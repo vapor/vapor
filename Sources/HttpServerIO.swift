@@ -52,7 +52,9 @@ public class HttpServerIO {
     }
     
     func dispatch(method: Method, path: String) -> ([String: String], Request -> HttpResponse) {
-        return ([:], { _ in HttpResponse.NotFound })
+        return ([:], { _ in 
+            return HttpResponse.NotFound 
+        })
     }
     
     func stop() {
