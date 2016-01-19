@@ -5,8 +5,7 @@ public class Controller {
 	}
 
 	public func index(request: Request) -> AnyObject {
-		let string: AnyObject = "index"
-		return string
+		return "index" as AnyObject
 	}
 
 }
