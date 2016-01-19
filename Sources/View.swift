@@ -1,6 +1,6 @@
 public class View {
 
-	public let resourceDir = "Resources"
+	public static let resourceDir = "Resources"
 	let bytes: [UInt8]
 
 	public init(path: String) {
