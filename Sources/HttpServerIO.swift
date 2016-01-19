@@ -2,7 +2,6 @@ import Foundation
 
 #if os(Linux)
     import Glibc
-    import NSLinux
 #endif
 
 public class HttpServerIO {
