@@ -1,3 +1,3 @@
 git pull
 swift build
-sudo .build/debug/Vapor
+.build/debug/Vapor
