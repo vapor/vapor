@@ -107,11 +107,15 @@ class HeartbeatController: Controller {
 
 Here the `HeartbeatControllers`'s index method will be called when `http://example.com/heartbeat/alternate` is visited.
 
+### Resource Controllers
+
+Resource controllers take advantage of CRUD-like `index`, `show`, `store`, `update`, `destroy` methods to make setting up REST APIs easy.
+
 ```swift
 Route.resource("/user", controller: UserController()) //not yet implemented
 ```
 
-This will create `GET`, `POST`, and `DELETE` methods for individual and groups of users. 
+This will create the appropriate `GET`, `POST`, `DELETE`, etc methods for individual and groups of users. 
 
 ## Deploying
 
