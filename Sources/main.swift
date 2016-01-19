@@ -3,9 +3,10 @@ import Swifter
 
 let server = HttpServer()
 
+server["/"] = { request in
+	return .MovedPermanently("http://tanner.xyz/index.html")
+}
 server["/:path"] = HttpHandlers.directory("/home/tanner/website")
-server["/scripts/:path"] = HttpHandlers.directory("/home/tanner/website/scripts")
-server["/styles/:path"] = HttpHandlers.directory("/home/tanner/website/styles")
 
 server["/heartbeat"] = { request in 
     return .OK(.Html("{lub:dub}"))
