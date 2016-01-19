@@ -16,7 +16,7 @@ public class View {
         self.bytes = array
 	}
 
-	public func render() {
+	public func render() -> HttpResponse {
         return HttpResponse.RAW(200, "OK", nil, { $0.write(self.bytes) })
 	}
 
