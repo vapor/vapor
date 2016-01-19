@@ -1,5 +1,9 @@
 import Foundation
 
+#if os(Linux)
+    import Glibc
+#endif
+
 public class Server: HttpServerIO {
     
     public static let VERSION = "1.0.0"

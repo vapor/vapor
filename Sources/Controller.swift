@@ -5,7 +5,7 @@ public class Controller {
 	}
 
 	public func index(request: Request) -> AnyObject {
-		return []
+		return "index"
 	}
 
 }

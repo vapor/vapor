@@ -35,7 +35,7 @@ extension String {
     
     static func fromUInt8(array: [UInt8]) -> String {
         #if os(Linux)
-            return String(data: NSData(bytes: array, length: array.count), encoding: NSUTF8StringEncoding)
+            return String(data: NSData(bytes: array, length: array.count), encoding: NSUTF8StringEncoding) ?? ""
         #else
             if let s = String(data: NSData(bytes: array, length: array.count), encoding: NSUTF8StringEncoding) {
                 return s
