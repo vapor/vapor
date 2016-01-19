@@ -14,6 +14,10 @@ public class HttpServer: HttpServerIO {
     
     private let router = HttpRouter()
 
+    public override init() {
+
+    }
+
     func parseRoutes() {
         for route in Route.routes {
             self.router.register(route.method.rawValue, path: route.path) { request in 
