@@ -17,6 +17,8 @@ This is a work in progress, so don't rely on this for anything important. And pu
 Starting the server takes two lines.
 
 ```swift
+import Vapor
+
 let server = Server()
 server.run()
 ```
@@ -83,6 +85,19 @@ Controllers are great for keeping your code organized. `Route` directives can ta
 
 ```swift
 Route.get("/heartbeat/alternate", closure: HeartbeatController().index)
+```
+
+`HearbeatController.swift`
+```swift
+import Vapor
+
+class HeartbeatController: Controller {
+
+	override func index(request: Request) -> AnyObject {
+		return ["lub": "dub"]
+	}
+
+}
 ```
 
 Here the `HeartbeatControllers`'s index method will be called when `http://example.com/heartbeat/alternate` is visited.
