@@ -9,7 +9,8 @@ public class View {
         let filesPath = View.resourceDir + "/" + path
         
         guard let fileBody = NSData(contentsOfFile: filesPath) else {
-            return HttpResponse.NotFound
+        	self.bytes = []
+            return
         }
       
 		//TODO: Implement range
