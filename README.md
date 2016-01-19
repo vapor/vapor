@@ -36,10 +36,13 @@ If you are having trouble connecting, make sure your ports are open. Check out `
 
 Routing in Vapor is simple and very similar to Laravel.
 
+`main.swift`
 ```swift
 Route.get("welcome") { request in
 	return "Hello"
 }
+
+//...start server
 ```
 
 Here we will respond to all requests to `http://example.com/welcome` with the string `"Hello"`. 
