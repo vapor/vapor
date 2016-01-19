@@ -3,9 +3,7 @@ import Swifter
 
 let server = HttpServer()
 
-server["/"] = { request in 
-	return .OK(.Html("Welcome. This was served by Swift."))
-}
+server["/"] = HttpHandlers.directory("~/website")
 server["/heartbeat"] = { request in 
     return .OK(.Html("{lub:dub}"))
 }
