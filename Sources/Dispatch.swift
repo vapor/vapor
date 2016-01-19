@@ -1,17 +1,3 @@
-//
-//  Dispatch.swift
-//  NSLinux
-//
-//  Created by John Holdsworth on 11/06/2015.
-//  Copyright (c) 2015 John Holdsworth. All rights reserved.
-//
-//  $Id: //depot/NSLinux/Sources/Dispatch.swift#7 $
-//
-//  Repo: https://github.com/johnno1962/NSLinux
-//
-
-// Hastily put together libdispatch substitutes
-
 #if os(Linux)
 import Glibc
 

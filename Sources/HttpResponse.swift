@@ -1,9 +1,3 @@
-//
-//  HttpResponse.swift
-//  Swifter
-//  Copyright (c) 2015 Damian Kołakowski. All rights reserved.
-//
-
 import Foundation
 
 public enum SerializationError: ErrorType {

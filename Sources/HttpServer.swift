@@ -1,11 +1,3 @@
-//
-//  HttpServer2.swift
-//  Swifter
-//
-//  Created by Damian Kolakowski on 17/12/15.
-//  Copyright © 2015 Damian Kołakowski. All rights reserved.
-//
-
 import Foundation
 
 public class HttpServer: HttpServerIO {
@@ -25,6 +17,8 @@ public class HttpServer: HttpServerIO {
 
                 if let response = response as? String {
                     return .OK(.Html(response))
+                } else if let view = response as? View {
+                    return view.render()
                 } else {
                     return .OK(.Json(response))
                 }
@@ -53,7 +47,7 @@ public class HttpServer: HttpServerIO {
         }
     }
 
-    override func dispatch(method: String, path: String) -> ([String:String], HttpRequest -> HttpResponse) {
+    override func dispatch(method: Method, path: String) -> ([String:String], Request -> HttpResponse) {
         if let result = router.route(method, path: path) {
             return result
         }

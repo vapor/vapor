@@ -1,16 +1,8 @@
-//
-//  Socket.swift
-//  Swifter
-//  Copyright (c) 2015 Damian Kołakowski. All rights reserved.
-//
-
 #if os(Linux)
     import Glibc
 #else
     import Foundation
 #endif
-
-/* Low level routines for POSIX sockets */
 
 enum SocketError: ErrorType {
     case SocketCreationFailed(String)

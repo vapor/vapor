@@ -1,16 +1,10 @@
-//
-//  HttpRouter.swift
-//  Swifter
-//  Copyright (c) 2015 Damian Kołakowski. All rights reserved.
-//
-
 import Foundation
 
 class HttpRouter {
     
     private class Node {
         var nodes = [String: Node]()
-        var handler: (HttpRequest -> HttpResponse)? = nil
+        var handler: (Request -> HttpResponse)? = nil
     }
     
     private var rootNode = Node()
@@ -34,7 +28,7 @@ class HttpRouter {
         return result
     }
     
-    func register(method: String?, path: String, handler: (HttpRequest -> HttpResponse)?) {
+    func register(method: String?, path: String, handler: (Request -> HttpResponse)?) {
         var pathSegments = stripQuery(path).split("/")
         if let method = method {
             pathSegments.insert(method, atIndex: 0)
@@ -45,9 +39,9 @@ class HttpRouter {
         inflate(&rootNode, generator: &pathSegmentsGenerator).handler = handler
     }
     
-    func route(method: String?, path: String) -> ([String: String], HttpRequest -> HttpResponse)? {
+    func route(method: Method?, path: String) -> ([String: String], Request -> HttpResponse)? {
         if let method = method {
-            let pathSegments = (method + "/" + stripQuery(path)).split("/")
+            let pathSegments = (method.rawValue + "/" + stripQuery(path)).split("/")
             var pathSegmentsGenerator = pathSegments.generate()
             var params = [String:String]()
             if let handler = findHandler(&rootNode, params: &params, generator: &pathSegmentsGenerator) {
@@ -75,7 +69,7 @@ class HttpRouter {
         return node
     }
     
-    private func findHandler(inout node: Node, inout params: [String: String], inout generator: IndexingGenerator<[String]>) -> (HttpRequest -> HttpResponse)? {
+    private func findHandler(inout node: Node, inout params: [String: String], inout generator: IndexingGenerator<[String]>) -> (Request -> HttpResponse)? {
         guard let pathToken = generator.next() else {
             return node.handler
         }

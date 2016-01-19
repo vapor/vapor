@@ -1,9 +1,3 @@
-//
-//  HttpParser.swift
-//  Swifter
-//  Copyright (c) 2015 Damian Kołakowski. All rights reserved.
-//
-
 #if os(Linux)
     import Glibc
 #else
@@ -16,16 +10,17 @@ enum HttpParserError: ErrorType {
 
 class HttpParser {
     
-    func readHttpRequest(socket: Socket) throws -> HttpRequest {
+    func readHttpRequest(socket: Socket) throws -> Request {
         let statusLine = try socket.readLine()
         let statusLineTokens = statusLine.split(" ")
         if statusLineTokens.count < 3 {
             throw HttpParserError.InvalidStatusLine(statusLine)
         }
-        let request = HttpRequest()
-        request.method = statusLineTokens[0]
+
+        let method = Method(rawValue: statusLineTokens[0]) ?? .Unknown
+        let request = Request(method: method)
         request.path = statusLineTokens[1]
-        request.queryParams = extractQueryParams(request.path)
+        request.query = self.extractQueryParams(request.path)
         request.headers = try readHeaders(socket)
         if let contentLength = request.headers["content-length"], let contentLengthValue = Int(contentLength) {
             request.body = try readBody(socket, size: contentLengthValue)
@@ -33,17 +28,22 @@ class HttpParser {
         return request
     }
     
-    private func extractQueryParams(url: String) -> [(String, String)] {
-        guard let query = url.split("?").last else {
-            return []
+    private func extractQueryParams(url: String) -> [String: String] {
+        var query = [String: String]()
+
+        var urlParts = url.split("?")
+        if urlParts.count < 2 {
+            return query
         }
-        return query.split("&").reduce([(String, String)]()) { (c, s) -> [(String, String)] in
-            let tokens = s.split(1, separator: "=")
+
+        for subQuery in urlParts[1].split("&") {
+            let tokens = subQuery.split(1, separator: "=")
             if let name = tokens.first, value = tokens.last {
-                return c + [(name.removePercentEncoding(), value.removePercentEncoding())]
+                query[name.removePercentEncoding()] = value.removePercentEncoding()
             }
-            return c
         }
+
+        return query
     }
     
     private func readBody(socket: Socket, size: Int) throws -> [UInt8] {

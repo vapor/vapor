@@ -1,9 +1,3 @@
-//
-//  HttpServer.swift
-//  Swifter
-//  Copyright (c) 2015 Damian Kołakowski. All rights reserved.
-//
-
 import Foundation
 
 #if os(Linux)
@@ -43,7 +37,7 @@ public class HttpServerIO {
             let request = request
             let (params, handler) = self.dispatch(request.method, path: request.path)
             request.address = address
-            request.params = params;
+            request.parameters = params;
             let response = handler(request)
             var keepConnection = parser.supportsKeepAlive(request.headers)
             do {
@@ -57,7 +51,7 @@ public class HttpServerIO {
         socket.release()
     }
     
-    func dispatch(method: String, path: String) -> ([String: String], HttpRequest -> HttpResponse) {
+    func dispatch(method: Method, path: String) -> ([String: String], Request -> HttpResponse) {
         return ([:], { _ in HttpResponse.NotFound })
     }
     

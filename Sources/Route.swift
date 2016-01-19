@@ -2,12 +2,7 @@ public class Route {
 
 	static var routes: [Route] = []
 
-	public enum Method: String {
-		case GET = "GET"
-		case POST = "POST"
-	}
-
-	public typealias Closure = (request: AnyObject) -> AnyObject
+	public typealias Closure = (request: Request) -> AnyObject
 
 	let method: Method
 	let path: String
