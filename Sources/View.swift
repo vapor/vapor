@@ -1,3 +1,5 @@
+import Foundation
+
 public class View {
 
 	public static let resourceDir = "Resources"
