@@ -71,6 +71,10 @@ Route.get("/") { request in
 
 Just put the `index.html` in the `Resources` folder at the root of your project and it will be served.
 
+### Public
+
+All files put in the `Public` folder at the root of your project will be available at the root of your domain. This is a great place to put your assets (`.css`, `.js`, `.png`, etc).
+
 ## Request
 
 Every route call gets passed a `Request` object. This can be used to grab query and path parameters.
@@ -91,6 +95,14 @@ Controllers are great for keeping your code organized. `Route` directives can ta
 ```swift
 Route.get("/heartbeat/alternate", closure: HeartbeatController().index)
 ```
+
+To pass a function name as a closure like above, the closure must have the function signature 
+
+```swift
+func index(request: Request) -> AnyObject
+```
+
+Here is an example of a controller for returning an API heartbeat.
 
 `HearbeatController.swift`
 ```swift
@@ -135,3 +147,7 @@ To deploy to DigitalOcean, simply
 	- (you may need to install `ufw` to set appropriate ports)
 
 My website `http://tanner.xyz` is currently running using this Vapor.
+
+## Swifter
+
+This project is based on [Swifter](https://github.com/glock45/swifter)
