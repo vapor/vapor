@@ -3,12 +3,14 @@ import Swifter
 
 let server = HttpServer()
 
+server["/"] = { request in 
+	return .OK(.Html("Welcome. This was served by Swift."))
+}
+server["/heartbeat"] = { request in 
+    return .OK(.Html("{lub:dub}"))
+}
+
 do {
-
-	server["/heartbeat"] = { request in 
-	    return .OK(.Html("{lub:dub}"))
-	}
-
 	let port: in_port_t = 80
 	try server.start(port)
 	print("Server has started on port \(port)")
