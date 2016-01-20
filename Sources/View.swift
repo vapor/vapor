@@ -19,8 +19,8 @@ public class View {
         self.bytes = array
 	}
 
-	public func render() -> HttpResponse {
-        return HttpResponse.RAW(200, "OK", ["Content-Type": "text/html"], { $0.write(self.bytes) })
+	public func render() -> Response {
+        return .RAW(200, "OK", ["Content-Type": "text/html"], { $0.write(self.bytes) })
 	}
 
 }

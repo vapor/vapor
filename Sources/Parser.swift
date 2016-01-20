@@ -4,17 +4,17 @@
     import Foundation
 #endif
 
-enum HttpParserError: ErrorType {
+enum ParserError: ErrorType {
     case InvalidStatusLine(String)
 }
 
-class HttpParser {
+class Parser {
     
     func readHttpRequest(socket: Socket) throws -> Request {
         let statusLine = try socket.readLine()
         let statusLineTokens = statusLine.split(" ")
         if statusLineTokens.count < 3 {
-            throw HttpParserError.InvalidStatusLine(statusLine)
+            throw ParserError.InvalidStatusLine(statusLine)
         }
 
         let method = Method(rawValue: statusLineTokens[0]) ?? .Unknown

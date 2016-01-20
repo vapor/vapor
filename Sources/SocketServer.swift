@@ -4,7 +4,7 @@ import Foundation
     import Glibc
 #endif
 
-public class HttpServerIO {
+public class SocketServer {
     
     private var listenSocket: Socket = Socket(socketFileDescriptor: -1)
     private var clientSockets: Set<Socket> = []
@@ -31,7 +31,7 @@ public class HttpServerIO {
     
     func handleConnection(socket: Socket) {
         let address = try? socket.peername()
-        let parser = HttpParser()
+        let parser = Parser()
         while let request = try? parser.readHttpRequest(socket) {
             let request = request
             let (params, handler) = self.dispatch(request.method, path: request.path)
@@ -50,9 +50,9 @@ public class HttpServerIO {
         socket.release()
     }
     
-    func dispatch(method: Method, path: String) -> ([String: String], Request -> HttpResponse) {
+    func dispatch(method: Method, path: String) -> ([String: String], Request -> Response) {
         return ([:], { _ in 
-            return HttpResponse.NotFound 
+            return .NotFound 
         })
     }
     
@@ -72,14 +72,14 @@ public class HttpServerIO {
         handle.unlock();
     }
     
-    private struct InnerWriteContext: HttpResponseBodyWriter {
+    private struct InnerWriteContext: ResponseBodyWriter {
         let socket: Socket
         func write(data: [UInt8]) {
             let _ = try? socket.writeUInt8(data)
         }
     }
     
-    private func respond(socket: Socket, response: HttpResponse, keepAlive: Bool) throws -> Bool {
+    private func respond(socket: Socket, response: Response, keepAlive: Bool) throws -> Bool {
         try socket.writeUTF8("HTTP/1.1 \(response.statusCode()) \(response.reasonPhrase())\r\n")
         
         let content = response.content()

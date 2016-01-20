@@ -1,10 +1,10 @@
 import Foundation
 
-class HttpRouter {
+class Router {
     
     private class Node {
         var nodes = [String: Node]()
-        var handler: (Request -> HttpResponse)? = nil
+        var handler: (Request -> Response)? = nil
     }
     
     private var rootNode = Node()
@@ -28,7 +28,7 @@ class HttpRouter {
         return result
     }
     
-    func register(method: String?, path: String, handler: (Request -> HttpResponse)?) {
+    func register(method: String?, path: String, handler: (Request -> Response)?) {
         var pathSegments = stripQuery(path).split("/")
         if let method = method {
             pathSegments.insert(method, atIndex: 0)
@@ -39,7 +39,7 @@ class HttpRouter {
         inflate(&rootNode, generator: &pathSegmentsGenerator).handler = handler
     }
     
-    func route(method: Method?, path: String) -> ([String: String], Request -> HttpResponse)? {
+    func route(method: Method?, path: String) -> ([String: String], Request -> Response)? {
         if let method = method {
             let pathSegments = (method.rawValue + "/" + stripQuery(path)).split("/")
             var pathSegmentsGenerator = pathSegments.generate()
@@ -69,7 +69,7 @@ class HttpRouter {
         return node
     }
     
-    private func findHandler(inout node: Node, inout params: [String: String], inout generator: IndexingGenerator<[String]>) -> (Request -> HttpResponse)? {
+    private func findHandler(inout node: Node, inout params: [String: String], inout generator: IndexingGenerator<[String]>) -> (Request -> Response)? {
         guard let pathToken = generator.next() else {
             return node.handler
         }

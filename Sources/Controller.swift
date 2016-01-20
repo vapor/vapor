@@ -4,8 +4,8 @@ public class Controller {
 
 	}
 
-	public func index(request: Request) -> AnyObject {
-		return "index" as! AnyObject
+	public func index(request: Request) -> Any {
+		return "index"
 	}
 
 }

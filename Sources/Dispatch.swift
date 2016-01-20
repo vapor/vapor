@@ -1,3 +1,5 @@
+var _module_dispatch = true
+
 #if os(Linux)
 import Glibc
 

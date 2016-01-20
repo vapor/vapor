@@ -4,11 +4,11 @@ import Foundation
     import Glibc
 #endif
 
-public class Server: HttpServerIO {
+public class Server: SocketServer {
     
     public static let VERSION = "1.0.2"
     
-    private let router = HttpRouter()
+    private let router = Router()
 
     public override init() {
 
@@ -23,8 +23,10 @@ public class Server: HttpServerIO {
                     return .OK(.Html(response))
                 } else if let view = response as? View {
                     return view.render()
+                } else if let obj = response as? AnyObject {
+                    return .OK(.Json(obj))
                 } else {
-                    return .OK(.Json(response))
+                    return .OK(.Html(""))
                 }
             }
         }
@@ -51,7 +53,7 @@ public class Server: HttpServerIO {
         }
     }
 
-    override func dispatch(method: Method, path: String) -> ([String:String], Request -> HttpResponse) {
+    override func dispatch(method: Method, path: String) -> ([String:String], Request -> Response) {
         //check in routes
         if let result = router.route(method, path: path) {
             return result
@@ -70,7 +72,7 @@ public class Server: HttpServerIO {
                     response += "</table>"
 
                     return ([:], { _ in 
-                        return HttpResponse.OK(.Html(response))
+                        return .OK(.Html(response))
                     })
                 } catch {
                     //continue to not found
@@ -80,7 +82,7 @@ public class Server: HttpServerIO {
                     var array = [UInt8](count: fileBody.length, repeatedValue: 0)
                     fileBody.getBytes(&array, length: fileBody.length)
                     return ([:], { _ in 
-                        return HttpResponse.RAW(200, "OK", nil, { $0.write(array) })
+                        return .RAW(200, "OK", nil, { $0.write(array) })
                     })
                     
                 }

@@ -5,18 +5,18 @@ public enum SerializationError: ErrorType {
     case NotSupported
 }
 
-public protocol HttpResponseBodyWriter {
+public protocol ResponseBodyWriter {
     func write(data: [UInt8])
 }
 
-public enum HttpResponseBody {
+public enum ResponseBody {
     
     case Json(AnyObject)
     case Html(String)
     case Text(String)
     case Custom(Any, (Any) throws -> String)
     
-    func content() -> (Int, ((HttpResponseBodyWriter) throws -> Void)?) {
+    func content() -> (Int, ((ResponseBodyWriter) throws -> Void)?) {
         do {
             switch self {
             case .Json(let object):
@@ -55,13 +55,13 @@ public enum HttpResponseBody {
     }
 }
 
-public enum HttpResponse {
+public enum Response {
     
-    case OK(HttpResponseBody), Created, Accepted
+    case OK(ResponseBody), Created, Accepted
     case MovedPermanently(String)
     case BadRequest, Unauthorized, Forbidden, NotFound
     case InternalServerError
-    case RAW(Int, String, [String:String]?, ((HttpResponseBodyWriter) -> Void)? )
+    case RAW(Int, String, [String:String]?, ((ResponseBodyWriter) -> Void)? )
     
     func statusCode() -> Int {
         switch self {
@@ -115,7 +115,7 @@ public enum HttpResponse {
         return headers
     }
     
-    func content() -> (length: Int, writeClosure: ((HttpResponseBodyWriter) throws -> Void)?) {
+    func content() -> (length: Int, writeClosure: ((ResponseBodyWriter) throws -> Void)?) {
         switch self {
         case .OK(let body)             : return body.content()
         case .RAW(_, _, _, let writer) : return (-1, writer)
@@ -135,7 +135,7 @@ public enum HttpResponse {
     }
 */
 
-func ==(inLeft: HttpResponse, inRight: HttpResponse) -> Bool {
+func ==(inLeft: Response, inRight: Response) -> Bool {
     return inLeft.statusCode() == inRight.statusCode()
 }
 
