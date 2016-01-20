@@ -1,6 +1,8 @@
+![Vapor](https://cloud.githubusercontent.com/assets/1342803/12457776/87e20994-bf74-11e5-8942-200a0238af12.png)
+
 # Vapor
 
-A simple Laravel-like framework built with Swift.
+A Laravel/Lumen Inspired Web Framework for Swift that works on iOS, OS X, and Ubuntu.
 
 ## Getting Started
 
