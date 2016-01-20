@@ -1,9 +1,5 @@
 import Foundation
 
-#if os(Linux)
-    import Glibc
-#endif
-
 public class Server: SocketServer {
     
     public static let VERSION = "1.0.2"
@@ -38,16 +34,10 @@ public class Server: SocketServer {
         do {
             let port: in_port_t = UInt16(raw_port)
             try self.start(port)
+
             print("Server has started on port \(port)")
 
-            #if os(Linux)
-                while true {
-                    sleep(1)
-                }
-            #else
-                NSRunLoop.mainRunLoop().run()
-            #endif
-            
+            self.loop()
         } catch {
             print("Server start error: \(error)")
         }
