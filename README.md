@@ -4,6 +4,10 @@
 
 A Laravel/Lumen Inspired Web Framework for Swift that works on iOS, OS X, and Ubuntu.
 
+[x] Insanely fast (25ms from cold start)
+[x] Beautiful syntax
+[x] Type Safe
+
 ## Getting Started
 
 Clone the [Example](https://github.com/tannernelson/vapor-example) project to start making your application. This repository is for the framework module.
