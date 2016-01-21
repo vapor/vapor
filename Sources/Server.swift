@@ -21,12 +21,14 @@ public class Server: SocketServer {
                     return view.render()
                 } else if let response = response as? Response {
                     return response
-                } else {
+                } else if let object = response as? AnyObject {
                     do {
-                        return try Response(statusCode: 200, jsonObject: response)    
+                        return try Response(statusCode: 200, jsonObject: object)    
                     } catch {
                         return Response(error: "JSON serialization error: \(error)")
                     }
+                } else {
+                    return Response(statusCode: 200, text: "")
                 }
             }
         }
