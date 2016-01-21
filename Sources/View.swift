@@ -20,7 +20,7 @@ public class View {
 	}
 
 	public func render() -> Response {
-        return .RAW(200, "OK", ["Content-Type": "text/html"], { $0.write(self.bytes) })
+        return Response(statusCode: 200, data: self.bytes, contentType: .Html)
 	}
 
 }

@@ -2,6 +2,12 @@ import Foundation
 
 public class Request {
     
+    public enum Method: String {
+        case GET = "GET"
+        case POST = "POST"
+        case Unknown = "x"
+    }
+
     public let method: Method
     public var parameters: [String: String] = [:]
     public var query: [String: String] = [:]

@@ -15,14 +15,16 @@ public class Server: SocketServer {
             self.router.register(route.method.rawValue, path: route.path) { request in 
                 let response = route.closure(request: request)
 
-                if let response = response as? String {
-                    return .OK(.Html(response))
+                if let html = response as? String {
+                    return Response(statusCode: 200, html: html)
                 } else if let view = response as? View {
                     return view.render()
-                } else if let obj = response as? AnyObject {
-                    return .OK(.Json(obj))
+                } else if let object = response as? AnyObject {
+                    return try! Response(statusCode: 200, jsonObject: object)
+                } else if let response = response as? Response {
+                    return response
                 } else {
-                    return .OK(.Html(""))
+                    return Response(statusCode: 200, text: "")
                 }
             }
         }
@@ -43,7 +45,7 @@ public class Server: SocketServer {
         }
     }
 
-    override func dispatch(method: Method, path: String) -> ([String:String], Request -> Response) {
+    override func dispatch(method: Request.Method, path: String) -> (Request -> Response) {
         //check in routes
         if let result = router.route(method, path: path) {
             return result
@@ -61,9 +63,9 @@ public class Server: SocketServer {
                     response += files.map({ "<tr><td><a href=\"\(path)/\($0)\">\($0)</a></td></tr>"}).joinWithSeparator("")
                     response += "</table>"
 
-                    return ([:], { _ in 
-                        return .OK(.Html(response))
-                    })
+                    return { _ in 
+                        return Response(statusCode: 200, html: response)
+                    }
                 } catch {
                     //continue to not found
                 }
@@ -71,9 +73,9 @@ public class Server: SocketServer {
                 if let fileBody = NSData(contentsOfFile: filePath) {
                     var array = [UInt8](count: fileBody.length, repeatedValue: 0)
                     fileBody.getBytes(&array, length: fileBody.length)
-                    return ([:], { _ in 
-                        return .RAW(200, "OK", nil, { $0.write(array) })
-                    })
+                    return { _ in 
+                        return Response(statusCode: 200, data: array, contentType: .Text)
+                    }
                     
                 }
             }

@@ -1,141 +1,155 @@
 import Foundation
 
-public enum SerializationError: ErrorType {
-    case InvalidObject
-    case NotSupported
-}
-
-public protocol ResponseBodyWriter {
+public protocol ResponseWriter {
     func write(data: [UInt8])
 }
 
-public enum ResponseBody {
-    
-    case Json(AnyObject)
-    case Html(String)
-    case Text(String)
-    case Custom(Any, (Any) throws -> String)
-    
-    func content() -> (Int, ((ResponseBodyWriter) throws -> Void)?) {
-        do {
-            switch self {
-            case .Json(let object):
-                guard NSJSONSerialization.isValidJSONObject(object) else {
-                    throw SerializationError.InvalidObject
-                }
-                let json = try NSJSONSerialization.dataWithJSONObject(object, options: NSJSONWritingOptions.PrettyPrinted)
-                let data = Array(UnsafeBufferPointer(start: UnsafePointer<UInt8>(json.bytes), count: json.length))
-                return (data.count, {
-                    $0.write(data)
-                })
-            case .Text(let body):
-                let data = [UInt8](body.utf8)
-                return (data.count, {
-                    $0.write(data)
-                })
-            case .Html(let body):
-                let serialised = "<html><meta charset=\"UTF-8\"><body>\(body)</body></html>"
-                let data = [UInt8](serialised.utf8)
-                return (data.count, {
-                    $0.write(data)
-                })
-            case .Custom(let object, let closure):
-                let serialised = try closure(object)
-                let data = [UInt8](serialised.utf8)
-                return (data.count, {
-                    $0.write(data)
-                })
-            }
-        } catch {
-            let data = [UInt8]("Serialisation error: \(error)".utf8)
-            return (data.count, {
-                $0.write(data)
-            })
-        }
-    }
-}
+public class Redirect: Response {
+    var redirectLocation: String
 
-public enum Response {
-    
-    case OK(ResponseBody), Created, Accepted
-    case MovedPermanently(String)
-    case BadRequest, Unauthorized, Forbidden, NotFound
-    case InternalServerError
-    case RAW(Int, String, [String:String]?, ((ResponseBodyWriter) -> Void)? )
-    
-    func statusCode() -> Int {
-        switch self {
-        case .OK(_)                   : return 200
-        case .Created                 : return 201
-        case .Accepted                : return 202
-        case .MovedPermanently        : return 301
-        case .BadRequest              : return 400
-        case .Unauthorized            : return 401
-        case .Forbidden               : return 403
-        case .NotFound                : return 404
-        case .InternalServerError     : return 500
-        case .RAW(let code, _ , _, _) : return code
-        }
-    }
-    
-    func reasonPhrase() -> String {
-        switch self {
-        case .OK(_)                    : return "OK"
-        case .Created                  : return "Created"
-        case .Accepted                 : return "Accepted"
-        case .MovedPermanently         : return "Moved Permanently"
-        case .BadRequest               : return "Bad Request"
-        case .Unauthorized             : return "Unauthorized"
-        case .Forbidden                : return "Forbidden"
-        case .NotFound                 : return "Not Found"
-        case .InternalServerError      : return "Internal Server Error"
-        case .RAW(_, let phrase, _, _) : return phrase
-        }
-    }
-    
-    func headers() -> [String: String] {
-        var headers = ["Server" : "Vapor \(Server.VERSION)"]
-        switch self {
-        case .OK(let body):
-            switch body {
-            case .Json(_)   : headers["Content-Type"] = "application/json"
-            case .Html(_)   : headers["Content-Type"] = "text/html"
-            default:break
-            }
-        case .MovedPermanently(let location):
-            headers["Location"] = location
-        case .RAW(_, _, let rawHeaders, _):
-            if let rawHeaders = rawHeaders {
-                for (k, v) in rawHeaders {
-                    headers.updateValue(v, forKey: k)
-                }
-            }
-        default:break
-        }
+    override func headers() -> [String: String] {
+        var headers = super.headers()
+        headers["Location"] = self.redirectLocation
         return headers
     }
-    
-    func content() -> (length: Int, writeClosure: ((ResponseBodyWriter) throws -> Void)?) {
-        switch self {
-        case .OK(let body)             : return body.content()
-        case .RAW(_, _, _, let writer) : return (-1, writer)
-        default                        : return (-1, nil)
-        }
+
+    public init(to redirectLocation: String) {
+        self.redirectLocation = redirectLocation
+        super.init(statusCode: 301, data: [], contentType: .None)
     }
 }
 
-/**
-    Makes it possible to compare handler responses with '==', but
-	ignores any associated values. This should generally be what
-	you want. E.g.:
-	
-    let resp = handler(updatedRequest)
-        if resp == .NotFound {
-        print("Client requested not found: \(request.url)")
-    }
-*/
+public class Response {
 
-func ==(inLeft: Response, inRight: Response) -> Bool {
-    return inLeft.statusCode() == inRight.statusCode()
+    public enum SerializationError: ErrorType {
+        case InvalidObject
+        case NotSupported
+    }
+
+    typealias WriteClosure = (ResponseWriter) throws -> Void
+
+    let statusCode: Int
+    let data: [UInt8]
+    let contentType: ContentType
+
+    enum ContentType {
+        case Text, Html, Json, None
+    }
+
+    enum Status {
+        case OK, Created, Accepted
+        case MovedPermanently
+        case BadRequest, Unauthorized, Forbidden, NotFound
+        case InternalServerError
+        case Unknown
+    }
+
+    var status: Status {
+        switch self.statusCode {
+        case 200:
+            return .OK
+        case 201:
+            return .Created
+        case 202:
+            return .Accepted
+        case 301:
+            return .MovedPermanently
+        case 400:
+            return .BadRequest
+        case 401:
+            return .Unauthorized
+        case 403:
+            return .Forbidden
+        case 404:
+            return .NotFound
+        case 500:
+            return .InternalServerError
+        default: 
+            return .Unknown
+        }
+    }
+    var reasonPhrase: String {
+        switch self.status {
+        case .OK:
+            return "OK"
+        case .Created: 
+            return "Created"
+        case .Accepted: 
+            return "Accepted"
+        case .MovedPermanently: 
+            return "Moved Permanently"
+        case .BadRequest: 
+            return "Bad Request"
+        case .Unauthorized: 
+            return "Unauthorized"
+        case .Forbidden: 
+            return "Forbidden"
+        case .NotFound: 
+            return "Not Found"
+        case .InternalServerError: 
+            return "Internal Server Error"
+        case .Unknown:
+            return "Unknown"
+        }
+    }
+
+    func content() -> (length: Int, writeClosure: WriteClosure?) {
+        return (self.data.count, { writer in
+            writer.write(self.data) 
+        })
+    }
+
+    func headers() -> [String: String] {
+        var headers = ["Server" : "Vapor \(Server.VERSION)"]
+
+        switch self.status {
+        case .OK:
+            switch self.contentType {
+            case .Json: 
+                headers["Content-Type"] = "application/json"
+            case .Html: 
+                headers["Content-Type"] = "text/html"
+            default:
+                break
+            }
+        default:
+            break
+        }
+
+        return headers
+    }
+
+    init(statusCode:Int, data: [UInt8], contentType: ContentType) {
+        self.statusCode = statusCode
+        self.data = data
+        self.contentType = contentType
+    }
+
+    convenience init(statusCode: Int, html: String) {
+        let serialised = "<html><meta charset=\"UTF-8\"><body>\(html)</body></html>"
+        let data = [UInt8](serialised.utf8)
+        self.init(statusCode: statusCode, data: data, contentType: .Html)
+    }
+
+    convenience init(statusCode: Int, text: String) {
+        let data = [UInt8](text.utf8)
+        self.init(statusCode: statusCode, data: data, contentType: .Text)
+    }
+
+    convenience init(statusCode: Int, jsonObject: AnyObject) throws {
+        guard NSJSONSerialization.isValidJSONObject(jsonObject) else {
+            throw SerializationError.InvalidObject
+        }
+
+        let json = try NSJSONSerialization.dataWithJSONObject(jsonObject, options: NSJSONWritingOptions.PrettyPrinted)
+        let data = Array(UnsafeBufferPointer(start: UnsafePointer<UInt8>(json.bytes), count: json.length))
+
+        self.init(statusCode: statusCode, data: data, contentType: .Json)
+    }
+}
+
+
+func ==(left: Response, right: Response) -> Bool {
+    return left.statusCode == right.statusCode
 }
 

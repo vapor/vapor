@@ -39,20 +39,20 @@ class Router {
         inflate(&rootNode, generator: &pathSegmentsGenerator).handler = handler
     }
     
-    func route(method: Method?, path: String) -> ([String: String], Request -> Response)? {
+    func route(method: Request.Method?, path: String) -> (Request -> Response)? {
         if let method = method {
             let pathSegments = (method.rawValue + "/" + stripQuery(path)).split("/")
             var pathSegmentsGenerator = pathSegments.generate()
             var params = [String:String]()
             if let handler = findHandler(&rootNode, params: &params, generator: &pathSegmentsGenerator) {
-                return (params, handler)
+                return handler
             }
         }
         let pathSegments = ("*/" + stripQuery(path)).split("/")
         var pathSegmentsGenerator = pathSegments.generate()
         var params = [String:String]()
         if let handler = findHandler(&rootNode, params: &params, generator: &pathSegmentsGenerator) {
-            return (params, handler)
+            return handler
         }
         return nil
     }

@@ -4,11 +4,11 @@ public class Route {
 
 	public typealias Closure = (request: Request) -> Any
 
-	let method: Method
+	let method: Request.Method
 	let path: String
 	let closure: Closure
 
-	init(method: Method, path: String, closure: Closure) {
+	init(method: Request.Method, path: String, closure: Closure) {
 		self.method = method
 		self.path = path
 		self.closure = closure

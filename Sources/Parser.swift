@@ -17,7 +17,7 @@ class Parser {
             throw ParserError.InvalidStatusLine(statusLine)
         }
 
-        let method = Method(rawValue: statusLineTokens[0]) ?? .Unknown
+        let method = Request.Method(rawValue: statusLineTokens[0]) ?? .Unknown
         let request = Request(method: method)
         request.path = statusLineTokens[1]
         request.query = self.extractQueryParams(request.path)

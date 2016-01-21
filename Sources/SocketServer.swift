@@ -82,13 +82,13 @@ public class SocketServer {
 
         while let request = try? parser.readHttpRequest(socket) {
             //dispatch the server to handle the request
-            let dispatchResponse = self.dispatch(request.method, path: request.path)
+            let handler = self.dispatch(request.method, path: request.path)
 
             //add parameters to request
             request.address = address
-            request.parameters = dispatchResponse.parameters
+            request.parameters = [:]
 
-            let response = dispatchResponse.handler(request)
+            let response = handler(request)
             var keepConnection = parser.supportsKeepAlive(request.headers)
             do {
                 keepConnection = try self.respond(socket, response: response, keepAlive: keepConnection)
@@ -104,19 +104,14 @@ public class SocketServer {
     }
 
     /**
-     * Typealias for the enum returned by Server dispatch method.
-     */
-    typealias DispatchResponse = (parameters: [String: String], handler: (Request -> Response))
-    
-    /**
      * Returns a closure that given a Request returns a Response
      *
      * @return DispatchResponse
      */
-    func dispatch(method: Method, path: String) -> DispatchResponse {
-        return ([:], { _ in 
-            return .NotFound 
-        })
+    func dispatch(method: Request.Method, path: String) -> (Request -> Response) {
+        return { _ in 
+            return Response(statusCode: 404, text: "Page not found") 
+        }
     }
     
     /**
@@ -148,40 +143,30 @@ public class SocketServer {
         handle.unlock();
     }
     
-    private struct InnerWriteContext: ResponseBodyWriter {
-        let socket: Socket
-        func write(data: [UInt8]) {
-            let _ = try? socket.writeUInt8(data)
-        }
-    }
-    
     /**
      * Writes the response to the client socket.
      */
     private func respond(socket: Socket, response: Response, keepAlive: Bool) throws -> Bool {
-        try socket.writeUTF8("HTTP/1.1 \(response.statusCode()) \(response.reasonPhrase())\r\n")
-        
-        let content = response.content()
-        
-        if content.length >= 0 {
-            try socket.writeUTF8("Content-Length: \(content.length)\r\n")
+        try socket.writeUTF8("HTTP/1.1 \(response.statusCode) \(response.reasonPhrase)\r\n")
+    
+
+        var headers = response.headers()
+
+        if response.data.count >= 0 {
+            headers["Content-Length"] = "\(response.data.count)"
         }
         
-        if keepAlive && content.length != -1 {
-            try socket.writeUTF8("Connection: keep-alive\r\n")
+        if keepAlive && response.data.count != -1 {
+            headers["Connection"] = "keep-alive"
         }
         
-        for (name, value) in response.headers() {
+        for (name, value) in headers {
             try socket.writeUTF8("\(name): \(value)\r\n")
         }
         
         try socket.writeUTF8("\r\n")
-    
-        if let writeClosure = content.writeClosure {
-            let context = InnerWriteContext(socket: socket)
-            try writeClosure(context)
-        }
-        
-        return keepAlive && content.length != -1;
+
+        try socket.writeUInt8(response.data)
+        return keepAlive && response.data.count != -1;
     }
 }
