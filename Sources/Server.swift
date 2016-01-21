@@ -32,7 +32,7 @@ public class Server: SocketServer {
         }
     }
 
-    public func run(port: Int = 80) {
+    public func run(port port: Int = 80) {
         self.parseRoutes()
 
         do {
