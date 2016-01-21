@@ -1,7 +1,12 @@
 import Foundation
 
+/**
+    Requests contains data sent from a client to the
+    web server such as method, parameters, and data.
+*/
 public class Request {
     
+    ///Available HTTP Methods
     public enum Method: String {
         case Get = "GET"
         case Post = "POST"
@@ -11,8 +16,11 @@ public class Request {
         case Unknown = "x"
     }
 
+    ///HTTP Method used for request
     public let method: Method
+    ///URL parameters (ex: `:id`)
     public var parameters: [String: String] = [:]
+    ///GET or POST data
     public var data: [String: String] = [:]
     
     var path: String = ""
