@@ -2,7 +2,7 @@ public class Route {
 
 	static var routes: [Route] = []
 
-	public typealias Closure = (request: Request) -> Any
+	public typealias Closure = (request: Request) -> AnyObject
 
 	let method: Request.Method
 	let path: String

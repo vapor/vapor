@@ -2,7 +2,7 @@ import Foundation
 
 public class Server: SocketServer {
     
-    public static let VERSION = "1.0.2"
+    public static let VERSION = "1.0.3"
     
     private let router = Router()
 
@@ -21,14 +21,12 @@ public class Server: SocketServer {
                     return view.render()
                 } else if let response = response as? Response {
                     return response
-                } else if let object = response as? AnyObject {
+                } else {
                     do {
-                        return try Response(statusCode: 200, jsonObject: object)    
+                        return try Response(statusCode: 200, jsonObject: response)    
                     } catch {
                         return Response(error: "JSON serialization error: \(error)")
                     }
-                } else {
-                    return Response(statusCode: 200, text: "")
                 }
             }
         }
