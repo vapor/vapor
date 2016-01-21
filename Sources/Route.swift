@@ -17,15 +17,33 @@ public class Route {
 	}
 
 	public class func get(path: String, closure: Closure) {
-		let _ = Route(method: .GET, path: path, closure: closure)
+		let _ = Route(method: .Get, path: path, closure: closure)
 	}
 
+	public class func post(path: String, closure: Closure) {
+		let _ = Route(method: .Post, path: path, closure: closure)
+	}
+
+	public class func put(path: String, closure: Closure) {
+		let _ = Route(method: .Put, path: path, closure: closure)
+	}
+
+	public class func patch(path: String, closure: Closure) {
+		let _ = Route(method: .Patch, path: path, closure: closure)
+	}
+
+	public class func delete(path: String, closure: Closure) {
+		let _ = Route(method: .Delete, path: path, closure: closure)
+	}
+
+
 	public class func resource(path: String, controller: Controller) {
-		//TODO: add other methods
-		let closure: Closure = { request in
-			return controller.index(request)
-		}
-		let _ = Route(method: .GET, path: path, closure: closure)
+		self.get(path, closure: controller.index)
+		self.post(path, closure: controller.store)
+
+		self.get("\(path)/:id", closure: controller.show)
+		self.put("\(path)/:id", closure: controller.update)
+		self.delete("\(path)/:id", closure: controller.destroy)
 	}
 
 }

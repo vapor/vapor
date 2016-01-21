@@ -2,6 +2,8 @@ Route.get("/heartbeat") { request in
 	return ["lub": "dub"]
 }
 
+Route.resource("users", controller: Controller())
+
 Route.get("/text") { request in 
 	return "Hello"
 }

@@ -3,8 +3,11 @@ import Foundation
 public class Request {
     
     public enum Method: String {
-        case GET = "GET"
-        case POST = "POST"
+        case Get = "GET"
+        case Post = "POST"
+        case Put = "PUT"
+        case Patch = "PATCH"
+        case Delete = "DELETE"
         case Unknown = "x"
     }
 
