@@ -19,12 +19,12 @@ public class SocketServer {
         Starts the server on a given port.
         - parameter listenPort: The port to listen on.
     */
-    func start(listenPort: in_port_t) throws {
+    func start(listenPort: Int) throws {
         //stop the server if it's running
         self.stop()
 
         //open a socket, might fail
-        self.listenSocket = try Socket.tcpSocketForListen(listenPort)
+        self.listenSocket = try Socket.tcpSocketForListen(UInt16(listenPort))
 
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0)) {
 

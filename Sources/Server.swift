@@ -36,7 +36,6 @@ public class Server: SocketServer {
         self.parseRoutes()
 
         do {
-            let port: in_port_t = UInt16(raw_port)
             try self.start(port)
 
             print("Server has started on port \(port)")

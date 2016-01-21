@@ -9,35 +9,35 @@ public class Controller {
 	 * Display many instances.
 	 */
 	public func index(request: Request) -> AnyObject {
-		return "index"
+		return "index" as! AnyObject
 	}
 
 	/**
 	 * Create a new instance.
 	 */
 	public func store(request: Request) -> AnyObject {
-		return "store"
+		return "store" as! AnyObject
 	}
 
 	/**
 	 * Show an instance.
 	 */
 	public func show(request: Request) -> AnyObject {
-		return "show"
+		return "show" as! AnyObject
 	}
 
 	/**
 	 * Update an instance.
 	 */
 	public func update(request: Request) -> AnyObject {
-		return "update"
+		return "update" as! AnyObject
 	}
 
 	/**
 	 * Delete an instance.
 	 */
 	public func destroy(request: Request) -> AnyObject {
-		return "destroy"
+		return "destroy" as! AnyObject
 	}
 
 }
