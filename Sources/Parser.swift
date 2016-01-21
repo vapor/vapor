@@ -20,7 +20,7 @@ class Parser {
         let method = Request.Method(rawValue: statusLineTokens[0]) ?? .Unknown
         let request = Request(method: method)
         request.path = statusLineTokens[1]
-        request.query = self.extractQueryParams(request.path)
+        request.data = self.extractQueryParams(request.path)
         request.headers = try readHeaders(socket)
         if let contentLength = request.headers["content-length"], let contentLengthValue = Int(contentLength) {
             request.body = try readBody(socket, size: contentLengthValue)

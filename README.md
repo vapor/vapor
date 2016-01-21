@@ -86,7 +86,7 @@ This is a list of the properties available on the request object.
 ```swift
 public let method: Method
 public var parameters: [String: String] = [:]
-public var query: [String: String] = [:]
+public var data: [String: String] = [:]
 ```
 
 ## Controllers

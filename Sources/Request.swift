@@ -13,7 +13,7 @@ public class Request {
 
     public let method: Method
     public var parameters: [String: String] = [:]
-    public var query: [String: String] = [:]
+    public var data: [String: String] = [:]
     
     var path: String = ""
     var headers: [String: String] = [:]
