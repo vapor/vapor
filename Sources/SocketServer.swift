@@ -6,25 +6,19 @@ import Foundation
 
 public class SocketServer {
     
-    /**
-     * A socket open to the port the server is listening on. Usually 80.
-     */
+    ///A socket open to the port the server is listening on. Usually 80.
     private var listenSocket: Socket = Socket(socketFileDescriptor: -1)
 
-    /**
-     * A set of connected client sockets.
-     */
+    ///A set of connected client sockets.
     private var clientSockets: Set<Socket> = []
 
-    /**
-     * The shared lock for notifying new connections.
-     */
+    ///The shared lock for notifying new connections.
     private let clientSocketsLock = NSLock()
     
     /**
-     * Starts the server on a given port.
-     * @param listenPort The port to listen on.
-     */
+        Starts the server on a given port.
+        @param listenPort The port to listen on.
+    */
     func start(listenPort: in_port_t) throws {
         //stop the server if it's running
         self.stop()
@@ -60,9 +54,9 @@ public class SocketServer {
     }
 
     /**
-     * Starts an infinite loop to keep the server alive while it
-     * waits for inbound connections.
-     */
+        Starts an infinite loop to keep the server alive while it
+        waits for inbound connections.
+    */
     func loop() {
         #if os(Linux)
             while true {
@@ -104,10 +98,10 @@ public class SocketServer {
     }
 
     /**
-     * Returns a closure that given a Request returns a Response
-     *
-     * @return DispatchResponse
-     */
+        Returns a closure that given a Request returns a Response
+        
+        @return DispatchResponse
+    */
     func dispatch(method: Request.Method, path: String) -> (Request -> Response) {
         return { _ in 
             return Response(statusCode: 404, text: "Page not found") 
@@ -115,8 +109,8 @@ public class SocketServer {
     }
     
     /**
-     * Stops the server
-     */
+        Stops the server
+    */
     func stop() {
         //free the port
         self.listenSocket.release()
@@ -131,12 +125,12 @@ public class SocketServer {
     }
     
     /**
-     * Locking mechanism for holding thread until a 
-     * new socket connection is ready.
-     * 
-     * @param handle NSLock
-     * @param closure Code that will run when the lock has been altered.
-     */
+        Locking mechanism for holding thread until a 
+        new socket connection is ready.
+        
+        @param handle NSLock
+        @param closure Code that will run when the lock has been altered.
+    */
     private func lock(handle: NSLock, closure: () -> ()) {
         handle.lock()
         closure()
@@ -144,8 +138,8 @@ public class SocketServer {
     }
     
     /**
-     * Writes the response to the client socket.
-     */
+        Writes the response to the client socket.
+    */
     private func respond(socket: Socket, response: Response, keepAlive: Bool) throws -> Bool {
         try socket.writeUTF8("HTTP/1.1 \(response.statusCode) \(response.reasonPhrase)\r\n")
     

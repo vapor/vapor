@@ -4,21 +4,45 @@ public protocol ResponseWriter {
     func write(data: [UInt8])
 }
 
+/**
+    Responses that redirect to a supplied URL.
+ */
 public class Redirect: Response {
+
+    ///The URL string for redirect
     var redirectLocation: String
 
+    /**
+        Redirect headers return normal `Response` headers
+        while adding `Location`.
+
+        @return [String: String] Dictionary of headers
+     */
     override func headers() -> [String: String] {
         var headers = super.headers()
         headers["Location"] = self.redirectLocation
         return headers
     }
 
+    /**
+        Creates a `Response` object that redirects
+        to a given URL string.
+
+        - parameter redirectLocation: The URL string for redirect
+        
+        - returns Response
+     */
     public init(to redirectLocation: String) {
         self.redirectLocation = redirectLocation
         super.init(statusCode: 301, data: [], contentType: .None)
     }
 }
 
+/**
+    Responses are objects responsible for returning
+    data to the HTTP request such as the body, status 
+    code and headers.
+ */
 public class Response {
 
     public enum SerializationError: ErrorType {
