@@ -2,7 +2,7 @@ import Foundation
 
 public class Server: SocketServer {
     
-    public static let VERSION = "1.0.3"
+    public static let VERSION = "1.0.4"
     
     private let router = Router()
 
