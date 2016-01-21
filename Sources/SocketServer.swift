@@ -17,7 +17,7 @@ public class SocketServer {
     
     /**
         Starts the server on a given port.
-        @param listenPort The port to listen on.
+        - parameter listenPort: The port to listen on.
     */
     func start(listenPort: in_port_t) throws {
         //stop the server if it's running
@@ -100,7 +100,7 @@ public class SocketServer {
     /**
         Returns a closure that given a Request returns a Response
         
-        @return DispatchResponse
+        - returns: DispatchResponse
     */
     func dispatch(method: Request.Method, path: String) -> (Request -> Response) {
         return { _ in 
@@ -128,8 +128,8 @@ public class SocketServer {
         Locking mechanism for holding thread until a 
         new socket connection is ready.
         
-        @param handle NSLock
-        @param closure Code that will run when the lock has been altered.
+        - parameter handle: NSLock
+        - parameter closure: Code that will run when the lock has been altered.
     */
     private func lock(handle: NSLock, closure: () -> ()) {
         handle.lock()
