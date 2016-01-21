@@ -145,7 +145,7 @@ public class Response {
     }
 
     convenience init(error: String) {
-        let object: [String: AnyObject] = [
+        let object: [String: Any] = [
             "error": true,
             "message": error
         ]
