@@ -4,9 +4,9 @@
 
 A Laravel/Lumen Inspired Web Framework for Swift that works on iOS, OS X, and Ubuntu.
 
-[x] Insanely fast (25ms from cold start)
-[x] Beautiful syntax
-[x] Type Safe
+- [x] Insanely fast (25ms from cold start)
+- [x] Beautiful syntax
+- [x] Type Safe
 
 ## Getting Started
 
