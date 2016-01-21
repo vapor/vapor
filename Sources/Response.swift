@@ -149,7 +149,7 @@ public class Response {
             "error": true,
             "message": error
         ]
-        try! self.init(statusCode: 500, jsonObject: object as! AnyObject)
+        try! self.init(statusCode: 500, jsonObject: object as! Any)
     }
 
     convenience init(statusCode: Int, html: String) {
