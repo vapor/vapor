@@ -145,11 +145,11 @@ public class Response {
     }
 
     convenience init(error: String) {
-        let object = [
+        let object: [String: AnyObject] = [
             "error": true,
             "message": error
-        ] as! AnyObject
-        try! self.init(statusCode: 500, jsonObject: object)
+        ]
+        try! self.init(statusCode: 500, jsonObject: object as! AnyObject)
     }
 
     convenience init(statusCode: Int, html: String) {
