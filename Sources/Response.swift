@@ -126,16 +126,11 @@ public class Response {
     func headers() -> [String: String] {
         var headers = ["Server" : "Vapor \(Server.VERSION)"]
 
-        switch self.status {
-        case .OK:
-            switch self.contentType {
-            case .Json: 
-                headers["Content-Type"] = "application/json"
-            case .Html: 
-                headers["Content-Type"] = "text/html"
-            default:
-                break
-            }
+        switch self.contentType {
+        case .Json: 
+            headers["Content-Type"] = "application/json"
+        case .Html: 
+            headers["Content-Type"] = "text/html"
         default:
             break
         }
@@ -147,6 +142,13 @@ public class Response {
         self.statusCode = statusCode
         self.data = data
         self.contentType = contentType
+    }
+
+    convenience init(error: String) {
+        try! self.init(statusCode: 500, jsonObject: [
+            "error": true,
+            "message": error
+        ])
     }
 
     convenience init(statusCode: Int, html: String) {
