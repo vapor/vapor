@@ -154,6 +154,8 @@ To deploy to DigitalOcean, simply
 
 My website `http://tanner.xyz` is currently running using this Vapor.
 
-## Swifter
+## Attributions
 
-This project is based on [Swifter](https://github.com/glock45/swifter)
+This project is based on [Swifter](https://github.com/glock45/swifter) by Damian Kołakowski. It uses compatibilty code from [NSLinux](https://github.com/johnno1962/NSLinux) by johnno1962.
+
+Go checkout and star their repos.

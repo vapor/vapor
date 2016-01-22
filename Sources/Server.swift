@@ -1,3 +1,7 @@
+//
+// Based on HttpServer from Swifter (https://github.com/glock45/swifter) by Damian Kołakowski.
+//
+
 import Foundation
 
 public class Server: SocketServer {

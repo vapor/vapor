@@ -1,3 +1,7 @@
+//
+// Based on NSLinux (https://github.com/johnno1962/NSLinux) by johnno1962.
+//
+
 import Foundation
 
 extension String {

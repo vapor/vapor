@@ -1,3 +1,7 @@
+//
+// Based on HttpRouter from Swifter (https://github.com/glock45/swifter) by Damian Kołakowski.
+//
+
 import Foundation
 
 class Router {
