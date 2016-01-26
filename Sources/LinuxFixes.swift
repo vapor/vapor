@@ -82,10 +82,6 @@ extension String {
         return out
     }
 
-    func stringByReplacingOccurrencesOfString( str1: String, withString str2: String ) -> String {
-        return componentsSeparatedByString( str1 ).joinWithSeparator( str2 )
-    }
-
     func rangeOfString( str: String ) -> Range<Int>? {
         var start = -1
         withCString { (bytes) in
