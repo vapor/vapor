@@ -20,7 +20,7 @@ public class View {
 	}
 
 	public func render() -> Response {
-        return Response(statusCode: 200, data: self.bytes, contentType: .Html)
+        return Response(status: .OK, data: self.bytes, contentType: .Html)
 	}
 
 }

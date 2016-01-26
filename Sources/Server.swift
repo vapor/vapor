@@ -9,6 +9,7 @@ public class Server: SocketServer {
     public static let VERSION = "1.0.5"
     
     private let router = Router()
+    public var bootstrap = Bootstrap()
 
     public override init() {
 
@@ -17,23 +18,30 @@ public class Server: SocketServer {
     func parseRoutes() {
         for route in Route.routes {
             self.router.register(route.method.rawValue, path: route.path) { request in 
-                let response = route.closure(request: request)
+                self.bootstrap.request(request)
 
-                if let html = response as? String {
-                    return Response(statusCode: 200, html: html)
-                } else if let view = response as? View {
-                    return view.render()
-                } else if let response = response as? Response {
-                    return response
-                } else if let object = response as? AnyObject {
+                let closureResult = route.closure(request: request)
+                let response: Response
+
+                if let html = closureResult as? String {
+                    response = Response(status: .OK, html: html)
+                } else if let view = closureResult as? View {
+                    response = view.render()
+                } else if let result = closureResult as? Response {
+                    response = result
+                } else if let object = closureResult as? AnyObject {
                     do {
-                        return try Response(statusCode: 200, jsonObject: object)    
+                        response = try Response(status: .OK, jsonObject: object)    
                     } catch {
-                        return Response(error: "JSON serialization error: \(error)")
+                        response = Response(error: "JSON serialization error: \(error)")
                     }
                 } else {
-                    return Response(statusCode: 200, text: "")
+                    response = Response(status: .OK, text: "")
                 }
+
+                self.bootstrap.respond(request, response: response)
+
+                return response
             }
         }
     }
@@ -71,7 +79,7 @@ public class Server: SocketServer {
                     response += "</table>"
 
                     return { _ in 
-                        return Response(statusCode: 200, html: response)
+                        return Response(status: .OK, html: response)
                     }
                 } catch {
                     //continue to not found
@@ -81,7 +89,7 @@ public class Server: SocketServer {
                     var array = [UInt8](count: fileBody.length, repeatedValue: 0)
                     fileBody.getBytes(&array, length: fileBody.length)
                     return { _ in 
-                        return Response(statusCode: 200, data: array, contentType: .Text)
+                        return Response(status: .OK, data: array, contentType: .Text)
                     }
                     
                 }

@@ -25,7 +25,19 @@ class Parser {
         let request = Request(method: method)
         request.path = statusLineTokens[1]
         request.data = self.extractQueryParams(request.path)
-        request.headers = try readHeaders(socket)
+        request.headers = try self.readHeaders(socket)
+
+        if let cookieString = request.headers["cookie"] {
+            let cookies = cookieString.split(";")
+            for cookie in cookies {
+                let cookieArray = cookie.split("=")
+                if cookieArray.count == 2 {
+                    let key = cookieArray[0].stringByTrimmingCharactersInSet(NSCharacterSet.whitespaceCharacterSet())
+                    request.cookies[key] = cookieArray[1]
+                }
+            }
+        }
+
         if let contentLength = request.headers["content-length"], let contentLengthValue = Int(contentLength) {
             request.body = try readBody(socket, size: contentLengthValue)
         }

@@ -108,7 +108,7 @@ public class SocketServer {
     */
     func dispatch(method: Request.Method, path: String) -> (Request -> Response) {
         return { _ in 
-            return Response(statusCode: 404, text: "Page not found") 
+            return Response(status: .NotFound, text: "Page not found") 
         }
     }
     
@@ -145,7 +145,7 @@ public class SocketServer {
         Writes the response to the client socket.
     */
     private func respond(socket: Socket, response: Response, keepAlive: Bool) throws -> Bool {
-        try socket.writeUTF8("HTTP/1.1 \(response.statusCode) \(response.reasonPhrase)\r\n")
+        try socket.writeUTF8("HTTP/1.1 \(response.status.code) \(response.reasonPhrase)\r\n")
     
 
         var headers = response.headers()

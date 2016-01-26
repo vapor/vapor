@@ -26,11 +26,14 @@ public class Request {
     public var parameters: [String: String] = [:]
     ///GET or POST data
     public var data: [String: String] = [:]
+
+    public var cookies: [String: String] = [:]
     
     var path: String = ""
     var headers: [String: String] = [:]
     var body: [UInt8] = []
     var address: String? = ""
+    var session: Session = Session()
 
     init(method: Method) {
         self.method = method

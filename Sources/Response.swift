@@ -34,7 +34,7 @@ public class Redirect: Response {
      */
     public init(to redirectLocation: String) {
         self.redirectLocation = redirectLocation
-        super.init(statusCode: 301, data: [], contentType: .None)
+        super.init(status: .MovedPermanently, data: [], contentType: .None)
     }
 }
 
@@ -52,46 +52,33 @@ public class Response {
 
     typealias WriteClosure = (ResponseWriter) throws -> Void
 
-    let statusCode: Int
+    let status: Status
     let data: [UInt8]
     let contentType: ContentType
+    public var cookies: [String: String] = [:]
 
     enum ContentType {
         case Text, Html, Json, None
     }
 
-    enum Status {
+    public enum Status {
         case OK, Created, Accepted
         case MovedPermanently
         case BadRequest, Unauthorized, Forbidden, NotFound
-        case InternalServerError
+        case ServerError
         case Unknown
-    }
+        case Custom(Int)
 
-    var status: Status {
-        switch self.statusCode {
-        case 200:
-            return .OK
-        case 201:
-            return .Created
-        case 202:
-            return .Accepted
-        case 301:
-            return .MovedPermanently
-        case 400:
-            return .BadRequest
-        case 401:
-            return .Unauthorized
-        case 403:
-            return .Forbidden
-        case 404:
-            return .NotFound
-        case 500:
-            return .InternalServerError
-        default: 
-            return .Unknown
+        public var code: Int {
+            switch self {
+                case .Custom(let code):
+                    return code
+                default:
+                    return 200
+            }
         }
     }
+
     var reasonPhrase: String {
         switch self.status {
         case .OK:
@@ -110,10 +97,12 @@ public class Response {
             return "Forbidden"
         case .NotFound: 
             return "Not Found"
-        case .InternalServerError: 
+        case .ServerError: 
             return "Internal Server Error"
         case .Unknown:
             return "Unknown"
+        case .Custom:
+            return "Custom"    
         }
     }
 
@@ -125,6 +114,18 @@ public class Response {
 
     func headers() -> [String: String] {
         var headers = ["Server" : "Vapor \(Server.VERSION)"]
+
+        if self.cookies.count > 0 {
+            var cookieString = ""
+            for (key, value) in self.cookies {
+                if cookieString != "" {
+                    cookieString += ";"
+                }
+
+                cookieString += "\(key)=\(value)"
+            }
+            headers["Set-Cookie"] = cookieString
+        }
 
         switch self.contentType {
         case .Json: 
@@ -138,8 +139,8 @@ public class Response {
         return headers
     }
 
-    init(statusCode:Int, data: [UInt8], contentType: ContentType) {
-        self.statusCode = statusCode
+    init(status: Status, data: [UInt8], contentType: ContentType) {
+        self.status = status
         self.data = data
         self.contentType = contentType
     }
@@ -149,21 +150,21 @@ public class Response {
             "error": true,
             "message": error
         ]
-        try! self.init(statusCode: 500, jsonObject: object as! AnyObject)
+        try! self.init(status: .ServerError, jsonObject: object as! AnyObject)
     }
 
-    convenience init(statusCode: Int, html: String) {
+    convenience init(status: Status, html: String) {
         let serialised = "<html><meta charset=\"UTF-8\"><body>\(html)</body></html>"
         let data = [UInt8](serialised.utf8)
-        self.init(statusCode: statusCode, data: data, contentType: .Html)
+        self.init(status: status, data: data, contentType: .Html)
     }
 
-    convenience init(statusCode: Int, text: String) {
+    public convenience init(status: Status, text: String) {
         let data = [UInt8](text.utf8)
-        self.init(statusCode: statusCode, data: data, contentType: .Text)
+        self.init(status: status, data: data, contentType: .Text)
     }
 
-    convenience init(statusCode: Int, jsonObject: AnyObject) throws {
+    convenience init(status: Status, jsonObject: AnyObject) throws {
         guard NSJSONSerialization.isValidJSONObject(jsonObject) else {
             throw SerializationError.InvalidObject
         }
@@ -171,12 +172,12 @@ public class Response {
         let json = try NSJSONSerialization.dataWithJSONObject(jsonObject, options: NSJSONWritingOptions.PrettyPrinted)
         let data = Array(UnsafeBufferPointer(start: UnsafePointer<UInt8>(json.bytes), count: json.length))
 
-        self.init(statusCode: statusCode, data: data, contentType: .Json)
+        self.init(status: status, data: data, contentType: .Json)
     }
 }
 
 
 func ==(left: Response, right: Response) -> Bool {
-    return left.statusCode == right.statusCode
+    return left.status.code == right.status.code
 }
 

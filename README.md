@@ -77,6 +77,31 @@ Route.get("/") { request in
 
 Just put the `index.html` in the `Resources` folder at the root of your project and it will be served.
 
+### Response
+
+A manual response can be returned if you want to set something like `cookies`.
+
+```swift
+Route.get("cookie") { request in
+	let response = Response(status: .OK, text: "Cookie was set")
+	response.cookies["test"] = "123"
+	return response
+}
+```
+
+The Status enum above (`.OK`) can be one of the following, or custom.
+
+```
+public enum Status {
+    case OK, Created, Accepted
+    case MovedPermanently
+    case BadRequest, Unauthorized, Forbidden, NotFound
+    case ServerError
+    case Unknown
+    case Custom(Int)
+}
+```
+
 ### Public
 
 All files put in the `Public` folder at the root of your project will be available at the root of your domain. This is a great place to put your assets (`.css`, `.js`, `.png`, etc).
@@ -88,9 +113,24 @@ Every route call gets passed a `Request` object. This can be used to grab query 
 This is a list of the properties available on the request object.
 
 ```swift
-public let method: Method
-public var parameters: [String: String] = [:]
-public var data: [String: String] = [:]
+let method: Method
+var parameters: [String: String] = [:]
+var data: [String: String] = [:]
+var cookies: [String: String]
+var session: Session
+```
+
+### Session
+
+Sessions will be kept track of using the `vapor-session` cookie. The default (and currently only) session driver is `.Memory`.
+
+```swift
+if let name = request.session.data["name"] {
+	//name was in session	
+}
+
+//store name in session
+request.session.data["name"] = "Vapor"
 ```
 
 ## Controllers
@@ -134,6 +174,28 @@ Route.resource("/user", controller: UserController()) //not yet implemented
 ```
 
 This will create the appropriate `GET`, `POST`, `DELETE`, etc methods for individual and groups of users. 
+
+## Bootstrap
+
+Create a subclass of `Bootstrap` to hook into server requests and responses. Set the `server.boostrap` property to your subclass.
+
+```
+class MyBootstrap: Bootstrap {
+	override func request(request: Request) {
+		super.request(request)
+
+		print("Incoming request from \(request.address)")
+	}
+
+	override func respond(request: Request, response: Response) {
+		super.respond(request, response: response)
+
+		print("Responding to request")
+	}
+}
+
+server.bootstrap = MyBootstrap()
+```
 
 ## Deploying
 
