@@ -8,7 +8,7 @@ public protocol ResponseConvertible {
 
 extension String: ResponseConvertible {
 	public func response() -> Response {
-		return Response(status: .OK, text: self)
+		return Response(status: .OK, html: self)
 	}
 }
 
