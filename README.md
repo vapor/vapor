@@ -139,7 +139,7 @@ Controllers are great for keeping your code organized. `Route` directives can ta
 
 `main.swift`
 ```swift
-Route.get("/heartbeat/alternate", closure: HeartbeatController().index)
+Route.get("heartbeat", closure: HeartbeatController().index)
 ```
 
 To pass a function name as a closure like above, the closure must have the function signature 
