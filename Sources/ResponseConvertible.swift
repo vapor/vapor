@@ -21,3 +21,13 @@ extension Dictionary: ResponseConvertible {
         }
 	}
 }
+
+extension Array: ResponseConvertible {
+	public func response() -> Response {
+		do {
+            return try Response(status: .OK, jsonObject: (self as! AnyObject))    
+        } catch {
+            return Response(error: "JSON serialization error: \(error)")
+        }
+	}
+}
