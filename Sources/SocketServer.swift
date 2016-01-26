@@ -63,9 +63,11 @@ public class SocketServer {
     */
     func loop() {
         #if os(Linux)
-            while true {
+            print("Press return to stop it.")
+            while readLine() == nil {
                 sleep(1)
             }
+            stop()
         #else
             NSRunLoop.mainRunLoop().run()
         #endif
