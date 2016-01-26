@@ -63,7 +63,7 @@ Route.get("version") { request in
 }
 ```
 
-This responds to all requests to `http://example.com/version` with the JSON dictionary `{"version": "1.0"}` and correct headers.
+This responds to all requests to `http://example.com/version` with the JSON dictionary `{"version": "1.0"}` and `Content-Type: application/json`.
 
 ### Views
 
@@ -75,7 +75,23 @@ Route.get("/") { request in
 }
 ```
 
-Just put the `index.html` in the `Resources` folder at the root of your project and it will be served.
+Or Mustache templates (coming soon).
+
+`index.mustache`
+
+```mustache
+<html>
+	<h1>{{ message }}</h1>
+</html>
+```
+
+```swift
+Route.get("/") { request in
+	return View(path: "index.mustache", ["message": "Hello"])
+}
+```
+
+Just put the View file in the `Resources` folder at the root of your project and it will be served.
 
 ### Response
 
@@ -89,7 +105,7 @@ Route.get("cookie") { request in
 }
 ```
 
-The Status enum above (`.OK`) can be one of the following, or custom.
+The Status enum above (`.OK`) can be one of the following.
 
 ```swift
 public enum Status {
@@ -100,6 +116,12 @@ public enum Status {
     case Unknown
     case Custom(Int)
 }
+```
+
+Or something custom.
+
+```swift
+let status: Status = .Custom(420) //https://dev.twitter.com/overview/api/response-codes
 ```
 
 ### Public
@@ -114,8 +136,8 @@ This is a list of the properties available on the request object.
 
 ```swift
 let method: Method
-var parameters: [String: String]
-var data: [String: String]
+var parameters: [String: String] //URL parameters like id in user/:id
+var data: [String: String] //GET or POST data
 var cookies: [String: String]
 var session: Session
 ```
