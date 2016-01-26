@@ -65,16 +65,28 @@ public class Response {
         case OK, Created, Accepted
         case MovedPermanently
         case BadRequest, Unauthorized, Forbidden, NotFound
-        case ServerError
+        case Error
         case Unknown
         case Custom(Int)
 
         public var code: Int {
             switch self {
+                case .OK: return 200
+                case .Created: return 201
+                case .Accepted: return 202
+
+                case .MovedPermanently: return 301
+
+                case .BadRequest: return 400
+                case .Unauthorized: return 401
+                case .Forbidden: return 403
+                case .NotFound: return 404
+
+                case .Error: return 500 
+
+                case .Unknown: return 0
                 case .Custom(let code):
                     return code
-                default:
-                    return 200
             }
         }
     }
@@ -87,8 +99,10 @@ public class Response {
             return "Created"
         case .Accepted: 
             return "Accepted"
+
         case .MovedPermanently: 
             return "Moved Permanently"
+
         case .BadRequest: 
             return "Bad Request"
         case .Unauthorized: 
@@ -97,8 +111,10 @@ public class Response {
             return "Forbidden"
         case .NotFound: 
             return "Not Found"
-        case .ServerError: 
+
+        case .Error: 
             return "Internal Server Error"
+            
         case .Unknown:
             return "Unknown"
         case .Custom:
@@ -150,7 +166,7 @@ public class Response {
             "error": true,
             "message": error
         ]
-        try! self.init(status: .ServerError, jsonObject: object as! AnyObject)
+        try! self.init(status: .Error, jsonObject: object as! AnyObject)
     }
 
     convenience init(status: Status, html: String) {
