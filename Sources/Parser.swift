@@ -43,7 +43,7 @@ class Parser {
             let body = try readBody(socket, size: contentLengthValue)
             
             if let bodyString = NSString(bytes: body, length: body.count, encoding: NSUTF8StringEncoding) {
-                let postArray = (bodyString as! String).split("&")
+                let postArray = bodyString.description.split("&")
                 for postItem in postArray {
                     let pair = postItem.split("=")
                     if pair.count == 2 {
