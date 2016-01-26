@@ -4,9 +4,9 @@
 
 #if os(Linux)
     import Glibc
-#else
-    import Foundation
 #endif
+
+import Foundation
 
 enum ParserError: ErrorType {
     case InvalidStatusLine(String)
