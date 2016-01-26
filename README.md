@@ -114,8 +114,8 @@ This is a list of the properties available on the request object.
 
 ```swift
 let method: Method
-var parameters: [String: String] = [:]
-var data: [String: String] = [:]
+var parameters: [String: String]
+var data: [String: String]
 var cookies: [String: String]
 var session: Session
 ```
