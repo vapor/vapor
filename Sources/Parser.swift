@@ -32,7 +32,7 @@ class Parser {
             for cookie in cookies {
                 let cookieArray = cookie.split("=")
                 if cookieArray.count == 2 {
-                    let key = cookieArray[0].stringByTrimmingCharactersInSet(NSCharacterSet.whitespaceCharacterSet())
+                    let key = cookieArray[0].stringByReplacingOccurrencesOfString(" ", withString: "")
                     request.cookies[key] = cookieArray[1]
                 }
             }
