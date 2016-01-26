@@ -192,7 +192,7 @@ Here the `HeartbeatControllers`'s index method will be called when `http://examp
 Resource controllers take advantage of CRUD-like `index`, `show`, `store`, `update`, `destroy` methods to make setting up REST APIs easy.
 
 ```swift
-Route.resource("user", controller: UserController()) //not yet implemented
+Route.resource("user", controller: UserController()) 
 ```
 
 This will create the appropriate `GET`, `POST`, `DELETE`, etc methods for individual and groups of users. 
