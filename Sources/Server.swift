@@ -18,6 +18,20 @@ public class Server: SocketServer {
     func parseRoutes() {
         for route in Route.routes {
             self.router.register(route.method.rawValue, path: route.path) { request in 
+
+                //grab request params
+                let routePaths = route.path.split("/")
+                for (index, path) in routePaths.enumerate() {
+                    if path.hasPrefix(":") {
+                        let requestPaths = request.path.split("/")
+                        if requestPaths.count > index {
+                            var trimPath = path
+                            trimPath.removeAtIndex(path.startIndex)
+                            request.parameters[trimPath] = requestPaths[index]
+                        }
+                    }
+                }
+
                 self.bootstrap.request(request)
 
                 let closureResult = route.closure(request: request)

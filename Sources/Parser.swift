@@ -21,6 +21,7 @@ class Parser {
             throw ParserError.InvalidStatusLine(statusLine)
         }
 
+
         let method = Request.Method(rawValue: statusLineTokens[0]) ?? .Unknown
         let request = Request(method: method)
         request.path = statusLineTokens[1]
@@ -39,8 +40,22 @@ class Parser {
         }
 
         if let contentLength = request.headers["content-length"], let contentLengthValue = Int(contentLength) {
-            request.body = try readBody(socket, size: contentLengthValue)
+            let body = try readBody(socket, size: contentLengthValue)
+            
+            if let bodyString = NSString(bytes: body, length: body.count, encoding: NSUTF8StringEncoding) {
+                let postArray = (bodyString as String).split("&")
+                for postItem in postArray {
+                    let pair = postItem.split("=")
+                    if pair.count == 2 {
+                        request.data[pair[0]] = pair[1]
+                    }
+                }
+            }
+
+            request.body = body
         }
+
+
         return request
     }
     

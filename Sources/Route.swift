@@ -36,6 +36,14 @@ public class Route {
 		let _ = Route(method: .Delete, path: path, closure: closure)
 	}
 
+	public class func any(path: String, closure: Closure) {
+		self.get(path, closure: closure)
+		self.post(path, closure: closure)
+		self.put(path, closure: closure)
+		self.patch(path, closure: closure)
+		self.delete(path, closure: closure)
+	}
+
 
 	public class func resource(path: String, controller: Controller) {
 		self.get(path, closure: controller.index)
