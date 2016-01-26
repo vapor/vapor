@@ -91,7 +91,7 @@ Route.get("cookie") { request in
 
 The Status enum above (`.OK`) can be one of the following, or custom.
 
-```
+```swift
 public enum Status {
     case OK, Created, Accepted
     case MovedPermanently
