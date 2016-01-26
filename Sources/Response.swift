@@ -192,6 +192,11 @@ public class Response {
     }
 }
 
+extension Response: ResponseConvertible {
+    public func response() -> Response {
+        return self
+    }
+}
 
 func ==(left: Response, right: Response) -> Bool {
     return left.status.code == right.status.code

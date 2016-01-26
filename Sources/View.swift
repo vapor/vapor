@@ -19,8 +19,10 @@ public class View {
         self.bytes = array
 	}
 
-	public func render() -> Response {
-        return Response(status: .OK, data: self.bytes, contentType: .Html)
-	}
+}
 
+extension View: ResponseConvertible {
+    public func response() -> Response {
+        return Response(status: .OK, data: self.bytes, contentType: .Html)
+    }
 }

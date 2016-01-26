@@ -6,7 +6,7 @@ import Foundation
 
 public class Server: SocketServer {
     
-    public static let VERSION = "1.0.5"
+    public static let VERSION = "1.1.1"
     
     private let router = Router()
     public var bootstrap = Bootstrap()
@@ -34,24 +34,7 @@ public class Server: SocketServer {
 
                 self.bootstrap.request(request)
 
-                let closureResult = route.closure(request: request)
-                let response: Response
-
-                if let html = closureResult as? String {
-                    response = Response(status: .OK, html: html)
-                } else if let view = closureResult as? View {
-                    response = view.render()
-                } else if let result = closureResult as? Response {
-                    response = result
-                } else if let object = closureResult as? AnyObject {
-                    do {
-                        response = try Response(status: .OK, jsonObject: object)    
-                    } catch {
-                        response = Response(error: "JSON serialization error: \(error)")
-                    }
-                } else {
-                    response = Response(status: .OK, text: "")
-                }
+                let response = route.closure(request: request).response()
 
                 self.bootstrap.respond(request, response: response)
 
