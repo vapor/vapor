@@ -6,7 +6,7 @@ import Foundation
 
 public class Server: SocketServer {
     
-    public static let VERSION = "1.1.1"
+    public static let VERSION = "1.1.4"
     
     private let router = Router()
     public var bootstrap = Bootstrap()
