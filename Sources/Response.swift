@@ -162,11 +162,9 @@ public class Response {
     }
 
     public convenience init(error: String) {
-        let object: [String: Any] = [
-            "error": true,
-            "message": error
-        ]
-        try! self.init(status: .Error, json: object)
+        let text = "{\n\t\"error\": true,\n\t\"message\":\"\(error)\"}"
+        let data = [UInt8](text.utf8)
+        self.init(status: .Error, data: data, contentType: .Json)
     }
 
     public convenience init(status: Status, html: String) {
