@@ -166,7 +166,7 @@ public class Response {
             "error": true,
             "message": error
         ]
-        try! self.init(status: .Error, jsonObject: object as! AnyObject)
+        try! self.init(status: .Error, json: object as! AnyObject)
     }
 
     convenience init(status: Status, html: String) {
@@ -180,8 +180,8 @@ public class Response {
         self.init(status: status, data: data, contentType: .Text)
     }
 
-    convenience init(status: Status, jsonObject: Any) throws {
-        guard let jsonObject = jsonObject as? AnyObject else {
+    convenience init(status: Status, json: Any) throws {
+        guard let jsonObject = json as? AnyObject else {
             throw SerializationError.InvalidObject
         }
         guard NSJSONSerialization.isValidJSONObject(jsonObject) else {

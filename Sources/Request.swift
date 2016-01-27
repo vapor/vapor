@@ -33,7 +33,7 @@ public class Request {
     var headers: [String: String] = [:]
     var body: [UInt8] = []
     var address: String? = ""
-    var session: Session = Session()
+    public var session: Session = Session()
 
     init(method: Method) {
         self.method = method

@@ -19,8 +19,9 @@ public class Server: SocketServer {
         for route in Route.routes {
             self.router.register(route.method.rawValue, path: route.path) { request in 
 
+
                 //grab request params
-                let routePaths = route.path.split("/")
+                let routePaths = route.path.split("?")[0].split("/")
                 for (index, path) in routePaths.enumerate() {
                     if path.hasPrefix(":") {
                         let requestPaths = request.path.split("/")
