@@ -4,10 +4,10 @@ protocol SessionDriver {
 
 public class Session {
 
-	public enum Type {
+	public enum DriverType {
 		case File, Memory
 	}
-	public static var type: Type = .Memory {
+	public static var type: DriverType = .Memory {
 		didSet {
 			switch self.type {
 				case .Memory:
