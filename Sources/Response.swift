@@ -161,12 +161,12 @@ public class Response {
         self.contentType = contentType
     }
 
-    public convenience init(error: string) {
-        let object: [string: any] = [
+    public convenience init(error: String) {
+        let object: [String: Any] = [
             "error": true,
             "message": error
         ]
-        try! self.init(status: .error, json: object as! anyobject)
+        try! self.init(status: .Error, json: object)
     }
 
     public convenience init(status: Status, html: String) {
