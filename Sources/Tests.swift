@@ -1,4 +1,4 @@
-import Spectre
+/*import Spectre
 
 public class Tests {
 	public class func run() {
@@ -19,4 +19,4 @@ public class Tests {
 			}
 		}
 	}
-}
+}*/
