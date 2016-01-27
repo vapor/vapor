@@ -25,7 +25,7 @@ extension Dictionary: ResponseConvertible {
 extension Array: ResponseConvertible {
 	public func response() -> Response {
 		do {
-            return try Response(status: .OK, json: (self as! AnyObject))    
+            return try Response(status: .OK, json: self)    
         } catch {
             return Response(error: "JSON serialization error: \(error)")
         }

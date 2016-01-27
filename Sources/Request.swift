@@ -29,7 +29,7 @@ public class Request {
 
     public var cookies: [String: String] = [:]
     
-    var path: String = ""
+    public var path: String = ""
     var headers: [String: String] = [:]
     var body: [UInt8] = []
     var address: String? = ""
