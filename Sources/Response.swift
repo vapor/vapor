@@ -179,8 +179,22 @@ public class Response {
     }
 
     public convenience init(status: Status, json: Any) throws {
-        let string = JSONSerializer.serialize(json)
-        let data = [UInt8](string.utf8)
+        let data: [UInt8]
+
+        if let jsonObject = json as? AnyObject {
+            guard NSJSONSerialization.isValidJSONObject(jsonObject) else {
+                throw SerializationError.InvalidObject
+            }
+
+            let json = try NSJSONSerialization.dataWithJSONObject(jsonObject, options: NSJSONWritingOptions.PrettyPrinted)
+            data = Array(UnsafeBufferPointer(start: UnsafePointer<UInt8>(json.bytes), count: json.length))
+        } else {
+            //fall back to manual serializer
+            let string = JSONSerializer.serialize(json)
+            data = [UInt8](string.utf8)
+        }
+       
+
         self.init(status: status, data: data, contentType: .Json)
     }
 }
