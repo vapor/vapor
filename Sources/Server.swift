@@ -44,8 +44,20 @@ public class Server: SocketServer {
         }
     }
 
-    public func run(port port: Int = 80) {
+    public func run(port inPort: Int = 80) {
         self.parseRoutes()
+
+        var port = inPort
+
+        if Process.arguments.count >= 2 {
+            let secondArg = Process.arguments[1]
+            if secondArg.hasPrefix("--port=") {
+                let portString = secondArg.split("=")[1]
+                if let portInt = Int(portString) {
+                    port = portInt
+                }
+            }
+        }
 
         do {
             try self.start(port)
