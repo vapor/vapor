@@ -47,7 +47,7 @@ public class Session {
 	}
 
 	var key: String?
-	var data: [String: String] = [:] {
+	public var data: [String: String] = [:] {
 		didSet {
 			if self.key == nil {
 				let key = "12931923912" //TODO: generate random key

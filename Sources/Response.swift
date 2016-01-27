@@ -161,15 +161,15 @@ public class Response {
         self.contentType = contentType
     }
 
-    convenience init(error: String) {
-        let object: [String: Any] = [
+    public convenience init(error: string) {
+        let object: [string: any] = [
             "error": true,
             "message": error
         ]
-        try! self.init(status: .Error, json: object as! AnyObject)
+        try! self.init(status: .error, json: object as! anyobject)
     }
 
-    convenience init(status: Status, html: String) {
+    public convenience init(status: Status, html: String) {
         let serialised = "<html><meta charset=\"UTF-8\"><body>\(html)</body></html>"
         let data = [UInt8](serialised.utf8)
         self.init(status: status, data: data, contentType: .Html)
@@ -180,7 +180,7 @@ public class Response {
         self.init(status: status, data: data, contentType: .Text)
     }
 
-    convenience init(status: Status, json: Any) throws {
+    public convenience init(status: Status, json: Any) throws {
         guard let jsonObject = json as? AnyObject else {
             throw SerializationError.InvalidObject
         }
