@@ -1,3 +1,4 @@
+let currentlyTesting = false
 /*import Spectre
 
 public class Tests {
