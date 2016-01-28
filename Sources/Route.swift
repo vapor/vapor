@@ -2,7 +2,7 @@ public class Route {
 
 	static var routes: [Route] = []
 
-	public typealias Closure = (request: Request) -> ResponseConvertible
+	public typealias Closure = ((request: Request) throws -> ResponseConvertible) 
 
 	let method: Request.Method
 	let path: String

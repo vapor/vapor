@@ -19,7 +19,6 @@ public class Server: SocketServer {
         for route in Route.routes {
             self.router.register(route.method.rawValue, path: route.path) { request in 
 
-
                 //grab request params
                 let routePaths = route.path.split("?")[0].split("/")
                 for (index, path) in routePaths.enumerate() {
@@ -35,8 +34,14 @@ public class Server: SocketServer {
 
                 self.bootstrap.request(request)
 
-                let response = route.closure(request: request).response()
-
+                let response: Response
+                do {
+                    response = try route.closure(request: request).response()
+                } catch View.Error.InvalidPath {
+                    response = Response(status: .NotFound, text: "View not found")
+                } catch {
+                    response = Response(error: "Server Error: \(error)")
+                }
                 self.bootstrap.respond(request, response: response)
 
                 return response
