@@ -165,9 +165,9 @@ public class Request {
                 body.removeRange(Range(body.count-matchOffset..<body.count))
                 if body.last == Request.NL {
                     body.removeLast()
-                    if body.last == Request.CR {
-                        body.removeLast()
-                    }
+                }
+                if body.last == Request.CR {
+                    body.removeLast()
                 }
                 return body
             }
