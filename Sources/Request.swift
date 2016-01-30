@@ -162,7 +162,7 @@ public class Request {
             matchOffset = ( x == boundaryArray[matchOffset] ? matchOffset + 1 : 0 )
             body.append(x)
             if matchOffset == boundaryArray.count {
-                body.removeRange(Range<Int>(start: body.count-matchOffset, end: body.count))
+                body.removeRange(Range(body.count-matchOffset..<body.count))
                 if body.last == Request.NL {
                     body.removeLast()
                     if body.last == Request.CR {
