@@ -29,7 +29,7 @@ public class Redirect: Response {
         to a given URL string.
 
         - parameter redirectLocation: The URL string for redirect
-        
+
         - returns Response
      */
     public init(to redirectLocation: String) {
@@ -40,7 +40,7 @@ public class Redirect: Response {
 
 /**
     Responses are objects responsible for returning
-    data to the HTTP request such as the body, status 
+    data to the HTTP request such as the body, status
     code and headers.
  */
 public class Response {
@@ -82,7 +82,7 @@ public class Response {
                 case .Forbidden: return 403
                 case .NotFound: return 404
 
-                case .Error: return 500 
+                case .Error: return 500
 
                 case .Unknown: return 0
                 case .Custom(let code):
@@ -95,36 +95,36 @@ public class Response {
         switch self.status {
         case .OK:
             return "OK"
-        case .Created: 
+        case .Created:
             return "Created"
-        case .Accepted: 
+        case .Accepted:
             return "Accepted"
 
-        case .MovedPermanently: 
+        case .MovedPermanently:
             return "Moved Permanently"
 
-        case .BadRequest: 
+        case .BadRequest:
             return "Bad Request"
-        case .Unauthorized: 
+        case .Unauthorized:
             return "Unauthorized"
-        case .Forbidden: 
+        case .Forbidden:
             return "Forbidden"
-        case .NotFound: 
+        case .NotFound:
             return "Not Found"
 
-        case .Error: 
+        case .Error:
             return "Internal Server Error"
-            
+
         case .Unknown:
             return "Unknown"
         case .Custom:
-            return "Custom"    
+            return "Custom"
         }
     }
 
     func content() -> (length: Int, writeClosure: WriteClosure?) {
         return (self.data.count, { writer in
-            writer.write(self.data) 
+            writer.write(self.data)
         })
     }
 
@@ -144,9 +144,9 @@ public class Response {
         }
 
         switch self.contentType {
-        case .Json: 
+        case .Json:
             headers["Content-Type"] = "application/json"
-        case .Html: 
+        case .Html:
             headers["Content-Type"] = "text/html"
         default:
             break
@@ -193,9 +193,13 @@ public class Response {
             let string = JSONSerializer.serialize(json)
             data = [UInt8](string.utf8)
         }
-       
+
 
         self.init(status: status, data: data, contentType: .Json)
+    }
+
+    public func send() {
+        print("Sending")
     }
 }
 
@@ -208,4 +212,3 @@ extension Response: ResponseConvertible {
 func ==(left: Response, right: Response) -> Bool {
     return left.status.code == right.status.code
 }
-
