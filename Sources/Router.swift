@@ -5,12 +5,13 @@
 import Foundation
 
 class Router {
-    
+
     private class Node {
         var nodes = [String: Node]()
-        var handler: (Request -> Response)? = nil
+        var syncHandler: (Request -> Response)? = nil
+        var asyncHandler: ((Request, Response) -> Void)? = nil
     }
-    
+
     private var rootNode = Node()
 
     func routes() -> [String] {
@@ -20,10 +21,10 @@ class Router {
         }
         return routes
     }
-    
+
     private func routesForNode(node: Node, prefix: String = "") -> [String] {
         var result = [String]()
-        if node.handler != nil {
+        if node.syncHandler != nil {
             result.append(prefix)
         }
         for (key, child) in node.nodes {
@@ -31,8 +32,8 @@ class Router {
         }
         return result
     }
-    
-    func register(method: String?, path: String, handler: (Request -> Response)?) {
+
+    func register(method: String?, path: String, syncHandler: (Request -> Response)?) {
         var pathSegments = stripQuery(path).split("/")
         if let method = method {
             pathSegments.insert(method, atIndex: 0)
@@ -40,9 +41,20 @@ class Router {
             pathSegments.insert("*", atIndex: 0)
         }
         var pathSegmentsGenerator = pathSegments.generate()
-        inflate(&rootNode, generator: &pathSegmentsGenerator).handler = handler
+        inflate(&rootNode, generator: &pathSegmentsGenerator).syncHandler = syncHandler
     }
-    
+
+    func register(method: String?, path: String, asyncHandler: ((Request, Response) -> Void)?) {
+        var pathSegments = stripQuery(path).split("/")
+        if let method = method {
+            pathSegments.insert(method, atIndex: 0)
+        } else {
+            pathSegments.insert("*", atIndex: 0)
+        }
+        var pathSegmentsGenerator = pathSegments.generate()
+        inflate(&rootNode, generator: &pathSegmentsGenerator).asyncHandler = asyncHandler
+    }
+
     func route(method: Request.Method?, path: String) -> (Request -> Response)? {
         if let method = method {
             let pathSegments = (method.rawValue + "/" + stripQuery(path)).split("/")
@@ -60,7 +72,7 @@ class Router {
         }
         return nil
     }
-    
+
     private func inflate(inout node: Node, inout generator: IndexingGenerator<[String]>) -> Node {
         if let pathSegment = generator.next() {
             if let _ = node.nodes[pathSegment] {
@@ -72,10 +84,10 @@ class Router {
         }
         return node
     }
-    
+
     private func findHandler(inout node: Node, inout params: [String: String], inout generator: IndexingGenerator<[String]>) -> (Request -> Response)? {
         guard let pathToken = generator.next() else {
-            return node.handler
+            return node.syncHandler
         }
         let variableNodes = node.nodes.filter { $0.0.characters.first == ":" }
         if let variableNode = variableNodes.first {
@@ -90,7 +102,7 @@ class Router {
         }
         return nil
     }
-    
+
     private func stripQuery(path: String) -> String {
         if let path = path.split("?").first {
             return path

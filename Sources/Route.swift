@@ -2,23 +2,39 @@ public class Route {
 
 	static var routes: [Route] = []
 
-	public typealias Closure = ((request: Request) throws -> ResponseConvertible) 
+	public typealias Closure = ((request: Request) throws -> ResponseConvertible)
+
+    public typealias ResponseClosure = ((request: Request, inout response: Response) throws -> Void)
 
 	let method: Request.Method
 	let path: String
-	let closure: Closure
+	let syncHandler: Closure?
+	let asyncHandler: ResponseClosure?
 
-	init(method: Request.Method, path: String, closure: Closure) {
+	init(method: Request.Method, path: String, syncHandler: Closure?, asyncHandler: ResponseClosure?) {
 		self.method = method
 		self.path = path
-		self.closure = closure
+		self.syncHandler = syncHandler
+		self.asyncHandler = asyncHandler
 
 		Route.routes.append(self)
+	}
+
+	convenience init(method: Request.Method, path: String, closure: ResponseClosure) {
+		self.init(method: method, path: path, syncHandler: nil, asyncHandler: closure)
+	}
+
+	convenience init(method: Request.Method, path: String, closure: Closure) {
+		self.init(method: method, path: path, syncHandler: closure, asyncHandler: nil)
 	}
 
 	public class func get(path: String, closure: Closure) {
 		let _ = Route(method: .Get, path: path, closure: closure)
 	}
+
+    public class func get(path: String, closure: ResponseClosure) {
+		let _ = Route(method: .Get, path: path, closure: closure)
+    }
 
 	public class func post(path: String, closure: Closure) {
 		let _ = Route(method: .Post, path: path, closure: closure)
