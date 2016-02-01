@@ -219,6 +219,22 @@ class MyBootstrap: Bootstrap {
 server.bootstrap = MyBootstrap()
 ```
 
+## Async
+
+Use the `AsyncResponse` to send custom, asynchronous responses. You have full control over the response here, meaning you are responsible for writing all required headers and releasing the `Socket` when done. (Thanks @elliottminns)
+
+```swift
+Route.get("async") { request in 
+	return AsyncResponse() { socket in
+		try socket.writeUTF8("HTTP/1.1 200 OK\r\n")
+		try socket.writeUTF8("Content-Type: application/json\r\n\r\n")
+		try socket.writeUTF8("{\"hello\": \"world\"}")
+
+		socket.release()
+	}
+}
+```
+
 ## Deploying
 
 Vapor has been successfully tested on Ubuntu 14.04 LTS (DigitalOcean) and Ubuntu 15.10 (VirtualBox). 
