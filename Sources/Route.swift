@@ -1,4 +1,28 @@
 public class Route {
+    
+    public class async {
+        
+        public class func get(path: String, closure: ResponseClosure) {
+            let _ = Route(method: .Get, path: path, closure: closure)
+        }
+        
+        public class func post(path: String, closure: ResponseClosure) {
+            let _ = Route(method: .Post, path: path, closure: closure)
+        }
+        
+        public class func put(path: String, closure: ResponseClosure) {
+            let _ = Route(method: .Put, path: path, closure: closure)
+        }
+        
+        public class func patch(path: String, closure: ResponseClosure) {
+            let _ = Route(method: .Patch, path: path, closure: closure)
+        }
+        
+        public class func delete(path: String, closure: ResponseClosure) {
+            let _ = Route(method: .Delete, path: path, closure: closure)
+        }
+        
+    }
 
 	static var routes: [Route] = []
 
@@ -31,10 +55,6 @@ public class Route {
 	public class func get(path: String, closure: Closure) {
 		let _ = Route(method: .Get, path: path, closure: closure)
 	}
-
-    public class func get(path: String, closure: ResponseClosure) {
-		let _ = Route(method: .Get, path: path, closure: closure)
-    }
 
 	public class func post(path: String, closure: Closure) {
 		let _ = Route(method: .Post, path: path, closure: closure)
