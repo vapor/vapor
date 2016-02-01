@@ -52,12 +52,15 @@ public class Response {
 
     typealias WriteClosure = (ResponseWriter) throws -> Void
 
-    let status: Status
-    let data: [UInt8]
-    let contentType: ContentType
+    public var status: Status
+    public var data: [UInt8]
+    public var contentType: ContentType
     public var cookies: [String: String] = [:]
+    
+    var bootstrap: Bootstrap?
+    var request: Request?
 
-    enum ContentType {
+    public enum ContentType {
         case Text, Html, Json, None
     }
 
@@ -160,6 +163,12 @@ public class Response {
         self.data = data
         self.contentType = contentType
     }
+    
+    convenience init(bootstrap: Bootstrap, request: Request) {
+        self.init(status: .OK, data: [], contentType: .Text)
+        self.bootstrap = bootstrap
+        self.request = request
+    }
 
     public convenience init(error: String) {
         let text = "{\n\t\"error\": true,\n\t\"message\":\"\(error)\"\n}"
@@ -197,9 +206,38 @@ public class Response {
 
         self.init(status: status, data: data, contentType: .Json)
     }
+}
 
+
+// MARK: - Send methods
+extension Response {
+    
     public func send() {
-        print("Sending")
+        guard let request = request else { return }
+        self.bootstrap?.respond(request, response: self)
+    }
+    
+    public func send(text text: String) {
+        data = [UInt8](text.utf8)
+        status = .OK
+        contentType = .Text
+        send()
+    }
+    
+    public func send(html html: String) {
+        let serialised = "<html><meta charset=\"UTF-8\"><body>\(html)</body></html>"
+        data = [UInt8](serialised.utf8)
+        status = .OK
+        contentType = .Text
+        send()
+    }
+    
+    public func send(view view: View) {
+        let response = view.response()
+        data = response.data
+        contentType = response.contentType
+        status = response.status
+        send()
     }
 }
 

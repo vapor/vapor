@@ -13,6 +13,7 @@ public class View {
         let filesPath = View.resourceDir + "/" + path
         
         guard let fileBody = NSData(contentsOfFile: filesPath) else {
+            bytes = []
             throw Error.InvalidPath
         }
       

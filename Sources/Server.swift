@@ -17,51 +17,52 @@ public class Server: SocketServer {
 
     func parseRoutes() {
         for route in Route.routes {
-            if route.syncHandler != nil {
-                parseSyncRoute(route)
-            }
-        }
-    }
-
-    func parseSyncRoute(route: Route) {
-        self.router.register(route.method.rawValue, path: route.path, syncHandler: { request in
-
-            //grab request params
-            let routePaths = route.path.split("?")[0].split("/")
-            for (index, path) in routePaths.enumerate() {
-                if path.hasPrefix(":") {
-                    let requestPaths = request.path.split("/")
-                    if requestPaths.count > index {
-                        var trimPath = path
-                        trimPath.removeAtIndex(path.startIndex)
-                        request.parameters[trimPath] = requestPaths[index]
+            self.router.register(route.method.rawValue, path: route.path, handler: { request in
+                
+                //grab request params
+                let routePaths = route.path.split("?")[0].split("/")
+                for (index, path) in routePaths.enumerate() {
+                    if path.hasPrefix(":") {
+                        let requestPaths = request.path.split("/")
+                        if requestPaths.count > index {
+                            var trimPath = path
+                            trimPath.removeAtIndex(path.startIndex)
+                            request.parameters[trimPath] = requestPaths[index]
+                        }
                     }
                 }
-            }
-
-            self.bootstrap.request(request)
-
-            let response: Response
-
-            if let syncHandler = route.syncHandler {
-
-                do {
-                    response = try syncHandler(request: request).response()
-                } catch View.Error.InvalidPath {
-                    response = Response(status: .NotFound, text: "View not found")
-                } catch {
-                    response = Response(error: "Server Error: \(error)")
+                
+                self.bootstrap.request(request)
+                
+                var response: Response = Response(bootstrap: self.bootstrap, request: request)
+                
+                if let syncHandler = route.syncHandler {
+                    
+                    do {
+                        response = try syncHandler(request: request).response()
+                    } catch View.Error.InvalidPath {
+                        response = Response(status: .NotFound, text: "View not found")
+                    } catch {
+                        response = Response(error: "Server Error: \(error)")
+                    }
+                    
+                    self.bootstrap.respond(request, response: response)
+                    
+                } else if let asyncHandler = route.asyncHandler {
+                    
+                    do {
+                        
+                        try asyncHandler(request: request, response: response)
+                    }  catch View.Error.InvalidPath {
+                        response = Response(status: .NotFound, text: "View not found")
+                    } catch {
+                        response = Response(error: "Server Error: \(error)")
+                    }
                 }
-
-                self.bootstrap.respond(request, response: response)
-
-            } else {
-
-                response = Response(error: "Route has no sync handler")
-            }
-
-            return response
-        })
+                
+                return response
+            })
+        }
     }
 
     public func run(port inPort: Int = 80) {

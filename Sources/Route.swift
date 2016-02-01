@@ -4,7 +4,7 @@ public class Route {
 
 	public typealias Closure = ((request: Request) throws -> ResponseConvertible)
 
-    public typealias ResponseClosure = ((request: Request, inout response: Response) throws -> Void)
+    public typealias ResponseClosure = ((request: Request, response: Response) throws -> Void)
 
 	let method: Request.Method
 	let path: String

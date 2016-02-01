@@ -8,8 +8,7 @@ class Router {
 
     private class Node {
         var nodes = [String: Node]()
-        var syncHandler: (Request -> Response)? = nil
-        var asyncHandler: ((Request, Response) -> Void)? = nil
+        var handler: (Request -> Response)? = nil
     }
 
     private var rootNode = Node()
@@ -24,7 +23,7 @@ class Router {
 
     private func routesForNode(node: Node, prefix: String = "") -> [String] {
         var result = [String]()
-        if node.syncHandler != nil {
+        if node.handler != nil {
             result.append(prefix)
         }
         for (key, child) in node.nodes {
@@ -33,7 +32,7 @@ class Router {
         return result
     }
 
-    func register(method: String?, path: String, syncHandler: (Request -> Response)?) {
+    func register(method: String?, path: String, handler: (Request -> Response)?) {
         var pathSegments = stripQuery(path).split("/")
         if let method = method {
             pathSegments.insert(method, atIndex: 0)
@@ -41,18 +40,7 @@ class Router {
             pathSegments.insert("*", atIndex: 0)
         }
         var pathSegmentsGenerator = pathSegments.generate()
-        inflate(&rootNode, generator: &pathSegmentsGenerator).syncHandler = syncHandler
-    }
-
-    func register(method: String?, path: String, asyncHandler: ((Request, Response) -> Void)?) {
-        var pathSegments = stripQuery(path).split("/")
-        if let method = method {
-            pathSegments.insert(method, atIndex: 0)
-        } else {
-            pathSegments.insert("*", atIndex: 0)
-        }
-        var pathSegmentsGenerator = pathSegments.generate()
-        inflate(&rootNode, generator: &pathSegmentsGenerator).asyncHandler = asyncHandler
+        inflate(&rootNode, generator: &pathSegmentsGenerator).handler = handler
     }
 
     func route(method: Request.Method?, path: String) -> (Request -> Response)? {
@@ -87,7 +75,7 @@ class Router {
 
     private func findHandler(inout node: Node, inout params: [String: String], inout generator: IndexingGenerator<[String]>) -> (Request -> Response)? {
         guard let pathToken = generator.next() else {
-            return node.syncHandler
+            return node.handler
         }
         let variableNodes = node.nodes.filter { $0.0.characters.first == ":" }
         if let variableNode = variableNodes.first {
