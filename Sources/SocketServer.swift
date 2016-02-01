@@ -70,7 +70,7 @@ public class SocketServer {
             NSRunLoop.mainRunLoop().run()
         #endif
     }
-    
+
     func handleConnection(socket: Socket) {
         //try to get the ip address of the incoming request (like 127.0.0.1)
         let address = try? socket.peername()
@@ -145,26 +145,30 @@ public class SocketServer {
         Writes the response to the client socket.
     */
     private func respond(socket: Socket, response: Response, keepAlive: Bool) throws -> Bool {
-        try socket.writeUTF8("HTTP/1.1 \(response.status.code) \(response.reasonPhrase)\r\n")
-    
+        if let response = response as? AsyncResponse {
+            try response.writer(socket)
+        } else {
+            try socket.writeUTF8("HTTP/1.1 \(response.status.code) \(response.reasonPhrase)\r\n")
 
-        var headers = response.headers()
+            var headers = response.headers()
 
-        if response.data.count >= 0 {
-            headers["Content-Length"] = "\(response.data.count)"
+            if response.data.count >= 0 {
+                headers["Content-Length"] = "\(response.data.count)"
+            }
+            
+            if keepAlive && response.data.count != -1 {
+                headers["Connection"] = "keep-alive"
+            }
+            
+            for (name, value) in headers {
+                try socket.writeUTF8("\(name): \(value)\r\n")
+            }
+            
+            try socket.writeUTF8("\r\n")
+
+            try socket.writeUInt8(response.data)
         }
         
-        if keepAlive && response.data.count != -1 {
-            headers["Connection"] = "keep-alive"
-        }
-        
-        for (name, value) in headers {
-            try socket.writeUTF8("\(name): \(value)\r\n")
-        }
-        
-        try socket.writeUTF8("\r\n")
-
-        try socket.writeUInt8(response.data)
-        return keepAlive && response.data.count != -1;
+        return keepAlive && response.data.count != -1;  
     }
 }

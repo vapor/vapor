@@ -21,7 +21,7 @@ enum SocketError: ErrorType {
     case RecvFailed(String)
 }
 
-class Socket: Hashable, Equatable {
+public class Socket: Hashable, Equatable {
     
     class func tcpSocketForListen(port: in_port_t, maxPendingConnection: Int32 = SOMAXCONN) throws -> Socket {
         
@@ -81,7 +81,7 @@ class Socket: Hashable, Equatable {
         self.socketFileDescriptor = socketFileDescriptor
     }
     
-    var hashValue: Int { return Int(self.socketFileDescriptor) }
+    public var hashValue: Int { return Int(self.socketFileDescriptor) }
     
     func release() {
         Socket.release(self.socketFileDescriptor)
@@ -102,11 +102,11 @@ class Socket: Hashable, Equatable {
         return Socket(socketFileDescriptor: clientSocket)
     }
     
-    func writeUTF8(string: String) throws {
+    public func writeUTF8(string: String) throws {
         try writeUInt8([UInt8](string.utf8))
     }
     
-    func writeUInt8(data: [UInt8]) throws {
+    public func writeUInt8(data: [UInt8]) throws {
         try data.withUnsafeBufferPointer {
             var sent = 0
             while sent < data.count {
@@ -183,7 +183,7 @@ class Socket: Hashable, Equatable {
         #endif
     }
     
-    private class func release(socket: Int32) {
+    public class func release(socket: Int32) {
         #if os(Linux)
             shutdown(socket, Int32(SHUT_RDWR))
         #else
@@ -202,6 +202,6 @@ class Socket: Hashable, Equatable {
     }
 }
 
-func ==(socket1: Socket, socket2: Socket) -> Bool {
+public func ==(socket1: Socket, socket2: Socket) -> Bool {
     return socket1.socketFileDescriptor == socket2.socketFileDescriptor
 }

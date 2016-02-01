@@ -7,6 +7,13 @@ public protocol ResponseConvertible {
 	func response() -> Response
 }
 
+
+extension Response: ResponseConvertible {
+    public func response() -> Response {
+        return self
+    }
+}
+
 extension String: ResponseConvertible {
 	public func response() -> Response {
 		return Response(status: .OK, html: self)

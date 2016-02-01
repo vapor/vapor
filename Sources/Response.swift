@@ -39,6 +39,24 @@ public class Redirect: Response {
 }
 
 /**
+    Allows for asynchronous responses. Passes
+    the server Socket to the Response for writing.
+    The response calls `release()` on the Socket
+    when it is complete.
+
+    Inspired by elliottminns
+*/
+class AsyncResponse: Response {
+    typealias Writer = Socket throws -> Void
+    var writer: Writer
+
+    init(writer: Writer) {
+        self.writer = writer
+        super.init(status: .OK, data: [], contentType: .None)
+    }
+}
+
+/**
     Responses are objects responsible for returning
     data to the HTTP request such as the body, status 
     code and headers.
@@ -199,11 +217,6 @@ public class Response {
     }
 }
 
-extension Response: ResponseConvertible {
-    public func response() -> Response {
-        return self
-    }
-}
 
 func ==(left: Response, right: Response) -> Bool {
     return left.status.code == right.status.code
