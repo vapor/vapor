@@ -5,9 +5,9 @@
 import Foundation
 
 public class Server: SocketServer {
-    
+
     public static let VERSION = "0.1.4"
-    
+
     private let router = Router()
     public var bootstrap = Bootstrap()
 
@@ -17,8 +17,8 @@ public class Server: SocketServer {
 
     func parseRoutes() {
         for route in Route.routes {
-            self.router.register(route.method.rawValue, path: route.path) { request in 
-
+            self.router.register(route.method.rawValue, path: route.path, handler: { request in
+                
                 //grab request params
                 let routePaths = route.path.split("?")[0].split("/")
                 for (index, path) in routePaths.enumerate() {
@@ -31,21 +31,37 @@ public class Server: SocketServer {
                         }
                     }
                 }
-
+                
                 self.bootstrap.request(request)
-
-                let response: Response
-                do {
-                    response = try route.closure(request: request).response()
-                } catch View.Error.InvalidPath {
-                    response = Response(status: .NotFound, text: "View not found")
-                } catch {
-                    response = Response(error: "Server Error: \(error)")
+                
+                var response: Response = Response(bootstrap: self.bootstrap, request: request)
+                
+                if let syncHandler = route.syncHandler {
+                    
+                    do {
+                        response = try syncHandler(request: request).response()
+                    } catch View.Error.InvalidPath {
+                        response = Response(status: .NotFound, text: "View not found")
+                    } catch {
+                        response = Response(error: "Server Error: \(error)")
+                    }
+                    
+                    self.bootstrap.respond(request, response: response)
+                    
+                } else if let asyncHandler = route.asyncHandler {
+                    
+                    do {
+                        
+                        try asyncHandler(request: request, response: response)
+                    }  catch View.Error.InvalidPath {
+                        response = Response(status: .NotFound, text: "View not found")
+                    } catch {
+                        response = Response(error: "Server Error: \(error)")
+                    }
                 }
-                self.bootstrap.respond(request, response: response)
-
+                
                 return response
-            }
+            })
         }
     }
 
@@ -93,7 +109,7 @@ public class Server: SocketServer {
                     response += files.map({ "<tr><td><a href=\"\(path)/\($0)\">\($0)</a></td></tr>"}).joinWithSeparator("")
                     response += "</table>"
 
-                    return { _ in 
+                    return { _ in
                         return Response(status: .OK, html: response)
                     }
                 } catch {
@@ -103,15 +119,15 @@ public class Server: SocketServer {
                 if let fileBody = NSData(contentsOfFile: filePath) {
                     var array = [UInt8](count: fileBody.length, repeatedValue: 0)
                     fileBody.getBytes(&array, length: fileBody.length)
-                    return { _ in 
+                    return { _ in
                         return Response(status: .OK, data: array, contentType: .Text)
                     }
-                    
+
                 }
             }
         }
 
         return super.dispatch(method, path: path)
     }
-    
+
 }

@@ -5,12 +5,12 @@
 import Foundation
 
 class Router {
-    
+
     private class Node {
         var nodes = [String: Node]()
         var handler: (Request -> Response)? = nil
     }
-    
+
     private var rootNode = Node()
 
     func routes() -> [String] {
@@ -20,7 +20,7 @@ class Router {
         }
         return routes
     }
-    
+
     private func routesForNode(node: Node, prefix: String = "") -> [String] {
         var result = [String]()
         if node.handler != nil {
@@ -31,7 +31,7 @@ class Router {
         }
         return result
     }
-    
+
     func register(method: String?, path: String, handler: (Request -> Response)?) {
         var pathSegments = stripQuery(path).split("/")
         if let method = method {
@@ -42,7 +42,7 @@ class Router {
         var pathSegmentsGenerator = pathSegments.generate()
         inflate(&rootNode, generator: &pathSegmentsGenerator).handler = handler
     }
-    
+
     func route(method: Request.Method?, path: String) -> (Request -> Response)? {
         if let method = method {
             let pathSegments = (method.rawValue + "/" + stripQuery(path)).split("/")
@@ -60,7 +60,7 @@ class Router {
         }
         return nil
     }
-    
+
     private func inflate(inout node: Node, inout generator: IndexingGenerator<[String]>) -> Node {
         if let pathSegment = generator.next() {
             if let _ = node.nodes[pathSegment] {
@@ -72,7 +72,7 @@ class Router {
         }
         return node
     }
-    
+
     private func findHandler(inout node: Node, inout params: [String: String], inout generator: IndexingGenerator<[String]>) -> (Request -> Response)? {
         guard let pathToken = generator.next() else {
             return node.handler
@@ -90,7 +90,7 @@ class Router {
         }
         return nil
     }
-    
+
     private func stripQuery(path: String) -> String {
         if let path = path.split("?").first {
             return path
