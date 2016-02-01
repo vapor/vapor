@@ -1,27 +1,27 @@
 public class Route {
-    
+
     public class async {
-        
+
         public class func get(path: String, closure: ResponseClosure) {
             let _ = Route(method: .Get, path: path, closure: closure)
         }
-        
+
         public class func post(path: String, closure: ResponseClosure) {
             let _ = Route(method: .Post, path: path, closure: closure)
         }
-        
+
         public class func put(path: String, closure: ResponseClosure) {
             let _ = Route(method: .Put, path: path, closure: closure)
         }
-        
+
         public class func patch(path: String, closure: ResponseClosure) {
             let _ = Route(method: .Patch, path: path, closure: closure)
         }
-        
+
         public class func delete(path: String, closure: ResponseClosure) {
             let _ = Route(method: .Delete, path: path, closure: closure)
         }
-        
+
     }
 
 	static var routes: [Route] = []
@@ -80,6 +80,14 @@ public class Route {
 		self.delete(path, closure: closure)
 	}
 
+	public class func resorce(path: String, controller: AsyncController) {
+		self.async.get(path, closure: controller.index)
+		self.async.post(path, closure: controller.index)
+
+		self.async.get("\(path)/:id", closure: controller.show)
+		self.async.put("\(path)/:id", closure: controller.update)
+		self.async.delete("\(path)/:id", closure: controller.destroy)
+	}
 
 	public class func resource(path: String, controller: Controller) {
 		self.get(path, closure: controller.index)
