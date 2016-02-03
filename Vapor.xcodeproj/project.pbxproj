@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		C304C8A11C62C6EC00058C92 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = C352E6D61C62BC6A00E26467 /* main.swift */; };
+		C304C8A21C62C6EF00058C92 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = C352E6D61C62BC6A00E26467 /* main.swift */; };
 		C352E6E51C62BC6A00E26467 /* Bootstrap.swift in Sources */ = {isa = PBXBuildFile; fileRef = C352E6D21C62BC6A00E26467 /* Bootstrap.swift */; };
 		C352E6E61C62BC6A00E26467 /* Bootstrap.swift in Sources */ = {isa = PBXBuildFile; fileRef = C352E6D21C62BC6A00E26467 /* Bootstrap.swift */; };
 		C352E6E71C62BC6A00E26467 /* Controller.swift in Sources */ = {isa = PBXBuildFile; fileRef = C352E6D31C62BC6A00E26467 /* Controller.swift */; };
@@ -15,8 +17,6 @@
 		C352E6EA1C62BC6A00E26467 /* JSONSerializer.swift in Sources */ = {isa = PBXBuildFile; fileRef = C352E6D41C62BC6A00E26467 /* JSONSerializer.swift */; };
 		C352E6EB1C62BC6A00E26467 /* LinuxFixes.swift in Sources */ = {isa = PBXBuildFile; fileRef = C352E6D51C62BC6A00E26467 /* LinuxFixes.swift */; };
 		C352E6EC1C62BC6A00E26467 /* LinuxFixes.swift in Sources */ = {isa = PBXBuildFile; fileRef = C352E6D51C62BC6A00E26467 /* LinuxFixes.swift */; };
-		C352E6ED1C62BC6A00E26467 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = C352E6D61C62BC6A00E26467 /* main.swift */; };
-		C352E6EE1C62BC6A00E26467 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = C352E6D61C62BC6A00E26467 /* main.swift */; };
 		C352E6EF1C62BC6A00E26467 /* MemorySessionDriver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C352E6D71C62BC6A00E26467 /* MemorySessionDriver.swift */; };
 		C352E6F01C62BC6A00E26467 /* MemorySessionDriver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C352E6D71C62BC6A00E26467 /* MemorySessionDriver.swift */; };
 		C352E6F11C62BC6A00E26467 /* Parser.swift in Sources */ = {isa = PBXBuildFile; fileRef = C352E6D81C62BC6A00E26467 /* Parser.swift */; };
@@ -289,13 +289,13 @@
 			files = (
 				C352E6FF1C62BC6A00E26467 /* Session.swift in Sources */,
 				C352E6E51C62BC6A00E26467 /* Bootstrap.swift in Sources */,
+				C304C8A11C62C6EC00058C92 /* main.swift in Sources */,
 				C352E7011C62BC6A00E26467 /* Socket.swift in Sources */,
 				C352E6F31C62BC6A00E26467 /* Request.swift in Sources */,
 				C352E6F91C62BC6A00E26467 /* Route.swift in Sources */,
 				C352E7091C62BC6A00E26467 /* View.swift in Sources */,
 				C352E6EF1C62BC6A00E26467 /* MemorySessionDriver.swift in Sources */,
 				C352E6FB1C62BC6A00E26467 /* Router.swift in Sources */,
-				C352E6ED1C62BC6A00E26467 /* main.swift in Sources */,
 				C352E6F51C62BC6A00E26467 /* Response.swift in Sources */,
 				C352E6E91C62BC6A00E26467 /* JSONSerializer.swift in Sources */,
 				C352E6EB1C62BC6A00E26467 /* LinuxFixes.swift in Sources */,
@@ -320,7 +320,6 @@
 				C352E6F81C62BC6A00E26467 /* ResponseConvertible.swift in Sources */,
 				C352E6F01C62BC6A00E26467 /* MemorySessionDriver.swift in Sources */,
 				C352E7001C62BC6A00E26467 /* Session.swift in Sources */,
-				C352E6EE1C62BC6A00E26467 /* main.swift in Sources */,
 				C352E6F61C62BC6A00E26467 /* Response.swift in Sources */,
 				C352E6F21C62BC6A00E26467 /* Parser.swift in Sources */,
 				C352E6E61C62BC6A00E26467 /* Bootstrap.swift in Sources */,
@@ -328,6 +327,7 @@
 				C352E7061C62BC6A00E26467 /* StringExtensions.swift in Sources */,
 				C352E6FA1C62BC6A00E26467 /* Route.swift in Sources */,
 				C352E6F41C62BC6A00E26467 /* Request.swift in Sources */,
+				C304C8A21C62C6EF00058C92 /* main.swift in Sources */,
 				C352E7041C62BC6A00E26467 /* SocketServer.swift in Sources */,
 				C352E6EA1C62BC6A00E26467 /* JSONSerializer.swift in Sources */,
 				C352E6FC1C62BC6A00E26467 /* Router.swift in Sources */,

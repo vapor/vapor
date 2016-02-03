@@ -5,5 +5,6 @@ before_install:
 - if brew outdated | grep -qx xctool; then brew upgrade xctool; fi
 
 script:
+- touch /Users/travis/build/tannernelson/vapor/Sources/main.swift
 - xctool clean build -project Vapor.xcodeproj -scheme Vapor
 - xctool test -project Vapor.xcodeproj -scheme Tests
