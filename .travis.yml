@@ -1,4 +1,4 @@
-language: swift
+language: objective-c
 
 before_install:
 - brew update
