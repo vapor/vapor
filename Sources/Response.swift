@@ -16,7 +16,7 @@ public class Redirect: Response {
         Redirect headers return normal `Response` headers
         while adding `Location`.
 
-        @return [String: String] Dictionary of headers
+        - returns Dictionary of headers
      */
     override func headers() -> [String: String] {
         var headers = super.headers()

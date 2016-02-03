@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		C352E6921C62BB1C00E26467 /* Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C352E6911C62BB1C00E26467 /* Tests.swift */; };
 		C352E6E51C62BC6A00E26467 /* Bootstrap.swift in Sources */ = {isa = PBXBuildFile; fileRef = C352E6D21C62BC6A00E26467 /* Bootstrap.swift */; };
 		C352E6E61C62BC6A00E26467 /* Bootstrap.swift in Sources */ = {isa = PBXBuildFile; fileRef = C352E6D21C62BC6A00E26467 /* Bootstrap.swift */; };
 		C352E6E71C62BC6A00E26467 /* Controller.swift in Sources */ = {isa = PBXBuildFile; fileRef = C352E6D31C62BC6A00E26467 /* Controller.swift */; };
@@ -44,6 +43,7 @@
 		C352E7061C62BC6A00E26467 /* StringExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = C352E6E21C62BC6A00E26467 /* StringExtensions.swift */; };
 		C352E7091C62BC6A00E26467 /* View.swift in Sources */ = {isa = PBXBuildFile; fileRef = C352E6E41C62BC6A00E26467 /* View.swift */; };
 		C352E70A1C62BC6A00E26467 /* View.swift in Sources */ = {isa = PBXBuildFile; fileRef = C352E6E41C62BC6A00E26467 /* View.swift */; };
+		C38808641C62C0390067DADD /* ResponseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C38808631C62C0390067DADD /* ResponseTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -61,7 +61,6 @@
 /* Begin PBXFileReference section */
 		C352E6811C62BB0F00E26467 /* Vapor */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Vapor; sourceTree = BUILT_PRODUCTS_DIR; };
 		C352E68F1C62BB1C00E26467 /* Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Tests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		C352E6911C62BB1C00E26467 /* Tests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests.swift; sourceTree = "<group>"; };
 		C352E6931C62BB1C00E26467 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		C352E6D21C62BC6A00E26467 /* Bootstrap.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Bootstrap.swift; sourceTree = "<group>"; };
 		C352E6D31C62BC6A00E26467 /* Controller.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Controller.swift; sourceTree = "<group>"; };
@@ -87,6 +86,7 @@
 		C352E7131C62BDE200E26467 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		C352E7141C62BE6900E26467 /* Package.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Package.swift; sourceTree = "<group>"; };
 		C352E7151C62BED500E26467 /* .gitignore */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
+		C38808631C62C0390067DADD /* ResponseTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ResponseTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -133,8 +133,8 @@
 		C352E6901C62BB1C00E26467 /* Tests */ = {
 			isa = PBXGroup;
 			children = (
-				C352E6911C62BB1C00E26467 /* Tests.swift */,
 				C352E6931C62BB1C00E26467 /* Info.plist */,
+				C38808631C62C0390067DADD /* ResponseTests.swift */,
 			);
 			path = Tests;
 			sourceTree = "<group>";
@@ -314,6 +314,7 @@
 				C352E6FE1C62BC6A00E26467 /* Server.swift in Sources */,
 				C352E6E81C62BC6A00E26467 /* Controller.swift in Sources */,
 				C352E6EC1C62BC6A00E26467 /* LinuxFixes.swift in Sources */,
+				C38808641C62C0390067DADD /* ResponseTests.swift in Sources */,
 				C352E6F81C62BC6A00E26467 /* ResponseConvertible.swift in Sources */,
 				C352E6F01C62BC6A00E26467 /* MemorySessionDriver.swift in Sources */,
 				C352E7001C62BC6A00E26467 /* Session.swift in Sources */,
@@ -322,7 +323,6 @@
 				C352E6F21C62BC6A00E26467 /* Parser.swift in Sources */,
 				C352E6E61C62BC6A00E26467 /* Bootstrap.swift in Sources */,
 				C352E70A1C62BC6A00E26467 /* View.swift in Sources */,
-				C352E6921C62BB1C00E26467 /* Tests.swift in Sources */,
 				C352E7061C62BC6A00E26467 /* StringExtensions.swift in Sources */,
 				C352E6FA1C62BC6A00E26467 /* Route.swift in Sources */,
 				C352E6F41C62BC6A00E26467 /* Request.swift in Sources */,
@@ -475,6 +475,7 @@
 				C352E68A1C62BB0F00E26467 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		C352E6941C62BB1C00E26467 /* Build configuration list for PBXNativeTarget "Tests" */ = {
 			isa = XCConfigurationList;
@@ -483,6 +484,7 @@
 				C352E6961C62BB1C00E26467 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
