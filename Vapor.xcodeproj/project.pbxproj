@@ -87,6 +87,7 @@
 		C352E70D1C62BCC600E26467 /* vapor-logo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "vapor-logo.png"; sourceTree = "<group>"; };
 		C352E70F1C62BCC600E26467 /* app.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; path = app.css; sourceTree = "<group>"; };
 		C352E7121C62BCF300E26467 /* welcome.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = welcome.html; sourceTree = "<group>"; };
+		C352E7131C62BDE200E26467 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -110,6 +111,7 @@
 		C352E6781C62BB0F00E26467 = {
 			isa = PBXGroup;
 			children = (
+				C352E7131C62BDE200E26467 /* README.md */,
 				C352E7111C62BCF300E26467 /* Resources */,
 				C352E70B1C62BCC600E26467 /* Public */,
 				C352E6D11C62BC6A00E26467 /* Sources */,
