@@ -85,8 +85,8 @@ class Router {
         if let _ = node.nodes[pathToken] {
             return findHandler(&node.nodes[pathToken]!, params: &params, generator: &generator)
         }
-        if let _ = node.nodes["*"] {
-            return findHandler(&node.nodes["*"]!, params: &params, generator: &generator)
+        if let starNode = node.nodes["*"] {
+            return starNode.handler
         }
         return nil
     }
