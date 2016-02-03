@@ -27,7 +27,7 @@ public class Server: SocketServer {
                         if requestPaths.count > index {
                             var trimPath = path
                             trimPath.removeAtIndex(path.startIndex)
-                            request.parameters[trimPath] = requestPaths[index]
+                            request.parameters[trimPath] = requestPaths[index].split("?")[0]
                         }
                     }
                 }
