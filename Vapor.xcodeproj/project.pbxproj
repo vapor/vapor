@@ -59,6 +59,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		C304C8A01C62C3F400058C92 /* .travis.yml */ = {isa = PBXFileReference; lastKnownFileType = text; path = .travis.yml; sourceTree = "<group>"; };
 		C352E6811C62BB0F00E26467 /* Vapor */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Vapor; sourceTree = BUILT_PRODUCTS_DIR; };
 		C352E68F1C62BB1C00E26467 /* Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Tests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		C352E6931C62BB1C00E26467 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -111,6 +112,7 @@
 			isa = PBXGroup;
 			children = (
 				C352E7151C62BED500E26467 /* .gitignore */,
+				C304C8A01C62C3F400058C92 /* .travis.yml */,
 				C352E7141C62BE6900E26467 /* Package.swift */,
 				C352E7131C62BDE200E26467 /* README.md */,
 				C352E7111C62BCF300E26467 /* Resources */,

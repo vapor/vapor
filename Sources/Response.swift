@@ -16,10 +16,10 @@ public class Redirect: Response {
         Redirect headers return normal `Response` headers
         while adding `Location`.
 
-        - returns Dictionary of headers
+        - returns: Dictionary of headers
      */
-    override func headers() -> [String: String] {
-        var headers = super.headers()
+    override var headers: [String: String] {
+        var headers = super.headers
         headers["Location"] = self.redirectLocation
         return headers
     }
@@ -28,9 +28,9 @@ public class Redirect: Response {
         Creates a `Response` object that redirects
         to a given URL string.
 
-        - parameter redirectLocation: The URL string for redirect
+        - parameter: redirectLocation: The URL string for redirect
         
-        - returns Response
+        - returns: Response
      */
     public init(to redirectLocation: String) {
         self.redirectLocation = redirectLocation
@@ -146,7 +146,7 @@ public class Response {
         })
     }
 
-    func headers() -> [String: String] {
+    var headers: [String: String] {
         var headers = ["Server" : "Vapor \(Server.VERSION)"]
 
         if self.cookies.count > 0 {

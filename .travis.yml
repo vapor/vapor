@@ -1,0 +1,5 @@
+language: swift
+
+script:
+- xctool clean build -project Vapor.xcodeproj -scheme Vapor
+- xctool test -project Vapor.xcodeproj -scheme Tests

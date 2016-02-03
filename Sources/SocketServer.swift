@@ -150,7 +150,7 @@ public class SocketServer {
         } else {
             try socket.writeUTF8("HTTP/1.1 \(response.status.code) \(response.reasonPhrase)\r\n")
 
-            var headers = response.headers()
+            var headers = response.headers
 
             if response.data.count >= 0 {
                 headers["Content-Length"] = "\(response.data.count)"

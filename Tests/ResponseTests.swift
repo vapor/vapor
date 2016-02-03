@@ -18,7 +18,7 @@ class ResponseTests: XCTestCase {
 
 
         var found = false
-        for (key, val) in redirect.headers() {
+        for (key, val) in redirect.headers {
             if key == "Location" && val == url {
                 found = true
             }
