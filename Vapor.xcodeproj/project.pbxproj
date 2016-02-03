@@ -86,6 +86,7 @@
 		C352E7121C62BCF300E26467 /* welcome.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = welcome.html; sourceTree = "<group>"; };
 		C352E7131C62BDE200E26467 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		C352E7141C62BE6900E26467 /* Package.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Package.swift; sourceTree = "<group>"; };
+		C352E7151C62BED500E26467 /* .gitignore */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -109,6 +110,7 @@
 		C352E6781C62BB0F00E26467 = {
 			isa = PBXGroup;
 			children = (
+				C352E7151C62BED500E26467 /* .gitignore */,
 				C352E7141C62BE6900E26467 /* Package.swift */,
 				C352E7131C62BDE200E26467 /* README.md */,
 				C352E7111C62BCF300E26467 /* Resources */,

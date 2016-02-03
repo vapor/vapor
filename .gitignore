@@ -3,3 +3,5 @@ Packages
 Sources/main.swift
 Public
 Resources
+.DS_Store
+xcuserdata
