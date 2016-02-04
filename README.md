@@ -8,6 +8,8 @@ A Laravel/Lumen Inspired Web Framework for Swift that works on iOS, OS X, and Ub
 - [x] Beautiful syntax
 - [x] Type safe
 
+## Badges
+
 ![Travis](https://img.shields.io/travis/tannernelson/vapor.svg?style=flat-square)
 ![Issues](http://issuestats.com/github/tannernelson/vapor/badge/pr?style=flat-square)
 
