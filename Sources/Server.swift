@@ -1,37 +1,33 @@
-//
-// Based on HttpServer from Swifter (https://github.com/glock45/swifter) by Damian Kołakowski.
-//
-
 import Foundation
 
-public class Server: SocketServer {
+public class Server {
     
-    public static let VERSION = "0.1.5"
+    public static let VERSION = "0.1.6"
     
-    private let router = Router()
     public var bootstrap = Bootstrap()
+    
+    public var router: RouterDriver
+    public let driver: ServerDriver
 
-    public override init() {
-
+    public convenience init() {
+        let driver = SocketServer()
+        self.init(driver: driver)
+    }
+    
+    public init(driver: ServerDriver) {
+        self.driver = driver
+        self.router = NodeRouter()
+        
+        self.driver.delegate = self
     }
 
-    func parseRoutes() {
+    /**
+        Registers all routes from the `Route` interface
+        into the current `RouterDriver`.
+    */
+    func registerRoutes() {
         for route in Route.routes {
-            self.router.register(route.method.rawValue, path: route.path) { request in 
-
-                //grab request params
-                let routePaths = route.path.split("?")[0].split("/")
-                for (index, path) in routePaths.enumerate() {
-                    if path.hasPrefix(":") {
-                        let requestPaths = request.path.split("/")
-                        if requestPaths.count > index {
-                            var trimPath = path
-                            trimPath.removeAtIndex(path.startIndex)
-                            request.parameters[trimPath] = requestPaths[index].split("?")[0]
-                        }
-                    }
-                }
-
+            self.router.register(route.method, path: route.path) { request in 
                 self.bootstrap.request(request)
 
                 let response: Response
@@ -50,14 +46,17 @@ public class Server: SocketServer {
     }
 
     public func run(port inPort: Int = 80) {
-        self.parseRoutes()
+        self.registerRoutes()
 
         var port = inPort
 
-        if Process.arguments.count >= 2 {
-            let secondArg = Process.arguments[1]
-            if secondArg.hasPrefix("--port=") {
-                let portString = secondArg.split("=")[1]
+        //grab process args
+        for argument in Process.arguments {
+            if argument.hasPrefix("--workDir=") {
+                let workDirString = argument.split("=")[1]
+                Config.workDir = workDirString
+            } else if argument.hasPrefix("--port=") {
+                let portString = argument.split("=")[1]
                 if let portInt = Int(portString) {
                     port = portInt
                 }
@@ -65,7 +64,7 @@ public class Server: SocketServer {
         }
 
         do {
-            try self.start(port)
+            try self.driver.boot(port: port)
 
             print("Server has started on port \(port)")
 
@@ -74,15 +73,34 @@ public class Server: SocketServer {
             print("Server start error: \(error)")
         }
     }
+    
+    
+    /**
+        Starts an infinite loop to keep the server alive while it
+        waits for inbound connections.
+    */
+    func loop() {
+        #if os(Linux)
+            while true {
+                sleep(1)
+            }
+        #else
+            NSRunLoop.mainRunLoop().run()
+        #endif
+    }
 
-    override func dispatch(method: Request.Method, path: String) -> (Request -> Response) {
+}
+
+extension Server: ServerDriverDelegate {
+    public func serverDriverDidReceiveRequest(request: Request) -> Response {
+        
         //check in routes
-        if let result = router.route(method, path: path) {
-            return result
+        if let result = router.route(request) {
+            return result(request)
         }
-
+        
         //check in file system
-        let filePath = "Public" + path
+        let filePath = "Public" + request.path
         let fileManager = NSFileManager.defaultManager()
         var isDir: ObjCBool = false
         if fileManager.fileExistsAtPath(filePath, isDirectory: &isDir) {
@@ -90,12 +108,10 @@ public class Server: SocketServer {
                 do {
                     let files = try fileManager.contentsOfDirectoryAtPath(filePath)
                     var response = "<h3>\(filePath)</h3></br><table>"
-                    response += files.map({ "<tr><td><a href=\"\(path)/\($0)\">\($0)</a></td></tr>"}).joinWithSeparator("")
+                    response += files.map({ "<tr><td><a href=\"\(request.path)/\($0)\">\($0)</a></td></tr>"}).joinWithSeparator("")
                     response += "</table>"
-
-                    return { _ in 
-                        return Response(status: .OK, html: response)
-                    }
+                    
+                    return Response(status: .OK, html: response)
                 } catch {
                     //continue to not found
                 }
@@ -103,15 +119,14 @@ public class Server: SocketServer {
                 if let fileBody = NSData(contentsOfFile: filePath) {
                     var array = [UInt8](count: fileBody.length, repeatedValue: 0)
                     fileBody.getBytes(&array, length: fileBody.length)
-                    return { _ in 
-                        return Response(status: .OK, data: array, contentType: .Text)
-                    }
+                    return Response(status: .OK, data: array, contentType: .Text)
                     
                 }
             }
         }
-
-        return super.dispatch(method, path: path)
+        
+        
+        
+        return Response(status: .NotFound, text: "Page not found")
     }
-    
 }

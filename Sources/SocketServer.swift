@@ -1,124 +1,66 @@
-//
-// Based on HttpServerIO from Swifter (https://github.com/glock45/swifter) by Damian Kołakowski.
-//
-
 import Foundation
 
 #if os(Linux)
     import Glibc
 #endif
 
-public class SocketServer {
+public class SocketServer: ServerDriver {
     
-    ///A socket open to the port the server is listening on. Usually 80.
-    private var listenSocket: Socket = Socket(socketFileDescriptor: -1)
-
-    ///A set of connected client sockets.
-    private var clientSockets: Set<Socket> = []
-
-    ///The shared lock for notifying new connections.
-    private let clientSocketsLock = NSLock()
+    /// Turns received `Request`s into a `Response`s
+    public var delegate: ServerDriverDelegate?
+    
+    init() {
+        
+    }
     
     /**
         Starts the server on a given port.
-        - parameter listenPort: The port to listen on.
-    */
-    func start(listenPort: Int) throws {
+     
+        - parameter port: The port to listen on.
+     */
+    public func boot(port port: Int) throws {
         //stop the server if it's running
-        self.stop()
-
+        self.halt()
+        
         //open a socket, might fail
-        self.listenSocket = try Socket.tcpSocketForListen(UInt16(listenPort))
-
+        self.listenSocket = try Socket.tcpSocketForListen(UInt16(port))
+        
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0)) {
-
+            
             //creates the infinite loop that will wait for client connections
             while let socket = try? self.listenSocket.acceptClientSocket() {
-
+                
                 //wait for lock to notify a new connection
                 self.lock(self.clientSocketsLock) {
                     //keep track of open sockets
                     self.clientSockets.insert(socket)
                 }
-
+                
                 //handle connection in background thread
                 dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), {
                     self.handleConnection(socket)
-
+                    
                     //set lock to wait for another connection
                     self.lock(self.clientSocketsLock) {
                         self.clientSockets.remove(socket)
                     }
                 })
             }
-
+            
             //stop the server in case something didn't work
-            self.stop()
-        }
-    }
-
-    /**
-        Starts an infinite loop to keep the server alive while it
-        waits for inbound connections.
-    */
-    func loop() {
-        #if os(Linux)
-            while true {
-                sleep(1)
-            }
-        #else
-            NSRunLoop.mainRunLoop().run()
-        #endif
-    }
-
-    func handleConnection(socket: Socket) {
-        //try to get the ip address of the incoming request (like 127.0.0.1)
-        let address = try? socket.peername()
-
-        //create a request parser
-        let parser = Parser()
-
-        while let request = try? parser.readHttpRequest(socket) {
-            //dispatch the server to handle the request
-            let handler = self.dispatch(request.method, path: request.path)
-
-            //add parameters to request
-            request.address = address
-            request.parameters = [:]
-
-            let response = handler(request)
-            var keepConnection = parser.supportsKeepAlive(request.headers)
-            do {
-                keepConnection = try self.respond(socket, response: response, keepAlive: keepConnection)
-            } catch {
-                print("Failed to send response: \(error)")
-                break
-            }
-            if !keepConnection { break }
+            self.halt()
         }
 
-        //release the connection
-        socket.release()
-    }
-
-    /**
-        Returns a closure that given a Request returns a Response
-        
-        - returns: DispatchResponse
-    */
-    func dispatch(method: Request.Method, path: String) -> (Request -> Response) {
-        return { _ in 
-            return Response(status: .NotFound, text: "Page not found") 
-        }
     }
     
     /**
-        Stops the server
+        Stops the server by closing all connected 
+        client `Socket`s
     */
-    func stop() {
+    public func halt() {
         //free the port
         self.listenSocket.release()
-
+        
         //shutdown all client sockets
         self.lock(self.clientSocketsLock) {
             for socket in self.clientSockets {
@@ -128,6 +70,49 @@ public class SocketServer {
         }
     }
     
+    ///A `Socket` open to the port the server is listening on. Usually 80.
+    private var listenSocket: Socket = Socket(socketFileDescriptor: -1)
+
+    ///A set of connected client `Socket`s.
+    private var clientSockets: Set<Socket> = []
+
+    ///The shared lock for notifying new connections.
+    private let clientSocketsLock = NSLock()
+   
+    /**
+        Handles incoming `Socket` connections by parsing
+        the HTTP request into a `Request` and writing
+        a `Response` back to the `Socket`.
+    */
+    func handleConnection(socket: Socket) {
+        defer {
+            socket.release()
+        }
+        
+        guard let delegate = self.delegate else {
+            print("No server delegate")
+            return
+        }
+        
+        let parser = SocketParser()
+
+        while let request = try? parser.readHttpRequest(socket) {
+            let response = delegate.serverDriverDidReceiveRequest(request)
+
+            var keepConnection = request.supportsKeepAlive
+            do {
+                keepConnection = try self.respond(socket, response: response, keepAlive: keepConnection)
+            } catch {
+                print("Failed to send response: \(error)")
+                break
+            }
+            if !keepConnection { break }
+        }
+
+    }
+    
+    
+
     /**
         Locking mechanism for holding thread until a 
         new socket connection is ready.
@@ -142,7 +127,7 @@ public class SocketServer {
     }
     
     /**
-        Writes the response to the client socket.
+        Writes the `Response` to the client `Socket`.
     */
     private func respond(socket: Socket, response: Response, keepAlive: Bool) throws -> Bool {
         if let response = response as? AsyncResponse {

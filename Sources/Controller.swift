@@ -5,37 +5,27 @@ public class Controller {
 
 	}
 
-	/**
-	 * Display many instances.
-	 */
+    ///Display many instances
 	public func index(request: Request) -> ResponseConvertible {
 		return "index"
 	}
 
-	/**
-	 * Create a new instance.
-	 */
+	///Create a new instance.
 	public func store(request: Request) -> ResponseConvertible {
 		return "store"
 	}
 
-	/**
-	 * Show an instance.
-	 */
+	///Show an instance.
 	public func show(request: Request) -> ResponseConvertible {
 		return "show"
 	}
 
-	/**
-	 * Update an instance.
-	 */
+    ///Update an instance.
 	public func update(request: Request) -> ResponseConvertible {
 		return "update"
 	}
 
-	/**
-	 * Delete an instance.
-	 */
+	///Delete an instance.
 	public func destroy(request: Request) -> ResponseConvertible {
 		return "destroy"
 	}

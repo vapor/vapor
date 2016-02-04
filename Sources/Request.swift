@@ -1,7 +1,3 @@
-//
-// Based on HttpRequest from Swifter (https://github.com/glock45/swifter) by Damian Kołakowski.
-//
-
 import Foundation
 
 /**
@@ -20,158 +16,130 @@ public class Request {
         case Unknown = "x"
     }
 
-    ///HTTP Method used for request
+    ///HTTP Method used for request.
     public let method: Method
-    ///URL parameters (ex: `:id`)
+    
+    ///Query data from the path, or POST data from the body (depends on `Method`).
+    public let data: [String: String]
+    
+    ///Browser stored data sent with every server request
+    public let cookies: [String: String]
+    
+    ///Path requested from server, not including hostname.
+    public let path: String
+    
+    ///Information or metadata about the `Request`.
+    public let headers: [String: String]
+    
+    ///Content of the `Request`.
+    public let body: [UInt8]
+    
+    ///Address from which the `Request` originated.
+    public let address: String?
+    
+    ///URL parameters (ex: `:id`).
     public var parameters: [String: String] = [:]
-    ///GET or POST data
-    public var data: [String: String] = [:]
-
-    public var cookies: [String: String] = [:]
     
-    public var path: String = ""
-    var headers: [String: String] = [:]
-    var body: [UInt8] = []
-    var address: String? = ""
+    ///Server stored information related from session cookie.
     public var session: Session = Session()
+    
+    ///Whether the connection should be kept open for multiple Requests
+    var supportsKeepAlive: Bool {
+        if let value = self.headers["connection"] {
+            return "keep-alive" == value.trim()
+        }
+        return false
+    }
 
-    init(method: Method) {
+    init(method: Method, path: String, address: String?, headers: [String: String], body: [UInt8]) {
         self.method = method
-    }
-    
-    func parseUrlencodedForm() -> [(String, String)] {
-        guard let contentTypeHeader = headers["content-type"] else {
-            return []
-        }
-        let contentTypeHeaderTokens = contentTypeHeader.split(";").map { $0.trim() }
-        guard let contentType = contentTypeHeaderTokens.first where contentType == "application/x-www-form-urlencoded" else {
-            return []
-        }
-        return String.fromUInt8(body).split("&").map { (param: String) -> (String, String) in
-            let tokens = param.split("=")
-            if let name = tokens.first, value = tokens.last where tokens.count == 2 {
-                return (name.replace("+", new: " ").removePercentEncoding(),
-                        value.replace("+", new: " ").removePercentEncoding())
-            }
-            return ("","")
-        }
-    }
-    
-    struct MultiPart {
+        self.path = path.split(separator: "?")[0]
+        self.address = address
+        self.headers = headers
+        self.body = body
+        self.cookies = Request.parseCookies(headers["cookie"])
         
-        let headers: [String: String]
-        let body: [UInt8]
-        
-        var name: String? {
-            return valueFor("content-disposition", parameterName: "name")?.unquote()
-        }
-        
-        var fileName: String? {
-            return valueFor("content-disposition", parameterName: "filename")?.unquote()
-        }
-        
-        private func valueFor(headerName: String, parameterName: String) -> String? {
-            return headers.reduce([String]()) { (currentResults: [String], header: (key: String, value: String)) -> [String] in
-                guard header.key == headerName else {
-                    return currentResults
-                }
-                let headerValueParams = header.value.split(";").map { $0.trim() }
-                return headerValueParams.reduce(currentResults, combine: { (results:[String], token: String) -> [String] in
-                    let parameterTokens = token.split(1, separator: "=")
-                    if parameterTokens.first == parameterName, let value = parameterTokens.last {
-                        return results + [value]
-                    }
-                    return results
-                })
-            }.first
-        }
-    }
-    
-    func parseMultiPartFormData() -> [MultiPart] {
-        guard let contentTypeHeader = headers["content-type"] else {
-            return []
-        }
-        let contentTypeHeaderTokens = contentTypeHeader.split(";").map { $0.trim() }
-        guard let contentType = contentTypeHeaderTokens.first where contentType == "multipart/form-data" else {
-            return []
-        }
-        var boundary: String? = nil
-        contentTypeHeaderTokens.forEach({
-            let tokens = $0.split("=")
-            if let key = tokens.first where key == "boundary" && tokens.count == 2 {
-                boundary = tokens.last
-            }
-        })
-        if let boundary = boundary where boundary.utf8.count > 0 {
-            return parseMultiPartFormData(body, boundary: "--\(boundary)")
-        }
-        return []
-    }
-    
-    private func parseMultiPartFormData(data: [UInt8], boundary: String) -> [MultiPart] {
-        var generator = data.generate()
-        var result = [MultiPart]()
-        while let part = nextMultiPart(&generator, boundary: boundary, isFirst: result.isEmpty) {
-            result.append(part)
-        }
-        return result
-    }
-    
-    private func nextMultiPart(inout generator: IndexingGenerator<[UInt8]>, boundary: String, isFirst: Bool) -> MultiPart? {
-        if isFirst {
-            guard nextMultiPartLine(&generator) == boundary else {
-                return nil
-            }
+        if method == .Post {
+            self.data = Request.parsePostData(body)
         } else {
-            nextMultiPartLine(&generator)
+            self.data = Request.parseQueryData(path)
         }
-        var headers = [String: String]()
-        while let line = nextMultiPartLine(&generator) where !line.isEmpty {
-            let tokens = line.split(":")
-            if let name = tokens.first, value = tokens.last where tokens.count == 2 {
-                headers[name.lowercaseString] = value.trim()
-            }
-        }
-        guard let body = nextMultiPartBody(&generator, boundary: boundary) else {
-            return nil
-        }
-        return MultiPart(headers: headers, body: body)
     }
     
-    private func nextMultiPartLine(inout generator: IndexingGenerator<[UInt8]>) -> String? {
-        var result = String()
-        while let value = generator.next() {
-            if value > Request.CR {
-                result.append(Character(UnicodeScalar(value)))
-            }
-            if value == Request.NL {
-                break
+    /**
+        Cookies are sent to the server as `key=value` pairs
+        separated by semicolons.
+
+        - returns: String dictionary of parsed cookies.
+    */
+    class func parseCookies(string: String?) -> [String: String] {
+        var cookies: [String: String] = [:]
+        
+        guard let string = string else {
+            return cookies
+        }
+        
+        let cookieTokens = string.split(";")
+        for cookie in cookieTokens {
+            let cookieArray = cookie.split("=")
+            
+            if cookieArray.count == 2 {
+                let key = cookieArray[0].stringByReplacingOccurrencesOfString(" ", withString: "")
+                cookies[key] = cookieArray[1]
             }
         }
-        return result
+        
+        return cookies
     }
     
-    static let CR = UInt8(13)
-    static let NL = UInt8(10)
+    /**
+        POST data is sent in the body of the request
+        as `key=value` pairs separated by ampersands.
+     
+        - returns: String dictionary of parsed POST data.
+    */
+    class func parsePostData(body: [UInt8]) -> [String: String] {
+        if let bodyString = NSString(bytes: body, length: body.count, encoding: NSUTF8StringEncoding) {
+            return self.parseData(bodyString.description)
+        }
+        
+        return [:]
+    }
     
-    private func nextMultiPartBody(inout generator: IndexingGenerator<[UInt8]>, boundary: String) -> [UInt8]? {
-        var body = [UInt8]()
-        let boundaryArray = [UInt8](boundary.utf8)
-        var matchOffset = 0;
-        while let x = generator.next() {
-            matchOffset = ( x == boundaryArray[matchOffset] ? matchOffset + 1 : 0 )
-            body.append(x)
-            if matchOffset == boundaryArray.count {
-                body.removeRange(Range(body.count-matchOffset..<body.count))
-                if body.last == Request.NL {
-                    body.removeLast()
-                }
-                if body.last == Request.CR {
-                    body.removeLast()
-                }
-                return body
+    /**
+        Query data is information appended to the URL path
+        as `key=value` pairs separated by `&` after
+        an initial `?`
+     
+        - returns: String dictionary of parsed Query data
+    */
+    class func parseQueryData(string: String) -> [String: String] {
+        
+        var urlParts = string.split("?")
+        if urlParts.count >= 2 {
+            return self.parseData(urlParts[1])
+        }
+        
+        return [:]
+    }
+    
+    /**
+        Parses `key=value` pair data separated by `&`.
+     
+        - returns: String dictionary of parsed data
+    */
+    class func parseData(string: String) -> [String: String] {
+        var data: [String: String] = [:]
+        
+        for pair in string.split("&") {
+            let tokens = pair.split(1, separator: "=")
+            
+            if let name = tokens.first, value = tokens.last {
+                data[name.removePercentEncoding()] = value.removePercentEncoding()
             }
         }
-        return nil
+        
+        return data
     }
+
 }

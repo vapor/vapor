@@ -1,6 +1,7 @@
 //
 // Based on comment from ElvishJerricco <https://www.reddit.com/r/swift/comments/42n46u/a_laravellumen_inspired_web_framework_for_swift/czc3nw8>
 //
+
 import Foundation
 
 public protocol ResponseConvertible {

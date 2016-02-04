@@ -145,7 +145,14 @@ public class Socket: Hashable, Equatable {
         return characters
     }
     
+    var cachedPeerName: String?
+    
     func peername() throws -> String {
+        if let name = self.cachedPeerName {
+            return name
+        }
+        
+        
         var addr = sockaddr(), len: socklen_t = socklen_t(sizeof(sockaddr))
         if getpeername(self.socketFileDescriptor, &addr, &len) != 0 {
             throw SocketError.GetPeerNameFailed(Socket.descriptionOfLastError())
@@ -157,6 +164,8 @@ public class Socket: Hashable, Equatable {
         guard let name = String.fromCString(hostBuffer) else {
             throw SocketError.ConvertingPeerNameFailed
         }
+        
+        self.cachedPeerName = name
         return name
     }
     
