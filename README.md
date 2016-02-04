@@ -12,7 +12,7 @@ A Laravel/Lumen Inspired Web Framework for Swift that works on iOS, OS X, and Ub
 
 [![Build Status](https://img.shields.io/travis/tannernelson/vapor.svg?style=flat-square)](https://travis-ci.org/tannernelson/vapor)
 [![Issue Stats](http://issuestats.com/github/tannernelson/vapor/badge/pr?style=flat-square)](http://issuestats.com/github/tannernelson/vapor)
-[![Swift 2.2](https://img.shields.io/badge/Swift-2.2-orange.svg?style=flat)](https://swift.org)
+[![Swift 2.2](https://img.shields.io/badge/Swift-2.2-orange.svg?style=flat-square)](https://swift.org)
 
 ## Getting Started
 
