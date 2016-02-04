@@ -15,12 +15,12 @@ sudo: required
 dist: trusty
 
 env:
-- SWIFT_VERSION=swift-2.2-SNAPSHOT-2015-12-01-b
+#- SWIFT_VERSION=swift-2.2-SNAPSHOT-2015-12-01-b
+- SWIFT_VESRION=swift-DEVELOPMENT-SNAPSHOT-2016-01-25-a
 
 install:
 - mkdir swift
 - curl https://swift.org/builds/ubuntu1404/$SWIFT_VERSION/$SWIFT_VERSION-ubuntu14.04.tar.gz -s | tar xz -C swift &> /dev/null
 
 script:
-- touch /Users/travis/build/tannernelson/vapor/Sources/main.swift
 - env PATH=$(pwd)/swift/$SWIFT_VERSION-ubuntu14.04/usr/bin:$PATH swift build
