@@ -160,6 +160,27 @@ if let name = request.session.data["name"] {
 request.session.data["name"] = "Vapor"
 ```
 
+## Database
+
+Vapor was designed alongside [Fluent](https://github.com/tannernelson/fluent), an Eloquent inspired ORM that empowers simple and expressive database management. 
+
+```swift
+import Fluent
+
+if let user = User.find(5) {
+    print("Found \(user.name)")
+
+    user.name = "New Name"
+    user.save()
+}
+```
+
+Underlying [Fluent](https://github.com/tannernelson/fluent) is a powerful Query builder.
+
+```swift
+let user = Query<User>().filter("id", notIn: [1, 2, 3]).filter("age", .GreaterThan, 21).first
+```
+
 ## Controllers
 
 Controllers are great for keeping your code organized. `Route` directives can take whole controllers or controller methods as arguments instead of closures.
