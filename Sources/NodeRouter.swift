@@ -103,25 +103,19 @@ class NodeRouter: RouterDriver {
             return key.characters.first == ":"
         }
         
-        var child: Node?
-        
         if let variableNode: (key: String, node: Node) = variableNodes.first {
             //get rid of `:`
             var key = variableNode.key
             key.removeAtIndex(key.startIndex)
             
             request.parameters[key] = path
-            child = variableNode.1
+            return self.search(variableNode.node, paths: paths, request: request)
         } else if let pathNode = node.nodes[path] {
-            child = pathNode
-        } else if let startNode = node.nodes["*"] {
-            child = startNode
+            return self.search(pathNode, paths: paths, request: request)
+        } else if let starNode = node.nodes["*"] {
+            return starNode.handler //thanks @KenLau
+        } else {
+            return nil
         }
-        
-        if let child = child {
-            return self.search(child, paths: paths, request: request)
-        }
-
-        return nil
     }
 }
