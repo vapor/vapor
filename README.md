@@ -1,5 +1,7 @@
 ![Vapor](https://cloud.githubusercontent.com/assets/1342803/12457900/1825c70c-bf75-11e5-9080-989345fa43e2.png)
 
+![Travis](https://api.travis-ci.org/tannernelson/vapor.svg)
+
 # Vapor
 
 A Laravel/Lumen Inspired Web Framework for Swift that works on iOS, OS X, and Ubuntu.
