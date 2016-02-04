@@ -1,5 +1,6 @@
 var _module_nsstring = true
 
+
 #if os(Linux)
 import Foundation
 import Glibc
