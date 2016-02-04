@@ -34,7 +34,9 @@ class NodeRouter: RouterDriver {
         Recurses the routing tree to return nodes for assigning
         handlers and create child nodes where needed.
     */
-    func inflate(node: Node, var paths: [String]) -> Node {
+    func inflate(node: Node, paths: [String]) -> Node {
+        var paths = paths
+        
         if paths.count == 0 {
             return node
         }
@@ -67,7 +69,7 @@ class NodeRouter: RouterDriver {
     func printNode(node: Node, depth: Int) {
         for (key, node) in node.nodes {
             var prefix = ""
-            for var i = 0; i < depth; i++ {
+            for _ in 0 ..< depth {
                 prefix += "\t"
             }
             print("\(prefix)\(key)")
@@ -87,7 +89,9 @@ class NodeRouter: RouterDriver {
     }
   
     
-    private func search(node: Node, var paths: [String], request: Request) -> (Request -> Response)? {
+    private func search(node: Node, paths: [String], request: Request) -> (Request -> Response)? {
+        var paths = paths
+        
         if paths.count == 0 {
             return node.handler
         }
