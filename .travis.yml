@@ -1,10 +1,26 @@
-language: objective-c
+#language: objective-c
 
-before_install:
-- brew update
-- if brew outdated | grep -qx xctool; then brew upgrade xctool; fi
+#before_install:
+#- brew update
+#- if brew outdated | grep -qx xctool; then brew upgrade xctool; fi
+
+#script:
+#- touch /Users/travis/build/tannernelson/vapor/Sources/main.swift
+#- xctool clean build -project Vapor.xcodeproj -scheme Vapor
+#- xctool test -project Vapor.xcodeproj -scheme Tests
+
+language: generic
+
+sudo: required
+dist: trusty
+
+env:
+- SWIFT_VERSION=swift-2.2-SNAPSHOT-2015-12-01-b
+
+install:
+- mkdir swift
+- curl https://swift.org/builds/ubuntu1404/$SWIFT_VERSION/$SWIFT_VERSION-ubuntu14.04.tar.gz -s | tar xz -C swift &> /dev/null
 
 script:
 - touch /Users/travis/build/tannernelson/vapor/Sources/main.swift
-- xctool clean build -project Vapor.xcodeproj -scheme Vapor
-- xctool test -project Vapor.xcodeproj -scheme Tests
+- env PATH=$(pwd)/swift/$SWIFT_VERSION-ubuntu14.04/usr/bin:$PATH swift build
