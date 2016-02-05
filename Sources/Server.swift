@@ -1,5 +1,10 @@
 import Foundation
 
+#if os(Linux)
+    import Glibc
+#endif
+
+
 public class Server {
     
     public static let VERSION = "0.1.6"
