@@ -203,7 +203,7 @@ public class Socket: Hashable, Equatable {
     
     private class func htonsPort(port: in_port_t) -> in_port_t {
         #if os(Linux)
-            return port.bigEndian
+            return port.bigEndian //use htons() when llvm stops crashing
         #else
             let isLittleEndian = Int(OSHostByteOrder()) == OSLittleEndian
             return isLittleEndian ? _OSSwapInt16(port) : port
