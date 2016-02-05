@@ -94,7 +94,7 @@ public class Request {
     
     /**
         POST data is sent in the body of the request
-        as `key=value` pairs separated by ampersands.
+        as `key=value` pairs separated by `&`.
      
         - returns: String dictionary of parsed POST data.
     */

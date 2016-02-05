@@ -203,7 +203,8 @@ public class Socket: Hashable, Equatable {
     
     private class func htonsPort(port: in_port_t) -> in_port_t {
         #if os(Linux)
-            return htons(port)
+            let fixedPort = htons(port)
+            return fixedPort
         #else
             let isLittleEndian = Int(OSHostByteOrder()) == OSLittleEndian
             return isLittleEndian ? _OSSwapInt16(port) : port
