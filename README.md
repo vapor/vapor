@@ -265,6 +265,8 @@ Route.get("async") { request in
 
 Vapor has been successfully tested on Ubuntu 14.04 LTS (DigitalOcean) and Ubuntu 15.10 (VirtualBox). 
 
+### DigitalOcean
+
 To deploy to DigitalOcean, simply 
 
 - Install Swift 2.2
@@ -277,6 +279,11 @@ To deploy to DigitalOcean, simply
 	- Run `.build/debug/MyApp`
 	- (you may need to run as `sudo` to use certain ports)
 	- (you may need to install `ufw` to set appropriate ports)
+
+
+### Heroku
+
+To deploy on Heroku, one can use [Kyle Fuller's Heroku buildpack](https://github.com/kylef/heroku-buildpack-swift) which works out of the box with the `vapor-example`.
 
 My website `http://tanner.xyz` is currently running using Vapor.
 
