@@ -12,7 +12,9 @@
 extension String {
     
     var SHA1: String {
-        return self.SHA1Array.reduce("") { $0 + String(format: "%02x", $1) }
+        return self.SHA1Array.reduce("") { el1, el2 in
+            return el1 + String(el2, radix: 16, uppercase: false)
+        }
     }
     
     var SHA1Array: [UInt8] {
