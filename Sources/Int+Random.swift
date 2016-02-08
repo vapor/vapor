@@ -17,7 +17,7 @@ extension Int {
     public static func random(min min: Int, max: Int) -> Int {
         let top = max - min + 1
         #if os(Linux)
-            let j = Int(random() % (top)) + min
+            let j = Int(Glibc.random() % (top)) + min
         #else
             return Int(arc4random_uniform(UInt32(top))) + min
         #endif
