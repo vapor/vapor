@@ -271,7 +271,7 @@ let hello = Hash.make("world")
 
 For added security, set a custom `applicationKey` on the `Hash` class.
 
-```
+```swift
 Hash.applicationKey = "my-secret-key"
 ```
 
