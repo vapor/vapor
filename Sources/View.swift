@@ -2,7 +2,7 @@ import Foundation
 
 public class View {
 
-	public static let resourceDir = Config.workDir + "Resources"
+	public static let resourceDir = Server.workDir + "Resources"
 	let bytes: [UInt8]
 
     enum Error: ErrorType {

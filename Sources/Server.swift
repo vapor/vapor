@@ -7,21 +7,66 @@ import Foundation
 
 public class Server {
     
-    public static let VERSION = "0.1.6"
+    public static let VERSION = "0.1.7"
     
-    public var bootstrap = Bootstrap()
-    
+    /**
+        The router driver is responsible
+        for returning registered `Route` handlers
+        for a given request.
+    */
     public var router: RouterDriver
+    
+    /**
+        The `ServerDriver` is responsible
+        for handling connections on the desired port.
+        This property is constant since it cannot
+        be changed after the server has been booted.
+    */
     public let driver: ServerDriver
+    
+    /**
+        `Middleware` will be applied in the order
+        it is set in this array. 
+     
+        Make sure to append your custom `Middleware`
+        if you don't want to overwrite default behavior.
+    */
+    public var middleware: [Middleware]
 
+    /**
+        Initializes the `Server` with a
+        `SocketServer` and `NodeRouter`.
+    */
     public convenience init() {
         let driver = SocketServer()
         self.init(driver: driver)
     }
     
+    /**
+        The work directory of your application is
+        the directory in which your Resources, Public, etc
+        folders are stored. This is normally `./` if
+        you are running Vapor using `.build/xxx/App`
+    */
+    public static var workDir = "./" {
+        didSet {
+            if !self.workDir.hasSuffix("/") {
+                self.workDir += "/"
+            }
+        }
+    }
+    
+    /**
+        Initialize the `Server` with a custom
+        `ServerDriver`
+    */
     public init(driver: ServerDriver) {
         self.driver = driver
         self.router = NodeRouter()
+        
+        self.middleware = [
+            SessionMiddleware()
+        ]
         
         self.driver.delegate = self
     }
@@ -32,8 +77,7 @@ public class Server {
     */
     func registerRoutes() {
         for route in Route.routes {
-            self.router.register(route.method, path: route.path) { request in 
-                self.bootstrap.request(request)
+            self.router.register(route.method, path: route.path) { request in
 
                 let response: Response
                 do {
@@ -43,13 +87,16 @@ public class Server {
                 } catch {
                     response = Response(error: "Server Error: \(error)")
                 }
-                self.bootstrap.respond(request, response: response)
 
                 return response
             }
         }
     }
 
+    /**
+        Boots the chosen `ServerDriver` and
+        runs on the supplied port.
+    */
     public func run(port inPort: Int = 80) {
         self.registerRoutes()
 
@@ -59,7 +106,7 @@ public class Server {
         for argument in Process.arguments {
             if argument.hasPrefix("--workDir=") {
                 let workDirString = argument.split("=")[1]
-                Config.workDir = workDirString
+                Server.workDir = workDirString
             } else if argument.hasPrefix("--port=") {
                 let portString = argument.split("=")[1]
                 if let portInt = Int(portString) {
@@ -98,40 +145,44 @@ public class Server {
 
 extension Server: ServerDriverDelegate {
     public func serverDriverDidReceiveRequest(request: Request) -> Response {
+        var handler: Request -> Response
         
         //check in routes
-        if let result = router.route(request) {
-            return result(request)
-        }
-        
-        //check in file system
-        let filePath = "Public" + request.path
-        let fileManager = NSFileManager.defaultManager()
-        var isDir: ObjCBool = false
-        if fileManager.fileExistsAtPath(filePath, isDirectory: &isDir) {
-            if isDir {
-                do {
-                    let files = try fileManager.contentsOfDirectoryAtPath(filePath)
-                    var response = "<h3>\(filePath)</h3></br><table>"
-                    response += files.map({ "<tr><td><a href=\"\(request.path)/\($0)\">\($0)</a></td></tr>"}).joinWithSeparator("")
-                    response += "</table>"
-                    
-                    return Response(status: .OK, html: response)
-                } catch {
-                    //continue to not found
-                }
-            } else {
+        if let routerHandler = router.route(request) {
+            handler = routerHandler
+        } else {
+            //check in file system
+            let filePath = "Public" + request.path
+            
+            let fileManager = NSFileManager.defaultManager()
+            var isDir: ObjCBool = false
+            
+            if fileManager.fileExistsAtPath(filePath, isDirectory: &isDir) {
+                //file exists
                 if let fileBody = NSData(contentsOfFile: filePath) {
                     var array = [UInt8](count: fileBody.length, repeatedValue: 0)
                     fileBody.getBytes(&array, length: fileBody.length)
-                    return Response(status: .OK, data: array, contentType: .Text)
                     
+                    return Response(status: .OK, data: array, contentType: .Text)
+                } else {
+                    handler = { _ in
+                        return Response(error: "Could not open file.")
+                    }
+                }
+            } else {
+                //default not found handler
+                handler = { _ in
+                    return Response(status: .NotFound, text: "Page not found")
                 }
             }
         }
         
+        //loop through middlewares in order
+        for middleware in self.middleware {
+            handler = middleware.handle(handler)
+        }
         
-        
-        return Response(status: .NotFound, text: "Page not found")
+        let response = handler(request)
+        return response
     }
 }

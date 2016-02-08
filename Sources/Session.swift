@@ -1,3 +1,5 @@
+import Foundation
+
 protocol SessionDriver {
 	var sessions: [String: Session] { get set }
 }
@@ -50,7 +52,15 @@ public class Session {
 	public var data: [String: String] = [:] {
 		didSet {
 			if self.key == nil {
-				let key = "12931923912" //TODO: generate random key
+                
+				var key = "\(NSDate().timeIntervalSinceNow)"
+                key += "v@p0r"
+                key += "\(Int.random(min: 0, max: 9999))"
+                key += "s3sS10n"
+                key += "\(Int.random(min: 0, max: 9999))"
+                
+                key = key.SHA1
+                
 				self.key = key
 				Session.driver.sessions[key] = self
 			}

@@ -223,26 +223,26 @@ Route.resource("user", controller: UserController())
 
 This will create the appropriate `GET`, `POST`, `DELETE`, etc methods for individual and groups of users. 
 
-## Bootstrap
+## Middleware
 
-Create a subclass of `Bootstrap` to hook into server requests and responses. Set the `server.boostrap` property to your subclass.
+Create a class conforming to `Middleware` to hook into server requests and responses. Append your classes to the `server.middleware` array in the order you want them to run..
 
 ```swift
-class MyBootstrap: Bootstrap {
-	override func request(request: Request) {
-		super.request(request)
+class MyMiddleware: Middleware {
+    func handle(handler: Request -> Response) -> (Request -> Response) {
+        return { request in
+            print("Incoming request from \(request.address)")
 
-		print("Incoming request from \(request.address)")
-	}
+            let response = handler(request)
 
-	override func respond(request: Request, response: Response) {
-		super.respond(request, response: response)
+            print("Responding with status \(response.status)")
 
-		print("Responding to request")
-	}
+            return response
+        }
+    }
 }
 
-server.bootstrap = MyBootstrap()
+server.middleware.append(MyMiddleware())
 ```
 
 ## Async
@@ -259,6 +259,20 @@ Route.get("async") { request in
 		socket.release()
 	}
 }
+```
+
+## Hash
+
+Vapor currently supports `SHA1` hashes. 
+
+```swift
+let hello = Hash.make("world")
+```
+
+For added security, set a custom `applicationKey` on the `Hash` class.
+
+```
+Hash.applicationKey = "my-secret-key"
 ```
 
 ## Deploying
