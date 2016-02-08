@@ -107,9 +107,11 @@ public class Server {
             if argument.hasPrefix("--workDir=") {
                 let workDirString = argument.split("=")[1]
                 Server.workDir = workDirString
+                print("Work dir override: \(workDirString)")
             } else if argument.hasPrefix("--port=") {
                 let portString = argument.split("=")[1]
                 if let portInt = Int(portString) {
+                    print("Port override: \(portInt)")
                     port = portInt
                 }
             }
