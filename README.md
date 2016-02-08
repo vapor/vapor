@@ -193,7 +193,7 @@ Route.get("heartbeat", closure: HeartbeatController().index)
 To pass a function name as a closure like above, the closure must have the function signature 
 
 ```swift
-func index(request: Request) -> AnyObject
+func index(request: Request) -> ResponseConvertible
 ```
 
 Here is an example of a controller for returning an API heartbeat.
