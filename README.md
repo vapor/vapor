@@ -12,12 +12,15 @@ A Laravel/Lumen Inspired Web Framework for Swift that works on iOS, OS X, and Ub
 
 [![Build Status](https://img.shields.io/travis/tannernelson/vapor.svg?style=flat-square)](https://travis-ci.org/tannernelson/vapor)
 [![Issue Stats](http://issuestats.com/github/tannernelson/vapor/badge/pr?style=flat-square)](http://issuestats.com/github/tannernelson/vapor)
+[![PRs Welcome](https://img.shields.io/badge/prs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
 
 ## Getting Started
 
 Clone the [Example](https://github.com/tannernelson/vapor-example) project to start making your application or check out the [live demo](http://vapor.tanner.xyz:8080) running on Ubuntu. This repository is for the framework module. 
 
 You must have Swift 2.2 or later installed. You can learn more about Swift 2.2 at [Swift.org](http://swift.org)
+
+Want to make a pull request? You can learn how from this *free* series [How to Contribute to an Open Source Project on GitHub](https://egghead.io/series/how-to-contribute-to-an-open-source-project-on-github)
 
 ### Work in Progress
 
