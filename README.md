@@ -83,7 +83,7 @@ Route.get("/") { request in
 }
 ```
 
-Or Stencil templates.
+Or [Stencil](https://github.com/kylef/Stencil) templates.
 
 `index.stencil`
 
