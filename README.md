@@ -83,9 +83,9 @@ Route.get("/") { request in
 }
 ```
 
-Or Mustache templates (coming soon).
+Or Stencil templates.
 
-`index.mustache`
+`index.stencil`
 
 ```mustache
 <html>
@@ -95,11 +95,31 @@ Or Mustache templates (coming soon).
 
 ```swift
 Route.get("/") { request in
-	return View(path: "index.mustache", ["message": "Hello"])
+	return View(path: "index.stencil", context: ["message": "Hello"])
 }
 ```
 
-Just put the View file in the `Resources` folder at the root of your project and it will be served.
+If you have `VaporStencil` added, just put the View file in the `Resources` folder at the root of your project and it will be served.
+
+#### Stencil
+
+To add `VaporStencil`, add the following package to your `Package.swift`.
+
+`Package.swift`
+```swift
+.Package(url: "https://github.com/tannernelson/vapor-stencil.git", majorVersion: 0)
+```
+
+Then set the `StencilRenderer()` on your `View.renderers` for whatever file extensions you would like to be rendered as `Stencil` templates.
+
+`main.swift`
+```swift
+import VaporStencil
+
+//set the stencil renderer
+//for all .stencil files
+View.renderers[".stencil"] = StencilRenderer()
+```
 
 ### Response
 
