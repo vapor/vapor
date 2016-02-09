@@ -317,6 +317,35 @@ To deploy to DigitalOcean, simply
 	- (you may need to run as `sudo` to use certain ports)
 	- (you may need to install `ufw` to set appropriate ports)
 
+#### Upstart
+
+To start your `Vapor` site automatically when the server is booted, add this file to your server.
+
+`/etc/init/vapor-example.conf`
+
+```conf
+description "Vapor Example"
+
+start on startup
+
+exec /home/<user_name>/vapor-example/.build/release/VaporApp --workDir=/home/<user_name>/vapor-example
+```
+
+You additionally have access to the following commands for starting and stopping your server.
+
+```shell
+sudo stop vapor-example
+sudo start vapor-example
+```
+
+The following script is useful for upgrading your website.
+
+```shell
+git pull
+swift build --configuration release
+sudo stop vapor-example
+sudo start vapor-example
+```
 
 ### Heroku
 
