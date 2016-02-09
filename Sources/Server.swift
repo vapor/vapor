@@ -154,7 +154,7 @@ extension Server: ServerDriverDelegate {
             handler = routerHandler
         } else {
             //check in file system
-            let filePath = "Public" + request.path
+            let filePath = Server.workDir + "Public" + request.path
             
             let fileManager = NSFileManager.defaultManager()
             var isDir: ObjCBool = false
