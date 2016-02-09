@@ -7,7 +7,7 @@ import Foundation
 
 public class Server {
     
-    public static let VERSION = "0.1.7"
+    public static let VERSION = "0.1.8"
     
     /**
         The router driver is responsible

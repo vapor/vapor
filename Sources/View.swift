@@ -1,11 +1,8 @@
 import Foundation
-import Stencil
 
 public class View {
 
-    public static var renderers: [String: RenderDriver] = [
-        ".stencil": StencilRenderer()
-    ]
+    public static var renderers: [String: RenderDriver] = [:]
 
 	public static let resourceDir = Server.workDir + "Resources"
 	var bytes: [UInt8]
@@ -50,16 +47,3 @@ extension View: ResponseConvertible {
     }
 }
 
-public protocol RenderDriver {
-    func render(template template: String, context: [String: Any]) throws -> String
-}
-
-public class StencilRenderer: RenderDriver {
-
-    public func render(template template: String, context: [String: Any]) throws -> String {
-        let c = Context(dictionary: context)
-        let template = Template(templateString: template)
-        return try template.render(c)
-    }
-    
-}
