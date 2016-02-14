@@ -8,7 +8,7 @@
     import Foundation
 #endif
 
-enum SocketError: ErrorType {
+public enum SocketError: ErrorType {
     case SocketCreationFailed(String)
     case SocketSettingReUseAddrFailed(String)
     case BindFailed(String)
@@ -23,7 +23,7 @@ enum SocketError: ErrorType {
 
 public class Socket: Hashable, Equatable {
     
-    class func tcpSocketForListen(port: in_port_t, maxPendingConnection: Int32 = SOMAXCONN) throws -> Socket {
+    public class func tcpSocketForListen(port: in_port_t, maxPendingConnection: Int32 = SOMAXCONN) throws -> Socket {
         
         #if os(Linux)
             let socketFileDescriptor = socket(AF_INET, Int32(SOCK_STREAM.rawValue), 0)
@@ -83,11 +83,11 @@ public class Socket: Hashable, Equatable {
     
     public var hashValue: Int { return Int(self.socketFileDescriptor) }
     
-    func release() {
+    public func release() {
         Socket.release(self.socketFileDescriptor)
     }
     
-    func shutdwn() {
+    public func shutdwn() {
         Socket.shutdwn(self.socketFileDescriptor)
     }
     
@@ -123,7 +123,7 @@ public class Socket: Hashable, Equatable {
         }
     }
     
-    func read() throws -> UInt8 {
+    public func read() throws -> UInt8 {
         var buffer = [UInt8](count: 1, repeatedValue: 0)
         let next = recv(self.socketFileDescriptor as Int32, &buffer, Int(buffer.count), 0)
         if next <= 0 {
@@ -135,7 +135,7 @@ public class Socket: Hashable, Equatable {
     private static let CR = UInt8(13)
     private static let NL = UInt8(10)
     
-    func readLine() throws -> String {
+    public func readLine() throws -> String {
         var characters: String = ""
         var n: UInt8 = 0
         repeat {
@@ -147,7 +147,7 @@ public class Socket: Hashable, Equatable {
     
     var cachedPeerName: String?
     
-    func peername() throws -> String {
+    public func peername() throws -> String {
         if let name = self.cachedPeerName {
             return name
         }
