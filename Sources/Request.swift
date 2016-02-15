@@ -84,7 +84,7 @@ public class Request {
             let cookieArray = cookie.split("=")
             
             if cookieArray.count == 2 {
-                let key = cookieArray[0].stringByReplacingOccurrencesOfString(" ", withString: "")
+                let key = cookieArray[0].split(" ").joinWithSeparator("")
                 cookies[key] = cookieArray[1]
             }
         }

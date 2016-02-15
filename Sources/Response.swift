@@ -46,11 +46,11 @@ public class Redirect: Response {
 
     Inspired by elliottminns
 */
-class AsyncResponse: Response {
-    typealias Writer = Socket throws -> Void
-    var writer: Writer
+public class AsyncResponse: Response {
+    public typealias Writer = Socket throws -> Void
+    public let writer: Writer
 
-    init(writer: Writer) {
+    public init(writer: Writer) {
         self.writer = writer
         super.init(status: .OK, data: [], contentType: .None)
     }
