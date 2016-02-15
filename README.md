@@ -16,7 +16,9 @@ A Laravel/Lumen Inspired Web Framework for Swift that works on iOS, OS X, and Ub
 
 ## Getting Started
 
-Clone the [Example](https://github.com/tannernelson/vapor-example) project to start making your application or check out the [live demo](http://vapor.tanner.xyz:8080) running on Ubuntu. This repository is for the framework module. 
+Clone the [Example](https://github.com/tannernelson/vapor-example) project to start making your application or check out the [live demo](http://vapor.tanner.xyz:8080) running on Ubuntu. This repository is for the framework module.
+
+You can also download the alpha [Vapor Installer](https://github.com/mpclarkson/vapor-installer), which allows you to create a new project at the command line e.g. `vapor new MyProject`
 
 You must have Swift 2.2 or later installed. You can learn more about Swift 2.2 at [Swift.org](http://swift.org)
 
@@ -59,7 +61,7 @@ Route.get("welcome") { request in
 //...start server
 ```
 
-Here we will respond to all requests to `http://example.com/welcome` with the string `"Hello"`. 
+Here we will respond to all requests to `http://example.com/welcome` with the string `"Hello"`.
 
 ### JSON
 
@@ -176,7 +178,7 @@ Sessions will be kept track of using the `vapor-session` cookie. The default (an
 
 ```swift
 if let name = request.session.data["name"] {
-	//name was in session	
+	//name was in session
 }
 
 //store name in session
@@ -185,7 +187,7 @@ request.session.data["name"] = "Vapor"
 
 ## Database
 
-Vapor was designed alongside [Fluent](https://github.com/tannernelson/fluent), an Eloquent inspired ORM that empowers simple and expressive database management. 
+Vapor was designed alongside [Fluent](https://github.com/tannernelson/fluent), an Eloquent inspired ORM that empowers simple and expressive database management.
 
 ```swift
 import Fluent
@@ -213,7 +215,7 @@ Controllers are great for keeping your code organized. `Route` directives can ta
 Route.get("heartbeat", closure: HeartbeatController().index)
 ```
 
-To pass a function name as a closure like above, the closure must have the function signature 
+To pass a function name as a closure like above, the closure must have the function signature
 
 ```swift
 func index(request: Request) -> ResponseConvertible
@@ -241,10 +243,10 @@ Here the `HeartbeatControllers`'s index method will be called when `http://examp
 Resource controllers take advantage of CRUD-like `index`, `show`, `store`, `update`, `destroy` methods to make setting up REST APIs easy.
 
 ```swift
-Route.resource("user", controller: UserController()) 
+Route.resource("user", controller: UserController())
 ```
 
-This will create the appropriate `GET`, `POST`, `DELETE`, etc methods for individual and groups of users. 
+This will create the appropriate `GET`, `POST`, `DELETE`, etc methods for individual and groups of users.
 
 ## Middleware
 
@@ -273,7 +275,7 @@ server.middleware.append(MyMiddleware())
 Use the `AsyncResponse` to send custom, asynchronous responses. You have full control over the response here, meaning you are responsible for writing all required headers and releasing the `Socket` when done. (Thanks @elliottminns)
 
 ```swift
-Route.get("async") { request in 
+Route.get("async") { request in
 	return AsyncResponse() { socket in
 		try socket.writeUTF8("HTTP/1.1 200 OK\r\n")
 		try socket.writeUTF8("Content-Type: application/json\r\n\r\n")
@@ -286,7 +288,7 @@ Route.get("async") { request in
 
 ## Hash
 
-Vapor currently supports `SHA1` hashes. 
+Vapor currently supports `SHA1` hashes.
 
 ```swift
 let hello = Hash.make("world")
@@ -300,11 +302,11 @@ Hash.applicationKey = "my-secret-key"
 
 ## Deploying
 
-Vapor has been successfully tested on Ubuntu 14.04 LTS (DigitalOcean) and Ubuntu 15.10 (VirtualBox). 
+Vapor has been successfully tested on Ubuntu 14.04 LTS (DigitalOcean) and Ubuntu 15.10 (VirtualBox).
 
 ### DigitalOcean
 
-To deploy to DigitalOcean, simply 
+To deploy to DigitalOcean, simply
 
 - Install Swift 2.2
 	- `wget` the .tar.gz from Apple
