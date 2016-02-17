@@ -13,6 +13,7 @@ public class Request {
         case Put = "PUT"
         case Patch = "PATCH"
         case Delete = "DELETE"
+        case Options = "OPTIONS"
         case Unknown = "x"
     }
 
