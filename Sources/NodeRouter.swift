@@ -122,7 +122,7 @@ class NodeRouter: RouterDriver {
             var key = variableNode.key
             key.removeAtIndex(key.startIndex)
             
-            request.parameters[key] = path
+            request.parameters[key] = path.stringByRemovingPercentEncoding
             return self.search(variableNode.node, paths: paths, request: request)
         } else if let pathNode = node.nodes[path] {
             return self.search(pathNode, paths: paths, request: request)
