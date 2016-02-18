@@ -13,6 +13,8 @@ class NodeRouter: RouterDriver {
         The `Request.Method` is combined with the path
         to create a tree as shown below.
      
+                HOST
+               /    \
             GET      POST
              | \     / | \
              1  2   3  4  5
@@ -22,11 +24,12 @@ class NodeRouter: RouterDriver {
         Ex: GET 1/6, POST 3
      
     */
-    func register(method: Request.Method, path: String, handler: (Request -> Response)) {
-        let paths = [method.rawValue] + path.split("/")
+    func register(hostname hostname: String?, method: Request.Method, path: String, handler: (Request -> Response)) {
+        let host = hostname ?? "*"
+        let paths = [host] + [method.rawValue] + path.split("/")
         self.inflate(self.rootNode, paths: paths).handler = handler
         
-        //self.printTree()
+        self.printTree()
     }
     
     
@@ -81,7 +84,27 @@ class NodeRouter: RouterDriver {
     func route(request: Request) -> (Request -> Response)? {
         let paths = [request.method.rawValue] + request.path.split("/")
         
-        if let handler = self.search(self.rootNode, paths: paths, request: request) {
+        // create root tree node
+        let root = Node()
+        
+        // all "*" domains shall be included in every request
+        if let star = self.rootNode.nodes["*"] {
+            for (key, node) in star.nodes {
+                root.nodes[key] = node
+            }
+        }
+        
+        // merge all routes for the specific domain (if there any)
+        if let host = self.rootNode.nodes[request.hostname] {
+            for (key, node) in host.nodes {
+                root.nodes[key] = node
+            }
+        }
+        
+        // debug
+        //printNode(root, depth: 0)
+        
+        if let handler = self.search(root, paths: paths, request: request) {
             return handler
         }
         
