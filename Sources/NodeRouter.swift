@@ -84,18 +84,24 @@ class NodeRouter: RouterDriver {
     func route(request: Request) -> (Request -> Response)? {
         let paths = [request.method.rawValue] + request.path.split("/")
         
+        // create root tree node
         let root = Node()
+        
+        // all "*" domains shall be included in every request
         if let star = self.rootNode.nodes["*"] {
             for (key, node) in star.nodes {
                 root.nodes[key] = node
             }
         }
         
+        // merge all routes for the specific domain (if there any)
         if let host = self.rootNode.nodes[request.hostname] {
             for (key, node) in host.nodes {
                 root.nodes[key] = node
             }
         }
+        
+        // debug
         //printNode(root, depth: 0)
         
         if let handler = self.search(root, paths: paths, request: request) {
