@@ -50,6 +50,9 @@
 		C377F2EF1C696CAB00DABD21 /* RenderDriver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C377F2EE1C696CAB00DABD21 /* RenderDriver.swift */; };
 		C377F2F01C696CAB00DABD21 /* RenderDriver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C377F2EE1C696CAB00DABD21 /* RenderDriver.swift */; };
 		C38808641C62C0390067DADD /* ResponseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C38808631C62C0390067DADD /* ResponseTests.swift */; };
+		C3943DC31C7663E80014F4EE /* RouterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3943DC21C7663E80014F4EE /* RouterTests.swift */; };
+		C3943DC41C7664D90014F4EE /* Middleware.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3EDEA7A1C683A6C00754727 /* Middleware.swift */; };
+		C3943DC51C7664D90014F4EE /* SessionMiddleware.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3EDEA7C1C683CE100754727 /* SessionMiddleware.swift */; };
 		C3EDEA7B1C683A6C00754727 /* Middleware.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3EDEA7A1C683A6C00754727 /* Middleware.swift */; };
 		C3EDEA7D1C683CE100754727 /* SessionMiddleware.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3EDEA7C1C683CE100754727 /* SessionMiddleware.swift */; };
 		C3EDEA801C68419800754727 /* String+SHA1.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3EDEA7F1C68419800754727 /* String+SHA1.swift */; };
@@ -105,6 +108,7 @@
 		C352E7151C62BED500E26467 /* .gitignore */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
 		C377F2EE1C696CAB00DABD21 /* RenderDriver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RenderDriver.swift; sourceTree = "<group>"; };
 		C38808631C62C0390067DADD /* ResponseTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ResponseTests.swift; sourceTree = "<group>"; };
+		C3943DC21C7663E80014F4EE /* RouterTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RouterTests.swift; sourceTree = "<group>"; };
 		C3EDEA7A1C683A6C00754727 /* Middleware.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Middleware.swift; sourceTree = "<group>"; };
 		C3EDEA7C1C683CE100754727 /* SessionMiddleware.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SessionMiddleware.swift; sourceTree = "<group>"; };
 		C3EDEA7F1C68419800754727 /* String+SHA1.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "String+SHA1.swift"; sourceTree = "<group>"; };
@@ -227,6 +231,7 @@
 			children = (
 				C352E6931C62BB1C00E26467 /* Info.plist */,
 				C38808631C62C0390067DADD /* ResponseTests.swift */,
+				C3943DC21C7663E80014F4EE /* RouterTests.swift */,
 			);
 			path = Tests;
 			sourceTree = "<group>";
@@ -439,7 +444,9 @@
 				C352E6F81C62BC6A00E26467 /* ResponseConvertible.swift in Sources */,
 				C352E6F01C62BC6A00E26467 /* MemorySessionDriver.swift in Sources */,
 				C352E7001C62BC6A00E26467 /* Session.swift in Sources */,
+				C3943DC41C7664D90014F4EE /* Middleware.swift in Sources */,
 				C352E6F61C62BC6A00E26467 /* Response.swift in Sources */,
+				C3943DC31C7663E80014F4EE /* RouterTests.swift in Sources */,
 				C3EDEA851C6842C700754727 /* Int+Random.swift in Sources */,
 				C352E6F21C62BC6A00E26467 /* SocketParser.swift in Sources */,
 				C304C8AB1C62FCA300058C92 /* RequestFormExtension.swift in Sources */,
@@ -452,6 +459,7 @@
 				C304C8A21C62C6EF00058C92 /* main.swift in Sources */,
 				C352E7041C62BC6A00E26467 /* SocketServer.swift in Sources */,
 				C3EDEA881C68459300754727 /* Hash.swift in Sources */,
+				C3943DC51C7664D90014F4EE /* SessionMiddleware.swift in Sources */,
 				C3EDEA811C68419800754727 /* String+SHA1.swift in Sources */,
 				C352E6EA1C62BC6A00E26467 /* JSONSerializer.swift in Sources */,
 				C352E6FC1C62BC6A00E26467 /* NodeRouter.swift in Sources */,
