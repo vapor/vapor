@@ -49,11 +49,15 @@ class RouterTests: XCTestCase {
         let percentEncodedString = "testing%20parameter%21%23%24%26%27%28%29%2A%2B%2C%2F%3A%3B%3D%3F%40%5B%5D"
         let decodedString = "testing parameter!#$&'()*+,/:;=?@[]"
         
+        var handlerRan = false
+        
         router.register(hostname: nil, method: .Get, path: "test/:string") { request in
             
             let testParameter = request.parameters["string"]
             
             XCTAssert(testParameter == decodedString, "URL parameter was not decoded properly")
+            
+            handlerRan = true
             
             return Response(status: .OK, data: [], contentType: .None)
         }
@@ -62,6 +66,8 @@ class RouterTests: XCTestCase {
         let handler = router.route(request)
         
         handler?(request)
+        
+        XCTAssert(handlerRan, "The handler did not run, and the parameter test also did not run")
     }
     
 }
