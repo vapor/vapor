@@ -24,11 +24,12 @@ class NodeRouter: RouterDriver {
         Ex: GET 1/6, POST 3
      
     */
-    func register(method: Request.Method, path: String, handler: (Request -> Response)) {
-        let paths = [method.rawValue] + path.split("/")
+    func register(hostname hostname: String?, method: Request.Method, path: String, handler: (Request -> Response)) {
+        let host = hostname ?? "*"
+        let paths = [host] + [method.rawValue] + path.split("/")
         self.inflate(self.rootNode, paths: paths).handler = handler
         
-        //self.printTree()
+        self.printTree()
     }
     
     
@@ -83,7 +84,21 @@ class NodeRouter: RouterDriver {
     func route(request: Request) -> (Request -> Response)? {
         let paths = [request.method.rawValue] + request.path.split("/")
         
-        if let handler = self.search(self.rootNode, paths: paths, request: request) {
+        let root = Node()
+        if let star = self.rootNode.nodes["*"] {
+            for (key, node) in star.nodes {
+                root.nodes[key] = node
+            }
+        }
+        
+        if let host = self.rootNode.nodes[request.hostname] {
+            for (key, node) in host.nodes {
+                root.nodes[key] = node
+            }
+        }
+        //printNode(root, depth: 0)
+        
+        if let handler = self.search(root, paths: paths, request: request) {
             return handler
         }
         
