@@ -29,7 +29,7 @@ class NodeRouter: RouterDriver {
         let paths = [host] + [method.rawValue] + path.split("/")
         self.inflate(self.rootNode, paths: paths).handler = handler
         
-        self.printTree()
+        //self.printTree()
     }
     
     
