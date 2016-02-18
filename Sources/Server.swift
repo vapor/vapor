@@ -77,7 +77,7 @@ public class Server {
     */
     func registerRoutes() {
         for route in Route.routes {
-            self.router.register(route.method, path: route.path) { request in
+            self.router.register(hostname: route.hostname, method: route.method, path: route.path) { request in
 
                 let response: Response
                 do {
