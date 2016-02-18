@@ -357,6 +357,6 @@ My website `http://tanner.xyz` is currently running using Vapor.
 
 ## Attributions
 
-This project is based on [Swifter](https://github.com/glock45/swifter) by Damian Kołakowski. It uses compatibilty code from [NSLinux](https://github.com/johnno1962/NSLinux) by johnno1962.
+This project is based on [Swifter](https://github.com/glock45/swifter) by Damian Kołakowski. It uses compatibility code from [NSLinux](https://github.com/johnno1962/NSLinux) by johnno1962.
 
 Go checkout and star their repos.
