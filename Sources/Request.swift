@@ -45,7 +45,7 @@ public class Request {
     public var session: Session = Session()
     
     ///Requested hostname
-    public let hostname: String?
+    public let hostname: String
     
     ///Whether the connection should be kept open for multiple Requests
     var supportsKeepAlive: Bool {
@@ -62,7 +62,7 @@ public class Request {
         self.headers = headers
         self.body = body
         self.cookies = Request.parseCookies(headers["cookie"])
-        self.hostname = headers["host"]
+        self.hostname = headers["host"] ?? "*"
         
         if method == .Post {
             self.data = Request.parsePostData(body)
