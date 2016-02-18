@@ -13,6 +13,8 @@ class NodeRouter: RouterDriver {
         The `Request.Method` is combined with the path
         to create a tree as shown below.
      
+                HOST
+               /    \
             GET      POST
              | \     / | \
              1  2   3  4  5
