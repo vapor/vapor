@@ -1,4 +1,9 @@
-import Foundation
+#if os(Linux)
+    import Glibc
+#else
+    import Foundation
+#endif
+
 
 public class Hash {
     
