@@ -80,6 +80,43 @@ Route.get("version") { request in
 
 This responds to all requests to `http://example.com/version` with the JSON dictionary `{"version": "1.0"}` and `Content-Type: application/json`.
 
+#### Complex Responses
+
+Vapor will do its best to infer a Json response from the returned type, but for some more complex examples, particularly on Linux, there are known inference issues.  To circumvent this, you can use the included `Json` type and wrap your response, for example:
+
+```swift
+Route.get("solar-system") { request in
+	let json = [
+			"planets" : [
+				"mars",
+				"venus",
+				"jupiter",
+				"earth"
+			]
+	]
+	return Json(json)
+}
+```
+
+#### Requests
+
+To access Json from parameters sent up with a request, use `request.json`
+
+```swift
+Route.post("messages") { request in
+	guard
+		   let json = request.json,
+			 let userId = json["userId"]?.stringValue,
+			 let messageBody = json["message"]?.stringValue
+			 else { throw error }
+
+	let message = Message(userId: userId, body: messageBody)
+	message.save()
+
+	return Response(status: .OK, text: "Message Created")
+}
+```
+
 ### Views
 
 You can also respond with HTML pages.
