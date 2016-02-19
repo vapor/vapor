@@ -29,6 +29,10 @@ Want to make a pull request? You can learn how from this *free* series [How to C
 
 This is a work in progress, so don't rely on this for anything important. And pull requests are welcome!
 
+## Wiki
+
+Visit the [Vapor Wiki](https://github.com/tannernelson/vapor/wiki) for extensive documentation on using and contributing to Vapor. 
+
 ## Server
 
 Starting the server takes two lines.
