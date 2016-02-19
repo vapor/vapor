@@ -1,3 +1,9 @@
+/**
+ * Organize your routing logic with a subclass of
+ * `Controller`. Controlls group related route logic into
+ * a single class that, by default, conforms to standard
+ * CRUD operations.
+ */
 public class Controller {
 
 	///Create a default controller

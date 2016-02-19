@@ -1,5 +1,11 @@
 import Foundation
 
+/**
+ * This class attempts to seralize a given `Any` object
+ * into a JSON-encoded string. It is meant as a placeholder
+ * for Swift's Foundation support of serializing native
+ * Dictionary and Array elements.
+ */
 class JSONSerializer {
 
     class func serialize(object: Any) -> String {

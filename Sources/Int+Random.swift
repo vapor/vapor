@@ -1,12 +1,3 @@
-//
-//  Int+Random.swift
-//  Vapor
-//
-//  Created by Tanner Nelson on 2/7/16.
-//  Copyright © 2016 Tanner Nelson. All rights reserved.
-//
-
-
 #if os(Linux)
     import Glibc
 #else
@@ -14,6 +5,10 @@
 #endif
 
 extension Int {
+    /**
+     * Generates a random number between (and inclusive of)
+     * the given minimum and maxiumum.
+     */
     public static func random(min min: Int, max: Int) -> Int {
         let top = max - min + 1
         #if os(Linux)
