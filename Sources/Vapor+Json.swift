@@ -16,8 +16,9 @@ public typealias JSON = Json
 
 extension Json : ResponseConvertible {
     public func response() -> Response {
-        let js = serialize(.PrettyPrint)
-        return Response(status: .OK, text: js)
+        let js = serialize()
+        let data = Array(js.utf8)
+        return Response(status: .OK, data: data, contentType: .Json)
     }
 }
 
