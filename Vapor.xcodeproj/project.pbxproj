@@ -7,8 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		C304C8A11C62C6EC00058C92 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = C352E6D61C62BC6A00E26467 /* main.swift */; };
-		C304C8A21C62C6EF00058C92 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = C352E6D61C62BC6A00E26467 /* main.swift */; };
+		3492B2ED1C7819D800D8E588 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3492B2EC1C7819D800D8E588 /* main.swift */; };
 		C304C8A71C62D65200058C92 /* ServerDriver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C304C8A61C62D65200058C92 /* ServerDriver.swift */; };
 		C304C8A81C62D65200058C92 /* ServerDriver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C304C8A61C62D65200058C92 /* ServerDriver.swift */; };
 		C304C8AA1C62FCA300058C92 /* RequestFormExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = C304C8A91C62FCA300058C92 /* RequestFormExtension.swift */; };
@@ -76,6 +75,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		3492B2EC1C7819D800D8E588 /* main.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		C304C8A01C62C3F400058C92 /* .travis.yml */ = {isa = PBXFileReference; lastKnownFileType = text; path = .travis.yml; sourceTree = "<group>"; };
 		C304C8A61C62D65200058C92 /* ServerDriver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ServerDriver.swift; sourceTree = "<group>"; };
 		C304C8A91C62FCA300058C92 /* RequestFormExtension.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RequestFormExtension.swift; sourceTree = "<group>"; };
@@ -86,7 +86,6 @@
 		C352E6D31C62BC6A00E26467 /* Controller.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Controller.swift; sourceTree = "<group>"; };
 		C352E6D41C62BC6A00E26467 /* JSONSerializer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = JSONSerializer.swift; sourceTree = "<group>"; };
 		C352E6D51C62BC6A00E26467 /* LinuxFixes.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LinuxFixes.swift; sourceTree = "<group>"; };
-		C352E6D61C62BC6A00E26467 /* main.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		C352E6D71C62BC6A00E26467 /* MemorySessionDriver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MemorySessionDriver.swift; sourceTree = "<group>"; };
 		C352E6D81C62BC6A00E26467 /* SocketParser.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SocketParser.swift; sourceTree = "<group>"; };
 		C352E6D91C62BC6A00E26467 /* Request.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Request.swift; sourceTree = "<group>"; };
@@ -239,8 +238,8 @@
 		C352E6D11C62BC6A00E26467 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
+				3492B2EC1C7819D800D8E588 /* main.swift */,
 				C377F2ED1C696C9B00DABD21 /* View */,
-				C352E6D61C62BC6A00E26467 /* main.swift */,
 				C304C8B21C63054400058C92 /* Routing */,
 				C304C8B01C63053500058C92 /* Request */,
 				C304C8B11C63053C00058C92 /* Response */,
@@ -403,7 +402,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				C352E6FF1C62BC6A00E26467 /* Session.swift in Sources */,
-				C304C8A11C62C6EC00058C92 /* main.swift in Sources */,
 				C352E7011C62BC6A00E26467 /* Socket.swift in Sources */,
 				C3EDEA7D1C683CE100754727 /* SessionMiddleware.swift in Sources */,
 				C304C8AA1C62FCA300058C92 /* RequestFormExtension.swift in Sources */,
@@ -417,6 +415,7 @@
 				C352E6FB1C62BC6A00E26467 /* NodeRouter.swift in Sources */,
 				C352E6F51C62BC6A00E26467 /* Response.swift in Sources */,
 				C352E6E91C62BC6A00E26467 /* JSONSerializer.swift in Sources */,
+				3492B2ED1C7819D800D8E588 /* main.swift in Sources */,
 				C352E6EB1C62BC6A00E26467 /* LinuxFixes.swift in Sources */,
 				C352E6E71C62BC6A00E26467 /* Controller.swift in Sources */,
 				C304C8A71C62D65200058C92 /* ServerDriver.swift in Sources */,
@@ -456,7 +455,6 @@
 				C377F2F01C696CAB00DABD21 /* RenderDriver.swift in Sources */,
 				C352E6FA1C62BC6A00E26467 /* Route.swift in Sources */,
 				C352E6F41C62BC6A00E26467 /* Request.swift in Sources */,
-				C304C8A21C62C6EF00058C92 /* main.swift in Sources */,
 				C352E7041C62BC6A00E26467 /* SocketServer.swift in Sources */,
 				C3EDEA881C68459300754727 /* Hash.swift in Sources */,
 				C3943DC51C7664D90014F4EE /* SessionMiddleware.swift in Sources */,
