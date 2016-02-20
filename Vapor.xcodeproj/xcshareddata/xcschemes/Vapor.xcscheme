@@ -11,7 +11,8 @@
             buildForRunning = "YES"
             buildForProfiling = "YES"
             buildForArchiving = "YES"
-            buildForAnalyzing = "YES">
+            buildForAnalyzing = "YES"
+            hideIssues = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "C352E6801C62BB0F00E26467"
@@ -63,7 +64,7 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "--workDir=/Users/tanner/Developer/vapor/vapor"
+            argument = "--workDir=($SRCROOT)"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>
