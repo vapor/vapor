@@ -56,17 +56,15 @@ extension Router {
         self.patch(path, closure: closure)
         self.delete(path, closure: closure)
     }
-    
-    // TODO: Add Back
-    
-//    public class func resource(path: String, controller: Controller) {
-//        self.get(path, closure: controller.index)
-//        self.post(path, closure: controller.store)
-//        
-//        self.get("\(path)/:id", closure: controller.show)
-//        self.put("\(path)/:id", closure: controller.update)
-//        self.delete("\(path)/:id", closure: controller.destroy)
-//    }
+
+    public final func resource(path: String, controller: Controller) {
+        self.get(path, closure: controller.index)
+        self.post(path, closure: controller.store)
+
+        self.get("\(path)/:id", closure: controller.show)
+        self.put("\(path)/:id", closure: controller.update)
+        self.delete("\(path)/:id", closure: controller.destroy)
+    }
 }
 
 public final class Router {
