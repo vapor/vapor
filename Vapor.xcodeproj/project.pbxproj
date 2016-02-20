@@ -37,10 +37,6 @@
 		C352E6F61C62BC6A00E26467 /* Response.swift in Sources */ = {isa = PBXBuildFile; fileRef = C352E6DA1C62BC6A00E26467 /* Response.swift */; };
 		C352E6F71C62BC6A00E26467 /* ResponseConvertible.swift in Sources */ = {isa = PBXBuildFile; fileRef = C352E6DB1C62BC6A00E26467 /* ResponseConvertible.swift */; };
 		C352E6F81C62BC6A00E26467 /* ResponseConvertible.swift in Sources */ = {isa = PBXBuildFile; fileRef = C352E6DB1C62BC6A00E26467 /* ResponseConvertible.swift */; };
-		C352E6F91C62BC6A00E26467 /* Route.swift in Sources */ = {isa = PBXBuildFile; fileRef = C352E6DC1C62BC6A00E26467 /* Route.swift */; };
-		C352E6FA1C62BC6A00E26467 /* Route.swift in Sources */ = {isa = PBXBuildFile; fileRef = C352E6DC1C62BC6A00E26467 /* Route.swift */; };
-		C352E6FB1C62BC6A00E26467 /* NodeRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C352E6DD1C62BC6A00E26467 /* NodeRouter.swift */; };
-		C352E6FC1C62BC6A00E26467 /* NodeRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C352E6DD1C62BC6A00E26467 /* NodeRouter.swift */; };
 		C352E6FD1C62BC6A00E26467 /* Server.swift in Sources */ = {isa = PBXBuildFile; fileRef = C352E6DE1C62BC6A00E26467 /* Server.swift */; };
 		C352E6FE1C62BC6A00E26467 /* Server.swift in Sources */ = {isa = PBXBuildFile; fileRef = C352E6DE1C62BC6A00E26467 /* Server.swift */; };
 		C352E6FF1C62BC6A00E26467 /* Session.swift in Sources */ = {isa = PBXBuildFile; fileRef = C352E6DF1C62BC6A00E26467 /* Session.swift */; };
@@ -103,8 +99,6 @@
 		C352E6D91C62BC6A00E26467 /* Request.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Request.swift; sourceTree = "<group>"; };
 		C352E6DA1C62BC6A00E26467 /* Response.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Response.swift; sourceTree = "<group>"; };
 		C352E6DB1C62BC6A00E26467 /* ResponseConvertible.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ResponseConvertible.swift; sourceTree = "<group>"; };
-		C352E6DC1C62BC6A00E26467 /* Route.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Route.swift; sourceTree = "<group>"; };
-		C352E6DD1C62BC6A00E26467 /* NodeRouter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NodeRouter.swift; sourceTree = "<group>"; };
 		C352E6DE1C62BC6A00E26467 /* Server.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Server.swift; sourceTree = "<group>"; };
 		C352E6DF1C62BC6A00E26467 /* Session.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Session.swift; sourceTree = "<group>"; };
 		C352E6E01C62BC6A00E26467 /* Socket.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Socket.swift; sourceTree = "<group>"; };
@@ -219,8 +213,6 @@
 				802030101C78CAC2009B8655 /* Branch.swift */,
 				802030161C78CAE1009B8655 /* Router.swift */,
 				C304C8B41C6306B100058C92 /* RouterDriver.swift */,
-				C352E6DC1C62BC6A00E26467 /* Route.swift */,
-				C352E6DD1C62BC6A00E26467 /* NodeRouter.swift */,
 			);
 			name = Routing;
 			sourceTree = "<group>";
@@ -438,7 +430,6 @@
 				C352E7091C62BC6A00E26467 /* View.swift in Sources */,
 				C352E6EF1C62BC6A00E26467 /* MemorySessionDriver.swift in Sources */,
 				C377F2EF1C696CAB00DABD21 /* RenderDriver.swift in Sources */,
-				C352E6FB1C62BC6A00E26467 /* NodeRouter.swift in Sources */,
 				C352E6F51C62BC6A00E26467 /* Response.swift in Sources */,
 				C352E6E91C62BC6A00E26467 /* JSONSerializer.swift in Sources */,
 				802030011C77C956009B8655 /* Vapor+Json.swift in Sources */,
@@ -483,7 +474,6 @@
 				C352E70A1C62BC6A00E26467 /* View.swift in Sources */,
 				C352E7061C62BC6A00E26467 /* StringExtensions.swift in Sources */,
 				C377F2F01C696CAB00DABD21 /* RenderDriver.swift in Sources */,
-				C352E6FA1C62BC6A00E26467 /* Route.swift in Sources */,
 				802030181C78CAE1009B8655 /* Router.swift in Sources */,
 				C352E6F41C62BC6A00E26467 /* Request.swift in Sources */,
 				C352E7041C62BC6A00E26467 /* SocketServer.swift in Sources */,
@@ -492,7 +482,6 @@
 				8020539B1C7A8C87009E26E9 /* RequestData+Test.swift in Sources */,
 				C3EDEA811C68419800754727 /* String+SHA1.swift in Sources */,
 				C352E6EA1C62BC6A00E26467 /* JSONSerializer.swift in Sources */,
-				C352E6FC1C62BC6A00E26467 /* NodeRouter.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

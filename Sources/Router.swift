@@ -54,6 +54,7 @@ extension AltRouter {
         self.delete(path, closure: closure)
     }
     
+    // TODO: Add Back
     
 //    public class func resource(path: String, controller: Controller) {
 //        self.get(path, closure: controller.index)
