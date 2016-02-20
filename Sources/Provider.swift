@@ -1,4 +1,4 @@
-public class ServiceProvider {
+public class Provider {
 	public let application: Application
 
 	public required init(application: Application) {

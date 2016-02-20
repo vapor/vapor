@@ -1,7 +1,7 @@
 public class Application {
 	public static let VERSION = "0.1.9"
 
-	private var serviceProviders = Array<ServiceProvider>()
+	private var providers = Array<Provider>()
 	public private(set) var booted = false
 	public let server: Server
 
@@ -13,13 +13,13 @@ public class Application {
 		self.server = Server(driver: serverDriver)
 	}
 
-	public func register(providers: [ServiceProvider.Type]) {
+	public func register(providers: [Provider.Type]) {
 		for provider in providers {
 			self.register(provider)
 		}
 	}
 
-	public func register<T: ServiceProvider>(provider: T.Type) -> T {
+	public func register<T: Provider>(provider: T.Type) -> T {
 		if let registered = self.getProvider(provider) {
 			return registered
 		}
@@ -34,8 +34,8 @@ public class Application {
 		return provider
 	}
 
-	public func getProvider<T: ServiceProvider>(provider: T.Type) -> T? {
-		for value in self.serviceProviders {
+	public func getProvider<T: Provider>(provider: T.Type) -> T? {
+		for value in self.providers {
 			if value.dynamicType == provider {
 				return value as? T
 			}
@@ -49,14 +49,14 @@ public class Application {
 			return
 		}
 
-		for provider in self.serviceProviders {
+		for provider in self.providers {
 			self.bootProvider(provider)
 		}
 
 		self.booted = true
 	}
 
-	public func bootProvider(provider: ServiceProvider) {
+	public func bootProvider(provider: Provider) {
 		provider.boot()
 	}
 
