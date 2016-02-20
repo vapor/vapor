@@ -7,46 +7,49 @@
 //
 
 public typealias Host = String
-public typealias RequestHandler = Request throws -> ResponseConvertible
 
-public let Route = AltRouter()
+public let Route = Router()
 
-extension AltRouter: RouterDriver {
-    public func route(request: Request) -> RequestHandler? {
+extension Request {
+    public typealias Handler = Request throws -> ResponseConvertible
+}
+
+extension Router: RouterDriver {
+    public func route(request: Request) -> Request.Handler? {
         return handle(request)
     }
     
-    public func register(hostname hostname: String = "*", method: Request.Method, path: String, handler: RequestHandler) {
+    public func register(hostname hostname: String = "*", method: Request.Method, path: String, handler: Request.Handler) {
         add(hostname, method: method, path: path, handler: handler)
     }
 }
 
-extension AltRouter {
-    public final func get(path: String, closure: RequestHandler) {
+extension Router {
+    public final func get(path: String, closure: Request.Handler) {
         add(method: .Get, path: path, handler: closure)
     }
     
-    public final func post(path: String, closure: RequestHandler) {
+    public final func post(path: String, closure: Request.Handler) {
         self.add(method: .Post, path: path, handler: closure)
     }
     
-    public final func put(path: String, closure: RequestHandler) {
+    public final func put(path: String, closure: Request.Handler) {
         self.add(method: .Put, path: path, handler: closure)
     }
     
-    public final func patch(path: String, closure: RequestHandler) {
+    public final func patch(path: String, closure: Request.Handler) {
         self.add(method: .Patch, path: path, handler: closure)
     }
     
-    public final func delete(path: String, closure: RequestHandler) {
+    public final func delete(path: String, closure: Request.Handler) {
         self.add(method: .Delete, path: path, handler: closure)
     }
     
-    public final func options(path: String, closure: RequestHandler) {
+    public final func options(path: String, closure: Request.Handler) {
         self.add(method: .Options, path: path, handler: closure)
     }
     
-    public final func any(path: String, closure: RequestHandler) {
+    public final func any(path: String, closure: Request.Handler) {
         self.get(path, closure: closure)
         self.post(path, closure: closure)
         self.put(path, closure: closure)
@@ -66,13 +69,13 @@ extension AltRouter {
 //    }
 }
 
-public final class AltRouter {
+public final class Router {
     
     private final var tree: [Host : [Request.Method : Branch]] = [:]
     
     internal init() {}
     
-    internal final func handle(request: Request) -> RequestHandler? {
+    internal final func handle(request: Request) -> Request.Handler? {
         let root = tree[request.hostname] ?? tree["*"]
         guard
             let branch = root?[request.method]
@@ -85,7 +88,7 @@ public final class AltRouter {
         return branch.handle(request, comps: generator)
     }
     
-    public final func add(host: Host = "*", method: Request.Method, path: String, handler: RequestHandler) {
+    public final func add(host: Host = "*", method: Request.Method, path: String, handler: Request.Handler) {
         let generator = path.pathComponentGenerator()
         var root = tree[host] ?? [:]
         let branch = root[method] ?? Branch(name: "")

@@ -27,7 +27,7 @@ internal final class Branch {
         Branch('users') -> Branch('messages') -> *Branches('id')
         *indicates a supported branch
      */
-    private var handler: RequestHandler?
+    private var handler: Request.Handler?
     
     /**
      key or *
@@ -46,7 +46,7 @@ internal final class Branch {
      
      - returns: an initialized request Branch
      */
-    init(name: String, handler: RequestHandler? = nil) {
+    init(name: String, handler: Request.Handler? = nil) {
         self.name = name
         self.handler = handler
     }
@@ -60,7 +60,7 @@ internal final class Branch {
      - returns: a request handler or nil if not supported
      */
     @warn_unused_result
-    func handle(request: Request, comps: AnyGenerator<String>) -> RequestHandler? {
+    func handle(request: Request, comps: AnyGenerator<String>) -> Request.Handler? {
         guard let key = comps.next() else {
             return handler
         }
@@ -85,7 +85,7 @@ internal final class Branch {
      - parameter generator: the generator that will be used to match the path components.  /users/messages/:id will return a generator that is 'users' <- 'messages' <- '*id'
      - parameter handler:   the handler to assign to the end path component
      */
-    func extendBranch(generator: AnyGenerator<String>, handler: RequestHandler) {
+    func extendBranch(generator: AnyGenerator<String>, handler: Request.Handler) {
         guard let key = generator.next() else {
             self.handler = handler
             return

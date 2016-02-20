@@ -20,7 +20,7 @@ class RouterTests: XCTestCase {
     }
     
     func testSingleHostRouting() {
-        let router = AltRouter()
+        let router = Router()
         let compare = "Hello Text Data Processing Test"
         let data = [UInt8](compare.utf8)
         
@@ -49,7 +49,7 @@ class RouterTests: XCTestCase {
     }
     
     func testMultipleHostsRouting() {
-        let router = AltRouter()
+        let router = Router()
         
         let data_1 = [UInt8]("1".utf8)
         let data_2 = [UInt8]("2".utf8)
@@ -82,7 +82,7 @@ class RouterTests: XCTestCase {
     }
     
     func testURLParameterDecoding() {
-        let router = AltRouter()
+        let router = Router()
         
         let percentEncodedString = "testing%20parameter%21%23%24%26%27%28%29%2A%2B%2C%2F%3A%3B%3D%3F%40%5B%5D"
         let decodedString = "testing parameter!#$&'()*+,/:;=?@[]"
