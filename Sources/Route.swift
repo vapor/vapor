@@ -55,14 +55,31 @@ public class Route {
 		self.delete(path, closure: closure)
 	}
 
-
 	public class func resource(path: String, controller: Controller) {
-		self.get(path, closure: controller.index)
-		self.post(path, closure: controller.store)
+        
+        //Get the path components separated by "."
+        let components = path.componentsSeparatedByString(".")
+        let num = components.count
+        
+        //Construct the params
+        let params = num == 1 ? [":id"] : components.map { ":\($0)_id"  }
+        
+        //Construct the path for show, update and destroy
+        let fullPath = num == 1
+            ? "\(path)/\(params.last!)"
+            : Zip2Sequence(components, params)
+                .flatMap { "\($0)/\($1)" }
+                .joinWithSeparator("/")
+        
+        //The path for index and store (ie without the trailing id)
+        let shortPath = fullPath.stringByReplacingOccurrencesOfString("/" + params.last!, withString: "")
+        
+		self.get(shortPath, closure: controller.index)
+		self.post(shortPath, closure: controller.store)
 
-		self.get("\(path)/:id", closure: controller.show)
-		self.put("\(path)/:id", closure: controller.update)
-		self.delete("\(path)/:id", closure: controller.destroy)
+		self.get(fullPath, closure: controller.show)
+		self.put(fullPath, closure: controller.update)
+		self.delete(fullPath, closure: controller.destroy)
 	}
     
     public class func host(hostname: String, closure: () -> ()) {
