@@ -61,17 +61,15 @@ public class Route {
         let components = path.componentsSeparatedByString(".")
         let num = components.count
         
-        //Construct the params
-        let params = num == 1 ? [":id"] : components.map { ":\($0)_id"  }
+        //Construct the named params
+        let params: [String] = num > 1 ? components.map { ":\($0)_id"  } : [":id"]
         
         //Construct the path for show, update and destroy
-        let fullPath = num == 1
-            ? "\(path)/\(params.last!)"
-            : Zip2Sequence(components, params)
-                .flatMap { "\($0)/\($1)" }
-                .joinWithSeparator("/")
+        let fullPath = components.enumerate()
+            .map { $1 + "/" + params[$0] }
+            .joinWithSeparator("/")
         
-        //The path for index and store (ie without the trailing id)
+        //The path for index and store (i.e. without the trailing id)
         let shortPath = fullPath.stringByReplacingOccurrencesOfString("/" + params.last!, withString: "")
         
 		self.get(shortPath, closure: controller.index)

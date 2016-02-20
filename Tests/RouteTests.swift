@@ -7,8 +7,47 @@
 //
 
 import XCTest
-@testable import Vapor
 
 class RouteTests: XCTestCase {
+    
+    func testSimpleResource() {
+        
+        Route.resource("foo", controller: Controller())
+        
+        let expectedRoutes = [
+            "Get foo nil",
+            "Post foo nil",
+            "Get foo/:id nil",
+            "Put foo/:id nil",
+            "Delete foo/:id nil",
+        ]
+        
+        assertRoutesExist(expectedRoutes)
+       
+    }
+    
+    private func assertRoutesExist(expected: [String]) {
+        
+        expected.forEach { description in
+            let exists = Route.routes.filter { $0.description == description }.count == 1
+            XCTAssert(exists, "routes should contain \(description)")
+        }
+    }
+    
+    func testNestedResource() {
+        
+        Route.resource("foo.bar", controller: Controller())
+        
+        let expectedRoutes = [
+            "Get foo/:foo_id/bar nil",
+            "Post foo/:foo_id/bar nil",
+            "Get foo/:foo_id/bar/:bar_id nil",
+            "Put foo/:foo_id/bar/:bar_id nil",
+            "Delete foo/:foo_id/bar/:bar_id nil",
+            ]
+        
+        assertRoutesExist(expectedRoutes)
+    }
+
 
 }
