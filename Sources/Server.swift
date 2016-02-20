@@ -130,7 +130,7 @@ extension Server: ServerDriverDelegate {
             handler = { req in
                 let response: Response
                 do {
-                    response = try routerHandler(req)
+                    response = try routerHandler(req).response()
                 } catch View.Error.InvalidPath {
                     response = Response(status: .NotFound, text: "View not found")
                 } catch {

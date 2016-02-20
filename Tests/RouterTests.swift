@@ -38,7 +38,7 @@ class RouterTests: XCTestCase {
         
         do {
             let result = router.handle(request)!
-            var bytes = try result(request).data
+            var bytes = try result(request).response().data
             
             let utf8 = NSData(bytes: &bytes , length: bytes.count)
             let string = String(data: utf8, encoding: NSUTF8StringEncoding)
@@ -68,13 +68,13 @@ class RouterTests: XCTestCase {
         let handler_1 = router.route(request_1)
         let handler_2 = router.route(request_2)
         
-        if let response_1 = try? handler_1?(request_1) {
+        if let response_1 = try? handler_1?(request_1).response() {
             XCTAssert(response_1!.data == data_1, "Incorrect response returned by Handler 1")
         } else {
             XCTFail("Handler 1 did not return a response")
         }
         
-        if let response_2 = try? handler_2?(request_2) {
+        if let response_2 = try? handler_2?(request_2).response() {
             XCTAssert(response_2!.data == data_2, "Incorrect response returned by Handler 2")
         } else {
             XCTFail("Handler 2 did not return a response")

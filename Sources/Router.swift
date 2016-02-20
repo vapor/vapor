@@ -7,7 +7,7 @@
 //
 
 public typealias Host = String
-public typealias RequestHandler = Request throws -> Response
+public typealias RequestHandler = Request throws -> ResponseConvertible
 
 public let Route = AltRouter()
 
