@@ -8,38 +8,8 @@
 
 public typealias Host = String
 public typealias RequestHandler = Request throws -> Response
-//
-//public protocol RouterDriver {
-//
-//    func route(request: Request) -> (Request -> Response)?
-//    func register(hostname hostname: String, method: Request.Method, path: String, handler: (Request -> Response))
-//    
-//}
 
-//public protocol RouterDriver {
-//    
-//    func route(request: Request) -> (Request -> Response)?
-//    func register(hostname hostname: String?, method: Request.Method, path: String, handler: (Request -> Response))
-//    
-//}
-
-//extension AltRouter: RouterDriver {
-//    public func route(request: Request) -> (Request -> Response)? {
-//        // Possibly make overall throwable?
-//        // I'm wrapping the throwable version for now
-//        guard let handler = handle(request) else { return nil }
-//        return {
-//            do {
-//                try handler($0)
-//            }
-//        }
-//    }
-//}
-
-//public protocol RouterDriver {
-//    func route(request: Request) -> RequestHandler?
-//    func register(hostname hostname: String?, method: Request.Method, path: String, handler: RequestHandler)
-//}
+public let Route = AltRouter()
 
 extension AltRouter: RouterDriver {
     public func route(request: Request) -> RequestHandler? {
@@ -50,8 +20,6 @@ extension AltRouter: RouterDriver {
         add(hostname, method: method, path: path, handler: handler)
     }
 }
-
-public let Route = AltRouter()
 
 extension AltRouter {
     public final func get(path: String, closure: RequestHandler) {

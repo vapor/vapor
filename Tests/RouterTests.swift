@@ -33,7 +33,7 @@ class RouterTests: XCTestCase {
                 
                 do {
                     let result = router.handle(request)!
-                    var bytes = try! result(request).data
+                    var bytes = try result(request).data
                     
                     let utf8 = NSData(bytes: &bytes , length: bytes.count)
                     let string = String(data: utf8, encoding: NSUTF8StringEncoding)

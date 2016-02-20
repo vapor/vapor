@@ -72,45 +72,6 @@ public class Server {
     }
 
     /**
-        Registers all routes from the `Route` interface
-        into the current `RouterDriver`.
-    */
-//    func registerRoutes(routes: [Route]) {
-//        routes.forEach { route in
-//            router.register(hostname: route.hostname, method: route.method, path: route.path) {
-//            
-//                            let response: Response
-//                            do {
-//                                response = try route.closure(request: request).response()
-//                            } catch View.Error.InvalidPath {
-//                                response = Response(status: .NotFound, text: "View not found")
-//                            } catch {
-//                                response = Response(error: "Server Error: \(error)")
-//                            }
-//            
-//                            return response
-//                        }
-//        }
-        
-        
-//        for route in Route.routes {
-//            self.router.register(hostname: route.hostname, method: route.method, path: route.path) { request in
-//
-//                let response: Response
-//                do {
-//                    response = try route.closure(request: request).response()
-//                } catch View.Error.InvalidPath {
-//                    response = Response(status: .NotFound, text: "View not found")
-//                } catch {
-//                    response = Response(error: "Server Error: \(error)")
-//                }
-//
-//                return response
-//            }
-//        }
-//    }
-
-    /**
         Boots the chosen `ServerDriver` and
         runs on the supplied port.
     */
