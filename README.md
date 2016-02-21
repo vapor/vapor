@@ -265,7 +265,7 @@ You can also create nested resources for one to many relationships. For example,
 This can be achieved by using dot notation in the path, as follows:
 
 ```swift
-Route.resource("user.messages", controller: MessagesController())
+Route.resource("company.user", controller: CompanyUserController())
 ```
 
 This will create appropriate nested `GET`, `POST`, `DELETE`, etc methods, for example:
