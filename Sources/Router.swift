@@ -58,12 +58,23 @@ extension Router {
     }
 
     public final func resource(path: String, controller: Controller) {
-        self.get(path, closure: controller.index)
-        self.post(path, closure: controller.store)
-
-        self.get("\(path)/:id", closure: controller.show)
-        self.put("\(path)/:id", closure: controller.update)
-        self.delete("\(path)/:id", closure: controller.destroy)
+        let last = "/:id"
+        let shortPath = path.componentsSeparatedByString(".")
+            .flatMap { component in
+                return [component, "/:\(component)_id/"]
+            }
+            .dropLast()
+            .joinWithSeparator("")
+        
+        // ie: /users
+        self.get(shortPath, closure: controller.index)
+        self.post(shortPath, closure: controller.store)
+        
+        // ie: /users/:id
+        let fullPath = shortPath + last
+        self.get(fullPath, closure: controller.show)
+        self.put(fullPath, closure: controller.update)
+        self.delete(fullPath, closure: controller.destroy)
     }
 }
 
