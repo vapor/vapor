@@ -7,9 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		3471560A1C7972000006F6AB /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 347156091C7972000006F6AB /* Logger.swift */; };
 		3471560C1C797AE60006F6AB /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3471560B1C797AE60006F6AB /* Log.swift */; };
-		3471560E1C797B200006F6AB /* LogDriver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3471560D1C797B200006F6AB /* LogDriver.swift */; };
+		3471560E1C797B200006F6AB /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3471560D1C797B200006F6AB /* Logger.swift */; };
 		3492B2ED1C7819D800D8E588 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3492B2EC1C7819D800D8E588 /* main.swift */; };
 		3492B2EF1C787DD600D8E588 /* RouteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3492B2EE1C787DD600D8E588 /* RouteTests.swift */; };
 		C304C8A71C62D65200058C92 /* ServerDriver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C304C8A61C62D65200058C92 /* ServerDriver.swift */; };
@@ -79,9 +78,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		347156091C7972000006F6AB /* Logger.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Logger.swift; sourceTree = "<group>"; };
 		3471560B1C797AE60006F6AB /* Log.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Log.swift; sourceTree = "<group>"; };
-		3471560D1C797B200006F6AB /* LogDriver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LogDriver.swift; sourceTree = "<group>"; };
+		3471560D1C797B200006F6AB /* Logger.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Logger.swift; sourceTree = "<group>"; };
 		3492B2EC1C7819D800D8E588 /* main.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		3492B2EE1C787DD600D8E588 /* RouteTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RouteTests.swift; sourceTree = "<group>"; };
 		C304C8A01C62C3F400058C92 /* .travis.yml */ = {isa = PBXFileReference; lastKnownFileType = text; path = .travis.yml; sourceTree = "<group>"; };
@@ -144,9 +142,8 @@
 		347156081C7971E60006F6AB /* Logging */ = {
 			isa = PBXGroup;
 			children = (
-				347156091C7972000006F6AB /* Logger.swift */,
 				3471560B1C797AE60006F6AB /* Log.swift */,
-				3471560D1C797B200006F6AB /* LogDriver.swift */,
+				3471560D1C797B200006F6AB /* Logger.swift */,
 			);
 			name = Logging;
 			sourceTree = "<group>";
@@ -425,12 +422,11 @@
 				C352E7011C62BC6A00E26467 /* Socket.swift in Sources */,
 				C3EDEA7D1C683CE100754727 /* SessionMiddleware.swift in Sources */,
 				C304C8AA1C62FCA300058C92 /* RequestFormExtension.swift in Sources */,
-				3471560A1C7972000006F6AB /* Logger.swift in Sources */,
 				C352E6F31C62BC6A00E26467 /* Request.swift in Sources */,
 				C352E6F91C62BC6A00E26467 /* Route.swift in Sources */,
 				C304C8B51C6306B100058C92 /* RouterDriver.swift in Sources */,
 				C3EDEA871C68459300754727 /* Hash.swift in Sources */,
-				3471560E1C797B200006F6AB /* LogDriver.swift in Sources */,
+				3471560E1C797B200006F6AB /* Logger.swift in Sources */,
 				C352E7091C62BC6A00E26467 /* View.swift in Sources */,
 				C352E6EF1C62BC6A00E26467 /* MemorySessionDriver.swift in Sources */,
 				C377F2EF1C696CAB00DABD21 /* RenderDriver.swift in Sources */,

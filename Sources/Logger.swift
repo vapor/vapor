@@ -1,5 +1,5 @@
 //
-//  Logger.swift
+//  LogDriver.swift
 //  Vapor
 //
 //  Created by Matthew on 21/02/2016.
@@ -8,20 +8,16 @@
 
 import Foundation
 
-/** Logger Class
+public protocol Logger {
+    func log(level: LogLevel, message: String)
+}
 
+/*
 */
-public class Logger {
-
-    private let driver: LoggerDriver
+public class ConsoleLogger: Logger {
     
-    public static let sharedInstance = Logger()
-
-    private init() {
-        driver = ConsoleLogDriver()
-    }
-    
-    public func log(log: Loggable) {
-        driver.log(log)
+    public func log(level: LogLevel, message: String) {
+        let date = NSDate()
+        print("[\(date)] \(level): \(message)")
     }
 }

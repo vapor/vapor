@@ -71,9 +71,7 @@ public class Request {
         }
         
         //Testing logs
-        let message = "Received \(method.rawValue) request for \(path)"
-        let log = Log(level: .Info, message: message)
-        Logger.sharedInstance.log(log)
+        Log.info("Received \(method.rawValue) request for \(path)")
     }
     
     /**
