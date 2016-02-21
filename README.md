@@ -276,7 +276,7 @@ You can now access these parameters in a controller, as follows:
 
 ```swift
 let companyId = request.parameters["company_id"]
-let userId = request.parameters["id"] //The final parameter is always `:id`.
+let userId = request.parameters["id"] //Note: The final parameter is always `id`.
 ```
 
 ## Middleware
