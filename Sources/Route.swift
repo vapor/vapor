@@ -59,8 +59,8 @@ public class Route {
         
         let last = "/:id"
         let shortPath = path.componentsSeparatedByString(".")
-            .flatMap {
-                [$0, "/:\($0)_id/"]
+            .flatMap { component in
+                return [component, "/:\(component)_id/"]
             }
             .dropLast()
             .joinWithSeparator("")
