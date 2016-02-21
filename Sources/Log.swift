@@ -17,8 +17,8 @@ extension LogLevel: CustomStringConvertible {
 }
 
 public protocol Loggable: CustomStringConvertible {
-    var level: LogLevel { get }
     var date: NSDate { get }
+    var level: LogLevel { get }
     var message: String { get }
 }
 

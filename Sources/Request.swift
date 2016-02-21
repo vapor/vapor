@@ -69,6 +69,11 @@ public class Request {
         } else {
             self.data = Request.parseQueryData(path)
         }
+        
+        //Testing logs
+        let message = "Received \(method.rawValue) request for \(path)"
+        let log = Log(level: .Info, message: message)
+        Logger.sharedInstance.log(log)
     }
     
     /**
