@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		3492B2ED1C7819D800D8E588 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3492B2EC1C7819D800D8E588 /* main.swift */; };
+		3492B2EF1C787DD600D8E588 /* RouteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3492B2EE1C787DD600D8E588 /* RouteTests.swift */; };
 		C304C8A71C62D65200058C92 /* ServerDriver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C304C8A61C62D65200058C92 /* ServerDriver.swift */; };
 		C304C8A81C62D65200058C92 /* ServerDriver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C304C8A61C62D65200058C92 /* ServerDriver.swift */; };
 		C304C8AA1C62FCA300058C92 /* RequestFormExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = C304C8A91C62FCA300058C92 /* RequestFormExtension.swift */; };
@@ -76,6 +77,7 @@
 
 /* Begin PBXFileReference section */
 		3492B2EC1C7819D800D8E588 /* main.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		3492B2EE1C787DD600D8E588 /* RouteTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RouteTests.swift; sourceTree = "<group>"; };
 		C304C8A01C62C3F400058C92 /* .travis.yml */ = {isa = PBXFileReference; lastKnownFileType = text; path = .travis.yml; sourceTree = "<group>"; };
 		C304C8A61C62D65200058C92 /* ServerDriver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ServerDriver.swift; sourceTree = "<group>"; };
 		C304C8A91C62FCA300058C92 /* RequestFormExtension.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RequestFormExtension.swift; sourceTree = "<group>"; };
@@ -231,6 +233,7 @@
 				C352E6931C62BB1C00E26467 /* Info.plist */,
 				C38808631C62C0390067DADD /* ResponseTests.swift */,
 				C3943DC21C7663E80014F4EE /* RouterTests.swift */,
+				3492B2EE1C787DD600D8E588 /* RouteTests.swift */,
 			);
 			path = Tests;
 			sourceTree = "<group>";
@@ -443,6 +446,7 @@
 				C352E6F81C62BC6A00E26467 /* ResponseConvertible.swift in Sources */,
 				C352E6F01C62BC6A00E26467 /* MemorySessionDriver.swift in Sources */,
 				C352E7001C62BC6A00E26467 /* Session.swift in Sources */,
+				3492B2EF1C787DD600D8E588 /* RouteTests.swift in Sources */,
 				C3943DC41C7664D90014F4EE /* Middleware.swift in Sources */,
 				C352E6F61C62BC6A00E26467 /* Response.swift in Sources */,
 				C3943DC31C7663E80014F4EE /* RouterTests.swift in Sources */,
