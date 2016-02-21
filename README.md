@@ -247,7 +247,7 @@ Here the `HeartbeatControllers`'s index method will be called when `http://examp
 
 Resource controllers take advantage of CRUD-like `index`, `show`, `store`, `update`, `destroy` methods to make setting up REST APIs easy.
 
-####Single Resources####
+### Single Resources
 
 ```swift
 Route.resource("user", controller: UserController())
@@ -258,7 +258,7 @@ This will create the appropriate `GET`, `POST`, `DELETE`, etc methods for indivi
 - .Get /user - an index of users
 - .Get /user/:id - a single user etc
 
-####Nested Resources####
+### Nested Resources
 
 You can also create nested resources for one to many relationships. For example, a "company" can have multiple "users".
 This can be achieved by using dot notation in the path, as follows:
