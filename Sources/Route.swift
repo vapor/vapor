@@ -57,28 +57,23 @@ public class Route {
 
 	public class func resource(path: String, controller: Controller) {
         
-        //Get the path components separated by "."
-        let components = path.componentsSeparatedByString(".")
+        let last = "/:id"
+        let shortPath = path.componentsSeparatedByString(".")
+            .flatMap {
+                [$0, "/:\($0)_id/"]
+            }
+            .dropLast()
+            .joinWithSeparator("")
         
-        //Construct the named params (the final parameter is always :id)
-        let params = components.enumerate().map {
-            $0 == components.count - 1 ? ":id" : ":\($1)_id"
-        }
+        // ie: /users
+        self.get(shortPath, closure: controller.index)
+        self.post(shortPath, closure: controller.store)
         
-        //Construct the path for show, update and destroy
-        let fullPath = components.enumerate()
-            .map { $1 + "/" + params[$0] }
-            .joinWithSeparator("/")
-        
-        //The path for index and store (i.e. without the trailing id)
-        let shortPath = fullPath.stringByReplacingOccurrencesOfString("/" + params.last!, withString: "")
-        
-		self.get(shortPath, closure: controller.index)
-		self.post(shortPath, closure: controller.store)
-
-		self.get(fullPath, closure: controller.show)
-		self.put(fullPath, closure: controller.update)
-		self.delete(fullPath, closure: controller.destroy)
+        // ie: /users/:id
+        let fullPath = shortPath + last
+        self.get(fullPath, closure: controller.show)
+        self.put(fullPath, closure: controller.update)
+        self.delete(fullPath, closure: controller.destroy)
 	}
     
     public class func host(hostname: String, closure: () -> ()) {

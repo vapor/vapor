@@ -26,14 +26,6 @@ class RouteTests: XCTestCase {
        
     }
     
-    private func assertRoutesExist(expected: [String]) {
-        
-        expected.forEach { description in
-            let exists = Route.routes.filter { $0.description == description }.count == 1
-            XCTAssert(exists, "routes should contain \(description)")
-        }
-    }
-    
     func testNestedResource() {
         
         Route.resource("foo.bar", controller: Controller())
@@ -44,9 +36,17 @@ class RouteTests: XCTestCase {
             "Get foo/:foo_id/bar/:id nil",
             "Put foo/:foo_id/bar/:id nil",
             "Delete foo/:foo_id/bar/:id nil",
-            ]
+        ]
         
         assertRoutesExist(expectedRoutes)
+    }
+    
+    private func assertRoutesExist(expected: [String]) {
+        
+        expected.forEach { description in
+            let exists = Route.routes.filter { $0.description == description }.count == 1
+            XCTAssert(exists, "routes should contain \(description)")
+        }
     }
 
 
