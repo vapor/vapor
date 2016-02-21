@@ -65,7 +65,7 @@ extension Router {
             }
             .dropLast()
             .joinWithSeparator("")
-        
+
         // ie: /users
         self.get(shortPath, closure: controller.index)
         self.post(shortPath, closure: controller.store)

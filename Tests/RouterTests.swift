@@ -11,13 +11,13 @@ import XCTest
 
 class RouterTests: XCTestCase {
     
-    func testBranchPerformance() {
-        self.measureBlock {
-            for _ in 1...10_000 {
-                self.testMultipleHostsRouting()
-            }
-        }
-    }
+//    func testBranchPerformance() {
+//        self.measureBlock {
+//            for _ in 1...10_000 {
+//                self.testMultipleHostsRouting()
+//            }
+//        }
+//    }
     
     func testSingleHostRouting() {
         let router = Router()
