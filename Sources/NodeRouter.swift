@@ -1,5 +1,9 @@
 import Foundation
 
+/**
+ * Registers routes as nodes on a tree, and
+ * searches for a matching route by recursion.
+ */
 class NodeRouter: RouterDriver {
     
     class Node {
