@@ -7,8 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		3492B2ED1C7819D800D8E588 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3492B2EC1C7819D800D8E588 /* main.swift */; };
 		3492B2EF1C787DD600D8E588 /* RouteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3492B2EE1C787DD600D8E588 /* RouteTests.swift */; };
+		802030011C77C956009B8655 /* Vapor+Json.swift in Sources */ = {isa = PBXBuildFile; fileRef = 802030001C77C956009B8655 /* Vapor+Json.swift */; };
 		C304C8A71C62D65200058C92 /* ServerDriver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C304C8A61C62D65200058C92 /* ServerDriver.swift */; };
 		C304C8A81C62D65200058C92 /* ServerDriver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C304C8A61C62D65200058C92 /* ServerDriver.swift */; };
 		C304C8AA1C62FCA300058C92 /* RequestFormExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = C304C8A91C62FCA300058C92 /* RequestFormExtension.swift */; };
@@ -76,8 +76,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		3492B2EC1C7819D800D8E588 /* main.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		3492B2EE1C787DD600D8E588 /* RouteTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RouteTests.swift; sourceTree = "<group>"; };
+		802030001C77C956009B8655 /* Vapor+Json.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Vapor+Json.swift"; sourceTree = "<group>"; };
 		C304C8A01C62C3F400058C92 /* .travis.yml */ = {isa = PBXFileReference; lastKnownFileType = text; path = .travis.yml; sourceTree = "<group>"; };
 		C304C8A61C62D65200058C92 /* ServerDriver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ServerDriver.swift; sourceTree = "<group>"; };
 		C304C8A91C62FCA300058C92 /* RequestFormExtension.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RequestFormExtension.swift; sourceTree = "<group>"; };
@@ -135,6 +135,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		80202FFF1C77C94C009B8655 /* Json */ = {
+			isa = PBXGroup;
+			children = (
+				802030001C77C956009B8655 /* Vapor+Json.swift */,
+			);
+			name = Json;
+			sourceTree = "<group>";
+		};
 		C304C8AC1C63047100058C92 /* Socket */ = {
 			isa = PBXGroup;
 			children = (
@@ -241,7 +249,7 @@
 		C352E6D11C62BC6A00E26467 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
-				3492B2EC1C7819D800D8E588 /* main.swift */,
+				80202FFF1C77C94C009B8655 /* Json */,
 				C377F2ED1C696C9B00DABD21 /* View */,
 				C304C8B21C63054400058C92 /* Routing */,
 				C304C8B01C63053500058C92 /* Request */,
@@ -418,7 +426,7 @@
 				C352E6FB1C62BC6A00E26467 /* NodeRouter.swift in Sources */,
 				C352E6F51C62BC6A00E26467 /* Response.swift in Sources */,
 				C352E6E91C62BC6A00E26467 /* JSONSerializer.swift in Sources */,
-				3492B2ED1C7819D800D8E588 /* main.swift in Sources */,
+				802030011C77C956009B8655 /* Vapor+Json.swift in Sources */,
 				C352E6EB1C62BC6A00E26467 /* LinuxFixes.swift in Sources */,
 				C352E6E71C62BC6A00E26467 /* Controller.swift in Sources */,
 				C304C8A71C62D65200058C92 /* ServerDriver.swift in Sources */,
@@ -557,6 +565,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_INCLUDE_PATHS = "$(SRCROOT)/.build/debug";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
@@ -567,6 +576,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_INCLUDE_PATHS = "$(SRCROOT)/.build/release";
 			};
 			name = Release;
 		};
@@ -578,6 +588,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.tannernelson.Tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_INCLUDE_PATHS = "$(SRCROOT)/.build/debug";
 			};
 			name = Debug;
 		};
@@ -589,6 +600,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.tannernelson.Tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_INCLUDE_PATHS = "$(SRCROOT)/.build/release";
 			};
 			name = Release;
 		};
