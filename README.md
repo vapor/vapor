@@ -10,14 +10,14 @@ A Laravel/Lumen Inspired Web Framework for Swift that works on iOS, OS X, and Ub
 
 ## Badges
 
-[![Build Status](https://img.shields.io/travis/tannernelson/vapor.svg?style=flat-square)](https://travis-ci.org/tannernelson/vapor)
-[![Issue Stats](http://issuestats.com/github/tannernelson/vapor/badge/pr?style=flat-square)](http://issuestats.com/github/tannernelson/vapor)
+[![Build Status](https://img.shields.io/travis/qutheory/vapor.svg?style=flat-square)](https://travis-ci.org/qutheory/vapor)
+[![Issue Stats](http://issuestats.com/github/qutheory/vapor/badge/pr?style=flat-square)](http://issuestats.com/github/qutheory/vapor)
 [![PRs Welcome](https://img.shields.io/badge/prs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
 [![Slack Status](http://slack.tanner.xyz:8085/badge.svg?style=flat-square)](http://slack.tanner.xyz:8085)
 
 ## Getting Started
 
-Clone the [Example](https://github.com/tannernelson/vapor-example) project to start making your application or check out the [live demo](http://vapor.tanner.xyz:8080) running on Ubuntu. This repository is for the framework module.
+Clone the [Example](https://github.com/qutheory/vapor-example) project to start making your application or check out the [live demo](http://vapor.qutheory.io) running on Ubuntu. This repository is for the framework module.
 
 You can also download the alpha [Vapor Installer](https://github.com/mpclarkson/vapor-installer), which allows you to create a new project at the command line e.g. `vapor new MyProject`
 
@@ -31,7 +31,7 @@ This is a work in progress, so don't rely on this for anything important. And pu
 
 ## Wiki
 
-Visit the [Vapor Wiki](https://github.com/tannernelson/vapor/wiki) for extensive documentation on using and contributing to Vapor.
+Visit the [Vapor Wiki](https://github.com/qutheory/vapor/wiki) for extensive documentation on using and contributing to Vapor.
 
 ## Server
 
@@ -114,7 +114,7 @@ To add `VaporStencil`, add the following package to your `Package.swift`.
 
 `Package.swift`
 ```swift
-.Package(url: "https://github.com/tannernelson/vapor-stencil.git", majorVersion: 0)
+.Package(url: "https://github.com/qutheory/vapor-stencil.git", majorVersion: 0)
 ```
 
 Then set the `StencilRenderer()` on your `View.renderers` for whatever file extensions you would like to be rendered as `Stencil` templates.
@@ -192,7 +192,7 @@ request.session.data["name"] = "Vapor"
 
 ## Database
 
-Vapor was designed alongside [Fluent](https://github.com/tannernelson/fluent), an Eloquent inspired ORM that empowers simple and expressive database management.
+Vapor was designed alongside [Fluent](https://github.com/qutheory/fluent), an Eloquent inspired ORM that empowers simple and expressive database management.
 
 ```swift
 import Fluent
@@ -205,7 +205,7 @@ if let user = User.find(5) {
 }
 ```
 
-Underlying [Fluent](https://github.com/tannernelson/fluent) is a powerful Query builder.
+Underlying [Fluent](https://github.com/qutheory/fluent) is a powerful Query builder.
 
 ```swift
 let user = Query<User>().filter("id", notIn: [1, 2, 3]).filter("age", .GreaterThan, 21).first
