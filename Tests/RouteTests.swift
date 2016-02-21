@@ -41,9 +41,9 @@ class RouteTests: XCTestCase {
         let expectedRoutes = [
             "Get foo/:foo_id/bar nil",
             "Post foo/:foo_id/bar nil",
-            "Get foo/:foo_id/bar/:bar_id nil",
-            "Put foo/:foo_id/bar/:bar_id nil",
-            "Delete foo/:foo_id/bar/:bar_id nil",
+            "Get foo/:foo_id/bar/:id nil",
+            "Put foo/:foo_id/bar/:id nil",
+            "Delete foo/:foo_id/bar/:id nil",
             ]
         
         assertRoutesExist(expectedRoutes)

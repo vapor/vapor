@@ -59,10 +59,11 @@ public class Route {
         
         //Get the path components separated by "."
         let components = path.componentsSeparatedByString(".")
-        let num = components.count
         
-        //Construct the named params
-        let params: [String] = num > 1 ? components.map { ":\($0)_id"  } : [":id"]
+        //Construct the named params (the final parameter is always :id)
+        let params = components.enumerate().map {
+            $0 == components.count - 1 ? ":id" : ":\($1)_id"
+        }
         
         //Construct the path for show, update and destroy
         let fullPath = components.enumerate()
