@@ -239,7 +239,11 @@ app.middleware.append(MyMiddleware)
 app.providers.append(VaporFastServer.Provider)
 ```
 
-My website `http://tanner.xyz` is currently running using Vapor.
+## Compatibility
+
+Vapor has been tested on OS X 10.11, Ubuntu 14.04, and Ubuntu 15.10. 
+
+My website `http://tanner.xyz` as well as `http://qutheory.io` are currently running using Vapor on DigitalOcean.
 
 ## Attributions
 
