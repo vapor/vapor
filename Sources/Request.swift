@@ -69,6 +69,9 @@ public class Request {
         } else {
             self.data = Request.parseQueryData(path)
         }
+        
+        //Testing logs
+        Log.info("Received \(method.rawValue) request for \(path)")
     }
     
     /**
