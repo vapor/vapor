@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		3471560C1C797AE60006F6AB /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3471560B1C797AE60006F6AB /* Log.swift */; };
+		3471560E1C797B200006F6AB /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3471560D1C797B200006F6AB /* Logger.swift */; };
+		347156101C7AB7800006F6AB /* LogLevel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3471560F1C7AB7800006F6AB /* LogLevel.swift */; };
 		3492B2ED1C7819D800D8E588 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3492B2EC1C7819D800D8E588 /* main.swift */; };
 		3492B2EF1C787DD600D8E588 /* RouteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3492B2EE1C787DD600D8E588 /* RouteTests.swift */; };
 		C304C8A71C62D65200058C92 /* ServerDriver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C304C8A61C62D65200058C92 /* ServerDriver.swift */; };
@@ -76,6 +79,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		3471560B1C797AE60006F6AB /* Log.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Log.swift; sourceTree = "<group>"; };
+		3471560D1C797B200006F6AB /* Logger.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Logger.swift; sourceTree = "<group>"; };
+		3471560F1C7AB7800006F6AB /* LogLevel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LogLevel.swift; sourceTree = "<group>"; };
 		3492B2EC1C7819D800D8E588 /* main.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		3492B2EE1C787DD600D8E588 /* RouteTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RouteTests.swift; sourceTree = "<group>"; };
 		C304C8A01C62C3F400058C92 /* .travis.yml */ = {isa = PBXFileReference; lastKnownFileType = text; path = .travis.yml; sourceTree = "<group>"; };
@@ -135,6 +141,16 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		347156081C7971E60006F6AB /* Logging */ = {
+			isa = PBXGroup;
+			children = (
+				3471560B1C797AE60006F6AB /* Log.swift */,
+				3471560D1C797B200006F6AB /* Logger.swift */,
+				3471560F1C7AB7800006F6AB /* LogLevel.swift */,
+			);
+			name = Logging;
+			sourceTree = "<group>";
+		};
 		C304C8AC1C63047100058C92 /* Socket */ = {
 			isa = PBXGroup;
 			children = (
@@ -241,6 +257,7 @@
 		C352E6D11C62BC6A00E26467 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
+				347156081C7971E60006F6AB /* Logging */,
 				3492B2EC1C7819D800D8E588 /* main.swift */,
 				C377F2ED1C696C9B00DABD21 /* View */,
 				C304C8B21C63054400058C92 /* Routing */,
@@ -412,7 +429,9 @@
 				C352E6F91C62BC6A00E26467 /* Route.swift in Sources */,
 				C304C8B51C6306B100058C92 /* RouterDriver.swift in Sources */,
 				C3EDEA871C68459300754727 /* Hash.swift in Sources */,
+				3471560E1C797B200006F6AB /* Logger.swift in Sources */,
 				C352E7091C62BC6A00E26467 /* View.swift in Sources */,
+				347156101C7AB7800006F6AB /* LogLevel.swift in Sources */,
 				C352E6EF1C62BC6A00E26467 /* MemorySessionDriver.swift in Sources */,
 				C377F2EF1C696CAB00DABD21 /* RenderDriver.swift in Sources */,
 				C352E6FB1C62BC6A00E26467 /* NodeRouter.swift in Sources */,
@@ -425,6 +444,7 @@
 				C352E6F71C62BC6A00E26467 /* ResponseConvertible.swift in Sources */,
 				C352E7031C62BC6A00E26467 /* SocketServer.swift in Sources */,
 				C3EDEA801C68419800754727 /* String+SHA1.swift in Sources */,
+				3471560C1C797AE60006F6AB /* Log.swift in Sources */,
 				C3EDEA7B1C683A6C00754727 /* Middleware.swift in Sources */,
 				C352E6FD1C62BC6A00E26467 /* Server.swift in Sources */,
 				C3EDEA841C6842C700754727 /* Int+Random.swift in Sources */,
