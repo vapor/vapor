@@ -72,6 +72,12 @@ public class Application {
         self.middleware.append(SessionMiddleware)
 	}
 
+    
+    public func bootProviders() {
+        for provider in self.providers {
+            provider.boot(self)
+        }
+    }
 
 
 	/**
@@ -79,9 +85,7 @@ public class Application {
 		runs on the supplied port.
 	*/
 	public func start(port inPort: Int = 80) {
-        for provider in self.providers {
-            provider.boot(self)
-        }
+        self.bootProviders()
         
         self.server.delegate = self
         
