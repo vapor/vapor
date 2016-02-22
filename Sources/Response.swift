@@ -147,7 +147,7 @@ public class Response {
     }
 
     var headers: [String: String] {
-        var headers = ["Server" : "Vapor \(Server.VERSION)"]
+        var headers = ["Server" : "Vapor \(Application.VERSION)"]
 
         if self.cookies.count > 0 {
             var cookieString = ""
