@@ -36,7 +36,7 @@ public class Application {
 		Provider classes that have been registered
 		with this application
 	*/
-    private var providers: [Provider.Type]
+    public var providers: [Provider.Type]
 
 	/**
 		The work directory of your application is
@@ -51,18 +51,18 @@ public class Application {
 			}
 		}
 	}
-    
-    public convenience init() {
-        self.init(providers: [])
-    }
 
+    /**
+        Routes added to the `Application`. They will
+        be registered to the `RouterDriver` when 
+        `start()` is called.
+    */
+    var routes: [Route] = []
 
 	/**
 		Initialize the Application.
-
-		- Parameter providers: Optional list of providers to add.
 	*/
-	public init(providers: [Provider.Type]) {
+	public init() {
         self.server = SocketServer()
         self.router = NodeRouter()
 
@@ -70,35 +70,11 @@ public class Application {
 			SessionMiddleware()
 		]
 
-
         self.providers = []
-        
-        for provider in providers {
-            self.addProvider(provider)
-        }
-
         
         self.server.delegate = self
 	}
 
-
-	public func addProvider(provider: Provider.Type) {
-		guard !self.hasProvider(provider) else {
-			return
-		}
-
-		self.providers.append(provider)
-	}
-
-	public func hasProvider(provider: Provider.Type) -> Bool {
-		for value in self.providers {
-			if value == provider {
-				return true
-			}
-		}
-
-		return false
-	}
 
 
 	/**
@@ -159,7 +135,7 @@ public class Application {
 		into the current `RouterDriver`.
 	*/
 	func registerRoutes() {
-		for route in Route.routes {
+		for route in self.routes {
 			self.router.register(hostname: route.hostname, method: route.method, path: route.path) { request in
 				let response: Response
 
