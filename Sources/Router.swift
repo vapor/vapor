@@ -21,31 +21,31 @@ extension Router: RouterDriver {
 }
 
 extension Router {
-    public final func get(path: String, closure: ConvertibleHandler) {
+    public final func get(path: String, closure: Handler) {
         self.add(method: .Get, path: path, handler: closure)
     }
     
-    public final func post(path: String, closure: ConvertibleHandler) {
+    public final func post(path: String, closure: Handler) {
         self.add(method: .Post, path: path, handler: closure)
     }
     
-    public final func put(path: String, closure: ConvertibleHandler) {
+    public final func put(path: String, closure: Handler) {
         self.add(method: .Put, path: path, handler: closure)
     }
     
-    public final func patch(path: String, closure: ConvertibleHandler) {
+    public final func patch(path: String, closure: Handler) {
         self.add(method: .Patch, path: path, handler: closure)
     }
     
-    public final func delete(path: String, closure: ConvertibleHandler) {
+    public final func delete(path: String, closure: Handler) {
         self.add(method: .Delete, path: path, handler: closure)
     }
     
-    public final func options(path: String, closure: ConvertibleHandler) {
+    public final func options(path: String, closure: Handler) {
         self.add(method: .Options, path: path, handler: closure)
     }
     
-    public final func any(path: String, closure: ConvertibleHandler) {
+    public final func any(path: String, closure: Handler) {
         self.get(path, closure: closure)
         self.post(path, closure: closure)
         self.put(path, closure: closure)
@@ -76,7 +76,7 @@ extension Router {
 
 public final class Router {
     
-    public typealias ConvertibleHandler = Request throws -> ResponseConvertible
+    public typealias Handler = Request throws -> ResponseConvertible
     
     private final var tree: [Host : [Request.Method : Branch]] = [:]
     
@@ -95,7 +95,7 @@ public final class Router {
         return branch.handle(request, comps: generator)
     }
     
-    public final func add(host: Host = "*", method: Request.Method, path: String, handler: ConvertibleHandler) {
+    public final func add(host: Host = "*", method: Request.Method, path: String, handler: Handler) {
         let generator = path.pathComponentGenerator()
         var root = tree[host] ?? [:]
         let branch = root[method] ?? Branch(name: "")
