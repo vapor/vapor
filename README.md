@@ -31,14 +31,14 @@ Starting the server takes two lines.
 ```swift
 import Vapor
 
-let server = Server()
-server.run()
+let app = Application()
+app.start()
 ```
 
 You can also choose which port the server runs on.
 
 ```swift
-server.run(port: 8080)
+app.start(port: 8080)
 ```
 
 If you are having trouble connecting, make sure your ports are open. Check out `apt-get ufw` for simple port management.
@@ -49,7 +49,7 @@ Routing in Vapor is simple and very similar to Laravel.
 
 `main.swift`
 ```swift
-Route.get("welcome") { request in
+app.get("welcome") { request in
 	return "Hello"
 }
 
@@ -63,7 +63,7 @@ Here we will respond to all requests to `http://example.com/welcome` with the st
 Responding with JSON is easy.
 
 ```swift
-Route.get("version") { request in
+app.get("version") { request in
 	return ["version": "1.0"]
 }
 ```
@@ -75,7 +75,7 @@ This responds to all requests to `http://example.com/version` with the JSON dict
 Vapor will do its best to infer a Json response from the returned type, but for some more complex examples, particularly on Linux, there are known inference issues.  To circumvent this, you can use the included `Json` type and wrap your response, for example:
 
 ```swift
-Route.get("solar-system") { request in
+app.get("solar-system") { request in
 	let json = [
 			"planets" : [
 				"mars",
@@ -93,7 +93,7 @@ Route.get("solar-system") { request in
 To access Json from parameters sent up with a request, use `request.json`
 
 ```swift
-Route.post("messages") { request in
+app.post("messages") { request in
 	guard
 		   let json = request.json,
 			 let userId = json["userId"]?.stringValue,
@@ -112,7 +112,7 @@ Route.post("messages") { request in
 You can also respond with HTML pages.
 
 ```swift
-Route.get("/") { request in
+app.get("/") { request in
 	return View(path: "index.html")
 }
 ```
@@ -128,7 +128,7 @@ Or [Stencil](https://github.com/kylef/Stencil) templates.
 ```
 
 ```swift
-Route.get("/") { request in
+app.get("/") { request in
 	return View(path: "index.stencil", context: ["message": "Hello"])
 }
 ```
@@ -160,7 +160,7 @@ View.renderers[".stencil"] = StencilRenderer()
 A manual response can be returned if you want to set something like `cookies`.
 
 ```swift
-Route.get("cookie") { request in
+app.get("cookie") { request in
 	let response = Response(status: .OK, text: "Cookie was set")
 	response.cookies["test"] = "123"
 	return response
@@ -244,7 +244,7 @@ Controllers are great for keeping your code organized. `Route` directives can ta
 
 `main.swift`
 ```swift
-Route.get("heartbeat", closure: HeartbeatController().index)
+app.get("heartbeat", closure: HeartbeatController().index)
 ```
 
 To pass a function name as a closure like above, the closure must have the function signature
@@ -277,7 +277,7 @@ Resource controllers take advantage of CRUD-like `index`, `show`, `store`, `upda
 ### Single Resources
 
 ```swift
-Route.resource("user", controller: UserController())
+app.resource("user", controller: UserController())
 ```
 
 This will create the appropriate `GET`, `POST`, `DELETE`, etc methods for individual and groups of users:
@@ -291,7 +291,7 @@ You can also create nested resources for one to many relationships. For example,
 This can be achieved by using dot notation in the path, as follows:
 
 ```swift
-Route.resource("company.user", controller: CompanyUserController())
+app.resource("company.user", controller: CompanyUserController())
 ```
 
 This will create appropriate nested `GET`, `POST`, `DELETE`, etc methods, for example:
@@ -333,7 +333,7 @@ server.middleware.append(MyMiddleware())
 Use the `AsyncResponse` to send custom, asynchronous responses. You have full control over the response here, meaning you are responsible for writing all required headers and releasing the `Socket` when done. (Thanks @elliottminns)
 
 ```swift
-Route.get("async") { request in
+app.get("async") { request in
 	return AsyncResponse() { socket in
 		try socket.writeUTF8("HTTP/1.1 200 OK\r\n")
 		try socket.writeUTF8("Content-Type: application/json\r\n\r\n")
