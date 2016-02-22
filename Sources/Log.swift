@@ -8,36 +8,8 @@
 
 import Foundation
 
-public enum LogLevel {
-    case Verbose, Debug, Info, Warning, Error, Fatal, Custom(String)
-   
-    public static var all: [LogLevel] {
-        return [.Verbose, .Debug, .Info, .Warning, .Error, .Fatal]
-    }
-}
 
-extension LogLevel: CustomStringConvertible {
-    public var description: String {
-        switch self {
-        case Verbose: return "VERBOSE"
-        case Debug: return "DEBUG"
-        case Info: return "INFO"
-        case Warning: return "WARNING"
-        case Error: return "ERROR"
-        case Fatal: return "FATAL"
-        case Custom(let string): return "\(string.uppercaseString)"
-        }
-    }
-}
-
-extension LogLevel: Equatable {}
-
-public func ==(lhs: LogLevel, rhs: LogLevel) -> Bool {
-    return lhs.description == rhs.description
-}
-
-
-/* Log class
+/* Log
 */
 public class Log {
     

@@ -13,6 +13,7 @@ public protocol Logger {
 }
 
 /*
+ Logs to the console
 */
 public class ConsoleLogger: Logger {
     
