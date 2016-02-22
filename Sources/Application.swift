@@ -20,7 +20,7 @@ public class Application {
 		This property is constant since it cannot
 		be changed after the server has been booted.
 	*/
-	public let server: ServerDriver
+	public var server: ServerDriver
 
 	/**
 		`Middleware` will be applied in the order
@@ -29,7 +29,7 @@ public class Application {
 		Make sure to append your custom `Middleware`
 		if you don't want to overwrite default behavior.
 	*/
-	public var middleware: [Middleware]
+	public var middleware: [Middleware.Type]
 
 
 	/**
@@ -66,13 +66,10 @@ public class Application {
         self.server = SocketServer()
         self.router = NodeRouter()
 
-		self.middleware = [
-			SessionMiddleware()
-		]
-
+        self.middleware = []
         self.providers = []
         
-        self.server.delegate = self
+        self.middleware.append(SessionMiddleware)
 	}
 
 
@@ -85,6 +82,8 @@ public class Application {
         for provider in self.providers {
             provider.boot(self)
         }
+        
+        self.server.delegate = self
         
 		self.registerRoutes()
 
@@ -143,8 +142,6 @@ public class Application {
 					response = try route.closure(request: request).response()
 				} catch View.Error.InvalidPath {
 					response = Response(status: .NotFound, text: "View not found")
-				} catch {
-					response = Response(error: "Server Error: \(error)")
 				}
 
 				return response
@@ -157,7 +154,7 @@ public class Application {
 extension Application: ServerDriverDelegate {
 
 	public func serverDriverDidReceiveRequest(request: Request) -> Response {
-		var handler: Request -> Response
+		var handler: Request.Handler
 
 		// Check in routes
 		if let routerHandler = router.route(request) {
@@ -194,8 +191,13 @@ extension Application: ServerDriverDelegate {
 			handler = middleware.handle(handler)
 		}
 
-		let response = handler(request)
-		return response
+        do {
+            let response = try handler(request: request)
+            return response
+        } catch {
+            return Response(error: "Server Error: \(error)")
+        }
+
 	}
 
 }
