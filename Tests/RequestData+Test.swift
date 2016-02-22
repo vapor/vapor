@@ -9,15 +9,16 @@
 import Foundation
 
 extension Request {
-    ///Available Data Types
-    public enum Data {
-        case UrlQuery([String : String])
-        case Json(String)
-        case NotAvailable
+    public struct Data {
         
-        public init(bytes: [UInt8]) {
-            self = .Json("This is not ready for testing -- Placeholder until Xcode can compile swift packages")
+        // MARK: Initialization
+        
+        public let query: [String : String]
+        public let bytes: [UInt8]
+        
+        internal init(query: [String : String] = [:], bytes: [UInt8]) {
+            self.query = query
+            self.bytes = bytes
         }
     }
-    
 }

@@ -64,12 +64,8 @@ public class Request {
         self.cookies = Request.parseCookies(headers["cookie"])
         self.hostname = headers["host"] ?? "*"
         
-        if method == .Post {
-            self.data = Data(bytes: body)
-        } else {
-            let query = Request.parseQueryData(path)
-            self.data = .UrlQuery(query)
-        }
+        let query = Request.parseQueryData(path)
+        self.data = Data(query: query, bytes: body)
     }
     
     /**
