@@ -8,12 +8,18 @@
 
 import Foundation
 
+/* Logger protocol. Custom loggers must conform 
+ to this protocol
+ */
 public protocol Logger {
     func log(level: LogLevel, message: String)
 }
 
 /*
  Logs to the console
+ 
+ - parameter level: LogLevel enum
+ - parameter message: String to log
 */
 public class ConsoleLogger: Logger {
     

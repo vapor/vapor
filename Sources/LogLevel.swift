@@ -8,9 +8,17 @@
 
 import Foundation
 
+/*
+ LogLevel enumeration
+ */
 public enum LogLevel {
     case Verbose, Debug, Info, Warning, Error, Fatal, Custom(String)
     
+    /*
+     Returns all standard log levels (i.e. except Custom)
+    
+     returns - array of LogLevel
+     */
     public static var all: [LogLevel] {
         return [.Verbose, .Debug, .Info, .Warning, .Error, .Fatal]
     }
