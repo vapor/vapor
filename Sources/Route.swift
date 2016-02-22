@@ -3,6 +3,8 @@ extension Application {
     public func add(method method: Request.Method, path: String, closure: Request.Handler) {
         let route = Route(method: method, path: path, closure: closure)
         route.hostname = Route.hostname
+        
+        self.routes.append(route)
     }
     
     public func get(path: String, closure: Request.Handler) {
@@ -69,7 +71,6 @@ extension Application {
 
 class Route {
 
-	static var routes: [Route] = []
     static var hostname: String?
 
 
@@ -82,8 +83,6 @@ class Route {
 		self.method = method
 		self.path = path
 		self.closure = closure
-        
-		Route.routes.append(self)
 	}
     
  
