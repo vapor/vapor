@@ -13,7 +13,7 @@ public class Server {
         for a given request.
     */
     public var router: RouterDriver
-    
+
     /**
         The `ServerDriver` is responsible
         for handling connections on the desired port.
@@ -21,11 +21,11 @@ public class Server {
         be changed after the server has been booted.
     */
     public let driver: ServerDriver
-    
+
     /**
         `Middleware` will be applied in the order
-        it is set in this array. 
-     
+        it is set in this array.
+
         Make sure to append your custom `Middleware`
         if you don't want to overwrite default behavior.
     */
@@ -39,7 +39,7 @@ public class Server {
         let driver = SocketServer()
         self.init(driver: driver)
     }
-    
+
     /**
         The work directory of your application is
         the directory in which your Resources, Public, etc
@@ -53,7 +53,7 @@ public class Server {
             }
         }
     }
-    
+
     /**
         Initialize the `Server` with a custom
         `ServerDriver`
@@ -61,11 +61,11 @@ public class Server {
     public init(driver: ServerDriver, router: RouterDriver = Route) {
         self.driver = driver
         self.router = router
-        
+
         self.middleware = [
             SessionMiddleware()
         ]
-        
+
         self.driver.delegate = self
     }
 
@@ -101,8 +101,8 @@ public class Server {
             print("Server start error: \(error)")
         }
     }
-    
-    
+
+
     /**
         Starts an infinite loop to keep the server alive while it
         waits for inbound connections.
@@ -122,7 +122,7 @@ public class Server {
 extension Server: ServerDriverDelegate {
     public func serverDriverDidReceiveRequest(request: Request) -> Response {
         var handler: Request -> Response
-        
+
         //check in routes
         if let routerHandler = router.route(request) {
             handler = { req in
@@ -134,22 +134,22 @@ extension Server: ServerDriverDelegate {
                 } catch {
                     response = Response(error: "Server Error: \(error)")
                 }
-                
+
                 return response
             }
         } else {
             //check in file system
             let filePath = Server.workDir + "Public" + request.path
-            
+
             let fileManager = NSFileManager.defaultManager()
             var isDir: ObjCBool = false
-            
+
             if fileManager.fileExistsAtPath(filePath, isDirectory: &isDir) {
                 //file exists
                 if let fileBody = NSData(contentsOfFile: filePath) {
                     var array = [UInt8](count: fileBody.length, repeatedValue: 0)
                     fileBody.getBytes(&array, length: fileBody.length)
-                    
+
                     return Response(status: .OK, data: array, contentType: .Text)
                 } else {
                     handler = { _ in
@@ -163,12 +163,12 @@ extension Server: ServerDriverDelegate {
                 }
             }
         }
-        
+
         //loop through middlewares in order
         for middleware in self.middleware {
             handler = middleware.handle(handler)
         }
-        
+
         let response = handler(request)
         return response
     }
