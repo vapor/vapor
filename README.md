@@ -23,9 +23,9 @@ This is a work in progress, so *do not* rely on this for anything important. And
 
 Visit the [Vapor Wiki](https://github.com/qutheory/vapor/wiki) for extensive documentation on getting setup, using, and contributing to Vapor.
 
-## Server
+## Application
 
-Starting the server takes two lines.
+Starting the application takes two lines.
 
 `main.swift`
 ```swift
@@ -53,7 +53,7 @@ app.get("welcome") { request in
 	return "Hello"
 }
 
-//...start server
+//...start application
 ```
 
 Here we will respond to all requests to `http://example.com/welcome` with the string `"Hello"`.
@@ -69,43 +69,6 @@ app.get("version") { request in
 ```
 
 This responds to all requests to `http://example.com/version` with the JSON dictionary `{"version": "1.0"}` and `Content-Type: application/json`.
-
-#### Complex Responses
-
-Vapor will do its best to infer a Json response from the returned type, but for some more complex examples, particularly on Linux, there are known inference issues.  To circumvent this, you can use the included `Json` type and wrap your response, for example:
-
-```swift
-app.get("solar-system") { request in
-	let json = [
-			"planets" : [
-				"mars",
-				"venus",
-				"jupiter",
-				"earth"
-			]
-	]
-	return Json(json)
-}
-```
-
-#### Requests
-
-To access Json from parameters sent up with a request, use `request.json`
-
-```swift
-app.post("messages") { request in
-	guard
-		   let json = request.json,
-			 let userId = json["userId"]?.stringValue,
-			 let messageBody = json["message"]?.stringValue
-			 else { throw error }
-
-	let message = Message(userId: userId, body: messageBody)
-	message.save()
-
-	return Response(status: .OK, text: "Message Created")
-}
-```
 
 ### Views
 
@@ -194,14 +157,18 @@ All files put in the `Public` folder at the root of your project will be availab
 
 Every route call gets passed a `Request` object. This can be used to grab query and path parameters.
 
-This is a list of the properties available on the request object.
+### Data
+
+To access JSON, Query, and form-encoded data from the `Request`.
 
 ```swift
-let method: Method
-var parameters: [String: String] //URL parameters like id in user/:id
-var data: [String: String] //GET or POST data
-var cookies: [String: String]
-var session: Session
+app.post("hello") { request in
+	guard let name = request.data["name"]?.string {
+		return "Please include a name"
+	}
+
+	return "Hello, \(name)!"
+}
 ```
 
 ### Session
@@ -274,8 +241,6 @@ Here the `HeartbeatControllers`'s index method will be called when `http://examp
 
 Resource controllers take advantage of CRUD-like `index`, `show`, `store`, `update`, `destroy` methods to make setting up REST APIs easy.
 
-### Single Resources
-
 ```swift
 app.resource("user", controller: UserController())
 ```
@@ -284,27 +249,6 @@ This will create the appropriate `GET`, `POST`, `DELETE`, etc methods for indivi
 
 - .Get /user - an index of users
 - .Get /user/:id - a single user etc
-
-### Nested Resources
-
-You can also create nested resources for one to many relationships. For example, a "company" can have multiple "users".
-This can be achieved by using dot notation in the path, as follows:
-
-```swift
-app.resource("company.user", controller: CompanyUserController())
-```
-
-This will create appropriate nested `GET`, `POST`, `DELETE`, etc methods, for example:
-
-- .Get /company/:company_id/user - an index of users at a specific company
-- .Get /company/:company_id/user/:id - a specific user at a specific company
-
-You can now access these parameters in a controller, as follows:
-
-```swift
-let companyId = request.parameters["company_id"]
-let userId = request.parameters["id"] //Note: The final parameter is always `id`.
-```
 
 ## Middleware
 
@@ -325,91 +269,8 @@ class MyMiddleware: Middleware {
     }
 }
 
-server.middleware.append(MyMiddleware())
+server.middleware.append(MyMiddleware
 ```
-
-## Async
-
-Use the `AsyncResponse` to send custom, asynchronous responses. You have full control over the response here, meaning you are responsible for writing all required headers and releasing the `Socket` when done. (Thanks @elliottminns)
-
-```swift
-app.get("async") { request in
-	return AsyncResponse() { socket in
-		try socket.writeUTF8("HTTP/1.1 200 OK\r\n")
-		try socket.writeUTF8("Content-Type: application/json\r\n\r\n")
-		try socket.writeUTF8("{\"hello\": \"world\"}")
-
-		socket.release()
-	}
-}
-```
-
-## Hash
-
-Vapor currently supports `SHA1` hashes.
-
-```swift
-let hello = Hash.make("world")
-```
-
-For added security, set a custom `applicationKey` on the `Hash` class.
-
-```swift
-Hash.applicationKey = "my-secret-key"
-```
-
-## Deploying
-
-Vapor has been successfully tested on Ubuntu 14.04 LTS (DigitalOcean) and Ubuntu 15.10 (VirtualBox).
-
-### DigitalOcean
-
-To deploy to DigitalOcean, simply
-
-- Install Swift 2.2
-	- `wget` the .tar.gz from Apple
-	- Set the `export PATH` in your `~/.bashrc`
-	- (you may need to install `binutils` as well if you see `ar not found`)
-- Clone your fork of the `vapor-example` repository to the server
-- `cd` into the repository
-	- Run `swift build`
-	- Run `.build/debug/MyApp`
-	- (you may need to run as `sudo` to use certain ports)
-	- (you may need to install `ufw` to set appropriate ports)
-
-#### Upstart
-
-To start your `Vapor` site automatically when the server is booted, add this file to your server.
-
-`/etc/init/vapor-example.conf`
-
-```conf
-description "Vapor Example"
-
-start on startup
-
-exec /home/<user_name>/vapor-example/.build/release/VaporApp --workDir=/home/<user_name>/vapor-example
-```
-
-You additionally have access to the following commands for starting and stopping your server.
-
-```shell
-sudo stop vapor-example
-sudo start vapor-example
-```
-
-The following script is useful for upgrading your website.
-
-```shell
-git pull
-swift build --configuration release
-sudo stop vapor-example
-sudo start vapor-example
-```
-
-### Heroku
-
-To deploy on Heroku, one can use [Kyle Fuller's Heroku buildpack](https://github.com/kylef/heroku-buildpack-swift) which works out of the box with the `vapor-example`.
 
 My website `http://tanner.xyz` is currently running using Vapor.
 
