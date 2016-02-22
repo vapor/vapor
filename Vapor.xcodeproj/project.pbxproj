@@ -7,7 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		3492B2ED1C7819D800D8E588 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3492B2EC1C7819D800D8E588 /* main.swift */; };
+		288CFC2E1C7AC01A00E4617A /* Application.swift in Sources */ = {isa = PBXBuildFile; fileRef = 288CFC2D1C7AC01A00E4617A /* Application.swift */; };
+		288CFC311C7AC02A00E4617A /* Provider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 288CFC301C7AC02A00E4617A /* Provider.swift */; };
+		288CFC321C7AC05B00E4617A /* Application.swift in Sources */ = {isa = PBXBuildFile; fileRef = 288CFC2D1C7AC01A00E4617A /* Application.swift */; };
+		288CFC331C7AC05D00E4617A /* Provider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 288CFC301C7AC02A00E4617A /* Provider.swift */; };
 		3492B2EF1C787DD600D8E588 /* RouteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3492B2EE1C787DD600D8E588 /* RouteTests.swift */; };
 		C304C8A71C62D65200058C92 /* ServerDriver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C304C8A61C62D65200058C92 /* ServerDriver.swift */; };
 		C304C8A81C62D65200058C92 /* ServerDriver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C304C8A61C62D65200058C92 /* ServerDriver.swift */; };
@@ -76,7 +79,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		3492B2EC1C7819D800D8E588 /* main.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		288CFC2D1C7AC01A00E4617A /* Application.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Application.swift; sourceTree = "<group>"; };
+		288CFC301C7AC02A00E4617A /* Provider.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Provider.swift; sourceTree = "<group>"; };
 		3492B2EE1C787DD600D8E588 /* RouteTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RouteTests.swift; sourceTree = "<group>"; };
 		C304C8A01C62C3F400058C92 /* .travis.yml */ = {isa = PBXFileReference; lastKnownFileType = text; path = .travis.yml; sourceTree = "<group>"; };
 		C304C8A61C62D65200058C92 /* ServerDriver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ServerDriver.swift; sourceTree = "<group>"; };
@@ -135,6 +139,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		288CFC2F1C7AC02000E4617A /* Providers */ = {
+			isa = PBXGroup;
+			children = (
+				288CFC301C7AC02A00E4617A /* Provider.swift */,
+			);
+			name = Providers;
+			sourceTree = "<group>";
+		};
 		C304C8AC1C63047100058C92 /* Socket */ = {
 			isa = PBXGroup;
 			children = (
@@ -241,7 +253,7 @@
 		C352E6D11C62BC6A00E26467 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
-				3492B2EC1C7819D800D8E588 /* main.swift */,
+				288CFC2D1C7AC01A00E4617A /* Application.swift */,
 				C377F2ED1C696C9B00DABD21 /* View */,
 				C304C8B21C63054400058C92 /* Routing */,
 				C304C8B01C63053500058C92 /* Request */,
@@ -249,6 +261,7 @@
 				C304C8AD1C63048200058C92 /* Server */,
 				C304C8AE1C63050900058C92 /* Session */,
 				C3EDEA7E1C683DC300754727 /* Middleware */,
+				288CFC2F1C7AC02000E4617A /* Providers */,
 				C3EDEA821C68419B00754727 /* Crypto */,
 				C304C8AF1C63051E00058C92 /* Fixes */,
 			);
@@ -413,12 +426,12 @@
 				C304C8B51C6306B100058C92 /* RouterDriver.swift in Sources */,
 				C3EDEA871C68459300754727 /* Hash.swift in Sources */,
 				C352E7091C62BC6A00E26467 /* View.swift in Sources */,
+				288CFC2E1C7AC01A00E4617A /* Application.swift in Sources */,
 				C352E6EF1C62BC6A00E26467 /* MemorySessionDriver.swift in Sources */,
 				C377F2EF1C696CAB00DABD21 /* RenderDriver.swift in Sources */,
 				C352E6FB1C62BC6A00E26467 /* NodeRouter.swift in Sources */,
 				C352E6F51C62BC6A00E26467 /* Response.swift in Sources */,
 				C352E6E91C62BC6A00E26467 /* JSONSerializer.swift in Sources */,
-				3492B2ED1C7819D800D8E588 /* main.swift in Sources */,
 				C352E6EB1C62BC6A00E26467 /* LinuxFixes.swift in Sources */,
 				C352E6E71C62BC6A00E26467 /* Controller.swift in Sources */,
 				C304C8A71C62D65200058C92 /* ServerDriver.swift in Sources */,
@@ -426,6 +439,7 @@
 				C352E7031C62BC6A00E26467 /* SocketServer.swift in Sources */,
 				C3EDEA801C68419800754727 /* String+SHA1.swift in Sources */,
 				C3EDEA7B1C683A6C00754727 /* Middleware.swift in Sources */,
+				288CFC311C7AC02A00E4617A /* Provider.swift in Sources */,
 				C352E6FD1C62BC6A00E26467 /* Server.swift in Sources */,
 				C3EDEA841C6842C700754727 /* Int+Random.swift in Sources */,
 				C352E6F11C62BC6A00E26467 /* SocketParser.swift in Sources */,
@@ -446,6 +460,7 @@
 				C352E6F81C62BC6A00E26467 /* ResponseConvertible.swift in Sources */,
 				C352E6F01C62BC6A00E26467 /* MemorySessionDriver.swift in Sources */,
 				C352E7001C62BC6A00E26467 /* Session.swift in Sources */,
+				288CFC321C7AC05B00E4617A /* Application.swift in Sources */,
 				3492B2EF1C787DD600D8E588 /* RouteTests.swift in Sources */,
 				C3943DC41C7664D90014F4EE /* Middleware.swift in Sources */,
 				C352E6F61C62BC6A00E26467 /* Response.swift in Sources */,
@@ -458,6 +473,7 @@
 				C352E7061C62BC6A00E26467 /* StringExtensions.swift in Sources */,
 				C377F2F01C696CAB00DABD21 /* RenderDriver.swift in Sources */,
 				C352E6FA1C62BC6A00E26467 /* Route.swift in Sources */,
+				288CFC331C7AC05D00E4617A /* Provider.swift in Sources */,
 				C352E6F41C62BC6A00E26467 /* Request.swift in Sources */,
 				C352E7041C62BC6A00E26467 /* SocketServer.swift in Sources */,
 				C3EDEA881C68459300754727 /* Hash.swift in Sources */,
