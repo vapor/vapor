@@ -52,8 +52,6 @@ Routing in Vapor is simple and very similar to Laravel.
 app.get("welcome") { request in
 	return "Hello"
 }
-
-//...start application
 ```
 
 Here we will respond to all requests to `http://example.com/welcome` with the string `"Hello"`.
@@ -96,27 +94,7 @@ app.get("/") { request in
 }
 ```
 
-If you have `VaporStencil` added, just put the View file in the `Resources` folder at the root of your project and it will be served.
-
-#### Stencil
-
-To add `VaporStencil`, add the following package to your `Package.swift`.
-
-`Package.swift`
-```swift
-.Package(url: "https://github.com/qutheory/vapor-stencil.git", majorVersion: 0)
-```
-
-Then set the `StencilRenderer()` on your `View.renderers` for whatever file extensions you would like to be rendered as `Stencil` templates.
-
-`main.swift`
-```swift
-import VaporStencil
-
-//set the stencil renderer
-//for all .stencil files
-View.renderers[".stencil"] = StencilRenderer()
-```
+If you have [VaporStencil](https://github.com/qutheory/vapor-stencil) added, just put the View file in the `Resources` folder at the root of your project and it will be served.
 
 ### Response
 
