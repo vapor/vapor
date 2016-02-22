@@ -5,12 +5,13 @@ public class Application {
 	public private(set) var booted = false
 	public let server: Server
 
-	public convenience init() {
-		self.init(serverDriver: SocketServer())
+	public convenience init(_ providers: [Provider.Type] = []) {
+		self.init(serverDriver: SocketServer(), providers: providers)
 	}
 
-	public init(serverDriver: ServerDriver) {
+	public init(serverDriver: ServerDriver, providers: [Provider.Type] = []) {
 		self.server = Server(driver: serverDriver)
+		self.register(providers)
 	}
 
 	public func register(providers: [Provider.Type]) {
