@@ -16,12 +16,14 @@ public class Request {
         case Options = "OPTIONS"
         case Unknown = "x"
     }
+    
+    public typealias Handler = ((request: Request) throws -> Response)
 
     ///HTTP Method used for request.
     public let method: Method
     
     ///Query data from the path, or POST data from the body (depends on `Method`).
-    public let data: [String: String]
+    public let data: Data
     
     ///Browser stored data sent with every server request
     public let cookies: [String: String]
@@ -64,11 +66,8 @@ public class Request {
         self.cookies = Request.parseCookies(headers["cookie"])
         self.hostname = headers["host"] ?? "*"
         
-        if method == .Post {
-            self.data = Request.parsePostData(body)
-        } else {
-            self.data = Request.parseQueryData(path)
-        }
+        let query = Request.parseQueryData(path)
+        self.data = Data(query: query, bytes: body)
     }
     
     /**
@@ -98,27 +97,13 @@ public class Request {
     }
     
     /**
-        POST data is sent in the body of the request
-        as `key=value` pairs separated by `&`.
-     
-        - returns: String dictionary of parsed POST data.
-    */
-    class func parsePostData(body: [UInt8]) -> [String: String] {
-        if let bodyString = NSString(bytes: body, length: body.count, encoding: NSUTF8StringEncoding) {
-            return self.parseData(bodyString.description)
-        }
-        
-        return [:]
-    }
-    
-    /**
         Query data is information appended to the URL path
         as `key=value` pairs separated by `&` after
         an initial `?`
      
         - returns: String dictionary of parsed Query data
     */
-    class func parseQueryData(string: String) -> [String: String] {
+    static func parseQueryData(string: String) -> [String: String] {
         
         var urlParts = string.split("?")
         if urlParts.count >= 2 {
@@ -133,7 +118,7 @@ public class Request {
      
         - returns: String dictionary of parsed data
     */
-    class func parseData(string: String) -> [String: String] {
+    static func parseData(string: String) -> [String: String] {
         var data: [String: String] = [:]
         
         for pair in string.split("&") {
