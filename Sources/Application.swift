@@ -57,6 +57,16 @@ public class Application {
 		self.booted = true
 	}
 
+	public func start(port: Int? = nil) {
+		self.boot()
+
+		if let port = port {
+			self.server.run(port: port)
+		} else {
+			self.server.run()
+		}
+	}
+
 	public func bootProvider(provider: Provider) {
 		provider.boot()
 	}
