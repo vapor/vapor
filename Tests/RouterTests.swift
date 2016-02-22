@@ -16,7 +16,7 @@ class RouterTests: XCTestCase {
         let compare = "Hello Text Data Processing Test"
         let data = [UInt8](compare.utf8)
         
-        router.add("other.test", method: .Get, path: "test") { request in
+        router.register(hostname: "other.test", method: .Get, path: "test") { request in
             return Response(status: .OK, data: data, contentType: .Text)
         }
         
@@ -29,7 +29,7 @@ class RouterTests: XCTestCase {
         )
         
         do {
-            let result = router.handle(request)!
+            let result = router.route(request)!
             var bytes = try result(request: request).data
             
             let utf8 = NSData(bytes: &bytes , length: bytes.count)

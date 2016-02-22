@@ -9,7 +9,7 @@
 import XCTest
 
 class RouteTests: XCTestCase {
-    private let Route = Router()
+    private let app = Application()
     
     private struct ResourceTestTemplate {
         let method: Request.Method
@@ -34,7 +34,7 @@ class RouteTests: XCTestCase {
         ]
 
         let controller = ResourceTestController()
-        Route.resource("foo", controller: controller)
+        app.resource("foo", controller: controller)
         
         executeTemplates(templates, assertController: controller)
     }
@@ -49,7 +49,7 @@ class RouteTests: XCTestCase {
         ]
         
         let controller = NestedResourceTestController(nestedResourceIdKey: "foo_id")
-        Route.resource("foo.bar", controller: controller)
+        app.resource("foo.bar", controller: controller)
         
         executeTemplates(templates, assertController: controller)
     }
@@ -58,7 +58,7 @@ class RouteTests: XCTestCase {
         do {
             try templates.forEach { template in
                 let request = template.request()
-                if let handler = Route.handle(request) {
+                if let handler = app.router.route(request) {
                     try handler(request: request)
                 } else {
                     XCTFail("Unable to find resource handler for request: \(request)")
