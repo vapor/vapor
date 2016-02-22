@@ -108,25 +108,6 @@ app.get("cookie") { request in
 }
 ```
 
-The Status enum above (`.OK`) can be one of the following.
-
-```swift
-public enum Status {
-    case OK, Created, Accepted
-    case MovedPermanently
-    case BadRequest, Unauthorized, Forbidden, NotFound
-    case ServerError
-    case Unknown
-    case Custom(Int)
-}
-```
-
-Or something custom.
-
-```swift
-let status: Status = .Custom(420) //https://dev.twitter.com/overview/api/response-codes
-```
-
 ### Public
 
 All files put in the `Public` folder at the root of your project will be available at the root of your domain. This is a great place to put your assets (`.css`, `.js`, `.png`, etc).
@@ -247,7 +228,15 @@ class MyMiddleware: Middleware {
     }
 }
 
-server.middleware.append(MyMiddleware
+app.middleware.append(MyMiddleware)
+```
+
+## Providers
+
+[Providers](https://github.com/qutheory/vapor/wiki/Provider) and [Drivers](https://github.com/qutheory/vapor/wiki/Driver) allow almost any component of Vapor to be extended or replaced.
+
+```swift
+app.providers.append(VaporFastServer.Provider)
 ```
 
 My website `http://tanner.xyz` is currently running using Vapor.
