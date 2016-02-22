@@ -17,7 +17,7 @@ public class Request {
         case Unknown = "x"
     }
     
-    public typealias Handler = ((request: Request) throws -> Response)
+    public typealias Handler = ((request: Request) throws -> ResponseConvertible)
 
     ///HTTP Method used for request.
     public let method: Method

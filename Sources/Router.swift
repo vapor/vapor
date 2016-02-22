@@ -10,10 +10,6 @@ public typealias Host = String
 
 public let Route = Router()
 
-extension Request {
-    public typealias Handler = Request throws -> ResponseConvertible
-}
-
 extension Router: RouterDriver {
     public func route(request: Request) -> Request.Handler? {
         return handle(request)

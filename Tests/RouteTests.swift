@@ -59,7 +59,7 @@ class RouteTests: XCTestCase {
             try templates.forEach { template in
                 let request = template.request()
                 if let handler = Route.handle(request) {
-                    try handler(request)
+                    try handler(request: request)
                 } else {
                     XCTFail("Unable to find resource handler for request: \(request)")
                 }

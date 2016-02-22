@@ -12,7 +12,7 @@ public class Application {
 		for returning registered `Route` handlers
 		for a given request.
 	*/
-	public var router: RouterDriver
+	public let router: RouterDriver
 
 	/**
 		The server driver is responsible
@@ -52,19 +52,12 @@ public class Application {
 		}
 	}
 
-    /**
-        Routes added to the `Application`. They will
-        be registered to the `RouterDriver` when 
-        `start()` is called.
-    */
-    var routes: [Route] = []
-
 	/**
 		Initialize the Application.
 	*/
-	public init() {
-        self.server = SocketServer()
-        self.router = NodeRouter()
+    public init(router: RouterDriver = Router(), server: ServerDriver = SocketServer()) {
+        self.server = server
+        self.router = router
 
         self.middleware = []
         self.providers = []
@@ -88,8 +81,6 @@ public class Application {
         self.bootProviders()
         
         self.server.delegate = self
-        
-		self.registerRoutes()
 
 		var port = inPort
 
@@ -132,27 +123,6 @@ public class Application {
 			NSRunLoop.mainRunLoop().run()
 		#endif
 	}
-
-	/**
-		Registers all routes from the `Route` interface
-		into the current `RouterDriver`.
-	*/
-	func registerRoutes() {
-		for route in self.routes {
-			self.router.register(hostname: route.hostname, method: route.method, path: route.path) { request in
-				let response: Response
-
-				do {
-					response = try route.closure(request: request).response()
-				} catch View.Error.InvalidPath {
-					response = Response(status: .NotFound, text: "View not found")
-				}
-
-				return response
-			}
-		}
-	}
-
 }
 
 extension Application: ServerDriverDelegate {
@@ -196,8 +166,8 @@ extension Application: ServerDriverDelegate {
 		}
 
         do {
-            let response = try handler(request: request)
-            return response
+            let convertible = try handler(request: request)
+            return convertible.response()
         } catch {
             return Response(error: "Server Error: \(error)")
         }
