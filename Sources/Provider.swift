@@ -1,7 +1,3 @@
-public class Provider {
-
-	public class func boot(application: Application) {
-
-	}
-
+public protocol Provider {
+	static func boot(application: Application)
 }

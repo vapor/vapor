@@ -62,6 +62,7 @@
 		C3EDEA851C6842C700754727 /* Int+Random.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3EDEA831C6842C700754727 /* Int+Random.swift */; };
 		C3EDEA871C68459300754727 /* Hash.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3EDEA861C68459300754727 /* Hash.swift */; };
 		C3EDEA881C68459300754727 /* Hash.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3EDEA861C68459300754727 /* Hash.swift */; };
+		C3F640891C7AC59C00838E45 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3F640881C7AC59C00838E45 /* main.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -116,6 +117,7 @@
 		C3EDEA7F1C68419800754727 /* String+SHA1.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "String+SHA1.swift"; sourceTree = "<group>"; };
 		C3EDEA831C6842C700754727 /* Int+Random.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Int+Random.swift"; sourceTree = "<group>"; };
 		C3EDEA861C68459300754727 /* Hash.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Hash.swift; sourceTree = "<group>"; };
+		C3F640881C7AC59C00838E45 /* main.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -249,6 +251,7 @@
 		C352E6D11C62BC6A00E26467 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
+				C3F640881C7AC59C00838E45 /* main.swift */,
 				288CFC2D1C7AC01A00E4617A /* Application.swift */,
 				C377F2ED1C696C9B00DABD21 /* View */,
 				C304C8B21C63054400058C92 /* Routing */,
@@ -424,6 +427,7 @@
 				C352E7091C62BC6A00E26467 /* View.swift in Sources */,
 				288CFC2E1C7AC01A00E4617A /* Application.swift in Sources */,
 				C352E6EF1C62BC6A00E26467 /* MemorySessionDriver.swift in Sources */,
+				C3F640891C7AC59C00838E45 /* main.swift in Sources */,
 				C377F2EF1C696CAB00DABD21 /* RenderDriver.swift in Sources */,
 				C352E6FB1C62BC6A00E26467 /* NodeRouter.swift in Sources */,
 				C352E6F51C62BC6A00E26467 /* Response.swift in Sources */,

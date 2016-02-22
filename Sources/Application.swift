@@ -8,13 +8,6 @@ public class Application {
 	public static let VERSION = "0.1.9"
 
 	/**
-		Flag indicating whether or not the
-		application and it’s providers have
-		been booted yet
-	*/
-	public private(set) var booted = false
-
-	/**
 		The router driver is responsible
 		for returning registered `Route` handlers
 		for a given request.
@@ -43,7 +36,7 @@ public class Application {
 		Provider classes that have been registered
 		with this application
 	*/
-	private var providers = Array<Provider.Type>()
+    private var providers: [Provider.Type]
 
 	/**
 		The work directory of your application is
@@ -58,47 +51,43 @@ public class Application {
 			}
 		}
 	}
+    
+    public convenience init() {
+        self.init(providers: [])
+    }
 
-	public convenience init(_ providers: [Provider.Type] = []) {
-		self.init(providers: providers)
-	}
 
 	/**
-		Initialize the Application instance with various optional overrides.
+		Initialize the Application.
 
-		- Parameter server: Instance of ServerDriver, optionally defaulting to SocketServer
-		- Parameter router: Instance of RouterDriver, optionally defaulting to NodeRouter
-		- Parameter providers: Optional list of providers to register
+		- Parameter providers: Optional list of providers to add.
 	*/
-	public init(server: ServerDriver = SocketServer(), router: RouterDriver = NodeRouter(), providers: [Provider.Type] = []) {
-		self.router = router
+	public init(providers: [Provider.Type]) {
+        self.server = SocketServer()
+        self.router = NodeRouter()
 
 		self.middleware = [
 			SessionMiddleware()
 		]
 
-		self.server = server
-		self.server.delegate = self
 
-		self.register(providers)
+        self.providers = []
+        
+        for provider in providers {
+            self.addProvider(provider)
+        }
+
+        
+        self.server.delegate = self
 	}
 
-	public func register(providers: [Provider.Type]) {
-		for provider in providers {
-			self.register(provider)
-		}
-	}
 
-	public func register(provider: Provider.Type) {
+	public func addProvider(provider: Provider.Type) {
 		guard !self.hasProvider(provider) else {
 			return
 		}
 
 		self.providers.append(provider)
-
-		if self.booted {
-			self.bootProvider(provider)
-		}
 	}
 
 	public func hasProvider(provider: Provider.Type) -> Bool {
@@ -111,29 +100,16 @@ public class Application {
 		return false
 	}
 
-	public func boot() {
-		if self.booted {
-			return
-		}
-
-		for provider in self.providers {
-			self.bootProvider(provider)
-		}
-
-		self.booted = true
-	}
-
-	public func bootProvider(provider: Provider.Type) {
-		provider.boot(self)
-	}
 
 	/**
 		Boots the chosen server driver and
 		runs on the supplied port.
 	*/
 	public func start(port inPort: Int = 80) {
-		self.boot()
-
+        for provider in self.providers {
+            provider.boot(self)
+        }
+        
 		self.registerRoutes()
 
 		var port = inPort
