@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		3492B2EF1C787DD600D8E588 /* RouteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3492B2EE1C787DD600D8E588 /* RouteTests.swift */; };
 		802030011C77C956009B8655 /* Vapor+Json.swift in Sources */ = {isa = PBXBuildFile; fileRef = 802030001C77C956009B8655 /* Vapor+Json.swift */; };
+		802053991C7A8C7D009E26E9 /* RequestData+Target.swift in Sources */ = {isa = PBXBuildFile; fileRef = 802053981C7A8C7D009E26E9 /* RequestData+Target.swift */; };
+		8020539B1C7A8C87009E26E9 /* RequestData+Test.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8020539A1C7A8C87009E26E9 /* RequestData+Test.swift */; };
 		C304C8A71C62D65200058C92 /* ServerDriver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C304C8A61C62D65200058C92 /* ServerDriver.swift */; };
 		C304C8A81C62D65200058C92 /* ServerDriver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C304C8A61C62D65200058C92 /* ServerDriver.swift */; };
 		C304C8AA1C62FCA300058C92 /* RequestFormExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = C304C8A91C62FCA300058C92 /* RequestFormExtension.swift */; };
@@ -78,6 +80,8 @@
 /* Begin PBXFileReference section */
 		3492B2EE1C787DD600D8E588 /* RouteTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RouteTests.swift; sourceTree = "<group>"; };
 		802030001C77C956009B8655 /* Vapor+Json.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Vapor+Json.swift"; sourceTree = "<group>"; };
+		802053981C7A8C7D009E26E9 /* RequestData+Target.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "RequestData+Target.swift"; sourceTree = "<group>"; };
+		8020539A1C7A8C87009E26E9 /* RequestData+Test.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "RequestData+Test.swift"; path = "Tests/RequestData+Test.swift"; sourceTree = SOURCE_ROOT; };
 		C304C8A01C62C3F400058C92 /* .travis.yml */ = {isa = PBXFileReference; lastKnownFileType = text; path = .travis.yml; sourceTree = "<group>"; };
 		C304C8A61C62D65200058C92 /* ServerDriver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ServerDriver.swift; sourceTree = "<group>"; };
 		C304C8A91C62FCA300058C92 /* RequestFormExtension.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RequestFormExtension.swift; sourceTree = "<group>"; };
@@ -187,6 +191,8 @@
 			children = (
 				C352E6D91C62BC6A00E26467 /* Request.swift */,
 				C304C8A91C62FCA300058C92 /* RequestFormExtension.swift */,
+				802053981C7A8C7D009E26E9 /* RequestData+Target.swift */,
+				8020539A1C7A8C87009E26E9 /* RequestData+Test.swift */,
 			);
 			name = Request;
 			sourceTree = "<group>";
@@ -418,6 +424,7 @@
 				C304C8AA1C62FCA300058C92 /* RequestFormExtension.swift in Sources */,
 				C352E6F31C62BC6A00E26467 /* Request.swift in Sources */,
 				C352E6F91C62BC6A00E26467 /* Route.swift in Sources */,
+				802053991C7A8C7D009E26E9 /* RequestData+Target.swift in Sources */,
 				C304C8B51C6306B100058C92 /* RouterDriver.swift in Sources */,
 				C3EDEA871C68459300754727 /* Hash.swift in Sources */,
 				C352E7091C62BC6A00E26467 /* View.swift in Sources */,
@@ -470,6 +477,7 @@
 				C352E7041C62BC6A00E26467 /* SocketServer.swift in Sources */,
 				C3EDEA881C68459300754727 /* Hash.swift in Sources */,
 				C3943DC51C7664D90014F4EE /* SessionMiddleware.swift in Sources */,
+				8020539B1C7A8C87009E26E9 /* RequestData+Test.swift in Sources */,
 				C3EDEA811C68419800754727 /* String+SHA1.swift in Sources */,
 				C352E6EA1C62BC6A00E26467 /* JSONSerializer.swift in Sources */,
 				C352E6FC1C62BC6A00E26467 /* NodeRouter.swift in Sources */,
