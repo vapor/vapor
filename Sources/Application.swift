@@ -166,8 +166,7 @@ extension Application: ServerDriverDelegate {
 		}
 
         do {
-            let convertible = try handler(request: request)
-            return convertible.response()
+            return try handler(request: request)
         } catch {
             return Response(error: "Server Error: \(error)")
         }

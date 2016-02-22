@@ -4,8 +4,7 @@ class SessionMiddleware: Middleware {
         return { request in
             Session.start(request)
 
-            let convertible = try handler(request: request)
-            let response = convertible.response()
+            let response = try handler(request: request)
             
             Session.close(request: request, response: response)
 
