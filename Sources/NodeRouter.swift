@@ -38,7 +38,7 @@ class NodeRouter: RouterDriver {
     
     class Node {
         var nodes = [String: Node]()
-        var handler: (Request -> Response)? = nil
+        var handler: Request.Handler? = nil
     }
     var rootNode = Node()
     
@@ -58,7 +58,7 @@ class NodeRouter: RouterDriver {
         Ex: GET 1/6, POST 3
      
     */
-    func register(hostname hostname: String?, method: Request.Method, path: String, handler: (Request -> Response)) {
+    func register(hostname hostname: String?, method: Request.Method, path: String, handler: Request.Handler) {
         let host = hostname ?? "*"
         let paths = [host] + [method.rawValue] + path.split("/")
         self.inflate(self.rootNode, paths: paths).handler = handler
@@ -115,7 +115,7 @@ class NodeRouter: RouterDriver {
     }
 
     
-    func route(request: Request) -> (Request -> Response)? {
+    func route(request: Request) -> Request.Handler? {
         let paths = [request.method.rawValue] + request.path.split("/")
         
         //if we can find a tree for the current domain name,
@@ -137,7 +137,7 @@ class NodeRouter: RouterDriver {
     }
   
     
-    private func search(node: Node, paths: [String], request: Request) -> (Request -> Response)? {
+    private func search(node: Node, paths: [String], request: Request) -> Request.Handler? {
         var paths = paths
         
         if paths.count == 0 {

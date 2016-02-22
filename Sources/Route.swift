@@ -1,37 +1,37 @@
 extension Application {
     
-    public func add(method method: Request.Method, path: String, closure: Request.Handler) {
+    public func add(method method: Request.Method, path: String, closure: Route.Handler) {
         let route = Route(method: method, path: path, closure: closure)
         route.hostname = Route.hostname
         
         self.routes.append(route)
     }
     
-    public func get(path: String, closure: Request.Handler) {
+    public func get(path: String, closure: Route.Handler) {
         self.add(method: .Get, path: path, closure: closure)
     }
     
-    public func post(path: String, closure: Request.Handler) {
+    public func post(path: String, closure: Route.Handler) {
         self.add(method: .Post, path: path, closure: closure)
     }
     
-    public func put(path: String, closure: Request.Handler) {
+    public func put(path: String, closure: Route.Handler) {
         self.add(method: .Put, path: path, closure: closure)
     }
     
-    public func patch(path: String, closure: Request.Handler) {
+    public func patch(path: String, closure: Route.Handler) {
         self.add(method: .Patch, path: path, closure: closure)
     }
     
-    public func delete(path: String, closure: Request.Handler) {
+    public func delete(path: String, closure: Route.Handler) {
         self.add(method: .Delete, path: path, closure: closure)
     }
     
-    public func options(path: String, closure: Request.Handler) {
+    public func options(path: String, closure: Route.Handler) {
         self.add(method: .Options, path: path, closure: closure)
     }
     
-    public func any(path: String, closure: Request.Handler) {
+    public func any(path: String, closure: Route.Handler) {
         self.get(path, closure: closure)
         self.post(path, closure: closure)
         self.put(path, closure: closure)
@@ -69,27 +69,25 @@ extension Application {
     
 }
 
-class Route {
-
+public class Route {
     static var hostname: String?
-
+    
+    public typealias Handler = ((request: Request) throws -> ResponseConvertible)
 
 	let method: Request.Method
 	let path: String
-	let closure: Request.Handler
+	let closure: Route.Handler
     var hostname: String?
 
-	init(method: Request.Method, path: String, closure: Request.Handler) {
+	init(method: Request.Method, path: String, closure: Route.Handler) {
 		self.method = method
 		self.path = path
 		self.closure = closure
 	}
-    
- 
 }
 
 extension Route: CustomStringConvertible {
-    var description: String {
+    public var description: String {
         return "\(self.method) \(self.path) \(self.hostname)"
     }
 }
