@@ -4,7 +4,7 @@ public class View {
 
     public static var renderers: [String: RenderDriver] = [:]
 
-	public static let resourceDir = Server.workDir + "Resources"
+	public static let resourceDir = Application.workDir + "Resources"
 	var bytes: [UInt8]
 
     enum Error: ErrorType {

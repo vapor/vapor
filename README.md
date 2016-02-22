@@ -15,23 +15,13 @@ A Laravel/Lumen Inspired Web Framework for Swift that works on iOS, OS X, and Ub
 [![PRs Welcome](https://img.shields.io/badge/prs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
 [![Slack Status](http://slack.tanner.xyz:8085/badge.svg?style=flat-square)](http://slack.tanner.xyz:8085)
 
-## Getting Started
+## Work in Progress
 
-Clone the [Example](https://github.com/qutheory/vapor-example) project to start making your application or check out the [live demo](http://vapor.qutheory.io) running on Ubuntu. This repository is for the framework module.
+This is a work in progress, so *do not* rely on this for anything important. And pull requests are welcome!
 
-You can also download the alpha [Vapor Installer](https://github.com/mpclarkson/vapor-installer), which allows you to create a new project at the command line e.g. `vapor new MyProject`
+## Documentation
 
-You must have Swift 2.2 or later installed. You can learn more about Swift 2.2 at [Swift.org](http://swift.org)
-
-Want to make a pull request? You can learn how from this *free* series [How to Contribute to an Open Source Project on GitHub](https://egghead.io/series/how-to-contribute-to-an-open-source-project-on-github)
-
-### Work in Progress
-
-This is a work in progress, so don't rely on this for anything important. And pull requests are welcome!
-
-## Wiki
-
-Visit the [Vapor Wiki](https://github.com/qutheory/vapor/wiki) for extensive documentation on using and contributing to Vapor.
+Visit the [Vapor Wiki](https://github.com/qutheory/vapor/wiki) for extensive documentation on getting setup, using, and contributing to Vapor.
 
 ## Server
 
