@@ -13,27 +13,27 @@ extension Application {
     public typealias Handler = Request throws -> ResponseConvertible
     
     public final func get(path: String, closure: Handler) {
-        self.add(method: .Get, path: path, closure: closure)
+        self.add(.Get, path: path, closure: closure)
     }
     
     public final func post(path: String, closure: Handler) {
-        self.add(method: .Post, path: path, closure: closure)
+        self.add(.Post, path: path, closure: closure)
     }
     
     public final func put(path: String, closure: Handler) {
-        self.add(method: .Put, path: path, closure: closure)
+        self.add(.Put, path: path, closure: closure)
     }
     
     public final func patch(path: String, closure: Handler) {
-        self.add(method: .Patch, path: path, closure: closure)
+        self.add(.Patch, path: path, closure: closure)
     }
     
     public final func delete(path: String, closure: Handler) {
-        self.add(method: .Delete, path: path, closure: closure)
+        self.add(.Delete, path: path, closure: closure)
     }
     
     public final func options(path: String, closure: Handler) {
-        self.add(method: .Options, path: path, closure: closure)
+        self.add(.Options, path: path, closure: closure)
     }
     
     public final func any(path: String, closure: Handler) {
@@ -65,12 +65,18 @@ extension Application {
         self.delete(fullPath, closure: controller.destroy)
     }
     
-    public final func add(host host: Host = "*", method: Request.Method, path: String, closure: Handler) {
+    public final func add(method: Request.Method, path: String, closure: Handler) {
         router.register(hostname: host, method: method, path: path) { request in
             return try closure(request).response()
         }
     }
     
+    public final func host(host: String, closure: () -> Void) {
+        let original = self.host
+        self.host = host
+        closure()
+        self.host = original
+    }
 }
 
 public final class BranchRouter: RouterDriver {

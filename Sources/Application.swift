@@ -51,6 +51,8 @@ public class Application {
 			}
 		}
 	}
+    
+    internal var host: String = "*"
 
 	/**
 		Initialize the Application.
