@@ -21,31 +21,31 @@ extension Router: RouterDriver {
 }
 
 extension Router {
-    public final func get(path: String, closure: Request.Handler) {
-        add(method: .Get, path: path, handler: closure)
+    public final func get(path: String, closure: ConvertibleHandler) {
+        self.add(method: .Get, path: path, handler: closure)
     }
     
-    public final func post(path: String, closure: Request.Handler) {
+    public final func post(path: String, closure: ConvertibleHandler) {
         self.add(method: .Post, path: path, handler: closure)
     }
     
-    public final func put(path: String, closure: Request.Handler) {
+    public final func put(path: String, closure: ConvertibleHandler) {
         self.add(method: .Put, path: path, handler: closure)
     }
     
-    public final func patch(path: String, closure: Request.Handler) {
+    public final func patch(path: String, closure: ConvertibleHandler) {
         self.add(method: .Patch, path: path, handler: closure)
     }
     
-    public final func delete(path: String, closure: Request.Handler) {
+    public final func delete(path: String, closure: ConvertibleHandler) {
         self.add(method: .Delete, path: path, handler: closure)
     }
     
-    public final func options(path: String, closure: Request.Handler) {
+    public final func options(path: String, closure: ConvertibleHandler) {
         self.add(method: .Options, path: path, handler: closure)
     }
     
-    public final func any(path: String, closure: Request.Handler) {
+    public final func any(path: String, closure: ConvertibleHandler) {
         self.get(path, closure: closure)
         self.post(path, closure: closure)
         self.put(path, closure: closure)
@@ -76,6 +76,8 @@ extension Router {
 
 public final class Router {
     
+    public typealias ConvertibleHandler = Request throws -> ResponseConvertible
+    
     private final var tree: [Host : [Request.Method : Branch]] = [:]
     
     internal init() {}
@@ -93,11 +95,19 @@ public final class Router {
         return branch.handle(request, comps: generator)
     }
     
-    public final func add(host: Host = "*", method: Request.Method, path: String, handler: Request.Handler) {
+    public final func add(host: Host = "*", method: Request.Method, path: String, handler: ConvertibleHandler) {
         let generator = path.pathComponentGenerator()
         var root = tree[host] ?? [:]
         let branch = root[method] ?? Branch(name: "")
-        branch.extendBranch(generator, handler: handler)
+        branch.extendBranch(generator) { request in
+            do {
+                return try handler(request).response()
+            } catch View.Error.InvalidPath {
+                return Response(status: .NotFound, text: "View not found")
+            } catch {
+                return Response(error: "\(error)")
+            }
+        }
         root[method] = branch
         tree[host] = root
     }
