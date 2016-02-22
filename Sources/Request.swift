@@ -70,8 +70,7 @@ public class Request {
             self.data = Request.parseQueryData(path)
         }
         
-        //Testing logs
-        Log.info("Received \(method.rawValue) request for \(path)")
+        Log.verbose("Received \(method.rawValue) request for \(path)")
     }
     
     /**
