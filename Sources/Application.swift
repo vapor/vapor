@@ -55,7 +55,7 @@ public class Application {
 	/**
 		Initialize the Application.
 	*/
-    public init(router: RouterDriver = Router(), server: ServerDriver = SocketServer()) {
+    public init(router: RouterDriver = BranchRouter(), server: ServerDriver = SocketServer()) {
         self.server = server
         self.router = router
 
