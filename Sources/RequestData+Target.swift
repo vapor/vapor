@@ -8,19 +8,30 @@
 
 import PureJsonSerializer
 
-extension Request {
+/**
+ *  This protocol defines a type of data received.
+ *  these variables are used to access underlying
+ *  values
+ */
+public protocol Node {
+    var isNull: Bool { get }
+    var bool: Bool { get }
+    var float: Float? { get }
+    var double: Double? { get }
+    var int: Int? { get }
+    var uint: UInt? { get }
+    var string: String? { get }
+    var array: [Node]? { get }
+    var object: [String : Node]? { get }
+}
+
+public extension Request {
+    
+    /**
+     *  The data received from the request in json body or url query
+     */
     public struct Data {
-        public protocol Node {
-            public var isNull: Bool { get }
-            public var boolValue: Bool? { get }
-            public var floatValue: Float? { get }
-            public var doubleValue: Double? { get }
-            public var intValue: Int? { get }
-            public var uintValue: UInt? { get }
-            public var stringValue: String? { get }
-            public var arrayValue: [Node]? { get }
-            public var objectValue: [String : Node]? { get }
-        }
+        
         
         // MARK: Initialization
         
@@ -44,7 +55,7 @@ extension Request {
     }
 }
 
-extension Json : Request.Data.Node {
+extension Json : Node {
     public var isNull: Bool {
         switch self {
         case .NullValue:
@@ -112,7 +123,7 @@ extension Json : Request.Data.Node {
         case .ArrayValue(let array):
             return array
                 .flatMap { js in
-                    return Node(js).string
+                    return js.string
                 }
                 .joinWithSeparator(",")
         case .ObjectValue(_):
@@ -122,16 +133,20 @@ extension Json : Request.Data.Node {
     
     public var array: [Node]? {
         guard case let .ArrayValue(array) = self else { return nil }
-        return array
+        return array.map { $0 as Node }
     }
     
     public var object: [String : Node]? {
         guard case let .ObjectValue(object) = self else { return nil }
-        return object
+        var mapped: [String : Node] = [:]
+        object.forEach { key, val in
+            mapped[key] = val as Node
+        }
+        return mapped
     }
 }
 
-extension String : Request.Data.Node {
+extension String : Node {
     public var isNull: Bool {
         return self == "null"
     }
@@ -164,7 +179,9 @@ extension String : Request.Data.Node {
     }
     
     public var array: [Node]? {
-        return self.componentsSeparatedByString(",")
+        return self
+            .componentsSeparatedByString(",")
+            .map { $0 as Node }
     }
     
     public var object: [String : Node]? {
