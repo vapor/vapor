@@ -11,7 +11,7 @@ import Foundation
 /* Logger protocol. Custom loggers must conform 
  to this protocol
  */
-public protocol Logger {
+public protocol LogDriver {
     func log(level: LogLevel, message: String)
 }
 
@@ -21,7 +21,7 @@ public protocol Logger {
  - parameter level: LogLevel enum
  - parameter message: String to log
 */
-public class ConsoleLogger: Logger {
+public class ConsoleLogger: LogDriver {
     
     public func log(level: LogLevel, message: String) {
         let date = NSDate()
