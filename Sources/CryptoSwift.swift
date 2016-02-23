@@ -264,53 +264,6 @@ extension Int {
     }
 }
 
-// Left operator
-
-infix operator &<<= {
-associativity none
-precedence 160
-}
-
-infix operator &<< {
-associativity none
-precedence 160
-}
-
-infix operator &>>= {
-associativity none
-precedence 160
-}
-
-infix operator &>> {
-associativity none
-precedence 160
-}
-
-/** shift left and assign with bits truncation */
-public func &<<= (inout lhs: Int, rhs: Int) {
-    lhs.shiftLeft(rhs)
-}
-
-/** shift left with bits truncation */
-public func &<< (lhs: Int, rhs: Int) -> Int {
-    var l = lhs;
-    l.shiftLeft(rhs)
-    return l
-}
-
-// Right operator
-
-/** shift right and assign with bits truncation */
-func &>>= (inout lhs: Int, rhs: Int) {
-    lhs.shiftRight(rhs)
-}
-
-/** shift right and assign with bits truncation */
-func &>> (lhs: Int, rhs: Int) -> Int {
-    var l = lhs;
-    l.shiftRight(rhs)
-    return l
-}
 
 
 
