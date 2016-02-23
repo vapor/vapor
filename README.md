@@ -231,6 +231,18 @@ class MyMiddleware: Middleware {
 app.middleware.append(MyMiddleware)
 ```
 
+Middleware can also be applied to a specific set of routes by using the `app.middleware(_: handler:)` method.
+
+```swift
+app.get("welcome") { ... }
+
+app.middleware([AuthMiddleware]) {
+   app.get("user") { ... }
+}
+```
+
+In this example the `AuthMiddleware` will be applied to the `user` route but not the `welcome` route.
+
 ## Providers
 
 [Providers](https://github.com/qutheory/vapor/wiki/Provider) and [Drivers](https://github.com/qutheory/vapor/wiki/Driver) allow almost any component of Vapor to be extended or replaced.
