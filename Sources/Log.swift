@@ -8,7 +8,6 @@
 
 import Foundation
 
-
 /* Log class
 */
 public class Log {
