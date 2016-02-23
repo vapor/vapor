@@ -11,11 +11,11 @@ import XCTest
 
 class LogTests: XCTestCase {
 
-    class DummyLogger: Logger {
+    class DummyLogger: LogDriver {
         
         static var output: String?
         
-        func log(level: LogLevel, message: String) {
+        func log(level: Log.Level, message: String) {
             DummyLogger.output = "\(level.description) \(message)"
         }
     }
@@ -25,7 +25,7 @@ class LogTests: XCTestCase {
     override func setUp() {
         DummyLogger.output = nil
         Log.driver = DummyLogger()
-        Log.enabledLevels = LogLevel.all
+        Log.enabledLevels = Log.Level.all
     }
     
     func testCanOverrideDefaultLogger() {
@@ -33,20 +33,20 @@ class LogTests: XCTestCase {
     }
     
     func testAllLevelsEnabledByDefault() {
-        let levels = LogLevel.all
+        let levels = Log.Level.all
         levels.forEach { level in
-            XCTAssertTrue(Log.enabledLevels.contains(level))
+            XCTAssertTrue(Log.enabledLevels.contains(level), "\(level) should be enabled")
         }
     }
     
     func testCanOverrideDefaultEnabledLevels() {
-        Log.enabledLevels = [LogLevel.Debug]
+        Log.enabledLevels = [Log.Level.Debug]
         XCTAssertTrue(Log.enabledLevels.count == 1, "only one log level should be enabled")
-        XCTAssertTrue(Log.enabledLevels.first == LogLevel.Debug, "only Debug logs should be enabled")
+        XCTAssertTrue(Log.enabledLevels.first == Log.Level.Debug, "only Debug logs should be enabled")
     }
     
     func testDisabledLogsDoNoOutput() {
-        Log.enabledLevels = [LogLevel.Debug]
+        Log.enabledLevels = [Log.Level.Debug]
         Log.error("this should not output")
         XCTAssertNil(DummyLogger.output, "disabled level should not output")
     }
