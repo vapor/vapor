@@ -109,7 +109,7 @@ class SHA2 {
         self.h.forEach {(h) -> () in
             hh.append(UInt32(h))
         }
-        
+
         // append message length, in a 64-bit big-endian integer. So now the message length is a multiple of 512 bits.
         tmpMessage += (message.count * 8).bytes(64 / 8)
         
@@ -172,13 +172,17 @@ class SHA2 {
             hh[6] = (hh[6] &+ G)
             hh[7] = (hh[7] &+ H)
         }
-        
+
         // Produce the final hash value (big-endian) as a 160 bit number:
         var result = [UInt8]()
         result.reserveCapacity(hh.count / 4)
+
         self.resultingArray(hh).forEach {
             let item = $0.bigEndian
-            result += [UInt8(item & 0xff), UInt8((item >> 8) & 0xff), UInt8((item >> 16) & 0xff), UInt8((item >> 24) & 0xff)]
+            result += [UInt8(item & 0xff)]
+	    result += [UInt8((item >> 8) & 0xff)]
+            result += [UInt8((item >> 16) & 0xff)]
+            result += [UInt8((item >> 24) & 0xff)]
         }
         return result
     }
