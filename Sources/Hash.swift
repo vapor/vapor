@@ -65,9 +65,8 @@ public class CryptoHasher: HashDriver {
             let hmac = try Authenticator.HMAC(key: keyBuff, variant: .sha256).authenticate(msgBuff)    
             return NSData.withBytes(hmac).toHexString()
         } catch {
-            //uh oh
-            print("Unable to create hash")
-            return ""
+            Log.error("Unable to create hash, returning hash for empty string.")
+            return "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
         }
 
     }
