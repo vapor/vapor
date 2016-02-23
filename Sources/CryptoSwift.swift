@@ -198,94 +198,6 @@ class SHA2 : HashProtocol {
         return result
     }
     
-    func calculate64() -> [UInt8] {
-        var tmpMessage = self.prepare(128)
-        
-        // hash values
-        var hh = [UInt64]()
-        variant.h.forEach {(h) -> () in
-            hh.append(h)
-        }
-        
-        
-        // append message length, in a 64-bit big-endian integer. So now the message length is a multiple of 512 bits.
-        tmpMessage += (message.count * 8).bytes(64 / 8)
-        
-        // Process the message in successive 1024-bit chunks:
-        let chunkSizeBytes = 1024 / 8 // 128
-        for chunk in BytesSequence(chunkSize: chunkSizeBytes, data: tmpMessage) {
-            // break chunk into sixteen 64-bit words M[j], 0 ≤ j ≤ 15, big-endian
-            // Extend the sixteen 64-bit words into eighty 64-bit words:
-            var M = [UInt64](count: variant.k.count, repeatedValue: 0)
-            for x in 0..<M.count {
-                switch (x) {
-                case 0...15:
-                    let start = chunk.startIndex + (x * sizeofValue(M[x]))
-                    let end = start + sizeofValue(M[x])
-                    let le = toUInt64Array(chunk[start..<end])[0]
-                    M[x] = le.bigEndian
-                    break
-                default:
-                    let s0 = rotateRight(M[x-15], n: 1) ^ rotateRight(M[x-15], n: 8) ^ (M[x-15] >> 7)
-                    let s1 = rotateRight(M[x-2], n: 19) ^ rotateRight(M[x-2], n: 61) ^ (M[x-2] >> 6)
-                    M[x] = M[x-16] &+ s0 &+ M[x-7] &+ s1
-                    break
-                }
-            }
-            
-            var A = hh[0]
-            var B = hh[1]
-            var C = hh[2]
-            var D = hh[3]
-            var E = hh[4]
-            var F = hh[5]
-            var G = hh[6]
-            var H = hh[7]
-            
-            // Main loop
-            for j in 0..<variant.k.count {
-                let s0 = rotateRight(A,n: 28) ^ rotateRight(A,n: 34) ^ rotateRight(A,n: 39) //FIXME: n:
-                let maj = (A & B) ^ (A & C) ^ (B & C)
-                let t2 = s0 &+ maj
-                let s1 = rotateRight(E,n: 14) ^ rotateRight(E,n: 18) ^ rotateRight(E,n: 41)
-                let ch = (E & F) ^ ((~E) & G)
-                let t1 = H &+ s1 &+ ch &+ variant.k[j] &+ UInt64(M[j])
-                
-                H = G
-                G = F
-                F = E
-                E = D &+ t1
-                D = C
-                C = B
-                B = A
-                A = t1 &+ t2
-            }
-            
-            hh[0] = (hh[0] &+ A)
-            hh[1] = (hh[1] &+ B)
-            hh[2] = (hh[2] &+ C)
-            hh[3] = (hh[3] &+ D)
-            hh[4] = (hh[4] &+ E)
-            hh[5] = (hh[5] &+ F)
-            hh[6] = (hh[6] &+ G)
-            hh[7] = (hh[7] &+ H)
-        }
-        
-        // Produce the final hash value (big-endian)
-        var result = [UInt8]()
-        result.reserveCapacity(hh.count / 4)
-        variant.resultingArray(hh).forEach {
-            let item = $0.bigEndian
-            var partialResult = [UInt8]()
-            partialResult.reserveCapacity(8)
-            for i in 0..<8 {
-                let shift = UInt64(8 * i)
-                partialResult.append(UInt8((item >> shift) & 0xff))
-            }
-            result += partialResult
-        }
-        return result
-    }
 }
 
 
@@ -426,23 +338,7 @@ func toUInt32Array(slice: ArraySlice<UInt8>) -> Array<UInt32> {
     return result
 }
 
-func toUInt64Array(slice: ArraySlice<UInt8>) -> Array<UInt64> {
-    var result = Array<UInt64>()
-    result.reserveCapacity(32)
-    for idx in slice.startIndex.stride(to: slice.endIndex, by: sizeof(UInt64)) {
-        var val:UInt64 = 0
-        val |= UInt64(slice[idx.advancedBy(7)]) << 56
-        val |= UInt64(slice[idx.advancedBy(6)]) << 48
-        val |= UInt64(slice[idx.advancedBy(5)]) << 40
-        val |= UInt64(slice[idx.advancedBy(4)]) << 32
-        val |= UInt64(slice[idx.advancedBy(3)]) << 24
-        val |= UInt64(slice[idx.advancedBy(2)]) << 16
-        val |= UInt64(slice[idx.advancedBy(1)]) << 8
-        val |= UInt64(slice[idx.advancedBy(0)]) << 0
-        result.append(val)
-    }
-    return result
-}
+
 
 
 func rotateLeft(v:UInt8, _ n:UInt8) -> UInt8 {
@@ -473,9 +369,6 @@ func rotateRight(x:UInt64, n:UInt64) -> UInt64 {
     return ((x >> n) | (x << (64 - n)))
 }
 
-func reverseBytes(value: UInt32) -> UInt32 {
-    return ((value & 0x000000FF) << 24) | ((value & 0x0000FF00) << 8) | ((value & 0x00FF0000) >> 8)  | ((value & 0xFF000000) >> 24);
-}
 
 
 /// Array of bytes, little-endian representation. Don't use if not necessary.
