@@ -165,6 +165,16 @@
 			name = Providers;
 			sourceTree = "<group>";
 		};
+		34CC59601C7BE9C1007CA680 /* Log */ = {
+			isa = PBXGroup;
+			children = (
+				34CC59571C7BE405007CA680 /* Log.swift */,
+				34CC59581C7BE405007CA680 /* Logger.swift */,
+				34CC59591C7BE405007CA680 /* LogLevel.swift */,
+			);
+			name = Log;
+			sourceTree = "<group>";
+		};
 		80202FFF1C77C94C009B8655 /* Json */ = {
 			isa = PBXGroup;
 			children = (
@@ -281,9 +291,7 @@
 		C352E6D11C62BC6A00E26467 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
-				34CC59571C7BE405007CA680 /* Log.swift */,
-				34CC59581C7BE405007CA680 /* Logger.swift */,
-				34CC59591C7BE405007CA680 /* LogLevel.swift */,
+				34CC59601C7BE9C1007CA680 /* Log */,
 				80202FFF1C77C94C009B8655 /* Json */,
 				288CFC2D1C7AC01A00E4617A /* Application.swift */,
 				C377F2ED1C696C9B00DABD21 /* View */,
