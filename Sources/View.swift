@@ -20,6 +20,7 @@ public class View {
         
         guard let fileBody = NSData(contentsOfFile: filesPath) else {
             self.bytes = []
+            Log.error("No view found in path: \(filesPath)")
             throw Error.InvalidPath
         }
 

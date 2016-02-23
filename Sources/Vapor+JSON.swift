@@ -7,7 +7,6 @@
 //
 
 import Foundation
-@_exported import PureJsonSerializer
 
 /// To allow users to opt into preferred case style
 public typealias JSON = Json

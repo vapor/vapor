@@ -25,6 +25,6 @@ public class ConsoleLogger: LogDriver {
     
     public func log(level: Log.Level, message: String) {
         let date = NSDate()
-        print("[\(date)] \(level): \(message)")
+        print("[\(date)] [\(level)] \(message)")
     }
 }

@@ -207,11 +207,9 @@ public class Response {
             let json = try NSJSONSerialization.dataWithJSONObject(jsonObject, options: NSJSONWritingOptions.PrettyPrinted)
             data = Array(UnsafeBufferPointer(start: UnsafePointer<UInt8>(json.bytes), count: json.length))
         } else {
-            //fall back to manual serializer
-            let string = JSONSerializer.serialize(json)
-            data = [UInt8](string.utf8)
+            data = []
         }
-       
+        
 
         self.init(status: status, data: data, contentType: .Json)
     }

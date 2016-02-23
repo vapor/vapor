@@ -73,6 +73,12 @@ public class Application {
             provider.boot(self)
         }
     }
+    
+    func bootRoutes() {
+        for route in Route.routes {
+            self.router.register(hostname: route.hostname, method: route.method, path: route.path, handler: route.handler)
+        }
+    }
 
 
 	/**
@@ -81,8 +87,9 @@ public class Application {
 	*/
 	public func start(port inPort: Int = 80) {
         self.bootProviders()
-        
         self.server.delegate = self
+        
+        self.bootRoutes()
 
 		var port = inPort
 

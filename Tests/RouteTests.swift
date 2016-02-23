@@ -9,7 +9,6 @@
 import XCTest
 
 class RouteTests: XCTestCase {
-    private let app = Application()
     
     private struct ResourceTestTemplate {
         let method: Request.Method
@@ -34,9 +33,11 @@ class RouteTests: XCTestCase {
         ]
 
         let controller = ResourceTestController()
+        
+        let app = Application()
         app.resource("foo", controller: controller)
         
-        executeTemplates(templates, assertController: controller)
+        self.executeTemplates(app, templates: templates, assertController: controller)
     }
     
     func testNestedResource() {
@@ -49,15 +50,20 @@ class RouteTests: XCTestCase {
         ]
         
         let controller = NestedResourceTestController(nestedResourceIdKey: "foo_id")
+        
+        let app = Application()
         app.resource("foo.bar", controller: controller)
         
-        executeTemplates(templates, assertController: controller)
+        self.executeTemplates(app, templates: templates, assertController: controller)
     }
     
-    private func executeTemplates(templates: [ResourceTestTemplate], assertController: ResourceTestController) {
+    private func executeTemplates(app: Application, templates: [ResourceTestTemplate], assertController: ResourceTestController) {
+        app.bootRoutes()
+        
         do {
             try templates.forEach { template in
                 let request = template.request()
+                
                 if let handler = app.router.route(request) {
                     try handler(request: request)
                 } else {
@@ -79,7 +85,7 @@ private class ResourceTestController: Controller {
     
     // MARK: Init
     
-    override init() {
+    init() {
         locks = [
             "index" : 0,
             "store" : 0,
@@ -87,7 +93,6 @@ private class ResourceTestController: Controller {
             "update" : 0,
             "destroy" : 0
         ]
-        super.init()
     }
     
     // MARK:
@@ -104,36 +109,37 @@ private class ResourceTestController: Controller {
     
     // MARK: Handlers
     
-    override func index(request: Request) throws -> ResponseConvertible {
+    func index(request: Request) throws -> ResponseConvertible {
         incrementLock("index")
-        return try super.index(request)
+        return "index"
     }
     
     ///Create a new instance.
-    override func store(request: Request) throws -> ResponseConvertible {
+    func store(request: Request) throws -> ResponseConvertible {
         incrementLock("store")
-        return try super.store(request)
+        return "store"
     }
     
     ///Show an instance.
-    override func show(request: Request) throws -> ResponseConvertible {
-        XCTAssert(request.parameters["id"] != nil)
+    func show(request: Request) throws -> ResponseConvertible {
+        print(request.parameters)
+        XCTAssert(request.parameters["id"] != nil, "Did not receive id parameter")
         incrementLock("show")
-        return try super.show(request)
+        return "show"
     }
     
     ///Update an instance.
-    override func update(request: Request) throws -> ResponseConvertible {
-        XCTAssert(request.parameters["id"] != nil)
+    func update(request: Request) throws -> ResponseConvertible {
+        XCTAssert(request.parameters["id"] != nil, "Did not receive id parameter")
         incrementLock("update")
-        return try super.update(request)
+        return "update"
     }
     
     ///Delete an instance.
-    override func destroy(request: Request) throws -> ResponseConvertible {
-        XCTAssert(request.parameters["id"] != nil)
+    func destroy(request: Request) throws -> ResponseConvertible {
+        XCTAssert(request.parameters["id"] != nil, "Did not receive id parameter")
         incrementLock("destroy")
-        return try super.destroy(request)
+        return "destory"
     }
 }
 
@@ -158,19 +164,19 @@ private class NestedResourceTestController: ResourceTestController {
     
     ///Show an instance.
     override func show(request: Request) throws -> ResponseConvertible {
-        XCTAssert(request.parameters[nestedResourceIdKey] != nil)
+        XCTAssert(request.parameters[nestedResourceIdKey] != nil, "Did not receive nested id parameter")
         return try super.show(request)
     }
     
     ///Update an instance.
     override func update(request: Request) throws -> ResponseConvertible {
-        XCTAssert(request.parameters[nestedResourceIdKey] != nil)
+        XCTAssert(request.parameters[nestedResourceIdKey] != nil, "Did not receive nested id parameter")
         return try super.update(request)
     }
     
     ///Delete an instance.
     override func destroy(request: Request) throws -> ResponseConvertible {
-        XCTAssert(request.parameters[nestedResourceIdKey] != nil)
+        XCTAssert(request.parameters[nestedResourceIdKey] != nil, "Did not receive nested id parameter")
         return try super.destroy(request)
     }
 }
