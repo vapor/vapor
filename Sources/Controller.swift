@@ -4,31 +4,19 @@
  * a single protocol that, by default, conforms to standard
  * CRUD operations.
  */
-public class Controller {
-    public init() {}
-
+public protocol Controller {
     /// Display many instances
-	public func index(request: Request) throws -> ResponseConvertible {
-        return ""
-    }
+	func index(request: Request) throws -> ResponseConvertible
 
     /// Create a new instance.
-    public func store(request: Request) throws -> ResponseConvertible {
-        return ""
-    }
+    func store(request: Request) throws -> ResponseConvertible
 
     /// Show an instance.
-    public func show(request: Request) throws -> ResponseConvertible {
-        return ""
-    }
+    func show(request: Request) throws -> ResponseConvertible
 
     /// Update an instance.
-    public func update(request: Request) throws -> ResponseConvertible {
-        return ""
-    }
+    func update(request: Request) throws -> ResponseConvertible
 
     /// Delete an instance.
-    public func destroy(request: Request) throws -> ResponseConvertible {
-        return ""
-    }
+    func destroy(request: Request) throws -> ResponseConvertible
 }
