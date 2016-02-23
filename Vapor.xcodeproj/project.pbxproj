@@ -32,8 +32,8 @@
 		C304C8B61C6306B100058C92 /* RouterDriver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C304C8B41C6306B100058C92 /* RouterDriver.swift */; };
 		C3433FCD1C7CFB4C009F0876 /* Application+Route.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3433FCC1C7CFB4C009F0876 /* Application+Route.swift */; };
 		C3433FCE1C7D02BD009F0876 /* Application+Route.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3433FCC1C7CFB4C009F0876 /* Application+Route.swift */; };
-		C3433FD01C7D1134009F0876 /* Crypto.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3433FCF1C7D1134009F0876 /* Crypto.swift */; };
-		C3433FD11C7D1134009F0876 /* Crypto.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3433FCF1C7D1134009F0876 /* Crypto.swift */; };
+		C3433FD01C7D1134009F0876 /* CryptoSwift.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3433FCF1C7D1134009F0876 /* CryptoSwift.swift */; };
+		C3433FD11C7D1134009F0876 /* CryptoSwift.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3433FCF1C7D1134009F0876 /* CryptoSwift.swift */; };
 		C3433FD41C7D119D009F0876 /* HashTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3433FD21C7D119D009F0876 /* HashTests.swift */; };
 		C3433FD61C7D1203009F0876 /* SHA256Hasher.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3433FD51C7D1203009F0876 /* SHA256Hasher.swift */; };
 		C3433FD71C7D1203009F0876 /* SHA256Hasher.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3433FD51C7D1203009F0876 /* SHA256Hasher.swift */; };
@@ -107,7 +107,7 @@
 		C304C8A91C62FCA300058C92 /* RequestFormExtension.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RequestFormExtension.swift; sourceTree = "<group>"; };
 		C304C8B41C6306B100058C92 /* RouterDriver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RouterDriver.swift; sourceTree = "<group>"; };
 		C3433FCC1C7CFB4C009F0876 /* Application+Route.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Application+Route.swift"; sourceTree = "<group>"; };
-		C3433FCF1C7D1134009F0876 /* Crypto.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Crypto.swift; sourceTree = "<group>"; };
+		C3433FCF1C7D1134009F0876 /* CryptoSwift.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CryptoSwift.swift; sourceTree = "<group>"; };
 		C3433FD21C7D119D009F0876 /* HashTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HashTests.swift; sourceTree = "<group>"; };
 		C3433FD51C7D1203009F0876 /* SHA256Hasher.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SHA256Hasher.swift; sourceTree = "<group>"; };
 		C352E6811C62BB0F00E26467 /* Vapor */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Vapor; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -378,7 +378,7 @@
 				C3EDEA831C6842C700754727 /* Int+Random.swift */,
 				C3EDEA861C68459300754727 /* Hash.swift */,
 				C3433FD51C7D1203009F0876 /* SHA256Hasher.swift */,
-				C3433FCF1C7D1134009F0876 /* Crypto.swift */,
+				C3433FCF1C7D1134009F0876 /* CryptoSwift.swift */,
 			);
 			name = Crypto;
 			sourceTree = "<group>";
@@ -479,7 +479,7 @@
 				C352E6F31C62BC6A00E26467 /* Request.swift in Sources */,
 				802053991C7A8C7D009E26E9 /* RequestData+Target.swift in Sources */,
 				C304C8B51C6306B100058C92 /* RouterDriver.swift in Sources */,
-				C3433FD01C7D1134009F0876 /* Crypto.swift in Sources */,
+				C3433FD01C7D1134009F0876 /* CryptoSwift.swift in Sources */,
 				C3EDEA871C68459300754727 /* Hash.swift in Sources */,
 				C352E7091C62BC6A00E26467 /* View.swift in Sources */,
 				288CFC2E1C7AC01A00E4617A /* Application.swift in Sources */,
@@ -515,7 +515,7 @@
 				C352E6E81C62BC6A00E26467 /* Controller.swift in Sources */,
 				C304C8B61C6306B100058C92 /* RouterDriver.swift in Sources */,
 				C352E6EC1C62BC6A00E26467 /* LinuxFixes.swift in Sources */,
-				C3433FD11C7D1134009F0876 /* Crypto.swift in Sources */,
+				C3433FD11C7D1134009F0876 /* CryptoSwift.swift in Sources */,
 				C38808641C62C0390067DADD /* ResponseTests.swift in Sources */,
 				C352E6F81C62BC6A00E26467 /* ResponseConvertible.swift in Sources */,
 				34CC595B1C7BE405007CA680 /* Log.swift in Sources */,
