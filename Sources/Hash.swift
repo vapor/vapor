@@ -34,7 +34,7 @@ public class Hash {
 	 * - returns: Hashed string
      */
     public class func make(string: String) -> String {
-        return Hash.driver.hash(message: string, key: applicationKey)
+        return Hash.driver.hash(string, key: applicationKey)
     }
     
 }
@@ -50,7 +50,7 @@ public protocol HashDriver {
 	 * return the hashed string according
 	 * to whatever algorithm it chooses to implement.
 	 */
-	func hash(string: String) -> String
+	func hash(message: String, key: String) -> String
 }
 
 public class CryptoHasher: HashDriver {
@@ -62,9 +62,15 @@ public class CryptoHasher: HashDriver {
         var msgBuff = [UInt8]()
         msgBuff += message.utf8
 
-        let hmac = Authenticator.HMAC(key: keyBuff, variant: .sha256).authenticate(msgBuff)
+        do {
+            let hmac = try Authenticator.HMAC(key: keyBuff, variant: .sha256).authenticate(msgBuff)    
+            return NSData.withBytes(hmac).toHexString()
+        } catch {
+            //uh oh
+            print("Unable to create hash")
+            return ""
+        }
 
-        return NSData.withBytes(hmac).hexString
     }
 
 }
