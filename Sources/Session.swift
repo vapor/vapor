@@ -58,8 +58,10 @@ public class Session {
                 key += "\(Int.random(min: 0, max: 9999))"
                 key += "s3sS10n"
                 key += "\(Int.random(min: 0, max: 9999))"
+                key += "k3y"
+                key += "\(Int.random(min: 0, max: 9999))"
                 
-                key = key.SHA1
+                key = Hash.make(key)
                 
 				self.key = key
 				Session.driver.sessions[key] = self

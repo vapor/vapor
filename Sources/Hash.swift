@@ -4,6 +4,8 @@
     import Foundation
 #endif
 
+import CryptoSwift
+
 
 public class Hash {
     
@@ -23,7 +25,7 @@ public class Hash {
      * It will be used to create the hashes 
      * request by functions like `make()`
      */
-    public static var driver: HashDriver = SHA1Hasher()
+    public static var driver: HashDriver = CryptoHasher()
     
     /**
      * Hashes a string using the `Hash` class's 
@@ -32,7 +34,7 @@ public class Hash {
 	 * - returns: Hashed string
      */
     public class func make(string: String) -> String {
-        return Hash.driver.hash("\(string)\(applicationKey)")
+        return Hash.driver.hash(message: string, key: applicationKey)
     }
     
 }
@@ -49,6 +51,22 @@ public protocol HashDriver {
 	 * to whatever algorithm it chooses to implement.
 	 */
 	func hash(string: String) -> String
+}
+
+public class CryptoHasher: HashDriver {
+
+    public func hash(message: String, key: String) -> String {
+        var keyBuff = [UInt8]()
+        keyBuff += key.utf8
+
+        var msgBuff = [UInt8]()
+        msgBuff += message.utf8
+
+        let hmac = Authenticator.HMAC(key: keyBuff, variant: .sha256).authenticate(msgBuff)
+
+        return NSData.withBytes(hmac).hexString
+    }
+
 }
 
 /**
