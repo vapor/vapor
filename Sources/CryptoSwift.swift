@@ -180,7 +180,7 @@ class SHA2 {
         self.resultingArray(hh).forEach {
             let item = $0.bigEndian
             result += [UInt8(item & 0xff)]
-	    result += [UInt8((item >> 8) & 0xff)]
+            result += [UInt8((item >> 8) & 0xff)]
             result += [UInt8((item >> 16) & 0xff)]
             result += [UInt8((item >> 24) & 0xff)]
         }
