@@ -1,37 +1,45 @@
 /**
- * Organize your routing logic with a subclass of
- * `Controller`. Controlls group related route logic into
- * a single class that, by default, conforms to standard
+ * Organize your routing logic with a conformance of
+ * `Controller`. Controls group related route logic into
+ * a single protocol that, by default, conforms to standard
  * CRUD operations.
  */
-public class Controller {
+public protocol Controller: class {
+    /// Display many instances
+	func index(request: Request) throws -> ResponseConvertible
 
-	///Create a default controller
-	public init() {}
+    /// Create a new instance.
+    func store(request: Request) throws -> ResponseConvertible
 
-    ///Display many instances
+    /// Show an instance.
+    func show(request: Request) throws -> ResponseConvertible
+
+    /// Update an instance.
+    func update(request: Request) throws -> ResponseConvertible
+
+    /// Delete an instance.
+    func destroy(request: Request) throws -> ResponseConvertible
+
+}
+
+extension Controller {
 	public func index(request: Request) throws -> ResponseConvertible {
 		return "index"
 	}
 
-	///Create a new instance.
 	public func store(request: Request) throws -> ResponseConvertible {
 		return "store"
 	}
 
-	///Show an instance.
 	public func show(request: Request) throws -> ResponseConvertible {
 		return "show"
 	}
 
-    ///Update an instance.
 	public func update(request: Request) throws -> ResponseConvertible {
 		return "update"
 	}
 
-	///Delete an instance.
 	public func destroy(request: Request) throws -> ResponseConvertible {
 		return "destroy"
-	}
-    
+	}    
 }
