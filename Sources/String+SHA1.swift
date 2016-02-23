@@ -1,3 +1,7 @@
+//
+//  Copyright 2014-2016 Damian Kołakowski. All rights reserved.
+//
+
 #if os(Linux)
     import Glibc
 #else
@@ -5,105 +9,18 @@
 #endif
 
 
-public class Hash {
+extension String {
     
-    /**
-     * The `applicationKey` adds an additional layer
-     * of security to all hashes. 
-     * 
-     * Ensure this key stays
-     * the same during the lifetime of your application, since
-     * changing it will result in mismatching hashes.
-     */
-    public static var applicationKey: String = ""
-
-    /**
-     * Any class that conforms to the `HashDriver` 
-     * protocol may be set as the `Hash`'s driver.
-     * It will be used to create the hashes 
-     * request by functions like `make()`
-     */
-    public static var driver: HashDriver = SHA1Hasher()
-    
-    /**
-     * Hashes a string using the `Hash` class's 
-     * current `HashDriver` and `applicationString` salt.
-	 *
-	 * - returns: Hashed string
-     */
-    public class func make(string: String) -> String {
-        return Hash.driver.hash("\(string)\(applicationKey)")
-    }
-    
-}
-
-/**
- * Classes that conform to `HashDriver` may be set
- * as the `Hash` classes hashing engine.
- */
-public protocol HashDriver {
-
-	/**
-	 * Given a string, this function will 
-	 * return the hashed string according
-	 * to whatever algorithm it chooses to implement.
-	 */
-	func hash(string: String) -> String
-}
-
-/**
- * This class uses the SHA1 algorithm as described
- * here <https://en.wikipedia.org/wiki/SHA-1>
- */
-public class SHA1Hasher: HashDriver {
-
-	public func hash(string: String) -> String {
-		return self.sha1Algorithm(string).reduce("") { el1, el2 in
+    var SHA1: String {
+        return self.SHA1Array.reduce("") { el1, el2 in
             return el1 + String(el2, radix: 16, uppercase: false)
         }
-	}
-    
-    func rotateLeft(v: UInt32, _ n: UInt32) -> UInt32 {
-        return ((v << n) & 0xFFFFFFFF) | (v >> (32 - n))
     }
     
-}
-
-
-/**
-Copyright (c) 2014, Damian Kołakowski
-All rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-
-* Redistributions of source code must retain the above copyright notice, this
-list of conditions and the following disclaimer.
-
-* Redistributions in binary form must reproduce the above copyright notice,
-this list of conditions and the following disclaimer in the documentation
-and/or other materials provided with the distribution.
-
-* Neither the name of the {organization} nor the names of its
-contributors may be used to endorse or promote products derived from
-this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
-
-extension SHA1Hasher {
-    
-    func sha1Algorithm(string: String) -> [UInt8] {
-        var message = [UInt8](string.utf8)
+    var SHA1Array: [UInt8] {
+        
+        // Alghorithm from: https://en.wikipedia.org/wiki/SHA-1
+        var message = [UInt8](self.utf8)
         
         var h0 = UInt32(littleEndian: 0x67452301)
         var h1 = UInt32(littleEndian: 0xEFCDAB89)
@@ -201,5 +118,8 @@ extension SHA1Hasher {
         
         return result;
     }
-
+    
+    func rotateLeft(v: UInt32, _ n: UInt32) -> UInt32 {
+        return ((v << n) & 0xFFFFFFFF) | (v >> (32 - n))
+    }
 }
