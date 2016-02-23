@@ -88,6 +88,6 @@ class LogTests: XCTestCase {
     
     func testConsoleLoggerDidPrintToConsole() {
         Log.driver = ConsoleLogger()
-        XCTAssertNotNil(Log.info("foo"))
+        XCTAssertNotNil(Log.info("foo")) //Todo: This test isn't actually doing anything. I'm unsure how to assert console output...?
     }
 }
