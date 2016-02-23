@@ -13,8 +13,7 @@ extension Application {
     public class Route: CustomStringConvertible {
         static var scopedHost: String?
         static var scopedMiddleware: [Middleware.Type] = []
-        
-        static var routes: [Route] = []
+       
         
         let method: Request.Method
         let path: String
@@ -121,13 +120,12 @@ extension Application {
             route.hostname = hostname
         }
         
-        Route.routes.append(route)
+        self.routes.append(route)
     }
     
     public final func host(host: String, closure: () -> Void) {
-        let original = self.host
-        self.host = host
+        Route.scopedHost = host
         closure()
-        self.host = original
+        Route.scopedHost = nil
     }
 }

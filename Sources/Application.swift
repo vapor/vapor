@@ -52,7 +52,7 @@ public class Application {
 		}
 	}
     
-    internal var host: String = "*"
+    var routes: [Route] = []
 
 	/**
 		Initialize the Application.
@@ -75,7 +75,7 @@ public class Application {
     }
     
     func bootRoutes() {
-        for route in Route.routes {
+        for route in self.routes {
             self.router.register(hostname: route.hostname, method: route.method, path: route.path, handler: route.handler)
         }
     }
