@@ -60,7 +60,7 @@ internal final class Branch {
      - returns: a request handler or nil if not supported
      */
     @warn_unused_result
-    func handle(request: Request, comps: AnyGenerator<String>) -> Request.Handler? {
+    func handle(request: Request, comps: CompatibilityGenerator<String>) -> Request.Handler? {
         guard let key = comps.next() else {
             return handler
         }
@@ -85,7 +85,7 @@ internal final class Branch {
      - parameter generator: the generator that will be used to match the path components.  /users/messages/:id will return a generator that is 'users' <- 'messages' <- '*id'
      - parameter handler:   the handler to assign to the end path component
      */
-    func extendBranch(generator: AnyGenerator<String>, handler: Request.Handler) {
+    func extendBranch(generator: CompatibilityGenerator<String>, handler: Request.Handler) {
         guard let key = generator.next() else {
             self.handler = handler
             return
