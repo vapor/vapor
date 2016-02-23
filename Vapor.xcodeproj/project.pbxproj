@@ -12,6 +12,7 @@
 		288CFC321C7AC05B00E4617A /* Application.swift in Sources */ = {isa = PBXBuildFile; fileRef = 288CFC2D1C7AC01A00E4617A /* Application.swift */; };
 		288CFC331C7AC05D00E4617A /* Provider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 288CFC301C7AC02A00E4617A /* Provider.swift */; };
 		3492B2EF1C787DD600D8E588 /* RouteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3492B2EE1C787DD600D8E588 /* RouteTests.swift */; };
+		34CC59561C7BE3C9007CA680 /* LogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34CC59551C7BE3C9007CA680 /* LogTests.swift */; };
 		802030011C77C956009B8655 /* Vapor+Json.swift in Sources */ = {isa = PBXBuildFile; fileRef = 802030001C77C956009B8655 /* Vapor+Json.swift */; };
 		802030121C78CAC2009B8655 /* Branch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 802030101C78CAC2009B8655 /* Branch.swift */; };
 		802030131C78CAC2009B8655 /* Branch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 802030101C78CAC2009B8655 /* Branch.swift */; };
@@ -85,6 +86,7 @@
 		288CFC2D1C7AC01A00E4617A /* Application.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Application.swift; sourceTree = "<group>"; };
 		288CFC301C7AC02A00E4617A /* Provider.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Provider.swift; sourceTree = "<group>"; };
 		3492B2EE1C787DD600D8E588 /* RouteTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RouteTests.swift; sourceTree = "<group>"; };
+		34CC59551C7BE3C9007CA680 /* LogTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LogTests.swift; sourceTree = "<group>"; };
 		802030001C77C956009B8655 /* Vapor+Json.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Vapor+Json.swift"; sourceTree = "<group>"; };
 		802030101C78CAC2009B8655 /* Branch.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Branch.swift; sourceTree = "<group>"; };
 		802030161C78CAE1009B8655 /* BranchRouter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BranchRouter.swift; sourceTree = "<group>"; };
@@ -258,6 +260,7 @@
 		C352E6901C62BB1C00E26467 /* Tests */ = {
 			isa = PBXGroup;
 			children = (
+				34CC59551C7BE3C9007CA680 /* LogTests.swift */,
 				C352E6931C62BB1C00E26467 /* Info.plist */,
 				C38808631C62C0390067DADD /* ResponseTests.swift */,
 				C3943DC21C7663E80014F4EE /* RouterTests.swift */,
@@ -483,6 +486,7 @@
 				3492B2EF1C787DD600D8E588 /* RouteTests.swift in Sources */,
 				C3943DC41C7664D90014F4EE /* Middleware.swift in Sources */,
 				C352E6F61C62BC6A00E26467 /* Response.swift in Sources */,
+				34CC59561C7BE3C9007CA680 /* LogTests.swift in Sources */,
 				C3943DC31C7663E80014F4EE /* RouterTests.swift in Sources */,
 				C3EDEA851C6842C700754727 /* Int+Random.swift in Sources */,
 				802030131C78CAC2009B8655 /* Branch.swift in Sources */,
