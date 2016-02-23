@@ -50,15 +50,10 @@ struct BytesSequence: SequenceType {
     }
 }
 
-
-internal protocol HashProtocol {
-    var message: Array<UInt8> { get }
-    
-    /** Common part for hash calculation. Prepare header data. */
-    func prepare(len:Int) -> Array<UInt8>
-}
-
-extension HashProtocol {
+class SHA2 {
+    init() {
+        
+    }
     
     func prepare(len:Int) -> Array<UInt8> {
         var tmpMessage = message
@@ -78,42 +73,32 @@ extension HashProtocol {
         tmpMessage += Array<UInt8>(count: counter, repeatedValue: 0)
         return tmpMessage
     }
-}
-
-class SHA2 : HashProtocol {
+    
     var size = 256
-    let variant = SHA2.Variant.sha256
     
-    let message: [UInt8]
+    var message: [UInt8] = []
     
-    init(_ message:[UInt8]) {
-        self.message = message
+    private var h:[UInt64] {
+        return [0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19]
     }
     
-    enum Variant {
-        case sha256
-        
-        private var h:[UInt64] {
-            return [0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19]
-        }
-        
-        private var k:[UInt64] {
-            return [
-                0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
-                        0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
-                        0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
-                        0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
-                        0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
-                        0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
-                        0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
-                        0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
-            ]
-        }
-        
-        private func resultingArray<T>(hh:[T]) -> ArraySlice<T> {
-            return ArraySlice(hh)
-        }
+    private var k:[UInt64] {
+        return [
+            0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+                    0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+                    0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+                    0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+                    0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+                    0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+                    0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+                    0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
+        ]
     }
+    
+    private func resultingArray<T>(hh:[T]) -> ArraySlice<T> {
+        return ArraySlice(hh)
+    }
+
     
     //FIXME: I can't do Generic func out of calculate32 and calculate64 (UInt32 vs UInt64), but if you can - please do pull request.
     func calculate32() -> [UInt8] {
@@ -121,7 +106,7 @@ class SHA2 : HashProtocol {
         
         // hash values
         var hh = [UInt32]()
-        variant.h.forEach {(h) -> () in
+        self.h.forEach {(h) -> () in
             hh.append(UInt32(h))
         }
         
@@ -133,7 +118,7 @@ class SHA2 : HashProtocol {
         for chunk in BytesSequence(chunkSize: chunkSizeBytes, data: tmpMessage) {
             // break chunk into sixteen 32-bit words M[j], 0 ≤ j ≤ 15, big-endian
             // Extend the sixteen 32-bit words into sixty-four 32-bit words:
-            var M:[UInt32] = [UInt32](count: variant.k.count, repeatedValue: 0)
+            var M:[UInt32] = [UInt32](count: self.k.count, repeatedValue: 0)
             for x in 0..<M.count {
                 switch (x) {
                 case 0...15:
@@ -160,13 +145,13 @@ class SHA2 : HashProtocol {
             var H = hh[7]
             
             // Main loop
-            for j in 0..<variant.k.count {
+            for j in 0..<self.k.count {
                 let s0 = rotateRight(A,n: 2) ^ rotateRight(A,n: 13) ^ rotateRight(A,n: 22)
                 let maj = (A & B) ^ (A & C) ^ (B & C)
                 let t2 = s0 &+ maj
                 let s1 = rotateRight(E,n: 6) ^ rotateRight(E,n: 11) ^ rotateRight(E,n: 25)
                 let ch = (E & F) ^ ((~E) & G)
-                let t1 = H &+ s1 &+ ch &+ UInt32(variant.k[j]) &+ M[j]
+                let t1 = H &+ s1 &+ ch &+ UInt32(self.k[j]) &+ M[j]
                 
                 H = G
                 G = F
@@ -191,7 +176,7 @@ class SHA2 : HashProtocol {
         // Produce the final hash value (big-endian) as a 160 bit number:
         var result = [UInt8]()
         result.reserveCapacity(hh.count / 4)
-        variant.resultingArray(hh).forEach {
+        self.resultingArray(hh).forEach {
             let item = $0.bigEndian
             result += [UInt8(item & 0xff), UInt8((item >> 8) & 0xff), UInt8((item >> 16) & 0xff), UInt8((item >> 24) & 0xff)]
         }
@@ -453,7 +438,8 @@ extension NSData {
 class HMAC {
     
     class func calculateHash(bytes bytes:[UInt8]) -> [UInt8]? {
-        let sha = SHA2(bytes)
+        let sha = SHA2()
+        sha.message = bytes
         return sha.calculate32()
     }
     
