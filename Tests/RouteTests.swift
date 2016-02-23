@@ -79,7 +79,7 @@ private class ResourceTestController: Controller {
     
     // MARK: Init
     
-    override init() {
+    init() {
         locks = [
             "index" : 0,
             "store" : 0,
@@ -87,7 +87,6 @@ private class ResourceTestController: Controller {
             "update" : 0,
             "destroy" : 0
         ]
-        super.init()
     }
     
     // MARK:
@@ -104,36 +103,36 @@ private class ResourceTestController: Controller {
     
     // MARK: Handlers
     
-    override func index(request: Request) throws -> ResponseConvertible {
+    func index(request: Request) throws -> ResponseConvertible {
         incrementLock("index")
-        return try super.index(request)
+        return "index"
     }
     
     ///Create a new instance.
-    override func store(request: Request) throws -> ResponseConvertible {
+    func store(request: Request) throws -> ResponseConvertible {
         incrementLock("store")
-        return try super.store(request)
+        return "request"
     }
     
     ///Show an instance.
-    override func show(request: Request) throws -> ResponseConvertible {
+    func show(request: Request) throws -> ResponseConvertible {
         XCTAssert(request.parameters["id"] != nil)
         incrementLock("show")
-        return try super.show(request)
+        return "show"
     }
     
     ///Update an instance.
-    override func update(request: Request) throws -> ResponseConvertible {
+    func update(request: Request) throws -> ResponseConvertible {
         XCTAssert(request.parameters["id"] != nil)
         incrementLock("update")
-        return try super.update(request)
+        return "update"
     }
     
     ///Delete an instance.
-    override func destroy(request: Request) throws -> ResponseConvertible {
+    func destroy(request: Request) throws -> ResponseConvertible {
         XCTAssert(request.parameters["id"] != nil)
         incrementLock("destroy")
-        return try super.destroy(request)
+        return "destroy"
     }
 }
 

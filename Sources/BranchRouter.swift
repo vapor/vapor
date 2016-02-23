@@ -112,15 +112,32 @@ public final class BranchRouter: RouterDriver {
     }
 }
 
+/**
+ *  Until Swift api is stable for AnyGenerator, using this in interim to allow compiling Swift 2 and 2.2+
+ */
+public struct CompatibilityGenerator<T>: GeneratorType {
+    public typealias Element = T
+    
+    private let closure: () -> T?
+    
+    init(closure: () -> T?) {
+        self.closure = closure
+    }
+    
+    public func next() -> Element? {
+        return closure()
+    }
+}
+
 extension String {
-    private func pathComponentGenerator() -> AnyGenerator<String> {
+    private func pathComponentGenerator() -> CompatibilityGenerator<String> {
         let comps = self
             .characters
             .split { $0 == "/" }
             .map(String.init)
         
         var idx = 0
-        return AnyGenerator<String> {
+        return CompatibilityGenerator<String> {
             guard idx < comps.count else {
                 return nil
             }
