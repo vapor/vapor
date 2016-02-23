@@ -3,7 +3,6 @@
 #endif
 
 import Foundation
-import CryptoSwift
 
 
 public class Hash {
@@ -24,7 +23,7 @@ public class Hash {
      * It will be used to create the hashes 
      * request by functions like `make()`
      */
-    public static var driver: HashDriver = CryptoHasher()
+    public static var driver: HashDriver = SHA256Hasher()
     
     /**
      * Hashes a string using the `Hash` class's 
@@ -52,25 +51,3 @@ public protocol HashDriver {
 	func hash(message: String, key: String) -> String
 }
 
-
-public class CryptoHasher: HashDriver {
-
-    public func hash(message: String, key: String) -> String {
-    
-        var msgBuff = [UInt8]()
-        msgBuff += message.utf8
-        
-        var keyBuff = [UInt8]()
-        keyBuff += key.utf8
-        
-        do {
-            let hmac = try Authenticator.HMAC(key: keyBuff, variant: .sha256).authenticate(msgBuff)
-            return NSData.withBytes(hmac).toHexString()
-        } catch {
-            Log.error("Unable to create hash, returning hash for empty string.")
-            return "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-        }
-
-    }
-    
-}

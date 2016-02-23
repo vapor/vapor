@@ -86,10 +86,6 @@ extension Application {
         let pathRoot = paths.joinWithSeparator("/")
         let fullPath = pathRoot + "/:id"
         
-        print(pathRoot)
-        print(fullPath)
-
-
         // ie: /users
         self.get(pathRoot, closure: controller.index)
         self.post(pathRoot, closure: controller.store)
