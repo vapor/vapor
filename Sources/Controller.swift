@@ -5,6 +5,8 @@
  * CRUD operations.
  */
 public class Controller {
+    public init() {}
+
     /// Display many instances
 	func index(request: Request) throws -> ResponseConvertible {
         return ""
