@@ -68,6 +68,8 @@ public class Request {
         
         let query = Request.parseQueryData(path)
         self.data = Data(query: query, bytes: body)
+        
+        Log.verbose("Received \(method) request for \(path)")
     }
     
     /**
