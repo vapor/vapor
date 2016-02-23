@@ -6,6 +6,7 @@
 //  Copyright © 2016 Tanner Nelson. All rights reserved.
 //
 
+import Foundation
 import PureJsonSerializer
 
 /**
@@ -39,8 +40,20 @@ public extension Request {
         public let json: Json?
         
         internal init(query: [String : String] = [:], bytes: [UInt8]) {
-            self.query = query
-            self.json = try? Json.deserialize(bytes)
+            var mutableQuery = query
+            
+            do {
+                self.json = try Json.deserialize(bytes)
+            } catch {
+                self.json = nil
+                
+                // Will overwrite keys if they are duplicated from `query`
+                Data.parsePostData(bytes).forEach { key, val in
+                    mutableQuery[key] = val
+                }
+            }
+            
+            self.query = mutableQuery
         }
         
         // MARK: Subscripting
@@ -51,6 +64,40 @@ public extension Request {
         
         public subscript(idx: Int) -> Node? {
             return json?[idx]
+        }
+        
+        /**
+         Checks for form encoding of body if Json fails
+         
+         - parameter body: byte array from body
+         
+         - returns: a key value pair dictionary
+         */
+        static func parsePostData(body: [UInt8]) -> [String: String] {
+            if let bodyString = NSString(bytes: body, length: body.count, encoding: NSUTF8StringEncoding) {
+                return self.parseData(bodyString.description)
+            }
+            
+            return [:]
+        }
+        
+        /**
+         Parses `key=value` pair data separated by `&`.
+         
+         - returns: String dictionary of parsed data
+         */
+        static func parseData(string: String) -> [String: String] {
+            var data: [String: String] = [:]
+            
+            for pair in string.split("&") {
+                let tokens = pair.split(1, separator: "=")
+                
+                if let name = tokens.first, value = tokens.last {
+                    data[name.removePercentEncoding()] = value.removePercentEncoding()
+                }
+            }
+            
+            return data
         }
     }
 }
