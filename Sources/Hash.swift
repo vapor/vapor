@@ -1,9 +1,8 @@
 #if os(Linux)
     import Glibc
-#else
-    import Foundation
 #endif
 
+import Foundation
 import CryptoSwift
 
 
