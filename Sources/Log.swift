@@ -12,7 +12,7 @@ import Foundation
     Log class
 */
 public class Log {
-        
+    
     /**
         LogLevel enumeration
     */
