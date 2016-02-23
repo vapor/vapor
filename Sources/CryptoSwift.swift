@@ -102,7 +102,8 @@ class SHA2 {
     
     //FIXME: I can't do Generic func out of calculate32 and calculate64 (UInt32 vs UInt64), but if you can - please do pull request.
     func calculate32() -> [UInt8] {
-        var tmpMessage = self.prepare(64)
+        return []
+        /*var tmpMessage = self.prepare(64)
         
         // hash values
         var hh = [UInt32]()
@@ -180,18 +181,13 @@ class SHA2 {
             let item = $0.bigEndian
             result += [UInt8(item & 0xff), UInt8((item >> 8) & 0xff), UInt8((item >> 16) & 0xff), UInt8((item >> 24) & 0xff)]
         }
-        return result
+        return result */
     }
     
 }
 
 
-/* array of bits */
-extension Int {
-    init(bits: [Bit]) {
-        self.init(bitPattern: integerFromBitsArray(bits) as UInt)
-    }
-}
+
 
 /* array of bytes */
 extension Int {
@@ -210,44 +206,6 @@ extension Int {
     }
 }
 
-
-
-/** Shift bits */
-extension Int {
-    
-    /** Shift bits to the left. All bits are shifted (including sign bit) */
-    private mutating func shiftLeft(count: Int) -> Int {
-        self = shiftLeft(count) //FIXME: count:
-        return self
-    }
-    
-    /** Shift bits to the right. All bits are shifted (including sign bit) */
-    private mutating func shiftRight(count: Int) -> Int {
-        if (self == 0) {
-            return self;
-        }
-        
-        let bitsCount = sizeofValue(self) * 8
-        
-        if (count >= bitsCount) {
-            return 0
-        }
-        
-        let maxBitsForValue = Int(floor(log2(Double(self)) + 1))
-        let shiftCount = Swift.min(count, maxBitsForValue - 1)
-        var shiftedValue:Int = 0;
-        
-        for bitIdx in 0..<bitsCount {
-            // if bit is set then copy to result and shift left 1
-            let bit = 1 << bitIdx
-            if ((self & bit) == bit) {
-                shiftedValue = shiftedValue | (bit >> shiftCount)
-            }
-        }
-        self = Int(shiftedValue)
-        return self
-    }
-}
 
 
 
