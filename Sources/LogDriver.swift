@@ -12,7 +12,7 @@ import Foundation
  to this protocol
  */
 public protocol LogDriver {
-    func log(level: LogLevel, message: String)
+    func log(level: Log.Level, message: String)
 }
 
 /*
@@ -23,7 +23,7 @@ public protocol LogDriver {
 */
 public class ConsoleLogger: LogDriver {
     
-    public func log(level: LogLevel, message: String) {
+    public func log(level: Log.Level, message: String) {
         let date = NSDate()
         print("[\(date)] \(level): \(message)")
     }

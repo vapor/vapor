@@ -8,11 +8,39 @@
 
 import Foundation
 
-/* 
+/**
     Log class
 */
 public class Log {
-    
+        
+    /**
+        LogLevel enumeration
+    */
+    public enum Level: Equatable, CustomStringConvertible {
+        case Verbose, Debug, Info, Warning, Error, Fatal, Custom(String)
+        
+        /*
+         Returns all standard log levels (i.e. except Custom)
+        
+         returns - array of Log.Level
+         */
+        public static var all: [Log.Level] {
+            return [.Verbose, .Debug, .Info, .Warning, .Error, .Fatal]
+        }
+
+        public var description: String {
+            switch self {
+            case Verbose: return "VERBOSE"
+            case Debug: return "DEBUG"
+            case Info: return "INFO"
+            case Warning: return "WARNING"
+            case Error: return "ERROR"
+            case Fatal: return "FATAL"
+            case Custom(let string): return "\(string.uppercaseString)"
+            }
+        }
+    }
+
     /**
         LogDriver. Default is the console logger.
         This can be overriden with a custom logger.
@@ -23,7 +51,7 @@ public class Log {
         Enabled log levels. Default is to log all levels. This
         can be overridden.
      */
-    public static var enabledLevels: [LogLevel] = LogLevel.all
+    public static var enabledLevels: [Log.Level] = Log.Level.all
     
     /**
         Logs verbose messages if .Verbose is enabled
@@ -99,4 +127,8 @@ public class Log {
     public static func custom(message: String, label: String) {
         driver.log(.Custom(label), message: message)
     }
+}
+
+public func ==(lhs: Log.Level, rhs: Log.Level) -> Bool {
+    return lhs.description == rhs.description
 }
