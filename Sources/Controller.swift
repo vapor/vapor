@@ -8,27 +8,27 @@ public class Controller {
     public init() {}
 
     /// Display many instances
-	func index(request: Request) throws -> ResponseConvertible {
+	public func index(request: Request) throws -> ResponseConvertible {
         return ""
     }
 
     /// Create a new instance.
-    func store(request: Request) throws -> ResponseConvertible {
+    public func store(request: Request) throws -> ResponseConvertible {
         return ""
     }
 
     /// Show an instance.
-    func show(request: Request) throws -> ResponseConvertible {
+    public func show(request: Request) throws -> ResponseConvertible {
         return ""
     }
 
     /// Update an instance.
-    func update(request: Request) throws -> ResponseConvertible {
+    public func update(request: Request) throws -> ResponseConvertible {
         return ""
     }
 
     /// Delete an instance.
-    func destroy(request: Request) throws -> ResponseConvertible {
+    public func destroy(request: Request) throws -> ResponseConvertible {
         return ""
     }
 }
