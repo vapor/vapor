@@ -53,6 +53,13 @@ public class Application {
 	}
     
     internal var host: String = "*"
+    
+    /**
+        An array of arrays representing middleware to apply
+        to a specific set of routes that are registered inside
+        of the middleware(_: closure:) function
+    */
+    internal var currentMiddlewareTypes = [[Middleware.Type]]()
 
 	/**
 		Initialize the Application.
@@ -72,6 +79,17 @@ public class Application {
         for provider in self.providers {
             provider.boot(self)
         }
+    }
+    
+    /**
+        Applies the middleware to the routes defined 
+        inside the closure. This method can be nested within
+        itself safely.
+    */
+    public func middleware(middleware: [Middleware.Type], closure: () -> ()) {
+        currentMiddlewareTypes.append(middleware)
+        closure()
+        currentMiddlewareTypes.removeLast()
     }
 
 

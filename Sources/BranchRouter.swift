@@ -66,9 +66,17 @@ extension Application {
     }
     
     public final func add(method: Request.Method, path: String, closure: Handler) {
-        router.register(hostname: host, method: method, path: path) { request in
+        
+        var handler = { request in
             return try closure(request).response()
         }
+      
+        // The call to app.middleware can nested so we need to flatten it
+        for middleware in currentMiddlewareTypes.flatten() {
+            handler = middleware.handle(handler)
+        }
+        
+        router.register(hostname: host, method: method, path: path, handler: handler)
     }
     
     public final func host(host: String, closure: () -> Void) {
