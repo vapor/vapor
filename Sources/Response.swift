@@ -18,7 +18,7 @@ public class Redirect: Response {
 
         - returns: Dictionary of headers
      */
-    override var headers: [String: String] {
+    public override var headers: [String: String] {
         var headers = super.headers
         headers["Location"] = self.redirectLocation
         return headers
