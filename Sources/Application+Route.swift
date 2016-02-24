@@ -109,10 +109,10 @@ extension Application {
             return try handler(request).response()
         }
         
-        //Apply any scoped middlewares
-        for middleware in Route.scopedMiddleware {
-            handler = middleware.handle(handler)
-        }
+//        //Apply any scoped middlewares
+//        for middleware in Route.scopedMiddleware {
+//            handler = middleware.handle(handler)
+//        }
         
         //Store the route for registering with Router later
         let route = Route(method: method, path: path, handler: handler)
@@ -125,23 +125,23 @@ extension Application {
         self.routes.append(route)
     }
     
-    /**
-        Applies the middleware to the routes defined
-        inside the closure. This method can be nested within
-        itself safely.
-    */
-    public func middleware(middleware: Middleware.Type, handler: () -> ()) {
-       self.middleware([middleware], handler: handler)
-    }
+//    /**
+//        Applies the middleware to the routes defined
+//        inside the closure. This method can be nested within
+//        itself safely.
+//    */
+//    public func middleware(middleware: Middleware.Type, handler: () -> ()) {
+//       self.middleware([middleware], handler: handler)
+//    }
     
-    public func middleware(middleware: [Middleware.Type], handler: () -> ()) {
-        let original = Route.scopedMiddleware
-        Route.scopedMiddleware += middleware
-        
-        handler()
-        
-        Route.scopedMiddleware = original
-    }
+//    public func middleware(middleware: [Middleware.Type], handler: () -> ()) {
+//        let original = Route.scopedMiddleware
+//        Route.scopedMiddleware += middleware
+//        
+//        handler()
+//        
+//        Route.scopedMiddleware = original
+//    }
     
     public final func host(host: String, handler: () -> Void) {
         Route.scopedHost = host
