@@ -109,7 +109,7 @@ public class Response {
         }
     }
 
-    var reasonPhrase: String {
+    public var reasonPhrase: String {
         switch self.status {
         case .OK:
             return "OK"
