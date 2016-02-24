@@ -70,8 +70,8 @@ public class Response {
 
     typealias WriteClosure = (ResponseWriter) throws -> Void
 
-    let status: Status
-    let data: [UInt8]
+    public let status: Status
+    public let data: [UInt8]
     let contentType: ContentType
     public var cookies: [String: String] = [:]
 
