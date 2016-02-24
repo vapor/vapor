@@ -136,7 +136,7 @@ extension Application {
     
     public func middleware(middleware: [Middleware.Type], handler: () -> ()) {
         let original = Route.scopedMiddleware
-        Route.scopedMiddleware = middleware
+        Route.scopedMiddleware += middleware
         
         handler()
         
