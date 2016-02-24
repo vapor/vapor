@@ -67,28 +67,21 @@ extension Application {
     }
     
     public final func resource(path: String, controller: Controller) {
-        let components = path.componentsSeparatedByString(".")
-        
-        var paths: [String] = []
-        
-        for (index, component) in path.componentsSeparatedByString(".").enumerate() {
-            if index != components.count - 1 {
-                paths.append("\(component)s")
-                paths.append(":\(component)_id")
-            }
-        }
-        
-        if let last = components.last {
-            paths.append("\(last)s")
-        }
 
+        let last = "/:id"
         
-        let pathRoot = paths.joinWithSeparator("/")
-        let fullPath = pathRoot + "/:id"
+        let shortPath = path.componentsSeparatedByString(".")
+            .flatMap { component in
+                return [component, "/:\(component)_id/"]
+            }
+            .dropLast()
+            .joinWithSeparator("")
+        
+        let fullPath = shortPath + last
         
         // ie: /users
-        self.get(pathRoot, closure: controller.index)
-        self.post(pathRoot, closure: controller.store)
+        self.get(shortPath, closure: controller.index)
+        self.post(shortPath, closure: controller.store)
         
         // ie: /users/:id
         self.get(fullPath, closure: controller.show)
