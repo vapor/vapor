@@ -89,7 +89,6 @@ extension Application {
             .joinWithSeparator("")
         
         let fullPath = shortPath + last
-        print(fullPath)
         
         // ie: /users
         self.get(shortPath, handler: controller.index)
