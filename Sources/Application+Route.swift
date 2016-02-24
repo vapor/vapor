@@ -72,12 +72,13 @@ extension Application {
         
         let shortPath = path.componentsSeparatedByString(".")
             .flatMap { component in
-                return [component, "/:\(component)_id/"]
+                return ["\(component)s", "/:\(component)_id/"]
             }
             .dropLast()
             .joinWithSeparator("")
         
         let fullPath = shortPath + last
+        print(fullPath)
         
         // ie: /users
         self.get(shortPath, closure: controller.index)
