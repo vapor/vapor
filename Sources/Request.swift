@@ -57,7 +57,7 @@ public class Request {
         return false
     }
 
-    init(method: Method, path: String, address: String?, headers: [String: String], body: [UInt8]) {
+    public init(method: Method, path: String, address: String?, headers: [String: String], body: [UInt8]) {
         self.method = method
         self.path = path.split(separator: "?")[0]
         self.address = address
