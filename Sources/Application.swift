@@ -5,7 +5,7 @@ import Foundation
 #endif
 
 public class Application {
-	public static let VERSION = "0.2.2"
+	public static let VERSION = "0.2.3"
 
 	/**
 		The router driver is responsible
@@ -52,7 +52,7 @@ public class Application {
 		}
 	}
     
-    internal var host: String = "*"
+    var routes: [Route] = []
 
 	/**
 		Initialize the Application.
@@ -73,6 +73,12 @@ public class Application {
             provider.boot(self)
         }
     }
+    
+    func bootRoutes() {
+        for route in self.routes {
+            self.router.register(hostname: route.hostname, method: route.method, path: route.path, handler: route.handler)
+        }
+    }
 
 
 	/**
@@ -81,8 +87,9 @@ public class Application {
 	*/
 	public func start(port inPort: Int = 80) {
         self.bootProviders()
-        
         self.server.delegate = self
+        
+        self.bootRoutes()
 
 		var port = inPort
 

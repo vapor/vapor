@@ -7,7 +7,6 @@
 //
 
 import Foundation
-import PureJsonSerializer
 
 /**
  *  This protocol defines a type of data received.
@@ -102,18 +101,7 @@ public extension Request {
     }
 }
 
-extension Json : Node {
-    public var isNull: Bool {
-        switch self {
-        case .NullValue:
-            return true
-        case .StringValue(let string) where string == "null":
-            return true
-        default:
-            return false
-        }
-    }
-    
+extension Json: Node {
     public var bool: Bool {
         switch  self {
         case .BooleanValue(let bool):
@@ -193,7 +181,7 @@ extension Json : Node {
     }
 }
 
-extension String : Node {
+extension String: Node {
     public var isNull: Bool {
         return self == "null"
     }

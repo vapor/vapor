@@ -10,6 +10,7 @@ private let O = "0".ord, A = "A".ord, percent = "%".ord
 private func unhex( char: Int8 ) -> Int8 {
     return char < A ? char - O : char - A + 10
 }
+    
 
 extension String {
 

@@ -7,14 +7,13 @@
 //
 
 import Foundation
-@_exported import PureJsonSerializer
 
 /// To allow users to opt into preferred case style
 public typealias JSON = Json
 
 // MARK: Response
 
-extension Json : ResponseConvertible {
+extension Json: ResponseConvertible {
     public func response() -> Response {
         let js = serialize()
         let data = Array(js.utf8)

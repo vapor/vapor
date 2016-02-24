@@ -46,7 +46,7 @@ class RouterTests: XCTestCase {
         let data_1 = [UInt8]("1".utf8)
         let data_2 = [UInt8]("2".utf8)
         
-        router.register(method: .Get, path: "test") { request in
+        router.register(hostname: nil, method: .Get, path: "test") { request in
             return Response(status: .OK, data: data_1, contentType: .Text)
         }
         
@@ -81,7 +81,7 @@ class RouterTests: XCTestCase {
         
         var handlerRan = false
         
-        router.register(method: .Get, path: "test/:string") { request in
+        router.register(hostname: nil, method: .Get, path: "test/:string") { request in
             
             let testParameter = request.parameters["string"]
             
