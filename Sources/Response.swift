@@ -98,6 +98,26 @@ public class Response {
                 return code
             }
         }
+
+        public var reasonPhrase: String {
+            switch self {
+            case .OK: return "OK"
+            case .Created: return "Created"
+            case .Accepted: return "Accepted"
+                
+            case .MovedPermanently: return "Moved Permanently"
+                
+            case .BadRequest: return "Bad Request"
+            case .Unauthorized: return "Unauthorized"
+            case .Forbidden: return "Forbidden"
+            case .NotFound: return "Not Found"
+                
+            case .Error: return "Internal Server Error"
+                
+            case .Unknown: return "Unknown"
+            case .Custom(let code): return "Custom \(code)"
+            }
+        }
     }
     
     // MARK: Member Variables
@@ -105,7 +125,7 @@ public class Response {
     public let status: Status
     public let data: [UInt8]
     public let contentType: ContentType
-    public private(set) var headers: [String : String] = [:]
+    public var headers: [String : String] = [:]
     
     public var cookies: [String : String] = [:] {
         didSet {
@@ -142,12 +162,6 @@ public class Response {
         default:
             self.headers = [:]
         }
-    }
-    
-    // MARK: Append Headers
-    
-    public final func appendHeader(key key: String, value: String) {
-        headers[key] = value
     }
 }
 
@@ -229,36 +243,5 @@ public func ==(left: Response, right: Response) -> Bool {
     return left.status.code == right.status.code
 }
 
-extension Response.Status: CustomStringConvertible {
-    public var description: String {
-        switch self {
-        case .OK:
-            return "OK"
-        case .Created:
-            return "Created"
-        case .Accepted:
-            return "Accepted"
-            
-        case .MovedPermanently:
-            return "Moved Permanently"
-            
-        case .BadRequest:
-            return "Bad Request"
-        case .Unauthorized:
-            return "Unauthorized"
-        case .Forbidden:
-            return "Forbidden"
-        case .NotFound:
-            return "Not Found"
-            
-        case .Error:
-            return "Internal Server Error"
-            
-        case .Unknown:
-            return "Unknown"
-        case .Custom(let code):
-            return "Custom \(code)"
-        }
-    }
-}
+
 
