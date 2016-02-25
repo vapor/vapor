@@ -10,30 +10,6 @@ import Foundation
 
 extension Application {
     
-    public class Route: CustomStringConvertible {
-        static var scopedHost: String?
-        static var scopedMiddleware: [Middleware.Type] = []
-       
-        
-        let method: Request.Method
-        let path: String
-        let handler: Request.Handler
-        var hostname: String?
-        
-        public typealias Handler = Request throws -> ResponseConvertible
-        
-        init(method: Request.Method, path: String, handler: Request.Handler) {
-            self.method = method
-            self.path = path
-            self.handler = handler
-        }
-        
-        public var description: String {
-            return "\(self.method) \(self.path) \(self.hostname)"
-        }
-        
-    }
-    
     public final func get(path: String, handler: Route.Handler) {
         self.add(.Get, path: path, handler: handler)
     }
@@ -100,8 +76,6 @@ extension Application {
         self.delete(fullPath, handler: controller.destroy)
     }
     
-
-    
     public final func add(method: Request.Method, path: String, handler: Route.Handler) {
         
         //Convert Route.Handler to Request.Handler
@@ -109,39 +83,34 @@ extension Application {
             return try handler(request).response()
         }
         
-//        //Apply any scoped middlewares
-//        for middleware in Route.scopedMiddleware {
-//            handler = middleware.handle(handler)
-//        }
-        
-        //Store the route for registering with Router later
-        let route = Route(method: method, path: path, handler: handler)
-        
-        //Add scoped hostname if we have one
-        if let hostname = Route.scopedHost {
-            route.hostname = hostname
+        //Apply any scoped middlewares
+        for middleware in Route.scopedMiddleware {
+            handler = middleware.handle(handler)
         }
         
+        //Store the route for registering with Router later
+        let host = Route.scopedHost ?? "*"
+        let route = Route(host: host, method: method, path: path, handler: handler)
         self.routes.append(route)
     }
     
-//    /**
-//        Applies the middleware to the routes defined
-//        inside the closure. This method can be nested within
-//        itself safely.
-//    */
-//    public func middleware(middleware: Middleware.Type, handler: () -> ()) {
-//       self.middleware([middleware], handler: handler)
-//    }
+    /**
+        Applies the middleware to the routes defined
+        inside the closure. This method can be nested within
+        itself safely.
+    */
+    public final func middleware(middleware: Middleware.Type, handler: () -> ()) {
+       self.middleware([middleware], handler: handler)
+    }
     
-//    public func middleware(middleware: [Middleware.Type], handler: () -> ()) {
-//        let original = Route.scopedMiddleware
-//        Route.scopedMiddleware += middleware
-//        
-//        handler()
-//        
-//        Route.scopedMiddleware = original
-//    }
+    public final func middleware(middleware: [Middleware.Type], handler: () -> ()) {
+        let original = Route.scopedMiddleware
+        Route.scopedMiddleware += middleware
+        
+        handler()
+        
+        Route.scopedMiddleware = original
+    }
     
     public final func host(host: String, handler: () -> Void) {
         Route.scopedHost = host

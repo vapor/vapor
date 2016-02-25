@@ -4,9 +4,9 @@
 
 A Laravel/Lumen Inspired Web Framework for Swift that works on iOS, OS X, and Ubuntu.
 
-- [x] Insanely fast
-- [x] Beautiful syntax
-- [x] Type safe
+- [x] Pure Swift (0 dependencies)
+- [x] Modular
+- [x] Beautifully expressive
 
 ## Badges
 
@@ -14,6 +14,10 @@ A Laravel/Lumen Inspired Web Framework for Swift that works on iOS, OS X, and Ub
 [![Issue Stats](http://issuestats.com/github/qutheory/vapor/badge/pr?style=flat-square)](http://issuestats.com/github/qutheory/vapor)
 [![PRs Welcome](https://img.shields.io/badge/prs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
 [![Slack Status](http://slack.tanner.xyz:8085/badge.svg?style=flat-square)](http://slack.tanner.xyz:8085)
+
+## Introduction
+
+Vapor is the first true web framework for Swift. It provides a beautifully expressive foundation for your app without tying you to any single server implementation. To learn more about Vapor's modularity, check out the [Vapor Zewo Server](https://github.com/qutheory/vapor-zewo-server) or Vapor's protocol-oriented [Drivers](https://github.com/qutheory/vapor/wiki/Driver).
 
 ## Work in Progress
 
@@ -230,6 +234,18 @@ class MyMiddleware: Middleware {
 
 app.middleware.append(MyMiddleware)
 ```
+
+Middleware can also be applied to a specific set of routes by using the `app.middleware(_: handler:)` method.
+
+```swift
+app.get("welcome") { ... }
+
+app.middleware([AuthMiddleware]) {
+   app.get("user") { ... }
+}
+```
+
+In this example the AuthMiddleware will be applied to the `user` route but not the `welcome` route.
 
 ## Providers
 
