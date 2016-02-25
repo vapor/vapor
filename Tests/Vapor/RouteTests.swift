@@ -7,6 +7,17 @@
 //
 
 import XCTest
+@testable import Vapor
+
+#if os(Linux)
+    extension RouteTests: XCTestCaseProvider {
+        var allTests : [(String, () throws -> Void)] {
+            return [
+                ("testRoute", testRoute)
+            ]
+        }
+    }
+#endif
 
 class RouteTests: XCTestCase {
  

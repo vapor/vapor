@@ -7,6 +7,17 @@
 //
 
 import XCTest
+@testable import Vapor
+
+#if os(Linux)
+    extension ResponseTests: XCTestCaseProvider {
+        var allTests : [(String, () throws -> Void)] {
+            return [
+                ("testRedirect", testRedirect)
+            ]
+        }
+    }
+#endif
 
 class ResponseTests: XCTestCase {
 
