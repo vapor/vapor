@@ -1,3 +1,5 @@
+import Vapor
+
 let app = Application()
 
 app.get("test") { request in
