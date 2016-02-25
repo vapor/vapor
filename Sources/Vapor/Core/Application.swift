@@ -78,6 +78,20 @@ public class Application {
         routes.forEach(router.register)
     }
 
+    /**
+        Returns the string value of an
+        argument passed to the executable
+        in the format --name=value
+    */
+    func argument(name: String) -> String? {
+        for argument in Process.arguments {
+            if argument.hasPrefix("--\(name)=") {
+                return argument.split("=")[1]
+            }
+        }
+        
+        return nil
+    }
 
 	/**
 		Boots the chosen server driver and
@@ -92,19 +106,18 @@ public class Application {
 		var port = inPort
 
 		//grab process args
-		for argument in Process.arguments {
-			if argument.hasPrefix("--workDir=") {
-				let workDirString = argument.split("=")[1]
-				self.dynamicType.workDir = workDirString
-				print("Work dir override: \(workDirString)")
-			} else if argument.hasPrefix("--port=") {
-				let portString = argument.split("=")[1]
-				if let portInt = Int(portString) {
-					print("Port override: \(portInt)")
-					port = portInt
-				}
-			}
-		}
+        if let workDir = self.argument("workDir") {
+            print("Work dir override: \(workDir)")
+            self.dynamicType.workDir = workDir
+        }
+        
+        if let portString = self.argument("port") {
+            if let portInt = Int(portString) {
+                print("Port override: \(portInt)")
+                port = portInt
+            }
+        }
+
 
 		do {
 			try self.server.boot(port: port)
