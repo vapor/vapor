@@ -1,22 +1,12 @@
-/**
- * Organize your routing logic with a conformance of
- * `Controller`. Controls group related route logic into
- * a single protocol that, by default, conforms to standard
- * CRUD operations.
- */
-public protocol Controller {
-    /// Display many instances
-	func index(request: Request) throws -> ResponseConvertible
+//
+//  Controller.swift
+//  Vapor
+//
+//  Created by James Richard on 2/24/16.
+//  Copyright © 2016 Tanner Nelson. All rights reserved.
+//
 
-    /// Create a new instance.
-    func store(request: Request) throws -> ResponseConvertible
-
-    /// Show an instance.
-    func show(request: Request) throws -> ResponseConvertible
-
-    /// Update an instance.
-    func update(request: Request) throws -> ResponseConvertible
-
-    /// Delete an instance.
-    func destroy(request: Request) throws -> ResponseConvertible
+public protocol Controller: class {
+    var request: Request { get }
+    init(request: Request) throws
 }
