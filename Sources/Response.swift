@@ -1,27 +1,15 @@
 import Foundation
 
-public protocol ResponseWriter {
-    func write(data: [UInt8])
-}
-
 /**
     Responses that redirect to a supplied URL.
  */
 public class Redirect: Response {
 
     ///The URL string for redirect
-    var redirectLocation: String
-
-    /**
-        Redirect headers return normal `Response` headers
-        while adding `Location`.
-
-        - returns: Dictionary of headers
-     */
-    public override var headers: [String: String] {
-        var headers = super.headers
-        headers["Location"] = self.redirectLocation
-        return headers
+    var redirectLocation: String {
+        didSet {
+            headers["Location"] = redirectLocation
+        }
     }
 
     /**
@@ -35,6 +23,7 @@ public class Redirect: Response {
     public init(to redirectLocation: String) {
         self.redirectLocation = redirectLocation
         super.init(status: .MovedPermanently, data: [], contentType: .None)
+        headers["Location"] = redirectLocation
     }
 }
 
@@ -62,23 +51,25 @@ public class AsyncResponse: Response {
     code and headers.
  */
 public class Response {
-
-    public enum SerializationError: ErrorType {
-        case InvalidObject
-        case NotSupported
+    
+    // MARK: Types
+    
+    /**
+     The content type of the response
+     
+     - Text: text content type
+     - Html: html content type
+     - Json: json content type
+     - None: no content type
+     - Other: non-explicit content type
+     */
+    public enum ContentType {
+        case Text, Html, Json, None, Other(String)
     }
-
-    typealias WriteClosure = (ResponseWriter) throws -> Void
-
-    public let status: Status
-    public let data: [UInt8]
-    let contentType: ContentType
-    public var cookies: [String: String] = [:]
-
-    enum ContentType {
-        case Text, Html, Json, None
-    }
-
+    
+    /**
+     Http status representing the response
+     */
     public enum Status {
         case OK, Created, Accepted
         case MovedPermanently
@@ -86,137 +77,188 @@ public class Response {
         case Error
         case Unknown
         case Custom(Int)
-
+        
         public var code: Int {
             switch self {
-                case .OK: return 200
-                case .Created: return 201
-                case .Accepted: return 202
-
-                case .MovedPermanently: return 301
-
-                case .BadRequest: return 400
-                case .Unauthorized: return 401
-                case .Forbidden: return 403
-                case .NotFound: return 404
-
-                case .Error: return 500 
-
-                case .Unknown: return 0
-                case .Custom(let code):
-                    return code
+            case .OK: return 200
+            case .Created: return 201
+            case .Accepted: return 202
+                
+            case .MovedPermanently: return 301
+                
+            case .BadRequest: return 400
+            case .Unauthorized: return 401
+            case .Forbidden: return 403
+            case .NotFound: return 404
+                
+            case .Error: return 500
+                
+            case .Unknown: return 0
+            case .Custom(let code):
+                return code
             }
         }
     }
+    
+    // MARK: Member Variables
 
-    public var reasonPhrase: String {
-        switch self.status {
-        case .OK:
-            return "OK"
-        case .Created: 
-            return "Created"
-        case .Accepted: 
-            return "Accepted"
-
-        case .MovedPermanently: 
-            return "Moved Permanently"
-
-        case .BadRequest: 
-            return "Bad Request"
-        case .Unauthorized: 
-            return "Unauthorized"
-        case .Forbidden: 
-            return "Forbidden"
-        case .NotFound: 
-            return "Not Found"
-
-        case .Error: 
-            return "Internal Server Error"
-            
-        case .Unknown:
-            return "Unknown"
-        case .Custom:
-            return "Custom"    
-        }
-    }
-
-    func content() -> (length: Int, writeClosure: WriteClosure?) {
-        return (self.data.count, { writer in
-            writer.write(self.data) 
-        })
-    }
-
-    public var headers: [String: String] {
-        var headers = ["Server" : "Vapor \(Application.VERSION)"]
-
-        if self.cookies.count > 0 {
-            var cookieString = ""
-            for (key, value) in self.cookies {
-                if cookieString != "" {
-                    cookieString += ";"
-                }
-
-                cookieString += "\(key)=\(value)"
+    public let status: Status
+    public let data: [UInt8]
+    public let contentType: ContentType
+    public private(set) var headers: [String : String] = [:]
+    
+    public var cookies: [String : String] = [:] {
+        didSet {
+            if cookies.isEmpty {
+                headers["Set-Cookie"] = nil
+            } else {
+                headers["Set-Cookie"] = cookies
+                    .map { key, val in return "\(key)=\(val)" }
+                    .joinWithSeparator(";")
             }
-            headers["Set-Cookie"] = cookieString
         }
-
-        switch self.contentType {
-        case .Json: 
-            headers["Content-Type"] = "application/json"
-        case .Html: 
-            headers["Content-Type"] = "text/html"
-        default:
-            break
-        }
-
-        return headers
     }
-
-    init(status: Status, data: [UInt8], contentType: ContentType) {
+    
+    // MARK: Initialization
+    
+    /**
+     Designated Initializer
+     
+     - parameter status: http status of response
+     - parameter data: the byte sequence that will be transmitted
+     - parameter contentType: the content type that the data represents
+     */
+    public init<T: SequenceType where T.Generator.Element == UInt8>(status: Status, data: T, contentType: ContentType) {
         self.status = status
-        self.data = data
+        self.data = [UInt8](data)
         self.contentType = contentType
+        switch contentType {
+        case .Json:
+            self.headers = ["Content-Type" : "application/json"]
+        case .Html:
+            self.headers = ["Content-Type" : "text/html"]
+        case let .Other(description):
+            self.headers = ["Content-Type" : description]
+        default:
+            self.headers = [:]
+        }
     }
+    
+    // MARK: Append Headers
+    
+    public final func appendHeader(key key: String, value: String) {
+        headers[key] = value
+    }
+}
 
+// MARK: - Convenience Initializers
+
+extension Response {
+    /**
+     When attempting to serialize an object of type 'Any' into Json,
+     invalid objects will throw
+     
+     - InvalidObject: the object to serialize is not a valid Json object
+     */
+    public enum SerializationError: ErrorType {
+        case InvalidObject
+    }
+    
+    /**
+     Convenience Initializer Error
+     
+     Will return 500
+     
+     - parameter error: a description of the server error
+     */
     public convenience init(error: String) {
         let text = "{\n\t\"error\": true,\n\t\"message\":\"\(error)\"\n}"
-        let data = [UInt8](text.utf8)
-        self.init(status: .Error, data: data, contentType: .Json)
+        self.init(status: .Error, data: text.utf8, contentType: .Json)
     }
-
+    
+    /**
+     Convenience Initializer - Html
+     
+     - parameter status: http status of response
+     - parameter html: the html string to be rendered as a response
+     */
     public convenience init(status: Status, html: String) {
         let serialised = "<html><meta charset=\"UTF-8\"><body>\(html)</body></html>"
-        let data = [UInt8](serialised.utf8)
-        self.init(status: status, data: data, contentType: .Html)
+        self.init(status: status, data: serialised.utf8, contentType: .Html)
     }
-
+    
+    /**
+     Convenience Initializer - Text
+     
+     - parameter status: http status
+     - parameter text: basic text response
+     */
     public convenience init(status: Status, text: String) {
-        let data = [UInt8](text.utf8)
-        self.init(status: status, data: data, contentType: .Text)
+        self.init(status: status, data: text.utf8, contentType: .Text)
     }
-
+    
+    /**
+     Convenience Initializer
+     
+     - parameter status: the http status
+     - parameter json: any value that will be attempted to be serialized as json.  Use 'Json' for more complex objects
+     
+     - throws: SerializationErro
+     */
     public convenience init(status: Status, json: Any) throws {
         let data: [UInt8]
-
+        
         if let jsonObject = json as? AnyObject {
             guard NSJSONSerialization.isValidJSONObject(jsonObject) else {
                 throw SerializationError.InvalidObject
             }
-
+            
             let json = try NSJSONSerialization.dataWithJSONObject(jsonObject, options: NSJSONWritingOptions.PrettyPrinted)
             data = Array(UnsafeBufferPointer(start: UnsafePointer<UInt8>(json.bytes), count: json.length))
         } else {
             data = []
         }
         
-
         self.init(status: status, data: data, contentType: .Json)
     }
 }
 
+extension Response: Equatable {}
 
-func ==(left: Response, right: Response) -> Bool {
+public func ==(left: Response, right: Response) -> Bool {
     return left.status.code == right.status.code
+}
+
+extension Response.Status: CustomStringConvertible {
+    public var description: String {
+        switch self {
+        case .OK:
+            return "OK"
+        case .Created:
+            return "Created"
+        case .Accepted:
+            return "Accepted"
+            
+        case .MovedPermanently:
+            return "Moved Permanently"
+            
+        case .BadRequest:
+            return "Bad Request"
+        case .Unauthorized:
+            return "Unauthorized"
+        case .Forbidden:
+            return "Forbidden"
+        case .NotFound:
+            return "Not Found"
+            
+        case .Error:
+            return "Internal Server Error"
+            
+        case .Unknown:
+            return "Unknown"
+        case .Custom(let code):
+            return "Custom \(code)"
+        }
+    }
 }
 
