@@ -6,44 +6,32 @@
 //  Copyright © 2016 Tanner Nelson. All rights reserved.
 //
 
-
+import Foundation
 
 /*
- 
-EXAMPLE
-
-let high = Subscriber(subscribesTo: "event.name", priority: 100) { data in
-    print("High Priority - \(data)")
-}
-
-let low = Subscriber(subscribesTo: "event.name") { data in
-    print("Standard Priority - \(data)")
-}
-
-let other = Subscriber(subscribesTo: "other.name") { data in
-    print("Other subscriber - \(data)")
-}
-
-Subscriber.add([low, high, other])
-
-let event = Event(tag: "event.name", data: "This is the data")
-Event.fire(event)
-
-//Prints first
-"High Priority - This is the data"
-//Prints second
-"Standard Priority - This is the data"
-
+ Enums used to identify events must implement this protocol
  */
+public protocol EventType {
+    var rawValue: String { get }
+}
 
-public struct Event<T where T: AnyObject> {
+extension EventType {
+    var identifier: String { return String(self) + self.rawValue}
+}
+
+/*
+ Event class
+ */
+public class Event<T, U where T: EventType, U: Any> {
     
-    //MARK: Static methods
-    
+    /* Fires the event and passes the event to each subscriber registered for the specific event
+     
+     - parameter event: The Event object
+     */
     public static func fire(event: Event) {
         let subscribed = Subscriber.registered
             .filter { subscriber in
-                return subscriber.tag == event.tag
+                return subscriber.type.identifier == event.type.identifier
             }
             .sort { $0.priority > $1.priority }
         
@@ -52,63 +40,84 @@ public struct Event<T where T: AnyObject> {
         }
     }
     
-    //MARK: Properties
+    let type: T
+    let data: U
     
-    let tag: String
-    let data: T
-    
-    public init(tag: String, data: T) {
-        self.tag = tag
+    /* Initializer
+     
+     - parameter type: The EventType used to identify susbcribers that should respond to this event
+     - parameter: data: Any - the data passed to subscribers
+     */
+    public required init(_ type: T, data: U) {
+        self.type = type
         self.data = data
     }
 }
 
+//MARK: Subscriber
+
+public typealias EventHandler = (Any) -> ()
+
+/*
+ Subcribers must implement this protocol
+ */
 public protocol Subscribable {
-    func handle(data: AnyObject)
+    func handle(data: Any)
+    var priority: Int { get }
+    var type: EventType { get }
 }
 
-public typealias EventHandler = (AnyObject) -> ()
-
-public class Subscriber: Equatable, Subscribable {
+/* Subscriber class - listens to events that are fired.
+ */
+public class Subscriber: Subscribable {
     
-    //MARK: Static methods
+    /*
+     Array of subscribers that are registerd in the application
+     */
+    private(set) static var registered: [Subscribable] = []
     
-    private static var registered: [Subscriber] = []
-    
-    public static func add(subscriber: Subscriber) {
+    /*
+     Registers a single subscriber
+     
+     - parameter subscriber: A subscriber
+     */
+    public static func add(subscriber: Subscribable) {
         Subscriber.registered.append(subscriber)
     }
     
-    public static func add(subscribers: [Subscriber]) {
-        Subscriber.registered += subscribers
+    /*
+     Registers an array of subscribers
+     
+    - parameter subs: An array of subscribers
+     */
+    public static func add(subs: [Subscribable]) {
+        Subscriber.registered += subs
     }
-    
-//    
-//    public static func remove(subscriber: Subscriber) {
-//        guard let index = Subscriber.registered
-//            .indexOf(subscriber) else { return }
-//        
-//        Subscriber.registered.removeAtIndex(index)
-//    }
     
     //MARK: Properties
     
-    public let tag: String
+    public let type: EventType
     public let priority: Int
     public let closure: EventHandler
     
-    public required init(subscribesTo tag: String, priority: Int = 50, closure: EventHandler) {
-        self.tag = tag
+    /*
+     Initializer
+     
+     - parameter type: The event type the subscriber should respond to
+     - parameter priority: Int that determines the order in which the event 
+          is passed to the subscriber
+     - closure: A closure that receives the event data object
+     */
+    public required init(_ type: EventType, priority: Int = 50, closure: EventHandler) {
+        self.type = type
         self.priority = priority
         self.closure = closure
     }
     
-    public func handle(data: AnyObject) {
+    /*
+     This calls the closure
+    */
+    public func handle(data: Any) {
         closure(data)
     }
 }
-
-public func ==(lhs: Subscriber, rhs: Subscriber) -> Bool {
-    return String(lhs) == String(rhs)
-}
-
