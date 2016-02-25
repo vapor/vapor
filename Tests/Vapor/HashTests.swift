@@ -8,6 +8,17 @@
 
 import Foundation
 import XCTest
+@testable import Vapor
+
+#if os(Linux)
+    extension HashTests: XCTestCaseProvider {
+        var allTests : [(String, () throws -> Void)] {
+            return [
+                ("testHash", testHash)
+            ]
+        }
+    }
+#endif
 
 class HashTests: XCTestCase {
     

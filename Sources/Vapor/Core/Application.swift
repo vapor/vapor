@@ -5,7 +5,7 @@ import Foundation
 #endif
 
 public class Application {
-	public static let VERSION = "0.2.4"
+	public static let VERSION = "0.2.5"
 
 	/**
 		The router driver is responsible
@@ -156,7 +156,8 @@ extension Application: ServerDriverDelegate {
 					return Response(status: .OK, data: array, contentType: .Text)
 				} else {
 					handler = { _ in
-						return Response(error: "Could not open file.")
+                        Log.warning("Could not open file, returning 404")
+						return Response(status: .NotFound, text: "Page not found")
 					}
 				}
 			} else {

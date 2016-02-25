@@ -369,7 +369,15 @@ extension Array: CSArrayType {
 extension CSArrayType where Generator.Element == UInt8 {
     
     func toHexString() -> String {
-        return self.lazy.reduce("") { $0 + String(format:"%02x", $1) }
+        return self.lazy.reduce("") { previous, next in
+            var converted = String(next, radix: 16)
+            
+            if converted.characters.count == 1 {
+                converted = "0" + converted
+            }
+
+            return previous + converted
+        }
     }
 }
 

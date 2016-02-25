@@ -9,14 +9,16 @@
 #- xctool clean build -project Vapor.xcodeproj -scheme Vapor
 #- xctool test -project Vapor.xcodeproj -scheme Tests
 
+os:
+  - linux
+  - osx
 language: generic
-
 sudo: required
 dist: trusty
-
+osx_image: xcode7.3
 install:
-- mkdir swift
-- curl https://swift.org/builds/development/ubuntu1404/swift-DEVELOPMENT-SNAPSHOT-2016-01-25-a/swift-DEVELOPMENT-SNAPSHOT-2016-01-25-a-ubuntu14.04.tar.gz -s | tar xz -C swift &> /dev/null
-
+  - curl -sL https://gist.github.com/kylef/5c0475ff02b7c7671d2a/raw/621ef9b29bbb852fdfd2e10ed147b321d792c1e4/swiftenv-install.sh | bash
 script:
-- env PATH=$(pwd)/swift/swift-DEVELOPMENT-SNAPSHOT-2016-01-25-a-ubuntu14.04/usr/bin:$PATH swift build
+  - . ~/.swiftenv/init
+  - swift build
+  - swift test
