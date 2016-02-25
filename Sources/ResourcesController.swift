@@ -6,7 +6,7 @@
  */
 public protocol ResourcesController {
     /// Display many instances
-	func index(request: Request) throws -> ResponseConvertible
+    func index(request: Request) throws -> ResponseConvertible
 
     /// Create a new instance.
     func store(request: Request) throws -> ResponseConvertible
