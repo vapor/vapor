@@ -125,6 +125,7 @@
 		C309FC661C7F995C00161DC7 /* RenderDriver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RenderDriver.swift; sourceTree = "<group>"; };
 		C309FC671C7F995C00161DC7 /* View.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = View.swift; sourceTree = "<group>"; };
 		C309FC691C7F995C00161DC7 /* main.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		C336FF581C7F9FC300C8F9B7 /* .swift-version */ = {isa = PBXFileReference; lastKnownFileType = text; path = ".swift-version"; sourceTree = "<group>"; };
 		C352E6811C62BB0F00E26467 /* Vapor */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Vapor; sourceTree = BUILT_PRODUCTS_DIR; };
 		C352E68F1C62BB1C00E26467 /* Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Tests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		C352E70D1C62BCC600E26467 /* vapor-logo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "vapor-logo.png"; sourceTree = "<group>"; };
@@ -308,6 +309,7 @@
 		C352E6781C62BB0F00E26467 = {
 			isa = PBXGroup;
 			children = (
+				C336FF581C7F9FC300C8F9B7 /* .swift-version */,
 				C352E7151C62BED500E26467 /* .gitignore */,
 				C304C8A01C62C3F400058C92 /* .travis.yml */,
 				C352E7141C62BE6900E26467 /* Package.swift */,
