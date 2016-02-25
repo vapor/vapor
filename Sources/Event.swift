@@ -6,7 +6,39 @@
 //  Copyright © 2016 Tanner Nelson. All rights reserved.
 //
 
-public class Event<T where T: AnyObject> {
+
+
+/*
+ 
+EXAMPLE
+
+let high = Subscriber(subscribesTo: "event.name", priority: 100) { data in
+    print("High Priority - \(data)")
+}
+
+let low = Subscriber(subscribesTo: "event.name") { data in
+    print("Standard Priority - \(data)")
+}
+
+let other = Subscriber(subscribesTo: "other.name") { data in
+    print("Other subscriber - \(data)")
+}
+
+Subscriber.add([low, high, other])
+
+let event = Event(tag: "event.name", data: "This is the data")
+Event.fire(event)
+
+//Prints first
+"High Priority - This is the data"
+//Prints second
+"Standard Priority - This is the data"
+
+ */
+
+public struct Event<T where T: AnyObject> {
+    
+    //MARK: Static methods
     
     public static func fire(event: Event) {
         let subscribed = Subscriber.registered
@@ -20,27 +52,52 @@ public class Event<T where T: AnyObject> {
         }
     }
     
+    //MARK: Properties
+    
     let tag: String
     let data: T
     
-    public required init(tag: String, data: T) {
+    public init(tag: String, data: T) {
         self.tag = tag
         self.data = data
     }
 }
 
+public protocol Subscribable {
+    func handle(data: AnyObject)
+}
 
-public class Subscriber {
+public typealias EventHandler = (AnyObject) -> ()
+
+public class Subscriber: Equatable, Subscribable {
     
-    public typealias EventHandler = (AnyObject) -> ()
+    //MARK: Static methods
     
-    public static var registered: [Subscriber] = []
+    private static var registered: [Subscriber] = []
+    
+    public static func add(subscriber: Subscriber) {
+        Subscriber.registered.append(subscriber)
+    }
+    
+    public static func add(subscribers: [Subscriber]) {
+        Subscriber.registered += subscribers
+    }
+    
+//    
+//    public static func remove(subscriber: Subscriber) {
+//        guard let index = Subscriber.registered
+//            .indexOf(subscriber) else { return }
+//        
+//        Subscriber.registered.removeAtIndex(index)
+//    }
+    
+    //MARK: Properties
     
     public let tag: String
     public let priority: Int
     public let closure: EventHandler
     
-    public required init(subscribesTo tag: String, priority: Int, closure: EventHandler) {
+    public required init(subscribesTo tag: String, priority: Int = 50, closure: EventHandler) {
         self.tag = tag
         self.priority = priority
         self.closure = closure
@@ -50,3 +107,8 @@ public class Subscriber {
         closure(data)
     }
 }
+
+public func ==(lhs: Subscriber, rhs: Subscriber) -> Bool {
+    return String(lhs) == String(rhs)
+}
+
