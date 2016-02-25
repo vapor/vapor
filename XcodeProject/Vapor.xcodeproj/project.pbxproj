@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		3492B2EF1C787DD600D8E588 /* RouteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3492B2EE1C787DD600D8E588 /* RouteTests.swift */; };
 		34CC59561C7BE3C9007CA680 /* LogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34CC59551C7BE3C9007CA680 /* LogTests.swift */; };
-		3A91D3C61C7F699700EA3CA0 /* RequestData+Test.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A91D3C51C7F699700EA3CA0 /* RequestData+Test.swift */; };
 		3A91D3CF1C7F6AF900EA3CA0 /* Vapor.h in Headers */ = {isa = PBXBuildFile; fileRef = 3A91D3CE1C7F6AF900EA3CA0 /* Vapor.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		3A91D3D71C7F6B6600EA3CA0 /* Application.swift in Sources */ = {isa = PBXBuildFile; fileRef = 288CFC2D1C7AC01A00E4617A /* Application.swift */; };
 		3A91D3D81C7F6B6600EA3CA0 /* Route.swift in Sources */ = {isa = PBXBuildFile; fileRef = C364C5001C7EB579009F65DD /* Route.swift */; };
@@ -47,7 +46,6 @@
 		3AEEF41A1C7F6D1B0099CBAE /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = C352E6931C62BB1C00E26467 /* Info.plist */; };
 		3AEEF41D1C7F6D4A0099CBAE /* Vapor.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3A91D3CC1C7F6AF900EA3CA0 /* Vapor.framework */; };
 		3AEEF4531C7F72C30099CBAE /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AEEF4181C7F6CBF0099CBAE /* main.swift */; };
-		3AEEF4541C7F732F0099CBAE /* Vapor.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 3AEEF4441C7F70D40099CBAE /* Vapor.a */; };
 		C3433FD41C7D119D009F0876 /* HashTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3433FD21C7D119D009F0876 /* HashTests.swift */; };
 		C38808641C62C0390067DADD /* ResponseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C38808631C62C0390067DADD /* ResponseTests.swift */; };
 		C3943DC31C7663E80014F4EE /* RouterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3943DC21C7663E80014F4EE /* RouterTests.swift */; };
@@ -77,55 +75,53 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		288CFC2D1C7AC01A00E4617A /* Application.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Application.swift; path = ../Sources/Vapor/Application.swift; sourceTree = SOURCE_ROOT; };
-		288CFC301C7AC02A00E4617A /* Provider.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Provider.swift; path = ../Sources/Vapor/Provider.swift; sourceTree = SOURCE_ROOT; };
+		288CFC2D1C7AC01A00E4617A /* Application.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Application.swift; path = ../Sources/Vapor/Core/Application.swift; sourceTree = SOURCE_ROOT; };
+		288CFC301C7AC02A00E4617A /* Provider.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Provider.swift; path = ../Sources/Vapor/Core/Provider.swift; sourceTree = SOURCE_ROOT; };
 		3492B2EE1C787DD600D8E588 /* RouteTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RouteTests.swift; path = ../Tests/Vapor/RouteTests.swift; sourceTree = SOURCE_ROOT; };
 		34CC59551C7BE3C9007CA680 /* LogTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = LogTests.swift; path = ../Tests/Vapor/LogTests.swift; sourceTree = SOURCE_ROOT; };
-		34CC59571C7BE405007CA680 /* Log.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Log.swift; path = ../Sources/Vapor/Log.swift; sourceTree = SOURCE_ROOT; };
-		34CC59611C7C5A03007CA680 /* LogDriver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = LogDriver.swift; path = ../Sources/Vapor/LogDriver.swift; sourceTree = SOURCE_ROOT; };
-		3A91D3C51C7F699700EA3CA0 /* RequestData+Test.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "RequestData+Test.swift"; path = "../Tests/Vapor/RequestData+Test.swift"; sourceTree = SOURCE_ROOT; };
+		34CC59571C7BE405007CA680 /* Log.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Log.swift; path = ../Sources/Vapor/Log/Log.swift; sourceTree = SOURCE_ROOT; };
+		34CC59611C7C5A03007CA680 /* LogDriver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = LogDriver.swift; path = ../Sources/Vapor/Log/LogDriver.swift; sourceTree = SOURCE_ROOT; };
 		3A91D3CC1C7F6AF900EA3CA0 /* Vapor.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Vapor.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		3A91D3CE1C7F6AF900EA3CA0 /* Vapor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Vapor.h; sourceTree = "<group>"; };
 		3A91D3D01C7F6AF900EA3CA0 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		3AEEF4181C7F6CBF0099CBAE /* main.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = main.swift; path = ../Sources/VaporExample/main.swift; sourceTree = "<group>"; };
-		3AEEF4441C7F70D40099CBAE /* Vapor.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = Vapor.a; path = ../.build/debug/Vapor.a; sourceTree = "<group>"; };
+		3AEEF4181C7F6CBF0099CBAE /* main.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = main.swift; path = ../Sources/VaporDev/main.swift; sourceTree = SOURCE_ROOT; };
 		3AEEF44A1C7F71080099CBAE /* VaporExample */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = VaporExample; sourceTree = BUILT_PRODUCTS_DIR; };
-		802030001C77C956009B8655 /* Vapor+JSON.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "Vapor+JSON.swift"; path = "../Sources/Vapor/Vapor+JSON.swift"; sourceTree = SOURCE_ROOT; };
-		802030101C78CAC2009B8655 /* Branch.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Branch.swift; path = ../Sources/Vapor/Branch.swift; sourceTree = SOURCE_ROOT; };
-		802030161C78CAE1009B8655 /* BranchRouter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = BranchRouter.swift; path = ../Sources/Vapor/BranchRouter.swift; sourceTree = SOURCE_ROOT; };
-		802053981C7A8C7D009E26E9 /* RequestData+Target.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "RequestData+Target.swift"; path = "../Sources/Vapor/RequestData+Target.swift"; sourceTree = SOURCE_ROOT; };
-		C304C8A61C62D65200058C92 /* ServerDriver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = ServerDriver.swift; path = ../Sources/Vapor/ServerDriver.swift; sourceTree = SOURCE_ROOT; };
-		C304C8A91C62FCA300058C92 /* RequestFormExtension.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RequestFormExtension.swift; path = ../Sources/Vapor/RequestFormExtension.swift; sourceTree = SOURCE_ROOT; };
-		C304C8B41C6306B100058C92 /* RouterDriver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RouterDriver.swift; path = ../Sources/Vapor/RouterDriver.swift; sourceTree = SOURCE_ROOT; };
-		C3433FCC1C7CFB4C009F0876 /* Application+Route.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "Application+Route.swift"; path = "../Sources/Vapor/Application+Route.swift"; sourceTree = SOURCE_ROOT; };
-		C3433FCF1C7D1134009F0876 /* CryptoSwift.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = CryptoSwift.swift; path = ../Sources/Vapor/CryptoSwift.swift; sourceTree = SOURCE_ROOT; };
+		802030001C77C956009B8655 /* Vapor+JSON.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "Vapor+JSON.swift"; path = "../Sources/Vapor/JSON/Vapor+JSON.swift"; sourceTree = SOURCE_ROOT; };
+		802030101C78CAC2009B8655 /* Branch.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Branch.swift; path = ../Sources/Vapor/Router/Branch.swift; sourceTree = SOURCE_ROOT; };
+		802030161C78CAE1009B8655 /* BranchRouter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = BranchRouter.swift; path = ../Sources/Vapor/Router/BranchRouter.swift; sourceTree = SOURCE_ROOT; };
+		802053981C7A8C7D009E26E9 /* RequestData+Target.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "RequestData+Target.swift"; path = "../Sources/Vapor/Request/RequestData+Target.swift"; sourceTree = SOURCE_ROOT; };
+		C304C8A61C62D65200058C92 /* ServerDriver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = ServerDriver.swift; path = ../Sources/Vapor/Server/ServerDriver.swift; sourceTree = SOURCE_ROOT; };
+		C304C8A91C62FCA300058C92 /* RequestFormExtension.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RequestFormExtension.swift; path = ../Sources/Vapor/Request/RequestFormExtension.swift; sourceTree = SOURCE_ROOT; };
+		C304C8B41C6306B100058C92 /* RouterDriver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RouterDriver.swift; path = ../Sources/Vapor/Router/RouterDriver.swift; sourceTree = SOURCE_ROOT; };
+		C3433FCC1C7CFB4C009F0876 /* Application+Route.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "Application+Route.swift"; path = "../Sources/Vapor/Routing/Application+Route.swift"; sourceTree = SOURCE_ROOT; };
+		C3433FCF1C7D1134009F0876 /* CryptoSwift.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = CryptoSwift.swift; path = ../Sources/Vapor/Hash/CryptoSwift.swift; sourceTree = SOURCE_ROOT; };
 		C3433FD21C7D119D009F0876 /* HashTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = HashTests.swift; path = ../Tests/Vapor/HashTests.swift; sourceTree = SOURCE_ROOT; };
-		C3433FD51C7D1203009F0876 /* SHA256Hasher.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SHA256Hasher.swift; path = ../Sources/Vapor/SHA256Hasher.swift; sourceTree = SOURCE_ROOT; };
+		C3433FD51C7D1203009F0876 /* SHA256Hasher.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SHA256Hasher.swift; path = ../Sources/Vapor/Hash/SHA256Hasher.swift; sourceTree = SOURCE_ROOT; };
 		C352E68F1C62BB1C00E26467 /* Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Tests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		C352E6931C62BB1C00E26467 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = Info.plist; path = Tests/Info.plist; sourceTree = SOURCE_ROOT; };
-		C352E6D31C62BC6A00E26467 /* Controller.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Controller.swift; path = ../Sources/Vapor/Controller.swift; sourceTree = SOURCE_ROOT; };
-		C352E6D41C62BC6A00E26467 /* JSONSerializer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = JSONSerializer.swift; path = ../Sources/Vapor/JSONSerializer.swift; sourceTree = SOURCE_ROOT; };
-		C352E6D51C62BC6A00E26467 /* LinuxFixes.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = LinuxFixes.swift; path = ../Sources/Vapor/LinuxFixes.swift; sourceTree = SOURCE_ROOT; };
-		C352E6D71C62BC6A00E26467 /* MemorySessionDriver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = MemorySessionDriver.swift; path = ../Sources/Vapor/MemorySessionDriver.swift; sourceTree = SOURCE_ROOT; };
-		C352E6D81C62BC6A00E26467 /* SocketParser.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SocketParser.swift; path = ../Sources/Vapor/SocketParser.swift; sourceTree = SOURCE_ROOT; };
-		C352E6D91C62BC6A00E26467 /* Request.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Request.swift; path = ../Sources/Vapor/Request.swift; sourceTree = SOURCE_ROOT; };
-		C352E6DA1C62BC6A00E26467 /* Response.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Response.swift; path = ../Sources/Vapor/Response.swift; sourceTree = SOURCE_ROOT; };
-		C352E6DB1C62BC6A00E26467 /* ResponseConvertible.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = ResponseConvertible.swift; path = ../Sources/Vapor/ResponseConvertible.swift; sourceTree = SOURCE_ROOT; };
-		C352E6DF1C62BC6A00E26467 /* Session.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Session.swift; path = ../Sources/Vapor/Session.swift; sourceTree = SOURCE_ROOT; };
-		C352E6E01C62BC6A00E26467 /* Socket.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Socket.swift; path = ../Sources/Vapor/Socket.swift; sourceTree = SOURCE_ROOT; };
-		C352E6E11C62BC6A00E26467 /* SocketServer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SocketServer.swift; path = ../Sources/Vapor/SocketServer.swift; sourceTree = SOURCE_ROOT; };
-		C352E6E21C62BC6A00E26467 /* StringExtensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = StringExtensions.swift; path = ../Sources/Vapor/StringExtensions.swift; sourceTree = SOURCE_ROOT; };
-		C352E6E41C62BC6A00E26467 /* View.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = View.swift; path = ../Sources/Vapor/View.swift; sourceTree = SOURCE_ROOT; };
+		C352E6D31C62BC6A00E26467 /* Controller.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Controller.swift; path = ../Sources/Vapor/Routing/Controller.swift; sourceTree = SOURCE_ROOT; };
+		C352E6D41C62BC6A00E26467 /* JSONSerializer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = JSONSerializer.swift; path = ../Sources/Vapor/JSON/JSONSerializer.swift; sourceTree = SOURCE_ROOT; };
+		C352E6D51C62BC6A00E26467 /* LinuxFixes.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = LinuxFixes.swift; path = ../Sources/Vapor/Fixes/LinuxFixes.swift; sourceTree = SOURCE_ROOT; };
+		C352E6D71C62BC6A00E26467 /* MemorySessionDriver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = MemorySessionDriver.swift; path = ../Sources/Vapor/Session/MemorySessionDriver.swift; sourceTree = SOURCE_ROOT; };
+		C352E6D81C62BC6A00E26467 /* SocketParser.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SocketParser.swift; path = ../Sources/Vapor/Server/SocketParser.swift; sourceTree = SOURCE_ROOT; };
+		C352E6D91C62BC6A00E26467 /* Request.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Request.swift; path = ../Sources/Vapor/Request/Request.swift; sourceTree = SOURCE_ROOT; };
+		C352E6DA1C62BC6A00E26467 /* Response.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Response.swift; path = ../Sources/Vapor/Response/Response.swift; sourceTree = SOURCE_ROOT; };
+		C352E6DB1C62BC6A00E26467 /* ResponseConvertible.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = ResponseConvertible.swift; path = ../Sources/Vapor/Response/ResponseConvertible.swift; sourceTree = SOURCE_ROOT; };
+		C352E6DF1C62BC6A00E26467 /* Session.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Session.swift; path = ../Sources/Vapor/Session/Session.swift; sourceTree = SOURCE_ROOT; };
+		C352E6E01C62BC6A00E26467 /* Socket.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Socket.swift; path = ../Sources/Vapor/Server/Socket.swift; sourceTree = SOURCE_ROOT; };
+		C352E6E11C62BC6A00E26467 /* SocketServer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SocketServer.swift; path = ../Sources/Vapor/Server/SocketServer.swift; sourceTree = SOURCE_ROOT; };
+		C352E6E21C62BC6A00E26467 /* StringExtensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = StringExtensions.swift; path = ../Sources/Vapor/Fixes/StringExtensions.swift; sourceTree = SOURCE_ROOT; };
+		C352E6E41C62BC6A00E26467 /* View.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = View.swift; path = ../Sources/Vapor/View/View.swift; sourceTree = SOURCE_ROOT; };
 		C352E7131C62BDE200E26467 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = ../README.md; sourceTree = SOURCE_ROOT; };
 		C352E7141C62BE6900E26467 /* Package.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Package.swift; path = ../Package.swift; sourceTree = SOURCE_ROOT; };
-		C364C5001C7EB579009F65DD /* Route.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Route.swift; path = ../Sources/Vapor/Route.swift; sourceTree = SOURCE_ROOT; };
-		C377F2EE1C696CAB00DABD21 /* RenderDriver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RenderDriver.swift; path = ../Sources/Vapor/RenderDriver.swift; sourceTree = SOURCE_ROOT; };
+		C364C5001C7EB579009F65DD /* Route.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Route.swift; path = ../Sources/Vapor/Routing/Route.swift; sourceTree = SOURCE_ROOT; };
+		C377F2EE1C696CAB00DABD21 /* RenderDriver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RenderDriver.swift; path = ../Sources/Vapor/View/RenderDriver.swift; sourceTree = SOURCE_ROOT; };
 		C38808631C62C0390067DADD /* ResponseTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = ResponseTests.swift; path = ../Tests/Vapor/ResponseTests.swift; sourceTree = SOURCE_ROOT; };
 		C3943DC21C7663E80014F4EE /* RouterTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RouterTests.swift; path = ../Tests/Vapor/RouterTests.swift; sourceTree = SOURCE_ROOT; };
-		C3EDEA7A1C683A6C00754727 /* Middleware.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Middleware.swift; path = ../Sources/Vapor/Middleware.swift; sourceTree = SOURCE_ROOT; };
-		C3EDEA7C1C683CE100754727 /* SessionMiddleware.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SessionMiddleware.swift; path = ../Sources/Vapor/SessionMiddleware.swift; sourceTree = SOURCE_ROOT; };
-		C3EDEA831C6842C700754727 /* Int+Random.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "Int+Random.swift"; path = "../Sources/Vapor/Int+Random.swift"; sourceTree = SOURCE_ROOT; };
-		C3EDEA861C68459300754727 /* Hash.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Hash.swift; path = ../Sources/Vapor/Hash.swift; sourceTree = SOURCE_ROOT; };
+		C3EDEA7A1C683A6C00754727 /* Middleware.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Middleware.swift; path = ../Sources/Vapor/Middleware/Middleware.swift; sourceTree = SOURCE_ROOT; };
+		C3EDEA7C1C683CE100754727 /* SessionMiddleware.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SessionMiddleware.swift; path = ../Sources/Vapor/Session/SessionMiddleware.swift; sourceTree = SOURCE_ROOT; };
+		C3EDEA831C6842C700754727 /* Int+Random.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "Int+Random.swift"; path = "../Sources/Vapor/Hash/Int+Random.swift"; sourceTree = SOURCE_ROOT; };
+		C3EDEA861C68459300754727 /* Hash.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Hash.swift; path = ../Sources/Vapor/Hash/Hash.swift; sourceTree = SOURCE_ROOT; };
 		C3F683351C7D1EF300033AA2 /* ControllerTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = ControllerTests.swift; path = ../Tests/Vapor/ControllerTests.swift; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
@@ -141,7 +137,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				3AEEF4541C7F732F0099CBAE /* Vapor.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -209,7 +204,6 @@
 		3AEEF4511C7F71110099CBAE /* Dependencies */ = {
 			isa = PBXGroup;
 			children = (
-				3AEEF4441C7F70D40099CBAE /* Vapor.a */,
 			);
 			name = Dependencies;
 			sourceTree = "<group>";
@@ -334,7 +328,6 @@
 			isa = PBXGroup;
 			children = (
 				C352E6931C62BB1C00E26467 /* Info.plist */,
-				3A91D3C51C7F699700EA3CA0 /* RequestData+Test.swift */,
 				C3F683351C7D1EF300033AA2 /* ControllerTests.swift */,
 				C3433FD21C7D119D009F0876 /* HashTests.swift */,
 				34CC59551C7BE3C9007CA680 /* LogTests.swift */,
@@ -594,7 +587,6 @@
 				34CC59561C7BE3C9007CA680 /* LogTests.swift in Sources */,
 				C3943DC31C7663E80014F4EE /* RouterTests.swift in Sources */,
 				C3433FD41C7D119D009F0876 /* HashTests.swift in Sources */,
-				3A91D3C61C7F699700EA3CA0 /* RequestData+Test.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -796,6 +788,7 @@
 				3AEEF4501C7F71080099CBAE /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		C352E67C1C62BB0F00E26467 /* Build configuration list for PBXProject "Vapor" */ = {
 			isa = XCConfigurationList;
