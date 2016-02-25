@@ -35,8 +35,10 @@ public class Event<T, U where T: EventType, U: Any> {
             }
             .sort { $0.priority > $1.priority }
         
-        subscribed.forEach { subscriber in
-            subscriber.handle(event.data)
+        for subscriber in subscribed {
+            if !subscriber.handle(event.data) {
+                break
+            }
         }
     }
     
@@ -46,7 +48,7 @@ public class Event<T, U where T: EventType, U: Any> {
     /* Initializer
      
      - parameter type: The EventType used to identify susbcribers that should respond to this event
-     - parameter: data: Any - the data passed to subscribers
+     - parameter: data: Any - the data passed to subscribers to respond to
      */
     public required init(_ type: T, data: U) {
         self.type = type
@@ -56,13 +58,14 @@ public class Event<T, U where T: EventType, U: Any> {
 
 //MARK: Subscriber
 
-public typealias EventHandler = (Any) -> ()
+public typealias Continue = Bool
+public typealias EventHandler = (Any) -> (Continue)
 
 /*
  Subcribers must implement this protocol
  */
 public protocol Subscribable {
-    func handle(data: Any)
+    func handle(data: Any) -> Continue
     var priority: Int { get }
     var type: EventType { get }
 }
@@ -117,7 +120,7 @@ public class Subscriber: Subscribable {
     /*
      This calls the closure
     */
-    public func handle(data: Any) {
-        closure(data)
+    public func handle(data: Any) -> Continue {
+        return closure(data)
     }
 }
