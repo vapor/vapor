@@ -173,7 +173,13 @@ extension Application: ServerDriverDelegate {
 		}
 
         do {
-            return try handler(request: request)
+            let response = try handler(request: request)
+
+            if response.headers["Content-Type"] == nil {
+            	Log.warning("Response had no 'Content-Type' header.")
+            }
+
+            return response
         } catch {
             return Response(error: "Server Error: \(error)")
         }
