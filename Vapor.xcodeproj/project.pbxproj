@@ -17,6 +17,8 @@
 		34CC595B1C7BE405007CA680 /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34CC59571C7BE405007CA680 /* Log.swift */; };
 		34CC59621C7C5A03007CA680 /* LogDriver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34CC59611C7C5A03007CA680 /* LogDriver.swift */; };
 		34CC59631C7C5A1B007CA680 /* LogDriver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34CC59611C7C5A03007CA680 /* LogDriver.swift */; };
+		34CC59661C7DC8B9007CA680 /* Event.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34CC59651C7DC8B9007CA680 /* Event.swift */; };
+		34CC59671C7DCAE3007CA680 /* Event.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34CC59651C7DC8B9007CA680 /* Event.swift */; };
 		802030011C77C956009B8655 /* Vapor+JSON.swift in Sources */ = {isa = PBXBuildFile; fileRef = 802030001C77C956009B8655 /* Vapor+JSON.swift */; };
 		802030121C78CAC2009B8655 /* Branch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 802030101C78CAC2009B8655 /* Branch.swift */; };
 		802030131C78CAC2009B8655 /* Branch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 802030101C78CAC2009B8655 /* Branch.swift */; };
@@ -98,6 +100,7 @@
 		34CC59551C7BE3C9007CA680 /* LogTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LogTests.swift; sourceTree = "<group>"; };
 		34CC59571C7BE405007CA680 /* Log.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Log.swift; sourceTree = "<group>"; };
 		34CC59611C7C5A03007CA680 /* LogDriver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LogDriver.swift; sourceTree = "<group>"; };
+		34CC59651C7DC8B9007CA680 /* Event.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Event.swift; sourceTree = "<group>"; };
 		802030001C77C956009B8655 /* Vapor+JSON.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Vapor+JSON.swift"; sourceTree = "<group>"; };
 		802030101C78CAC2009B8655 /* Branch.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Branch.swift; sourceTree = "<group>"; };
 		802030161C78CAE1009B8655 /* BranchRouter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BranchRouter.swift; sourceTree = "<group>"; };
@@ -177,6 +180,14 @@
 				34CC59611C7C5A03007CA680 /* LogDriver.swift */,
 			);
 			name = Log;
+			sourceTree = "<group>";
+		};
+		34CC59641C7DC8AA007CA680 /* Event */ = {
+			isa = PBXGroup;
+			children = (
+				34CC59651C7DC8B9007CA680 /* Event.swift */,
+			);
+			name = Event;
 			sourceTree = "<group>";
 		};
 		80202FFF1C77C94C009B8655 /* JSON */ = {
@@ -305,6 +316,7 @@
 		C352E6D11C62BC6A00E26467 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
+				34CC59641C7DC8AA007CA680 /* Event */,
 				C393E0F31C7CF9A6009F0543 /* main.swift */,
 				288CFC2D1C7AC01A00E4617A /* Application.swift */,
 				C3433FCB1C7CFB39009F0876 /* Routing */,
@@ -482,6 +494,7 @@
 				C352E6F31C62BC6A00E26467 /* Request.swift in Sources */,
 				802053991C7A8C7D009E26E9 /* RequestData+Target.swift in Sources */,
 				C304C8B51C6306B100058C92 /* RouterDriver.swift in Sources */,
+				34CC59661C7DC8B9007CA680 /* Event.swift in Sources */,
 				C3433FD01C7D1134009F0876 /* CryptoSwift.swift in Sources */,
 				C3EDEA871C68459300754727 /* Hash.swift in Sources */,
 				C352E7091C62BC6A00E26467 /* View.swift in Sources */,
@@ -520,6 +533,7 @@
 				C352E6EC1C62BC6A00E26467 /* LinuxFixes.swift in Sources */,
 				C3433FD11C7D1134009F0876 /* CryptoSwift.swift in Sources */,
 				C38808641C62C0390067DADD /* ResponseTests.swift in Sources */,
+				34CC59671C7DCAE3007CA680 /* Event.swift in Sources */,
 				C352E6F81C62BC6A00E26467 /* ResponseConvertible.swift in Sources */,
 				34CC595B1C7BE405007CA680 /* Log.swift in Sources */,
 				C352E6F01C62BC6A00E26467 /* MemorySessionDriver.swift in Sources */,
