@@ -77,36 +77,33 @@ extension Application {
     }
     
     public final func add(method: Request.Method, path: String, handler: Route.Handler) {
-        
-        //Convert Route.Handler to Request.Handler
-        var handler = { request in
+        // Convert Route.Handler to Request.Handler
+        let handler = { request in
             return try handler(request).response()
         }
-        
-        //Apply any scoped middlewares
-        for middleware in Route.scopedMiddleware {
-            handler = middleware.handle(handler)
-        }
-        
-        //Store the route for registering with Router later
-        let host = Route.scopedHost ?? "*"
-        let route = Route(host: host, method: method, path: path, handler: handler)
-        self.routes.append(route)
+
+        add(method, path: path, routeHandler: handler)
     }
 
     public final func add<ActionController: Controller>(method: Request.Method, path: String, action: (ActionController) -> () throws -> ResponseConvertible) {
-
-        //Convert Action to Request.Handler
-        var handler = { request in
+        // Convert Action to Request.Handler
+        let handler = { request in
             return try action(try ActionController(request: request))().response()
         }
 
-        //Apply any scoped middlewares
+        add(method, path: path, routeHandler: handler)
+    }
+
+    private func add(method: Request.Method, path: String, routeHandler: Request.Handler) {
+        // Make handler writable
+        var handler = routeHandler
+
+        // Apply any scoped middlewares
         for middleware in Route.scopedMiddleware {
             handler = middleware.handle(handler)
         }
 
-        //Store the route for registering with Router later
+        // Store the route for registering with Router later
         let host = Route.scopedHost ?? "*"
         let route = Route(host: host, method: method, path: path, handler: handler)
         self.routes.append(route)
