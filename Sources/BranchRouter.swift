@@ -33,23 +33,24 @@ public final class BranchRouter: RouterDriver {
     
     // MARK: Registration
     
-    public final func register(hostname hostname: String?, method: Request.Method, path: String, handler: Request.Handler) {
-        let generator = path.pathComponentGenerator()
+    public final func register(route: Route) {
+        let generator = route.path.pathComponentGenerator()
         
-        let host = hostname ?? "*"
         
         //get the current root for the host, or create one if none
-        var root = self.tree[host] ?? [:]
+        let host = route.hostname
+        var base = self.tree[host] ?? [:]
         
         //look for a branch for the method, or create one if none
-        let branch = root[method] ?? Branch(name: "")
+        let method = route.method
+        let branch = base[method] ?? Branch(name: "")
         
         //extend the branch
-        branch.extendBranch(generator, handler: handler)
+        branch.extendBranch(generator, handler: route.handler)
         
         //assign the branch and root to the tree
-        root[method] = branch
-        self.tree[host] = root
+        base[method] = branch
+        self.tree[host] = base
     }
 }
 

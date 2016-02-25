@@ -16,9 +16,10 @@ class RouterTests: XCTestCase {
         let compare = "Hello Text Data Processing Test"
         let data = [UInt8](compare.utf8)
         
-        router.register(hostname: "other.test", method: .Get, path: "test") { request in
+        let route = Route.init(host: "other.test", method: .Get, path: "test") { request in
             return Response(status: .OK, data: data, contentType: .Text)
         }
+        router.register(route)
         
         let request = Request(
             method: .Get,
@@ -46,13 +47,15 @@ class RouterTests: XCTestCase {
         let data_1 = [UInt8]("1".utf8)
         let data_2 = [UInt8]("2".utf8)
         
-        router.register(hostname: nil, method: .Get, path: "test") { request in
+        let route_1 = Route.init(method: .Get, path: "test") { request in
             return Response(status: .OK, data: data_1, contentType: .Text)
         }
+        router.register(route_1)
         
-        router.register(hostname: "vapor.test", method: .Get, path: "test") { request in
+        let route_2 = Route.init(host: "vapor.test", method: .Get, path: "test") { request in
             return Response(status: .OK, data: data_2, contentType: .Text)
         }
+        router.register(route_2)
         
         let request_1 = Request(method: .Get, path: "test", address: nil, headers: ["host": "other.test"], body: [])
         let request_2 = Request(method: .Get, path: "test", address: nil, headers: ["host": "vapor.test"], body: [])
@@ -81,7 +84,7 @@ class RouterTests: XCTestCase {
         
         var handlerRan = false
         
-        router.register(hostname: nil, method: .Get, path: "test/:string") { request in
+        let route = Route(method: .Get, path: "test/:string") { request in
             
             let testParameter = request.parameters["string"]
             
@@ -91,6 +94,7 @@ class RouterTests: XCTestCase {
             
             return Response(status: .OK, data: [], contentType: .None)
         }
+        router.register(route)
         
         let request = Request(method: .Get, path: "test/\(percentEncodedString)", address: nil, headers: [:], body: [])
         let handler = router.route(request)

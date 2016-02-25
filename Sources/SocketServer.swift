@@ -133,7 +133,7 @@ public class SocketServer: ServerDriver {
         if let response = response as? AsyncResponse {
             try response.writer(socket)
         } else {
-            try socket.writeUTF8("HTTP/1.1 \(response.status.code) \(response.reasonPhrase)\r\n")
+            try socket.writeUTF8("HTTP/1.1 \(response.status.code) \(response.status)\r\n")
 
             var headers = response.headers
 

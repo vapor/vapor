@@ -5,7 +5,7 @@ import Foundation
 #endif
 
 public class Application {
-	public static let VERSION = "0.2.3"
+	public static let VERSION = "0.2.4"
 
 	/**
 		The router driver is responsible
@@ -75,9 +75,7 @@ public class Application {
     }
     
     func bootRoutes() {
-        for route in self.routes {
-            self.router.register(hostname: route.hostname, method: route.method, path: route.path, handler: route.handler)
-        }
+        routes.forEach(router.register)
     }
 
 
@@ -175,7 +173,13 @@ extension Application: ServerDriverDelegate {
 		}
 
         do {
-            return try handler(request: request)
+            let response = try handler(request: request)
+
+            if response.headers["Content-Type"] == nil {
+            	Log.warning("Response had no 'Content-Type' header.")
+            }
+
+            return response
         } catch {
             return Response(error: "Server Error: \(error)")
         }
