@@ -14,8 +14,7 @@ import XCTest
     extension HashTests: XCTestCaseProvider {
         var allTests : [(String, () throws -> Void)] {
             return [
-                // ("testHash", testHash)
-                //Reinstate once CryptoSwift works properly on linux
+                ("testHash", testHash)
             ]
         }
     }
