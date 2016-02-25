@@ -7,6 +7,7 @@
 //
 
 import Foundation
+@testable import Vapor
 
 extension Request {
     public struct Data {

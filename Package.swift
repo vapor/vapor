@@ -2,5 +2,17 @@ import PackageDescription
 
 let package = Package(
     name: "Vapor",
-    dependencies: []
+    exclude: [],
+    targets: [
+        Target(
+            name: "Vapor",
+            dependencies: []
+        ),
+        Target(
+            name: "VaporExample",
+            dependencies: [
+                .Target(name: "Vapor")
+            ]
+        )
+    ]
 )

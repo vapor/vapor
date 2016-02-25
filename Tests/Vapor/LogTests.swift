@@ -7,7 +7,28 @@
 //
 
 import XCTest
-//@testable import Vapor
+@testable import Vapor
+
+#if os(Linux)
+    extension LogTests: XCTestCaseProvider {
+        var allTests : [(String, () throws -> Void)] {
+            return [
+                ("testCanOverrideDefaultLogger", testCanOverrideDefaultLogger),
+                ("testAllLevelsEnabledByDefault", testAllLevelsEnabledByDefault),
+                ("testCanOverrideDefaultEnabledLevels", testCanOverrideDefaultEnabledLevels),
+                ("testDisabledLogsDoNoOutput", testDisabledLogsDoNoOutput),
+                ("testVerboseDidLog", testVerboseDidLog),
+                ("testDebugDidLog", testDebugDidLog),
+                ("testInfoDidLog", testInfoDidLog),
+                ("testWarningDidLog", testWarningDidLog),
+                ("testErrorDidLog", testErrorDidLog),
+                ("testFatalDidLog", testFatalDidLog),
+                ("testCustomDidLog", testCustomDidLog),
+                ("testConsoleLoggerDidPrintToConsole", testConsoleLoggerDidPrintToConsole)
+            ]
+        }
+    }
+#endif
 
 class LogTests: XCTestCase {
 

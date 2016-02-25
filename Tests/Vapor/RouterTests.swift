@@ -8,6 +8,19 @@
 
 import Foundation
 import XCTest
+@testable import Vapor
+
+#if os(Linux)
+    extension RouterTests: XCTestCaseProvider {
+        var allTests : [(String, () throws -> Void)] {
+            return [
+                ("testSingleHostRouting", testSingleHostRouting),
+                ("testMultipleHostsRouting", testMultipleHostsRouting),
+                ("testURLParameterDecoding", testURLParameterDecoding)
+            ]
+        }
+    }
+#endif
 
 class RouterTests: XCTestCase {
     
