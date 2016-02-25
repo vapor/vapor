@@ -90,6 +90,13 @@ extension Application {
         
         //Store the route for registering with Router later
         let host = Route.scopedHost ?? "*"
+        
+        //Apply any scoped prefix
+        var path = path
+        if let prefix = Route.scopedPrefix {
+            path = prefix + "/" + path
+        }
+        
         let route = Route(host: host, method: method, path: path, handler: handler)
         self.routes.append(route)
     }
@@ -118,5 +125,17 @@ extension Application {
         handler()
         
         Route.scopedHost = nil
+    }
+    
+    /**
+        Create multiple routes with the same base URL
+        without repeating yourself.
+    */
+    public func group(prefix: String, handler: () -> Void) {
+        Route.scopedPrefix = prefix
+        
+        handler()
+        
+        Route.scopedPrefix = nil
     }
 }

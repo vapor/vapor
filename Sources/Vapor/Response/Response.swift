@@ -199,7 +199,7 @@ extension Response {
      - parameter html: the html string to be rendered as a response
      */
     public convenience init(status: Status, html: String) {
-        let serialised = "<html><meta charset=\"UTF-8\"><body>\(html)</body></html>"
+        let serialised = "<html><meta charset=\"UTF-8\">\(html)</html>"
         self.init(status: status, data: serialised.utf8, contentType: .Html)
     }
     
@@ -232,6 +232,10 @@ extension Response {
             let json = try NSJSONSerialization.dataWithJSONObject(jsonObject, options: NSJSONWritingOptions.PrettyPrinted)
             data = Array(UnsafeBufferPointer(start: UnsafePointer<UInt8>(json.bytes), count: json.length))
         } else {
+            Log.warning("NSJSON failure. Try wrapping with Json()")
+            #if os(Linux)
+            Log.warning("NSJSON is not yet supported on Linux.")
+            #endif
             data = []
         }
         

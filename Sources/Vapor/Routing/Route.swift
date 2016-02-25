@@ -14,6 +14,7 @@ public class Route {
     
     internal static var scopedHost: String?
     internal static var scopedMiddleware: [Middleware.Type] = []
+    internal static var scopedPrefix: String?
 
     // MARK: Attributes
     
