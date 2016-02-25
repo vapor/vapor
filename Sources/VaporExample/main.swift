@@ -1,5 +1,7 @@
-
-import Vapor
-
 let app = Application()
-app.start(port: 8000)
+
+app.get("test") { request in
+    return "123"
+}
+
+app.start(port: 8080)
