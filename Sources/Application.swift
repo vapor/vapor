@@ -75,9 +75,7 @@ public class Application {
     }
     
     func bootRoutes() {
-        for route in self.routes {
-            self.router.register(hostname: route.hostname, method: route.method, path: route.path, handler: route.handler)
-        }
+        routes.forEach(router.register)
     }
 
 

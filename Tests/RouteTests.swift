@@ -33,11 +33,11 @@ class RouteTests: XCTestCase {
         var bazFound = false
         
         for route in app.routes {
-            if route.path == "foo" && route.method == .Get && route.hostname == nil {
+            if route.path == "foo" && route.method == .Get && route.hostname == "*" {
                 fooFound = true
             }
             
-            if route.path == "bar" && route.method == .Post && route.hostname == nil {
+            if route.path == "bar" && route.method == .Post && route.hostname == "*" {
                 barFound = true
             }
             
