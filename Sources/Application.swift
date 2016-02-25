@@ -5,7 +5,7 @@ import Foundation
 #endif
 
 public class Application {
-	public static let VERSION = "0.2.3"
+	public static let VERSION = "0.2.4"
 
 	/**
 		The router driver is responsible

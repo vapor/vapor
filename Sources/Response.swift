@@ -162,6 +162,8 @@ public class Response {
         default:
             self.headers = [:]
         }
+        
+        self.headers["Server"] = "Vapor \(Application.VERSION)"
     }
 }
 
