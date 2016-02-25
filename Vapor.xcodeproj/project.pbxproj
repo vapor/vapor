@@ -81,6 +81,10 @@
 		C336FF691C7FA0AE00C8F9B7 /* RouteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C336FF611C7FA0AE00C8F9B7 /* RouteTests.swift */; };
 		C336FF6B1C7FA17400C8F9B7 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = C336FF6A1C7FA17400C8F9B7 /* main.swift */; };
 		C336FF6C1C7FA17400C8F9B7 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = C336FF6A1C7FA17400C8F9B7 /* main.swift */; };
+		C3E8B0571C7FBEE900127C1D /* Abort.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3E8B0561C7FBEE900127C1D /* Abort.swift */; };
+		C3E8B0581C7FBEE900127C1D /* Abort.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3E8B0561C7FBEE900127C1D /* Abort.swift */; };
+		C3E8B05A1C7FBFE800127C1D /* AbortMiddleware.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3E8B0591C7FBFE800127C1D /* AbortMiddleware.swift */; };
+		C3E8B05B1C7FBFE800127C1D /* AbortMiddleware.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3E8B0591C7FBFE800127C1D /* AbortMiddleware.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -97,6 +101,7 @@
 
 /* Begin PBXFileReference section */
 		C304C8A01C62C3F400058C92 /* .travis.yml */ = {isa = PBXFileReference; lastKnownFileType = text; path = .travis.yml; sourceTree = "<group>"; };
+		C309EB931C7FC53700FB2A90 /* LinuxMain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinuxMain.swift; sourceTree = "<group>"; };
 		C309FC3B1C7F995B00161DC7 /* Application.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Application.swift; sourceTree = "<group>"; };
 		C309FC3C1C7F995B00161DC7 /* Provider.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Provider.swift; sourceTree = "<group>"; };
 		C309FC3E1C7F995B00161DC7 /* LinuxFixes.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LinuxFixes.swift; sourceTree = "<group>"; };
@@ -147,6 +152,8 @@
 		C352E7131C62BDE200E26467 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		C352E7141C62BE6900E26467 /* Package.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Package.swift; sourceTree = "<group>"; };
 		C352E7151C62BED500E26467 /* .gitignore */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
+		C3E8B0561C7FBEE900127C1D /* Abort.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Abort.swift; sourceTree = "<group>"; };
+		C3E8B0591C7FBFE800127C1D /* AbortMiddleware.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AbortMiddleware.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -192,6 +199,7 @@
 			children = (
 				C309FC3B1C7F995B00161DC7 /* Application.swift */,
 				C309FC3C1C7F995B00161DC7 /* Provider.swift */,
+				C3E8B0561C7FBEE900127C1D /* Abort.swift */,
 			);
 			path = Core;
 			sourceTree = "<group>";
@@ -238,6 +246,7 @@
 			isa = PBXGroup;
 			children = (
 				C309FC4C1C7F995B00161DC7 /* Middleware.swift */,
+				C3E8B0591C7FBFE800127C1D /* AbortMiddleware.swift */,
 			);
 			path = Middleware;
 			sourceTree = "<group>";
@@ -397,6 +406,7 @@
 		C352E6901C62BB1C00E26467 /* Tests */ = {
 			isa = PBXGroup;
 			children = (
+				C309EB931C7FC53700FB2A90 /* LinuxMain.swift */,
 				C336FF5A1C7FA0AE00C8F9B7 /* Vapor */,
 			);
 			path = Tests;
@@ -499,6 +509,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C3E8B0571C7FBEE900127C1D /* Abort.swift in Sources */,
 				C309FC821C7F995C00161DC7 /* Middleware.swift in Sources */,
 				C309FC721C7F995C00161DC7 /* CryptoSwift.swift in Sources */,
 				C336FF6B1C7FA17400C8F9B7 /* main.swift in Sources */,
@@ -516,6 +527,7 @@
 				C309FC741C7F995C00161DC7 /* Hash.swift in Sources */,
 				C309FC8C1C7F995C00161DC7 /* ResponseConvertible.swift in Sources */,
 				C309FC8E1C7F995C00161DC7 /* Branch.swift in Sources */,
+				C3E8B05A1C7FBFE800127C1D /* AbortMiddleware.swift in Sources */,
 				C309FC901C7F995C00161DC7 /* BranchRouter.swift in Sources */,
 				C309FC861C7F995C00161DC7 /* RequestData+Target.swift in Sources */,
 				C309FC921C7F995C00161DC7 /* RouterDriver.swift in Sources */,
@@ -558,9 +570,11 @@
 				C309FC751C7F995C00161DC7 /* Hash.swift in Sources */,
 				C309FC8D1C7F995C00161DC7 /* ResponseConvertible.swift in Sources */,
 				C309FC8F1C7F995C00161DC7 /* Branch.swift in Sources */,
+				C3E8B05B1C7FBFE800127C1D /* AbortMiddleware.swift in Sources */,
 				C309FC911C7F995C00161DC7 /* BranchRouter.swift in Sources */,
 				C309FC871C7F995C00161DC7 /* RequestData+Target.swift in Sources */,
 				C309FC931C7F995C00161DC7 /* RouterDriver.swift in Sources */,
+				C3E8B0581C7FBEE900127C1D /* Abort.swift in Sources */,
 				C336FF681C7FA0AE00C8F9B7 /* RouterTests.swift in Sources */,
 				C336FF691C7FA0AE00C8F9B7 /* RouteTests.swift in Sources */,
 				C309FC711C7F995C00161DC7 /* StringExtensions.swift in Sources */,
