@@ -73,8 +73,14 @@
 		C309FCA91C7F995C00161DC7 /* RenderDriver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C309FC661C7F995C00161DC7 /* RenderDriver.swift */; };
 		C309FCAA1C7F995C00161DC7 /* View.swift in Sources */ = {isa = PBXBuildFile; fileRef = C309FC671C7F995C00161DC7 /* View.swift */; };
 		C309FCAB1C7F995C00161DC7 /* View.swift in Sources */ = {isa = PBXBuildFile; fileRef = C309FC671C7F995C00161DC7 /* View.swift */; };
-		C309FCAC1C7F995C00161DC7 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = C309FC691C7F995C00161DC7 /* main.swift */; };
-		C309FCAD1C7F995C00161DC7 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = C309FC691C7F995C00161DC7 /* main.swift */; };
+		C336FF631C7FA0AE00C8F9B7 /* ControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C336FF5B1C7FA0AE00C8F9B7 /* ControllerTests.swift */; };
+		C336FF641C7FA0AE00C8F9B7 /* HashTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C336FF5C1C7FA0AE00C8F9B7 /* HashTests.swift */; };
+		C336FF651C7FA0AE00C8F9B7 /* LogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C336FF5D1C7FA0AE00C8F9B7 /* LogTests.swift */; };
+		C336FF671C7FA0AE00C8F9B7 /* ResponseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C336FF5F1C7FA0AE00C8F9B7 /* ResponseTests.swift */; };
+		C336FF681C7FA0AE00C8F9B7 /* RouterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C336FF601C7FA0AE00C8F9B7 /* RouterTests.swift */; };
+		C336FF691C7FA0AE00C8F9B7 /* RouteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C336FF611C7FA0AE00C8F9B7 /* RouteTests.swift */; };
+		C336FF6B1C7FA17400C8F9B7 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = C336FF6A1C7FA17400C8F9B7 /* main.swift */; };
+		C336FF6C1C7FA17400C8F9B7 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = C336FF6A1C7FA17400C8F9B7 /* main.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -124,8 +130,14 @@
 		C309FC641C7F995C00161DC7 /* SessionMiddleware.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SessionMiddleware.swift; sourceTree = "<group>"; };
 		C309FC661C7F995C00161DC7 /* RenderDriver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RenderDriver.swift; sourceTree = "<group>"; };
 		C309FC671C7F995C00161DC7 /* View.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = View.swift; sourceTree = "<group>"; };
-		C309FC691C7F995C00161DC7 /* main.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		C336FF581C7F9FC300C8F9B7 /* .swift-version */ = {isa = PBXFileReference; lastKnownFileType = text; path = ".swift-version"; sourceTree = "<group>"; };
+		C336FF5B1C7FA0AE00C8F9B7 /* ControllerTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ControllerTests.swift; sourceTree = "<group>"; };
+		C336FF5C1C7FA0AE00C8F9B7 /* HashTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HashTests.swift; sourceTree = "<group>"; };
+		C336FF5D1C7FA0AE00C8F9B7 /* LogTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LogTests.swift; sourceTree = "<group>"; };
+		C336FF5F1C7FA0AE00C8F9B7 /* ResponseTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ResponseTests.swift; sourceTree = "<group>"; };
+		C336FF601C7FA0AE00C8F9B7 /* RouterTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RouterTests.swift; sourceTree = "<group>"; };
+		C336FF611C7FA0AE00C8F9B7 /* RouteTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RouteTests.swift; sourceTree = "<group>"; };
+		C336FF6A1C7FA17400C8F9B7 /* main.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = main.swift; path = Sources/VaporDev/main.swift; sourceTree = SOURCE_ROOT; };
 		C352E6811C62BB0F00E26467 /* Vapor */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Vapor; sourceTree = BUILT_PRODUCTS_DIR; };
 		C352E68F1C62BB1C00E26467 /* Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Tests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		C352E70D1C62BCC600E26467 /* vapor-logo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "vapor-logo.png"; sourceTree = "<group>"; };
@@ -298,12 +310,26 @@
 			path = View;
 			sourceTree = "<group>";
 		};
-		C309FC681C7F995C00161DC7 /* VaporExample */ = {
+		C309FC681C7F995C00161DC7 /* VaporDev */ = {
 			isa = PBXGroup;
 			children = (
-				C309FC691C7F995C00161DC7 /* main.swift */,
+				C336FF6A1C7FA17400C8F9B7 /* main.swift */,
 			);
+			name = VaporDev;
 			path = VaporExample;
+			sourceTree = "<group>";
+		};
+		C336FF5A1C7FA0AE00C8F9B7 /* Vapor */ = {
+			isa = PBXGroup;
+			children = (
+				C336FF5B1C7FA0AE00C8F9B7 /* ControllerTests.swift */,
+				C336FF5C1C7FA0AE00C8F9B7 /* HashTests.swift */,
+				C336FF5D1C7FA0AE00C8F9B7 /* LogTests.swift */,
+				C336FF5F1C7FA0AE00C8F9B7 /* ResponseTests.swift */,
+				C336FF601C7FA0AE00C8F9B7 /* RouterTests.swift */,
+				C336FF611C7FA0AE00C8F9B7 /* RouteTests.swift */,
+			);
+			path = Vapor;
 			sourceTree = "<group>";
 		};
 		C352E6781C62BB0F00E26467 = {
@@ -334,6 +360,7 @@
 		C352E6901C62BB1C00E26467 /* Tests */ = {
 			isa = PBXGroup;
 			children = (
+				C336FF5A1C7FA0AE00C8F9B7 /* Vapor */,
 			);
 			path = Tests;
 			sourceTree = "<group>";
@@ -342,7 +369,7 @@
 			isa = PBXGroup;
 			children = (
 				C309FC391C7F995B00161DC7 /* Vapor */,
-				C309FC681C7F995C00161DC7 /* VaporExample */,
+				C309FC681C7F995C00161DC7 /* VaporDev */,
 			);
 			path = Sources;
 			sourceTree = "<group>";
@@ -470,7 +497,7 @@
 			files = (
 				C309FC821C7F995C00161DC7 /* Middleware.swift in Sources */,
 				C309FC721C7F995C00161DC7 /* CryptoSwift.swift in Sources */,
-				C309FCAC1C7F995C00161DC7 /* main.swift in Sources */,
+				C336FF6B1C7FA17400C8F9B7 /* main.swift in Sources */,
 				C309FC7A1C7F995C00161DC7 /* JSONSerializer.swift in Sources */,
 				C309FC8A1C7F995C00161DC7 /* Response.swift in Sources */,
 				C309FC7E1C7F995C00161DC7 /* Log.swift in Sources */,
@@ -509,9 +536,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C336FF671C7FA0AE00C8F9B7 /* ResponseTests.swift in Sources */,
 				C309FC831C7F995C00161DC7 /* Middleware.swift in Sources */,
 				C309FC731C7F995C00161DC7 /* CryptoSwift.swift in Sources */,
-				C309FCAD1C7F995C00161DC7 /* main.swift in Sources */,
+				C336FF651C7FA0AE00C8F9B7 /* LogTests.swift in Sources */,
 				C309FC7B1C7F995C00161DC7 /* JSONSerializer.swift in Sources */,
 				C309FC8B1C7F995C00161DC7 /* Response.swift in Sources */,
 				C309FC7F1C7F995C00161DC7 /* Log.swift in Sources */,
@@ -529,16 +557,21 @@
 				C309FC911C7F995C00161DC7 /* BranchRouter.swift in Sources */,
 				C309FC871C7F995C00161DC7 /* RequestData+Target.swift in Sources */,
 				C309FC931C7F995C00161DC7 /* RouterDriver.swift in Sources */,
+				C336FF681C7FA0AE00C8F9B7 /* RouterTests.swift in Sources */,
+				C336FF691C7FA0AE00C8F9B7 /* RouteTests.swift in Sources */,
 				C309FC711C7F995C00161DC7 /* StringExtensions.swift in Sources */,
 				C309FCAB1C7F995C00161DC7 /* View.swift in Sources */,
 				C309FC6D1C7F995C00161DC7 /* Provider.swift in Sources */,
+				C336FF6C1C7FA17400C8F9B7 /* main.swift in Sources */,
 				C309FCA51C7F995C00161DC7 /* Session.swift in Sources */,
 				C309FCA31C7F995C00161DC7 /* MemorySessionDriver.swift in Sources */,
 				C309FC971C7F995C00161DC7 /* Controller.swift in Sources */,
+				C336FF641C7FA0AE00C8F9B7 /* HashTests.swift in Sources */,
 				C309FCA11C7F995C00161DC7 /* SocketServer.swift in Sources */,
 				C309FCA91C7F995C00161DC7 /* RenderDriver.swift in Sources */,
 				C309FC9D1C7F995C00161DC7 /* Socket.swift in Sources */,
 				C309FC851C7F995C00161DC7 /* Request.swift in Sources */,
+				C336FF631C7FA0AE00C8F9B7 /* ControllerTests.swift in Sources */,
 				C309FC6B1C7F995C00161DC7 /* Application.swift in Sources */,
 				C309FC991C7F995C00161DC7 /* Route.swift in Sources */,
 				C309FC6F1C7F995C00161DC7 /* LinuxFixes.swift in Sources */,

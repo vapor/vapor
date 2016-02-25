@@ -9,7 +9,7 @@ let package = Package(
             dependencies: []
         ),
         Target(
-            name: "VaporExample",
+            name: "VaporDev",
             dependencies: [
                 .Target(name: "Vapor")
             ]
