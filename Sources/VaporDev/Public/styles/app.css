@@ -1,0 +1,77 @@
+* {
+	box-sizing: border-box;
+}
+
+body, html {
+	padding: 0;
+	margin: 0;
+	height: 100%;
+}
+
+body {
+	font-family: sans-serif;
+	color: #333;
+	position: relative;
+}
+
+
+a {
+	color: #92A8D1;
+	text-decoration: none;
+	border-bottom: 1px dotted;
+}
+
+a:hover {
+	color: #F7CAC9;
+}
+
+div.wrapper {
+	width: 100%;
+	max-width: 600px;
+	margin: 0 auto;
+	position: relative;
+	top: 50%;
+	transform: translateY(-50%);
+	margin-top: -25px; //adjust eye level
+}
+
+h1#logo {
+	text-indent: -9999px;
+	background-image: url(../images/vapor-logo.png);
+	background-size: 100%;
+	width: 347.5px;
+	height: 84px;
+	margin: 0 auto;
+}
+
+nav.main {
+	text-align: center;
+	margin-top: 20px;
+}
+nav.main ul {
+	margin: 0;
+	padding: 0;
+}
+nav.main ul li {
+	display: inline-block;
+	padding: 0 5px;
+}
+
+
+footer.main {
+	position: absolute;
+	width: 100%;
+	text-align: center;
+	bottom: 10px;
+}
+
+footer.main p {
+	margin: 0;
+	padding: 0;
+	color: #ccc;
+	font-weight: 300;
+}
+
+footer.main p a {
+	color: #ccc;
+}

@@ -138,11 +138,12 @@
 		C336FF601C7FA0AE00C8F9B7 /* RouterTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RouterTests.swift; sourceTree = "<group>"; };
 		C336FF611C7FA0AE00C8F9B7 /* RouteTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RouteTests.swift; sourceTree = "<group>"; };
 		C336FF6A1C7FA17400C8F9B7 /* main.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = main.swift; path = Sources/VaporDev/main.swift; sourceTree = SOURCE_ROOT; };
+		C336FF6F1C7FA26C00C8F9B7 /* vapor-logo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "vapor-logo.png"; sourceTree = "<group>"; };
+		C336FF711C7FA26C00C8F9B7 /* app.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; path = app.css; sourceTree = "<group>"; };
+		C336FF731C7FA26C00C8F9B7 /* template.stencil */ = {isa = PBXFileReference; lastKnownFileType = text; path = template.stencil; sourceTree = "<group>"; };
+		C336FF741C7FA26C00C8F9B7 /* welcome.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = welcome.html; sourceTree = "<group>"; };
 		C352E6811C62BB0F00E26467 /* Vapor */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Vapor; sourceTree = BUILT_PRODUCTS_DIR; };
 		C352E68F1C62BB1C00E26467 /* Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Tests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		C352E70D1C62BCC600E26467 /* vapor-logo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "vapor-logo.png"; sourceTree = "<group>"; };
-		C352E70F1C62BCC600E26467 /* app.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; path = app.css; sourceTree = "<group>"; };
-		C352E7121C62BCF300E26467 /* welcome.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = welcome.html; sourceTree = "<group>"; };
 		C352E7131C62BDE200E26467 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		C352E7141C62BE6900E26467 /* Package.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Package.swift; sourceTree = "<group>"; };
 		C352E7151C62BED500E26467 /* .gitignore */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
@@ -313,6 +314,8 @@
 		C309FC681C7F995C00161DC7 /* VaporDev */ = {
 			isa = PBXGroup;
 			children = (
+				C336FF6D1C7FA26C00C8F9B7 /* Public */,
+				C336FF721C7FA26C00C8F9B7 /* Resources */,
 				C336FF6A1C7FA17400C8F9B7 /* main.swift */,
 			);
 			name = VaporDev;
@@ -332,6 +335,42 @@
 			path = Vapor;
 			sourceTree = "<group>";
 		};
+		C336FF6D1C7FA26C00C8F9B7 /* Public */ = {
+			isa = PBXGroup;
+			children = (
+				C336FF6E1C7FA26C00C8F9B7 /* images */,
+				C336FF701C7FA26C00C8F9B7 /* styles */,
+			);
+			name = Public;
+			path = Sources/VaporDev/Public;
+			sourceTree = SOURCE_ROOT;
+		};
+		C336FF6E1C7FA26C00C8F9B7 /* images */ = {
+			isa = PBXGroup;
+			children = (
+				C336FF6F1C7FA26C00C8F9B7 /* vapor-logo.png */,
+			);
+			path = images;
+			sourceTree = "<group>";
+		};
+		C336FF701C7FA26C00C8F9B7 /* styles */ = {
+			isa = PBXGroup;
+			children = (
+				C336FF711C7FA26C00C8F9B7 /* app.css */,
+			);
+			path = styles;
+			sourceTree = "<group>";
+		};
+		C336FF721C7FA26C00C8F9B7 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				C336FF731C7FA26C00C8F9B7 /* template.stencil */,
+				C336FF741C7FA26C00C8F9B7 /* welcome.html */,
+			);
+			name = Resources;
+			path = Sources/VaporDev/Resources;
+			sourceTree = SOURCE_ROOT;
+		};
 		C352E6781C62BB0F00E26467 = {
 			isa = PBXGroup;
 			children = (
@@ -340,8 +379,6 @@
 				C304C8A01C62C3F400058C92 /* .travis.yml */,
 				C352E7141C62BE6900E26467 /* Package.swift */,
 				C352E7131C62BDE200E26467 /* README.md */,
-				C352E7111C62BCF300E26467 /* Resources */,
-				C352E70B1C62BCC600E26467 /* Public */,
 				C352E6D11C62BC6A00E26467 /* Sources */,
 				C352E6901C62BB1C00E26467 /* Tests */,
 				C352E6821C62BB0F00E26467 /* Products */,
@@ -372,39 +409,6 @@
 				C309FC681C7F995C00161DC7 /* VaporDev */,
 			);
 			path = Sources;
-			sourceTree = "<group>";
-		};
-		C352E70B1C62BCC600E26467 /* Public */ = {
-			isa = PBXGroup;
-			children = (
-				C352E70C1C62BCC600E26467 /* images */,
-				C352E70E1C62BCC600E26467 /* styles */,
-			);
-			path = Public;
-			sourceTree = "<group>";
-		};
-		C352E70C1C62BCC600E26467 /* images */ = {
-			isa = PBXGroup;
-			children = (
-				C352E70D1C62BCC600E26467 /* vapor-logo.png */,
-			);
-			path = images;
-			sourceTree = "<group>";
-		};
-		C352E70E1C62BCC600E26467 /* styles */ = {
-			isa = PBXGroup;
-			children = (
-				C352E70F1C62BCC600E26467 /* app.css */,
-			);
-			path = styles;
-			sourceTree = "<group>";
-		};
-		C352E7111C62BCF300E26467 /* Resources */ = {
-			isa = PBXGroup;
-			children = (
-				C352E7121C62BCF300E26467 /* welcome.html */,
-			);
-			path = Resources;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */

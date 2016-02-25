@@ -156,7 +156,8 @@ extension Application: ServerDriverDelegate {
 					return Response(status: .OK, data: array, contentType: .Text)
 				} else {
 					handler = { _ in
-						return Response(error: "Could not open file.")
+                        Log.warning("Could not open file, returning 404")
+						return Response(status: .NotFound, text: "Page not found")
 					}
 				}
 			} else {
