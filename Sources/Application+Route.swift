@@ -46,14 +46,14 @@ extension Application {
     
     /**
         Creates standard Create, Read, Update, Delete routes
-        using the Handlers from a supplied `Controller`.
+        using the Handlers from a supplied `ResourcesController`.
      
         The `path` supports nested resources, like `users.photos`.
         users/:user_id/photos/:id
      
         Note: You are responsible for pluralizing your endpoints.
     */
-    public final func resource(path: String, controller: Controller) {
+    public final func resource(path: String, controller: ResourcesController) {
 
         let last = "/:id"
         

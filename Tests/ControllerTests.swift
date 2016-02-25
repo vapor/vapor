@@ -1,5 +1,5 @@
 //
-//  RouteTests.swift
+//  ResourcesControllerTests.swift
 //  Vapor
 //
 //  Created by Matthew on 20/02/2016.
@@ -8,9 +8,9 @@
 
 import XCTest
 
-class ControllerTests: XCTestCase {
+class ResourcesControllerTests: XCTestCase {
     
-    class TestController: Controller {
+    class TestController: ResourcesController {
         
         var lock: (
             index: Int,
