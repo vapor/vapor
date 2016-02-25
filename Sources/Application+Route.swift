@@ -93,6 +93,24 @@ extension Application {
         let route = Route(host: host, method: method, path: path, handler: handler)
         self.routes.append(route)
     }
+
+    public final func add<ActionController: Controller>(method: Request.Method, path: String, action: (ActionController) -> () throws -> ResponseConvertible) {
+
+        //Convert Action to Request.Handler
+        var handler = { request in
+            return try action(try ActionController(request: request))().response()
+        }
+
+        //Apply any scoped middlewares
+        for middleware in Route.scopedMiddleware {
+            handler = middleware.handle(handler)
+        }
+
+        //Store the route for registering with Router later
+        let host = Route.scopedHost ?? "*"
+        let route = Route(host: host, method: method, path: path, handler: handler)
+        self.routes.append(route)
+    }
     
     /**
         Applies the middleware to the routes defined

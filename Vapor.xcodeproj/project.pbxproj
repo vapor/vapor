@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1A6FDF651C7ED71700B0529C /* Controller.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A6FDF641C7ED71700B0529C /* Controller.swift */; };
 		288CFC2E1C7AC01A00E4617A /* Application.swift in Sources */ = {isa = PBXBuildFile; fileRef = 288CFC2D1C7AC01A00E4617A /* Application.swift */; };
 		288CFC311C7AC02A00E4617A /* Provider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 288CFC301C7AC02A00E4617A /* Provider.swift */; };
 		288CFC321C7AC05B00E4617A /* Application.swift in Sources */ = {isa = PBXBuildFile; fileRef = 288CFC2D1C7AC01A00E4617A /* Application.swift */; };
@@ -94,6 +95,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		1A6FDF641C7ED71700B0529C /* Controller.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Controller.swift; sourceTree = "<group>"; };
 		288CFC2D1C7AC01A00E4617A /* Application.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Application.swift; sourceTree = "<group>"; };
 		288CFC301C7AC02A00E4617A /* Provider.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Provider.swift; sourceTree = "<group>"; };
 		3492B2EE1C787DD600D8E588 /* RouteTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RouteTests.swift; sourceTree = "<group>"; };
@@ -264,6 +266,7 @@
 				C364C5001C7EB579009F65DD /* Route.swift */,
 				C352E6D31C62BC6A00E26467 /* ResourcesController.swift */,
 				C3433FCC1C7CFB4C009F0876 /* Application+Route.swift */,
+				1A6FDF641C7ED71700B0529C /* Controller.swift */,
 			);
 			name = Routing;
 			sourceTree = "<group>";
@@ -498,6 +501,7 @@
 				802030011C77C956009B8655 /* Vapor+JSON.swift in Sources */,
 				C352E6EB1C62BC6A00E26467 /* LinuxFixes.swift in Sources */,
 				C352E6E71C62BC6A00E26467 /* ResourcesController.swift in Sources */,
+				1A6FDF651C7ED71700B0529C /* Controller.swift in Sources */,
 				C304C8A71C62D65200058C92 /* ServerDriver.swift in Sources */,
 				C352E6F71C62BC6A00E26467 /* ResponseConvertible.swift in Sources */,
 				802030121C78CAC2009B8655 /* Branch.swift in Sources */,
