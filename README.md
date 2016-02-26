@@ -4,7 +4,7 @@
 
 A Laravel/Lumen Inspired Web Framework for Swift that works on iOS, OS X, and Ubuntu.
 
-- [x] Pure Swift (0 dependencies)
+- [x] Pure Swift (No makefiles, module maps)
 - [x] Modular
 - [x] Beautifully expressive
 
