@@ -199,7 +199,7 @@ extension Response {
      - parameter html: the html string to be rendered as a response
      */
     public convenience init(status: Status, html: String) {
-        let serialised = "<html><meta charset=\"UTF-8\">\(html)</html>"
+        let serialised = "<html><meta charset=\"UTF-8\"><body>\(html)</body></html>"
         self.init(status: status, data: serialised.utf8, contentType: .Html)
     }
     

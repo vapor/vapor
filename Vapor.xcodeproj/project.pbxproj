@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		C309EB951C7FCCF100FB2A90 /* Controller.swift in Sources */ = {isa = PBXBuildFile; fileRef = C309EB941C7FCCF100FB2A90 /* Controller.swift */; };
+		C309EB961C7FCCF100FB2A90 /* Controller.swift in Sources */ = {isa = PBXBuildFile; fileRef = C309EB941C7FCCF100FB2A90 /* Controller.swift */; };
+		C309EB991C7FCF0400FB2A90 /* MyController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C309EB981C7FCF0400FB2A90 /* MyController.swift */; };
 		C309FC6A1C7F995C00161DC7 /* Application.swift in Sources */ = {isa = PBXBuildFile; fileRef = C309FC3B1C7F995B00161DC7 /* Application.swift */; };
 		C309FC6B1C7F995C00161DC7 /* Application.swift in Sources */ = {isa = PBXBuildFile; fileRef = C309FC3B1C7F995B00161DC7 /* Application.swift */; };
 		C309FC6C1C7F995C00161DC7 /* Provider.swift in Sources */ = {isa = PBXBuildFile; fileRef = C309FC3C1C7F995B00161DC7 /* Provider.swift */; };
@@ -51,8 +54,8 @@
 		C309FC931C7F995C00161DC7 /* RouterDriver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C309FC571C7F995B00161DC7 /* RouterDriver.swift */; };
 		C309FC941C7F995C00161DC7 /* Application+Route.swift in Sources */ = {isa = PBXBuildFile; fileRef = C309FC591C7F995B00161DC7 /* Application+Route.swift */; };
 		C309FC951C7F995C00161DC7 /* Application+Route.swift in Sources */ = {isa = PBXBuildFile; fileRef = C309FC591C7F995B00161DC7 /* Application+Route.swift */; };
-		C309FC961C7F995C00161DC7 /* Controller.swift in Sources */ = {isa = PBXBuildFile; fileRef = C309FC5A1C7F995B00161DC7 /* Controller.swift */; };
-		C309FC971C7F995C00161DC7 /* Controller.swift in Sources */ = {isa = PBXBuildFile; fileRef = C309FC5A1C7F995B00161DC7 /* Controller.swift */; };
+		C309FC961C7F995C00161DC7 /* ResourceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C309FC5A1C7F995B00161DC7 /* ResourceController.swift */; };
+		C309FC971C7F995C00161DC7 /* ResourceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C309FC5A1C7F995B00161DC7 /* ResourceController.swift */; };
 		C309FC981C7F995C00161DC7 /* Route.swift in Sources */ = {isa = PBXBuildFile; fileRef = C309FC5B1C7F995B00161DC7 /* Route.swift */; };
 		C309FC991C7F995C00161DC7 /* Route.swift in Sources */ = {isa = PBXBuildFile; fileRef = C309FC5B1C7F995B00161DC7 /* Route.swift */; };
 		C309FC9A1C7F995C00161DC7 /* ServerDriver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C309FC5D1C7F995C00161DC7 /* ServerDriver.swift */; };
@@ -102,6 +105,8 @@
 /* Begin PBXFileReference section */
 		C304C8A01C62C3F400058C92 /* .travis.yml */ = {isa = PBXFileReference; lastKnownFileType = text; path = .travis.yml; sourceTree = "<group>"; };
 		C309EB931C7FC53700FB2A90 /* LinuxMain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinuxMain.swift; sourceTree = "<group>"; };
+		C309EB941C7FCCF100FB2A90 /* Controller.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Controller.swift; sourceTree = "<group>"; };
+		C309EB981C7FCF0400FB2A90 /* MyController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MyController.swift; sourceTree = "<group>"; };
 		C309FC3B1C7F995B00161DC7 /* Application.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Application.swift; sourceTree = "<group>"; };
 		C309FC3C1C7F995B00161DC7 /* Provider.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Provider.swift; sourceTree = "<group>"; };
 		C309FC3E1C7F995B00161DC7 /* LinuxFixes.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LinuxFixes.swift; sourceTree = "<group>"; };
@@ -124,7 +129,7 @@
 		C309FC561C7F995B00161DC7 /* BranchRouter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BranchRouter.swift; sourceTree = "<group>"; };
 		C309FC571C7F995B00161DC7 /* RouterDriver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RouterDriver.swift; sourceTree = "<group>"; };
 		C309FC591C7F995B00161DC7 /* Application+Route.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Application+Route.swift"; sourceTree = "<group>"; };
-		C309FC5A1C7F995B00161DC7 /* Controller.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Controller.swift; sourceTree = "<group>"; };
+		C309FC5A1C7F995B00161DC7 /* ResourceController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ResourceController.swift; sourceTree = "<group>"; };
 		C309FC5B1C7F995B00161DC7 /* Route.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Route.swift; sourceTree = "<group>"; };
 		C309FC5D1C7F995C00161DC7 /* ServerDriver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ServerDriver.swift; sourceTree = "<group>"; };
 		C309FC5E1C7F995C00161DC7 /* Socket.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Socket.swift; sourceTree = "<group>"; };
@@ -174,6 +179,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		C309EB971C7FCF0400FB2A90 /* Controllers */ = {
+			isa = PBXGroup;
+			children = (
+				C309EB981C7FCF0400FB2A90 /* MyController.swift */,
+			);
+			name = Controllers;
+			path = Sources/VaporDev/Controllers;
+			sourceTree = SOURCE_ROOT;
+		};
 		C309FC391C7F995B00161DC7 /* Vapor */ = {
 			isa = PBXGroup;
 			children = (
@@ -284,7 +298,8 @@
 			isa = PBXGroup;
 			children = (
 				C309FC591C7F995B00161DC7 /* Application+Route.swift */,
-				C309FC5A1C7F995B00161DC7 /* Controller.swift */,
+				C309FC5A1C7F995B00161DC7 /* ResourceController.swift */,
+				C309EB941C7FCCF100FB2A90 /* Controller.swift */,
 				C309FC5B1C7F995B00161DC7 /* Route.swift */,
 			);
 			path = Routing;
@@ -323,6 +338,7 @@
 		C309FC681C7F995C00161DC7 /* VaporDev */ = {
 			isa = PBXGroup;
 			children = (
+				C309EB971C7FCF0400FB2A90 /* Controllers */,
 				C336FF6D1C7FA26C00C8F9B7 /* Public */,
 				C336FF721C7FA26C00C8F9B7 /* Resources */,
 				C336FF6A1C7FA17400C8F9B7 /* main.swift */,
@@ -530,18 +546,20 @@
 				C3E8B05A1C7FBFE800127C1D /* AbortMiddleware.swift in Sources */,
 				C309FC901C7F995C00161DC7 /* BranchRouter.swift in Sources */,
 				C309FC861C7F995C00161DC7 /* RequestData+Target.swift in Sources */,
+				C309EB991C7FCF0400FB2A90 /* MyController.swift in Sources */,
 				C309FC921C7F995C00161DC7 /* RouterDriver.swift in Sources */,
 				C309FC701C7F995C00161DC7 /* StringExtensions.swift in Sources */,
 				C309FCAA1C7F995C00161DC7 /* View.swift in Sources */,
 				C309FC6C1C7F995C00161DC7 /* Provider.swift in Sources */,
 				C309FCA41C7F995C00161DC7 /* Session.swift in Sources */,
 				C309FCA21C7F995C00161DC7 /* MemorySessionDriver.swift in Sources */,
-				C309FC961C7F995C00161DC7 /* Controller.swift in Sources */,
+				C309FC961C7F995C00161DC7 /* ResourceController.swift in Sources */,
 				C309FCA01C7F995C00161DC7 /* SocketServer.swift in Sources */,
 				C309FCA81C7F995C00161DC7 /* RenderDriver.swift in Sources */,
 				C309FC9C1C7F995C00161DC7 /* Socket.swift in Sources */,
 				C309FC841C7F995C00161DC7 /* Request.swift in Sources */,
 				C309FC6A1C7F995C00161DC7 /* Application.swift in Sources */,
+				C309EB951C7FCCF100FB2A90 /* Controller.swift in Sources */,
 				C309FC981C7F995C00161DC7 /* Route.swift in Sources */,
 				C309FC6E1C7F995C00161DC7 /* LinuxFixes.swift in Sources */,
 				C309FC881C7F995C00161DC7 /* RequestFormExtension.swift in Sources */,
@@ -571,6 +589,7 @@
 				C309FC8D1C7F995C00161DC7 /* ResponseConvertible.swift in Sources */,
 				C309FC8F1C7F995C00161DC7 /* Branch.swift in Sources */,
 				C3E8B05B1C7FBFE800127C1D /* AbortMiddleware.swift in Sources */,
+				C309EB961C7FCCF100FB2A90 /* Controller.swift in Sources */,
 				C309FC911C7F995C00161DC7 /* BranchRouter.swift in Sources */,
 				C309FC871C7F995C00161DC7 /* RequestData+Target.swift in Sources */,
 				C309FC931C7F995C00161DC7 /* RouterDriver.swift in Sources */,
@@ -583,7 +602,7 @@
 				C336FF6C1C7FA17400C8F9B7 /* main.swift in Sources */,
 				C309FCA51C7F995C00161DC7 /* Session.swift in Sources */,
 				C309FCA31C7F995C00161DC7 /* MemorySessionDriver.swift in Sources */,
-				C309FC971C7F995C00161DC7 /* Controller.swift in Sources */,
+				C309FC971C7F995C00161DC7 /* ResourceController.swift in Sources */,
 				C336FF641C7FA0AE00C8F9B7 /* HashTests.swift in Sources */,
 				C309FCA11C7F995C00161DC7 /* SocketServer.swift in Sources */,
 				C309FCA91C7F995C00161DC7 /* RenderDriver.swift in Sources */,

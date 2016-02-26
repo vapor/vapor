@@ -1,4 +1,4 @@
-//import Vapor //Travis will fail without this
+import Vapor //Travis will fail without this
 
 let app = Application()
 
@@ -28,5 +28,6 @@ app.group("abort") {
     }
 }
 
+app.resource("resource", controller: MyController.self)
 
 app.start(port: 8080)
