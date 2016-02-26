@@ -1,6 +1,8 @@
 import Foundation
 import Jay
 
+private typealias JayType = JsonValue
+
 public enum Json: Equatable {
     
     case NullValue
@@ -57,68 +59,78 @@ public enum Json: Equatable {
 
 // MARK: Mapping between Json and Jay types
 
-func jayTypeFromJson(json: Json) -> JsonValue {
-    
-    switch json {
-    case .ObjectValue(let dict):
-        var newDict = JsonObject()
-        for (k,v) in dict {
-            newDict[k] = jayTypeFromJson(v)
+extension JayType {
+    private init(_ json: Json) {
+        switch json {
+        case .ObjectValue(let dict):
+            var newDict = JsonObject()
+            for (k,v) in dict {
+                newDict[k] = JayType(v)
+            }
+            self = .Object(newDict)
+        case .ArrayValue(let arr):
+            var newArray = JsonArray()
+            for i in arr {
+                newArray.append(JayType(i))
+            }
+            self = .Array(newArray)
+        case .NullValue:
+            self = .Null
+        case .NumberValue(let num):
+            self = .Number(JsonNumber.JsonDbl(num))
+        case .BooleanValue(let bool):
+            self = .Boolean(bool ? .True : .False)
+        case .StringValue(let str):
+            self = .String(str)
         }
-        return JsonValue.Object(newDict)
-    case .ArrayValue(let arr):
-        var newArray = JsonArray()
-        for i in arr {
-            newArray.append(jayTypeFromJson(i))
-        }
-        return JsonValue.Array(newArray)
-    case .NullValue: return JsonValue.Null
-    case .NumberValue(let num): return JsonValue.Number(JsonNumber.JsonDbl(num))
-    case .BooleanValue(let bool): return JsonValue.Boolean(bool ? .True : .False)
-    case .StringValue(let str): return JsonValue.String(str)
     }
 }
 
-func jsonFromJayType(jay: JsonValue) -> Json {
-    
-    switch jay {
-    case .Object(let dict):
-        var newDict = [String:Json]()
-        for (k,v) in dict {
-            newDict[k] = jsonFromJayType(v)
+extension Json {
+    private init(_ jay: JayType) {
+        switch jay {
+        case .Object(let dict):
+            var newDict = [String : Json]()
+            for (k,v) in dict {
+                newDict[k] = Json(v)
+            }
+            self = Json(newDict)
+        case .Array(let arr):
+            var newArray = [Json]()
+            for i in arr {
+                newArray.append(Json(i))
+            }
+            self = Json(newArray)
+        case .Null: self = Json.NullValue
+        case .Number(let num):
+            switch num {
+            case .JsonDbl(let dbl):
+                self = Json(dbl)
+            case .JsonInt(let int):
+                self = Json(Double(int))
+            }
+        case .Boolean(let bool):
+            self = Json(bool == .True)
+        case .String(let str):
+            self = Json(str)
         }
-        return Json(newDict)
-    case .Array(let arr):
-        var newArray = [Json]()
-        for i in arr {
-            newArray.append(jsonFromJayType(i))
-        }
-        return Json(newArray)
-    case .Null: return Json.NullValue
-    case .Number(let num):
-        switch num {
-        case .JsonDbl(let dbl): return Json(dbl)
-        case .JsonInt(let int): return Json(Double(int))
-        }
-    case .Boolean(let bool): return Json(bool == .True)
-    case .String(let str): return Json(str)
+        
     }
 }
 
 // MARK: Serialization
 
 extension Json {
-
     public static func deserialize(source: [UInt8]) throws -> Json {
         let jayValue = try Jay().typesafeJsonFromData(source)
-        return jsonFromJayType(jayValue)
+        return Json(jayValue)
     }
 }
 
 extension Json {
     
     public func serialize() throws -> [UInt8] {
-        let jayValue = jayTypeFromJson(self)
+        let jayValue = JayType(self)
         return try Jay().dataFromJson(jayValue)
     }
 }
