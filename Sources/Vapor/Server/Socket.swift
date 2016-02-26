@@ -49,6 +49,21 @@ public enum SocketError: ErrorType {
 
 public class Socket: Hashable, Equatable {
     
+    /**
+     Returns the string value of an
+     argument passed to the executable
+     in the format --name=value
+     */
+    static func argument(name: String) -> String? {
+        for argument in Process.arguments {
+            if argument.hasPrefix("--\(name)=") {
+                return argument.split("=")[1]
+            }
+        }
+        
+        return nil
+    }
+    
     public class func tcpSocketForListen(port: in_port_t, maxPendingConnection: Int32 = SOMAXCONN) throws -> Socket {
         
         #if os(Linux)
@@ -69,18 +84,19 @@ public class Socket: Hashable, Equatable {
         }
         Socket.setNoSigPipe(socketFileDescriptor)
         
+        let ip = argument("ip") ?? "0.0.0.0"
         #if os(Linux)
             var addr = sockaddr_in()
             addr.sin_family = sa_family_t(AF_INET)
             addr.sin_port = Socket.htonsPort(port)
-            addr.sin_addr = in_addr(s_addr: in_addr_t(0))
+            addr.sin_addr = in_addr(s_addr: inet_addr(ip))
             addr.sin_zero = (0, 0, 0, 0, 0, 0, 0, 0)
         #else
             var addr = sockaddr_in()
             addr.sin_len = __uint8_t(sizeof(sockaddr_in))
             addr.sin_family = sa_family_t(AF_INET)
             addr.sin_port = Socket.htonsPort(port)
-            addr.sin_addr = in_addr(s_addr: inet_addr("0.0.0.0"))
+            addr.sin_addr = in_addr(s_addr: inet_addr(ip))
             addr.sin_zero = (0, 0, 0, 0, 0, 0, 0, 0)
         #endif
         
