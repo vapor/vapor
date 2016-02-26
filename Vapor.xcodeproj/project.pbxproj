@@ -10,6 +10,7 @@
 		C309EB951C7FCCF100FB2A90 /* Controller.swift in Sources */ = {isa = PBXBuildFile; fileRef = C309EB941C7FCCF100FB2A90 /* Controller.swift */; };
 		C309EB961C7FCCF100FB2A90 /* Controller.swift in Sources */ = {isa = PBXBuildFile; fileRef = C309EB941C7FCCF100FB2A90 /* Controller.swift */; };
 		C309EB991C7FCF0400FB2A90 /* MyController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C309EB981C7FCF0400FB2A90 /* MyController.swift */; };
+		C309EB9A1C7FD2E200FB2A90 /* MyController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C309EB981C7FCF0400FB2A90 /* MyController.swift */; };
 		C309FC6A1C7F995C00161DC7 /* Application.swift in Sources */ = {isa = PBXBuildFile; fileRef = C309FC3B1C7F995B00161DC7 /* Application.swift */; };
 		C309FC6B1C7F995C00161DC7 /* Application.swift in Sources */ = {isa = PBXBuildFile; fileRef = C309FC3B1C7F995B00161DC7 /* Application.swift */; };
 		C309FC6C1C7F995C00161DC7 /* Provider.swift in Sources */ = {isa = PBXBuildFile; fileRef = C309FC3C1C7F995B00161DC7 /* Provider.swift */; };
@@ -581,6 +582,7 @@
 				C309FC811C7F995C00161DC7 /* LogDriver.swift in Sources */,
 				C309FC9B1C7F995C00161DC7 /* ServerDriver.swift in Sources */,
 				C309FC791C7F995C00161DC7 /* SHA256Hasher.swift in Sources */,
+				C309EB9A1C7FD2E200FB2A90 /* MyController.swift in Sources */,
 				C309FCA71C7F995C00161DC7 /* SessionMiddleware.swift in Sources */,
 				C309FC951C7F995C00161DC7 /* Application+Route.swift in Sources */,
 				C309FC771C7F995C00161DC7 /* Int+Random.swift in Sources */,

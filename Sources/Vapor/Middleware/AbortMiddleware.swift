@@ -18,6 +18,7 @@ public class AbortMiddleware: Middleware {
     
     class func errorResponse(status: Response.Status, message: String) throws -> Response {
         let json = try Json([
+            "error": "true",
             "message": message
         ])
         return Response(status: status, data: json.serialize().utf8, contentType: .Json)
