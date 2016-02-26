@@ -13,6 +13,7 @@
 		3A659FC11C80365700C105F5 /* AbortMiddleware.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A659FC01C80365700C105F5 /* AbortMiddleware.swift */; };
 		3A659FC31C80367B00C105F5 /* Abort.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A659FC21C80367B00C105F5 /* Abort.swift */; };
 		3A659FC51C80368F00C105F5 /* ResourceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A659FC41C80368F00C105F5 /* ResourceController.swift */; };
+		3A659FC71C805E3B00C105F5 /* libJay.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 3A659FC61C805E3B00C105F5 /* libJay.dylib */; };
 		3A91D3CF1C7F6AF900EA3CA0 /* Vapor.h in Headers */ = {isa = PBXBuildFile; fileRef = 3A91D3CE1C7F6AF900EA3CA0 /* Vapor.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		3A91D3D71C7F6B6600EA3CA0 /* Application.swift in Sources */ = {isa = PBXBuildFile; fileRef = 288CFC2D1C7AC01A00E4617A /* Application.swift */; };
 		3A91D3D81C7F6B6600EA3CA0 /* Route.swift in Sources */ = {isa = PBXBuildFile; fileRef = C364C5001C7EB579009F65DD /* Route.swift */; };
@@ -89,6 +90,7 @@
 		3A659FC01C80365700C105F5 /* AbortMiddleware.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = AbortMiddleware.swift; path = ../Sources/Vapor/Middleware/AbortMiddleware.swift; sourceTree = SOURCE_ROOT; };
 		3A659FC21C80367B00C105F5 /* Abort.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Abort.swift; path = ../Sources/Vapor/Core/Abort.swift; sourceTree = SOURCE_ROOT; };
 		3A659FC41C80368F00C105F5 /* ResourceController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = ResourceController.swift; path = ../Sources/Vapor/Routing/ResourceController.swift; sourceTree = SOURCE_ROOT; };
+		3A659FC61C805E3B00C105F5 /* libJay.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libJay.dylib; path = ../.build/debug/libJay.dylib; sourceTree = "<group>"; };
 		3A91D3CC1C7F6AF900EA3CA0 /* Vapor.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Vapor.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		3A91D3CE1C7F6AF900EA3CA0 /* Vapor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Vapor.h; sourceTree = "<group>"; };
 		3A91D3D01C7F6AF900EA3CA0 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -138,6 +140,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3A659FC71C805E3B00C105F5 /* libJay.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -213,6 +216,7 @@
 		3AEEF4511C7F71110099CBAE /* Dependencies */ = {
 			isa = PBXGroup;
 			children = (
+				3A659FC61C805E3B00C105F5 /* libJay.dylib */,
 				3A583A001C7FCA720044AAFF /* libVapor.dylib */,
 			);
 			name = Dependencies;
@@ -631,6 +635,7 @@
 				INFOPLIST_FILE = Vapor/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
+				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/../.build/debug";
 				PRODUCT_BUNDLE_IDENTIFIER = com.tannernelson.Vapor;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -654,6 +659,7 @@
 				INFOPLIST_FILE = Vapor/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
+				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/../.build/debug";
 				PRODUCT_BUNDLE_IDENTIFIER = com.tannernelson.Vapor;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
