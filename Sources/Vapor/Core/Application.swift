@@ -58,7 +58,7 @@ public class Application {
 	}
 
 	/**
-		Optional handler to be called when determing the
+		Optional handler to be called when detecting the
 		current environment.
 	*/
 	public var detectEnvironmentHandler: ((String) -> String)?
