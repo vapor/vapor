@@ -19,7 +19,6 @@ extension Json: ResponseConvertible {
         } catch {
             //return error!
             let errorString = "\(error)"
-            print(errorString)
             //TODO: which response? 500? 400? should we be leaking the error?
             return Response(error: errorString)
         }

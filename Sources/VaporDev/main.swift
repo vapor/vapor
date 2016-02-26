@@ -27,6 +27,13 @@ app.post("json") { request in
     return "Received \(count) unicorns"
 }
 
+app.post("json2") { request in
+    //parse a key inside the received json
+    guard let json = request.json else { return Response(error: "Invalid json") }
+    guard let count = json.objectValue?["unicorns"]?.int else { return Response(error: "No unicorn count provided") }
+    return try Response(status: .Created, json: Json(["message":"Received \(count) unicorns"]))
+}
+
 app.group("abort") {
     app.get("400") { request in
         throw Abort.BadRequest
