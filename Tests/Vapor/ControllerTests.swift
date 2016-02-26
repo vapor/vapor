@@ -21,9 +21,12 @@ import XCTest
 
 class ControllerTests: XCTestCase {
     
-    class TestController: Controller {
+    class TestController: ResourceController {
+        required init() {
+            
+        }
         
-        var lock: (
+        static var lock: (
             index: Int,
             store: Int,
             show: Int,
@@ -33,31 +36,31 @@ class ControllerTests: XCTestCase {
         
         /// Display many instances
         func index(request: Request) throws -> ResponseConvertible {
-            self.lock.index += 1
+            TestController.lock.index += 1
             return "index"
         }
         
         /// Create a new instance.
         func store(request: Request) throws -> ResponseConvertible {
-            self.lock.store += 1
+            TestController.lock.store += 1
             return "store"
         }
         
         /// Show an instance.
         func show(request: Request) throws -> ResponseConvertible {
-            self.lock.show += 1
+            TestController.lock.show += 1
             return "show"
         }
         
         /// Update an instance.
         func update(request: Request) throws -> ResponseConvertible {
-            self.lock.update += 1
+            TestController.lock.update += 1
             return "update"
         }
         
         /// Delete an instance.
         func destroy(request: Request) throws -> ResponseConvertible {
-            self.lock.destroy += 1
+            TestController.lock.destroy += 1
             return "destroy"
         }
         
@@ -67,8 +70,7 @@ class ControllerTests: XCTestCase {
         
         let app = Application()
         
-        let controller = TestController()
-        app.resource("foo", controller: controller)
+        app.resource("foo", controller: TestController.self)
         
         app.bootRoutes()
         
@@ -76,7 +78,7 @@ class ControllerTests: XCTestCase {
         if let handler = app.router.route(fooIndex) {
             do {
                 try handler(request: fooIndex)
-                XCTAssert(controller.lock.index == 1, "foo.index Lock not correct")
+                XCTAssert(TestController.lock.index == 1, "foo.index Lock not correct")
             } catch {
                 XCTFail("foo.index handler failed")
             }

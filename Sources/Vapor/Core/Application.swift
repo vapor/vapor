@@ -61,7 +61,10 @@ public class Application {
         self.server = server
         self.router = router
 
-        self.middleware = []
+        self.middleware = [
+            AbortMiddleware.self
+        ]
+        
         self.providers = []
         
         self.middleware.append(SessionMiddleware)

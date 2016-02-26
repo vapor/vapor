@@ -73,6 +73,13 @@ public class Request {
     }
     
     /**
+        Quickly create a Request with an empty body.
+    */
+    public convenience init(method: Method, path: String) {
+        self.init(method: method, path: path, address: nil, headers: [:], body: [])
+    }
+    
+    /**
         Cookies are sent to the server as `key=value` pairs
         separated by semicolons.
 
