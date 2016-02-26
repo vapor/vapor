@@ -10,6 +10,32 @@ app.get("test") { request in
     return "123"
 }
 
+app.get("json") { request in
+    return Json(
+        [
+            "number":123,
+            "text": "unicorns",
+            "nested": ["one", 2, false]
+        ]
+    )
+}
+
+app.post("json") { request in
+    //parse a key inside the received json
+    guard let count = request.data["unicorns"]?.int else {
+        return Response(error: "No unicorn count provided")
+    }
+    return "Received \(count) unicorns"
+}
+
+app.post("json2") { request in
+    //parse a key inside the received json
+    guard let count = request.data["unicorns"]?.int else {
+        return Response(error: "No unicorn count provided")
+    }
+    return try Response(status: .Created, json: Json(["message":"Received \(count) unicorns"]))
+}
+
 app.group("abort") {
     app.get("400") { request in
         throw Abort.BadRequest
@@ -27,7 +53,5 @@ app.group("abort") {
         throw Abort.InternalServerError
     }
 }
-
-app.resource("resource", controller: MyController.self)
 
 app.start(port: 8080)
