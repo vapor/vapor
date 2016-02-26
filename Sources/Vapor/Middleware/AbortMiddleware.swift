@@ -21,7 +21,8 @@ public class AbortMiddleware: Middleware {
             "error": "true",
             "message": message
         ])
-        return Response(status: status, data: json.serialize().utf8, contentType: .Json)
+        let data = try json.serialize()
+        return Response(status: status, data: data, contentType: .Json)
     }
     
 }

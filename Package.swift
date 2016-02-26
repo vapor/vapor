@@ -2,6 +2,9 @@ import PackageDescription
 
 let package = Package(
     name: "Vapor",
+    dependencies: [
+        .Package(url: "https://github.com/czechboy0/Jay.git", majorVersion: 0, minor: 3)
+    ],
     exclude: [],
     targets: [
         Target(
@@ -23,3 +26,5 @@ let package = Package(
 
 let lib = Product(name: "Vapor", type: .Library(.Dynamic), modules: "Vapor")
 products.append(lib)
+
+
