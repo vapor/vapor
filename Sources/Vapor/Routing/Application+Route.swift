@@ -138,19 +138,27 @@ extension Application {
     }
     
     public final func host(host: String, handler: () -> Void) {
+        let original = Route.scopedHost
         Route.scopedHost = host
         
         handler()
         
-        Route.scopedHost = nil
+        Route.scopedHost = original
     }
     
     /**
         Create multiple routes with the same base URL
         without repeating yourself.
     */
-    public func group(prefix: String, handler: () -> Void) {
-        Route.scopedPrefix = prefix
+    public func group(prefix: String, @noescape handler: () -> Void) {
+        let original = Route.scopedPrefix
+        
+        //append original with a trailing slash
+        if let original = original {
+            Route.scopedPrefix = original + "/" + prefix
+        } else {
+            Route.scopedPrefix = prefix
+        }
         
         handler()
         
