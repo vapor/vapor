@@ -25,7 +25,7 @@ class EnvironmentTests: XCTestCase {
 
     func testEnvironment() {
         let app = Application()
-        XCTAssert(app.environment == "local", "Incorrect environment: \(app.environment)")
+        XCTAssert(app.environment == .Development, "Incorrect environment: \(app.environment)")
     }
 
     func testDetectEnvironmentHandler() {
@@ -34,7 +34,7 @@ class EnvironmentTests: XCTestCase {
             return "xctest"
         }
 
-        XCTAssert(app.environment == "xctest", "Incorrect environment: \(app.environment)")
+        XCTAssert(app.environment == .Custom("xctest"), "Incorrect environment: \(app.environment)")
     }
 
     func testInEnvironment() {
@@ -43,7 +43,7 @@ class EnvironmentTests: XCTestCase {
             return "xctest"
         }
 
-        XCTAssert(app.inEnvironment("production", "qa", "xctest"), "Environment not correctly detected: \(app.environment)")
+        XCTAssert(app.inEnvironment(.Production, .QA, .Custom("xctest")), "Environment not correctly detected: \(app.environment)")
     }
 
 }

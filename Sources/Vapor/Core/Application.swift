@@ -42,12 +42,12 @@ public class Application {
 		Internal value populated the first time
 		self.environment is computed
 	*/
-	private var detectedEnvironment: String?
+	private var detectedEnvironment: Environment?
 
 	/**
 		Current environment of the application
 	*/
-	public var environment: String {
+	public var environment: Environment {
 		if let environment = self.detectedEnvironment {
 			return environment
 		}
@@ -106,21 +106,21 @@ public class Application {
         routes.forEach(router.register)
     }
 
-	func bootEnvironment() -> String {
+	func bootEnvironment() -> Environment {
 		var environment: String
 
 		if let value = self.argument("env") {
 			environment = value
 		} else {
 			// TODO: This should default to "production" in release builds
-			environment = "local"
+			environment = "development"
 		}
 
 		if let handler = self.detectEnvironmentHandler {
 			environment = handler(environment)
 		}
 
-		return environment
+		return Environment.fromString(environment)
 	}
 
 	/**
@@ -133,7 +133,7 @@ public class Application {
 		value will be true if the the passed in environment
 		matches the app environment.
 	*/
-	public func inEnvironment(environments: String...) -> Bool {
+	public func inEnvironment(environments: Environment...) -> Bool {
 		if environments.count == 1 {
 			return self.environment == environments[0]
 		} else {
