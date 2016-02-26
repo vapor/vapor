@@ -47,12 +47,12 @@
 		3A91D3F51C7F6B6600EA3CA0 /* Vapor+JSON.swift in Sources */ = {isa = PBXBuildFile; fileRef = 802030001C77C956009B8655 /* Vapor+JSON.swift */; };
 		3A91D3F61C7F6B6600EA3CA0 /* LinuxFixes.swift in Sources */ = {isa = PBXBuildFile; fileRef = C352E6D51C62BC6A00E26467 /* LinuxFixes.swift */; };
 		3A91D3F71C7F6B6600EA3CA0 /* StringExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = C352E6E21C62BC6A00E26467 /* StringExtensions.swift */; };
-		3AEEF41A1C7F6D1B0099CBAE /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = C352E6931C62BB1C00E26467 /* Info.plist */; };
 		3AEEF41D1C7F6D4A0099CBAE /* Vapor.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3A91D3CC1C7F6AF900EA3CA0 /* Vapor.framework */; };
 		3AEEF4531C7F72C30099CBAE /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AEEF4181C7F6CBF0099CBAE /* main.swift */; };
 		C3433FD41C7D119D009F0876 /* HashTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3433FD21C7D119D009F0876 /* HashTests.swift */; };
 		C38808641C62C0390067DADD /* ResponseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C38808631C62C0390067DADD /* ResponseTests.swift */; };
 		C3943DC31C7663E80014F4EE /* RouterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3943DC21C7663E80014F4EE /* RouterTests.swift */; };
+		C3DFB55D1C80C2860045801C /* MyController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3DFB5541C80C2860045801C /* MyController.swift */; };
 		C3F683361C7D1EF300033AA2 /* ControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3F683351C7D1EF300033AA2 /* ControllerTests.swift */; };
 /* End PBXBuildFile section */
 
@@ -93,7 +93,7 @@
 		3A91D3CE1C7F6AF900EA3CA0 /* Vapor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Vapor.h; sourceTree = "<group>"; };
 		3A91D3D01C7F6AF900EA3CA0 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		3AEEF4181C7F6CBF0099CBAE /* main.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = main.swift; path = ../Sources/VaporDev/main.swift; sourceTree = SOURCE_ROOT; };
-		3AEEF44A1C7F71080099CBAE /* VaporExample */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = VaporExample; sourceTree = BUILT_PRODUCTS_DIR; };
+		3AEEF44A1C7F71080099CBAE /* VaporDev */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = VaporDev; sourceTree = BUILT_PRODUCTS_DIR; };
 		802030001C77C956009B8655 /* Vapor+JSON.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "Vapor+JSON.swift"; path = "../Sources/Vapor/JSON/Vapor+JSON.swift"; sourceTree = SOURCE_ROOT; };
 		802030101C78CAC2009B8655 /* Branch.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Branch.swift; path = ../Sources/Vapor/Router/Branch.swift; sourceTree = SOURCE_ROOT; };
 		802030161C78CAE1009B8655 /* BranchRouter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = BranchRouter.swift; path = ../Sources/Vapor/Router/BranchRouter.swift; sourceTree = SOURCE_ROOT; };
@@ -126,6 +126,11 @@
 		C377F2EE1C696CAB00DABD21 /* RenderDriver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RenderDriver.swift; path = ../Sources/Vapor/View/RenderDriver.swift; sourceTree = SOURCE_ROOT; };
 		C38808631C62C0390067DADD /* ResponseTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = ResponseTests.swift; path = ../Tests/Vapor/ResponseTests.swift; sourceTree = SOURCE_ROOT; };
 		C3943DC21C7663E80014F4EE /* RouterTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RouterTests.swift; path = ../Tests/Vapor/RouterTests.swift; sourceTree = SOURCE_ROOT; };
+		C3DFB5541C80C2860045801C /* MyController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MyController.swift; sourceTree = "<group>"; };
+		C3DFB5571C80C2860045801C /* vapor-logo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "vapor-logo.png"; sourceTree = "<group>"; };
+		C3DFB5591C80C2860045801C /* app.css */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.css; path = app.css; sourceTree = "<group>"; };
+		C3DFB55B1C80C2860045801C /* template.stencil */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = template.stencil; sourceTree = "<group>"; };
+		C3DFB55C1C80C2860045801C /* welcome.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; path = welcome.html; sourceTree = "<group>"; };
 		C3EDEA7A1C683A6C00754727 /* Middleware.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Middleware.swift; path = ../Sources/Vapor/Middleware/Middleware.swift; sourceTree = SOURCE_ROOT; };
 		C3EDEA7C1C683CE100754727 /* SessionMiddleware.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SessionMiddleware.swift; path = ../Sources/Vapor/Session/SessionMiddleware.swift; sourceTree = SOURCE_ROOT; };
 		C3EDEA831C6842C700754727 /* Int+Random.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "Int+Random.swift"; path = "../Sources/Vapor/Hash/Int+Random.swift"; sourceTree = SOURCE_ROOT; };
@@ -202,12 +207,15 @@
 			path = Vapor;
 			sourceTree = "<group>";
 		};
-		3A91D3D41C7F6B1A00EA3CA0 /* VaporExample */ = {
+		3A91D3D41C7F6B1A00EA3CA0 /* VaporDev */ = {
 			isa = PBXGroup;
 			children = (
+				C3DFB5531C80C2860045801C /* Controllers */,
+				C3DFB5551C80C2860045801C /* Public */,
+				C3DFB55A1C80C2860045801C /* Resources */,
 				3AEEF4181C7F6CBF0099CBAE /* main.swift */,
 			);
-			name = VaporExample;
+			name = VaporDev;
 			sourceTree = "<group>";
 		};
 		3AEEF4511C7F71110099CBAE /* Dependencies */ = {
@@ -318,7 +326,7 @@
 			children = (
 				C352E7141C62BE6900E26467 /* Package.swift */,
 				C352E7131C62BDE200E26467 /* README.md */,
-				3A91D3D41C7F6B1A00EA3CA0 /* VaporExample */,
+				3A91D3D41C7F6B1A00EA3CA0 /* VaporDev */,
 				3A91D3CD1C7F6AF900EA3CA0 /* Vapor */,
 				C352E6901C62BB1C00E26467 /* Tests */,
 				3AEEF4511C7F71110099CBAE /* Dependencies */,
@@ -331,7 +339,7 @@
 			children = (
 				C352E68F1C62BB1C00E26467 /* Tests.xctest */,
 				3A91D3CC1C7F6AF900EA3CA0 /* Vapor.framework */,
-				3AEEF44A1C7F71080099CBAE /* VaporExample */,
+				3AEEF44A1C7F71080099CBAE /* VaporDev */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -358,6 +366,51 @@
 			);
 			name = View;
 			path = ../Sources;
+			sourceTree = "<group>";
+		};
+		C3DFB5531C80C2860045801C /* Controllers */ = {
+			isa = PBXGroup;
+			children = (
+				C3DFB5541C80C2860045801C /* MyController.swift */,
+			);
+			name = Controllers;
+			path = ../Sources/VaporDev/Controllers;
+			sourceTree = "<group>";
+		};
+		C3DFB5551C80C2860045801C /* Public */ = {
+			isa = PBXGroup;
+			children = (
+				C3DFB5561C80C2860045801C /* images */,
+				C3DFB5581C80C2860045801C /* styles */,
+			);
+			name = Public;
+			path = ../Sources/VaporDev/Public;
+			sourceTree = "<group>";
+		};
+		C3DFB5561C80C2860045801C /* images */ = {
+			isa = PBXGroup;
+			children = (
+				C3DFB5571C80C2860045801C /* vapor-logo.png */,
+			);
+			path = images;
+			sourceTree = "<group>";
+		};
+		C3DFB5581C80C2860045801C /* styles */ = {
+			isa = PBXGroup;
+			children = (
+				C3DFB5591C80C2860045801C /* app.css */,
+			);
+			path = styles;
+			sourceTree = "<group>";
+		};
+		C3DFB55A1C80C2860045801C /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				C3DFB55B1C80C2860045801C /* template.stencil */,
+				C3DFB55C1C80C2860045801C /* welcome.html */,
+			);
+			name = Resources;
+			path = ../Sources/VaporDev/Resources;
 			sourceTree = "<group>";
 		};
 		C3EDEA7E1C683DC300754727 /* Middleware */ = {
@@ -416,9 +469,9 @@
 			productReference = 3A91D3CC1C7F6AF900EA3CA0 /* Vapor.framework */;
 			productType = "com.apple.product-type.framework";
 		};
-		3AEEF4491C7F71080099CBAE /* VaporExample */ = {
+		3AEEF4491C7F71080099CBAE /* VaporDev */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 3AEEF44E1C7F71080099CBAE /* Build configuration list for PBXNativeTarget "VaporExample" */;
+			buildConfigurationList = 3AEEF44E1C7F71080099CBAE /* Build configuration list for PBXNativeTarget "VaporDev" */;
 			buildPhases = (
 				3AEEF4521C7F712C0099CBAE /* Swift Build Dependencies */,
 				3AEEF4461C7F71080099CBAE /* Sources */,
@@ -429,9 +482,9 @@
 			);
 			dependencies = (
 			);
-			name = VaporExample;
+			name = VaporDev;
 			productName = VaporExample;
-			productReference = 3AEEF44A1C7F71080099CBAE /* VaporExample */;
+			productReference = 3AEEF44A1C7F71080099CBAE /* VaporDev */;
 			productType = "com.apple.product-type.tool";
 		};
 		C352E68E1C62BB1C00E26467 /* Tests */ = {
@@ -485,7 +538,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				3AEEF4491C7F71080099CBAE /* VaporExample */,
+				3AEEF4491C7F71080099CBAE /* VaporDev */,
 				3A91D3CB1C7F6AF900EA3CA0 /* Vapor */,
 				C352E68E1C62BB1C00E26467 /* Tests */,
 			);
@@ -504,7 +557,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				3AEEF41A1C7F6D1B0099CBAE /* Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -523,7 +575,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "swift build --chdir \"$SRCROOT\"";
+			shellScript = "/Library/Developer/Toolchains/swift-latest.xctoolchain/usr/bin/swift build --chdir \"$SRCROOT\"";
 		};
 		3AEEF4521C7F712C0099CBAE /* Swift Build Dependencies */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -537,7 +589,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "swift build --chdir \"$SRCROOT\"";
+			shellScript = "/Library/Developer/Toolchains/swift-latest.xctoolchain/usr/bin/swift build --chdir \"$SRCROOT\"";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -590,6 +642,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				3AEEF4531C7F72C30099CBAE /* main.swift in Sources */,
+				C3DFB55D1C80C2860045801C /* MyController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -799,7 +852,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		3AEEF44E1C7F71080099CBAE /* Build configuration list for PBXNativeTarget "VaporExample" */ = {
+		3AEEF44E1C7F71080099CBAE /* Build configuration list for PBXNativeTarget "VaporDev" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				3AEEF44F1C7F71080099CBAE /* Debug */,
