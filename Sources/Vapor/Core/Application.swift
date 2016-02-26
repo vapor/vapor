@@ -61,7 +61,7 @@ public class Application {
 		Optional handler to be called when detecting the
 		current environment.
 	*/
-	public var detectEnvironmentHandler: ((String) -> String)?
+	public var detectEnvironmentHandler: ((String) -> Environment)?
 
 	/**
 		The work directory of your application is
@@ -117,10 +117,10 @@ public class Application {
 		}
 
 		if let handler = self.detectEnvironmentHandler {
-			environment = handler(environment)
+			return handler(environment)
+		} else {
+			return Environment.fromString(environment)
 		}
-
-		return Environment.fromString(environment)
 	}
 
 	/**
