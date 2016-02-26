@@ -123,6 +123,24 @@ public class Application {
 		return environment
 	}
 
+	/**
+		If multiple environments are passed, return
+		value will be true if at least one of the passed
+		in environment values matches the app environment
+		and false if none of them match.
+
+		If a single environment is passed, the return
+		value will be true if the the passed in environment
+		matches the app environment.
+	*/
+	public func inEnvironment(environments: String...) -> Bool {
+		if environments.count == 1 {
+			return self.environment == environments[0]
+		} else {
+			return environments.contains(self.environment)
+		}
+	}
+
     /**
         Returns the string value of an
         argument passed to the executable
