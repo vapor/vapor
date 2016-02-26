@@ -39,6 +39,31 @@ public class Application {
     public var providers: [Provider.Type]
 
 	/**
+		Internal value populated the first time
+		self.environment is computed
+	*/
+	private var detectedEnvironment: String?
+
+	/**
+		Current environment of the application
+	*/
+	public var environment: String {
+		if let environment = self.detectedEnvironment {
+			return environment
+		}
+
+		let environment = self.bootEnvironment()
+		self.detectedEnvironment = environment
+		return environment
+	}
+
+	/**
+		Optional handler to be called when determing the
+		current environment.
+	*/
+	public var detectEnvironmentHandler: ((String) -> String)?
+
+	/**
 		The work directory of your application is
 		the directory in which your Resources, Public, etc
 		folders are stored. This is normally `./` if
@@ -80,6 +105,23 @@ public class Application {
     func bootRoutes() {
         routes.forEach(router.register)
     }
+
+	func bootEnvironment() -> String {
+		var environment: String
+
+		if let value = self.argument("env") {
+			environment = value
+		} else {
+			// TODO: This should default to "production" in release builds
+			environment = "local"
+		}
+
+		if let handler = self.detectEnvironmentHandler {
+			environment = handler(environment)
+		}
+
+		return environment
+	}
 
     /**
         Returns the string value of an
