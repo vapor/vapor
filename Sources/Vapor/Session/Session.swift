@@ -48,8 +48,18 @@ public class Session {
 		}
 	}
 
+    public subscript(key: String) -> String? {
+        get {
+            return data[key]
+        }
+
+        set(newValue) {
+            data[key] = newValue
+        }
+    }
+
 	var key: String?
-	public var data: [String: String] = [:] {
+	var data: [String: String] = [:] {
 		didSet {
 			if self.key == nil {
                 
