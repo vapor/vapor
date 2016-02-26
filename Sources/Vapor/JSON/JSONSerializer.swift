@@ -121,8 +121,9 @@ extension Json {
 // MARK: Serialization
 
 extension Json {
-    public static func deserialize(source: [UInt8]) throws -> Json {
-        let jayValue = try Jay().typesafeJsonFromData(source)
+    public static func deserialize<T: SequenceType where T.Generator.Element == UInt8>(source: T) throws -> Json {
+        let byteArray = [UInt8](source)
+        let jayValue = try Jay().typesafeJsonFromData(byteArray)
         return Json(jayValue)
     }
 }
