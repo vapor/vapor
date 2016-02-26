@@ -1,0 +1,86 @@
+#!/usr/bin/env swift
+
+#if os(Linux)
+	import Glibc
+#else
+	import Darwin
+#endif
+
+if Process.arguments.count < 2 {
+	print("Usage: ./vapordev [build|clean|run|test|fresh-[build|test|run]]")
+	exit(1)
+}
+
+let clean: Void -> Bool = {
+	print("Cleaning")
+	return system("rm -fr .build Packages") == 0
+}
+
+let build: Void -> Bool = {
+	print("Building")
+	return system("swift build") == 0
+}
+
+let test: Void -> Bool = {
+	print("Testing")
+	return system("swift test") == 0
+}
+
+let run: Void -> Bool = {
+	print("Running")
+	return system(".build/debug/VaporDev") == 0
+}
+
+let freshBuild: Void -> Bool = {
+	if clean() {
+		return build()
+	} else {
+		print("Clean filed, aborting")
+		return false
+	}
+}
+
+var successful: Bool
+
+switch Process.arguments[1] {
+case "clean":
+	successful = clean()
+case "build":
+	successful = build()
+case "test":
+	if build() {
+		successful = test()
+	} else {
+		print("Build failed, aborting")
+		successful = false
+	}
+case "run":
+	if build() {
+		successful = run()
+	} else {
+		print("Build failed, aborting")
+		successful = false
+	}
+case "fresh-build":
+	successful = freshBuild()
+case "fresh-test":
+	if freshBuild() {
+		successful = test()
+	} else {
+		print("Build failed, aborting")
+		successful = false
+	}
+case "fresh-run":
+	if freshBuild() {
+		successful = run()
+	} else {
+		print("Build failed, aborting")
+		successful = false
+	}
+default:
+	print("ERROR: Unknown command: \(Process.arguments[1])")
+	successful = false
+}
+
+exit(successful ? 0 : 1)
+
