@@ -232,6 +232,10 @@ extension Response {
             let json = try NSJSONSerialization.dataWithJSONObject(jsonObject, options: NSJSONWritingOptions.PrettyPrinted)
             data = Array(UnsafeBufferPointer(start: UnsafePointer<UInt8>(json.bytes), count: json.length))
         } else {
+            Log.warning("NSJSON failure. Try wrapping with Json()")
+            #if os(Linux)
+            Log.warning("NSJSON is not yet supported on Linux.")
+            #endif
             data = []
         }
         

@@ -53,7 +53,7 @@ extension Application {
      
         Note: You are responsible for pluralizing your endpoints.
     */
-    public final func resource(path: String, controller: Controller) {
+    public final func resource(path: String, controller: ResourceController.Type) {
 
         let last = "/:id"
         
@@ -67,13 +67,31 @@ extension Application {
         let fullPath = shortPath + last
         
         // ie: /users
-        self.get(shortPath, handler: controller.index)
-        self.post(shortPath, handler: controller.store)
+        self.get(shortPath) { request in
+            let c = controller.init()
+            return try c.index(request)
+        }
+        
+        self.post(shortPath) { request in
+            let c = controller.init()
+            return try c.store(request)
+        }
         
         // ie: /users/:id
-        self.get(fullPath, handler: controller.show)
-        self.put(fullPath, handler: controller.update)
-        self.delete(fullPath, handler: controller.destroy)
+        self.get(fullPath) { request in
+            let c = controller.init()
+            return try c.show(request)
+        }
+        
+        self.put(fullPath) { request in
+            let c = controller.init()
+            return try c.update(request)
+        }
+        
+        self.delete(fullPath) { request in
+            let c = controller.init()
+            return try c.destroy(request)
+        }
     }
     
     public final func add(method: Request.Method, path: String, handler: Route.Handler) {
@@ -90,6 +108,13 @@ extension Application {
         
         //Store the route for registering with Router later
         let host = Route.scopedHost ?? "*"
+        
+        //Apply any scoped prefix
+        var path = path
+        if let prefix = Route.scopedPrefix {
+            path = prefix + "/" + path
+        }
+        
         let route = Route(host: host, method: method, path: path, handler: handler)
         self.routes.append(route)
     }
@@ -113,10 +138,30 @@ extension Application {
     }
     
     public final func host(host: String, handler: () -> Void) {
+        let original = Route.scopedHost
         Route.scopedHost = host
         
         handler()
         
-        Route.scopedHost = nil
+        Route.scopedHost = original
+    }
+    
+    /**
+        Create multiple routes with the same base URL
+        without repeating yourself.
+    */
+    public func group(prefix: String, @noescape handler: () -> Void) {
+        let original = Route.scopedPrefix
+        
+        //append original with a trailing slash
+        if let original = original {
+            Route.scopedPrefix = original + "/" + prefix
+        } else {
+            Route.scopedPrefix = prefix
+        }
+        
+        handler()
+        
+        Route.scopedPrefix = nil
     }
 }
