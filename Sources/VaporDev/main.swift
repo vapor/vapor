@@ -22,15 +22,17 @@ app.get("json") { request in
 
 app.post("json") { request in
     //parse a key inside the received json
-    guard let json = request.json else { return Response(error: "Invalid json") }
-    guard let count = json.objectValue?["unicorns"]?.int else { return Response(error: "No unicorn count provided") }
+    guard let count = request.data["unicorns"]?.int else {
+        return Response(error: "No unicorn count provided")
+    }
     return "Received \(count) unicorns"
 }
 
 app.post("json2") { request in
     //parse a key inside the received json
-    guard let json = request.json else { return Response(error: "Invalid json") }
-    guard let count = json.objectValue?["unicorns"]?.int else { return Response(error: "No unicorn count provided") }
+    guard let count = request.data["unicorns"]?.int else {
+        return Response(error: "No unicorn count provided")
+    }
     return try Response(status: .Created, json: Json(["message":"Received \(count) unicorns"]))
 }
 
@@ -51,7 +53,5 @@ app.group("abort") {
         throw Abort.InternalServerError
     }
 }
-
-//app.resource("resource", controller: MyController.self)
 
 app.start(port: 8080)
