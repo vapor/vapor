@@ -1,4 +1,4 @@
-import Vapor //Travis will fail without this
+import Vapor
 
 let app = Application()
 
