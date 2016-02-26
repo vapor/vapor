@@ -13,7 +13,8 @@ import XCTest
     extension RouteTests: XCTestCaseProvider {
         var allTests : [(String, () throws -> Void)] {
             return [
-                ("testRoute", testRoute)
+                ("testRoute", testRoute),
+                ("testRouteScopedPrefix", testRouteScopedPrefix)
             ]
         }
     }
@@ -39,35 +40,78 @@ class RouteTests: XCTestCase {
             }
         }
         
-        var fooFound = false
-        var barFound = false
-        var bazFound = false
+        self.assertRouteExists("foo", method: .Get, host: "*", inRoutes: app.routes)
+        self.assertRouteExists("bar", method: .Post, host: "*", inRoutes: app.routes)
+        self.assertRouteExists("baz", method: .Put, host: "google.com", inRoutes: app.routes)
+    }
+
+    
+    func testRouteScopedPrefix() {
+        let app = Application()
         
-        for route in app.routes {
-            if route.path == "foo" && route.method == .Get && route.hostname == "*" {
-                fooFound = true
+        app.group("group/path") {
+            app.get("1") { request in
+                return ""
             }
             
-            if route.path == "bar" && route.method == .Post && route.hostname == "*" {
-                barFound = true
-            }
-            
-            if route.path == "baz" && route.method == .Put && route.hostname == "google.com" {
-                bazFound = true
+            app.options("2") { request in
+                return ""
             }
         }
+
+        self.assertRouteExists("group/path/1", method: .Get, host: "*", inRoutes: app.routes)
+        self.assertRouteExists("group/path/2", method: .Options, host: "*", inRoutes: app.routes)
+    }
+    
+    func testRouteAbort() {
+        let app = Application()
         
-        if !fooFound {
-            XCTFail("GET /foo was not found")
+        app.get("400") { request in
+            throw Abort.BadRequest
         }
         
-        if !barFound {
-            XCTFail("POST /bar was not found")
+        app.bootRoutes()
+        
+        let request = Request(method: .Get, path: "400")
+        guard var handler = app.router.route(request) else {
+            XCTFail("No handler found")
+            return
         }
         
-        if !bazFound {
-            XCTFail("PUT google.com/baz was not found")
+        do {
+            try handler(request: request)
+            XCTFail("Handler did not throw error")
+        } catch Abort.BadRequest {
+            //pass
+        } catch {
+            XCTFail("Handler threw incorrect error")
+        }
+        
+        for middleware in app.middleware {
+            handler = middleware.handle(handler)
+        }
+        
+        do {
+            let request = try handler(request: request)
+            XCTAssert(request.status.code == 400, "Incorrect response status")
+        } catch {
+            XCTFail("Middleware did not handle abort")
         }
     }
 
+    
+    func assertRouteExists(path: String, method: Request.Method, host: String, inRoutes routes: [Route]) {
+        var found = false
+        
+        for route in routes {
+            if route.path == path && route.method == method && route.hostname == host {
+                found = true
+            }
+            
+        }
+        
+        if !found {
+            XCTFail("\(method) \(path) was not found")
+        }
+    }
 }
