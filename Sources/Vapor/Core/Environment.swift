@@ -9,16 +9,11 @@ public enum Environment: Equatable {
 		let string = string.lowercaseString
 
 		switch string {
-		case "production":
-			return .Production
-		case "qa":
-			return .QA
-		case "test":
-			return .Test
-		case "development":
-			return .Development
-		default:
-			return .Custom(string)
+		case "production": return .Production
+		case "qa": return .QA
+		case "test": return .Test
+		case "development": return .Development
+		default: return .Custom(string)
 		}
 	}
 }
