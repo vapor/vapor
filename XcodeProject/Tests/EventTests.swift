@@ -26,7 +26,6 @@ import XCTest
 class EventTests: XCTestCase {
 
     var subscribers: [Subscriber] = []
-    
     static var responded: [Subscriber] = []
     
     //MARK: Set up
@@ -36,7 +35,6 @@ class EventTests: XCTestCase {
     }
     
     private class HighFooSubscriber: Subscriber {
-        
         let type: EventType = TestEvents.FooEvent
         let priority: Int = 100
         
@@ -47,7 +45,6 @@ class EventTests: XCTestCase {
     }
     
     private class LowFooSubscriber: Subscriber {
-        
         let type: EventType = TestEvents.FooEvent
         let priority: Int = 50
         
@@ -58,7 +55,6 @@ class EventTests: XCTestCase {
     }
     
     private class BarFalseSubscriber: Subscriber {
-        
         let type: EventType = TestEvents.BarEvent
         let priority: Int = 100
         
@@ -69,7 +65,6 @@ class EventTests: XCTestCase {
     }
     
     private class BarTrueSubscriber: Subscriber {
-        
         let type: EventType = TestEvents.BarEvent
         let priority: Int = 50
         
@@ -79,11 +74,8 @@ class EventTests: XCTestCase {
         }
     }
 
-    
+    //Set up the test dependencies
     func prepare() {
-        
-        //Reset all of the data
-        
         EventTests.responded = []
         
         subscribers = [
@@ -94,7 +86,6 @@ class EventTests: XCTestCase {
         ]
         
         SubscriberContainer.subscribers = subscribers
-        
     }
     
     //MARK: Tests
@@ -105,7 +96,6 @@ class EventTests: XCTestCase {
     
     func testSubscribersDidLoadInApplication() {
         prepare()
-        
         SubscriberContainer.subscribers = []
         
         let app = Application()
@@ -113,14 +103,12 @@ class EventTests: XCTestCase {
         app.start()
         
         XCTAssertEqual(4, SubscriberContainer.subscribers.count, "4 subscribers should load")
-        
     }
     
     func testSubscribersDidRespondToEvent() {
         prepare()
         fire()
         XCTAssertEqual(2, EventTests.responded.count, "2 subscribers should have responded to FooEvent")
-        
     }
     
     func testSubscribersDidFireInOrderOfPriority() {

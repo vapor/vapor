@@ -31,7 +31,6 @@ public class Application {
 	*/
 	public var middleware: [Middleware.Type]
 
-
 	/**
 		Provider classes that have been registered
 		with this application
