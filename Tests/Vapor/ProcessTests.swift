@@ -9,6 +9,16 @@
 import XCTest
 @testable import Vapor
 
+#if os(Linux)
+    extension ProcessTests: XCTestCaseProvider {
+        var allTests : [(String, () throws -> Void)] {
+            return [
+                       ("testArgumentExtraction", testArgumentExtraction)
+            ]
+        }
+    }
+#endif
+
 class ProcessTests: XCTestCase {
     
     func testArgumentExtraction() {
