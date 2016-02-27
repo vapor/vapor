@@ -8,17 +8,20 @@
 
 import XCTest
 @testable import Vapor
-//
-//#if os(Linux)
-//    extension RouteTests: XCTestCaseProvider {
-//        var allTests : [(String, () throws -> Void)] {
-//            return [
-//                       ("testRoute", testRoute),
-//                       ("testRouteScopedPrefix", testRouteScopedPrefix)
-//            ]
-//        }
-//    }
-//#endif
+
+#if os(Linux)
+    extension EventTests: XCTestCaseProvider {
+        var allTests : [(String, () throws -> Void)] {
+            return [
+                       ("testSubscribersDidLoadInApplication", testSubscribersDidLoadInApplication),
+                       ("testSubscribersDidRespondToEvent", testSubscribersDidRespondToEvent),
+                       ("testSubscribersDidFireInOrderOfPriority", testSubscribersDidFireInOrderOfPriority),
+                       ("testSubscribersReturningFalseStopsPropogation", testSubscribersReturningFalseStopsPropogation),
+                       
+            ]
+        }
+    }
+#endif
 
 class EventTests: XCTestCase {
 
