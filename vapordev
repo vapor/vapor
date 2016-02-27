@@ -24,12 +24,26 @@ if Process.arguments.count < 2 {
 	exit(1)
 }
 
+var cleaned = false
 let clean: Void -> Bool = {
+	if cleaned {
+		return true
+	} else {
+		cleaned = true
+	}
+
 	print("Cleaning")
 	return system("rm -fr .build Packages") == 0
 }
 
+var built = false
 let build: Void -> Bool = {
+	if built {
+		return true
+	} else {
+		built = true
+	}
+
 	print("Building")
 	return system("swift build") == 0
 }
