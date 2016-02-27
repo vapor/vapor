@@ -163,7 +163,7 @@ func dispatch_async( queue: Int, _ block: () -> () ) {
         pthread_detach( pthread )
     }
     else {
-        Log.Error( "pthread_create() error" )
+        Log.error( "pthread_create() error" )
     }
 }
 
