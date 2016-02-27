@@ -61,7 +61,7 @@ class EventTests: XCTestCase {
         
         func handle(data: Any) -> Continue {
             EventTests.responded.append(self)
-            return true
+            return false
         }
     }
     
@@ -91,9 +91,14 @@ class EventTests: XCTestCase {
         ]
         
         SubscriberContainer.subscribers = subscribers
+        
     }
     
     //MARK: Tests
+    private func fire(type: TestEvents = .FooEvent) {
+        let event = Event(type, data: "dummy")
+        Event.fire(event)
+    }
     
     func testSubscribersDidLoadInApplication() {
         prepare()
@@ -108,69 +113,23 @@ class EventTests: XCTestCase {
         
     }
     
-    
-    func testSubscribersDidRespondToEventCorrectly() {
+    func testSubscribersDidRespondToEvent() {
         prepare()
-        
-        let event = Event(TestEvents.FooEvent, data: "dummy")
-        Event.fire(event)
-        
-        XCTAssertEqual(2, EventTests.responded.count, "2 subscribers should have responded to .FooEvent")
+        fire()
+        XCTAssertEqual(2, EventTests.responded.count, "2 subscribers should have responded to FooEvent")
         
     }
-
     
-//    func testRoute() {
-//        
-//    
-////        let event = Event(type: SystemEvents.ApplicationDidStart, data: "This is the data")
-//
-//        
-//        class HighSubscriber: Subscriber {
-//        
-//            let type: EventType = SystemEvents.UserRegistered
-//            let priority: Int = 100
-//        
-//            func handle(data: Any) -> Continue {
-//                print("I did something with the user")
-//                return true
-//            }
-//        }
-//        
-//        public class LowSubscriber: Subscriber {
-//        
-//            public let type: EventType = SystemEvents.UserRegistered
-//            public let priority: Int = 0
-//        
-//            public func handle(data: Any) -> Continue {
-//                print("I did something with the user")
-//                return true
-//            }
-//        }
-//        
-//        struct User {
-//            let name: String
-//        }
-//        
-//        enum SystemEvents: String, EventType {
-//            case ApplicationDidStart, UserRegistered
-//        }
-//        
-//        enum MyEvents: String, EventType {
-//            case CustomEvent
-//        }
-//        
-//        let user = User(name: "John Doe")
-//        
-//        
-//        
-//        let event = Event(SystemEvents.UserRegistered, data: user)
-//        Event.fire(event)
-//        
-//        
-//
-//        
-//        
-//    }
+    func testSubscribersDidFireInOrderOfPriority() {
+        prepare()
+        fire()
+        XCTAssertTrue(String(EventTests.responded[0]).containsString("HighFooSubscriber"), "HighFooSubscriber should respond before LowFooSubscriber")
+    }
+    
+    func testSubscribersReturningFalseStopsPropogation() {
+        prepare()
+        fire(.BarEvent)
+        XCTAssertEqual(1, EventTests.responded.count, "only 1 bar subscriber should respond")
+    }
 
 }
