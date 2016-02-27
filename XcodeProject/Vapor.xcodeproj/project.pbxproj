@@ -50,6 +50,7 @@
 		3A91D3F71C7F6B6600EA3CA0 /* StringExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = C352E6E21C62BC6A00E26467 /* StringExtensions.swift */; };
 		3AEEF41D1C7F6D4A0099CBAE /* Vapor.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3A91D3CC1C7F6AF900EA3CA0 /* Vapor.framework */; };
 		3AEEF4531C7F72C30099CBAE /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AEEF4181C7F6CBF0099CBAE /* main.swift */; };
+		800EFA561C822EE200F6C066 /* Process.swift in Sources */ = {isa = PBXBuildFile; fileRef = 800EFA551C822EE200F6C066 /* Process.swift */; };
 		C3433FD41C7D119D009F0876 /* HashTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3433FD21C7D119D009F0876 /* HashTests.swift */; };
 		C38808641C62C0390067DADD /* ResponseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C38808631C62C0390067DADD /* ResponseTests.swift */; };
 		C3943DC31C7663E80014F4EE /* RouterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3943DC21C7663E80014F4EE /* RouterTests.swift */; };
@@ -96,6 +97,7 @@
 		3A91D3D01C7F6AF900EA3CA0 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		3AEEF4181C7F6CBF0099CBAE /* main.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = main.swift; path = ../Sources/VaporDev/main.swift; sourceTree = SOURCE_ROOT; };
 		3AEEF44A1C7F71080099CBAE /* VaporDev */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = VaporDev; sourceTree = BUILT_PRODUCTS_DIR; };
+		800EFA551C822EE200F6C066 /* Process.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Process.swift; sourceTree = "<group>"; };
 		802030001C77C956009B8655 /* Vapor+JSON.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "Vapor+JSON.swift"; path = "../Sources/Vapor/JSON/Vapor+JSON.swift"; sourceTree = SOURCE_ROOT; };
 		802030101C78CAC2009B8655 /* Branch.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Branch.swift; path = ../Sources/Vapor/Router/Branch.swift; sourceTree = SOURCE_ROOT; };
 		802030161C78CAE1009B8655 /* BranchRouter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = BranchRouter.swift; path = ../Sources/Vapor/Router/BranchRouter.swift; sourceTree = SOURCE_ROOT; };
@@ -204,6 +206,7 @@
 				C3EDEA821C68419B00754727 /* Crypto */,
 				80202FFF1C77C94C009B8655 /* JSON */,
 				C304C8AF1C63051E00058C92 /* Fixes */,
+				800EFA541C822ECF00F6C066 /* Process */,
 				3A91D3CE1C7F6AF900EA3CA0 /* Vapor.h */,
 				3A91D3D01C7F6AF900EA3CA0 /* Info.plist */,
 			);
@@ -228,6 +231,15 @@
 				3A583A001C7FCA720044AAFF /* libVapor.dylib */,
 			);
 			name = Dependencies;
+			sourceTree = "<group>";
+		};
+		800EFA541C822ECF00F6C066 /* Process */ = {
+			isa = PBXGroup;
+			children = (
+				800EFA551C822EE200F6C066 /* Process.swift */,
+			);
+			name = Process;
+			path = ../../Sources/Vapor/Process;
 			sourceTree = "<group>";
 		};
 		80202FFF1C77C94C009B8655 /* JSON */ = {
@@ -612,6 +624,7 @@
 				3A91D3F71C7F6B6600EA3CA0 /* StringExtensions.swift in Sources */,
 				3A91D3E01C7F6B6600EA3CA0 /* BranchRouter.swift in Sources */,
 				3A91D3E51C7F6B6600EA3CA0 /* Response.swift in Sources */,
+				800EFA561C822EE200F6C066 /* Process.swift in Sources */,
 				3A91D3EF1C7F6B6600EA3CA0 /* Provider.swift in Sources */,
 				3A659FC51C80368F00C105F5 /* ResourceController.swift in Sources */,
 				3A91D3DA1C7F6B6600EA3CA0 /* Application+Route.swift in Sources */,

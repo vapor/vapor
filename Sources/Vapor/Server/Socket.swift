@@ -48,22 +48,7 @@ public enum SocketError: ErrorType {
 }
 
 public class Socket: Hashable, Equatable {
-    
-    /**
-     Returns the string value of an
-     argument passed to the executable
-     in the format --name=value
-     */
-    static func argument(name: String) -> String? {
-        for argument in Process.arguments {
-            if argument.hasPrefix("--\(name)=") {
-                return argument.split("=")[1]
-            }
-        }
-        
-        return nil
-    }
-    
+
     public class func tcpSocketForListen(port: in_port_t, maxPendingConnection: Int32 = SOMAXCONN) throws -> Socket {
         
         #if os(Linux)
@@ -84,7 +69,7 @@ public class Socket: Hashable, Equatable {
         }
         Socket.setNoSigPipe(socketFileDescriptor)
         
-        let ip = argument("ip") ?? "0.0.0.0"
+        let ip = Process.valueFor(argument: "ip") ?? "0.0.0.0"
         #if os(Linux)
             var addr = sockaddr_in()
             addr.sin_family = sa_family_t(AF_INET)
