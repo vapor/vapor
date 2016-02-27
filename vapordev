@@ -6,8 +6,21 @@
 	import Darwin
 #endif
 
+enum Command: String {
+	case Clean = "clean"
+	case Build = "build"
+	case Run = "run"
+	case Test = "test"
+
+	static var all: [Command] = [.Clean, .Build, .Run, .Test]
+}
+
 if Process.arguments.count < 2 {
-	print("Usage: ./vapordev [build|clean|run|test|fresh-[build|test|run]]")
+	let commands = Command.all.map {
+		return $0.rawValue
+	}
+
+	print("Usage: ./vapordev [\(commands.joinWithSeparator("|"))]")
 	exit(1)
 }
 
@@ -31,56 +44,53 @@ let run: Void -> Bool = {
 	return system(".build/debug/VaporDev") == 0
 }
 
-let freshBuild: Void -> Bool = {
-	if clean() {
-		return build()
+var commands = Array<Command>()
+
+for (i, value) in Process.arguments.enumerate() {
+	guard i > 0 else {
+		continue
+	}
+
+	if let command = Command(rawValue: value.lowercaseString) {
+		commands.append(command)
 	} else {
-		print("Clean filed, aborting")
-		return false
+		var matched = false
+
+		for command in Command.all {
+			if command.rawValue.hasPrefix(value) {
+				commands.append(command)
+				matched = true
+				break
+			}
+		}
+
+		if !matched {
+			print("ERROR: Unknown command: \(value)")
+			exit(1)
+		}
 	}
 }
 
-var successful: Bool
+for command in commands {
+	var successful: Bool
 
-switch Process.arguments[1] {
-case "clean":
-	successful = clean()
-case "build":
-	successful = build()
-case "test":
-	if build() {
-		successful = test()
-	} else {
-		print("Build failed, aborting")
-		successful = false
+	switch command {
+	case .Clean:
+		successful = clean()
+	case .Build:
+		successful = build()
+	case .Run, .Test:
+		if build() {
+			successful = command == .Test ? test() : run()
+		} else {
+			print("Build failed, aborting")
+			successful = false
+		}
 	}
-case "run":
-	if build() {
-		successful = run()
-	} else {
-		print("Build failed, aborting")
-		successful = false
+
+	if !successful {
+		exit(1)
 	}
-case "fresh-build":
-	successful = freshBuild()
-case "fresh-test":
-	if freshBuild() {
-		successful = test()
-	} else {
-		print("Build failed, aborting")
-		successful = false
-	}
-case "fresh-run":
-	if freshBuild() {
-		successful = run()
-	} else {
-		print("Build failed, aborting")
-		successful = false
-	}
-default:
-	print("ERROR: Unknown command: \(Process.arguments[1])")
-	successful = false
 }
 
-exit(successful ? 0 : 1)
-
+exit(0)
