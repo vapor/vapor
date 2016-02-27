@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		3492B2EF1C787DD600D8E588 /* RouteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3492B2EE1C787DD600D8E588 /* RouteTests.swift */; };
+		34B003FE1C815325008B418B /* Event.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34B003FD1C815325008B418B /* Event.swift */; };
+		34B00F851C81564E0072C542 /* EventTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34B00F841C81564E0072C542 /* EventTests.swift */; };
 		34CC59561C7BE3C9007CA680 /* LogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34CC59551C7BE3C9007CA680 /* LogTests.swift */; };
 		3A583A011C7FCA720044AAFF /* libVapor.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 3A583A001C7FCA720044AAFF /* libVapor.dylib */; };
 		3A659FC11C80365700C105F5 /* AbortMiddleware.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A659FC01C80365700C105F5 /* AbortMiddleware.swift */; };
@@ -83,6 +85,8 @@
 		288CFC2D1C7AC01A00E4617A /* Application.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Application.swift; path = ../Sources/Vapor/Core/Application.swift; sourceTree = SOURCE_ROOT; };
 		288CFC301C7AC02A00E4617A /* Provider.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Provider.swift; path = ../Sources/Vapor/Core/Provider.swift; sourceTree = SOURCE_ROOT; };
 		3492B2EE1C787DD600D8E588 /* RouteTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RouteTests.swift; path = ../Tests/Vapor/RouteTests.swift; sourceTree = SOURCE_ROOT; };
+		34B003FD1C815325008B418B /* Event.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Event.swift; sourceTree = "<group>"; };
+		34B00F841C81564E0072C542 /* EventTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EventTests.swift; sourceTree = "<group>"; };
 		34CC59551C7BE3C9007CA680 /* LogTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = LogTests.swift; path = ../Tests/Vapor/LogTests.swift; sourceTree = SOURCE_ROOT; };
 		34CC59571C7BE405007CA680 /* Log.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Log.swift; path = ../Sources/Vapor/Log/Log.swift; sourceTree = SOURCE_ROOT; };
 		34CC59611C7C5A03007CA680 /* LogDriver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = LogDriver.swift; path = ../Sources/Vapor/Log/LogDriver.swift; sourceTree = SOURCE_ROOT; };
@@ -177,6 +181,15 @@
 			path = ../Sources;
 			sourceTree = "<group>";
 		};
+		34B003FC1C815317008B418B /* Event */ = {
+			isa = PBXGroup;
+			children = (
+				34B003FD1C815325008B418B /* Event.swift */,
+			);
+			name = Event;
+			path = ../../Sources/Vapor/Event;
+			sourceTree = "<group>";
+		};
 		34CC59601C7BE9C1007CA680 /* Log */ = {
 			isa = PBXGroup;
 			children = (
@@ -190,6 +203,7 @@
 		3A91D3CD1C7F6AF900EA3CA0 /* Vapor */ = {
 			isa = PBXGroup;
 			children = (
+				34B003FC1C815317008B418B /* Event */,
 				288CFC2D1C7AC01A00E4617A /* Application.swift */,
 				C3433FCB1C7CFB39009F0876 /* Routing */,
 				C377F2ED1C696C9B00DABD21 /* View */,
@@ -358,6 +372,7 @@
 				C38808631C62C0390067DADD /* ResponseTests.swift */,
 				C3943DC21C7663E80014F4EE /* RouterTests.swift */,
 				3492B2EE1C787DD600D8E588 /* RouteTests.swift */,
+				34B00F841C81564E0072C542 /* EventTests.swift */,
 			);
 			path = Tests;
 			sourceTree = "<group>";
@@ -618,6 +633,7 @@
 				3A91D3DD1C7F6B6600EA3CA0 /* Log.swift in Sources */,
 				3A91D3E81C7F6B6600EA3CA0 /* SocketServer.swift in Sources */,
 				3A91D3E91C7F6B6600EA3CA0 /* SocketParser.swift in Sources */,
+				34B003FE1C815325008B418B /* Event.swift in Sources */,
 				3A91D3D91C7F6B6600EA3CA0 /* Controller.swift in Sources */,
 				3A91D3F01C7F6B6600EA3CA0 /* Int+Random.swift in Sources */,
 				3A659FC11C80365700C105F5 /* AbortMiddleware.swift in Sources */,
@@ -657,6 +673,7 @@
 				C38808641C62C0390067DADD /* ResponseTests.swift in Sources */,
 				3492B2EF1C787DD600D8E588 /* RouteTests.swift in Sources */,
 				C3F683361C7D1EF300033AA2 /* ControllerTests.swift in Sources */,
+				34B00F851C81564E0072C542 /* EventTests.swift in Sources */,
 				34CC59561C7BE3C9007CA680 /* LogTests.swift in Sources */,
 				C3943DC31C7663E80014F4EE /* RouterTests.swift in Sources */,
 				C3433FD41C7D119D009F0876 /* HashTests.swift in Sources */,

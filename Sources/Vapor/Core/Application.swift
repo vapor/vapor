@@ -37,6 +37,12 @@ public class Application {
 		with this application
 	*/
     public var providers: [Provider.Type]
+    
+    /**
+        Event subscriber classes that have been registered
+        with this application
+     */
+    public var subscribers: [Subscriber]
 
 	/**
 		The work directory of your application is
@@ -66,11 +72,11 @@ public class Application {
         ]
         
         self.providers = []
+        self.subscribers = []
         
         self.middleware.append(SessionMiddleware)
 	}
-
-    
+ 
     public func bootProviders() {
         for provider in self.providers {
             provider.boot(self)
@@ -79,6 +85,10 @@ public class Application {
     
     func bootRoutes() {
         routes.forEach(router.register)
+    }
+    
+    func loadSubscribers() {
+        SubscriberContainer.subscribers = subscribers
     }
 
     /**
@@ -105,6 +115,7 @@ public class Application {
         self.server.delegate = self
         
         self.bootRoutes()
+        self.loadSubscribers()
 
 		var port = inPort
 
