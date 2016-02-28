@@ -114,9 +114,13 @@ public class Request {
     */
     static func parseQueryData(string: String) -> [String: String] {
         
-        var urlParts = string.split("?")
+        let urlParts = string.split("?")
         if urlParts.count >= 2 {
-            return self.parseData(urlParts[1])
+            // First `?` indicates query, subsequent `?` should be included as part of the arguments so we reinsert all `?` after dropping the first element which will be the url.
+            let suffix = urlParts
+                .dropFirst()
+                .joinWithSeparator("?")
+            return self.parseData(suffix)
         }
         
         return [:]
