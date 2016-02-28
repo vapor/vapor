@@ -74,29 +74,10 @@ public extension Request {
          */
         static func parsePostData(body: [UInt8]) -> [String: String] {
             if let bodyString = NSString(bytes: body, length: body.count, encoding: NSUTF8StringEncoding) {
-                return self.parseData(bodyString.description)
+                return bodyString.description.keyValuePairs()
             }
             
             return [:]
-        }
-        
-        /**
-         Parses `key=value` pair data separated by `&`.
-         
-         - returns: String dictionary of parsed data
-         */
-        static func parseData(string: String) -> [String: String] {
-            var data: [String: String] = [:]
-            
-            for pair in string.split("&") {
-                let tokens = pair.split(1, separator: "=")
-                
-                if let name = tokens.first, value = tokens.last {
-                    data[name.removePercentEncoding()] = value.removePercentEncoding()
-                }
-            }
-            
-            return data
         }
     }
 }
