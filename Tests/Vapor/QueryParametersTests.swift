@@ -11,7 +11,7 @@ import XCTest
 @testable import Vapor
 
 #if os(Linux)
-    extension QueryParameter: XCTestCaseProvider {
+    extension QueryParameterTests: XCTestCaseProvider {
         var allTests : [(String, () throws -> Void)] {
             return [
                        ("testArgumentExtraction", testArgumentExtraction)
