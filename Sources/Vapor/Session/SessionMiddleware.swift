@@ -14,7 +14,7 @@ class SessionMiddleware: Middleware {
     func handle(handler: Request.Handler) -> Request.Handler {
         return { request in
 
-            let sessionIdentifier = request.cookies["vapor-session"] ?? self.createSessionIdentifier()
+            let sessionIdentifier = request.cookies["vapor-session"] ?? Session.driver.createSessionIdentifier()
             request.session.sessionIdentifier = sessionIdentifier
 
             let response = try handler(request: request)
@@ -24,16 +24,4 @@ class SessionMiddleware: Middleware {
             return response
         }
     }
-
-    private func createSessionIdentifier() -> String {
-        var identifier = String(NSDate().timeIntervalSinceNow)
-        identifier += "v@p0r"
-        identifier += String(Int.random(min: 0, max: 9999))
-        identifier += "s3sS10n"
-        identifier += String(Int.random(min: 0, max: 9999))
-        identifier += "k3y"
-        identifier += String(Int.random(min: 0, max: 9999))
-        return Hash.make(identifier)
-    }
-
 }
