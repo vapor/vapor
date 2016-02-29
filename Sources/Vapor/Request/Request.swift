@@ -44,7 +44,7 @@ public class Request {
     public var parameters: [String: String] = [:]
     
     ///Server stored information related from session cookie.
-    public internal(set) var session: Session?
+    public let session = Session()
     
     ///Requested hostname
     public let hostname: String

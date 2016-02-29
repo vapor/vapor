@@ -6,33 +6,19 @@ import Foundation
  * data will be purged if the server is restarted.
  */
 public class MemorySessionDriver: SessionDriver {
-	var sessions = [String: Session]()
+    var sessions = [String: [String: String]]()
 
     public init() { }
 
-    public subscript(sessionIdentifier: String) -> Session {
-        guard let session = sessions[sessionIdentifier] else {
-            let newSession = MemorySession()
-            sessions[sessionIdentifier] = newSession
-            return newSession
-        }
-
-        return session
+    public func valueForKey(key: String, inSessionIdentifiedBy sessionIdentifier: String) -> String? {
+        return sessions[sessionIdentifier]?[key]
     }
-}
 
-public final class MemorySession: Session {
-    var data = [String: String]()
-
-    private init() { }
-
-    public subscript(key: String) -> String? {
-        get {
-            return data[key]
+    public func setValue(value: String?, forKey key: String, inSessionIdentifiedBy sessionIdentifier: String) {
+        if sessions[sessionIdentifier] == nil {
+            sessions[sessionIdentifier] = [String: String]()
         }
 
-        set(newValue) {
-            data[key] = newValue
-        }
+        sessions[sessionIdentifier]![key] = value
     }
 }

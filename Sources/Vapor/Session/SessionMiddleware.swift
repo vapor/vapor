@@ -18,7 +18,7 @@ class SessionMiddleware: Middleware {
         return { request in
 
             let sessionIdentifier = request.cookies["vapor-session"] ?? self.createSessionIdentifier()
-            request.session = self.sessionDriver[sessionIdentifier]
+            request.session.sessionIdentifier = sessionIdentifier
 
             let response = try handler(request: request)
 
