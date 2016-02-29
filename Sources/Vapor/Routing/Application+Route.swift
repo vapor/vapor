@@ -162,6 +162,6 @@ extension Application {
         
         handler()
         
-        Route.scopedPrefix = nil
+        Route.scopedPrefix = original
     }
 }
