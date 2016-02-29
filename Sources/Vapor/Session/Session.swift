@@ -10,7 +10,7 @@ public class Session {
 	}
 
 	public func destroy() {
-        Session.driver.destroy(session: self)
+        Session.driver.destroy(self)
 	}
 
     public subscript(key: String) -> String? {
@@ -19,7 +19,7 @@ public class Session {
         }
 
         set {
-            Session.driver.set(value: newValue, forKey: key, inSession: self)
+            Session.driver.set(newValue, forKey: key, inSession: self)
         }
     }
 }
