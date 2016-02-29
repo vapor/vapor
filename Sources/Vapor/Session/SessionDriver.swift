@@ -1,6 +1,6 @@
 public protocol SessionDriver: class {
-    var randomSessionIdentifier: String
-    func valueForKey(key: String, inSessionIdentifiedBy sessionIdentifier: String) -> String?
-    func setValue(value: String?, forKey key: String, inSessionIdentifiedBy sessionIdentifier: String)
-    func destroySessionIdentifiedBy(sessionIdentifier: String)
+    func newSessionIdentifier() -> String
+    func valueFor(key key: String, inSession session: Session) -> String?
+    func set(value value: String?, forKey key: String, inSession session: Session)
+    func destroy(session session: Session)
 }

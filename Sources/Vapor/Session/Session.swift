@@ -10,31 +10,16 @@ public class Session {
 	}
 
 	public func destroy() {
-        guard let sessionIdentifier = sessionIdentifier else {
-            Log.warning("Unable to destroy the session: The session has not be registered yet")
-            return
-        }
-
-        Session.driver.destroySessionIdentifiedBy(sessionIdentifier)
+        Session.driver.destroy(session: self)
 	}
 
     public subscript(key: String) -> String? {
         get {
-            guard let sessionIdentifier = sessionIdentifier else {
-                Log.warning("Unable to read a value for '\(key)': The session has not be registered yet")
-                return nil
-            }
-
-            return Session.driver.valueForKey(key, inSessionIdentifiedBy: sessionIdentifier)
+            return Session.driver.valueFor(key: key, inSession: self)
         }
 
-        set(newValue) {
-            guard let sessionIdentifier = sessionIdentifier else {
-                Log.warning("Unable to store a value for '\(key)': The session has not be registered yet")
-                return
-            }
-
-            Session.driver.setValue(newValue, forKey: key, inSessionIdentifiedBy: sessionIdentifier)
+        set {
+            Session.driver.set(value: newValue, forKey: key, inSession: self)
         }
     }
 }
