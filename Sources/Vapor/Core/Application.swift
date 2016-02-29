@@ -29,7 +29,7 @@ public class Application {
 		Make sure to append your custom `Middleware`
 		if you don't want to overwrite default behavior.
 	*/
-	public var middleware: [Middleware.Type]
+	public var middleware: [Middleware]
 
 
 	/**
@@ -57,17 +57,17 @@ public class Application {
 	/**
 		Initialize the Application.
 	*/
-    public init(router: RouterDriver = BranchRouter(), server: ServerDriver = SocketServer()) {
+    public init(router: RouterDriver = BranchRouter(), server: ServerDriver = SocketServer(), sessionDriver: SessionDriver = MemorySessionDriver()) {
         self.server = server
         self.router = router
 
         self.middleware = [
-            AbortMiddleware.self
+            AbortMiddleware()
         ]
         
         self.providers = []
-        
-        self.middleware.append(SessionMiddleware)
+
+        self.middleware.append(SessionMiddleware(sessionDriver: sessionDriver))
 	}
 
     

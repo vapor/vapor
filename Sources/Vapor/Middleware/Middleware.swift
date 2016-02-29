@@ -16,6 +16,6 @@ public protocol Middleware {
         Call `handler(request)` somewhere inside your custom
         handler to get the `Response` object.
     */
-    static func handle(handler: Request.Handler) -> Request.Handler
+    func handle(handler: Request.Handler) -> Request.Handler
     
 }

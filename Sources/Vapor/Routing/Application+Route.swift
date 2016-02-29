@@ -124,11 +124,11 @@ extension Application {
         inside the closure. This method can be nested within
         itself safely.
     */
-    public final func middleware(middleware: Middleware.Type, handler: () -> ()) {
+    public final func middleware(middleware: Middleware, handler: () -> ()) {
        self.middleware([middleware], handler: handler)
     }
     
-    public final func middleware(middleware: [Middleware.Type], handler: () -> ()) {
+    public final func middleware(middleware: [Middleware], handler: () -> ()) {
         let original = Route.scopedMiddleware
         Route.scopedMiddleware += middleware
         

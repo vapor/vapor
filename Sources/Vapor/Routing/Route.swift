@@ -13,7 +13,7 @@ public class Route {
     // MARK: Internal State
     
     internal static var scopedHost: String?
-    internal static var scopedMiddleware: [Middleware.Type] = []
+    internal static var scopedMiddleware: [Middleware] = []
     internal static var scopedPrefix: String?
 
     // MARK: Attributes
