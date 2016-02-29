@@ -32,8 +32,8 @@ let clean: Void -> Bool = {
 		cleaned = true
 	}
 
-	print("Cleaning")
-	return system("rm -fr .build Packages") == 0
+	print("Cleaning...")
+	return system("rm -rf .build Packages") == 0
 }
 
 var built = false
@@ -44,24 +44,25 @@ let build: Void -> Bool = {
 		built = true
 	}
 
-	print("Building")
+	print("Building...")
 	return system("swift build") == 0
 }
 
 let test: Void -> Bool = {
-	print("Testing")
+	print("Testing...")
 	return system("swift test") == 0
 }
 
 let run: Void -> Bool = {
-	print("Running")
+	print("Running...")
 	return system(".build/debug/VaporDev") == 0
 }
 
-var commands = Array<Command>()
+var commands: [Command] = []
 
 for (i, value) in Process.arguments.enumerate() {
 	guard i > 0 else {
+		//skip executable name
 		continue
 	}
 
