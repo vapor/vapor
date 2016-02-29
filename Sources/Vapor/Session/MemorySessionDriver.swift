@@ -22,7 +22,7 @@ public class MemorySessionDriver: SessionDriver {
         sessions[sessionIdentifier]![key] = value
     }
 
-    public func createSessionIdentifier() -> String {
+    public var randomSessionIdentifier: String {
         var identifier = String(NSDate().timeIntervalSinceNow)
         identifier += "v@p0r"
         identifier += String(Int.random(min: 0, max: 9999))

@@ -1,7 +1,7 @@
 
 public class Session {
 
-	public static var driver: SessionDriver = MemorySessionDriver()
+    public static var driver: SessionDriver = MemorySessionDriver()
 
     var sessionIdentifier: String?
 
