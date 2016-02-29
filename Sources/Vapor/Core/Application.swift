@@ -139,24 +139,24 @@ public class Application {
 		let fileManager = NSFileManager.defaultManager()
 		var isDir: ObjCBool = false
 
-		if fileManager.fileExistsAtPath(filePath, isDirectory: &isDir) {
-			// File exists
-			if let fileBody = NSData(contentsOfFile: filePath) {
-				var array = [UInt8](count: fileBody.length, repeatedValue: 0)
-				fileBody.getBytes(&array, length: fileBody.length)
+		guard fileManager.fileExistsAtPath(filePath, isDirectory: &isDir) else {
+			return nil
+		}
 
-				return { _ in
-					return Response(status: .OK, data: array, contentType: .Text)
-				}
-			} else {
-				return { _ in
-					Log.warning("Could not open file, returning 404")
-					return Response(status: .NotFound, text: "Page not found")
-				}
+		// File exists
+		if let fileBody = NSData(contentsOfFile: filePath) {
+			var array = [UInt8](count: fileBody.length, repeatedValue: 0)
+			fileBody.getBytes(&array, length: fileBody.length)
+
+			return { _ in
+				return Response(status: .OK, data: array, contentType: .Text)
 			}
-		} 
-
-		return nil
+		} else {
+			return { _ in
+				Log.warning("Could not open file, returning 404")
+				return Response(status: .NotFound, text: "Page not found")
+			}
+		}
 	}
 }
 
