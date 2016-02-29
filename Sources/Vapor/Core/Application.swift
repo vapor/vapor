@@ -36,7 +36,7 @@ public class Application {
 		Provider classes that have been registered
 		with this application
 	*/
-    public var providers: [Provider.Type]
+	public var providers: [Provider.Type]
 
 	/**
 		The work directory of your application is
@@ -51,65 +51,67 @@ public class Application {
 			}
 		}
 	}
-    
-    var routes: [Route] = []
+
+	var port: Int = 80
+	
+	var routes: [Route] = []
 
 	/**
 		Initialize the Application.
 	*/
-    public init(router: RouterDriver = BranchRouter(), server: ServerDriver = SocketServer()) {
-        self.server = server
-        self.router = router
+	public init(router: RouterDriver = BranchRouter(), server: ServerDriver = SocketServer()) {
+		self.server = server
+		self.router = router
 
-        self.middleware = [
-            AbortMiddleware.self
-        ]
-        
-        self.providers = []
-        
-        self.middleware.append(SessionMiddleware)
+		self.middleware = [
+			AbortMiddleware.self
+		]
+		
+		self.providers = []
+		
+		self.middleware.append(SessionMiddleware)
 	}
 
-    
-    public func bootProviders() {
-        for provider in self.providers {
-            provider.boot(self)
-        }
-    }
-    
-    func bootRoutes() {
-        routes.forEach(router.register)
-    }
+	
+	public func bootProviders() {
+		for provider in self.providers {
+			provider.boot(self)
+		}
+	}
+	
+	func bootRoutes() {
+		routes.forEach(router.register)
+	}
+
+	func bootArguments() {
+		//grab process args
+		if let workDir = Process.valueFor(argument: "workDir") {
+			Log.info("Work dir override: \(workDir)")
+			self.dynamicType.workDir = workDir
+		}
+		
+		if let portString = Process.valueFor(argument: "port"), let portInt = Int(portString) {
+			Log.info("Port override: \(portInt)")
+			self.port = portInt
+		}
+	}
 
 	/**
 		Boots the chosen server driver and
 		runs on the supplied port.
 	*/
-	public func start(port inPort: Int = 80) {
-        self.bootProviders()
-        self.server.delegate = self
-        
-        self.bootRoutes()
+	public func start(port port: Int = 80) {
+		self.bootProviders()
+		self.server.delegate = self
 
-		var port = inPort
-
-		//grab process args
-        if let workDir = Process.valueFor(argument: "workDir") {
-            Log.info("Work dir override: \(workDir)")
-            self.dynamicType.workDir = workDir
-        }
-        
-        if let portString = Process.valueFor(argument: "port"), let portInt = Int(portString) {
-            Log.info("Port override: \(portInt)")
-            port = portInt
-        }
-
+		self.port = port
+		
+		self.bootRoutes()
+		self.bootArguments()
 
 		do {
-			try self.server.boot(port: port)
-
-			Log.info("Server has started on port \(port)")
-
+			try self.server.boot(port: self.port)
+			Log.info("Server has started on port \(self.port)")
 			self.loop()
 		} catch {
 			Log.info("Server start error: \(error)")
@@ -129,6 +131,33 @@ public class Application {
 			NSRunLoop.mainRunLoop().run()
 		#endif
 	}
+
+	func checkFileSystem(request: Request) -> Request.Handler? {
+		// Check in file system
+		let filePath = self.dynamicType.workDir + "Public" + request.path
+
+		let fileManager = NSFileManager.defaultManager()
+		var isDir: ObjCBool = false
+
+		if fileManager.fileExistsAtPath(filePath, isDirectory: &isDir) {
+			// File exists
+			if let fileBody = NSData(contentsOfFile: filePath) {
+				var array = [UInt8](count: fileBody.length, repeatedValue: 0)
+				fileBody.getBytes(&array, length: fileBody.length)
+
+				return { _ in
+					return Response(status: .OK, data: array, contentType: .Text)
+				}
+			} else {
+				return { _ in
+					Log.warning("Could not open file, returning 404")
+					return Response(status: .NotFound, text: "Page not found")
+				}
+			}
+		} 
+
+		return nil
+	}
 }
 
 extension Application: ServerDriverDelegate {
@@ -139,31 +168,12 @@ extension Application: ServerDriverDelegate {
 		// Check in routes
 		if let routerHandler = router.route(request) {
 			handler = routerHandler
+		} else if let fileHander = self.checkFileSystem(request) {
+			handler = fileHander
 		} else {
-			// Check in file system
-			let filePath = self.dynamicType.workDir + "Public" + request.path
-
-			let fileManager = NSFileManager.defaultManager()
-			var isDir: ObjCBool = false
-
-			if fileManager.fileExistsAtPath(filePath, isDirectory: &isDir) {
-				// File exists
-				if let fileBody = NSData(contentsOfFile: filePath) {
-					var array = [UInt8](count: fileBody.length, repeatedValue: 0)
-					fileBody.getBytes(&array, length: fileBody.length)
-
-					return Response(status: .OK, data: array, contentType: .Text)
-				} else {
-					handler = { _ in
-                        Log.warning("Could not open file, returning 404")
-						return Response(status: .NotFound, text: "Page not found")
-					}
-				}
-			} else {
-				// Default not found handler
-				handler = { _ in
-					return Response(status: .NotFound, text: "Page not found")
-				}
+			// Default not found handler
+			handler = { _ in
+				return Response(status: .NotFound, text: "Page not found")
 			}
 		}
 
@@ -172,17 +182,17 @@ extension Application: ServerDriverDelegate {
 			handler = middleware.handle(handler)
 		}
 
-        do {
-            let response = try handler(request: request)
+		do {
+			let response = try handler(request: request)
 
-            if response.headers["Content-Type"] == nil {
-            	Log.warning("Response had no 'Content-Type' header.")
-            }
+			if response.headers["Content-Type"] == nil {
+				Log.warning("Response had no 'Content-Type' header.")
+			}
 
-            return response
-        } catch {
-            return Response(error: "Server Error: \(error)")
-        }
+			return response
+		} catch {
+			return Response(error: "Server Error: \(error)")
+		}
 
 	}
 
