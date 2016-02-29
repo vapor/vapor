@@ -57,7 +57,7 @@ public class Application {
 	/**
 		Initialize the Application.
 	*/
-    public init(router: RouterDriver = BranchRouter(), server: ServerDriver = SocketServer(), sessionDriver: SessionDriver = MemorySessionDriver()) {
+    public init(router: RouterDriver = BranchRouter(), server: ServerDriver = SocketServer()) {
         self.server = server
         self.router = router
 
@@ -67,7 +67,7 @@ public class Application {
         
         self.providers = []
 
-        self.middleware.append(SessionMiddleware(sessionDriver: sessionDriver))
+        self.middleware.append(SessionMiddleware())
 	}
 
     

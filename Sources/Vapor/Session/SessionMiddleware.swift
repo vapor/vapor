@@ -8,11 +8,8 @@ import Foundation
  An instance of this middleware is added when an `Application` is created.
  */
 class SessionMiddleware: Middleware {
-    private let sessionDriver: SessionDriver
 
-    init(sessionDriver: SessionDriver) {
-        self.sessionDriver = sessionDriver
-    }
+    init() { }
 
     func handle(handler: Request.Handler) -> Request.Handler {
         return { request in
