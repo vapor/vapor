@@ -1,6 +1,6 @@
 public class AbortMiddleware: Middleware {
 
-    public class func handle(handler: Request.Handler) -> Request.Handler {
+    public func handle(handler: Request.Handler) -> Request.Handler {
         return { request in
             do {
                 return try handler(request: request)
@@ -16,7 +16,7 @@ public class AbortMiddleware: Middleware {
         }
     }
     
-    class func errorResponse(status: Response.Status, message: String) throws -> Response {
+    private func errorResponse(status: Response.Status, message: String) throws -> Response {
         let json = try Json([
             "error": "true",
             "message": message
