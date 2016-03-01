@@ -3,7 +3,7 @@ public class Session {
 
     public static var driver: SessionDriver = MemorySessionDriver()
 
-    var sessionIdentifier: String?
+    public internal(set) var identifier: String?
 
 	init() {
 		//do nothing

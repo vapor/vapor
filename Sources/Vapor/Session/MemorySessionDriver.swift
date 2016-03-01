@@ -11,7 +11,7 @@ public class MemorySessionDriver: SessionDriver {
     public init() { }
 
     public func valueFor(key key: String, inSession session: Session) -> String? {
-        guard let sessionIdentifier = session.sessionIdentifier else {
+        guard let sessionIdentifier = session.identifier else {
             Log.warning("Unable to read a value for '\(key)': The session has not been registered yet")
             return nil
         }
@@ -20,7 +20,7 @@ public class MemorySessionDriver: SessionDriver {
     }
 
     public func set(value: String?, forKey key: String, inSession session: Session) {
-        guard let sessionIdentifier = session.sessionIdentifier else {
+        guard let sessionIdentifier = session.identifier else {
             Log.warning("Unable to store a value for '\(key)': The session has not been registered yet")
             return
         }
@@ -44,7 +44,7 @@ public class MemorySessionDriver: SessionDriver {
     }
 
     public func destroy(session: Session) {
-        guard let sessionIdentifier = session.sessionIdentifier else {
+        guard let sessionIdentifier = session.identifier else {
             Log.warning("Unable to destroy the session: The session has not been registered yet")
             return
         }
