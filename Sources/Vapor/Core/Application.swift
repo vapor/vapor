@@ -52,6 +52,10 @@ public class Application {
 		}
 	}
 
+    var scopedHost: String?
+    var scopedMiddleware: [Middleware.Type] = []
+    var scopedPrefix: String?
+
 	var port: Int = 80
 	
 	var routes: [Route] = []
