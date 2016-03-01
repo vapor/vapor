@@ -8,16 +8,19 @@
 
 import Foundation
 
-/// To allow users to opt into preferred case style
-public typealias JSON = Json
-
 // MARK: Response
 
 extension Json: ResponseConvertible {
     public func response() -> Response {
-        let js = serialize()
-        let data = Array(js.utf8)
-        return Response(status: .OK, data: data, contentType: .Json)
+        do {
+            let data = try serialize()
+            return Response(status: .OK, data: data, contentType: .Json)
+        } catch {
+            //return error!
+            let errorString = "\(error)"
+            //TODO: which response? 500? 400? should we be leaking the error?
+            return Response(error: errorString)
+        }
     }
 }
 
