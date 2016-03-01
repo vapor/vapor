@@ -44,7 +44,7 @@ public class Request {
     public var parameters: [String: String] = [:]
     
     ///Server stored information related from session cookie.
-    public var session: Session = Session()
+    public let session = Session()
     
     ///Requested hostname
     public let hostname: String
@@ -66,7 +66,7 @@ public class Request {
         self.cookies = Request.parseCookies(headers["cookie"])
         self.hostname = headers["host"] ?? "*"
         
-        let query = Request.parseQueryData(path)
+        let query = path.queryData()
         self.data = Data(query: query, bytes: body)
         
         Log.verbose("Received \(method) request for \(path)")
@@ -105,32 +105,34 @@ public class Request {
         return cookies
     }
     
+}
+
+extension String {
+    
     /**
-        Query data is information appended to the URL path
-        as `key=value` pairs separated by `&` after
-        an initial `?`
+     Query data is information appended to the URL path
+     as `key=value` pairs separated by `&` after
+     an initial `?`
      
-        - returns: String dictionary of parsed Query data
-    */
-    static func parseQueryData(string: String) -> [String: String] {
-        
-        var urlParts = string.split("?")
-        if urlParts.count >= 2 {
-            return self.parseData(urlParts[1])
-        }
-        
-        return [:]
+     - returns: String dictionary of parsed Query data
+     */
+    internal func queryData() -> [String: String] {
+        // First `?` indicates query, subsequent `?` should be included as part of the arguments
+        return split(1, separator: "?")
+            .dropFirst()
+            .reduce("", combine: +)
+            .keyValuePairs()
     }
     
     /**
-        Parses `key=value` pair data separated by `&`.
+     Parses `key=value` pair data separated by `&`.
      
-        - returns: String dictionary of parsed data
-    */
-    static func parseData(string: String) -> [String: String] {
+     - returns: String dictionary of parsed data
+     */
+    internal func keyValuePairs() -> [String: String] {
         var data: [String: String] = [:]
         
-        for pair in string.split("&") {
+        for pair in self.split("&") {
             let tokens = pair.split(1, separator: "=")
             
             if let name = tokens.first, value = tokens.last {
@@ -140,5 +142,5 @@ public class Request {
         
         return data
     }
-
+    
 }
