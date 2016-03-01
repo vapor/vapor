@@ -8,9 +8,9 @@ public enum Environment: Equatable {
 		let string = string.lowercaseString
 
 		switch string {
-		case "production": return .Production
+		case "production", "prod": return .Production
 		case "test": return .Test
-		case "development": return .Development
+		case "development", "dev": return .Development
 		default: return .Custom(string)
 		}
 	}
