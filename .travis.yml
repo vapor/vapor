@@ -1,14 +1,3 @@
-#language: objective-c
-
-#before_install:
-#- brew update
-#- if brew outdated | grep -qx xctool; then brew upgrade xctool; fi
-
-#script:
-#- touch /Users/travis/build/tannernelson/vapor/Sources/main.swift
-#- xctool clean build -project Vapor.xcodeproj -scheme Vapor
-#- xctool test -project Vapor.xcodeproj -scheme Tests
-
 os:
   - linux
   - osx
@@ -17,8 +6,7 @@ sudo: required
 dist: trusty
 osx_image: xcode7.3
 install:
-  - curl -sL https://gist.github.com/kylef/5c0475ff02b7c7671d2a/raw/621ef9b29bbb852fdfd2e10ed147b321d792c1e4/swiftenv-install.sh | bash
+  - eval "$(curl -sL https://gist.githubusercontent.com/kylef/5c0475ff02b7c7671d2a/raw/02090c7ede5a637b76e6df1710e83cd0bbe7dcdf/swiftenv-install.sh)"
 script:
-  - . ~/.swiftenv/init
   - swift build
   - swift test

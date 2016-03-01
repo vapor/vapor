@@ -1,0 +1,111 @@
+#!/usr/bin/env swift
+
+#if os(Linux)
+	import Glibc
+#else
+	import Darwin
+#endif
+
+enum Command: String {
+	case Clean = "clean"
+	case Build = "build"
+	case Run = "run"
+	case Test = "test"
+
+	static var all: [Command] = [.Clean, .Build, .Run, .Test]
+}
+
+if Process.arguments.count < 2 {
+	let commands = Command.all.map {
+		return $0.rawValue
+	}
+
+	print("Usage: ./vapordev [\(commands.joinWithSeparator("|"))]")
+	exit(1)
+}
+
+var cleaned = false
+let clean: Void -> Bool = {
+	if cleaned {
+		return true
+	} else {
+		cleaned = true
+	}
+
+	print("Cleaning...")
+	return system("rm -rf .build Packages") == 0
+}
+
+var built = false
+let build: Void -> Bool = {
+	if built {
+		return true
+	} else {
+		built = true
+	}
+
+	print("Building...")
+	return system("swift build") == 0
+}
+
+let test: Void -> Bool = {
+	print("Testing...")
+	return system("swift test") == 0
+}
+
+let run: Void -> Bool = {
+	print("Running...")
+	return system(".build/debug/VaporDev") == 0
+}
+
+var commands: [Command] = []
+
+for (i, value) in Process.arguments.enumerate() {
+	guard i > 0 else {
+		//skip executable name
+		continue
+	}
+
+	if let command = Command(rawValue: value.lowercaseString) {
+		commands.append(command)
+	} else {
+		var matched = false
+
+		for command in Command.all {
+			if command.rawValue.hasPrefix(value) {
+				commands.append(command)
+				matched = true
+				break
+			}
+		}
+
+		if !matched {
+			print("ERROR: Unknown command: \(value)")
+			exit(1)
+		}
+	}
+}
+
+for command in commands {
+	var successful: Bool
+
+	switch command {
+	case .Clean:
+		successful = clean()
+	case .Build:
+		successful = build()
+	case .Run, .Test:
+		if build() {
+			successful = command == .Test ? test() : run()
+		} else {
+			print("Build failed, aborting")
+			successful = false
+		}
+	}
+
+	if !successful {
+		exit(1)
+	}
+}
+
+exit(0)

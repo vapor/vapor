@@ -54,44 +54,23 @@ extension Application {
         Note: You are responsible for pluralizing your endpoints.
     */
     public final func resource(path: String, controller: ResourceController.Type) {
-
         let last = "/:id"
-        
         let shortPath = path.componentsSeparatedByString(".")
             .flatMap { component in
                 return [component, "/:\(component)_id/"]
             }
             .dropLast()
             .joinWithSeparator("")
-        
         let fullPath = shortPath + last
         
         // ie: /users
-        self.get(shortPath) { request in
-            let c = controller.init()
-            return try c.index(request)
-        }
-        
-        self.post(shortPath) { request in
-            let c = controller.init()
-            return try c.store(request)
-        }
+        self.get(shortPath) { try controller.init().index($0) }
+        self.post(shortPath) { try controller.init().store($0) }
         
         // ie: /users/:id
-        self.get(fullPath) { request in
-            let c = controller.init()
-            return try c.show(request)
-        }
-        
-        self.put(fullPath) { request in
-            let c = controller.init()
-            return try c.update(request)
-        }
-        
-        self.delete(fullPath) { request in
-            let c = controller.init()
-            return try c.destroy(request)
-        }
+        self.get(fullPath) { try controller.init().show($0) }
+        self.put(fullPath) { try controller.init().update($0) }
+        self.delete(fullPath) { try controller.init().destroy($0) }
     }
     
     public final func add(method: Request.Method, path: String, handler: Route.Handler) {
@@ -162,6 +141,6 @@ extension Application {
         
         handler()
         
-        Route.scopedPrefix = nil
+        Route.scopedPrefix = original
     }
 }

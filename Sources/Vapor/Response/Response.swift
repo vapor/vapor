@@ -221,24 +221,8 @@ extension Response {
      
      - throws: SerializationErro
      */
-    public convenience init(status: Status, json: Any) throws {
-        let data: [UInt8]
-        
-        if let jsonObject = json as? AnyObject {
-            guard NSJSONSerialization.isValidJSONObject(jsonObject) else {
-                throw SerializationError.InvalidObject
-            }
-            
-            let json = try NSJSONSerialization.dataWithJSONObject(jsonObject, options: NSJSONWritingOptions.PrettyPrinted)
-            data = Array(UnsafeBufferPointer(start: UnsafePointer<UInt8>(json.bytes), count: json.length))
-        } else {
-            Log.warning("NSJSON failure. Try wrapping with Json()")
-            #if os(Linux)
-            Log.warning("NSJSON is not yet supported on Linux.")
-            #endif
-            data = []
-        }
-        
+    public convenience init(status: Status, json: Json) throws {
+        let data = try json.serialize()
         self.init(status: status, data: data, contentType: .Json)
     }
 }

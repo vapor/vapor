@@ -4,7 +4,7 @@
 
 A Laravel/Lumen Inspired Web Framework for Swift that works on iOS, OS X, and Ubuntu.
 
-- [x] Pure Swift (0 dependencies)
+- [x] Pure Swift (No makefiles, module maps)
 - [x] Modular
 - [x] Beautifully expressive
 
@@ -139,12 +139,12 @@ app.post("hello") { request in
 Sessions will be kept track of using the `vapor-session` cookie. The default (and currently only) session driver is `.Memory`.
 
 ```swift
-if let name = request.session.data["name"] {
+if let name = request.session["name"] {
 	//name was in session
 }
 
 //store name in session
-request.session.data["name"] = "Vapor"
+request.session["name"] = "Vapor"
 ```
 
 ## Database

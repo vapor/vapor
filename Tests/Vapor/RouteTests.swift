@@ -13,6 +13,7 @@ import XCTest
     extension RouteTests: XCTestCaseProvider {
         var allTests : [(String, () throws -> Void)] {
             return [
+                ("testNestedRouteScopedPrefixPopsCorrectly", testNestedRouteScopedPrefixPopsCorrectly),
                 ("testRoute", testRoute),
                 ("testRouteScopedPrefix", testRouteScopedPrefix)
             ]
@@ -61,6 +62,25 @@ class RouteTests: XCTestCase {
 
         self.assertRouteExists("group/path/1", method: .Get, host: "*", inRoutes: app.routes)
         self.assertRouteExists("group/path/2", method: .Options, host: "*", inRoutes: app.routes)
+    }
+
+    func testNestedRouteScopedPrefixPopsCorrectly() {
+        let app = Application()
+
+        app.group("group") {
+            app.group("subgroup") {
+                app.get("1") { request in
+                    return ""
+                }
+            }
+
+            app.options("2") { request in
+                return ""
+            }
+        }
+
+        self.assertRouteExists("group/subgroup/1", method: .Get, host: "*", inRoutes: app.routes)
+        self.assertRouteExists("group/2", method: .Options, host: "*", inRoutes: app.routes)
     }
     
     func testRouteAbort() {
