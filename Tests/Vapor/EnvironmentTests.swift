@@ -43,7 +43,7 @@ class EnvironmentTests: XCTestCase {
             return .Custom("xctest")
         }
 
-        XCTAssert(app.inEnvironment(.Production, .QA, .Custom("xctest")), "Environment not correctly detected: \(app.environment)")
+        XCTAssert(app.inEnvironment(.Production, .Development, .Custom("xctest")), "Environment not correctly detected: \(app.environment)")
     }
 
 }

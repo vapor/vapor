@@ -1,6 +1,5 @@
 public enum Environment: Equatable {
 	case Production
-	case QA
 	case Test
 	case Development
 	case Custom(String)
@@ -10,7 +9,6 @@ public enum Environment: Equatable {
 
 		switch string {
 		case "production": return .Production
-		case "qa": return .QA
 		case "test": return .Test
 		case "development": return .Development
 		default: return .Custom(string)
@@ -23,7 +21,6 @@ extension Environment: CustomStringConvertible {
 	public var description: String {
 		switch self {
 		case Production: return "production"
-		case QA: return "qa"
 		case Test: return "test"
 		case Development: return "development"
 		case Custom(let string): return string
