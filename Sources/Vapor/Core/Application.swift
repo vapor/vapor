@@ -39,31 +39,6 @@ public class Application {
 	public var providers: [Provider.Type]
 
 	/**
-		Internal value populated the first time
-		self.environment is computed
-	*/
-	private var detectedEnvironment: Environment?
-
-	/**
-		Current environment of the application
-	*/
-	public var environment: Environment {
-		if let environment = self.detectedEnvironment {
-			return environment
-		}
-
-		let environment = self.bootEnvironment()
-		self.detectedEnvironment = environment
-		return environment
-	}
-
-	/**
-		Optional handler to be called when detecting the
-		current environment.
-	*/
-	public var detectEnvironmentHandler: ((String) -> Environment)?
-
-	/**
 		The work directory of your application is
 		the directory in which your Resources, Public, etc
 		folders are stored. This is normally `./` if
