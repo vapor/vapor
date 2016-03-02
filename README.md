@@ -136,7 +136,7 @@ app.post("hello") { request in
 
 ### Session
 
-Sessions will be kept track of using the `vapor-session` cookie. The default (and currently only) session driver is `.Memory`.
+Sessions will be kept track of using the `vapor-session` cookie. The default session driver is a `MemorySessionDriver`. You can change the driver by setting `Session.driver` to a different object that conforms to `SessionDriver`.
 
 ```swift
 if let name = request.session["name"] {
