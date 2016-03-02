@@ -1,4 +1,4 @@
-![Vapor](https://cloud.githubusercontent.com/assets/1342803/12457900/1825c70c-bf75-11e5-9080-989345fa43e2.png)
+![Vapor](https://cloud.githubusercontent.com/assets/1342803/13461073/9251cf50-e07f-11e5-8c3a-a986eb8b3941.png)
 
 # Vapor
 
