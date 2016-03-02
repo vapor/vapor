@@ -3,6 +3,7 @@ import XCTest
 
 XCTMain([
 	ControllerTests(),
+	EnvironmentTests(),
 	HashTests(),
 	LogTests(),
 	ResponseTests(),
