@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1A475B091C8663AB008E4F98 /* FooController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A475B081C8663AB008E4F98 /* FooController.swift */; };
 		3492B2EF1C787DD600D8E588 /* RouteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3492B2EE1C787DD600D8E588 /* RouteTests.swift */; };
 		34CC59561C7BE3C9007CA680 /* LogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34CC59551C7BE3C9007CA680 /* LogTests.swift */; };
 		3A583A011C7FCA720044AAFF /* libVapor.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 3A583A001C7FCA720044AAFF /* libVapor.dylib */; };
@@ -83,6 +84,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		1A475B081C8663AB008E4F98 /* FooController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FooController.swift; sourceTree = "<group>"; };
 		288CFC2D1C7AC01A00E4617A /* Application.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Application.swift; path = ../Sources/Vapor/Core/Application.swift; sourceTree = SOURCE_ROOT; };
 		288CFC301C7AC02A00E4617A /* Provider.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Provider.swift; path = ../Sources/Vapor/Core/Provider.swift; sourceTree = SOURCE_ROOT; };
 		3492B2EE1C787DD600D8E588 /* RouteTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RouteTests.swift; path = ../Tests/Vapor/RouteTests.swift; sourceTree = SOURCE_ROOT; };
@@ -393,6 +395,7 @@
 		C3DFB5531C80C2860045801C /* Controllers */ = {
 			isa = PBXGroup;
 			children = (
+				1A475B081C8663AB008E4F98 /* FooController.swift */,
 				C3DFB5541C80C2860045801C /* MyController.swift */,
 			);
 			name = Controllers;
@@ -665,6 +668,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				3AEEF4531C7F72C30099CBAE /* main.swift in Sources */,
+				1A475B091C8663AB008E4F98 /* FooController.swift in Sources */,
 				C3DFB55D1C80C2860045801C /* MyController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

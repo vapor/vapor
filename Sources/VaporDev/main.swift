@@ -54,4 +54,6 @@ app.group("abort") {
     }
 }
 
+app.add(.Get, path: "foo", action: FooController.foo)
+
 app.start(port: 8080)
