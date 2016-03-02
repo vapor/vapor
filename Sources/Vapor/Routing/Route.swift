@@ -10,12 +10,6 @@ public class Route {
      */
     public typealias Handler = Request throws -> ResponseConvertible
 
-    // MARK: Internal State
-    
-    internal static var scopedHost: String?
-    internal static var scopedMiddleware: [Middleware.Type] = []
-    internal static var scopedPrefix: String?
-
     // MARK: Attributes
     
     let method: Request.Method
