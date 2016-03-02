@@ -85,10 +85,11 @@ public class Socket: Hashable, Equatable {
             addr.sin_zero = (0, 0, 0, 0, 0, 0, 0, 0)
         #endif
         
-        var bind_addr = sockaddr()
-        memcpy(&bind_addr, &addr, Int(sizeof(sockaddr_in)))
+        //var bind_addr = sockaddr()
+        //memcpy(&bind_addr, &addr, Int(sizeof(sockaddr_in)))
+        let bind_addr = Socket.sockaddr_cast(&addr)
         
-        if bind(socketFileDescriptor, &bind_addr, socklen_t(sizeof(sockaddr_in))) == -1 {
+        if bind(socketFileDescriptor, bind_addr, socklen_t(sizeof(sockaddr_in))) == -1 {
             let details = Socket.descriptionOfLastError()
             Socket.release(socketFileDescriptor)
             throw SocketError.BindFailed(details)
@@ -235,6 +236,10 @@ public class Socket: Hashable, Equatable {
             let isLittleEndian = Int(OSHostByteOrder()) == OSLittleEndian
             return isLittleEndian ? _OSSwapInt16(port) : port
         #endif
+    }
+
+    private class func sockaddr_cast(p: UnsafeMutablePointer<Void>) -> UnsafeMutablePointer<sockaddr> {
+        return UnsafeMutablePointer<sockaddr>(p)
     }
 }
 
