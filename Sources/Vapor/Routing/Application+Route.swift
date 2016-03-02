@@ -53,7 +53,7 @@ extension Application {
      
         Note: You are responsible for pluralizing your endpoints.
     */
-    public final func resource(path: String, controller: ResourceController.Type) {
+    public final func resource<RoutedController: ResourceController>(path: String, controller: RoutedController.Type) {
         let last = "/:id"
         let shortPath = path.componentsSeparatedByString(".")
             .flatMap { component in
@@ -62,15 +62,23 @@ extension Application {
             .dropLast()
             .joinWithSeparator("")
         let fullPath = shortPath + last
-        
+
         // ie: /users
-        self.get(shortPath) { try controller.init().index($0) }
-        self.post(shortPath) { try controller.init().store($0) }
-        
+        self.add(.Get, path: shortPath, action: RoutedController.index)
+        self.add(.Post, path: shortPath, action: RoutedController.store)
+
         // ie: /users/:id
-        self.get(fullPath) { try controller.init().show($0) }
-        self.put(fullPath) { try controller.init().update($0) }
-        self.delete(fullPath) { try controller.init().destroy($0) }
+        self.add(.Get, path: fullPath, action: RoutedController.show)
+        self.add(.Put, path: fullPath, action: RoutedController.update)
+        self.add(.Delete, path: fullPath, action: RoutedController.destroy)
+    }
+
+    public final func add<RoutedController: Controller>(method: Request.Method, path: String, action: (RoutedController) -> (Request) throws -> ResponseConvertible) {
+        add(method, path: path) { request in
+            let controller = RoutedController()
+            let actionCall = action(controller)
+            return try actionCall(request).response()
+        }
     }
     
     public final func add(method: Request.Method, path: String, handler: Route.Handler) {

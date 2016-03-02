@@ -39,6 +39,31 @@ public class Application {
 	public var providers: [Provider.Type]
 
 	/**
+		Internal value populated the first time
+		self.environment is computed
+	*/
+	private var detectedEnvironment: Environment?
+
+	/**
+		Current environment of the application
+	*/
+	public var environment: Environment {
+		if let environment = self.detectedEnvironment {
+			return environment
+		}
+
+		let environment = self.bootEnvironment()
+		self.detectedEnvironment = environment
+		return environment
+	}
+
+	/**
+		Optional handler to be called when detecting the
+		current environment.
+	*/
+	public var detectEnvironmentHandler: ((String) -> Environment)?
+
+	/**
 		The work directory of your application is
 		the directory in which your Resources, Public, etc
 		folders are stored. This is normally `./` if
@@ -57,7 +82,7 @@ public class Application {
     var scopedPrefix: String?
 
 	var port: Int = 80
-	
+
 	var routes: [Route] = []
 
 	/**
@@ -70,19 +95,53 @@ public class Application {
 		self.middleware = [
 			AbortMiddleware.self
 		]
-		
+
 		self.providers = []
-		
+
 		self.middleware.append(SessionMiddleware)
 	}
 
-	
 	public func bootProviders() {
 		for provider in self.providers {
 			provider.boot(self)
 		}
 	}
-	
+
+	func bootEnvironment() -> Environment {
+		var environment: String
+
+		if let value = Process.valueFor(argument: "env") {
+			environment = value
+		} else {
+			// TODO: This should default to "production" in release builds
+			environment = "development"
+		}
+
+		if let handler = self.detectEnvironmentHandler {
+			return handler(environment)
+		} else {
+			return Environment.fromString(environment)
+		}
+	}
+
+	/**
+		If multiple environments are passed, return
+		value will be true if at least one of the passed
+		in environment values matches the app environment
+		and false if none of them match.
+
+		If a single environment is passed, the return
+		value will be true if the the passed in environment
+		matches the app environment.
+	*/
+	public func inEnvironment(environments: Environment...) -> Bool {
+		if environments.count == 1 {
+			return self.environment == environments[0]
+		} else {
+			return environments.contains(self.environment)
+		}
+	}
+
 	func bootRoutes() {
 		routes.forEach(router.register)
 	}
@@ -93,7 +152,7 @@ public class Application {
 			Log.info("Work dir override: \(workDir)")
 			self.dynamicType.workDir = workDir
 		}
-		
+
 		if let portString = Process.valueFor(argument: "port"), let portInt = Int(portString) {
 			Log.info("Port override: \(portInt)")
 			self.port = portInt
@@ -109,7 +168,7 @@ public class Application {
 		self.server.delegate = self
 
 		self.port = port
-		
+
 		self.bootRoutes()
 		self.bootArguments()
 
