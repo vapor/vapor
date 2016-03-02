@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1A33BBA91C874355000499CE /* Environment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A33BBA81C874355000499CE /* Environment.swift */; };
 		1AC8BC7C1C84B5A500BAC14E /* MemorySessionDriver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AC8BC7B1C84B5A500BAC14E /* MemorySessionDriver.swift */; };
 		3492B2EF1C787DD600D8E588 /* RouteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3492B2EE1C787DD600D8E588 /* RouteTests.swift */; };
 		34CC59561C7BE3C9007CA680 /* LogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34CC59551C7BE3C9007CA680 /* LogTests.swift */; };
@@ -84,6 +85,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		1A33BBA81C874355000499CE /* Environment.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Environment.swift; path = ../../Sources/Vapor/Core/Environment.swift; sourceTree = "<group>"; };
 		1AC8BC7B1C84B5A500BAC14E /* MemorySessionDriver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = MemorySessionDriver.swift; path = ../Sources/Vapor/Session/MemorySessionDriver.swift; sourceTree = "<group>"; };
 		288CFC2D1C7AC01A00E4617A /* Application.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Application.swift; path = ../Sources/Vapor/Core/Application.swift; sourceTree = SOURCE_ROOT; };
 		288CFC301C7AC02A00E4617A /* Provider.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Provider.swift; path = ../Sources/Vapor/Core/Provider.swift; sourceTree = SOURCE_ROOT; };
@@ -199,6 +201,7 @@
 			isa = PBXGroup;
 			children = (
 				288CFC2D1C7AC01A00E4617A /* Application.swift */,
+				1A33BBA81C874355000499CE /* Environment.swift */,
 				C3433FCB1C7CFB39009F0876 /* Routing */,
 				C377F2ED1C696C9B00DABD21 /* View */,
 				34CC59601C7BE9C1007CA680 /* Log */,
@@ -657,6 +660,7 @@
 				3A91D3F41C7F6B6600EA3CA0 /* JSONSerializer.swift in Sources */,
 				3A91D3F61C7F6B6600EA3CA0 /* LinuxFixes.swift in Sources */,
 				3A91D3E41C7F6B6600EA3CA0 /* RequestData.swift in Sources */,
+				1A33BBA91C874355000499CE /* Environment.swift in Sources */,
 				3A91D3F21C7F6B6600EA3CA0 /* SHA256Hasher.swift in Sources */,
 				3A91D3F51C7F6B6600EA3CA0 /* Vapor+JSON.swift in Sources */,
 				3A91D3F11C7F6B6600EA3CA0 /* Hash.swift in Sources */,
