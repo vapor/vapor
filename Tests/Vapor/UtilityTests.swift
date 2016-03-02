@@ -9,6 +9,8 @@ import XCTest
 @testable import Vapor
 
 #if os(Linux)
+    import Glibc
+    import Foundation
     extension UtilityTests: XCTestCaseProvider {
         var allTests : [(String, () throws -> Void)] {
             return [
