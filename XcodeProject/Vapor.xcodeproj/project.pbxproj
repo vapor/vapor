@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1A33BBAC1C874555000499CE /* NSLock+Closure.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A33BBAB1C874555000499CE /* NSLock+Closure.swift */; };
 		1AC8BC7C1C84B5A500BAC14E /* MemorySessionDriver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AC8BC7B1C84B5A500BAC14E /* MemorySessionDriver.swift */; };
 		3492B2EF1C787DD600D8E588 /* RouteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3492B2EE1C787DD600D8E588 /* RouteTests.swift */; };
 		34CC59561C7BE3C9007CA680 /* LogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34CC59551C7BE3C9007CA680 /* LogTests.swift */; };
@@ -84,6 +85,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		1A33BBAB1C874555000499CE /* NSLock+Closure.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "NSLock+Closure.swift"; path = "../../Sources/Vapor/Utilities/NSLock+Closure.swift"; sourceTree = "<group>"; };
 		1AC8BC7B1C84B5A500BAC14E /* MemorySessionDriver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = MemorySessionDriver.swift; path = ../Sources/Vapor/Session/MemorySessionDriver.swift; sourceTree = "<group>"; };
 		288CFC2D1C7AC01A00E4617A /* Application.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Application.swift; path = ../Sources/Vapor/Core/Application.swift; sourceTree = SOURCE_ROOT; };
 		288CFC301C7AC02A00E4617A /* Provider.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Provider.swift; path = ../Sources/Vapor/Core/Provider.swift; sourceTree = SOURCE_ROOT; };
@@ -176,6 +178,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		1A33BBAA1C87453A000499CE /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				1A33BBAB1C874555000499CE /* NSLock+Closure.swift */,
+			);
+			name = Utilities;
+			sourceTree = "<group>";
+		};
 		288CFC2F1C7AC02000E4617A /* Providers */ = {
 			isa = PBXGroup;
 			children = (
@@ -213,6 +223,7 @@
 				80202FFF1C77C94C009B8655 /* JSON */,
 				C304C8AF1C63051E00058C92 /* Fixes */,
 				800EFA541C822ECF00F6C066 /* Process */,
+				1A33BBAA1C87453A000499CE /* Utilities */,
 				3A91D3CE1C7F6AF900EA3CA0 /* Vapor.h */,
 				3A91D3D01C7F6AF900EA3CA0 /* Info.plist */,
 			);
@@ -628,6 +639,7 @@
 				3A91D3DE1C7F6B6600EA3CA0 /* LogDriver.swift in Sources */,
 				3A91D3E21C7F6B6600EA3CA0 /* Request.swift in Sources */,
 				3A91D3DF1C7F6B6600EA3CA0 /* Branch.swift in Sources */,
+				1A33BBAC1C874555000499CE /* NSLock+Closure.swift in Sources */,
 				3A91D3EE1C7F6B6600EA3CA0 /* SessionMiddleware.swift in Sources */,
 				3A91D3E71C7F6B6600EA3CA0 /* Socket.swift in Sources */,
 				3A91D3F71C7F6B6600EA3CA0 /* StringExtensions.swift in Sources */,

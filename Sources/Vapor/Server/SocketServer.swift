@@ -31,7 +31,7 @@ public class SocketServer: ServerDriver {
             while let socket = try? self.listenSocket.acceptClientSocket() {
                 
                 //wait for lock to notify a new connection
-                self.lock(self.clientSocketsLock) {
+                self.clientSocketsLock.locked {
                     //keep track of open sockets
                     self.clientSockets.insert(socket)
                 }
@@ -41,7 +41,7 @@ public class SocketServer: ServerDriver {
                     self.handleConnection(socket)
                     
                     //set lock to wait for another connection
-                    self.lock(self.clientSocketsLock) {
+                    self.clientSocketsLock.locked {
                         self.clientSockets.remove(socket)
                     }
                 })
@@ -62,7 +62,7 @@ public class SocketServer: ServerDriver {
         self.listenSocket.release()
         
         //shutdown all client sockets
-        self.lock(self.clientSocketsLock) {
+        self.clientSocketsLock.locked {
             for socket in self.clientSockets {
                 socket.shutdwn()
             }
@@ -109,21 +109,6 @@ public class SocketServer: ServerDriver {
             if !keepConnection { break }
         }
 
-    }
-    
-    
-
-    /**
-        Locking mechanism for holding thread until a 
-        new socket connection is ready.
-        
-        - parameter handle: NSLock
-        - parameter closure: Code that will run when the lock has been altered.
-    */
-    private func lock(handle: NSLock, closure: () -> ()) {
-        handle.lock()
-        closure()
-        handle.unlock();
     }
     
     /**

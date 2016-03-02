@@ -7,6 +7,7 @@ import Foundation
  */
 public class MemorySessionDriver: SessionDriver {
     var sessions = [String: [String: String]]()
+    private var sessionsLock = NSLock()
 
     public init() { }
 
@@ -16,7 +17,12 @@ public class MemorySessionDriver: SessionDriver {
             return nil
         }
 
-        return sessions[sessionIdentifier]?[key]
+        var value: String?
+        sessionsLock.locked {
+            value = sessions[sessionIdentifier]?[key]
+        }
+
+        return value
     }
 
     public func set(value: String?, forKey key: String, inSession session: Session) {
@@ -25,11 +31,13 @@ public class MemorySessionDriver: SessionDriver {
             return
         }
 
-        if sessions[sessionIdentifier] == nil {
-            sessions[sessionIdentifier] = [String: String]()
-        }
+        sessionsLock.locked {
+            if sessions[sessionIdentifier] == nil {
+                sessions[sessionIdentifier] = [String: String]()
+            }
 
-        sessions[sessionIdentifier]?[key] = value
+            sessions[sessionIdentifier]?[key] = value
+        }
     }
 
     public func newSessionIdentifier() -> String {
@@ -49,6 +57,8 @@ public class MemorySessionDriver: SessionDriver {
             return
         }
 
-        sessions[sessionIdentifier] = nil
+        sessionsLock.locked {
+            sessions[sessionIdentifier] = nil
+        }
     }
 }
