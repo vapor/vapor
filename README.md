@@ -19,6 +19,8 @@ A Laravel/Lumen Inspired Web Framework for Swift that works on iOS, OS X, and Ub
 
 Vapor is the first true web framework for Swift. It provides a beautifully expressive foundation for your app without tying you to any single server implementation. To learn more about Vapor's modularity, check out the [Vapor Zewo Server](https://github.com/qutheory/vapor-zewo-server) or Vapor's protocol-oriented [Drivers](https://github.com/qutheory/vapor/wiki/Driver).
 
+To start your own project with Vapor, fork the boilerplate code from [Vapor Example](https://github.com/qutheory/vapor-example).
+
 ## Work in Progress
 
 This is a work in progress, so *do not* rely on this for anything important. And pull requests are welcome!
