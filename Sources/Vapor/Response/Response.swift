@@ -122,9 +122,9 @@ public class Response {
     
     // MARK: Member Variables
 
-    public let status: Status
-    public let data: [UInt8]
-    public let contentType: ContentType
+    public var status: Status
+    public var data: [UInt8]
+    public var contentType: ContentType
     public var headers: [String : String] = [:]
     
     public var cookies: [String : String] = [:] {
