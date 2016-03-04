@@ -6,6 +6,7 @@ XCTMain([
 	EnvironmentTests(),
 	HashTests(),
 	LogTests(),
+	MemorySessionDriverTests(),
 	ResponseTests(),
 	RouterTests(),
 	RouteTests()
