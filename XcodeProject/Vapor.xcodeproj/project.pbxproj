@@ -56,6 +56,7 @@
 		800EFA561C822EE200F6C066 /* Process.swift in Sources */ = {isa = PBXBuildFile; fileRef = 800EFA551C822EE200F6C066 /* Process.swift */; };
 		800EFA581C8231EE00F6C066 /* ProcessTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 800EFA571C8231EE00F6C066 /* ProcessTests.swift */; };
 		800EFA5A1C83A00300F6C066 /* QueryParametersTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 800EFA591C83A00300F6C066 /* QueryParametersTests.swift */; };
+		80FF32EF1C8A63DE008EC414 /* NSData+SequenceType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80FF32EE1C8A63DE008EC414 /* NSData+SequenceType.swift */; };
 		C3433FD41C7D119D009F0876 /* HashTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3433FD21C7D119D009F0876 /* HashTests.swift */; };
 		C38808641C62C0390067DADD /* ResponseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C38808631C62C0390067DADD /* ResponseTests.swift */; };
 		C3943DC31C7663E80014F4EE /* RouterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3943DC21C7663E80014F4EE /* RouterTests.swift */; };
@@ -112,6 +113,7 @@
 		802030101C78CAC2009B8655 /* Branch.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Branch.swift; path = ../Sources/Vapor/Router/Branch.swift; sourceTree = SOURCE_ROOT; };
 		802030161C78CAE1009B8655 /* BranchRouter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = BranchRouter.swift; path = ../Sources/Vapor/Router/BranchRouter.swift; sourceTree = SOURCE_ROOT; };
 		802053981C7A8C7D009E26E9 /* RequestData.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RequestData.swift; path = ../Sources/Vapor/Request/RequestData.swift; sourceTree = SOURCE_ROOT; };
+		80FF32EE1C8A63DE008EC414 /* NSData+SequenceType.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "NSData+SequenceType.swift"; path = "../../Sources/Vapor/Utilities/NSData+SequenceType.swift"; sourceTree = "<group>"; };
 		C304C8A61C62D65200058C92 /* ServerDriver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = ServerDriver.swift; path = ../Sources/Vapor/Server/ServerDriver.swift; sourceTree = SOURCE_ROOT; };
 		C304C8A91C62FCA300058C92 /* RequestFormExtension.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RequestFormExtension.swift; path = ../Sources/Vapor/Request/RequestFormExtension.swift; sourceTree = SOURCE_ROOT; };
 		C304C8B41C6306B100058C92 /* RouterDriver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RouterDriver.swift; path = ../Sources/Vapor/Router/RouterDriver.swift; sourceTree = SOURCE_ROOT; };
@@ -183,6 +185,7 @@
 		1A33BBAA1C87453A000499CE /* Utilities */ = {
 			isa = PBXGroup;
 			children = (
+				80FF32EE1C8A63DE008EC414 /* NSData+SequenceType.swift */,
 				1A33BBAB1C874555000499CE /* NSLock+Closure.swift */,
 			);
 			name = Utilities;
@@ -658,6 +661,7 @@
 				3A91D3D91C7F6B6600EA3CA0 /* Controller.swift in Sources */,
 				3A91D3F01C7F6B6600EA3CA0 /* Int+Random.swift in Sources */,
 				3A659FC11C80365700C105F5 /* AbortMiddleware.swift in Sources */,
+				80FF32EF1C8A63DE008EC414 /* NSData+SequenceType.swift in Sources */,
 				3A91D3EA1C7F6B6600EA3CA0 /* ServerDriver.swift in Sources */,
 				3A91D3DB1C7F6B6600EA3CA0 /* View.swift in Sources */,
 				3A91D3EB1C7F6B6600EA3CA0 /* Session.swift in Sources */,
