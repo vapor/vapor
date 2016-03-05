@@ -69,21 +69,17 @@ public class Socket: Hashable, Equatable {
         }
         Socket.setNoSigPipe(socketFileDescriptor)
         
-        let ip = Process.valueFor(argument: "ip") ?? "0.0.0.0"
-        #if os(Linux)
-            var addr = sockaddr_in()
-            addr.sin_family = sa_family_t(AF_INET)
-            addr.sin_port = Socket.htonsPort(port)
-            addr.sin_addr = in_addr(s_addr: inet_addr(ip))
-            addr.sin_zero = (0, 0, 0, 0, 0, 0, 0, 0)
-        #else
-            var addr = sockaddr_in()
-            addr.sin_len = __uint8_t(sizeof(sockaddr_in))
-            addr.sin_family = sa_family_t(AF_INET)
-            addr.sin_port = Socket.htonsPort(port)
-            addr.sin_addr = in_addr(s_addr: inet_addr(ip))
-            addr.sin_zero = (0, 0, 0, 0, 0, 0, 0, 0)
+        
+        var addr = sockaddr_in()
+        #if os(OSX)
+        addr.sin_len = __uint8_t(sizeof(sockaddr_in))
         #endif
+        addr.sin_family = sa_family_t(AF_INET)
+        addr.sin_port = Socket.htonsPort(port)
+        
+        let ip = Process.valueFor(argument: "ip") ?? "0.0.0.0"
+        addr.sin_addr = in_addr(s_addr: inet_addr(ip))
+        addr.sin_zero = (0, 0, 0, 0, 0, 0, 0, 0)
         
         //var bind_addr = sockaddr()
         //memcpy(&bind_addr, &addr, Int(sizeof(sockaddr_in)))
