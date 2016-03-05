@@ -130,18 +130,23 @@ public class Socket: Hashable, Equatable {
         return Socket(socketFileDescriptor: clientSocket)
     }
     
-    public func writeUTF8(string: String) throws {
-        try writeUInt8([UInt8](string.utf8))
+    public func write(string: String) throws {
+        try write(string.utf8)
     }
     
-    public func writeUInt8(data: [UInt8]) throws {
+    public func write<T: SequenceType where T.Generator.Element == UInt8>(sequence: T) throws {
+        let byteArray = [UInt8](sequence)
+        try write(byteArray)
+    }
+    
+    public func write(data: [UInt8]) throws {
         try data.withUnsafeBufferPointer {
             var sent = 0
             while sent < data.count {
                 #if os(Linux)
                     let s = send(self.socketFileDescriptor, $0.baseAddress + sent, Int(data.count - sent), Int32(MSG_NOSIGNAL))
                 #else
-                    let s = write(self.socketFileDescriptor, $0.baseAddress + sent, Int(data.count - sent))
+                    let s = Darwin.write(self.socketFileDescriptor, $0.baseAddress + sent, Int(data.count - sent))
                 #endif
                 if s <= 0 {
                     throw SocketError.WriteFailed(Socket.descriptionOfLastError())
