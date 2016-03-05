@@ -60,7 +60,7 @@ app.get("welcome") { request in
 }
 ```
 
-Here we will respond to all requests to `http://example.com/welcome` with the string `"Hello"`.
+Here we will respond to all HTTP GET requests to `http://example.com/welcome` with the string `"Hello"`.
 
 ### JSON
 
@@ -72,7 +72,7 @@ app.get("version") { request in
 }
 ```
 
-This responds to all requests to `http://example.com/version` with the JSON dictionary `{"version": "1.0"}` and `Content-Type: application/json`.
+This responds to all HTTP GET requests to `http://example.com/version` with the JSON dictionary `{"version": "1.0"}` and `Content-Type: application/json`.
 
 ### Views
 
