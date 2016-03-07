@@ -184,7 +184,7 @@ extension UInt64 : JsonConvertible {}
 extension UnsignedIntegerType {
     public func jsonRepresentation() throws -> Json {
         let double = Double(UIntMax(self.toUIntMax()))
-        return .from(double)
+        return Json(double)
     }
     
     public static func newInstance(json: Json) throws -> Self {
@@ -207,7 +207,7 @@ extension Int64 : JsonConvertible {}
 extension SignedIntegerType {
     public func jsonRepresentation() throws -> Json {
         let double = Double(IntMax(self.toIntMax()))
-        return .from(double)
+        return Json(double)
     }
     
     public static func newInstance(json: Json) throws -> Self {
@@ -241,7 +241,7 @@ public protocol JsonConvertibleFloatingPointType : JsonConvertible {
 
 extension JsonConvertibleFloatingPointType {
     public func jsonRepresentation() throws -> Json {
-        return .from(doubleValue)
+        return Json(doubleValue)
     }
     
     public static func newInstance(json: Json) throws -> Self {
