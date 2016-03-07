@@ -106,7 +106,7 @@ public class Response {
             case .OK: return "OK"
             case .Created: return "Created"
             case .Accepted: return "Accepted"
-            case .NoContent: return "NoContent"
+            case .NoContent: return "No Content"
                 
             case .MovedPermanently: return "Moved Permanently"
                 
