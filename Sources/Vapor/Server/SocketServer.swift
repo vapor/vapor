@@ -118,7 +118,7 @@ public class SocketServer: ServerDriver {
         if let response = response as? AsyncResponse {
             try response.writer(socket)
         } else {
-            try socket.writeUTF8("HTTP/1.1 \(response.status.code) \(response.status)\r\n")
+            try socket.write("HTTP/1.1 \(response.status.code) \(response.status)\r\n")
 
             var headers = response.headers
 
@@ -131,12 +131,12 @@ public class SocketServer: ServerDriver {
             }
             
             for (name, value) in headers {
-                try socket.writeUTF8("\(name): \(value)\r\n")
+                try socket.write("\(name): \(value)\r\n")
             }
             
-            try socket.writeUTF8("\r\n")
+            try socket.write("\r\n")
 
-            try socket.writeUInt8(response.data)
+            try socket.write(response.data)
         }
         
         return keepAlive && response.data.count != -1;  

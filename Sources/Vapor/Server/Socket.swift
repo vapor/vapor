@@ -69,21 +69,17 @@ public class Socket: Hashable, Equatable {
         }
         Socket.setNoSigPipe(socketFileDescriptor)
         
-        let ip = Process.valueFor(argument: "ip") ?? "0.0.0.0"
-        #if os(Linux)
-            var addr = sockaddr_in()
-            addr.sin_family = sa_family_t(AF_INET)
-            addr.sin_port = Socket.htonsPort(port)
-            addr.sin_addr = in_addr(s_addr: inet_addr(ip))
-            addr.sin_zero = (0, 0, 0, 0, 0, 0, 0, 0)
-        #else
-            var addr = sockaddr_in()
-            addr.sin_len = __uint8_t(sizeof(sockaddr_in))
-            addr.sin_family = sa_family_t(AF_INET)
-            addr.sin_port = Socket.htonsPort(port)
-            addr.sin_addr = in_addr(s_addr: inet_addr(ip))
-            addr.sin_zero = (0, 0, 0, 0, 0, 0, 0, 0)
+        
+        var addr = sockaddr_in()
+        #if os(OSX)
+        addr.sin_len = __uint8_t(sizeof(sockaddr_in))
         #endif
+        addr.sin_family = sa_family_t(AF_INET)
+        addr.sin_port = Socket.htonsPort(port)
+        
+        let ip = Process.valueFor(argument: "ip") ?? "0.0.0.0"
+        addr.sin_addr = in_addr(s_addr: inet_addr(ip))
+        addr.sin_zero = (0, 0, 0, 0, 0, 0, 0, 0)
         
         //var bind_addr = sockaddr()
         //memcpy(&bind_addr, &addr, Int(sizeof(sockaddr_in)))
@@ -130,18 +126,23 @@ public class Socket: Hashable, Equatable {
         return Socket(socketFileDescriptor: clientSocket)
     }
     
-    public func writeUTF8(string: String) throws {
-        try writeUInt8([UInt8](string.utf8))
+    public func write(string: String) throws {
+        try write(string.utf8)
     }
     
-    public func writeUInt8(data: [UInt8]) throws {
+    public func write<T: SequenceType where T.Generator.Element == UInt8>(sequence: T) throws {
+        let byteArray = [UInt8](sequence)
+        try write(byteArray)
+    }
+    
+    public func write(data: [UInt8]) throws {
         try data.withUnsafeBufferPointer {
             var sent = 0
             while sent < data.count {
                 #if os(Linux)
                     let s = send(self.socketFileDescriptor, $0.baseAddress + sent, Int(data.count - sent), Int32(MSG_NOSIGNAL))
                 #else
-                    let s = write(self.socketFileDescriptor, $0.baseAddress + sent, Int(data.count - sent))
+                    let s = Darwin.write(self.socketFileDescriptor, $0.baseAddress + sent, Int(data.count - sent))
                 #endif
                 if s <= 0 {
                     throw SocketError.WriteFailed(Socket.descriptionOfLastError())
