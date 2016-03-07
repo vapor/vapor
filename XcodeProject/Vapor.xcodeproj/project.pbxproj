@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		1A33BBAC1C874555000499CE /* NSLock+Closure.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A33BBAB1C874555000499CE /* NSLock+Closure.swift */; };
-		1AC8BC7C1C84B5A500BAC14E /* MemorySessionDriver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AC8BC7B1C84B5A500BAC14E /* MemorySessionDriver.swift */; };
 		1AF2F51B1C89DE2A00A7B2EA /* MemorySessionDriverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AF2F51A1C89DE2A00A7B2EA /* MemorySessionDriverTests.swift */; };
 		3492B2EF1C787DD600D8E588 /* RouteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3492B2EE1C787DD600D8E588 /* RouteTests.swift */; };
 		34CC59561C7BE3C9007CA680 /* LogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34CC59551C7BE3C9007CA680 /* LogTests.swift */; };
@@ -56,6 +55,9 @@
 		800EFA561C822EE200F6C066 /* Process.swift in Sources */ = {isa = PBXBuildFile; fileRef = 800EFA551C822EE200F6C066 /* Process.swift */; };
 		800EFA581C8231EE00F6C066 /* ProcessTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 800EFA571C8231EE00F6C066 /* ProcessTests.swift */; };
 		800EFA5A1C83A00300F6C066 /* QueryParametersTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 800EFA591C83A00300F6C066 /* QueryParametersTests.swift */; };
+		8049435E1C8CAEAF0064FA7A /* Environment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8049435D1C8CAEAF0064FA7A /* Environment.swift */; };
+		8049436D1C8DBED70064FA7A /* MemorySessionDriver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8049436C1C8DBED70064FA7A /* MemorySessionDriver.swift */; };
+		80FF32EF1C8A63DE008EC414 /* NSData+SequenceType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80FF32EE1C8A63DE008EC414 /* NSData+SequenceType.swift */; };
 		C3433FD41C7D119D009F0876 /* HashTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3433FD21C7D119D009F0876 /* HashTests.swift */; };
 		C38808641C62C0390067DADD /* ResponseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C38808631C62C0390067DADD /* ResponseTests.swift */; };
 		C3943DC31C7663E80014F4EE /* RouterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3943DC21C7663E80014F4EE /* RouterTests.swift */; };
@@ -87,7 +89,6 @@
 
 /* Begin PBXFileReference section */
 		1A33BBAB1C874555000499CE /* NSLock+Closure.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "NSLock+Closure.swift"; path = "../../Sources/Vapor/Utilities/NSLock+Closure.swift"; sourceTree = "<group>"; };
-		1AC8BC7B1C84B5A500BAC14E /* MemorySessionDriver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = MemorySessionDriver.swift; path = ../Sources/Vapor/Session/MemorySessionDriver.swift; sourceTree = "<group>"; };
 		1AF2F51A1C89DE2A00A7B2EA /* MemorySessionDriverTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = MemorySessionDriverTests.swift; path = ../../Tests/Vapor/MemorySessionDriverTests.swift; sourceTree = "<group>"; };
 		288CFC2D1C7AC01A00E4617A /* Application.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Application.swift; path = ../Sources/Vapor/Core/Application.swift; sourceTree = SOURCE_ROOT; };
 		288CFC301C7AC02A00E4617A /* Provider.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Provider.swift; path = ../Sources/Vapor/Core/Provider.swift; sourceTree = SOURCE_ROOT; };
@@ -112,6 +113,9 @@
 		802030101C78CAC2009B8655 /* Branch.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Branch.swift; path = ../Sources/Vapor/Router/Branch.swift; sourceTree = SOURCE_ROOT; };
 		802030161C78CAE1009B8655 /* BranchRouter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = BranchRouter.swift; path = ../Sources/Vapor/Router/BranchRouter.swift; sourceTree = SOURCE_ROOT; };
 		802053981C7A8C7D009E26E9 /* RequestData.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RequestData.swift; path = ../Sources/Vapor/Request/RequestData.swift; sourceTree = SOURCE_ROOT; };
+		8049435D1C8CAEAF0064FA7A /* Environment.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Environment.swift; path = ../../Sources/Vapor/Core/Environment.swift; sourceTree = "<group>"; };
+		8049436C1C8DBED70064FA7A /* MemorySessionDriver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = MemorySessionDriver.swift; path = ../Sources/Vapor/Session/MemorySessionDriver.swift; sourceTree = SOURCE_ROOT; };
+		80FF32EE1C8A63DE008EC414 /* NSData+SequenceType.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "NSData+SequenceType.swift"; path = "../../Sources/Vapor/Utilities/NSData+SequenceType.swift"; sourceTree = "<group>"; };
 		C304C8A61C62D65200058C92 /* ServerDriver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = ServerDriver.swift; path = ../Sources/Vapor/Server/ServerDriver.swift; sourceTree = SOURCE_ROOT; };
 		C304C8A91C62FCA300058C92 /* RequestFormExtension.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RequestFormExtension.swift; path = ../Sources/Vapor/Request/RequestFormExtension.swift; sourceTree = SOURCE_ROOT; };
 		C304C8B41C6306B100058C92 /* RouterDriver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RouterDriver.swift; path = ../Sources/Vapor/Router/RouterDriver.swift; sourceTree = SOURCE_ROOT; };
@@ -183,6 +187,7 @@
 		1A33BBAA1C87453A000499CE /* Utilities */ = {
 			isa = PBXGroup;
 			children = (
+				80FF32EE1C8A63DE008EC414 /* NSData+SequenceType.swift */,
 				1A33BBAB1C874555000499CE /* NSLock+Closure.swift */,
 			);
 			name = Utilities;
@@ -210,6 +215,7 @@
 		3A91D3CD1C7F6AF900EA3CA0 /* Vapor */ = {
 			isa = PBXGroup;
 			children = (
+				8049435D1C8CAEAF0064FA7A /* Environment.swift */,
 				288CFC2D1C7AC01A00E4617A /* Application.swift */,
 				C3433FCB1C7CFB39009F0876 /* Routing */,
 				C377F2ED1C696C9B00DABD21 /* View */,
@@ -294,7 +300,7 @@
 		C304C8AE1C63050900058C92 /* Session */ = {
 			isa = PBXGroup;
 			children = (
-				1AC8BC7B1C84B5A500BAC14E /* MemorySessionDriver.swift */,
+				8049436C1C8DBED70064FA7A /* MemorySessionDriver.swift */,
 				C352E6DF1C62BC6A00E26467 /* Session.swift */,
 				C352E6D71C62BC6A00E26467 /* SessionDriver.swift */,
 			);
@@ -658,20 +664,22 @@
 				3A91D3D91C7F6B6600EA3CA0 /* Controller.swift in Sources */,
 				3A91D3F01C7F6B6600EA3CA0 /* Int+Random.swift in Sources */,
 				3A659FC11C80365700C105F5 /* AbortMiddleware.swift in Sources */,
+				80FF32EF1C8A63DE008EC414 /* NSData+SequenceType.swift in Sources */,
 				3A91D3EA1C7F6B6600EA3CA0 /* ServerDriver.swift in Sources */,
+				8049436D1C8DBED70064FA7A /* MemorySessionDriver.swift in Sources */,
 				3A91D3DB1C7F6B6600EA3CA0 /* View.swift in Sources */,
 				3A91D3EB1C7F6B6600EA3CA0 /* Session.swift in Sources */,
 				3A91D3D71C7F6B6600EA3CA0 /* Application.swift in Sources */,
 				3A91D3E11C7F6B6600EA3CA0 /* RouterDriver.swift in Sources */,
 				3A91D3EC1C7F6B6600EA3CA0 /* SessionDriver.swift in Sources */,
 				3A91D3F31C7F6B6600EA3CA0 /* CryptoSwift.swift in Sources */,
-				1AC8BC7C1C84B5A500BAC14E /* MemorySessionDriver.swift in Sources */,
 				3A91D3D81C7F6B6600EA3CA0 /* Route.swift in Sources */,
 				3A91D3ED1C7F6B6600EA3CA0 /* Middleware.swift in Sources */,
 				3A91D3E31C7F6B6600EA3CA0 /* RequestFormExtension.swift in Sources */,
 				3A91D3F41C7F6B6600EA3CA0 /* JSONSerializer.swift in Sources */,
 				3A91D3F61C7F6B6600EA3CA0 /* LinuxFixes.swift in Sources */,
 				3A91D3E41C7F6B6600EA3CA0 /* RequestData.swift in Sources */,
+				8049435E1C8CAEAF0064FA7A /* Environment.swift in Sources */,
 				3A91D3F21C7F6B6600EA3CA0 /* SHA256Hasher.swift in Sources */,
 				3A91D3F51C7F6B6600EA3CA0 /* Vapor+JSON.swift in Sources */,
 				3A91D3F11C7F6B6600EA3CA0 /* Hash.swift in Sources */,

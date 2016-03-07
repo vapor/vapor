@@ -34,26 +34,12 @@ public enum Json: Equatable {
         self = .ObjectValue(value)
     }
     
-    // MARK: From
-    
-    public static func from(value: Bool) -> Json {
-        return .BooleanValue(value)
+    public init<T: SignedIntegerType>(_ value: T) {
+        self = .NumberValue(Double(value.toIntMax()))
     }
     
-    public static func from(value: Double) -> Json {
-        return .NumberValue(value)
-    }
-    
-    public static func from(value: String) -> Json {
-        return .StringValue(value)
-    }
-    
-    public static func from(value: [Json]) -> Json {
-        return .ArrayValue(value)
-    }
-    
-    public static func from(value: [String: Json]) -> Json {
-        return .ObjectValue(value)
+    public init<T: UnsignedIntegerType>(_ value: T) {
+        self = .NumberValue(Double(value.toUIntMax()))
     }
 }
 
@@ -219,7 +205,7 @@ extension Json {
             guard let object = objectValue else { fatalError("Unable to set string subscript on non-object type!") }
             var mutableObject = object
             mutableObject[key] = newValue
-            self = Json.from(mutableObject)
+            self = Json(mutableObject)
         }
     }
 }
