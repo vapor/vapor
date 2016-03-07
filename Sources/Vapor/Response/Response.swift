@@ -72,6 +72,7 @@ public class Response {
      */
     public enum Status {
         case OK, Created, Accepted
+        case NoContent
         case MovedPermanently
         case BadRequest, Unauthorized, Forbidden, NotFound
         case Error
@@ -83,6 +84,7 @@ public class Response {
             case .OK: return 200
             case .Created: return 201
             case .Accepted: return 202
+            case .NoContent: return 204
                 
             case .MovedPermanently: return 301
                 
@@ -104,6 +106,7 @@ public class Response {
             case .OK: return "OK"
             case .Created: return "Created"
             case .Accepted: return "Accepted"
+            case .NoContent: return "NoContent"
                 
             case .MovedPermanently: return "Moved Permanently"
                 
