@@ -9,5 +9,6 @@ XCTMain([
 	MemorySessionDriverTests(),
 	ResponseTests(),
 	RouterTests(),
-	RouteTests()
+	RouteTests(),
+	SessionTests()
 ])
