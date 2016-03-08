@@ -268,3 +268,7 @@ My website `http://tanner.xyz` as well as `http://qutheory.io` are currently run
 This project is based on [Swifter](https://github.com/glock45/swifter) by Damian Kołakowski. It uses compatibility code from [NSLinux](https://github.com/johnno1962/NSLinux) by johnno1962.
 
 Go checkout and star their repos.
+
+## Author
+
+Made by [Tanner Nelson](http://tanner.xyz)
