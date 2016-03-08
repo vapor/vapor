@@ -19,7 +19,7 @@ extension Response: ResponseConvertible {
     }
 }
 
-extension String: ResponseConvertible {
+extension Swift.String: ResponseConvertible {
 	public func response() -> Response {
 		return Response(status: .OK, html: self)
 	}

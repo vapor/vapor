@@ -59,7 +59,7 @@ public class Request {
 
     public init(method: Method, path: String, address: String?, headers: [String: String], body: [UInt8]) {
         self.method = method
-        self.path = path.split(separator: "?")[0]
+        self.path = path.split(separator: "?").first ?? ""
         self.address = address
         self.headers = headers
         self.body = body

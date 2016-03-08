@@ -31,7 +31,7 @@ public class SocketServer: ServerDriver {
             while let socket = try? self.listenSocket.acceptClientSocket() {
                 
                 //wait for lock to notify a new connection
-                self.lock(self.clientSocketsLock) {
+                self.clientSocketsLock.locked {
                     //keep track of open sockets
                     self.clientSockets.insert(socket)
                 }
@@ -41,7 +41,7 @@ public class SocketServer: ServerDriver {
                     self.handleConnection(socket)
                     
                     //set lock to wait for another connection
-                    self.lock(self.clientSocketsLock) {
+                    self.clientSocketsLock.locked {
                         self.clientSockets.remove(socket)
                     }
                 })
@@ -62,7 +62,7 @@ public class SocketServer: ServerDriver {
         self.listenSocket.release()
         
         //shutdown all client sockets
-        self.lock(self.clientSocketsLock) {
+        self.clientSocketsLock.locked {
             for socket in self.clientSockets {
                 socket.shutdwn()
             }
@@ -111,21 +111,6 @@ public class SocketServer: ServerDriver {
 
     }
     
-    
-
-    /**
-        Locking mechanism for holding thread until a 
-        new socket connection is ready.
-        
-        - parameter handle: NSLock
-        - parameter closure: Code that will run when the lock has been altered.
-    */
-    private func lock(handle: NSLock, closure: () -> ()) {
-        handle.lock()
-        closure()
-        handle.unlock();
-    }
-    
     /**
         Writes the `Response` to the client `Socket`.
     */
@@ -133,7 +118,7 @@ public class SocketServer: ServerDriver {
         if let response = response as? AsyncResponse {
             try response.writer(socket)
         } else {
-            try socket.writeUTF8("HTTP/1.1 \(response.status.code) \(response.status)\r\n")
+            try socket.write("HTTP/1.1 \(response.status.code) \(response.status)\r\n")
 
             var headers = response.headers
 
@@ -146,12 +131,12 @@ public class SocketServer: ServerDriver {
             }
             
             for (name, value) in headers {
-                try socket.writeUTF8("\(name): \(value)\r\n")
+                try socket.write("\(name): \(value)\r\n")
             }
             
-            try socket.writeUTF8("\r\n")
+            try socket.write("\r\n")
 
-            try socket.writeUInt8(response.data)
+            try socket.write(response.data)
         }
         
         return keepAlive && response.data.count != -1;  

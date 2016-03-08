@@ -1,4 +1,4 @@
-![Vapor](https://cloud.githubusercontent.com/assets/1342803/12457900/1825c70c-bf75-11e5-9080-989345fa43e2.png)
+![Vapor](https://cloud.githubusercontent.com/assets/1342803/13461073/9251cf50-e07f-11e5-8c3a-a986eb8b3941.png)
 
 # Vapor
 
@@ -18,6 +18,8 @@ A Laravel/Lumen Inspired Web Framework for Swift that works on iOS, OS X, and Ub
 ## Introduction
 
 Vapor is the first true web framework for Swift. It provides a beautifully expressive foundation for your app without tying you to any single server implementation. To learn more about Vapor's modularity, check out the [Vapor Zewo Server](https://github.com/qutheory/vapor-zewo-server) or Vapor's protocol-oriented [Drivers](https://github.com/qutheory/vapor/wiki/Driver).
+
+To start your own project with Vapor, fork the boilerplate code from [Vapor Example](https://github.com/qutheory/vapor-example).
 
 ## Work in Progress
 
@@ -58,7 +60,7 @@ app.get("welcome") { request in
 }
 ```
 
-Here we will respond to all requests to `http://example.com/welcome` with the string `"Hello"`.
+Here we will respond to all HTTP GET requests to `http://example.com/welcome` with the string `"Hello"`.
 
 ### JSON
 
@@ -70,7 +72,7 @@ app.get("version") { request in
 }
 ```
 
-This responds to all requests to `http://example.com/version` with the JSON dictionary `{"version": "1.0"}` and `Content-Type: application/json`.
+This responds to all HTTP GET requests to `http://example.com/version` with the JSON dictionary `{"version": "1.0"}` and `Content-Type: application/json`.
 
 ### Views
 
@@ -266,3 +268,7 @@ My website `http://tanner.xyz` as well as `http://qutheory.io` are currently run
 This project is based on [Swifter](https://github.com/glock45/swifter) by Damian Kołakowski. It uses compatibility code from [NSLinux](https://github.com/johnno1962/NSLinux) by johnno1962.
 
 Go checkout and star their repos.
+
+## Author
+
+Made by [Tanner Nelson](http://tanner.xyz)
