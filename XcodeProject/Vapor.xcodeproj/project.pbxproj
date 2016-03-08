@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		1A33BBAC1C874555000499CE /* NSLock+Closure.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A33BBAB1C874555000499CE /* NSLock+Closure.swift */; };
+		1AD708021C8E6A9500F17339 /* SessionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AD708011C8E6A9500F17339 /* SessionTests.swift */; };
 		1AF2F51B1C89DE2A00A7B2EA /* MemorySessionDriverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AF2F51A1C89DE2A00A7B2EA /* MemorySessionDriverTests.swift */; };
 		3492B2EF1C787DD600D8E588 /* RouteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3492B2EE1C787DD600D8E588 /* RouteTests.swift */; };
 		34CC59561C7BE3C9007CA680 /* LogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34CC59551C7BE3C9007CA680 /* LogTests.swift */; };
@@ -89,6 +90,7 @@
 
 /* Begin PBXFileReference section */
 		1A33BBAB1C874555000499CE /* NSLock+Closure.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "NSLock+Closure.swift"; path = "../../Sources/Vapor/Utilities/NSLock+Closure.swift"; sourceTree = "<group>"; };
+		1AD708011C8E6A9500F17339 /* SessionTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SessionTests.swift; path = ../../Tests/Vapor/SessionTests.swift; sourceTree = "<group>"; };
 		1AF2F51A1C89DE2A00A7B2EA /* MemorySessionDriverTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = MemorySessionDriverTests.swift; path = ../../Tests/Vapor/MemorySessionDriverTests.swift; sourceTree = "<group>"; };
 		288CFC2D1C7AC01A00E4617A /* Application.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Application.swift; path = ../Sources/Vapor/Core/Application.swift; sourceTree = SOURCE_ROOT; };
 		288CFC301C7AC02A00E4617A /* Provider.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Provider.swift; path = ../Sources/Vapor/Core/Provider.swift; sourceTree = SOURCE_ROOT; };
@@ -389,16 +391,17 @@
 		C352E6901C62BB1C00E26467 /* Tests */ = {
 			isa = PBXGroup;
 			children = (
-				C352E6931C62BB1C00E26467 /* Info.plist */,
 				C3F683351C7D1EF300033AA2 /* ControllerTests.swift */,
 				C3433FD21C7D119D009F0876 /* HashTests.swift */,
+				C352E6931C62BB1C00E26467 /* Info.plist */,
 				34CC59551C7BE3C9007CA680 /* LogTests.swift */,
+				1AF2F51A1C89DE2A00A7B2EA /* MemorySessionDriverTests.swift */,
+				800EFA571C8231EE00F6C066 /* ProcessTests.swift */,
+				800EFA591C83A00300F6C066 /* QueryParametersTests.swift */,
 				C38808631C62C0390067DADD /* ResponseTests.swift */,
 				C3943DC21C7663E80014F4EE /* RouterTests.swift */,
 				3492B2EE1C787DD600D8E588 /* RouteTests.swift */,
-				800EFA571C8231EE00F6C066 /* ProcessTests.swift */,
-				800EFA591C83A00300F6C066 /* QueryParametersTests.swift */,
-				1AF2F51A1C89DE2A00A7B2EA /* MemorySessionDriverTests.swift */,
+				1AD708011C8E6A9500F17339 /* SessionTests.swift */,
 			);
 			path = Tests;
 			sourceTree = "<group>";
@@ -704,6 +707,7 @@
 				800EFA581C8231EE00F6C066 /* ProcessTests.swift in Sources */,
 				C38808641C62C0390067DADD /* ResponseTests.swift in Sources */,
 				800EFA5A1C83A00300F6C066 /* QueryParametersTests.swift in Sources */,
+				1AD708021C8E6A9500F17339 /* SessionTests.swift in Sources */,
 				3492B2EF1C787DD600D8E588 /* RouteTests.swift in Sources */,
 				C3F683361C7D1EF300033AA2 /* ControllerTests.swift in Sources */,
 				34CC59561C7BE3C9007CA680 /* LogTests.swift in Sources */,
