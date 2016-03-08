@@ -89,16 +89,16 @@ extension Application {
         }
         
         //Apply any scoped middlewares
-        for middleware in Route.scopedMiddleware {
+        for middleware in scopedMiddleware {
             handler = middleware.handle(handler)
         }
         
         //Store the route for registering with Router later
-        let host = Route.scopedHost ?? "*"
+        let host = scopedHost ?? "*"
         
         //Apply any scoped prefix
         var path = path
-        if let prefix = Route.scopedPrefix {
+        if let prefix = scopedPrefix {
             path = prefix + "/" + path
         }
         
@@ -116,21 +116,21 @@ extension Application {
     }
     
     public final func middleware(middleware: [Middleware.Type], handler: () -> ()) {
-        let original = Route.scopedMiddleware
-        Route.scopedMiddleware += middleware
+        let original = scopedMiddleware
+        scopedMiddleware += middleware
         
         handler()
         
-        Route.scopedMiddleware = original
+        scopedMiddleware = original
     }
     
     public final func host(host: String, handler: () -> Void) {
-        let original = Route.scopedHost
-        Route.scopedHost = host
+        let original = scopedHost
+        scopedHost = host
         
         handler()
         
-        Route.scopedHost = original
+        scopedHost = original
     }
     
     /**
@@ -138,17 +138,17 @@ extension Application {
         without repeating yourself.
     */
     public func group(prefix: String, @noescape handler: () -> Void) {
-        let original = Route.scopedPrefix
+        let original = scopedPrefix
         
         //append original with a trailing slash
         if let original = original {
-            Route.scopedPrefix = original + "/" + prefix
+            scopedPrefix = original + "/" + prefix
         } else {
-            Route.scopedPrefix = prefix
+            scopedPrefix = prefix
         }
         
         handler()
         
-        Route.scopedPrefix = original
+        scopedPrefix = original
     }
 }
