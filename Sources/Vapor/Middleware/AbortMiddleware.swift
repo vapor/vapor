@@ -1,6 +1,6 @@
 public class AbortMiddleware: Middleware {
 
-    public class func handle(forApplication application: Application, handler: Request.Handler) -> Request.Handler {
+    public class func handle(handler: Request.Handler, for application: Application) -> Request.Handler {
         return { request in
             do {
                 return try handler(request: request)

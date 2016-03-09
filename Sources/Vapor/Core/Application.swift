@@ -250,7 +250,7 @@ extension Application: ServerDriverDelegate {
 
 		// Loop through middlewares in order
 		for middleware in self.middleware {
-            handler = middleware.handle(forApplication: self, handler: handler)
+            handler = middleware.handle(handler, for: self)
 		}
 
 		do {
