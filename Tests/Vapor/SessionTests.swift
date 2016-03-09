@@ -22,30 +22,14 @@ import XCTest
 #endif
 
 class SessionTests: XCTestCase {
-    var originalDriver: SessionDriver!
-    private var testDriver: TestDriver!
-
-    // TODO: When XCTestCase is converted from a protocol to a class on Linux, these should be renamed to setUp() and 
-    // tearDown(), and not called manually.
-    func doSetUp() {
-        originalDriver = Session.driver
-        testDriver = TestDriver()
-        Session.driver = testDriver
-    }
-    
-    func doTearDown() {
-        Session.driver = originalDriver
-        testDriver = nil
-    }
-    
     func testDestroy_asksDriverToDestroy() {
-        doSetUp()
-        defer { doTearDown() }
         let subject = Session()
+        let driver = TestDriver()
+        subject.driver = driver
         subject.destroy()
-        XCTAssertEqual(testDriver.actions.count, 1)
-        guard !testDriver.actions.isEmpty else { return }
-        guard case .Destroy(let session) = testDriver.actions[0] else {
+        XCTAssertEqual(driver.actions.count, 1)
+        guard !driver.actions.isEmpty else { return }
+        guard case .Destroy(let session) = driver.actions[0] else {
             XCTFail("Recorded action was not a destroy action")
             return
         }
@@ -54,14 +38,14 @@ class SessionTests: XCTestCase {
     }
 
     func testSubscriptGet_asksDriverForValue() {
-        doSetUp()
-        defer { doTearDown() }
         let subject = Session()
+        let driver = TestDriver()
+        subject.driver = driver
         _ = subject["test"]
 
-        XCTAssertEqual(testDriver.actions.count, 1)
-        guard !testDriver.actions.isEmpty else { return }
-        guard case .ValueFor(let key, let session) = testDriver.actions[0] else {
+        XCTAssertEqual(driver.actions.count, 1)
+        guard !driver.actions.isEmpty else { return }
+        guard case .ValueFor(let key, let session) = driver.actions[0] else {
             XCTFail("Recorded action was not a value for action")
             return
         }
@@ -71,14 +55,14 @@ class SessionTests: XCTestCase {
     }
 
     func testSubscriptSet_asksDriverToSetValue() {
-        doSetUp()
-        defer { doTearDown() }
         let subject = Session()
+        let driver = TestDriver()
+        subject.driver = driver
         subject["foo"] = "bar"
 
-        XCTAssertEqual(testDriver.actions.count, 1)
-        guard !testDriver.actions.isEmpty else { return }
-        guard case .SetValue(let value, let key, let session) = testDriver.actions[0] else {
+        XCTAssertEqual(driver.actions.count, 1)
+        guard !driver.actions.isEmpty else { return }
+        guard case .SetValue(let value, let key, let session) = driver.actions[0] else {
             XCTFail("Recorded action was not a set value action")
             return
         }
