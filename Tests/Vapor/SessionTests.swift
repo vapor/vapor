@@ -26,10 +26,8 @@ class SessionTests: XCTestCase {
         let driver = TestDriver()
         let subject = Session(identifier: "baz", driver: driver)
         subject.destroy()
-        XCTAssertEqual(driver.actions.count, 1)
-        guard !driver.actions.isEmpty else { return }
-        guard case .Destroy(let session) = driver.actions[0] else {
-            XCTFail("Recorded action was not a destroy action")
+        guard let action = driver.actions.first, case .Destroy(let session) = action else {
+            XCTFail("No actions recorded or recorded action was not a destroy action")
             return
         }
 
@@ -41,10 +39,8 @@ class SessionTests: XCTestCase {
         let subject = Session(identifier: "baz", driver: driver)
         _ = subject["test"]
 
-        XCTAssertEqual(driver.actions.count, 1)
-        guard !driver.actions.isEmpty else { return }
-        guard case .ValueFor(let key, let session) = driver.actions[0] else {
-            XCTFail("Recorded action was not a value for action")
+        guard let action = driver.actions.first, case .ValueFor(let key, let session) = action else {
+            XCTFail("No actions recorded or recorded action was not a value for action")
             return
         }
 
@@ -57,10 +53,8 @@ class SessionTests: XCTestCase {
         let subject = Session(identifier: "baz", driver: driver)
         subject["foo"] = "bar"
 
-        XCTAssertEqual(driver.actions.count, 1)
-        guard !driver.actions.isEmpty else { return }
-        guard case .SetValue(let value, let key, let session) = driver.actions[0] else {
-            XCTFail("Recorded action was not a set value action")
+        guard let action = driver.actions.first, case .SetValue(let value, let key, let session) = action else {
+            XCTFail("No actions recorded or recorded action was not a set value action")
             return
         }
 
