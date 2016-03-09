@@ -6,6 +6,7 @@
 //
 
 import XCTest
+import Foundation
 import libc
 @testable import Vapor
 
