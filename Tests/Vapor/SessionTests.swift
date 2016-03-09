@@ -23,9 +23,8 @@ import XCTest
 
 class SessionTests: XCTestCase {
     func testDestroy_asksDriverToDestroy() {
-        let subject = Session()
         let driver = TestDriver()
-        subject.driver = driver
+        let subject = Session(identifier: "baz", driver: driver)
         subject.destroy()
         XCTAssertEqual(driver.actions.count, 1)
         guard !driver.actions.isEmpty else { return }
@@ -38,9 +37,8 @@ class SessionTests: XCTestCase {
     }
 
     func testSubscriptGet_asksDriverForValue() {
-        let subject = Session()
         let driver = TestDriver()
-        subject.driver = driver
+        let subject = Session(identifier: "baz", driver: driver)
         _ = subject["test"]
 
         XCTAssertEqual(driver.actions.count, 1)
@@ -55,9 +53,8 @@ class SessionTests: XCTestCase {
     }
 
     func testSubscriptSet_asksDriverToSetValue() {
-        let subject = Session()
         let driver = TestDriver()
-        subject.driver = driver
+        let subject = Session(identifier: "baz", driver: driver)
         subject["foo"] = "bar"
 
         XCTAssertEqual(driver.actions.count, 1)

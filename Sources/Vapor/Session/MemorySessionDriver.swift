@@ -12,31 +12,21 @@ public class MemorySessionDriver: SessionDriver {
     public init() { }
     
     public func valueFor(key key: String, inSession session: Session) -> String? {
-        guard let sessionIdentifier = session.identifier else {
-            Log.warning("Unable to read a value for '\(key)': The session has not been registered yet")
-            return nil
-        }
-        
         var value: String?
         sessionsLock.locked {
-            value = sessions[sessionIdentifier]?[key]
+            value = sessions[session.identifier]?[key]
         }
         
         return value
     }
     
     public func set(value: String?, forKey key: String, inSession session: Session) {
-        guard let sessionIdentifier = session.identifier else {
-            Log.warning("Unable to store a value for '\(key)': The session has not been registered yet")
-            return
-        }
-        
         sessionsLock.locked {
-            if sessions[sessionIdentifier] == nil {
-                sessions[sessionIdentifier] = [String: String]()
+            if sessions[session.identifier] == nil {
+                sessions[session.identifier] = [String: String]()
             }
             
-            sessions[sessionIdentifier]?[key] = value
+            sessions[session.identifier]?[key] = value
         }
     }
     
@@ -52,13 +42,8 @@ public class MemorySessionDriver: SessionDriver {
     }
     
     public func destroy(session: Session) {
-        guard let sessionIdentifier = session.identifier else {
-            Log.warning("Unable to destroy the session: The session has not been registered yet")
-            return
-        }
-        
         sessionsLock.locked {
-            sessions[sessionIdentifier] = nil
+            sessions[session.identifier] = nil
         }
     }
 }
