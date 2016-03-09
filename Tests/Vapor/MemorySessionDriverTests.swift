@@ -12,13 +12,13 @@ import XCTest
     extension MemorySessionDriverTests: XCTestCaseProvider {
         var allTests : [(String, () throws -> Void)] {
             return [
-                       ("testValueForKey_onSessionWithIdentifier_onNonExistantSession_isNil", testValueForKey_onSessionWithIdentifier_onNonExistantSession_isNil),
-                       ("testValueForKey_onSessionWithIdentifier_onExistingSession_onNonExistingKey_isNil", testValueForKey_onSessionWithIdentifier_onExistingSession_onNonExistingKey_isNil),
-                       ("testValueForKey_onSessionWithIdentifier_onExistingSession_onExistingKey_isKeyValue", testValueForKey_onSessionWithIdentifier_onExistingSession_onExistingKey_isKeyValue),
-                       ("testSetValueForKey_onSessionWithIdentifier_setsValueCorrectly", testSetValueForKey_onSessionWithIdentifier_setsValueCorrectly),
-                       ("testSetValueForKey_onSessionWithIdentifier_withExistingValue_overwritesValueCorrectly", testSetValueForKey_onSessionWithIdentifier_withExistingValue_overwritesValueCorrectly),
-                       ("testSetValueForKey_onSessionWithIdentifier_withExistingValue_toNilErasesValue", testSetValueForKey_onSessionWithIdentifier_withExistingValue_toNilErasesValue),
-                       ("testDestroySession_onSessionThatHasIdentifier_removesSession", testDestroySession_onSessionThatHasIdentifier_removesSession)
+                       ("testValueForKey_onNonExistantSession_isNil", testValueForKey_onNonExistantSession_isNil),
+                       ("testValueForKey_onExistingSession_onNonExistingKey_isNil", testValueForKey_onExistingSession_onNonExistingKey_isNil),
+                       ("testValueForKey_onExistingSession_onExistingKey_isKeyValue", testValueForKey_onExistingSession_onExistingKey_isKeyValue),
+                       ("testSetValueForKey_setsValueCorrectly", testSetValueForKey_setsValueCorrectly),
+                       ("testSetValueForKey_withExistingValue_overwritesValueCorrectly", testSetValueForKey_withExistingValue_overwritesValueCorrectly),
+                       ("testSetValueForKey_withExistingValue_toNilErasesValue", testSetValueForKey_withExistingValue_toNilErasesValue),
+                       ("testDestroySession_removesSession", testDestroySession_removesSession)
             ]
         }
     }
