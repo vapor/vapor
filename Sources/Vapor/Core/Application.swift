@@ -27,7 +27,7 @@ public class Application {
         storing and reading values written to the
         users session.
     */
-    public var sessionDriver: SessionDriver
+    public var session: SessionDriver
 
 	/**
 		`Middleware` will be applied in the order
@@ -95,10 +95,10 @@ public class Application {
 	/**
 		Initialize the Application.
 	*/
-    public init(router: RouterDriver = BranchRouter(), server: ServerDriver = SocketServer(), sessionDriver: SessionDriver = MemorySessionDriver()) {
+    public init(router: RouterDriver = BranchRouter(), server: ServerDriver = SocketServer(), session: SessionDriver = MemorySessionDriver()) {
 		self.server = server
 		self.router = router
-        self.sessionDriver = sessionDriver
+        self.session = session
 
 		self.middleware = [
 			AbortMiddleware.self
