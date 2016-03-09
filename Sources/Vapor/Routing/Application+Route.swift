@@ -90,7 +90,7 @@ extension Application {
         
         //Apply any scoped middlewares
         for middleware in scopedMiddleware {
-            handler = middleware.handle(handler)
+            handler = middleware.handle(forApplication: self, handler: handler)
         }
         
         //Store the route for registering with Router later
