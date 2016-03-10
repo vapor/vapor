@@ -1,8 +1,4 @@
-#if os(Linux)
-    import Glibc
-#else
-    import Foundation
-#endif
+import libc
 
 extension Int {
     /**
@@ -12,7 +8,7 @@ extension Int {
     public static func random(min min: Int, max: Int) -> Int {
         let top = max - min + 1
         #if os(Linux)
-            return Int(Glibc.random() % top) + min
+            return Int(libc.random() % top) + min
         #else
             return Int(arc4random_uniform(UInt32(top))) + min
         #endif

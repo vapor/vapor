@@ -9,7 +9,9 @@ let package = Package(
     targets: [
         Target(
             name: "Vapor",
-            dependencies: []
+            dependencies: [
+                .Target(name: "libc")
+            ]
         ),
         Target(
             name: "VaporDev",
