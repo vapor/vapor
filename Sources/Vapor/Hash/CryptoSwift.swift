@@ -7,13 +7,7 @@
 //
 
 import Foundation
-
-
-#if os(Linux)
-    import Glibc
-#else
-    import Darwin
-#endif
+import libc
 
 //
 //  SHA2.swift

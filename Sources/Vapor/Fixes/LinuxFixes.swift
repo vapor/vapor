@@ -3,14 +3,14 @@ var _module_nsstring = true
 #if os(Linux)
 
 import Foundation
-import Glibc
+import libc
 
 private let O = "0".ord, A = "A".ord, percent = "%".ord
 
 private func unhex( char: Int8 ) -> Int8 {
     return char < A ? char - O : char - A + 10
 }
-    
+
 
 extension String {
 
@@ -119,7 +119,7 @@ extension String {
 var _module_dispatch = true
 
 #if os(Linux)
-import Glibc
+import libc
 
 let DISPATCH_QUEUE_CONCURRENT = 0, DISPATCH_QUEUE_PRIORITY_HIGH = 0, DISPATCH_QUEUE_PRIORITY_LOW = 0, DISPATCH_QUEUE_PRIORITY_BACKGROUND = 0
 

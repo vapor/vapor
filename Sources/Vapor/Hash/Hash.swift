@@ -1,8 +1,5 @@
-#if os(Linux)
-    import Glibc
-#endif
-
 import Foundation
+import libc
 
 
 public class Hash {

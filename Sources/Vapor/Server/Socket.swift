@@ -28,11 +28,7 @@
  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if os(Linux)
-    import Glibc
-#else
-    import Foundation
-#endif
+import libc
 
 public enum SocketError: ErrorType {
     case SocketCreationFailed(String)
