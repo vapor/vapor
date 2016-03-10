@@ -43,6 +43,8 @@ public class Config {
 	public func populate(path: String, application: Application) throws {
 		var url = NSURL(fileURLWithPath: path)
 		var files = Dictionary<String, [NSURL]>()
+
+		// Populate config files by environment
 		try self.populateConfigFiles(&files, in: url)
 
 		for env in application.environment.description.keys {
@@ -57,7 +59,14 @@ public class Config {
 			}
 		}
 
+		// Loop through files and merge config upwards so the
+		// environment always overrides the base config
 		for (group, files) in files {
+			if group == ".env" {
+				// .env is handled differently below
+				continue
+			}
+
 			for file in files {
 				let data = try NSData(contentsOfURL: file, options: [])
 				let json = try Json.deserialize(data)
@@ -66,6 +75,27 @@ public class Config {
 					self.repository[group] = json
 				} else {
 					self.repository[group]?.merge(json)
+				}
+			}
+		}
+
+		// Apply .env overrides, which is a single file
+		// containing multiple groups
+		if let env = files[".env"] {
+			for file in env {
+				let data = try NSData(contentsOfURL: file, options: [])
+				let json = try Json.deserialize(data)
+
+				guard case let .ObjectValue(object) = json else {
+					return
+				}
+
+				for (group, json) in object {
+					if self.repository[group] == nil {
+						self.repository[group] = json
+					} else {
+						self.repository[group]?.merge(json)
+					}
 				}
 			}
 		}

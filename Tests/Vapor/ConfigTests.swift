@@ -9,6 +9,7 @@ import XCTest
 				("testNesting", testNesting),
 				("testEnvironmentCascading", testEnvironmentCascading),
 				("testEnvironmentCascadingNesting", testEnvironmentCascadingNesting),
+				("testDotEnv", testDotEnv),
 			]
 		}
 	}
@@ -34,6 +35,11 @@ class ConfigTests: XCTestCase {
 	func testEnvironmentCascadingNesting() {
 		let config = self.config(.Production)
 		XCTAssert(config.get("app.nested.c.true")?.bool == false, "Nesting config incorrectly loaded.")
+	}
+
+	func testDotEnv() {
+		let config = self.config(.Development)
+		XCTAssert(config.get("app.port")?.int == 9000, ".env config incorrectly loaded.")
 	}
 
 	private func config(environment: Environment) -> Config {
