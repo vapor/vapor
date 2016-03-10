@@ -29,6 +29,30 @@ public class Config {
 		return value
 	}
 
+	public func get(keyPath: String, _ fallback: String) -> String {
+		return self.get(keyPath)?.string ?? fallback
+	}
+
+	public func get(keyPath: String, _ fallback: Bool) -> Bool {
+		return self.get(keyPath)?.bool ?? fallback
+	}
+
+	public func get(keyPath: String, _ fallback: Int) -> Int {
+		return self.get(keyPath)?.int ?? fallback
+	}
+
+	public func get(keyPath: String, _ fallback: UInt) -> UInt {
+		return self.get(keyPath)?.uint ?? fallback
+	}
+
+	public func get(keyPath: String, _ fallback: Double) -> Double {
+		return self.get(keyPath)?.double ?? fallback
+	}
+
+	public func get(keyPath: String, _ fallback: Float) -> Float {
+		return self.get(keyPath)?.float ?? fallback
+	}
+
 	public func set(value: Json, forKeyPath keyPath: String) {
 		var keys = keyPath.keys
 		let group = keys.removeFirst()

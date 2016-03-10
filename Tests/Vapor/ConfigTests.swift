@@ -19,27 +19,27 @@ class ConfigTests: XCTestCase {
 
 	func testSimple() {
 		let config = self.config(.Development)
-		XCTAssert(config.get("app.debug")?.bool == true, "Config incorrectly loaded.")
+		XCTAssert(config.get("app.debug", false) == true, "Config incorrectly loaded.")
 	}
 
 	func testNesting() {
 		let config = self.config(.Development)
-		XCTAssert(config.get("app.nested.c.true")?.bool == true, "Nesting config incorrectly loaded.")
+		XCTAssert(config.get("app.nested.c.true", false) == true, "Nesting config incorrectly loaded.")
 	}
 
 	func testEnvironmentCascading() {
 		let config = self.config(.Production)
-		XCTAssert(config.get("app.debug")?.bool == false, "Cascading config incorrectly loaded.")
+		XCTAssert(config.get("app.debug", true) == false, "Cascading config incorrectly loaded.")
 	}
 
 	func testEnvironmentCascadingNesting() {
 		let config = self.config(.Production)
-		XCTAssert(config.get("app.nested.c.true")?.bool == false, "Nesting config incorrectly loaded.")
+		XCTAssert(config.get("app.nested.c.true", true) == false, "Nesting config incorrectly loaded.")
 	}
 
 	func testDotEnv() {
 		let config = self.config(.Development)
-		XCTAssert(config.get("app.port")?.int == 9000, ".env config incorrectly loaded.")
+		XCTAssert(config.get("app.port", 0) == 9000, ".env config incorrectly loaded.")
 	}
 
 	private func config(environment: Environment) -> Config {
