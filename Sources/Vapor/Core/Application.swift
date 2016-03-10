@@ -19,6 +19,13 @@ public class Application {
 	*/
 	public var server: ServerDriver
 
+    /**
+        The session driver is responsible for
+        storing and reading values written to the
+        users session.
+    */
+    public var session: SessionDriver
+
 	/**
 		`Middleware` will be applied in the order
 		it is set in this array.
@@ -85,9 +92,10 @@ public class Application {
 	/**
 		Initialize the Application.
 	*/
-	public init(router: RouterDriver = BranchRouter(), server: ServerDriver = SocketServer()) {
+    public init(router: RouterDriver = BranchRouter(), server: ServerDriver = SocketServer(), session: SessionDriver = MemorySessionDriver()) {
 		self.server = server
 		self.router = router
+        self.session = session
 
 		self.middleware = [
 			AbortMiddleware.self
@@ -239,7 +247,7 @@ extension Application: ServerDriverDelegate {
 
 		// Loop through middlewares in order
 		for middleware in self.middleware {
-			handler = middleware.handle(handler)
+            handler = middleware.handle(handler, for: self)
 		}
 
 		do {

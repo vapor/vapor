@@ -108,7 +108,7 @@ class RouteTests: XCTestCase {
         }
         
         for middleware in app.middleware {
-            handler = middleware.handle(handler)
+            handler = middleware.handle(handler, for: app)
         }
         
         do {

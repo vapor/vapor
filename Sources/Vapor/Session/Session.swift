@@ -1,25 +1,25 @@
 
 public class Session {
 
-    public static var driver: SessionDriver = MemorySessionDriver()
+    public let identifier: String
+    var driver: SessionDriver
 
-    public internal(set) var identifier: String?
-
-	init() {
-		//do nothing
+    init(identifier: String, driver: SessionDriver) {
+        self.identifier = identifier
+        self.driver = driver
 	}
 
 	public func destroy() {
-        Session.driver.destroy(self)
+        driver.destroy(self)
 	}
 
     public subscript(key: String) -> String? {
         get {
-            return Session.driver.valueFor(key: key, inSession: self)
+            return driver.valueFor(key: key, inSession: self)
         }
 
         set {
-            Session.driver.set(newValue, forKey: key, inSession: self)
+            driver.set(newValue, forKey: key, inSession: self)
         }
     }
 }
