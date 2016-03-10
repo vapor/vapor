@@ -53,32 +53,40 @@ extension Application {
      
         Note: You are responsible for pluralizing your endpoints.
     */
-    public final func resource<RoutedController: ResourceController>(path: String, controller: RoutedController.Type) {
+    public final func resource<ResourceController: Controller>(path: String, controllerFactory: () -> ResourceController) {
         let last = "/:id"
         let shortPath = path.componentsSeparatedByString(".")
-            .flatMap { component in
-                return [component, "/:\(component)_id/"]
-            }
-            .dropLast()
-            .joinWithSeparator("")
+        .flatMap { component in
+            return [component, "/:\(component)_id/"]
+        }
+        .dropLast()
+        .joinWithSeparator("")
         let fullPath = shortPath + last
 
         // ie: /users
-        self.add(.Get, path: shortPath, action: RoutedController.index)
-        self.add(.Post, path: shortPath, action: RoutedController.store)
+        self.add(.Get, path: shortPath, controllerFactory: controllerFactory, action: ResourceController.index)
+        self.add(.Post, path: shortPath, controllerFactory: controllerFactory, action: ResourceController.store)
 
         // ie: /users/:id
-        self.add(.Get, path: fullPath, action: RoutedController.show)
-        self.add(.Put, path: fullPath, action: RoutedController.update)
-        self.add(.Delete, path: fullPath, action: RoutedController.destroy)
+        self.add(.Get, path: fullPath, controllerFactory: controllerFactory, action: ResourceController.show)
+        self.add(.Put, path: fullPath, controllerFactory: controllerFactory, action: ResourceController.update)
+        self.add(.Delete, path: fullPath, controllerFactory: controllerFactory, action: ResourceController.destroy)
     }
 
-    public final func add<RoutedController: Controller>(method: Request.Method, path: String, action: (RoutedController) -> (Request) throws -> ResponseConvertible) {
+    public final func resource<ResourceController: BasicController>(path: String, controller: ResourceController.Type) {
+        resource(path, controllerFactory: ResourceController.init)
+    }
+
+    public final func add<ResourceController: Controller>(method: Request.Method, path: String, controllerFactory: () -> ResourceController, action: (ResourceController) -> Route.Handler) {
         add(method, path: path) { request in
-            let controller = RoutedController()
+            let controller = controllerFactory()
             let actionCall = action(controller)
             return try actionCall(request).response()
         }
+    }
+
+    public final func add<ResourceController: BasicController>(method: Request.Method, path: String, action: (ResourceController) -> Route.Handler) {
+        add(method, path: path, controllerFactory: ResourceController.init, action: action)
     }
     
     public final func add(method: Request.Method, path: String, handler: Route.Handler) {
