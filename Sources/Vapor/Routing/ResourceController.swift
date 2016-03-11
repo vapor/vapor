@@ -1,10 +1,10 @@
 /**
  * Organize your routing logic with a conformance of
- * `Controller`. Controls group related route logic into
+ * `ResourceController`. Controls group related route logic into
  * a single protocol that, by default, conforms to standard
  * CRUD operations.
  */
-public protocol Controller {
+public protocol ResourceController {
     /// Display many instances
 	  func index(request: Request) throws -> ResponseConvertible
 
@@ -20,5 +20,3 @@ public protocol Controller {
     /// Delete an instance.
     func destroy(request: Request) throws -> ResponseConvertible
 }
-
-public protocol BasicController: Controller, DefaultInitializable { }

@@ -1,6 +1,6 @@
 import Vapor //Travis will fail without this
 
-class MyController: BasicController {
+class MyController: ResourceController, DefaultInitializable {
     required init() {
         
     }

@@ -42,42 +42,40 @@ extension Application {
         self.delete(path, handler: handler)
     }
     
-
-    
     /**
         Creates standard Create, Read, Update, Delete routes
-        using the Handlers from a supplied `Controller`.
+        using the Handlers from a supplied `ResourceController`.
      
         The `path` supports nested resources, like `users.photos`.
         users/:user_id/photos/:id
      
         Note: You are responsible for pluralizing your endpoints.
     */
-    public final func resource<ResourceController: Controller>(path: String, controllerFactory: () -> ResourceController) {
+    public final func resource<ResourceControllerType: ResourceController>(path: String, controllerFactory: () -> ResourceControllerType) {
         let last = "/:id"
         let shortPath = path.componentsSeparatedByString(".")
-        .flatMap { component in
-            return [component, "/:\(component)_id/"]
-        }
-        .dropLast()
-        .joinWithSeparator("")
+            .flatMap { component in
+                return [component, "/:\(component)_id/"]
+            }
+            .dropLast()
+            .joinWithSeparator("")
         let fullPath = shortPath + last
 
         // ie: /users
-        self.add(.Get, path: shortPath, controllerFactory: controllerFactory, action: ResourceController.index)
-        self.add(.Post, path: shortPath, controllerFactory: controllerFactory, action: ResourceController.store)
+        self.add(.Get, path: shortPath, controllerFactory: controllerFactory, action: ResourceControllerType.index)
+        self.add(.Post, path: shortPath, controllerFactory: controllerFactory, action: ResourceControllerType.store)
 
         // ie: /users/:id
-        self.add(.Get, path: fullPath, controllerFactory: controllerFactory, action: ResourceController.show)
-        self.add(.Put, path: fullPath, controllerFactory: controllerFactory, action: ResourceController.update)
-        self.add(.Delete, path: fullPath, controllerFactory: controllerFactory, action: ResourceController.destroy)
+        self.add(.Get, path: fullPath, controllerFactory: controllerFactory, action: ResourceControllerType.show)
+        self.add(.Put, path: fullPath, controllerFactory: controllerFactory, action: ResourceControllerType.update)
+        self.add(.Delete, path: fullPath, controllerFactory: controllerFactory, action: ResourceControllerType.destroy)
     }
 
-    public final func resource<ResourceController: BasicController>(path: String, controller: ResourceController.Type) {
-        resource(path, controllerFactory: ResourceController.init)
+    public final func resource<ResourceControllerType: ResourceController where ResourceControllerType: DefaultInitializable>(path: String, controller: ResourceControllerType.Type) {
+        resource(path, controllerFactory: ResourceControllerType.init)
     }
 
-    public final func add<ResourceController: Controller>(method: Request.Method, path: String, controllerFactory: () -> ResourceController, action: (ResourceController) -> Route.Handler) {
+    public final func add<Controller>(method: Request.Method, path: String, controllerFactory: () -> Controller, action: Controller -> Route.Handler) {
         add(method, path: path) { request in
             let controller = controllerFactory()
             let actionCall = action(controller)
@@ -85,8 +83,8 @@ extension Application {
         }
     }
 
-    public final func add<ResourceController: BasicController>(method: Request.Method, path: String, action: (ResourceController) -> Route.Handler) {
-        add(method, path: path, controllerFactory: ResourceController.init, action: action)
+    public final func add<Controller: DefaultInitializable>(method: Request.Method, path: String, action: Controller -> Route.Handler) {
+        add(method, path: path, controllerFactory: Controller.init, action: action)
     }
     
     public final func add(method: Request.Method, path: String, handler: Route.Handler) {
