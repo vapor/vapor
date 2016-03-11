@@ -46,7 +46,7 @@ class ConfigTests: XCTestCase {
 		let app = self.app(environment)
 
 		do {
-			try app.config.populate("./TestConfig", application: app)
+			try app.config.populate("./Sources/VaporDev/Config", application: app)
 		} catch {
 			XCTAssert(false, "Failed to load config: \(config)")
 		}
