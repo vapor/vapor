@@ -110,14 +110,7 @@ public class Application {
 		self.middleware.append(SessionMiddleware)
 
 		self.config = Config()
-
-		if NSFileManager.defaultManager().fileExistsAtPath(Config.configDir) {
-			do {
-				try self.config.populate(Config.configDir, application: self)
-			} catch {
-				Log.error("Unable to populate config: \(error)")
-			}
-		}
+		self.config.populate(self)
 	}
 
 	public func bootProviders() {

@@ -64,6 +64,16 @@ public class Config {
 		}
 	}
 
+	public func populate(application: Application) {
+		if NSFileManager.defaultManager().fileExistsAtPath(self.dynamicType.configDir) {
+			do {
+				try self.populate(self.dynamicType.configDir, application: application)
+			} catch {
+				Log.error("Unable to populate config: \(error)")
+			}
+		}
+	}
+
 	public func populate(path: String, application: Application) throws {
 		var url = NSURL(fileURLWithPath: path)
 		var files = Dictionary<String, [NSURL]>()
