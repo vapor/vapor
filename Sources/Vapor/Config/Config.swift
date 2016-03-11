@@ -64,13 +64,18 @@ public class Config {
 		}
 	}
 
-	public func populate(application: Application) {
+	/* Convenience call to conditionally populate config if it exists */
+	public func populate(application: Application) -> Bool {
 		if NSFileManager.defaultManager().fileExistsAtPath(self.dynamicType.configDir) {
 			do {
 				try self.populate(self.dynamicType.configDir, application: application)
+				return true
 			} catch {
 				Log.error("Unable to populate config: \(error)")
+				return false
 			}
+		} else {
+			return false
 		}
 	}
 
