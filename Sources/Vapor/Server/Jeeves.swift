@@ -27,7 +27,7 @@ public class Jeeves<Socket: Vapor.Socket>: ServerDriver {
 
         Background {
             do {
-                try self.streamSocket?.accept(self.handle)
+                try self.streamSocket?.accept(Int(SOMAXCONN), connectionHandler: self.handle)
             } catch {
                 Log.error("Failed to accept: \(self.streamSocket) error: \(error)")
             }

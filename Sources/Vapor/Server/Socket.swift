@@ -13,17 +13,15 @@ public protocol Identifiable {
 public protocol Socket: Identifiable {
     func read(bufferLength: Int) throws -> [Byte]
     func write(buffer: [Byte]) throws
-
+    
     func bind(address: String?, port: String?) throws
     func listen(backlog: Int) throws
-    func accept(connectionHandler: Socket -> Void) throws
-
+    func accept(maximumConsecutiveFailures: Int, connectionHandler: (Socket) -> Void) throws
+    
     func close() throws
-
+    
     static func streamSocket() throws -> Self
 }
-
-// MARK: Write
 
 extension Socket {
     func writeHeader(line line: String) throws {

@@ -35,7 +35,7 @@ private final class TestSocket: Socket {
     func listen(backlog: Int) throws {
         fatalError("Not yet supported")
     }
-    func accept(connectionHandler: Socket -> Void) throws {
+    private func accept(maximumConsecutiveFailures: Int, connectionHandler: (Socket) -> Void) throws {
         fatalError("Not yet supported")
     }
 

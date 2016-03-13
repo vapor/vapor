@@ -13,7 +13,10 @@ extension Hummingbird.Socket: Socket {
         try send(bytes)
     }
     
-    public func accept(connectionHandler: Socket -> Void) throws {
-        try accept(Int(SOMAXCONN), connectionHandler: connectionHandler)
+    
+    public func accept(maximumConsecutiveFailures: Int, connectionHandler: (Socket) -> Void) throws {
+        try accept(maximumConsecutiveFailures) { (sock: Hummingbird.Socket) in // Keep type explicit to prevent infinite loop
+            connectionHandler(sock)
+        }
     }
 }
