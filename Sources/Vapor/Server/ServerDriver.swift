@@ -1,9 +1,9 @@
 import Foundation
 
 public protocol ServerDriver {
-    func boot(port port: Int) throws
+    func boot(ip ip: String, port: Int) throws
     func halt()
-    
+
     var delegate: ServerDriverDelegate? { get set }
 }
 
