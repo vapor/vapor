@@ -212,8 +212,7 @@ for method: Func.Method in [.Get, .Post] {
 functions += "}"
 
 if Process.arguments.count < 2 {
-    print("Please pass $SRCROOT as a parameter")
-    return
+    fatalError("Please pass $SRCROOT as a parameter")
 }
 
 let path = Process.arguments[1].stringByReplacingOccurrencesOfString("XcodeProject", withString: "")
