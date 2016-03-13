@@ -29,7 +29,16 @@ public class Application {
 	/**
 		Provides access to config settings.
 	*/
-	public let config: Config
+	private var configHolder: Config?
+	public var config: Config {
+		if let config = self.configHolder {
+			return config
+		}
+
+		let config = Config(application: self)
+		self.configHolder = config
+		return config
+	}
 
 	/**
 		`Middleware` will be applied in the order
@@ -109,9 +118,6 @@ public class Application {
 		self.providers = []
 
 		self.middleware.append(SessionMiddleware)
-
-		self.config = Config()
-		self.config.populate(self)
 	}
 
 	public func bootProviders() {

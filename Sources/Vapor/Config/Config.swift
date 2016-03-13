@@ -5,8 +5,12 @@ public class Config {
 	private let fileManager = NSFileManager.defaultManager()
 	private var repository: [String: Json]
 
-	public init(repository: [String: Json] = Dictionary()) {
+	public init(repository: [String: Json] = Dictionary(), application: Application? = nil) {
 		self.repository = repository
+
+		if let application = application {
+			self.populate(application)
+		}
 	}
 
 	public func has(keyPath: String) -> Bool {
