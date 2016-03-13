@@ -29,22 +29,6 @@ extension String: StringInitializable {
 
 extension Application {
     
-    public final func put(path: String, handler: Route.Handler) {
-        self.add(.Put, path: path, handler: handler)
-    }
-    
-    public final func patch(path: String, handler: Route.Handler) {
-        self.add(.Patch, path: path, handler: handler)
-    }
-    
-    public final func delete(path: String, handler: Route.Handler) {
-        self.add(.Delete, path: path, handler: handler)
-    }
-    
-    public final func options(path: String, handler: Route.Handler) {
-        self.add(.Options, path: path, handler: handler)
-    }
-    
     public final func any(path: String, handler: Route.Handler) {
         self.get(path, handler: handler)
         self.post(path, handler: handler)
