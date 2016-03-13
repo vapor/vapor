@@ -53,23 +53,25 @@ public class Jeeves<Socket: Vapor.Socket>: ServerDriver {
     }
 
     private func handle(socket: Vapor.Socket) {
-        activeSockets.insert(socket)
-        defer {
-            activeSockets.remove(socket)
-        }
-
-        do {
-            var keepAlive = false
-            repeat {
-                let request = try socket.readRequest()
-                let response = delegate?.serverDriverDidReceiveRequest(request) ?? Response.notFound()
-                try socket.write(response)
-                keepAlive = request.supportsKeepAlive
-            } while keepAlive
-
-            try socket.close()
-        } catch {
-            Log.error("Request Handle Failed: \(error)")
+        Background {
+            self.activeSockets.insert(socket)
+            defer {
+                self.activeSockets.remove(socket)
+            }
+            
+            do {
+                var keepAlive = false
+                repeat {
+                    let request = try socket.readRequest()
+                    let response = self.delegate?.serverDriverDidReceiveRequest(request) ?? Response.notFound()
+                    try socket.write(response)
+                    keepAlive = request.supportsKeepAlive
+                } while keepAlive
+                
+                try socket.close()
+            } catch {
+                Log.error("Request Handle Failed: \(error)")
+            }
         }
     }
 }
