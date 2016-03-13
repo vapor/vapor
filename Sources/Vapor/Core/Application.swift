@@ -2,7 +2,7 @@ import Foundation
 import libc
 
 public class Application {
-	public static let VERSION = "0.2.9"
+	public static let VERSION = "0.2.10"
 
 	/**
 		The router driver is responsible
@@ -90,6 +90,7 @@ public class Application {
     var scopedPrefix: String?
 
 	var port: Int = 80
+	var ip: String = "0.0.0.0"
 
 	var routes: [Route] = []
 
@@ -165,28 +166,35 @@ public class Application {
 			self.dynamicType.workDir = workDir
 		}
 
-		if let portString = Process.valueFor(argument: "port"), let portInt = Int(portString) {
-			Log.info("Port override: \(portInt)")
-			self.port = portInt
+		if let ip = Process.valueFor(argument: "ip") {
+			Log.info("IP override: \(ip)")
+			self.ip = ip
+		}
+
+		if let port = Process.valueFor(argument: "port")?.int {
+			Log.info("Port override: \(port)")
+			self.port = port
 		}
 	}
 
 	/**
 		Boots the chosen server driver and
-		runs on the supplied port.
+		optionally runs on the supplied
+		ip & port overrides
 	*/
-	public func start(port port: Int = 80) {
+	public func start(ip ip: String? = nil, port: Int? = nil) {
 		self.bootProviders()
 		self.server.delegate = self
 
-		self.port = port
+		self.ip = ip ?? self.ip
+		self.port = port ?? self.port
 
 		self.bootRoutes()
 		self.bootArguments()
 
 		do {
-			try self.server.boot(port: self.port)
-			Log.info("Server has started on port \(self.port)")
+			try self.server.boot(ip: self.ip, port: self.port)
+			Log.info("Server has started on \(self.ip):\(self.port)")
 			self.loop()
 		} catch {
 			Log.info("Server start error: \(error)")
