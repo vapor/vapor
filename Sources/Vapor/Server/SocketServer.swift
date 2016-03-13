@@ -15,13 +15,13 @@ public class SocketServer: ServerDriver {
      
         - parameter port: The port to listen on.
      */
-    public func boot(port port: Int) throws {
+    public func boot(ip ip: String, port: Int) throws {
         //stop the server if it's running
         self.halt()
         
         //open a socket, might fail
-        self.listenSocket = try Socket.tcpSocketForListen(UInt16(port))
-        
+        self.listenSocket = try Socket.tcpSocketForListen(ip, port: UInt16(port))
+
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0)) {
             
             //creates the infinite loop that will wait for client connections
