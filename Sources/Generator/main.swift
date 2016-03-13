@@ -211,6 +211,11 @@ for method: Func.Method in [.Get, .Post] {
 
 functions += "}"
 
+if Process.arguments.count < 2 {
+    print("Please pass $SRCROOT as a parameter")
+    return
+}
+
 let path = Process.arguments[1].stringByReplacingOccurrencesOfString("XcodeProject", withString: "")
 let url = NSURL(fileURLWithPath: path + "/Sources/Vapor/Core/Generated.swift")
 
