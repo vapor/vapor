@@ -93,7 +93,7 @@ public class Application {
 	/**
 		Initialize the Application.
 	*/
-    public init(router: RouterDriver = BranchRouter(), server: ServerDriver = SocketServer(), session: SessionDriver = MemorySessionDriver()) {
+    public init(router: RouterDriver = BranchRouter(), server: ServerDriver = Jeeves<Hummingbird.Socket>(), session: SessionDriver = MemorySessionDriver()) {
 		self.server = server
 		self.router = router
         self.session = session
