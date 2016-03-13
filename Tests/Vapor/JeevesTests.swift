@@ -53,7 +53,8 @@ private final class TestSocket: Socket {
     extension JeevesTests: XCTestCaseProvider {
         var allTests : [(String, () throws -> Void)] {
             return [
-                       ("testRequestHeader", testRequestHeader)
+                       ("testReadHeader", testReadHeader),
+                       ("testReadRequest", testReadRequest)
             ]
         }
     }
@@ -61,8 +62,7 @@ private final class TestSocket: Socket {
 
 class JeevesTests: XCTestCase {
 
-    func testRequestHeader() throws {
-        print("Tested")
+    func testReadHeader() throws {
         let socket = TestSocket()
         let header = try Request.Header(socket)
 
@@ -78,5 +78,11 @@ class JeevesTests: XCTestCase {
         XCTAssert(fields["User-Agent"] == "Paw/2.2.9 (Macintosh; OS X/10.11.3) GCDHTTPRequest")
         XCTAssert(fields["Connection"] == "close")
         XCTAssert(fields["Host"] == "localhost:8080")
+    }
+    
+    func testReadRequest() throws {
+        let socket = TestSocket()
+        let request = try socket.readRequest()
+        XCTAssert(request.data["hello"]?.string == "world")
     }
 }
