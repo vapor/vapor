@@ -60,6 +60,8 @@
 		8049436D1C8DBED70064FA7A /* MemorySessionDriver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8049436C1C8DBED70064FA7A /* MemorySessionDriver.swift */; };
 		80FF32EF1C8A63DE008EC414 /* NSData+SequenceType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80FF32EE1C8A63DE008EC414 /* NSData+SequenceType.swift */; };
 		C3433FD41C7D119D009F0876 /* HashTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3433FD21C7D119D009F0876 /* HashTests.swift */; };
+		C387A0431C95FEBA00B6282E /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = C387A0361C95FDFE00B6282E /* main.swift */; };
+		C387A0451C96125800B6282E /* Generated.swift in Sources */ = {isa = PBXBuildFile; fileRef = C387A0441C96125800B6282E /* Generated.swift */; };
 		C38808641C62C0390067DADD /* ResponseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C38808631C62C0390067DADD /* ResponseTests.swift */; };
 		C3943DC31C7663E80014F4EE /* RouterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3943DC21C7663E80014F4EE /* RouterTests.swift */; };
 		C3DFB55D1C80C2860045801C /* MyController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3DFB5541C80C2860045801C /* MyController.swift */; };
@@ -78,6 +80,15 @@
 
 /* Begin PBXCopyFilesBuildPhase section */
 		3AEEF4481C7F71080099CBAE /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+		C387A0391C95FE1300B6282E /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = /usr/share/man/man1/;
@@ -144,6 +155,10 @@
 		C352E7141C62BE6900E26467 /* Package.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Package.swift; path = ../Package.swift; sourceTree = SOURCE_ROOT; };
 		C364C5001C7EB579009F65DD /* Route.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Route.swift; path = ../Sources/Vapor/Routing/Route.swift; sourceTree = SOURCE_ROOT; };
 		C377F2EE1C696CAB00DABD21 /* RenderDriver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RenderDriver.swift; path = ../Sources/Vapor/View/RenderDriver.swift; sourceTree = SOURCE_ROOT; };
+		C387A0361C95FDFE00B6282E /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		C387A03B1C95FE1300B6282E /* Generator */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Generator; sourceTree = BUILT_PRODUCTS_DIR; };
+		C387A03D1C95FE1300B6282E /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		C387A0441C96125800B6282E /* Generated.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Generated.swift; path = ../../Sources/Vapor/Core/Generated.swift; sourceTree = "<group>"; };
 		C38808631C62C0390067DADD /* ResponseTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = ResponseTests.swift; path = ../Tests/Vapor/ResponseTests.swift; sourceTree = SOURCE_ROOT; };
 		C3943DC21C7663E80014F4EE /* RouterTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RouterTests.swift; path = ../Tests/Vapor/RouterTests.swift; sourceTree = SOURCE_ROOT; };
 		C3DFB5541C80C2860045801C /* MyController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MyController.swift; sourceTree = "<group>"; };
@@ -183,6 +198,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		C387A0381C95FE1300B6282E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -218,6 +240,7 @@
 			isa = PBXGroup;
 			children = (
 				8049435D1C8CAEAF0064FA7A /* Environment.swift */,
+				C387A0441C96125800B6282E /* Generated.swift */,
 				288CFC2D1C7AC01A00E4617A /* Application.swift */,
 				C3433FCB1C7CFB39009F0876 /* Routing */,
 				C377F2ED1C696C9B00DABD21 /* View */,
@@ -372,8 +395,10 @@
 				C352E7131C62BDE200E26467 /* README.md */,
 				3A91D3D41C7F6B1A00EA3CA0 /* VaporDev */,
 				3A91D3CD1C7F6AF900EA3CA0 /* Vapor */,
+				C387A0351C95FDF300B6282E /* Generator */,
 				C352E6901C62BB1C00E26467 /* Tests */,
 				3AEEF4511C7F71110099CBAE /* Dependencies */,
+				C387A03C1C95FE1300B6282E /* Generator */,
 				C352E6821C62BB0F00E26467 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -384,6 +409,7 @@
 				C352E68F1C62BB1C00E26467 /* Tests.xctest */,
 				3A91D3CC1C7F6AF900EA3CA0 /* Vapor.framework */,
 				3AEEF44A1C7F71080099CBAE /* VaporDev */,
+				C387A03B1C95FE1300B6282E /* Generator */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -414,6 +440,23 @@
 			);
 			name = View;
 			path = ../Sources;
+			sourceTree = "<group>";
+		};
+		C387A0351C95FDF300B6282E /* Generator */ = {
+			isa = PBXGroup;
+			children = (
+				C387A0361C95FDFE00B6282E /* main.swift */,
+			);
+			name = Generator;
+			path = ../Sources/Generator;
+			sourceTree = "<group>";
+		};
+		C387A03C1C95FE1300B6282E /* Generator */ = {
+			isa = PBXGroup;
+			children = (
+				C387A03D1C95FE1300B6282E /* main.swift */,
+			);
+			path = Generator;
 			sourceTree = "<group>";
 		};
 		C3DFB5531C80C2860045801C /* Controllers */ = {
@@ -553,13 +596,30 @@
 			productReference = C352E68F1C62BB1C00E26467 /* Tests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
+		C387A03A1C95FE1300B6282E /* Generator */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C387A03F1C95FE1300B6282E /* Build configuration list for PBXNativeTarget "Generator" */;
+			buildPhases = (
+				C387A0371C95FE1300B6282E /* Sources */,
+				C387A0381C95FE1300B6282E /* Frameworks */,
+				C387A0391C95FE1300B6282E /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Generator;
+			productName = Generator;
+			productReference = C387A03B1C95FE1300B6282E /* Generator */;
+			productType = "com.apple.product-type.tool";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
 		C352E6791C62BB0F00E26467 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastSwiftUpdateCheck = 0730;
+				LastSwiftUpdateCheck = 0720;
 				LastUpgradeCheck = 0720;
 				ORGANIZATIONNAME = "Tanner Nelson";
 				TargetAttributes = {
@@ -571,6 +631,9 @@
 					};
 					C352E68E1C62BB1C00E26467 = {
 						CreatedOnToolsVersion = 7.2;
+					};
+					C387A03A1C95FE1300B6282E = {
+						CreatedOnToolsVersion = 7.2.1;
 					};
 				};
 			};
@@ -587,6 +650,7 @@
 			projectRoot = "";
 			targets = (
 				3AEEF4491C7F71080099CBAE /* VaporDev */,
+				C387A03A1C95FE1300B6282E /* Generator */,
 				3A91D3CB1C7F6AF900EA3CA0 /* Vapor */,
 				C352E68E1C62BB1C00E26467 /* Tests */,
 			);
@@ -659,6 +723,7 @@
 				3A91D3E51C7F6B6600EA3CA0 /* Response.swift in Sources */,
 				800EFA561C822EE200F6C066 /* Process.swift in Sources */,
 				3A91D3EF1C7F6B6600EA3CA0 /* Provider.swift in Sources */,
+				C387A0451C96125800B6282E /* Generated.swift in Sources */,
 				3A659FC51C80368F00C105F5 /* ResourceController.swift in Sources */,
 				3A91D3DA1C7F6B6600EA3CA0 /* Application+Route.swift in Sources */,
 				3A91D3DD1C7F6B6600EA3CA0 /* Log.swift in Sources */,
@@ -713,6 +778,14 @@
 				34CC59561C7BE3C9007CA680 /* LogTests.swift in Sources */,
 				C3943DC31C7663E80014F4EE /* RouterTests.swift in Sources */,
 				C3433FD41C7D119D009F0876 /* HashTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C387A0371C95FE1300B6282E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C387A0431C95FEBA00B6282E /* main.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -899,6 +972,20 @@
 			};
 			name = Release;
 		};
+		C387A0401C95FE1300B6282E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		C387A0411C95FE1300B6282E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -937,6 +1024,14 @@
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
+		};
+		C387A03F1C95FE1300B6282E /* Build configuration list for PBXNativeTarget "Generator" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C387A0401C95FE1300B6282E /* Debug */,
+				C387A0411C95FE1300B6282E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
 		};
 /* End XCConfigurationList section */
 	};
