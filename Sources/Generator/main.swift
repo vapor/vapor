@@ -70,7 +70,7 @@ struct Func: CustomStringConvertible {
             return "\\(\(param.name))"
         }.joinWithSeparator("/")
         
-        f += "\t\tself.add(.\(method), path: \"/\(pathString)\") { request in\n"
+        f += "\t\tself.add(.\(method), path: \"\(pathString)\") { request in\n"
         
         //function body
         if wildcards.count > 0 {

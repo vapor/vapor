@@ -157,7 +157,6 @@
 		C377F2EE1C696CAB00DABD21 /* RenderDriver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RenderDriver.swift; path = ../Sources/Vapor/View/RenderDriver.swift; sourceTree = SOURCE_ROOT; };
 		C387A0361C95FDFE00B6282E /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		C387A03B1C95FE1300B6282E /* Generator */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Generator; sourceTree = BUILT_PRODUCTS_DIR; };
-		C387A03D1C95FE1300B6282E /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		C387A0441C96125800B6282E /* Generated.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Generated.swift; path = ../../Sources/Vapor/Core/Generated.swift; sourceTree = "<group>"; };
 		C38808631C62C0390067DADD /* ResponseTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = ResponseTests.swift; path = ../Tests/Vapor/ResponseTests.swift; sourceTree = SOURCE_ROOT; };
 		C3943DC21C7663E80014F4EE /* RouterTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RouterTests.swift; path = ../Tests/Vapor/RouterTests.swift; sourceTree = SOURCE_ROOT; };
@@ -398,7 +397,6 @@
 				C387A0351C95FDF300B6282E /* Generator */,
 				C352E6901C62BB1C00E26467 /* Tests */,
 				3AEEF4511C7F71110099CBAE /* Dependencies */,
-				C387A03C1C95FE1300B6282E /* Generator */,
 				C352E6821C62BB0F00E26467 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -449,14 +447,6 @@
 			);
 			name = Generator;
 			path = ../Sources/Generator;
-			sourceTree = "<group>";
-		};
-		C387A03C1C95FE1300B6282E /* Generator */ = {
-			isa = PBXGroup;
-			children = (
-				C387A03D1C95FE1300B6282E /* main.swift */,
-			);
-			path = Generator;
 			sourceTree = "<group>";
 		};
 		C3DFB5531C80C2860045801C /* Controllers */ = {
