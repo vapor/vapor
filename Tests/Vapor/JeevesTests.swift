@@ -43,7 +43,7 @@ private final class TestSocket: Socket {
         fatalError("Not yet supported")
     }
 
-    static func streamSocket() throws -> Self {
+    private static func makeSocket() throws -> Socket {
         return self.init()
     }
 }
