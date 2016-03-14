@@ -7,7 +7,7 @@ extension Hummingbird.Socket: Socket {
     }
     
     public func read(bufferLength: Int) throws -> [Byte] {
-        return try recv(bufferLength)
+        return try receive(bufferLength)
     }
     
     public func write(bytes: [Byte]) throws {

@@ -4,7 +4,7 @@ let package = Package(
     name: "Vapor",
     dependencies: [
         .Package(url: "https://github.com/czechboy0/Jay.git", majorVersion: 0, minor: 3),
-        .Package(url: "https://github.com/LoganWright/Hummingbird", majorVersion: 1)
+        .Package(url: "https://github.com/ketzusaka/Hummingbird", majorVersion: 1)
     ],
     exclude: [],
     targets: [
@@ -27,5 +27,5 @@ let package = Package(
 //from xcode. this will become unnecessary once official xcode+swiftpm support is done.
 //watch progress: https://github.com/apple/swift-package-manager/compare/xcodeproj?expand=1
 
-// let lib = Product(name: "Vapor", type: .Library(.Dynamic), modules: "Vapor")
-// products.append(lib)
+let lib = Product(name: "Vapor", type: .Library(.Dynamic), modules: "Vapor")
+products.append(lib)
