@@ -1,8 +1,9 @@
 import Foundation
+import Hummingbird
 
 extension Hummingbird.Socket: Socket {
     public var id: String {
-        return "\(socketDescriptor)"
+        return "\(hashValue)"
     }
     
     public func read(bufferLength: Int) throws -> [Byte] {

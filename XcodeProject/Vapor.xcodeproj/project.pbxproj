@@ -64,6 +64,7 @@
 		8049436D1C8DBED70064FA7A /* MemorySessionDriver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8049436C1C8DBED70064FA7A /* MemorySessionDriver.swift */; };
 		8087DB591C9505E0002E57CC /* JeevesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8087DB581C9505E0002E57CC /* JeevesTests.swift */; };
 		809334C71C94FA8B0090AC20 /* Jeeves.swift in Sources */ = {isa = PBXBuildFile; fileRef = 809334C61C94FA8B0090AC20 /* Jeeves.swift */; };
+		80E940AD1C97044400B2D72F /* libHummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 80E940AC1C97044400B2D72F /* libHummingbird.dylib */; };
 		80FF32EF1C8A63DE008EC414 /* NSData+SequenceType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80FF32EE1C8A63DE008EC414 /* NSData+SequenceType.swift */; };
 		C3433FD41C7D119D009F0876 /* HashTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3433FD21C7D119D009F0876 /* HashTests.swift */; };
 		C3691FE01C98BEDA00C680DE /* EnvironmentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3691FDF1C98BEDA00C680DE /* EnvironmentTests.swift */; };
@@ -145,6 +146,7 @@
 		8049436C1C8DBED70064FA7A /* MemorySessionDriver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = MemorySessionDriver.swift; path = ../Sources/Vapor/Session/MemorySessionDriver.swift; sourceTree = SOURCE_ROOT; };
 		8087DB581C9505E0002E57CC /* JeevesTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = JeevesTests.swift; path = ../../Tests/Vapor/JeevesTests.swift; sourceTree = "<group>"; };
 		809334C61C94FA8B0090AC20 /* Jeeves.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Jeeves.swift; path = ../Sources/Vapor/Server/Jeeves.swift; sourceTree = SOURCE_ROOT; };
+		80E940AC1C97044400B2D72F /* libHummingbird.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libHummingbird.dylib; path = ../.build/debug/libHummingbird.dylib; sourceTree = "<group>"; };
 		80FF32EE1C8A63DE008EC414 /* NSData+SequenceType.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "NSData+SequenceType.swift"; path = "../../Sources/Vapor/Utilities/NSData+SequenceType.swift"; sourceTree = "<group>"; };
 		C304C8A61C62D65200058C92 /* ServerDriver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = ServerDriver.swift; path = ../Sources/Vapor/Server/ServerDriver.swift; sourceTree = SOURCE_ROOT; };
 		C304C8B41C6306B100058C92 /* RouterDriver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RouterDriver.swift; path = ../Sources/Vapor/Router/RouterDriver.swift; sourceTree = SOURCE_ROOT; };
@@ -195,6 +197,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				3A659FC71C805E3B00C105F5 /* libJay.dylib in Frameworks */,
+				80E940AD1C97044400B2D72F /* libHummingbird.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -413,6 +416,7 @@
 		C352E6781C62BB0F00E26467 = {
 			isa = PBXGroup;
 			children = (
+				80E940AC1C97044400B2D72F /* libHummingbird.dylib */,
 				C352E7141C62BE6900E26467 /* Package.swift */,
 				C352E7131C62BDE200E26467 /* README.md */,
 				3A91D3D41C7F6B1A00EA3CA0 /* VaporDev */,

@@ -42,7 +42,7 @@ private final class TestSocket: Socket {
     func close() throws {
         fatalError("Not yet supported")
     }
-
+    
     private static func makeSocket() throws -> Socket {
         return self.init()
     }
