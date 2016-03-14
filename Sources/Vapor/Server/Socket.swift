@@ -20,7 +20,7 @@ public protocol Socket: Identifiable {
     
     func close() throws
     
-    static func streamSocket() throws -> Self
+    static func makeSocket() throws -> Socket
 }
 
 extension Socket {

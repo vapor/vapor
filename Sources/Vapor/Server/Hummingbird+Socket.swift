@@ -19,4 +19,8 @@ extension Hummingbird.Socket: Socket {
             connectionHandler(sock)
         }
     }
+    
+    public static func makeSocket() throws -> Socket {
+        return try streamSocket()
+    }
 }

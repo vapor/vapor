@@ -9,7 +9,7 @@ public class Jeeves<Socket: Vapor.Socket>: ServerDriver {
 
     // MARK: Sockets
 
-    private var streamSocket: Socket?
+    private var streamSocket: Vapor.Socket?
     private var activeSockets = ThreadSafeSocketStore()
 
     // MARK: Init
@@ -21,7 +21,7 @@ public class Jeeves<Socket: Vapor.Socket>: ServerDriver {
 
     public func boot(ip ip: String, port: Int) throws {
         halt()
-        streamSocket = try Socket.streamSocket()
+        streamSocket = try Socket.makeSocket()
         try streamSocket?.bind(ip, port: "\(port)")
         try streamSocket?.listen(100)
 
