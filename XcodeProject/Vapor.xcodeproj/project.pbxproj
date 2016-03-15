@@ -59,8 +59,8 @@
 		8049436D1C8DBED70064FA7A /* MemorySessionDriver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8049436C1C8DBED70064FA7A /* MemorySessionDriver.swift */; };
 		80FF32EF1C8A63DE008EC414 /* NSData+SequenceType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80FF32EE1C8A63DE008EC414 /* NSData+SequenceType.swift */; };
 		C3433FD41C7D119D009F0876 /* HashTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3433FD21C7D119D009F0876 /* HashTests.swift */; };
-		C3691FDC1C98BE3400C680DE /* TypedRouteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3691FDB1C98BE3400C680DE /* TypedRouteTests.swift */; };
 		C3691FE01C98BEDA00C680DE /* EnvironmentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3691FDF1C98BEDA00C680DE /* EnvironmentTests.swift */; };
+		C3691FE21C98C47F00C680DE /* TypedRouteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3691FE11C98C47F00C680DE /* TypedRouteTests.swift */; };
 		C387A0431C95FEBA00B6282E /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = C387A0361C95FDFE00B6282E /* main.swift */; };
 		C387A0451C96125800B6282E /* Generated.swift in Sources */ = {isa = PBXBuildFile; fileRef = C387A0441C96125800B6282E /* Generated.swift */; };
 		C38808641C62C0390067DADD /* ResponseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C38808631C62C0390067DADD /* ResponseTests.swift */; };
@@ -154,9 +154,9 @@
 		C352E7131C62BDE200E26467 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = ../README.md; sourceTree = SOURCE_ROOT; };
 		C352E7141C62BE6900E26467 /* Package.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Package.swift; path = ../Package.swift; sourceTree = SOURCE_ROOT; };
 		C364C5001C7EB579009F65DD /* Route.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Route.swift; path = ../Sources/Vapor/Routing/Route.swift; sourceTree = SOURCE_ROOT; };
-		C3691FDB1C98BE3400C680DE /* TypedRouteTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TypedRouteTests.swift; sourceTree = "<group>"; };
 		C3691FDD1C98BE9E00C680DE /* LinuxMain.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = LinuxMain.swift; path = ../../Tests/LinuxMain.swift; sourceTree = "<group>"; };
 		C3691FDF1C98BEDA00C680DE /* EnvironmentTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = EnvironmentTests.swift; path = ../../Tests/Vapor/EnvironmentTests.swift; sourceTree = "<group>"; };
+		C3691FE11C98C47F00C680DE /* TypedRouteTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = TypedRouteTests.swift; path = ../../Tests/Vapor/TypedRouteTests.swift; sourceTree = "<group>"; };
 		C377F2EE1C696CAB00DABD21 /* RenderDriver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RenderDriver.swift; path = ../Sources/Vapor/View/RenderDriver.swift; sourceTree = SOURCE_ROOT; };
 		C387A0361C95FDFE00B6282E /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		C387A03B1C95FE1300B6282E /* Generator */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Generator; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -430,7 +430,7 @@
 				C3943DC21C7663E80014F4EE /* RouterTests.swift */,
 				3492B2EE1C787DD600D8E588 /* RouteTests.swift */,
 				1AD708011C8E6A9500F17339 /* SessionTests.swift */,
-				C3691FDB1C98BE3400C680DE /* TypedRouteTests.swift */,
+				C3691FE11C98C47F00C680DE /* TypedRouteTests.swift */,
 			);
 			path = Tests;
 			sourceTree = "<group>";
@@ -762,6 +762,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C3691FE21C98C47F00C680DE /* TypedRouteTests.swift in Sources */,
 				1AF2F51B1C89DE2A00A7B2EA /* MemorySessionDriverTests.swift in Sources */,
 				800EFA581C8231EE00F6C066 /* ProcessTests.swift in Sources */,
 				C38808641C62C0390067DADD /* ResponseTests.swift in Sources */,
@@ -769,7 +770,6 @@
 				800EFA5A1C83A00300F6C066 /* QueryParametersTests.swift in Sources */,
 				1AD708021C8E6A9500F17339 /* SessionTests.swift in Sources */,
 				3492B2EF1C787DD600D8E588 /* RouteTests.swift in Sources */,
-				C3691FDC1C98BE3400C680DE /* TypedRouteTests.swift in Sources */,
 				C3F683361C7D1EF300033AA2 /* ControllerTests.swift in Sources */,
 				34CC59561C7BE3C9007CA680 /* LogTests.swift in Sources */,
 				C3943DC31C7663E80014F4EE /* RouterTests.swift in Sources */,
