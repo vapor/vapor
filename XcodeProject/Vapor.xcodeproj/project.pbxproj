@@ -60,7 +60,6 @@
 		80FF32EF1C8A63DE008EC414 /* NSData+SequenceType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80FF32EE1C8A63DE008EC414 /* NSData+SequenceType.swift */; };
 		C3433FD41C7D119D009F0876 /* HashTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3433FD21C7D119D009F0876 /* HashTests.swift */; };
 		C3691FDC1C98BE3400C680DE /* TypedRouteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3691FDB1C98BE3400C680DE /* TypedRouteTests.swift */; };
-		C3691FDE1C98BE9E00C680DE /* LinuxMain.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3691FDD1C98BE9E00C680DE /* LinuxMain.swift */; };
 		C3691FE01C98BEDA00C680DE /* EnvironmentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3691FDF1C98BEDA00C680DE /* EnvironmentTests.swift */; };
 		C387A0431C95FEBA00B6282E /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = C387A0361C95FDFE00B6282E /* main.swift */; };
 		C387A0451C96125800B6282E /* Generated.swift in Sources */ = {isa = PBXBuildFile; fileRef = C387A0441C96125800B6282E /* Generated.swift */; };
@@ -767,7 +766,6 @@
 				800EFA581C8231EE00F6C066 /* ProcessTests.swift in Sources */,
 				C38808641C62C0390067DADD /* ResponseTests.swift in Sources */,
 				C3691FE01C98BEDA00C680DE /* EnvironmentTests.swift in Sources */,
-				C3691FDE1C98BE9E00C680DE /* LinuxMain.swift in Sources */,
 				800EFA5A1C83A00300F6C066 /* QueryParametersTests.swift in Sources */,
 				1AD708021C8E6A9500F17339 /* SessionTests.swift in Sources */,
 				3492B2EF1C787DD600D8E588 /* RouteTests.swift in Sources */,
