@@ -29,25 +29,6 @@ app.get(i, s) { request, int, string in
     ])
 }
 
-//app.get("users", i) { request, id in
-//    return try Json([
-//        "message": "You requested user id \(id)"
-//    ])
-//}
-//
-//
-//app.get(i) { request, num in
-//    return try Json([
-//        "message": "You requested number \(num)"
-//    ])
-//}
-//
-//app.get(i, "users") { request, num in
-//    return try Json([
-//        "message": "You requested number \(num) users"
-//    ])
-//}
-
 app.post("json") { request in
     //parse a key inside the received json
     guard let count = request.data["unicorns"]?.int else {
