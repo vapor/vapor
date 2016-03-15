@@ -54,9 +54,9 @@ public class Jeeves<Socket where Socket: Vapor.Socket, Socket: Hashable>: Server
 
     private func handle(socket: Socket) {
         Background {
-            self.activeSockets.insert(socket)
+            let id = self.activeSockets.insert(socket)
             defer {
-                self.activeSockets.remove(socket)
+                self.activeSockets.remove(id: id)
             }
             
             do {

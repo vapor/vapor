@@ -6,10 +6,12 @@ private let HeaderEndOfLine = "\r\n"
 
 // MARK: Protocols
 
-public protocol Socket {
+public protocol SocketIO {
     func read(bufferLength: Int) throws -> [Byte]
     func write(buffer: [Byte]) throws
-    
+}
+
+public protocol Socket: SocketIO {
     func bind(toAddress address: String?, onPort port: String?) throws
     func listen(pendingConnectionBacklog backlog: Int) throws
     func accept(maximumConsecutiveFailures: Int, connectionHandler: (Self) -> Void) throws
@@ -19,7 +21,7 @@ public protocol Socket {
     static func makeSocket() throws -> Self
 }
 
-extension Socket {
+extension SocketIO {
     func writeHeader(line line: String) throws {
         try write(line + HeaderEndOfLine)
     }
@@ -39,7 +41,7 @@ extension Socket {
 
 // MARK: Read
 
-extension Socket {
+extension SocketIO {
     public func nextByte() throws -> Byte? {
         return try read(1).first
     }
@@ -62,7 +64,7 @@ extension Socket {
 
 // MARK: Request / Response
 
-extension Socket {
+extension SocketIO {
     public func readRequest() throws -> Request {
         let header = try Request.Header(self)
         let requestLine = header.requestLine

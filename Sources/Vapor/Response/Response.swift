@@ -36,7 +36,7 @@ public class Redirect: Response {
     Inspired by elliottminns
 */
 public class AsyncResponse: Response {
-    public typealias Writer = Socket throws -> Void
+    public typealias Writer = SocketIO throws -> Void
     public let writer: Writer
 
     public init(writer: Writer) {

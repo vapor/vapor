@@ -10,20 +10,20 @@ extension Request {
         let requestLine: RequestLine
         private(set) var fields: [String : String] = [:]
         
-        init(_ socket: Socket) throws {
+        init(_ socket: SocketIO) throws {
             let requestLineRaw = try socket.readLine()
             requestLine = try RequestLine(requestLineRaw)
             try collectHeaderFields(socket)
         }
         
-        private mutating func collectHeaderFields(socket: Socket) throws {
+        private mutating func collectHeaderFields(socket: SocketIO) throws {
             while let line = try nextHeaderLine(socket) {
                 let (key, val) = try extractKeyPair(line)
                 fields[key] = val
             }
         }
         
-        private func nextHeaderLine(socket: Socket) throws -> String? {
+        private func nextHeaderLine(socket: SocketIO) throws -> String? {
             let next = try socket.readLine()
             if !next.isEmpty {
                 return next
