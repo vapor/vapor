@@ -68,11 +68,33 @@ Responding with JSON is easy.
 
 ```swift
 app.get("version") { request in
-	return ["version": "1.0"]
+	return Json(["version": "1.0"])
 }
 ```
 
 This responds to all HTTP GET requests to `http://example.com/version` with the JSON dictionary `{"version": "1.0"}` and `Content-Type: application/json`.
+
+### Type Safe Routing
+
+Vapor supports [Frank](https://github.com/nestproject/Frank) inspired type-safe routing.
+
+```swift
+app.get("users", Int, "posts", String, "comments") { request, userId, postName in 
+    return "You requested the comments for user #\(userId)'s post named \(postName))"
+}
+```
+
+Here we will respond to all HTTP GET requests to `http://example.com/users/<userId>/posts/<postName>/comments`
+
+You can also extend your own types to conform to Vapor's `StringInitializable` protocol.
+
+```swift
+app.get("users", User) { request, user in
+    return "Hello \(user.name)"
+}
+```
+
+This responses to all HTTP GET requests to `http://example.com/users/<userId>` where `<userId>` is an integer and a user with that id was found.
 
 ### Views
 
