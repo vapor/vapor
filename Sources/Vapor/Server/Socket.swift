@@ -45,8 +45,8 @@ public enum SocketError: ErrorType {
 
 public class Socket: Hashable, Equatable {
 
-    public class func tcpSocketForListen(port: in_port_t, maxPendingConnection: Int32 = SOMAXCONN) throws -> Socket {
-        
+    public class func tcpSocketForListen(ip: String, port: in_port_t, maxPendingConnection: Int32 = SOMAXCONN) throws -> Socket {
+
         #if os(Linux)
             let socketFileDescriptor = socket(AF_INET, Int32(SOCK_STREAM.rawValue), 0)
         #else
@@ -72,8 +72,7 @@ public class Socket: Hashable, Equatable {
         #endif
         addr.sin_family = sa_family_t(AF_INET)
         addr.sin_port = Socket.htonsPort(port)
-        
-        let ip = Process.valueFor(argument: "ip") ?? "0.0.0.0"
+
         addr.sin_addr = in_addr(s_addr: inet_addr(ip))
         addr.sin_zero = (0, 0, 0, 0, 0, 0, 0, 0)
         
