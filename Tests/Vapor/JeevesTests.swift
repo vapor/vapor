@@ -29,13 +29,15 @@ private final class TestSocket: Socket {
         fatalError("Not yet supported")
     }
 
-    func bind(address: String?, port: String?) throws {
+    func bind(toAddress address: String?, onPort port: String?) throws {
         fatalError("Not yet supported")
     }
-    func listen(backlog: Int) throws {
+    
+    private func listen(pendingConnectionBacklog backlog: Int) throws {
         fatalError("Not yet supported")
     }
-    private func accept(maximumConsecutiveFailures: Int, connectionHandler: (Socket) -> Void) throws {
+    
+    private func accept(maximumConsecutiveFailures: Int, connectionHandler: (TestSocket) -> Void) throws {
         fatalError("Not yet supported")
     }
 
@@ -43,7 +45,7 @@ private final class TestSocket: Socket {
         fatalError("Not yet supported")
     }
     
-    private static func makeSocket() throws -> Socket {
+    private static func makeSocket() throws -> TestSocket {
         return self.init()
     }
 }

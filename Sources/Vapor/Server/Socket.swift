@@ -6,21 +6,17 @@ private let HeaderEndOfLine = "\r\n"
 
 // MARK: Protocols
 
-public protocol Identifiable {
-    var id: String { get }
-}
-
-public protocol Socket: Identifiable {
+public protocol Socket {
     func read(bufferLength: Int) throws -> [Byte]
     func write(buffer: [Byte]) throws
     
-    func bind(address: String?, port: String?) throws
-    func listen(backlog: Int) throws
-    func accept(maximumConsecutiveFailures: Int, connectionHandler: (Socket) -> Void) throws
+    func bind(toAddress address: String?, onPort port: String?) throws
+    func listen(pendingConnectionBacklog backlog: Int) throws
+    func accept(maximumConsecutiveFailures: Int, connectionHandler: (Self) -> Void) throws
     
     func close() throws
     
-    static func makeSocket() throws -> Socket
+    static func makeSocket() throws -> Self
 }
 
 extension Socket {
