@@ -51,7 +51,7 @@ If you are having trouble connecting, make sure your ports are open. Check out `
 
 ## Routing
 
-Routing in Vapor is simple and very similar to Laravel.
+Routing in Vapor is simple and expressive.
 
 `main.swift`
 ```swift
@@ -60,7 +60,7 @@ app.get("welcome") { request in
 }
 ```
 
-Here we will respond to all HTTP GET requests to `http://example.com/welcome` with the string `"Hello"`.
+Here we will respond to all GET requests to `http://example.com/welcome` with the string `"Hello"`.
 
 ### JSON
 
@@ -72,7 +72,7 @@ app.get("version") { request in
 }
 ```
 
-This responds to all HTTP GET requests to `http://example.com/version` with the JSON dictionary `{"version": "1.0"}` and `Content-Type: application/json`.
+This responds to all GET requests to `http://example.com/version` with the JSON dictionary `{"version": "1.0"}` and `Content-Type: application/json`.
 
 ### Type Safe Routing
 
@@ -84,9 +84,9 @@ app.get("users", Int, "posts", String, "comments") { request, userId, postName i
 }
 ```
 
-Here we will respond to all HTTP GET requests to `http://example.com/users/<userId>/posts/<postName>/comments`
+Here we will respond to all GET requests to `http://example.com/users/<userId>/posts/<postName>/comments`
 
-You can also extend your own types to conform to Vapor's `StringInitializable` protocol.
+You can also extend your own types to conform to Vapor's `StringInitializable` protocol. Here is an example where the `User` class conforms.
 
 ```swift
 app.get("users", User) { request, user in
@@ -94,7 +94,7 @@ app.get("users", User) { request, user in
 }
 ```
 
-This responses to all HTTP GET requests to `http://example.com/users/<userId>` where `<userId>` is an integer and a user with that id was found.
+Now requesting a `User` is expressive and concise.
 
 ### Views
 
@@ -102,7 +102,7 @@ You can also respond with HTML pages.
 
 ```swift
 app.get("/") { request in
-	return View(path: "index.html")
+	return try View(path: "index.html")
 }
 ```
 
