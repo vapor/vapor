@@ -7,12 +7,12 @@
 
 import Foundation
 
-internal final class ThreadSafeSocketStore<Socket where Socket: Vapor.Socket> {
+internal final class ThreadSafeSocketStore<Socket where Socket: Vapor.Socket, Socket: Hashable> {
     
     // MARK: Properties
     
     private let lock = NSLock()
-    private var storage: [String : Socket] = [:]
+    private var storage: Set<Socket> = []
     
     // MARK: Computed
     
@@ -26,18 +26,15 @@ internal final class ThreadSafeSocketStore<Socket where Socket: Vapor.Socket> {
     
     // MARK: Features
     
-    @warn_unused_result
-    func insert(element: Socket) -> String {
-        let id = NSUUID().UUIDString
+    func insert(element: Socket) {
         lock.locked {
-            storage[id] = element
+            storage.insert(element)
         }
-        return id
     }
     
-    func remove(id id: String) {
+    func remove(element: Socket) {
         lock.locked {
-            storage[id] = nil
+            storage.remove(element)
         }
     }
     
@@ -45,7 +42,7 @@ internal final class ThreadSafeSocketStore<Socket where Socket: Vapor.Socket> {
     
     func forEach(@noescape body: Socket throws -> Void) rethrows {
         try lock.locked {
-            try storage.values.forEach(body)
+            try storage.forEach(body)
         }
     }
 }
