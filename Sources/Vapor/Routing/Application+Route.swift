@@ -8,31 +8,26 @@
 
 import Foundation
 
+public protocol StringInitializable {
+    init?(from string: String) throws
+}
+
+extension Int: StringInitializable {
+    public init?(from string: String) throws {
+        guard let int = Int(string) else {
+            return nil
+        }
+        
+        self = int
+    }
+}
+extension String: StringInitializable {
+    public init?(from string: String) throws {
+        self = string
+    }
+}
+
 extension Application {
-    
-    public final func get(path: String, handler: Route.Handler) {
-        self.add(.Get, path: path, handler: handler)
-    }
-    
-    public final func post(path: String, handler: Route.Handler) {
-        self.add(.Post, path: path, handler: handler)
-    }
-    
-    public final func put(path: String, handler: Route.Handler) {
-        self.add(.Put, path: path, handler: handler)
-    }
-    
-    public final func patch(path: String, handler: Route.Handler) {
-        self.add(.Patch, path: path, handler: handler)
-    }
-    
-    public final func delete(path: String, handler: Route.Handler) {
-        self.add(.Delete, path: path, handler: handler)
-    }
-    
-    public final func options(path: String, handler: Route.Handler) {
-        self.add(.Options, path: path, handler: handler)
-    }
     
     public final func any(path: String, handler: Route.Handler) {
         self.get(path, handler: handler)

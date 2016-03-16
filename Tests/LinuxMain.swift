@@ -10,5 +10,6 @@ XCTMain([
 	ResponseTests(),
 	RouterTests(),
 	RouteTests(),
-	SessionTests()
+	SessionTests(),
+	TypedRouteTests()
 ])
