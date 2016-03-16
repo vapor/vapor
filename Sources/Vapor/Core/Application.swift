@@ -29,16 +29,7 @@ public class Application {
 	/**
 		Provides access to config settings.
 	*/
-	private var configHolder: Config?
-	public var config: Config {
-		if let config = self.configHolder {
-			return config
-		}
-
-		let config = Config(application: self)
-		self.configHolder = config
-		return config
-	}
+	public private(set) lazy var config: Config = Config(application: self)
 
 	/**
 		`Middleware` will be applied in the order
