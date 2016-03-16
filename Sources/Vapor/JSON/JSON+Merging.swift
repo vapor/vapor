@@ -1,11 +1,11 @@
 extension Json {
 
 	/** Recursively merges two Json objects */
-	mutating func merge(with: Json) {
-		switch with {
+	mutating func merge(with json: Json) {
+		switch json {
 			case .ObjectValue(let object):
 				guard case let .ObjectValue(object2) = self else {
-					self = with
+					self = json
 					return
 				}
 
@@ -14,7 +14,7 @@ extension Json {
 				for (key, value) in object {
 					if let original = merged[key] {
 						var newValue = original
-						newValue.merge(value)
+						newValue.merge(with: value)
 						merged[key] = newValue
 					} else {
 						merged[key] = value
@@ -24,13 +24,13 @@ extension Json {
 				self = .ObjectValue(merged)
 			case .ArrayValue(let array):
 				guard case let .ArrayValue(array2) = self else {
-					self = with
+					self = json
 					return
 				}
 
 				self = .ArrayValue(array + array2)
 			default:
-				self = with
+				self = json
 		}
 
 	}

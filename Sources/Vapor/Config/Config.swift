@@ -117,7 +117,7 @@ public class Config {
 				if self.repository[group] == nil {
 					self.repository[group] = json
 				} else {
-					self.repository[group]?.merge(json)
+					self.repository[group]?.merge(with: json)
 				}
 			}
 		}
@@ -137,7 +137,7 @@ public class Config {
 					if self.repository[group] == nil {
 						self.repository[group] = json
 					} else {
-						self.repository[group]?.merge(json)
+						self.repository[group]?.merge(with: json)
 					}
 				}
 			}
