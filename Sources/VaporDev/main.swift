@@ -20,6 +20,15 @@ app.get("json") { request in
     )
 }
 
+let i = Int.self
+let s = String.self
+
+app.get(i, s) { request, int, string in
+    return try Json([
+        "message": "Int \(int) String \(string)"
+    ])
+}
+
 app.post("json") { request in
     //parse a key inside the received json
     guard let count = request.data["unicorns"]?.int else {
