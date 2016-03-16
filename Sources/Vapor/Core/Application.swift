@@ -2,7 +2,7 @@ import Foundation
 import libc
 
 public class Application {
-	public static let VERSION = "0.2.10"
+	public static let VERSION = "0.3.0"
 
 	/**
 		The router driver is responsible
