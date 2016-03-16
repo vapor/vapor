@@ -5,16 +5,16 @@ public class Config {
 	private let fileManager = NSFileManager.defaultManager()
 	private var repository: [String: Json]
 
-	public init(repository: [String: Json] = Dictionary(), application: Application? = nil) {
+	public init(repository: [String: Json] = [:], application: Application? = nil) {
 		self.repository = repository
 
 		if let application = application {
-			self.populate(application)
+			populate(application)
 		}
 	}
 
 	public func has(keyPath: String) -> Bool {
-		return self.get(keyPath) != nil
+		return get(keyPath) != nil
 	}
 
 	public func get(keyPath: String) -> Json? {
@@ -24,7 +24,7 @@ public class Config {
 			return nil
 		}
 
-		var value = self.repository[keys.removeFirst()]
+		var value = repository[keys.removeFirst()]
 
 		while value != nil && value != Json.NullValue && keys.count > 0 {
 			value = value?[keys.removeFirst()]
@@ -34,27 +34,27 @@ public class Config {
 	}
 
 	public func get(keyPath: String, _ fallback: String) -> String {
-		return self.get(keyPath)?.string ?? fallback
+		return get(keyPath)?.string ?? fallback
 	}
 
 	public func get(keyPath: String, _ fallback: Bool) -> Bool {
-		return self.get(keyPath)?.bool ?? fallback
+		return get(keyPath)?.bool ?? fallback
 	}
 
 	public func get(keyPath: String, _ fallback: Int) -> Int {
-		return self.get(keyPath)?.int ?? fallback
+		return get(keyPath)?.int ?? fallback
 	}
 
 	public func get(keyPath: String, _ fallback: UInt) -> UInt {
-		return self.get(keyPath)?.uint ?? fallback
+		return get(keyPath)?.uint ?? fallback
 	}
 
 	public func get(keyPath: String, _ fallback: Double) -> Double {
-		return self.get(keyPath)?.double ?? fallback
+		return get(keyPath)?.double ?? fallback
 	}
 
 	public func get(keyPath: String, _ fallback: Float) -> Float {
-		return self.get(keyPath)?.float ?? fallback
+		return get(keyPath)?.float ?? fallback
 	}
 
 	public func set(value: Json, forKeyPath keyPath: String) {
@@ -62,17 +62,17 @@ public class Config {
 		let group = keys.removeFirst()
 
 		if keys.count == 0 {
-			self.repository[group] = value
+			repository[group] = value
 		} else {
-			self.repository[group]?.set(value, keys: keyPath.keys)
+			repository[group]?.set(value, keys: keyPath.keys)
 		}
 	}
 
 	/* Convenience call to conditionally populate config if it exists */
 	public func populate(application: Application) -> Bool {
-		if self.fileManager.fileExistsAtPath(self.dynamicType.configDir) {
+		if fileManager.fileExistsAtPath(self.dynamicType.configDir) {
 			do {
-				try self.populate(self.dynamicType.configDir, application: application)
+				try populate(self.dynamicType.configDir, application: application)
 				return true
 			} catch {
 				Log.error("Unable to populate config: \(error)")
@@ -85,10 +85,10 @@ public class Config {
 
 	public func populate(path: String, application: Application) throws {
 		var url = NSURL(fileURLWithPath: path)
-		var files = Dictionary<String, [NSURL]>()
+		var files = [String: [NSURL]]()
 
 		// Populate config files by environment
-		try self.populateConfigFiles(&files, in: url)
+		try populateConfigFiles(&files, in: url)
 
 		for env in application.environment.description.keys {
 			#if os(Linux)
@@ -97,8 +97,8 @@ public class Config {
 				url = url.URLByAppendingPathComponent(env)
 			#endif
 
-			if self.fileManager.fileExistsAtPath(url.path!) {
-				try self.populateConfigFiles(&files, in: url)
+			if url.path.flatMap(fileManager.fileExistsAtPath) == true {
+				try populateConfigFiles(&files, in: url)
 			}
 		}
 
@@ -114,10 +114,10 @@ public class Config {
 				let data = try NSData(contentsOfURL: file, options: [])
 				let json = try Json.deserialize(data)
 
-				if self.repository[group] == nil {
-					self.repository[group] = json
+				if repository[group] == nil {
+					repository[group] = json
 				} else {
-					self.repository[group]?.merge(with: json)
+					repository[group]?.merge(with: json)
 				}
 			}
 		}
@@ -134,10 +134,10 @@ public class Config {
 				}
 
 				for (group, json) in object {
-					if self.repository[group] == nil {
-						self.repository[group] = json
+					if repository[group] == nil {
+						repository[group] = json
 					} else {
-						self.repository[group]?.merge(with: json)
+						repository[group]?.merge(with: json)
 					}
 				}
 			}
@@ -145,7 +145,7 @@ public class Config {
 	}
 
 	private func populateConfigFiles(inout files: [String: [NSURL]], in url: NSURL) throws {
-		let contents = try self.fileManager.contentsOfDirectoryAtURL(url, includingPropertiesForKeys: nil, options: [ ])
+		let contents = try fileManager.contentsOfDirectoryAtURL(url, includingPropertiesForKeys: nil, options: [ ])
 
 		for file in contents {
 			guard file.pathExtension == "json" else {
@@ -157,7 +157,7 @@ public class Config {
 			}
 
 			if files[name] == nil {
-				files[name] = Array()
+				files[name] = []
 			}
 
 			files[name]?.append(file)
@@ -198,7 +198,7 @@ extension Json {
 extension String {
 
 	private var keys: [String] {
-		return self.split(".")
+		return split(".")
 	}
 
 }
