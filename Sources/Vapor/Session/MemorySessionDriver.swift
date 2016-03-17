@@ -7,7 +7,7 @@ import Foundation
  */
 public class MemorySessionDriver: SessionDriver {
     var sessions = [String: [String: String]]()
-    private var sessionsLock = NSLock()
+    private var sessionsLock = Lock()
     
     public init() { }
     
