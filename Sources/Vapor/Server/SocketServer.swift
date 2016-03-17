@@ -74,7 +74,7 @@ public class SocketServer: ServerDriver {
     private var clientSockets: Set<Socket> = []
 
     ///The shared lock for notifying new connections.
-    private let clientSocketsLock = NSLock()
+    private let clientSocketsLock = Lock()
    
     /**
         Handles incoming `Socket` connections by parsing

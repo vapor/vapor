@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		1A33BBAC1C874555000499CE /* NSLock+Closure.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A33BBAB1C874555000499CE /* NSLock+Closure.swift */; };
+		1A33BBAC1C874555000499CE /* Lock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A33BBAB1C874555000499CE /* Lock.swift */; };
 		1AD708021C8E6A9500F17339 /* SessionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AD708011C8E6A9500F17339 /* SessionTests.swift */; };
 		1AF2F51B1C89DE2A00A7B2EA /* MemorySessionDriverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AF2F51A1C89DE2A00A7B2EA /* MemorySessionDriverTests.swift */; };
 		3492B2EF1C787DD600D8E588 /* RouteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3492B2EE1C787DD600D8E588 /* RouteTests.swift */; };
@@ -101,7 +101,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		1A33BBAB1C874555000499CE /* NSLock+Closure.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "NSLock+Closure.swift"; path = "../../Sources/Vapor/Utilities/NSLock+Closure.swift"; sourceTree = "<group>"; };
+		1A33BBAB1C874555000499CE /* Lock.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Lock.swift; path = ../../Sources/Vapor/Utilities/Lock.swift; sourceTree = "<group>"; };
 		1AD708011C8E6A9500F17339 /* SessionTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SessionTests.swift; path = ../../Tests/Vapor/SessionTests.swift; sourceTree = "<group>"; };
 		1AF2F51A1C89DE2A00A7B2EA /* MemorySessionDriverTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = MemorySessionDriverTests.swift; path = ../../Tests/Vapor/MemorySessionDriverTests.swift; sourceTree = "<group>"; };
 		288CFC2D1C7AC01A00E4617A /* Application.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Application.swift; path = ../Sources/Vapor/Core/Application.swift; sourceTree = SOURCE_ROOT; };
@@ -214,7 +214,7 @@
 			isa = PBXGroup;
 			children = (
 				80FF32EE1C8A63DE008EC414 /* NSData+SequenceType.swift */,
-				1A33BBAB1C874555000499CE /* NSLock+Closure.swift */,
+				1A33BBAB1C874555000499CE /* Lock.swift */,
 			);
 			name = Utilities;
 			sourceTree = "<group>";
@@ -710,7 +710,7 @@
 				3A91D3DE1C7F6B6600EA3CA0 /* LogDriver.swift in Sources */,
 				3A91D3E21C7F6B6600EA3CA0 /* Request.swift in Sources */,
 				3A91D3DF1C7F6B6600EA3CA0 /* Branch.swift in Sources */,
-				1A33BBAC1C874555000499CE /* NSLock+Closure.swift in Sources */,
+				1A33BBAC1C874555000499CE /* Lock.swift in Sources */,
 				3A91D3EE1C7F6B6600EA3CA0 /* SessionMiddleware.swift in Sources */,
 				3A91D3E71C7F6B6600EA3CA0 /* Socket.swift in Sources */,
 				3A91D3F71C7F6B6600EA3CA0 /* StringExtensions.swift in Sources */,
