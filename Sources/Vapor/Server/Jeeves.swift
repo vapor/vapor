@@ -1,5 +1,8 @@
-
-import Foundation
+#if os(Linux)
+    import Glibc
+#else
+    import Darwin
+#endif
 
 public class Jeeves<Socket where Socket: Vapor.Socket, Socket: Hashable>: ServerDriver {
 
@@ -25,7 +28,7 @@ public class Jeeves<Socket where Socket: Vapor.Socket, Socket: Hashable>: Server
         try streamSocket?.bind(toAddress: ip, onPort: "\(port)")
         try streamSocket?.listen(pendingConnectionBacklog: 100)
 
-        Background {
+        try Background {
             do {
                 try self.streamSocket?.accept(Int(SOMAXCONN), connectionHandler: self.handle)
             } catch {
@@ -53,27 +56,33 @@ public class Jeeves<Socket where Socket: Vapor.Socket, Socket: Hashable>: Server
     }
 
     private func handle(socket: Socket) {
-        Background {
-            self.activeSockets.insert(socket)
-            defer {
-                self.activeSockets.remove(socket)
-            }
-            
-            do {
-                var keepAlive = false
-                repeat {
-                    let request = try socket.readRequest()
-                    let response = self.delegate?.serverDriverDidReceiveRequest(request) ?? Response.notFound()
-                    try socket.write(response)
-                    keepAlive = request.supportsKeepAlive
-                } while keepAlive
+        do {
+            try Background {
+                self.activeSockets.insert(socket)
+                defer {
+                    self.activeSockets.remove(socket)
+                }
                 
-                try socket.close()
-            } catch {
-                Log.error("Request Handle Failed: \(error)")
+                do {
+                    var keepAlive = false
+                    repeat {
+                        let request = try socket.readRequest()
+                        let response = self.delegate?.serverDriverDidReceiveRequest(request) ?? Response.notFound()
+                        try socket.write(response)
+                        keepAlive = request.supportsKeepAlive
+                    } while keepAlive
+                    
+                    try socket.close()
+                } catch {
+                    Log.error("Request Handle Failed: \(error)")
+                }
             }
+        } catch {
+            Log.error("Backgrounding Handler Failed: \(error)")
         }
     }
+    
+    
 }
 
 extension Response {

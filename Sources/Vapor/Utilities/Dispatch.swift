@@ -5,13 +5,10 @@
 //  Copyright © 2015 lowriDevs. All rights reserved.
 //
 
-import Foundation
+import Strand
 
 public typealias Block = () -> Void
 
-public func Background(function: Block) {
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), function)
+public func Background(function: Block) throws {
+    let _ = try Strand(closure: function)
 }
-
-// **** Consider dependency, this is from Intrepid Swift Wisdom
-// https://github.com/IntrepidPursuits/swift-wisdom/blob/master/SwiftWisdom/Core/Async/After/After.swift
