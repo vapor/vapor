@@ -228,6 +228,15 @@ extension Response {
         let data = try json.serialize()
         self.init(status: status, data: data, contentType: .Json)
     }
+    
+    /**
+     Convenience initializer for plain status. Useful for things like `Created` that might not have a response body
+     
+     - parameter status: the status to use when generating the response
+     */
+    public convenience init(status: Status) {
+        self.init(status: status, text: status.reasonPhrase)
+    }
 }
 
 extension Response: Equatable {}
