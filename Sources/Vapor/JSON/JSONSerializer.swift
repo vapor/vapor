@@ -22,6 +22,11 @@ public enum Json: Equatable {
         self = .NumberValue(value)
     }
     
+    public init(_ value: Int) {
+        let double = Double(value)
+        self.init(double)
+    }
+    
     public init(_ value: String) {
         self = .StringValue(value)
     }
@@ -32,14 +37,6 @@ public enum Json: Equatable {
     
     public init(_ value: [String : Json]) {
         self = .ObjectValue(value)
-    }
-    
-    public init<T: SignedIntegerType>(_ value: T) {
-        self = .NumberValue(Double(value.toIntMax()))
-    }
-    
-    public init<T: UnsignedIntegerType>(_ value: T) {
-        self = .NumberValue(Double(value.toUIntMax()))
     }
 }
 

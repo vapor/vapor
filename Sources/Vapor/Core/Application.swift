@@ -1,8 +1,9 @@
 import Foundation
 import libc
+import Hummingbird
 
 public class Application {
-	public static let VERSION = "0.2.9"
+	public static let VERSION = "0.3.0"
 
 	/**
 		The router driver is responsible
@@ -27,6 +28,11 @@ public class Application {
     public var session: SessionDriver
 
 	/**
+		Provides access to config settings.
+	*/
+	public private(set) lazy var config: Config = Config(application: self)
+
+	/**
 		`Middleware` will be applied in the order
 		it is set in this array.
 
@@ -34,7 +40,6 @@ public class Application {
 		if you don't want to overwrite default behavior.
 	*/
 	public var middleware: [Middleware.Type]
-
 
 	/**
 		Provider classes that have been registered
@@ -86,13 +91,14 @@ public class Application {
     var scopedPrefix: String?
 
 	var port: Int = 80
+	var ip: String = "0.0.0.0"
 
 	var routes: [Route] = []
 
 	/**
 		Initialize the Application.
 	*/
-    public init(router: RouterDriver = BranchRouter(), server: ServerDriver = SocketServer(), session: SessionDriver = MemorySessionDriver()) {
+    public init(router: RouterDriver = BranchRouter(), server: ServerDriver = Jeeves<Hummingbird.Socket>(), session: SessionDriver = MemorySessionDriver()) {
 		self.server = server
 		self.router = router
         self.session = session
@@ -158,28 +164,35 @@ public class Application {
 			self.dynamicType.workDir = workDir
 		}
 
-		if let portString = Process.valueFor(argument: "port"), let portInt = Int(portString) {
-			Log.info("Port override: \(portInt)")
-			self.port = portInt
+		if let ip = Process.valueFor(argument: "ip") {
+			Log.info("IP override: \(ip)")
+			self.ip = ip
+		}
+
+		if let port = Process.valueFor(argument: "port")?.int {
+			Log.info("Port override: \(port)")
+			self.port = port
 		}
 	}
 
 	/**
 		Boots the chosen server driver and
-		runs on the supplied port.
+		optionally runs on the supplied
+		ip & port overrides
 	*/
-	public func start(port port: Int = 80) {
+	public func start(ip ip: String? = nil, port: Int? = nil) {
 		self.bootProviders()
 		self.server.delegate = self
 
-		self.port = port
+		self.ip = ip ?? self.ip
+		self.port = port ?? self.port
 
 		self.bootRoutes()
 		self.bootArguments()
 
 		do {
-			try self.server.boot(port: self.port)
-			Log.info("Server has started on port \(self.port)")
+			try self.server.boot(ip: self.ip, port: self.port)
+			Log.info("Server has started on \(self.ip):\(self.port)")
 			self.loop()
 		} catch {
 			Log.info("Server start error: \(error)")
