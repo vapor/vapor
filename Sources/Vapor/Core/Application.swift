@@ -1,4 +1,3 @@
-import Foundation
 import libc
 
 public class Application {
@@ -199,23 +198,47 @@ public class Application {
 		waits for inbound connections.
 	*/
 	func loop() {
-		#if os(Linux)
-			while true {
-				sleep(1)
-			}
-		#else
-			NSRunLoop.mainRunLoop().run()
-		#endif
+		while true {
+			sleep(1)
+		}
+	}
+
+	func fileExistsAtPath(path: String, isDirectory: inout Bool) -> Bool {
+		var s = stat()
+        if lstat(path, &s) >= 0 {
+            if isDirectory != nil {
+                if (s.st_mode & S_IFMT) == S_IFLNK {
+                    if stat(path, &s) >= 0 {
+                        isDirectory = (s.st_mode & S_IFMT) == S_IFDIR
+                    } else {
+                        return false
+                    }
+                } else {
+                    isDirectory = (s.st_mode & S_IFMT) == S_IFDIR
+                }
+            }
+
+            // don't chase the link for this magic case -- we might be /Net/foo
+            // which is a symlink to /private/Net/foo which is not yet mounted...
+            if (s.st_mode & S_IFMT) == S_IFLNK {
+                if (s.st_mode & S_ISVTX) == S_ISVTX {
+                    return true
+                }
+                // chase the link; too bad if it is a slink to /Net/foo
+                stat(path, &s) >= 0
+            }
+        } else {
+            return false
+        }
+        return true
 	}
 
 	func checkFileSystem(request: Request) -> Request.Handler? {
 		// Check in file system
 		let filePath = self.dynamicType.workDir + "Public" + request.path
 
-		let fileManager = NSFileManager.defaultManager()
-		var isDir: ObjCBool = false
-
-		guard fileManager.fileExistsAtPath(filePath, isDirectory: &isDir) else {
+		var isDir = false
+		guard fileExistsAtPath(filePath, isDirectory: &isDir) else {
 			return nil
 		}
 
