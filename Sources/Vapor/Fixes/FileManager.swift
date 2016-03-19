@@ -47,14 +47,10 @@ class FileManager {
             throw Error.Unreadable
         }
 
+        //thanks @Danappelxx
         let data = UnsafeMutablePointer<UInt8>(rawData)
-
-        var array: [UInt8] = []
-        for i in 0..<length {
-        	array.append(data[i])
-        }
-
-        return array
+        let buffer = UnsafeMutableBufferPointer<UInt8>(start: data, count: length)
+        return Array(buffer)
     }
 
     static func fileExistsAtPath(path: String, isDirectory: inout Bool) -> Bool {
