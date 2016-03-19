@@ -27,6 +27,11 @@ public class Application {
     public var session: SessionDriver
 
 	/**
+		Provides access to config settings.
+	*/
+	public private(set) lazy var config: Config = Config(application: self)
+
+	/**
 		`Middleware` will be applied in the order
 		it is set in this array.
 
@@ -34,7 +39,6 @@ public class Application {
 		if you don't want to overwrite default behavior.
 	*/
 	public var middleware: [Middleware.Type]
-
 
 	/**
 		Provider classes that have been registered

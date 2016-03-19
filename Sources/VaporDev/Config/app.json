@@ -1,0 +1,12 @@
+{
+	"debug": true,
+	"port": 8000,
+
+	"nested": {
+		"a": "a",
+		"b": "b",
+		"c": {
+			"true": true
+		}
+	}
+}

@@ -10,6 +10,8 @@
 		1A33BBAC1C874555000499CE /* NSLock+Closure.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A33BBAB1C874555000499CE /* NSLock+Closure.swift */; };
 		1AD708021C8E6A9500F17339 /* SessionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AD708011C8E6A9500F17339 /* SessionTests.swift */; };
 		1AF2F51B1C89DE2A00A7B2EA /* MemorySessionDriverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AF2F51A1C89DE2A00A7B2EA /* MemorySessionDriverTests.swift */; };
+		28EAB2C61C92345D004F84BD /* JSON+Merging.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28EAB2C51C92345D004F84BD /* JSON+Merging.swift */; };
+		28EAB2C91C9234A7004F84BD /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28EAB2C81C9234A7004F84BD /* Config.swift */; };
 		3492B2EF1C787DD600D8E588 /* RouteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3492B2EE1C787DD600D8E588 /* RouteTests.swift */; };
 		34CC59561C7BE3C9007CA680 /* LogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34CC59551C7BE3C9007CA680 /* LogTests.swift */; };
 		3A583A011C7FCA720044AAFF /* libVapor.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 3A583A001C7FCA720044AAFF /* libVapor.dylib */; };
@@ -106,6 +108,8 @@
 		1AF2F51A1C89DE2A00A7B2EA /* MemorySessionDriverTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = MemorySessionDriverTests.swift; path = ../../Tests/Vapor/MemorySessionDriverTests.swift; sourceTree = "<group>"; };
 		288CFC2D1C7AC01A00E4617A /* Application.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Application.swift; path = ../Sources/Vapor/Core/Application.swift; sourceTree = SOURCE_ROOT; };
 		288CFC301C7AC02A00E4617A /* Provider.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Provider.swift; path = ../Sources/Vapor/Core/Provider.swift; sourceTree = SOURCE_ROOT; };
+		28EAB2C51C92345D004F84BD /* JSON+Merging.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "JSON+Merging.swift"; path = "../../Sources/Vapor/JSON/JSON+Merging.swift"; sourceTree = "<group>"; };
+		28EAB2C81C9234A7004F84BD /* Config.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Config.swift; sourceTree = "<group>"; };
 		3492B2EE1C787DD600D8E588 /* RouteTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RouteTests.swift; path = ../Tests/Vapor/RouteTests.swift; sourceTree = SOURCE_ROOT; };
 		34CC59551C7BE3C9007CA680 /* LogTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = LogTests.swift; path = ../Tests/Vapor/LogTests.swift; sourceTree = SOURCE_ROOT; };
 		34CC59571C7BE405007CA680 /* Log.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Log.swift; path = ../Sources/Vapor/Log/Log.swift; sourceTree = SOURCE_ROOT; };
@@ -228,6 +232,15 @@
 			path = ../Sources;
 			sourceTree = "<group>";
 		};
+		28EAB2C71C9234A7004F84BD /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				28EAB2C81C9234A7004F84BD /* Config.swift */,
+			);
+			name = Config;
+			path = ../../Sources/Vapor/Config;
+			sourceTree = "<group>";
+		};
 		34CC59601C7BE9C1007CA680 /* Log */ = {
 			isa = PBXGroup;
 			children = (
@@ -254,6 +267,7 @@
 				C304C8AE1C63050900058C92 /* Session */,
 				C3EDEA7E1C683DC300754727 /* Middleware */,
 				288CFC2F1C7AC02000E4617A /* Providers */,
+				28EAB2C71C9234A7004F84BD /* Config */,
 				C3EDEA821C68419B00754727 /* Crypto */,
 				80202FFF1C77C94C009B8655 /* JSON */,
 				C304C8AF1C63051E00058C92 /* Fixes */,
@@ -299,6 +313,7 @@
 			children = (
 				C352E6D41C62BC6A00E26467 /* JSONSerializer.swift */,
 				802030001C77C956009B8655 /* Vapor+JSON.swift */,
+				28EAB2C51C92345D004F84BD /* JSON+Merging.swift */,
 			);
 			name = JSON;
 			path = ../Sources;
@@ -716,6 +731,7 @@
 				3A91D3F71C7F6B6600EA3CA0 /* StringExtensions.swift in Sources */,
 				3A91D3E01C7F6B6600EA3CA0 /* BranchRouter.swift in Sources */,
 				3A91D3E51C7F6B6600EA3CA0 /* Response.swift in Sources */,
+				28EAB2C91C9234A7004F84BD /* Config.swift in Sources */,
 				800EFA561C822EE200F6C066 /* Process.swift in Sources */,
 				3A91D3EF1C7F6B6600EA3CA0 /* Provider.swift in Sources */,
 				C387A0451C96125800B6282E /* Generated.swift in Sources */,
@@ -730,6 +746,7 @@
 				80FF32EF1C8A63DE008EC414 /* NSData+SequenceType.swift in Sources */,
 				3A91D3EA1C7F6B6600EA3CA0 /* ServerDriver.swift in Sources */,
 				8049436D1C8DBED70064FA7A /* MemorySessionDriver.swift in Sources */,
+				28EAB2C61C92345D004F84BD /* JSON+Merging.swift in Sources */,
 				3A91D3DB1C7F6B6600EA3CA0 /* View.swift in Sources */,
 				3A91D3EB1C7F6B6600EA3CA0 /* Session.swift in Sources */,
 				3A91D3D71C7F6B6600EA3CA0 /* Application.swift in Sources */,
