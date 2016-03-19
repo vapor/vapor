@@ -1,244 +1,111 @@
-/**
- Copyright (c) 2014, Damian Kołakowski
- All rights reserved.
- 
- Redistribution and use in source and binary forms, with or without
- modification, are permitted provided that the following conditions are met:
- 
- * Redistributions of source code must retain the above copyright notice, this
- list of conditions and the following disclaimer.
- 
- * Redistributions in binary form must reproduce the above copyright notice,
- this list of conditions and the following disclaimer in the documentation
- and/or other materials provided with the distribution.
- 
- * Neither the name of the {organization} nor the names of its
- contributors may be used to endorse or promote products derived from
- this software without specific prior written permission.
- 
- THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+import Foundation
 
-import libc
+// MARK: Constants
 
-public enum SocketError: ErrorType {
-    case SocketCreationFailed(String)
-    case SocketSettingReUseAddrFailed(String)
-    case BindFailed(String)
-    case ListenFailed(String)
-    case WriteFailed(String)
-    case GetPeerNameFailed(String)
-    case ConvertingPeerNameFailed
-    case GetNameInfoFailed(String)
-    case AcceptFailed(String)
-    case RecvFailed(String)
+private let HeaderEndOfLine = "\r\n"
+
+// MARK: Protocols
+
+public protocol SocketIO {
+    func read(bufferLength: Int) throws -> [Byte]
+    func write(buffer: [Byte]) throws
 }
 
-public class Socket: Hashable, Equatable {
+public protocol Socket: SocketIO {
+    func bind(toAddress address: String?, onPort port: String?) throws
+    func listen(pendingConnectionBacklog backlog: Int) throws
+    func accept(maximumConsecutiveFailures: Int, connectionHandler: (Self) -> Void) throws
+    
+    func close() throws
+    
+    static func makeSocket() throws -> Self
+}
 
-    public class func tcpSocketForListen(ip: String, port: in_port_t, maxPendingConnection: Int32 = SOMAXCONN) throws -> Socket {
+extension SocketIO {
+    func writeHeader(line line: String) throws {
+        try write(line + HeaderEndOfLine)
+    }
 
-        #if os(Linux)
-            let socketFileDescriptor = socket(AF_INET, Int32(SOCK_STREAM.rawValue), 0)
-        #else
-            let socketFileDescriptor = socket(AF_INET, SOCK_STREAM, 0)
-        #endif
-        
-        if socketFileDescriptor == -1 {
-            throw SocketError.SocketCreationFailed(Socket.descriptionOfLastError())
-        }
-        
-        var value: Int32 = 1
-        if setsockopt(socketFileDescriptor, SOL_SOCKET, SO_REUSEADDR, &value, socklen_t(sizeof(Int32))) == -1 {
-            let details = Socket.descriptionOfLastError()
-            Socket.release(socketFileDescriptor)
-            throw SocketError.SocketSettingReUseAddrFailed(details)
-        }
-        Socket.setNoSigPipe(socketFileDescriptor)
-        
-        
-        var addr = sockaddr_in()
-        #if os(OSX)
-        addr.sin_len = __uint8_t(sizeof(sockaddr_in))
-        #endif
-        addr.sin_family = sa_family_t(AF_INET)
-        addr.sin_port = Socket.htonsPort(port)
+    func writeHeader(key key: String, val: String) throws {
+        try writeHeader(line: "\(key): \(val)")
+    }
 
-        addr.sin_addr = in_addr(s_addr: inet_addr(ip))
-        addr.sin_zero = (0, 0, 0, 0, 0, 0, 0, 0)
-        
-        //var bind_addr = sockaddr()
-        //memcpy(&bind_addr, &addr, Int(sizeof(sockaddr_in)))
-        let bind_addr = Socket.sockaddr_cast(&addr)
-        
-        if bind(socketFileDescriptor, bind_addr, socklen_t(sizeof(sockaddr_in))) == -1 {
-            let details = Socket.descriptionOfLastError()
-            Socket.release(socketFileDescriptor)
-            throw SocketError.BindFailed(details)
-        }
-        
-        if listen(socketFileDescriptor, maxPendingConnection ) == -1 {
-            let details = Socket.descriptionOfLastError()
-            Socket.release(socketFileDescriptor)
-            throw SocketError.ListenFailed(details)
-        }
-        return Socket(socketFileDescriptor: socketFileDescriptor)
-    }
-    
-    private let socketFileDescriptor: Int32
-    
-    init(socketFileDescriptor: Int32) {
-        self.socketFileDescriptor = socketFileDescriptor
-    }
-    
-    public var hashValue: Int { return Int(self.socketFileDescriptor) }
-    
-    public func release() {
-        Socket.release(self.socketFileDescriptor)
-    }
-    
-    public func shutdwn() {
-        Socket.shutdwn(self.socketFileDescriptor)
-    }
-    
-    func acceptClientSocket() throws -> Socket {
-        var addr = sockaddr()        
-        var len: socklen_t = 0
-        let clientSocket = accept(self.socketFileDescriptor, &addr, &len)
-        if clientSocket == -1 {
-            throw SocketError.AcceptFailed(Socket.descriptionOfLastError())
-        }
-        Socket.setNoSigPipe(clientSocket)
-        return Socket(socketFileDescriptor: clientSocket)
-    }
-    
-    public func write(string: String) throws {
+    func write(string: String) throws {
         try write(string.utf8)
     }
-    
-    public func write<T: SequenceType where T.Generator.Element == UInt8>(sequence: T) throws {
-        let byteArray = [UInt8](sequence)
-        try write(byteArray)
-    }
-    
-    public func write(data: [UInt8]) throws {
-        try data.withUnsafeBufferPointer {
-            var sent = 0
-            while sent < data.count {
-                #if os(Linux)
-                    let s = send(self.socketFileDescriptor, $0.baseAddress + sent, Int(data.count - sent), Int32(MSG_NOSIGNAL))
-                #else
-                    let s = Darwin.write(self.socketFileDescriptor, $0.baseAddress + sent, Int(data.count - sent))
-                #endif
-                if s <= 0 {
-                    throw SocketError.WriteFailed(Socket.descriptionOfLastError())
-                }
-                sent += s
-            }
-        }
-    }
-    
-    public func read() throws -> UInt8 {
-        var buffer = [UInt8](count: 1, repeatedValue: 0)
-        let next = recv(self.socketFileDescriptor as Int32, &buffer, Int(buffer.count), 0)
-        if next <= 0 {
-            throw SocketError.RecvFailed(Socket.descriptionOfLastError())
-        }
-        return buffer[0]
-    }
-    
-    private static let CR = UInt8(13)
-    private static let NL = UInt8(10)
-    
-    public func readLine() throws -> String {
-        var characters: String = ""
-        var n: UInt8 = 0
-        repeat {
-            n = try self.read()
-            if n > Socket.CR { characters.append(Character(UnicodeScalar(n))) }
-        } while n != Socket.NL
-        return characters
-    }
-    
-    var cachedPeerName: String?
-    
-    public func peername() throws -> String {
-        if let name = self.cachedPeerName {
-            return name
-        }
-        
-        
-        var addr = sockaddr(), len: socklen_t = socklen_t(sizeof(sockaddr))
-        if getpeername(self.socketFileDescriptor, &addr, &len) != 0 {
-            throw SocketError.GetPeerNameFailed(Socket.descriptionOfLastError())
-        }
-        var hostBuffer = [CChar](count: Int(NI_MAXHOST), repeatedValue: 0)
-        if getnameinfo(&addr, len, &hostBuffer, socklen_t(hostBuffer.count), nil, 0, NI_NUMERICHOST) != 0 {
-            throw SocketError.GetNameInfoFailed(Socket.descriptionOfLastError())
-        }
-        guard let name = String.fromCString(hostBuffer) else {
-            throw SocketError.ConvertingPeerNameFailed
-        }
-        
-        self.cachedPeerName = name
-        return name
-    }
-    
-    private class func descriptionOfLastError() -> String {
-        return String.fromCString(UnsafePointer(strerror(errno))) ?? "Error: \(errno)"
-    }
-    
-    private class func setNoSigPipe(socket: Int32) {
-        #if os(Linux)
-            // There is no SO_NOSIGPIPE in Linux (nor some other systems). You can instead use the MSG_NOSIGNAL flag when calling send(),
-            // or use signal(SIGPIPE, SIG_IGN) to make your entire application ignore SIGPIPE.
-        #else
-            // Prevents crashes when blocking calls are pending and the app is paused ( via Home button ).
-            var no_sig_pipe: Int32 = 1
-            setsockopt(socket, SOL_SOCKET, SO_NOSIGPIPE, &no_sig_pipe, socklen_t(sizeof(Int32)))
-        #endif
-    }
-    
-    private class func shutdwn(socket: Int32) {
-        #if os(Linux)
-            shutdown(socket, Int32(SHUT_RDWR))
-        #else
-            Darwin.shutdown(socket, SHUT_RDWR)
-        #endif
-    }
-    
-    public class func release(socket: Int32) {
-        #if os(Linux)
-            shutdown(socket, Int32(SHUT_RDWR))
-        #else
-            Darwin.shutdown(socket, SHUT_RDWR)
-        #endif
-        close(socket)
-    }
-    
-    private class func htonsPort(port: in_port_t) -> in_port_t {
-        #if os(Linux)
-            return port.bigEndian //use htons() when llvm stops crashing
-        #else
-            let isLittleEndian = Int(OSHostByteOrder()) == OSLittleEndian
-            return isLittleEndian ? _OSSwapInt16(port) : port
-        #endif
-    }
 
-    private class func sockaddr_cast(p: UnsafeMutablePointer<Void>) -> UnsafeMutablePointer<sockaddr> {
-        return UnsafeMutablePointer<sockaddr>(p)
+    public func write<ByteSequence: SequenceType where ByteSequence.Generator.Element == Byte>(bytes: ByteSequence) throws {
+        try write([UInt8](bytes))
     }
 }
 
-public func ==(socket1: Socket, socket2: Socket) -> Bool {
-    return socket1.socketFileDescriptor == socket2.socketFileDescriptor
+// MARK: Read
+
+extension SocketIO {
+    public func nextByte() throws -> Byte? {
+        return try read(1).first
+    }
+
+    internal func readLine() throws -> String {
+        var line: String = ""
+        func append(byte: Byte) {
+            // Possible minimum bad name here because we expect `>=`. Or make minimum '14'
+            guard byte >= MinimumValidAsciiCharacter else { return }
+            line.append(Character(byte))
+        }
+
+        while let next = try nextByte() where next != NewLine {
+            append(next)
+        }
+
+        return line
+    }
+}
+
+// MARK: Request / Response
+
+extension SocketIO {
+    public func readRequest() throws -> Request {
+        let header = try Request.Header(self)
+        let requestLine = header.requestLine
+
+        let body: [UInt8]
+        if let length = header.fields["Content-Length"], let bufferSize = Int(length) {
+            body = try read(bufferSize)
+        } else {
+            body = []
+        }
+
+
+        let method = Request.Method(rawValue: requestLine.method) ?? .Unknown
+        let path = requestLine.uri
+        // TODO: Figure out whow to get this
+        let address = "*"
+        return Request(method: method,
+                       path: path,
+                       address: address,
+                       headers: header.fields,
+                       body: body)
+    }
+
+    public func write(response: Response, keepAlive: Bool = false) throws {
+        if let response = response as? AsyncResponse {
+            try response.writer(self)
+        } else {
+            let statusLine = "HTTP/1.1 \(response.status.code) \(response.status)"
+            try writeHeader(line: statusLine)
+
+            var headers = response.headers
+            if response.data.count >= 0 {
+                headers["Content-Length"] = "\(response.data.count)"
+            }
+            if keepAlive {
+                headers["Connection"] = "keep-alive"
+            }
+            try headers.forEach(writeHeader)
+
+            try write(HeaderEndOfLine)
+            try write(response.data)
+        }
+    }
 }

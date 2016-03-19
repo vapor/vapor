@@ -1,4 +1,5 @@
 import libc
+import Hummingbird
 
 public class Application {
 	public static let VERSION = "0.3.0"
@@ -26,6 +27,11 @@ public class Application {
     public var session: SessionDriver
 
 	/**
+		Provides access to config settings.
+	*/
+	public private(set) lazy var config: Config = Config(application: self)
+
+	/**
 		`Middleware` will be applied in the order
 		it is set in this array.
 
@@ -33,7 +39,6 @@ public class Application {
 		if you don't want to overwrite default behavior.
 	*/
 	public var middleware: [Middleware.Type]
-
 
 	/**
 		Provider classes that have been registered
@@ -92,7 +97,7 @@ public class Application {
 	/**
 		Initialize the Application.
 	*/
-    public init(router: RouterDriver = BranchRouter(), server: ServerDriver = SocketServer(), session: SessionDriver = MemorySessionDriver()) {
+    public init(router: RouterDriver = BranchRouter(), server: ServerDriver = Jeeves<Hummingbird.Socket>(), session: SessionDriver = MemorySessionDriver()) {
 		self.server = server
 		self.router = router
         self.session = session
