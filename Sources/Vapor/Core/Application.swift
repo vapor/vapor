@@ -20,12 +20,12 @@ public class Application {
 	*/
 	public var server: ServerDriver
 
-    /**
-        The session driver is responsible for
-        storing and reading values written to the
-        users session.
-    */
-    public var session: SessionDriver
+    	/**
+	 	The session driver is responsible for
+        	storing and reading values written to the
+        	users session.
+    	*/
+    	public var session: SessionDriver
 
 	/**
 		Provides access to config settings.
