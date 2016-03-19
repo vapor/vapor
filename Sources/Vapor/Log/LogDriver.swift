@@ -1,12 +1,4 @@
-//
-//  LogDriver.swift
-//  Vapor
-//
-//  Created by Matthew on 21/02/2016.
-//  Copyright © 2016 Tanner Nelson. All rights reserved.
-//
-
-import Foundation
+import libc
 
 /* Logger protocol. Custom loggers must conform 
  to this protocol
@@ -24,7 +16,7 @@ public protocol LogDriver {
 public class ConsoleLogger: LogDriver {
     
     public func log(level: Log.Level, message: String) {
-        let date = NSDate()
+    	let date = time(nil)
         print("[\(date)] [\(level)] \(message)")
     }
 }

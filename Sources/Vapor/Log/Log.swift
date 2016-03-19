@@ -1,13 +1,3 @@
-//
-//  Log.swift
-//  Vapor
-//
-//  Created by Matthew on 21/02/2016.
-//  Copyright © 2016 Tanner Nelson. All rights reserved.
-//
-
-import Foundation
-
 /**
     Log class
 */
