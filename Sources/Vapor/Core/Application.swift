@@ -1,5 +1,6 @@
 import Foundation
 import libc
+import Hummingbird
 
 public class Application {
 	public static let VERSION = "0.3.0"
@@ -97,7 +98,7 @@ public class Application {
 	/**
 		Initialize the Application.
 	*/
-    public init(router: RouterDriver = BranchRouter(), server: ServerDriver = SocketServer(), session: SessionDriver = MemorySessionDriver()) {
+    public init(router: RouterDriver = BranchRouter(), server: ServerDriver = Jeeves<Hummingbird.Socket>(), session: SessionDriver = MemorySessionDriver()) {
 		self.server = server
 		self.router = router
         self.session = session

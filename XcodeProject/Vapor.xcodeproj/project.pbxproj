@@ -36,8 +36,6 @@
 		3A91D3E51C7F6B6600EA3CA0 /* Response.swift in Sources */ = {isa = PBXBuildFile; fileRef = C352E6DA1C62BC6A00E26467 /* Response.swift */; };
 		3A91D3E61C7F6B6600EA3CA0 /* ResponseConvertible.swift in Sources */ = {isa = PBXBuildFile; fileRef = C352E6DB1C62BC6A00E26467 /* ResponseConvertible.swift */; };
 		3A91D3E71C7F6B6600EA3CA0 /* Socket.swift in Sources */ = {isa = PBXBuildFile; fileRef = C352E6E01C62BC6A00E26467 /* Socket.swift */; };
-		3A91D3E81C7F6B6600EA3CA0 /* SocketServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = C352E6E11C62BC6A00E26467 /* SocketServer.swift */; };
-		3A91D3E91C7F6B6600EA3CA0 /* SocketParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = C352E6D81C62BC6A00E26467 /* SocketParser.swift */; };
 		3A91D3EA1C7F6B6600EA3CA0 /* ServerDriver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C304C8A61C62D65200058C92 /* ServerDriver.swift */; };
 		3A91D3EB1C7F6B6600EA3CA0 /* Session.swift in Sources */ = {isa = PBXBuildFile; fileRef = C352E6DF1C62BC6A00E26467 /* Session.swift */; };
 		3A91D3EC1C7F6B6600EA3CA0 /* SessionDriver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C352E6D71C62BC6A00E26467 /* SessionDriver.swift */; };
@@ -57,8 +55,18 @@
 		800EFA561C822EE200F6C066 /* Process.swift in Sources */ = {isa = PBXBuildFile; fileRef = 800EFA551C822EE200F6C066 /* Process.swift */; };
 		800EFA581C8231EE00F6C066 /* ProcessTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 800EFA571C8231EE00F6C066 /* ProcessTests.swift */; };
 		800EFA5A1C83A00300F6C066 /* QueryParametersTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 800EFA591C83A00300F6C066 /* QueryParametersTests.swift */; };
+		8010376B1C95C949008C6E10 /* Hummingbird.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8010376A1C95C949008C6E10 /* Hummingbird.swift */; };
+		8010376D1C95D0AE008C6E10 /* Character+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8010376C1C95D0AE008C6E10 /* Character+Extensions.swift */; };
+		8010376F1C95D129008C6E10 /* ThreadSafeStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8010376E1C95D129008C6E10 /* ThreadSafeStore.swift */; };
+		801037731C95D1EC008C6E10 /* Dispatch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 801037721C95D1EC008C6E10 /* Dispatch.swift */; };
+		801037751C95D263008C6E10 /* S4.swift in Sources */ = {isa = PBXBuildFile; fileRef = 801037741C95D263008C6E10 /* S4.swift */; };
+		801037771C95D7FC008C6E10 /* RequestHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 801037761C95D7FC008C6E10 /* RequestHeader.swift */; };
+		801037791C95D898008C6E10 /* Hummingbird+Socket.swift in Sources */ = {isa = PBXBuildFile; fileRef = 801037781C95D898008C6E10 /* Hummingbird+Socket.swift */; };
 		8049435E1C8CAEAF0064FA7A /* Environment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8049435D1C8CAEAF0064FA7A /* Environment.swift */; };
 		8049436D1C8DBED70064FA7A /* MemorySessionDriver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8049436C1C8DBED70064FA7A /* MemorySessionDriver.swift */; };
+		8087DB591C9505E0002E57CC /* JeevesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8087DB581C9505E0002E57CC /* JeevesTests.swift */; };
+		809334C71C94FA8B0090AC20 /* Jeeves.swift in Sources */ = {isa = PBXBuildFile; fileRef = 809334C61C94FA8B0090AC20 /* Jeeves.swift */; };
+		80E940AD1C97044400B2D72F /* libHummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 80E940AC1C97044400B2D72F /* libHummingbird.dylib */; };
 		80FF32EF1C8A63DE008EC414 /* NSData+SequenceType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80FF32EE1C8A63DE008EC414 /* NSData+SequenceType.swift */; };
 		C3433FD41C7D119D009F0876 /* HashTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3433FD21C7D119D009F0876 /* HashTests.swift */; };
 		C3691FE01C98BEDA00C680DE /* EnvironmentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3691FDF1C98BEDA00C680DE /* EnvironmentTests.swift */; };
@@ -127,12 +135,22 @@
 		800EFA551C822EE200F6C066 /* Process.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Process.swift; sourceTree = "<group>"; };
 		800EFA571C8231EE00F6C066 /* ProcessTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = ProcessTests.swift; path = ../../Tests/Vapor/ProcessTests.swift; sourceTree = "<group>"; };
 		800EFA591C83A00300F6C066 /* QueryParametersTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = QueryParametersTests.swift; path = ../../Tests/Vapor/QueryParametersTests.swift; sourceTree = "<group>"; };
+		8010376A1C95C949008C6E10 /* Hummingbird.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Hummingbird.swift; path = ../Sources/Vapor/Server/Hummingbird.swift; sourceTree = SOURCE_ROOT; };
+		8010376C1C95D0AE008C6E10 /* Character+Extensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "Character+Extensions.swift"; path = "../Sources/Vapor/Utilities/Character+Extensions.swift"; sourceTree = SOURCE_ROOT; };
+		8010376E1C95D129008C6E10 /* ThreadSafeStore.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = ThreadSafeStore.swift; path = ../Sources/Vapor/Utilities/ThreadSafeStore.swift; sourceTree = SOURCE_ROOT; };
+		801037721C95D1EC008C6E10 /* Dispatch.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Dispatch.swift; path = ../../Sources/Vapor/Utilities/Dispatch.swift; sourceTree = "<group>"; };
+		801037741C95D263008C6E10 /* S4.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = S4.swift; path = ../../Sources/Vapor/Utilities/S4.swift; sourceTree = "<group>"; };
+		801037761C95D7FC008C6E10 /* RequestHeader.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RequestHeader.swift; path = ../Sources/Vapor/Server/RequestHeader.swift; sourceTree = SOURCE_ROOT; };
+		801037781C95D898008C6E10 /* Hummingbird+Socket.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "Hummingbird+Socket.swift"; path = "../Sources/Vapor/Server/Hummingbird+Socket.swift"; sourceTree = SOURCE_ROOT; };
 		802030001C77C956009B8655 /* Vapor+JSON.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "Vapor+JSON.swift"; path = "../Sources/Vapor/JSON/Vapor+JSON.swift"; sourceTree = SOURCE_ROOT; };
 		802030101C78CAC2009B8655 /* Branch.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Branch.swift; path = ../Sources/Vapor/Router/Branch.swift; sourceTree = SOURCE_ROOT; };
 		802030161C78CAE1009B8655 /* BranchRouter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = BranchRouter.swift; path = ../Sources/Vapor/Router/BranchRouter.swift; sourceTree = SOURCE_ROOT; };
 		802053981C7A8C7D009E26E9 /* RequestData.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RequestData.swift; path = ../Sources/Vapor/Request/RequestData.swift; sourceTree = SOURCE_ROOT; };
 		8049435D1C8CAEAF0064FA7A /* Environment.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Environment.swift; path = ../../Sources/Vapor/Core/Environment.swift; sourceTree = "<group>"; };
 		8049436C1C8DBED70064FA7A /* MemorySessionDriver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = MemorySessionDriver.swift; path = ../Sources/Vapor/Session/MemorySessionDriver.swift; sourceTree = SOURCE_ROOT; };
+		8087DB581C9505E0002E57CC /* JeevesTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = JeevesTests.swift; path = ../../Tests/Vapor/JeevesTests.swift; sourceTree = "<group>"; };
+		809334C61C94FA8B0090AC20 /* Jeeves.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Jeeves.swift; path = ../Sources/Vapor/Server/Jeeves.swift; sourceTree = SOURCE_ROOT; };
+		80E940AC1C97044400B2D72F /* libHummingbird.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libHummingbird.dylib; path = ../.build/debug/libHummingbird.dylib; sourceTree = "<group>"; };
 		80FF32EE1C8A63DE008EC414 /* NSData+SequenceType.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "NSData+SequenceType.swift"; path = "../../Sources/Vapor/Utilities/NSData+SequenceType.swift"; sourceTree = "<group>"; };
 		C304C8A61C62D65200058C92 /* ServerDriver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = ServerDriver.swift; path = ../Sources/Vapor/Server/ServerDriver.swift; sourceTree = SOURCE_ROOT; };
 		C304C8B41C6306B100058C92 /* RouterDriver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RouterDriver.swift; path = ../Sources/Vapor/Router/RouterDriver.swift; sourceTree = SOURCE_ROOT; };
@@ -146,13 +164,11 @@
 		C352E6D41C62BC6A00E26467 /* JSONSerializer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = JSONSerializer.swift; path = ../Sources/Vapor/JSON/JSONSerializer.swift; sourceTree = SOURCE_ROOT; };
 		C352E6D51C62BC6A00E26467 /* LinuxFixes.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = LinuxFixes.swift; path = ../Sources/Vapor/Fixes/LinuxFixes.swift; sourceTree = SOURCE_ROOT; };
 		C352E6D71C62BC6A00E26467 /* SessionDriver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SessionDriver.swift; path = ../Sources/Vapor/Session/SessionDriver.swift; sourceTree = SOURCE_ROOT; };
-		C352E6D81C62BC6A00E26467 /* SocketParser.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SocketParser.swift; path = ../Sources/Vapor/Server/SocketParser.swift; sourceTree = SOURCE_ROOT; };
 		C352E6D91C62BC6A00E26467 /* Request.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Request.swift; path = ../Sources/Vapor/Request/Request.swift; sourceTree = SOURCE_ROOT; };
 		C352E6DA1C62BC6A00E26467 /* Response.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Response.swift; path = ../Sources/Vapor/Response/Response.swift; sourceTree = SOURCE_ROOT; };
 		C352E6DB1C62BC6A00E26467 /* ResponseConvertible.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = ResponseConvertible.swift; path = ../Sources/Vapor/Response/ResponseConvertible.swift; sourceTree = SOURCE_ROOT; };
 		C352E6DF1C62BC6A00E26467 /* Session.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Session.swift; path = ../Sources/Vapor/Session/Session.swift; sourceTree = SOURCE_ROOT; };
 		C352E6E01C62BC6A00E26467 /* Socket.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Socket.swift; path = ../Sources/Vapor/Server/Socket.swift; sourceTree = SOURCE_ROOT; };
-		C352E6E11C62BC6A00E26467 /* SocketServer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SocketServer.swift; path = ../Sources/Vapor/Server/SocketServer.swift; sourceTree = SOURCE_ROOT; };
 		C352E6E21C62BC6A00E26467 /* StringExtensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = StringExtensions.swift; path = ../Sources/Vapor/Fixes/StringExtensions.swift; sourceTree = SOURCE_ROOT; };
 		C352E6E41C62BC6A00E26467 /* View.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = View.swift; path = ../Sources/Vapor/View/View.swift; sourceTree = SOURCE_ROOT; };
 		C352E7131C62BDE200E26467 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = ../README.md; sourceTree = SOURCE_ROOT; };
@@ -185,6 +201,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				3A659FC71C805E3B00C105F5 /* libJay.dylib in Frameworks */,
+				80E940AD1C97044400B2D72F /* libHummingbird.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -217,11 +234,16 @@
 		1A33BBAA1C87453A000499CE /* Utilities */ = {
 			isa = PBXGroup;
 			children = (
+				801037741C95D263008C6E10 /* S4.swift */,
+				801037721C95D1EC008C6E10 /* Dispatch.swift */,
+				8010376E1C95D129008C6E10 /* ThreadSafeStore.swift */,
+				8010376C1C95D0AE008C6E10 /* Character+Extensions.swift */,
 				80FF32EE1C8A63DE008EC414 /* NSData+SequenceType.swift */,
 				1A33BBAB1C874555000499CE /* NSLock+Closure.swift */,
 			);
 			name = Utilities;
-			sourceTree = "<group>";
+			path = Vapor;
+			sourceTree = SOURCE_ROOT;
 		};
 		288CFC2F1C7AC02000E4617A /* Providers */ = {
 			isa = PBXGroup;
@@ -322,9 +344,8 @@
 		C304C8AC1C63047100058C92 /* Socket */ = {
 			isa = PBXGroup;
 			children = (
+				801037781C95D898008C6E10 /* Hummingbird+Socket.swift */,
 				C352E6E01C62BC6A00E26467 /* Socket.swift */,
-				C352E6E11C62BC6A00E26467 /* SocketServer.swift */,
-				C352E6D81C62BC6A00E26467 /* SocketParser.swift */,
 			);
 			name = Socket;
 			sourceTree = "<group>";
@@ -332,6 +353,9 @@
 		C304C8AD1C63048200058C92 /* Server */ = {
 			isa = PBXGroup;
 			children = (
+				8010376A1C95C949008C6E10 /* Hummingbird.swift */,
+				809334C61C94FA8B0090AC20 /* Jeeves.swift */,
+				801037761C95D7FC008C6E10 /* RequestHeader.swift */,
 				C304C8AC1C63047100058C92 /* Socket */,
 				C304C8A61C62D65200058C92 /* ServerDriver.swift */,
 			);
@@ -407,6 +431,7 @@
 		C352E6781C62BB0F00E26467 = {
 			isa = PBXGroup;
 			children = (
+				80E940AC1C97044400B2D72F /* libHummingbird.dylib */,
 				C352E7141C62BE6900E26467 /* Package.swift */,
 				C352E7131C62BDE200E26467 /* README.md */,
 				3A91D3D41C7F6B1A00EA3CA0 /* VaporDev */,
@@ -446,6 +471,7 @@
 				3492B2EE1C787DD600D8E588 /* RouteTests.swift */,
 				1AD708011C8E6A9500F17339 /* SessionTests.swift */,
 				C3691FE11C98C47F00C680DE /* TypedRouteTests.swift */,
+				8087DB581C9505E0002E57CC /* JeevesTests.swift */,
 			);
 			path = Tests;
 			sourceTree = "<group>";
@@ -726,6 +752,7 @@
 				3A91D3E21C7F6B6600EA3CA0 /* Request.swift in Sources */,
 				3A91D3DF1C7F6B6600EA3CA0 /* Branch.swift in Sources */,
 				1A33BBAC1C874555000499CE /* NSLock+Closure.swift in Sources */,
+				8010376B1C95C949008C6E10 /* Hummingbird.swift in Sources */,
 				3A91D3EE1C7F6B6600EA3CA0 /* SessionMiddleware.swift in Sources */,
 				3A91D3E71C7F6B6600EA3CA0 /* Socket.swift in Sources */,
 				3A91D3F71C7F6B6600EA3CA0 /* StringExtensions.swift in Sources */,
@@ -733,18 +760,22 @@
 				3A91D3E51C7F6B6600EA3CA0 /* Response.swift in Sources */,
 				28EAB2C91C9234A7004F84BD /* Config.swift in Sources */,
 				800EFA561C822EE200F6C066 /* Process.swift in Sources */,
+				801037731C95D1EC008C6E10 /* Dispatch.swift in Sources */,
 				3A91D3EF1C7F6B6600EA3CA0 /* Provider.swift in Sources */,
 				C387A0451C96125800B6282E /* Generated.swift in Sources */,
 				3A659FC51C80368F00C105F5 /* ResourceController.swift in Sources */,
+				801037771C95D7FC008C6E10 /* RequestHeader.swift in Sources */,
 				3A91D3DA1C7F6B6600EA3CA0 /* Application+Route.swift in Sources */,
+				801037791C95D898008C6E10 /* Hummingbird+Socket.swift in Sources */,
 				3A91D3DD1C7F6B6600EA3CA0 /* Log.swift in Sources */,
-				3A91D3E81C7F6B6600EA3CA0 /* SocketServer.swift in Sources */,
-				3A91D3E91C7F6B6600EA3CA0 /* SocketParser.swift in Sources */,
+				8010376F1C95D129008C6E10 /* ThreadSafeStore.swift in Sources */,
 				3A91D3D91C7F6B6600EA3CA0 /* Controller.swift in Sources */,
 				3A91D3F01C7F6B6600EA3CA0 /* Int+Random.swift in Sources */,
 				3A659FC11C80365700C105F5 /* AbortMiddleware.swift in Sources */,
 				80FF32EF1C8A63DE008EC414 /* NSData+SequenceType.swift in Sources */,
+				801037751C95D263008C6E10 /* S4.swift in Sources */,
 				3A91D3EA1C7F6B6600EA3CA0 /* ServerDriver.swift in Sources */,
+				809334C71C94FA8B0090AC20 /* Jeeves.swift in Sources */,
 				8049436D1C8DBED70064FA7A /* MemorySessionDriver.swift in Sources */,
 				28EAB2C61C92345D004F84BD /* JSON+Merging.swift in Sources */,
 				3A91D3DB1C7F6B6600EA3CA0 /* View.swift in Sources */,
@@ -757,6 +788,7 @@
 				3A91D3ED1C7F6B6600EA3CA0 /* Middleware.swift in Sources */,
 				3A91D3F41C7F6B6600EA3CA0 /* JSONSerializer.swift in Sources */,
 				3A91D3F61C7F6B6600EA3CA0 /* LinuxFixes.swift in Sources */,
+				8010376D1C95D0AE008C6E10 /* Character+Extensions.swift in Sources */,
 				3A91D3E41C7F6B6600EA3CA0 /* RequestData.swift in Sources */,
 				8049435E1C8CAEAF0064FA7A /* Environment.swift in Sources */,
 				3A91D3F21C7F6B6600EA3CA0 /* SHA256Hasher.swift in Sources */,
@@ -784,6 +816,7 @@
 				800EFA581C8231EE00F6C066 /* ProcessTests.swift in Sources */,
 				C38808641C62C0390067DADD /* ResponseTests.swift in Sources */,
 				C3691FE01C98BEDA00C680DE /* EnvironmentTests.swift in Sources */,
+				8087DB591C9505E0002E57CC /* JeevesTests.swift in Sources */,
 				800EFA5A1C83A00300F6C066 /* QueryParametersTests.swift in Sources */,
 				1AD708021C8E6A9500F17339 /* SessionTests.swift in Sources */,
 				3492B2EF1C787DD600D8E588 /* RouteTests.swift in Sources */,
