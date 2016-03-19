@@ -56,9 +56,6 @@ extension String {
         return self
     }
 
-    func stringByTrimmingCharactersInSet( cset: NSCharacterSet ) -> String {
-        return self
-    }
     
     func componentsSeparatedByString( sep: String ) -> [String] {
         var out = [String]()
