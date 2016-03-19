@@ -157,12 +157,14 @@ public class Response {
         self.contentType = contentType
         switch contentType {
         case .Json:
-            self.headers = ["Content-Type" : "application/json"]
+            self.headers = ["Content-Type": "application/json"]
         case .Html:
-            self.headers = ["Content-Type" : "text/html"]
+            self.headers = ["Content-Type": "text/html"]
         case let .Other(description):
-            self.headers = ["Content-Type" : description]
-        default:
+            self.headers = ["Content-Type": description]
+        case .Text:
+            self.headers = ["Content-Type": "text"]
+        case .None:
             self.headers = [:]
         }
         

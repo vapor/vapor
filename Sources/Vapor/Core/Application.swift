@@ -203,52 +203,19 @@ public class Application {
 		}
 	}
 
-	func fileExistsAtPath(path: String, isDirectory: inout Bool) -> Bool {
-		var s = stat()
-        if lstat(path, &s) >= 0 {
-            if isDirectory != nil {
-                if (s.st_mode & S_IFMT) == S_IFLNK {
-                    if stat(path, &s) >= 0 {
-                        isDirectory = (s.st_mode & S_IFMT) == S_IFDIR
-                    } else {
-                        return false
-                    }
-                } else {
-                    isDirectory = (s.st_mode & S_IFMT) == S_IFDIR
-                }
-            }
-
-            // don't chase the link for this magic case -- we might be /Net/foo
-            // which is a symlink to /private/Net/foo which is not yet mounted...
-            if (s.st_mode & S_IFMT) == S_IFLNK {
-                if (s.st_mode & S_ISVTX) == S_ISVTX {
-                    return true
-                }
-                // chase the link; too bad if it is a slink to /Net/foo
-                stat(path, &s) >= 0
-            }
-        } else {
-            return false
-        }
-        return true
-	}
-
 	func checkFileSystem(request: Request) -> Request.Handler? {
 		// Check in file system
 		let filePath = self.dynamicType.workDir + "Public" + request.path
 
 		var isDir = false
-		guard fileExistsAtPath(filePath, isDirectory: &isDir) else {
+		guard FileManager.fileExistsAtPath(filePath, isDirectory: &isDir) else {
 			return nil
 		}
 
 		// File exists
-		if let fileBody = NSData(contentsOfFile: filePath) {
-			var array = [UInt8](count: fileBody.length, repeatedValue: 0)
-			fileBody.getBytes(&array, length: fileBody.length)
-
+		if let fileBody = try? FileManager.readBytesFromFile(filePath) {
 			return { _ in
-				return Response(status: .OK, data: array, contentType: .Text)
+				return Response(status: .OK, data: fileBody, contentType: .Text)
 			}
 		} else {
 			return { _ in
