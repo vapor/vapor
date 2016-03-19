@@ -1,5 +1,3 @@
-import Foundation
-
 /**
     Intercept and modify `Request`s and `Response`s
     using middleware. Create a class that conforms to 
