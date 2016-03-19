@@ -1,4 +1,4 @@
-import Foundation
+import libc
 
 /**
  * The `MemorySessionDriver` stores session data
@@ -31,7 +31,7 @@ public class MemorySessionDriver: SessionDriver {
     }
     
     public func makeSessionIdentifier() -> String {
-        var identifier = String(NSDate().timeIntervalSinceNow)
+        var identifier = String(time(nil))
         identifier += "v@p0r"
         identifier += String(Int.random(min: 0, max: 9999))
         identifier += "s3sS10n"

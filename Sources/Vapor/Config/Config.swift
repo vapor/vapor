@@ -1,5 +1,11 @@
 import Foundation
 
+extension NSData: SequenceType {
+    public func generate() -> UnsafeBufferPointer<UInt8>.Generator {
+        return UnsafeBufferPointer<UInt8>(start: UnsafePointer<UInt8>(self.bytes), count: self.length).generate()
+    }
+}
+
 public class Config {
 	public static let configDir = Application.workDir + "Config"
 	private let fileManager = NSFileManager.defaultManager()
@@ -144,7 +150,7 @@ public class Config {
 		}
 	}
 
-	private func populateConfigFiles(inout files: [String: [NSURL]], in url: NSURL) throws {
+	private func populateConfigFiles(files: inout [String: [NSURL]], in url: NSURL) throws {
 		let contents = try fileManager.contentsOfDirectoryAtURL(url, includingPropertiesForKeys: nil, options: [ ])
 
 		for file in contents {

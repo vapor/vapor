@@ -1,5 +1,3 @@
-import Foundation
-
 // MARK: Constants
 
 private let HeaderEndOfLine = "\r\n"

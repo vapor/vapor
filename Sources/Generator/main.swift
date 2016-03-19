@@ -1,11 +1,3 @@
-//
-//  main.swift
-//  Vapor
-//
-//  Created by Tanner Nelson on 3/13/16.
-//  Copyright © 2016 Tanner Nelson. All rights reserved.
-//
-
 import Foundation
 
 let GENERIC_MAP = ["T", "U", "V", "W", "X"]

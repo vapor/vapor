@@ -2,7 +2,6 @@ var _module_nsstring = true
 
 #if os(Linux)
 
-import Foundation
 import libc
 
 private let O = "0".ord, A = "A".ord, percent = "%".ord

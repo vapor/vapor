@@ -1,4 +1,3 @@
-import Foundation
 import Jay
 
 private typealias JayType = JsonValue

@@ -1,17 +1,8 @@
-//
-// ThreadSafeStore.swift
-// Vapor
-//
-// Created by Logan Wright on 03/13/2016
-//
-
-import Foundation
-
 internal final class ThreadSafeSocketStore<Socket where Socket: Vapor.Socket, Socket: Hashable> {
     
     // MARK: Properties
     
-    private let lock = NSLock()
+    private let lock = Lock()
     private var storage: Set<Socket> = []
     
     // MARK: Computed

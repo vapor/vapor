@@ -31,10 +31,24 @@
  OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
-import Foundation
+import libc
 
 extension String {
+    public static func buffer(size size: Int) -> [Int8] {
+        return [Int8](count: size, repeatedValue: 0)
+    }
+
+    public init?(pointer: UnsafePointer<UInt8>, length: Int) {
+        let uPointer = UnsafePointer<Int8>(pointer)
+        var buffer = String.buffer(size: length + 1)
+        strncpy(&buffer, uPointer, length)
+
+        guard let string = String.fromCString(buffer) else {
+            return nil
+        }
+
+        self.init(string)
+    }
 
     func split(separator: Character) -> [String] {
         return self.characters.split { $0 == separator }.map(String.init)
@@ -68,14 +82,7 @@ extension String {
     }
     
     static func fromUInt8(array: [UInt8]) -> String {
-        #if os(Linux)
-            return String(data: NSData(bytes: array, length: array.count), encoding: NSUTF8StringEncoding) ?? ""
-        #else
-            if let s = String(data: NSData(bytes: array, length: array.count), encoding: NSUTF8StringEncoding) {
-                return s
-            }
-            return ""
-        #endif
+        return String(pointer: array, length: array.count) ?? ""
     }
     
     func removePercentEncoding() -> String {

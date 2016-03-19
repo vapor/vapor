@@ -1,5 +1,3 @@
-import Foundation
-
 /**
     Responses that redirect to a supplied URL.
  */

@@ -1,5 +1,3 @@
-import Foundation
-
 /**
     Requests contains data sent from a client to the
     web server such as method, parameters, and data.

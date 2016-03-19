@@ -1,5 +1,3 @@
-import Foundation
-
 public class View {
 
     public static var renderers: [String: RenderDriver] = [:]
@@ -18,17 +16,12 @@ public class View {
     public init(path: String, context: [String: Any]) throws {
         let filesPath = View.resourceDir + "/" + path
         
-        guard let fileBody = NSData(contentsOfFile: filesPath) else {
+        guard let fileBody = try? FileManager.readBytesFromFile(filesPath) else {
             self.bytes = []
             Log.error("No view found in path: \(filesPath)")
             throw Error.InvalidPath
         }
-
-        //TODO: Implement range
-        var array = [UInt8](count: fileBody.length, repeatedValue: 0)
-        fileBody.getBytes(&array, length: fileBody.length)
-
-        self.bytes = array
+        self.bytes = fileBody
 
         for (suffix, renderer) in View.renderers {
             if path.hasSuffix(suffix) {
