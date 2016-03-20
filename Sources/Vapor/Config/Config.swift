@@ -1,3 +1,4 @@
+#if swift(>=3.0)
 import Foundation
 
 extension NSData: SequenceType {
@@ -208,3 +209,4 @@ extension String {
 	}
 
 }
+#endif
