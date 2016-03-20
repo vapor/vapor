@@ -3,15 +3,18 @@ public class Session {
 
     public let identifier: String
     var driver: SessionDriver
+    public var enabled: Bool
 
     public init(driver: SessionDriver) {
-        self.identifier = driver.makeSessionIdentifier()
         self.driver = driver
+        identifier = driver.makeSessionIdentifier()
+        enabled = false
     }
 
     init(identifier: String, driver: SessionDriver) {
-        self.identifier = identifier
         self.driver = driver
+        self.identifier = identifier
+        enabled = true
 	}
 
 	public func destroy() {
@@ -22,8 +25,8 @@ public class Session {
         get {
             return driver.valueFor(key: key, inSession: self)
         }
-
         set {
+            enabled = true
             driver.set(newValue, forKey: key, inSession: self)
         }
     }

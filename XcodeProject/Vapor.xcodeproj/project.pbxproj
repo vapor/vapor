@@ -74,6 +74,7 @@
 		C387A0431C95FEBA00B6282E /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = C387A0361C95FDFE00B6282E /* main.swift */; };
 		C38808641C62C0390067DADD /* ResponseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C38808631C62C0390067DADD /* ResponseTests.swift */; };
 		C3943DC31C7663E80014F4EE /* RouterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3943DC21C7663E80014F4EE /* RouterTests.swift */; };
+		C3B4F38E1C9F5D9E00CB2731 /* ApplicationInitializable.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3B4F38D1C9F5D9E00CB2731 /* ApplicationInitializable.swift */; };
 		C3DFB55D1C80C2860045801C /* MyController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3DFB5541C80C2860045801C /* MyController.swift */; };
 		C3F683361C7D1EF300033AA2 /* ControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3F683351C7D1EF300033AA2 /* ControllerTests.swift */; };
 /* End PBXBuildFile section */
@@ -185,6 +186,7 @@
 		C387A03B1C95FE1300B6282E /* Generator */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Generator; sourceTree = BUILT_PRODUCTS_DIR; };
 		C38808631C62C0390067DADD /* ResponseTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = ResponseTests.swift; path = ../Tests/Vapor/ResponseTests.swift; sourceTree = SOURCE_ROOT; };
 		C3943DC21C7663E80014F4EE /* RouterTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RouterTests.swift; path = ../Tests/Vapor/RouterTests.swift; sourceTree = SOURCE_ROOT; };
+		C3B4F38D1C9F5D9E00CB2731 /* ApplicationInitializable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ApplicationInitializable.swift; sourceTree = "<group>"; };
 		C3DFB5541C80C2860045801C /* MyController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MyController.swift; sourceTree = "<group>"; };
 		C3DFB5571C80C2860045801C /* vapor-logo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "vapor-logo.png"; sourceTree = "<group>"; };
 		C3DFB5591C80C2860045801C /* app.css */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.css; path = app.css; sourceTree = "<group>"; };
@@ -395,6 +397,7 @@
 			children = (
 				C31A82941C9F4AB8005F1DBE /* Application+Route.swift */,
 				C31A82951C9F4AB8005F1DBE /* DefaultInitializable.swift */,
+				C3B4F38D1C9F5D9E00CB2731 /* ApplicationInitializable.swift */,
 				C31A82961C9F4AB8005F1DBE /* ResourceController.swift */,
 				C31A82971C9F4AB8005F1DBE /* Route.swift */,
 			);
@@ -775,6 +778,7 @@
 				C31A82DB1C9F4AB8005F1DBE /* RenderDriver.swift in Sources */,
 				C31A82BD1C9F4AB8005F1DBE /* LogDriver.swift in Sources */,
 				C31A82D51C9F4AB8005F1DBE /* SessionMiddleware.swift in Sources */,
+				C3B4F38E1C9F5D9E00CB2731 /* ApplicationInitializable.swift in Sources */,
 				C31A82D91C9F4AB8005F1DBE /* S4.swift in Sources */,
 				C31A82B11C9F4AB8005F1DBE /* Generated.swift in Sources */,
 				C31A82C31C9F4AB8005F1DBE /* Response.swift in Sources */,
