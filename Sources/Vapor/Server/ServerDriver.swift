@@ -1,5 +1,3 @@
-import Foundation
-
 public protocol ServerDriver {
     func boot(ip ip: String, port: Int) throws
     func halt()

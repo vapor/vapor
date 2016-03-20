@@ -6,8 +6,6 @@
 //  Copyright © 2016 Tanner Nelson. All rights reserved.
 //
 
-import Foundation
-
 // MARK: Response
 
 extension Json: ResponseConvertible {

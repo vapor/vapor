@@ -1,4 +1,3 @@
-import Foundation
 import Hummingbird
 
 extension Hummingbird.Socket: Socket {

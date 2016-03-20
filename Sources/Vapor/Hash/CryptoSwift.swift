@@ -6,7 +6,6 @@
 //  Copyright © 2016 Tanner Nelson. All rights reserved.
 //
 
-import Foundation
 import libc
 
 //
@@ -380,29 +379,6 @@ extension CSArrayType where Generator.Element == UInt8 {
         }
     }
 }
-
-extension NSData {
-    
-    func toHexString() -> String {
-        return self.arrayOfBytes().toHexString()
-    }
-    
-    func arrayOfBytes() -> [UInt8] {
-        let count = self.length / sizeof(UInt8)
-        var bytesArray = [UInt8](count: count, repeatedValue: 0)
-        self.getBytes(&bytesArray, length:count * sizeof(UInt8))
-        return bytesArray
-    }
-    
-    convenience init(bytes: [UInt8]) {
-        self.init(data: NSData.withBytes(bytes))
-    }
-    
-    class func withBytes(bytes: [UInt8]) -> NSData {
-        return NSData(bytes: bytes, length: bytes.count)
-    }
-}
-
 
 class HMAC {
     

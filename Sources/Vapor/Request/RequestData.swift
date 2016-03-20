@@ -6,8 +6,6 @@
 //  Copyright © 2016 Tanner Nelson. All rights reserved.
 //
 
-import Foundation
-
 /**
  *  This protocol defines a type of data received.
  *  these variables are used to access underlying
@@ -73,8 +71,8 @@ public extension Request {
          - returns: a key value pair dictionary
          */
         static func parsePostData(body: [UInt8]) -> [String: String] {
-            if let bodyString = NSString(bytes: body, length: body.count, encoding: NSUTF8StringEncoding) {
-                return bodyString.description.keyValuePairs()
+            if let bodyString = String(pointer: body, length: body.count) {
+                return bodyString.keyValuePairs()
             }
             
             return [:]
