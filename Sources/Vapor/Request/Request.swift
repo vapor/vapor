@@ -55,7 +55,12 @@ public class Request {
         return false
     }
 
-    public init(method: Method, path: String, address: String?, headers: [String: String], body: [UInt8]) {
+    public init(method: Method, path: String, address: String?, headers caseSensitiveHeaders: [String: String], body: [UInt8]) {
+        var headers: [String: String] = [:]
+        for (key, val) in caseSensitiveHeaders {
+            headers[key.lowercaseString] = val
+        }
+        
         self.method = method
         self.path = path.split(separator: "?").first ?? ""
         self.address = address

@@ -38,7 +38,7 @@ extension Request {
             // Drop first to remove leading ` ` key is actually `: `, but doesn't support splitting on substring, only char
             guard let key = components.first, let val = components.last?.characters.dropFirst() else { throw Error.InvalidHeaderKeyPair }
             
-            return (key.lowercaseString, String(val))
+            return (key, String(val))
         }
     }
 }
