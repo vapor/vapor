@@ -46,7 +46,7 @@ extension Application {
      
         Note: You are responsible for pluralizing your endpoints.
     */
-    public final func resource<ResourceControllerType: ResourceController>(path: String, controllerFactory: () -> ResourceControllerType) {
+    public final func resource<ResourceControllerType: ResourceController>(path: String, makeControllerWith controllerFactory: () -> ResourceControllerType) {
         let last = "/:id"
         let shortPath = path.componentsSeparatedByString(".")
             .flatMap { component in
@@ -57,20 +57,20 @@ extension Application {
         let fullPath = shortPath + last
 
         // ie: /users
-        self.add(.Get, path: shortPath, controllerFactory: controllerFactory, action: ResourceControllerType.index)
-        self.add(.Post, path: shortPath, controllerFactory: controllerFactory, action: ResourceControllerType.store)
+        self.add(.Get, path: shortPath, makeControllerWith: controllerFactory, action: ResourceControllerType.index)
+        self.add(.Post, path: shortPath, makeControllerWith: controllerFactory, action: ResourceControllerType.store)
 
         // ie: /users/:id
-        self.add(.Get, path: fullPath, controllerFactory: controllerFactory, action: ResourceControllerType.show)
-        self.add(.Put, path: fullPath, controllerFactory: controllerFactory, action: ResourceControllerType.update)
-        self.add(.Delete, path: fullPath, controllerFactory: controllerFactory, action: ResourceControllerType.destroy)
+        self.add(.Get, path: fullPath, makeControllerWith: controllerFactory, action: ResourceControllerType.show)
+        self.add(.Put, path: fullPath, makeControllerWith: controllerFactory, action: ResourceControllerType.update)
+        self.add(.Delete, path: fullPath, makeControllerWith: controllerFactory, action: ResourceControllerType.destroy)
     }
 
     public final func resource<ResourceControllerType: ResourceController where ResourceControllerType: DefaultInitializable>(path: String, controller: ResourceControllerType.Type) {
-        resource(path, controllerFactory: ResourceControllerType.init)
+        resource(path, makeControllerWith: ResourceControllerType.init)
     }
 
-    public final func add<Controller>(method: Request.Method, path: String, controllerFactory: () -> Controller, action: Controller -> Route.Handler) {
+    public final func add<Controller>(method: Request.Method, path: String, makeControllerWith controllerFactory: () -> Controller, action: Controller -> Route.Handler) {
         add(method, path: path) { request in
             let controller = controllerFactory()
             let actionCall = action(controller)
@@ -79,7 +79,7 @@ extension Application {
     }
 
     public final func add<Controller: DefaultInitializable>(method: Request.Method, path: String, action: Controller -> Route.Handler) {
-        add(method, path: path, controllerFactory: Controller.init, action: action)
+        add(method, path: path, makeControllerWith: Controller.init, action: action)
     }
     
     public final func add(method: Request.Method, path: String, handler: Route.Handler) {
