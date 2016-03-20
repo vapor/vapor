@@ -1,0 +1,3 @@
+public protocol DefaultInitializable {
+    init()
+}
