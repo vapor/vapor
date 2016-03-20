@@ -1,40 +1,76 @@
+// String.swift
 //
-// Based on NSLinux (https://github.com/johnno1962/NSLinux) by johnno1962.
+// The MIT License (MIT)
 //
+// Copyright (c) 2015 Zewo
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
 
-/**
- Copyright (c) 2014, Damian Kołakowski
- All rights reserved.
- 
- Redistribution and use in source and binary forms, with or without
- modification, are permitted provided that the following conditions are met:
- 
- * Redistributions of source code must retain the above copyright notice, this
- list of conditions and the following disclaimer.
- 
- * Redistributions in binary form must reproduce the above copyright notice,
- this list of conditions and the following disclaimer in the documentation
- and/or other materials provided with the distribution.
- 
- * Neither the name of the {organization} nor the names of its
- contributors may be used to endorse or promote products derived from
- this software without specific prior written permission.
- 
- THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
-
-import Foundation
+import libc
 
 extension String {
+    public static func buffer(size size: Int) -> [Int8] {
+        return [Int8](count: size, repeatedValue: 0)
+    }
+
+    public init?(pointer: UnsafePointer<UInt8>, length: Int) {
+        let uPointer = UnsafePointer<Int8>(pointer)
+        var buffer = String.buffer(size: length + 1)
+        strncpy(&buffer, uPointer, length)
+
+        guard let string = String.fromCString(buffer) else {
+            return nil
+        }
+
+        self.init(string)
+    }
+
+    public func trim(characters: CharacterSet) -> String {
+        let string = trim(left: characters)
+        return string.trim(right: characters)
+    }
+
+    public func trim(left characterSet: CharacterSet) -> String {
+        var start = characters.count
+
+        for (index, character) in characters.enumerate() {
+            if !characterSet.contains(character) {
+                start = index
+                break
+            }
+        }
+
+        return self[startIndex.advancedBy(start) ..< endIndex]
+    }
+
+    public func trim(right characterSet: CharacterSet) -> String {
+        var end = characters.count
+
+        for (index, character) in characters.reverse().enumerate() {
+            if !characterSet.contains(character) {
+                end = index
+                break
+            }
+        }
+
+        return self[startIndex ..< startIndex.advancedBy(characters.count - end)]
+    }
 
     func split(separator: Character) -> [String] {
         return self.characters.split { $0 == separator }.map(String.init)
@@ -60,81 +96,100 @@ extension String {
         return self
     }
     
-    func trim() -> String {
-        var scalars = self.unicodeScalars
-        while let _ = unicodeScalarToUInt32Whitespace(scalars.first) { scalars.removeFirst() }
-        while let _ = unicodeScalarToUInt32Whitespace(scalars.last) { scalars.removeLast() }
-        return String(scalars)
+    public func trim() -> String {
+        return trim(CharacterSet.whitespaceAndNewline)
     }
     
     static func fromUInt8(array: [UInt8]) -> String {
-        #if os(Linux)
-            return String(data: NSData(bytes: array, length: array.count), encoding: NSUTF8StringEncoding) ?? ""
-        #else
-            if let s = String(data: NSData(bytes: array, length: array.count), encoding: NSUTF8StringEncoding) {
-                return s
-            }
-            return ""
-        #endif
+        return String(pointer: array, length: array.count) ?? ""
     }
     
     func removePercentEncoding() -> String {
-        var scalars = self.unicodeScalars
-        var output = ""
-        var bytesBuffer = [UInt8]()
-        while let scalar = scalars.popFirst() {
-            if scalar == "%" {
-                let first = scalars.popFirst()
-                let secon = scalars.popFirst()
-                if let first = unicodeScalarToUInt32Hex(first), secon = unicodeScalarToUInt32Hex(secon) {
-                    bytesBuffer.append(first*16+secon)
-                } else {
-                    if !bytesBuffer.isEmpty {
-                        output.appendContentsOf(String.fromUInt8(bytesBuffer))
-                        bytesBuffer.removeAll()
-                    }
-                    if let first = first { output.append(Character(first)) }
-                    if let secon = secon { output.append(Character(secon)) }
+        let percentEncoded = self
+
+        let spaceCharacter: UInt8 = 32
+        let percentCharacter: UInt8 = 37
+        let plusCharacter: UInt8 = 43
+
+        var encodedBytes: [UInt8] = [] + percentEncoded.utf8
+        var decodedBytes: [UInt8] = []
+        var i = 0
+
+        while i < encodedBytes.count {
+            let currentCharacter = encodedBytes[i]
+
+            switch currentCharacter {
+            case percentCharacter:
+                let unicodeA = UnicodeScalar(encodedBytes[i + 1])
+                let unicodeB = UnicodeScalar(encodedBytes[i + 2])
+
+                let hexString = "\(unicodeA)\(unicodeB)"
+
+
+
+                guard let character = Int(hexString, radix: 16) else {
+                    return ""
                 }
-            } else {
-                if !bytesBuffer.isEmpty {
-                    output.appendContentsOf(String.fromUInt8(bytesBuffer))
-                    bytesBuffer.removeAll()
-                }
-                output.append(Character(scalar))
+
+                decodedBytes.append(UInt8(character))
+                i += 3
+
+            case plusCharacter:
+                decodedBytes.append(spaceCharacter)
+                i += 1
+
+            default:
+                decodedBytes.append(currentCharacter)
+                i += 1
             }
         }
-        if !bytesBuffer.isEmpty {
-            output.appendContentsOf(String.fromUInt8(bytesBuffer))
-            bytesBuffer.removeAll()
+
+        var string = ""
+        var decoder = UTF8()
+        var iterator = decodedBytes.generate()
+        var finished = false
+
+        while !finished {
+            let decodingResult = decoder.decode(&iterator)
+            switch decodingResult {
+            case .Result(let char): string.append(char)
+            case .EmptyInput: finished = true
+            case .Error:
+                return ""
+            }
         }
-        return output
+
+        return string
     }
-    
-    private func unicodeScalarToUInt32Whitespace(x: UnicodeScalar?) -> UInt8? {
-        if let x = x {
-            if x.value >= 9 && x.value <= 13 {
-                return UInt8(x.value)
-            }
-            if x.value == 32 {
-                return UInt8(x.value)
-            }
-        }
-        return nil
+}
+
+public struct CharacterSet: ArrayLiteralConvertible {
+    public static var whitespaceAndNewline: CharacterSet {
+        return [" ", "\t", "\r", "\n"]
     }
-    
-    private func unicodeScalarToUInt32Hex(x: UnicodeScalar?) -> UInt8? {
-        if let x = x {
-            if x.value >= 48 && x.value <= 57 {
-                return UInt8(x.value) - 48
-            }
-            if x.value >= 97 && x.value <= 102 {
-                return UInt8(x.value) - 87
-            }
-            if x.value >= 65 && x.value <= 70 {
-                return UInt8(x.value) - 55
-            }
-        }
-        return nil
+
+    public static var digits: CharacterSet {
+        return ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
+    }
+
+    private let characters: Set<Character>
+    private let isInverted: Bool
+
+    public var inverted: CharacterSet {
+        return CharacterSet(characters: characters, inverted: !isInverted)
+    }
+
+    public init(characters: Set<Character>, inverted: Bool = false) {
+        self.characters = characters
+        self.isInverted = inverted
+    }
+
+    public init(arrayLiteral elements: Character...) {
+        self.init(characters: Set(elements))
+    }
+
+    public func contains(character: Character) -> Bool {
+        let contains = characters.contains(character)
+        return isInverted ? !contains : contains
     }
 }

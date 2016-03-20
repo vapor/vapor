@@ -6,8 +6,6 @@
 // Additionally, Vapor projects may define their own `ResponseConvertible` objects
 //
 
-import Foundation
-
 public protocol ResponseConvertible {
 	func response() -> Response
 }

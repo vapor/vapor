@@ -1,4 +1,3 @@
-import Foundation
 import libc
 import Hummingbird
 
@@ -191,46 +190,26 @@ public class Application {
 		self.bootArguments()
 
 		do {
+			Log.info("Server starting on \(self.ip):\(self.port)")
 			try self.server.boot(ip: self.ip, port: self.port)
-			Log.info("Server has started on \(self.ip):\(self.port)")
-			self.loop()
 		} catch {
 			Log.info("Server start error: \(error)")
 		}
-	}
-
-	/**
-		Starts an infinite loop to keep the server alive while it
-		waits for inbound connections.
-	*/
-	func loop() {
-		#if os(Linux)
-			while true {
-				sleep(1)
-			}
-		#else
-			NSRunLoop.mainRunLoop().run()
-		#endif
 	}
 
 	func checkFileSystem(request: Request) -> Request.Handler? {
 		// Check in file system
 		let filePath = self.dynamicType.workDir + "Public" + request.path
 
-		let fileManager = NSFileManager.defaultManager()
-		var isDir: ObjCBool = false
-
-		guard fileManager.fileExistsAtPath(filePath, isDirectory: &isDir) else {
+		var isDir = false
+		guard FileManager.fileExistsAtPath(filePath, isDirectory: &isDir) else {
 			return nil
 		}
 
 		// File exists
-		if let fileBody = NSData(contentsOfFile: filePath) {
-			var array = [UInt8](count: fileBody.length, repeatedValue: 0)
-			fileBody.getBytes(&array, length: fileBody.length)
-
+		if let fileBody = try? FileManager.readBytesFromFile(filePath) {
 			return { _ in
-				return Response(status: .OK, data: array, contentType: .Text)
+				return Response(status: .OK, data: fileBody, contentType: .Text)
 			}
 		} else {
 			return { _ in

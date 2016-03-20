@@ -285,12 +285,6 @@ Vapor has been tested on OS X 10.11, Ubuntu 14.04, and Ubuntu 15.10.
 
 My website `http://tanner.xyz` as well as `http://qutheory.io` are currently running using Vapor on DigitalOcean.
 
-## Attributions
-
-This project is based on [Swifter](https://github.com/glock45/swifter) by Damian Kołakowski. It uses compatibility code from [NSLinux](https://github.com/johnno1962/NSLinux) by johnno1962.
-
-Go checkout and star their repos.
-
 ## Author
 
 Made by [Tanner Nelson](http://tanner.xyz)

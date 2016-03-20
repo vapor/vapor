@@ -6,8 +6,6 @@
 //  Copyright © 2016 Tanner Nelson. All rights reserved.
 //
 
-import Foundation
-
 public protocol StringInitializable {
     init?(from string: String) throws
 }
