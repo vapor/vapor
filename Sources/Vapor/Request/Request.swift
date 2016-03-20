@@ -55,19 +55,14 @@ public class Request {
         return false
     }
 
-    public init(method: Method, path: String, address: String?, headers caseSensitiveHeaders: [String: String], body: [UInt8]) {
-        var headers: [String: String] = [:]
-        for (key, val) in caseSensitiveHeaders {
-            headers[key.lowercaseString] = val
-        }
-        
+    public init(method: Method, path: String, address: String?, headers: [String: String], body: [UInt8]) {
         self.method = method
         self.path = path.split(separator: "?").first ?? ""
         self.address = address
         self.headers = headers
         self.body = body
-        self.cookies = Request.parseCookies(headers["cookie"])
-        self.hostname = headers["host"] ?? "*"
+        self.cookies = Request.parseCookies(headers["Cookie"])
+        self.hostname = headers["Host"] ?? "*"
         
         let query = path.queryData()
         self.data = Data(query: query, bytes: body)
