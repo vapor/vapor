@@ -29,6 +29,16 @@ app.get(i, s) { request, int, string in
     ])
 }
 
+app.get("session") { request in 
+    if request.session == nil {
+        //create a new session
+        request.session = Session(driver: app.session)
+        request.session?["name"] = "Vapor"
+    }
+    
+    return "Session set"
+}
+
 app.post("json") { request in
     //parse a key inside the received json
     guard let count = request.data["unicorns"]?.int else {

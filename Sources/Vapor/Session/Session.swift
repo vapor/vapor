@@ -4,6 +4,11 @@ public class Session {
     public let identifier: String
     var driver: SessionDriver
 
+    public init(driver: SessionDriver) {
+        self.identifier = driver.makeSessionIdentifier()
+        self.driver = driver
+    }
+
     init(identifier: String, driver: SessionDriver) {
         self.identifier = identifier
         self.driver = driver

@@ -42,7 +42,7 @@ public class Request {
     public var parameters: [String: String] = [:]
     
     ///Server stored information related from session cookie.
-    public internal(set) var session: Session?
+    public var session: Session?
     
     ///Requested hostname
     public let hostname: String
@@ -85,7 +85,7 @@ public class Request {
     */
     class func parseCookies(string: String?) -> [String: String] {
         var cookies: [String: String] = [:]
-        
+
         guard let string = string else {
             return cookies
         }
@@ -99,7 +99,7 @@ public class Request {
                 cookies[key] = cookieArray[1]
             }
         }
-        
+
         return cookies
     }
     
