@@ -32,8 +32,10 @@ app.get(i, s) { request, int, string in
 app.get("session") { request in 
     if request.session == nil {
         //create a new session
-        request.session = Session(driver: app.session)
-        request.session?["name"] = "Vapor"
+        let session = Session(driver: app.session)
+        session["name"] = "Vapor"
+
+        request.session = session
     }
     
     return "Session set"
