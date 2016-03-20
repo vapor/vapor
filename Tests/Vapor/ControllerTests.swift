@@ -21,7 +21,7 @@ import XCTest
 
 class ControllerTests: XCTestCase {
     
-    class TestController: ResourceController {
+    class TestController: ResourceController, DefaultInitializable {
         required init() {
             
         }
