@@ -28,12 +28,10 @@ public class Jeeves<Socket where Socket: Vapor.Socket, Socket: Hashable>: Server
         try streamSocket?.bind(toAddress: ip, onPort: "\(port)")
         try streamSocket?.listen(pendingConnectionBacklog: 100)
 
-        try Background {
-            do {
-                try self.streamSocket?.accept(Int(SOMAXCONN), connectionHandler: self.handle)
-            } catch {
-                Log.error("Failed to accept: \(self.streamSocket) error: \(error)")
-            }
+        do {
+            try self.streamSocket?.accept(Int(SOMAXCONN), connectionHandler: self.handle)
+        } catch {
+            Log.error("Failed to accept: \(self.streamSocket) error: \(error)")
         }
     }
 

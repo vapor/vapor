@@ -190,21 +190,10 @@ public class Application {
 		self.bootArguments()
 
 		do {
+			Log.info("Server starting on \(self.ip):\(self.port)")
 			try self.server.boot(ip: self.ip, port: self.port)
-			Log.info("Server has started on \(self.ip):\(self.port)")
-			self.loop()
 		} catch {
 			Log.info("Server start error: \(error)")
-		}
-	}
-
-	/**
-		Starts an infinite loop to keep the server alive while it
-		waits for inbound connections.
-	*/
-	func loop() {
-		while true {
-			sleep(1)
 		}
 	}
 
