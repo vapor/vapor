@@ -18,6 +18,7 @@ public class Session {
 	}
 
 	public func destroy() {
+        enabled = false
         driver.destroy(self)
 	}
 
