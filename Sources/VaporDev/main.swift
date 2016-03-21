@@ -29,6 +29,11 @@ app.get(i, s) { request, int, string in
     ])
 }
 
+app.get("session") { request in 
+    request.session?["name"] = "Vapor"
+    return "Session set"
+}
+
 app.post("json") { request in
     //parse a key inside the received json
     guard let count = request.data["unicorns"]?.int else {
