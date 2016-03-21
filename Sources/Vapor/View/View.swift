@@ -24,11 +24,14 @@ public class View {
         self.bytes = fileBody
 
         for (suffix, renderer) in View.renderers {
+            //FIXME
+            #if swift(>=3.0)
             if path.hasSuffix(suffix) {
                 let template =  String.fromUInt8(self.bytes)
                 let rendered = try renderer.render(template: template, context: context)
                 self.bytes = [UInt8](rendered.utf8)
             }
+            #endif
         }
 
     }
