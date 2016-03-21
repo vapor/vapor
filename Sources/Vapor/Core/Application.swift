@@ -26,10 +26,12 @@ public class Application {
     */
     public var session: SessionDriver
 
+    #if swift(>=3.0)
 	/**
 		Provides access to config settings.
 	*/
 	public private(set) lazy var config: Config = Config(application: self)
+	#endif
 
 	/**
 		`Middleware` will be applied in the order
