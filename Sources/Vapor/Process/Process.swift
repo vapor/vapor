@@ -19,7 +19,7 @@ extension Process {
      - returns: the value matching the argument if possible
      */
     public static func valueFor(argument name: String, inArguments arguments: [String] = Process.arguments) -> String? {
-        if swift(>=3.0)
+        #if swift(>=3.0)
         for argument in arguments where argument.hasPrefix("--\(name)=") {
             return argument.split("=").last
         }
