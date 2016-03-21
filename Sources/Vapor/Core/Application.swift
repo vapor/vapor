@@ -81,7 +81,7 @@ public class Application {
 	*/
 	public static var workDir = "./" {
 		didSet {
-			if !self.workDir.hasSuffix("/") {
+			if self.workDir.characters.last != "/" {
 				self.workDir += "/"
 			}
 		}
