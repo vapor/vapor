@@ -1,13 +1,18 @@
 class SessionMiddleware: Middleware {
 
-    static func handle(handler: Request.Handler, for application: Application) -> Request.Handler {
+    static func handle(handler: Request.Handler, for app: Application) -> Request.Handler {
         return { request in
-            let sessionIdentifier = request.cookies["vapor-session"] ?? application.session.makeSessionIdentifier()
-            request.session = Session(identifier: sessionIdentifier, driver: application.session)
+            if let sessionIdentifier = request.cookies["vapor-session"] {
+            	request.session = Session(identifier: sessionIdentifier, driver: app.session)
+            } else {
+                request.session = Session(driver: app.session)
+            }
 
             let response = try handler(request: request)
 
-            response.cookies["vapor-session"] = sessionIdentifier
+            if let session = request.session where session.enabled {
+            	response.cookies["vapor-session"] = session.identifier
+            }
 
             return response
         }
