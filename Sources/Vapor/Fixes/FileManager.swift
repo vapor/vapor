@@ -53,6 +53,7 @@ class FileManager {
         return Array(buffer)
     }
 
+    #if swift(>=3.0)
     static func fileExistsAtPath(path: String, isDirectory: inout Bool) -> Bool {
 		var s = stat()
         if lstat(path, &s) >= 0 {
@@ -80,4 +81,32 @@ class FileManager {
         }
         return true
 	}
+    #else 
+    static func fileExistsAtPath(path: String, inout isDirectory: Bool) -> Bool {var s = stat()
+        if lstat(path, &s) >= 0 {
+            if (s.st_mode & S_IFMT) == S_IFLNK {
+                if stat(path, &s) >= 0 {
+                    isDirectory = (s.st_mode & S_IFMT) == S_IFDIR
+                } else {
+                    return false
+                }
+            } else {
+                isDirectory = (s.st_mode & S_IFMT) == S_IFDIR
+            }
+
+            // don't chase the link for this magic case -- we might be /Net/foo
+            // which is a symlink to /private/Net/foo which is not yet mounted...
+            if (s.st_mode & S_IFMT) == S_IFLNK {
+                if (s.st_mode & S_ISVTX) == S_ISVTX {
+                    return true
+                }
+                // chase the link; too bad if it is a slink to /Net/foo
+                stat(path, &s) >= 0
+            }
+        } else {
+            return false
+        }
+        return true
+    }
+    #endif
 }

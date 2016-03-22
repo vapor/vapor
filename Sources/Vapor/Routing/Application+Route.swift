@@ -80,6 +80,12 @@ extension Application {
         add(method, path: path, makeControllerWith: Controller.init, action: action)
     }
     
+    public final func add<Controller: ApplicationInitializable>(method: Request.Method, path: String, action: Controller -> Route.Handler) {
+        add(method, path: path, makeControllerWith: {
+            return Controller(application: self)
+        }, action: action)
+    }
+    
     public final func add(method: Request.Method, path: String, handler: Route.Handler) {
         
         //Convert Route.Handler to Request.Handler

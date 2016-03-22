@@ -2,7 +2,7 @@ import libc
 import Hummingbird
 
 public class Application {
-	public static let VERSION = "0.3.0"
+	public static let VERSION = "0.3.1"
 
 	/**
 		The router driver is responsible
@@ -26,10 +26,12 @@ public class Application {
     */
     public var session: SessionDriver
 
+    #if swift(>=3.0)
 	/**
 		Provides access to config settings.
 	*/
 	public private(set) lazy var config: Config = Config(application: self)
+	#endif
 
 	/**
 		`Middleware` will be applied in the order
@@ -79,7 +81,7 @@ public class Application {
 	*/
 	public static var workDir = "./" {
 		didSet {
-			if !self.workDir.hasSuffix("/") {
+			if self.workDir.characters.last != "/" {
 				self.workDir += "/"
 			}
 		}
