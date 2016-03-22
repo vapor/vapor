@@ -2,7 +2,7 @@ import libc
 import Hummingbird
 
 public class Application {
-	public static let VERSION = "0.3.1"
+	public static let VERSION = "0.3.2"
 
 	/**
 		The router driver is responsible
