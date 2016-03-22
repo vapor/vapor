@@ -24,6 +24,34 @@
 
 import libc
 
+#if swift(>=3.0)
+    extension String {
+
+    }
+#else 
+    extension String {
+        func hasPrefix(str: String) -> Bool {
+            let strGen = str.characters.generate()
+            let selfGen = self.characters.generate()
+            let seq = Zip2Sequence(strGen, selfGen)
+            for (lhs, rhs) in seq where lhs != rhs {
+                return false
+            }
+            return true
+        }
+
+        func hasSuffix(str: String) -> Bool {
+            let strGen = str.characters.reverse().generate()
+            let selfGen = self.characters.reverse().generate()
+            let seq = Zip2Sequence(strGen, selfGen)
+            for (lhs, rhs) in seq where lhs != rhs {
+                return false
+            }
+            return true
+        }
+    }
+#endif
+
 extension String {
     public static func buffer(size size: Int) -> [Int8] {
         return [Int8](count: size, repeatedValue: 0)

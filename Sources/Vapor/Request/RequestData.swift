@@ -193,14 +193,9 @@ extension String: Node {
     }
     
     public var array: [Node]? {
-        //FIXME
-        #if swift(>=3.0) 
-            return self
-                .componentsSeparatedByString(",")
-                .map { $0 as Node }
-        #else 
-            return nil
-        #endif
+        return self
+            .split(",")
+            .map { $0 as Node }
     }
     
     public var object: [String : Node]? {

@@ -77,7 +77,7 @@ internal final class Branch {
         if let next = subBranches[key] {
             return next.handle(request, comps: comps)
         } else if let wildcard = subBranches["*"] {
-            request.parameters[wildcard.name] = key.stringByRemovingPercentEncoding
+            request.parameters[wildcard.name] = key.removePercentEncoding()
             return wildcard.handle(request, comps: comps)
         } else {
             return nil
@@ -100,7 +100,7 @@ internal final class Branch {
             return
         }
         
-        if key.hasPrefix(":") {
+        if key.characters.first == ":" {
             let chars = key.characters
             let indexOne = chars.startIndex.advancedBy(1)
             let sub = key.characters.suffixFrom(indexOne)
