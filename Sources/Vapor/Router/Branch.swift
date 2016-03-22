@@ -77,10 +77,7 @@ internal final class Branch {
         if let next = subBranches[key] {
             return next.handle(request, comps: comps)
         } else if let wildcard = subBranches["*"] {
-            //FIXME
-            #if swift(>=3.0)
-            request.parameters[wildcard.name] = key.stringByRemovingPercentEncoding
-            #endif
+            request.parameters[wildcard.name] = key.removePercentEncoding()
             return wildcard.handle(request, comps: comps)
         } else {
             return nil

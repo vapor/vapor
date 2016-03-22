@@ -203,8 +203,7 @@ public class Application {
 		// Check in file system
 		let filePath = self.dynamicType.workDir + "Public" + request.path
 
-		var isDir = false
-		guard FileManager.fileExistsAtPath(filePath, isDirectory: &isDir) else {
+		guard FileManager.fileAtPath(filePath).exists else {
 			return nil
 		}
 

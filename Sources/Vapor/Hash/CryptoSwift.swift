@@ -92,8 +92,6 @@ class SHA2 {
         return ArraySlice(hh)
     }
 
-    
-    //FIXME: I can't do Generic func out of calculate32 and calculate64 (UInt32 vs UInt64), but if you can - please do pull request.
     func calculate32() -> [UInt8] {
         var tmpMessage = self.prepare(64)
         

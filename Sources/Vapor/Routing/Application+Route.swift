@@ -47,17 +47,12 @@ extension Application {
     public final func resource<ResourceControllerType: ResourceController>(path: String, makeControllerWith controllerFactory: () -> ResourceControllerType) {
         let last = "/:id"
 
-        //FIXME
-        #if swift(>=3.0)
-            let shortPath = path.componentsSeparatedByString(".")
-                .flatMap { component in
-                    return [component, "/:\(component)_id/"]
-                }
-                .dropLast()
-                .joinWithSeparator("")
-        #else
-            let shortPath = ""
-        #endif
+        let shortPath = path.split(".")
+            .flatMap { component in
+                return [component, "/:\(component)_id/"]
+            }
+            .dropLast()
+            .joinWithSeparator("")
         
         let fullPath = shortPath + last
 

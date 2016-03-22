@@ -39,25 +39,15 @@ import libc
             }
             return true
         }
-        
-        public func componentsSeparatedByString( sep: String ) -> [String] {
-            var out = [String]()
-            withCString { (bytes) in
-                sep.withCString { (sbytes) in
-                    var bytes = UnsafeMutablePointer<Int8>( bytes )
-                    while true {
-                        let start = strstr( bytes, sbytes ) - UnsafeMutablePointer<Int8>( bytes )
-                        if start < 0 {
-                            out.append( String.fromCString( bytes )! )
-                            break
-                        }
-                        bytes[start] = 0
-                        out.append( String.fromCString( bytes )! )
-                        bytes += start + Int(strlen( sbytes ))
-                    }
-                }
+
+        func hasSuffix(str: String) -> Bool {
+            let strGen = str.characters.reverse().generate()
+            let selfGen = self.characters.reverse().generate()
+            let seq = Zip2Sequence(strGen, selfGen)
+            for (lhs, rhs) in seq where lhs != rhs {
+                return false
             }
-            return out
+            return true
         }
     }
 #endif

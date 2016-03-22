@@ -194,7 +194,7 @@ extension String: Node {
     
     public var array: [Node]? {
         return self
-            .componentsSeparatedByString(",")
+            .split(",")
             .map { $0 as Node }
     }
     
