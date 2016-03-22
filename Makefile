@@ -1,28 +1,32 @@
-run: build
-	export LD_LIBRARY_PATH=.build; \
-	.build/VaporApp
+.PHONY: fetch clean prepare
 
-build: build_vapor
+pwd = $(shell pwd)
+
+make: .build/libVapor.so
 	cd .build; \
-	swiftc ../Sources/VaporDev/main.swift ../Sources/VaporDev/**/*.swift -I . -L . -lVapor -lJay -lHummingbird -llibc -lStrand -o VaporApp
+	swiftc ../Sources/VaporDev/main.swift ../Sources/VaporDev/**/*.swift -I . -L . -lVapor -lJay -lHummingbird -llibc -lStrand -Xlinker -rpath -Xlinker $(pwd)/.build -o VaporApp
 
-build_vapor: build_hummingbird build_jay build_vapor_libc
+run: make
+	.build/VaporApp
+	
+
+.build/libVapor.so: .build/libHummingbird.so .build/libJay.so .build/liblibc.so
 	cd .build; \
 	swiftc ../Sources/Vapor/**/*.swift -emit-library -emit-module -module-name Vapor -I . -L .
 
-build_vapor_libc: fetch
+.build/liblibc.so: 
 	cd .build; \
 	swiftc ../Sources/libc/*.swift -emit-library -emit-module -module-name libc -I . -L .
 
-build_jay: fetch
+.build/libJay.so:
 	cd .build; \
 	swiftc ../Packages/Jay/Sources/Jay/*.swift -emit-library -emit-module -module-name Jay -I . -L .
 
-build_hummingbird: build_strand
+.build/libHummingbird.so: .build/libStrand.so
 	cd .build; \
 	swiftc ../Packages/Hummingbird/Sources/*.swift -emit-library -emit-module -module-name Hummingbird -I . -L . 
 
-build_strand: fetch
+.build/libStrand.so:
 	cd .build; \
 	swiftc ../Packages/Strand/Sources/*.swift -emit-library -emit-module -module-name Strand
 
