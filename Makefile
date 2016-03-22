@@ -1,33 +1,51 @@
 .PHONY: clean
 
-pwd = $(shell pwd)
+OS = $(shell uname)
+PWD = $(shell pwd)
 
-.build/VaporApp: .build/libVapor.so Sources/VaporDev/main.swift Sources/VaporDev/**/*.swift
-	swiftc Sources/VaporDev/**.swift -I .build -L .build -lVapor -lJay -lHummingbird -llibc -lStrand -Xlinker -rpath -Xlinker $(pwd)/.build -o .build/VaporApp
+ifeq "$(OS)" "Darwin"
+	SWIFTC = xcrun -sdk macosx swiftc
+	LIBHUMMINGBIRD = .build/libHummingbird.dylib
+	LIBJAY = .build/libJay.dylib
+	LIBSTRAND = .build/libStrand.dylib
+	LIBLIBC = .build/liblibc.dylib
+	LIBVAPOR = .build/libVapor.dylib
+else
+	SWIFTC = swiftc
+	LIBHUMMINGBIRD = .build/libHummingbird.so
+	LIBJAY = .build/libJay.so
+	LIBSTRAND = .build/libStrand.so
+	LIBLIBC = .build/liblibc.so
+	LIBVAPOR = .build/libVapor.so
+endif
+
+
+.build/VaporApp: $(LIBVAPOR) Sources/VaporDev/main.swift Sources/VaporDev/**/*.swift
+	$(SWIFTC) Sources/VaporDev/**.swift -I .build -L .build -lVapor -lJay -lHummingbird -llibc -lStrand -Xlinker -rpath -Xlinker $(PWD)/.build -o .build/VaporApp
 
 run: .build/VaporApp
 	.build/VaporApp
 	
-.build/libVapor.so: .build/libHummingbird.so .build/libJay.so .build/liblibc.so
+$(LIBVAPOR): $(LIBHUMMINGBIRD) $(LIBJAY) $(LIBLIBC)
 	cd .build; \
-	swiftc ../Sources/Vapor/**/*.swift -emit-library -emit-module -module-name Vapor -I . -L .
+	$(SWIFTC) ../Sources/Vapor/**/*.swift -emit-library -emit-module -module-name Vapor -I . -L . -lJay -lHummingbird -llibc -lStrand
 
-.build/liblibc.so: 
+$(LIBLIBC): 
 	cd .build; \
-	swiftc ../Sources/libc/*.swift -emit-library -emit-module -module-name libc -I . -L .
+	$(SWIFTC) ../Sources/libc/*.swift -emit-library -emit-module -module-name libc -I . -L .
 
-.build/libJay.so: Packages/Jay/Sources/Jay/*.swift
+$(LIBJAY): Packages/Jay/Sources/Jay/*.swift
 	cd .build; \
-	swiftc ../Packages/Jay/Sources/Jay/*.swift -emit-library -emit-module -module-name Jay -I . -L .
+	$(SWIFTC) ../Packages/Jay/Sources/Jay/*.swift -emit-library -emit-module -module-name Jay -I . -L .
 
-.build/libHummingbird.so: .build/libStrand.so Packages/Hummingbird/Sources/*.swift
+$(LIBHUMMINGBIRD): $(LIBSTRAND) Packages/Hummingbird/Sources/*.swift
 	cd .build; \
-	swiftc ../Packages/Hummingbird/Sources/*.swift -emit-library -emit-module -module-name Hummingbird -I . -L . 
+	$(SWIFTC) ../Packages/Hummingbird/Sources/*.swift -emit-library -emit-module -module-name Hummingbird -I . -L . -lStrand
 
-.build/libStrand.so: Packages/Strand/Sources/*.swift
+$(LIBSTRAND): Packages/Strand/Sources/*.swift
 	mkdir .build; \
 	cd .build; \
-	swiftc ../Packages/Strand/Sources/*.swift -emit-library -emit-module -module-name Strand
+	$(SWIFTC) ../Packages/Strand/Sources/*.swift -emit-library -emit-module -module-name Strand
 
 Packages/Strand/Sources/*.swift:
 	git clone https://github.com/ketzusaka/Strand Packages/Strand;
