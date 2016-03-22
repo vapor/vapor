@@ -1,4 +1,4 @@
-.PHONY: clean
+.PHONY: clean run install
 
 OS = $(shell uname)
 PWD = $(shell pwd)
@@ -28,6 +28,10 @@ endif
 
 run: .build/VaporApp
 	$(RUN);
+
+install: $(LIBVAPOR)
+	mdkir /usr/local/opt/vapor/lib
+	cp .build/*.so /usr/local/opt/vapor/lib/
 	
 $(LIBVAPOR): $(LIBHUMMINGBIRD) $(LIBJAY) $(LIBLIBC) Sources/Vapor/**/*.swift
 	cd .build; \

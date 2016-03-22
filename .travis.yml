@@ -8,10 +8,4 @@ osx_image: xcode7.3
 install:
   - eval "$(curl -sL https://gist.githubusercontent.com/kylef/5c0475ff02b7c7671d2a/raw/02090c7ede5a637b76e6df1710e83cd0bbe7dcdf/swiftenv-install.sh)"
 script:
-  - swift build --fetch
-  - rm -rf Packages/*/Tests
-  - swift build
-  - swift test
-  - wget https://swift.org/builds/swift-2.2-release/ubuntu1404/swift-2.2-RELEASE/swift-2.2-RELEASE-ubuntu14.04.tar.gz
-  - export PATH=swift-2.2-RELEASE-ubuntu14.04/usr/bin/:"${PATH}"
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; make fi; # temporarily don't build on osx
+  - ./.travis.sh
