@@ -30,8 +30,13 @@ run: .build/VaporApp
 	$(RUN);
 
 install: $(LIBVAPOR)
-	mdkir /usr/local/opt/vapor/lib
-	cp .build/*.so /usr/local/opt/vapor/lib/
+	mkdir /usr/local/opt; \
+	mkdir /usr/local/opt/vapor; \
+	mkdir /usr/local/opt/vapor/lib; \
+	mkdir /usr/local/opt/vapor/include; \
+	cp -R .build/lib* /usr/local/opt/vapor/lib; \
+	cp -R .build/*.swiftdoc /usr/local/opt/vapor/include; \
+	cp -R .build/*.swiftmodule /usr/local/opt/vapor/include; \
 	
 $(LIBVAPOR): $(LIBHUMMINGBIRD) $(LIBJAY) $(LIBLIBC) Sources/Vapor/**/*.swift
 	cd .build; \

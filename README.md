@@ -10,10 +10,10 @@ A Laravel/Lumen Inspired Web Framework for Swift that works on iOS, OS X, and Ub
 
 ## Badges
 
-[![Build Status](https://img.shields.io/travis/qutheory/vapor.svg?style=flat-square)](https://travis-ci.org/qutheory/vapor)
-[![Issue Stats](http://issuestats.com/github/qutheory/vapor/badge/pr?style=flat-square)](http://issuestats.com/github/qutheory/vapor)
-[![PRs Welcome](https://img.shields.io/badge/prs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
-[![Slack Status](http://slack.tanner.xyz:8085/badge.svg?style=flat-square)](http://slack.tanner.xyz:8085)
+[![Build Status](https://api.travis-ci.org/qutheory/vapor.svg?branch=master)](https://travis-ci.org/qutheory/vapor)
+[![Issue Stats](http://issuestats.com/github/qutheory/vapor/badge/pr)](http://issuestats.com/github/qutheory/vapor)
+[![PRs Welcome](https://img.shields.io/badge/prs-welcome-brightgreen.svg)](http://makeapullrequest.com)
+[![Slack Status](http://slack.tanner.xyz:8085/badge.svg)](http://slack.tanner.xyz:8085)
 
 ## Introduction
 
