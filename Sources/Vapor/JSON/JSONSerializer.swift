@@ -3,37 +3,37 @@ import Jay
 private typealias JayType = JsonValue
 
 public enum Json: Equatable {
-    
+
     case NullValue
     case BooleanValue(Bool)
     case NumberValue(Double)
     case StringValue(String)
     case ArrayValue([Json])
     case ObjectValue([String:Json])
-    
+
     // MARK: Initialization
-    
+
     public init(_ value: Bool) {
         self = .BooleanValue(value)
     }
-    
+
     public init(_ value: Double) {
         self = .NumberValue(value)
     }
-    
+
     public init(_ value: Int) {
         let double = Double(value)
         self.init(double)
     }
-    
+
     public init(_ value: String) {
         self = .StringValue(value)
     }
-    
+
     public init(_ value: [Json]) {
         self = .ArrayValue(value)
     }
-    
+
     public init(_ value: [String : Json]) {
         self = .ObjectValue(value)
     }
@@ -96,7 +96,7 @@ extension Json {
         case .String(let str):
             self = Json(str)
         }
-        
+
     }
 }
 
@@ -111,7 +111,7 @@ extension Json {
 }
 
 extension Json {
-    
+
     public func serialize() throws -> [UInt8] {
         let jayValue = JayType(self)
         return try Jay().dataFromJson(jayValue)
@@ -125,7 +125,7 @@ extension Json {
         guard case .NullValue = self else { return false }
         return true
     }
-    
+
     public var boolValue: Bool? {
         if case let .BooleanValue(bool) = self {
             return bool
@@ -139,46 +139,46 @@ extension Json {
             return nil
         }
     }
-    
+
     public var floatValue: Float? {
         guard let double = doubleValue else { return nil }
         return Float(double)
     }
-    
+
     public var doubleValue: Double? {
         guard case let .NumberValue(double) = self else {
             return nil
         }
-        
+
         return double
     }
-    
+
     public var intValue: Int? {
         guard case let .NumberValue(double) = self where double % 1 == 0 else {
             return nil
         }
-        
+
         return Int(double)
     }
-    
+
     public var uintValue: UInt? {
         guard let intValue = intValue else { return nil }
         return UInt(intValue)
     }
-    
+
     public var stringValue: String? {
         guard case let .StringValue(string) = self else {
             return nil
         }
-        
+
         return string
     }
-    
+
     public var arrayValue: [Json]? {
         guard case let .ArrayValue(array) = self else { return nil }
         return array
     }
-    
+
     public var objectValue: [String : Json]? {
         guard case let .ObjectValue(object) = self else { return nil }
         return object
@@ -191,7 +191,7 @@ extension Json {
         guard let array = arrayValue where index < array.count else { return nil }
         return array[index]
     }
-    
+
     public subscript(key: String) -> Json? {
         get {
             guard let dict = objectValue else { return nil }
@@ -257,15 +257,15 @@ extension Json: FloatLiteralConvertible {
 extension Json: StringLiteralConvertible {
     public typealias UnicodeScalarLiteralType = String
     public typealias ExtendedGraphemeClusterLiteralType = String
-    
+
     public init(unicodeScalarLiteral value: UnicodeScalarLiteralType) {
         self = .StringValue(value)
     }
-    
+
     public init(extendedGraphemeClusterLiteral value: ExtendedGraphemeClusterType) {
         self = .StringValue(value)
     }
-    
+
     public init(stringLiteral value: StringLiteralType) {
         self = .StringValue(value)
     }

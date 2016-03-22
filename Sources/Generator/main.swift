@@ -7,32 +7,32 @@ struct Func: CustomStringConvertible {
     enum Method {
         case Get, Post, Put, Patch, Delete, Options
     }
-    
+
     var method: Method
     var params: [Param]
-    
+
     var description: String {
-       
-        
-        
+
+
+
         let wildcards = params.filter { param in
             return param.type == .Wildcard
         }
-        
-        
+
+
         var f = ""
         f += "\tpublic func "
         f += "\(method)".lowercaseString
-        
+
         //generic <>
         if wildcards.count > 0 {
             let genericsString = wildcards.map { wildcard in
                 return "\(wildcard.generic): StringInitializable"
             }.joinWithSeparator(", ")
-            
+
             f += "<\(genericsString)>"
         }
-        
+
         let paramsString = params.enumerate().map { (index, param) in
             if index > 0 {
                 return "_ \(param)"
@@ -40,31 +40,31 @@ struct Func: CustomStringConvertible {
                 return param.description
             }
         }.joinWithSeparator(", ")
-        
+
         f += "(\(paramsString), handler: (Request"
-        
+
         //handler params
         if wildcards.count > 0 {
             let genericsString = wildcards.map { wildcard in
                 return wildcard.generic
             }.joinWithSeparator(", ")
-            
+
             f += ", \(genericsString)) throws -> ResponseConvertible) {\n"
 
         } else {
             f += ") throws -> ResponseConvertible) {\n"
         }
-        
+
         let pathString = params.map { param in
             if param.type == .Wildcard {
                 return ":\(param.name)"
             }
-            
+
             return "\\(\(param.name))"
         }.joinWithSeparator("/")
-        
+
         f += "\t\tself.add(.\(method), path: \"\(pathString)\") { request in\n"
-        
+
         //function body
         if wildcards.count > 0 {
             //grab from request params
@@ -73,40 +73,40 @@ struct Func: CustomStringConvertible {
                 f += "\t\t\t\tthrow Abort.BadRequest\n"
                 f += "\t\t\t}\n"
             }
-            
+
             f += "\n"
-            
+
             //try
             for wildcard in wildcards {
                 f += "\t\t\tlet e\(wildcard.name) = try \(wildcard.generic)(from: v\(wildcard.name))\n"
             }
-            
+
             f += "\n"
-            
+
             //ensure conversion worked
             for wildcard in wildcards {
                 f += "\t\t\tguard let c\(wildcard.name) = e\(wildcard.name) else {\n"
                 f += "\t\t\t\tthrow Abort.BadRequest\n"
                 f += "\t\t\t}\n"
             }
-            
+
             f += "\n"
-            
-            
+
+
             let wildcardString = wildcards.map { wildcard in
                 return "c\(wildcard.name)"
                 }.joinWithSeparator(", ")
-            
-            
+
+
             f += "\t\t\treturn try handler(request, \(wildcardString))\n"
-            
+
         } else {
-            
+
             f += "\t\t\treturn try handler(request)\n"
         }
-        
+
         f += "\t\t}\n"
-        
+
         f += "\t}"
         return f
     }
@@ -114,13 +114,13 @@ struct Func: CustomStringConvertible {
 
 func paramTypeCount(type: Param.`Type`, params: [Param]) -> Int {
     var i = 0
-    
+
     for param in params {
         if param.type == type {
             i += 1
         }
     }
-    
+
     return i
 }
 
@@ -128,7 +128,7 @@ struct Param: CustomStringConvertible {
     var name: String
     var type: Type
     var generic: String
-    
+
     var description: String {
         var description = "\(name): "
         if type == .Wildcard {
@@ -138,38 +138,38 @@ struct Param: CustomStringConvertible {
         }
         return description
     }
-    
+
     enum `Type` {
         case Path, Wildcard
     }
     static var types: [Type] = [.Path, .Wildcard]
-    
+
     static func addTypePermutations(toArray paramsArray: [[Param]]) -> [[Param]] {
         var permParamsArray: [[Param]] = []
-        
+
         for paramArray in paramsArray {
             for type in Param.types {
                 var mutableParamArray = paramArray
-                
+
                 var name = ""
                 if type == .Wildcard {
                     name = "w"
                 } else {
                     name = "p"
                 }
-                
+
                 let count = paramTypeCount(type, params: paramArray)
                 name += "\(count)"
-                
+
                 let generic = GENERIC_MAP[count]
-                
+
                 let param = Param(name: name, type: type, generic: generic)
-                
+
                 mutableParamArray.append(param)
                 permParamsArray.append(mutableParamArray)
             }
         }
-        
+
         return permParamsArray
     }
 }
@@ -184,7 +184,7 @@ for paramCount in 0...MAX_PARAMS {
     for _ in 0..<paramCount {
         perms = Param.addTypePermutations(toArray: perms)
     }
-    
+
     paramPermutations += perms
 }
 
@@ -199,7 +199,7 @@ for method: Func.Method in [.Get, .Post, .Put, .Patch, .Delete, .Options] {
         guard params.count > 0 else {
             continue
         }
-        
+
         var f = Func(method: method, params: params)
         generated += "\(f)\n\n"
     }

@@ -34,10 +34,10 @@ extension Request {
     }
 }
 
-// MARK: Json Convertible 
+// MARK: Json Convertible
 
 public enum JsonError: ErrorType {
-    
+
     /**
      *  When converting to a value from Json, if there is a type conflict, this will throw an error
      *
@@ -51,23 +51,23 @@ public enum JsonError: ErrorType {
  *  An umbrella protocol used to define behavior to and from Json
  */
 public protocol JsonConvertible {
-    
+
     /**
      This function will be used to create an instance of the type from Json
-     
+
      - parameter json: the json to use in initialization
-     
+
      - throws: a potential error.  ie: invalid json type
-     
+
      - returns: an initialized object
      */
     static func newInstance(json: Json) throws -> Self
-    
+
     /**
      Used to convert the object back to its Json representation
-     
+
      - throws: a potential conversion error
-     
+
      - returns: the object as a Json representation
      */
     func jsonRepresentation() throws -> Json
@@ -76,35 +76,35 @@ public protocol JsonConvertible {
 // MARK: Json Convertible Initializers
 
 extension Json {
-    
+
     /**
      Create Json from any convertible type
-     
+
      - parameter any: the convertible type
-     
+
      - throws: a potential conversion error
-     
+
      - returns: initialized Json
      */
     public init<T: JsonConvertible>(_ any: T) throws {
         self = try any.jsonRepresentation()
     }
-    
+
     public init<T: JsonConvertible>(_ any: [T]) throws {
         let mapped = try any.map(Json.init)
         self.init(mapped)
     }
-    
+
     public init<T: JsonConvertible>(_ any: [[T]]) throws {
         let mapped = try any.map(Json.init)
         self.init(mapped)
     }
-    
+
     public init<T: JsonConvertible>(_ any: Set<T>) throws {
         let mapped = try any.map(Json.init)
         self.init(mapped)
     }
-    
+
     public init<T: JsonConvertible>(_ any: [String : T]) throws {
         var mapped: [String : Json] = [:]
         try any.forEach { key, val in
@@ -112,7 +112,7 @@ extension Json {
         }
         self.init(mapped)
     }
-    
+
     public init<T: JsonConvertible>(_ any: [String : [T]]) throws {
         var mapped: [String : Json] = [:]
         try any.forEach { key, val in
@@ -120,7 +120,7 @@ extension Json {
         }
         self.init(mapped)
     }
-    
+
     public init<T: JsonConvertible>(_ any: [String : [String : T]]) throws {
         var mapped: [String : Json] = [:]
         try any.forEach { key, val in
@@ -134,7 +134,7 @@ extension Json : JsonConvertible {
     public static func newInstance(json: Json) -> Json {
         return json
     }
-    
+
     public func jsonRepresentation() -> Json {
         return self
     }
@@ -146,7 +146,7 @@ extension String : JsonConvertible {
     public func jsonRepresentation() throws -> Json {
         return Json(self)
     }
-    
+
     public static func newInstance(json: Json) throws -> String {
         guard let string = json.stringValue else {
             throw JsonError.UnableToConvert(json: json, toType: "\(self.dynamicType)")
@@ -161,7 +161,7 @@ extension Bool : JsonConvertible {
     public func jsonRepresentation() throws -> Json {
         return Json(self)
     }
-    
+
     public static func newInstance(json: Json) throws -> Bool {
         guard let bool = json.boolValue else {
             throw JsonError.UnableToConvert(json: json, toType: "\(self.dynamicType)")
@@ -184,12 +184,12 @@ extension UnsignedIntegerType {
         let double = Double(UIntMax(self.toUIntMax()))
         return Json(double)
     }
-    
+
     public static func newInstance(json: Json) throws -> Self {
         guard let int = json.uintValue else {
             throw JsonError.UnableToConvert(json: json, toType: "\(self.dynamicType)")
         }
-        
+
         return self.init(int.toUIntMax())
     }
 }
@@ -207,12 +207,12 @@ extension SignedIntegerType {
         let double = Double(IntMax(self.toIntMax()))
         return Json(double)
     }
-    
+
     public static func newInstance(json: Json) throws -> Self {
         guard let int = json.intValue else {
             throw JsonError.UnableToConvert(json: json, toType: "\(self.dynamicType)")
         }
-        
+
         return self.init(int.toIntMax())
     }
 }
@@ -241,7 +241,7 @@ extension JsonConvertibleFloatingPointType {
     public func jsonRepresentation() throws -> Json {
         return Json(doubleValue)
     }
-    
+
     public static func newInstance(json: Json) throws -> Self {
         guard let double = json.doubleValue else {
             throw JsonError.UnableToConvert(json: json, toType: "\(self.dynamicType)")

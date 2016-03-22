@@ -23,7 +23,7 @@ class ResponseTests: XCTestCase {
 
     func testRedirect() {
         let url = "http://tanner.xyz"
-        
+
         let redirect = Redirect(to: url)
         XCTAssert(redirect.redirectLocation == url, "redirect location should be url")
 

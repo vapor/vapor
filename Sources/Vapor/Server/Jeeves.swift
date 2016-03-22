@@ -60,7 +60,7 @@ public class Jeeves<Socket where Socket: Vapor.Socket, Socket: Hashable>: Server
                 defer {
                     self.activeSockets.remove(socket)
                 }
-                
+
                 do {
                     var keepAlive = false
                     repeat {
@@ -69,7 +69,7 @@ public class Jeeves<Socket where Socket: Vapor.Socket, Socket: Hashable>: Server
                         try socket.write(response)
                         keepAlive = request.supportsKeepAlive
                     } while keepAlive
-                    
+
                     try socket.close()
                 } catch {
                     Log.error("Request Handle Failed: \(error)")
@@ -79,8 +79,8 @@ public class Jeeves<Socket where Socket: Vapor.Socket, Socket: Hashable>: Server
             Log.error("Backgrounding Handler Failed: \(error)")
         }
     }
-    
-    
+
+
 }
 
 extension Response {

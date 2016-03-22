@@ -13,9 +13,9 @@ public protocol Socket: SocketIO {
     func bind(toAddress address: String?, onPort port: String?) throws
     func listen(pendingConnectionBacklog backlog: Int) throws
     func accept(maximumConsecutiveFailures: Int, connectionHandler: (Self) -> Void) throws
-    
+
     func close() throws
-    
+
     static func makeSocket() throws -> Self
 }
 

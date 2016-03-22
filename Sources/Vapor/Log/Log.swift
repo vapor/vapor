@@ -2,16 +2,16 @@
     Log class
 */
 public class Log {
-    
+
     /**
         LogLevel enumeration
     */
     public enum Level: Equatable, CustomStringConvertible {
         case Verbose, Debug, Info, Warning, Error, Fatal, Custom(String)
-        
+
         /*
          Returns all standard log levels (i.e. except Custom)
-        
+
          returns - array of Log.Level
          */
         public static var all: [Log.Level] {
@@ -36,13 +36,13 @@ public class Log {
         This can be overriden with a custom logger.
      */
     public static var driver: LogDriver = ConsoleLogger()
-    
+
     /**
         Enabled log levels. Default is to log all levels. This
         can be overridden.
      */
     public static var enabledLevels: [Log.Level] = Log.Level.all
-    
+
     /**
         Logs verbose messages if .Verbose is enabled
 
@@ -53,7 +53,7 @@ public class Log {
             driver.log(.Verbose, message: message)
         }
     }
-    
+
     /**
         Logs debug messages if .Debug is enabled
 
@@ -64,7 +64,7 @@ public class Log {
             driver.log(.Debug, message: message)
         }
     }
-    
+
     /**
         Logs info messages if .Info is enabled
 
@@ -75,7 +75,7 @@ public class Log {
             driver.log(.Info, message: message)
         }
     }
-    
+
     /**
         Logs warning messages if .Warning is enabled
 
@@ -86,7 +86,7 @@ public class Log {
              driver.log(.Warning, message: message)
         }
     }
-    
+
     /**
         Logs error messages if .Error is enabled
 
@@ -97,7 +97,7 @@ public class Log {
             driver.log(.Error, message: message)
         }
     }
-    
+
     /**
         Logs fatal messages if .Fatal is enabled
 
@@ -108,7 +108,7 @@ public class Log {
             driver.log(.Fatal, message: message)
         }
     }
-    
+
     /**
         Logs custom messages if .Always is enabled.
 

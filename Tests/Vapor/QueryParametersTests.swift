@@ -21,11 +21,11 @@ import XCTest
 #endif
 
 class QueryParameterTests: XCTestCase {
-    
+
     func testArgumentExtraction() {
         let url = "https://www.example.com/users?name=test&inclusiveQuestionMark=a?b&inclusiveEquals=a=b"
         let query = url.queryData()
-        
+
         XCTAssert(query["name"] == "test")
         XCTAssert(query["inclusiveQuestionMark"] == "a?b")
         XCTAssert(query["inclusiveEquals"] == "a=b")

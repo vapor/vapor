@@ -23,13 +23,13 @@ class FileManager {
             }
             return true
         }
-        
+
         if !ret {
         	throw Error.Unreadable
         }
-        
+
         let length = Int(info.st_size)
-        
+
         let rawData = malloc(length)
         var remaining = Int(info.st_size)
         var total = 0
@@ -81,7 +81,7 @@ class FileManager {
         }
         return true
 	}
-    #else 
+    #else
     static func fileExistsAtPath(path: String, inout isDirectory: Bool) -> Bool {var s = stat()
         if lstat(path, &s) >= 0 {
             if (s.st_mode & S_IFMT) == S_IFLNK {
