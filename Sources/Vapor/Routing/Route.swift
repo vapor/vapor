@@ -4,22 +4,22 @@
  the application can take
  */
 public class Route {
-    
+
     /**
      The responder type that is used when a route is matched
      */
     public typealias Handler = Request throws -> ResponseConvertible
 
     // MARK: Attributes
-    
+
     let method: Request.Method
     let path: String
     let handler: Request.Handler
     let hostname: String
-    
+
     /**
      Designated Initializer
-     
+
      - parameter method: Http Method associated with Route
      - parameter path: the path to use when deciding the route
      - parameter handler: the handler to route when the path is called

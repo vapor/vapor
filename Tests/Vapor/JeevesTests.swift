@@ -32,11 +32,11 @@ private final class TestSocket: Socket {
     func bind(toAddress address: String?, onPort port: String?) throws {
         fatalError("Not yet supported")
     }
-    
+
     private func listen(pendingConnectionBacklog backlog: Int) throws {
         fatalError("Not yet supported")
     }
-    
+
     private func accept(maximumConsecutiveFailures: Int, connectionHandler: (TestSocket) -> Void) throws {
         fatalError("Not yet supported")
     }
@@ -44,7 +44,7 @@ private final class TestSocket: Socket {
     func close() throws {
         fatalError("Not yet supported")
     }
-    
+
     private static func makeSocket() throws -> TestSocket {
         return self.init()
     }
@@ -81,7 +81,7 @@ class JeevesTests: XCTestCase {
         XCTAssert(fields["Connection"] == "close")
         XCTAssert(fields["Host"] == "localhost:8080")
     }
-    
+
     func testReadRequest() throws {
         let socket = TestSocket()
         let request = try socket.readRequest()

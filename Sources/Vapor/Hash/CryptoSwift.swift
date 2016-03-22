@@ -29,11 +29,11 @@ private func CS_AnyGenerator<Element>(body: () -> Element?) -> AnyGenerator<Elem
 struct BytesSequence: SequenceType {
     let chunkSize: Int
     let data: [UInt8]
-    
+
     func generate() -> AnyGenerator<ArraySlice<UInt8>> {
-        
+
         var offset:Int = 0
-        
+
         return CS_AnyGenerator {
             let end = min(self.chunkSize, self.data.count - offset)
             let result = self.data[offset..<offset + end]
@@ -45,36 +45,36 @@ struct BytesSequence: SequenceType {
 
 class SHA2 {
     init() {
-        
+
     }
-    
+
     func prepare(len:Int) -> Array<UInt8> {
         var tmpMessage = message
-        
+
         // Step 1. Append Padding Bits
         tmpMessage.append(0x80) // append one bit (UInt8 with one bit) to message
-        
+
         // append "0" bit until message length in bits ≡ 448 (mod 512)
         var msgLength = tmpMessage.count
         var counter = 0
-        
+
         while msgLength % len != (len - 8) {
             counter += 1
             msgLength += 1
         }
-        
+
         tmpMessage += Array<UInt8>(count: counter, repeatedValue: 0)
         return tmpMessage
     }
-    
+
     var size = 256
-    
+
     var message: [UInt8] = []
-    
+
     private var h:[UInt64] {
         return [0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19]
     }
-    
+
     private var k:[UInt64] {
         return [
             0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
@@ -87,16 +87,16 @@ class SHA2 {
                     0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
         ]
     }
-    
+
     private func resultingArray<T>(hh:[T]) -> ArraySlice<T> {
         return ArraySlice(hh)
     }
 
-    
+
     //FIXME: I can't do Generic func out of calculate32 and calculate64 (UInt32 vs UInt64), but if you can - please do pull request.
     func calculate32() -> [UInt8] {
         var tmpMessage = self.prepare(64)
-        
+
         // hash values
         var hh = [UInt32]()
         self.h.forEach {(h) -> () in
@@ -105,7 +105,7 @@ class SHA2 {
 
         // append message length, in a 64-bit big-endian integer. So now the message length is a multiple of 512 bits.
         tmpMessage += (message.count * 8).bytes(64 / 8)
-        
+
         // Process the message in successive 512-bit chunks:
         let chunkSizeBytes = 512 / 8 // 64
         for chunk in BytesSequence(chunkSize: chunkSizeBytes, data: tmpMessage) {
@@ -127,7 +127,7 @@ class SHA2 {
                     break
                 }
             }
-            
+
             var A = hh[0]
             var B = hh[1]
             var C = hh[2]
@@ -136,7 +136,7 @@ class SHA2 {
             var F = hh[5]
             var G = hh[6]
             var H = hh[7]
-            
+
             // Main loop
             for j in 0..<self.k.count {
                 let s0 = rotateRight(A,n: 2) ^ rotateRight(A,n: 13) ^ rotateRight(A,n: 22)
@@ -145,7 +145,7 @@ class SHA2 {
                 let s1 = rotateRight(E,n: 6) ^ rotateRight(E,n: 11) ^ rotateRight(E,n: 25)
                 let ch = (E & F) ^ ((~E) & G)
                 let t1 = H &+ s1 &+ ch &+ UInt32(self.k[j]) &+ M[j]
-                
+
                 H = G
                 G = F
                 F = E
@@ -155,7 +155,7 @@ class SHA2 {
                 B = A
                 A = t1 &+ t2
             }
-            
+
             hh[0] = (hh[0] &+ A)
             hh[1] = (hh[1] &+ B)
             hh[2] = (hh[2] &+ C)
@@ -179,7 +179,7 @@ class SHA2 {
         }
         return result
     }
-    
+
 }
 
 
@@ -191,11 +191,11 @@ extension Int {
     func bytes(totalBytes: Int = sizeof(Int)) -> [UInt8] {
         return arrayOfBytes(self, length: totalBytes)
     }
-    
+
     static func withBytes(bytes: ArraySlice<UInt8>) -> Int {
         return Int.withBytes(Array(bytes))
     }
-    
+
     /** Int with array bytes (little-endian) */
     static func withBytes(bytes: [UInt8]) -> Int {
         return integerWithBytes(bytes)
@@ -218,7 +218,7 @@ extension Int {
 func toUInt32Array(slice: ArraySlice<UInt8>) -> Array<UInt32> {
     var result = Array<UInt32>()
     result.reserveCapacity(16)
-    
+
     for idx in slice.startIndex.stride(to: slice.endIndex, by: sizeof(UInt32)) {
         let val1:UInt32 = (UInt32(slice[idx.advancedBy(3)]) << 24)
         let val2:UInt32 = (UInt32(slice[idx.advancedBy(2)]) << 16)
@@ -267,19 +267,19 @@ func rotateRight(x:UInt64, n:UInt64) -> UInt64 {
 /// I found this method slow
 func arrayOfBytes<T>(value:T, length:Int? = nil) -> [UInt8] {
     let totalBytes = length ?? sizeof(T)
-    
+
     let valuePointer = UnsafeMutablePointer<T>.alloc(1)
     valuePointer.memory = value
-    
+
     let bytesPointer = UnsafeMutablePointer<UInt8>(valuePointer)
     var bytes = [UInt8](count: totalBytes, repeatedValue: 0)
     for j in 0..<min(sizeof(T),totalBytes) {
         bytes[totalBytes - 1 - j] = (bytesPointer + j).memory
     }
-    
+
     valuePointer.destroy()
     valuePointer.dealloc(1)
-    
+
     return bytes
 }
 
@@ -293,11 +293,11 @@ func integerWithBytes<T: IntegerType where T:ByteConvertible, T: BitshiftOperati
             bytes += [UInt8](count: paddingCount, repeatedValue: 0)
         }
     }
-    
+
     if sizeof(T) == 1 {
         return T(truncatingBitPattern: UInt64(bytes.first!))
     }
-    
+
     var result: T = 0
     for byte in bytes.reverse() {
         result = result << 8 | T(byte)
@@ -366,11 +366,11 @@ extension Array: CSArrayType {
 }
 
 extension CSArrayType where Generator.Element == UInt8 {
-    
+
     func toHexString() -> String {
         return self.lazy.reduce("") { previous, next in
             var converted = String(next, radix: 16)
-            
+
             if converted.characters.count == 1 {
                 converted = "0" + converted
             }
@@ -381,28 +381,28 @@ extension CSArrayType where Generator.Element == UInt8 {
 }
 
 class HMAC {
-    
+
     class func calculateHash(bytes bytes:[UInt8]) -> [UInt8]? {
         let sha = SHA2()
         sha.message = bytes
         return sha.calculate32()
     }
-    
+
     class func authenticate(key  key: [UInt8], message: [UInt8]) -> [UInt8]? {
         var key = key
-        
-        
+
+
         if (key.count > 64) {
             if let hash = self.calculateHash(bytes: key) {
                 key = hash
             }
         }
-        
+
         if (key.count < 64) { // keys shorter than blocksize are zero-padded
             key = key + [UInt8](count: 64 - key.count, repeatedValue: 0)
         }
-        
-        
+
+
         var opad = [UInt8](count: 64, repeatedValue: 0x5c)
         for (idx, _) in key.enumerate() {
             opad[idx] = key[idx] ^ opad[idx]
@@ -411,13 +411,13 @@ class HMAC {
         for (idx, _) in key.enumerate() {
             ipad[idx] = key[idx] ^ ipad[idx]
         }
-        
+
         var finalHash:[UInt8]? = nil;
         if let ipadAndMessageHash = self.calculateHash(bytes: ipad + message) {
             finalHash = self.calculateHash(bytes: opad + ipadAndMessageHash);
         }
-        
+
         return finalHash
     }
-    
+
 }

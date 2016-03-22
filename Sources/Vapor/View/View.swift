@@ -15,7 +15,7 @@ public class View {
 
     public init(path: String, context: [String: Any]) throws {
         let filesPath = View.resourceDir + "/" + path
-        
+
         guard let fileBody = try? FileManager.readBytesFromFile(filesPath) else {
             self.bytes = []
             Log.error("No view found in path: \(filesPath)")

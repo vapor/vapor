@@ -24,57 +24,57 @@ public protocol Node {
 }
 
 public extension Request {
-    
+
     /**
      *  The data received from the request in json body or url query
      */
     public struct Data {
-        
-        
+
+
         // MARK: Initialization
-        
+
         public let query: [String : String]
         public let json: Json?
-        
+
         internal init(query: [String : String] = [:], bytes: [UInt8]) {
             var mutableQuery = query
-            
+
             do {
                 self.json = try Json.deserialize(bytes)
             } catch {
                 self.json = nil
-                
+
                 // Will overwrite keys if they are duplicated from `query`
                 Data.parsePostData(bytes).forEach { key, val in
                     mutableQuery[key] = val
                 }
             }
-            
+
             self.query = mutableQuery
         }
-        
+
         // MARK: Subscripting
 
         public subscript(key: String) -> Node? {
             return query[key] ?? json?[key]
         }
-        
+
         public subscript(idx: Int) -> Node? {
             return json?[idx]
         }
-        
+
         /**
          Checks for form encoding of body if Json fails
-         
+
          - parameter body: byte array from body
-         
+
          - returns: a key value pair dictionary
          */
         static func parsePostData(body: [UInt8]) -> [String: String] {
             if let bodyString = String(pointer: body, length: body.count) {
                 return bodyString.keyValuePairs()
             }
-            
+
             return [:]
         }
     }
@@ -93,22 +93,22 @@ extension Json: Node {
             return false
         }
     }
-    
+
     public var int: Int? {
         guard let double = double else { return nil }
         return Int(double)
     }
-    
+
     public var uint: UInt? {
         guard let double = double else { return nil }
         return UInt(double)
     }
-    
+
     public var float: Float? {
         guard let double = double else { return nil }
         return Float(double)
     }
-    
+
     public var double: Double? {
         switch self {
         case .BooleanValue(let bool):
@@ -123,7 +123,7 @@ extension Json: Node {
             return nil
         }
     }
-    
+
     public var string: String? {
         switch self {
         case .StringValue(let string):
@@ -144,12 +144,12 @@ extension Json: Node {
             return nil
         }
     }
-    
+
     public var array: [Node]? {
         guard case let .ArrayValue(array) = self else { return nil }
         return array.map { $0 as Node }
     }
-    
+
     public var object: [String : Node]? {
         guard case let .ObjectValue(object) = self else { return nil }
         var mapped: [String : Node] = [:]
@@ -164,45 +164,45 @@ extension String: Node {
     public var isNull: Bool {
         return self == "null"
     }
-    
+
     public var bool: Bool {
         return Bool(self)
     }
-    
+
     public var int: Int? {
         guard let double = double else { return nil }
         return Int(double)
     }
-    
+
     public var uint: UInt? {
         guard let double = double else { return nil }
         return UInt(double)
     }
-    
+
     public var float: Float? {
         guard let double = double else { return nil }
         return Float(double)
     }
-    
+
     public var double: Double? {
         return Double(self)
     }
-    
+
     public var string: String? {
         return self
     }
-    
+
     public var array: [Node]? {
         //FIXME
-        #if swift(>=3.0) 
+        #if swift(>=3.0)
             return self
                 .componentsSeparatedByString(",")
                 .map { $0 as Node }
-        #else 
+        #else
             return nil
         #endif
     }
-    
+
     public var object: [String : Node]? {
         return nil
     }
@@ -217,7 +217,7 @@ extension Bool {
             .lowercaseString
             .characters
             .first ?? "n"
-        
+
         switch cleaned {
         case "t", "y", "1":
             self = true
@@ -227,7 +227,7 @@ extension Bool {
             } else {
                 self = false
             }
-            
+
         }
     }
 }

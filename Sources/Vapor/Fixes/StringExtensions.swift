@@ -75,17 +75,17 @@ extension String {
     func split(separator: Character) -> [String] {
         return self.characters.split { $0 == separator }.map(String.init)
     }
-    
+
     func split(maxSplit: Int = Int.max, separator: Character) -> [String] {
         return self.characters.split(maxSplit) { $0 == separator }.map(String.init)
     }
-    
+
     func replace(old: Character, new: Character) -> String {
         var buffer = [Character]()
         self.characters.forEach { buffer.append($0 == old ? new : $0) }
         return String(buffer)
     }
-    
+
     func unquote() -> String {
         var scalars = self.unicodeScalars;
         if scalars.first == "\"" && scalars.last == "\"" && scalars.count >= 2 {
@@ -95,15 +95,15 @@ extension String {
         }
         return self
     }
-    
+
     public func trim() -> String {
         return trim(CharacterSet.whitespaceAndNewline)
     }
-    
+
     static func fromUInt8(array: [UInt8]) -> String {
         return String(pointer: array, length: array.count) ?? ""
     }
-    
+
     func removePercentEncoding() -> String {
         let percentEncoded = self
 
