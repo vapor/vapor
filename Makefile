@@ -10,6 +10,7 @@ ifeq "$(OS)" "Darwin"
 	LIBSTRAND = .build/libStrand.dylib
 	LIBLIBC = .build/liblibc.dylib
 	LIBVAPOR = .build/libVapor.dylib
+	RUN = cd .build; ./VaporApp; cd ../
 else
 	SWIFTC = swiftc
 	LIBHUMMINGBIRD = .build/libHummingbird.so
@@ -17,16 +18,18 @@ else
 	LIBSTRAND = .build/libStrand.so
 	LIBLIBC = .build/liblibc.so
 	LIBVAPOR = .build/libVapor.so
+	RUN = .build/VaporApp
 endif
 
 
 .build/VaporApp: $(LIBVAPOR) Sources/VaporDev/main.swift Sources/VaporDev/**/*.swift
-	$(SWIFTC) Sources/VaporDev/**.swift -I .build -L .build -lVapor -lJay -lHummingbird -llibc -lStrand -Xlinker -rpath -Xlinker $(PWD)/.build -o .build/VaporApp
+	$(EXPORT)
+	$(SWIFTC) Sources/VaporDev/**.swift -I .build -L $(PWD)/.build -lVapor -lJay -lHummingbird -llibc -lStrand -Xlinker -rpath -Xlinker $(PWD)/.build -o .build/VaporApp
 
 run: .build/VaporApp
-	.build/VaporApp
+	$(RUN);
 	
-$(LIBVAPOR): $(LIBHUMMINGBIRD) $(LIBJAY) $(LIBLIBC)
+$(LIBVAPOR): $(LIBHUMMINGBIRD) $(LIBJAY) $(LIBLIBC) Sources/Vapor/**/*.swift
 	cd .build; \
 	$(SWIFTC) ../Sources/Vapor/**/*.swift -emit-library -emit-module -module-name Vapor -I . -L . -lJay -lHummingbird -llibc -lStrand
 

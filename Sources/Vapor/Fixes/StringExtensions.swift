@@ -24,6 +24,44 @@
 
 import libc
 
+#if swift(>=3.0)
+    extension String {
+
+    }
+#else 
+    extension String {
+        func hasPrefix(str: String) -> Bool {
+            let strGen = str.characters.generate()
+            let selfGen = self.characters.generate()
+            let seq = Zip2Sequence(strGen, selfGen)
+            for (lhs, rhs) in seq where lhs != rhs {
+                return false
+            }
+            return true
+        }
+        
+        public func componentsSeparatedByString( sep: String ) -> [String] {
+            var out = [String]()
+            withCString { (bytes) in
+                sep.withCString { (sbytes) in
+                    var bytes = UnsafeMutablePointer<Int8>( bytes )
+                    while true {
+                        let start = strstr( bytes, sbytes ) - UnsafeMutablePointer<Int8>( bytes )
+                        if start < 0 {
+                            out.append( String.fromCString( bytes )! )
+                            break
+                        }
+                        bytes[start] = 0
+                        out.append( String.fromCString( bytes )! )
+                        bytes += start + Int(strlen( sbytes ))
+                    }
+                }
+            }
+            return out
+        }
+    }
+#endif
+
 extension String {
     public static func buffer(size size: Int) -> [Int8] {
         return [Int8](count: size, repeatedValue: 0)
