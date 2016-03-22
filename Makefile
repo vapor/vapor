@@ -5,7 +5,7 @@ pwd = $(shell pwd)
 .build/VaporApp: .build/libVapor.so Sources/VaporDev/main.swift Sources/VaporDev/**/*.swift
 	swiftc Sources/VaporDev/**.swift -I .build -L .build -lVapor -lJay -lHummingbird -llibc -lStrand -Xlinker -rpath -Xlinker $(pwd)/.build -o .build/VaporApp
 
-run: make
+run: .build/VaporApp
 	.build/VaporApp
 	
 .build/libVapor.so: .build/libHummingbird.so .build/libJay.so .build/liblibc.so
