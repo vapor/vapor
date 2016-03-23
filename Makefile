@@ -53,6 +53,7 @@ install_linux: $(RELEASE_DIR)/libVapor.so
 	cp -R $(RELEASE_DIR)/lib* /usr/local/lib; \
 	cp -R $(RELEASE_DIR)/*.swiftdoc /usr/local/include/vapor; \
 	cp -R $(RELEASE_DIR)/*.swiftmodule /usr/local/include/vapor; \
+	cp vapor /usr/local/bin
 
 install_darwin: $(RELEASE_DIR)/libVapor.dylib
 	mkdir -p /usr/local/opt/vapor/lib; \

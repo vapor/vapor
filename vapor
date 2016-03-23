@@ -90,8 +90,12 @@ class Vapor {
 
 		#if os(Linux)
 			let cc = "swiftc"
+			let include = "/usr/local/opt/vapor/include/"
+			let lib = "/usr/local/opt/vapor/lib/ "
 		#else
 			let cc = "xcrun -sdk macosx swiftc"
+			let include = "/usr/local/include/vapor/"
+			let lib = "/usr/local/lib/"
 		#endif
 
 		var files = ""
@@ -104,7 +108,7 @@ class Vapor {
 		}
 
 		do {
-			try run("\(cc) \(files) -I /usr/local/opt/vapor/include/ -L /usr/local/opt/vapor/lib/ -lVapor -lJay -lHummingbird -llibc -lStrand -o .build/VaporApp")
+			try run("\(cc) \(files) -I \(include) -L \(lib) -lVapor -lJay -lHummingbird -llibc -lStrand -o .build/VaporApp")
 			print("Built: .build/VaporApp")
 		} catch {
 			print("Error: Could not build project.")
