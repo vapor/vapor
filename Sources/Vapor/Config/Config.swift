@@ -1,15 +1,5 @@
-#if swift(>=3.0)
-import Foundation
-
-extension NSData: SequenceType {
-    public func generate() -> UnsafeBufferPointer<UInt8>.Generator {
-        return UnsafeBufferPointer<UInt8>(start: UnsafePointer<UInt8>(self.bytes), count: self.length).generate()
-    }
-}
-
 public class Config {
 	public static let configDir = Application.workDir + "Config"
-	private let fileManager = NSFileManager.defaultManager()
 	private var repository: [String: Json]
 
 	public init(repository: [String: Json] = [:], application: Application? = nil) {
@@ -77,7 +67,7 @@ public class Config {
 
 	/* Convenience call to conditionally populate config if it exists */
 	public func populate(application: Application) -> Bool {
-		if fileManager.fileExistsAtPath(self.dynamicType.configDir) {
+		if FileManager.fileAtPath(self.dynamicType.configDir).exists {
 			do {
 				try populate(self.dynamicType.configDir, application: application)
 				return true
@@ -91,21 +81,17 @@ public class Config {
 	}
 
 	public func populate(path: String, application: Application) throws {
-		var url = NSURL(fileURLWithPath: path)
-		var files = [String: [NSURL]]()
+		var path = path.finish("/")
+		var files = [String: [String]]()
 
 		// Populate config files by environment
-		try populateConfigFiles(&files, in: url)
+		try populateConfigFiles(&files, in: path)
 
 		for env in application.environment.description.keys {
-			#if os(Linux)
-				url = url.URLByAppendingPathComponent(env)!
-			#else
-				url = url.URLByAppendingPathComponent(env)
-			#endif
+			path += env + "/"
 
-			if url.path.flatMap(fileManager.fileExistsAtPath) == true {
-				try populateConfigFiles(&files, in: url)
+			if FileManager.fileAtPath(path).exists {
+				try populateConfigFiles(&files, in: path)
 			}
 		}
 
@@ -118,7 +104,7 @@ public class Config {
 			}
 
 			for file in files {
-				let data = try NSData(contentsOfURL: file, options: [])
+				let data = try FileManager.readBytesFromFile(file)
 				let json = try Json.deserialize(data)
 
 				if repository[group] == nil {
@@ -133,7 +119,7 @@ public class Config {
 		// containing multiple groups
 		if let env = files[".env"] {
 			for file in env {
-				let data = try NSData(contentsOfURL: file, options: [])
+				let data = try FileManager.readBytesFromFile(file)
 				let json = try Json.deserialize(data)
 
 				guard case let .ObjectValue(object) = json else {
@@ -151,17 +137,16 @@ public class Config {
 		}
 	}
 
-	private func populateConfigFiles(files: inout [String: [NSURL]], in url: NSURL) throws {
-		let contents = try fileManager.contentsOfDirectoryAtURL(url, includingPropertiesForKeys: nil, options: [ ])
+	private func populateConfigFiles(files: inout [String: [String]], in path: String) throws {
+		let contents = try FileManager.contentsOfDirectory(path)
+		let suffix = ".json"
 
 		for file in contents {
-			guard file.pathExtension == "json" else {
+			guard let fileName = file.split("/").last, suffixRange = fileName.rangeOfString(suffix) where suffixRange.endIndex == fileName.characters.endIndex else {
 				continue
 			}
 
-			guard let name = file.URLByDeletingPathExtension?.lastPathComponent else {
-				continue
-			}
+			let name = fileName.substringToIndex(suffixRange.startIndex)
 
 			if files[name] == nil {
 				files[name] = []
@@ -209,4 +194,3 @@ extension String {
 	}
 
 }
-#endif
