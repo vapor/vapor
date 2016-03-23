@@ -34,7 +34,7 @@ endif
 
 
 $(DEBUG_DIR)/VaporApp: $(LIBVAPOR) Sources/VaporDev/main.swift Sources/VaporDev/**/*.swift
-	$(SWIFTC) Sources/VaporDev/**.swift -I $(DEBUG_DIR) -L $(PWD)/$(DEBUG_DIR) -lVapor -lJay -lHummingbird -llibc -lStrand -Xlinker -rpath -Xlinker $(PWD)/$(DEBUG_DIR) -o $(DEBUG_DIR)/VaporApp
+	$(SWIFTC) Sources/VaporDev/**.swift -I $(DEBUG_DIR) -L $(PWD)/$(DEBUG_DIR) -lVapor -lHummingbird -llibc -lStrand -Xlinker -rpath -Xlinker $(PWD)/$(DEBUG_DIR) -o $(DEBUG_DIR)/VaporApp
 
 release: $(PACKAGES_DIR)/Strand/Sources/*.swift $(PACKAGES_DIR)/Jay/Sources/Jay/*.swift $(PACKAGES_DIR)/Hummingbird/Sources/*.swift
 	mkdir -p $(RELEASE_DIR); \
