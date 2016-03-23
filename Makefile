@@ -34,7 +34,7 @@ endif
 
 
 $(DEBUG_DIR)/VaporApp: $(LIBVAPOR) Sources/VaporDev/main.swift Sources/VaporDev/**/*.swift
-	$(SWIFTC) Sources/VaporDev/**.swift -I $(DEBUG_DIR) -lVapor -lJay -lHummingbird -llibc -lStrand -Xlinker -rpath -Xlinker $(PWD)/$(DEBUG_DIR) -o $(DEBUG_DIR)/VaporApp
+	$(SWIFTC) Sources/VaporDev/**.swift -I $(DEBUG_DIR) -L $(PWD)/$(DEBUG_DIR) -lVapor -lJay -lHummingbird -llibc -lStrand -Xlinker -rpath -Xlinker $(PWD)/$(DEBUG_DIR) -o $(DEBUG_DIR)/VaporApp
 
 run: $(DEBUG_DIR)/VaporApp
 	$(RUN);
