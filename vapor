@@ -50,10 +50,19 @@ let build: Void -> Bool = {
 	#if os(Linux)
 		let cc = "swiftc"
 	#else
-		let cc = "xcrun swiftc"
+		let cc = "xcrun -sdk macosx swiftc"
 	#endif
 
-	if (system("\(cc) App/main.swift App/**/*.swift -I /usr/local/opt/vapor/include/ -L /usr/local/opt/vapor/lib/ -lVapor -lJay -lHummingbird -llibc -lStrand -o .build/VaporApp") == 0) {
+	var files = ""
+	if Process.arguments.count >= 3 {
+		for i in 2..<Process.arguments.count {
+			files += " " + Process.arguments[i]
+		}
+	} else {
+		files = "App/main.swift App/**/*.swift"
+	}
+
+	if (system("\(cc) \(files) -I /usr/local/opt/vapor/include/ -L /usr/local/opt/vapor/lib/ -lVapor -lJay -lHummingbird -llibc -lStrand -o .build/VaporApp") == 0) {
 		print("Built: .build/VaporApp")
 		return true
 	} else {
