@@ -103,9 +103,9 @@ class FileManager {
 		defer { globfree(&gt) }
 
 		let path = try self.expandPath(path).finish("/")
-		let pattern = strdup(path + "*")
+		let pattern = strdup(path + "{*,.*}")
 
-		switch glob(pattern, GLOB_MARK | GLOB_NOSORT, nil, &gt) {
+		switch glob(pattern, GLOB_MARK | GLOB_NOSORT | GLOB_BRACE, nil, &gt) {
 		case GLOB_NOMATCH:
 			return [ ]
 		case GLOB_ABORTED:
