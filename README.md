@@ -29,6 +29,24 @@ This is a work in progress, so *do not* rely on this for anything important. And
 
 Visit the [Vapor Wiki](https://github.com/qutheory/vapor/wiki) for extensive documentation on getting setup, using, and contributing to Vapor.
 
+## Installation
+
+Install on OS X Homebrew
+
+```shell
+brew tap qutheory/tap
+brew install vapor
+```
+
+Build your project using `vapor build` for Swift 2.2 or `swift build` for Swift 3.0
+
+```
+vapor new my-project
+cd my-project
+vapor build
+.build/VaporApp --port=8080
+```
+
 ## Application
 
 Starting the application takes two lines.
