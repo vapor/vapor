@@ -166,13 +166,13 @@ public class Config {
 			}
 
 			let name: String
+
 			if (fileName == ".env.json") {
 				name = ".env"
+			} else if fileName.hasSuffix(".json"), let value = fileName.split(".").first {
+				name = value
 			} else {
-				guard let substring = fileName.split(".").first else {
-					continue
-				}
-				name = substring
+				continue
 			}
 
 			if files[name] == nil {
