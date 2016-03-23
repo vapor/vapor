@@ -34,7 +34,10 @@ endif
 
 
 $(DEBUG_DIR)/VaporApp: $(LIBVAPOR) Sources/VaporDev/main.swift Sources/VaporDev/**/*.swift
-	$(SWIFTC) Sources/VaporDev/**.swift -I $(DEBUG_DIR) -L $(PWD)/$(DEBUG_DIR) -lVapor -lHummingbird -llibc -lStrand -Xlinker -rpath -Xlinker $(PWD)/$(DEBUG_DIR) -o $(DEBUG_DIR)/VaporApp
+	$(SWIFTC) Sources/VaporDev/**.swift -I $(DEBUG_DIR) -L $(PWD)/$(DEBUG_DIR) -lVapor -lJay -lHummingbird -llibc -lStrand -Xlinker -rpath -Xlinker $(PWD)/$(DEBUG_DIR) -o $(DEBUG_DIR)/VaporApp
+
+run: $(DEBUG_DIR)/VaporApp
+	$(RUN);
 
 release: $(PACKAGES_DIR)/Strand/Sources/*.swift $(PACKAGES_DIR)/Jay/Sources/Jay/*.swift $(PACKAGES_DIR)/Hummingbird/Sources/*.swift
 	mkdir -p $(RELEASE_DIR); \
@@ -45,15 +48,21 @@ release: $(PACKAGES_DIR)/Strand/Sources/*.swift $(PACKAGES_DIR)/Jay/Sources/Jay/
 	$(SWIFTC) -O ../../Sources/libc/*.swift -emit-library -emit-module -module-name libc -I . -L .; \
 	$(SWIFTC) -O ../../Sources/Vapor/**/*.swift -emit-library -emit-module -module-name Vapor -I . -L . -lJay -lHummingbird -llibc -lStrand
 
-run: $(DEBUG_DIR)/VaporApp
-	$(RUN);
+$(RELEASE_DIR)/libVapor.so: release
+$(RELEASE_DIR)/libVapor.dylib: release
 
-install: $(LIBVAPOR)
+install_linux: $(RELEASE_DIR)/libVapor.so
+	mkdir -p /usr/local/include/vapor; \
+	cp -R $(RELEASE_DIR)/lib* /usr/local/lib; \
+	cp -R $(RELEASE_DIR)/*.swiftdoc /usr/local/include/vapor; \
+	cp -R $(RELEASE_DIR)/*.swiftmodule /usr/local/include/vapor; \
+
+install_darwin: $(RELEASE_DIR)/libVapor.dylib
 	mkdir -p /usr/local/opt/vapor/lib; \
 	mkdir -p /usr/local/opt/vapor/include; \
-	cp -R $(DEBUG_DIR)/lib* /usr/local/opt/vapor/lib; \
-	cp -R $(DEBUG_DIR)/*.swiftdoc /usr/local/opt/vapor/include; \
-	cp -R $(DEBUG_DIR)/*.swiftmodule /usr/local/opt/vapor/include; \
+	cp -R $(RELEASE_DIR)/lib* /usr/local/opt/vapor/lib; \
+	cp -R $(RELEASE_DIR)/*.swiftdoc /usr/local/opt/vapor/include; \
+	cp -R $(RELEASE_DIR)/*.swiftmodule /usr/local/opt/vapor/include; \
 	
 $(LIBVAPOR): $(LIBHUMMINGBIRD) $(LIBJAY) $(LIBLIBC) Sources/Vapor/**/*.swift
 	mkdir -p $(DEBUG_DIR); \
