@@ -74,7 +74,7 @@ let make: Void -> Bool = {
 	}
 	let name = Process.arguments[2]
 
-	if (system("git clone git@github.com:qutheory/vapor-example.git \(name)") != 0) {
+	if (system("git clone https://github.com/qutheory/vapor-example.git \(name)") != 0) {
 		print("Error: Could not clone repository")
 		return false
 	}
