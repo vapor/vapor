@@ -80,8 +80,8 @@ class Vapor {
 	}
 
 	func clean() {
-		print("Cleaning...")
 		run("rm -rf .build", orFail: "Could not clean")
+		print("Cleaned.")
 	}
 
 	func build() {
@@ -117,7 +117,7 @@ class Vapor {
 
 	func run() {
 		print("Running...")
-		run(".build/VaporApp", orFail: "Could not run Application.")
+		run(".build/VaporApp", orFail: "Could not run application.")
 	}
 
 	func newProject() {
