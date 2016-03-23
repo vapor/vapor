@@ -6,119 +6,159 @@
 	import Darwin
 #endif
 
-enum Command: String {
-	case Clean = "clean"
-	case Build = "build"
-	case Run = "run"
-	case New = "new"
+class Vapor {
+	var arguments: [String]
 
-	static var all: [Command] = [.Clean, .Build, .Run, .New]
-}
+	init(arguments: [String]) {
+		self.arguments = arguments
 
-if Process.arguments.count < 2 {
-	let commands = Command.all.map {
-		return $0.rawValue
-	}
-
-	print("Usage: \(Process.arguments[0]) [\(commands.joinWithSeparator("|"))]")
-	exit(1)
-}
-
-var cleaned = false
-let clean: Void -> Bool = {
-	if cleaned {
-		return true
-	} else {
-		cleaned = true
-	}
-
-	print("Cleaning...")
-	return system("rm -rf .build") == 0
-}
-
-var built = false
-let build: Void -> Bool = {
-	if built {
-		return true
-	} else {
-		built = true
-	}
-
-	print("Building...")
-	system("mkdir -p .build")
-
-	#if os(Linux)
-		let cc = "swiftc"
-	#else
-		let cc = "xcrun -sdk macosx swiftc"
-	#endif
-
-	var files = ""
-	if Process.arguments.count >= 3 {
-		for i in 2..<Process.arguments.count {
-			files += " " + Process.arguments[i]
+		if arguments.count < 2 {
+			printUsage()
+			exit(1)
 		}
-	} else {
-		files = "App/main.swift App/**/*.swift"
 	}
 
-	if (system("\(cc) \(files) -I /usr/local/opt/vapor/include/ -L /usr/local/opt/vapor/lib/ -lVapor -lJay -lHummingbird -llibc -lStrand -o .build/VaporApp") == 0) {
-		print("Built: .build/VaporApp")
-		return true
-	} else {
-		return false
-	}
-}
+	func start() {
+		if let command = Command(rawValue: arguments[1]) {
+			switch command {
+			case .Clean:
+				clean()
+			case .Build:
+				build()
+			case .Run:
+				run()
+			case .New:
+				newProject()
+			case .Help:
+				help()
+			}
 
-let run: Void -> Bool = {
-	print("Running...")
-	return system(".build/VaporApp") == 0
-}
-
-let make: Void -> Bool = {
-	print("New...")
-	if Process.arguments.count < 3 {
-		print("Usage: \(Process.arguments[0]) \(Process.arguments[1]) <project-name>")
-		return false
-	}
-	let name = Process.arguments[2]
-
-	if (system("git clone https://github.com/qutheory/vapor-example.git \(name)") != 0) {
-		print("Error: Could not clone repository")
-		return false
-	}
-
-	system("rm -rf \(name)/.git")
-	return true
-}
-
-if let command = Command(rawValue: Process.arguments[1]) {
-	var successful: Bool
-
-	switch command {
-	case .Clean:
-		successful = clean()
-	case .Build:
-		successful = build()
-	case .Run:
-		if build() {
-			successful = run()
+			exit(0)
 		} else {
-			print("Build failed, aborting")
-			successful = false
+			print("Error: Unknown command: \(Process.arguments[1])")
+			exit(1)
 		}
-	case .New:
-		successful = make()
 	}
 
-	if !successful {
-		exit(1)
+	enum Error: ErrorType {
+		case System(Int32)
 	}
-} else {
-	print("Error: Unknown command: \(Process.arguments[1])")
-	exit(1)
+
+	enum Command: String {
+		case Clean = "clean"
+		case Build = "build"
+		case Run = "run"
+		case New = "new"
+		case Help = "help"
+
+		static var all: [Command] = [.Clean, .Build, .Run, .New, .Help]
+	}
+
+	func printUsage() {
+		let names = Command.all.map { command in
+			return command.rawValue
+		}
+
+		print("Usage: \(arguments[0]) [\(names.joinWithSeparator("|"))]")
+	}
+
+	func run(command: String) throws {
+		let result = system(command)
+
+		if result != 0 {
+			throw Error.System(result)
+		}
+	}
+
+	func run(command: String, orFail errorMessage: String) {
+		do {
+			try run(command)
+		} catch {
+			print("Error: \(errorMessage)")
+			exit(1)
+		}
+	}
+
+	func clean() {
+		print("Cleaning...")
+		run("rm -rf .build", orFail: "Could not clean")
+	}
+
+	func build() {
+		print("Building...")
+		run("mkdir -p .build", orFail: "Could not create .build directory")
+
+		#if os(Linux)
+			let cc = "swiftc"
+		#else
+			let cc = "xcrun -sdk macosx swiftc"
+		#endif
+
+		var files = ""
+		if arguments.count >= 3 {
+			for i in 2..<arguments.count {
+				files += " " + arguments[i]
+			}
+		} else {
+			files = "App/main.swift App/**/*.swift"
+		}
+
+		do {
+			try run("\(cc) \(files) -I /usr/local/opt/vapor/include/ -L /usr/local/opt/vapor/lib/ -lVapor -lJay -lHummingbird -llibc -lStrand -o .build/VaporApp")
+			print("Built: .build/VaporApp")
+		} catch {
+			print("Error: Could not build project.")
+			print("Usage: vapor build [file1, file2, ...]")
+			print("Make sure you are running Apple Swift version 2.2.")
+			print("Run \(cc) --version to check your version.")
+			exit(1)
+		}
+	}
+
+	func run() {
+		print("Running...")
+		run(".build/VaporApp", orFail: "Could not run Application.")
+	}
+
+	func newProject() {
+		print("New...")
+
+		if arguments.count < 3 {
+			print("Usage: \(arguments[0]) \(arguments[1]) <project-name>")
+			exit(1)
+		}
+		let name = arguments[2]
+
+		do {
+			try run("git clone https://github.com/qutheory/vapor-example.git \(name)") 
+			let _ = try? run("rm -rf \(name)/.git")
+			print("Enjoy")
+		} catch {
+			print("Error: Could not clone repository")
+			exit(1)
+		}
+	}
+
+	func help() {
+		printUsage()
+		print("")
+		print("Options:")
+		print("\tbuild [file1, file2, ...]")
+		print("\t\tBuilds source files and links Vapor libraries.")
+		print("\t\tDefaults to App/ folder structure if no files passed.")
+		print()
+		print("\trun")
+		print("\t\tRuns the executable built by vapor build.")
+		print("\t\tTo pass arguments to the program, run it manually .build/VaporApp")
+		print()
+		print("\tnew <project-name>")
+		print("\t\tClones the Vapor Example to a given folder name and removes .git.")
+		print()
+		print("\tclean")
+		print()
+		print("\thelp")
+	}
 }
 
-
-
-exit(0)
+let cli = Vapor(arguments: Process.arguments)
+cli.start()
