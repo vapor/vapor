@@ -20,16 +20,22 @@ ifeq "$(OS)" "Darwin"
 	LIBJAY = $(DEBUG_DIR)/libJay.dylib
 	LIBSTRAND = $(DEBUG_DIR)/libStrand.dylib
 	LIBLIBC = $(DEBUG_DIR)/liblibc.dylib
+	LIBVAPORNAME = libVapor.dylib
 	LIBVAPOR = $(DEBUG_DIR)/libVapor.dylib
 	RUN = cd $(DEBUG_DIR); ./VaporApp; cd ../
+	SYSLIB = /usr/local/lib
+	SYSINCLUDE = /usr/local/include/vapor
 else
 	SWIFTC = swiftc
 	LIBHUMMINGBIRD = $(DEBUG_DIR)/libHummingbird.so
 	LIBJAY = $(DEBUG_DIR)/libJay.so
 	LIBSTRAND = $(DEBUG_DIR)/libStrand.so
 	LIBLIBC = $(DEBUG_DIR)/liblibc.so
+	LIBVAPORNAME = libVapor.so
 	LIBVAPOR = $(DEBUG_DIR)/libVapor.so
 	RUN = $(DEBUG_DIR)/VaporApp
+	SYSLIB = /usr/local/opt/vapor/lib
+	SYSINCLUDE = /usr/local/opt/vapor/include
 endif
 
 
@@ -48,19 +54,13 @@ release: $(PACKAGES_DIR)/Strand/Sources/*.swift $(PACKAGES_DIR)/Jay/Sources/Jay/
 	$(SWIFTC) -O ../../Sources/libc/*.swift -emit-library -emit-module -module-name libc -I . -L .; \
 	$(SWIFTC) -O ../../Sources/Vapor/**/*.swift -emit-library -emit-module -module-name Vapor -I . -L . -lJay -lHummingbird -llibc -lStrand
 
-install_linux: $(RELEASE_DIR)/libVapor.so
-	mkdir -p /usr/local/include/vapor; \
-	cp -R $(RELEASE_DIR)/lib* /usr/local/lib; \
-	cp -R $(RELEASE_DIR)/*.swiftdoc /usr/local/include/vapor; \
-	cp -R $(RELEASE_DIR)/*.swiftmodule /usr/local/include/vapor; \
+install: $(RELEASE_DIR)/$(LIBVAPORNAME)
+	mkdir -p $(SYSLIB); \
+	mkdir -p $(SYSINCLUDE); \
+	cp -R $(RELEASE_DIR)/lib* $(SYSLIB); \
+	cp -R $(RELEASE_DIR)/*.swiftdoc $(SYSINCLUDE); \
+	cp -R $(RELEASE_DIR)/*.swiftmodule $(SYSINCLUDE); \
 	cp vapor /usr/local/bin
-
-install_darwin: $(RELEASE_DIR)/libVapor.dylib
-	mkdir -p /usr/local/opt/vapor/lib; \
-	mkdir -p /usr/local/opt/vapor/include; \
-	cp -R $(RELEASE_DIR)/lib* /usr/local/opt/vapor/lib; \
-	cp -R $(RELEASE_DIR)/*.swiftdoc /usr/local/opt/vapor/include; \
-	cp -R $(RELEASE_DIR)/*.swiftmodule /usr/local/opt/vapor/include; \
 	
 $(LIBVAPOR): $(LIBHUMMINGBIRD) $(LIBJAY) $(LIBLIBC) Sources/Vapor/**/*.swift
 	mkdir -p $(DEBUG_DIR); \
