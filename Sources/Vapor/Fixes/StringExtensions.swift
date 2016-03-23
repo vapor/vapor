@@ -49,6 +49,24 @@ import libc
             }
             return true
         }
+        func rangeOfString(str: String) -> Range<Int>? {
+            var start = -1
+            withCString { (bytes) in
+                str.withCString { (sbytes) in
+                    start = strstr( bytes, sbytes ) - UnsafeMutablePointer<Int8>( bytes )
+                }
+            }
+            return start < 0 ? nil : start..<start+str.utf8.count
+        }
+        func substringToIndex(index: Int) -> String {
+            var out = self
+            withCString { (bytes) in
+                let bytes = UnsafeMutablePointer<Int8>(bytes)
+                bytes[index] = 0
+                out = String.fromCString( bytes )!
+            }
+            return out
+        }
     }
 #endif
 

@@ -3,6 +3,10 @@
 OS = $(shell uname)
 PWD = $(shell pwd)
 
+STRAND_TAG = 1.0.2
+HUMMINGBIRD_TAG = 1.0.3
+JAY_TAG = 0.4.0
+
 ifeq "$(OS)" "Darwin"
 	SWIFTC = xcrun -sdk macosx swiftc
 	LIBHUMMINGBIRD = .build/libHummingbird.dylib
@@ -66,15 +70,17 @@ $(LIBSTRAND): Packages/Strand/Sources/*.swift
 Packages/Strand/Sources/*.swift:
 	git clone https://github.com/ketzusaka/Strand Packages/Strand; \
 	cd Packages/Strand; \
-	git checkout 1.0.2
+	git checkout $(STRAND_TAG)
 
 Packages/Jay/Sources/Jay/*.swift:
-	git clone https://github.com/qutheory/json Packages/Jay
+	git clone https://github.com/qutheory/json Packages/Jay; \
+	cd Packages/Jay; \
+	git checkout $(JAY_TAG)
 
 Packages/Hummingbird/Sources/*.swift:
 	git clone https://github.com/ketzusaka/Hummingbird Packages/Hummingbird; \
 	cd Packages/Hummingbird; \
-	git checkout 1.0.3
+	git checkout $(HUMMINGBIRD_TAG)
 
 clean:
 	rm -rf Packages
