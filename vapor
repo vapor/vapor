@@ -53,7 +53,12 @@ let build: Void -> Bool = {
 		let cc = "xcrun swiftc"
 	#endif
 
-	return system("\(cc) App/main.swift App/**/*.swift -I /usr/local/opt/vapor/include/ -L /usr/local/opt/vapor/lib/ -lVapor -lJay -lHummingbird -llibc -lStrand -o .build/VaporApp") == 0
+	if (system("\(cc) App/main.swift App/**/*.swift -I /usr/local/opt/vapor/include/ -L /usr/local/opt/vapor/lib/ -lVapor -lJay -lHummingbird -llibc -lStrand -o .build/VaporApp") == 0) {
+		print("Built: .build/VaporApp")
+		return true
+	} else {
+		return false
+	}
 }
 
 let run: Void -> Bool = {
