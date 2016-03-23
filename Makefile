@@ -39,18 +39,22 @@ install: $(LIBVAPOR)
 	cp -R .build/*.swiftmodule /usr/local/opt/vapor/include; \
 	
 $(LIBVAPOR): $(LIBHUMMINGBIRD) $(LIBJAY) $(LIBLIBC) Sources/Vapor/**/*.swift
+	mkdir .build; \
 	cd .build; \
 	$(SWIFTC) ../Sources/Vapor/**/*.swift -emit-library -emit-module -module-name Vapor -I . -L . -lJay -lHummingbird -llibc -lStrand
 
 $(LIBLIBC): 
+	mkdir .build; \
 	cd .build; \
 	$(SWIFTC) ../Sources/libc/*.swift -emit-library -emit-module -module-name libc -I . -L .
 
 $(LIBJAY): Packages/Jay/Sources/Jay/*.swift
+	mkdir .build; \
 	cd .build; \
 	$(SWIFTC) ../Packages/Jay/Sources/Jay/*.swift -emit-library -emit-module -module-name Jay -I . -L .
 
 $(LIBHUMMINGBIRD): $(LIBSTRAND) Packages/Hummingbird/Sources/*.swift
+	mkdir .build; \
 	cd .build; \
 	$(SWIFTC) ../Packages/Hummingbird/Sources/*.swift -emit-library -emit-module -module-name Hummingbird -I . -L . -lStrand
 
@@ -60,16 +64,17 @@ $(LIBSTRAND): Packages/Strand/Sources/*.swift
 	$(SWIFTC) ../Packages/Strand/Sources/*.swift -emit-library -emit-module -module-name Strand
 
 Packages/Strand/Sources/*.swift:
-	git clone https://github.com/ketzusaka/Strand Packages/Strand;
+	git clone https://github.com/ketzusaka/Strand Packages/Strand; \
+	cd Packages/Strand; \
+	git checkout 1.0.2
 
 Packages/Jay/Sources/Jay/*.swift:
 	git clone https://github.com/qutheory/json Packages/Jay
 
 Packages/Hummingbird/Sources/*.swift:
-	git clone https://github.com/ketzusaka/Hummingbird Packages/Hummingbird
-
-.build:
-	mkdir .build
+	git clone https://github.com/ketzusaka/Hummingbird Packages/Hummingbird; \
+	cd Packages/Hummingbird; \
+	git checkout 1.0.3
 
 clean:
 	rm -rf Packages
