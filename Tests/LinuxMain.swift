@@ -2,6 +2,7 @@ import XCTest
 @testable import Vaportest
 
 XCTMain([
+	ConfigTests(),
 	ControllerTests(),
 	EnvironmentTests(),
 	HashTests(),
