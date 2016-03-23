@@ -120,7 +120,7 @@ class Vapor {
 			print("Make sure you are running Apple Swift version 2.2.")
 			print("Run \(cc) --version to check your version.")
 			print()
-			fail("Error: Could not build project.")
+			fail("Could not build project.")
 		}
 	}
 
