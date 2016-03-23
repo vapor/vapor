@@ -14,7 +14,7 @@ class Vapor {
 
 		if arguments.count < 2 {
 			printUsage()
-			exit(1)
+			fail("Invalid number of arguments.")
 		}
 	}
 
@@ -33,10 +33,8 @@ class Vapor {
 				help()
 			}
 
-			exit(0)
 		} else {
-			print("Error: Unknown command: \(Process.arguments[1])")
-			exit(1)
+			fail("Unknown command: \(Process.arguments[1])")
 		}
 	}
 
@@ -74,9 +72,13 @@ class Vapor {
 		do {
 			try run(command)
 		} catch {
-			print("Error: \(errorMessage)")
-			exit(1)
+			fail(errorMessage)
 		}
+	}
+
+	func fail(message: String) {
+		print("Error: \(message)")
+		exit(1)
 	}
 
 	func clean() {
@@ -113,41 +115,43 @@ class Vapor {
 			try run("\(cc) \(files) -I \(include) -L \(lib) -lVapor -lJay -lHummingbird -llibc -lStrand \(rpath) -o .build/VaporApp")
 			print("Built: .build/VaporApp")
 		} catch {
-			print("Error: Could not build project.")
+			print()
 			print("Usage: vapor build [file1, file2, ...]")
 			print("Make sure you are running Apple Swift version 2.2.")
 			print("Run \(cc) --version to check your version.")
-			exit(1)
+			print()
+			fail("Error: Could not build project.")
 		}
 	}
 
 	func run() {
 		print("Running...")
-		run(".build/VaporApp", orFail: "Could not run application.")
+		run(".build/VaporApp", orFail: "")
 	}
 
 	func newProject() {
-		print("New...")
-
 		if arguments.count < 3 {
 			print("Usage: \(arguments[0]) \(arguments[1]) <project-name>")
-			exit(1)
+			fail("Invalid number of arguments.")
 		}
 		let name = arguments[2]
 
 		do {
 			try run("git clone https://github.com/qutheory/vapor-example.git \(name)") 
 			let _ = try? run("rm -rf \(name)/.git")
-			print("Enjoy")
+			print()
+			print("Project \"\(name)\" has been created.")
+			print("Enjoy!")
+			print()
 		} catch {
-			print("Error: Could not clone repository")
-			exit(1)
+			fail("Could not clone repository")
 		}
 	}
 
 	func help() {
+		print()
 		printUsage()
-		print("")
+		print()
 		print("Options:")
 		print("\tbuild [file1, file2, ...]")
 		print("\t\tBuilds source files and links Vapor libraries.")
@@ -163,8 +167,16 @@ class Vapor {
 		print("\tclean")
 		print()
 		print("\thelp")
+		print()
+		print("Community:")
+		print("\tJoin our Slack if you have questions, need help, or want to contribute.")
+		print("\thttps://github.com/qutheory/vapor#badges")
+		print("\t(Look for the Slack badge in Vapor's README)")
+		print()
 	}
 }
 
 let cli = Vapor(arguments: Process.arguments)
 cli.start()
+
+exit(0)
