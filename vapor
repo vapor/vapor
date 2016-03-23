@@ -1,0 +1,103 @@
+#!/usr/bin/env swift
+
+#if os(Linux)
+	import Glibc
+#else
+	import Darwin
+#endif
+
+enum Command: String {
+	case Clean = "clean"
+	case Build = "build"
+	case Run = "run"
+	case New = "new"
+
+	static var all: [Command] = [.Clean, .Build, .Run, .New]
+}
+
+if Process.arguments.count < 2 {
+	let commands = Command.all.map {
+		return $0.rawValue
+	}
+
+	print("Usage: \(Process.arguments[0]) [\(commands.joinWithSeparator("|"))]")
+	exit(1)
+}
+
+var cleaned = false
+let clean: Void -> Bool = {
+	if cleaned {
+		return true
+	} else {
+		cleaned = true
+	}
+
+	print("Cleaning...")
+	return system("rm -rf .build") == 0
+}
+
+var built = false
+let build: Void -> Bool = {
+	if built {
+		return true
+	} else {
+		built = true
+	}
+
+	print("Building...")
+	system("mkdir -p .build")
+	return system("xcrun swiftc Sources/main.swift Sources/**/*.swift -I /usr/local/opt/vapor/include/ -L /usr/local/opt/vapor/lib/ -lVapor -lJay -lHummingbird -llibc -lStrand -o .build/VaporApp") == 0
+}
+
+let run: Void -> Bool = {
+	print("Running...")
+	return system(".build/VaporApp") == 0
+}
+
+let make: Void -> Bool = {
+	print("New...")
+	if Process.arguments.count < 3 {
+		print("Usage: \(Process.arguments[0]) \(Process.arguments[1]) <project-name>")
+		return false
+	}
+	let name = Process.arguments[2]
+
+	if (system("git clone git@github.com:qutheory/vapor-example.git \(name)") != 0) {
+		print("Error: Could not clone repository")
+		return false
+	}
+
+	system("rm -rf \(name)/.git")
+	return true
+}
+
+if let command = Command(rawValue: Process.arguments[1]) {
+	var successful: Bool
+
+	switch command {
+	case .Clean:
+		successful = clean()
+	case .Build:
+		successful = build()
+	case .Run:
+		if build() {
+			successful = run()
+		} else {
+			print("Build failed, aborting")
+			successful = false
+		}
+	case .New:
+		successful = make()
+	}
+
+	if !successful {
+		exit(1)
+	}
+} else {
+	print("Error: Unknown command: \(Process.arguments[1])")
+	exit(1)
+}
+
+
+
+exit(0)
