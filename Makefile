@@ -48,9 +48,6 @@ release: $(PACKAGES_DIR)/Strand/Sources/*.swift $(PACKAGES_DIR)/Jay/Sources/Jay/
 	$(SWIFTC) -O ../../Sources/libc/*.swift -emit-library -emit-module -module-name libc -I . -L .; \
 	$(SWIFTC) -O ../../Sources/Vapor/**/*.swift -emit-library -emit-module -module-name Vapor -I . -L . -lJay -lHummingbird -llibc -lStrand
 
-$(RELEASE_DIR)/libVapor.so: release
-$(RELEASE_DIR)/libVapor.dylib: release
-
 install_linux: $(RELEASE_DIR)/libVapor.so
 	mkdir -p /usr/local/include/vapor; \
 	cp -R $(RELEASE_DIR)/lib* /usr/local/lib; \
