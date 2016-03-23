@@ -81,4 +81,55 @@ class FileManager {
         }
         return (true, isDirectory)
     }
+
+	static func expandPath(path: String) throws -> String {
+		let result = realpath(path, nil)
+
+		guard result != nil else {
+			throw Error.Unreadable
+		}
+
+		defer { free(result) }
+
+		if let expanded = String.fromCString(result) {
+			return expanded
+		} else {
+			throw Error.Unreadable
+		}
+	}
+
+	static func contentsOfDirectory(path: String) throws -> [String] {
+		var gt = glob_t()
+		defer { globfree(&gt) }
+
+		let path = try self.expandPath(path).finish("/")
+		let pattern = strdup(path + "*")
+
+		switch glob(pattern, GLOB_MARK | GLOB_NOSORT, nil, &gt) {
+		case GLOB_NOMATCH:
+			return [ ]
+		case GLOB_ABORTED:
+			throw Error.Unreadable
+		default:
+			break
+		}
+
+		var contents = [String]()
+		let count: Int
+
+		#if os(Linux)
+			count = Int(gt.gl_pathc)
+		#else
+			count = Int(gt.gl_matchc)
+		#endif
+
+		for i in 0..<count {
+			if let path = String.fromCString(gt.gl_pathv[i]) {
+				contents.append(path)
+			}
+		}
+
+		return contents
+	}
+
 }
