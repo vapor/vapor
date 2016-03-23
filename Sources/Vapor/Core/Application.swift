@@ -111,6 +111,7 @@ public class Application {
 		self.providers = []
 
 		self.middleware.append(SessionMiddleware)
+		self.server.delegate = self
 	}
 
 	public func bootProviders() {
@@ -183,7 +184,6 @@ public class Application {
 	*/
 	public func start(ip ip: String? = nil, port: Int? = nil) {
 		self.bootProviders()
-		self.server.delegate = self
 
 		self.ip = ip ?? self.ip
 		self.port = port ?? self.port
