@@ -115,8 +115,15 @@ class FileManager {
 		}
 
 		var contents = [String]()
+		let count: Int
 
-		for i in 0..<Int(gt.gl_matchc) {
+		#if os(Linux)
+			count = Int(gt.gl_pathc)
+		#else
+			count = Int(gt.gl_matchc)
+		#endif
+
+		for i in 0..<count {
 			if let path = String.fromCString(gt.gl_pathv[i]) {
 				contents.append(path)
 			}
