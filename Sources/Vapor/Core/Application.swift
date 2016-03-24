@@ -19,14 +19,14 @@ public class Application {
 	*/
 	public var server: ServerDriver
 
-    /**
-        The session driver is responsible for
-        storing and reading values written to the
-        users session.
-    */
-    public var session: SessionDriver
+	/**
+		The session driver is responsible for
+		storing and reading values written to the
+		users session.
+	*/
+	public var session: SessionDriver
 
-    #if swift(>=3.0)
+	#if swift(>=3.0)
 	/**
 		Provides access to config settings.
 	*/
@@ -87,9 +87,9 @@ public class Application {
 		}
 	}
 
-    var scopedHost: String?
-    var scopedMiddleware: [Middleware.Type] = []
-    var scopedPrefix: String?
+	var scopedHost: String?
+	var scopedMiddleware: [Middleware.Type] = []
+	var scopedPrefix: String?
 
 	var port: Int = 80
 	var ip: String = "0.0.0.0"
@@ -99,10 +99,10 @@ public class Application {
 	/**
 		Initialize the Application.
 	*/
-    public init(router: RouterDriver = BranchRouter(), server: ServerDriver = Jeeves<Hummingbird.Socket>(), session: SessionDriver = MemorySessionDriver()) {
+	public init(router: RouterDriver = BranchRouter(), server: ServerDriver = Jeeves<Hummingbird.Socket>(), session: SessionDriver = MemorySessionDriver()) {
 		self.server = server
 		self.router = router
-        self.session = session
+		self.session = session
 
 		self.middleware = [
 			AbortMiddleware.self
@@ -204,7 +204,7 @@ public class Application {
 		let filePath = self.dynamicType.workDir + "Public" + request.path
 
 		guard FileManager.fileAtPath(filePath).exists else {
-            Log.warning("Could not find file at path \(filePath)")
+			Log.warning("Could not find file at path \(filePath)")
 			return nil
 		}
 
@@ -229,7 +229,6 @@ extension Application: ServerDriverDelegate {
 
 		// Check in routes
 		if let routerHandler = router.route(request) {
-        
 			handler = routerHandler
 		} else if let fileHander = self.checkFileSystem(request) {
 			handler = fileHander
@@ -242,7 +241,7 @@ extension Application: ServerDriverDelegate {
 
 		// Loop through middlewares in order
 		for middleware in self.middleware {
-            handler = middleware.handle(handler, for: self)
+			handler = middleware.handle(handler, for: self)
 		}
 
 		do {
