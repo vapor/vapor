@@ -11,9 +11,7 @@ script:
   - ./.travis.sh
   - sudo make install
   - vapor build Sources/VaporDev/main.swift Sources/VaporDev/**/*.swift
-  - rm -rf .build Packages
   - swift build --fetch
   - rm -rf Packages/*/Tests
   - swift build
   - swift test
-
