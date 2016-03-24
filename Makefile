@@ -23,7 +23,7 @@ ifeq "$(OS)" "Darwin"
 	LIBVAPORNAME = libVapor.dylib
 	LIBVAPOR = $(DEBUG_DIR)/libVapor.dylib
 	RUN = cd $(DEBUG_DIR); ./VaporApp; cd ../
-	SYSLIB = /usr/local/lib
+	SYSLIB = /usr/local/opt/vapor/lib
 	SYSINCLUDE = /usr/local/include/vapor
 else
 	SWIFTC = swiftc
@@ -34,7 +34,7 @@ else
 	LIBVAPORNAME = libVapor.so
 	LIBVAPOR = $(DEBUG_DIR)/libVapor.so
 	RUN = $(DEBUG_DIR)/VaporApp
-	SYSLIB = /usr/local/opt/vapor/lib
+	SYSLIB = /usr/local/lib
 	SYSINCLUDE = /usr/local/opt/vapor/include
 endif
 
