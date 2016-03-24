@@ -4,7 +4,7 @@ OS = $(shell uname)
 PWD = $(shell pwd)
 ARCH = $(shell uname -m)
 
-VERSION = 0.3.3
+VERSION = 0.3.4
 
 RELEASE_DIR = Release/$(VERSION)_$(OS)_$(ARCH)
 DEBUG_DIR = .build
