@@ -13,3 +13,4 @@ script:
   - swift build
   - swift test
   - ./.travis.sh
+  - ./vapor build
