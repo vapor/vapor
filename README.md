@@ -31,21 +31,38 @@ Visit the [Vapor Wiki](https://github.com/qutheory/vapor/wiki) for extensive doc
 
 ## Installation
 
-Install on OS X Homebrew
+### Swift 2.2
+
+#### Homebrew
 
 ```shell
 brew tap qutheory/tap
 brew install vapor
 ```
 
-Build your project using `vapor build` for Swift 2.2 or `swift build` for Swift 3.0
+#### Manual / Ubuntu
 
 ```
-vapor new my-project
-cd my-project
-vapor build
-.build/VaporApp --port=8080
+git clone https://github.com/qutheory/vapor
+cd vapor
+sudo make install
 ```
+
+List the available commands of the `vapor` CLI.
+
+```
+vapor help
+```
+
+### Swift 3.0
+
+Simply add Vapor as a dependency to your project's `Package.swift`.
+
+```
+.Package(url: "https://github.com/qutheory/vapor.git", majorVersion: 0)
+```
+
+For more detailed installation instructions, visit the [Getting Started](https://github.com/qutheory/vapor/wiki/Setup) section of the Wiki.
 
 ## Application
 
