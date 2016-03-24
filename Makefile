@@ -24,7 +24,7 @@ ifeq "$(OS)" "Darwin"
 	LIBVAPOR = $(DEBUG_DIR)/libVapor.dylib
 	RUN = cd $(DEBUG_DIR); ./VaporApp; cd ../
 	SYSLIB = /usr/local/opt/vapor/lib
-	SYSINCLUDE = /usr/local/include/vapor
+	SYSINCLUDE = /usr/local/opt/vapor/include
 else
 	SWIFTC = swiftc
 	LIBHUMMINGBIRD = $(DEBUG_DIR)/libHummingbird.so
@@ -35,7 +35,7 @@ else
 	LIBVAPOR = $(DEBUG_DIR)/libVapor.so
 	RUN = $(DEBUG_DIR)/VaporApp
 	SYSLIB = /usr/local/lib
-	SYSINCLUDE = /usr/local/opt/vapor/include
+	SYSINCLUDE = /usr/local/include/vapor
 endif
 
 
