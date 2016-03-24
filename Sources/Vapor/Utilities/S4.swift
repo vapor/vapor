@@ -1,9 +1,4 @@
-//
-// S4.swift
-// Vapor
-//
-// Created by Logan Wright on 03/13/2016
-
-// Replace this file when S4 is introduced
-
+/**
+	The beginning of S4 integration.
+*/
 public typealias Byte = UInt8

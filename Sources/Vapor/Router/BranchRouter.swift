@@ -1,22 +1,12 @@
-//
-//  router.swift
-//  HelloServer
-//
-//  Created by Logan Wright on 2/15/16.
-//  Copyright © 2016 LoganWright. All rights reserved.
-//
-
 public typealias Host = String
 
 
 public final class BranchRouter: RouterDriver {
     
     // MARK: Private Tree Representation
-    
     private final var tree: [Host : [Request.Method : Branch]] = [:]
     
     // MARK: Routing
-    
     public final func route(request: Request) -> Request.Handler? {
         //get root from hostname, or * route
         let root = tree[request.hostname] ?? tree["*"]
@@ -32,7 +22,6 @@ public final class BranchRouter: RouterDriver {
     }
     
     // MARK: Registration
-    
     public final func register(route: Route) {
         let generator = route.path.pathComponentGenerator()
         
@@ -55,8 +44,8 @@ public final class BranchRouter: RouterDriver {
 }
 
 /**
- *  Until Swift api is stable for AnyGenerator, using this in interim to allow compiling Swift 2 and 2.2+
- */
+    Until Swift api is stable for AnyGenerator, using this in interim to allow compiling Swift 2 and 2.2+
+*/
 public struct CompatibilityGenerator<T>: GeneratorType {
     public typealias Element = T
     

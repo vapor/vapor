@@ -7,21 +7,16 @@
 public class Jeeves<Socket where Socket: Vapor.Socket, Socket: Hashable>: ServerDriver {
 
     // MARK: Delegate
-
     public var delegate: ServerDriverDelegate?
 
     // MARK: Sockets
-
     private var streamSocket: Socket?
     private var activeSockets = ThreadSafeSocketStore<Socket>()
 
     // MARK: Init
-
     public init() {}
 
     // MARK: ServerDriver
-
-
     public func boot(ip ip: String, port: Int) throws {
         halt()
         streamSocket = try Socket.makeSocket()

@@ -1,11 +1,3 @@
-//
-//  Process.swift
-//  Vapor
-//
-//  Created by Logan Wright on 2/27/16.
-//  Copyright © 2016 Tanner Nelson. All rights reserved.
-//
-
 extension Process {
 
     /**

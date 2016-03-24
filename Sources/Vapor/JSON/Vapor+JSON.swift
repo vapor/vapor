@@ -1,13 +1,6 @@
-//
-//  Vapor+Json.swift
-//  Vapor
-//
-//  Created by Logan Wright on 2/19/16.
-//  Copyright © 2016 Tanner Nelson. All rights reserved.
-//
-
-// MARK: Response
-
+/**
+    Allows Json to be returned in any vapor Closure
+*/  
 extension Json: ResponseConvertible {
     public func response() -> Response {
         do {
@@ -22,70 +15,59 @@ extension Json: ResponseConvertible {
     }
 }
 
-// MARK: Request Json
-
 extension Request {
 
     /**
-     If the body can be serialized as Json, the value will be returned here
-     */
+        If the body can be serialized as Json, the value will be returned here
+    */
     public var json: Json? {
         return try? Json.deserialize(body)
     }
 }
 
-// MARK: Json Convertible 
-
 public enum JsonError: ErrorType {
     
     /**
-     *  When converting to a value from Json, if there is a type conflict, this will throw an error
-     *
-     *  @param Json   the json that was unable to map
-     *  @param String a string description of the type that was attempting to map
-     */
+        When converting to a value from Json, if there is a type conflict, this will throw an error
+        
+        - param the json that was unable to map
+        - param a string description of the type that was attempting to map
+    */
     case UnableToConvert(json: Json, toType: String)
 }
 
 /**
- *  An umbrella protocol used to define behavior to and from Json
- */
+    An umbrella protocol used to define behavior to and from Json
+*/
 public protocol JsonConvertible {
     
     /**
-     This function will be used to create an instance of the type from Json
-     
-     - parameter json: the json to use in initialization
-     
-     - throws: a potential error.  ie: invalid json type
-     
-     - returns: an initialized object
+        This function will be used to create an instance of the type from Json
+
+        - parameter json: the json to use in initialization
+        - throws: a potential error.  ie: invalid json type
+        - returns: an initialized object
      */
     static func newInstance(json: Json) throws -> Self
     
     /**
-     Used to convert the object back to its Json representation
-     
-     - throws: a potential conversion error
-     
-     - returns: the object as a Json representation
-     */
+        Used to convert the object back to its Json representation
+
+        - throws: a potential conversion error
+        - returns: the object as a Json representation
+    */
     func jsonRepresentation() throws -> Json
 }
-
-// MARK: Json Convertible Initializers
 
 extension Json {
     
     /**
-     Create Json from any convertible type
-     
-     - parameter any: the convertible type
-     
-     - throws: a potential conversion error
-     
-     - returns: initialized Json
-     */
+        Create Json from any convertible type
+
+        - parameter any: the convertible type
+        - throws: a potential conversion error
+        - returns: initialized Json
+    */
     public init<T: JsonConvertible>(_ any: T) throws {
         self = try any.jsonRepresentation()
     }

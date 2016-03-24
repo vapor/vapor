@@ -1,18 +1,34 @@
+/**
+    Loads and renders a file from the `Resources` folder
+    in the Application's work directory.
+*/
 public class View {
-
+    ///Currently applied RenderDrivers
     public static var renderers: [String: RenderDriver] = [:]
 
-	public static let resourceDir = Application.workDir + "Resources"
-	var bytes: [UInt8]
+    ///Location of Resource files
+    public static let resourceDir = Application.workDir + "Resources"
+    var bytes: [UInt8]
 
     enum Error: ErrorType {
         case InvalidPath
     }
 
+    /**
+        Attempt to load and render a file from
+        the supplied path.
+    */
     public convenience init(path: String) throws {
         try self.init(path: path, context: [:])
     }
 
+    /**
+        Attempt to load and render a file
+        from the supplied path using the contextual
+        information supplied.
+
+        - context Passed to RenderDrivers
+    */
     public init(path: String, context: [String: Any]) throws {
         let filesPath = View.resourceDir + "/" + path
         
@@ -35,6 +51,7 @@ public class View {
 
 }
 
+///Allows Views to be returned in Vapor closures
 extension View: ResponseConvertible {
     public func response() -> Response {
         return Response(status: .OK, data: self.bytes, contentType: .Html)
