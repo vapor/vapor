@@ -194,7 +194,7 @@ public class Application {
             Log.info("Server starting on \(self.ip):\(self.port)")
             try self.server.boot(ip: self.ip, port: self.port)
         } catch {
-            Log.info("Server start error: \(error)")
+            Log.error("Server start error: \(error)")
         }
     }
 
