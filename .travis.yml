@@ -7,8 +7,8 @@ dist: trusty
 osx_image: xcode7.3
 install:
 script:
-  - ./.travis.sh
-  - export PATH=swift-2.2-RELEASE-ubuntu14.04/usr/bin/:"${PATH}"
+  - . ./.travis.sh
+  - export PATH=$TRAVIS_BUILD_DIR/swift-2.2-RELEASE-ubuntu14.04/usr/bin/:"${PATH}"
   - make
   - sudo make install
   - vapor build Sources/VaporDev/main.swift Sources/VaporDev/**/*.swift
