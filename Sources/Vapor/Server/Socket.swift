@@ -32,9 +32,15 @@ extension SocketIO {
         try write(string.utf8)
     }
 
+    #if swift(>=3.0)
+    public func write<ByteSequence: Sequence where ByteSequence.Iterator.Element == Byte>(bytes: ByteSequence) throws {
+        try write([UInt8](bytes))
+    }
+    #else
     public func write<ByteSequence: SequenceType where ByteSequence.Generator.Element == Byte>(bytes: ByteSequence) throws {
         try write([UInt8](bytes))
     }
+    #endif
 }
 
 // MARK: Read

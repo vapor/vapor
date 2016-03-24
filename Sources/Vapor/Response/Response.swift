@@ -149,7 +149,8 @@ public class Response {
      - parameter data: the byte sequence that will be transmitted
      - parameter contentType: the content type that the data represents
      */
-    public init<T: SequenceType where T.Generator.Element == UInt8>(status: Status, data: T, contentType: ContentType) {
+    #if swift(>=3.0)
+    public init<T: Sequence where T.Iterator.Element == UInt8>(status: Status, data: T, contentType: ContentType) {
         self.status = status
         self.data = [UInt8](data)
         self.contentType = contentType
@@ -168,6 +169,28 @@ public class Response {
         
         self.headers["Server"] = "Vapor \(Application.VERSION)"
     }
+    #else
+    public init<T: SequenceType where T.Generator.Element == UInt8>(status: Status, data: T, contentType: ContentType) {
+        self.status = status
+        self.data = [UInt8](data)
+        self.contentType = contentType
+        switch contentType {
+        case .Json:
+        self.headers = ["Content-Type": "application/json"]
+        case .Html:
+        self.headers = ["Content-Type": "text/html"]
+        case let .Other(description):
+        self.headers = ["Content-Type": description]
+        case .Text:
+        self.headers = ["Content-Type": "text"]
+        case .None:
+        self.headers = [:]
+        }
+        
+        self.headers["Server"] = "Vapor \(Application.VERSION)"
+    }
+    #endif
+
 }
 
 // MARK: - Convenience Initializers

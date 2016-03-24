@@ -353,9 +353,15 @@ func integerFromBitsArray<T: UnsignedIntegerType>(bits: [Bit]) -> T
     return bitPattern
 }
 
+#if swift(>=3.0)
+protocol CSArrayType: Sequence {
+    func cs_arrayValue() -> [Generator.Element]
+}
+#else
 protocol CSArrayType: _ArrayType {
     func cs_arrayValue() -> [Generator.Element]
 }
+#endif
 
 extension Array: CSArrayType {
     func cs_arrayValue() -> [Generator.Element] {

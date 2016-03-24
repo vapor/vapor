@@ -4,8 +4,12 @@ public class View {
 
 	public static let resourceDir = Application.workDir + "Resources"
 	var bytes: [UInt8]
+    
+    #if !swift(>=3.0)
+        typealias ErrorType = ErrorProtocol
+    #endif
 
-    enum Error: ErrorType {
+    enum Error: ErrorProtocol {
         case InvalidPath
     }
 

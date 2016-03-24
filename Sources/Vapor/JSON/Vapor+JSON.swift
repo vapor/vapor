@@ -179,7 +179,11 @@ extension UInt16 : JsonConvertible {}
 extension UInt32 : JsonConvertible {}
 extension UInt64 : JsonConvertible {}
 
-extension UnsignedIntegerType {
+#if !swift(>=3.0)
+    typealias UnsignedInteger = UnsignedIntegerType
+#endif
+
+extension UnsignedInteger {
     public func jsonRepresentation() throws -> Json {
         let double = Double(UIntMax(self.toUIntMax()))
         return Json(double)
@@ -202,7 +206,11 @@ extension Int16 : JsonConvertible {}
 extension Int32 : JsonConvertible {}
 extension Int64 : JsonConvertible {}
 
-extension SignedIntegerType {
+#if !swift(>=3.0)
+    typealias SignedInteger = SignedIntegerType
+#endif
+
+extension SignedInteger {
     public func jsonRepresentation() throws -> Json {
         let double = Double(IntMax(self.toIntMax()))
         return Json(double)

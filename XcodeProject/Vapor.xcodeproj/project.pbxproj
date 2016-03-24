@@ -628,8 +628,8 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = C387A03F1C95FE1300B6282E /* Build configuration list for PBXNativeTarget "Generator" */;
 			buildPhases = (
-				C387A0371C95FE1300B6282E /* Sources */,
 				C387A0381C95FE1300B6282E /* Frameworks */,
+				C387A0371C95FE1300B6282E /* Sources */,
 				C387A0391C95FE1300B6282E /* CopyFiles */,
 			);
 			buildRules = (
@@ -729,7 +729,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "/Library/Developer/Toolchains/swift-DEVELOPMENT-SNAPSHOT-2016-03-01-a.xctoolchain/usr/bin/swift build --chdir \"$SRCROOT\"";
+			shellScript = "/Library/Developer/Toolchains/swift-DEVELOPMENT-SNAPSHOT-2016-03-24-a.xctoolchain/usr/bin/swift build --chdir \"$SRCROOT\"";
 		};
 /* End PBXShellScriptBuildPhase section */
 

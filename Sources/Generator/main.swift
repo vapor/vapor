@@ -1,3 +1,5 @@
+#if swift(>=3.0)
+
 import Foundation
 
 let GENERIC_MAP = ["T", "U", "V", "W", "X"]
@@ -22,32 +24,32 @@ struct Func: CustomStringConvertible {
         
         var f = ""
         f += "\tpublic func "
-        f += "\(method)".lowercaseString
+        f += "\(method)".lowercased()
         
         //generic <>
         if wildcards.count > 0 {
             let genericsString = wildcards.map { wildcard in
                 return "\(wildcard.generic): StringInitializable"
-            }.joinWithSeparator(", ")
+            }.joined(separator: ", ")
             
             f += "<\(genericsString)>"
         }
         
-        let paramsString = params.enumerate().map { (index, param) in
+        let paramsString = params.enumerated().map { (index, param) in
             if index > 0 {
                 return "_ \(param)"
             } else {
                 return param.description
             }
-        }.joinWithSeparator(", ")
-        
+        }.joined(separator: ", ")
+
         f += "(\(paramsString), handler: (Request"
         
         //handler params
         if wildcards.count > 0 {
             let genericsString = wildcards.map { wildcard in
                 return wildcard.generic
-            }.joinWithSeparator(", ")
+            }.joined(separator: ", ")
             
             f += ", \(genericsString)) throws -> ResponseConvertible) {\n"
 
@@ -61,7 +63,7 @@ struct Func: CustomStringConvertible {
             }
             
             return "\\(\(param.name))"
-        }.joinWithSeparator("/")
+        }.joined(separator: ", ")
         
         f += "\t\tself.add(.\(method), path: \"\(pathString)\") { request in\n"
         
@@ -95,8 +97,7 @@ struct Func: CustomStringConvertible {
             
             let wildcardString = wildcards.map { wildcard in
                 return "c\(wildcard.name)"
-                }.joinWithSeparator(", ")
-            
+            }.joined(separator: ", ")
             
             f += "\t\t\treturn try handler(request, \(wildcardString))\n"
             
@@ -211,14 +212,16 @@ if Process.arguments.count < 2 {
     fatalError("Please pass $SRCROOT as a parameter")
 }
 
-let path = Process.arguments[1].stringByReplacingOccurrencesOfString("XcodeProject", withString: "")
+let path = Process.arguments[1].replacingOccurrences(of: "XcodeProject", with: "")
 let url = NSURL(fileURLWithPath: path + "/Sources/Vapor/Core/Generated.swift")
 
 do{
     // writing to disk
-    try generated.writeToURL(url, atomically: true, encoding: NSUTF8StringEncoding)
+    try generated.write(to: url, atomically: true, encoding: NSUTF8StringEncoding)
     print("File created at \(url)")
 } catch let error as NSError {
     print("Error writing generated file at \(url)")
     print(error.localizedDescription)
 }
+
+#endif
