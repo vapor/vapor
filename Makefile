@@ -1,82 +1,109 @@
-.PHONY: clean run install
+.PHONY: clean run install release
 
 OS = $(shell uname)
 PWD = $(shell pwd)
+ARCH = $(shell uname -m)
+
+VERSION = 0.3.3
+
+RELEASE_DIR = Release/$(VERSION)_$(OS)_$(ARCH)
+DEBUG_DIR = .build
+PACKAGES_DIR = Packages
+
+STRAND_TAG = 1.0.2
+HUMMINGBIRD_TAG = 1.0.3
+JAY_TAG = 0.4.0
 
 ifeq "$(OS)" "Darwin"
 	SWIFTC = xcrun -sdk macosx swiftc
-	LIBHUMMINGBIRD = .build/libHummingbird.dylib
-	LIBJAY = .build/libJay.dylib
-	LIBSTRAND = .build/libStrand.dylib
-	LIBLIBC = .build/liblibc.dylib
-	LIBVAPOR = .build/libVapor.dylib
-	RUN = cd .build; ./VaporApp; cd ../
+	LIBHUMMINGBIRD = $(DEBUG_DIR)/libHummingbird.dylib
+	LIBJAY = $(DEBUG_DIR)/libJay.dylib
+	LIBSTRAND = $(DEBUG_DIR)/libStrand.dylib
+	LIBLIBC = $(DEBUG_DIR)/liblibc.dylib
+	LIBVAPORNAME = libVapor.dylib
+	LIBVAPOR = $(DEBUG_DIR)/libVapor.dylib
+	RUN = cd $(DEBUG_DIR); ./VaporApp; cd ../
+	SYSLIB = /usr/local/lib
+	SYSINCLUDE = /usr/local/include/vapor
 else
 	SWIFTC = swiftc
-	LIBHUMMINGBIRD = .build/libHummingbird.so
-	LIBJAY = .build/libJay.so
-	LIBSTRAND = .build/libStrand.so
-	LIBLIBC = .build/liblibc.so
-	LIBVAPOR = .build/libVapor.so
-	RUN = .build/VaporApp
+	LIBHUMMINGBIRD = $(DEBUG_DIR)/libHummingbird.so
+	LIBJAY = $(DEBUG_DIR)/libJay.so
+	LIBSTRAND = $(DEBUG_DIR)/libStrand.so
+	LIBLIBC = $(DEBUG_DIR)/liblibc.so
+	LIBVAPORNAME = libVapor.so
+	LIBVAPOR = $(DEBUG_DIR)/libVapor.so
+	RUN = $(DEBUG_DIR)/VaporApp
+	SYSLIB = /usr/local/opt/vapor/lib
+	SYSINCLUDE = /usr/local/opt/vapor/include
 endif
 
 
-.build/VaporApp: $(LIBVAPOR) Sources/VaporDev/main.swift Sources/VaporDev/**/*.swift
-	$(EXPORT)
-	$(SWIFTC) Sources/VaporDev/**.swift -I .build -L $(PWD)/.build -lVapor -lJay -lHummingbird -llibc -lStrand -Xlinker -rpath -Xlinker $(PWD)/.build -o .build/VaporApp
+$(DEBUG_DIR)/VaporApp: $(LIBVAPOR) Sources/VaporDev/main.swift Sources/VaporDev/**/*.swift
+	$(SWIFTC) Sources/VaporDev/**.swift -I $(DEBUG_DIR) -L $(PWD)/$(DEBUG_DIR) -lVapor -lJay -lHummingbird -llibc -lStrand -Xlinker -rpath -Xlinker $(PWD)/$(DEBUG_DIR) -o $(DEBUG_DIR)/VaporApp
 
-run: .build/VaporApp
+run: $(DEBUG_DIR)/VaporApp
 	$(RUN);
 
-install: $(LIBVAPOR)
-	mkdir /usr/local/opt; \
-	mkdir /usr/local/opt/vapor; \
-	mkdir /usr/local/opt/vapor/lib; \
-	mkdir /usr/local/opt/vapor/include; \
-	cp -R .build/lib* /usr/local/opt/vapor/lib; \
-	cp -R .build/*.swiftdoc /usr/local/opt/vapor/include; \
-	cp -R .build/*.swiftmodule /usr/local/opt/vapor/include; \
+release: $(PACKAGES_DIR)/Strand/Sources/*.swift $(PACKAGES_DIR)/Jay/Sources/Jay/*.swift $(PACKAGES_DIR)/Hummingbird/Sources/*.swift
+	mkdir -p $(RELEASE_DIR); \
+	cd $(RELEASE_DIR); \
+	$(SWIFTC) -O ../../$(PACKAGES_DIR)/Strand/Sources/*.swift -emit-library -emit-module -module-name Strand; \
+	$(SWIFTC) -O ../../$(PACKAGES_DIR)/Hummingbird/Sources/*.swift -emit-library -emit-module -module-name Hummingbird -I . -L . -lStrand; \
+	$(SWIFTC) -O ../../$(PACKAGES_DIR)/Jay/Sources/Jay/*.swift -emit-library -emit-module -module-name Jay -I . -L .; \
+	$(SWIFTC) -O ../../Sources/libc/*.swift -emit-library -emit-module -module-name libc -I . -L .; \
+	$(SWIFTC) -O ../../Sources/Vapor/**/*.swift -emit-library -emit-module -module-name Vapor -I . -L . -lJay -lHummingbird -llibc -lStrand
+
+install: $(RELEASE_DIR)/$(LIBVAPORNAME)
+	mkdir -p $(SYSLIB); \
+	mkdir -p $(SYSINCLUDE); \
+	cp -R $(RELEASE_DIR)/lib* $(SYSLIB); \
+	cp -R $(RELEASE_DIR)/*.swiftdoc $(SYSINCLUDE); \
+	cp -R $(RELEASE_DIR)/*.swiftmodule $(SYSINCLUDE); \
+	cp vapor /usr/local/bin
 	
 $(LIBVAPOR): $(LIBHUMMINGBIRD) $(LIBJAY) $(LIBLIBC) Sources/Vapor/**/*.swift
-	mkdir .build; \
-	cd .build; \
+	mkdir -p $(DEBUG_DIR); \
+	cd $(DEBUG_DIR); \
 	$(SWIFTC) ../Sources/Vapor/**/*.swift -emit-library -emit-module -module-name Vapor -I . -L . -lJay -lHummingbird -llibc -lStrand
 
 $(LIBLIBC): 
-	mkdir .build; \
-	cd .build; \
+	mkdir -p $(DEBUG_DIR); \
+	cd $(DEBUG_DIR); \
 	$(SWIFTC) ../Sources/libc/*.swift -emit-library -emit-module -module-name libc -I . -L .
 
-$(LIBJAY): Packages/Jay/Sources/Jay/*.swift
-	mkdir .build; \
-	cd .build; \
-	$(SWIFTC) ../Packages/Jay/Sources/Jay/*.swift -emit-library -emit-module -module-name Jay -I . -L .
+$(LIBJAY): $(PACKAGES_DIR)/Jay/Sources/Jay/*.swift
+	mkdir -p $(DEBUG_DIR); \
+	cd $(DEBUG_DIR); \
+	$(SWIFTC) ../$(PACKAGES_DIR)/Jay/Sources/Jay/*.swift -emit-library -emit-module -module-name Jay -I . -L .
 
-$(LIBHUMMINGBIRD): $(LIBSTRAND) Packages/Hummingbird/Sources/*.swift
-	mkdir .build; \
-	cd .build; \
-	$(SWIFTC) ../Packages/Hummingbird/Sources/*.swift -emit-library -emit-module -module-name Hummingbird -I . -L . -lStrand
+$(LIBHUMMINGBIRD): $(LIBSTRAND) $(PACKAGES_DIR)/Hummingbird/Sources/*.swift
+	mkdir -p $(DEBUG_DIR); \
+	cd $(DEBUG_DIR); \
+	$(SWIFTC) ../$(PACKAGES_DIR)/Hummingbird/Sources/*.swift -emit-library -emit-module -module-name Hummingbird -I . -L . -lStrand
 
-$(LIBSTRAND): Packages/Strand/Sources/*.swift
-	mkdir .build; \
-	cd .build; \
-	$(SWIFTC) ../Packages/Strand/Sources/*.swift -emit-library -emit-module -module-name Strand
+$(LIBSTRAND): $(PACKAGES_DIR)/Strand/Sources/*.swift
+	mkdir -p $(DEBUG_DIR); \
+	cd $(DEBUG_DIR); \
+	$(SWIFTC) ../$(PACKAGES_DIR)/Strand/Sources/*.swift -emit-library -emit-module -module-name Strand
 
-Packages/Strand/Sources/*.swift:
-	git clone https://github.com/ketzusaka/Strand Packages/Strand; \
-	cd Packages/Strand; \
-	git checkout 1.0.2
+$(PACKAGES_DIR)/Strand/Sources/*.swift:
+	git clone https://github.com/ketzusaka/Strand $(PACKAGES_DIR)/Strand; \
+	cd $(PACKAGES_DIR)/Strand; \
+	git checkout $(STRAND_TAG)
 
-Packages/Jay/Sources/Jay/*.swift:
-	git clone https://github.com/qutheory/json Packages/Jay
+$(PACKAGES_DIR)/Jay/Sources/Jay/*.swift:
+	git clone https://github.com/qutheory/json $(PACKAGES_DIR)/Jay; \
+	cd $(PACKAGES_DIR)/Jay; \
+	git checkout $(JAY_TAG)
 
-Packages/Hummingbird/Sources/*.swift:
-	git clone https://github.com/ketzusaka/Hummingbird Packages/Hummingbird; \
-	cd Packages/Hummingbird; \
-	git checkout 1.0.3
+$(PACKAGES_DIR)/Hummingbird/Sources/*.swift:
+	git clone https://github.com/ketzusaka/Hummingbird $(PACKAGES_DIR)/Hummingbird; \
+	cd $(PACKAGES_DIR)/Hummingbird; \
+	git checkout $(HUMMINGBIRD_TAG)
 
 clean:
-	rm -rf Packages
-	rm -rf .build
+	rm -rf $(PACKAGES_DIR)
+	rm -rf $(DEBUG_DIR)
+	rm -rf $(RELEASE_DIR)
 

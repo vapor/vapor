@@ -137,6 +137,7 @@ public class Config {
 		}
 	}
 
+	#if swift(>=3.0)
 	private func populateConfigFiles(files: inout [String: [String]], in path: String) throws {
 		let contents = try FileManager.contentsOfDirectory(path)
 		let suffix = ".json"
@@ -155,6 +156,33 @@ public class Config {
 			files[name]?.append(file)
 		}
 	}
+	#else
+	private func populateConfigFiles(inout files: [String: [String]], in path: String) throws {
+		let contents = try FileManager.contentsOfDirectory(path)
+
+		for file in contents {
+			guard let fileName = file.split("/").last else {
+				continue
+			}
+
+			let name: String
+
+			if (fileName == ".env.json") {
+				name = ".env"
+			} else if fileName.hasSuffix(".json"), let value = fileName.split(".").first {
+				name = value
+			} else {
+				continue
+			}
+
+			if files[name] == nil {
+				files[name] = []
+			}
+
+			files[name]?.append(file)
+		}
+	}
+	#endif
 
 }
 
