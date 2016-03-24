@@ -13,4 +13,5 @@ script:
   - swift build
   - swift test
   - ./.travis.sh
-  - ./vapor build Sources/VaporDev/main.swift Sources/VaporDev/**/*.swift
+  - sudo make install
+  - vapor build Sources/VaporDev/main.swift Sources/VaporDev/**/*.swift
