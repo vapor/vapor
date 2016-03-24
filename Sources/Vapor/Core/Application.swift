@@ -204,13 +204,14 @@ public class Application {
 		let filePath = self.dynamicType.workDir + "Public" + request.path
 
 		guard FileManager.fileAtPath(filePath).exists else {
+            Log.warning("Could not find file at path \(filePath)")
 			return nil
 		}
 
 		// File exists
 		if let fileBody = try? FileManager.readBytesFromFile(filePath) {
 			return { _ in
-				return Response(status: .OK, data: fileBody, contentType: .Text)
+				return Response(status: .OK, data: fileBody, contentType: .None)
 			}
 		} else {
 			return { _ in
@@ -228,6 +229,7 @@ extension Application: ServerDriverDelegate {
 
 		// Check in routes
 		if let routerHandler = router.route(request) {
+        
 			handler = routerHandler
 		} else if let fileHander = self.checkFileSystem(request) {
 			handler = fileHander

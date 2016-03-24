@@ -3,7 +3,7 @@ import Vapor
 let app = Application()
 
 app.get("/") { request in
-    return "Welcome to Vapor"
+    return try View(path: "welcome.html")
 }
 
 app.get("test") { request in
@@ -23,7 +23,7 @@ app.get("json") { request in
 let i = Int.self
 let s = String.self
 
-app.get(i, s) { request, int, string in
+app.get("test", i, s) { request, int, string in
     return try Json([
         "message": "Int \(int) String \(string)"
     ])
