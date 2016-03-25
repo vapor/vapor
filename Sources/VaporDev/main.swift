@@ -2,6 +2,8 @@ import Vapor
 
 let app = Application()
 
+app.hash.key = app.config.get("app.hash.key", "default-key")
+
 app.get("/") { request in
     return try app.view("welcome.html")
 }
