@@ -1,16 +1,8 @@
-//
-//  RequestData+Target.swift
-//  Vapor
-//
-//  Created by Logan Wright on 2/21/16.
-//  Copyright © 2016 Tanner Nelson. All rights reserved.
-//
-
 /**
- *  This protocol defines a type of data received.
- *  these variables are used to access underlying
- *  values
- */
+    This protocol defines a type of data received.
+    these variables are used to access underlying
+    values
+*/
 public protocol Node {
     var isNull: Bool { get }
     var bool: Bool { get }
@@ -26,13 +18,10 @@ public protocol Node {
 public extension Request {
     
     /**
-     *  The data received from the request in json body or url query
-     */
+        The data received from the request in json body or url query
+    */
     public struct Data {
-        
-        
         // MARK: Initialization
-        
         public let query: [String : String]
         public let json: Json?
         
@@ -54,7 +43,6 @@ public extension Request {
         }
         
         // MARK: Subscripting
-
         public subscript(key: String) -> Node? {
             return query[key] ?? json?[key]
         }
@@ -64,12 +52,12 @@ public extension Request {
         }
         
         /**
-         Checks for form encoding of body if Json fails
-         
-         - parameter body: byte array from body
-         
-         - returns: a key value pair dictionary
-         */
+            Checks for form encoding of body if Json fails
+
+            - parameter body: byte array from body
+
+            - returns: a key value pair dictionary
+        */
         static func parsePostData(body: [UInt8]) -> [String: String] {
             if let bodyString = String(pointer: body, length: body.count) {
                 return bodyString.keyValuePairs()
@@ -209,8 +197,8 @@ extension String: Node {
 
 extension Bool {
     /**
-     This function seeks to replicate the expected behavior of `var boolValue: Bool` on `NSString`.  Any variant of `yes`, `y`, `true`, `t`, or any numerical value greater than 0 will be considered `true`
-     */
+        This function seeks to replicate the expected behavior of `var boolValue: Bool` on `NSString`.  Any variant of `yes`, `y`, `true`, `t`, or any numerical value greater than 0 will be considered `true`
+    */
     public init(_ string: String) {
         let cleaned = string
             .lowercased()

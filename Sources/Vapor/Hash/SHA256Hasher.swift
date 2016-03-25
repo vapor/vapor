@@ -1,11 +1,7 @@
-//
-//  SHA256Hasher.swift
-//  Vapor
-//
-//  Created by Tanner Nelson on 2/23/16.
-//  Copyright © 2016 Tanner Nelson. All rights reserved.
-//
-
+/**
+    Create SHA256 + HMAC hashes with the
+    Hash class by applying this driver.
+*/
 public class SHA256Hasher: HashDriver {
     
     public func hash(message: String, key: String) -> String {

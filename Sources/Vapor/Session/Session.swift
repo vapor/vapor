@@ -1,4 +1,11 @@
+/**
+    Use the Session class to store sensitive
+    information for individual users of your application
+    such as API keys or login tokens.
 
+    Access the current Application's Session using
+    `app.session`.
+*/
 public class Session {
 
     public let identifier: String
@@ -15,12 +22,12 @@ public class Session {
         self.driver = driver
         self.identifier = identifier
         enabled = true
-	}
+    }
 
-	public func destroy() {
+    public func destroy() {
         enabled = false
         driver.destroy(self)
-	}
+    }
 
     public subscript(key: String) -> String? {
         get {

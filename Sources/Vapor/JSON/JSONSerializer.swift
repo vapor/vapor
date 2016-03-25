@@ -2,6 +2,10 @@ import Jay
 
 private typealias JayType = JsonValue
 
+/**
+    Handles the conversion from JayType
+    Json values to Vapor Json values.
+*/
 public enum Json: Equatable {
     
     case NullValue

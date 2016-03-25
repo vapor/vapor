@@ -113,11 +113,11 @@ public class Request {
 extension String {
     
     /**
-     Query data is information appended to the URL path
-     as `key=value` pairs separated by `&` after
-     an initial `?`
-     
-     - returns: String dictionary of parsed Query data
+        Query data is information appended to the URL path
+        as `key=value` pairs separated by `&` after
+        an initial `?`
+
+        - returns: String dictionary of parsed Query data
      */
     internal func queryData() -> [String: String] {
         // First `?` indicates query, subsequent `?` should be included as part of the arguments
@@ -128,9 +128,9 @@ extension String {
     }
     
     /**
-     Parses `key=value` pair data separated by `&`.
-     
-     - returns: String dictionary of parsed data
+        Parses `key=value` pair data separated by `&`.
+
+        - returns: String dictionary of parsed data
      */
     internal func keyValuePairs() -> [String: String] {
         var data: [String: String] = [:]

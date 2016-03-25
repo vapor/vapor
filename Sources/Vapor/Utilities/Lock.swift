@@ -1,18 +1,13 @@
-//
-//  Lock.swift
-//  Vapor
-//
-//  Created by James Richard on 3/2/16.
-//
-
-// Most of this code is from the Swift Foundation project
-
 #if os(Linux)
     import Glibc
 #else
     import Darwin
 #endif
 
+/**
+    A Swift wrapper around pthread_mutex from
+    Swift's Foundation project.
+*/
 class Lock {
 
     #if swift(>=3.0)

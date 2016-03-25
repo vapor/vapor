@@ -1,12 +1,12 @@
 
 /**
- The route class that will be used to model the various paths
- the application can take
- */
+    The route class that will be used to model the various paths
+    the application can take
+*/
 public class Route {
     
     /**
-     The responder type that is used when a route is matched
+        The responder type that is used when a route is matched
      */
     public typealias Handler = Request throws -> ResponseConvertible
 
@@ -18,11 +18,11 @@ public class Route {
     let hostname: String
     
     /**
-     Designated Initializer
-     
-     - parameter method: Http Method associated with Route
-     - parameter path: the path to use when deciding the route
-     - parameter handler: the handler to route when the path is called
+        Designated Initializer
+
+        - parameter method: Http Method associated with Route
+        - parameter path: the path to use when deciding the route
+        - parameter handler: the handler to route when the path is called
      */
     init(host: String = "*", method: Request.Method, path: String, handler: Request.Handler) {
         self.hostname = host

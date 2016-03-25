@@ -1,9 +1,7 @@
 // MARK: Constants
-
 private let HeaderEndOfLine = "\r\n"
 
 // MARK: Protocols
-
 public protocol SocketIO {
     func read(bufferLength: Int) throws -> [Byte]
     func write(buffer: [Byte]) throws
@@ -44,7 +42,6 @@ extension SocketIO {
 }
 
 // MARK: Read
-
 extension SocketIO {
     public func nextByte() throws -> Byte? {
         return try read(1).first
@@ -67,7 +64,6 @@ extension SocketIO {
 }
 
 // MARK: Request / Response
-
 extension SocketIO {
     public func readRequest() throws -> Request {
         let header = try Request.Header(self)

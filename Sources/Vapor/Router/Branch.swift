@@ -1,11 +1,3 @@
-//
-//  Branch.swift
-//  HelloServer
-//
-//  Created by Logan Wright on 2/15/16.
-//  Copyright © 2016 LoganWright. All rights reserved.
-//
-
 /**
     When routing requests, different branches will be established, 
     in a linked list style stemming from their host and request method.  

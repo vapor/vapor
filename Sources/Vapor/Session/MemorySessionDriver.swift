@@ -1,10 +1,10 @@
 import libc
 
 /**
- * The `MemorySessionDriver` stores session data
- * in a Swift `Dictionary`. This means all session
- * data will be purged if the server is restarted.
- */
+    The `MemorySessionDriver` stores session data
+    in a Swift `Dictionary`. This means all session
+    data will be purged if the server is restarted.
+*/
 public class MemorySessionDriver: SessionDriver {
     var sessions = [String: [String: String]]()
     private var sessionsLock = Lock()

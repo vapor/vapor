@@ -1,5 +1,6 @@
 /**
-    Log class
+    Log messages to the console using
+    the static methods on this class.
 */
 public class Log {
     

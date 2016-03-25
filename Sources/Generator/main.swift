@@ -88,7 +88,7 @@ struct Func: CustomStringConvertible {
             //ensure conversion worked
             for wildcard in wildcards {
                 f += "\t\t\tguard let c\(wildcard.name) = e\(wildcard.name) else {\n"
-                f += "\t\t\t\tthrow Abort.BadRequest\n"
+                f += "\t\t\t\tthrow Abort.InvalidParameter(\"\(wildcard.name)\", \(wildcard.generic).self)\n"
                 f += "\t\t\t}\n"
             }
             
