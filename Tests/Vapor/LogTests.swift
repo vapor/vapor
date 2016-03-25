@@ -55,7 +55,7 @@ class LogTests: XCTestCase {
     
     func testCanOverrideDefaultLogger() {
         prepare()
-        XCTAssertTrue(String(Log.driver).contains(other: "DummyLogger"), "driver should be DummyLogger")
+        XCTAssertTrue(String(Log.driver).contains("DummyLogger"), "driver should be DummyLogger")
     }
     
     func testAllLevelsEnabledByDefault() {
