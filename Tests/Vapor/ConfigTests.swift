@@ -1,21 +1,16 @@
 import XCTest
 @testable import Vapor
 
-#if os(Linux)
-	extension ConfigTests: XCTestCaseProvider {
-		var allTests : [(String, () throws -> Void)] {
-			return [
-				("testSimple", testSimple),
-				("testNesting", testNesting),
-				("testEnvironmentCascading", testEnvironmentCascading),
-				("testEnvironmentCascadingNesting", testEnvironmentCascadingNesting),
-				("testDotEnv", testDotEnv),
-			]
-		}
-	}
-#endif
-
 class ConfigTests: XCTestCase {
+    static var allTests : [(String, ConfigTests -> () throws -> Void)] {
+        return [
+           ("testSimple", testSimple),
+           ("testNesting", testNesting),
+           ("testEnvironmentCascading", testEnvironmentCascading),
+           ("testEnvironmentCascadingNesting", testEnvironmentCascadingNesting),
+           ("testDotEnv", testDotEnv),
+        ]
+    }
 
 	func testSimple() {
 		let config = self.config(.Development)
