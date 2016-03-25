@@ -24,7 +24,7 @@ public class View {
         information supplied.
         - context Passed to RenderDrivers
     */
-    public init(application: Application, path: String, context: [String: Any] = [:]) throws {
+    public init(_ application: Application, path: String, context: [String: Any] = [:]) throws {
         let resourceDir = application.workDir + "Resources"
         self.resourceDir = resourceDir
 
@@ -56,3 +56,11 @@ extension View: ResponseConvertible {
     }
 }
 
+///Adds convenience method to Application to create a view
+extension Application {
+
+    public func view(path: String, context: [String: Any] = [:]) throws -> View {
+        return try View(self, path: path, context: context)
+    }
+
+}
