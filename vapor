@@ -101,18 +101,22 @@ class Vapor {
 			let lib = "/usr/local/opt/vapor/lib/"
 			let rpath = ""
 		#endif
+		
+		var cflags = ""
 
-		var files = ""
+		var files = "App/main.swift App/**/*.swift"
 		if arguments.count >= 3 {
-			for i in 2..<arguments.count {
-				files += " " + arguments[i]
+			if arguments.count == 3 && arguments[2] == "--release" {
+				cflags = "-O"
+			} else {
+				for i in 2..<arguments.count {
+					files += " " + arguments[i]
+				}
 			}
-		} else {
-			files = "App/main.swift App/**/*.swift"
 		}
 
 		do {
-			try run("\(cc) \(files) -I \(include) -L \(lib) -lVapor -lJay -lHummingbird -llibc -lStrand \(rpath) -o .build/VaporApp")
+			try run("\(cc) \(cflags) \(files) -I \(include) -L \(lib) -lVapor -lJay -lHummingbird -llibc -lStrand \(rpath) -o .build/VaporApp")
 			print("Built: .build/VaporApp")
 		} catch {
 			print()
