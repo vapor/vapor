@@ -35,6 +35,11 @@ import libc
         func lowercased() -> String {
             return self.lowercaseString
         }
+    
+        func uppercased() -> String {
+            return self.uppercaseString
+        }
+    
         func hasPrefix(str: String) -> Bool {
             let strGen = str.characters.generate()
             let selfGen = self.characters.generate()

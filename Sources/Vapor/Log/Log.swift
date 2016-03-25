@@ -26,7 +26,7 @@ public class Log {
             case Warning: return "WARNING"
             case Error: return "ERROR"
             case Fatal: return "FATAL"
-            case Custom(let string): return "\(string.uppercaseString)"
+            case Custom(let string): return "\(string.uppercased())"
             }
         }
     }
