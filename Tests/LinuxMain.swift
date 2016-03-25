@@ -1,4 +1,5 @@
 import XCTest
+@testable import Vaportest
 
 XCTMain([
     testCase(ConfigTests.allTests),
