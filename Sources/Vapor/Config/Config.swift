@@ -46,7 +46,7 @@ public class Config {
         return result != nil
     }
     
-    ///Returns the most relevant instance of the request key
+    ///Returns the generic Json representation for an item at a given path or throws
     public func get(keyPath: String) throws -> Json {
         var keys = keyPath.keys
 
@@ -67,105 +67,20 @@ public class Config {
         return json
     }
     
-    public func get(keyPath: String) throws -> String {
+    //Returns the value for a given type from the Config or throws
+    public func get<T: JsonConvertible>(keyPath: String) throws -> T {
         let result: Json = try get(keyPath)
-        
-        guard let string = result.stringValue else {
-            throw Error.NoValueFound
-        }
-        
-        return string
+        return try T.makeWith(result)
     }
     
-    public func get(keyPath: String) throws -> Bool {
-        let result: Json = try get(keyPath)
-        
-        guard let bool = result.boolValue else {
-            throw Error.NoValueFound
-        }
-        
-        return bool
-    }
-    
-    public func get(keyPath: String) throws -> Int {
-        let result: Json = try get(keyPath)
-        
-        guard let int = result.int else {
-            throw Error.NoValueFound
-        }
-        
-        return int
-    }
-    
-    
-    public func get(keyPath: String) throws -> UInt {
-        let result: Json = try get(keyPath)
-        
-        guard let int = result.uintValue else {
-            throw Error.NoValueFound
-        }
-        
-        return int
-    }
-    
-    
-    public func get(keyPath: String) throws -> Double {
-        let result: Json = try get(keyPath)
-        
-        guard let int = result.doubleValue else {
-            throw Error.NoValueFound
-        }
-        
-        return int
-    }
-    
-    
-    public func get(keyPath: String) throws -> Float {
-        let result: Json = try get(keyPath)
-        
-        guard let int = result.floatValue else {
-            throw Error.NoValueFound
-        }
-        
-        return int
-    }
 
     ///Returns the result of `get(key: String)` but with a `String` fallback for `nil` cases
-    public func get(keyPath: String, _ fallback: String) -> String {
-        let string: String? = try? get(keyPath)
+    public func get<T: JsonConvertible>(keyPath: String, _ fallback: T) -> T {
+        let string: T? = try? get(keyPath)
         return string ?? fallback
     }
 
-    ///Returns the result of `get(key: String)` but with a `Bool` fallback for `nil` cases
-    public func get(keyPath: String, _ fallback: Bool) -> Bool {
-        let bool: Bool? = try? get(keyPath)
-        return bool ?? fallback
-    }
-
-    ///Returns the result of `get(key: String)` but with a `Int` fallback for `nil` cases
-    public func get(keyPath: String, _ fallback: Int) -> Int {
-        let int: Int? = try? get(keyPath)
-        return int ?? fallback
-    }
-
-    ///Returns the result of `get(key: String)` but with a `UInt` fallback for `nil` cases
-    public func get(keyPath: String, _ fallback: UInt) -> UInt {
-        let uint: UInt? = try? get(keyPath)
-        return uint ?? fallback
-    }
-
-    ///Returns the result of `get(key: String)` but with a `Double` fallback for `nil` cases
-    public func get(keyPath: String, _ fallback: Double) -> Double {
-        let double: Double? = try? get(keyPath)
-        return double ?? fallback
-    }
-
-    ///Returns the result of `get(key: String)` but with a `Float` fallback for `nil` cases
-    public func get(keyPath: String, _ fallback: Float) -> Float {
-        let float: Float? = try? get(keyPath)
-        return float ?? fallback
-    }
-
+   
     ///Temporarily sets a value for a given key path
     public func set(value: Json, forKeyPath keyPath: String) {
         var keys = keyPath.keys
