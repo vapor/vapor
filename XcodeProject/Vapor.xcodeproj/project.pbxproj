@@ -74,6 +74,7 @@
 		C387A0431C95FEBA00B6282E /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = C387A0361C95FDFE00B6282E /* main.swift */; };
 		C38808641C62C0390067DADD /* ResponseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C38808631C62C0390067DADD /* ResponseTests.swift */; };
 		C3943DC31C7663E80014F4EE /* RouterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3943DC21C7663E80014F4EE /* RouterTests.swift */; };
+		C3B009C31CA4CFDC00D2DCD1 /* ConfigTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3B009C21CA4CFDC00D2DCD1 /* ConfigTests.swift */; };
 		C3B4F38E1C9F5D9E00CB2731 /* ApplicationInitializable.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3B4F38D1C9F5D9E00CB2731 /* ApplicationInitializable.swift */; };
 		C3DFB55D1C80C2860045801C /* MyController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3DFB5541C80C2860045801C /* MyController.swift */; };
 		C3F683361C7D1EF300033AA2 /* ControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3F683351C7D1EF300033AA2 /* ControllerTests.swift */; };
@@ -187,6 +188,7 @@
 		C38808631C62C0390067DADD /* ResponseTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = ResponseTests.swift; path = ../Tests/Vapor/ResponseTests.swift; sourceTree = SOURCE_ROOT; };
 		C3943DC21C7663E80014F4EE /* RouterTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RouterTests.swift; path = ../Tests/Vapor/RouterTests.swift; sourceTree = SOURCE_ROOT; };
 		C3B009C01CA4BCC200D2DCD1 /* vapor */ = {isa = PBXFileReference; explicitFileType = sourcecode.swift; name = vapor; path = ../vapor; sourceTree = "<group>"; };
+		C3B009C21CA4CFDC00D2DCD1 /* ConfigTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = ConfigTests.swift; path = ../../Tests/Vapor/ConfigTests.swift; sourceTree = "<group>"; };
 		C3B4F38D1C9F5D9E00CB2731 /* ApplicationInitializable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ApplicationInitializable.swift; sourceTree = "<group>"; };
 		C3DFB5541C80C2860045801C /* MyController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MyController.swift; sourceTree = "<group>"; };
 		C3DFB5571C80C2860045801C /* vapor-logo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "vapor-logo.png"; sourceTree = "<group>"; };
@@ -486,16 +488,17 @@
 			children = (
 				C3691FDD1C98BE9E00C680DE /* LinuxMain.swift */,
 				C352E6931C62BB1C00E26467 /* Info.plist */,
-				C3691FDF1C98BEDA00C680DE /* EnvironmentTests.swift */,
+				C3B009C21CA4CFDC00D2DCD1 /* ConfigTests.swift */,
 				C3F683351C7D1EF300033AA2 /* ControllerTests.swift */,
+				C3691FDF1C98BEDA00C680DE /* EnvironmentTests.swift */,
 				C3433FD21C7D119D009F0876 /* HashTests.swift */,
 				34CC59551C7BE3C9007CA680 /* LogTests.swift */,
 				1AF2F51A1C89DE2A00A7B2EA /* MemorySessionDriverTests.swift */,
-				800EFA571C8231EE00F6C066 /* ProcessTests.swift */,
-				800EFA591C83A00300F6C066 /* QueryParametersTests.swift */,
 				C38808631C62C0390067DADD /* ResponseTests.swift */,
+				800EFA571C8231EE00F6C066 /* ProcessTests.swift */,
 				C3943DC21C7663E80014F4EE /* RouterTests.swift */,
 				3492B2EE1C787DD600D8E588 /* RouteTests.swift */,
+				800EFA591C83A00300F6C066 /* QueryParametersTests.swift */,
 				1AD708011C8E6A9500F17339 /* SessionTests.swift */,
 				C3691FE11C98C47F00C680DE /* TypedRouteTests.swift */,
 				8087DB581C9505E0002E57CC /* JeevesTests.swift */,
@@ -814,6 +817,7 @@
 				800EFA5A1C83A00300F6C066 /* QueryParametersTests.swift in Sources */,
 				1AD708021C8E6A9500F17339 /* SessionTests.swift in Sources */,
 				3492B2EF1C787DD600D8E588 /* RouteTests.swift in Sources */,
+				C3B009C31CA4CFDC00D2DCD1 /* ConfigTests.swift in Sources */,
 				C3F683361C7D1EF300033AA2 /* ControllerTests.swift in Sources */,
 				34CC59561C7BE3C9007CA680 /* LogTests.swift in Sources */,
 				C3943DC31C7663E80014F4EE /* RouterTests.swift in Sources */,

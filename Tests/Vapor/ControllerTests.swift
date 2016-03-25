@@ -9,18 +9,14 @@
 import XCTest
 @testable import Vapor
 
-#if os(Linux)
-    extension ControllerTests: XCTestCaseProvider {
-        var allTests : [(String, () throws -> Void)] {
-            return [
-                ("testController", testController)
-            ]
-        }
-    }
-#endif
-
 class ControllerTests: XCTestCase {
     
+    static var allTests : [(String, ControllerTests -> () throws -> Void)] {
+        return [
+            ("testController", testController)
+        ]
+    }
+
     class TestController: ResourceController, DefaultInitializable {
         required init() {
             

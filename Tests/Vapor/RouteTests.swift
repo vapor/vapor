@@ -9,19 +9,15 @@
 import XCTest
 @testable import Vapor
 
-#if os(Linux)
-    extension RouteTests: XCTestCaseProvider {
-        var allTests : [(String, () throws -> Void)] {
-            return [
-                ("testNestedRouteScopedPrefixPopsCorrectly", testNestedRouteScopedPrefixPopsCorrectly),
-                ("testRoute", testRoute),
-                ("testRouteScopedPrefix", testRouteScopedPrefix)
-            ]
-        }
-    }
-#endif
-
 class RouteTests: XCTestCase {
+    
+    static var allTests : [(String, RouteTests -> () throws -> Void)] {
+        return [
+           ("testNestedRouteScopedPrefixPopsCorrectly", testNestedRouteScopedPrefixPopsCorrectly),
+           ("testRoute", testRoute),
+           ("testRouteScopedPrefix", testRouteScopedPrefix)
+        ]
+    }
  
     func testRoute() {
         

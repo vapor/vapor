@@ -10,16 +10,6 @@ import Foundation
 import XCTest
 @testable import Vapor
 
-#if os(Linux)
-    extension TypedRouteTests: XCTestCaseProvider {
-        var allTests : [(String, () throws -> Void)] {
-            return [
-               ("testRouting", testRouting),
-            ]
-        }
-    }
-#endif
-
 class Post: StringInitializable {
     
     required init?(from string: String) throws {
@@ -29,6 +19,12 @@ class Post: StringInitializable {
 }
 
 class TypedRouteTests: XCTestCase {
+    
+    var allTests : [(String, TypedRouteTests -> () throws -> Void)] {
+        return [
+           ("testRouting", testRouting),
+        ]
+    }
     
     func testRouting() {
         

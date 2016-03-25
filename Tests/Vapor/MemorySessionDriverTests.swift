@@ -8,23 +8,19 @@
 import XCTest
 @testable import Vapor
 
-#if os(Linux)
-    extension MemorySessionDriverTests: XCTestCaseProvider {
-        var allTests : [(String, () throws -> Void)] {
-            return [
-                       ("testValueForKey_onNonExistantSession_isNil", testValueForKey_onNonExistantSession_isNil),
-                       ("testValueForKey_onExistingSession_onNonExistingKey_isNil", testValueForKey_onExistingSession_onNonExistingKey_isNil),
-                       ("testValueForKey_onExistingSession_onExistingKey_isKeyValue", testValueForKey_onExistingSession_onExistingKey_isKeyValue),
-                       ("testSetValueForKey_setsValueCorrectly", testSetValueForKey_setsValueCorrectly),
-                       ("testSetValueForKey_withExistingValue_overwritesValueCorrectly", testSetValueForKey_withExistingValue_overwritesValueCorrectly),
-                       ("testSetValueForKey_withExistingValue_toNilErasesValue", testSetValueForKey_withExistingValue_toNilErasesValue),
-                       ("testDestroySession_removesSession", testDestroySession_removesSession)
-            ]
-        }
-    }
-#endif
-
 class MemorySessionDriverTests: XCTestCase {
+    var allTests : [(String, MemorySessionDriverTests -> () throws -> Void)] {
+        return [
+           ("testValueForKey_onNonExistantSession_isNil", testValueForKey_onNonExistantSession_isNil),
+           ("testValueForKey_onExistingSession_onNonExistingKey_isNil", testValueForKey_onExistingSession_onNonExistingKey_isNil),
+           ("testValueForKey_onExistingSession_onExistingKey_isKeyValue", testValueForKey_onExistingSession_onExistingKey_isKeyValue),
+           ("testSetValueForKey_setsValueCorrectly", testSetValueForKey_setsValueCorrectly),
+           ("testSetValueForKey_withExistingValue_overwritesValueCorrectly", testSetValueForKey_withExistingValue_overwritesValueCorrectly),
+           ("testSetValueForKey_withExistingValue_toNilErasesValue", testSetValueForKey_withExistingValue_toNilErasesValue),
+           ("testDestroySession_removesSession", testDestroySession_removesSession)
+        ]
+    }
+    
     // MARK: - Obtaining Values
     func testValueForKey_onNonExistantSession_isNil() {
         let subject = MemorySessionDriver()

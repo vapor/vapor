@@ -9,17 +9,13 @@
 import XCTest
 @testable import Vapor
 
-#if os(Linux)
-    extension ProcessTests: XCTestCaseProvider {
-        var allTests : [(String, () throws -> Void)] {
-            return [
-                       ("testArgumentExtraction", testArgumentExtraction)
-            ]
-        }
-    }
-#endif
-
 class ProcessTests: XCTestCase {
+    
+    static var allTests : [(String, ProcessTests -> () throws -> Void)] {
+        return [
+            ("testArgumentExtraction", testArgumentExtraction)
+        ]
+    }
     
     func testArgumentExtraction() {
         let testArguments = ["--ip=123.45.1.6", "--port=8080", "--workDir=WorkDirectory"]

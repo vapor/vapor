@@ -9,19 +9,14 @@
 import XCTest
 @testable import Vapor
 
-#if os(Linux)
-    extension EnvironmentTests: XCTestCaseProvider {
-        var allTests : [(String, () throws -> Void)] {
-            return [
-                ("testEnvironment", testEnvironment),
-                ("testDetectEnvironmentHandler", testDetectEnvironmentHandler),
-                ("testInEnvironment", testInEnvironment)
-            ]
-        }
-    }
-#endif
-
 class EnvironmentTests: XCTestCase {
+    static var allTests : [(String, EnvironmentTests -> () throws -> Void)] {
+        return [
+           ("testEnvironment", testEnvironment),
+           ("testDetectEnvironmentHandler", testDetectEnvironmentHandler),
+           ("testInEnvironment", testInEnvironment)
+        ]
+    }
 
     func testEnvironment() {
         let app = Application()

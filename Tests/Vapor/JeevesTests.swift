@@ -50,19 +50,14 @@ private final class TestSocket: Socket {
     }
 }
 
-
-#if os(Linux)
-    extension JeevesTests: XCTestCaseProvider {
-        var allTests : [(String, () throws -> Void)] {
-            return [
-                       ("testReadHeader", testReadHeader),
-                       ("testReadRequest", testReadRequest)
-            ]
-        }
-    }
-#endif
-
 class JeevesTests: XCTestCase {
+    
+    static var allTests : [(String, JeevesTests -> () throws -> Void)] {
+        return [
+           ("testReadHeader", testReadHeader),
+           ("testReadRequest", testReadRequest)
+        ]
+    }
 
     func testReadHeader() throws {
         let socket = TestSocket()

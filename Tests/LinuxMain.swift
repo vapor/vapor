@@ -9,8 +9,11 @@ XCTMain([
 	LogTests(),
 	MemorySessionDriverTests(),
 	ResponseTests(),
+	ProcessTests(),
 	RouterTests(),
 	RouteTests(),
+	QueryParametersTests(),
 	SessionTests(),
-	TypedRouteTests()
+	TypedRouteTests(),
+	JeevesTests()
 ])
