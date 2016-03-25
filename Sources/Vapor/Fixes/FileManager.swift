@@ -1,7 +1,9 @@
 import libc
 
+
+
 class FileManager {
-	enum Error: ErrorType {
+	enum Error: ErrorProtocol {
 		case CouldNotOpenFile
 		case Unreadable
 	}
@@ -34,8 +36,13 @@ class FileManager {
         var remaining = Int(info.st_size)
         var total = 0
         while remaining > 0 {
-        	//change to advanced(by:)
-            let amt = read(fd, rawData.advancedBy(total), remaining)
+            #if swift(>=3.0)
+                let advanced = rawData.advanced(by: total)
+            #else
+                let advanced = rawData.advancedBy(total)
+            #endif
+            
+            let amt = read(fd, advanced, remaining)
             if amt < 0 {
                 break
             }
@@ -90,8 +97,14 @@ class FileManager {
 		}
 
 		defer { free(result) }
+        
+        #if swift(>=3.0)
+            let cstring = String(validatingUTF8: result)
+        #else
+            let cstring = String.fromCString(result)
+        #endif
 
-		if let expanded = String.fromCString(result) {
+		if let expanded = cstring {
 			return expanded
 		} else {
 			throw Error.Unreadable
@@ -124,7 +137,14 @@ class FileManager {
 		#endif
 
 		for i in 0..<count {
-			if let path = String.fromCString(gt.gl_pathv[i]) {
+            
+            #if swift(>=3.0)
+                let cstring = String(validatingUTF8: gt.gl_pathv[i])
+            #else
+                let cstring = String.fromCString(gt.gl_pathv[i])
+            #endif
+            
+			if let path = cstring {
 				contents.append(path)
 			}
 		}

@@ -4,7 +4,7 @@ OS = $(shell uname)
 PWD = $(shell pwd)
 ARCH = $(shell uname -m)
 
-VERSION = 0.3.4
+VERSION = 0.3.5
 
 RELEASE_DIR = Release/$(VERSION)_$(OS)_$(ARCH)
 DEBUG_DIR = .build
@@ -105,5 +105,4 @@ $(PACKAGES_DIR)/Hummingbird/Sources/*.swift:
 clean:
 	rm -rf $(PACKAGES_DIR)
 	rm -rf $(DEBUG_DIR)
-	rm -rf $(RELEASE_DIR)
 

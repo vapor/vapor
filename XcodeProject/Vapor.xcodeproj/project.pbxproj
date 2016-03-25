@@ -186,6 +186,7 @@
 		C387A03B1C95FE1300B6282E /* Generator */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Generator; sourceTree = BUILT_PRODUCTS_DIR; };
 		C38808631C62C0390067DADD /* ResponseTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = ResponseTests.swift; path = ../Tests/Vapor/ResponseTests.swift; sourceTree = SOURCE_ROOT; };
 		C3943DC21C7663E80014F4EE /* RouterTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RouterTests.swift; path = ../Tests/Vapor/RouterTests.swift; sourceTree = SOURCE_ROOT; };
+		C3B009C01CA4BCC200D2DCD1 /* vapor */ = {isa = PBXFileReference; explicitFileType = sourcecode.swift; name = vapor; path = ../vapor; sourceTree = "<group>"; };
 		C3B4F38D1C9F5D9E00CB2731 /* ApplicationInitializable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ApplicationInitializable.swift; sourceTree = "<group>"; };
 		C3DFB5541C80C2860045801C /* MyController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MyController.swift; sourceTree = "<group>"; };
 		C3DFB5571C80C2860045801C /* vapor-logo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "vapor-logo.png"; sourceTree = "<group>"; };
@@ -458,6 +459,7 @@
 			isa = PBXGroup;
 			children = (
 				C352E7141C62BE6900E26467 /* Package.swift */,
+				C3B009C01CA4BCC200D2DCD1 /* vapor */,
 				C352E7131C62BDE200E26467 /* README.md */,
 				3A91D3D41C7F6B1A00EA3CA0 /* VaporDev */,
 				3A91D3CD1C7F6AF900EA3CA0 /* Vapor */,

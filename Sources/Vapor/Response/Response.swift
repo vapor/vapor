@@ -133,9 +133,18 @@ public class Response {
             if cookies.isEmpty {
                 headers["Set-Cookie"] = nil
             } else {
-                headers["Set-Cookie"] = cookies
-                    .map { key, val in return "\(key)=\(val)" }
-                    .joinWithSeparator(";")
+                let mapped = cookies.map { key, val in
+                    return "\(key)=\(val)"
+                }
+                
+                #if swift(>=3.0)
+                    let cookiesString = mapped.joined(separator: ";")
+                #else
+                    let cookiesString = mapped.joinWithSeparator(";")
+                #endif
+                
+                headers["Set-Cookie"] = cookiesString
+                
             }
         }
     }
@@ -202,7 +211,7 @@ extension Response {
      
      - InvalidObject: the object to serialize is not a valid Json object
      */
-    public enum SerializationError: ErrorType {
+    public enum SerializationError: ErrorProtocol {
         case InvalidObject
     }
     

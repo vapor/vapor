@@ -18,18 +18,40 @@ import libc
 
 
 //TODO: func anyGenerator is renamed to AnyGenerator in Swift 2.2, until then it's just dirty hack for linux (because swift >= 2.2 is available for Linux)
-private func CS_AnyGenerator<Element>(body: () -> Element?) -> AnyGenerator<Element> {
-    #if os(Linux)
-        return AnyGenerator(body: body)
-    #else
-        return AnyGenerator(body: body)
-    #endif
-}
 
-struct BytesSequence: SequenceType {
+#if !swift(>=3.0)
+    typealias Sequence = SequenceType
+#endif
+
+#if swift(>=3.0)
+private func CS_AnyGenerator<Element>(body: () -> Element?) -> AnyIterator<Element> {
+    return AnyIterator(body: body)
+}
+#else
+private func CS_AnyGenerator<Element>(body: () -> Element?) -> AnyGenerator<Element> {
+    return AnyGenerator(body: body)
+}
+#endif
+
+struct BytesSequence: Sequence {
     let chunkSize: Int
     let data: [UInt8]
     
+    
+    #if swift(>=3.0)
+    func makeIterator() -> AnyIterator<ArraySlice<UInt8>> {
+        
+        var offset:Int = 0
+        
+        return CS_AnyGenerator {
+            let two = self.data.count - offset
+            let end = Swift.min(self.chunkSize, two)
+            let result = self.data[offset..<offset + end]
+            offset += result.count
+            return result.count > 0 ? result : nil
+        }
+    }
+    #else
     func generate() -> AnyGenerator<ArraySlice<UInt8>> {
         
         var offset:Int = 0
@@ -41,6 +63,7 @@ struct BytesSequence: SequenceType {
             return result.count > 0 ? result : nil
         }
     }
+    #endif
 }
 
 class SHA2 {
@@ -63,7 +86,11 @@ class SHA2 {
             msgLength += 1
         }
         
-        tmpMessage += Array<UInt8>(count: counter, repeatedValue: 0)
+        #if swift(>=3.0)
+            tmpMessage += Array<UInt8>(repeating: 0, count: counter)
+        #else
+            tmpMessage += Array<UInt8>(count: counter, repeatedValue: 0)
+        #endif
         return tmpMessage
     }
     
@@ -109,7 +136,11 @@ class SHA2 {
         for chunk in BytesSequence(chunkSize: chunkSizeBytes, data: tmpMessage) {
             // break chunk into sixteen 32-bit words M[j], 0 ≤ j ≤ 15, big-endian
             // Extend the sixteen 32-bit words into sixty-four 32-bit words:
-            var M:[UInt32] = [UInt32](count: self.k.count, repeatedValue: 0)
+            #if swift(>=3.0)
+                var M:[UInt32] = [UInt32](repeating: 0, count: self.k.count)
+            #else
+                var M:[UInt32] = [UInt32](count: self.k.count, repeatedValue: 0)
+            #endif
             for x in 0..<M.count {
                 switch (x) {
                 case 0...15:
@@ -217,14 +248,25 @@ func toUInt32Array(slice: ArraySlice<UInt8>) -> Array<UInt32> {
     var result = Array<UInt32>()
     result.reserveCapacity(16)
     
-    for idx in slice.startIndex.stride(to: slice.endIndex, by: sizeof(UInt32)) {
-        let val1:UInt32 = (UInt32(slice[idx.advancedBy(3)]) << 24)
-        let val2:UInt32 = (UInt32(slice[idx.advancedBy(2)]) << 16)
-        let val3:UInt32 = (UInt32(slice[idx.advancedBy(1)]) << 8)
-        let val4:UInt32 = UInt32(slice[idx])
-        let val:UInt32 = val1 | val2 | val3 | val4
-        result.append(val)
-    }
+    #if swift(>=3.0)
+        for idx in stride(from: slice.startIndex, to: slice.endIndex, by: sizeof(UInt32)) {
+            let val1:UInt32 = (UInt32(slice[idx.advanced(by: 3)]) << 24)
+            let val2:UInt32 = (UInt32(slice[idx.advanced(by: 2)]) << 16)
+            let val3:UInt32 = (UInt32(slice[idx.advanced(by: 1)]) << 8)
+            let val4:UInt32 = UInt32(slice[idx])
+            let val:UInt32 = val1 | val2 | val3 | val4
+            result.append(val)
+        }
+    #else
+        for idx in slice.startIndex.stride(to: slice.endIndex, by: sizeof(UInt32)) {
+            let val1:UInt32 = (UInt32(slice[idx.advancedBy(3)]) << 24)
+            let val2:UInt32 = (UInt32(slice[idx.advancedBy(2)]) << 16)
+            let val3:UInt32 = (UInt32(slice[idx.advancedBy(1)]) << 8)
+            let val4:UInt32 = UInt32(slice[idx])
+            let val:UInt32 = val1 | val2 | val3 | val4
+            result.append(val)
+        }
+    #endif
     return result
 }
 
@@ -266,29 +308,55 @@ func rotateRight(x:UInt64, n:UInt64) -> UInt64 {
 func arrayOfBytes<T>(value:T, length:Int? = nil) -> [UInt8] {
     let totalBytes = length ?? sizeof(T)
     
-    let valuePointer = UnsafeMutablePointer<T>.alloc(1)
-    valuePointer.memory = value
-    
-    let bytesPointer = UnsafeMutablePointer<UInt8>(valuePointer)
-    var bytes = [UInt8](count: totalBytes, repeatedValue: 0)
-    for j in 0..<min(sizeof(T),totalBytes) {
-        bytes[totalBytes - 1 - j] = (bytesPointer + j).memory
-    }
-    
-    valuePointer.destroy()
-    valuePointer.dealloc(1)
+    #if swift(>=3.0)
+        let valuePointer = UnsafeMutablePointer<T>(allocatingCapacity: 1)
+        valuePointer.pointee = value
+        
+        let bytesPointer = UnsafeMutablePointer<UInt8>(valuePointer)
+        var bytes = [UInt8](repeating: 0, count: totalBytes)
+        for j in 0..<min(sizeof(T),totalBytes) {
+            bytes[totalBytes - 1 - j] = (bytesPointer + j).pointee
+        }
+        
+        valuePointer.deinitialize()
+        valuePointer.deallocateCapacity(1)
+    #else
+        let valuePointer = UnsafeMutablePointer<T>.alloc(1)
+        valuePointer.memory = value
+        
+        let bytesPointer = UnsafeMutablePointer<UInt8>(valuePointer)
+        var bytes = [UInt8](count: totalBytes, repeatedValue: 0)
+        for j in 0..<min(sizeof(T),totalBytes) {
+            bytes[totalBytes - 1 - j] = (bytesPointer + j).memory
+        }
+        
+        valuePointer.destroy()
+        valuePointer.dealloc(1)
+    #endif
     
     return bytes
 }
 
 /// Initialize integer from array of bytes.
 /// This method may be slow
-func integerWithBytes<T: IntegerType where T:ByteConvertible, T: BitshiftOperationsType>(bytes: [UInt8]) -> T {
-    var bytes = bytes.reverse() as Array<UInt8> //FIXME: check it this is equivalent of Array(...)
+#if !swift(>=3.0)
+    typealias Integer = IntegerType
+#endif
+
+func integerWithBytes<T: Integer where T:ByteConvertible, T: BitshiftOperationsType>(bytes: [UInt8]) -> T {
+    #if swift(>=3.0)
+        var bytes = bytes.reversed() as Array<UInt8> //FIXME: check it this is equivalent of Array(...)
+    #else
+        var bytes = bytes.reverse() as Array<UInt8> //FIXME: check it this is equivalent of Array(...)
+    #endif
     if bytes.count < sizeof(T) {
         let paddingCount = sizeof(T) - bytes.count
         if (paddingCount > 0) {
-            bytes += [UInt8](count: paddingCount, repeatedValue: 0)
+            #if swift(>=3.0)
+                bytes += [UInt8](repeating: 0, count: paddingCount)
+            #else
+                bytes += [UInt8](count: paddingCount, repeatedValue: 0)
+            #endif
         }
     }
     
@@ -297,7 +365,12 @@ func integerWithBytes<T: IntegerType where T:ByteConvertible, T: BitshiftOperati
     }
     
     var result: T = 0
-    for byte in bytes.reverse() {
+    #if swift(>=3.0)
+        let reversed = bytes.reversed()
+    #else
+        let reversed = bytes.reverse()
+    #endif
+    for byte in reversed {
         result = result << 8 | T(byte)
     }
     return result
@@ -341,35 +414,45 @@ extension UInt64 : BitshiftOperationsType, ByteConvertible {
 }
 
 /** build bit pattern from array of bits */
-func integerFromBitsArray<T: UnsignedIntegerType>(bits: [Bit]) -> T
+
+#if swift(>=3.0)
+    typealias Bit = Int
+#endif
+
+func integerFromBitsArray<T: UnsignedInteger>(bits: [Bit]) -> T
 {
     var bitPattern:T = 0
-    for (idx,b) in bits.enumerate() {
-        if (b == Bit.One) {
-            let bit = T(UIntMax(1) << UIntMax(idx))
-            bitPattern = bitPattern | bit
+    #if swift(>=3.0)
+        for (idx,b) in bits.enumerated() {
+            if (b == 1) {
+                let bit = T(UIntMax(1) << UIntMax(idx))
+                bitPattern = bitPattern | bit
+            }
         }
-    }
+    #else
+        for (idx,b) in bits.enumerate() {
+            if (b == Bit.One) {
+                let bit = T(UIntMax(1) << UIntMax(idx))
+                bitPattern = bitPattern | bit
+            }
+        }
+    #endif
     return bitPattern
 }
 
 #if swift(>=3.0)
 protocol CSArrayType: Sequence {
-    func cs_arrayValue() -> [Generator.Element]
+    func cs_arrayValue() -> [Iterator.Element]
 }
-#else
-protocol CSArrayType: _ArrayType {
-    func cs_arrayValue() -> [Generator.Element]
-}
-#endif
-
+    
 extension Array: CSArrayType {
-    func cs_arrayValue() -> [Generator.Element] {
+    func cs_arrayValue() -> [Iterator.Element] {
         return self
     }
 }
-
-extension CSArrayType where Generator.Element == UInt8 {
+    
+    
+extension CSArrayType where Iterator.Element == UInt8 {
     
     func toHexString() -> String {
         return self.lazy.reduce("") { previous, next in
@@ -378,11 +461,40 @@ extension CSArrayType where Generator.Element == UInt8 {
             if converted.characters.count == 1 {
                 converted = "0" + converted
             }
-
+            
             return previous + converted
         }
     }
 }
+#else
+protocol CSArrayType: _ArrayType {
+    func cs_arrayValue() -> [Generator.Element]
+}
+    
+extension Array: CSArrayType {
+    func cs_arrayValue() -> [Generator.Element] {
+        return self
+    }
+}
+    
+    
+extension CSArrayType where Generator.Element == UInt8 {
+    
+    func toHexString() -> String {
+        return self.lazy.reduce("") { previous, next in
+            var converted = String(next, radix: 16)
+    
+            if converted.characters.count == 1 {
+                converted = "0" + converted
+            }
+    
+            return previous + converted
+        }
+    }
+}
+#endif
+
+
 
 class HMAC {
     
@@ -402,19 +514,35 @@ class HMAC {
             }
         }
         
-        if (key.count < 64) { // keys shorter than blocksize are zero-padded
-            key = key + [UInt8](count: 64 - key.count, repeatedValue: 0)
-        }
-        
-        
-        var opad = [UInt8](count: 64, repeatedValue: 0x5c)
-        for (idx, _) in key.enumerate() {
-            opad[idx] = key[idx] ^ opad[idx]
-        }
-        var ipad = [UInt8](count: 64, repeatedValue: 0x36)
-        for (idx, _) in key.enumerate() {
-            ipad[idx] = key[idx] ^ ipad[idx]
-        }
+        #if swift(>=3.0)
+            if (key.count < 64) { // keys shorter than blocksize are zero-padded
+                key = key + [UInt8](repeating: 0, count: 64 - key.count)
+            }
+            
+            
+            var opad = [UInt8](repeating: 0x5c, count: 64)
+            for (idx, _) in key.enumerated() {
+                opad[idx] = key[idx] ^ opad[idx]
+            }
+            var ipad = [UInt8](repeating: 0x36, count: 64)
+            for (idx, _) in key.enumerated() {
+                ipad[idx] = key[idx] ^ ipad[idx]
+            }
+        #else
+            if (key.count < 64) { // keys shorter than blocksize are zero-padded
+                key = key + [UInt8](count: 64 - key.count, repeatedValue: 0)
+            }
+            
+            
+            var opad = [UInt8](count: 64, repeatedValue: 0x5c)
+            for (idx, _) in key.enumerate() {
+                opad[idx] = key[idx] ^ opad[idx]
+            }
+            var ipad = [UInt8](count: 64, repeatedValue: 0x36)
+            for (idx, _) in key.enumerate() {
+                ipad[idx] = key[idx] ^ ipad[idx]
+            }
+        #endif
         
         var finalHash:[UInt8]? = nil;
         if let ipadAndMessageHash = self.calculateHash(bytes: ipad + message) {

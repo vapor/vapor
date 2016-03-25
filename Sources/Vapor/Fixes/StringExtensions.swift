@@ -29,7 +29,12 @@ import libc
 
     }
 #else
+    public typealias ErrorProtocol = ErrorType
+    
     extension String {
+        func lowercased() -> String {
+            return self.lowercaseString
+        }
         func hasPrefix(str: String) -> Bool {
             let strGen = str.characters.generate()
             let selfGen = self.characters.generate()
@@ -72,7 +77,11 @@ import libc
 
 extension String {
     public static func buffer(size size: Int) -> [Int8] {
-        return [Int8](count: size, repeatedValue: 0)
+        #if swift(>=3.0)
+            return [Int8](repeating: 0, count: size)
+        #else
+            return [Int8](count: size, repeatedValue: 0)
+        #endif
     }
 
     public init?(pointer: UnsafePointer<UInt8>, length: Int) {
@@ -80,7 +89,13 @@ extension String {
         var buffer = String.buffer(size: length + 1)
         strncpy(&buffer, uPointer, length)
 
-        guard let string = String.fromCString(buffer) else {
+        #if swift(>=3.0)
+            let cstring = String(validatingUTF8: buffer)
+        #else
+            let cstring = String.fromCString(buffer)
+        #endif
+        
+        guard let string = cstring else {
             return nil
         }
 
@@ -94,28 +109,52 @@ extension String {
 
     public func trim(left characterSet: CharacterSet) -> String {
         var start = characters.count
+        
+        #if swift(>=3.0)
+            let charactersEnumerated = characters.enumerated()
+        #else
+            let charactersEnumerated = characters.enumerate()
+        #endif
 
-        for (index, character) in characters.enumerate() {
+        for (index, character) in charactersEnumerated {
             if !characterSet.contains(character) {
                 start = index
                 break
             }
         }
+        
+        #if swift(>=3.0)
+            let si = startIndex.advanced(by: start)
+        #else
+            let si = startIndex.advancedBy(start)
+        #endif
 
-        return self[startIndex.advancedBy(start) ..< endIndex]
+        return self[si ..< endIndex]
     }
 
     public func trim(right characterSet: CharacterSet) -> String {
         var end = characters.count
+        
+        #if swift(>=3.0)
+            let charactersEnumerated = characters.reversed().enumerated()
+        #else
+            let charactersEnumerated = characters.reverse().enumerate()
+        #endif
 
-        for (index, character) in characters.reverse().enumerate() {
+        for (index, character) in charactersEnumerated {
             if !characterSet.contains(character) {
                 end = index
                 break
             }
         }
+        
+        #if swift(>=3.0)
+            let si = startIndex.advanced(by: characters.count - end)
+        #else
+            let si = startIndex.advancedBy(characters.count - end)
+        #endif
 
-        return self[startIndex ..< startIndex.advancedBy(characters.count - end)]
+        return self[startIndex ..< si]
     }
 
     func split(separator: Character) -> [String] {
@@ -123,7 +162,11 @@ extension String {
     }
     
     func split(maxSplit: Int = Int.max, separator: Character) -> [String] {
-        return self.characters.split(maxSplit) { $0 == separator }.map(String.init)
+        #if swift(>=3.0)
+            return self.characters.split(separator: separator, maxSplits: maxSplit, omittingEmptySubsequences: false).map(String.init)
+        #else
+            return self.characters.split(maxSplit) { $0 == separator }.map(String.init)
+        #endif
     }
 
     public func finish(ending: String) -> String {
@@ -200,18 +243,30 @@ extension String {
 
         var string = ""
         var decoder = UTF8()
-        var iterator = decodedBytes.generate()
         var finished = false
-
-        while !finished {
-            let decodingResult = decoder.decode(&iterator)
-            switch decodingResult {
-            case .Result(let char): string.append(char)
-            case .EmptyInput: finished = true
-            case .Error:
-                return ""
+        #if swift(>=3.0)
+            var iterator = decodedBytes.makeIterator()
+            while !finished {
+                let decodingResult = decoder.decode(&iterator)
+                switch decodingResult {
+                case .scalarValue(let char): string.append(char)
+                case .emptyInput: finished = true
+                case .error:
+                    return ""
+                }
             }
-        }
+        #else
+            var iterator = decodedBytes.generate()
+            while !finished {
+                let decodingResult = decoder.decode(&iterator)
+                switch decodingResult {
+                case .Result(let char): string.append(char)
+                case .EmptyInput: finished = true
+                case .Error:
+                    return ""
+                }
+            }
+        #endif
 
         return string
     }

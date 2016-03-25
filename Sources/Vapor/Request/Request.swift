@@ -57,7 +57,7 @@ public class Request {
 
     public init(method: Method, path: String, address: String?, headers: [String: String], body: [UInt8]) {
         self.method = method
-        self.path = path.split(separator: "?").first ?? ""
+        self.path = path.split("?").first ?? ""
         self.address = address
         self.headers = headers
         self.body = body
@@ -95,7 +95,12 @@ public class Request {
             let cookieArray = cookie.split("=")
             
             if cookieArray.count == 2 {
-                let key = cookieArray[0].split(" ").joinWithSeparator("")
+                let split = cookieArray[0].split(" ")
+                #if swift(>=3.0)
+                    let key = split.joined(separator: "")
+                #else
+                    let key = split.joinWithSeparator("")
+                #endif
                 cookies[key] = cookieArray[1]
             }
         }

@@ -36,7 +36,7 @@ extension Request {
 
 // MARK: Json Convertible 
 
-public enum JsonError: ErrorType {
+public enum JsonError: ErrorProtocol {
     
     /**
      *  When converting to a value from Json, if there is a type conflict, this will throw an error
