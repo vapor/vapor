@@ -1,11 +1,10 @@
 /**
     A handful of standard errors that can be thrown
     in any Vapor closure by calling `throw Abort.<case>`.
-
     These errors can be caught in Middleware to give
     a desired response.
 */
-public enum Abort: ErrorType {
+public enum Abort: ErrorProtocol {
     case InvalidParameter(String, StringInitializable.Type)
     case BadRequest
     case NotFound

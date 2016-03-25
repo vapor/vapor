@@ -9,28 +9,25 @@
 import XCTest
 @testable import Vapor
 
-#if os(Linux)
-    extension LogTests: XCTestCaseProvider {
-        var allTests : [(String, () throws -> Void)] {
-            return [
-                ("testCanOverrideDefaultLogger", testCanOverrideDefaultLogger),
-                ("testAllLevelsEnabledByDefault", testAllLevelsEnabledByDefault),
-                ("testCanOverrideDefaultEnabledLevels", testCanOverrideDefaultEnabledLevels),
-                ("testDisabledLogsDoNoOutput", testDisabledLogsDoNoOutput),
-                ("testVerboseDidLog", testVerboseDidLog),
-                ("testDebugDidLog", testDebugDidLog),
-                ("testInfoDidLog", testInfoDidLog),
-                ("testWarningDidLog", testWarningDidLog),
-                ("testErrorDidLog", testErrorDidLog),
-                ("testFatalDidLog", testFatalDidLog),
-                ("testCustomDidLog", testCustomDidLog),
-                ("testConsoleLoggerDidPrintToConsole", testConsoleLoggerDidPrintToConsole)
-            ]
-        }
-    }
-#endif
-
 class LogTests: XCTestCase {
+    
+    static var allTests : [(String, LogTests -> () throws -> Void)] {
+        return [
+           ("testCanOverrideDefaultLogger", testCanOverrideDefaultLogger),
+           ("testAllLevelsEnabledByDefault", testAllLevelsEnabledByDefault),
+           ("testCanOverrideDefaultEnabledLevels", testCanOverrideDefaultEnabledLevels),
+           ("testDisabledLogsDoNoOutput", testDisabledLogsDoNoOutput),
+           ("testVerboseDidLog", testVerboseDidLog),
+           ("testDebugDidLog", testDebugDidLog),
+           ("testInfoDidLog", testInfoDidLog),
+           ("testWarningDidLog", testWarningDidLog),
+           ("testErrorDidLog", testErrorDidLog),
+           ("testFatalDidLog", testFatalDidLog),
+           ("testCustomDidLog", testCustomDidLog),
+           ("testConsoleLoggerDidPrintToConsole", testConsoleLoggerDidPrintToConsole)
+        ]
+    }
+
 
     class DummyLogger: LogDriver {
         
@@ -55,7 +52,11 @@ class LogTests: XCTestCase {
     
     func testCanOverrideDefaultLogger() {
         prepare()
-        XCTAssertTrue(String(Log.driver).containsString("DummyLogger"), "driver should be DummyLogger")
+        #if os(Linux)
+            XCTAssertTrue(String(Log.driver).containsString("DummyLogger"), "driver should be DummyLogger")
+        #else
+            XCTAssertTrue(String(Log.driver).contains("DummyLogger"), "driver should be DummyLogger")
+        #endif
     }
     
     func testAllLevelsEnabledByDefault() {

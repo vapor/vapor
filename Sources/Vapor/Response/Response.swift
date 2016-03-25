@@ -1,6 +1,6 @@
 /**
     Responses that redirect to a supplied URL.
-*/
+ */
 public class Redirect: Response {
 
     ///The URL string for redirect
@@ -17,7 +17,7 @@ public class Redirect: Response {
         - parameter: redirectLocation: The URL string for redirect
         
         - returns: Response
-    */
+     */
     public init(to redirectLocation: String) {
         self.redirectLocation = redirectLocation
         super.init(status: .MovedPermanently, data: [], contentType: .None)
@@ -47,7 +47,7 @@ public class AsyncResponse: Response {
     Responses are objects responsible for returning
     data to the HTTP request such as the body, status 
     code and headers.
-*/
+ */
 public class Response {
     
     // MARK: Types
@@ -122,6 +122,7 @@ public class Response {
     }
     
     // MARK: Member Variables
+
     public var status: Status
     public var data: [UInt8]
     public var contentType: ContentType
@@ -132,9 +133,18 @@ public class Response {
             if cookies.isEmpty {
                 headers["Set-Cookie"] = nil
             } else {
-                headers["Set-Cookie"] = cookies
-                    .map { key, val in return "\(key)=\(val)" }
-                    .joinWithSeparator(";")
+                let mapped = cookies.map { key, val in
+                    return "\(key)=\(val)"
+                }
+                
+                #if swift(>=3.0)
+                    let cookiesString = mapped.joined(separator: ";")
+                #else
+                    let cookiesString = mapped.joinWithSeparator(";")
+                #endif
+                
+                headers["Set-Cookie"] = cookiesString
+                
             }
         }
     }
@@ -148,7 +158,8 @@ public class Response {
         - parameter data: the byte sequence that will be transmitted
         - parameter contentType: the content type that the data represents
     */
-    public init<T: SequenceType where T.Generator.Element == UInt8>(status: Status, data: T, contentType: ContentType) {
+    #if swift(>=3.0)
+    public init<T: Sequence where T.Iterator.Element == UInt8>(status: Status, data: T, contentType: ContentType) {
         self.status = status
         self.data = [UInt8](data)
         self.contentType = contentType
@@ -167,6 +178,28 @@ public class Response {
         
         self.headers["Server"] = "Vapor \(Application.VERSION)"
     }
+    #else
+    public init<T: SequenceType where T.Generator.Element == UInt8>(status: Status, data: T, contentType: ContentType) {
+        self.status = status
+        self.data = [UInt8](data)
+        self.contentType = contentType
+        switch contentType {
+        case .Json:
+        self.headers = ["Content-Type": "application/json"]
+        case .Html:
+        self.headers = ["Content-Type": "text/html"]
+        case let .Other(description):
+        self.headers = ["Content-Type": description]
+        case .Text:
+        self.headers = ["Content-Type": "text"]
+        case .None:
+        self.headers = [:]
+        }
+        
+        self.headers["Server"] = "Vapor \(Application.VERSION)"
+    }
+    #endif
+
 }
 
 // MARK: - Convenience Initializers
@@ -177,50 +210,51 @@ extension Response {
 
         - InvalidObject: the object to serialize is not a valid Json object
     */
-    public enum SerializationError: ErrorType {
+    public enum SerializationError: ErrorProtocol {
         case InvalidObject
     }
     
     /**
-        Convenience Initializer Error
-
-        Will return 500
-
-        - parameter error: a description of the server error
+         Convenience Initializer Error
+         
+         Will return 500
+         
+         - parameter error: a description of the server error
     */
     public convenience init(error: String) {
-        self.init(status: .Error, data: error.utf8, contentType: .Text)
+        let text = "{\n\t\"error\": true,\n\t\"message\":\"\(error)\"\n}"
+        self.init(status: .Error, data: text.utf8, contentType: .Json)
     }
     
     /**
-        Convenience Initializer - Html
-
-        - parameter status: http status of response
-        - parameter html: the html string to be rendered as a response
-     */
+         Convenience Initializer - Html
+         
+         - parameter status: http status of response
+         - parameter html: the html string to be rendered as a response
+    */
     public convenience init(status: Status, html: String) {
         let serialised = "<html><meta charset=\"UTF-8\"><body>\(html)</body></html>"
         self.init(status: status, data: serialised.utf8, contentType: .Html)
     }
     
     /**
-        Convenience Initializer - Text
-
-        - parameter status: http status
-        - parameter text: basic text response
-     */
+         Convenience Initializer - Text
+         
+         - parameter status: http status
+         - parameter text: basic text response
+    */
     public convenience init(status: Status, text: String) {
         self.init(status: status, data: text.utf8, contentType: .Text)
     }
     
     /**
-        Convenience Initializer
-
-        - parameter status: the http status
-        - parameter json: any value that will be attempted to be serialized as json.  Use 'Json' for more complex objects
-
-        - throws: SerializationErro
-     */
+         Convenience Initializer
+         
+         - parameter status: the http status
+         - parameter json: any value that will be attempted to be serialized as json.  Use 'Json' for more complex objects
+         
+         - throws: SerializationErro
+    */
     public convenience init(status: Status, json: Json) throws {
         let data = try json.serialize()
         self.init(status: status, data: data, contentType: .Json)

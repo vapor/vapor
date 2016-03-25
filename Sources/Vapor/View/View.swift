@@ -9,8 +9,12 @@ public class View {
     ///Location of Resource files
     public static let resourceDir = Application.workDir + "Resources"
     var bytes: [UInt8]
+    
+    #if !swift(>=3.0)
+        typealias ErrorType = ErrorProtocol
+    #endif
 
-    enum Error: ErrorType {
+    enum Error: ErrorProtocol {
         case InvalidPath
     }
 
@@ -26,7 +30,6 @@ public class View {
         Attempt to load and render a file
         from the supplied path using the contextual
         information supplied.
-
         - context Passed to RenderDrivers
     */
     public init(path: String, context: [String: Any]) throws {

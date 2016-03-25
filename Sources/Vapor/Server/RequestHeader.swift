@@ -2,8 +2,11 @@ extension Request {
     // HEADERS
     // https://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html
     internal struct Header {
+        #if !swift(>=3.0)
+        typealias ErrorType = ErrorProtocol
+        #endif
         
-        enum Error: ErrorType {
+        enum Error: ErrorProtocol {
             case InvalidHeaderKeyPair
         }
         
@@ -60,7 +63,11 @@ extension Request.Header {
     // https://www.w3.org/Protocols/rfc2616/rfc2616-sec5.html
     // Request-Line   = Method SP Request-URI SP HTTP-Version CRLF
     internal struct RequestLine {
-        enum Error: ErrorType {
+        #if !swift(>=3.0)
+        typealias ErrorType = ErrorProtocol
+        #endif
+        
+        enum Error: ErrorProtocol {
             case InvalidComponents
         }
         

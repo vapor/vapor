@@ -10,7 +10,11 @@ public enum Environment: Equatable {
     case Custom(String)
 
     static func fromString(string: String) -> Environment {
-        let string = string.lowercaseString
+        #if swift(>=3.0)
+            let string = string.lowercased()
+        #else
+            let string = string.lowercaseString
+        #endif
 
         switch string {
         case "production", "prod": return .Production
@@ -22,6 +26,7 @@ public enum Environment: Equatable {
 }
 
 extension Environment: CustomStringConvertible {
+
     public var description: String {
         switch self {
         case Production: return "production"
@@ -30,6 +35,7 @@ extension Environment: CustomStringConvertible {
         case Custom(let string): return string
         }
     }
+
 }
 
 public func ==(lhs: Environment, rhs: Environment) -> Bool {

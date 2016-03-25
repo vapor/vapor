@@ -7,7 +7,6 @@
 
     For example, a file named `Config/app.json` containing
     `{"port": 80}` can be accessed with `app.config.get("app.port")`.
-
     To override certain configurations for a given environment,
     create a file with the same name in a subdirectory of the environment.
     For example, a file named `Config/production/app.json` would override
@@ -18,6 +17,7 @@
     This file should be included in the `.gitignore` by default so that
     sensitive information does not get added to version control.
 */
+
 public class Config {
     ///The directory in which configuration files reside
     public static let configDir = Application.workDir + "Config"
@@ -29,7 +29,6 @@ public class Config {
     /**
         Creates an instance of `Config` with an
         optional starting repository of information. 
-
         The application is required to detect environment.
     */
     public init(repository: [String: Json] = [:], application: Application? = nil) {
@@ -72,22 +71,22 @@ public class Config {
         return get(keyPath)?.bool ?? fallback
     }
 
-    ///Returns the result of `get(key: String)` but with an `Int` fallback for `nil` cases
+    ///Returns the result of `get(key: String)` but with a `Int` fallback for `nil` cases
     public func get(keyPath: String, _ fallback: Int) -> Int {
         return get(keyPath)?.int ?? fallback
     }
 
-    ///Returns the result of `get(key: String)` but with an `UInt` fallback for `nil` cases
+    ///Returns the result of `get(key: String)` but with a `UInt` fallback for `nil` cases
     public func get(keyPath: String, _ fallback: UInt) -> UInt {
         return get(keyPath)?.uint ?? fallback
     }
 
-    ///Returns the result of `get(key: String)` but with an `Double` fallback for `nil` cases
+    ///Returns the result of `get(key: String)` but with a `Double` fallback for `nil` cases
     public func get(keyPath: String, _ fallback: Double) -> Double {
         return get(keyPath)?.double ?? fallback
     }
 
-    ///Returns the result of `get(key: String)` but with an `Float` fallback for `nil` cases
+    ///Returns the result of `get(key: String)` but with a `Float` fallback for `nil` cases
     public func get(keyPath: String, _ fallback: Float) -> Float {
         return get(keyPath)?.float ?? fallback
     }
@@ -183,11 +182,20 @@ public class Config {
         let suffix = ".json"
 
         for file in contents {
-            guard let fileName = file.split("/").last, suffixRange = fileName.rangeOfString(suffix) where suffixRange.endIndex == fileName.characters.endIndex else {
-                continue
-            }
+            #if os(Linux)
+                guard let fileName = file.split("/").last, suffixRange = fileName.rangeOfString(suffix) where suffixRange.endIndex == fileName.characters.endIndex else {
+                    continue
+                }
+                
+                let name = fileName.substringToIndex(suffixRange.startIndex)
+            #else
+                guard let fileName = file.split("/").last, suffixRange = fileName.range(of: suffix) where suffixRange.endIndex == fileName.characters.endIndex else {
+                    continue
+                }
+                
+                let name = fileName.substring(to: suffixRange.startIndex)
+            #endif
 
-            let name = fileName.substringToIndex(suffixRange.startIndex)
 
             if files[name] == nil {
                 files[name] = []

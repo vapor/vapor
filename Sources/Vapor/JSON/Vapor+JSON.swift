@@ -15,6 +15,7 @@ extension Json: ResponseConvertible {
     }
 }
 
+// MARK: Request Json
 extension Request {
 
     /**
@@ -25,48 +26,55 @@ extension Request {
     }
 }
 
-public enum JsonError: ErrorType {
+// MARK: Json Convertible 
+public enum JsonError: ErrorProtocol {
     
     /**
         When converting to a value from Json, if there is a type conflict, this will throw an error
-        
-        - param the json that was unable to map
-        - param a string description of the type that was attempting to map
+
+        - param Json   the json that was unable to map
+        - param String a string description of the type that was attempting to map
     */
     case UnableToConvert(json: Json, toType: String)
 }
 
 /**
-    An umbrella protocol used to define behavior to and from Json
-*/
+ *  An umbrella protocol used to define behavior to and from Json
+ */
 public protocol JsonConvertible {
     
     /**
         This function will be used to create an instance of the type from Json
-
-        - parameter json: the json to use in initialization
-        - throws: a potential error.  ie: invalid json type
-        - returns: an initialized object
-     */
+         
+         - parameter json: the json to use in initialization
+         
+         - throws: a potential error.  ie: invalid json type
+         
+         - returns: an initialized object
+    */
     static func newInstance(json: Json) throws -> Self
     
     /**
         Used to convert the object back to its Json representation
-
-        - throws: a potential conversion error
-        - returns: the object as a Json representation
+     
+         - throws: a potential conversion error
+         
+         - returns: the object as a Json representation
     */
     func jsonRepresentation() throws -> Json
 }
 
+// MARK: Json Convertible Initializers
 extension Json {
     
     /**
-        Create Json from any convertible type
-
-        - parameter any: the convertible type
-        - throws: a potential conversion error
-        - returns: initialized Json
+         Create Json from any convertible type
+         
+         - parameter any: the convertible type
+         
+         - throws: a potential conversion error
+         
+         - returns: initialized Json
     */
     public init<T: JsonConvertible>(_ any: T) throws {
         self = try any.jsonRepresentation()
@@ -138,7 +146,6 @@ extension String : JsonConvertible {
 }
 
 // MARK: Boolean
-
 extension Bool : JsonConvertible {
     public func jsonRepresentation() throws -> Json {
         return Json(self)
@@ -154,14 +161,17 @@ extension Bool : JsonConvertible {
 
 
 // MARK: UnsignedIntegerType
-
 extension UInt : JsonConvertible {}
 extension UInt8 : JsonConvertible {}
 extension UInt16 : JsonConvertible {}
 extension UInt32 : JsonConvertible {}
 extension UInt64 : JsonConvertible {}
 
-extension UnsignedIntegerType {
+#if !swift(>=3.0)
+    typealias UnsignedInteger = UnsignedIntegerType
+#endif
+
+extension UnsignedInteger {
     public func jsonRepresentation() throws -> Json {
         let double = Double(UIntMax(self.toUIntMax()))
         return Json(double)
@@ -177,14 +187,17 @@ extension UnsignedIntegerType {
 }
 
 // MARK: SignedIntegerType
-
 extension Int : JsonConvertible {}
 extension Int8 : JsonConvertible {}
 extension Int16 : JsonConvertible {}
 extension Int32 : JsonConvertible {}
 extension Int64 : JsonConvertible {}
 
-extension SignedIntegerType {
+#if !swift(>=3.0)
+    typealias SignedInteger = SignedIntegerType
+#endif
+
+extension SignedInteger {
     public func jsonRepresentation() throws -> Json {
         let double = Double(IntMax(self.toIntMax()))
         return Json(double)
@@ -201,7 +214,6 @@ extension SignedIntegerType {
 
 
 // MARK: FloatingPointType
-
 extension Float : JsonConvertibleFloatingPointType {
     public var doubleValue: Double {
         return Double(self)

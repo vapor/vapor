@@ -4,9 +4,14 @@ let package = Package(
     name: "Vapor",
     dependencies: [
         .Package(url: "https://github.com/qutheory/json.git", majorVersion: 0),
-        .Package(url: "https://github.com/ketzusaka/Hummingbird", majorVersion: 1, minor: 0)
+        .Package(url: "https://github.com/ketzusaka/Hummingbird", majorVersion: 1, minor: 1)
     ],
-    exclude: [],
+    exclude: [
+        "Sources/VaporDev",
+        "Sources/Generator",
+        "XcodeProject",
+        "Release"
+    ],
     targets: [
         Target(
             name: "Vapor",

@@ -9,19 +9,15 @@
 @testable import Vapor
 import XCTest
 
-#if os(Linux)
-    extension SessionTests: XCTestCaseProvider {
-        var allTests : [(String, () throws -> Void)] {
-            return [
-                       ("testDestroy_asksDriverToDestroy", testDestroy_asksDriverToDestroy),
-                       ("testSubscriptGet_asksDriverForValue", testSubscriptGet_asksDriverForValue),
-                       ("testSubscriptSet_asksDriverToSetValue", testSubscriptSet_asksDriverToSetValue)
-            ]
-        }
-    }
-#endif
-
 class SessionTests: XCTestCase {
+    static var allTests : [(String, SessionTests -> () throws -> Void)] {
+        return [
+           ("testDestroy_asksDriverToDestroy", testDestroy_asksDriverToDestroy),
+           ("testSubscriptGet_asksDriverForValue", testSubscriptGet_asksDriverForValue),
+           ("testSubscriptSet_asksDriverToSetValue", testSubscriptSet_asksDriverToSetValue)
+        ]
+    }
+    
     func testDestroy_asksDriverToDestroy() {
         let driver = TestDriver()
         let subject = Session(identifier: "baz", driver: driver)

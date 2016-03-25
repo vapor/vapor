@@ -123,11 +123,15 @@ extension Json: Node {
         case .NullValue:
             return "null"
         case .ArrayValue(let array):
-            return array
+            let flat = array
                 .flatMap { js in
                     return js.string
                 }
-                .joinWithSeparator(",")
+            #if swift(>=3.0)
+                return flat.joined(separator: ",")
+            #else
+                return flat.joinWithSeparator(",")
+            #endif
         case .ObjectValue(_):
             return nil
         }
@@ -197,7 +201,7 @@ extension Bool {
     */
     public init(_ string: String) {
         let cleaned = string
-            .lowercaseString
+            .lowercased()
             .characters
             .first ?? "n"
         
