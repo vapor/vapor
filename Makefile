@@ -52,7 +52,8 @@ release: $(PACKAGES_DIR)/Strand/Sources/*.swift $(PACKAGES_DIR)/Jay/Sources/Jay/
 	$(SWIFTC) -O ../../$(PACKAGES_DIR)/Hummingbird/Sources/*.swift -emit-library -emit-module -module-name Hummingbird -I . -L . -lStrand; \
 	$(SWIFTC) -O ../../$(PACKAGES_DIR)/Jay/Sources/Jay/*.swift -emit-library -emit-module -module-name Jay -I . -L .; \
 	$(SWIFTC) -O ../../Sources/libc/*.swift -emit-library -emit-module -module-name libc -I . -L .; \
-	$(SWIFTC) -O ../../Sources/Vapor/**/*.swift -emit-library -emit-module -module-name Vapor -I . -L . -lJay -lHummingbird -llibc -lStrand
+	$(SWIFTC) -O ../../Sources/Vapor/**/*.swift -emit-library -emit-module -module-name Vapor -I . -L . -lJay -lHummingbird -llibc -lStrand; \
+	cp ../../Vapor .
 
 install: $(RELEASE_DIR)/$(LIBVAPORNAME)
 	mkdir -p $(SYSLIB); \
