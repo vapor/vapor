@@ -76,6 +76,12 @@ extension Application {
         resource(path, makeControllerWith: ResourceControllerType.init)
     }
 
+    public final func resource<ResourceControllerType: ResourceController where ResourceControllerType: ApplicationInitializable>(path: String, controller: ResourceControllerType.Type) {
+        resource(path) {
+            return ResourceControllerType(application: self)
+        }
+    }
+
     public final func add<Controller>(method: Request.Method, path: String, makeControllerWith controllerFactory: () -> Controller, action: Controller -> Route.Handler) {
         add(method, path: path) { request in
             let controller = controllerFactory()

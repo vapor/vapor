@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		1AD708021C8E6A9500F17339 /* SessionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AD708011C8E6A9500F17339 /* SessionTests.swift */; };
 		1AF2F51B1C89DE2A00A7B2EA /* MemorySessionDriverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AF2F51A1C89DE2A00A7B2EA /* MemorySessionDriverTests.swift */; };
+		28B0763D1CA4F4A400EFA87E /* Controller.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28B0763C1CA4F4A400EFA87E /* Controller.swift */; };
 		3492B2EF1C787DD600D8E588 /* RouteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3492B2EE1C787DD600D8E588 /* RouteTests.swift */; };
 		34CC59561C7BE3C9007CA680 /* LogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34CC59551C7BE3C9007CA680 /* LogTests.swift */; };
 		3A583A011C7FCA720044AAFF /* libVapor.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 3A583A001C7FCA720044AAFF /* libVapor.dylib */; };
@@ -113,6 +114,7 @@
 /* Begin PBXFileReference section */
 		1AD708011C8E6A9500F17339 /* SessionTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SessionTests.swift; path = ../../Tests/Vapor/SessionTests.swift; sourceTree = "<group>"; };
 		1AF2F51A1C89DE2A00A7B2EA /* MemorySessionDriverTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = MemorySessionDriverTests.swift; path = ../../Tests/Vapor/MemorySessionDriverTests.swift; sourceTree = "<group>"; };
+		28B0763C1CA4F4A400EFA87E /* Controller.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Controller.swift; sourceTree = "<group>"; };
 		3492B2EE1C787DD600D8E588 /* RouteTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RouteTests.swift; path = ../Tests/Vapor/RouteTests.swift; sourceTree = SOURCE_ROOT; };
 		34CC59551C7BE3C9007CA680 /* LogTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = LogTests.swift; path = ../Tests/Vapor/LogTests.swift; sourceTree = SOURCE_ROOT; };
 		3A583A001C7FCA720044AAFF /* libVapor.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libVapor.dylib; path = ../.build/debug/libVapor.dylib; sourceTree = "<group>"; };
@@ -401,6 +403,7 @@
 				C31A82941C9F4AB8005F1DBE /* Application+Route.swift */,
 				C31A82951C9F4AB8005F1DBE /* DefaultInitializable.swift */,
 				C3B4F38D1C9F5D9E00CB2731 /* ApplicationInitializable.swift */,
+				28B0763C1CA4F4A400EFA87E /* Controller.swift */,
 				C31A82961C9F4AB8005F1DBE /* ResourceController.swift */,
 				C31A82971C9F4AB8005F1DBE /* Route.swift */,
 			);
@@ -747,6 +750,7 @@
 				C31A82C21C9F4AB8005F1DBE /* RequestData.swift in Sources */,
 				C31A82CB1C9F4AB8005F1DBE /* Route.swift in Sources */,
 				C31A82C51C9F4AB8005F1DBE /* Branch.swift in Sources */,
+				28B0763D1CA4F4A400EFA87E /* Controller.swift in Sources */,
 				C31A82BE1C9F4AB8005F1DBE /* AbortMiddleware.swift in Sources */,
 				C31A82D81C9F4AB8005F1DBE /* Lock.swift in Sources */,
 				C31A82B71C9F4AB8005F1DBE /* Int+Random.swift in Sources */,
