@@ -73,7 +73,6 @@
 		C387A0431C95FEBA00B6282E /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = C387A0361C95FDFE00B6282E /* main.swift */; };
 		C38808641C62C0390067DADD /* ResponseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C38808631C62C0390067DADD /* ResponseTests.swift */; };
 		C3943DC31C7663E80014F4EE /* RouterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3943DC21C7663E80014F4EE /* RouterTests.swift */; };
-		C3B009C31CA4CFDC00D2DCD1 /* ConfigTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3B009C21CA4CFDC00D2DCD1 /* ConfigTests.swift */; };
 		C3B009C51CA4D52F00D2DCD1 /* HashDriver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3B009C41CA4D52F00D2DCD1 /* HashDriver.swift */; };
 		C3B4F38E1C9F5D9E00CB2731 /* ApplicationInitializable.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3B4F38D1C9F5D9E00CB2731 /* ApplicationInitializable.swift */; };
 		C3DFB55D1C80C2860045801C /* MyController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3DFB5541C80C2860045801C /* MyController.swift */; };
@@ -817,7 +816,6 @@
 				800EFA5A1C83A00300F6C066 /* QueryParameterTests.swift in Sources */,
 				1AD708021C8E6A9500F17339 /* SessionTests.swift in Sources */,
 				3492B2EF1C787DD600D8E588 /* RouteTests.swift in Sources */,
-				C3B009C31CA4CFDC00D2DCD1 /* ConfigTests.swift in Sources */,
 				C3F683361C7D1EF300033AA2 /* ControllerTests.swift in Sources */,
 				34CC59561C7BE3C9007CA680 /* LogTests.swift in Sources */,
 				C3943DC31C7663E80014F4EE /* RouterTests.swift in Sources */,
