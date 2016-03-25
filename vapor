@@ -6,6 +6,10 @@
     import Darwin
 #endif
 
+#if !swift(>=3.0)
+    typealias ErrorProtocol = ErrorType
+#endif
+
 class Vapor {
     var arguments: [String]
     var release = false
@@ -51,7 +55,7 @@ class Vapor {
         }
     }
 
-    enum Error: ErrorType {
+    enum Error: ErrorProtocol {
         case System(Int32)
     }
 
@@ -70,7 +74,11 @@ class Vapor {
             return command.rawValue
         }
 
-        print("Usage: \(arguments[0]) [\(names.joinWithSeparator("|"))]")
+        #if swift(>=3.0)
+            print("Usage: \(arguments[0]) [\(names.joined(separator: "|"))]")
+        #else
+            print("Usage: \(arguments[0]) [\(names.joinWithSeparator("|"))]")
+        #endif
     }
 
     func run(command: String) throws {
