@@ -130,7 +130,10 @@ class Vapor {
 
 	func run() {
 		print("Running...")
-		run(".build/VaporApp", orFail: "")
+		let result = system(".build/VaporApp")
+		if (result != 0 && result != 2) {
+			fail("Could not run VaporApp. Make sure to run `vapor build` first.")
+		}
 	}
 
 	func newProject() {

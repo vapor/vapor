@@ -10,6 +10,7 @@ script:
   - . ./.travis.sh # conditionally installs Swift 2.2 on Linux
   - export PATH=$TRAVIS_BUILD_DIR/swift-2.2-RELEASE-ubuntu14.04/usr/bin/:"${PATH}" # adds Swift 2.2 to PATH
   - make # compiles project with Swift 2.2
+  - make release # compiles optimized
   - sudo make install # installs shared libs and CLI
   - vapor build Sources/VaporDev/main.swift Sources/VaporDev/**/*.swift # builds VaporDev with CLI
   - rm -rf Packages .build # cleans project to prevent conflicts between 2.2 and 3.0
@@ -17,4 +18,5 @@ script:
   - swift build --fetch # clones all dependencies
   - rm -rf Packages/*/Tests # fixes SPM bug
   - swift build 
+  - swift build --configuration release
   - swift test

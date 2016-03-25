@@ -1,6 +1,6 @@
 /**
     Responses that redirect to a supplied URL.
- */
+*/
 public class Redirect: Response {
 
     ///The URL string for redirect
@@ -17,7 +17,7 @@ public class Redirect: Response {
         - parameter: redirectLocation: The URL string for redirect
         
         - returns: Response
-     */
+    */
     public init(to redirectLocation: String) {
         self.redirectLocation = redirectLocation
         super.init(status: .MovedPermanently, data: [], contentType: .None)
@@ -47,27 +47,27 @@ public class AsyncResponse: Response {
     Responses are objects responsible for returning
     data to the HTTP request such as the body, status 
     code and headers.
- */
+*/
 public class Response {
     
     // MARK: Types
     
     /**
-     The content type of the response
-     
-     - Text: text content type
-     - Html: html content type
-     - Json: json content type
-     - None: no content type
-     - Other: non-explicit content type
-     */
+        The content type of the response
+
+        - Text: text content type
+        - Html: html content type
+        - Json: json content type
+        - None: no content type
+        - Other: non-explicit content type
+    */
     public enum ContentType {
         case Text, Html, Json, None, Other(String)
     }
     
     /**
-     Http status representing the response
-     */
+        Http status representing the response
+    */
     public enum Status {
         case OK, Created, Accepted
         case NoContent
@@ -122,7 +122,6 @@ public class Response {
     }
     
     // MARK: Member Variables
-
     public var status: Status
     public var data: [UInt8]
     public var contentType: ContentType
@@ -143,12 +142,12 @@ public class Response {
     // MARK: Initialization
     
     /**
-     Designated Initializer
-     
-     - parameter status: http status of response
-     - parameter data: the byte sequence that will be transmitted
-     - parameter contentType: the content type that the data represents
-     */
+        Designated Initializer
+
+        - parameter status: http status of response
+        - parameter data: the byte sequence that will be transmitted
+        - parameter contentType: the content type that the data represents
+    */
     public init<T: SequenceType where T.Generator.Element == UInt8>(status: Status, data: T, contentType: ContentType) {
         self.status = status
         self.data = [UInt8](data)
@@ -171,35 +170,33 @@ public class Response {
 }
 
 // MARK: - Convenience Initializers
-
 extension Response {
     /**
-     When attempting to serialize an object of type 'Any' into Json,
-     invalid objects will throw
-     
-     - InvalidObject: the object to serialize is not a valid Json object
-     */
+        When attempting to serialize an object of type 'Any' into Json,
+        invalid objects will throw
+
+        - InvalidObject: the object to serialize is not a valid Json object
+    */
     public enum SerializationError: ErrorType {
         case InvalidObject
     }
     
     /**
-     Convenience Initializer Error
-     
-     Will return 500
-     
-     - parameter error: a description of the server error
-     */
+        Convenience Initializer Error
+
+        Will return 500
+
+        - parameter error: a description of the server error
+    */
     public convenience init(error: String) {
-        let text = "{\n\t\"error\": true,\n\t\"message\":\"\(error)\"\n}"
-        self.init(status: .Error, data: text.utf8, contentType: .Json)
+        self.init(status: .Error, data: error.utf8, contentType: .Text)
     }
     
     /**
-     Convenience Initializer - Html
-     
-     - parameter status: http status of response
-     - parameter html: the html string to be rendered as a response
+        Convenience Initializer - Html
+
+        - parameter status: http status of response
+        - parameter html: the html string to be rendered as a response
      */
     public convenience init(status: Status, html: String) {
         let serialised = "<html><meta charset=\"UTF-8\"><body>\(html)</body></html>"
@@ -207,22 +204,22 @@ extension Response {
     }
     
     /**
-     Convenience Initializer - Text
-     
-     - parameter status: http status
-     - parameter text: basic text response
+        Convenience Initializer - Text
+
+        - parameter status: http status
+        - parameter text: basic text response
      */
     public convenience init(status: Status, text: String) {
         self.init(status: status, data: text.utf8, contentType: .Text)
     }
     
     /**
-     Convenience Initializer
-     
-     - parameter status: the http status
-     - parameter json: any value that will be attempted to be serialized as json.  Use 'Json' for more complex objects
-     
-     - throws: SerializationErro
+        Convenience Initializer
+
+        - parameter status: the http status
+        - parameter json: any value that will be attempted to be serialized as json.  Use 'Json' for more complex objects
+
+        - throws: SerializationErro
      */
     public convenience init(status: Status, json: Json) throws {
         let data = try json.serialize()
