@@ -147,13 +147,16 @@ public class Config {
                 guard let fileName = file.split("/").last, suffixRange = fileName.rangeOfString(suffix) where suffixRange.endIndex == fileName.characters.endIndex else {
                     continue
                 }
+                
+                let name = fileName.substringTo(suffixRange.startIndex)
             #else
                 guard let fileName = file.split("/").last, suffixRange = fileName.range(of: suffix) where suffixRange.endIndex == fileName.characters.endIndex else {
                     continue
                 }
+                
+                let name = fileName.substring(to: suffixRange.startIndex)
             #endif
 
-            let name = fileName.substring(to: suffixRange.startIndex)
 
 			if files[name] == nil {
 				files[name] = []
