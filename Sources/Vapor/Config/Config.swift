@@ -19,9 +19,6 @@
 */
 
 public class Config {
-    ///The directory in which configuration files reside
-    public static let configDir = Application.workDir + "Config"
-
     //The internal store of configuration options
     //backed by `Json`
     private var repository: [String: Json]
@@ -105,9 +102,11 @@ public class Config {
 
     ///Calls populate() in a convenient non-throwing manner
     public func populate(application: Application) -> Bool {
-        if FileManager.fileAtPath(self.dynamicType.configDir).exists {
+        let configDir = application.workDir + "Config"
+
+        if FileManager.fileAtPath(configDir).exists {
             do {
-                try populate(self.dynamicType.configDir, application: application)
+                try populate(configDir, application: application)
                 return true
             } catch {
                 Log.error("Unable to populate config: \(error)")

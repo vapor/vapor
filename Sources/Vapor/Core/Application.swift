@@ -79,7 +79,7 @@ public class Application {
         folders are stored. This is normally `./` if
         you are running Vapor using `.build/xxx/App`
     */
-    public static var workDir = "./" {
+    public var workDir = "./" {
         didSet {
             if self.workDir.characters.last != "/" {
                 self.workDir += "/"
@@ -161,7 +161,7 @@ public class Application {
         //grab process args
         if let workDir = Process.valueFor(argument: "workDir") {
             Log.info("Work dir override: \(workDir)")
-            self.dynamicType.workDir = workDir
+            self.workDir = workDir
         }
 
         if let ip = Process.valueFor(argument: "ip") {
@@ -200,7 +200,7 @@ public class Application {
 
     func checkFileSystem(request: Request) -> Request.Handler? {
         // Check in file system
-        let filePath = self.dynamicType.workDir + "Public" + request.path
+        let filePath = self.workDir + "Public" + request.path
 
         guard FileManager.fileAtPath(filePath).exists else {
             return nil
