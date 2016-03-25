@@ -9,7 +9,7 @@ import XCTest
 @testable import Vapor
 
 class MemorySessionDriverTests: XCTestCase {
-    var allTests : [(String, MemorySessionDriverTests -> () throws -> Void)] {
+    static var allTests : [(String, MemorySessionDriverTests -> () throws -> Void)] {
         return [
            ("testValueForKey_onNonExistantSession_isNil", testValueForKey_onNonExistantSession_isNil),
            ("testValueForKey_onExistingSession_onNonExistingKey_isNil", testValueForKey_onExistingSession_onNonExistingKey_isNil),
