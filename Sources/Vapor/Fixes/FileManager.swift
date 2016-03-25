@@ -1,18 +1,20 @@
 import libc
 
-
-
+/**
+    A replacement for Foundation's NSFileManager using
+    implementation from Swift's core libraries.
+*/
 class FileManager {
-	enum Error: ErrorProtocol {
-		case CouldNotOpenFile
-		case Unreadable
-	}
+    enum Error: ErrorProtocol {
+        case CouldNotOpenFile
+        case Unreadable
+    }
 
-	static func readBytesFromFile(path: String) throws -> [UInt8] {
+    static func readBytesFromFile(path: String) throws -> [UInt8] {
         let fd = open(path, O_RDONLY);
 
         if fd < 0 {
-        	throw Error.CouldNotOpenFile
+            throw Error.CouldNotOpenFile
         }
         defer {
             close(fd)
@@ -27,7 +29,7 @@ class FileManager {
         }
         
         if !ret {
-        	throw Error.Unreadable
+            throw Error.Unreadable
         }
         
         let length = Int(info.st_size)
@@ -89,14 +91,14 @@ class FileManager {
         return (true, isDirectory)
     }
 
-	static func expandPath(path: String) throws -> String {
-		let result = realpath(path, nil)
+    static func expandPath(path: String) throws -> String {
+        let result = realpath(path, nil)
 
-		guard result != nil else {
-			throw Error.Unreadable
-		}
+        guard result != nil else {
+            throw Error.Unreadable
+        }
 
-		defer { free(result) }
+        defer { free(result) }
         
         #if swift(>=3.0)
             let cstring = String(validatingUTF8: result)
@@ -104,39 +106,39 @@ class FileManager {
             let cstring = String.fromCString(result)
         #endif
 
-		if let expanded = cstring {
-			return expanded
-		} else {
-			throw Error.Unreadable
-		}
-	}
+        if let expanded = cstring {
+            return expanded
+        } else {
+            throw Error.Unreadable
+        }
+    }
 
-	static func contentsOfDirectory(path: String) throws -> [String] {
-		var gt = glob_t()
-		defer { globfree(&gt) }
+    static func contentsOfDirectory(path: String) throws -> [String] {
+        var gt = glob_t()
+        defer { globfree(&gt) }
 
-		let path = try self.expandPath(path).finish("/")
-		let pattern = strdup(path + "{*,.*}")
+        let path = try self.expandPath(path).finish("/")
+        let pattern = strdup(path + "{*,.*}")
 
-		switch glob(pattern, GLOB_MARK | GLOB_NOSORT | GLOB_BRACE, nil, &gt) {
-		case GLOB_NOMATCH:
-			return [ ]
-		case GLOB_ABORTED:
-			throw Error.Unreadable
-		default:
-			break
-		}
+        switch glob(pattern, GLOB_MARK | GLOB_NOSORT | GLOB_BRACE, nil, &gt) {
+        case GLOB_NOMATCH:
+            return [ ]
+        case GLOB_ABORTED:
+            throw Error.Unreadable
+        default:
+            break
+        }
 
-		var contents = [String]()
-		let count: Int
+        var contents = [String]()
+        let count: Int
 
-		#if os(Linux)
-			count = Int(gt.gl_pathc)
-		#else
-			count = Int(gt.gl_matchc)
-		#endif
+        #if os(Linux)
+            count = Int(gt.gl_pathc)
+        #else
+            count = Int(gt.gl_matchc)
+        #endif
 
-		for i in 0..<count {
+        for i in 0..<count {
             
             #if swift(>=3.0)
                 let cstring = String(validatingUTF8: gt.gl_pathv[i])
@@ -144,12 +146,12 @@ class FileManager {
                 let cstring = String.fromCString(gt.gl_pathv[i])
             #endif
             
-			if let path = cstring {
-				contents.append(path)
-			}
-		}
+            if let path = cstring {
+                contents.append(path)
+            }
+        }
 
-		return contents
-	}
+        return contents
+    }
 
 }

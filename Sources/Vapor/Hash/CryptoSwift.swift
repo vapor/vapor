@@ -1,10 +1,3 @@
-//
-//  Crypto.swift
-//  Vapor
-//
-//  Created by Tanner Nelson on 2/23/16.
-//  Copyright © 2016 Tanner Nelson. All rights reserved.
-//
 
 import libc
 
@@ -15,10 +8,6 @@ import libc
 //  Created by Marcin Krzyzanowski on 24/08/14.
 //  Copyright (c) 2014 Marcin Krzyzanowski. All rights reserved.
 //
-
-
-//TODO: func anyGenerator is renamed to AnyGenerator in Swift 2.2, until then it's just dirty hack for linux (because swift >= 2.2 is available for Linux)
-
 #if !swift(>=3.0)
     typealias Sequence = SequenceType
 #endif

@@ -53,21 +53,21 @@ public class Response {
     // MARK: Types
     
     /**
-     The content type of the response
-     
-     - Text: text content type
-     - Html: html content type
-     - Json: json content type
-     - None: no content type
-     - Other: non-explicit content type
-     */
+        The content type of the response
+
+        - Text: text content type
+        - Html: html content type
+        - Json: json content type
+        - None: no content type
+        - Other: non-explicit content type
+    */
     public enum ContentType {
         case Text, Html, Json, None, Other(String)
     }
     
     /**
-     Http status representing the response
-     */
+        Http status representing the response
+    */
     public enum Status {
         case OK, Created, Accepted
         case NoContent
@@ -152,12 +152,12 @@ public class Response {
     // MARK: Initialization
     
     /**
-     Designated Initializer
-     
-     - parameter status: http status of response
-     - parameter data: the byte sequence that will be transmitted
-     - parameter contentType: the content type that the data represents
-     */
+        Designated Initializer
+
+        - parameter status: http status of response
+        - parameter data: the byte sequence that will be transmitted
+        - parameter contentType: the content type that the data represents
+    */
     #if swift(>=3.0)
     public init<T: Sequence where T.Iterator.Element == UInt8>(status: Status, data: T, contentType: ContentType) {
         self.status = status
@@ -203,59 +203,58 @@ public class Response {
 }
 
 // MARK: - Convenience Initializers
-
 extension Response {
     /**
-     When attempting to serialize an object of type 'Any' into Json,
-     invalid objects will throw
-     
-     - InvalidObject: the object to serialize is not a valid Json object
-     */
+        When attempting to serialize an object of type 'Any' into Json,
+        invalid objects will throw
+
+        - InvalidObject: the object to serialize is not a valid Json object
+    */
     public enum SerializationError: ErrorProtocol {
         case InvalidObject
     }
     
     /**
-     Convenience Initializer Error
-     
-     Will return 500
-     
-     - parameter error: a description of the server error
-     */
+         Convenience Initializer Error
+         
+         Will return 500
+         
+         - parameter error: a description of the server error
+    */
     public convenience init(error: String) {
         let text = "{\n\t\"error\": true,\n\t\"message\":\"\(error)\"\n}"
         self.init(status: .Error, data: text.utf8, contentType: .Json)
     }
     
     /**
-     Convenience Initializer - Html
-     
-     - parameter status: http status of response
-     - parameter html: the html string to be rendered as a response
-     */
+         Convenience Initializer - Html
+         
+         - parameter status: http status of response
+         - parameter html: the html string to be rendered as a response
+    */
     public convenience init(status: Status, html: String) {
         let serialised = "<html><meta charset=\"UTF-8\"><body>\(html)</body></html>"
         self.init(status: status, data: serialised.utf8, contentType: .Html)
     }
     
     /**
-     Convenience Initializer - Text
-     
-     - parameter status: http status
-     - parameter text: basic text response
-     */
+         Convenience Initializer - Text
+         
+         - parameter status: http status
+         - parameter text: basic text response
+    */
     public convenience init(status: Status, text: String) {
         self.init(status: status, data: text.utf8, contentType: .Text)
     }
     
     /**
-     Convenience Initializer
-     
-     - parameter status: the http status
-     - parameter json: any value that will be attempted to be serialized as json.  Use 'Json' for more complex objects
-     
-     - throws: SerializationErro
-     */
+         Convenience Initializer
+         
+         - parameter status: the http status
+         - parameter json: any value that will be attempted to be serialized as json.  Use 'Json' for more complex objects
+         
+         - throws: SerializationErro
+    */
     public convenience init(status: Status, json: Json) throws {
         let data = try json.serialize()
         self.init(status: status, data: data, contentType: .Json)
