@@ -6,6 +6,10 @@
     import Darwin
 #endif
 
+#if !swift(>=3.0)
+    typealias ErrorProtocol = ErrorType
+#endif
+
 class Vapor {
     var arguments: [String]
     var release = false
@@ -51,7 +55,7 @@ class Vapor {
         }
     }
 
-    enum Error: ErrorType {
+    enum Error: ErrorProtocol {
         case System(Int32)
     }
 
@@ -70,7 +74,11 @@ class Vapor {
             return command.rawValue
         }
 
-        print("Usage: \(arguments[0]) [\(names.joinWithSeparator("|"))]")
+        #if swift(>=3.0)
+            print("Usage: \(arguments[0]) [\(names.joined(separator: "|"))]")
+        #else
+            print("Usage: \(arguments[0]) [\(names.joinWithSeparator("|"))]")
+        #endif
     }
 
     func run(command: String) throws {
@@ -123,6 +131,7 @@ class Vapor {
         var files = "App/main.swift App/**/*.swift"
 
         if arguments.count >= 3 {
+            files = ""
             for i in 2..<arguments.count {
                 files += " " + arguments[i]
             }
@@ -170,25 +179,28 @@ class Vapor {
         printUsage()
         print()
         print("Options:")
-        print("\tbuild [file1, file2, ...]")
-        print("\t\tBuilds source files and links Vapor libraries.")
-        print("\t\tDefaults to App/ folder structure if no files passed.")
+        print("  build [file1, file2, ...]")
+        print("    Builds source files and links Vapor libs.")
+        print("    Defaults to App/ folder structure.")
         print()
-        print("\trun")
-        print("\t\tRuns the executable built by vapor build.")
-        print("\t\tTo pass arguments to the program, run it manually .build/VaporApp")
+        print("  run")
+        print("    Runs the executable built by vapor build.")
+        print("    To pass arguments to the program, ")
+        print("    run it manually .build/VaporApp")
         print()
-        print("\tnew <project-name>")
-        print("\t\tClones the Vapor Example to a given folder name and removes .git.")
+        print("  new <project-name>")
+        print("    Clones the Vapor Example to a given ")
+        print("    folder name and removes .git.")
         print()
-        print("\tclean")
+        print("  clean")
         print()
-        print("\thelp")
+        print("  help")
         print()
         print("Community:")
-        print("\tJoin our Slack if you have questions, need help, or want to contribute.")
-        print("\thttps://github.com/qutheory/vapor#badges")
-        print("\t(Look for the Slack badge in Vapor's README)")
+        print("  Join our Slack if you have questions, ")
+        print("  need help, or want to contribute.")
+        print("  https://github.com/qutheory/vapor#badges")
+        print("  (Look for the Slack badge in Vapor's README)")
         print()
     }
 }
