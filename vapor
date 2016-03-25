@@ -123,6 +123,7 @@ class Vapor {
         var files = "App/main.swift App/**/*.swift"
 
         if arguments.count >= 3 {
+            files = ""
             for i in 2..<arguments.count {
                 files += " " + arguments[i]
             }
