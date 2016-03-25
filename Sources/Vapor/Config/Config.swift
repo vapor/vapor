@@ -148,7 +148,7 @@ public class Config {
                     continue
                 }
                 
-                let name = fileName.substringTo(suffixRange.startIndex)
+                let name = fileName.substringToIndex(suffixRange.startIndex)
             #else
                 guard let fileName = file.split("/").last, suffixRange = fileName.range(of: suffix) where suffixRange.endIndex == fileName.characters.endIndex else {
                     continue
