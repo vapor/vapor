@@ -1,3 +1,4 @@
+#if os(Linux)
 import XCTest
 
 XCTMain([
@@ -11,8 +12,9 @@ XCTMain([
     testCase(ProcessTests.allTests),
     testCase(RouterTests.allTests),
     testCase(RouteTests.allTests),
-    testCase(QueryParametersTests.allTests),
+    testCase(QueryParameterTests.allTests),
     testCase(SessionTests.allTests),
     testCase(TypedRouteTests.allTests),
     testCase(JeevesTests.allTests)
 ])
+#endif

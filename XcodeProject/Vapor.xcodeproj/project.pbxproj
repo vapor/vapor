@@ -17,7 +17,7 @@
 		3AEEF41D1C7F6D4A0099CBAE /* Vapor.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3A91D3CC1C7F6AF900EA3CA0 /* Vapor.framework */; };
 		3AEEF4531C7F72C30099CBAE /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AEEF4181C7F6CBF0099CBAE /* main.swift */; };
 		800EFA581C8231EE00F6C066 /* ProcessTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 800EFA571C8231EE00F6C066 /* ProcessTests.swift */; };
-		800EFA5A1C83A00300F6C066 /* QueryParametersTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 800EFA591C83A00300F6C066 /* QueryParametersTests.swift */; };
+		800EFA5A1C83A00300F6C066 /* QueryParameterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 800EFA591C83A00300F6C066 /* QueryParameterTests.swift */; };
 		8087DB591C9505E0002E57CC /* JeevesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8087DB581C9505E0002E57CC /* JeevesTests.swift */; };
 		C31A82AD1C9F4AB8005F1DBE /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = C31A826E1C9F4AB8005F1DBE /* Config.swift */; };
 		C31A82AE1C9F4AB8005F1DBE /* Abort.swift in Sources */ = {isa = PBXBuildFile; fileRef = C31A82701C9F4AB8005F1DBE /* Abort.swift */; };
@@ -124,7 +124,7 @@
 		3AEEF4181C7F6CBF0099CBAE /* main.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = main.swift; path = ../Sources/VaporDev/main.swift; sourceTree = SOURCE_ROOT; };
 		3AEEF44A1C7F71080099CBAE /* VaporDev */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = VaporDev; sourceTree = BUILT_PRODUCTS_DIR; };
 		800EFA571C8231EE00F6C066 /* ProcessTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = ProcessTests.swift; path = ../../Tests/Vapor/ProcessTests.swift; sourceTree = "<group>"; };
-		800EFA591C83A00300F6C066 /* QueryParametersTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = QueryParametersTests.swift; path = ../../Tests/Vapor/QueryParametersTests.swift; sourceTree = "<group>"; };
+		800EFA591C83A00300F6C066 /* QueryParameterTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = QueryParameterTests.swift; path = ../../Tests/Vapor/QueryParameterTests.swift; sourceTree = "<group>"; };
 		8087DB581C9505E0002E57CC /* JeevesTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = JeevesTests.swift; path = ../../Tests/Vapor/JeevesTests.swift; sourceTree = "<group>"; };
 		C31A826E1C9F4AB8005F1DBE /* Config.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Config.swift; sourceTree = "<group>"; };
 		C31A82701C9F4AB8005F1DBE /* Abort.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Abort.swift; sourceTree = "<group>"; };
@@ -498,7 +498,7 @@
 				800EFA571C8231EE00F6C066 /* ProcessTests.swift */,
 				C3943DC21C7663E80014F4EE /* RouterTests.swift */,
 				3492B2EE1C787DD600D8E588 /* RouteTests.swift */,
-				800EFA591C83A00300F6C066 /* QueryParametersTests.swift */,
+				800EFA591C83A00300F6C066 /* QueryParameterTests.swift */,
 				1AD708011C8E6A9500F17339 /* SessionTests.swift */,
 				C3691FE11C98C47F00C680DE /* TypedRouteTests.swift */,
 				8087DB581C9505E0002E57CC /* JeevesTests.swift */,
@@ -814,7 +814,7 @@
 				C38808641C62C0390067DADD /* ResponseTests.swift in Sources */,
 				C3691FE01C98BEDA00C680DE /* EnvironmentTests.swift in Sources */,
 				8087DB591C9505E0002E57CC /* JeevesTests.swift in Sources */,
-				800EFA5A1C83A00300F6C066 /* QueryParametersTests.swift in Sources */,
+				800EFA5A1C83A00300F6C066 /* QueryParameterTests.swift in Sources */,
 				1AD708021C8E6A9500F17339 /* SessionTests.swift in Sources */,
 				3492B2EF1C787DD600D8E588 /* RouteTests.swift in Sources */,
 				C3B009C31CA4CFDC00D2DCD1 /* ConfigTests.swift in Sources */,

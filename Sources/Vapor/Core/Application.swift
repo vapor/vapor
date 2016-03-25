@@ -209,7 +209,7 @@ public class Application {
         // File exists
         if let fileBody = try? FileManager.readBytesFromFile(filePath) {
             return { _ in
-                return Response(status: .OK, data: fileBody, contentType: .Text)
+                return Response(status: .OK, data: fileBody, contentType: .None)
             }
         } else {
             return { _ in
