@@ -9,7 +9,7 @@ public class Application {
         for returning registered `Route` handlers
         for a given request.
     */
-    public let router: RouterDriver
+    public var router: RouterDriver = BranchRouter()
 
     /**
         The server driver is responsible
@@ -17,21 +17,25 @@ public class Application {
         This property is constant since it cannot
         be changed after the server has been booted.
     */
-    public var server: ServerDriver
+    public var server: ServerDriver = Jeeves<Hummingbird.Socket>()
 
     /**
         The session driver is responsible for
         storing and reading values written to the
         users session.
     */
-    public var session: SessionDriver
+    public lazy var session: SessionDriver = MemorySessionDriver(application: self)
 
-    #if swift(>=3.0)
     /**
         Provides access to config settings.
     */
-    public private(set) lazy var config: Config = Config(application: self)
-    #endif
+    public lazy var config: Config = Config(application: self)
+    
+    /**
+        Provides access to the underlying
+        `HashDriver`.
+    */
+    public private(set) lazy var hash: Hash = Hash()
 
     /**
         `Middleware` will be applied in the order
@@ -99,11 +103,7 @@ public class Application {
     /**
         Initialize the Application.
     */
-    public init(router: RouterDriver = BranchRouter(), server: ServerDriver = Jeeves<Hummingbird.Socket>(), session: SessionDriver = MemorySessionDriver()) {
-        self.server = server
-        self.router = router
-        self.session = session
-
+    public init() {
         self.middleware = [
             AbortMiddleware.self,
             SessionMiddleware.self

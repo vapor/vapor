@@ -6,14 +6,14 @@ import libc
 public class Hash {
     
     /**
-        The `applicationKey` adds an additional layer
+        The `key` adds an additional layer
         of security to all hashes. 
         
         Ensure this key stays
         the same during the lifetime of your application, since
         changing it will result in mismatching hashes.
     */
-    public static var applicationKey: String = ""
+    public var key: String = ""
 
     /**
         Any class that conforms to the `HashDriver` 
@@ -21,7 +21,7 @@ public class Hash {
         It will be used to create the hashes 
         request by functions like `make()`
     */
-    public static var driver: HashDriver = SHA256Hasher()
+    public var driver: HashDriver = SHA256Hasher()
     
     /**
         Hashes a string using the `Hash` class's 
@@ -29,8 +29,8 @@ public class Hash {
         
         - returns: Hashed string
     */
-    public class func make(string: String) -> String {
-        return Hash.driver.hash(string, key: applicationKey)
+    public func make(string: String) -> String {
+        return driver.hash(string, key: key)
     }
     
 }

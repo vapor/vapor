@@ -3,7 +3,7 @@ import Vapor
 let app = Application()
 
 app.get("/") { request in
-    return try View(path: "welcome.html")
+    return try app.view("welcome.html")
 }
 
 app.get("test") { request in
@@ -68,4 +68,4 @@ app.group("abort") {
     }
 }
 
-app.start(port: 8080)
+app.start(port: 8023)
