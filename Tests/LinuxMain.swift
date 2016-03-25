@@ -1,18 +1,18 @@
 import XCTest
 
 XCTMain([
-	ConfigTests(),
-	ControllerTests(),
-	EnvironmentTests(),
-	HashTests(),
-	LogTests(),
-	MemorySessionDriverTests(),
-	ResponseTests(),
-	ProcessTests(),
-	RouterTests(),
-	RouteTests(),
-	QueryParametersTests(),
-	SessionTests(),
-	TypedRouteTests(),
-	JeevesTests()
+    testCase(ConfigTests.allTests),
+    testCase(ControllerTests.allTests),
+    testCase(EnvironmentTests.allTests),
+    testCase(HashTests.allTests),
+    testCase(LogTests.allTests),
+    testCase(MemorySessionDriverTests.allTests),
+    testCase(ResponseTests.allTests),
+    testCase(ProcessTests.allTests),
+    testCase(RouterTests.allTests),
+    testCase(RouteTests.allTests),
+    testCase(QueryParametersTests.allTests),
+    testCase(SessionTests.allTests),
+    testCase(TypedRouteTests.allTests),
+    testCase(JeevesTests.allTests)
 ])
