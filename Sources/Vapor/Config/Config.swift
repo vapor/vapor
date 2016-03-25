@@ -143,9 +143,15 @@ public class Config {
 		let suffix = ".json"
 
 		for file in contents {
-            guard let fileName = file.split("/").last, suffixRange = fileName.range(of: suffix) where suffixRange.endIndex == fileName.characters.endIndex else {
-				continue
-			}
+            #if os(Linux)
+                guard let fileName = file.split("/").last, suffixRange = fileName.rangeOfString(suffix) where suffixRange.endIndex == fileName.characters.endIndex else {
+                    continue
+                }
+            #else
+                guard let fileName = file.split("/").last, suffixRange = fileName.range(of: suffix) where suffixRange.endIndex == fileName.characters.endIndex else {
+                    continue
+                }
+            #endif
 
             let name = fileName.substring(to: suffixRange.startIndex)
 
