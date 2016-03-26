@@ -154,7 +154,7 @@ public class Config {
                 let data = try FileManager.readBytesFromFile(file)
                 let json = try Json.deserialize(data)
 
-                guard case let .ObjectValue(object) = json else {
+                guard case let .Object(object) = json else {
                     return
                 }
 
@@ -229,7 +229,7 @@ public class Config {
 
 extension Json {
 
-    mutating private func set(value: Json, keys: [String]) {
+    mutating private func set(value: Json, keys: [Swift.String]) {
         var keys = keys
 
         guard keys.count > 0 else {
@@ -238,7 +238,7 @@ extension Json {
 
         let key = keys.removeFirst()
 
-        guard case let .ObjectValue(object) = self else {
+        guard case let .Object(object) = self else {
             return
         }
 
@@ -247,11 +247,11 @@ extension Json {
         if keys.count == 0 {
             updated[key] = value
         } else {
-            var child = updated[key] ?? Json.ObjectValue([:])
+            var child = updated[key] ?? Json.Object([:])
             child.set(value, keys: keys)
         }
 
-        self = .ObjectValue(updated)
+        self = .Object(updated)
     }
 
 }
