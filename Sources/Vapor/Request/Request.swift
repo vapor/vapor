@@ -2,7 +2,53 @@
     Requests contains data sent from a client to the
     web server such as method, parameters, and data.
 */
+
+
+
 public class Request {
+    public struct Header {
+        public struct Key: StringLiteralConvertible, Hashable, Equatable, CustomStringConvertible {
+            var string: String
+            
+            public init(_ string: String) {
+                self.string = string
+            }
+            
+            #if swift(>=3.0)
+                public init(stringLiteral value: StringLiteralType) {
+                   string = value
+                }
+                
+                public init(unicodeScalarLiteral value: UnicodeScalar) {
+                    string = "\(value)"
+                }
+                
+                public init(extendedGraphemeClusterLiteral value: StaticString) {
+                    string = "\(value)"
+                }
+            #else
+                public init(unicodeScalarLiteral value: UnicodeScalarLiteralType) {
+                    string = "\(value)"
+                }
+                
+                public init(extendedGraphemeClusterLiteral value: ExtendedGraphemeClusterLiteralType) {
+                    string = value
+                }
+                
+                public init(stringLiteral value: StringLiteralType) {
+                    string = value
+                }
+            #endif
+            
+            public var description: String {
+                return string
+            }
+
+            public var hashValue: Int {
+                return string.lowercased().hashValue
+            }
+        }
+    }
     
     ///Available HTTP Methods
     public enum Method: String {
@@ -30,7 +76,7 @@ public class Request {
     public let path: String
     
     ///Information or metadata about the `Request`.
-    public let headers: [String: String]
+    public let headers: [Header.Key: String]
     
     ///Content of the `Request`.
     public let body: [UInt8]
@@ -55,11 +101,17 @@ public class Request {
         return false
     }
 
-    public init(method: Method, path: String, address: String?, headers: [String: String], body: [UInt8]) {
+    public init(method: Method, path: String, address: String?, headers headersArray: [(String, String)], body: [UInt8]) {
         self.method = method
         self.path = path.split("?").first ?? ""
         self.address = address
-        self.headers = headers
+        
+        var headersBuffer: [Header.Key: String] = [:]
+        for (key, value) in headersArray {
+            headersBuffer[Request.Header.Key(key)] = value
+        }
+        headers = headersBuffer
+        
         self.body = body
         self.cookies = Request.parseCookies(headers["Cookie"])
         self.hostname = headers["Host"] ?? "*"
@@ -74,7 +126,7 @@ public class Request {
         Quickly create a Request with an empty body.
     */
     public convenience init(method: Method, path: String) {
-        self.init(method: method, path: path, address: nil, headers: [:], body: [])
+        self.init(method: method, path: path, address: nil, headers: [], body: [])
     }
     
     /**
@@ -108,6 +160,9 @@ public class Request {
         return cookies
     }
     
+}
+public func ==(lhs: Request.Header.Key, rhs: Request.Header.Key) -> Bool {
+    return lhs.string == rhs.string
 }
 
 extension String {

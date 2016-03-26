@@ -53,7 +53,7 @@
 		C31A82CB1C9F4AB8005F1DBE /* Route.swift in Sources */ = {isa = PBXBuildFile; fileRef = C31A82971C9F4AB8005F1DBE /* Route.swift */; };
 		C31A82CC1C9F4AB8005F1DBE /* Hummingbird+Socket.swift in Sources */ = {isa = PBXBuildFile; fileRef = C31A82991C9F4AB8005F1DBE /* Hummingbird+Socket.swift */; };
 		C31A82CE1C9F4AB8005F1DBE /* Jeeves.swift in Sources */ = {isa = PBXBuildFile; fileRef = C31A829B1C9F4AB8005F1DBE /* Jeeves.swift */; };
-		C31A82CF1C9F4AB8005F1DBE /* RequestHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = C31A829C1C9F4AB8005F1DBE /* RequestHeader.swift */; };
+		C31A82CF1C9F4AB8005F1DBE /* Header.swift in Sources */ = {isa = PBXBuildFile; fileRef = C31A829C1C9F4AB8005F1DBE /* Header.swift */; };
 		C31A82D01C9F4AB8005F1DBE /* ServerDriver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C31A829D1C9F4AB8005F1DBE /* ServerDriver.swift */; };
 		C31A82D11C9F4AB8005F1DBE /* Socket.swift in Sources */ = {isa = PBXBuildFile; fileRef = C31A829E1C9F4AB8005F1DBE /* Socket.swift */; };
 		C31A82D21C9F4AB8005F1DBE /* MemorySessionDriver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C31A82A01C9F4AB8005F1DBE /* MemorySessionDriver.swift */; };
@@ -160,7 +160,7 @@
 		C31A82971C9F4AB8005F1DBE /* Route.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Route.swift; sourceTree = "<group>"; };
 		C31A82991C9F4AB8005F1DBE /* Hummingbird+Socket.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Hummingbird+Socket.swift"; sourceTree = "<group>"; };
 		C31A829B1C9F4AB8005F1DBE /* Jeeves.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Jeeves.swift; sourceTree = "<group>"; };
-		C31A829C1C9F4AB8005F1DBE /* RequestHeader.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RequestHeader.swift; sourceTree = "<group>"; };
+		C31A829C1C9F4AB8005F1DBE /* Header.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Header.swift; sourceTree = "<group>"; };
 		C31A829D1C9F4AB8005F1DBE /* ServerDriver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ServerDriver.swift; sourceTree = "<group>"; };
 		C31A829E1C9F4AB8005F1DBE /* Socket.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Socket.swift; sourceTree = "<group>"; };
 		C31A82A01C9F4AB8005F1DBE /* MemorySessionDriver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MemorySessionDriver.swift; sourceTree = "<group>"; };
@@ -416,7 +416,7 @@
 			children = (
 				C31A82991C9F4AB8005F1DBE /* Hummingbird+Socket.swift */,
 				C31A829B1C9F4AB8005F1DBE /* Jeeves.swift */,
-				C31A829C1C9F4AB8005F1DBE /* RequestHeader.swift */,
+				C31A829C1C9F4AB8005F1DBE /* Header.swift */,
 				C31A829D1C9F4AB8005F1DBE /* ServerDriver.swift */,
 				C31A829E1C9F4AB8005F1DBE /* Socket.swift */,
 			);
@@ -758,7 +758,7 @@
 				C31A82B41C9F4AB8005F1DBE /* StringExtensions.swift in Sources */,
 				C31A82C11C9F4AB8005F1DBE /* Request.swift in Sources */,
 				C31A82B51C9F4AB8005F1DBE /* CryptoSwift.swift in Sources */,
-				C31A82CF1C9F4AB8005F1DBE /* RequestHeader.swift in Sources */,
+				C31A82CF1C9F4AB8005F1DBE /* Header.swift in Sources */,
 				C31A82AF1C9F4AB8005F1DBE /* Application.swift in Sources */,
 				C31A82D01C9F4AB8005F1DBE /* ServerDriver.swift in Sources */,
 				C31A82B91C9F4AB8005F1DBE /* JSON+Merging.swift in Sources */,

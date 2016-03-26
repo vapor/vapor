@@ -66,7 +66,7 @@ extension SocketIO {
 // MARK: Request / Response
 extension SocketIO {
     public func readRequest() throws -> Request {
-        let header = try Request.Header(self)
+        let header = try Header(self)
         let requestLine = header.requestLine
 
         let body: [UInt8]
@@ -84,7 +84,7 @@ extension SocketIO {
         return Request(method: method,
                        path: path,
                        address: address,
-                       headers: header.fields,
+                       headers: header.fieldsArray,
                        body: body)
     }
 

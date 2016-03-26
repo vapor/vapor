@@ -26,7 +26,7 @@ public class AbortMiddleware: Middleware {
     }
     
     class func errorResponse(status: Response.Status, message: String) throws -> Response {
-        let json = try Json([
+        let json = Json([
             "error": "true",
             "message": message
         ])

@@ -8,6 +8,10 @@ public  typealias JayType = JsonValue
 */
 public enum Json {
     
+    public init(_ obj: Any) {
+        self = .NullValue
+    }
+    
     case NullValue
     case BooleanValue(Bool)
     case NumberValue(Double)
