@@ -31,7 +31,6 @@
 		C31A82B61C9F4AB8005F1DBE /* Hash.swift in Sources */ = {isa = PBXBuildFile; fileRef = C31A827A1C9F4AB8005F1DBE /* Hash.swift */; };
 		C31A82B71C9F4AB8005F1DBE /* Int+Random.swift in Sources */ = {isa = PBXBuildFile; fileRef = C31A827B1C9F4AB8005F1DBE /* Int+Random.swift */; };
 		C31A82B81C9F4AB8005F1DBE /* SHA256Hasher.swift in Sources */ = {isa = PBXBuildFile; fileRef = C31A827C1C9F4AB8005F1DBE /* SHA256Hasher.swift */; };
-		C31A82BB1C9F4AB8005F1DBE /* NodeInitializable.swift in Sources */ = {isa = PBXBuildFile; fileRef = C31A82801C9F4AB8005F1DBE /* NodeInitializable.swift */; };
 		C31A82BC1C9F4AB8005F1DBE /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = C31A82821C9F4AB8005F1DBE /* Log.swift */; };
 		C31A82BD1C9F4AB8005F1DBE /* LogDriver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C31A82831C9F4AB8005F1DBE /* LogDriver.swift */; };
 		C31A82BE1C9F4AB8005F1DBE /* AbortMiddleware.swift in Sources */ = {isa = PBXBuildFile; fileRef = C31A82851C9F4AB8005F1DBE /* AbortMiddleware.swift */; };
@@ -65,10 +64,11 @@
 		C31A82DB1C9F4AB8005F1DBE /* RenderDriver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C31A82AB1C9F4AB8005F1DBE /* RenderDriver.swift */; };
 		C31A82DC1C9F4AB8005F1DBE /* View.swift in Sources */ = {isa = PBXBuildFile; fileRef = C31A82AC1C9F4AB8005F1DBE /* View.swift */; };
 		C31A82DE1C9F4AFB005F1DBE /* libHummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C31A82DD1C9F4AFB005F1DBE /* libHummingbird.dylib */; };
+		C32F0FA21CA72AF300EDB267 /* Node.swift in Sources */ = {isa = PBXBuildFile; fileRef = C32F0FA01CA72AF300EDB267 /* Node.swift */; };
+		C32F0FA31CA72AF300EDB267 /* NodeInitializable.swift in Sources */ = {isa = PBXBuildFile; fileRef = C32F0FA11CA72AF300EDB267 /* NodeInitializable.swift */; };
 		C3433FD41C7D119D009F0876 /* HashTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3433FD21C7D119D009F0876 /* HashTests.swift */; };
 		C3691FE01C98BEDA00C680DE /* EnvironmentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3691FDF1C98BEDA00C680DE /* EnvironmentTests.swift */; };
 		C3691FE21C98C47F00C680DE /* TypedRouteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3691FE11C98C47F00C680DE /* TypedRouteTests.swift */; };
-		C37548441CA62A2900760FBE /* Node.swift in Sources */ = {isa = PBXBuildFile; fileRef = C37548431CA62A2900760FBE /* Node.swift */; };
 		C37548481CA6F07100760FBE /* JSON.swift in Sources */ = {isa = PBXBuildFile; fileRef = C37548471CA6F07100760FBE /* JSON.swift */; };
 		C387A0431C95FEBA00B6282E /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = C387A0361C95FDFE00B6282E /* main.swift */; };
 		C38808641C62C0390067DADD /* ResponseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C38808631C62C0390067DADD /* ResponseTests.swift */; };
@@ -137,7 +137,6 @@
 		C31A827A1C9F4AB8005F1DBE /* Hash.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Hash.swift; sourceTree = "<group>"; };
 		C31A827B1C9F4AB8005F1DBE /* Int+Random.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Int+Random.swift"; sourceTree = "<group>"; };
 		C31A827C1C9F4AB8005F1DBE /* SHA256Hasher.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SHA256Hasher.swift; sourceTree = "<group>"; };
-		C31A82801C9F4AB8005F1DBE /* NodeInitializable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NodeInitializable.swift; sourceTree = "<group>"; };
 		C31A82821C9F4AB8005F1DBE /* Log.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Log.swift; sourceTree = "<group>"; };
 		C31A82831C9F4AB8005F1DBE /* LogDriver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LogDriver.swift; sourceTree = "<group>"; };
 		C31A82851C9F4AB8005F1DBE /* AbortMiddleware.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AbortMiddleware.swift; sourceTree = "<group>"; };
@@ -172,6 +171,8 @@
 		C31A82AC1C9F4AB8005F1DBE /* View.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = View.swift; sourceTree = "<group>"; };
 		C31A82DD1C9F4AFB005F1DBE /* libHummingbird.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libHummingbird.dylib; path = ../.build/debug/libHummingbird.dylib; sourceTree = "<group>"; };
 		C32F0F9E1CA721DF00EDB267 /* .travis.yml */ = {isa = PBXFileReference; lastKnownFileType = text; name = .travis.yml; path = ../.travis.yml; sourceTree = "<group>"; };
+		C32F0FA01CA72AF300EDB267 /* Node.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Node.swift; sourceTree = "<group>"; };
+		C32F0FA11CA72AF300EDB267 /* NodeInitializable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NodeInitializable.swift; sourceTree = "<group>"; };
 		C3433FD21C7D119D009F0876 /* HashTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = HashTests.swift; path = ../Tests/Vapor/HashTests.swift; sourceTree = SOURCE_ROOT; };
 		C352E68F1C62BB1C00E26467 /* Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Tests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		C352E6931C62BB1C00E26467 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = Info.plist; path = Tests/Info.plist; sourceTree = SOURCE_ROOT; };
@@ -180,7 +181,6 @@
 		C361CEDD1CA4E60900982CC8 /* LinuxMain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = LinuxMain.swift; path = ../../Tests/LinuxMain.swift; sourceTree = "<group>"; };
 		C3691FDF1C98BEDA00C680DE /* EnvironmentTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = EnvironmentTests.swift; path = ../../Tests/Vapor/EnvironmentTests.swift; sourceTree = "<group>"; };
 		C3691FE11C98C47F00C680DE /* TypedRouteTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = TypedRouteTests.swift; path = ../../Tests/Vapor/TypedRouteTests.swift; sourceTree = "<group>"; };
-		C37548431CA62A2900760FBE /* Node.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Node.swift; sourceTree = "<group>"; };
 		C37548471CA6F07100760FBE /* JSON.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = JSON.swift; sourceTree = "<group>"; };
 		C387A0361C95FDFE00B6282E /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		C387A03B1C95FE1300B6282E /* Generator */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Generator; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -243,6 +243,7 @@
 				C31A827D1C9F4AB8005F1DBE /* JSON */,
 				C31A82811C9F4AB8005F1DBE /* Log */,
 				C31A82841C9F4AB8005F1DBE /* Middleware */,
+				C32F0F9F1CA72AF300EDB267 /* Node */,
 				C31A82871C9F4AB8005F1DBE /* Process */,
 				C31A82891C9F4AB8005F1DBE /* Request */,
 				C31A828C1C9F4AB8005F1DBE /* Response */,
@@ -327,8 +328,6 @@
 			isa = PBXGroup;
 			children = (
 				C37548471CA6F07100760FBE /* JSON.swift */,
-				C31A82801C9F4AB8005F1DBE /* NodeInitializable.swift */,
-				C37548431CA62A2900760FBE /* Node.swift */,
 			);
 			name = JSON;
 			path = ../../Sources/Vapor/JSON;
@@ -454,6 +453,16 @@
 			);
 			name = View;
 			path = ../../Sources/Vapor/View;
+			sourceTree = "<group>";
+		};
+		C32F0F9F1CA72AF300EDB267 /* Node */ = {
+			isa = PBXGroup;
+			children = (
+				C32F0FA01CA72AF300EDB267 /* Node.swift */,
+				C32F0FA11CA72AF300EDB267 /* NodeInitializable.swift */,
+			);
+			name = Node;
+			path = ../../Sources/Vapor/Node;
 			sourceTree = "<group>";
 		};
 		C352E6781C62BB0F00E26467 = {
@@ -744,7 +753,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				C31A82D71C9F4AB8005F1DBE /* Dispatch.swift in Sources */,
-				C37548441CA62A2900760FBE /* Node.swift in Sources */,
 				C31A82BF1C9F4AB8005F1DBE /* Middleware.swift in Sources */,
 				C31A82C21C9F4AB8005F1DBE /* RequestData.swift in Sources */,
 				C31A82CB1C9F4AB8005F1DBE /* Route.swift in Sources */,
@@ -764,12 +772,12 @@
 				C31A82C71C9F4AB8005F1DBE /* RouterDriver.swift in Sources */,
 				C31A82BC1C9F4AB8005F1DBE /* Log.swift in Sources */,
 				C31A82B81C9F4AB8005F1DBE /* SHA256Hasher.swift in Sources */,
-				C31A82BB1C9F4AB8005F1DBE /* NodeInitializable.swift in Sources */,
 				C31A82C91C9F4AB8005F1DBE /* DefaultInitializable.swift in Sources */,
 				C31A82D31C9F4AB8005F1DBE /* Session.swift in Sources */,
 				C31A82C61C9F4AB8005F1DBE /* BranchRouter.swift in Sources */,
 				C31A82C81C9F4AB8005F1DBE /* Application+Route.swift in Sources */,
 				C31A82C01C9F4AB8005F1DBE /* Process.swift in Sources */,
+				C32F0FA21CA72AF300EDB267 /* Node.swift in Sources */,
 				C31A82AE1C9F4AB8005F1DBE /* Abort.swift in Sources */,
 				C31A82B61C9F4AB8005F1DBE /* Hash.swift in Sources */,
 				C31A82C41C9F4AB8005F1DBE /* ResponseConvertible.swift in Sources */,
@@ -791,6 +799,7 @@
 				C31A82B21C9F4AB8005F1DBE /* Provider.swift in Sources */,
 				C31A82D11C9F4AB8005F1DBE /* Socket.swift in Sources */,
 				C31A82DA1C9F4AB8005F1DBE /* ThreadSafeStore.swift in Sources */,
+				C32F0FA31CA72AF300EDB267 /* NodeInitializable.swift in Sources */,
 				C37548481CA6F07100760FBE /* JSON.swift in Sources */,
 				C31A82AD1C9F4AB8005F1DBE /* Config.swift in Sources */,
 			);
