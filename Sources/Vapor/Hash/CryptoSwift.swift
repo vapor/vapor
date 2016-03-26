@@ -139,7 +139,7 @@ class SHA2 {
                     M[x] = le.bigEndian
                     break
                 default:
-                    let s0 = rotateRight(M[x-15], n: 7) ^ rotateRight(M[x-15], n: 18) ^ (M[x-15] >> 3) //FIXME: n
+                    let s0 = rotateRight(M[x-15], n: 7) ^ rotateRight(M[x-15], n: 18) ^ (M[x-15] >> 3)
                     let s1 = rotateRight(M[x-2], n: 17) ^ rotateRight(M[x-2], n: 19) ^ (M[x-2] >> 10)
                     M[x] = M[x-16] &+ s0 &+ M[x-7] &+ s1
                     break
@@ -334,9 +334,9 @@ func arrayOfBytes<T>(value:T, length:Int? = nil) -> [UInt8] {
 
 func integerWithBytes<T: Integer where T:ByteConvertible, T: BitshiftOperationsType>(bytes: [UInt8]) -> T {
     #if swift(>=3.0)
-        var bytes = bytes.reversed() as Array<UInt8> //FIXME: check it this is equivalent of Array(...)
+        var bytes = bytes.reversed() as Array<UInt8>
     #else
-        var bytes = bytes.reverse() as Array<UInt8> //FIXME: check it this is equivalent of Array(...)
+        var bytes = bytes.reverse() as Array<UInt8>
     #endif
     if bytes.count < sizeof(T) {
         let paddingCount = sizeof(T) - bytes.count

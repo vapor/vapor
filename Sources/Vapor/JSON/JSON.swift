@@ -2,44 +2,52 @@ import JSON
 
 public class Json {
     
-    var json: JSON
+    private var _json: JSON
     
     public init(_ value: JSON) {
-        json = value
+        _json = value
     }
     
     public init(_ value: Bool) {
-        json = .booleanValue(value)
+        _json = .booleanValue(value)
     }
     
     public init(_ value: Double) {
-        json = .numberValue(value)
+        _json = .numberValue(value)
     }
     
     public init(_ value: Int) {
-        json = .numberValue(Double(value))
+        _json = .numberValue(Double(value))
     }
     
     public init(_ value: String) {
-        json = .stringValue(value)
+        _json = .stringValue(value)
     }
     
     public init(_ value: [JSON]) {
-        json = .arrayValue(value)
+        _json = .arrayValue(value)
     }
     
     public init(_ value: [String: JSON]) {
-        json = .objectValue(value)
+        _json = .objectValue(value)
     }
     
     public init(_ value: [UInt8]) throws {
         let data: Data = Data(value)
-        json = try JSONParser().parse(data)
+        _json = try JSONParser().parse(data)
     }
     
     public var data: [UInt8] {
-        return JSONSerializer().serialize(json).bytes
+        return JSONSerializer().serialize(_json).bytes
         
+    }
+    
+    public subscript(key: String) -> Node? {
+        return object?[key]
+    }
+    
+    public subscript(index: Int) -> Node? {
+        return array?[index]
     }
 }
 
@@ -51,7 +59,7 @@ extension Json: ResponseConvertible {
 
 extension Json: Node {
     public var isNull: Bool {
-        switch json {
+        switch _json {
         case .nullValue:
             return true
         default:
@@ -60,7 +68,7 @@ extension Json: Node {
     }
 
     public var bool: Bool? {
-        switch json {
+        switch _json {
         case .booleanValue(let bool):
             return bool
         default:
@@ -69,7 +77,7 @@ extension Json: Node {
     }
 
     public var int: Int? {
-        switch json {
+        switch _json {
         case .numberValue(let double):
             return Int(double)
         default:
@@ -90,7 +98,7 @@ extension Json: Node {
     }
 
     public var string: String? {
-        switch json {
+        switch _json {
         case .stringValue(let string):
             return string
         default:
@@ -99,7 +107,7 @@ extension Json: Node {
     }
 
     public var array: [Node]? {
-        switch json {
+        switch _json {
         case .arrayValue(let array):
             return array.map { json in
                 return Json(json)
@@ -110,7 +118,7 @@ extension Json: Node {
     }
 
     public var object: [String : Node]? {
-        switch json {
+        switch _json {
         case .objectValue(let object):
             var mapped: [String: Node] = [:]
             object.forEach { key, json in
@@ -120,5 +128,9 @@ extension Json: Node {
         default:
             return nil
         }
+    }
+    
+    public var json: Json? {
+        return self
     }
 }

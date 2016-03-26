@@ -29,15 +29,11 @@ public extension Request {
         
         // MARK: Subscripting
         public subscript(key: String) -> Node? {
-            //FIXME
-            //return query[key] ?? json?.object?[key]
-            return nil
+            return query[key] ?? json?.object?[key]
         }
         
-        public subscript(idx: Int) -> Node? {
-            return nil
-            //return json?.array?[idx]
-            //FIXME
+        public subscript(index: Int) -> Node? {
+            return json?.array?[index]
         }
         
         /**
@@ -110,6 +106,10 @@ extension String: Node {
     
     public var object: [String : Node]? {
         return nil
+    }
+    
+    public var json: Json? {
+        return Json(self)
     }
 }
 
