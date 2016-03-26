@@ -70,7 +70,7 @@ class ControllerTests: XCTestCase {
         
         app.bootRoutes()
         
-        let fooIndex = Request(method: .Get, path: "foo", address: nil, headers: [:], body: [])
+        let fooIndex = Request(method: .Get, path: "foo", address: nil, headers: [], body: [])
         if let handler = app.router.route(fooIndex) {
             do {
                 try handler(request: fooIndex)

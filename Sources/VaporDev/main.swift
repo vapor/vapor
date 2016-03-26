@@ -26,7 +26,7 @@ let i = Int.self
 let s = String.self
 
 app.get("test", i, s) { request, int, string in
-    return Json([
+    return try Json([
         "message": "Int \(int) String \(string)"
     ])
 }

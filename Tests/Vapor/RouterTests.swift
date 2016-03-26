@@ -34,7 +34,7 @@ class RouterTests: XCTestCase {
             method: .Get,
             path: "test",
             address: nil,
-            headers: ["Host": "other.test"],
+            headers: [("Host", "other.test")],
             body: []
         )
         
@@ -66,8 +66,8 @@ class RouterTests: XCTestCase {
         }
         router.register(route_2)
         
-        let request_1 = Request(method: .Get, path: "test", address: nil, headers: ["Host": "other.test"], body: [])
-        let request_2 = Request(method: .Get, path: "test", address: nil, headers: ["Host": "vapor.test"], body: [])
+        let request_1 = Request(method: .Get, path: "test", address: nil, headers: [("Host", "other.test")], body: [])
+        let request_2 = Request(method: .Get, path: "test", address: nil, headers: [("Host", "vapor.test")], body: [])
         
         let handler_1 = router.route(request_1)
         let handler_2 = router.route(request_2)
@@ -105,7 +105,7 @@ class RouterTests: XCTestCase {
         }
         router.register(route)
         
-        let request = Request(method: .Get, path: "test/\(percentEncodedString)", address: nil, headers: [:], body: [])
+        let request = Request(method: .Get, path: "test/\(percentEncodedString)", address: nil, headers: [], body: [])
         let handler = router.route(request)
         
         let _ = try? handler?(request: request)

@@ -61,6 +61,8 @@ class SessionTests: XCTestCase {
 }
 
 private class TestDriver: SessionDriver {
+    var app = Application()
+    
     enum Action {
         case ValueFor(key: String, session: Session)
         case SetValue(value: String?, key: String, session: Session)
