@@ -191,7 +191,7 @@ class Vapor {
             if swift2 {
                 try run(".build/VaporApp")
             } else {
-                var name = "VaporApp"
+                var name = "App"
                 let folder = release ? "release" : "debug"
                 
                 #if swift(>=3.0)
