@@ -13,7 +13,6 @@
 		3492B2EF1C787DD600D8E588 /* RouteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3492B2EE1C787DD600D8E588 /* RouteTests.swift */; };
 		34CC59561C7BE3C9007CA680 /* LogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34CC59551C7BE3C9007CA680 /* LogTests.swift */; };
 		3A583A011C7FCA720044AAFF /* libVapor.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 3A583A001C7FCA720044AAFF /* libVapor.dylib */; };
-		3A659FC71C805E3B00C105F5 /* libJay.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 3A659FC61C805E3B00C105F5 /* libJay.dylib */; };
 		3A91D3CF1C7F6AF900EA3CA0 /* Vapor.h in Headers */ = {isa = PBXBuildFile; fileRef = 3A91D3CE1C7F6AF900EA3CA0 /* Vapor.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		3AEEF41D1C7F6D4A0099CBAE /* Vapor.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3A91D3CC1C7F6AF900EA3CA0 /* Vapor.framework */; };
 		3AEEF4531C7F72C30099CBAE /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AEEF4181C7F6CBF0099CBAE /* main.swift */; };
@@ -118,7 +117,6 @@
 		3492B2EE1C787DD600D8E588 /* RouteTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RouteTests.swift; path = ../Tests/Vapor/RouteTests.swift; sourceTree = SOURCE_ROOT; };
 		34CC59551C7BE3C9007CA680 /* LogTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = LogTests.swift; path = ../Tests/Vapor/LogTests.swift; sourceTree = SOURCE_ROOT; };
 		3A583A001C7FCA720044AAFF /* libVapor.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libVapor.dylib; path = ../.build/debug/libVapor.dylib; sourceTree = "<group>"; };
-		3A659FC61C805E3B00C105F5 /* libJay.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libJay.dylib; path = ../.build/debug/libJay.dylib; sourceTree = "<group>"; };
 		3A91D3CC1C7F6AF900EA3CA0 /* Vapor.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Vapor.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		3A91D3CE1C7F6AF900EA3CA0 /* Vapor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Vapor.h; sourceTree = "<group>"; };
 		3A91D3D01C7F6AF900EA3CA0 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -205,7 +203,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				3A659FC71C805E3B00C105F5 /* libJay.dylib in Frameworks */,
 				C31A82DE1C9F4AFB005F1DBE /* libHummingbird.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -276,7 +273,6 @@
 			isa = PBXGroup;
 			children = (
 				C31A82DD1C9F4AFB005F1DBE /* libHummingbird.dylib */,
-				3A659FC61C805E3B00C105F5 /* libJay.dylib */,
 				3A583A001C7FCA720044AAFF /* libVapor.dylib */,
 			);
 			name = Dependencies;
