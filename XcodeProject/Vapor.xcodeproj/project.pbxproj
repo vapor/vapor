@@ -173,6 +173,7 @@
 		C31A82AB1C9F4AB8005F1DBE /* RenderDriver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RenderDriver.swift; sourceTree = "<group>"; };
 		C31A82AC1C9F4AB8005F1DBE /* View.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = View.swift; sourceTree = "<group>"; };
 		C31A82DD1C9F4AFB005F1DBE /* libHummingbird.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libHummingbird.dylib; path = ../.build/debug/libHummingbird.dylib; sourceTree = "<group>"; };
+		C32F0F9E1CA721DF00EDB267 /* .travis.yml */ = {isa = PBXFileReference; lastKnownFileType = text; name = .travis.yml; path = ../.travis.yml; sourceTree = "<group>"; };
 		C3433FD21C7D119D009F0876 /* HashTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = HashTests.swift; path = ../Tests/Vapor/HashTests.swift; sourceTree = SOURCE_ROOT; };
 		C352E68F1C62BB1C00E26467 /* Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Tests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		C352E6931C62BB1C00E26467 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = Info.plist; path = Tests/Info.plist; sourceTree = SOURCE_ROOT; };
@@ -462,6 +463,7 @@
 		C352E6781C62BB0F00E26467 = {
 			isa = PBXGroup;
 			children = (
+				C32F0F9E1CA721DF00EDB267 /* .travis.yml */,
 				C352E7141C62BE6900E26467 /* Package.swift */,
 				C3B009C01CA4BCC200D2DCD1 /* vapor */,
 				C352E7131C62BDE200E26467 /* README.md */,
