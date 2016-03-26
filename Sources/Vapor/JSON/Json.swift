@@ -114,6 +114,29 @@ extension Json: DictionaryLiteralConvertible {
     }
 }
 
+// MARK: Json Convertible Initializers
+extension Json {
+    
+    /**
+     Create Json from any convertible type
+     
+     - parameter any: the convertible type
+     - throws: a potential conversion error
+     - returns: initialized Json
+     */
+    public init(_ any: Any) throws {
+        let jsonBytes = try Jay().dataFromJson(any)
+        self = try Json.deserialize(jsonBytes)
+    }
+}
+
+extension Json: NodeInitializable {
+    public static func makeWith(node: Node) -> Json {
+        // TODO:
+        return Json.Null
+        //        return node
+    }
+}
 
 /**
     Allows Json to be returned in any vapor Closure

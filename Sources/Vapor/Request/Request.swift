@@ -24,14 +24,14 @@ public class Request {
                     string = "\(value)"
                 }
             #else
-                public init(unicodeScalarLiteral value: UnicodeScalarLiteralType) {
+                public init(unicodeScalarLiteral value: String) {
                     string = "\(value)"
                 }
                 
-                public init(extendedGraphemeClusterLiteral value: ExtendedGraphemeClusterLiteralType) {
+                public init(extendedGraphemeClusterLiteral value: String) {
                     string = value
                 }
-                
+            
                 public init(stringLiteral value: StringLiteralType) {
                     string = value
                 }
