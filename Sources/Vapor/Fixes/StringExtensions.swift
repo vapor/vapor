@@ -59,8 +59,15 @@ import libc
             }
             return true
         }
-
-    
+        func rangeOfString(str: String) -> Range<Int>? {
+            var start = -1
+            withCString { (bytes) in
+                str.withCString { (sbytes) in
+                    start = strstr( bytes, sbytes ) - UnsafeMutablePointer<Int8>( bytes )
+                }
+            }
+            return start < 0 ? nil : start..<start+str.utf8.count
+        }
         func substringToIndex(index: Int) -> String {
             var out = self
             withCString { (bytes) in
@@ -74,17 +81,6 @@ import libc
 #endif
 
 extension String {
-    
-    func rangeOfString(str: String) -> Range<Int>? {
-        var start = -1
-        withCString { (bytes) in
-            str.withCString { (sbytes) in
-                start = strstr( bytes, sbytes ) - UnsafeMutablePointer<Int8>( bytes )
-            }
-        }
-        return start < 0 ? nil : start..<start+str.utf8.count
-    }
-    
     public static func buffer(size size: Int) -> [Int8] {
         #if swift(>=3.0)
             return [Int8](repeating: 0, count: size)

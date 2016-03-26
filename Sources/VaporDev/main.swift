@@ -13,7 +13,7 @@ app.get("test") { request in
 }
 
 app.post("jsondata") { request in
-    print(request.data.json?["hi"]?.string)
+    print(request.data.json?.object?["hi"]?.string)
     return "yup"
 }
 
@@ -52,7 +52,7 @@ app.post("json2") { request in
     guard let count = request.data["unicorns"]?.int else {
         return Response(error: "No unicorn count provided")
     }
-    return Response(status: .Created, json: Json(["message":"Received \(count) unicorns"]))
+    return try Response(status: .Created, json: Json(["message":"Received \(count) unicorns"]))
 }
 
 app.group("abort") {
