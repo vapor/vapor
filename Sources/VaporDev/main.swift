@@ -4,6 +4,8 @@ let app = Application()
 
 app.hash.key = app.config.get("app.hash.key", "default-key")
 
+//MARK: Basic
+
 app.get("/") { request in
     return try app.view("welcome.html")
 }
@@ -12,20 +14,18 @@ app.get("test") { request in
     return "123"
 }
 
+//MARK: Resource
+
 app.resource("resource", controller: UserController.self)
+
+//MARK: Request data
 
 app.post("jsondata") { request in
     print(request.data.json?["hi"]?.string)
     return "yup"
 }
 
-app.get("json") { request in
-    return Json([
-        "number":123,
-        "text": "unicorns",
-        "nested": ["one", 2, false]
-    ])
-}
+//MARK: Type safe routing
 
 let i = Int.self
 let s = String.self
@@ -36,10 +36,17 @@ app.get("test", i, s) { request, int, string in
     ])
 }
 
-app.get("session") { request in 
-    request.session?["name"] = "Vapor"
-    return "Session set"
+
+//MARK: Json
+
+app.get("json") { request in
+    return Json([
+        "number":123,
+        "text": "unicorns",
+        "nested": ["one", 2, false]
+    ])
 }
+
 
 app.post("json") { request in
     //parse a key inside the received json
@@ -75,6 +82,15 @@ app.group("abort") {
     }
 }
 
+
+//MARK: Session
+
+app.get("session") { request in
+    request.session?["name"] = "Vapor"
+    return "Session set"
+}
+
+
 app.post("login") { request in
     guard
         let email = request.data["email"]?.string,
@@ -93,6 +109,8 @@ app.post("login") { request in
         "message": "Logged in"
     ])
 }
+
+//MARK: Middleware
 
 app.middleware(AuthMiddleware.self) {
     app.get("protected") { request in

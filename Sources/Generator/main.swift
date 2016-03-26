@@ -1,4 +1,4 @@
-!os(Linux)
+#if !os(Linux)
 
 import Foundation
 

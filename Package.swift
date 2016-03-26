@@ -8,8 +8,6 @@ let package = Package(
         .Package(url: "https://github.com/ketzusaka/Hummingbird", majorVersion: 1)
     ],
     exclude: [
-        "Sources/VaporDev",
-        "Sources/Generator",
         "XcodeProject",
         "Release"
     ],
