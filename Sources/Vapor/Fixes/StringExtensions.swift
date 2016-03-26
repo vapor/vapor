@@ -34,8 +34,8 @@ extension String {
     }
     
     func hasSuffix(str: String) -> Bool {
-        let strGen = str.characters.reversed().generate()
-        let selfGen = self.characters.reversed().generate()
+        let strGen = str.characters.reversed().iterator()
+        let selfGen = self.characters.reversed().iterator()
         let seq = Zip2Sequence(strGen, selfGen)
         for (lhs, rhs) in seq where lhs != rhs {
             return false
