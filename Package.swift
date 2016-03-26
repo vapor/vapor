@@ -3,7 +3,6 @@ import PackageDescription
 let package = Package(
     name: "Vapor",
     dependencies: [
-        //.Package(url: "https://github.com/qutheory/json.git", majorVersion: 0),
         .Package(url: "https://github.com/Zewo/JSON.git", majorVersion: 0),
         .Package(url: "https://github.com/ketzusaka/Hummingbird", majorVersion: 1, minor: 1)
     ],

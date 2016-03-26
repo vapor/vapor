@@ -13,6 +13,7 @@ public protocol Node {
     var string: String? { get }
     var array: [Node]? { get }
     var object: [String : Node]? { get }
+    var json: Json? { get }
 }
 
 public enum NodeError: ErrorProtocol {

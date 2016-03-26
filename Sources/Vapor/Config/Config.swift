@@ -43,15 +43,13 @@ public class Config {
 
     ///Returns whether this instance of `Config` contains the key
     public func has(keyPath: String) -> Bool {
-        return false
-        //let result: Json? = try? get(keyPath)
-        //return result != nil
+        let result: Node? = try? get(keyPath)
+        return result != nil
     }
     
     ///Returns the generic Json representation for an item at a given path or throws
     public func get(keyPath: String) throws -> Node {
-        return "" //FIXME
-        /*var keys = keyPath.keys
+        var keys = keyPath.keys
         
         guard let json: Json = repository[keys.removeFirst()] else {
             throw Error.NoFileFound
@@ -67,7 +65,7 @@ public class Config {
             throw Error.NoValueFound
         }
         
-        return result*/
+        return result
     }
     
     //Returns the value for a given type from the Config or throws
@@ -140,14 +138,14 @@ public class Config {
 
             for file in files {
                 let data = try FileManager.readBytesFromFile(file)
-                //FIXME
-                /*let json = try Json.deserialize(data)
+                let json = try Json(data)
 
                 if repository[group] == nil {
                     repository[group] = json
                 } else {
-                    repository[group]?.merge(with: json)
-                }*/
+                    //FIXME
+                    //repository[group]?.merge(with: json)
+                }
             }
         }
 
@@ -156,55 +154,25 @@ public class Config {
         if let env = files[".env"] {
             for file in env {
                 let data = try FileManager.readBytesFromFile(file)
-                //FIXME
-                /*let json = try Json.deserialize(data)
+                let json = try Json(data)
 
-                guard case let .Object(object) = json else {
+                guard let object = json.object else {
                     return
                 }
 
-                for (group, json) in object {
+                for (group, node) in object {
                     if repository[group] == nil {
-                        repository[group] = json
+                        repository[group] = node.json
                     } else {
-                        repository[group]?.merge(with: json)
+                        //FIXME
+                        //repository[group]?.merge(with: json)
                     }
-                }*/
-            }
-        }
-    }
-
-    #if swift(>=3.0)
-    private func populateConfigFiles(files: inout [String: [String]], in path: String) throws {
-        let contents = try FileManager.contentsOfDirectory(path)
-        let suffix = ".json"
-
-        for file in contents {
-            #if os(Linux)
-                guard let fileName = file.split("/").last, suffixRange = fileName.rangeOfString(suffix) where suffixRange.endIndex == fileName.characters.endIndex else {
-                    continue
                 }
-                
-                let name = fileName.substringToIndex(suffixRange.startIndex)
-            #else
-                let name = "" //FIXME
-                /*guard let fileName = file.split("/").last, suffixRange = fileName.range(of: suffix) where suffixRange.endIndex == fileName.characters.endIndex else {
-                    continue
-                }*/
-                
-                //let name = fileName.substring(to: suffixRange.startIndex)
-            #endif
-
-
-            if files[name] == nil {
-                files[name] = []
             }
-
-            files[name]?.append(file)
         }
     }
-    #else
-    private func populateConfigFiles(inout files: [String: [String]], in path: String) throws {
+
+    private func populateConfigFiles(files: inout [String: [String]], in path: String) throws {
         let contents = try FileManager.contentsOfDirectory(path)
 
         for file in contents {
@@ -229,7 +197,6 @@ public class Config {
             files[name]?.append(file)
         }
     }
-    #endif
 
 }
 
