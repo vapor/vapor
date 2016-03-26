@@ -12,6 +12,8 @@ app.get("test") { request in
     return "123"
 }
 
+app.resource("resource", controller: MyController.self)
+
 app.post("jsondata") { request in
     print(request.data.json?["hi"]?.string)
     return "yup"
@@ -73,4 +75,4 @@ app.group("abort") {
     }
 }
 
-app.start(port: 8023)
+app.start(port: 8024)

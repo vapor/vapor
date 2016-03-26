@@ -1,33 +1,47 @@
 import Vapor //Travis will fail without this
 
-class MyController: ResourceController, DefaultInitializable {
-    required init() {
+class MyController: Controller<String> {
+    required init(application: Application) {
+        super.init(application: application)
         
+        print("mycontroller")
     }
     
     /// Display many instances
-    func index(request: Request) throws -> ResponseConvertible {
-        return "index"
+    override func index(request: Request) throws -> ResponseConvertible {
+        return Json([
+            "controller": "MyController.index"
+        ])
     }
     
     /// Create a new instance.
-    func store(request: Request) throws -> ResponseConvertible {
-        return "store"
+    override func store(request: Request) throws -> ResponseConvertible {
+        return Json([
+            "controller": "MyController.store"
+        ])
     }
     
     /// Show an instance.
-    func show(request: Request) throws -> ResponseConvertible {
-        return "show"
+    override func show(request: Request, item: String) throws -> ResponseConvertible {
+        return Json([
+            "controller": "MyController.show",
+        ])
     }
     
     /// Update an instance.
-    func update(request: Request) throws -> ResponseConvertible {
-        return "update"
+    override func update(request: Request, item: String) throws -> ResponseConvertible {
+        return Json([
+            "controller": "MyController.update",
+        ])
     }
     
     /// Delete an instance.
-    func destroy(request: Request) throws -> ResponseConvertible {
-        return "destroy"
+    override func destroy(request: Request, item: String) throws -> ResponseConvertible {
+        Log.info("Delete: \(item)")
+        
+        return Json([
+            "controller": "MyController.destroy",
+        ])
     }
     
 }

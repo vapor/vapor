@@ -39,63 +39,42 @@ extension Application {
         Creates standard Create, Read, Update, Delete routes
         using the Handlers from a supplied `ResourceController`.
      
-        The `path` supports nested resources, like `users.photos`.
-        users/:user_id/photos/:id
-     
         Note: You are responsible for pluralizing your endpoints.
     */
-    public final func resource<ResourceControllerType: ResourceController>(path: String, makeControllerWith controllerFactory: () -> ResourceControllerType) {
-        let last = "/:id"
-
-        let shortPathArray = path.split(".")
-            .flatMap { component in
-                return [component, "/:\(component)_id/"]
-            }
-            .dropLast()
-            
+    public final func resource<Entity: StringInitializable>(path: String, makeControllerWith controllerFactory: () -> Controller<Entity>) {
+        //GET /entities
+        self.get(path) { request in
+            return try controllerFactory().index(request)
+        }
         
-        let shortPath = shortPathArray.joined(separator: "")
-        let fullPath = shortPath + last
-
-        // ie: /users
-        self.add(.Get, path: shortPath, makeControllerWith: controllerFactory, action: ResourceControllerType.index)
-        self.add(.Post, path: shortPath, makeControllerWith: controllerFactory, action: ResourceControllerType.store)
-
-        // ie: /users/:id
-        self.add(.Get, path: fullPath, makeControllerWith: controllerFactory, action: ResourceControllerType.show)
-        self.add(.Put, path: fullPath, makeControllerWith: controllerFactory, action: ResourceControllerType.update)
-        self.add(.Delete, path: fullPath, makeControllerWith: controllerFactory, action: ResourceControllerType.destroy)
+        //POST /entities
+        self.post(path) { request in
+            return try controllerFactory().index(request)
+        }
+        
+        //GET /entities/:id
+        self.get(path, Entity.self) { request, item in
+            return try controllerFactory().show(request, item: item)
+        }
+        
+        //PUT /entities/:id
+        self.put(path, Entity.self) { request, item in
+            return try controllerFactory().update(request, item: item)
+        }
+        
+        //DELETE /intities/:id
+        self.delete(path, Entity.self) { request, item in
+            return try controllerFactory().destroy(request, item: item)
+        }
     }
 
-    public final func resource<ResourceControllerType: ResourceController where ResourceControllerType: DefaultInitializable>(path: String, controller: ResourceControllerType.Type) {
-        resource(path, makeControllerWith: ResourceControllerType.init)
-    }
-
-    public final func resource<ResourceControllerType: ResourceController where ResourceControllerType: ApplicationInitializable>(path: String, controller: ResourceControllerType.Type) {
+    public final func resource<Entity: StringInitializable>(path: String, controller: Controller<Entity>.Type) {
         resource(path) {
-            return ResourceControllerType(application: self)
+            return controller.init(application: self)
         }
     }
 
-    public final func add<Controller>(method: Request.Method, path: String, makeControllerWith controllerFactory: () -> Controller, action: Controller -> Route.Handler) {
-        add(method, path: path) { request in
-            let controller = controllerFactory()
-            let actionCall = action(controller)
-            return try actionCall(request).response()
-        }
-    }
-
-    public final func add<Controller: DefaultInitializable>(method: Request.Method, path: String, action: Controller -> Route.Handler) {
-        add(method, path: path, makeControllerWith: Controller.init, action: action)
-    }
-    
-    public final func add<Controller: ApplicationInitializable>(method: Request.Method, path: String, action: Controller -> Route.Handler) {
-        add(method, path: path, makeControllerWith: {
-            return Controller(application: self)
-        }, action: action)
-    }
-    
-    public final func add(method: Request.Method, path: String, handler: Route.Handler) {
+    final func add(method: Request.Method, path: String, handler: Route.Handler) {
         //Convert Route.Handler to Request.Handler
         var handler = { request in
             return try handler(request).response()
