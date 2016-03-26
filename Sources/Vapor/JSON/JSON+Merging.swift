@@ -3,8 +3,8 @@ extension Json {
     /** Recursively merges two Json objects */
     mutating func merge(with json: Json) {
         switch json {
-            case .ObjectValue(let object):
-                guard case let .ObjectValue(object2) = self else {
+            case .Object(let object):
+                guard case let .Object(object2) = self else {
                     self = json
                     return
                 }
@@ -21,14 +21,14 @@ extension Json {
                     }
                 }
 
-                self = .ObjectValue(merged)
-            case .ArrayValue(let array):
-                guard case let .ArrayValue(array2) = self else {
+                self = .Object(merged)
+            case .Array(let array):
+                guard case let .Array(array2) = self else {
                     self = json
                     return
                 }
 
-                self = .ArrayValue(array + array2)
+                self = .Array(array + array2)
             default:
                 self = json
         }

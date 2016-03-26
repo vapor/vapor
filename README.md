@@ -136,7 +136,7 @@ Now requesting a `User` is expressive and concise.
 You can also respond with HTML pages.
 
 ```swift
-app.get("/") { [unowned app] request in
+app.get("/") { request in
     return try app.view("index.html")
 }
 ```
@@ -152,7 +152,7 @@ Or [Stencil](https://github.com/kylef/Stencil) templates.
 ```
 
 ```swift
-app.get("/") { [unowned app] request in
+app.get("/") { request in
     return try app.view("index.stencil", context: ["message": "Hello"])
 }
 ```

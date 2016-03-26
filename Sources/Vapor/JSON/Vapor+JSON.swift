@@ -1,3 +1,5 @@
+import Jay
+
 /**
     Allows Json to be returned in any vapor Closure
 */  
@@ -42,62 +44,25 @@ public protocol NodeInitializable {
 }
 
 // MARK: Json Convertible Initializers
-//extension Json {
-//    
-//    /**
-//         Create Json from any convertible type
-//         
-//         - parameter any: the convertible type
-//         - throws: a potential conversion error
-//         - returns: initialized Json
-//    */
-//    public init<T: NodeInitializable>(_ any: T) throws {
-//        self = try any.jsonRepresentation()
-//    }
-//    
-//    public init<T: NodeConvertible>(_ any: [T]) throws {
-//        let mapped = try any.map(Json.init)
-//        self.init(mapped)
-//    }
-//    
-//    public init<T: JsonConvertible>(_ any: [[T]]) throws {
-//        let mapped = try any.map(Json.init)
-//        self.init(mapped)
-//    }
-//    
-//    public init<T: JsonConvertible>(_ any: Set<T>) throws {
-//        let mapped = try any.map(Json.init)
-//        self.init(mapped)
-//    }
-//    
-//    public init<T: JsonConvertible>(_ any: [String : T]) throws {
-//        var mapped: [String : Json] = [:]
-//        try any.forEach { key, val in
-//            mapped[key] = try Json(val)
-//        }
-//        self.init(mapped)
-//    }
-//    
-//    public init<T: JsonConvertible>(_ any: [String : [T]]) throws {
-//        var mapped: [String : Json] = [:]
-//        try any.forEach { key, val in
-//            mapped[key] = try Json(val)
-//        }
-//        self.init(mapped)
-//    }
-//    
-//    public init<T: JsonConvertible>(_ any: [String : [String : T]]) throws {
-//        var mapped: [String : Json] = [:]
-//        try any.forEach { key, val in
-//            mapped[key] = try Json(val)
-//        }
-//        self.init(mapped)
-//    }
-//}
+extension Json {
+    
+    /**
+         Create Json from any convertible type
+         
+         - parameter any: the convertible type
+         - throws: a potential conversion error
+         - returns: initialized Json
+    */
+    public init(_ any: Any) throws {
+        let jsonBytes = try Jay().dataFromJson(any)
+        self = try Json.deserialize(jsonBytes)
+    }
+}
 
 extension Json: NodeInitializable {
     public static func makeWith(node: Node) -> Json {
-        return Json.NullValue
+        // TODO:
+        return Json.Null
 //        return node
     }
 }

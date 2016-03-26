@@ -1,3 +1,5 @@
+import Jay
+
 /**
     This protocol defines a type of data received.
     these variables are used to access underlying
@@ -79,10 +81,21 @@ public extension Request {
     }
 }
 
+extension JsonNumber {
+    public var number: Double {
+        switch self {
+        case .JsonInt(let int):
+            return Double(int)
+        case .JsonDbl(let dbl):
+            return dbl
+        }
+    }
+}
+
 extension Json: Node {
     public var isNull: Bool {
         switch self {
-        case .NullValue:
+        case .Null:
             return true
         default:
             return false
@@ -91,13 +104,13 @@ extension Json: Node {
     
     public var bool: Bool? {
         switch  self {
-        case .BooleanValue(let bool):
-            return bool
-        case .NumberValue(let number):
-            return Int(number) > 0
-        case .StringValue(let string):
+        case .Boolean(let bool):
+            return bool == .True
+        case .Number(let number):
+            return number.number > 0
+        case .String(let string):
             return Bool(string)
-        case .ObjectValue(_), .ArrayValue(_), .NullValue:
+        case .Object(_), .Array(_), .Null:
             return false
         }
     }
@@ -119,30 +132,30 @@ extension Json: Node {
     
     public var double: Double? {
         switch self {
-        case .BooleanValue(let bool):
-            return bool ? 1 : 0
-        case .NumberValue(let number):
-            return Double(number)
-        case .StringValue(let string):
+        case .Boolean(let bool):
+            return bool == .True ? 1 : 0
+        case .Number(let number):
+            return number.number
+        case .String(let string):
             return Double(string)
-        case .NullValue:
+        case .Null:
             return 0
-        case .ObjectValue(_), .ArrayValue(_):
+        case .Object(_), .Array(_):
             return nil
         }
     }
     
-    public var string: String? {
+    public var string: Swift.String? {
         switch self {
-        case .StringValue(let string):
+        case .String(let string):
             return string
-        case .BooleanValue(let bool):
-            return String(bool)
-        case .NumberValue(let number):
-            return String(number)
-        case .NullValue:
+        case .Boolean(let bool):
+            return Swift.String(bool)
+        case .Number(let number):
+            return number.number.description
+        case .Null:
             return "null"
-        case .ArrayValue(let array):
+        case .Array(let array):
             let flat = array
                 .flatMap { js in
                     return js.string
@@ -152,19 +165,19 @@ extension Json: Node {
             #else
                 return flat.joinWithSeparator(",")
             #endif
-        case .ObjectValue(_):
+        case .Object(_):
             return nil
         }
     }
     
     public var array: [Node]? {
-        guard case let .ArrayValue(array) = self else { return nil }
+        guard case let .Array(array) = self else { return nil }
         return array.map { $0 as Node }
     }
     
-    public var object: [String : Node]? {
-        guard case let .ObjectValue(object) = self else { return nil }
-        var mapped: [String : Node] = [:]
+    public var object: [Swift.String : Node]? {
+        guard case let .Object(object) = self else { return nil }
+        var mapped: [Swift.String : Node] = [:]
         object.forEach { key, val in
             mapped[key] = val as Node
         }
