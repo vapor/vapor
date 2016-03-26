@@ -29,112 +29,6 @@ extension Json {
     }
 }
 
-/**
-    Handles the conversion from JayType
-    Json values to Vapor Json values.
-*/
-////public enum Json {
-////    
-////    case NullValue
-////    case BooleanValue(Bool)
-////    case NumberValue(Double)
-////    case StringValue(String)
-////    case ArrayValue([Json])
-////    case ObjectValue([String:Json])
-////    
-////    // MARK: Initialization
-////    
-////    public init(_ value: Bool) {
-////        self = .BooleanValue(value)
-////    }
-////    
-////    public init(_ value: Double) {
-////        self = .NumberValue(value)
-////    }
-////    
-////    public init(_ value: Int) {
-////        let double = Double(value)
-////        self.init(double)
-////    }
-////    
-////    public init(_ value: String) {
-////        self = .StringValue(value)
-////    }
-////    
-////    public init(_ value: [Json]) {
-////        self = .ArrayValue(value)
-////    }
-////    
-////    public init(_ value: [String : Json]) {
-////        self = .ObjectValue(value)
-////    }
-////}
-//
-//// MARK: Mapping between Json and Jay types
-//
-//extension JayType {
-//    private init(_ json: Json) {
-//        switch json {
-//        case .ObjectValue(let dict):
-//            var newDict = JsonObject()
-//            for (k,v) in dict {
-//                newDict[k] = JayType(v)
-//            }
-//            self = .Object(newDict)
-//        case .ArrayValue(let arr):
-//            var newArray = JsonArray()
-//            for i in arr {
-//                newArray.append(JayType(i))
-//            }
-//            self = .Array(newArray)
-//        case .NullValue:
-//            self = .Null
-//        case .NumberValue(let num):
-//            self = .Number(JsonNumber.JsonDbl(num))
-//        case .BooleanValue(let bool):
-//            self = .Boolean(bool ? .True : .False)
-//        case .StringValue(let str):
-//            self = .String(str)
-//        }
-//    }
-//}
-//
-//extension Json {
-//    public init(_ jay: JaySON) {
-//        print(jay)
-//        self = .NullValue
-//    }
-//    public init(_ jay: JayType) {
-//        switch jay {
-//        case .Object(let dict):
-//            var newDict = [String : Json]()
-//            for (k,v) in dict {
-//                newDict[k] = Json(v)
-//            }
-//            self = Json(newDict)
-//        case .Array(let arr):
-//            var newArray = [Json]()
-//            for i in arr {
-//                newArray.append(Json(i))
-//            }
-//            self = Json(newArray)
-//        case .Null: self = Json.NullValue
-//        case .Number(let num):
-//            switch num {
-//            case .JsonDbl(let dbl):
-//                self = Json(dbl)
-//            case .JsonInt(let int):
-//                self = Json(Double(int))
-//            }
-//        case .Boolean(let bool):
-//            self = Json(bool == .True)
-//        case .String(let str):
-//            self = Json(str)
-//        }
-//        
-//    }
-//}
-
 // MARK: Serialization
 
 extension Json {
@@ -220,3 +114,70 @@ extension Json: DictionaryLiteralConvertible {
     }
 }
 
+
+/**
+    Allows Json to be returned in any vapor Closure
+*/
+extension Json: ResponseConvertible {
+    public func response() -> Response {
+        do {
+            let data = try serialize()
+            return Response(status: .OK, data: data, contentType: .Json)
+        } catch {
+            //return error!
+            let errorString = "\(error)"
+            //TODO: which response? 500? 400? should we be leaking the error?
+            return Response(error: errorString)
+        }
+    }
+}
+
+// MARK: Request Json
+extension Request {
+    
+    /**
+        If the body can be serialized as Json, the value will be returned here
+    */
+    public var json: Json? {
+        return try? Json.deserialize(body)
+    }
+}
+
+extension Json {
+    
+    /** Recursively merges two Json objects */
+    mutating func merge(with json: Json) {
+        switch json {
+        case .Object(let object):
+            guard case let .Object(object2) = self else {
+                self = json
+                return
+            }
+            
+            var merged = object2
+            
+            for (key, value) in object {
+                if let original = merged[key] {
+                    var newValue = original
+                    newValue.merge(with: value)
+                    merged[key] = newValue
+                } else {
+                    merged[key] = value
+                }
+            }
+            
+            self = .Object(merged)
+        case .Array(let array):
+            guard case let .Array(array2) = self else {
+                self = json
+                return
+            }
+            
+            self = .Array(array + array2)
+        default:
+            self = json
+        }
+        
+    }
+    
+}

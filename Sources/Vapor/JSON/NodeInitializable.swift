@@ -1,32 +1,5 @@
 import Jay
 
-/**
-    Allows Json to be returned in any vapor Closure
-*/  
-extension Json: ResponseConvertible {
-    public func response() -> Response {
-        do {
-            let data = try serialize()
-            return Response(status: .OK, data: data, contentType: .Json)
-        } catch {
-            //return error!
-            let errorString = "\(error)"
-            //TODO: which response? 500? 400? should we be leaking the error?
-            return Response(error: errorString)
-        }
-    }
-}
-
-// MARK: Request Json
-extension Request {
-
-    /**
-        If the body can be serialized as Json, the value will be returned here
-    */
-    public var json: Json? {
-        return try? Json.deserialize(body)
-    }
-}
 
 /**
  *  An umbrella protocol used to define behavior to and from Json

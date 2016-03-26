@@ -2,9 +2,6 @@
     Requests contains data sent from a client to the
     web server such as method, parameters, and data.
 */
-
-
-
 public class Request {
     public struct Header {
         public struct Key: StringLiteralConvertible, Hashable, Equatable, CustomStringConvertible {
