@@ -38,11 +38,7 @@ class FileManager {
         var remaining = Int(info.st_size)
         var total = 0
         while remaining > 0 {
-            #if swift(>=3.0)
-                let advanced = rawData.advanced(by: total)
-            #else
-                let advanced = rawData.advancedBy(total)
-            #endif
+            let advanced = rawData.advanced(by: total)
             
             let amt = read(fd, advanced, remaining)
             if amt < 0 {
@@ -100,11 +96,7 @@ class FileManager {
 
         defer { free(result) }
         
-        #if swift(>=3.0)
-            let cstring = String(validatingUTF8: result)
-        #else
-            let cstring = String.fromCString(result)
-        #endif
+        let cstring = String(validatingUTF8: result)
 
         if let expanded = cstring {
             return expanded
@@ -140,12 +132,7 @@ class FileManager {
 
         for i in 0..<count {
             
-            #if swift(>=3.0)
-                let cstring = String(validatingUTF8: gt.gl_pathv[i])
-            #else
-                let cstring = String.fromCString(gt.gl_pathv[i])
-            #endif
-            
+            let cstring = String(validatingUTF8: gt.gl_pathv[i])
             if let path = cstring {
                 contents.append(path)
             }

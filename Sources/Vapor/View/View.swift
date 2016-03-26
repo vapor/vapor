@@ -8,10 +8,6 @@ public class View {
 
     var bytes: [UInt8]
     
-    #if !swift(>=3.0)
-        typealias ErrorType = ErrorProtocol
-    #endif
-
     enum Error: ErrorProtocol {
         case InvalidPath
     }
@@ -34,7 +30,7 @@ public class View {
 
         for (suffix, renderer) in View.renderers {
             if path.hasSuffix(suffix) {
-                let template =  String.fromUInt8(self.bytes)
+                let template = String(data: bytes) ?? ""
                 let rendered = try renderer.render(template: template, context: context)
                 self.bytes = [UInt8](rendered.utf8)
             }

@@ -1,4 +1,4 @@
-#if swift(>=3.0) && !os(Linux)
+!os(Linux)
 
 import Foundation
 

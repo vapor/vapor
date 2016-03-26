@@ -10,12 +10,7 @@ public enum Environment: Equatable {
     case Custom(String)
 
     static func fromString(string: String) -> Environment {
-        #if swift(>=3.0)
-            let string = string.lowercased()
-        #else
-            let string = string.lowercaseString
-        #endif
-
+        let string = string.lowercased()
         switch string {
         case "production", "prod": return .Production
         case "test": return .Test

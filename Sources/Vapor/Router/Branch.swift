@@ -69,7 +69,7 @@ internal final class Branch {
         if let next = subBranches[key] {
             return next.handle(request, comps: comps)
         } else if let wildcard = subBranches["*"] {
-            request.parameters[wildcard.name] = key.removePercentEncoding()
+            request.parameters[wildcard.name] = try? String(percentEncoded: key)
             return wildcard.handle(request, comps: comps)
         } else {
             return nil
@@ -94,13 +94,8 @@ internal final class Branch {
         
         if key.characters.first == ":" {
             let chars = key.characters
-            #if swift(>=3.0)
-                let indexOne = chars.startIndex.advanced(by: 1)
-                let sub = key.characters.suffix(from: indexOne)
-            #else
-                let indexOne = chars.startIndex.advancedBy(1)
-                let sub = key.characters.suffixFrom(indexOne)
-            #endif
+            let indexOne = chars.startIndex.advanced(by: 1)
+            let sub = key.characters.suffix(from: indexOne)
             let substring = String(sub)
             
             let next = subBranches["*"] ?? Branch(name: substring)

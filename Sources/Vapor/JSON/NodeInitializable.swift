@@ -47,10 +47,6 @@ extension UInt16: NodeInitializable {}
 extension UInt32: NodeInitializable {}
 extension UInt64: NodeInitializable {}
 
-#if !swift(>=3.0)
-    typealias UnsignedInteger = UnsignedIntegerType
-#endif
-
 extension UnsignedInteger {
     public static func makeWith(node: Node) throws -> Self {
         guard let int = node.uint else {
@@ -67,10 +63,6 @@ extension Int8: NodeInitializable {}
 extension Int16: NodeInitializable {}
 extension Int32: NodeInitializable {}
 extension Int64: NodeInitializable {}
-
-#if !swift(>=3.0)
-    typealias SignedInteger = SignedIntegerType
-#endif
 
 extension SignedInteger {
     public static func makeWith(node: Node) throws -> Self {

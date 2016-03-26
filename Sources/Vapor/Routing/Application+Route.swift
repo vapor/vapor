@@ -54,12 +54,7 @@ extension Application {
             .dropLast()
             
         
-        #if swift(>=3.0)
-            let shortPath = shortPathArray.joined(separator: "")
-        #else
-            let shortPath = shortPathArray.joinWithSeparator("")
-        #endif
-        
+        let shortPath = shortPathArray.joined(separator: "")
         let fullPath = shortPath + last
 
         // ie: /users

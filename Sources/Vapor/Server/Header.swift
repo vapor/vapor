@@ -1,10 +1,6 @@
 // HEADERS
 // https://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html
 internal struct Header {
-    #if !swift(>=3.0)
-    typealias ErrorType = ErrorProtocol
-    #endif
-    
     enum Error: ErrorProtocol {
         case InvalidHeaderKeyPair
     }
@@ -42,7 +38,7 @@ internal struct Header {
     }
     
     private func extractKeyPair(line: String) throws -> (key: String, value: String) {
-        let components = line.split(1, separator: ":")
+        let components = line.split(":", maxSplits: 1)
         // Is this safe? It doesn't assert count == 2, so no `:` might get mapped directly
         // Drop first to remove leading ` ` key is actually `: `, but doesn't support splitting on substring, only char
         guard let key = components.first, let val = components.last?.characters.dropFirst() else { throw Error.InvalidHeaderKeyPair }
@@ -68,10 +64,6 @@ extension Header {
     // https://www.w3.org/Protocols/rfc2616/rfc2616-sec5.html
     // Request-Line   = Method SP Request-URI SP HTTP-Version CRLF
     internal struct RequestLine {
-        #if !swift(>=3.0)
-        typealias ErrorType = ErrorProtocol
-        #endif
-        
         enum Error: ErrorProtocol {
             case InvalidComponents
         }

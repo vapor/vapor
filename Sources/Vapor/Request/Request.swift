@@ -131,11 +131,7 @@ public class Request {
             
             if cookieArray.count == 2 {
                 let split = cookieArray[0].split(" ")
-                #if swift(>=3.0)
-                    let key = split.joined(separator: "")
-                #else
-                    let key = split.joinWithSeparator("")
-                #endif
+                let key = split.joined(separator: "")
                 cookies[key] = cookieArray[1]
             }
         }
@@ -159,7 +155,7 @@ extension String {
      */
     internal func queryData() -> [String: String] {
         // First `?` indicates query, subsequent `?` should be included as part of the arguments
-        return split(1, separator: "?")
+        return split("?", maxSplits: 1)
             .dropFirst()
             .reduce("", combine: +)
             .keyValuePairs()
@@ -174,10 +170,13 @@ extension String {
         var data: [String: String] = [:]
         
         for pair in self.split("&") {
-            let tokens = pair.split(1, separator: "=")
+            let tokens = pair.split("=", maxSplits: 1)
             
-            if let name = tokens.first, value = tokens.last {
-                data[name.removePercentEncoding()] = value.removePercentEncoding()
+            if
+                let name = tokens.first,
+                let value = tokens.last,
+                let parsedName = try? String(percentEncoded: name) {
+                data[parsedName] = try? String(percentEncoded: value)
             }
         }
         

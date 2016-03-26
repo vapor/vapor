@@ -44,7 +44,7 @@ public extension Request {
             - returns: a key value pair dictionary
         */
         static func parsePostData(body: [UInt8]) -> [String: String] {
-            if let bodyString = String(pointer: body, length: body.count) {
+            if let bodyString = String(data: body) {
                 return bodyString.keyValuePairs()
             }
             

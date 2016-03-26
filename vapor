@@ -6,10 +6,6 @@
     import Darwin
 #endif
 
-#if !swift(>=3.0)
-    typealias ErrorProtocol = ErrorType
-#endif
-
 class Vapor {
     var arguments: [String]
     var release = false

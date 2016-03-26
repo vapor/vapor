@@ -46,10 +46,6 @@ public final class BranchRouter: RouterDriver {
 /**
     Until Swift api is stable for AnyGenerator, using this in interim to allow compiling Swift 2 and 2.2+
 */
-#if !swift(>=3.0)
-    typealias IteratorProtocol = GeneratorType
-#endif
-
 public struct CompatibilityGenerator<T>: IteratorProtocol {
     public typealias Element = T
     
