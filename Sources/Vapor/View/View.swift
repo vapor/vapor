@@ -6,8 +6,6 @@ public class View {
     ///Currently applied RenderDrivers
     public static var renderers: [String: RenderDriver] = [:]
 
-    ///Location of Resource files
-    public let resourceDir: String
     var bytes: [UInt8]
     
     #if !swift(>=3.0)
@@ -25,10 +23,7 @@ public class View {
         - context Passed to RenderDrivers
     */
     public init(application: Application, path: String, context: [String: Any] = [:]) throws {
-        let resourceDir = application.workDir + "Resources"
-        self.resourceDir = resourceDir
-
-        let filesPath = resourceDir + "/" + path
+        let filesPath = application.workDir + "Resources/" + path
 
         guard let fileBody = try? FileManager.readBytesFromFile(filesPath) else {
             self.bytes = []
