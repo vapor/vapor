@@ -255,9 +255,8 @@ extension Response {
          
          - throws: SerializationErro
     */
-    public convenience init(status: Status, json: Json) throws {
-        //FIXME
-        self.init(status: status, data: [], contentType: .Json)
+    public convenience init(status: Status, json: Json) {
+        self.init(status: status, data: json.data, contentType: .Json)
     }
 }
 

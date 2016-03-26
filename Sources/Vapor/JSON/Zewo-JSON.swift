@@ -37,11 +37,14 @@ public class Json {
         json = try JSONParser().parse(data)
     }
     
+    public var data: [UInt8] {
+        return JSONSerializer().serialize(json).bytes
+        
+    }
 }
 
 extension Json: ResponseConvertible {
     public func response() -> Response {
-        let data = JSONSerializer().serialize(json)
         return Response(status: .OK, data: data, contentType: .Json)
     }
 }
