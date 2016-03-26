@@ -75,4 +75,31 @@ app.group("abort") {
     }
 }
 
+app.post("login") { request in
+    guard
+        let email = request.data["email"]?.string,
+        let password = request.data["password"]?.string
+    else {
+        throw Abort.BadRequest
+    }
+    
+    guard email == "user@qutheory.io" && password == "test123" else {
+        throw Abort.BadRequest
+    }
+    
+    request.session?["id"] = "123"
+    
+    return Json([
+        "message": "Logged in"
+    ])
+}
+
+app.middleware(AuthMiddleware.self) {
+    app.get("protected") { request in
+        return Json([
+            "message": "Welcome authorized user"
+        ])
+    }
+}
+
 app.start(port: 8024)

@@ -67,6 +67,7 @@
 		C32F0FA21CA72AF300EDB267 /* Node.swift in Sources */ = {isa = PBXBuildFile; fileRef = C32F0FA01CA72AF300EDB267 /* Node.swift */; };
 		C32F0FA31CA72AF300EDB267 /* NodeInitializable.swift in Sources */ = {isa = PBXBuildFile; fileRef = C32F0FA11CA72AF300EDB267 /* NodeInitializable.swift */; };
 		C32F0FA61CA7378B00EDB267 /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = C32F0FA51CA7378B00EDB267 /* User.swift */; };
+		C32F0FA91CA73B1700EDB267 /* AuthMiddleware.swift in Sources */ = {isa = PBXBuildFile; fileRef = C32F0FA81CA73B1700EDB267 /* AuthMiddleware.swift */; };
 		C3433FD41C7D119D009F0876 /* HashTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3433FD21C7D119D009F0876 /* HashTests.swift */; };
 		C3691FE01C98BEDA00C680DE /* EnvironmentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3691FDF1C98BEDA00C680DE /* EnvironmentTests.swift */; };
 		C3691FE21C98C47F00C680DE /* TypedRouteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3691FE11C98C47F00C680DE /* TypedRouteTests.swift */; };
@@ -175,6 +176,7 @@
 		C32F0FA01CA72AF300EDB267 /* Node.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Node.swift; sourceTree = "<group>"; };
 		C32F0FA11CA72AF300EDB267 /* NodeInitializable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NodeInitializable.swift; sourceTree = "<group>"; };
 		C32F0FA51CA7378B00EDB267 /* User.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = User.swift; path = ../Sources/VaporDev/Models/User.swift; sourceTree = "<group>"; };
+		C32F0FA81CA73B1700EDB267 /* AuthMiddleware.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = AuthMiddleware.swift; path = ../Sources/VaporDev/Middleware/AuthMiddleware.swift; sourceTree = "<group>"; };
 		C3433FD21C7D119D009F0876 /* HashTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = HashTests.swift; path = ../Tests/Vapor/HashTests.swift; sourceTree = SOURCE_ROOT; };
 		C352E68F1C62BB1C00E26467 /* Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Tests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		C352E6931C62BB1C00E26467 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = Info.plist; path = Tests/Info.plist; sourceTree = SOURCE_ROOT; };
@@ -264,6 +266,7 @@
 		3A91D3D41C7F6B1A00EA3CA0 /* VaporDev */ = {
 			isa = PBXGroup;
 			children = (
+				C32F0FA71CA73AF400EDB267 /* Middleware */,
 				C32F0FA41CA7377000EDB267 /* Models */,
 				C3DFB5531C80C2860045801C /* Controllers */,
 				C3DFB5551C80C2860045801C /* Public */,
@@ -474,6 +477,14 @@
 				C32F0FA51CA7378B00EDB267 /* User.swift */,
 			);
 			name = Models;
+			sourceTree = "<group>";
+		};
+		C32F0FA71CA73AF400EDB267 /* Middleware */ = {
+			isa = PBXGroup;
+			children = (
+				C32F0FA81CA73B1700EDB267 /* AuthMiddleware.swift */,
+			);
+			name = Middleware;
 			sourceTree = "<group>";
 		};
 		C352E6781C62BB0F00E26467 = {
@@ -823,6 +834,7 @@
 				3AEEF4531C7F72C30099CBAE /* main.swift in Sources */,
 				C3DFB55D1C80C2860045801C /* UserController.swift in Sources */,
 				C32F0FA61CA7378B00EDB267 /* User.swift in Sources */,
+				C32F0FA91CA73B1700EDB267 /* AuthMiddleware.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
