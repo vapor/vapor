@@ -39,9 +39,7 @@ class UserController: Controller<User> {
     override func destroy(request: Request, item: User) throws -> ResponseConvertible {
         Log.info("Delete: \(item)")
         
-        return Json([
-            "controller": "MyController.destroy",
-        ])
+        return item
     }
     
 }

@@ -8,6 +8,14 @@ final class User {
     }
 }
 
+extension User: ResponseConvertible {
+    func response() -> Response {
+        return Json([
+            "name": "\(name)"
+        ]).response()
+    }
+}
+
 extension User: CustomStringConvertible {
     var description: String {
         return "[User: \(name)]"
