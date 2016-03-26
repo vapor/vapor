@@ -23,7 +23,7 @@ public class View {
         - context Passed to RenderDrivers
     */
     public init(application: Application, path: String, context: [String: Any] = [:]) throws {
-        let filesPath = application.workDir + application.config.get("view.path", "Resources").finish("/") + path
+        let filesPath = application.workDir + "Resources/Views/" + path
 
         guard let fileBody = try? FileManager.readBytesFromFile(filesPath) else {
             self.bytes = []
