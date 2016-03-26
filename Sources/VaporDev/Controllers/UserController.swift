@@ -1,10 +1,10 @@
-import Vapor //Travis will fail without this
+import Vapor
 
-class MyController: Controller<String> {
+class UserController: Controller<User> {
     required init(application: Application) {
         super.init(application: application)
         
-        print("mycontroller")
+        Log.info("User controller created")
     }
     
     /// Display many instances
@@ -22,21 +22,21 @@ class MyController: Controller<String> {
     }
     
     /// Show an instance.
-    override func show(request: Request, item: String) throws -> ResponseConvertible {
+    override func show(request: Request, item: User) throws -> ResponseConvertible {
         return Json([
             "controller": "MyController.show",
         ])
     }
     
     /// Update an instance.
-    override func update(request: Request, item: String) throws -> ResponseConvertible {
+    override func update(request: Request, item: User) throws -> ResponseConvertible {
         return Json([
             "controller": "MyController.update",
         ])
     }
     
     /// Delete an instance.
-    override func destroy(request: Request, item: String) throws -> ResponseConvertible {
+    override func destroy(request: Request, item: User) throws -> ResponseConvertible {
         Log.info("Delete: \(item)")
         
         return Json([

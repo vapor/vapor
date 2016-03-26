@@ -12,7 +12,7 @@ app.get("test") { request in
     return "123"
 }
 
-app.resource("resource", controller: MyController.self)
+app.resource("resource", controller: UserController.self)
 
 app.post("jsondata") { request in
     print(request.data.json?["hi"]?.string)

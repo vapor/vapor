@@ -66,6 +66,7 @@
 		C31A82DE1C9F4AFB005F1DBE /* libHummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C31A82DD1C9F4AFB005F1DBE /* libHummingbird.dylib */; };
 		C32F0FA21CA72AF300EDB267 /* Node.swift in Sources */ = {isa = PBXBuildFile; fileRef = C32F0FA01CA72AF300EDB267 /* Node.swift */; };
 		C32F0FA31CA72AF300EDB267 /* NodeInitializable.swift in Sources */ = {isa = PBXBuildFile; fileRef = C32F0FA11CA72AF300EDB267 /* NodeInitializable.swift */; };
+		C32F0FA61CA7378B00EDB267 /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = C32F0FA51CA7378B00EDB267 /* User.swift */; };
 		C3433FD41C7D119D009F0876 /* HashTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3433FD21C7D119D009F0876 /* HashTests.swift */; };
 		C3691FE01C98BEDA00C680DE /* EnvironmentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3691FDF1C98BEDA00C680DE /* EnvironmentTests.swift */; };
 		C3691FE21C98C47F00C680DE /* TypedRouteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3691FE11C98C47F00C680DE /* TypedRouteTests.swift */; };
@@ -75,7 +76,7 @@
 		C3943DC31C7663E80014F4EE /* RouterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3943DC21C7663E80014F4EE /* RouterTests.swift */; };
 		C3B009C51CA4D52F00D2DCD1 /* HashDriver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3B009C41CA4D52F00D2DCD1 /* HashDriver.swift */; };
 		C3B4F38E1C9F5D9E00CB2731 /* ApplicationInitializable.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3B4F38D1C9F5D9E00CB2731 /* ApplicationInitializable.swift */; };
-		C3DFB55D1C80C2860045801C /* MyController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3DFB5541C80C2860045801C /* MyController.swift */; };
+		C3DFB55D1C80C2860045801C /* UserController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3DFB5541C80C2860045801C /* UserController.swift */; };
 		C3F683361C7D1EF300033AA2 /* ControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3F683351C7D1EF300033AA2 /* ControllerTests.swift */; };
 /* End PBXBuildFile section */
 
@@ -173,6 +174,7 @@
 		C32F0F9E1CA721DF00EDB267 /* .travis.yml */ = {isa = PBXFileReference; lastKnownFileType = text; name = .travis.yml; path = ../.travis.yml; sourceTree = "<group>"; };
 		C32F0FA01CA72AF300EDB267 /* Node.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Node.swift; sourceTree = "<group>"; };
 		C32F0FA11CA72AF300EDB267 /* NodeInitializable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NodeInitializable.swift; sourceTree = "<group>"; };
+		C32F0FA51CA7378B00EDB267 /* User.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = User.swift; path = ../Sources/VaporDev/Models/User.swift; sourceTree = "<group>"; };
 		C3433FD21C7D119D009F0876 /* HashTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = HashTests.swift; path = ../Tests/Vapor/HashTests.swift; sourceTree = SOURCE_ROOT; };
 		C352E68F1C62BB1C00E26467 /* Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Tests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		C352E6931C62BB1C00E26467 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = Info.plist; path = Tests/Info.plist; sourceTree = SOURCE_ROOT; };
@@ -190,7 +192,7 @@
 		C3B009C21CA4CFDC00D2DCD1 /* ConfigTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = ConfigTests.swift; path = ../../Tests/Vapor/ConfigTests.swift; sourceTree = "<group>"; };
 		C3B009C41CA4D52F00D2DCD1 /* HashDriver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HashDriver.swift; sourceTree = "<group>"; };
 		C3B4F38D1C9F5D9E00CB2731 /* ApplicationInitializable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ApplicationInitializable.swift; sourceTree = "<group>"; };
-		C3DFB5541C80C2860045801C /* MyController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MyController.swift; sourceTree = "<group>"; };
+		C3DFB5541C80C2860045801C /* UserController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UserController.swift; sourceTree = "<group>"; };
 		C3DFB5571C80C2860045801C /* vapor-logo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "vapor-logo.png"; sourceTree = "<group>"; };
 		C3DFB5591C80C2860045801C /* app.css */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.css; path = app.css; sourceTree = "<group>"; };
 		C3DFB55B1C80C2860045801C /* template.stencil */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = template.stencil; sourceTree = "<group>"; };
@@ -262,6 +264,7 @@
 		3A91D3D41C7F6B1A00EA3CA0 /* VaporDev */ = {
 			isa = PBXGroup;
 			children = (
+				C32F0FA41CA7377000EDB267 /* Models */,
 				C3DFB5531C80C2860045801C /* Controllers */,
 				C3DFB5551C80C2860045801C /* Public */,
 				C3DFB55A1C80C2860045801C /* Resources */,
@@ -465,6 +468,14 @@
 			path = ../../Sources/Vapor/Node;
 			sourceTree = "<group>";
 		};
+		C32F0FA41CA7377000EDB267 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				C32F0FA51CA7378B00EDB267 /* User.swift */,
+			);
+			name = Models;
+			sourceTree = "<group>";
+		};
 		C352E6781C62BB0F00E26467 = {
 			isa = PBXGroup;
 			children = (
@@ -527,7 +538,7 @@
 		C3DFB5531C80C2860045801C /* Controllers */ = {
 			isa = PBXGroup;
 			children = (
-				C3DFB5541C80C2860045801C /* MyController.swift */,
+				C3DFB5541C80C2860045801C /* UserController.swift */,
 			);
 			name = Controllers;
 			path = ../Sources/VaporDev/Controllers;
@@ -810,7 +821,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				3AEEF4531C7F72C30099CBAE /* main.swift in Sources */,
-				C3DFB55D1C80C2860045801C /* MyController.swift in Sources */,
+				C3DFB55D1C80C2860045801C /* UserController.swift in Sources */,
+				C32F0FA61CA7378B00EDB267 /* User.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
