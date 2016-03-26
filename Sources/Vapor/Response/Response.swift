@@ -222,7 +222,7 @@ extension Response {
          - parameter error: a description of the server error
     */
     public convenience init(error: String) {
-        let text = "{\n\t\"error\": true,\n\t\"message\":\"\(error)\"\n}"
+        let text = "{\n    \"error\": true,\n    \"message\":\"\(error)\"\n}"
         self.init(status: .Error, data: text.utf8, contentType: .Json)
     }
     
