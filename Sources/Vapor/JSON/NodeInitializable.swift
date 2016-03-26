@@ -1,5 +1,3 @@
-import Jay
-
 
 /**
  *  An umbrella protocol used to define behavior to and from Json

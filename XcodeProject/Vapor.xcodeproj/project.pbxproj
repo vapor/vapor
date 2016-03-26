@@ -32,7 +32,6 @@
 		C31A82B61C9F4AB8005F1DBE /* Hash.swift in Sources */ = {isa = PBXBuildFile; fileRef = C31A827A1C9F4AB8005F1DBE /* Hash.swift */; };
 		C31A82B71C9F4AB8005F1DBE /* Int+Random.swift in Sources */ = {isa = PBXBuildFile; fileRef = C31A827B1C9F4AB8005F1DBE /* Int+Random.swift */; };
 		C31A82B81C9F4AB8005F1DBE /* SHA256Hasher.swift in Sources */ = {isa = PBXBuildFile; fileRef = C31A827C1C9F4AB8005F1DBE /* SHA256Hasher.swift */; };
-		C31A82BA1C9F4AB8005F1DBE /* Json.swift in Sources */ = {isa = PBXBuildFile; fileRef = C31A827F1C9F4AB8005F1DBE /* Json.swift */; };
 		C31A82BB1C9F4AB8005F1DBE /* NodeInitializable.swift in Sources */ = {isa = PBXBuildFile; fileRef = C31A82801C9F4AB8005F1DBE /* NodeInitializable.swift */; };
 		C31A82BC1C9F4AB8005F1DBE /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = C31A82821C9F4AB8005F1DBE /* Log.swift */; };
 		C31A82BD1C9F4AB8005F1DBE /* LogDriver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C31A82831C9F4AB8005F1DBE /* LogDriver.swift */; };
@@ -71,6 +70,8 @@
 		C3691FE01C98BEDA00C680DE /* EnvironmentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3691FDF1C98BEDA00C680DE /* EnvironmentTests.swift */; };
 		C3691FE21C98C47F00C680DE /* TypedRouteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3691FE11C98C47F00C680DE /* TypedRouteTests.swift */; };
 		C37548441CA62A2900760FBE /* Node.swift in Sources */ = {isa = PBXBuildFile; fileRef = C37548431CA62A2900760FBE /* Node.swift */; };
+		C37548481CA6F07100760FBE /* Zewo-JSON.swift in Sources */ = {isa = PBXBuildFile; fileRef = C37548471CA6F07100760FBE /* Zewo-JSON.swift */; };
+		C37548491CA6F32200760FBE /* Json.swift in Sources */ = {isa = PBXBuildFile; fileRef = C31A827F1C9F4AB8005F1DBE /* Json.swift */; };
 		C387A0431C95FEBA00B6282E /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = C387A0361C95FDFE00B6282E /* main.swift */; };
 		C38808641C62C0390067DADD /* ResponseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C38808631C62C0390067DADD /* ResponseTests.swift */; };
 		C3943DC31C7663E80014F4EE /* RouterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3943DC21C7663E80014F4EE /* RouterTests.swift */; };
@@ -183,6 +184,7 @@
 		C3691FDF1C98BEDA00C680DE /* EnvironmentTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = EnvironmentTests.swift; path = ../../Tests/Vapor/EnvironmentTests.swift; sourceTree = "<group>"; };
 		C3691FE11C98C47F00C680DE /* TypedRouteTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = TypedRouteTests.swift; path = ../../Tests/Vapor/TypedRouteTests.swift; sourceTree = "<group>"; };
 		C37548431CA62A2900760FBE /* Node.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Node.swift; sourceTree = "<group>"; };
+		C37548471CA6F07100760FBE /* Zewo-JSON.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Zewo-JSON.swift"; sourceTree = "<group>"; };
 		C387A0361C95FDFE00B6282E /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		C387A03B1C95FE1300B6282E /* Generator */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Generator; sourceTree = BUILT_PRODUCTS_DIR; };
 		C38808631C62C0390067DADD /* ResponseTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = ResponseTests.swift; path = ../Tests/Vapor/ResponseTests.swift; sourceTree = SOURCE_ROOT; };
@@ -330,6 +332,7 @@
 			isa = PBXGroup;
 			children = (
 				C31A827F1C9F4AB8005F1DBE /* Json.swift */,
+				C37548471CA6F07100760FBE /* Zewo-JSON.swift */,
 				C31A82801C9F4AB8005F1DBE /* NodeInitializable.swift */,
 				C37548431CA62A2900760FBE /* Node.swift */,
 			);
@@ -760,6 +763,7 @@
 				C31A82C11C9F4AB8005F1DBE /* Request.swift in Sources */,
 				C31A82B51C9F4AB8005F1DBE /* CryptoSwift.swift in Sources */,
 				C31A82CF1C9F4AB8005F1DBE /* Header.swift in Sources */,
+				C37548491CA6F32200760FBE /* Json.swift in Sources */,
 				C31A82AF1C9F4AB8005F1DBE /* Application.swift in Sources */,
 				C31A82D01C9F4AB8005F1DBE /* ServerDriver.swift in Sources */,
 				C31A82B01C9F4AB8005F1DBE /* Environment.swift in Sources */,
@@ -775,7 +779,6 @@
 				C31A82AE1C9F4AB8005F1DBE /* Abort.swift in Sources */,
 				C31A82B61C9F4AB8005F1DBE /* Hash.swift in Sources */,
 				C31A82C41C9F4AB8005F1DBE /* ResponseConvertible.swift in Sources */,
-				C31A82BA1C9F4AB8005F1DBE /* Json.swift in Sources */,
 				C31A82D21C9F4AB8005F1DBE /* MemorySessionDriver.swift in Sources */,
 				C31A82DC1C9F4AB8005F1DBE /* View.swift in Sources */,
 				C3B009C51CA4D52F00D2DCD1 /* HashDriver.swift in Sources */,
@@ -794,6 +797,7 @@
 				C31A82B21C9F4AB8005F1DBE /* Provider.swift in Sources */,
 				C31A82D11C9F4AB8005F1DBE /* Socket.swift in Sources */,
 				C31A82DA1C9F4AB8005F1DBE /* ThreadSafeStore.swift in Sources */,
+				C37548481CA6F07100760FBE /* Zewo-JSON.swift in Sources */,
 				C31A82AD1C9F4AB8005F1DBE /* Config.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

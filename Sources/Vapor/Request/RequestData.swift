@@ -1,4 +1,4 @@
-import Jay
+import C7
 
 public extension Request {
     
@@ -14,7 +14,7 @@ public extension Request {
             var mutableQuery = query
             
             do {
-                self.json = try Json.deserialize(bytes)
+                self.json = try Json(bytes)
             } catch {
                 self.json = nil
                 
@@ -29,11 +29,15 @@ public extension Request {
         
         // MARK: Subscripting
         public subscript(key: String) -> Node? {
-            return query[key] ?? json?.object?[key]
+            //FIXME
+            //return query[key] ?? json?.object?[key]
+            return nil
         }
         
         public subscript(idx: Int) -> Node? {
-            return json?.array?[idx]
+            return nil
+            //return json?.array?[idx]
+            //FIXME
         }
         
         /**
@@ -53,109 +57,18 @@ public extension Request {
     }
 }
 
-extension JsonNumber {
-    public var number: Double {
-        switch self {
-        case .JsonInt(let int):
-            return Double(int)
-        case .JsonDbl(let dbl):
-            return dbl
-        }
-    }
-}
+//extension JsonNumber {
+//    public var number: Double {
+//        switch self {
+//        case .JsonInt(let int):
+//            return Double(int)
+//        case .JsonDbl(let dbl):
+//            return dbl
+//        }
+//    }
+//}
 
-extension Json: Node {
-    public var isNull: Bool {
-        switch self {
-        case .Null:
-            return true
-        default:
-            return false
-        }
-    }
-    
-    public var bool: Bool? {
-        switch  self {
-        case .Boolean(let bool):
-            return bool == .True
-        case .Number(let number):
-            return number.number > 0
-        case .String(let string):
-            return Bool(string)
-        case .Object(_), .Array(_), .Null:
-            return false
-        }
-    }
-    
-    public var int: Int? {
-        guard let double = double else { return nil }
-        return Int(double)
-    }
-    
-    public var uint: UInt? {
-        guard let double = double else { return nil }
-        return UInt(double)
-    }
-    
-    public var float: Float? {
-        guard let double = double else { return nil }
-        return Float(double)
-    }
-    
-    public var double: Double? {
-        switch self {
-        case .Boolean(let bool):
-            return bool == .True ? 1 : 0
-        case .Number(let number):
-            return number.number
-        case .String(let string):
-            return Double(string)
-        case .Null:
-            return 0
-        case .Object(_), .Array(_):
-            return nil
-        }
-    }
-    
-    public var string: Swift.String? {
-        switch self {
-        case .String(let string):
-            return string
-        case .Boolean(let bool):
-            return Swift.String(bool)
-        case .Number(let number):
-            return number.number.description
-        case .Null:
-            return "null"
-        case .Array(let array):
-            let flat = array
-                .flatMap { js in
-                    return js.string
-                }
-            #if swift(>=3.0)
-                return flat.joined(separator: ",")
-            #else
-                return flat.joinWithSeparator(",")
-            #endif
-        case .Object(_):
-            return nil
-        }
-    }
-    
-    public var array: [Node]? {
-        guard case let .Array(array) = self else { return nil }
-        return array.map { $0 as Node }
-    }
-    
-    public var object: [Swift.String : Node]? {
-        guard case let .Object(object) = self else { return nil }
-        var mapped: [Swift.String : Node] = [:]
-        object.forEach { key, val in
-            mapped[key] = val as Node
-        }
-        return mapped
-    }
-}
+
 
 extension String: Node {
     public var isNull: Bool {

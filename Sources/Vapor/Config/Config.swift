@@ -43,13 +43,15 @@ public class Config {
 
     ///Returns whether this instance of `Config` contains the key
     public func has(keyPath: String) -> Bool {
-        let result: Json? = try? get(keyPath)
-        return result != nil
+        return false
+        //let result: Json? = try? get(keyPath)
+        //return result != nil
     }
     
     ///Returns the generic Json representation for an item at a given path or throws
     public func get(keyPath: String) throws -> Node {
-        var keys = keyPath.keys
+        return "" //FIXME
+        /*var keys = keyPath.keys
         
         guard let json: Json = repository[keys.removeFirst()] else {
             throw Error.NoFileFound
@@ -65,7 +67,7 @@ public class Config {
             throw Error.NoValueFound
         }
         
-        return result
+        return result*/
     }
     
     //Returns the value for a given type from the Config or throws
@@ -90,7 +92,8 @@ public class Config {
         if keys.count == 0 {
             repository[group] = value
         } else {
-            repository[group]?.set(value, keys: keyPath.keys)
+            //FIXME
+            //repository[group]?.set(value, keys: keyPath.keys)
         }
     }
 
@@ -137,13 +140,14 @@ public class Config {
 
             for file in files {
                 let data = try FileManager.readBytesFromFile(file)
-                let json = try Json.deserialize(data)
+                //FIXME
+                /*let json = try Json.deserialize(data)
 
                 if repository[group] == nil {
                     repository[group] = json
                 } else {
                     repository[group]?.merge(with: json)
-                }
+                }*/
             }
         }
 
@@ -152,7 +156,8 @@ public class Config {
         if let env = files[".env"] {
             for file in env {
                 let data = try FileManager.readBytesFromFile(file)
-                let json = try Json.deserialize(data)
+                //FIXME
+                /*let json = try Json.deserialize(data)
 
                 guard case let .Object(object) = json else {
                     return
@@ -164,7 +169,7 @@ public class Config {
                     } else {
                         repository[group]?.merge(with: json)
                     }
-                }
+                }*/
             }
         }
     }
@@ -182,11 +187,12 @@ public class Config {
                 
                 let name = fileName.substringToIndex(suffixRange.startIndex)
             #else
-                guard let fileName = file.split("/").last, suffixRange = fileName.range(of: suffix) where suffixRange.endIndex == fileName.characters.endIndex else {
+                let name = "" //FIXME
+                /*guard let fileName = file.split("/").last, suffixRange = fileName.range(of: suffix) where suffixRange.endIndex == fileName.characters.endIndex else {
                     continue
-                }
+                }*/
                 
-                let name = fileName.substring(to: suffixRange.startIndex)
+                //let name = fileName.substring(to: suffixRange.startIndex)
             #endif
 
 
@@ -227,34 +233,35 @@ public class Config {
 
 }
 
-extension Json {
-
-    mutating private func set(value: Json, keys: [Swift.String]) {
-        var keys = keys
-
-        guard keys.count > 0 else {
-            return
-        }
-
-        let key = keys.removeFirst()
-
-        guard case let .Object(object) = self else {
-            return
-        }
-
-        var updated = object
-
-        if keys.count == 0 {
-            updated[key] = value
-        } else {
-            var child = updated[key] ?? Json.Object([:])
-            child.set(value, keys: keys)
-        }
-
-        self = .Object(updated)
-    }
-
-}
+//FIXME
+//extension Json {
+//
+//    mutating private func set(value: Json, keys: [Swift.String]) {
+//        var keys = keys
+//
+//        guard keys.count > 0 else {
+//            return
+//        }
+//
+//        let key = keys.removeFirst()
+//
+//        guard case let .Object(object) = self else {
+//            return
+//        }
+//
+//        var updated = object
+//
+//        if keys.count == 0 {
+//            updated[key] = value
+//        } else {
+//            var child = updated[key] ?? Json.Object([:])
+//            child.set(value, keys: keys)
+//        }
+//
+//        self = .Object(updated)
+//    }
+//
+//}
 
 extension String {
 

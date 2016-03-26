@@ -256,8 +256,8 @@ extension Response {
          - throws: SerializationErro
     */
     public convenience init(status: Status, json: Json) throws {
-        let data = try json.serialize()
-        self.init(status: status, data: data, contentType: .Json)
+        //FIXME
+        self.init(status: status, data: [], contentType: .Json)
     }
 }
 

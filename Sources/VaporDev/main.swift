@@ -12,21 +12,24 @@ app.get("test") { request in
     return "123"
 }
 
+app.post("jsondata") { request in
+    print(request.data.json?.object?["hi"]?.string)
+    return "yup"
+}
+
 app.get("json") { request in
-    return Json(
-        [
-            "number":123,
-            "text": "unicorns",
-            "nested": ["one", 2, false]
-        ]
-    )
+    return Json([
+        "number":123,
+        "text": "unicorns",
+        "nested": ["one", 2, false]
+    ])
 }
 
 let i = Int.self
 let s = String.self
 
 app.get("test", i, s) { request, int, string in
-    return try Json([
+    return Json([
         "message": "Int \(int) String \(string)"
     ])
 }
