@@ -24,6 +24,7 @@ public class Config {
     private var repository: [String: Json]
     
     public enum Error: ErrorProtocol {
+        case NoFileFound
         case NoValueFound
     }
 
@@ -47,35 +48,35 @@ public class Config {
     }
     
     ///Returns the generic Json representation for an item at a given path or throws
-    public func get(keyPath: String) throws -> Json {
+    public func get(keyPath: String) throws -> Node {
         var keys = keyPath.keys
+        
+        guard let json: Json = repository[keys.removeFirst()] else {
+            throw Error.NoFileFound
+        }
+        
+        var node: Node? = json
 
-        guard keys.count > 0 else {
-            return nil
+        for key in keys {
+            node = node?.object?[key]
         }
 
-        var value = repository[keys.removeFirst()]
-
-        while value != nil && value != Json.NullValue && keys.count > 0 {
-            value = value?[keys.removeFirst()]
-        }
-
-        guard let json = value else {
+        guard let result = node else {
             throw Error.NoValueFound
         }
         
-        return json
+        return result
     }
     
     //Returns the value for a given type from the Config or throws
-    public func get<T: JsonConvertible>(keyPath: String) throws -> T {
-        let result: Json = try get(keyPath)
+    public func get<T: NodeInitializable>(keyPath: String) throws -> T {
+        let result: Node = try get(keyPath)
         return try T.makeWith(result)
     }
     
 
     ///Returns the result of `get(key: String)` but with a `String` fallback for `nil` cases
-    public func get<T: JsonConvertible>(keyPath: String, _ fallback: T) -> T {
+    public func get<T: NodeInitializable>(keyPath: String, _ fallback: T) -> T {
         let string: T? = try? get(keyPath)
         return string ?? fallback
     }

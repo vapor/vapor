@@ -1,12 +1,12 @@
 import Jay
 
-private typealias JayType = JsonValue
+public  typealias JayType = JsonValue
 
 /**
     Handles the conversion from JayType
     Json values to Vapor Json values.
 */
-public enum Json: Equatable {
+public enum Json {
     
     case NullValue
     case BooleanValue(Bool)
@@ -73,7 +73,11 @@ extension JayType {
 }
 
 extension Json {
-    private init(_ jay: JayType) {
+    public init(_ jay: JaySON) {
+        print(jay)
+        self = .NullValue
+    }
+    public init(_ jay: JayType) {
         switch jay {
         case .Object(let dict):
             var newDict = [String : Json]()
@@ -130,115 +134,6 @@ extension Json {
     }
 }
 
-// MARK: Convenience
-
-extension Json {
-    public var isNull: Bool {
-        guard case .NullValue = self else { return false }
-        return true
-    }
-    
-    public var boolValue: Bool? {
-        if case let .BooleanValue(bool) = self {
-            return bool
-        } else if let integer = intValue where integer == 1 || integer == 0 {
-            // When converting from foundation type `[String : AnyObject]`, something that I see as important,
-            // it's not possible to distinguish between 'bool', 'double', and 'int'.
-            // Because of this, if we have an integer that is 0 or 1, and a user is requesting a boolean val,
-            // it's fairly likely this is their desired result.
-            return integer == 1
-        } else {
-            return nil
-        }
-    }
-    
-    public var floatValue: Float? {
-        guard let double = doubleValue else { return nil }
-        return Float(double)
-    }
-    
-    public var doubleValue: Double? {
-        guard case let .NumberValue(double) = self else {
-            return nil
-        }
-        
-        return double
-    }
-    
-    public var intValue: Int? {
-        guard case let .NumberValue(double) = self where double % 1 == 0 else {
-            return nil
-        }
-        
-        return Int(double)
-    }
-    
-    public var uintValue: UInt? {
-        guard let intValue = intValue else { return nil }
-        return UInt(intValue)
-    }
-    
-    public var stringValue: String? {
-        guard case let .StringValue(string) = self else {
-            return nil
-        }
-        
-        return string
-    }
-    
-    public var arrayValue: [Json]? {
-        guard case let .ArrayValue(array) = self else { return nil }
-        return array
-    }
-    
-    public var objectValue: [String : Json]? {
-        guard case let .ObjectValue(object) = self else { return nil }
-        return object
-    }
-}
-
-extension Json {
-    public subscript(index: Int) -> Json? {
-        assert(index >= 0)
-        guard let array = arrayValue where index < array.count else { return nil }
-        return array[index]
-    }
-    
-    public subscript(key: String) -> Json? {
-        get {
-            guard let dict = objectValue else { return nil }
-            return dict[key]
-        }
-        set {
-            guard let object = objectValue else { fatalError("Unable to set string subscript on non-object type!") }
-            var mutableObject = object
-            mutableObject[key] = newValue
-            self = Json(mutableObject)
-        }
-    }
-}
-
-public func ==(lhs: Json, rhs: Json) -> Bool {
-    switch lhs {
-    case .NullValue:
-        return rhs.isNull
-    case .BooleanValue(let lhsValue):
-        guard let rhsValue = rhs.boolValue else { return false }
-        return lhsValue == rhsValue
-    case .StringValue(let lhsValue):
-        guard let rhsValue = rhs.stringValue else { return false }
-        return lhsValue == rhsValue
-    case .NumberValue(let lhsValue):
-        guard let rhsValue = rhs.doubleValue else { return false }
-        return lhsValue == rhsValue
-    case .ArrayValue(let lhsValue):
-        guard let rhsValue = rhs.arrayValue else { return false }
-        return lhsValue == rhsValue
-    case .ObjectValue(let lhsValue):
-        guard let rhsValue = rhs.objectValue else { return false }
-        return lhsValue == rhsValue
-    }
-}
 
 // MARK: Literal Convertibles
 

@@ -26,160 +26,121 @@ extension Request {
     }
 }
 
-// MARK: Json Convertible 
-public enum JsonError: ErrorProtocol {
-    
-    /**
-        When converting to a value from Json, if there is a type conflict, this will throw an error
-
-        - param Json   the json that was unable to map
-        - param String a string description of the type that was attempting to map
-    */
-    case UnableToConvert(json: Json, toType: String)
-}
-
 /**
  *  An umbrella protocol used to define behavior to and from Json
  */
-public protocol JsonConvertible {
+public protocol NodeInitializable {
     
     /**
         This function will be used to create an instance of the type from Json
          
          - parameter json: the json to use in initialization
-         
          - throws: a potential error.  ie: invalid json type
-         
          - returns: an initialized object
     */
-    static func newInstance(json: Json) throws -> Self
-    
-    /**
-        Used to convert the object back to its Json representation
-     
-         - throws: a potential conversion error
-         
-         - returns: the object as a Json representation
-    */
-    func jsonRepresentation() throws -> Json
+    static func makeWith(node: Node) throws -> Self
 }
 
 // MARK: Json Convertible Initializers
-extension Json {
-    
-    /**
-         Create Json from any convertible type
-         
-         - parameter any: the convertible type
-         
-         - throws: a potential conversion error
-         
-         - returns: initialized Json
-    */
-    public init<T: JsonConvertible>(_ any: T) throws {
-        self = try any.jsonRepresentation()
-    }
-    
-    public init<T: JsonConvertible>(_ any: [T]) throws {
-        let mapped = try any.map(Json.init)
-        self.init(mapped)
-    }
-    
-    public init<T: JsonConvertible>(_ any: [[T]]) throws {
-        let mapped = try any.map(Json.init)
-        self.init(mapped)
-    }
-    
-    public init<T: JsonConvertible>(_ any: Set<T>) throws {
-        let mapped = try any.map(Json.init)
-        self.init(mapped)
-    }
-    
-    public init<T: JsonConvertible>(_ any: [String : T]) throws {
-        var mapped: [String : Json] = [:]
-        try any.forEach { key, val in
-            mapped[key] = try Json(val)
-        }
-        self.init(mapped)
-    }
-    
-    public init<T: JsonConvertible>(_ any: [String : [T]]) throws {
-        var mapped: [String : Json] = [:]
-        try any.forEach { key, val in
-            mapped[key] = try Json(val)
-        }
-        self.init(mapped)
-    }
-    
-    public init<T: JsonConvertible>(_ any: [String : [String : T]]) throws {
-        var mapped: [String : Json] = [:]
-        try any.forEach { key, val in
-            mapped[key] = try Json(val)
-        }
-        self.init(mapped)
-    }
-}
+//extension Json {
+//    
+//    /**
+//         Create Json from any convertible type
+//         
+//         - parameter any: the convertible type
+//         - throws: a potential conversion error
+//         - returns: initialized Json
+//    */
+//    public init<T: NodeInitializable>(_ any: T) throws {
+//        self = try any.jsonRepresentation()
+//    }
+//    
+//    public init<T: NodeConvertible>(_ any: [T]) throws {
+//        let mapped = try any.map(Json.init)
+//        self.init(mapped)
+//    }
+//    
+//    public init<T: JsonConvertible>(_ any: [[T]]) throws {
+//        let mapped = try any.map(Json.init)
+//        self.init(mapped)
+//    }
+//    
+//    public init<T: JsonConvertible>(_ any: Set<T>) throws {
+//        let mapped = try any.map(Json.init)
+//        self.init(mapped)
+//    }
+//    
+//    public init<T: JsonConvertible>(_ any: [String : T]) throws {
+//        var mapped: [String : Json] = [:]
+//        try any.forEach { key, val in
+//            mapped[key] = try Json(val)
+//        }
+//        self.init(mapped)
+//    }
+//    
+//    public init<T: JsonConvertible>(_ any: [String : [T]]) throws {
+//        var mapped: [String : Json] = [:]
+//        try any.forEach { key, val in
+//            mapped[key] = try Json(val)
+//        }
+//        self.init(mapped)
+//    }
+//    
+//    public init<T: JsonConvertible>(_ any: [String : [String : T]]) throws {
+//        var mapped: [String : Json] = [:]
+//        try any.forEach { key, val in
+//            mapped[key] = try Json(val)
+//        }
+//        self.init(mapped)
+//    }
+//}
 
-extension Json : JsonConvertible {
-    public static func newInstance(json: Json) -> Json {
-        return json
-    }
-    
-    public func jsonRepresentation() -> Json {
-        return self
+extension Json: NodeInitializable {
+    public static func makeWith(node: Node) -> Json {
+        return Json.NullValue
+//        return node
     }
 }
 
 // MARK: String
 
-extension String : JsonConvertible {
-    public func jsonRepresentation() throws -> Json {
-        return Json(self)
-    }
-    
-    public static func newInstance(json: Json) throws -> String {
-        guard let string = json.stringValue else {
-            throw JsonError.UnableToConvert(json: json, toType: "\(self.dynamicType)")
+extension String: NodeInitializable {
+    public static func makeWith(node: Node) throws -> String {
+        guard let string = node.string else {
+            throw NodeError.UnableToConvert(node: node, toType: "\(self.dynamicType)")
         }
+        
         return string
     }
 }
 
 // MARK: Boolean
-extension Bool : JsonConvertible {
-    public func jsonRepresentation() throws -> Json {
-        return Json(self)
-    }
-    
-    public static func newInstance(json: Json) throws -> Bool {
-        guard let bool = json.boolValue else {
-            throw JsonError.UnableToConvert(json: json, toType: "\(self.dynamicType)")
+extension Bool: NodeInitializable {
+    public static func makeWith(node: Node) throws -> Bool {
+        guard let bool = node.bool else {
+            throw NodeError.UnableToConvert(node: node, toType: "\(self.dynamicType)")
         }
+        
         return bool
     }
 }
 
 
 // MARK: UnsignedIntegerType
-extension UInt : JsonConvertible {}
-extension UInt8 : JsonConvertible {}
-extension UInt16 : JsonConvertible {}
-extension UInt32 : JsonConvertible {}
-extension UInt64 : JsonConvertible {}
+extension UInt: NodeInitializable {}
+extension UInt8: NodeInitializable {}
+extension UInt16: NodeInitializable {}
+extension UInt32: NodeInitializable {}
+extension UInt64: NodeInitializable {}
 
 #if !swift(>=3.0)
     typealias UnsignedInteger = UnsignedIntegerType
 #endif
 
 extension UnsignedInteger {
-    public func jsonRepresentation() throws -> Json {
-        let double = Double(UIntMax(self.toUIntMax()))
-        return Json(double)
-    }
-    
-    public static func newInstance(json: Json) throws -> Self {
-        guard let int = json.uintValue else {
-            throw JsonError.UnableToConvert(json: json, toType: "\(self.dynamicType)")
+    public static func makeWith(node: Node) throws -> Self {
+        guard let int = node.uint else {
+            throw NodeError.UnableToConvert(node: node, toType: "\(self.dynamicType)")
         }
         
         return self.init(int.toUIntMax())
@@ -187,25 +148,20 @@ extension UnsignedInteger {
 }
 
 // MARK: SignedIntegerType
-extension Int : JsonConvertible {}
-extension Int8 : JsonConvertible {}
-extension Int16 : JsonConvertible {}
-extension Int32 : JsonConvertible {}
-extension Int64 : JsonConvertible {}
+extension Int: NodeInitializable {}
+extension Int8: NodeInitializable {}
+extension Int16: NodeInitializable {}
+extension Int32: NodeInitializable {}
+extension Int64: NodeInitializable {}
 
 #if !swift(>=3.0)
     typealias SignedInteger = SignedIntegerType
 #endif
 
 extension SignedInteger {
-    public func jsonRepresentation() throws -> Json {
-        let double = Double(IntMax(self.toIntMax()))
-        return Json(double)
-    }
-    
-    public static func newInstance(json: Json) throws -> Self {
-        guard let int = json.intValue else {
-            throw JsonError.UnableToConvert(json: json, toType: "\(self.dynamicType)")
+    public static func makeWith(node: Node) throws -> Self {
+        guard let int = node.int else {
+            throw NodeError.UnableToConvert(node: node, toType: "\(self.dynamicType)")
         }
         
         return self.init(int.toIntMax())
@@ -214,32 +170,27 @@ extension SignedInteger {
 
 
 // MARK: FloatingPointType
-extension Float : JsonConvertibleFloatingPointType {
-    public var doubleValue: Double {
-        return Double(self)
-    }
-}
-
-extension Double : JsonConvertibleFloatingPointType {
-    public var doubleValue: Double {
-        return Double(self)
-    }
-}
-
-public protocol JsonConvertibleFloatingPointType : JsonConvertible {
-    var doubleValue: Double { get }
-    init(_ other: Double)
-}
-
-extension JsonConvertibleFloatingPointType {
-    public func jsonRepresentation() throws -> Json {
-        return Json(doubleValue)
-    }
-    
-    public static func newInstance(json: Json) throws -> Self {
-        guard let double = json.doubleValue else {
-            throw JsonError.UnableToConvert(json: json, toType: "\(self.dynamicType)")
+extension Float: NodeInitializable {
+    public static func makeWith(node: Node) throws -> Float {
+        guard let float = node.float else {
+            throw NodeError.UnableToConvert(node: node, toType: "\(self.dynamicType)")
         }
+        
+        return self.init(float)
+    }
+}
+
+extension Double: NodeInitializable {
+    public static func makeWith(node: Node) throws -> Double {
+        guard let double = node.double else {
+            throw NodeError.UnableToConvert(node: node, toType: "\(self.dynamicType)")
+        }
+        
         return self.init(double)
     }
+}
+
+public protocol NodeConvertibleFloatingPointType : NodeInitializable {
+    var doubleValue: Double { get }
+    init(_ other: Double)
 }

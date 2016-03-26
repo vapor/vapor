@@ -5,7 +5,7 @@
 */
 public protocol Node {
     var isNull: Bool { get }
-    var bool: Bool { get }
+    var bool: Bool? { get }
     var float: Float? { get }
     var double: Double? { get }
     var int: Int? { get }
@@ -13,6 +13,17 @@ public protocol Node {
     var string: String? { get }
     var array: [Node]? { get }
     var object: [String : Node]? { get }
+}
+
+public enum NodeError: ErrorProtocol {
+    
+    /**
+     When converting to a value from Json, if there is a type conflict, this will throw an error
+     
+     - param Json   the json that was unable to map
+     - param String a string description of the type that was attempting to map
+     */
+    case UnableToConvert(node: Node, toType: String)
 }
 
 public extension Request {
@@ -44,11 +55,11 @@ public extension Request {
         
         // MARK: Subscripting
         public subscript(key: String) -> Node? {
-            return query[key] ?? json?[key]
+            return query[key] ?? json?.object?[key]
         }
         
         public subscript(idx: Int) -> Node? {
-            return json?[idx]
+            return json?.array?[idx]
         }
         
         /**
@@ -69,7 +80,16 @@ public extension Request {
 }
 
 extension Json: Node {
-    public var bool: Bool {
+    public var isNull: Bool {
+        switch self {
+        case .NullValue:
+            return true
+        default:
+            return false
+        }
+    }
+    
+    public var bool: Bool? {
         switch  self {
         case .BooleanValue(let bool):
             return bool
@@ -157,7 +177,7 @@ extension String: Node {
         return self == "null"
     }
     
-    public var bool: Bool {
+    public var bool: Bool? {
         return Bool(self)
     }
     
