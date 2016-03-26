@@ -1,0 +1,211 @@
+#!/usr/bin/env swift
+
+#if os(Linux)
+    import Glibc
+#else
+    import Darwin
+#endif
+
+#if !swift(>=3.0)
+    typealias ErrorProtocol = ErrorType
+#endif
+
+class Vapor {
+    var arguments: [String]
+    var release = false
+
+    init(arguments: [String]) {
+        var commands: [String] = []
+
+        for argument in arguments {
+            if argument.characters.first == "-"  {
+                if argument == "--release" {
+                    release = true
+                }
+            } else {
+                commands.append(argument)        
+            }
+        }
+
+        self.arguments = commands
+
+        if commands.count < 2 {
+            printUsage()
+            fail("Invalid number of arguments.")
+        }
+    }
+
+    func start() {
+        if let command = Command(rawValue: arguments[1]) {
+            switch command {
+            case .Clean:
+                clean()
+            case .Build:
+                build()
+            case .Run:
+                run()
+            case .New:
+                newProject()
+            case .Help:
+                help()
+            }
+
+        } else {
+            fail("Unknown command: \(Process.arguments[1])")
+        }
+    }
+
+    enum Error: ErrorProtocol {
+        case System(Int32)
+    }
+
+    enum Command: String {
+        case Clean = "clean"
+        case Build = "build"
+        case Run = "run"
+        case New = "new"
+        case Help = "help"
+
+        static var all: [Command] = [.Clean, .Build, .Run, .New, .Help]
+    }
+
+    func printUsage() {
+        let names = Command.all.map { command in
+            return command.rawValue
+        }
+
+        #if swift(>=3.0)
+            print("Usage: \(arguments[0]) [\(names.joined(separator: "|"))]")
+        #else
+            print("Usage: \(arguments[0]) [\(names.joinWithSeparator("|"))]")
+        #endif
+    }
+
+    func run(command: String) throws {
+        let result = system(command)
+
+        if result != 0 {
+            throw Error.System(result)
+        }
+    }
+
+    func run(command: String, orFail errorMessage: String) {
+        do {
+            try run(command)
+        } catch {
+            fail(errorMessage)
+        }
+    }
+
+    func fail(message: String) {
+        print("Error: \(message)")
+        exit(1)
+    }
+
+    func clean() {
+        run("rm -rf .build", orFail: "Could not clean")
+        print("Cleaned.")
+    }
+
+    func build() {
+        print("Building...")
+        run("mkdir -p .build", orFail: "Could not create .build directory")
+
+        #if os(Linux)
+            let cc = "swiftc"
+            let include = "/usr/local/include/vapor/"
+            let lib = "/usr/local/lib/"
+            let rpath = "-Xlinker -rpath -Xlinker /usr/local/lib/"
+        #else
+            let cc = "xcrun -sdk macosx swiftc"
+            let include = "/usr/local/opt/vapor/include/"
+            let lib = "/usr/local/opt/vapor/lib/"
+            let rpath = ""
+        #endif
+        
+        var cflags = ""        
+        if release {
+            cflags = "-O"
+        }
+
+        var files = "App/main.swift App/**/*.swift"
+
+        if arguments.count >= 3 {
+            files = ""
+            for i in 2..<arguments.count {
+                files += " " + arguments[i]
+            }
+        }
+
+        do {
+            try run("\(cc) \(cflags) \(files) -I \(include) -L \(lib) -lVapor -lJay -lHummingbird -llibc -lStrand \(rpath) -o .build/VaporApp")
+            print("Built: .build/VaporApp")
+        } catch {
+            print()
+            print("Usage: vapor build [file1, file2, ...]")
+            print("Make sure you are running Apple Swift version 2.2.")
+            print("Run \(cc) --version to check your version.")
+            print()
+            fail("Could not build project.")
+        }
+    }
+
+    func run() {
+        print("Running...")
+        run(".build/VaporApp", orFail: "")
+    }
+
+    func newProject() {
+        if arguments.count < 3 {
+            print("Usage: \(arguments[0]) \(arguments[1]) <project-name>")
+            fail("Invalid number of arguments.")
+        }
+        let name = arguments[2]
+
+        do {
+            try run("git clone https://github.com/qutheory/vapor-example.git \(name)") 
+            let _ = try? run("rm -rf \(name)/.git")
+            print()
+            print("Project \"\(name)\" has been created.")
+            print("Enjoy!")
+            print()
+        } catch {
+            fail("Could not clone repository")
+        }
+    }
+
+    func help() {
+        print()
+        printUsage()
+        print()
+        print("Options:")
+        print("  build [file1, file2, ...]")
+        print("    Builds source files and links Vapor libs.")
+        print("    Defaults to App/ folder structure.")
+        print()
+        print("  run")
+        print("    Runs the executable built by vapor build.")
+        print("    To pass arguments to the program, ")
+        print("    run it manually .build/VaporApp")
+        print()
+        print("  new <project-name>")
+        print("    Clones the Vapor Example to a given ")
+        print("    folder name and removes .git.")
+        print()
+        print("  clean")
+        print()
+        print("  help")
+        print()
+        print("Community:")
+        print("  Join our Slack if you have questions, ")
+        print("  need help, or want to contribute.")
+        print("  https://github.com/qutheory/vapor#badges")
+        print("  (Look for the Slack badge in Vapor's README)")
+        print()
+    }
+}
+
+let cli = Vapor(arguments: Process.arguments)
+cli.start()
+
+exit(0)

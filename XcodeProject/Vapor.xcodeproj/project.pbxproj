@@ -181,12 +181,8 @@
 		C361CEDD1CA4E60900982CC8 /* LinuxMain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = LinuxMain.swift; path = ../../Tests/LinuxMain.swift; sourceTree = "<group>"; };
 		C3691FDF1C98BEDA00C680DE /* EnvironmentTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = EnvironmentTests.swift; path = ../../Tests/Vapor/EnvironmentTests.swift; sourceTree = "<group>"; };
 		C3691FE11C98C47F00C680DE /* TypedRouteTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = TypedRouteTests.swift; path = ../../Tests/Vapor/TypedRouteTests.swift; sourceTree = "<group>"; };
-<<<<<<< Updated upstream
 		C37548431CA62A2900760FBE /* Node.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Node.swift; sourceTree = "<group>"; };
 		C37548471CA6F07100760FBE /* JSON.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = JSON.swift; sourceTree = "<group>"; };
-=======
-		C375484A1CA7213D00760FBE /* .travis.yml */ = {isa = PBXFileReference; lastKnownFileType = text; name = .travis.yml; path = ../.travis.yml; sourceTree = "<group>"; };
->>>>>>> Stashed changes
 		C387A0361C95FDFE00B6282E /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		C387A03B1C95FE1300B6282E /* Generator */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Generator; sourceTree = BUILT_PRODUCTS_DIR; };
 		C38808631C62C0390067DADD /* ResponseTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = ResponseTests.swift; path = ../Tests/Vapor/ResponseTests.swift; sourceTree = SOURCE_ROOT; };
@@ -466,7 +462,6 @@
 		C352E6781C62BB0F00E26467 = {
 			isa = PBXGroup;
 			children = (
-				C375484A1CA7213D00760FBE /* .travis.yml */,
 				C352E7141C62BE6900E26467 /* Package.swift */,
 				C3B009C01CA4BCC200D2DCD1 /* vapor */,
 				C352E7131C62BDE200E26467 /* README.md */,
