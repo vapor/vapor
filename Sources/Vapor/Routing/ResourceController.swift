@@ -20,3 +20,30 @@ public protocol ResourceController {
     /// Delete an instance.
     func destroy(request: Request) throws -> ResponseConvertible
 }
+
+extension ResourceController {
+    /// Display many instances
+    public func index(request: Request) throws -> ResponseConvertible {
+        throw Abort.NotFound
+    }
+    
+    /// Create a new instance.
+    public func store(request: Request) throws -> ResponseConvertible {
+        throw Abort.NotFound
+    }
+    
+    /// Show an instance.
+    public func show(request: Request) throws -> ResponseConvertible {
+        throw Abort.NotFound
+    }
+    
+    /// Update an instance.
+    public func update(request: Request) throws -> ResponseConvertible {
+        throw Abort.NotFound
+    }
+    
+    /// Delete an instance.
+    public func destroy(request: Request) throws -> ResponseConvertible {
+        throw Abort.NotFound
+    }
+}

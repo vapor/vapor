@@ -10,32 +10,18 @@ public class Request {
             public init(_ string: String) {
                 self.string = string
             }
+   
+            public init(unicodeScalarLiteral value: String) {
+                string = "\(value)"
+            }
             
-            #if swift(>=3.0)
-                public init(stringLiteral value: StringLiteralType) {
-                   string = value
-                }
-                
-                public init(unicodeScalarLiteral value: UnicodeScalar) {
-                    string = "\(value)"
-                }
-                
-                public init(extendedGraphemeClusterLiteral value: StaticString) {
-                    string = "\(value)"
-                }
-            #else
-                public init(unicodeScalarLiteral value: String) {
-                    string = "\(value)"
-                }
-                
-                public init(extendedGraphemeClusterLiteral value: String) {
-                    string = value
-                }
-            
-                public init(stringLiteral value: StringLiteralType) {
-                    string = value
-                }
-            #endif
+            public init(extendedGraphemeClusterLiteral value: String) {
+                string = value
+            }
+        
+            public init(stringLiteral value: StringLiteralType) {
+                string = value
+            }
             
             public var description: String {
                 return string
