@@ -24,8 +24,8 @@ extension String {
 
 #if os(Linux)
     func hasPrefix(str: String) -> Bool {
-        let strGen = str.characters.iterator()
-        let selfGen = self.characters.iterator()
+        let strGen = str.characters.makeIterator()
+        let selfGen = self.characters.makeIterator()
         let seq = Zip2Sequence(strGen, selfGen)
         for (lhs, rhs) in seq where lhs != rhs {
             return false
@@ -34,8 +34,8 @@ extension String {
     }
     
     func hasSuffix(str: String) -> Bool {
-        let strGen = str.characters.reversed().iterator()
-        let selfGen = self.characters.reversed().iterator()
+        let strGen = str.characters.reversed().makeIterator()
+        let selfGen = self.characters.reversed().makeIterator()
         let seq = Zip2Sequence(strGen, selfGen)
         for (lhs, rhs) in seq where lhs != rhs {
             return false
