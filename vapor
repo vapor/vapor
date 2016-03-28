@@ -61,6 +61,10 @@ class Vapor {
         }
     }
 
+    #if !swift(>=3.0)
+        typealias ErrorProtocol = ErrorType
+    #endif
+
     enum Error: ErrorProtocol {
         case System(Int32)
     }
@@ -109,7 +113,7 @@ class Vapor {
     }
 
     func clean() {
-        run("rm -rf .build", orFail: "Could not clean")
+        run("rm -rf Packages .build", orFail: "Could not clean")
         print("Cleaned.")
     }
     

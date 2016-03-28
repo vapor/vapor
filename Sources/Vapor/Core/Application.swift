@@ -66,7 +66,7 @@ public class Application {
             return environment
         }
 
-        let environment = self.bootEnvironment()
+        let environment = bootEnvironment()
         self.detectedEnvironment = environment
         return environment
     }
@@ -189,8 +189,12 @@ public class Application {
         self.port = port ?? self.port
 
         bootRoutes()
-        bootEnvironment()
         bootArguments()
+        
+        if environment == .Production {
+            Log.info("Production mode detected, disabling information logs.")
+            Log.enabledLevels = [.Error, .Fatal]
+        }
 
         do {
             Log.info("Server starting on \(self.ip):\(self.port)")

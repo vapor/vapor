@@ -15,22 +15,22 @@ public class MemorySessionDriver: SessionDriver {
         app = application
     }
     
-    public func valueFor(key key: String, inSession session: Session) -> String? {
+    public func valueFor(key key: String, identifier: String) -> String? {
         var value: String?
         sessionsLock.locked {
-            value = sessions[session.identifier]?[key]
+            value = sessions[identifier]?[key]
         }
         
         return value
     }
     
-    public func set(value: String?, forKey key: String, inSession session: Session) {
+    public func set(value: String?, forKey key: String, identifier: String) {
         sessionsLock.locked {
-            if sessions[session.identifier] == nil {
-                sessions[session.identifier] = [String: String]()
+            if sessions[identifier] == nil {
+                sessions[identifier] = [String: String]()
             }
             
-            sessions[session.identifier]?[key] = value
+            sessions[identifier]?[key] = value
         }
     }
     
@@ -45,9 +45,9 @@ public class MemorySessionDriver: SessionDriver {
         return app.hash.make(identifier)
     }
     
-    public func destroy(session: Session) {
+    public func destroy(identifier: String) {
         sessionsLock.locked {
-            sessions[session.identifier] = nil
+            sessions[identifier] = nil
         }
     }
 }

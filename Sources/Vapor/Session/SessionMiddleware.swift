@@ -18,8 +18,8 @@ class SessionMiddleware: Middleware {
 
             let response = try handler(request: request)
 
-            if let session = request.session where session.enabled {
-                response.cookies["vapor-session"] = session.identifier
+            if let identifier = request.session?.identifier {
+                response.cookies["vapor-session"] = identifier
             }
 
             return response

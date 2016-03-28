@@ -8,13 +8,12 @@
 */
 public class Session {
 
-    public let identifier: String
+    public var identifier: String?
     var driver: SessionDriver
     public var enabled: Bool
 
     public init(driver: SessionDriver) {
         self.driver = driver
-        identifier = driver.makeSessionIdentifier()
         enabled = false
     }
 
@@ -25,17 +24,31 @@ public class Session {
     }
 
     public func destroy() {
-        enabled = false
-        driver.destroy(self)
+        if let i = identifier {
+            identifier = nil
+            driver.destroy(i)
+        }
     }
 
     public subscript(key: String) -> String? {
         get {
-            return driver.valueFor(key: key, inSession: self)
+            guard let i = identifier else {
+                return nil
+            }
+            
+            return driver.valueFor(key: key, identifier: i)
         }
         set {
-            enabled = true
-            driver.set(newValue, forKey: key, inSession: self)
+            let i: String
+            
+            if let existingIdentifier = identifier {
+                i = existingIdentifier
+            } else {
+                i = driver.makeSessionIdentifier()
+                identifier = i
+            }
+            
+            driver.set(newValue, forKey: key, identifier: i)
         }
     }
 }
