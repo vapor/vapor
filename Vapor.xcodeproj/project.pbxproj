@@ -779,7 +779,11 @@
 			isa = PBXGroup;
 			children = (
 				__PBXFileRef_Package.swift /* Package.swift */,
-				"_____Sources_" /* Sources */,
+				"_______Group_Vapor" /* Vapor */,
+				"_______Group_VaporDev" /* VaporDev */,
+				"_______Group_Generator" /* Generator */,
+				"_______Group_libc" /* libc */,
+				"_____Sources_" /* Packages */,
 				"_______Tests_" /* Tests */,
 				"____Products_" /* Products */,
 			);
@@ -805,7 +809,7 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		"_____Sources_" /* Sources */ = {
+		"_____Sources_" /* Packages */ = {
 			isa = PBXGroup;
 			children = (
 				"_______Group_OperatingSystem" /* OperatingSystem */,
@@ -816,12 +820,8 @@
 				"_______Group_JSON" /* JSON */,
 				"_______Group_Strand" /* Strand */,
 				"_______Group_Hummingbird" /* Hummingbird */,
-				"_______Group_Generator" /* Generator */,
-				"_______Group_libc" /* libc */,
-				"_______Group_Vapor" /* Vapor */,
-				"_______Group_VaporDev" /* VaporDev */,
 			);
-			name = Sources;
+			name = Packages;
 			sourceTree = "<group>";
 		};
 		"_______Group_C7" /* C7 */ = {
@@ -960,9 +960,9 @@
 		"_______Group_VaporDev" /* VaporDev */ = {
 			isa = PBXGroup;
 			children = (
+				C3960CA21CA8BC83009DAA87 /* main.swift */,
 				C3960C9B1CA8BC83009DAA87 /* Config */,
 				C3960CA01CA8BC83009DAA87 /* Controllers */,
-				C3960CA21CA8BC83009DAA87 /* main.swift */,
 				C3960CA31CA8BC83009DAA87 /* Middleware */,
 				C3960CA51CA8BC83009DAA87 /* Models */,
 				C3960CA71CA8BC83009DAA87 /* Public */,
