@@ -156,15 +156,15 @@ public class Config {
                 let data = try FileManager.readBytesFromFile(file)
                 let json = try Json(data)
 
-                guard let object = json.object else {
+                guard case .object(let object) = json else {
                     return
                 }
 
-                for (group, node) in object {
+                for (group, json) in object {
                     if repository[group] == nil {
-                        repository[group] = node.json
+                        repository[group] = json
                     } else {
-                        repository[group]?.merge(with: node.json ?? Json([:]))
+                        repository[group]?.merge(with: json)
                     }
                 }
             }
@@ -201,7 +201,7 @@ public class Config {
 
 extension Json {
 
-    private func set(value: Json, keys: [Swift.String]) {
+    private mutating func set(value: Json, keys: [Swift.String]) {
         var keys = keys
 
         guard keys.count > 0 else {
@@ -210,17 +210,17 @@ extension Json {
 
         let key = keys.removeFirst()
 
-        guard let o = object else {
+        guard case .object(let object) = self else {
             return
         }
 
-        var updated = o
+        var updated = object
 
         if keys.count == 0 {
             updated[key] = value
         } else {
-            let child = updated[key] ?? Json([:])
-            child.json?.set(value, keys: keys)
+            var child = updated[key] ?? Json([:])
+            child.set(value, keys: keys)
         }
     }
 

@@ -186,16 +186,6 @@
             skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "______Target_HummingbirdTestSuite"
-               BuildableName = "Hummingbird.testsuite.xctest"
-               BlueprintName = "Hummingbird.testsuite"
-               ReferencedContainer = "container:Vapor.xcodeproj">
-            </BuildableReference>
-         </TestableReference>
-         <TestableReference
-            skipped = "NO">
-            <BuildableReference
-               BuildableIdentifier = "primary"
                BlueprintIdentifier = "______Target_VaporTestSuite"
                BuildableName = "Vapor.testsuite.xctest"
                BlueprintName = "Vapor.testsuite"
