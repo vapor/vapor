@@ -11,6 +11,7 @@ import XCTest
 class MemorySessionDriverTests: XCTestCase {
     var application = Application()
     
+    var identifier = "baz"
     static var allTests : [(String, MemorySessionDriverTests -> () throws -> Void)] {
         return [
            ("testValueForKey_onNonExistantSession_isNil", testValueForKey_onNonExistantSession_isNil),
@@ -26,45 +27,45 @@ class MemorySessionDriverTests: XCTestCase {
     // MARK: - Obtaining Values
     func testValueForKey_onNonExistantSession_isNil() {
         let subject = MemorySessionDriver(application: application)
-        let session = Session(identifier: "baz", driver: subject)
-        XCTAssertNil(subject.valueFor(key: "foo", inSession: session))
+        _ = Session(identifier: identifier, driver: subject)
+        XCTAssertNil(subject.valueFor(key: "foo", identifier: identifier))
     }
 
     func testValueForKey_onExistingSession_onNonExistingKey_isNil() {
         let subject = MemorySessionDriver(application: application)
-        let session = Session(identifier: "baz", driver: subject)
+        _ = Session(identifier: identifier, driver: subject)
         subject.sessions = ["baz": [:]]
-        XCTAssertNil(subject.valueFor(key: "foo", inSession: session))
+        XCTAssertNil(subject.valueFor(key: "foo", identifier: identifier))
     }
 
     func testValueForKey_onExistingSession_onExistingKey_isKeyValue() {
         let subject = MemorySessionDriver(application: application)
-        let session = Session(identifier: "baz", driver: subject)
+        _ = Session(identifier: identifier, driver: subject)
         subject.sessions = ["baz": ["foo":"bar"]]
-        XCTAssertEqual(subject.valueFor(key: "foo", inSession: session), "bar")
+        XCTAssertEqual(subject.valueFor(key: "foo", identifier: identifier), "bar")
     }
 
     // MARK: - Setting Values
     func testSetValueForKey_setsValueCorrectly() {
         let subject = MemorySessionDriver(application: application)
-        let session = Session(identifier: "baz", driver: subject)
-        subject.set("foo", forKey: "bar", inSession: session)
+        let _ = Session(identifier: identifier, driver: subject)
+        subject.set("foo", forKey: "bar", identifier: identifier)
         XCTAssertEqual(subject.sessions["baz"]?["bar"], "foo")
     }
 
     func testSetValueForKey_withExistingValue_overwritesValueCorrectly() {
         let subject = MemorySessionDriver(application: application)
-        let session = Session(identifier: "baz", driver: subject)
+        let _ = Session(identifier: identifier, driver: subject)
         subject.sessions = ["baz":["bar":"foo"]]
-        subject.set("frob", forKey: "bar", inSession: session)
+        subject.set("frob", forKey: "bar", identifier: identifier)
         XCTAssertEqual(subject.sessions["baz"]?["bar"], "frob")
     }
 
     func testSetValueForKey_withExistingValue_toNilErasesValue() {
         let subject = MemorySessionDriver(application: application)
-        let session = Session(identifier: "baz", driver: subject)
+        let _ = Session(identifier: identifier, driver: subject)
         subject.sessions = ["baz":["bar":"foo"]]
-        subject.set(nil, forKey: "bar", inSession: session)
+        subject.set(nil, forKey: "bar", identifier: identifier)
         XCTAssertNil(subject.sessions["baz"]?["bar"])
     }
 
@@ -73,8 +74,8 @@ class MemorySessionDriverTests: XCTestCase {
     func testDestroySession_removesSession() {
         let subject = MemorySessionDriver(application: application)
         subject.sessions = ["baz":["bar":"foo"], "frob": [:]]
-        let session = Session(identifier: "baz", driver: subject)
-        subject.destroy(session)
+        let _ = Session(identifier: identifier, driver: subject)
+        subject.destroy(identifier)
 
         guard subject.sessions["frob"] != nil else {
             XCTFail("Session was unexpectedly removed")

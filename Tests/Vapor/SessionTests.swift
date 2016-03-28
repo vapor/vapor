@@ -22,12 +22,10 @@ class SessionTests: XCTestCase {
         let driver = TestDriver()
         let subject = Session(identifier: "baz", driver: driver)
         subject.destroy()
-        guard let action = driver.actions.first, case .Destroy(let session) = action else {
+        guard let action = driver.actions.first, case .Destroy = action else {
             XCTFail("No actions recorded or recorded action was not a destroy action")
             return
         }
-
-        XCTAssert(session === subject)
     }
 
     func testSubscriptGet_asksDriverForValue() {
@@ -35,13 +33,12 @@ class SessionTests: XCTestCase {
         let subject = Session(identifier: "baz", driver: driver)
         _ = subject["test"]
 
-        guard let action = driver.actions.first, case .ValueFor(let key, let session) = action else {
+        guard let action = driver.actions.first, case .ValueFor(let key) = action else {
             XCTFail("No actions recorded or recorded action was not a value for action")
             return
         }
 
-        XCTAssertEqual(key, "test")
-        XCTAssert(session === subject)
+        XCTAssertEqual(key.key, "test")
     }
 
     func testSubscriptSet_asksDriverToSetValue() {
@@ -49,14 +46,13 @@ class SessionTests: XCTestCase {
         let subject = Session(identifier: "baz", driver: driver)
         subject["foo"] = "bar"
 
-        guard let action = driver.actions.first, case .SetValue(let value, let key, let session) = action else {
+        guard let action = driver.actions.first, case .SetValue(let key) = action else {
             XCTFail("No actions recorded or recorded action was not a set value action")
             return
         }
 
-        XCTAssertEqual(value, "bar")
-        XCTAssertEqual(key, "foo")
-        XCTAssert(session === subject)
+        XCTAssertEqual(key.value, "bar")
+        XCTAssertEqual(key.key, "foo")
     }
 }
 
@@ -64,9 +60,9 @@ private class TestDriver: SessionDriver {
     var app = Application()
     
     enum Action {
-        case ValueFor(key: String, session: Session)
-        case SetValue(value: String?, key: String, session: Session)
-        case Destroy(session: Session)
+        case ValueFor(key: String, identifier: String)
+        case SetValue(value: String?, key: String, identifier: String)
+        case Destroy(identifier: String)
     }
 
     var actions = [Action]()
@@ -75,17 +71,17 @@ private class TestDriver: SessionDriver {
         return "Foo"
     }
 
-    func valueFor(key key: String, inSession session: Session) -> String? {
-        actions.append(.ValueFor(key: key, session: session))
+    func valueFor(key key: String, identifier: String) -> String? {
+        actions.append(.ValueFor(key: key, identifier: identifier))
         return nil
     }
 
-    func set(value: String?, forKey key: String, inSession session: Session) {
-        actions.append(.SetValue(value: value, key: key, session: session))
+    func set(value: String?, forKey key: String, identifier: String) {
+        actions.append(.SetValue(value: value, key: key, identifier: identifier))
     }
 
-    func destroy(session: Session) {
-        actions.append(.Destroy(session: session))
+    func destroy(identifier: String) {
+        actions.append(.Destroy(identifier: identifier))
     }
 
 }
