@@ -10,11 +10,7 @@
 */
 class Lock {
 
-    #if swift(>=3.0)
-        let mutex = UnsafeMutablePointer<pthread_mutex_t>(allocatingCapacity: 1)
-    #else
-        let mutex = UnsafeMutablePointer<pthread_mutex_t>.alloc(1)
-    #endif
+    let mutex = UnsafeMutablePointer<pthread_mutex_t>(allocatingCapacity: 1)
 
     init() {
         pthread_mutex_init(mutex, nil)
@@ -22,13 +18,8 @@ class Lock {
 
     deinit {
         pthread_mutex_destroy(mutex)
-        #if swift(>=3.0)
-            mutex.deinitialize()
-            mutex.deallocateCapacity(1)
-        #else
-            mutex.destroy()
-            mutex.dealloc(1)
-        #endif
+        mutex.deinitialize()
+        mutex.deallocateCapacity(1)
     }
 
     func lock() {

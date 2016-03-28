@@ -9,7 +9,11 @@ public class MemorySessionDriver: SessionDriver {
     var sessions = [String: [String: String]]()
     private var sessionsLock = Lock()
     
-    public init() { }
+    public var app: Application
+    
+    public init(application: Application) {
+        app = application
+    }
     
     public func valueFor(key key: String, inSession session: Session) -> String? {
         var value: String?
@@ -38,7 +42,7 @@ public class MemorySessionDriver: SessionDriver {
         identifier += String(Int.random(min: 0, max: 9999))
         identifier += "k3y"
         identifier += String(Int.random(min: 0, max: 9999))
-        return Hash.make(identifier)
+        return app.hash.make(identifier)
     }
     
     public func destroy(session: Session) {

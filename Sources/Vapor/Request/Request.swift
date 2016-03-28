@@ -3,6 +3,35 @@
     web server such as method, parameters, and data.
 */
 public class Request {
+    public struct Header {
+        public struct Key: StringLiteralConvertible, Hashable, Equatable, CustomStringConvertible {
+            var string: String
+            
+            public init(_ string: String) {
+                self.string = string
+            }
+   
+            public init(unicodeScalarLiteral value: String) {
+                string = "\(value)"
+            }
+            
+            public init(extendedGraphemeClusterLiteral value: String) {
+                string = value
+            }
+        
+            public init(stringLiteral value: StringLiteralType) {
+                string = value
+            }
+            
+            public var description: String {
+                return string
+            }
+
+            public var hashValue: Int {
+                return string.lowercased().hashValue
+            }
+        }
+    }
     
     ///Available HTTP Methods
     public enum Method: String {
@@ -30,7 +59,7 @@ public class Request {
     public let path: String
     
     ///Information or metadata about the `Request`.
-    public let headers: [String: String]
+    public let headers: [Header.Key: String]
     
     ///Content of the `Request`.
     public let body: [UInt8]
@@ -55,11 +84,17 @@ public class Request {
         return false
     }
 
-    public init(method: Method, path: String, address: String?, headers: [String: String], body: [UInt8]) {
+    public init(method: Method, path: String, address: String?, headers headersArray: [(String, String)], body: [UInt8]) {
         self.method = method
         self.path = path.split("?").first ?? ""
         self.address = address
-        self.headers = headers
+        
+        var headersBuffer: [Header.Key: String] = [:]
+        for (key, value) in headersArray {
+            headersBuffer[Request.Header.Key(key)] = value
+        }
+        headers = headersBuffer
+        
         self.body = body
         self.cookies = Request.parseCookies(headers["Cookie"])
         self.hostname = headers["Host"] ?? "*"
@@ -74,7 +109,7 @@ public class Request {
         Quickly create a Request with an empty body.
     */
     public convenience init(method: Method, path: String) {
-        self.init(method: method, path: path, address: nil, headers: [:], body: [])
+        self.init(method: method, path: path, address: nil, headers: [], body: [])
     }
     
     /**
@@ -96,11 +131,7 @@ public class Request {
             
             if cookieArray.count == 2 {
                 let split = cookieArray[0].split(" ")
-                #if swift(>=3.0)
-                    let key = split.joined(separator: "")
-                #else
-                    let key = split.joinWithSeparator("")
-                #endif
+                let key = split.joined(separator: "")
                 cookies[key] = cookieArray[1]
             }
         }
@@ -108,6 +139,9 @@ public class Request {
         return cookies
     }
     
+}
+public func ==(lhs: Request.Header.Key, rhs: Request.Header.Key) -> Bool {
+    return lhs.string == rhs.string
 }
 
 extension String {
@@ -121,7 +155,7 @@ extension String {
      */
     internal func queryData() -> [String: String] {
         // First `?` indicates query, subsequent `?` should be included as part of the arguments
-        return split(1, separator: "?")
+        return split("?", maxSplits: 1)
             .dropFirst()
             .reduce("", combine: +)
             .keyValuePairs()
@@ -136,10 +170,13 @@ extension String {
         var data: [String: String] = [:]
         
         for pair in self.split("&") {
-            let tokens = pair.split(1, separator: "=")
+            let tokens = pair.split("=", maxSplits: 1)
             
-            if let name = tokens.first, value = tokens.last {
-                data[name.removePercentEncoding()] = value.removePercentEncoding()
+            if
+                let name = tokens.first,
+                let value = tokens.last,
+                let parsedName = try? String(percentEncoded: name) {
+                data[parsedName] = try? String(percentEncoded: value)
             }
         }
         

@@ -65,7 +65,7 @@ class JeevesTests: XCTestCase {
 
     func testReadHeader() throws {
         let socket = TestSocket()
-        let header = try Request.Header(socket)
+        let header = try Header(socket)
 
         let requestLine = header.requestLine
         XCTAssert(requestLine.method == "POST")

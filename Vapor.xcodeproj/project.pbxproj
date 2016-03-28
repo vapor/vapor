@@ -1,0 +1,1831 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		C3779C2E1CA8DE6200A18F2E /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
+		C3779C2F1CA8DE6200A18F2E /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
+		C3779C301CA8DE6200A18F2E /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
+		C3779C311CA8DE6200A18F2E /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
+		C3779C321CA8DE6200A18F2E /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
+		C3779C331CA8DE6200A18F2E /* libData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Data" /* libData.dylib */; };
+		C3779C341CA8DE6200A18F2E /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
+		C3779C351CA8DE6200A18F2E /* libData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Data" /* libData.dylib */; };
+		C3779C361CA8DE6200A18F2E /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
+		C3779C371CA8DE6200A18F2E /* libInterchangeData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_InterchangeData" /* libInterchangeData.dylib */; };
+		C3779C381CA8DE6200A18F2E /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
+		C3779C391CA8DE6200A18F2E /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
+		C3779C3A1CA8DE6200A18F2E /* libData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Data" /* libData.dylib */; };
+		C3779C3B1CA8DE6200A18F2E /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
+		C3779C3C1CA8DE6200A18F2E /* libInterchangeData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_InterchangeData" /* libInterchangeData.dylib */; };
+		C3779C3D1CA8DE6200A18F2E /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
+		C3779C3E1CA8DE6200A18F2E /* libHummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Hummingbird" /* libHummingbird.dylib */; };
+		C3779C3F1CA8DE6200A18F2E /* libJSON.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_JSON" /* libJSON.dylib */; };
+		C3779C401CA8DE6200A18F2E /* libString.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_String" /* libString.dylib */; };
+		C3779C411CA8DE6200A18F2E /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
+		C3779C421CA8DE6200A18F2E /* libData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Data" /* libData.dylib */; };
+		C3779C431CA8DE6200A18F2E /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
+		C3779C441CA8DE6200A18F2E /* libInterchangeData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_InterchangeData" /* libInterchangeData.dylib */; };
+		C3779C451CA8DE6200A18F2E /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
+		C3779C461CA8DE6200A18F2E /* libHummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Hummingbird" /* libHummingbird.dylib */; };
+		C3779C471CA8DE6200A18F2E /* libJSON.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_JSON" /* libJSON.dylib */; };
+		C3779C481CA8DE6200A18F2E /* libString.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_String" /* libString.dylib */; };
+		C3779C491CA8DE6200A18F2E /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
+		C3779C4A1CA8DE6200A18F2E /* libData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Data" /* libData.dylib */; };
+		C3779C4B1CA8DE6200A18F2E /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
+		C3779C4C1CA8DE6200A18F2E /* libInterchangeData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_InterchangeData" /* libInterchangeData.dylib */; };
+		C3779C4D1CA8DE6200A18F2E /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
+		C3779C4E1CA8DE6200A18F2E /* libHummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Hummingbird" /* libHummingbird.dylib */; };
+		C3779C4F1CA8DE6200A18F2E /* libJSON.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_JSON" /* libJSON.dylib */; };
+		C3779C501CA8DE6200A18F2E /* libString.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_String" /* libString.dylib */; };
+		C3779C511CA8DE6200A18F2E /* liblibc.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_libc" /* liblibc.dylib */; };
+		C3779C521CA8DE6200A18F2E /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
+		C3779C531CA8DE6200A18F2E /* libData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Data" /* libData.dylib */; };
+		C3779C541CA8DE6200A18F2E /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
+		C3779C551CA8DE6200A18F2E /* libInterchangeData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_InterchangeData" /* libInterchangeData.dylib */; };
+		C3779C561CA8DE6200A18F2E /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
+		C3779C571CA8DE6200A18F2E /* libHummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Hummingbird" /* libHummingbird.dylib */; };
+		C3779C581CA8DE6200A18F2E /* libJSON.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_JSON" /* libJSON.dylib */; };
+		C3779C591CA8DE6200A18F2E /* libString.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_String" /* libString.dylib */; };
+		C3779C5A1CA8DE6200A18F2E /* libVapor.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Vapor" /* libVapor.dylib */; };
+		C3779C5B1CA8DE6200A18F2E /* liblibc.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_libc" /* liblibc.dylib */; };
+		_LinkFileRef_C7 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
+		_LinkFileRef_Data /* libData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Data" /* libData.dylib */; };
+		_LinkFileRef_Hummingbird /* libHummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Hummingbird" /* libHummingbird.dylib */; };
+		_LinkFileRef_InterchangeData /* libInterchangeData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_InterchangeData" /* libInterchangeData.dylib */; };
+		_LinkFileRef_JSON /* libJSON.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_JSON" /* libJSON.dylib */; };
+		_LinkFileRef_OperatingSystem /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
+		_LinkFileRef_Strand /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
+		_LinkFileRef_String /* libString.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_String" /* libString.dylib */; };
+		_LinkFileRef_Vapor /* libVapor.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Vapor" /* libVapor.dylib */; };
+		_LinkFileRef_libc /* liblibc.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_libc" /* liblibc.dylib */; };
+		"__src_cc_ref_Packages/C7-0.1.11/Sources/AsyncStream.swift" /* AsyncStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/C7-0.1.11/Sources/AsyncStream.swift" /* AsyncStream.swift */; };
+		"__src_cc_ref_Packages/C7-0.1.11/Sources/AsyncStreamClient.swift" /* AsyncStreamClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/C7-0.1.11/Sources/AsyncStreamClient.swift" /* AsyncStreamClient.swift */; };
+		"__src_cc_ref_Packages/C7-0.1.11/Sources/AsyncStreamServer.swift" /* AsyncStreamServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/C7-0.1.11/Sources/AsyncStreamServer.swift" /* AsyncStreamServer.swift */; };
+		"__src_cc_ref_Packages/C7-0.1.11/Sources/Byte.swift" /* Byte.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/C7-0.1.11/Sources/Byte.swift" /* Byte.swift */; };
+		"__src_cc_ref_Packages/C7-0.1.11/Sources/CaseInsensitiveString.swift" /* CaseInsensitiveString.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/C7-0.1.11/Sources/CaseInsensitiveString.swift" /* CaseInsensitiveString.swift */; };
+		"__src_cc_ref_Packages/C7-0.1.11/Sources/CustomDataStore.swift" /* CustomDataStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/C7-0.1.11/Sources/CustomDataStore.swift" /* CustomDataStore.swift */; };
+		"__src_cc_ref_Packages/C7-0.1.11/Sources/Data.swift" /* Data.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/C7-0.1.11/Sources/Data.swift" /* Data.swift */; };
+		"__src_cc_ref_Packages/C7-0.1.11/Sources/Drain.swift" /* Drain.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/C7-0.1.11/Sources/Drain.swift" /* Drain.swift */; };
+		"__src_cc_ref_Packages/C7-0.1.11/Sources/Storage.swift" /* Storage.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/C7-0.1.11/Sources/Storage.swift" /* Storage.swift */; };
+		"__src_cc_ref_Packages/C7-0.1.11/Sources/Stream.swift" /* Stream.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/C7-0.1.11/Sources/Stream.swift" /* Stream.swift */; };
+		"__src_cc_ref_Packages/C7-0.1.11/Sources/StreamClient.swift" /* StreamClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/C7-0.1.11/Sources/StreamClient.swift" /* StreamClient.swift */; };
+		"__src_cc_ref_Packages/C7-0.1.11/Sources/StreamSequence.swift" /* StreamSequence.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/C7-0.1.11/Sources/StreamSequence.swift" /* StreamSequence.swift */; };
+		"__src_cc_ref_Packages/C7-0.1.11/Sources/StreamServer.swift" /* StreamServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/C7-0.1.11/Sources/StreamServer.swift" /* StreamServer.swift */; };
+		"__src_cc_ref_Packages/C7-0.1.11/Sources/URI.swift" /* URI.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/C7-0.1.11/Sources/URI.swift" /* URI.swift */; };
+		"__src_cc_ref_Packages/Data-0.4.8/Source/Data.swift" /* Data.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/Data-0.4.8/Source/Data.swift" /* Data.swift */; };
+		"__src_cc_ref_Packages/Hummingbird-1.1.2/Sources/Socket.swift" /* Socket.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/Hummingbird-1.1.2/Sources/Socket.swift" /* Socket.swift */; };
+		"__src_cc_ref_Packages/Hummingbird-1.1.2/Sources/String+Transcoding.swift" /* String+Transcoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/Hummingbird-1.1.2/Sources/String+Transcoding.swift" /* String+Transcoding.swift */; };
+		"__src_cc_ref_Packages/InterchangeData-0.4.2/Source/InterchangeData.swift" /* InterchangeData.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/InterchangeData-0.4.2/Source/InterchangeData.swift" /* InterchangeData.swift */; };
+		"__src_cc_ref_Packages/JSON-0.4.1/Source/JSON.swift" /* JSON.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/JSON-0.4.1/Source/JSON.swift" /* JSON.swift */; };
+		"__src_cc_ref_Packages/JSON-0.4.1/Source/JSONInterchangeDataParser.swift" /* JSONInterchangeDataParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/JSON-0.4.1/Source/JSONInterchangeDataParser.swift" /* JSONInterchangeDataParser.swift */; };
+		"__src_cc_ref_Packages/JSON-0.4.1/Source/JSONInterchangeDataSerializer.swift" /* JSONInterchangeDataSerializer.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/JSON-0.4.1/Source/JSONInterchangeDataSerializer.swift" /* JSONInterchangeDataSerializer.swift */; };
+		"__src_cc_ref_Packages/JSON-0.4.1/Source/JSONParser.swift" /* JSONParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/JSON-0.4.1/Source/JSONParser.swift" /* JSONParser.swift */; };
+		"__src_cc_ref_Packages/JSON-0.4.1/Source/JSONSerializer.swift" /* JSONSerializer.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/JSON-0.4.1/Source/JSONSerializer.swift" /* JSONSerializer.swift */; };
+		"__src_cc_ref_Packages/OperatingSystem-0.4.2/Sources/OperatingSystem.swift" /* OperatingSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/OperatingSystem-0.4.2/Sources/OperatingSystem.swift" /* OperatingSystem.swift */; };
+		"__src_cc_ref_Packages/Strand-1.1.0/Sources/Strand.swift" /* Strand.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/Strand-1.1.0/Sources/Strand.swift" /* Strand.swift */; };
+		"__src_cc_ref_Packages/String-0.4.3/Source/String.swift" /* String.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/String-0.4.3/Source/String.swift" /* String.swift */; };
+		__src_cc_ref_Sources/Generator/main.swift /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Generator/main.swift /* main.swift */; };
+		__src_cc_ref_Sources/Vapor/Config/Config.swift /* Config/Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Config/Config.swift /* Config/Config.swift */; };
+		__src_cc_ref_Sources/Vapor/Core/Abort.swift /* Core/Abort.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Core/Abort.swift /* Core/Abort.swift */; };
+		__src_cc_ref_Sources/Vapor/Core/Application.swift /* Core/Application.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Core/Application.swift /* Core/Application.swift */; };
+		__src_cc_ref_Sources/Vapor/Core/Environment.swift /* Core/Environment.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Core/Environment.swift /* Core/Environment.swift */; };
+		__src_cc_ref_Sources/Vapor/Core/Generated.swift /* Core/Generated.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Core/Generated.swift /* Core/Generated.swift */; };
+		__src_cc_ref_Sources/Vapor/Core/Provider.swift /* Core/Provider.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Core/Provider.swift /* Core/Provider.swift */; };
+		__src_cc_ref_Sources/Vapor/Fixes/FileManager.swift /* Fixes/FileManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Fixes/FileManager.swift /* Fixes/FileManager.swift */; };
+		__src_cc_ref_Sources/Vapor/Fixes/StringExtensions.swift /* Fixes/StringExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Fixes/StringExtensions.swift /* Fixes/StringExtensions.swift */; };
+		__src_cc_ref_Sources/Vapor/Hash/CryptoSwift.swift /* Hash/CryptoSwift.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Hash/CryptoSwift.swift /* Hash/CryptoSwift.swift */; };
+		__src_cc_ref_Sources/Vapor/Hash/Hash.swift /* Hash/Hash.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Hash/Hash.swift /* Hash/Hash.swift */; };
+		__src_cc_ref_Sources/Vapor/Hash/HashDriver.swift /* Hash/HashDriver.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Hash/HashDriver.swift /* Hash/HashDriver.swift */; };
+		"__src_cc_ref_Sources/Vapor/Hash/Int+Random.swift" /* Hash/Int+Random.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Sources/Vapor/Hash/Int+Random.swift" /* Hash/Int+Random.swift */; };
+		__src_cc_ref_Sources/Vapor/Hash/SHA256Hasher.swift /* Hash/SHA256Hasher.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Hash/SHA256Hasher.swift /* Hash/SHA256Hasher.swift */; };
+		__src_cc_ref_Sources/Vapor/JSON/JSON.swift /* JSON/JSON.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/JSON/JSON.swift /* JSON/JSON.swift */; };
+		__src_cc_ref_Sources/Vapor/Log/Log.swift /* Log/Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Log/Log.swift /* Log/Log.swift */; };
+		__src_cc_ref_Sources/Vapor/Log/LogDriver.swift /* Log/LogDriver.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Log/LogDriver.swift /* Log/LogDriver.swift */; };
+		__src_cc_ref_Sources/Vapor/Middleware/AbortMiddleware.swift /* Middleware/AbortMiddleware.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Middleware/AbortMiddleware.swift /* Middleware/AbortMiddleware.swift */; };
+		__src_cc_ref_Sources/Vapor/Middleware/Middleware.swift /* Middleware/Middleware.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Middleware/Middleware.swift /* Middleware/Middleware.swift */; };
+		__src_cc_ref_Sources/Vapor/Node/Node.swift /* Node/Node.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Node/Node.swift /* Node/Node.swift */; };
+		__src_cc_ref_Sources/Vapor/Node/NodeInitializable.swift /* Node/NodeInitializable.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Node/NodeInitializable.swift /* Node/NodeInitializable.swift */; };
+		__src_cc_ref_Sources/Vapor/Process/Process.swift /* Process/Process.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Process/Process.swift /* Process/Process.swift */; };
+		__src_cc_ref_Sources/Vapor/Request/Request.swift /* Request/Request.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Request/Request.swift /* Request/Request.swift */; };
+		__src_cc_ref_Sources/Vapor/Request/RequestData.swift /* Request/RequestData.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Request/RequestData.swift /* Request/RequestData.swift */; };
+		__src_cc_ref_Sources/Vapor/Response/Response.swift /* Response/Response.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Response/Response.swift /* Response/Response.swift */; };
+		__src_cc_ref_Sources/Vapor/Response/ResponseConvertible.swift /* Response/ResponseConvertible.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Response/ResponseConvertible.swift /* Response/ResponseConvertible.swift */; };
+		__src_cc_ref_Sources/Vapor/Router/Branch.swift /* Router/Branch.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Router/Branch.swift /* Router/Branch.swift */; };
+		__src_cc_ref_Sources/Vapor/Router/BranchRouter.swift /* Router/BranchRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Router/BranchRouter.swift /* Router/BranchRouter.swift */; };
+		__src_cc_ref_Sources/Vapor/Router/RouterDriver.swift /* Router/RouterDriver.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Router/RouterDriver.swift /* Router/RouterDriver.swift */; };
+		"__src_cc_ref_Sources/Vapor/Routing/Application+Route.swift" /* Routing/Application+Route.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Sources/Vapor/Routing/Application+Route.swift" /* Routing/Application+Route.swift */; };
+		__src_cc_ref_Sources/Vapor/Routing/ApplicationInitializable.swift /* Routing/ApplicationInitializable.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Routing/ApplicationInitializable.swift /* Routing/ApplicationInitializable.swift */; };
+		__src_cc_ref_Sources/Vapor/Routing/Controller.swift /* Routing/Controller.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Routing/Controller.swift /* Routing/Controller.swift */; };
+		__src_cc_ref_Sources/Vapor/Routing/DefaultInitializable.swift /* Routing/DefaultInitializable.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Routing/DefaultInitializable.swift /* Routing/DefaultInitializable.swift */; };
+		__src_cc_ref_Sources/Vapor/Routing/ResourceController.swift /* Routing/ResourceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Routing/ResourceController.swift /* Routing/ResourceController.swift */; };
+		__src_cc_ref_Sources/Vapor/Routing/Route.swift /* Routing/Route.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Routing/Route.swift /* Routing/Route.swift */; };
+		__src_cc_ref_Sources/Vapor/Server/Header.swift /* Server/Header.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Server/Header.swift /* Server/Header.swift */; };
+		"__src_cc_ref_Sources/Vapor/Server/Hummingbird+Socket.swift" /* Server/Hummingbird+Socket.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Sources/Vapor/Server/Hummingbird+Socket.swift" /* Server/Hummingbird+Socket.swift */; };
+		__src_cc_ref_Sources/Vapor/Server/Jeeves.swift /* Server/Jeeves.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Server/Jeeves.swift /* Server/Jeeves.swift */; };
+		__src_cc_ref_Sources/Vapor/Server/ServerDriver.swift /* Server/ServerDriver.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Server/ServerDriver.swift /* Server/ServerDriver.swift */; };
+		__src_cc_ref_Sources/Vapor/Server/Socket.swift /* Server/Socket.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Server/Socket.swift /* Server/Socket.swift */; };
+		__src_cc_ref_Sources/Vapor/Session/MemorySessionDriver.swift /* Session/MemorySessionDriver.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Session/MemorySessionDriver.swift /* Session/MemorySessionDriver.swift */; };
+		__src_cc_ref_Sources/Vapor/Session/Session.swift /* Session/Session.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Session/Session.swift /* Session/Session.swift */; };
+		__src_cc_ref_Sources/Vapor/Session/SessionDriver.swift /* Session/SessionDriver.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Session/SessionDriver.swift /* Session/SessionDriver.swift */; };
+		__src_cc_ref_Sources/Vapor/Session/SessionMiddleware.swift /* Session/SessionMiddleware.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Session/SessionMiddleware.swift /* Session/SessionMiddleware.swift */; };
+		"__src_cc_ref_Sources/Vapor/Utilities/Character+Extensions.swift" /* Utilities/Character+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Sources/Vapor/Utilities/Character+Extensions.swift" /* Utilities/Character+Extensions.swift */; };
+		__src_cc_ref_Sources/Vapor/Utilities/Dispatch.swift /* Utilities/Dispatch.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Utilities/Dispatch.swift /* Utilities/Dispatch.swift */; };
+		__src_cc_ref_Sources/Vapor/Utilities/Lock.swift /* Utilities/Lock.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Utilities/Lock.swift /* Utilities/Lock.swift */; };
+		__src_cc_ref_Sources/Vapor/Utilities/S4.swift /* Utilities/S4.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Utilities/S4.swift /* Utilities/S4.swift */; };
+		__src_cc_ref_Sources/Vapor/Utilities/ThreadSafeStore.swift /* Utilities/ThreadSafeStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Utilities/ThreadSafeStore.swift /* Utilities/ThreadSafeStore.swift */; };
+		__src_cc_ref_Sources/Vapor/View/RenderDriver.swift /* View/RenderDriver.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/View/RenderDriver.swift /* View/RenderDriver.swift */; };
+		__src_cc_ref_Sources/Vapor/View/View.swift /* View/View.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/View/View.swift /* View/View.swift */; };
+		__src_cc_ref_Sources/VaporDev/Controllers/UserController.swift /* Controllers/UserController.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/VaporDev/Controllers/UserController.swift /* Controllers/UserController.swift */; };
+		__src_cc_ref_Sources/VaporDev/Middleware/AuthMiddleware.swift /* Middleware/AuthMiddleware.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/VaporDev/Middleware/AuthMiddleware.swift /* Middleware/AuthMiddleware.swift */; };
+		__src_cc_ref_Sources/VaporDev/Models/User.swift /* Models/User.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/VaporDev/Models/User.swift /* Models/User.swift */; };
+		__src_cc_ref_Sources/VaporDev/main.swift /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/VaporDev/main.swift /* main.swift */; };
+		__src_cc_ref_Sources/libc/libc.swift /* libc.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/libc/libc.swift /* libc.swift */; };
+		__src_cc_ref_Tests/Vapor/ConfigTests.swift /* ConfigTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Tests/Vapor/ConfigTests.swift /* ConfigTests.swift */; };
+		__src_cc_ref_Tests/Vapor/ControllerTests.swift /* ControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Tests/Vapor/ControllerTests.swift /* ControllerTests.swift */; };
+		__src_cc_ref_Tests/Vapor/EnvironmentTests.swift /* EnvironmentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Tests/Vapor/EnvironmentTests.swift /* EnvironmentTests.swift */; };
+		__src_cc_ref_Tests/Vapor/HashTests.swift /* HashTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Tests/Vapor/HashTests.swift /* HashTests.swift */; };
+		__src_cc_ref_Tests/Vapor/JeevesTests.swift /* JeevesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Tests/Vapor/JeevesTests.swift /* JeevesTests.swift */; };
+		__src_cc_ref_Tests/Vapor/LogTests.swift /* LogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Tests/Vapor/LogTests.swift /* LogTests.swift */; };
+		__src_cc_ref_Tests/Vapor/MemorySessionDriverTests.swift /* MemorySessionDriverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Tests/Vapor/MemorySessionDriverTests.swift /* MemorySessionDriverTests.swift */; };
+		__src_cc_ref_Tests/Vapor/ProcessTests.swift /* ProcessTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Tests/Vapor/ProcessTests.swift /* ProcessTests.swift */; };
+		__src_cc_ref_Tests/Vapor/QueryParameterTests.swift /* QueryParameterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Tests/Vapor/QueryParameterTests.swift /* QueryParameterTests.swift */; };
+		__src_cc_ref_Tests/Vapor/ResponseTests.swift /* ResponseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Tests/Vapor/ResponseTests.swift /* ResponseTests.swift */; };
+		__src_cc_ref_Tests/Vapor/RouteTests.swift /* RouteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Tests/Vapor/RouteTests.swift /* RouteTests.swift */; };
+		__src_cc_ref_Tests/Vapor/RouterTests.swift /* RouterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Tests/Vapor/RouterTests.swift /* RouterTests.swift */; };
+		__src_cc_ref_Tests/Vapor/SessionTests.swift /* SessionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Tests/Vapor/SessionTests.swift /* SessionTests.swift */; };
+		__src_cc_ref_Tests/Vapor/TypedRouteTests.swift /* TypedRouteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Tests/Vapor/TypedRouteTests.swift /* TypedRouteTests.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		C3779C5C1CA8DE6300A18F2E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = __RootObject_ /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = "______Target_OperatingSystem";
+			remoteInfo = OperatingSystem;
+		};
+		C3779C5D1CA8DE6300A18F2E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = __RootObject_ /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = "______Target_C7";
+			remoteInfo = C7;
+		};
+		C3779C5E1CA8DE6300A18F2E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = __RootObject_ /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = "______Target_Data";
+			remoteInfo = Data;
+		};
+		C3779C5F1CA8DE6300A18F2E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = __RootObject_ /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = "______Target_InterchangeData";
+			remoteInfo = InterchangeData;
+		};
+		C3779C601CA8DE6300A18F2E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = __RootObject_ /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = "______Target_Strand";
+			remoteInfo = Strand;
+		};
+		C3779C611CA8DE6300A18F2E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = __RootObject_ /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = "______Target_Hummingbird";
+			remoteInfo = Hummingbird;
+		};
+		C3779C621CA8DE6300A18F2E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = __RootObject_ /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = "______Target_JSON";
+			remoteInfo = JSON;
+		};
+		C3779C631CA8DE6300A18F2E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = __RootObject_ /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = "______Target_String";
+			remoteInfo = String;
+		};
+		C3779C641CA8DE6300A18F2E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = __RootObject_ /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = "______Target_libc";
+			remoteInfo = libc;
+		};
+		C3779C651CA8DE6300A18F2E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = __RootObject_ /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = "______Target_Vapor";
+			remoteInfo = Vapor;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		__PBXFileRef_Package.swift /* Package.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Package.swift; path = /Users/tanner/Developer/vapor/vapor/Package.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/C7-0.1.11/Sources/AsyncStream.swift" /* AsyncStream.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncStream.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/C7-0.1.11/Sources/AsyncStreamClient.swift" /* AsyncStreamClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncStreamClient.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/C7-0.1.11/Sources/AsyncStreamServer.swift" /* AsyncStreamServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncStreamServer.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/C7-0.1.11/Sources/Byte.swift" /* Byte.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Byte.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/C7-0.1.11/Sources/CaseInsensitiveString.swift" /* CaseInsensitiveString.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaseInsensitiveString.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/C7-0.1.11/Sources/CustomDataStore.swift" /* CustomDataStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomDataStore.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/C7-0.1.11/Sources/Data.swift" /* Data.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Data.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/C7-0.1.11/Sources/Drain.swift" /* Drain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Drain.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/C7-0.1.11/Sources/Storage.swift" /* Storage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Storage.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/C7-0.1.11/Sources/Stream.swift" /* Stream.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stream.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/C7-0.1.11/Sources/StreamClient.swift" /* StreamClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamClient.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/C7-0.1.11/Sources/StreamSequence.swift" /* StreamSequence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamSequence.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/C7-0.1.11/Sources/StreamServer.swift" /* StreamServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamServer.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/C7-0.1.11/Sources/URI.swift" /* URI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URI.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/Data-0.4.8/Source/Data.swift" /* Data.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Data.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/Hummingbird-1.1.2/Sources/Socket.swift" /* Socket.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Socket.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/Hummingbird-1.1.2/Sources/String+Transcoding.swift" /* String+Transcoding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+Transcoding.swift"; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/InterchangeData-0.4.2/Source/InterchangeData.swift" /* InterchangeData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InterchangeData.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/JSON-0.4.1/Source/JSON.swift" /* JSON.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSON.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/JSON-0.4.1/Source/JSONInterchangeDataParser.swift" /* JSONInterchangeDataParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONInterchangeDataParser.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/JSON-0.4.1/Source/JSONInterchangeDataSerializer.swift" /* JSONInterchangeDataSerializer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONInterchangeDataSerializer.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/JSON-0.4.1/Source/JSONParser.swift" /* JSONParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONParser.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/JSON-0.4.1/Source/JSONSerializer.swift" /* JSONSerializer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONSerializer.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/OperatingSystem-0.4.2/Sources/OperatingSystem.swift" /* OperatingSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OperatingSystem.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/Strand-1.1.0/Sources/Strand.swift" /* Strand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Strand.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/String-0.4.3/Source/String.swift" /* String.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = String.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Sources/Generator/main.swift /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Sources/Vapor/Config/Config.swift /* Config/Config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Config/Config.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Sources/Vapor/Core/Abort.swift /* Core/Abort.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Core/Abort.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Sources/Vapor/Core/Application.swift /* Core/Application.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Core/Application.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Sources/Vapor/Core/Environment.swift /* Core/Environment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Core/Environment.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Sources/Vapor/Core/Generated.swift /* Core/Generated.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Core/Generated.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Sources/Vapor/Core/Provider.swift /* Core/Provider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Core/Provider.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Sources/Vapor/Fixes/FileManager.swift /* Fixes/FileManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Fixes/FileManager.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Sources/Vapor/Fixes/StringExtensions.swift /* Fixes/StringExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Fixes/StringExtensions.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Sources/Vapor/Hash/CryptoSwift.swift /* Hash/CryptoSwift.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Hash/CryptoSwift.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Sources/Vapor/Hash/Hash.swift /* Hash/Hash.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Hash/Hash.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Sources/Vapor/Hash/HashDriver.swift /* Hash/HashDriver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Hash/HashDriver.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Sources/Vapor/Hash/Int+Random.swift" /* Hash/Int+Random.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Hash/Int+Random.swift"; sourceTree = "<group>"; };
+		__PBXFileRef_Sources/Vapor/Hash/SHA256Hasher.swift /* Hash/SHA256Hasher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Hash/SHA256Hasher.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Sources/Vapor/JSON/JSON.swift /* JSON/JSON.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSON/JSON.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Sources/Vapor/Log/Log.swift /* Log/Log.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Log/Log.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Sources/Vapor/Log/LogDriver.swift /* Log/LogDriver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Log/LogDriver.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Sources/Vapor/Middleware/AbortMiddleware.swift /* Middleware/AbortMiddleware.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Middleware/AbortMiddleware.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Sources/Vapor/Middleware/Middleware.swift /* Middleware/Middleware.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Middleware/Middleware.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Sources/Vapor/Node/Node.swift /* Node/Node.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Node/Node.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Sources/Vapor/Node/NodeInitializable.swift /* Node/NodeInitializable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Node/NodeInitializable.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Sources/Vapor/Process/Process.swift /* Process/Process.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Process/Process.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Sources/Vapor/Request/Request.swift /* Request/Request.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Request/Request.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Sources/Vapor/Request/RequestData.swift /* Request/RequestData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Request/RequestData.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Sources/Vapor/Response/Response.swift /* Response/Response.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Response/Response.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Sources/Vapor/Response/ResponseConvertible.swift /* Response/ResponseConvertible.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Response/ResponseConvertible.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Sources/Vapor/Router/Branch.swift /* Router/Branch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Router/Branch.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Sources/Vapor/Router/BranchRouter.swift /* Router/BranchRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Router/BranchRouter.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Sources/Vapor/Router/RouterDriver.swift /* Router/RouterDriver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Router/RouterDriver.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Sources/Vapor/Routing/Application+Route.swift" /* Routing/Application+Route.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Routing/Application+Route.swift"; sourceTree = "<group>"; };
+		__PBXFileRef_Sources/Vapor/Routing/ApplicationInitializable.swift /* Routing/ApplicationInitializable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Routing/ApplicationInitializable.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Sources/Vapor/Routing/Controller.swift /* Routing/Controller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Routing/Controller.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Sources/Vapor/Routing/DefaultInitializable.swift /* Routing/DefaultInitializable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Routing/DefaultInitializable.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Sources/Vapor/Routing/ResourceController.swift /* Routing/ResourceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Routing/ResourceController.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Sources/Vapor/Routing/Route.swift /* Routing/Route.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Routing/Route.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Sources/Vapor/Server/Header.swift /* Server/Header.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Server/Header.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Sources/Vapor/Server/Hummingbird+Socket.swift" /* Server/Hummingbird+Socket.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Server/Hummingbird+Socket.swift"; sourceTree = "<group>"; };
+		__PBXFileRef_Sources/Vapor/Server/Jeeves.swift /* Server/Jeeves.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Server/Jeeves.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Sources/Vapor/Server/ServerDriver.swift /* Server/ServerDriver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Server/ServerDriver.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Sources/Vapor/Server/Socket.swift /* Server/Socket.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Server/Socket.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Sources/Vapor/Session/MemorySessionDriver.swift /* Session/MemorySessionDriver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Session/MemorySessionDriver.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Sources/Vapor/Session/Session.swift /* Session/Session.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Session/Session.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Sources/Vapor/Session/SessionDriver.swift /* Session/SessionDriver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Session/SessionDriver.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Sources/Vapor/Session/SessionMiddleware.swift /* Session/SessionMiddleware.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Session/SessionMiddleware.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Sources/Vapor/Utilities/Character+Extensions.swift" /* Utilities/Character+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Utilities/Character+Extensions.swift"; sourceTree = "<group>"; };
+		__PBXFileRef_Sources/Vapor/Utilities/Dispatch.swift /* Utilities/Dispatch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utilities/Dispatch.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Sources/Vapor/Utilities/Lock.swift /* Utilities/Lock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utilities/Lock.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Sources/Vapor/Utilities/S4.swift /* Utilities/S4.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utilities/S4.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Sources/Vapor/Utilities/ThreadSafeStore.swift /* Utilities/ThreadSafeStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utilities/ThreadSafeStore.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Sources/Vapor/View/RenderDriver.swift /* View/RenderDriver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = View/RenderDriver.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Sources/Vapor/View/View.swift /* View/View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = View/View.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Sources/VaporDev/Controllers/UserController.swift /* Controllers/UserController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Controllers/UserController.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Sources/VaporDev/Middleware/AuthMiddleware.swift /* Middleware/AuthMiddleware.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Middleware/AuthMiddleware.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Sources/VaporDev/Models/User.swift /* Models/User.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/User.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Sources/VaporDev/main.swift /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Sources/libc/libc.swift /* libc.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = libc.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Tests/Vapor/ConfigTests.swift /* ConfigTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigTests.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Tests/Vapor/ControllerTests.swift /* ControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ControllerTests.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Tests/Vapor/EnvironmentTests.swift /* EnvironmentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnvironmentTests.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Tests/Vapor/HashTests.swift /* HashTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HashTests.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Tests/Vapor/JeevesTests.swift /* JeevesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JeevesTests.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Tests/Vapor/LogTests.swift /* LogTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogTests.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Tests/Vapor/MemorySessionDriverTests.swift /* MemorySessionDriverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemorySessionDriverTests.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Tests/Vapor/ProcessTests.swift /* ProcessTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessTests.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Tests/Vapor/QueryParameterTests.swift /* QueryParameterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueryParameterTests.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Tests/Vapor/ResponseTests.swift /* ResponseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResponseTests.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Tests/Vapor/RouteTests.swift /* RouteTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteTests.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Tests/Vapor/RouterTests.swift /* RouterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouterTests.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Tests/Vapor/SessionTests.swift /* SessionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionTests.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Tests/Vapor/TypedRouteTests.swift /* TypedRouteTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TypedRouteTests.swift; sourceTree = "<group>"; };
+		"_____Product_C7" /* libC7.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libC7.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		"_____Product_Data" /* libData.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libData.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		"_____Product_Generator" /* Generator */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; path = Generator; sourceTree = BUILT_PRODUCTS_DIR; };
+		"_____Product_Hummingbird" /* libHummingbird.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libHummingbird.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		"_____Product_InterchangeData" /* libInterchangeData.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libInterchangeData.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		"_____Product_JSON" /* libJSON.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libJSON.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		"_____Product_OperatingSystem" /* libOperatingSystem.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libOperatingSystem.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		"_____Product_Strand" /* libStrand.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libStrand.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		"_____Product_String" /* libString.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libString.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		"_____Product_Vapor" /* libVapor.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libVapor.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		"_____Product_VaporDev" /* VaporDev */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; path = VaporDev; sourceTree = BUILT_PRODUCTS_DIR; };
+		"_____Product_VaporTestSuite" /* Vapor.testsuite.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = Vapor.testsuite.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		"_____Product_libc" /* liblibc.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = liblibc.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		"___LinkPhase_C7" /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		"___LinkPhase_Data" /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 0;
+			files = (
+				_LinkFileRef_C7 /* libC7.dylib in Frameworks */,
+				C3779C2E1CA8DE6200A18F2E /* libOperatingSystem.dylib in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		"___LinkPhase_Generator" /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 0;
+			files = (
+				C3779C341CA8DE6200A18F2E /* libC7.dylib in Frameworks */,
+				C3779C351CA8DE6200A18F2E /* libData.dylib in Frameworks */,
+				C3779C361CA8DE6200A18F2E /* libStrand.dylib in Frameworks */,
+				C3779C371CA8DE6200A18F2E /* libInterchangeData.dylib in Frameworks */,
+				C3779C381CA8DE6200A18F2E /* libOperatingSystem.dylib in Frameworks */,
+				_LinkFileRef_Hummingbird /* libHummingbird.dylib in Frameworks */,
+				_LinkFileRef_JSON /* libJSON.dylib in Frameworks */,
+				_LinkFileRef_String /* libString.dylib in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		"___LinkPhase_Hummingbird" /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 0;
+			files = (
+				_LinkFileRef_Strand /* libStrand.dylib in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		"___LinkPhase_InterchangeData" /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 0;
+			files = (
+				C3779C2F1CA8DE6200A18F2E /* libC7.dylib in Frameworks */,
+				C3779C301CA8DE6200A18F2E /* libOperatingSystem.dylib in Frameworks */,
+				_LinkFileRef_Data /* libData.dylib in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		"___LinkPhase_JSON" /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 0;
+			files = (
+				C3779C311CA8DE6200A18F2E /* libC7.dylib in Frameworks */,
+				C3779C321CA8DE6200A18F2E /* libOperatingSystem.dylib in Frameworks */,
+				C3779C331CA8DE6200A18F2E /* libData.dylib in Frameworks */,
+				_LinkFileRef_InterchangeData /* libInterchangeData.dylib in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		"___LinkPhase_OperatingSystem" /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		"___LinkPhase_Strand" /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		"___LinkPhase_String" /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 0;
+			files = (
+				_LinkFileRef_OperatingSystem /* libOperatingSystem.dylib in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		"___LinkPhase_Vapor" /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 0;
+			files = (
+				C3779C411CA8DE6200A18F2E /* libC7.dylib in Frameworks */,
+				C3779C421CA8DE6200A18F2E /* libData.dylib in Frameworks */,
+				C3779C431CA8DE6200A18F2E /* libStrand.dylib in Frameworks */,
+				C3779C441CA8DE6200A18F2E /* libInterchangeData.dylib in Frameworks */,
+				C3779C451CA8DE6200A18F2E /* libOperatingSystem.dylib in Frameworks */,
+				C3779C461CA8DE6200A18F2E /* libHummingbird.dylib in Frameworks */,
+				C3779C471CA8DE6200A18F2E /* libJSON.dylib in Frameworks */,
+				C3779C481CA8DE6200A18F2E /* libString.dylib in Frameworks */,
+				_LinkFileRef_libc /* liblibc.dylib in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		"___LinkPhase_VaporDev" /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 0;
+			files = (
+				C3779C491CA8DE6200A18F2E /* libC7.dylib in Frameworks */,
+				C3779C4A1CA8DE6200A18F2E /* libData.dylib in Frameworks */,
+				C3779C4B1CA8DE6200A18F2E /* libStrand.dylib in Frameworks */,
+				C3779C4C1CA8DE6200A18F2E /* libInterchangeData.dylib in Frameworks */,
+				C3779C4D1CA8DE6200A18F2E /* libOperatingSystem.dylib in Frameworks */,
+				C3779C4E1CA8DE6200A18F2E /* libHummingbird.dylib in Frameworks */,
+				C3779C4F1CA8DE6200A18F2E /* libJSON.dylib in Frameworks */,
+				C3779C501CA8DE6200A18F2E /* libString.dylib in Frameworks */,
+				_LinkFileRef_Vapor /* libVapor.dylib in Frameworks */,
+				C3779C511CA8DE6200A18F2E /* liblibc.dylib in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		"___LinkPhase_VaporTestSuite" /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 0;
+			files = (
+				C3779C521CA8DE6200A18F2E /* libC7.dylib in Frameworks */,
+				C3779C531CA8DE6200A18F2E /* libData.dylib in Frameworks */,
+				C3779C541CA8DE6200A18F2E /* libStrand.dylib in Frameworks */,
+				C3779C551CA8DE6200A18F2E /* libInterchangeData.dylib in Frameworks */,
+				C3779C561CA8DE6200A18F2E /* libOperatingSystem.dylib in Frameworks */,
+				C3779C571CA8DE6200A18F2E /* libHummingbird.dylib in Frameworks */,
+				C3779C581CA8DE6200A18F2E /* libJSON.dylib in Frameworks */,
+				C3779C591CA8DE6200A18F2E /* libString.dylib in Frameworks */,
+				C3779C5A1CA8DE6200A18F2E /* libVapor.dylib in Frameworks */,
+				C3779C5B1CA8DE6200A18F2E /* liblibc.dylib in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		"___LinkPhase_libc" /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 0;
+			files = (
+				C3779C391CA8DE6200A18F2E /* libC7.dylib in Frameworks */,
+				C3779C3A1CA8DE6200A18F2E /* libData.dylib in Frameworks */,
+				C3779C3B1CA8DE6200A18F2E /* libStrand.dylib in Frameworks */,
+				C3779C3C1CA8DE6200A18F2E /* libInterchangeData.dylib in Frameworks */,
+				C3779C3D1CA8DE6200A18F2E /* libOperatingSystem.dylib in Frameworks */,
+				C3779C3E1CA8DE6200A18F2E /* libHummingbird.dylib in Frameworks */,
+				C3779C3F1CA8DE6200A18F2E /* libJSON.dylib in Frameworks */,
+				C3779C401CA8DE6200A18F2E /* libString.dylib in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		TestProducts_ /* Tests */ = {
+			isa = PBXGroup;
+			children = (
+				"_____Product_VaporTestSuite" /* Vapor.testsuite.xctest */,
+			);
+			name = Tests;
+			sourceTree = "<group>";
+		};
+		"___RootGroup_" = {
+			isa = PBXGroup;
+			children = (
+				__PBXFileRef_Package.swift /* Package.swift */,
+				"_____Sources_" /* Sources */,
+				"_______Tests_" /* Tests */,
+				"____Products_" /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		"____Products_" /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				TestProducts_ /* Tests */,
+				"_____Product_OperatingSystem" /* libOperatingSystem.dylib */,
+				"_____Product_String" /* libString.dylib */,
+				"_____Product_C7" /* libC7.dylib */,
+				"_____Product_Data" /* libData.dylib */,
+				"_____Product_InterchangeData" /* libInterchangeData.dylib */,
+				"_____Product_JSON" /* libJSON.dylib */,
+				"_____Product_Strand" /* libStrand.dylib */,
+				"_____Product_Hummingbird" /* libHummingbird.dylib */,
+				"_____Product_Generator" /* Generator */,
+				"_____Product_libc" /* liblibc.dylib */,
+				"_____Product_Vapor" /* libVapor.dylib */,
+				"_____Product_VaporDev" /* VaporDev */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		"_____Sources_" /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				"_______Group_OperatingSystem" /* OperatingSystem */,
+				"_______Group_String" /* String */,
+				"_______Group_C7" /* C7 */,
+				"_______Group_Data" /* Data */,
+				"_______Group_InterchangeData" /* InterchangeData */,
+				"_______Group_JSON" /* JSON */,
+				"_______Group_Strand" /* Strand */,
+				"_______Group_Hummingbird" /* Hummingbird */,
+				"_______Group_Generator" /* Generator */,
+				"_______Group_libc" /* libc */,
+				"_______Group_Vapor" /* Vapor */,
+				"_______Group_VaporDev" /* VaporDev */,
+			);
+			name = Sources;
+			sourceTree = "<group>";
+		};
+		"_______Group_C7" /* C7 */ = {
+			isa = PBXGroup;
+			children = (
+				"__PBXFileRef_Packages/C7-0.1.11/Sources/AsyncStream.swift" /* AsyncStream.swift */,
+				"__PBXFileRef_Packages/C7-0.1.11/Sources/AsyncStreamClient.swift" /* AsyncStreamClient.swift */,
+				"__PBXFileRef_Packages/C7-0.1.11/Sources/AsyncStreamServer.swift" /* AsyncStreamServer.swift */,
+				"__PBXFileRef_Packages/C7-0.1.11/Sources/Byte.swift" /* Byte.swift */,
+				"__PBXFileRef_Packages/C7-0.1.11/Sources/CaseInsensitiveString.swift" /* CaseInsensitiveString.swift */,
+				"__PBXFileRef_Packages/C7-0.1.11/Sources/CustomDataStore.swift" /* CustomDataStore.swift */,
+				"__PBXFileRef_Packages/C7-0.1.11/Sources/Data.swift" /* Data.swift */,
+				"__PBXFileRef_Packages/C7-0.1.11/Sources/Drain.swift" /* Drain.swift */,
+				"__PBXFileRef_Packages/C7-0.1.11/Sources/Storage.swift" /* Storage.swift */,
+				"__PBXFileRef_Packages/C7-0.1.11/Sources/Stream.swift" /* Stream.swift */,
+				"__PBXFileRef_Packages/C7-0.1.11/Sources/StreamClient.swift" /* StreamClient.swift */,
+				"__PBXFileRef_Packages/C7-0.1.11/Sources/StreamSequence.swift" /* StreamSequence.swift */,
+				"__PBXFileRef_Packages/C7-0.1.11/Sources/StreamServer.swift" /* StreamServer.swift */,
+				"__PBXFileRef_Packages/C7-0.1.11/Sources/URI.swift" /* URI.swift */,
+			);
+			name = C7;
+			path = "Packages/C7-0.1.11/Sources";
+			sourceTree = "<group>";
+		};
+		"_______Group_Data" /* Data */ = {
+			isa = PBXGroup;
+			children = (
+				"__PBXFileRef_Packages/Data-0.4.8/Source/Data.swift" /* Data.swift */,
+			);
+			name = Data;
+			path = "Packages/Data-0.4.8/Source";
+			sourceTree = "<group>";
+		};
+		"_______Group_Generator" /* Generator */ = {
+			isa = PBXGroup;
+			children = (
+				__PBXFileRef_Sources/Generator/main.swift /* main.swift */,
+			);
+			name = Generator;
+			path = Sources/Generator;
+			sourceTree = "<group>";
+		};
+		"_______Group_Hummingbird" /* Hummingbird */ = {
+			isa = PBXGroup;
+			children = (
+				"__PBXFileRef_Packages/Hummingbird-1.1.2/Sources/Socket.swift" /* Socket.swift */,
+				"__PBXFileRef_Packages/Hummingbird-1.1.2/Sources/String+Transcoding.swift" /* String+Transcoding.swift */,
+			);
+			name = Hummingbird;
+			path = "Packages/Hummingbird-1.1.2/Sources";
+			sourceTree = "<group>";
+		};
+		"_______Group_InterchangeData" /* InterchangeData */ = {
+			isa = PBXGroup;
+			children = (
+				"__PBXFileRef_Packages/InterchangeData-0.4.2/Source/InterchangeData.swift" /* InterchangeData.swift */,
+			);
+			name = InterchangeData;
+			path = "Packages/InterchangeData-0.4.2/Source";
+			sourceTree = "<group>";
+		};
+		"_______Group_JSON" /* JSON */ = {
+			isa = PBXGroup;
+			children = (
+				"__PBXFileRef_Packages/JSON-0.4.1/Source/JSON.swift" /* JSON.swift */,
+				"__PBXFileRef_Packages/JSON-0.4.1/Source/JSONInterchangeDataParser.swift" /* JSONInterchangeDataParser.swift */,
+				"__PBXFileRef_Packages/JSON-0.4.1/Source/JSONInterchangeDataSerializer.swift" /* JSONInterchangeDataSerializer.swift */,
+				"__PBXFileRef_Packages/JSON-0.4.1/Source/JSONParser.swift" /* JSONParser.swift */,
+				"__PBXFileRef_Packages/JSON-0.4.1/Source/JSONSerializer.swift" /* JSONSerializer.swift */,
+			);
+			name = JSON;
+			path = "Packages/JSON-0.4.1/Source";
+			sourceTree = "<group>";
+		};
+		"_______Group_OperatingSystem" /* OperatingSystem */ = {
+			isa = PBXGroup;
+			children = (
+				"__PBXFileRef_Packages/OperatingSystem-0.4.2/Sources/OperatingSystem.swift" /* OperatingSystem.swift */,
+			);
+			name = OperatingSystem;
+			path = "Packages/OperatingSystem-0.4.2/Sources";
+			sourceTree = "<group>";
+		};
+		"_______Group_Strand" /* Strand */ = {
+			isa = PBXGroup;
+			children = (
+				"__PBXFileRef_Packages/Strand-1.1.0/Sources/Strand.swift" /* Strand.swift */,
+			);
+			name = Strand;
+			path = "Packages/Strand-1.1.0/Sources";
+			sourceTree = "<group>";
+		};
+		"_______Group_String" /* String */ = {
+			isa = PBXGroup;
+			children = (
+				"__PBXFileRef_Packages/String-0.4.3/Source/String.swift" /* String.swift */,
+			);
+			name = String;
+			path = "Packages/String-0.4.3/Source";
+			sourceTree = "<group>";
+		};
+		"_______Group_Vapor" /* Vapor */ = {
+			isa = PBXGroup;
+			children = (
+				__PBXFileRef_Sources/Vapor/Config/Config.swift /* Config/Config.swift */,
+				__PBXFileRef_Sources/Vapor/Core/Abort.swift /* Core/Abort.swift */,
+				__PBXFileRef_Sources/Vapor/Core/Application.swift /* Core/Application.swift */,
+				__PBXFileRef_Sources/Vapor/Core/Environment.swift /* Core/Environment.swift */,
+				__PBXFileRef_Sources/Vapor/Core/Generated.swift /* Core/Generated.swift */,
+				__PBXFileRef_Sources/Vapor/Core/Provider.swift /* Core/Provider.swift */,
+				__PBXFileRef_Sources/Vapor/Fixes/FileManager.swift /* Fixes/FileManager.swift */,
+				__PBXFileRef_Sources/Vapor/Fixes/StringExtensions.swift /* Fixes/StringExtensions.swift */,
+				__PBXFileRef_Sources/Vapor/Hash/CryptoSwift.swift /* Hash/CryptoSwift.swift */,
+				__PBXFileRef_Sources/Vapor/Hash/Hash.swift /* Hash/Hash.swift */,
+				__PBXFileRef_Sources/Vapor/Hash/HashDriver.swift /* Hash/HashDriver.swift */,
+				"__PBXFileRef_Sources/Vapor/Hash/Int+Random.swift" /* Hash/Int+Random.swift */,
+				__PBXFileRef_Sources/Vapor/Hash/SHA256Hasher.swift /* Hash/SHA256Hasher.swift */,
+				__PBXFileRef_Sources/Vapor/JSON/JSON.swift /* JSON/JSON.swift */,
+				__PBXFileRef_Sources/Vapor/Log/Log.swift /* Log/Log.swift */,
+				__PBXFileRef_Sources/Vapor/Log/LogDriver.swift /* Log/LogDriver.swift */,
+				__PBXFileRef_Sources/Vapor/Middleware/AbortMiddleware.swift /* Middleware/AbortMiddleware.swift */,
+				__PBXFileRef_Sources/Vapor/Middleware/Middleware.swift /* Middleware/Middleware.swift */,
+				__PBXFileRef_Sources/Vapor/Node/Node.swift /* Node/Node.swift */,
+				__PBXFileRef_Sources/Vapor/Node/NodeInitializable.swift /* Node/NodeInitializable.swift */,
+				__PBXFileRef_Sources/Vapor/Process/Process.swift /* Process/Process.swift */,
+				__PBXFileRef_Sources/Vapor/Request/Request.swift /* Request/Request.swift */,
+				__PBXFileRef_Sources/Vapor/Request/RequestData.swift /* Request/RequestData.swift */,
+				__PBXFileRef_Sources/Vapor/Response/Response.swift /* Response/Response.swift */,
+				__PBXFileRef_Sources/Vapor/Response/ResponseConvertible.swift /* Response/ResponseConvertible.swift */,
+				__PBXFileRef_Sources/Vapor/Router/Branch.swift /* Router/Branch.swift */,
+				__PBXFileRef_Sources/Vapor/Router/BranchRouter.swift /* Router/BranchRouter.swift */,
+				__PBXFileRef_Sources/Vapor/Router/RouterDriver.swift /* Router/RouterDriver.swift */,
+				"__PBXFileRef_Sources/Vapor/Routing/Application+Route.swift" /* Routing/Application+Route.swift */,
+				__PBXFileRef_Sources/Vapor/Routing/ApplicationInitializable.swift /* Routing/ApplicationInitializable.swift */,
+				__PBXFileRef_Sources/Vapor/Routing/Controller.swift /* Routing/Controller.swift */,
+				__PBXFileRef_Sources/Vapor/Routing/DefaultInitializable.swift /* Routing/DefaultInitializable.swift */,
+				__PBXFileRef_Sources/Vapor/Routing/ResourceController.swift /* Routing/ResourceController.swift */,
+				__PBXFileRef_Sources/Vapor/Routing/Route.swift /* Routing/Route.swift */,
+				__PBXFileRef_Sources/Vapor/Server/Header.swift /* Server/Header.swift */,
+				"__PBXFileRef_Sources/Vapor/Server/Hummingbird+Socket.swift" /* Server/Hummingbird+Socket.swift */,
+				__PBXFileRef_Sources/Vapor/Server/Jeeves.swift /* Server/Jeeves.swift */,
+				__PBXFileRef_Sources/Vapor/Server/ServerDriver.swift /* Server/ServerDriver.swift */,
+				__PBXFileRef_Sources/Vapor/Server/Socket.swift /* Server/Socket.swift */,
+				__PBXFileRef_Sources/Vapor/Session/MemorySessionDriver.swift /* Session/MemorySessionDriver.swift */,
+				__PBXFileRef_Sources/Vapor/Session/Session.swift /* Session/Session.swift */,
+				__PBXFileRef_Sources/Vapor/Session/SessionDriver.swift /* Session/SessionDriver.swift */,
+				__PBXFileRef_Sources/Vapor/Session/SessionMiddleware.swift /* Session/SessionMiddleware.swift */,
+				"__PBXFileRef_Sources/Vapor/Utilities/Character+Extensions.swift" /* Utilities/Character+Extensions.swift */,
+				__PBXFileRef_Sources/Vapor/Utilities/Dispatch.swift /* Utilities/Dispatch.swift */,
+				__PBXFileRef_Sources/Vapor/Utilities/Lock.swift /* Utilities/Lock.swift */,
+				__PBXFileRef_Sources/Vapor/Utilities/S4.swift /* Utilities/S4.swift */,
+				__PBXFileRef_Sources/Vapor/Utilities/ThreadSafeStore.swift /* Utilities/ThreadSafeStore.swift */,
+				__PBXFileRef_Sources/Vapor/View/RenderDriver.swift /* View/RenderDriver.swift */,
+				__PBXFileRef_Sources/Vapor/View/View.swift /* View/View.swift */,
+			);
+			name = Vapor;
+			path = Sources/Vapor;
+			sourceTree = "<group>";
+		};
+		"_______Group_VaporDev" /* VaporDev */ = {
+			isa = PBXGroup;
+			children = (
+				__PBXFileRef_Sources/VaporDev/main.swift /* main.swift */,
+				__PBXFileRef_Sources/VaporDev/Controllers/UserController.swift /* Controllers/UserController.swift */,
+				__PBXFileRef_Sources/VaporDev/Middleware/AuthMiddleware.swift /* Middleware/AuthMiddleware.swift */,
+				__PBXFileRef_Sources/VaporDev/Models/User.swift /* Models/User.swift */,
+			);
+			name = VaporDev;
+			path = Sources/VaporDev;
+			sourceTree = "<group>";
+		};
+		"_______Group_VaporTestSuite" /* Vapor.testsuite */ = {
+			isa = PBXGroup;
+			children = (
+				__PBXFileRef_Tests/Vapor/ConfigTests.swift /* ConfigTests.swift */,
+				__PBXFileRef_Tests/Vapor/ControllerTests.swift /* ControllerTests.swift */,
+				__PBXFileRef_Tests/Vapor/EnvironmentTests.swift /* EnvironmentTests.swift */,
+				__PBXFileRef_Tests/Vapor/HashTests.swift /* HashTests.swift */,
+				__PBXFileRef_Tests/Vapor/JeevesTests.swift /* JeevesTests.swift */,
+				__PBXFileRef_Tests/Vapor/LogTests.swift /* LogTests.swift */,
+				__PBXFileRef_Tests/Vapor/MemorySessionDriverTests.swift /* MemorySessionDriverTests.swift */,
+				__PBXFileRef_Tests/Vapor/ProcessTests.swift /* ProcessTests.swift */,
+				__PBXFileRef_Tests/Vapor/QueryParameterTests.swift /* QueryParameterTests.swift */,
+				__PBXFileRef_Tests/Vapor/ResponseTests.swift /* ResponseTests.swift */,
+				__PBXFileRef_Tests/Vapor/RouterTests.swift /* RouterTests.swift */,
+				__PBXFileRef_Tests/Vapor/RouteTests.swift /* RouteTests.swift */,
+				__PBXFileRef_Tests/Vapor/SessionTests.swift /* SessionTests.swift */,
+				__PBXFileRef_Tests/Vapor/TypedRouteTests.swift /* TypedRouteTests.swift */,
+			);
+			name = Vapor.testsuite;
+			path = Tests/Vapor;
+			sourceTree = "<group>";
+		};
+		"_______Group_libc" /* libc */ = {
+			isa = PBXGroup;
+			children = (
+				__PBXFileRef_Sources/libc/libc.swift /* libc.swift */,
+			);
+			name = libc;
+			path = Sources/libc;
+			sourceTree = "<group>";
+		};
+		"_______Tests_" /* Tests */ = {
+			isa = PBXGroup;
+			children = (
+				"_______Group_VaporTestSuite" /* Vapor.testsuite */,
+			);
+			name = Tests;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		"______Target_C7" /* C7 */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = "_______Confs_C7" /* Build configuration list for PBXNativeTarget "C7" */;
+			buildPhases = (
+				CompilePhase_C7 /* Sources */,
+				"___LinkPhase_C7" /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = C7;
+			productName = C7;
+			productReference = "_____Product_C7" /* libC7.dylib */;
+			productType = "com.apple.product-type.library.dynamic";
+		};
+		"______Target_Data" /* Data */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = "_______Confs_Data" /* Build configuration list for PBXNativeTarget "Data" */;
+			buildPhases = (
+				CompilePhase_Data /* Sources */,
+				"___LinkPhase_Data" /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				__Dependency_C7 /* PBXTargetDependency */,
+				__Dependency_OperatingSystem /* PBXTargetDependency */,
+			);
+			name = Data;
+			productName = Data;
+			productReference = "_____Product_Data" /* libData.dylib */;
+			productType = "com.apple.product-type.library.dynamic";
+		};
+		"______Target_Generator" /* Generator */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = "_______Confs_Generator" /* Build configuration list for PBXNativeTarget "Generator" */;
+			buildPhases = (
+				CompilePhase_Generator /* Sources */,
+				"___LinkPhase_Generator" /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				__Dependency_C7 /* PBXTargetDependency */,
+				__Dependency_Data /* PBXTargetDependency */,
+				__Dependency_Strand /* PBXTargetDependency */,
+				__Dependency_InterchangeData /* PBXTargetDependency */,
+				__Dependency_OperatingSystem /* PBXTargetDependency */,
+				__Dependency_Hummingbird /* PBXTargetDependency */,
+				__Dependency_JSON /* PBXTargetDependency */,
+				__Dependency_String /* PBXTargetDependency */,
+			);
+			name = Generator;
+			productName = Generator;
+			productReference = "_____Product_Generator" /* Generator */;
+			productType = "com.apple.product-type.tool";
+		};
+		"______Target_Hummingbird" /* Hummingbird */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = "_______Confs_Hummingbird" /* Build configuration list for PBXNativeTarget "Hummingbird" */;
+			buildPhases = (
+				CompilePhase_Hummingbird /* Sources */,
+				"___LinkPhase_Hummingbird" /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				__Dependency_Strand /* PBXTargetDependency */,
+			);
+			name = Hummingbird;
+			productName = Hummingbird;
+			productReference = "_____Product_Hummingbird" /* libHummingbird.dylib */;
+			productType = "com.apple.product-type.library.dynamic";
+		};
+		"______Target_InterchangeData" /* InterchangeData */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = "_______Confs_InterchangeData" /* Build configuration list for PBXNativeTarget "InterchangeData" */;
+			buildPhases = (
+				CompilePhase_InterchangeData /* Sources */,
+				"___LinkPhase_InterchangeData" /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				__Dependency_C7 /* PBXTargetDependency */,
+				__Dependency_OperatingSystem /* PBXTargetDependency */,
+				__Dependency_Data /* PBXTargetDependency */,
+			);
+			name = InterchangeData;
+			productName = InterchangeData;
+			productReference = "_____Product_InterchangeData" /* libInterchangeData.dylib */;
+			productType = "com.apple.product-type.library.dynamic";
+		};
+		"______Target_JSON" /* JSON */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = "_______Confs_JSON" /* Build configuration list for PBXNativeTarget "JSON" */;
+			buildPhases = (
+				CompilePhase_JSON /* Sources */,
+				"___LinkPhase_JSON" /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				__Dependency_C7 /* PBXTargetDependency */,
+				__Dependency_OperatingSystem /* PBXTargetDependency */,
+				__Dependency_Data /* PBXTargetDependency */,
+				__Dependency_InterchangeData /* PBXTargetDependency */,
+			);
+			name = JSON;
+			productName = JSON;
+			productReference = "_____Product_JSON" /* libJSON.dylib */;
+			productType = "com.apple.product-type.library.dynamic";
+		};
+		"______Target_OperatingSystem" /* OperatingSystem */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = "_______Confs_OperatingSystem" /* Build configuration list for PBXNativeTarget "OperatingSystem" */;
+			buildPhases = (
+				CompilePhase_OperatingSystem /* Sources */,
+				"___LinkPhase_OperatingSystem" /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = OperatingSystem;
+			productName = OperatingSystem;
+			productReference = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */;
+			productType = "com.apple.product-type.library.dynamic";
+		};
+		"______Target_Strand" /* Strand */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = "_______Confs_Strand" /* Build configuration list for PBXNativeTarget "Strand" */;
+			buildPhases = (
+				CompilePhase_Strand /* Sources */,
+				"___LinkPhase_Strand" /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Strand;
+			productName = Strand;
+			productReference = "_____Product_Strand" /* libStrand.dylib */;
+			productType = "com.apple.product-type.library.dynamic";
+		};
+		"______Target_String" /* String */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = "_______Confs_String" /* Build configuration list for PBXNativeTarget "String" */;
+			buildPhases = (
+				CompilePhase_String /* Sources */,
+				"___LinkPhase_String" /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				__Dependency_OperatingSystem /* PBXTargetDependency */,
+			);
+			name = String;
+			productName = String;
+			productReference = "_____Product_String" /* libString.dylib */;
+			productType = "com.apple.product-type.library.dynamic";
+		};
+		"______Target_Vapor" /* Vapor */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = "_______Confs_Vapor" /* Build configuration list for PBXNativeTarget "Vapor" */;
+			buildPhases = (
+				CompilePhase_Vapor /* Sources */,
+				"___LinkPhase_Vapor" /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				__Dependency_C7 /* PBXTargetDependency */,
+				__Dependency_Data /* PBXTargetDependency */,
+				__Dependency_Strand /* PBXTargetDependency */,
+				__Dependency_InterchangeData /* PBXTargetDependency */,
+				__Dependency_OperatingSystem /* PBXTargetDependency */,
+				__Dependency_Hummingbird /* PBXTargetDependency */,
+				__Dependency_JSON /* PBXTargetDependency */,
+				__Dependency_String /* PBXTargetDependency */,
+				__Dependency_libc /* PBXTargetDependency */,
+			);
+			name = Vapor;
+			productName = Vapor;
+			productReference = "_____Product_Vapor" /* libVapor.dylib */;
+			productType = "com.apple.product-type.library.dynamic";
+		};
+		"______Target_VaporDev" /* VaporDev */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = "_______Confs_VaporDev" /* Build configuration list for PBXNativeTarget "VaporDev" */;
+			buildPhases = (
+				CompilePhase_VaporDev /* Sources */,
+				"___LinkPhase_VaporDev" /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				__Dependency_C7 /* PBXTargetDependency */,
+				__Dependency_Data /* PBXTargetDependency */,
+				__Dependency_Strand /* PBXTargetDependency */,
+				__Dependency_InterchangeData /* PBXTargetDependency */,
+				__Dependency_OperatingSystem /* PBXTargetDependency */,
+				__Dependency_Hummingbird /* PBXTargetDependency */,
+				__Dependency_JSON /* PBXTargetDependency */,
+				__Dependency_String /* PBXTargetDependency */,
+				__Dependency_Vapor /* PBXTargetDependency */,
+			);
+			name = VaporDev;
+			productName = VaporDev;
+			productReference = "_____Product_VaporDev" /* VaporDev */;
+			productType = "com.apple.product-type.tool";
+		};
+		"______Target_VaporTestSuite" /* Vapor.testsuite */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = "_______Confs_VaporTestSuite" /* Build configuration list for PBXNativeTarget "Vapor.testsuite" */;
+			buildPhases = (
+				CompilePhase_VaporTestSuite /* Sources */,
+				"___LinkPhase_VaporTestSuite" /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				__Dependency_C7 /* PBXTargetDependency */,
+				__Dependency_Data /* PBXTargetDependency */,
+				__Dependency_Strand /* PBXTargetDependency */,
+				__Dependency_InterchangeData /* PBXTargetDependency */,
+				__Dependency_OperatingSystem /* PBXTargetDependency */,
+				__Dependency_Hummingbird /* PBXTargetDependency */,
+				__Dependency_JSON /* PBXTargetDependency */,
+				__Dependency_String /* PBXTargetDependency */,
+				__Dependency_Vapor /* PBXTargetDependency */,
+			);
+			name = Vapor.testsuite;
+			productName = VaporTestSuite;
+			productReference = "_____Product_VaporTestSuite" /* Vapor.testsuite.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		"______Target_libc" /* libc */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = "_______Confs_libc" /* Build configuration list for PBXNativeTarget "libc" */;
+			buildPhases = (
+				CompilePhase_libc /* Sources */,
+				"___LinkPhase_libc" /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				__Dependency_C7 /* PBXTargetDependency */,
+				__Dependency_Data /* PBXTargetDependency */,
+				__Dependency_Strand /* PBXTargetDependency */,
+				__Dependency_InterchangeData /* PBXTargetDependency */,
+				__Dependency_OperatingSystem /* PBXTargetDependency */,
+				__Dependency_Hummingbird /* PBXTargetDependency */,
+				__Dependency_JSON /* PBXTargetDependency */,
+				__Dependency_String /* PBXTargetDependency */,
+			);
+			name = libc;
+			productName = libc;
+			productReference = "_____Product_libc" /* liblibc.dylib */;
+			productType = "com.apple.product-type.library.dynamic";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		__RootObject_ /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 9999;
+			};
+			buildConfigurationList = "___RootConfs_" /* Build configuration list for PBXProject "Vapor" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = "___RootGroup_";
+			productRefGroup = "____Products_" /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				"______Target_OperatingSystem" /* OperatingSystem */,
+				"______Target_String" /* String */,
+				"______Target_C7" /* C7 */,
+				"______Target_Data" /* Data */,
+				"______Target_InterchangeData" /* InterchangeData */,
+				"______Target_JSON" /* JSON */,
+				"______Target_Strand" /* Strand */,
+				"______Target_Hummingbird" /* Hummingbird */,
+				"______Target_Generator" /* Generator */,
+				"______Target_libc" /* libc */,
+				"______Target_Vapor" /* Vapor */,
+				"______Target_VaporDev" /* VaporDev */,
+				"______Target_VaporTestSuite" /* Vapor.testsuite */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		CompilePhase_C7 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 0;
+			files = (
+				"__src_cc_ref_Packages/C7-0.1.11/Sources/AsyncStream.swift" /* AsyncStream.swift in Sources */,
+				"__src_cc_ref_Packages/C7-0.1.11/Sources/AsyncStreamClient.swift" /* AsyncStreamClient.swift in Sources */,
+				"__src_cc_ref_Packages/C7-0.1.11/Sources/AsyncStreamServer.swift" /* AsyncStreamServer.swift in Sources */,
+				"__src_cc_ref_Packages/C7-0.1.11/Sources/Byte.swift" /* Byte.swift in Sources */,
+				"__src_cc_ref_Packages/C7-0.1.11/Sources/CaseInsensitiveString.swift" /* CaseInsensitiveString.swift in Sources */,
+				"__src_cc_ref_Packages/C7-0.1.11/Sources/CustomDataStore.swift" /* CustomDataStore.swift in Sources */,
+				"__src_cc_ref_Packages/C7-0.1.11/Sources/Data.swift" /* Data.swift in Sources */,
+				"__src_cc_ref_Packages/C7-0.1.11/Sources/Drain.swift" /* Drain.swift in Sources */,
+				"__src_cc_ref_Packages/C7-0.1.11/Sources/Storage.swift" /* Storage.swift in Sources */,
+				"__src_cc_ref_Packages/C7-0.1.11/Sources/Stream.swift" /* Stream.swift in Sources */,
+				"__src_cc_ref_Packages/C7-0.1.11/Sources/StreamClient.swift" /* StreamClient.swift in Sources */,
+				"__src_cc_ref_Packages/C7-0.1.11/Sources/StreamSequence.swift" /* StreamSequence.swift in Sources */,
+				"__src_cc_ref_Packages/C7-0.1.11/Sources/StreamServer.swift" /* StreamServer.swift in Sources */,
+				"__src_cc_ref_Packages/C7-0.1.11/Sources/URI.swift" /* URI.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CompilePhase_Data /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 0;
+			files = (
+				"__src_cc_ref_Packages/Data-0.4.8/Source/Data.swift" /* Data.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CompilePhase_Generator /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 0;
+			files = (
+				__src_cc_ref_Sources/Generator/main.swift /* main.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CompilePhase_Hummingbird /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 0;
+			files = (
+				"__src_cc_ref_Packages/Hummingbird-1.1.2/Sources/Socket.swift" /* Socket.swift in Sources */,
+				"__src_cc_ref_Packages/Hummingbird-1.1.2/Sources/String+Transcoding.swift" /* String+Transcoding.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CompilePhase_InterchangeData /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 0;
+			files = (
+				"__src_cc_ref_Packages/InterchangeData-0.4.2/Source/InterchangeData.swift" /* InterchangeData.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CompilePhase_JSON /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 0;
+			files = (
+				"__src_cc_ref_Packages/JSON-0.4.1/Source/JSON.swift" /* JSON.swift in Sources */,
+				"__src_cc_ref_Packages/JSON-0.4.1/Source/JSONInterchangeDataParser.swift" /* JSONInterchangeDataParser.swift in Sources */,
+				"__src_cc_ref_Packages/JSON-0.4.1/Source/JSONInterchangeDataSerializer.swift" /* JSONInterchangeDataSerializer.swift in Sources */,
+				"__src_cc_ref_Packages/JSON-0.4.1/Source/JSONParser.swift" /* JSONParser.swift in Sources */,
+				"__src_cc_ref_Packages/JSON-0.4.1/Source/JSONSerializer.swift" /* JSONSerializer.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CompilePhase_OperatingSystem /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 0;
+			files = (
+				"__src_cc_ref_Packages/OperatingSystem-0.4.2/Sources/OperatingSystem.swift" /* OperatingSystem.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CompilePhase_Strand /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 0;
+			files = (
+				"__src_cc_ref_Packages/Strand-1.1.0/Sources/Strand.swift" /* Strand.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CompilePhase_String /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 0;
+			files = (
+				"__src_cc_ref_Packages/String-0.4.3/Source/String.swift" /* String.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CompilePhase_Vapor /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 0;
+			files = (
+				__src_cc_ref_Sources/Vapor/Config/Config.swift /* Config/Config.swift in Sources */,
+				__src_cc_ref_Sources/Vapor/Core/Abort.swift /* Core/Abort.swift in Sources */,
+				__src_cc_ref_Sources/Vapor/Core/Application.swift /* Core/Application.swift in Sources */,
+				__src_cc_ref_Sources/Vapor/Core/Environment.swift /* Core/Environment.swift in Sources */,
+				__src_cc_ref_Sources/Vapor/Core/Generated.swift /* Core/Generated.swift in Sources */,
+				__src_cc_ref_Sources/Vapor/Core/Provider.swift /* Core/Provider.swift in Sources */,
+				__src_cc_ref_Sources/Vapor/Fixes/FileManager.swift /* Fixes/FileManager.swift in Sources */,
+				__src_cc_ref_Sources/Vapor/Fixes/StringExtensions.swift /* Fixes/StringExtensions.swift in Sources */,
+				__src_cc_ref_Sources/Vapor/Hash/CryptoSwift.swift /* Hash/CryptoSwift.swift in Sources */,
+				__src_cc_ref_Sources/Vapor/Hash/Hash.swift /* Hash/Hash.swift in Sources */,
+				__src_cc_ref_Sources/Vapor/Hash/HashDriver.swift /* Hash/HashDriver.swift in Sources */,
+				"__src_cc_ref_Sources/Vapor/Hash/Int+Random.swift" /* Hash/Int+Random.swift in Sources */,
+				__src_cc_ref_Sources/Vapor/Hash/SHA256Hasher.swift /* Hash/SHA256Hasher.swift in Sources */,
+				__src_cc_ref_Sources/Vapor/JSON/JSON.swift /* JSON/JSON.swift in Sources */,
+				__src_cc_ref_Sources/Vapor/Log/Log.swift /* Log/Log.swift in Sources */,
+				__src_cc_ref_Sources/Vapor/Log/LogDriver.swift /* Log/LogDriver.swift in Sources */,
+				__src_cc_ref_Sources/Vapor/Middleware/AbortMiddleware.swift /* Middleware/AbortMiddleware.swift in Sources */,
+				__src_cc_ref_Sources/Vapor/Middleware/Middleware.swift /* Middleware/Middleware.swift in Sources */,
+				__src_cc_ref_Sources/Vapor/Node/Node.swift /* Node/Node.swift in Sources */,
+				__src_cc_ref_Sources/Vapor/Node/NodeInitializable.swift /* Node/NodeInitializable.swift in Sources */,
+				__src_cc_ref_Sources/Vapor/Process/Process.swift /* Process/Process.swift in Sources */,
+				__src_cc_ref_Sources/Vapor/Request/Request.swift /* Request/Request.swift in Sources */,
+				__src_cc_ref_Sources/Vapor/Request/RequestData.swift /* Request/RequestData.swift in Sources */,
+				__src_cc_ref_Sources/Vapor/Response/Response.swift /* Response/Response.swift in Sources */,
+				__src_cc_ref_Sources/Vapor/Response/ResponseConvertible.swift /* Response/ResponseConvertible.swift in Sources */,
+				__src_cc_ref_Sources/Vapor/Router/Branch.swift /* Router/Branch.swift in Sources */,
+				__src_cc_ref_Sources/Vapor/Router/BranchRouter.swift /* Router/BranchRouter.swift in Sources */,
+				__src_cc_ref_Sources/Vapor/Router/RouterDriver.swift /* Router/RouterDriver.swift in Sources */,
+				"__src_cc_ref_Sources/Vapor/Routing/Application+Route.swift" /* Routing/Application+Route.swift in Sources */,
+				__src_cc_ref_Sources/Vapor/Routing/ApplicationInitializable.swift /* Routing/ApplicationInitializable.swift in Sources */,
+				__src_cc_ref_Sources/Vapor/Routing/Controller.swift /* Routing/Controller.swift in Sources */,
+				__src_cc_ref_Sources/Vapor/Routing/DefaultInitializable.swift /* Routing/DefaultInitializable.swift in Sources */,
+				__src_cc_ref_Sources/Vapor/Routing/ResourceController.swift /* Routing/ResourceController.swift in Sources */,
+				__src_cc_ref_Sources/Vapor/Routing/Route.swift /* Routing/Route.swift in Sources */,
+				__src_cc_ref_Sources/Vapor/Server/Header.swift /* Server/Header.swift in Sources */,
+				"__src_cc_ref_Sources/Vapor/Server/Hummingbird+Socket.swift" /* Server/Hummingbird+Socket.swift in Sources */,
+				__src_cc_ref_Sources/Vapor/Server/Jeeves.swift /* Server/Jeeves.swift in Sources */,
+				__src_cc_ref_Sources/Vapor/Server/ServerDriver.swift /* Server/ServerDriver.swift in Sources */,
+				__src_cc_ref_Sources/Vapor/Server/Socket.swift /* Server/Socket.swift in Sources */,
+				__src_cc_ref_Sources/Vapor/Session/MemorySessionDriver.swift /* Session/MemorySessionDriver.swift in Sources */,
+				__src_cc_ref_Sources/Vapor/Session/Session.swift /* Session/Session.swift in Sources */,
+				__src_cc_ref_Sources/Vapor/Session/SessionDriver.swift /* Session/SessionDriver.swift in Sources */,
+				__src_cc_ref_Sources/Vapor/Session/SessionMiddleware.swift /* Session/SessionMiddleware.swift in Sources */,
+				"__src_cc_ref_Sources/Vapor/Utilities/Character+Extensions.swift" /* Utilities/Character+Extensions.swift in Sources */,
+				__src_cc_ref_Sources/Vapor/Utilities/Dispatch.swift /* Utilities/Dispatch.swift in Sources */,
+				__src_cc_ref_Sources/Vapor/Utilities/Lock.swift /* Utilities/Lock.swift in Sources */,
+				__src_cc_ref_Sources/Vapor/Utilities/S4.swift /* Utilities/S4.swift in Sources */,
+				__src_cc_ref_Sources/Vapor/Utilities/ThreadSafeStore.swift /* Utilities/ThreadSafeStore.swift in Sources */,
+				__src_cc_ref_Sources/Vapor/View/RenderDriver.swift /* View/RenderDriver.swift in Sources */,
+				__src_cc_ref_Sources/Vapor/View/View.swift /* View/View.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CompilePhase_VaporDev /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 0;
+			files = (
+				__src_cc_ref_Sources/VaporDev/main.swift /* main.swift in Sources */,
+				__src_cc_ref_Sources/VaporDev/Controllers/UserController.swift /* Controllers/UserController.swift in Sources */,
+				__src_cc_ref_Sources/VaporDev/Middleware/AuthMiddleware.swift /* Middleware/AuthMiddleware.swift in Sources */,
+				__src_cc_ref_Sources/VaporDev/Models/User.swift /* Models/User.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CompilePhase_VaporTestSuite /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 0;
+			files = (
+				__src_cc_ref_Tests/Vapor/ConfigTests.swift /* ConfigTests.swift in Sources */,
+				__src_cc_ref_Tests/Vapor/ControllerTests.swift /* ControllerTests.swift in Sources */,
+				__src_cc_ref_Tests/Vapor/EnvironmentTests.swift /* EnvironmentTests.swift in Sources */,
+				__src_cc_ref_Tests/Vapor/HashTests.swift /* HashTests.swift in Sources */,
+				__src_cc_ref_Tests/Vapor/JeevesTests.swift /* JeevesTests.swift in Sources */,
+				__src_cc_ref_Tests/Vapor/LogTests.swift /* LogTests.swift in Sources */,
+				__src_cc_ref_Tests/Vapor/MemorySessionDriverTests.swift /* MemorySessionDriverTests.swift in Sources */,
+				__src_cc_ref_Tests/Vapor/ProcessTests.swift /* ProcessTests.swift in Sources */,
+				__src_cc_ref_Tests/Vapor/QueryParameterTests.swift /* QueryParameterTests.swift in Sources */,
+				__src_cc_ref_Tests/Vapor/ResponseTests.swift /* ResponseTests.swift in Sources */,
+				__src_cc_ref_Tests/Vapor/RouterTests.swift /* RouterTests.swift in Sources */,
+				__src_cc_ref_Tests/Vapor/RouteTests.swift /* RouteTests.swift in Sources */,
+				__src_cc_ref_Tests/Vapor/SessionTests.swift /* SessionTests.swift in Sources */,
+				__src_cc_ref_Tests/Vapor/TypedRouteTests.swift /* TypedRouteTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CompilePhase_libc /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 0;
+			files = (
+				__src_cc_ref_Sources/libc/libc.swift /* libc.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		__Dependency_C7 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = "______Target_C7" /* C7 */;
+			targetProxy = C3779C5D1CA8DE6300A18F2E /* PBXContainerItemProxy */;
+		};
+		__Dependency_Data /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = "______Target_Data" /* Data */;
+			targetProxy = C3779C5E1CA8DE6300A18F2E /* PBXContainerItemProxy */;
+		};
+		__Dependency_Hummingbird /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = "______Target_Hummingbird" /* Hummingbird */;
+			targetProxy = C3779C611CA8DE6300A18F2E /* PBXContainerItemProxy */;
+		};
+		__Dependency_InterchangeData /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = "______Target_InterchangeData" /* InterchangeData */;
+			targetProxy = C3779C5F1CA8DE6300A18F2E /* PBXContainerItemProxy */;
+		};
+		__Dependency_JSON /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = "______Target_JSON" /* JSON */;
+			targetProxy = C3779C621CA8DE6300A18F2E /* PBXContainerItemProxy */;
+		};
+		__Dependency_OperatingSystem /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = "______Target_OperatingSystem" /* OperatingSystem */;
+			targetProxy = C3779C5C1CA8DE6300A18F2E /* PBXContainerItemProxy */;
+		};
+		__Dependency_Strand /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = "______Target_Strand" /* Strand */;
+			targetProxy = C3779C601CA8DE6300A18F2E /* PBXContainerItemProxy */;
+		};
+		__Dependency_String /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = "______Target_String" /* String */;
+			targetProxy = C3779C631CA8DE6300A18F2E /* PBXContainerItemProxy */;
+		};
+		__Dependency_Vapor /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = "______Target_Vapor" /* Vapor */;
+			targetProxy = C3779C651CA8DE6300A18F2E /* PBXContainerItemProxy */;
+		};
+		__Dependency_libc /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = "______Target_libc" /* libc */;
+			targetProxy = C3779C641CA8DE6300A18F2E /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		_ReleaseConf_C7 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				DYLIB_INSTALL_NAME_BASE = "$(CONFIGURATION_BUILD_DIR)";
+				ENABLE_TESTABILITY = YES;
+				LD_RUNPATH_SEARCH_PATHS = "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				OTHER_SWIFT_FLAGS = "-DXcode";
+				PRODUCT_MODULE_NAME = C7;
+				PRODUCT_NAME = "lib$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		_ReleaseConf_Data /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				DYLIB_INSTALL_NAME_BASE = "$(CONFIGURATION_BUILD_DIR)";
+				ENABLE_TESTABILITY = YES;
+				LD_RUNPATH_SEARCH_PATHS = "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				OTHER_SWIFT_FLAGS = "-DXcode";
+				PRODUCT_MODULE_NAME = Data;
+				PRODUCT_NAME = "lib$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		_ReleaseConf_Generator /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				LD_RUNPATH_SEARCH_PATHS = "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				OTHER_SWIFT_FLAGS = "-DXcode";
+				PRODUCT_MODULE_NAME = Generator;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_FORCE_DYNAMIC_LINK_STDLIB = YES;
+				SWIFT_FORCE_STATIC_LINK_STDLIB = NO;
+			};
+			name = Release;
+		};
+		_ReleaseConf_Hummingbird /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				DYLIB_INSTALL_NAME_BASE = "$(CONFIGURATION_BUILD_DIR)";
+				ENABLE_TESTABILITY = YES;
+				LD_RUNPATH_SEARCH_PATHS = "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				OTHER_SWIFT_FLAGS = "-DXcode";
+				PRODUCT_MODULE_NAME = Hummingbird;
+				PRODUCT_NAME = "lib$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		_ReleaseConf_InterchangeData /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				DYLIB_INSTALL_NAME_BASE = "$(CONFIGURATION_BUILD_DIR)";
+				ENABLE_TESTABILITY = YES;
+				LD_RUNPATH_SEARCH_PATHS = "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				OTHER_SWIFT_FLAGS = "-DXcode";
+				PRODUCT_MODULE_NAME = InterchangeData;
+				PRODUCT_NAME = "lib$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		_ReleaseConf_JSON /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				DYLIB_INSTALL_NAME_BASE = "$(CONFIGURATION_BUILD_DIR)";
+				ENABLE_TESTABILITY = YES;
+				LD_RUNPATH_SEARCH_PATHS = "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				OTHER_SWIFT_FLAGS = "-DXcode";
+				PRODUCT_MODULE_NAME = JSON;
+				PRODUCT_NAME = "lib$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		_ReleaseConf_OperatingSystem /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				DYLIB_INSTALL_NAME_BASE = "$(CONFIGURATION_BUILD_DIR)";
+				ENABLE_TESTABILITY = YES;
+				LD_RUNPATH_SEARCH_PATHS = "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				OTHER_SWIFT_FLAGS = "-DXcode";
+				PRODUCT_MODULE_NAME = OperatingSystem;
+				PRODUCT_NAME = "lib$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		_ReleaseConf_Strand /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				DYLIB_INSTALL_NAME_BASE = "$(CONFIGURATION_BUILD_DIR)";
+				ENABLE_TESTABILITY = YES;
+				LD_RUNPATH_SEARCH_PATHS = "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				OTHER_SWIFT_FLAGS = "-DXcode";
+				PRODUCT_MODULE_NAME = Strand;
+				PRODUCT_NAME = "lib$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		_ReleaseConf_String /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				DYLIB_INSTALL_NAME_BASE = "$(CONFIGURATION_BUILD_DIR)";
+				ENABLE_TESTABILITY = YES;
+				LD_RUNPATH_SEARCH_PATHS = "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				OTHER_SWIFT_FLAGS = "-DXcode";
+				PRODUCT_MODULE_NAME = String;
+				PRODUCT_NAME = "lib$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		_ReleaseConf_Vapor /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				DYLIB_INSTALL_NAME_BASE = "$(CONFIGURATION_BUILD_DIR)";
+				ENABLE_TESTABILITY = YES;
+				LD_RUNPATH_SEARCH_PATHS = "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				OTHER_SWIFT_FLAGS = "-DXcode";
+				PRODUCT_MODULE_NAME = Vapor;
+				PRODUCT_NAME = "lib$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		_ReleaseConf_VaporDev /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				LD_RUNPATH_SEARCH_PATHS = "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				OTHER_SWIFT_FLAGS = "-DXcode";
+				PRODUCT_MODULE_NAME = VaporDev;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_FORCE_DYNAMIC_LINK_STDLIB = YES;
+				SWIFT_FORCE_STATIC_LINK_STDLIB = NO;
+			};
+			name = Release;
+		};
+		_ReleaseConf_VaporTestSuite /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				EMBEDDED_CONTENT_CONTAINS_SWIFT = YES;
+				LD_RUNPATH_SEARCH_PATHS = "@loader_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				OTHER_SWIFT_FLAGS = "-DXcode";
+				PRODUCT_MODULE_NAME = VaporTestSuite;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		_ReleaseConf_libc /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				DYLIB_INSTALL_NAME_BASE = "$(CONFIGURATION_BUILD_DIR)";
+				ENABLE_TESTABILITY = YES;
+				LD_RUNPATH_SEARCH_PATHS = "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				OTHER_SWIFT_FLAGS = "-DXcode";
+				PRODUCT_MODULE_NAME = libc;
+				PRODUCT_NAME = "lib$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		"___DebugConf_C7" /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				DYLIB_INSTALL_NAME_BASE = "$(CONFIGURATION_BUILD_DIR)";
+				ENABLE_TESTABILITY = YES;
+				LD_RUNPATH_SEARCH_PATHS = "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				OTHER_SWIFT_FLAGS = "-DXcode";
+				PRODUCT_MODULE_NAME = C7;
+				PRODUCT_NAME = "lib$(TARGET_NAME)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		"___DebugConf_Data" /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				DYLIB_INSTALL_NAME_BASE = "$(CONFIGURATION_BUILD_DIR)";
+				ENABLE_TESTABILITY = YES;
+				LD_RUNPATH_SEARCH_PATHS = "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				OTHER_SWIFT_FLAGS = "-DXcode";
+				PRODUCT_MODULE_NAME = Data;
+				PRODUCT_NAME = "lib$(TARGET_NAME)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		"___DebugConf_Generator" /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				LD_RUNPATH_SEARCH_PATHS = "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				OTHER_SWIFT_FLAGS = "-DXcode";
+				PRODUCT_MODULE_NAME = Generator;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_FORCE_DYNAMIC_LINK_STDLIB = YES;
+				SWIFT_FORCE_STATIC_LINK_STDLIB = NO;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		"___DebugConf_Hummingbird" /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				DYLIB_INSTALL_NAME_BASE = "$(CONFIGURATION_BUILD_DIR)";
+				ENABLE_TESTABILITY = YES;
+				LD_RUNPATH_SEARCH_PATHS = "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				OTHER_SWIFT_FLAGS = "-DXcode";
+				PRODUCT_MODULE_NAME = Hummingbird;
+				PRODUCT_NAME = "lib$(TARGET_NAME)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		"___DebugConf_InterchangeData" /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				DYLIB_INSTALL_NAME_BASE = "$(CONFIGURATION_BUILD_DIR)";
+				ENABLE_TESTABILITY = YES;
+				LD_RUNPATH_SEARCH_PATHS = "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				OTHER_SWIFT_FLAGS = "-DXcode";
+				PRODUCT_MODULE_NAME = InterchangeData;
+				PRODUCT_NAME = "lib$(TARGET_NAME)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		"___DebugConf_JSON" /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				DYLIB_INSTALL_NAME_BASE = "$(CONFIGURATION_BUILD_DIR)";
+				ENABLE_TESTABILITY = YES;
+				LD_RUNPATH_SEARCH_PATHS = "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				OTHER_SWIFT_FLAGS = "-DXcode";
+				PRODUCT_MODULE_NAME = JSON;
+				PRODUCT_NAME = "lib$(TARGET_NAME)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		"___DebugConf_OperatingSystem" /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				DYLIB_INSTALL_NAME_BASE = "$(CONFIGURATION_BUILD_DIR)";
+				ENABLE_TESTABILITY = YES;
+				LD_RUNPATH_SEARCH_PATHS = "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				OTHER_SWIFT_FLAGS = "-DXcode";
+				PRODUCT_MODULE_NAME = OperatingSystem;
+				PRODUCT_NAME = "lib$(TARGET_NAME)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		"___DebugConf_Strand" /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				DYLIB_INSTALL_NAME_BASE = "$(CONFIGURATION_BUILD_DIR)";
+				ENABLE_TESTABILITY = YES;
+				LD_RUNPATH_SEARCH_PATHS = "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				OTHER_SWIFT_FLAGS = "-DXcode";
+				PRODUCT_MODULE_NAME = Strand;
+				PRODUCT_NAME = "lib$(TARGET_NAME)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		"___DebugConf_String" /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				DYLIB_INSTALL_NAME_BASE = "$(CONFIGURATION_BUILD_DIR)";
+				ENABLE_TESTABILITY = YES;
+				LD_RUNPATH_SEARCH_PATHS = "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				OTHER_SWIFT_FLAGS = "-DXcode";
+				PRODUCT_MODULE_NAME = String;
+				PRODUCT_NAME = "lib$(TARGET_NAME)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		"___DebugConf_Vapor" /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				DYLIB_INSTALL_NAME_BASE = "$(CONFIGURATION_BUILD_DIR)";
+				ENABLE_TESTABILITY = YES;
+				LD_RUNPATH_SEARCH_PATHS = "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				OTHER_SWIFT_FLAGS = "-DXcode";
+				PRODUCT_MODULE_NAME = Vapor;
+				PRODUCT_NAME = "lib$(TARGET_NAME)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		"___DebugConf_VaporDev" /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				LD_RUNPATH_SEARCH_PATHS = "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				OTHER_SWIFT_FLAGS = "-DXcode";
+				PRODUCT_MODULE_NAME = VaporDev;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_FORCE_DYNAMIC_LINK_STDLIB = YES;
+				SWIFT_FORCE_STATIC_LINK_STDLIB = NO;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		"___DebugConf_VaporTestSuite" /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				EMBEDDED_CONTENT_CONTAINS_SWIFT = YES;
+				LD_RUNPATH_SEARCH_PATHS = "@loader_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				OTHER_SWIFT_FLAGS = "-DXcode";
+				PRODUCT_MODULE_NAME = VaporTestSuite;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		"___DebugConf_libc" /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				DYLIB_INSTALL_NAME_BASE = "$(CONFIGURATION_BUILD_DIR)";
+				ENABLE_TESTABILITY = YES;
+				LD_RUNPATH_SEARCH_PATHS = "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				OTHER_SWIFT_FLAGS = "-DXcode";
+				PRODUCT_MODULE_NAME = libc;
+				PRODUCT_NAME = "lib$(TARGET_NAME)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		"_____Release_" /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+			};
+			name = Release;
+		};
+		"_______Debug_" /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		"___RootConfs_" /* Build configuration list for PBXProject "Vapor" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				"_______Debug_" /* Debug */,
+				"_____Release_" /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		"_______Confs_C7" /* Build configuration list for PBXNativeTarget "C7" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				"___DebugConf_C7" /* Debug */,
+				_ReleaseConf_C7 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		"_______Confs_Data" /* Build configuration list for PBXNativeTarget "Data" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				"___DebugConf_Data" /* Debug */,
+				_ReleaseConf_Data /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		"_______Confs_Generator" /* Build configuration list for PBXNativeTarget "Generator" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				"___DebugConf_Generator" /* Debug */,
+				_ReleaseConf_Generator /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		"_______Confs_Hummingbird" /* Build configuration list for PBXNativeTarget "Hummingbird" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				"___DebugConf_Hummingbird" /* Debug */,
+				_ReleaseConf_Hummingbird /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		"_______Confs_InterchangeData" /* Build configuration list for PBXNativeTarget "InterchangeData" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				"___DebugConf_InterchangeData" /* Debug */,
+				_ReleaseConf_InterchangeData /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		"_______Confs_JSON" /* Build configuration list for PBXNativeTarget "JSON" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				"___DebugConf_JSON" /* Debug */,
+				_ReleaseConf_JSON /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		"_______Confs_OperatingSystem" /* Build configuration list for PBXNativeTarget "OperatingSystem" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				"___DebugConf_OperatingSystem" /* Debug */,
+				_ReleaseConf_OperatingSystem /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		"_______Confs_Strand" /* Build configuration list for PBXNativeTarget "Strand" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				"___DebugConf_Strand" /* Debug */,
+				_ReleaseConf_Strand /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		"_______Confs_String" /* Build configuration list for PBXNativeTarget "String" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				"___DebugConf_String" /* Debug */,
+				_ReleaseConf_String /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		"_______Confs_Vapor" /* Build configuration list for PBXNativeTarget "Vapor" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				"___DebugConf_Vapor" /* Debug */,
+				_ReleaseConf_Vapor /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		"_______Confs_VaporDev" /* Build configuration list for PBXNativeTarget "VaporDev" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				"___DebugConf_VaporDev" /* Debug */,
+				_ReleaseConf_VaporDev /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		"_______Confs_VaporTestSuite" /* Build configuration list for PBXNativeTarget "Vapor.testsuite" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				"___DebugConf_VaporTestSuite" /* Debug */,
+				_ReleaseConf_VaporTestSuite /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		"_______Confs_libc" /* Build configuration list for PBXNativeTarget "libc" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				"___DebugConf_libc" /* Debug */,
+				_ReleaseConf_libc /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = __RootObject_ /* Project object */;
+}

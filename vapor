@@ -6,21 +6,26 @@
     import Darwin
 #endif
 
-#if !swift(>=3.0)
-    typealias ErrorProtocol = ErrorType
-#endif
-
 class Vapor {
     var arguments: [String]
+    
     var release = false
+    var swift2 = false
+    
+    var flags: [String]
 
     init(arguments: [String]) {
         var commands: [String] = []
+        var flags: [String] = []
 
         for argument in arguments {
             if argument.characters.first == "-"  {
                 if argument == "--release" {
                     release = true
+                } else if argument == "--swift2.2" {
+                    swift2 = true
+                } else {
+                    flags.append(argument)
                 }
             } else {
                 commands.append(argument)        
@@ -28,6 +33,7 @@ class Vapor {
         }
 
         self.arguments = commands
+        self.flags = flags
 
         if commands.count < 2 {
             printUsage()
@@ -106,8 +112,35 @@ class Vapor {
         run("rm -rf .build", orFail: "Could not clean")
         print("Cleaned.")
     }
-
+    
     func build() {
+        if swift2 {
+            buildSwift2()
+        } else {
+            buildSwift3()
+        }
+    }
+    
+    func buildSwift3() {
+        do {
+            var buildFlags = ""
+            if release {
+                buildFlags = "-c release"
+            }
+            try run("swift build \(buildFlags)")
+        } catch {
+            print()
+            print("Usage: vapor build")
+            print("Make sure you are running Apple Swift version 3.0.")
+            print("Vapor only supports the latest snapshot.")
+            print("Use --swift2.2 to build for Swift 2.2")
+            print("Run swift --version to check your version.")
+            print()
+            fail("Could not build project.")
+        }
+    }
+
+    func buildSwift2() {
         print("Building...")
         run("mkdir -p .build", orFail: "Could not create .build directory")
 
@@ -152,7 +185,34 @@ class Vapor {
 
     func run() {
         print("Running...")
-        run(".build/VaporApp", orFail: "")
+        do {
+
+            
+            if swift2 {
+                try run(".build/VaporApp")
+            } else {
+                var name = "App"
+                let folder = release ? "release" : "debug"
+                
+                #if swift(>=3.0)
+                    let args = flags.joined(separator: " ")
+                #else
+                    let args = flags.joinWithSeparator(" ")
+                #endif
+                
+                if arguments.count >= 3 {
+                    name = arguments[2]
+                }
+                
+                try run(".build/\(folder)/\(name) \(args)")
+            }
+        } catch Error.System(let result) {
+            if result != 2 {
+                fail("Could not run project")
+            }
+        } catch {
+            fail("Unknown error")
+        }
     }
 
     func newProject() {
@@ -177,6 +237,13 @@ class Vapor {
     func help() {
         print()
         printUsage()
+        print()
+        print("Flags:")
+        print("  --release")
+        print("    Builds and runs with optimizations")
+        print()
+        print("  --swift2.2")
+        print("    Builds and runs using Swift 2.2")
         print()
         print("Options:")
         print("  build [file1, file2, ...]")

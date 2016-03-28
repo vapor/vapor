@@ -11,6 +11,12 @@ class ConfigTests: XCTestCase {
            ("testDotEnv", testDotEnv),
         ]
     }
+    
+    #if Xcode
+    let workDir = "/Users/tanner/Developer/vapor/vapor/Sources/VaporDev/"
+    #else
+    let workDir = "Sources/VaporDev/"
+    #endif
 
 	func testSimple() {
 		let config = self.config(.Development)
@@ -39,9 +45,11 @@ class ConfigTests: XCTestCase {
 
 	private func config(environment: Environment) -> Config {
 		let app = self.app(environment)
+        
+        print(workDir)
 
 		do {
-			try app.config.populate("./Sources/VaporDev/Config", application: app)
+			try app.config.populate("\(workDir)Config", application: app)
 		} catch {
 			XCTAssert(false, "Failed to load config: \(error)")
 		}

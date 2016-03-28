@@ -6,20 +6,20 @@
         return object //must be of type `ResponseConvertible`
     }```
 */
-public protocol ResponseConvertible {
-    func response() -> Response
+public protocol ResponseRepresentable {
+    func makeResponse() -> Response
 }
 
 ///Allows responses to be returned through closures
-extension Response: ResponseConvertible {
-    public func response() -> Response {
+extension Response: ResponseRepresentable {
+    public func makeResponse() -> Response {
         return self
     }
 }
 
 ///Allows Swift Strings to be returned through closures
-extension Swift.String: ResponseConvertible {
-    public func response() -> Response {
+extension Swift.String: ResponseRepresentable {
+    public func makeResponse() -> Response {
         return Response(status: .OK, html: self)
     }
 }

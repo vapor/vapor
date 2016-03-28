@@ -6,24 +6,10 @@ public class View {
     ///Currently applied RenderDrivers
     public static var renderers: [String: RenderDriver] = [:]
 
-    ///Location of Resource files
-    public static let resourceDir = Application.workDir + "Resources"
     var bytes: [UInt8]
     
-    #if !swift(>=3.0)
-        typealias ErrorType = ErrorProtocol
-    #endif
-
     enum Error: ErrorProtocol {
         case InvalidPath
-    }
-
-    /**
-        Attempt to load and render a file from
-        the supplied path.
-    */
-    public convenience init(path: String) throws {
-        try self.init(path: path, context: [:])
     }
 
     /**
@@ -32,9 +18,9 @@ public class View {
         information supplied.
         - context Passed to RenderDrivers
     */
-    public init(path: String, context: [String: Any]) throws {
-        let filesPath = View.resourceDir + "/" + path
-        
+    public init(application: Application, path: String, context: [String: Any] = [:]) throws {
+        let filesPath = application.workDir + "Resources/Views/" + path
+
         guard let fileBody = try? FileManager.readBytesFromFile(filesPath) else {
             self.bytes = []
             Log.error("No view found in path: \(filesPath)")
@@ -44,7 +30,7 @@ public class View {
 
         for (suffix, renderer) in View.renderers {
             if path.hasSuffix(suffix) {
-                let template =  String.fromUInt8(self.bytes)
+                let template = String(data: bytes) ?? ""
                 let rendered = try renderer.render(template: template, context: context)
                 self.bytes = [UInt8](rendered.utf8)
             }
@@ -55,9 +41,17 @@ public class View {
 }
 
 ///Allows Views to be returned in Vapor closures
-extension View: ResponseConvertible {
-    public func response() -> Response {
+extension View: ResponseRepresentable {
+    public func makeResponse() -> Response {
         return Response(status: .OK, data: self.bytes, contentType: .Html)
     }
 }
 
+///Adds convenience method to Application to create a view
+extension Application {
+
+    public func view(path: String, context: [String: Any] = [:]) throws -> View {
+        return try View(application: self, path: path, context: context)
+    }
+
+}

@@ -137,7 +137,7 @@ You can also respond with HTML pages.
 
 ```swift
 app.get("/") { request in
-	return try View(path: "index.html")
+    return try app.view("index.html")
 }
 ```
 
@@ -153,7 +153,7 @@ Or [Stencil](https://github.com/kylef/Stencil) templates.
 
 ```swift
 app.get("/") { request in
-	return View(path: "index.stencil", context: ["message": "Hello"])
+    return try app.view("index.stencil", context: ["message": "Hello"])
 }
 ```
 

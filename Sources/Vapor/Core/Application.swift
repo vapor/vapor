@@ -2,14 +2,14 @@ import libc
 import Hummingbird
 
 public class Application {
-    public static let VERSION = "0.3.5"
+    public static let VERSION = "0.4.0"
 
     /**
         The router driver is responsible
         for returning registered `Route` handlers
         for a given request.
     */
-    public let router: RouterDriver
+    public var router: RouterDriver = BranchRouter()
 
     /**
         The server driver is responsible
@@ -17,21 +17,25 @@ public class Application {
         This property is constant since it cannot
         be changed after the server has been booted.
     */
-    public var server: ServerDriver
+    public var server: ServerDriver = Jeeves<Hummingbird.Socket>()
 
     /**
         The session driver is responsible for
         storing and reading values written to the
         users session.
     */
-    public var session: SessionDriver
+    public lazy var session: SessionDriver = MemorySessionDriver(application: self)
 
-    #if swift(>=3.0)
     /**
         Provides access to config settings.
     */
-    public private(set) lazy var config: Config = Config(application: self)
-    #endif
+    public lazy var config: Config = Config(application: self)
+    
+    /**
+        Provides access to the underlying
+        `HashDriver`.
+    */
+    public private(set) lazy var hash: Hash = Hash()
 
     /**
         `Middleware` will be applied in the order
@@ -79,7 +83,7 @@ public class Application {
         folders are stored. This is normally `./` if
         you are running Vapor using `.build/xxx/App`
     */
-    public static var workDir = "./" {
+    public var workDir = "./" {
         didSet {
             if self.workDir.characters.last != "/" {
                 self.workDir += "/"
@@ -99,11 +103,7 @@ public class Application {
     /**
         Initialize the Application.
     */
-    public init(router: RouterDriver = BranchRouter(), server: ServerDriver = Jeeves<Hummingbird.Socket>(), session: SessionDriver = MemorySessionDriver()) {
-        self.server = server
-        self.router = router
-        self.session = session
-
+    public init() {
         self.middleware = [
             AbortMiddleware.self,
             SessionMiddleware.self
@@ -122,6 +122,7 @@ public class Application {
         var environment: String
 
         if let value = Process.valueFor(argument: "env") {
+            Log.info("Environment override: \(value)")
             environment = value
         } else {
             // TODO: This should default to "production" in release builds
@@ -161,7 +162,7 @@ public class Application {
         //grab process args
         if let workDir = Process.valueFor(argument: "workDir") {
             Log.info("Work dir override: \(workDir)")
-            self.dynamicType.workDir = workDir
+            self.workDir = workDir
         }
 
         if let ip = Process.valueFor(argument: "ip") {
@@ -181,18 +182,19 @@ public class Application {
         ip & port overrides
     */
     public func start(ip ip: String? = nil, port: Int? = nil) {
-        self.bootProviders()
-        self.server.delegate = self
+        bootProviders()
+        server.delegate = self
 
         self.ip = ip ?? self.ip
         self.port = port ?? self.port
 
-        self.bootRoutes()
-        self.bootArguments()
+        bootRoutes()
+        bootEnvironment()
+        bootArguments()
 
         do {
             Log.info("Server starting on \(self.ip):\(self.port)")
-            try self.server.boot(ip: self.ip, port: self.port)
+            try server.boot(ip: self.ip, port: self.port)
         } catch {
             Log.error("Server start error: \(error)")
         }
@@ -200,7 +202,7 @@ public class Application {
 
     func checkFileSystem(request: Request) -> Request.Handler? {
         // Check in file system
-        let filePath = self.dynamicType.workDir + "Public" + request.path
+        let filePath = self.workDir + "Public" + request.path
 
         guard FileManager.fileAtPath(filePath).exists else {
             return nil
@@ -251,7 +253,12 @@ extension Application: ServerDriverDelegate {
 
             return response
         } catch {
-            return Response(error: "Server Error: \(error)")
+            var error = "Server Error: \(error)"
+            if environment == .Production {
+                error = "Something went wrong"
+            }
+            
+            return Response(error: error)
         }
 
     }
