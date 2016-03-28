@@ -37,7 +37,7 @@ Visit the [Vapor Wiki](https://github.com/qutheory/vapor/wiki) for extensive doc
 
 ```shell
 brew tap qutheory/tap
-brew install vapor
+brew install vapor-swift-2
 ```
 
 #### Manual / Ubuntu
