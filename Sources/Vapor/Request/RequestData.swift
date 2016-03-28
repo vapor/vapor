@@ -53,19 +53,6 @@ public extension Request {
     }
 }
 
-//extension JsonNumber {
-//    public var number: Double {
-//        switch self {
-//        case .JsonInt(let int):
-//            return Double(int)
-//        case .JsonDbl(let dbl):
-//            return dbl
-//        }
-//    }
-//}
-
-
-
 extension String: Node {
     public var isNull: Bool {
         return self == "null"
