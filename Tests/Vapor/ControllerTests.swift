@@ -17,10 +17,8 @@ class ControllerTests: XCTestCase {
         ]
     }
 
-    class TestController: Controller<String> {
+    class TestController: Controller {
         required init(application: Application) {
-           super.init(application: application)
-
             print("TestController online")
         }
         
@@ -33,31 +31,31 @@ class ControllerTests: XCTestCase {
         ) = (0, 0, 0, 0, 0)
         
         /// Display many instances
-        override func index(request: Request) throws -> ResponseConvertible {
+        func index(request: Request) throws -> ResponseRepresentable {
             TestController.lock.index += 1
             return "index"
         }
         
         /// Create a new instance.
-        override func store(request: Request) throws -> ResponseConvertible {
+        func store(request: Request) throws -> ResponseRepresentable {
             TestController.lock.store += 1
             return "store"
         }
         
         /// Show an instance.
-        override func show(request: Request, item: String) throws -> ResponseConvertible {
+        func show(request: Request, item: String) throws -> ResponseRepresentable {
             TestController.lock.show += 1
             return "show"
         }
         
         /// Update an instance.
-        override func update(request: Request, item: String) throws -> ResponseConvertible {
+        func update(request: Request, item: String) throws -> ResponseRepresentable {
             TestController.lock.update += 1
             return "update"
         }
         
         /// Delete an instance.
-        override func destroy(request: Request, item: String) throws -> ResponseConvertible {
+        func destroy(request: Request, item: String) throws -> ResponseRepresentable {
             TestController.lock.destroy += 1
             return "destroy"
         }

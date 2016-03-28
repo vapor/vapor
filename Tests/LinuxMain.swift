@@ -1,3 +1,5 @@
+#if os(Linux)
+
 import XCTest
 @testable import VaporTestSuite
 
@@ -17,3 +19,5 @@ XCTMain([
     testCase(TypedRouteTests.allTests),
     testCase(JeevesTests.allTests)
 ])
+
+#endif

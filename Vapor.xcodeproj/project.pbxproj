@@ -7,54 +7,54 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		C3960CDD1CA8C62B009DAA87 /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
-		C3960CDE1CA8C62B009DAA87 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
-		C3960CDF1CA8C62B009DAA87 /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
-		C3960CE01CA8C62B009DAA87 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
-		C3960CE11CA8C62B009DAA87 /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
-		C3960CE21CA8C62B009DAA87 /* libData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Data" /* libData.dylib */; };
-		C3960CE31CA8C62B009DAA87 /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
-		C3960CE41CA8C62B009DAA87 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
-		C3960CE51CA8C62B009DAA87 /* libData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Data" /* libData.dylib */; };
-		C3960CE61CA8C62B009DAA87 /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
-		C3960CE71CA8C62B009DAA87 /* libInterchangeData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_InterchangeData" /* libInterchangeData.dylib */; };
-		C3960CE81CA8C62B009DAA87 /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
-		C3960CE91CA8C62B009DAA87 /* libHummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Hummingbird" /* libHummingbird.dylib */; };
-		C3960CEA1CA8C62B009DAA87 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
-		C3960CEB1CA8C62B009DAA87 /* libData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Data" /* libData.dylib */; };
-		C3960CEC1CA8C62B009DAA87 /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
-		C3960CED1CA8C62B009DAA87 /* libInterchangeData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_InterchangeData" /* libInterchangeData.dylib */; };
-		C3960CEE1CA8C62B009DAA87 /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
-		C3960CEF1CA8C62B009DAA87 /* libHummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Hummingbird" /* libHummingbird.dylib */; };
-		C3960CF01CA8C62B009DAA87 /* libJSON.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_JSON" /* libJSON.dylib */; };
-		C3960CF11CA8C62B009DAA87 /* libString.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_String" /* libString.dylib */; };
-		C3960CF21CA8C62B009DAA87 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
-		C3960CF31CA8C62B009DAA87 /* libData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Data" /* libData.dylib */; };
-		C3960CF41CA8C62B009DAA87 /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
-		C3960CF51CA8C62B009DAA87 /* libInterchangeData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_InterchangeData" /* libInterchangeData.dylib */; };
-		C3960CF61CA8C62B009DAA87 /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
-		C3960CF71CA8C62B009DAA87 /* libHummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Hummingbird" /* libHummingbird.dylib */; };
-		C3960CF81CA8C62B009DAA87 /* libJSON.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_JSON" /* libJSON.dylib */; };
-		C3960CF91CA8C62B009DAA87 /* libString.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_String" /* libString.dylib */; };
-		C3960CFA1CA8C62B009DAA87 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
-		C3960CFB1CA8C62B009DAA87 /* libData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Data" /* libData.dylib */; };
-		C3960CFC1CA8C62B009DAA87 /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
-		C3960CFD1CA8C62B009DAA87 /* libInterchangeData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_InterchangeData" /* libInterchangeData.dylib */; };
-		C3960CFE1CA8C62B009DAA87 /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
-		C3960CFF1CA8C62B009DAA87 /* libHummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Hummingbird" /* libHummingbird.dylib */; };
-		C3960D001CA8C62B009DAA87 /* libJSON.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_JSON" /* libJSON.dylib */; };
-		C3960D011CA8C62B009DAA87 /* libString.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_String" /* libString.dylib */; };
-		C3960D021CA8C62B009DAA87 /* liblibc.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_libc" /* liblibc.dylib */; };
-		C3960D031CA8C62B009DAA87 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
-		C3960D041CA8C62B009DAA87 /* libData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Data" /* libData.dylib */; };
-		C3960D051CA8C62B009DAA87 /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
-		C3960D061CA8C62B009DAA87 /* libInterchangeData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_InterchangeData" /* libInterchangeData.dylib */; };
-		C3960D071CA8C62B009DAA87 /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
-		C3960D081CA8C62B009DAA87 /* libHummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Hummingbird" /* libHummingbird.dylib */; };
-		C3960D091CA8C62B009DAA87 /* libJSON.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_JSON" /* libJSON.dylib */; };
-		C3960D0A1CA8C62B009DAA87 /* libString.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_String" /* libString.dylib */; };
-		C3960D0B1CA8C62B009DAA87 /* libVapor.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Vapor" /* libVapor.dylib */; };
-		C3960D0C1CA8C62B009DAA87 /* liblibc.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_libc" /* liblibc.dylib */; };
+		C3960D171CA8D38A009DAA87 /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
+		C3960D181CA8D38A009DAA87 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
+		C3960D191CA8D38A009DAA87 /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
+		C3960D1A1CA8D38A009DAA87 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
+		C3960D1B1CA8D38A009DAA87 /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
+		C3960D1C1CA8D38A009DAA87 /* libData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Data" /* libData.dylib */; };
+		C3960D1D1CA8D38A009DAA87 /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
+		C3960D1E1CA8D38A009DAA87 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
+		C3960D1F1CA8D38A009DAA87 /* libData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Data" /* libData.dylib */; };
+		C3960D201CA8D38A009DAA87 /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
+		C3960D211CA8D38A009DAA87 /* libInterchangeData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_InterchangeData" /* libInterchangeData.dylib */; };
+		C3960D221CA8D38A009DAA87 /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
+		C3960D231CA8D38A009DAA87 /* libHummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Hummingbird" /* libHummingbird.dylib */; };
+		C3960D241CA8D38A009DAA87 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
+		C3960D251CA8D38A009DAA87 /* libData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Data" /* libData.dylib */; };
+		C3960D261CA8D38A009DAA87 /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
+		C3960D271CA8D38A009DAA87 /* libInterchangeData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_InterchangeData" /* libInterchangeData.dylib */; };
+		C3960D281CA8D38A009DAA87 /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
+		C3960D291CA8D38A009DAA87 /* libHummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Hummingbird" /* libHummingbird.dylib */; };
+		C3960D2A1CA8D38A009DAA87 /* libJSON.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_JSON" /* libJSON.dylib */; };
+		C3960D2B1CA8D38A009DAA87 /* libString.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_String" /* libString.dylib */; };
+		C3960D2C1CA8D38A009DAA87 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
+		C3960D2D1CA8D38A009DAA87 /* libData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Data" /* libData.dylib */; };
+		C3960D2E1CA8D38A009DAA87 /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
+		C3960D2F1CA8D38A009DAA87 /* libInterchangeData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_InterchangeData" /* libInterchangeData.dylib */; };
+		C3960D301CA8D38A009DAA87 /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
+		C3960D311CA8D38A009DAA87 /* libHummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Hummingbird" /* libHummingbird.dylib */; };
+		C3960D321CA8D38A009DAA87 /* libJSON.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_JSON" /* libJSON.dylib */; };
+		C3960D331CA8D38A009DAA87 /* libString.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_String" /* libString.dylib */; };
+		C3960D341CA8D38A009DAA87 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
+		C3960D351CA8D38A009DAA87 /* libData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Data" /* libData.dylib */; };
+		C3960D361CA8D38A009DAA87 /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
+		C3960D371CA8D38A009DAA87 /* libInterchangeData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_InterchangeData" /* libInterchangeData.dylib */; };
+		C3960D381CA8D38A009DAA87 /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
+		C3960D391CA8D38A009DAA87 /* libHummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Hummingbird" /* libHummingbird.dylib */; };
+		C3960D3A1CA8D38A009DAA87 /* libJSON.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_JSON" /* libJSON.dylib */; };
+		C3960D3B1CA8D38A009DAA87 /* libString.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_String" /* libString.dylib */; };
+		C3960D3C1CA8D38A009DAA87 /* liblibc.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_libc" /* liblibc.dylib */; };
+		C3960D3D1CA8D38A009DAA87 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
+		C3960D3E1CA8D38A009DAA87 /* libData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Data" /* libData.dylib */; };
+		C3960D3F1CA8D38A009DAA87 /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
+		C3960D401CA8D38A009DAA87 /* libInterchangeData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_InterchangeData" /* libInterchangeData.dylib */; };
+		C3960D411CA8D38A009DAA87 /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
+		C3960D421CA8D38A009DAA87 /* libHummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Hummingbird" /* libHummingbird.dylib */; };
+		C3960D431CA8D38A009DAA87 /* libJSON.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_JSON" /* libJSON.dylib */; };
+		C3960D441CA8D38A009DAA87 /* libString.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_String" /* libString.dylib */; };
+		C3960D451CA8D38A009DAA87 /* libVapor.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Vapor" /* libVapor.dylib */; };
+		C3960D461CA8D38A009DAA87 /* liblibc.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_libc" /* liblibc.dylib */; };
 		_LinkFileRef_C7 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
 		_LinkFileRef_Data /* libData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Data" /* libData.dylib */; };
 		_LinkFileRef_Hummingbird /* libHummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Hummingbird" /* libHummingbird.dylib */; };
@@ -80,9 +80,9 @@
 		"__src_cc_ref_Packages/C7-0.1.11/Sources/StreamServer.swift" /* StreamServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/C7-0.1.11/Sources/StreamServer.swift" /* StreamServer.swift */; };
 		"__src_cc_ref_Packages/C7-0.1.11/Sources/URI.swift" /* URI.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/C7-0.1.11/Sources/URI.swift" /* URI.swift */; };
 		"__src_cc_ref_Packages/Data-0.4.8/Source/Data.swift" /* Data.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/Data-0.4.8/Source/Data.swift" /* Data.swift */; };
-		"__src_cc_ref_Packages/Hummingbird-1.1.1/Sources/Socket.swift" /* Socket.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/Hummingbird-1.1.1/Sources/Socket.swift" /* Socket.swift */; };
-		"__src_cc_ref_Packages/Hummingbird-1.1.1/Sources/String+Transcoding.swift" /* String+Transcoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/Hummingbird-1.1.1/Sources/String+Transcoding.swift" /* String+Transcoding.swift */; };
-		"__src_cc_ref_Packages/Hummingbird-1.1.1/Tests/Hummingbird/SocketTests.swift" /* SocketTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/Hummingbird-1.1.1/Tests/Hummingbird/SocketTests.swift" /* SocketTests.swift */; };
+		"__src_cc_ref_Packages/Hummingbird-1.1.2/Sources/Socket.swift" /* Socket.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/Hummingbird-1.1.2/Sources/Socket.swift" /* Socket.swift */; };
+		"__src_cc_ref_Packages/Hummingbird-1.1.2/Sources/String+Transcoding.swift" /* String+Transcoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/Hummingbird-1.1.2/Sources/String+Transcoding.swift" /* String+Transcoding.swift */; };
+		"__src_cc_ref_Packages/Hummingbird-1.1.2/Tests/Hummingbird/SocketTests.swift" /* SocketTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/Hummingbird-1.1.2/Tests/Hummingbird/SocketTests.swift" /* SocketTests.swift */; };
 		"__src_cc_ref_Packages/InterchangeData-0.4.2/Source/InterchangeData.swift" /* InterchangeData.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/InterchangeData-0.4.2/Source/InterchangeData.swift" /* InterchangeData.swift */; };
 		"__src_cc_ref_Packages/JSON-0.4.1/Source/JSON.swift" /* JSON.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/JSON-0.4.1/Source/JSON.swift" /* JSON.swift */; };
 		"__src_cc_ref_Packages/JSON-0.4.1/Source/JSONInterchangeDataParser.swift" /* JSONInterchangeDataParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/JSON-0.4.1/Source/JSONInterchangeDataParser.swift" /* JSONInterchangeDataParser.swift */; };
@@ -165,70 +165,70 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		C3960D0D1CA8C62B009DAA87 /* PBXContainerItemProxy */ = {
+		C3960D471CA8D38B009DAA87 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = __RootObject_ /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = "______Target_OperatingSystem";
 			remoteInfo = OperatingSystem;
 		};
-		C3960D0E1CA8C62B009DAA87 /* PBXContainerItemProxy */ = {
+		C3960D481CA8D38B009DAA87 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = __RootObject_ /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = "______Target_C7";
 			remoteInfo = C7;
 		};
-		C3960D0F1CA8C62B009DAA87 /* PBXContainerItemProxy */ = {
+		C3960D491CA8D38B009DAA87 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = __RootObject_ /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = "______Target_Data";
 			remoteInfo = Data;
 		};
-		C3960D101CA8C62B009DAA87 /* PBXContainerItemProxy */ = {
+		C3960D4A1CA8D38B009DAA87 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = __RootObject_ /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = "______Target_InterchangeData";
 			remoteInfo = InterchangeData;
 		};
-		C3960D111CA8C62B009DAA87 /* PBXContainerItemProxy */ = {
+		C3960D4B1CA8D38B009DAA87 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = __RootObject_ /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = "______Target_Strand";
 			remoteInfo = Strand;
 		};
-		C3960D121CA8C62B009DAA87 /* PBXContainerItemProxy */ = {
+		C3960D4C1CA8D38B009DAA87 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = __RootObject_ /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = "______Target_Hummingbird";
 			remoteInfo = Hummingbird;
 		};
-		C3960D131CA8C62B009DAA87 /* PBXContainerItemProxy */ = {
+		C3960D4D1CA8D38B009DAA87 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = __RootObject_ /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = "______Target_JSON";
 			remoteInfo = JSON;
 		};
-		C3960D141CA8C62B009DAA87 /* PBXContainerItemProxy */ = {
+		C3960D4E1CA8D38B009DAA87 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = __RootObject_ /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = "______Target_String";
 			remoteInfo = String;
 		};
-		C3960D151CA8C62B009DAA87 /* PBXContainerItemProxy */ = {
+		C3960D4F1CA8D38B009DAA87 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = __RootObject_ /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = "______Target_libc";
 			remoteInfo = libc;
 		};
-		C3960D161CA8C62B009DAA87 /* PBXContainerItemProxy */ = {
+		C3960D501CA8D38B009DAA87 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = __RootObject_ /* Project object */;
 			proxyType = 1;
@@ -254,9 +254,9 @@
 		"__PBXFileRef_Packages/C7-0.1.11/Sources/StreamServer.swift" /* StreamServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamServer.swift; sourceTree = "<group>"; };
 		"__PBXFileRef_Packages/C7-0.1.11/Sources/URI.swift" /* URI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URI.swift; sourceTree = "<group>"; };
 		"__PBXFileRef_Packages/Data-0.4.8/Source/Data.swift" /* Data.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Data.swift; sourceTree = "<group>"; };
-		"__PBXFileRef_Packages/Hummingbird-1.1.1/Sources/Socket.swift" /* Socket.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Socket.swift; sourceTree = "<group>"; };
-		"__PBXFileRef_Packages/Hummingbird-1.1.1/Sources/String+Transcoding.swift" /* String+Transcoding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+Transcoding.swift"; sourceTree = "<group>"; };
-		"__PBXFileRef_Packages/Hummingbird-1.1.1/Tests/Hummingbird/SocketTests.swift" /* SocketTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocketTests.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/Hummingbird-1.1.2/Sources/Socket.swift" /* Socket.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Socket.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/Hummingbird-1.1.2/Sources/String+Transcoding.swift" /* String+Transcoding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+Transcoding.swift"; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/Hummingbird-1.1.2/Tests/Hummingbird/SocketTests.swift" /* SocketTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocketTests.swift; sourceTree = "<group>"; };
 		"__PBXFileRef_Packages/InterchangeData-0.4.2/Source/InterchangeData.swift" /* InterchangeData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InterchangeData.swift; sourceTree = "<group>"; };
 		"__PBXFileRef_Packages/JSON-0.4.1/Source/JSON.swift" /* JSON.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSON.swift; sourceTree = "<group>"; };
 		"__PBXFileRef_Packages/JSON-0.4.1/Source/JSONInterchangeDataParser.swift" /* JSONInterchangeDataParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONInterchangeDataParser.swift; sourceTree = "<group>"; };
@@ -365,7 +365,7 @@
 			buildActionMask = 0;
 			files = (
 				_LinkFileRef_C7 /* libC7.dylib in Frameworks */,
-				C3960CDD1CA8C62B009DAA87 /* libOperatingSystem.dylib in Frameworks */,
+				C3960D171CA8D38A009DAA87 /* libOperatingSystem.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -373,12 +373,12 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
-				C3960CE41CA8C62B009DAA87 /* libC7.dylib in Frameworks */,
-				C3960CE51CA8C62B009DAA87 /* libData.dylib in Frameworks */,
-				C3960CE61CA8C62B009DAA87 /* libStrand.dylib in Frameworks */,
-				C3960CE71CA8C62B009DAA87 /* libInterchangeData.dylib in Frameworks */,
-				C3960CE81CA8C62B009DAA87 /* libOperatingSystem.dylib in Frameworks */,
-				C3960CE91CA8C62B009DAA87 /* libHummingbird.dylib in Frameworks */,
+				C3960D1E1CA8D38A009DAA87 /* libC7.dylib in Frameworks */,
+				C3960D1F1CA8D38A009DAA87 /* libData.dylib in Frameworks */,
+				C3960D201CA8D38A009DAA87 /* libStrand.dylib in Frameworks */,
+				C3960D211CA8D38A009DAA87 /* libInterchangeData.dylib in Frameworks */,
+				C3960D221CA8D38A009DAA87 /* libOperatingSystem.dylib in Frameworks */,
+				C3960D231CA8D38A009DAA87 /* libHummingbird.dylib in Frameworks */,
 				_LinkFileRef_JSON /* libJSON.dylib in Frameworks */,
 				_LinkFileRef_String /* libString.dylib in Frameworks */,
 			);
@@ -396,7 +396,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
-				C3960CE31CA8C62B009DAA87 /* libStrand.dylib in Frameworks */,
+				C3960D1D1CA8D38A009DAA87 /* libStrand.dylib in Frameworks */,
 				_LinkFileRef_Hummingbird /* libHummingbird.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -405,8 +405,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
-				C3960CDE1CA8C62B009DAA87 /* libC7.dylib in Frameworks */,
-				C3960CDF1CA8C62B009DAA87 /* libOperatingSystem.dylib in Frameworks */,
+				C3960D181CA8D38A009DAA87 /* libC7.dylib in Frameworks */,
+				C3960D191CA8D38A009DAA87 /* libOperatingSystem.dylib in Frameworks */,
 				_LinkFileRef_Data /* libData.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -415,9 +415,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
-				C3960CE01CA8C62B009DAA87 /* libC7.dylib in Frameworks */,
-				C3960CE11CA8C62B009DAA87 /* libOperatingSystem.dylib in Frameworks */,
-				C3960CE21CA8C62B009DAA87 /* libData.dylib in Frameworks */,
+				C3960D1A1CA8D38A009DAA87 /* libC7.dylib in Frameworks */,
+				C3960D1B1CA8D38A009DAA87 /* libOperatingSystem.dylib in Frameworks */,
+				C3960D1C1CA8D38A009DAA87 /* libData.dylib in Frameworks */,
 				_LinkFileRef_InterchangeData /* libInterchangeData.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -448,14 +448,14 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
-				C3960CF21CA8C62B009DAA87 /* libC7.dylib in Frameworks */,
-				C3960CF31CA8C62B009DAA87 /* libData.dylib in Frameworks */,
-				C3960CF41CA8C62B009DAA87 /* libStrand.dylib in Frameworks */,
-				C3960CF51CA8C62B009DAA87 /* libInterchangeData.dylib in Frameworks */,
-				C3960CF61CA8C62B009DAA87 /* libOperatingSystem.dylib in Frameworks */,
-				C3960CF71CA8C62B009DAA87 /* libHummingbird.dylib in Frameworks */,
-				C3960CF81CA8C62B009DAA87 /* libJSON.dylib in Frameworks */,
-				C3960CF91CA8C62B009DAA87 /* libString.dylib in Frameworks */,
+				C3960D2C1CA8D38A009DAA87 /* libC7.dylib in Frameworks */,
+				C3960D2D1CA8D38A009DAA87 /* libData.dylib in Frameworks */,
+				C3960D2E1CA8D38A009DAA87 /* libStrand.dylib in Frameworks */,
+				C3960D2F1CA8D38A009DAA87 /* libInterchangeData.dylib in Frameworks */,
+				C3960D301CA8D38A009DAA87 /* libOperatingSystem.dylib in Frameworks */,
+				C3960D311CA8D38A009DAA87 /* libHummingbird.dylib in Frameworks */,
+				C3960D321CA8D38A009DAA87 /* libJSON.dylib in Frameworks */,
+				C3960D331CA8D38A009DAA87 /* libString.dylib in Frameworks */,
 				_LinkFileRef_libc /* liblibc.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -464,16 +464,16 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
-				C3960CFA1CA8C62B009DAA87 /* libC7.dylib in Frameworks */,
-				C3960CFB1CA8C62B009DAA87 /* libData.dylib in Frameworks */,
-				C3960CFC1CA8C62B009DAA87 /* libStrand.dylib in Frameworks */,
-				C3960CFD1CA8C62B009DAA87 /* libInterchangeData.dylib in Frameworks */,
-				C3960CFE1CA8C62B009DAA87 /* libOperatingSystem.dylib in Frameworks */,
-				C3960CFF1CA8C62B009DAA87 /* libHummingbird.dylib in Frameworks */,
-				C3960D001CA8C62B009DAA87 /* libJSON.dylib in Frameworks */,
-				C3960D011CA8C62B009DAA87 /* libString.dylib in Frameworks */,
+				C3960D341CA8D38A009DAA87 /* libC7.dylib in Frameworks */,
+				C3960D351CA8D38A009DAA87 /* libData.dylib in Frameworks */,
+				C3960D361CA8D38A009DAA87 /* libStrand.dylib in Frameworks */,
+				C3960D371CA8D38A009DAA87 /* libInterchangeData.dylib in Frameworks */,
+				C3960D381CA8D38A009DAA87 /* libOperatingSystem.dylib in Frameworks */,
+				C3960D391CA8D38A009DAA87 /* libHummingbird.dylib in Frameworks */,
+				C3960D3A1CA8D38A009DAA87 /* libJSON.dylib in Frameworks */,
+				C3960D3B1CA8D38A009DAA87 /* libString.dylib in Frameworks */,
 				_LinkFileRef_Vapor /* libVapor.dylib in Frameworks */,
-				C3960D021CA8C62B009DAA87 /* liblibc.dylib in Frameworks */,
+				C3960D3C1CA8D38A009DAA87 /* liblibc.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -481,16 +481,16 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
-				C3960D031CA8C62B009DAA87 /* libC7.dylib in Frameworks */,
-				C3960D041CA8C62B009DAA87 /* libData.dylib in Frameworks */,
-				C3960D051CA8C62B009DAA87 /* libStrand.dylib in Frameworks */,
-				C3960D061CA8C62B009DAA87 /* libInterchangeData.dylib in Frameworks */,
-				C3960D071CA8C62B009DAA87 /* libOperatingSystem.dylib in Frameworks */,
-				C3960D081CA8C62B009DAA87 /* libHummingbird.dylib in Frameworks */,
-				C3960D091CA8C62B009DAA87 /* libJSON.dylib in Frameworks */,
-				C3960D0A1CA8C62B009DAA87 /* libString.dylib in Frameworks */,
-				C3960D0B1CA8C62B009DAA87 /* libVapor.dylib in Frameworks */,
-				C3960D0C1CA8C62B009DAA87 /* liblibc.dylib in Frameworks */,
+				C3960D3D1CA8D38A009DAA87 /* libC7.dylib in Frameworks */,
+				C3960D3E1CA8D38A009DAA87 /* libData.dylib in Frameworks */,
+				C3960D3F1CA8D38A009DAA87 /* libStrand.dylib in Frameworks */,
+				C3960D401CA8D38A009DAA87 /* libInterchangeData.dylib in Frameworks */,
+				C3960D411CA8D38A009DAA87 /* libOperatingSystem.dylib in Frameworks */,
+				C3960D421CA8D38A009DAA87 /* libHummingbird.dylib in Frameworks */,
+				C3960D431CA8D38A009DAA87 /* libJSON.dylib in Frameworks */,
+				C3960D441CA8D38A009DAA87 /* libString.dylib in Frameworks */,
+				C3960D451CA8D38A009DAA87 /* libVapor.dylib in Frameworks */,
+				C3960D461CA8D38A009DAA87 /* liblibc.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -498,14 +498,14 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
-				C3960CEA1CA8C62B009DAA87 /* libC7.dylib in Frameworks */,
-				C3960CEB1CA8C62B009DAA87 /* libData.dylib in Frameworks */,
-				C3960CEC1CA8C62B009DAA87 /* libStrand.dylib in Frameworks */,
-				C3960CED1CA8C62B009DAA87 /* libInterchangeData.dylib in Frameworks */,
-				C3960CEE1CA8C62B009DAA87 /* libOperatingSystem.dylib in Frameworks */,
-				C3960CEF1CA8C62B009DAA87 /* libHummingbird.dylib in Frameworks */,
-				C3960CF01CA8C62B009DAA87 /* libJSON.dylib in Frameworks */,
-				C3960CF11CA8C62B009DAA87 /* libString.dylib in Frameworks */,
+				C3960D241CA8D38A009DAA87 /* libC7.dylib in Frameworks */,
+				C3960D251CA8D38A009DAA87 /* libData.dylib in Frameworks */,
+				C3960D261CA8D38A009DAA87 /* libStrand.dylib in Frameworks */,
+				C3960D271CA8D38A009DAA87 /* libInterchangeData.dylib in Frameworks */,
+				C3960D281CA8D38A009DAA87 /* libOperatingSystem.dylib in Frameworks */,
+				C3960D291CA8D38A009DAA87 /* libHummingbird.dylib in Frameworks */,
+				C3960D2A1CA8D38A009DAA87 /* libJSON.dylib in Frameworks */,
+				C3960D2B1CA8D38A009DAA87 /* libString.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -613,20 +613,20 @@
 		"_______Group_Hummingbird" /* Hummingbird */ = {
 			isa = PBXGroup;
 			children = (
-				"__PBXFileRef_Packages/Hummingbird-1.1.1/Sources/Socket.swift" /* Socket.swift */,
-				"__PBXFileRef_Packages/Hummingbird-1.1.1/Sources/String+Transcoding.swift" /* String+Transcoding.swift */,
+				"__PBXFileRef_Packages/Hummingbird-1.1.2/Sources/Socket.swift" /* Socket.swift */,
+				"__PBXFileRef_Packages/Hummingbird-1.1.2/Sources/String+Transcoding.swift" /* String+Transcoding.swift */,
 			);
 			name = Hummingbird;
-			path = "Packages/Hummingbird-1.1.1/Sources";
+			path = "Packages/Hummingbird-1.1.2/Sources";
 			sourceTree = "<group>";
 		};
 		"_______Group_HummingbirdTestSuite" /* Hummingbird.testsuite */ = {
 			isa = PBXGroup;
 			children = (
-				"__PBXFileRef_Packages/Hummingbird-1.1.1/Tests/Hummingbird/SocketTests.swift" /* SocketTests.swift */,
+				"__PBXFileRef_Packages/Hummingbird-1.1.2/Tests/Hummingbird/SocketTests.swift" /* SocketTests.swift */,
 			);
 			name = Hummingbird.testsuite;
-			path = "Packages/Hummingbird-1.1.1/Tests/Hummingbird";
+			path = "Packages/Hummingbird-1.1.2/Tests/Hummingbird";
 			sourceTree = "<group>";
 		};
 		"_______Group_InterchangeData" /* InterchangeData */ = {
@@ -1151,8 +1151,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 0;
 			files = (
-				"__src_cc_ref_Packages/Hummingbird-1.1.1/Sources/Socket.swift" /* Socket.swift in Sources */,
-				"__src_cc_ref_Packages/Hummingbird-1.1.1/Sources/String+Transcoding.swift" /* String+Transcoding.swift in Sources */,
+				"__src_cc_ref_Packages/Hummingbird-1.1.2/Sources/Socket.swift" /* Socket.swift in Sources */,
+				"__src_cc_ref_Packages/Hummingbird-1.1.2/Sources/String+Transcoding.swift" /* String+Transcoding.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1160,7 +1160,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 0;
 			files = (
-				"__src_cc_ref_Packages/Hummingbird-1.1.1/Tests/Hummingbird/SocketTests.swift" /* SocketTests.swift in Sources */,
+				"__src_cc_ref_Packages/Hummingbird-1.1.2/Tests/Hummingbird/SocketTests.swift" /* SocketTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1311,52 +1311,52 @@
 		__Dependency_C7 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_C7" /* C7 */;
-			targetProxy = C3960D0E1CA8C62B009DAA87 /* PBXContainerItemProxy */;
+			targetProxy = C3960D481CA8D38B009DAA87 /* PBXContainerItemProxy */;
 		};
 		__Dependency_Data /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_Data" /* Data */;
-			targetProxy = C3960D0F1CA8C62B009DAA87 /* PBXContainerItemProxy */;
+			targetProxy = C3960D491CA8D38B009DAA87 /* PBXContainerItemProxy */;
 		};
 		__Dependency_Hummingbird /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_Hummingbird" /* Hummingbird */;
-			targetProxy = C3960D121CA8C62B009DAA87 /* PBXContainerItemProxy */;
+			targetProxy = C3960D4C1CA8D38B009DAA87 /* PBXContainerItemProxy */;
 		};
 		__Dependency_InterchangeData /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_InterchangeData" /* InterchangeData */;
-			targetProxy = C3960D101CA8C62B009DAA87 /* PBXContainerItemProxy */;
+			targetProxy = C3960D4A1CA8D38B009DAA87 /* PBXContainerItemProxy */;
 		};
 		__Dependency_JSON /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_JSON" /* JSON */;
-			targetProxy = C3960D131CA8C62B009DAA87 /* PBXContainerItemProxy */;
+			targetProxy = C3960D4D1CA8D38B009DAA87 /* PBXContainerItemProxy */;
 		};
 		__Dependency_OperatingSystem /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_OperatingSystem" /* OperatingSystem */;
-			targetProxy = C3960D0D1CA8C62B009DAA87 /* PBXContainerItemProxy */;
+			targetProxy = C3960D471CA8D38B009DAA87 /* PBXContainerItemProxy */;
 		};
 		__Dependency_Strand /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_Strand" /* Strand */;
-			targetProxy = C3960D111CA8C62B009DAA87 /* PBXContainerItemProxy */;
+			targetProxy = C3960D4B1CA8D38B009DAA87 /* PBXContainerItemProxy */;
 		};
 		__Dependency_String /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_String" /* String */;
-			targetProxy = C3960D141CA8C62B009DAA87 /* PBXContainerItemProxy */;
+			targetProxy = C3960D4E1CA8D38B009DAA87 /* PBXContainerItemProxy */;
 		};
 		__Dependency_Vapor /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_Vapor" /* Vapor */;
-			targetProxy = C3960D161CA8C62B009DAA87 /* PBXContainerItemProxy */;
+			targetProxy = C3960D501CA8D38B009DAA87 /* PBXContainerItemProxy */;
 		};
 		__Dependency_libc /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_libc" /* libc */;
-			targetProxy = C3960D151CA8C62B009DAA87 /* PBXContainerItemProxy */;
+			targetProxy = C3960D4F1CA8D38B009DAA87 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
