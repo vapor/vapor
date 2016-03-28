@@ -5,19 +5,46 @@
     CRUD operations.
 */
 public protocol ResourceController {
-    associatedtype T
+    associatedtype Item: StringInitializable
     /// Display many instances
-    func index(request: Request) throws -> ResponseConvertible
+    func index(request: Request) throws -> ResponseRepresentable
 
     /// Create a new instance.
-    func store(request: Request) throws -> ResponseConvertible
+    func store(request: Request) throws -> ResponseRepresentable
 
     /// Show an instance.
-    func show(request: Request, item: T) throws -> ResponseConvertible
+    func show(request: Request, item: Item) throws -> ResponseRepresentable
 
     /// Update an instance.
-    func update(request: Request, item: T) throws -> ResponseConvertible
+    func update(request: Request, item: Item) throws -> ResponseRepresentable
 
     /// Delete an instance.
-    func destroy(request: Request, item: T) throws -> ResponseConvertible
+    func destroy(request: Request, item: Item) throws -> ResponseRepresentable
+}
+
+extension ResourceController {
+    /// Display many instances
+    public func index(request: Request) throws -> ResponseRepresentable {
+        throw Abort.NotFound
+    }
+    
+    /// Create a new instance.
+    public func store(request: Request) throws -> ResponseRepresentable {
+        throw Abort.NotFound
+    }
+    
+    /// Show an instance.
+    public func show(request: Request, item: Item) throws -> ResponseRepresentable {
+        throw Abort.NotFound
+    }
+    
+    /// Update an instance.
+    public func update(request: Request, item: Item) throws -> ResponseRepresentable {
+        throw Abort.NotFound
+    }
+    
+    /// Delete an instance.
+    public func destroy(request: Request, item: Item) throws -> ResponseRepresentable {
+        throw Abort.NotFound
+    }
 }

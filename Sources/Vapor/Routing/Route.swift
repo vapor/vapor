@@ -8,7 +8,7 @@ public class Route {
     /**
         The responder type that is used when a route is matched
      */
-    public typealias Handler = Request throws -> ResponseConvertible
+    public typealias Handler = Request throws -> ResponseRepresentable
 
     // MARK: Attributes
     

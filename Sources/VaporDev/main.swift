@@ -16,7 +16,7 @@ app.get("test") { request in
 
 //MARK: Resource
 
-app.resource("resource", controller: UserController.self)
+app.resource("users", controller: UserController.self)
 
 //MARK: Request data
 

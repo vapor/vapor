@@ -41,7 +41,7 @@ extension Application {
      
         Note: You are responsible for pluralizing your endpoints.
     */
-    public final func resource<Entity: StringInitializable>(path: String, makeControllerWith controllerFactory: () -> Controller<Entity>) {
+    public final func resource<Resource: ResourceController>(path: String, makeControllerWith controllerFactory: () -> Resource) {
         //GET /entities
         self.get(path) { request in
             return try controllerFactory().index(request)
@@ -53,31 +53,38 @@ extension Application {
         }
         
         //GET /entities/:id
-        self.get(path, Entity.self) { request, item in
+        self.get(path, Resource.Item.self) { request, item in
             return try controllerFactory().show(request, item: item)
         }
         
         //PUT /entities/:id
-        self.put(path, Entity.self) { request, item in
+        self.put(path, Resource.Item.self) { request, item in
             return try controllerFactory().update(request, item: item)
         }
         
         //DELETE /intities/:id
-        self.delete(path, Entity.self) { request, item in
+        self.delete(path, Resource.Item.self) { request, item in
             return try controllerFactory().destroy(request, item: item)
+        }
+        
+    }
+    
+    public final func resource<Resource: ResourceController where Resource: ApplicationInitializable>(path: String, controller: Resource.Type) {
+        resource(path) {
+            return controller.init(application: self)
         }
     }
 
-    public final func resource<Entity: StringInitializable>(path: String, controller: Controller<Entity>.Type) {
+    public final func resource<Resource: ResourceController where Resource: DefaultInitializable>(path: String, controller: Resource.Type) {
         resource(path) {
-            return controller.init(application: self)
+            return controller.init()
         }
     }
 
     final func add(method: Request.Method, path: String, handler: Route.Handler) {
         //Convert Route.Handler to Request.Handler
         var handler = { request in
-            return try handler(request).response()
+            return try handler(request).makeResponse()
         }
         
         //Apply any scoped middlewares

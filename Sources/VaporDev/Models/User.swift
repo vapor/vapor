@@ -8,11 +8,17 @@ final class User {
     }
 }
 
-extension User: ResponseConvertible {
-    func response() -> Response {
+extension User: JsonRepresentable {
+    func makeJson() -> Json {
         return Json([
             "name": "\(name)"
-        ]).response()
+        ])
+    }
+}
+
+extension User: ResponseRepresentable {
+    func makeResponse() -> Response {
+        return makeJson().makeResponse()
     }
 }
 
@@ -24,6 +30,7 @@ extension User: CustomStringConvertible {
 
 extension User: StringInitializable {
     convenience init?(from string: String) throws {
+        print(string)
         self.init(name: string)
     }
 }

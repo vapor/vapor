@@ -24,12 +24,20 @@ public class Json {
         _json = .stringValue(value)
     }
     
-    public init(_ value: [JSON]) {
-        _json = .arrayValue(value)
+    public init(_ value: [JsonRepresentable]) {
+        let array: [JSON] = value.map { item in
+            return item.makeJson()._json
+        }
+        _json = .arrayValue(array)
     }
     
-    public init(_ value: [String: JSON]) {
-        _json = .objectValue(value)
+    public init(_ value: [String: JsonRepresentable]) {
+        var object: [String: JSON] = [:]
+        
+        value.forEach { (key, item) in
+            object[key] = item.makeJson()._json
+        }
+        _json = .objectValue(object)
     }
     
     public init(_ value: [UInt8]) throws {
@@ -84,14 +92,31 @@ public class Json {
     }
 }
 
+
+public protocol JsonRepresentable {
+    func makeJson() -> Json
+}
+
+extension JSON: JsonRepresentable {
+    public func makeJson() -> Json {
+        return Json(self)
+    }
+}
+
+extension String: JsonRepresentable {
+    public func makeJson() -> Json {
+        return Json(self)
+    }
+}
+
 extension Json: CustomStringConvertible {
     public var description: String {
         return _json.description
     }
 }
 
-extension Json: ResponseConvertible {
-    public func response() -> Response {
+extension Json: ResponseRepresentable {
+    public func makeResponse() -> Response {
         return Response(status: .OK, data: data, contentType: .Json)
     }
 }

@@ -51,10 +51,10 @@ struct Func: CustomStringConvertible {
                 return wildcard.generic
             }.joined(separator: ", ")
             
-            f += ", \(genericsString)) throws -> ResponseConvertible) {\n"
+            f += ", \(genericsString)) throws -> ResponseRepresentable) {\n"
 
         } else {
-            f += ") throws -> ResponseConvertible) {\n"
+            f += ") throws -> ResponseRepresentable) {\n"
         }
         
         let pathString = params.map { param in
@@ -63,7 +63,7 @@ struct Func: CustomStringConvertible {
             }
             
             return "\\(\(param.name))"
-        }.joined(separator: ", ")
+        }.joined(separator: "/")
         
         f += "\t\tself.add(.\(method), path: \"\(pathString)\") { request in\n"
         

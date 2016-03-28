@@ -41,8 +41,8 @@ public class View {
 }
 
 ///Allows Views to be returned in Vapor closures
-extension View: ResponseConvertible {
-    public func response() -> Response {
+extension View: ResponseRepresentable {
+    public func makeResponse() -> Response {
         return Response(status: .OK, data: self.bytes, contentType: .Html)
     }
 }
