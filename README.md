@@ -45,6 +45,7 @@ brew install vapor-swift-2
 ```
 git clone https://github.com/qutheory/vapor
 cd vapor
+git checkout swift-2-2
 sudo make install
 ```
 
