@@ -93,8 +93,16 @@ public class Json {
 }
 
 
-public protocol JsonRepresentable {
+public protocol JsonRepresentable: ResponseRepresentable {
     func makeJson() -> Json
+}
+
+
+extension JsonRepresentable  {
+    ///Allows any JsonRepresentable to be returned through closures
+    public func makeResponse() -> Response {
+        return makeJson().makeResponse()
+    }
 }
 
 extension JSON: JsonRepresentable {

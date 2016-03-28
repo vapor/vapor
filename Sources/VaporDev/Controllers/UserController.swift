@@ -21,7 +21,7 @@ class UserController: Controller {
     
     /// Show an instance.
     func show(request: Request, item user: User) throws -> ResponseRepresentable {
-        //User can be used like JSON
+        //User can be used like JSON with JsonRepresentable
         return Json([
             "controller": "MyController.show",
             "user": user
@@ -30,13 +30,13 @@ class UserController: Controller {
     
     /// Update an instance.
     func update(request: Request, item user: User) throws -> ResponseRepresentable {
-        //Direct to JSON
+        //Testing JsonRepresentable
         return user.makeJson()
     }
     
     /// Delete an instance.
     func destroy(request: Request, item user: User) throws -> ResponseRepresentable {
-        //User is ResponseConvertible
+        //User is ResponseRepresentable by proxy of JsonRepresentable
         return user
     }
     

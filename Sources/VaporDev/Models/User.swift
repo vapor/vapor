@@ -16,12 +16,6 @@ extension User: JsonRepresentable {
     }
 }
 
-extension User: ResponseRepresentable {
-    func makeResponse() -> Response {
-        return makeJson().makeResponse()
-    }
-}
-
 extension User: CustomStringConvertible {
     var description: String {
         return "[User: \(name)]"
