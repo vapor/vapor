@@ -26,7 +26,7 @@ extension String {
     func hasPrefix(str: String) -> Bool {
         let strGen = str.characters.makeIterator()
         let selfGen = self.characters.makeIterator()
-        let seq = Zip2Sequence(_sequence1: strGen,  _sequence2: selfGen)
+        let seq = zip(strGen, selfGen)
         for (lhs, rhs) in seq where lhs != rhs {
             return false
         }
@@ -36,7 +36,7 @@ extension String {
     func hasSuffix(str: String) -> Bool {
         let strGen = str.characters.reversed().makeIterator()
         let selfGen = self.characters.reversed().makeIterator()
-        let seq = Zip2Sequence(_sequence1: strGen,  _sequence2: selfGen)
+        let seq = zip(strGen, selfGen)
         for (lhs, rhs) in seq where lhs != rhs {
             return false
         }
