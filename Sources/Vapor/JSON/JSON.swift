@@ -109,6 +109,24 @@ extension String: JsonRepresentable {
     }
 }
 
+extension Int: JsonRepresentable {
+    public func makeJson() -> Json {
+        return Json(self)
+    }
+}
+
+extension Double: JsonRepresentable {
+    public func makeJson() -> Json {
+        return Json(self)
+    }
+}
+
+extension Bool: JsonRepresentable {
+    public func makeJson() -> Json {
+        return Json(self)
+    }
+}
+
 extension Json: CustomStringConvertible {
     public var description: String {
         return _json.description

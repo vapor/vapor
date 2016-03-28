@@ -41,8 +41,9 @@ app.get("test", i, s) { request, int, string in
 
 app.get("json") { request in
     return Json([
-        "number":123,
+        "number": 123,
         "text": "unicorns",
+        "bool": false,
         "nested": ["one", 2, false]
     ])
 }

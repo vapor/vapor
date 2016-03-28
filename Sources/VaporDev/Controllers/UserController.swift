@@ -20,26 +20,24 @@ class UserController: Controller {
     }
     
     /// Show an instance.
-    func show(request: Request, item: User) throws -> ResponseRepresentable {
+    func show(request: Request, item user: User) throws -> ResponseRepresentable {
+        //User can be used like JSON
         return Json([
             "controller": "MyController.show",
-            "user": item
+            "user": user
         ])
     }
     
     /// Update an instance.
-    func update(request: Request, item: User) throws -> ResponseRepresentable {
-        return Json([
-            "controller": "MyController.update",
-            "user": item
-        ])
+    func update(request: Request, item user: User) throws -> ResponseRepresentable {
+        //Direct to JSON
+        return user.makeJson()
     }
     
     /// Delete an instance.
-    func destroy(request: Request, item: User) throws -> ResponseRepresentable {
-        Log.info("Delete: \(item)")
-        
-        return item
+    func destroy(request: Request, item user: User) throws -> ResponseRepresentable {
+        //User is ResponseConvertible
+        return user
     }
     
 }
