@@ -122,6 +122,7 @@ public class Application {
         var environment: String
 
         if let value = Process.valueFor(argument: "env") {
+            Log.info("Environment override: \(value)")
             environment = value
         } else {
             // TODO: This should default to "production" in release builds
@@ -181,18 +182,19 @@ public class Application {
         ip & port overrides
     */
     public func start(ip ip: String? = nil, port: Int? = nil) {
-        self.bootProviders()
-        self.server.delegate = self
+        bootProviders()
+        server.delegate = self
 
         self.ip = ip ?? self.ip
         self.port = port ?? self.port
 
-        self.bootRoutes()
-        self.bootArguments()
+        bootRoutes()
+        bootEnvironment()
+        bootArguments()
 
         do {
             Log.info("Server starting on \(self.ip):\(self.port)")
-            try self.server.boot(ip: self.ip, port: self.port)
+            try server.boot(ip: self.ip, port: self.port)
         } catch {
             Log.error("Server start error: \(error)")
         }
@@ -251,7 +253,12 @@ extension Application: ServerDriverDelegate {
 
             return response
         } catch {
-            return Response(error: "Server Error: \(error)")
+            var error = "Server Error: \(error)"
+            if environment == .Production {
+                error = "Something went wrong"
+            }
+            
+            return Response(error: error)
         }
 
     }

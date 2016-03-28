@@ -82,6 +82,13 @@ app.group("abort") {
     }
 }
 
+enum Error: ErrorProtocol {
+    case Unhandled
+}
+
+app.get("error") { request in
+    throw Error.Unhandled
+}
 
 //MARK: Session
 
@@ -120,4 +127,4 @@ app.middleware(AuthMiddleware.self) {
     }
 }
 
-app.start(port: 8024)
+app.start(port: 8080)

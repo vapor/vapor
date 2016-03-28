@@ -194,8 +194,7 @@ extension Response {
          - parameter error: a description of the server error
     */
     public convenience init(error: String) {
-        let text = "{\n    \"error\": true,\n    \"message\":\"\(error)\"\n}"
-        self.init(status: .Error, data: text.utf8, contentType: .Json)
+        self.init(status: .Error, data: error.utf8, contentType: .Json)
     }
     
     /**
