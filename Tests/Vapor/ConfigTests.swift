@@ -12,7 +12,11 @@ class ConfigTests: XCTestCase {
         ]
     }
     
+    #if Xcode
     let workDir = "/Users/tanner/Developer/vapor/vapor/Sources/VaporDev/"
+    #else
+    let workDir = "Sources/VaporDev/"
+    #endif
 
 	func testSimple() {
 		let config = self.config(.Development)
@@ -36,12 +40,13 @@ class ConfigTests: XCTestCase {
 
 	func testDotEnv() {
 		let config = self.config(.Development)
-        print(config.get("app.port", 0))
 		XCTAssert(config.get("app.port", 0) == 9000, ".env config incorrectly loaded.")
 	}
 
 	private func config(environment: Environment) -> Config {
 		let app = self.app(environment)
+        
+        print(workDir)
 
 		do {
 			try app.config.populate("\(workDir)Config", application: app)

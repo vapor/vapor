@@ -300,6 +300,8 @@
 		C3960CAC1CA8BC83009DAA87 /* test.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = test.txt; sourceTree = "<group>"; };
 		C3960CAE1CA8BC83009DAA87 /* template.stencil */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = template.stencil; sourceTree = "<group>"; };
 		C3960CAF1CA8BC83009DAA87 /* welcome.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; path = welcome.html; sourceTree = "<group>"; };
+		C3960CB61CA8C0DE009DAA87 /* .swift-version */ = {isa = PBXFileReference; lastKnownFileType = text; path = ".swift-version"; sourceTree = "<group>"; };
+		C3960CB71CA8C0DE009DAA87 /* .travis.yml */ = {isa = PBXFileReference; lastKnownFileType = text; path = .travis.yml; sourceTree = "<group>"; };
 		__PBXFileRef_Package.swift /* Package.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Package.swift; path = /Users/tanner/Developer/vapor/vapor/Package.swift; sourceTree = "<group>"; };
 		"__PBXFileRef_Packages/C7-0.1.11/Sources/AsyncStream.swift" /* AsyncStream.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncStream.swift; sourceTree = "<group>"; };
 		"__PBXFileRef_Packages/C7-0.1.11/Sources/AsyncStreamClient.swift" /* AsyncStreamClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncStreamClient.swift; sourceTree = "<group>"; };
@@ -779,6 +781,8 @@
 			isa = PBXGroup;
 			children = (
 				__PBXFileRef_Package.swift /* Package.swift */,
+				C3960CB61CA8C0DE009DAA87 /* .swift-version */,
+				C3960CB71CA8C0DE009DAA87 /* .travis.yml */,
 				"_______Group_Vapor" /* Vapor */,
 				"_______Group_VaporDev" /* VaporDev */,
 				"_______Group_Generator" /* Generator */,
@@ -1006,8 +1010,8 @@
 		"_______Tests_" /* Tests */ = {
 			isa = PBXGroup;
 			children = (
-				"_______Group_HummingbirdTestSuite" /* Hummingbird.testsuite */,
 				"_______Group_VaporTestSuite" /* Vapor.testsuite */,
+				"_______Group_HummingbirdTestSuite" /* Hummingbird.testsuite */,
 			);
 			name = Tests;
 			sourceTree = "<group>";

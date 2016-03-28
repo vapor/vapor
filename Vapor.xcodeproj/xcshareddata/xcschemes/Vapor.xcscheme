@@ -219,9 +219,9 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "______Target_OperatingSystem"
-            BuildableName = "libOperatingSystem.dylib"
-            BlueprintName = "OperatingSystem"
+            BlueprintIdentifier = "______Target_Vapor"
+            BuildableName = "libVapor.dylib"
+            BlueprintName = "Vapor"
             ReferencedContainer = "container:Vapor.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
