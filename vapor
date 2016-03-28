@@ -266,8 +266,7 @@ class Vapor {
         print("Community:")
         print("  Join our Slack if you have questions, ")
         print("  need help, or want to contribute.")
-        print("  https://github.com/qutheory/vapor#badges")
-        print("  (Look for the Slack badge in Vapor's README)")
+        print("  http://slack.qutheory.io")
         print()
     }
 }

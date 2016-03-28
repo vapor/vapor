@@ -57,6 +57,10 @@ app.post("json") { request in
     return "Received \(count) unicorns"
 }
 
+app.get("redirect") { request in
+    return Redirect(to: "http://qutheory.io:8001")
+}
+
 app.post("json2") { request in
     //parse a key inside the received json
     guard let count = request.data["unicorns"]?.int else {
