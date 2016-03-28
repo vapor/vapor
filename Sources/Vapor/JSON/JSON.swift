@@ -49,6 +49,45 @@ public class Json {
     public subscript(index: Int) -> Node? {
         return array?[index]
     }
+    
+    func merge(with json: Json) {
+        switch _json {
+        case .objectValue(let object):
+            guard case let .objectValue(otherObject) = json._json else {
+                _json = json._json
+                return
+            }
+            
+            var merged = object
+
+            for (key, value) in otherObject {
+                if let original = object[key] {
+                    let newValue = Json(original)
+                    newValue.merge(with: Json(value))
+                    merged[key] = newValue._json
+                } else {
+                    merged[key] = value
+                }
+            }
+            
+            _json = .objectValue(merged)
+        case .arrayValue(let array):
+            guard case let .arrayValue(otherArray) = json._json else {
+                _json = json._json
+                return
+            }
+        
+            _json = .arrayValue(array + otherArray)
+        default:
+            _json = json._json
+        }
+    }
+}
+
+extension Json: CustomStringConvertible {
+    public var description: String {
+        return _json.description
+    }
 }
 
 extension Json: ResponseConvertible {

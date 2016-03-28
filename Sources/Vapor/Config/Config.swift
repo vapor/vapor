@@ -90,8 +90,7 @@ public class Config {
         if keys.count == 0 {
             repository[group] = value
         } else {
-            //FIXME
-            //repository[group]?.set(value, keys: keyPath.keys)
+            repository[group]?.set(value, keys: keyPath.keys)
         }
     }
 
@@ -145,8 +144,7 @@ public class Config {
                 if repository[group] == nil {
                     repository[group] = json
                 } else {
-                    //FIXME
-                    //repository[group]?.merge(with: json)
+                    repository[group]?.merge(with: json)
                 }
             }
         }
@@ -166,8 +164,7 @@ public class Config {
                     if repository[group] == nil {
                         repository[group] = node.json
                     } else {
-                        //FIXME
-                        //repository[group]?.merge(with: json)
+                        repository[group]?.merge(with: node.json ?? Json([:]))
                     }
                 }
             }
@@ -202,35 +199,33 @@ public class Config {
 
 }
 
-//FIXME
-//extension Json {
-//
-//    mutating private func set(value: Json, keys: [Swift.String]) {
-//        var keys = keys
-//
-//        guard keys.count > 0 else {
-//            return
-//        }
-//
-//        let key = keys.removeFirst()
-//
-//        guard case let .Object(object) = self else {
-//            return
-//        }
-//
-//        var updated = object
-//
-//        if keys.count == 0 {
-//            updated[key] = value
-//        } else {
-//            var child = updated[key] ?? Json.Object([:])
-//            child.set(value, keys: keys)
-//        }
-//
-//        self = .Object(updated)
-//    }
-//
-//}
+extension Json {
+
+    private func set(value: Json, keys: [Swift.String]) {
+        var keys = keys
+
+        guard keys.count > 0 else {
+            return
+        }
+
+        let key = keys.removeFirst()
+
+        guard let o = object else {
+            return
+        }
+
+        var updated = o
+
+        if keys.count == 0 {
+            updated[key] = value
+        } else {
+            let child = updated[key] ?? Json([:])
+            child.json?.set(value, keys: keys)
+        }
+    }
+
+}
+
 
 extension String {
 

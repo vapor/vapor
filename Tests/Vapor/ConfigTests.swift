@@ -11,6 +11,8 @@ class ConfigTests: XCTestCase {
            ("testDotEnv", testDotEnv),
         ]
     }
+    
+    let workDir = "/Users/tanner/Developer/vapor/vapor/Sources/VaporDev/"
 
 	func testSimple() {
 		let config = self.config(.Development)
@@ -34,6 +36,7 @@ class ConfigTests: XCTestCase {
 
 	func testDotEnv() {
 		let config = self.config(.Development)
+        print(config.get("app.port", 0))
 		XCTAssert(config.get("app.port", 0) == 9000, ".env config incorrectly loaded.")
 	}
 
@@ -41,7 +44,7 @@ class ConfigTests: XCTestCase {
 		let app = self.app(environment)
 
 		do {
-			try app.config.populate("./Sources/VaporDev/Config", application: app)
+			try app.config.populate("\(workDir)Config", application: app)
 		} catch {
 			XCTAssert(false, "Failed to load config: \(error)")
 		}
