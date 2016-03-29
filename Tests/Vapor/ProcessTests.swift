@@ -13,7 +13,8 @@ class ProcessTests: XCTestCase {
     
     static var allTests : [(String, ProcessTests -> () throws -> Void)] {
         return [
-            ("testArgumentExtraction", testArgumentExtraction)
+            ("testArgumentExtraction", testArgumentExtraction),
+            ("testFixes", testFixes)
         ]
     }
     
@@ -28,5 +29,11 @@ class ProcessTests: XCTestCase {
         
         let workDir = Process.valueFor(argument: "workDir", inArguments: testArguments)
         XCTAssert(workDir == "WorkDirectory")
+    }
+    
+    func testFixes() {
+        let bytes: [UInt8] = [64, 64, 64]
+        let string = String(data: bytes)
+        XCTAssert(string == "@@@")
     }
 }
