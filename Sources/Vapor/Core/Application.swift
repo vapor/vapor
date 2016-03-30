@@ -1,5 +1,6 @@
 import libc
 import Hummingbird
+import S4
 
 public class Application {
     public static let VERSION = "0.4.1"
@@ -17,7 +18,7 @@ public class Application {
         This property is constant since it cannot
         be changed after the server has been booted.
     */
-    public var server: ServerDriver = Jeeves<Hummingbird.Socket>()
+    public var server: ServerDriver?
 
     /**
         The session driver is responsible for
@@ -184,7 +185,6 @@ public class Application {
     public func start(ip ip: String? = nil, port: Int? = nil) {
         bootArguments()
         bootProviders()
-        server.delegate = self
 
         self.ip = ip ?? self.ip
         self.port = port ?? self.port
@@ -198,7 +198,9 @@ public class Application {
 
         do {
             Log.info("Server starting on \(self.ip):\(self.port)")
-            try server.boot(ip: self.ip, port: self.port)
+            let server = try Jeeves<Hummingbird.Socket>(port: self.port)
+            server.ip = self.ip
+            try server.serve(self)
         } catch {
             Log.error("Server start error: \(error)")
         }
@@ -215,7 +217,7 @@ public class Application {
         // File exists
         if let fileBody = try? FileManager.readBytesFromFile(filePath) {
             return { _ in
-                return Response(status: .OK, data: fileBody, contentType: .None)
+                return Response(status: .OK, data: Data(fileBody), contentType: .None)
             }
         } else {
             return { _ in
@@ -227,6 +229,10 @@ public class Application {
 }
 
 extension Application: ServerDriverDelegate {
+    
+    public func respond(request: S4.Request) throws -> S4.Response {
+        return self.serverDriverDidReceiveRequest(request.vaporRequest).s4Response
+    }
 
     public func serverDriverDidReceiveRequest(request: Request) -> Response {
         var handler: Request.Handler

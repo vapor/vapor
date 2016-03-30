@@ -1,3 +1,5 @@
+import C7
+
 /**
     Requests contains data sent from a client to the
     web server such as method, parameters, and data.
@@ -62,7 +64,7 @@ public class Request {
     public let headers: [Header.Key: String]
     
     ///Content of the `Request`.
-    public let body: [UInt8]
+    public let body: C7.Data
     
     ///Address from which the `Request` originated.
     public let address: String?
@@ -84,7 +86,7 @@ public class Request {
         return false
     }
 
-    public init(method: Method, path: String, address: String?, headers headersArray: [(String, String)], body: [UInt8]) {
+    public init(method: Method, path: String, address: String?, headers headersArray: [(String, String)], body: C7.Data) {
         self.method = method
         self.path = path.split("?").first ?? ""
         self.address = address
@@ -100,7 +102,7 @@ public class Request {
         self.hostname = headers["Host"] ?? "*"
         
         let query = path.queryData()
-        self.data = Data(query: query, bytes: body)
+        self.data = Data(query: query, bytes: body.bytes)
         
         Log.verbose("Received \(method) request for \(path)")
     }

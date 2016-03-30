@@ -71,8 +71,8 @@ public enum Json {
         self.init(json)
     }
     
-    public var data: [UInt8] {
-        return JSONSerializer().serialize(makeZewoJson()).bytes
+    public var data: Data {
+        return JSONSerializer().serialize(makeZewoJson())
     }
     
     private func makeZewoJson() -> JSON {

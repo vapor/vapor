@@ -124,7 +124,7 @@ public class Response {
     // MARK: Member Variables
 
     public var status: Status
-    public var data: [UInt8]
+    public var data: Data
     public var contentType: ContentType
     public var headers: [String : String] = [:]
     
@@ -153,9 +153,9 @@ public class Response {
         - parameter data: the byte sequence that will be transmitted
         - parameter contentType: the content type that the data represents
     */
-    public init<T: Sequence where T.Iterator.Element == UInt8>(status: Status, data: T, contentType: ContentType) {
+    public init(status: Status, data: Data, contentType: ContentType) {
         self.status = status
-        self.data = [UInt8](data)
+        self.data = data
         self.contentType = contentType
         switch contentType {
         case .Json:
@@ -194,7 +194,7 @@ extension Response {
          - parameter error: a description of the server error
     */
     public convenience init(error: String) {
-        self.init(status: .Error, data: error.utf8, contentType: .Json)
+        self.init(status: .Error, data: error.data, contentType: .Json)
     }
     
     /**
@@ -205,7 +205,7 @@ extension Response {
     */
     public convenience init(status: Status, html: String) {
         let serialised = "<html><meta charset=\"UTF-8\"><body>\(html)</body></html>"
-        self.init(status: status, data: serialised.utf8, contentType: .Html)
+        self.init(status: status, data: serialised.data, contentType: .Html)
     }
     
     /**
@@ -215,7 +215,7 @@ extension Response {
          - parameter text: basic text response
     */
     public convenience init(status: Status, text: String) {
-        self.init(status: status, data: text.utf8, contentType: .Text)
+        self.init(status: status, data: text.data, contentType: .Text)
     }
     
     /**

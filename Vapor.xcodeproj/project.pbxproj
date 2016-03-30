@@ -7,86 +7,137 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		C3779C2E1CA8DE6200A18F2E /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
-		C3779C2F1CA8DE6200A18F2E /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
-		C3779C301CA8DE6200A18F2E /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
-		C3779C311CA8DE6200A18F2E /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
-		C3779C321CA8DE6200A18F2E /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
-		C3779C331CA8DE6200A18F2E /* libData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Data" /* libData.dylib */; };
-		C3779C341CA8DE6200A18F2E /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
-		C3779C351CA8DE6200A18F2E /* libData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Data" /* libData.dylib */; };
-		C3779C361CA8DE6200A18F2E /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
-		C3779C371CA8DE6200A18F2E /* libInterchangeData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_InterchangeData" /* libInterchangeData.dylib */; };
-		C3779C381CA8DE6200A18F2E /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
-		C3779C391CA8DE6200A18F2E /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
-		C3779C3A1CA8DE6200A18F2E /* libData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Data" /* libData.dylib */; };
-		C3779C3B1CA8DE6200A18F2E /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
-		C3779C3C1CA8DE6200A18F2E /* libInterchangeData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_InterchangeData" /* libInterchangeData.dylib */; };
-		C3779C3D1CA8DE6200A18F2E /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
-		C3779C3E1CA8DE6200A18F2E /* libHummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Hummingbird" /* libHummingbird.dylib */; };
-		C3779C3F1CA8DE6200A18F2E /* libJSON.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_JSON" /* libJSON.dylib */; };
-		C3779C401CA8DE6200A18F2E /* libString.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_String" /* libString.dylib */; };
-		C3779C411CA8DE6200A18F2E /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
-		C3779C421CA8DE6200A18F2E /* libData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Data" /* libData.dylib */; };
-		C3779C431CA8DE6200A18F2E /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
-		C3779C441CA8DE6200A18F2E /* libInterchangeData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_InterchangeData" /* libInterchangeData.dylib */; };
-		C3779C451CA8DE6200A18F2E /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
-		C3779C461CA8DE6200A18F2E /* libHummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Hummingbird" /* libHummingbird.dylib */; };
-		C3779C471CA8DE6200A18F2E /* libJSON.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_JSON" /* libJSON.dylib */; };
-		C3779C481CA8DE6200A18F2E /* libString.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_String" /* libString.dylib */; };
-		C3779C491CA8DE6200A18F2E /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
-		C3779C4A1CA8DE6200A18F2E /* libData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Data" /* libData.dylib */; };
-		C3779C4B1CA8DE6200A18F2E /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
-		C3779C4C1CA8DE6200A18F2E /* libInterchangeData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_InterchangeData" /* libInterchangeData.dylib */; };
-		C3779C4D1CA8DE6200A18F2E /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
-		C3779C4E1CA8DE6200A18F2E /* libHummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Hummingbird" /* libHummingbird.dylib */; };
-		C3779C4F1CA8DE6200A18F2E /* libJSON.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_JSON" /* libJSON.dylib */; };
-		C3779C501CA8DE6200A18F2E /* libString.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_String" /* libString.dylib */; };
-		C3779C511CA8DE6200A18F2E /* liblibc.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_libc" /* liblibc.dylib */; };
-		C3779C521CA8DE6200A18F2E /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
-		C3779C531CA8DE6200A18F2E /* libData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Data" /* libData.dylib */; };
-		C3779C541CA8DE6200A18F2E /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
-		C3779C551CA8DE6200A18F2E /* libInterchangeData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_InterchangeData" /* libInterchangeData.dylib */; };
-		C3779C561CA8DE6200A18F2E /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
-		C3779C571CA8DE6200A18F2E /* libHummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Hummingbird" /* libHummingbird.dylib */; };
-		C3779C581CA8DE6200A18F2E /* libJSON.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_JSON" /* libJSON.dylib */; };
-		C3779C591CA8DE6200A18F2E /* libString.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_String" /* libString.dylib */; };
-		C3779C5A1CA8DE6200A18F2E /* libVapor.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Vapor" /* libVapor.dylib */; };
-		C3779C5B1CA8DE6200A18F2E /* liblibc.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_libc" /* liblibc.dylib */; };
+		C3F327D51CAC8857001A88EE /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
+		C3F327D61CAC8857001A88EE /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
+		C3F327D71CAC8857001A88EE /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
+		C3F327D81CAC8857001A88EE /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
+		C3F327D91CAC8857001A88EE /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
+		C3F327DA1CAC8857001A88EE /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
+		C3F327DB1CAC8857001A88EE /* libData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Data" /* libData.dylib */; };
+		C3F327DC1CAC8857001A88EE /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
+		C3F327DD1CAC8857001A88EE /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
+		C3F327DE1CAC8857001A88EE /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
+		C3F327DF1CAC8857001A88EE /* libData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Data" /* libData.dylib */; };
+		C3F327E01CAC8857001A88EE /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
+		C3F327E11CAC8857001A88EE /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
+		C3F327E21CAC8857001A88EE /* libInterchangeData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_InterchangeData" /* libInterchangeData.dylib */; };
+		C3F327E31CAC8857001A88EE /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
+		C3F327E41CAC8857001A88EE /* libS4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_S4" /* libS4.dylib */; };
+		C3F327E51CAC8857001A88EE /* libHummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Hummingbird" /* libHummingbird.dylib */; };
+		C3F327E61CAC8857001A88EE /* libData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Data" /* libData.dylib */; };
+		C3F327E71CAC8857001A88EE /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
+		C3F327E81CAC8857001A88EE /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
+		C3F327E91CAC8857001A88EE /* libInterchangeData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_InterchangeData" /* libInterchangeData.dylib */; };
+		C3F327EA1CAC8857001A88EE /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
+		C3F327EB1CAC8857001A88EE /* libS4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_S4" /* libS4.dylib */; };
+		C3F327EC1CAC8857001A88EE /* libHummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Hummingbird" /* libHummingbird.dylib */; };
+		C3F327ED1CAC8857001A88EE /* libJSON.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_JSON" /* libJSON.dylib */; };
+		C3F327EE1CAC8857001A88EE /* libString.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_String" /* libString.dylib */; };
+		C3F327EF1CAC8857001A88EE /* libData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Data" /* libData.dylib */; };
+		C3F327F01CAC8857001A88EE /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
+		C3F327F11CAC8857001A88EE /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
+		C3F327F21CAC8857001A88EE /* libInterchangeData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_InterchangeData" /* libInterchangeData.dylib */; };
+		C3F327F31CAC8857001A88EE /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
+		C3F327F41CAC8857001A88EE /* libS4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_S4" /* libS4.dylib */; };
+		C3F327F51CAC8857001A88EE /* libHummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Hummingbird" /* libHummingbird.dylib */; };
+		C3F327F61CAC8857001A88EE /* libJSON.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_JSON" /* libJSON.dylib */; };
+		C3F327F71CAC8857001A88EE /* libString.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_String" /* libString.dylib */; };
+		C3F327F81CAC8857001A88EE /* libData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Data" /* libData.dylib */; };
+		C3F327F91CAC8857001A88EE /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
+		C3F327FA1CAC8857001A88EE /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
+		C3F327FB1CAC8857001A88EE /* libInterchangeData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_InterchangeData" /* libInterchangeData.dylib */; };
+		C3F327FC1CAC8857001A88EE /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
+		C3F327FD1CAC8857001A88EE /* libS4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_S4" /* libS4.dylib */; };
+		C3F327FE1CAC8857001A88EE /* libHummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Hummingbird" /* libHummingbird.dylib */; };
+		C3F327FF1CAC8857001A88EE /* libJSON.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_JSON" /* libJSON.dylib */; };
+		C3F328001CAC8857001A88EE /* libString.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_String" /* libString.dylib */; };
+		C3F328011CAC8857001A88EE /* liblibc.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_libc" /* liblibc.dylib */; };
+		C3F328021CAC8857001A88EE /* libData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Data" /* libData.dylib */; };
+		C3F328031CAC8857001A88EE /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
+		C3F328041CAC8857001A88EE /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
+		C3F328051CAC8857001A88EE /* libInterchangeData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_InterchangeData" /* libInterchangeData.dylib */; };
+		C3F328061CAC8857001A88EE /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
+		C3F328071CAC8857001A88EE /* libS4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_S4" /* libS4.dylib */; };
+		C3F328081CAC8857001A88EE /* libHummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Hummingbird" /* libHummingbird.dylib */; };
+		C3F328091CAC8857001A88EE /* libJSON.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_JSON" /* libJSON.dylib */; };
+		C3F3280A1CAC8857001A88EE /* libString.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_String" /* libString.dylib */; };
+		C3F3280B1CAC8857001A88EE /* libVapor.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Vapor" /* libVapor.dylib */; };
+		C3F3280C1CAC8857001A88EE /* liblibc.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_libc" /* liblibc.dylib */; };
+		C3F328191CAC8B15001A88EE /* S4+Vapor.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3F328181CAC8B15001A88EE /* S4+Vapor.swift */; };
 		_LinkFileRef_C7 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
 		_LinkFileRef_Data /* libData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Data" /* libData.dylib */; };
 		_LinkFileRef_Hummingbird /* libHummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Hummingbird" /* libHummingbird.dylib */; };
 		_LinkFileRef_InterchangeData /* libInterchangeData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_InterchangeData" /* libInterchangeData.dylib */; };
 		_LinkFileRef_JSON /* libJSON.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_JSON" /* libJSON.dylib */; };
 		_LinkFileRef_OperatingSystem /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
+		_LinkFileRef_S4 /* libS4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_S4" /* libS4.dylib */; };
 		_LinkFileRef_Strand /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
 		_LinkFileRef_String /* libString.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_String" /* libString.dylib */; };
 		_LinkFileRef_Vapor /* libVapor.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Vapor" /* libVapor.dylib */; };
 		_LinkFileRef_libc /* liblibc.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_libc" /* liblibc.dylib */; };
-		"__src_cc_ref_Packages/C7-0.1.11/Sources/AsyncStream.swift" /* AsyncStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/C7-0.1.11/Sources/AsyncStream.swift" /* AsyncStream.swift */; };
-		"__src_cc_ref_Packages/C7-0.1.11/Sources/AsyncStreamClient.swift" /* AsyncStreamClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/C7-0.1.11/Sources/AsyncStreamClient.swift" /* AsyncStreamClient.swift */; };
-		"__src_cc_ref_Packages/C7-0.1.11/Sources/AsyncStreamServer.swift" /* AsyncStreamServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/C7-0.1.11/Sources/AsyncStreamServer.swift" /* AsyncStreamServer.swift */; };
-		"__src_cc_ref_Packages/C7-0.1.11/Sources/Byte.swift" /* Byte.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/C7-0.1.11/Sources/Byte.swift" /* Byte.swift */; };
-		"__src_cc_ref_Packages/C7-0.1.11/Sources/CaseInsensitiveString.swift" /* CaseInsensitiveString.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/C7-0.1.11/Sources/CaseInsensitiveString.swift" /* CaseInsensitiveString.swift */; };
-		"__src_cc_ref_Packages/C7-0.1.11/Sources/CustomDataStore.swift" /* CustomDataStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/C7-0.1.11/Sources/CustomDataStore.swift" /* CustomDataStore.swift */; };
-		"__src_cc_ref_Packages/C7-0.1.11/Sources/Data.swift" /* Data.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/C7-0.1.11/Sources/Data.swift" /* Data.swift */; };
-		"__src_cc_ref_Packages/C7-0.1.11/Sources/Drain.swift" /* Drain.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/C7-0.1.11/Sources/Drain.swift" /* Drain.swift */; };
-		"__src_cc_ref_Packages/C7-0.1.11/Sources/Storage.swift" /* Storage.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/C7-0.1.11/Sources/Storage.swift" /* Storage.swift */; };
-		"__src_cc_ref_Packages/C7-0.1.11/Sources/Stream.swift" /* Stream.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/C7-0.1.11/Sources/Stream.swift" /* Stream.swift */; };
-		"__src_cc_ref_Packages/C7-0.1.11/Sources/StreamClient.swift" /* StreamClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/C7-0.1.11/Sources/StreamClient.swift" /* StreamClient.swift */; };
-		"__src_cc_ref_Packages/C7-0.1.11/Sources/StreamSequence.swift" /* StreamSequence.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/C7-0.1.11/Sources/StreamSequence.swift" /* StreamSequence.swift */; };
-		"__src_cc_ref_Packages/C7-0.1.11/Sources/StreamServer.swift" /* StreamServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/C7-0.1.11/Sources/StreamServer.swift" /* StreamServer.swift */; };
-		"__src_cc_ref_Packages/C7-0.1.11/Sources/URI.swift" /* URI.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/C7-0.1.11/Sources/URI.swift" /* URI.swift */; };
+		"__src_cc_ref_Packages/C7-0.1.12/Sources/AsyncStream.swift" /* AsyncStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/C7-0.1.12/Sources/AsyncStream.swift" /* AsyncStream.swift */; };
+		"__src_cc_ref_Packages/C7-0.1.12/Sources/AsyncStreamClient.swift" /* AsyncStreamClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/C7-0.1.12/Sources/AsyncStreamClient.swift" /* AsyncStreamClient.swift */; };
+		"__src_cc_ref_Packages/C7-0.1.12/Sources/AsyncStreamServer.swift" /* AsyncStreamServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/C7-0.1.12/Sources/AsyncStreamServer.swift" /* AsyncStreamServer.swift */; };
+		"__src_cc_ref_Packages/C7-0.1.12/Sources/Byte.swift" /* Byte.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/C7-0.1.12/Sources/Byte.swift" /* Byte.swift */; };
+		"__src_cc_ref_Packages/C7-0.1.12/Sources/C7.swift" /* C7.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/C7-0.1.12/Sources/C7.swift" /* C7.swift */; };
+		"__src_cc_ref_Packages/C7-0.1.12/Sources/CaseInsensitiveString.swift" /* CaseInsensitiveString.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/C7-0.1.12/Sources/CaseInsensitiveString.swift" /* CaseInsensitiveString.swift */; };
+		"__src_cc_ref_Packages/C7-0.1.12/Sources/CustomDataStore.swift" /* CustomDataStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/C7-0.1.12/Sources/CustomDataStore.swift" /* CustomDataStore.swift */; };
+		"__src_cc_ref_Packages/C7-0.1.12/Sources/Data.swift" /* Data.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/C7-0.1.12/Sources/Data.swift" /* Data.swift */; };
+		"__src_cc_ref_Packages/C7-0.1.12/Sources/Drain.swift" /* Drain.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/C7-0.1.12/Sources/Drain.swift" /* Drain.swift */; };
+		"__src_cc_ref_Packages/C7-0.1.12/Sources/Storage.swift" /* Storage.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/C7-0.1.12/Sources/Storage.swift" /* Storage.swift */; };
+		"__src_cc_ref_Packages/C7-0.1.12/Sources/Stream.swift" /* Stream.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/C7-0.1.12/Sources/Stream.swift" /* Stream.swift */; };
+		"__src_cc_ref_Packages/C7-0.1.12/Sources/StreamClient.swift" /* StreamClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/C7-0.1.12/Sources/StreamClient.swift" /* StreamClient.swift */; };
+		"__src_cc_ref_Packages/C7-0.1.12/Sources/StreamSequence.swift" /* StreamSequence.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/C7-0.1.12/Sources/StreamSequence.swift" /* StreamSequence.swift */; };
+		"__src_cc_ref_Packages/C7-0.1.12/Sources/StreamServer.swift" /* StreamServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/C7-0.1.12/Sources/StreamServer.swift" /* StreamServer.swift */; };
+		"__src_cc_ref_Packages/C7-0.1.12/Sources/URI.swift" /* URI.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/C7-0.1.12/Sources/URI.swift" /* URI.swift */; };
+		"__src_cc_ref_Packages/C7-0.1.12/Tests/C7/ExampleTests.swift" /* ExampleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/C7-0.1.12/Tests/C7/ExampleTests.swift" /* ExampleTests.swift */; };
 		"__src_cc_ref_Packages/Data-0.4.8/Source/Data.swift" /* Data.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/Data-0.4.8/Source/Data.swift" /* Data.swift */; };
 		"__src_cc_ref_Packages/Hummingbird-1.1.2/Sources/Socket.swift" /* Socket.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/Hummingbird-1.1.2/Sources/Socket.swift" /* Socket.swift */; };
 		"__src_cc_ref_Packages/Hummingbird-1.1.2/Sources/String+Transcoding.swift" /* String+Transcoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/Hummingbird-1.1.2/Sources/String+Transcoding.swift" /* String+Transcoding.swift */; };
-		"__src_cc_ref_Packages/InterchangeData-0.4.2/Source/InterchangeData.swift" /* InterchangeData.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/InterchangeData-0.4.2/Source/InterchangeData.swift" /* InterchangeData.swift */; };
+		"__src_cc_ref_Packages/Hummingbird-1.1.2/Tests/Hummingbird/SocketTests.swift" /* SocketTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/Hummingbird-1.1.2/Tests/Hummingbird/SocketTests.swift" /* SocketTests.swift */; };
+		"__src_cc_ref_Packages/InterchangeData-0.4.3/Source/InterchangeData.swift" /* InterchangeData.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/InterchangeData-0.4.3/Source/InterchangeData.swift" /* InterchangeData.swift */; };
 		"__src_cc_ref_Packages/JSON-0.4.1/Source/JSON.swift" /* JSON.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/JSON-0.4.1/Source/JSON.swift" /* JSON.swift */; };
 		"__src_cc_ref_Packages/JSON-0.4.1/Source/JSONInterchangeDataParser.swift" /* JSONInterchangeDataParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/JSON-0.4.1/Source/JSONInterchangeDataParser.swift" /* JSONInterchangeDataParser.swift */; };
 		"__src_cc_ref_Packages/JSON-0.4.1/Source/JSONInterchangeDataSerializer.swift" /* JSONInterchangeDataSerializer.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/JSON-0.4.1/Source/JSONInterchangeDataSerializer.swift" /* JSONInterchangeDataSerializer.swift */; };
 		"__src_cc_ref_Packages/JSON-0.4.1/Source/JSONParser.swift" /* JSONParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/JSON-0.4.1/Source/JSONParser.swift" /* JSONParser.swift */; };
 		"__src_cc_ref_Packages/JSON-0.4.1/Source/JSONSerializer.swift" /* JSONSerializer.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/JSON-0.4.1/Source/JSONSerializer.swift" /* JSONSerializer.swift */; };
 		"__src_cc_ref_Packages/OperatingSystem-0.4.2/Sources/OperatingSystem.swift" /* OperatingSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/OperatingSystem-0.4.2/Sources/OperatingSystem.swift" /* OperatingSystem.swift */; };
+		"__src_cc_ref_Packages/S4-0.1.8/Sources/AsyncClient.swift" /* AsyncClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.8/Sources/AsyncClient.swift" /* AsyncClient.swift */; };
+		"__src_cc_ref_Packages/S4-0.1.8/Sources/AsyncMiddleware.swift" /* AsyncMiddleware.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.8/Sources/AsyncMiddleware.swift" /* AsyncMiddleware.swift */; };
+		"__src_cc_ref_Packages/S4-0.1.8/Sources/AsyncResponder.swift" /* AsyncResponder.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.8/Sources/AsyncResponder.swift" /* AsyncResponder.swift */; };
+		"__src_cc_ref_Packages/S4-0.1.8/Sources/AsyncRoute.swift" /* AsyncRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.8/Sources/AsyncRoute.swift" /* AsyncRoute.swift */; };
+		"__src_cc_ref_Packages/S4-0.1.8/Sources/AsyncRouteMatcher.swift" /* AsyncRouteMatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.8/Sources/AsyncRouteMatcher.swift" /* AsyncRouteMatcher.swift */; };
+		"__src_cc_ref_Packages/S4-0.1.8/Sources/AsyncRouter.swift" /* AsyncRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.8/Sources/AsyncRouter.swift" /* AsyncRouter.swift */; };
+		"__src_cc_ref_Packages/S4-0.1.8/Sources/AsyncServer.swift" /* AsyncServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.8/Sources/AsyncServer.swift" /* AsyncServer.swift */; };
+		"__src_cc_ref_Packages/S4-0.1.8/Sources/Body.swift" /* Body.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.8/Sources/Body.swift" /* Body.swift */; };
+		"__src_cc_ref_Packages/S4-0.1.8/Sources/Client.swift" /* Client.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.8/Sources/Client.swift" /* Client.swift */; };
+		"__src_cc_ref_Packages/S4-0.1.8/Sources/HeaderName.swift" /* HeaderName.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.8/Sources/HeaderName.swift" /* HeaderName.swift */; };
+		"__src_cc_ref_Packages/S4-0.1.8/Sources/HeaderValues.swift" /* HeaderValues.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.8/Sources/HeaderValues.swift" /* HeaderValues.swift */; };
+		"__src_cc_ref_Packages/S4-0.1.8/Sources/Headers.swift" /* Headers.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.8/Sources/Headers.swift" /* Headers.swift */; };
+		"__src_cc_ref_Packages/S4-0.1.8/Sources/Message.swift" /* Message.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.8/Sources/Message.swift" /* Message.swift */; };
+		"__src_cc_ref_Packages/S4-0.1.8/Sources/Method.swift" /* Method.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.8/Sources/Method.swift" /* Method.swift */; };
+		"__src_cc_ref_Packages/S4-0.1.8/Sources/Middleware.swift" /* Middleware.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.8/Sources/Middleware.swift" /* Middleware.swift */; };
+		"__src_cc_ref_Packages/S4-0.1.8/Sources/Request.swift" /* Request.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.8/Sources/Request.swift" /* Request.swift */; };
+		"__src_cc_ref_Packages/S4-0.1.8/Sources/RequestConvertible.swift" /* RequestConvertible.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.8/Sources/RequestConvertible.swift" /* RequestConvertible.swift */; };
+		"__src_cc_ref_Packages/S4-0.1.8/Sources/RequestInitializable.swift" /* RequestInitializable.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.8/Sources/RequestInitializable.swift" /* RequestInitializable.swift */; };
+		"__src_cc_ref_Packages/S4-0.1.8/Sources/RequestParser.swift" /* RequestParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.8/Sources/RequestParser.swift" /* RequestParser.swift */; };
+		"__src_cc_ref_Packages/S4-0.1.8/Sources/RequestRepresentable.swift" /* RequestRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.8/Sources/RequestRepresentable.swift" /* RequestRepresentable.swift */; };
+		"__src_cc_ref_Packages/S4-0.1.8/Sources/RequestSerializer.swift" /* RequestSerializer.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.8/Sources/RequestSerializer.swift" /* RequestSerializer.swift */; };
+		"__src_cc_ref_Packages/S4-0.1.8/Sources/Responder.swift" /* Responder.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.8/Sources/Responder.swift" /* Responder.swift */; };
+		"__src_cc_ref_Packages/S4-0.1.8/Sources/Response.swift" /* Response.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.8/Sources/Response.swift" /* Response.swift */; };
+		"__src_cc_ref_Packages/S4-0.1.8/Sources/ResponseConvertible.swift" /* ResponseConvertible.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.8/Sources/ResponseConvertible.swift" /* ResponseConvertible.swift */; };
+		"__src_cc_ref_Packages/S4-0.1.8/Sources/ResponseInitializable.swift" /* ResponseInitializable.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.8/Sources/ResponseInitializable.swift" /* ResponseInitializable.swift */; };
+		"__src_cc_ref_Packages/S4-0.1.8/Sources/ResponseParser.swift" /* ResponseParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.8/Sources/ResponseParser.swift" /* ResponseParser.swift */; };
+		"__src_cc_ref_Packages/S4-0.1.8/Sources/ResponseRepresentable.swift" /* ResponseRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.8/Sources/ResponseRepresentable.swift" /* ResponseRepresentable.swift */; };
+		"__src_cc_ref_Packages/S4-0.1.8/Sources/ResponseSerializer.swift" /* ResponseSerializer.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.8/Sources/ResponseSerializer.swift" /* ResponseSerializer.swift */; };
+		"__src_cc_ref_Packages/S4-0.1.8/Sources/Route.swift" /* Route.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.8/Sources/Route.swift" /* Route.swift */; };
+		"__src_cc_ref_Packages/S4-0.1.8/Sources/RouteMatcher.swift" /* RouteMatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.8/Sources/RouteMatcher.swift" /* RouteMatcher.swift */; };
+		"__src_cc_ref_Packages/S4-0.1.8/Sources/Router.swift" /* Router.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.8/Sources/Router.swift" /* Router.swift */; };
+		"__src_cc_ref_Packages/S4-0.1.8/Sources/S4.swift" /* S4.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.8/Sources/S4.swift" /* S4.swift */; };
+		"__src_cc_ref_Packages/S4-0.1.8/Sources/Server.swift" /* Server.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.8/Sources/Server.swift" /* Server.swift */; };
+		"__src_cc_ref_Packages/S4-0.1.8/Sources/Status.swift" /* Status.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.8/Sources/Status.swift" /* Status.swift */; };
+		"__src_cc_ref_Packages/S4-0.1.8/Sources/Version.swift" /* Version.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.8/Sources/Version.swift" /* Version.swift */; };
+		"__src_cc_ref_Packages/S4-0.1.8/Tests/S4/ExampleTests.swift" /* ExampleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.8/Tests/S4/ExampleTests.swift" /* ExampleTests.swift */; };
 		"__src_cc_ref_Packages/Strand-1.1.0/Sources/Strand.swift" /* Strand.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/Strand-1.1.0/Sources/Strand.swift" /* Strand.swift */; };
 		"__src_cc_ref_Packages/String-0.4.3/Source/String.swift" /* String.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/String-0.4.3/Source/String.swift" /* String.swift */; };
 		__src_cc_ref_Sources/Generator/main.swift /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Generator/main.swift /* main.swift */; };
@@ -136,7 +187,7 @@
 		"__src_cc_ref_Sources/Vapor/Utilities/Character+Extensions.swift" /* Utilities/Character+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Sources/Vapor/Utilities/Character+Extensions.swift" /* Utilities/Character+Extensions.swift */; };
 		__src_cc_ref_Sources/Vapor/Utilities/Dispatch.swift /* Utilities/Dispatch.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Utilities/Dispatch.swift /* Utilities/Dispatch.swift */; };
 		__src_cc_ref_Sources/Vapor/Utilities/Lock.swift /* Utilities/Lock.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Utilities/Lock.swift /* Utilities/Lock.swift */; };
-		__src_cc_ref_Sources/Vapor/Utilities/S4.swift /* Utilities/S4.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Utilities/S4.swift /* Utilities/S4.swift */; };
+		__src_cc_ref_Sources/Vapor/Utilities/S4.swift /* Vapor+S4.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Utilities/S4.swift /* Vapor+S4.swift */; };
 		__src_cc_ref_Sources/Vapor/Utilities/ThreadSafeStore.swift /* Utilities/ThreadSafeStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Utilities/ThreadSafeStore.swift /* Utilities/ThreadSafeStore.swift */; };
 		__src_cc_ref_Sources/Vapor/View/RenderDriver.swift /* View/RenderDriver.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/View/RenderDriver.swift /* View/RenderDriver.swift */; };
 		__src_cc_ref_Sources/Vapor/View/View.swift /* View/View.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/View/View.swift /* View/View.swift */; };
@@ -162,104 +213,151 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		C3779C5C1CA8DE6300A18F2E /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = __RootObject_ /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = "______Target_OperatingSystem";
-			remoteInfo = OperatingSystem;
-		};
-		C3779C5D1CA8DE6300A18F2E /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = __RootObject_ /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = "______Target_C7";
-			remoteInfo = C7;
-		};
-		C3779C5E1CA8DE6300A18F2E /* PBXContainerItemProxy */ = {
+		C3F3280D1CAC8857001A88EE /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = __RootObject_ /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = "______Target_Data";
 			remoteInfo = Data;
 		};
-		C3779C5F1CA8DE6300A18F2E /* PBXContainerItemProxy */ = {
+		C3F3280E1CAC8857001A88EE /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = __RootObject_ /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = "______Target_InterchangeData";
-			remoteInfo = InterchangeData;
+			remoteGlobalIDString = "______Target_C7";
+			remoteInfo = C7;
 		};
-		C3779C601CA8DE6300A18F2E /* PBXContainerItemProxy */ = {
+		C3F3280F1CAC8857001A88EE /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = __RootObject_ /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = "______Target_OperatingSystem";
+			remoteInfo = OperatingSystem;
+		};
+		C3F328101CAC8857001A88EE /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = __RootObject_ /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = "______Target_Strand";
 			remoteInfo = Strand;
 		};
-		C3779C611CA8DE6300A18F2E /* PBXContainerItemProxy */ = {
+		C3F328111CAC8857001A88EE /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = __RootObject_ /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = "______Target_InterchangeData";
+			remoteInfo = InterchangeData;
+		};
+		C3F328121CAC8857001A88EE /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = __RootObject_ /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = "______Target_S4";
+			remoteInfo = S4;
+		};
+		C3F328131CAC8857001A88EE /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = __RootObject_ /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = "______Target_Hummingbird";
 			remoteInfo = Hummingbird;
 		};
-		C3779C621CA8DE6300A18F2E /* PBXContainerItemProxy */ = {
+		C3F328141CAC8857001A88EE /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = __RootObject_ /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = "______Target_JSON";
 			remoteInfo = JSON;
 		};
-		C3779C631CA8DE6300A18F2E /* PBXContainerItemProxy */ = {
+		C3F328151CAC8857001A88EE /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = __RootObject_ /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = "______Target_String";
 			remoteInfo = String;
 		};
-		C3779C641CA8DE6300A18F2E /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = __RootObject_ /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = "______Target_libc";
-			remoteInfo = libc;
-		};
-		C3779C651CA8DE6300A18F2E /* PBXContainerItemProxy */ = {
+		C3F328161CAC8857001A88EE /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = __RootObject_ /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = "______Target_Vapor";
 			remoteInfo = Vapor;
 		};
+		C3F328171CAC8857001A88EE /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = __RootObject_ /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = "______Target_libc";
+			remoteInfo = libc;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		C3F328181CAC8B15001A88EE /* S4+Vapor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "S4+Vapor.swift"; path = "Utilities/S4+Vapor.swift"; sourceTree = "<group>"; };
 		__PBXFileRef_Package.swift /* Package.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Package.swift; path = /Users/tanner/Developer/vapor/vapor/Package.swift; sourceTree = "<group>"; };
-		"__PBXFileRef_Packages/C7-0.1.11/Sources/AsyncStream.swift" /* AsyncStream.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncStream.swift; sourceTree = "<group>"; };
-		"__PBXFileRef_Packages/C7-0.1.11/Sources/AsyncStreamClient.swift" /* AsyncStreamClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncStreamClient.swift; sourceTree = "<group>"; };
-		"__PBXFileRef_Packages/C7-0.1.11/Sources/AsyncStreamServer.swift" /* AsyncStreamServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncStreamServer.swift; sourceTree = "<group>"; };
-		"__PBXFileRef_Packages/C7-0.1.11/Sources/Byte.swift" /* Byte.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Byte.swift; sourceTree = "<group>"; };
-		"__PBXFileRef_Packages/C7-0.1.11/Sources/CaseInsensitiveString.swift" /* CaseInsensitiveString.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaseInsensitiveString.swift; sourceTree = "<group>"; };
-		"__PBXFileRef_Packages/C7-0.1.11/Sources/CustomDataStore.swift" /* CustomDataStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomDataStore.swift; sourceTree = "<group>"; };
-		"__PBXFileRef_Packages/C7-0.1.11/Sources/Data.swift" /* Data.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Data.swift; sourceTree = "<group>"; };
-		"__PBXFileRef_Packages/C7-0.1.11/Sources/Drain.swift" /* Drain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Drain.swift; sourceTree = "<group>"; };
-		"__PBXFileRef_Packages/C7-0.1.11/Sources/Storage.swift" /* Storage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Storage.swift; sourceTree = "<group>"; };
-		"__PBXFileRef_Packages/C7-0.1.11/Sources/Stream.swift" /* Stream.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stream.swift; sourceTree = "<group>"; };
-		"__PBXFileRef_Packages/C7-0.1.11/Sources/StreamClient.swift" /* StreamClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamClient.swift; sourceTree = "<group>"; };
-		"__PBXFileRef_Packages/C7-0.1.11/Sources/StreamSequence.swift" /* StreamSequence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamSequence.swift; sourceTree = "<group>"; };
-		"__PBXFileRef_Packages/C7-0.1.11/Sources/StreamServer.swift" /* StreamServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamServer.swift; sourceTree = "<group>"; };
-		"__PBXFileRef_Packages/C7-0.1.11/Sources/URI.swift" /* URI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URI.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/C7-0.1.12/Sources/AsyncStream.swift" /* AsyncStream.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncStream.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/C7-0.1.12/Sources/AsyncStreamClient.swift" /* AsyncStreamClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncStreamClient.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/C7-0.1.12/Sources/AsyncStreamServer.swift" /* AsyncStreamServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncStreamServer.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/C7-0.1.12/Sources/Byte.swift" /* Byte.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Byte.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/C7-0.1.12/Sources/C7.swift" /* C7.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = C7.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/C7-0.1.12/Sources/CaseInsensitiveString.swift" /* CaseInsensitiveString.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaseInsensitiveString.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/C7-0.1.12/Sources/CustomDataStore.swift" /* CustomDataStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomDataStore.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/C7-0.1.12/Sources/Data.swift" /* Data.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Data.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/C7-0.1.12/Sources/Drain.swift" /* Drain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Drain.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/C7-0.1.12/Sources/Storage.swift" /* Storage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Storage.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/C7-0.1.12/Sources/Stream.swift" /* Stream.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stream.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/C7-0.1.12/Sources/StreamClient.swift" /* StreamClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamClient.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/C7-0.1.12/Sources/StreamSequence.swift" /* StreamSequence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamSequence.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/C7-0.1.12/Sources/StreamServer.swift" /* StreamServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamServer.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/C7-0.1.12/Sources/URI.swift" /* URI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URI.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/C7-0.1.12/Tests/C7/ExampleTests.swift" /* ExampleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExampleTests.swift; sourceTree = "<group>"; };
 		"__PBXFileRef_Packages/Data-0.4.8/Source/Data.swift" /* Data.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Data.swift; sourceTree = "<group>"; };
 		"__PBXFileRef_Packages/Hummingbird-1.1.2/Sources/Socket.swift" /* Socket.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Socket.swift; sourceTree = "<group>"; };
 		"__PBXFileRef_Packages/Hummingbird-1.1.2/Sources/String+Transcoding.swift" /* String+Transcoding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+Transcoding.swift"; sourceTree = "<group>"; };
-		"__PBXFileRef_Packages/InterchangeData-0.4.2/Source/InterchangeData.swift" /* InterchangeData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InterchangeData.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/Hummingbird-1.1.2/Tests/Hummingbird/SocketTests.swift" /* SocketTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocketTests.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/InterchangeData-0.4.3/Source/InterchangeData.swift" /* InterchangeData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InterchangeData.swift; sourceTree = "<group>"; };
 		"__PBXFileRef_Packages/JSON-0.4.1/Source/JSON.swift" /* JSON.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSON.swift; sourceTree = "<group>"; };
 		"__PBXFileRef_Packages/JSON-0.4.1/Source/JSONInterchangeDataParser.swift" /* JSONInterchangeDataParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONInterchangeDataParser.swift; sourceTree = "<group>"; };
 		"__PBXFileRef_Packages/JSON-0.4.1/Source/JSONInterchangeDataSerializer.swift" /* JSONInterchangeDataSerializer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONInterchangeDataSerializer.swift; sourceTree = "<group>"; };
 		"__PBXFileRef_Packages/JSON-0.4.1/Source/JSONParser.swift" /* JSONParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONParser.swift; sourceTree = "<group>"; };
 		"__PBXFileRef_Packages/JSON-0.4.1/Source/JSONSerializer.swift" /* JSONSerializer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONSerializer.swift; sourceTree = "<group>"; };
 		"__PBXFileRef_Packages/OperatingSystem-0.4.2/Sources/OperatingSystem.swift" /* OperatingSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OperatingSystem.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.1.8/Sources/AsyncClient.swift" /* AsyncClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncClient.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.1.8/Sources/AsyncMiddleware.swift" /* AsyncMiddleware.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncMiddleware.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.1.8/Sources/AsyncResponder.swift" /* AsyncResponder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncResponder.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.1.8/Sources/AsyncRoute.swift" /* AsyncRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncRoute.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.1.8/Sources/AsyncRouteMatcher.swift" /* AsyncRouteMatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncRouteMatcher.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.1.8/Sources/AsyncRouter.swift" /* AsyncRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncRouter.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.1.8/Sources/AsyncServer.swift" /* AsyncServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncServer.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.1.8/Sources/Body.swift" /* Body.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Body.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.1.8/Sources/Client.swift" /* Client.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Client.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.1.8/Sources/HeaderName.swift" /* HeaderName.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeaderName.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.1.8/Sources/HeaderValues.swift" /* HeaderValues.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeaderValues.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.1.8/Sources/Headers.swift" /* Headers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Headers.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.1.8/Sources/Message.swift" /* Message.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Message.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.1.8/Sources/Method.swift" /* Method.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Method.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.1.8/Sources/Middleware.swift" /* Middleware.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Middleware.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.1.8/Sources/Request.swift" /* Request.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Request.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.1.8/Sources/RequestConvertible.swift" /* RequestConvertible.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestConvertible.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.1.8/Sources/RequestInitializable.swift" /* RequestInitializable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestInitializable.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.1.8/Sources/RequestParser.swift" /* RequestParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestParser.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.1.8/Sources/RequestRepresentable.swift" /* RequestRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestRepresentable.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.1.8/Sources/RequestSerializer.swift" /* RequestSerializer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestSerializer.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.1.8/Sources/Responder.swift" /* Responder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Responder.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.1.8/Sources/Response.swift" /* Response.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Response.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.1.8/Sources/ResponseConvertible.swift" /* ResponseConvertible.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResponseConvertible.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.1.8/Sources/ResponseInitializable.swift" /* ResponseInitializable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResponseInitializable.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.1.8/Sources/ResponseParser.swift" /* ResponseParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResponseParser.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.1.8/Sources/ResponseRepresentable.swift" /* ResponseRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResponseRepresentable.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.1.8/Sources/ResponseSerializer.swift" /* ResponseSerializer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResponseSerializer.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.1.8/Sources/Route.swift" /* Route.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Route.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.1.8/Sources/RouteMatcher.swift" /* RouteMatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteMatcher.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.1.8/Sources/Router.swift" /* Router.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Router.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.1.8/Sources/S4.swift" /* S4.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = S4.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.1.8/Sources/Server.swift" /* Server.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Server.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.1.8/Sources/Status.swift" /* Status.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Status.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.1.8/Sources/Version.swift" /* Version.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Version.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.1.8/Tests/S4/ExampleTests.swift" /* ExampleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExampleTests.swift; sourceTree = "<group>"; };
 		"__PBXFileRef_Packages/Strand-1.1.0/Sources/Strand.swift" /* Strand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Strand.swift; sourceTree = "<group>"; };
 		"__PBXFileRef_Packages/String-0.4.3/Source/String.swift" /* String.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = String.swift; sourceTree = "<group>"; };
 		__PBXFileRef_Sources/Generator/main.swift /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
@@ -309,7 +407,7 @@
 		"__PBXFileRef_Sources/Vapor/Utilities/Character+Extensions.swift" /* Utilities/Character+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Utilities/Character+Extensions.swift"; sourceTree = "<group>"; };
 		__PBXFileRef_Sources/Vapor/Utilities/Dispatch.swift /* Utilities/Dispatch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utilities/Dispatch.swift; sourceTree = "<group>"; };
 		__PBXFileRef_Sources/Vapor/Utilities/Lock.swift /* Utilities/Lock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utilities/Lock.swift; sourceTree = "<group>"; };
-		__PBXFileRef_Sources/Vapor/Utilities/S4.swift /* Utilities/S4.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utilities/S4.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Sources/Vapor/Utilities/S4.swift /* Vapor+S4.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "Vapor+S4.swift"; path = "Utilities/Vapor+S4.swift"; sourceTree = "<group>"; };
 		__PBXFileRef_Sources/Vapor/Utilities/ThreadSafeStore.swift /* Utilities/ThreadSafeStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utilities/ThreadSafeStore.swift; sourceTree = "<group>"; };
 		__PBXFileRef_Sources/Vapor/View/RenderDriver.swift /* View/RenderDriver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = View/RenderDriver.swift; sourceTree = "<group>"; };
 		__PBXFileRef_Sources/Vapor/View/View.swift /* View/View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = View/View.swift; sourceTree = "<group>"; };
@@ -333,17 +431,21 @@
 		__PBXFileRef_Tests/Vapor/SessionTests.swift /* SessionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionTests.swift; sourceTree = "<group>"; };
 		__PBXFileRef_Tests/Vapor/TypedRouteTests.swift /* TypedRouteTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TypedRouteTests.swift; sourceTree = "<group>"; };
 		"_____Product_C7" /* libC7.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libC7.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		"_____Product_C7TestSuite" /* C7TestSuite.xctest */ = {isa = PBXFileReference; lastKnownFileType = file; name = C7TestSuite.xctest; path = C7.testsuite.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		"_____Product_Data" /* libData.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libData.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		"_____Product_Generator" /* Generator */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; path = Generator; sourceTree = BUILT_PRODUCTS_DIR; };
 		"_____Product_Hummingbird" /* libHummingbird.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libHummingbird.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		"_____Product_HummingbirdTestSuite" /* HummingbirdTestSuite.xctest */ = {isa = PBXFileReference; lastKnownFileType = file; name = HummingbirdTestSuite.xctest; path = Hummingbird.testsuite.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		"_____Product_InterchangeData" /* libInterchangeData.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libInterchangeData.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		"_____Product_JSON" /* libJSON.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libJSON.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		"_____Product_OperatingSystem" /* libOperatingSystem.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libOperatingSystem.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		"_____Product_S4" /* libS4.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libS4.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		"_____Product_S4TestSuite" /* S4TestSuite.xctest */ = {isa = PBXFileReference; lastKnownFileType = file; name = S4TestSuite.xctest; path = S4.testsuite.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		"_____Product_Strand" /* libStrand.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libStrand.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		"_____Product_String" /* libString.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libString.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		"_____Product_Vapor" /* libVapor.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libVapor.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		"_____Product_VaporDev" /* VaporDev */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; path = VaporDev; sourceTree = BUILT_PRODUCTS_DIR; };
-		"_____Product_VaporTestSuite" /* Vapor.testsuite.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = Vapor.testsuite.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		"_____Product_VaporTestSuite" /* VaporTestSuite.xctest */ = {isa = PBXFileReference; lastKnownFileType = file; name = VaporTestSuite.xctest; path = Vapor.testsuite.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		"_____Product_libc" /* liblibc.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = liblibc.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -355,12 +457,20 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		"___LinkPhase_Data" /* Frameworks */ = {
+		"___LinkPhase_C7TestSuite" /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
 				_LinkFileRef_C7 /* libC7.dylib in Frameworks */,
-				C3779C2E1CA8DE6200A18F2E /* libOperatingSystem.dylib in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		"___LinkPhase_Data" /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 0;
+			files = (
+				C3F327D51CAC8857001A88EE /* libC7.dylib in Frameworks */,
+				C3F327D61CAC8857001A88EE /* libOperatingSystem.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -368,12 +478,13 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
-				C3779C341CA8DE6200A18F2E /* libC7.dylib in Frameworks */,
-				C3779C351CA8DE6200A18F2E /* libData.dylib in Frameworks */,
-				C3779C361CA8DE6200A18F2E /* libStrand.dylib in Frameworks */,
-				C3779C371CA8DE6200A18F2E /* libInterchangeData.dylib in Frameworks */,
-				C3779C381CA8DE6200A18F2E /* libOperatingSystem.dylib in Frameworks */,
-				_LinkFileRef_Hummingbird /* libHummingbird.dylib in Frameworks */,
+				C3F327DF1CAC8857001A88EE /* libData.dylib in Frameworks */,
+				C3F327E01CAC8857001A88EE /* libC7.dylib in Frameworks */,
+				C3F327E11CAC8857001A88EE /* libStrand.dylib in Frameworks */,
+				C3F327E21CAC8857001A88EE /* libInterchangeData.dylib in Frameworks */,
+				C3F327E31CAC8857001A88EE /* libOperatingSystem.dylib in Frameworks */,
+				C3F327E41CAC8857001A88EE /* libS4.dylib in Frameworks */,
+				C3F327E51CAC8857001A88EE /* libHummingbird.dylib in Frameworks */,
 				_LinkFileRef_JSON /* libJSON.dylib in Frameworks */,
 				_LinkFileRef_String /* libString.dylib in Frameworks */,
 			);
@@ -387,12 +498,21 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		"___LinkPhase_HummingbirdTestSuite" /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 0;
+			files = (
+				C3F327DC1CAC8857001A88EE /* libStrand.dylib in Frameworks */,
+				_LinkFileRef_Hummingbird /* libHummingbird.dylib in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		"___LinkPhase_InterchangeData" /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
-				C3779C2F1CA8DE6200A18F2E /* libC7.dylib in Frameworks */,
-				C3779C301CA8DE6200A18F2E /* libOperatingSystem.dylib in Frameworks */,
+				C3F327D71CAC8857001A88EE /* libC7.dylib in Frameworks */,
+				C3F327D81CAC8857001A88EE /* libOperatingSystem.dylib in Frameworks */,
 				_LinkFileRef_Data /* libData.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -401,9 +521,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
-				C3779C311CA8DE6200A18F2E /* libC7.dylib in Frameworks */,
-				C3779C321CA8DE6200A18F2E /* libOperatingSystem.dylib in Frameworks */,
-				C3779C331CA8DE6200A18F2E /* libData.dylib in Frameworks */,
+				C3F327D91CAC8857001A88EE /* libC7.dylib in Frameworks */,
+				C3F327DA1CAC8857001A88EE /* libOperatingSystem.dylib in Frameworks */,
+				C3F327DB1CAC8857001A88EE /* libData.dylib in Frameworks */,
 				_LinkFileRef_InterchangeData /* libInterchangeData.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -412,6 +532,23 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		"___LinkPhase_S4" /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 0;
+			files = (
+				C3F327DD1CAC8857001A88EE /* libC7.dylib in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		"___LinkPhase_S4TestSuite" /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 0;
+			files = (
+				C3F327DE1CAC8857001A88EE /* libC7.dylib in Frameworks */,
+				_LinkFileRef_S4 /* libS4.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -434,14 +571,15 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
-				C3779C411CA8DE6200A18F2E /* libC7.dylib in Frameworks */,
-				C3779C421CA8DE6200A18F2E /* libData.dylib in Frameworks */,
-				C3779C431CA8DE6200A18F2E /* libStrand.dylib in Frameworks */,
-				C3779C441CA8DE6200A18F2E /* libInterchangeData.dylib in Frameworks */,
-				C3779C451CA8DE6200A18F2E /* libOperatingSystem.dylib in Frameworks */,
-				C3779C461CA8DE6200A18F2E /* libHummingbird.dylib in Frameworks */,
-				C3779C471CA8DE6200A18F2E /* libJSON.dylib in Frameworks */,
-				C3779C481CA8DE6200A18F2E /* libString.dylib in Frameworks */,
+				C3F327EF1CAC8857001A88EE /* libData.dylib in Frameworks */,
+				C3F327F01CAC8857001A88EE /* libC7.dylib in Frameworks */,
+				C3F327F11CAC8857001A88EE /* libStrand.dylib in Frameworks */,
+				C3F327F21CAC8857001A88EE /* libInterchangeData.dylib in Frameworks */,
+				C3F327F31CAC8857001A88EE /* libOperatingSystem.dylib in Frameworks */,
+				C3F327F41CAC8857001A88EE /* libS4.dylib in Frameworks */,
+				C3F327F51CAC8857001A88EE /* libHummingbird.dylib in Frameworks */,
+				C3F327F61CAC8857001A88EE /* libJSON.dylib in Frameworks */,
+				C3F327F71CAC8857001A88EE /* libString.dylib in Frameworks */,
 				_LinkFileRef_libc /* liblibc.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -450,16 +588,17 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
-				C3779C491CA8DE6200A18F2E /* libC7.dylib in Frameworks */,
-				C3779C4A1CA8DE6200A18F2E /* libData.dylib in Frameworks */,
-				C3779C4B1CA8DE6200A18F2E /* libStrand.dylib in Frameworks */,
-				C3779C4C1CA8DE6200A18F2E /* libInterchangeData.dylib in Frameworks */,
-				C3779C4D1CA8DE6200A18F2E /* libOperatingSystem.dylib in Frameworks */,
-				C3779C4E1CA8DE6200A18F2E /* libHummingbird.dylib in Frameworks */,
-				C3779C4F1CA8DE6200A18F2E /* libJSON.dylib in Frameworks */,
-				C3779C501CA8DE6200A18F2E /* libString.dylib in Frameworks */,
+				C3F327F81CAC8857001A88EE /* libData.dylib in Frameworks */,
+				C3F327F91CAC8857001A88EE /* libC7.dylib in Frameworks */,
+				C3F327FA1CAC8857001A88EE /* libStrand.dylib in Frameworks */,
+				C3F327FB1CAC8857001A88EE /* libInterchangeData.dylib in Frameworks */,
+				C3F327FC1CAC8857001A88EE /* libOperatingSystem.dylib in Frameworks */,
+				C3F327FD1CAC8857001A88EE /* libS4.dylib in Frameworks */,
+				C3F327FE1CAC8857001A88EE /* libHummingbird.dylib in Frameworks */,
+				C3F327FF1CAC8857001A88EE /* libJSON.dylib in Frameworks */,
+				C3F328001CAC8857001A88EE /* libString.dylib in Frameworks */,
 				_LinkFileRef_Vapor /* libVapor.dylib in Frameworks */,
-				C3779C511CA8DE6200A18F2E /* liblibc.dylib in Frameworks */,
+				C3F328011CAC8857001A88EE /* liblibc.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -467,16 +606,17 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
-				C3779C521CA8DE6200A18F2E /* libC7.dylib in Frameworks */,
-				C3779C531CA8DE6200A18F2E /* libData.dylib in Frameworks */,
-				C3779C541CA8DE6200A18F2E /* libStrand.dylib in Frameworks */,
-				C3779C551CA8DE6200A18F2E /* libInterchangeData.dylib in Frameworks */,
-				C3779C561CA8DE6200A18F2E /* libOperatingSystem.dylib in Frameworks */,
-				C3779C571CA8DE6200A18F2E /* libHummingbird.dylib in Frameworks */,
-				C3779C581CA8DE6200A18F2E /* libJSON.dylib in Frameworks */,
-				C3779C591CA8DE6200A18F2E /* libString.dylib in Frameworks */,
-				C3779C5A1CA8DE6200A18F2E /* libVapor.dylib in Frameworks */,
-				C3779C5B1CA8DE6200A18F2E /* liblibc.dylib in Frameworks */,
+				C3F328021CAC8857001A88EE /* libData.dylib in Frameworks */,
+				C3F328031CAC8857001A88EE /* libC7.dylib in Frameworks */,
+				C3F328041CAC8857001A88EE /* libStrand.dylib in Frameworks */,
+				C3F328051CAC8857001A88EE /* libInterchangeData.dylib in Frameworks */,
+				C3F328061CAC8857001A88EE /* libOperatingSystem.dylib in Frameworks */,
+				C3F328071CAC8857001A88EE /* libS4.dylib in Frameworks */,
+				C3F328081CAC8857001A88EE /* libHummingbird.dylib in Frameworks */,
+				C3F328091CAC8857001A88EE /* libJSON.dylib in Frameworks */,
+				C3F3280A1CAC8857001A88EE /* libString.dylib in Frameworks */,
+				C3F3280B1CAC8857001A88EE /* libVapor.dylib in Frameworks */,
+				C3F3280C1CAC8857001A88EE /* liblibc.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -484,14 +624,15 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
-				C3779C391CA8DE6200A18F2E /* libC7.dylib in Frameworks */,
-				C3779C3A1CA8DE6200A18F2E /* libData.dylib in Frameworks */,
-				C3779C3B1CA8DE6200A18F2E /* libStrand.dylib in Frameworks */,
-				C3779C3C1CA8DE6200A18F2E /* libInterchangeData.dylib in Frameworks */,
-				C3779C3D1CA8DE6200A18F2E /* libOperatingSystem.dylib in Frameworks */,
-				C3779C3E1CA8DE6200A18F2E /* libHummingbird.dylib in Frameworks */,
-				C3779C3F1CA8DE6200A18F2E /* libJSON.dylib in Frameworks */,
-				C3779C401CA8DE6200A18F2E /* libString.dylib in Frameworks */,
+				C3F327E61CAC8857001A88EE /* libData.dylib in Frameworks */,
+				C3F327E71CAC8857001A88EE /* libC7.dylib in Frameworks */,
+				C3F327E81CAC8857001A88EE /* libStrand.dylib in Frameworks */,
+				C3F327E91CAC8857001A88EE /* libInterchangeData.dylib in Frameworks */,
+				C3F327EA1CAC8857001A88EE /* libOperatingSystem.dylib in Frameworks */,
+				C3F327EB1CAC8857001A88EE /* libS4.dylib in Frameworks */,
+				C3F327EC1CAC8857001A88EE /* libHummingbird.dylib in Frameworks */,
+				C3F327ED1CAC8857001A88EE /* libJSON.dylib in Frameworks */,
+				C3F327EE1CAC8857001A88EE /* libString.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -501,7 +642,10 @@
 		TestProducts_ /* Tests */ = {
 			isa = PBXGroup;
 			children = (
-				"_____Product_VaporTestSuite" /* Vapor.testsuite.xctest */,
+				"_____Product_C7TestSuite" /* C7TestSuite.xctest */,
+				"_____Product_HummingbirdTestSuite" /* HummingbirdTestSuite.xctest */,
+				"_____Product_S4TestSuite" /* S4TestSuite.xctest */,
+				"_____Product_VaporTestSuite" /* VaporTestSuite.xctest */,
 			);
 			name = Tests;
 			sourceTree = "<group>";
@@ -528,6 +672,7 @@
 				"_____Product_JSON" /* libJSON.dylib */,
 				"_____Product_Strand" /* libStrand.dylib */,
 				"_____Product_Hummingbird" /* libHummingbird.dylib */,
+				"_____Product_S4" /* libS4.dylib */,
 				"_____Product_Generator" /* Generator */,
 				"_____Product_libc" /* liblibc.dylib */,
 				"_____Product_Vapor" /* libVapor.dylib */,
@@ -547,6 +692,7 @@
 				"_______Group_JSON" /* JSON */,
 				"_______Group_Strand" /* Strand */,
 				"_______Group_Hummingbird" /* Hummingbird */,
+				"_______Group_S4" /* S4 */,
 				"_______Group_Generator" /* Generator */,
 				"_______Group_libc" /* libc */,
 				"_______Group_Vapor" /* Vapor */,
@@ -558,23 +704,33 @@
 		"_______Group_C7" /* C7 */ = {
 			isa = PBXGroup;
 			children = (
-				"__PBXFileRef_Packages/C7-0.1.11/Sources/AsyncStream.swift" /* AsyncStream.swift */,
-				"__PBXFileRef_Packages/C7-0.1.11/Sources/AsyncStreamClient.swift" /* AsyncStreamClient.swift */,
-				"__PBXFileRef_Packages/C7-0.1.11/Sources/AsyncStreamServer.swift" /* AsyncStreamServer.swift */,
-				"__PBXFileRef_Packages/C7-0.1.11/Sources/Byte.swift" /* Byte.swift */,
-				"__PBXFileRef_Packages/C7-0.1.11/Sources/CaseInsensitiveString.swift" /* CaseInsensitiveString.swift */,
-				"__PBXFileRef_Packages/C7-0.1.11/Sources/CustomDataStore.swift" /* CustomDataStore.swift */,
-				"__PBXFileRef_Packages/C7-0.1.11/Sources/Data.swift" /* Data.swift */,
-				"__PBXFileRef_Packages/C7-0.1.11/Sources/Drain.swift" /* Drain.swift */,
-				"__PBXFileRef_Packages/C7-0.1.11/Sources/Storage.swift" /* Storage.swift */,
-				"__PBXFileRef_Packages/C7-0.1.11/Sources/Stream.swift" /* Stream.swift */,
-				"__PBXFileRef_Packages/C7-0.1.11/Sources/StreamClient.swift" /* StreamClient.swift */,
-				"__PBXFileRef_Packages/C7-0.1.11/Sources/StreamSequence.swift" /* StreamSequence.swift */,
-				"__PBXFileRef_Packages/C7-0.1.11/Sources/StreamServer.swift" /* StreamServer.swift */,
-				"__PBXFileRef_Packages/C7-0.1.11/Sources/URI.swift" /* URI.swift */,
+				"__PBXFileRef_Packages/C7-0.1.12/Sources/AsyncStream.swift" /* AsyncStream.swift */,
+				"__PBXFileRef_Packages/C7-0.1.12/Sources/AsyncStreamClient.swift" /* AsyncStreamClient.swift */,
+				"__PBXFileRef_Packages/C7-0.1.12/Sources/AsyncStreamServer.swift" /* AsyncStreamServer.swift */,
+				"__PBXFileRef_Packages/C7-0.1.12/Sources/Byte.swift" /* Byte.swift */,
+				"__PBXFileRef_Packages/C7-0.1.12/Sources/C7.swift" /* C7.swift */,
+				"__PBXFileRef_Packages/C7-0.1.12/Sources/CaseInsensitiveString.swift" /* CaseInsensitiveString.swift */,
+				"__PBXFileRef_Packages/C7-0.1.12/Sources/CustomDataStore.swift" /* CustomDataStore.swift */,
+				"__PBXFileRef_Packages/C7-0.1.12/Sources/Data.swift" /* Data.swift */,
+				"__PBXFileRef_Packages/C7-0.1.12/Sources/Drain.swift" /* Drain.swift */,
+				"__PBXFileRef_Packages/C7-0.1.12/Sources/Storage.swift" /* Storage.swift */,
+				"__PBXFileRef_Packages/C7-0.1.12/Sources/Stream.swift" /* Stream.swift */,
+				"__PBXFileRef_Packages/C7-0.1.12/Sources/StreamClient.swift" /* StreamClient.swift */,
+				"__PBXFileRef_Packages/C7-0.1.12/Sources/StreamSequence.swift" /* StreamSequence.swift */,
+				"__PBXFileRef_Packages/C7-0.1.12/Sources/StreamServer.swift" /* StreamServer.swift */,
+				"__PBXFileRef_Packages/C7-0.1.12/Sources/URI.swift" /* URI.swift */,
 			);
 			name = C7;
-			path = "Packages/C7-0.1.11/Sources";
+			path = "Packages/C7-0.1.12/Sources";
+			sourceTree = "<group>";
+		};
+		"_______Group_C7TestSuite" /* C7.testsuite */ = {
+			isa = PBXGroup;
+			children = (
+				"__PBXFileRef_Packages/C7-0.1.12/Tests/C7/ExampleTests.swift" /* ExampleTests.swift */,
+			);
+			name = C7.testsuite;
+			path = "Packages/C7-0.1.12/Tests/C7";
 			sourceTree = "<group>";
 		};
 		"_______Group_Data" /* Data */ = {
@@ -605,13 +761,22 @@
 			path = "Packages/Hummingbird-1.1.2/Sources";
 			sourceTree = "<group>";
 		};
+		"_______Group_HummingbirdTestSuite" /* Hummingbird.testsuite */ = {
+			isa = PBXGroup;
+			children = (
+				"__PBXFileRef_Packages/Hummingbird-1.1.2/Tests/Hummingbird/SocketTests.swift" /* SocketTests.swift */,
+			);
+			name = Hummingbird.testsuite;
+			path = "Packages/Hummingbird-1.1.2/Tests/Hummingbird";
+			sourceTree = "<group>";
+		};
 		"_______Group_InterchangeData" /* InterchangeData */ = {
 			isa = PBXGroup;
 			children = (
-				"__PBXFileRef_Packages/InterchangeData-0.4.2/Source/InterchangeData.swift" /* InterchangeData.swift */,
+				"__PBXFileRef_Packages/InterchangeData-0.4.3/Source/InterchangeData.swift" /* InterchangeData.swift */,
 			);
 			name = InterchangeData;
-			path = "Packages/InterchangeData-0.4.2/Source";
+			path = "Packages/InterchangeData-0.4.3/Source";
 			sourceTree = "<group>";
 		};
 		"_______Group_JSON" /* JSON */ = {
@@ -634,6 +799,58 @@
 			);
 			name = OperatingSystem;
 			path = "Packages/OperatingSystem-0.4.2/Sources";
+			sourceTree = "<group>";
+		};
+		"_______Group_S4" /* S4 */ = {
+			isa = PBXGroup;
+			children = (
+				"__PBXFileRef_Packages/S4-0.1.8/Sources/AsyncClient.swift" /* AsyncClient.swift */,
+				"__PBXFileRef_Packages/S4-0.1.8/Sources/AsyncMiddleware.swift" /* AsyncMiddleware.swift */,
+				"__PBXFileRef_Packages/S4-0.1.8/Sources/AsyncResponder.swift" /* AsyncResponder.swift */,
+				"__PBXFileRef_Packages/S4-0.1.8/Sources/AsyncRoute.swift" /* AsyncRoute.swift */,
+				"__PBXFileRef_Packages/S4-0.1.8/Sources/AsyncRouteMatcher.swift" /* AsyncRouteMatcher.swift */,
+				"__PBXFileRef_Packages/S4-0.1.8/Sources/AsyncRouter.swift" /* AsyncRouter.swift */,
+				"__PBXFileRef_Packages/S4-0.1.8/Sources/AsyncServer.swift" /* AsyncServer.swift */,
+				"__PBXFileRef_Packages/S4-0.1.8/Sources/Body.swift" /* Body.swift */,
+				"__PBXFileRef_Packages/S4-0.1.8/Sources/Client.swift" /* Client.swift */,
+				"__PBXFileRef_Packages/S4-0.1.8/Sources/HeaderName.swift" /* HeaderName.swift */,
+				"__PBXFileRef_Packages/S4-0.1.8/Sources/Headers.swift" /* Headers.swift */,
+				"__PBXFileRef_Packages/S4-0.1.8/Sources/HeaderValues.swift" /* HeaderValues.swift */,
+				"__PBXFileRef_Packages/S4-0.1.8/Sources/Message.swift" /* Message.swift */,
+				"__PBXFileRef_Packages/S4-0.1.8/Sources/Method.swift" /* Method.swift */,
+				"__PBXFileRef_Packages/S4-0.1.8/Sources/Middleware.swift" /* Middleware.swift */,
+				"__PBXFileRef_Packages/S4-0.1.8/Sources/Request.swift" /* Request.swift */,
+				"__PBXFileRef_Packages/S4-0.1.8/Sources/RequestConvertible.swift" /* RequestConvertible.swift */,
+				"__PBXFileRef_Packages/S4-0.1.8/Sources/RequestInitializable.swift" /* RequestInitializable.swift */,
+				"__PBXFileRef_Packages/S4-0.1.8/Sources/RequestParser.swift" /* RequestParser.swift */,
+				"__PBXFileRef_Packages/S4-0.1.8/Sources/RequestRepresentable.swift" /* RequestRepresentable.swift */,
+				"__PBXFileRef_Packages/S4-0.1.8/Sources/RequestSerializer.swift" /* RequestSerializer.swift */,
+				"__PBXFileRef_Packages/S4-0.1.8/Sources/Responder.swift" /* Responder.swift */,
+				"__PBXFileRef_Packages/S4-0.1.8/Sources/Response.swift" /* Response.swift */,
+				"__PBXFileRef_Packages/S4-0.1.8/Sources/ResponseConvertible.swift" /* ResponseConvertible.swift */,
+				"__PBXFileRef_Packages/S4-0.1.8/Sources/ResponseInitializable.swift" /* ResponseInitializable.swift */,
+				"__PBXFileRef_Packages/S4-0.1.8/Sources/ResponseParser.swift" /* ResponseParser.swift */,
+				"__PBXFileRef_Packages/S4-0.1.8/Sources/ResponseRepresentable.swift" /* ResponseRepresentable.swift */,
+				"__PBXFileRef_Packages/S4-0.1.8/Sources/ResponseSerializer.swift" /* ResponseSerializer.swift */,
+				"__PBXFileRef_Packages/S4-0.1.8/Sources/Route.swift" /* Route.swift */,
+				"__PBXFileRef_Packages/S4-0.1.8/Sources/RouteMatcher.swift" /* RouteMatcher.swift */,
+				"__PBXFileRef_Packages/S4-0.1.8/Sources/Router.swift" /* Router.swift */,
+				"__PBXFileRef_Packages/S4-0.1.8/Sources/S4.swift" /* S4.swift */,
+				"__PBXFileRef_Packages/S4-0.1.8/Sources/Server.swift" /* Server.swift */,
+				"__PBXFileRef_Packages/S4-0.1.8/Sources/Status.swift" /* Status.swift */,
+				"__PBXFileRef_Packages/S4-0.1.8/Sources/Version.swift" /* Version.swift */,
+			);
+			name = S4;
+			path = "Packages/S4-0.1.8/Sources";
+			sourceTree = "<group>";
+		};
+		"_______Group_S4TestSuite" /* S4.testsuite */ = {
+			isa = PBXGroup;
+			children = (
+				"__PBXFileRef_Packages/S4-0.1.8/Tests/S4/ExampleTests.swift" /* ExampleTests.swift */,
+			);
+			name = S4.testsuite;
+			path = "Packages/S4-0.1.8/Tests/S4";
 			sourceTree = "<group>";
 		};
 		"_______Group_Strand" /* Strand */ = {
@@ -703,7 +920,8 @@
 				"__PBXFileRef_Sources/Vapor/Utilities/Character+Extensions.swift" /* Utilities/Character+Extensions.swift */,
 				__PBXFileRef_Sources/Vapor/Utilities/Dispatch.swift /* Utilities/Dispatch.swift */,
 				__PBXFileRef_Sources/Vapor/Utilities/Lock.swift /* Utilities/Lock.swift */,
-				__PBXFileRef_Sources/Vapor/Utilities/S4.swift /* Utilities/S4.swift */,
+				__PBXFileRef_Sources/Vapor/Utilities/S4.swift /* Vapor+S4.swift */,
+				C3F328181CAC8B15001A88EE /* S4+Vapor.swift */,
 				__PBXFileRef_Sources/Vapor/Utilities/ThreadSafeStore.swift /* Utilities/ThreadSafeStore.swift */,
 				__PBXFileRef_Sources/Vapor/View/RenderDriver.swift /* View/RenderDriver.swift */,
 				__PBXFileRef_Sources/Vapor/View/View.swift /* View/View.swift */,
@@ -758,6 +976,9 @@
 		"_______Tests_" /* Tests */ = {
 			isa = PBXGroup;
 			children = (
+				"_______Group_C7TestSuite" /* C7.testsuite */,
+				"_______Group_HummingbirdTestSuite" /* Hummingbird.testsuite */,
+				"_______Group_S4TestSuite" /* S4.testsuite */,
 				"_______Group_VaporTestSuite" /* Vapor.testsuite */,
 			);
 			name = Tests;
@@ -781,6 +1002,23 @@
 			productName = C7;
 			productReference = "_____Product_C7" /* libC7.dylib */;
 			productType = "com.apple.product-type.library.dynamic";
+		};
+		"______Target_C7TestSuite" /* C7.testsuite */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = "_______Confs_C7TestSuite" /* Build configuration list for PBXNativeTarget "C7.testsuite" */;
+			buildPhases = (
+				CompilePhase_C7TestSuite /* Sources */,
+				"___LinkPhase_C7TestSuite" /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				__Dependency_C7 /* PBXTargetDependency */,
+			);
+			name = C7.testsuite;
+			productName = C7TestSuite;
+			productReference = "_____Product_C7TestSuite" /* C7TestSuite.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
 		};
 		"______Target_Data" /* Data */ = {
 			isa = PBXNativeTarget;
@@ -810,11 +1048,12 @@
 			buildRules = (
 			);
 			dependencies = (
-				__Dependency_C7 /* PBXTargetDependency */,
 				__Dependency_Data /* PBXTargetDependency */,
+				__Dependency_C7 /* PBXTargetDependency */,
 				__Dependency_Strand /* PBXTargetDependency */,
 				__Dependency_InterchangeData /* PBXTargetDependency */,
 				__Dependency_OperatingSystem /* PBXTargetDependency */,
+				__Dependency_S4 /* PBXTargetDependency */,
 				__Dependency_Hummingbird /* PBXTargetDependency */,
 				__Dependency_JSON /* PBXTargetDependency */,
 				__Dependency_String /* PBXTargetDependency */,
@@ -840,6 +1079,24 @@
 			productName = Hummingbird;
 			productReference = "_____Product_Hummingbird" /* libHummingbird.dylib */;
 			productType = "com.apple.product-type.library.dynamic";
+		};
+		"______Target_HummingbirdTestSuite" /* Hummingbird.testsuite */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = "_______Confs_HummingbirdTestSuite" /* Build configuration list for PBXNativeTarget "Hummingbird.testsuite" */;
+			buildPhases = (
+				CompilePhase_HummingbirdTestSuite /* Sources */,
+				"___LinkPhase_HummingbirdTestSuite" /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				__Dependency_Strand /* PBXTargetDependency */,
+				__Dependency_Hummingbird /* PBXTargetDependency */,
+			);
+			name = Hummingbird.testsuite;
+			productName = HummingbirdTestSuite;
+			productReference = "_____Product_HummingbirdTestSuite" /* HummingbirdTestSuite.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
 		};
 		"______Target_InterchangeData" /* InterchangeData */ = {
 			isa = PBXNativeTarget;
@@ -896,6 +1153,41 @@
 			productReference = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */;
 			productType = "com.apple.product-type.library.dynamic";
 		};
+		"______Target_S4" /* S4 */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = "_______Confs_S4" /* Build configuration list for PBXNativeTarget "S4" */;
+			buildPhases = (
+				CompilePhase_S4 /* Sources */,
+				"___LinkPhase_S4" /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				__Dependency_C7 /* PBXTargetDependency */,
+			);
+			name = S4;
+			productName = S4;
+			productReference = "_____Product_S4" /* libS4.dylib */;
+			productType = "com.apple.product-type.library.dynamic";
+		};
+		"______Target_S4TestSuite" /* S4.testsuite */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = "_______Confs_S4TestSuite" /* Build configuration list for PBXNativeTarget "S4.testsuite" */;
+			buildPhases = (
+				CompilePhase_S4TestSuite /* Sources */,
+				"___LinkPhase_S4TestSuite" /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				__Dependency_C7 /* PBXTargetDependency */,
+				__Dependency_S4 /* PBXTargetDependency */,
+			);
+			name = S4.testsuite;
+			productName = S4TestSuite;
+			productReference = "_____Product_S4TestSuite" /* S4TestSuite.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		"______Target_Strand" /* Strand */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = "_______Confs_Strand" /* Build configuration list for PBXNativeTarget "Strand" */;
@@ -939,11 +1231,12 @@
 			buildRules = (
 			);
 			dependencies = (
-				__Dependency_C7 /* PBXTargetDependency */,
 				__Dependency_Data /* PBXTargetDependency */,
+				__Dependency_C7 /* PBXTargetDependency */,
 				__Dependency_Strand /* PBXTargetDependency */,
 				__Dependency_InterchangeData /* PBXTargetDependency */,
 				__Dependency_OperatingSystem /* PBXTargetDependency */,
+				__Dependency_S4 /* PBXTargetDependency */,
 				__Dependency_Hummingbird /* PBXTargetDependency */,
 				__Dependency_JSON /* PBXTargetDependency */,
 				__Dependency_String /* PBXTargetDependency */,
@@ -964,11 +1257,12 @@
 			buildRules = (
 			);
 			dependencies = (
-				__Dependency_C7 /* PBXTargetDependency */,
 				__Dependency_Data /* PBXTargetDependency */,
+				__Dependency_C7 /* PBXTargetDependency */,
 				__Dependency_Strand /* PBXTargetDependency */,
 				__Dependency_InterchangeData /* PBXTargetDependency */,
 				__Dependency_OperatingSystem /* PBXTargetDependency */,
+				__Dependency_S4 /* PBXTargetDependency */,
 				__Dependency_Hummingbird /* PBXTargetDependency */,
 				__Dependency_JSON /* PBXTargetDependency */,
 				__Dependency_String /* PBXTargetDependency */,
@@ -989,11 +1283,12 @@
 			buildRules = (
 			);
 			dependencies = (
-				__Dependency_C7 /* PBXTargetDependency */,
 				__Dependency_Data /* PBXTargetDependency */,
+				__Dependency_C7 /* PBXTargetDependency */,
 				__Dependency_Strand /* PBXTargetDependency */,
 				__Dependency_InterchangeData /* PBXTargetDependency */,
 				__Dependency_OperatingSystem /* PBXTargetDependency */,
+				__Dependency_S4 /* PBXTargetDependency */,
 				__Dependency_Hummingbird /* PBXTargetDependency */,
 				__Dependency_JSON /* PBXTargetDependency */,
 				__Dependency_String /* PBXTargetDependency */,
@@ -1001,7 +1296,7 @@
 			);
 			name = Vapor.testsuite;
 			productName = VaporTestSuite;
-			productReference = "_____Product_VaporTestSuite" /* Vapor.testsuite.xctest */;
+			productReference = "_____Product_VaporTestSuite" /* VaporTestSuite.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 		"______Target_libc" /* libc */ = {
@@ -1014,11 +1309,12 @@
 			buildRules = (
 			);
 			dependencies = (
-				__Dependency_C7 /* PBXTargetDependency */,
 				__Dependency_Data /* PBXTargetDependency */,
+				__Dependency_C7 /* PBXTargetDependency */,
 				__Dependency_Strand /* PBXTargetDependency */,
 				__Dependency_InterchangeData /* PBXTargetDependency */,
 				__Dependency_OperatingSystem /* PBXTargetDependency */,
+				__Dependency_S4 /* PBXTargetDependency */,
 				__Dependency_Hummingbird /* PBXTargetDependency */,
 				__Dependency_JSON /* PBXTargetDependency */,
 				__Dependency_String /* PBXTargetDependency */,
@@ -1051,11 +1347,15 @@
 				"______Target_OperatingSystem" /* OperatingSystem */,
 				"______Target_String" /* String */,
 				"______Target_C7" /* C7 */,
+				"______Target_C7TestSuite" /* C7.testsuite */,
 				"______Target_Data" /* Data */,
 				"______Target_InterchangeData" /* InterchangeData */,
 				"______Target_JSON" /* JSON */,
 				"______Target_Strand" /* Strand */,
 				"______Target_Hummingbird" /* Hummingbird */,
+				"______Target_HummingbirdTestSuite" /* Hummingbird.testsuite */,
+				"______Target_S4" /* S4 */,
+				"______Target_S4TestSuite" /* S4.testsuite */,
 				"______Target_Generator" /* Generator */,
 				"______Target_libc" /* libc */,
 				"______Target_Vapor" /* Vapor */,
@@ -1070,20 +1370,29 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 0;
 			files = (
-				"__src_cc_ref_Packages/C7-0.1.11/Sources/AsyncStream.swift" /* AsyncStream.swift in Sources */,
-				"__src_cc_ref_Packages/C7-0.1.11/Sources/AsyncStreamClient.swift" /* AsyncStreamClient.swift in Sources */,
-				"__src_cc_ref_Packages/C7-0.1.11/Sources/AsyncStreamServer.swift" /* AsyncStreamServer.swift in Sources */,
-				"__src_cc_ref_Packages/C7-0.1.11/Sources/Byte.swift" /* Byte.swift in Sources */,
-				"__src_cc_ref_Packages/C7-0.1.11/Sources/CaseInsensitiveString.swift" /* CaseInsensitiveString.swift in Sources */,
-				"__src_cc_ref_Packages/C7-0.1.11/Sources/CustomDataStore.swift" /* CustomDataStore.swift in Sources */,
-				"__src_cc_ref_Packages/C7-0.1.11/Sources/Data.swift" /* Data.swift in Sources */,
-				"__src_cc_ref_Packages/C7-0.1.11/Sources/Drain.swift" /* Drain.swift in Sources */,
-				"__src_cc_ref_Packages/C7-0.1.11/Sources/Storage.swift" /* Storage.swift in Sources */,
-				"__src_cc_ref_Packages/C7-0.1.11/Sources/Stream.swift" /* Stream.swift in Sources */,
-				"__src_cc_ref_Packages/C7-0.1.11/Sources/StreamClient.swift" /* StreamClient.swift in Sources */,
-				"__src_cc_ref_Packages/C7-0.1.11/Sources/StreamSequence.swift" /* StreamSequence.swift in Sources */,
-				"__src_cc_ref_Packages/C7-0.1.11/Sources/StreamServer.swift" /* StreamServer.swift in Sources */,
-				"__src_cc_ref_Packages/C7-0.1.11/Sources/URI.swift" /* URI.swift in Sources */,
+				"__src_cc_ref_Packages/C7-0.1.12/Sources/AsyncStream.swift" /* AsyncStream.swift in Sources */,
+				"__src_cc_ref_Packages/C7-0.1.12/Sources/AsyncStreamClient.swift" /* AsyncStreamClient.swift in Sources */,
+				"__src_cc_ref_Packages/C7-0.1.12/Sources/AsyncStreamServer.swift" /* AsyncStreamServer.swift in Sources */,
+				"__src_cc_ref_Packages/C7-0.1.12/Sources/Byte.swift" /* Byte.swift in Sources */,
+				"__src_cc_ref_Packages/C7-0.1.12/Sources/C7.swift" /* C7.swift in Sources */,
+				"__src_cc_ref_Packages/C7-0.1.12/Sources/CaseInsensitiveString.swift" /* CaseInsensitiveString.swift in Sources */,
+				"__src_cc_ref_Packages/C7-0.1.12/Sources/CustomDataStore.swift" /* CustomDataStore.swift in Sources */,
+				"__src_cc_ref_Packages/C7-0.1.12/Sources/Data.swift" /* Data.swift in Sources */,
+				"__src_cc_ref_Packages/C7-0.1.12/Sources/Drain.swift" /* Drain.swift in Sources */,
+				"__src_cc_ref_Packages/C7-0.1.12/Sources/Storage.swift" /* Storage.swift in Sources */,
+				"__src_cc_ref_Packages/C7-0.1.12/Sources/Stream.swift" /* Stream.swift in Sources */,
+				"__src_cc_ref_Packages/C7-0.1.12/Sources/StreamClient.swift" /* StreamClient.swift in Sources */,
+				"__src_cc_ref_Packages/C7-0.1.12/Sources/StreamSequence.swift" /* StreamSequence.swift in Sources */,
+				"__src_cc_ref_Packages/C7-0.1.12/Sources/StreamServer.swift" /* StreamServer.swift in Sources */,
+				"__src_cc_ref_Packages/C7-0.1.12/Sources/URI.swift" /* URI.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CompilePhase_C7TestSuite /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 0;
+			files = (
+				"__src_cc_ref_Packages/C7-0.1.12/Tests/C7/ExampleTests.swift" /* ExampleTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1112,11 +1421,19 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		CompilePhase_HummingbirdTestSuite /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 0;
+			files = (
+				"__src_cc_ref_Packages/Hummingbird-1.1.2/Tests/Hummingbird/SocketTests.swift" /* SocketTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		CompilePhase_InterchangeData /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 0;
 			files = (
-				"__src_cc_ref_Packages/InterchangeData-0.4.2/Source/InterchangeData.swift" /* InterchangeData.swift in Sources */,
+				"__src_cc_ref_Packages/InterchangeData-0.4.3/Source/InterchangeData.swift" /* InterchangeData.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1137,6 +1454,56 @@
 			buildActionMask = 0;
 			files = (
 				"__src_cc_ref_Packages/OperatingSystem-0.4.2/Sources/OperatingSystem.swift" /* OperatingSystem.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CompilePhase_S4 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 0;
+			files = (
+				"__src_cc_ref_Packages/S4-0.1.8/Sources/AsyncClient.swift" /* AsyncClient.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.1.8/Sources/AsyncMiddleware.swift" /* AsyncMiddleware.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.1.8/Sources/AsyncResponder.swift" /* AsyncResponder.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.1.8/Sources/AsyncRoute.swift" /* AsyncRoute.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.1.8/Sources/AsyncRouteMatcher.swift" /* AsyncRouteMatcher.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.1.8/Sources/AsyncRouter.swift" /* AsyncRouter.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.1.8/Sources/AsyncServer.swift" /* AsyncServer.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.1.8/Sources/Body.swift" /* Body.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.1.8/Sources/Client.swift" /* Client.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.1.8/Sources/HeaderName.swift" /* HeaderName.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.1.8/Sources/Headers.swift" /* Headers.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.1.8/Sources/HeaderValues.swift" /* HeaderValues.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.1.8/Sources/Message.swift" /* Message.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.1.8/Sources/Method.swift" /* Method.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.1.8/Sources/Middleware.swift" /* Middleware.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.1.8/Sources/Request.swift" /* Request.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.1.8/Sources/RequestConvertible.swift" /* RequestConvertible.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.1.8/Sources/RequestInitializable.swift" /* RequestInitializable.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.1.8/Sources/RequestParser.swift" /* RequestParser.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.1.8/Sources/RequestRepresentable.swift" /* RequestRepresentable.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.1.8/Sources/RequestSerializer.swift" /* RequestSerializer.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.1.8/Sources/Responder.swift" /* Responder.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.1.8/Sources/Response.swift" /* Response.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.1.8/Sources/ResponseConvertible.swift" /* ResponseConvertible.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.1.8/Sources/ResponseInitializable.swift" /* ResponseInitializable.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.1.8/Sources/ResponseParser.swift" /* ResponseParser.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.1.8/Sources/ResponseRepresentable.swift" /* ResponseRepresentable.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.1.8/Sources/ResponseSerializer.swift" /* ResponseSerializer.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.1.8/Sources/Route.swift" /* Route.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.1.8/Sources/RouteMatcher.swift" /* RouteMatcher.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.1.8/Sources/Router.swift" /* Router.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.1.8/Sources/S4.swift" /* S4.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.1.8/Sources/Server.swift" /* Server.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.1.8/Sources/Status.swift" /* Status.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.1.8/Sources/Version.swift" /* Version.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CompilePhase_S4TestSuite /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 0;
+			files = (
+				"__src_cc_ref_Packages/S4-0.1.8/Tests/S4/ExampleTests.swift" /* ExampleTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1197,6 +1564,7 @@
 				__src_cc_ref_Sources/Vapor/Server/Header.swift /* Server/Header.swift in Sources */,
 				"__src_cc_ref_Sources/Vapor/Server/Hummingbird+Socket.swift" /* Server/Hummingbird+Socket.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/Server/Jeeves.swift /* Server/Jeeves.swift in Sources */,
+				C3F328191CAC8B15001A88EE /* S4+Vapor.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/Server/ServerDriver.swift /* Server/ServerDriver.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/Server/Socket.swift /* Server/Socket.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/Session/MemorySessionDriver.swift /* Session/MemorySessionDriver.swift in Sources */,
@@ -1206,7 +1574,7 @@
 				"__src_cc_ref_Sources/Vapor/Utilities/Character+Extensions.swift" /* Utilities/Character+Extensions.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/Utilities/Dispatch.swift /* Utilities/Dispatch.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/Utilities/Lock.swift /* Utilities/Lock.swift in Sources */,
-				__src_cc_ref_Sources/Vapor/Utilities/S4.swift /* Utilities/S4.swift in Sources */,
+				__src_cc_ref_Sources/Vapor/Utilities/S4.swift /* Vapor+S4.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/Utilities/ThreadSafeStore.swift /* Utilities/ThreadSafeStore.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/View/RenderDriver.swift /* View/RenderDriver.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/View/View.swift /* View/View.swift in Sources */,
@@ -1259,52 +1627,57 @@
 		__Dependency_C7 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_C7" /* C7 */;
-			targetProxy = C3779C5D1CA8DE6300A18F2E /* PBXContainerItemProxy */;
+			targetProxy = C3F3280E1CAC8857001A88EE /* PBXContainerItemProxy */;
 		};
 		__Dependency_Data /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_Data" /* Data */;
-			targetProxy = C3779C5E1CA8DE6300A18F2E /* PBXContainerItemProxy */;
+			targetProxy = C3F3280D1CAC8857001A88EE /* PBXContainerItemProxy */;
 		};
 		__Dependency_Hummingbird /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_Hummingbird" /* Hummingbird */;
-			targetProxy = C3779C611CA8DE6300A18F2E /* PBXContainerItemProxy */;
+			targetProxy = C3F328131CAC8857001A88EE /* PBXContainerItemProxy */;
 		};
 		__Dependency_InterchangeData /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_InterchangeData" /* InterchangeData */;
-			targetProxy = C3779C5F1CA8DE6300A18F2E /* PBXContainerItemProxy */;
+			targetProxy = C3F328111CAC8857001A88EE /* PBXContainerItemProxy */;
 		};
 		__Dependency_JSON /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_JSON" /* JSON */;
-			targetProxy = C3779C621CA8DE6300A18F2E /* PBXContainerItemProxy */;
+			targetProxy = C3F328141CAC8857001A88EE /* PBXContainerItemProxy */;
 		};
 		__Dependency_OperatingSystem /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_OperatingSystem" /* OperatingSystem */;
-			targetProxy = C3779C5C1CA8DE6300A18F2E /* PBXContainerItemProxy */;
+			targetProxy = C3F3280F1CAC8857001A88EE /* PBXContainerItemProxy */;
+		};
+		__Dependency_S4 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = "______Target_S4" /* S4 */;
+			targetProxy = C3F328121CAC8857001A88EE /* PBXContainerItemProxy */;
 		};
 		__Dependency_Strand /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_Strand" /* Strand */;
-			targetProxy = C3779C601CA8DE6300A18F2E /* PBXContainerItemProxy */;
+			targetProxy = C3F328101CAC8857001A88EE /* PBXContainerItemProxy */;
 		};
 		__Dependency_String /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_String" /* String */;
-			targetProxy = C3779C631CA8DE6300A18F2E /* PBXContainerItemProxy */;
+			targetProxy = C3F328151CAC8857001A88EE /* PBXContainerItemProxy */;
 		};
 		__Dependency_Vapor /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_Vapor" /* Vapor */;
-			targetProxy = C3779C651CA8DE6300A18F2E /* PBXContainerItemProxy */;
+			targetProxy = C3F328161CAC8857001A88EE /* PBXContainerItemProxy */;
 		};
 		__Dependency_libc /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_libc" /* libc */;
-			targetProxy = C3779C641CA8DE6300A18F2E /* PBXContainerItemProxy */;
+			targetProxy = C3F328171CAC8857001A88EE /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -1320,6 +1693,19 @@
 				OTHER_SWIFT_FLAGS = "-DXcode";
 				PRODUCT_MODULE_NAME = C7;
 				PRODUCT_NAME = "lib$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		_ReleaseConf_C7TestSuite /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				EMBEDDED_CONTENT_CONTAINS_SWIFT = YES;
+				LD_RUNPATH_SEARCH_PATHS = "@loader_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				OTHER_SWIFT_FLAGS = "-DXcode";
+				PRODUCT_MODULE_NAME = C7TestSuite;
+				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
 		};
@@ -1365,6 +1751,19 @@
 			};
 			name = Release;
 		};
+		_ReleaseConf_HummingbirdTestSuite /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				EMBEDDED_CONTENT_CONTAINS_SWIFT = YES;
+				LD_RUNPATH_SEARCH_PATHS = "@loader_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				OTHER_SWIFT_FLAGS = "-DXcode";
+				PRODUCT_MODULE_NAME = HummingbirdTestSuite;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 		_ReleaseConf_InterchangeData /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1404,6 +1803,33 @@
 				OTHER_SWIFT_FLAGS = "-DXcode";
 				PRODUCT_MODULE_NAME = OperatingSystem;
 				PRODUCT_NAME = "lib$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		_ReleaseConf_S4 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				DYLIB_INSTALL_NAME_BASE = "$(CONFIGURATION_BUILD_DIR)";
+				ENABLE_TESTABILITY = YES;
+				LD_RUNPATH_SEARCH_PATHS = "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				OTHER_SWIFT_FLAGS = "-DXcode";
+				PRODUCT_MODULE_NAME = S4;
+				PRODUCT_NAME = "lib$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		_ReleaseConf_S4TestSuite /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				EMBEDDED_CONTENT_CONTAINS_SWIFT = YES;
+				LD_RUNPATH_SEARCH_PATHS = "@loader_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				OTHER_SWIFT_FLAGS = "-DXcode";
+				PRODUCT_MODULE_NAME = S4TestSuite;
+				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
 		};
@@ -1505,6 +1931,20 @@
 			};
 			name = Debug;
 		};
+		"___DebugConf_C7TestSuite" /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				EMBEDDED_CONTENT_CONTAINS_SWIFT = YES;
+				LD_RUNPATH_SEARCH_PATHS = "@loader_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				OTHER_SWIFT_FLAGS = "-DXcode";
+				PRODUCT_MODULE_NAME = C7TestSuite;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
 		"___DebugConf_Data" /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1550,6 +1990,20 @@
 			};
 			name = Debug;
 		};
+		"___DebugConf_HummingbirdTestSuite" /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				EMBEDDED_CONTENT_CONTAINS_SWIFT = YES;
+				LD_RUNPATH_SEARCH_PATHS = "@loader_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				OTHER_SWIFT_FLAGS = "-DXcode";
+				PRODUCT_MODULE_NAME = HummingbirdTestSuite;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
 		"___DebugConf_InterchangeData" /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1591,6 +2045,35 @@
 				OTHER_SWIFT_FLAGS = "-DXcode";
 				PRODUCT_MODULE_NAME = OperatingSystem;
 				PRODUCT_NAME = "lib$(TARGET_NAME)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		"___DebugConf_S4" /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				DYLIB_INSTALL_NAME_BASE = "$(CONFIGURATION_BUILD_DIR)";
+				ENABLE_TESTABILITY = YES;
+				LD_RUNPATH_SEARCH_PATHS = "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				OTHER_SWIFT_FLAGS = "-DXcode";
+				PRODUCT_MODULE_NAME = S4;
+				PRODUCT_NAME = "lib$(TARGET_NAME)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		"___DebugConf_S4TestSuite" /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				EMBEDDED_CONTENT_CONTAINS_SWIFT = YES;
+				LD_RUNPATH_SEARCH_PATHS = "@loader_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				OTHER_SWIFT_FLAGS = "-DXcode";
+				PRODUCT_MODULE_NAME = S4TestSuite;
+				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
@@ -1717,6 +2200,15 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
+		"_______Confs_C7TestSuite" /* Build configuration list for PBXNativeTarget "C7.testsuite" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				"___DebugConf_C7TestSuite" /* Debug */,
+				_ReleaseConf_C7TestSuite /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
 		"_______Confs_Data" /* Build configuration list for PBXNativeTarget "Data" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -1744,6 +2236,15 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
+		"_______Confs_HummingbirdTestSuite" /* Build configuration list for PBXNativeTarget "Hummingbird.testsuite" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				"___DebugConf_HummingbirdTestSuite" /* Debug */,
+				_ReleaseConf_HummingbirdTestSuite /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
 		"_______Confs_InterchangeData" /* Build configuration list for PBXNativeTarget "InterchangeData" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -1767,6 +2268,24 @@
 			buildConfigurations = (
 				"___DebugConf_OperatingSystem" /* Debug */,
 				_ReleaseConf_OperatingSystem /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		"_______Confs_S4" /* Build configuration list for PBXNativeTarget "S4" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				"___DebugConf_S4" /* Debug */,
+				_ReleaseConf_S4 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		"_______Confs_S4TestSuite" /* Build configuration list for PBXNativeTarget "S4.testsuite" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				"___DebugConf_S4TestSuite" /* Debug */,
+				_ReleaseConf_S4TestSuite /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

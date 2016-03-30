@@ -75,11 +75,12 @@ extension SocketIO {
         let path = requestLine.uri
         // TODO: Figure out whow to get this
         let address = "*"
+        let data = Data(body)
         return Request(method: method,
                        path: path,
                        address: address,
                        headers: header.fieldsArray,
-                       body: body)
+                       body: data)
     }
 
     public func write(response: Response, keepAlive: Bool = false) throws {

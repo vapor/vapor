@@ -3,22 +3,28 @@
 #else
     import Darwin
 #endif
+import S4
 
 public class Jeeves<Socket where Socket: Vapor.Socket, Socket: Hashable>: ServerDriver {
-
-    // MARK: Delegate
-    public var delegate: ServerDriverDelegate?
-
+    
     // MARK: Sockets
     private var streamSocket: Socket?
     private var activeSockets = ThreadSafeSocketStore<Socket>()
 
-    // MARK: Init
-    public init() {}
 
-    // MARK: ServerDriver
-    public func boot(ip ip: String, port: Int) throws {
+    // MARK: S4.Server
+    public var port: Int
+    public var ip: String?
+    public var delegate: S4.Responder?
+    
+    public required init(port: Int) throws {
+        self.port = port
+    }
+    
+    public func serve(responder: Responder) throws {
         halt()
+        self.delegate = responder
+        
         streamSocket = try Socket.makeSocket()
         try streamSocket?.bind(toAddress: ip, onPort: "\(port)")
         try streamSocket?.listen(pendingConnectionBacklog: 100)
@@ -60,7 +66,8 @@ public class Jeeves<Socket where Socket: Vapor.Socket, Socket: Hashable>: Server
                     var keepAlive = false
                     repeat {
                         let request = try socket.readRequest()
-                        let response = self.delegate?.serverDriverDidReceiveRequest(request) ?? Response.notFound()
+                        let s4Response = try? self.delegate?.respond(request.s4Request)
+                        let response = s4Response??.vaporResponse ?? Response.notFound()
                         try socket.write(response)
                         keepAlive = request.supportsKeepAlive
                     } while keepAlive
