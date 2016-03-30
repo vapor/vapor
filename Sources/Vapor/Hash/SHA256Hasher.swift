@@ -1,3 +1,5 @@
+import CryptoKitten
+
 /**
     Create SHA256 + HMAC hashes with the
     Hash class by applying this driver.
