@@ -14,6 +14,7 @@ A Laravel/Lumen Inspired Web Framework for Swift that works on iOS, OS X, and Ub
 [![Issue Stats](http://issuestats.com/github/qutheory/vapor/badge/pr?style=flat-square)](http://issuestats.com/github/qutheory/vapor)
 [![PRs Welcome](https://img.shields.io/badge/prs-welcome-brightgreen.svg)](http://makeapullrequest.com)
 [![Slack Status](http://qutheory.io:8001/badge.svg)](http://slack.qutheory.io)
+[![codebeat badge](https://codebeat.co/badges/3334c72c-c6e6-4061-a86b-f077b5250252)](https://codebeat.co/projects/github-com-qutheory-vapor)
 
 ## Introduction
 
