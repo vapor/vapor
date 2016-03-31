@@ -7,6 +7,7 @@ internal struct Header {
     
     let requestLine: RequestLine
     private(set) var fields: [String : String] = [:]
+    
     var fieldsArray: [(String, String)] {
         var array: [(String, String)] = []
         for (key, val) in fields {

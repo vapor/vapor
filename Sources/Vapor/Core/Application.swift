@@ -18,7 +18,7 @@ public class Application {
         This property is constant since it cannot
         be changed after the server has been booted.
     */
-    public var server: ServerDriver?
+    public var server: S4.Server?
 
     /**
         The session driver is responsible for
@@ -208,7 +208,7 @@ public class Application {
 
     func checkFileSystem(request: Request) -> Request.Handler? {
         // Check in file system
-        let filePath = self.workDir + "Public" + request.path
+        let filePath = self.workDir + "Public" + (request.uri.path ?? "")
 
         guard FileManager.fileAtPath(filePath).exists else {
             return nil
@@ -217,22 +217,33 @@ public class Application {
         // File exists
         if let fileBody = try? FileManager.readBytesFromFile(filePath) {
             return { _ in
-                return Response(status: .OK, data: Data(fileBody), contentType: .None)
+                return Response(status: .ok, data: Data(fileBody), contentType: .None)
             }
         } else {
             return { _ in
                 Log.warning("Could not open file, returning 404")
-                return Response(status: .NotFound, text: "Page not found")
+                return Response(status: .notFound, text: "Page not found")
             }
         }
     }
 }
 
-extension Application: ServerDriverDelegate {
+extension Application: S4.Responder {
     
     public func respond(request: S4.Request) throws -> S4.Response {
         return self.serverDriverDidReceiveRequest(request.vaporRequest).s4Response
     }
+    
+//    public func respond(request: S4.Request, result: (Void throws -> S4.Response) -> Void) {
+//        result {
+//            let response = self.serverDriverDidReceiveRequest(request.vaporRequest)
+//            
+//            if let async = response as? AsyncResponse {
+//                
+//            }
+//            
+//        }
+//    }
 
     public func serverDriverDidReceiveRequest(request: Request) -> Response {
         var handler: Request.Handler
@@ -245,7 +256,7 @@ extension Application: ServerDriverDelegate {
         } else {
             // Default not found handler
             handler = { _ in
-                return Response(status: .NotFound, text: "Page not found")
+                return Response(status: .notFound, text: "Page not found")
             }
         }
 

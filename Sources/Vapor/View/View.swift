@@ -1,3 +1,5 @@
+import C7
+
 /**
     Loads and renders a file from the `Resources` folder
     in the Application's work directory.
@@ -6,7 +8,7 @@ public class View {
     ///Currently applied RenderDrivers
     public static var renderers: [String: RenderDriver] = [:]
 
-    var data: Data
+    var data: C7.Data
     
     enum Error: ErrorProtocol {
         case InvalidPath
@@ -43,7 +45,7 @@ public class View {
 ///Allows Views to be returned in Vapor closures
 extension View: ResponseRepresentable {
     public func makeResponse() -> Response {
-        return Response(status: .OK, data: data, contentType: .Html)
+        return Response(status: .ok, data: data, contentType: .Html)
     }
 }
 

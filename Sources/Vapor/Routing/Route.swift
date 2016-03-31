@@ -1,3 +1,4 @@
+import S4
 
 /**
     The route class that will be used to model the various paths
@@ -12,7 +13,7 @@ public class Route {
 
     // MARK: Attributes
     
-    let method: Request.Method
+    let method: S4.Method
     let path: String
     let handler: Request.Handler
     let hostname: String
@@ -24,7 +25,7 @@ public class Route {
         - parameter path: the path to use when deciding the route
         - parameter handler: the handler to route when the path is called
      */
-    init(host: String = "*", method: Request.Method, path: String, handler: Request.Handler) {
+    init(host: String = "*", method: S4.Method, path: String, handler: Request.Handler) {
         self.hostname = host
         self.method = method
         self.path = path

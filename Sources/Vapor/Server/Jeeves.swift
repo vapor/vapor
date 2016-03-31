@@ -15,7 +15,7 @@ public class Jeeves<Socket where Socket: Vapor.Socket, Socket: Hashable>: Server
     // MARK: S4.Server
     public var port: Int
     public var ip: String?
-    public var delegate: S4.Responder?
+    public var delegate: S4.Responder!
     
     public required init(port: Int) throws {
         self.port = port
@@ -66,10 +66,11 @@ public class Jeeves<Socket where Socket: Vapor.Socket, Socket: Hashable>: Server
                     var keepAlive = false
                     repeat {
                         let request = try socket.readRequest()
-                        let s4Response = try? self.delegate?.respond(request.s4Request)
-                        let response = s4Response??.vaporResponse ?? Response.notFound()
-                        try socket.write(response)
-                        keepAlive = request.supportsKeepAlive
+                        let response = try self.delegate.respond(request)
+                        
+                        try socket.write(response, keepAlive: keepAlive)
+                        //FIXME: keep alive
+                        //keepAlive = request.supportsKeepAlive
                     } while keepAlive
                     
                     try socket.close()

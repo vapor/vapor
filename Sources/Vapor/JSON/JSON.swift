@@ -206,7 +206,7 @@ extension Json: CustomStringConvertible {
 
 extension Json: ResponseRepresentable {
     public func makeResponse() -> Response {
-        return Response(status: .OK, data: data, contentType: .Json)
+        return Response(status: .ok, data: data, contentType: .Json)
     }
 }
 

@@ -1,15 +1,20 @@
+import S4
+
 public typealias Host = String
 
 
 public final class BranchRouter: RouterDriver {
     
     // MARK: Private Tree Representation
-    private final var tree: [Host : [Request.Method : Branch]] = [:]
+    private final var tree: [Host : [S4.Method : Branch]] = [:]
     
     // MARK: Routing
     public final func route(request: Request) -> Request.Handler? {
+        let path = request.uri.path ?? ""
+        let host = request.uri.host ?? ""
+        
         //get root from hostname, or * route
-        let root = tree[request.hostname] ?? tree["*"]
+        let root = tree[host] ?? tree["*"]
         
         //ensure branch for current method exists
         guard let branch = root?[request.method] else {
@@ -17,7 +22,7 @@ public final class BranchRouter: RouterDriver {
         }
         
         //search branch with query path generator
-        let generator = request.path.pathComponentGenerator()
+        let generator = path.pathComponentGenerator()
         return branch.handle(request, comps: generator)
     }
     

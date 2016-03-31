@@ -1,3 +1,5 @@
+import S4
+
 /**
     Any type that conforms to this protocol
     can be passed as a requirement to Vapor's
@@ -81,7 +83,7 @@ extension Application {
         }
     }
 
-    final func add(method: Request.Method, path: String, handler: Route.Handler) {
+    final func add(method: S4.Method, path: String, handler: Route.Handler) {
         //Convert Route.Handler to Request.Handler
         var handler = { request in
             return try handler(request).makeResponse()

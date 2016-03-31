@@ -1,67 +1,27 @@
 import C7
+import S4
 
 /**
     Requests contains data sent from a client to the
     web server such as method, parameters, and data.
 */
 public class Request {
-    public struct Header {
-        public struct Key: StringLiteralConvertible, Hashable, Equatable, CustomStringConvertible {
-            var string: String
-            
-            public init(_ string: String) {
-                self.string = string
-            }
-   
-            public init(unicodeScalarLiteral value: String) {
-                string = "\(value)"
-            }
-            
-            public init(extendedGraphemeClusterLiteral value: String) {
-                string = value
-            }
-        
-            public init(stringLiteral value: StringLiteralType) {
-                string = value
-            }
-            
-            public var description: String {
-                return string
-            }
-
-            public var hashValue: Int {
-                return string.lowercased().hashValue
-            }
-        }
-    }
-    
-    ///Available HTTP Methods
-    public enum Method: String {
-        case Get = "GET"
-        case Post = "POST"
-        case Put = "PUT"
-        case Patch = "PATCH"
-        case Delete = "DELETE"
-        case Options = "OPTIONS"
-        case Unknown = "x"
-    }
-    
     public typealias Handler = ((request: Request) throws -> Response)
 
     ///HTTP Method used for request.
-    public let method: Method
+    public let method: S4.Method
     
     ///Query data from the path, or POST data from the body (depends on `Method`).
-    public let data: Data
+    public let data: Request.Data
     
     ///Browser stored data sent with every server request
     public let cookies: [String: String]
     
-    ///Path requested from server, not including hostname.
-    public let path: String
+    ///URI requested from server, not including hostname
+    public let uri: S4.URI
     
     ///Information or metadata about the `Request`.
-    public let headers: [Header.Key: String]
+    public let headers: S4.Headers
     
     ///Content of the `Request`.
     public let body: C7.Data
@@ -75,34 +35,33 @@ public class Request {
     ///Server stored information related from session cookie.
     public var session: Session?
     
-    ///Requested hostname
-    public let hostname: String
-    
     ///Whether the connection should be kept open for multiple Requests
     var supportsKeepAlive: Bool {
-        if let value = self.headers["connection"] {
+        if let value = headers["connection"].first {
             return "keep-alive" == value.trim()
         }
         return false
     }
 
-    public init(method: Method, path: String, address: String?, headers headersArray: [(String, String)], body: C7.Data) {
+    public init(method: Method, path: String, address: String?, headers: S4.Headers, body: C7.Data) {
         self.method = method
-        self.path = path.split("?").first ?? ""
         self.address = address
         
-        var headersBuffer: [Header.Key: String] = [:]
-        for (key, value) in headersArray {
-            headersBuffer[Request.Header.Key(key)] = value
-        }
-        headers = headersBuffer
+        self.headers = headers
+
+        
+        let path = path.split("?").first ?? ""
+        let host = headers["Host"].first ?? "*"
+        
         
         self.body = body
-        self.cookies = Request.parseCookies(headers["Cookie"])
-        self.hostname = headers["Host"] ?? "*"
+        self.cookies = Request.parseCookies(headers["Cookie"].first)
+        
         
         let query = path.queryData()
         self.data = Data(query: query, bytes: body.bytes)
+        
+        uri = S4.URI(scheme: "http", userInfo: nil, host: host, port: nil, path: path, query: [], fragment: nil)
         
         Log.verbose("Received \(method) request for \(path)")
     }
@@ -111,7 +70,7 @@ public class Request {
         Quickly create a Request with an empty body.
     */
     public convenience init(method: Method, path: String) {
-        self.init(method: method, path: path, address: nil, headers: [], body: [])
+        self.init(method: method, path: path, address: nil, headers: [:], body: [])
     }
     
     /**
@@ -141,9 +100,6 @@ public class Request {
         return cookies
     }
     
-}
-public func ==(lhs: Request.Header.Key, rhs: Request.Header.Key) -> Bool {
-    return lhs.string == rhs.string
 }
 
 extension String {

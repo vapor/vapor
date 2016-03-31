@@ -1,3 +1,5 @@
+import S4
+
 // MARK: Constants
 private let HeaderEndOfLine = "\r\n"
 
@@ -59,48 +61,68 @@ extension SocketIO {
 
 // MARK: Request / Response
 extension SocketIO {
-    public func readRequest() throws -> Request {
+    public func readRequest() throws -> S4.Request {
         let header = try Header(self)
         let requestLine = header.requestLine
 
-        let body: [UInt8]
+        //Body
+        let bytes: [UInt8]
         if let length = header.fields["Content-Length"], let bufferSize = Int(length) {
-            body = try read(bufferSize)
+            bytes = try read(bufferSize)
         } else {
-            body = []
+            bytes = []
         }
+        let data = S4.Data(bytes)
 
-
-        let method = Request.Method(rawValue: requestLine.method) ?? .Unknown
+        
+        //Method
+        let method: S4.Method
+        switch requestLine.method.lowercased() {
+        case "get":
+            method = .get
+        default:
+            method = .other(method: requestLine.method)
+        }
+        
+        //URI
         let path = requestLine.uri
-        // TODO: Figure out whow to get this
-        let address = "*"
-        let data = Data(body)
-        return Request(method: method,
-                       path: path,
-                       address: address,
-                       headers: header.fieldsArray,
-                       body: data)
+        let uri = S4.URI(scheme: "http", userInfo: nil, host: nil, port: nil, path: path, query: [], fragment: nil)
+        
+        //Headers
+        var headers = S4.Headers([:])
+        for (key, value) in header.fields {
+            headers[CaseInsensitiveString(key)] = HeaderValues(value)
+        }
+        
+        return S4.Request(method: method, uri: uri, headers: headers, body: data)
     }
 
-    public func write(response: Response, keepAlive: Bool = false) throws {
-        if let response = response as? AsyncResponse {
-            try response.writer(self)
-        } else {
-            let statusLine = "HTTP/1.1 \(response.status.code) \(response.status)"
-            try writeHeader(line: statusLine)
+    public func write(response: S4.Response, keepAlive: Bool) throws {
+        let version = response.version
+        let status = response.status
 
-            var headers = response.headers
-            if response.data.count >= 0 {
-                headers["Content-Length"] = "\(response.data.count)"
+        let statusLine = "HTTP/\(version.major).\(version.minor) \(status.statusCode) \(status.reasonPhrase)"
+        try writeHeader(line: statusLine)
+        
+        if keepAlive {
+            try writeHeader(key: "Connection", val: "keep-alive")
+        }
+        
+        try response.headers.forEach { (key, values) in
+            for value in values {
+                try writeHeader(key: key.string, val: value)
             }
-            if keepAlive {
-                headers["Connection"] = "keep-alive"
+        }
+        try write(HeaderEndOfLine)
+        
+        switch response.body {
+        case .buffer(let data):
+            try write(data)
+        case .stream(let stream):
+            while !stream.closed {
+                let chunk = try stream.receive()
+                try write(chunk.bytes)
             }
-            try headers.forEach(writeHeader)
-
-            try write(HeaderEndOfLine)
-            try write(response.data)
         }
     }
 }

@@ -1,27 +1,5 @@
 import S4
 
-extension S4.Method {
-    var vaporMethod: Vapor.Request.Method {
-        switch self {
-        case .get:
-            return .Get
-        case .post:
-            return .Post
-        case .put:
-            return .Put
-        case .patch:
-            return .Patch
-        case .delete:
-            return .Delete
-        case .options:
-            return .Options
-        default:
-            return .Unknown
-        }
-    }
-    
-}
-
 extension S4.Headers {
     var vaporHeaders: [(String, String)] {
         var vaporHeaders: [(String, String)] = []
@@ -57,24 +35,18 @@ extension URI {
 extension S4.Request {
     var vaporRequest: Vapor.Request {
         return Vapor.Request.init(
-            method: method.vaporMethod,
+            method: method,
             path: uri.vaporPath,
             address: nil,
-            headers: headers.vaporHeaders,
+            headers: headers,
             body: body.data
         )
     }
 }
 
-extension S4.Status {
-    var vaporStatus: Vapor.Response.Status {
-        return .OK
-    }
-}
-
 extension S4.Response {
     var vaporResponse: Vapor.Response {
-        let response = Vapor.Response(status: status.vaporStatus, data: body.data, contentType: Vapor.Response.ContentType.None)
+        let response = Vapor.Response(status: status, data: body.data, contentType: Vapor.Response.ContentType.None)
         
         for header in headers {
             for value in header.value.values {

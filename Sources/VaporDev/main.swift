@@ -66,24 +66,24 @@ app.post("json2") { request in
     guard let count = request.data["unicorns"]?.int else {
         return Response(error: "No unicorn count provided")
     }
-    return Response(status: .Created, json: Json(["message":"Received \(count) unicorns"]))
+    return Response(status: .created, json: Json(["message":"Received \(count) unicorns"]))
 }
 
 app.group("abort") {
     app.get("400") { request in
-        throw Abort.BadRequest
+        throw Abort.badRequest
     }
     
     app.get("404") { request in
-        throw Abort.NotFound
+        throw Abort.notFound
     }
     
     app.get("420") { request in
-        throw Abort.Custom(status: .Custom(420), message: "Enhance your calm")
+        throw Abort.custom(status: .enhanceYourCalm, message: "Enhance your calm")
     }
     
     app.get("500") { request in
-        throw Abort.InternalServerError
+        throw Abort.internalServerError
     }
 }
 
@@ -108,11 +108,11 @@ app.post("login") { request in
         let email = request.data["email"]?.string,
         let password = request.data["password"]?.string
     else {
-        throw Abort.BadRequest
+        throw Abort.badRequest
     }
     
     guard email == "user@qutheory.io" && password == "test123" else {
-        throw Abort.BadRequest
+        throw Abort.badRequest
     }
     
     request.session?["id"] = "123"

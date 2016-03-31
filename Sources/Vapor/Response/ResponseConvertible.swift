@@ -20,6 +20,6 @@ extension Response: ResponseRepresentable {
 ///Allows Swift Strings to be returned through closures
 extension Swift.String: ResponseRepresentable {
     public func makeResponse() -> Response {
-        return Response(status: .OK, html: self)
+        return Response(status: .ok, html: self)
     }
 }
