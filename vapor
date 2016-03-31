@@ -227,8 +227,11 @@ class Vapor {
         let name = arguments[2]
 
         do {
-            try run("git clone https://github.com/qutheory/vapor-example.git \(name)") 
-            let _ = try? run("rm -rf \(name)/.git")
+            let escapedName = "\"\(name)\"" // FIX: Doesn’t support names with quotes
+            try run("mkdir \(escapedName)")
+            try run("curl -L https://github.com/qutheory/vapor-example/archive/master.tar.gz > \(escapedName)/vapor-example.tar.gz")
+            try run("tar -xzf \(escapedName)/vapor-example.tar.gz --strip-components=1 --directory \(escapedName)")
+            let _ = try? run("rm \(escapedName)/vapor-example.tar.gz")
             print()
             print("Project \"\(name)\" has been created.")
             print("Enjoy!")
