@@ -5,6 +5,7 @@
 //  Created by Shaun Harrison on 2/20/16.
 //
 
+/** Command to start the server */
 public class ServeCommand: Command {
 
     public override var name: String {
@@ -17,8 +18,17 @@ public class ServeCommand: Command {
 
     public override var options: [InputOption] {
         return [
-            InputOption("ip", mode: .Optional, help: "The ip to serve the application on.", value: "0.0.0.0"),
-            InputOption("port", mode: .Optional, help: "The port to serve the application on.", value: String(app.config.get("app.port", 8080)))
+            InputOption("ip",
+                mode: .Optional,
+                help: "The ip to serve the application on.",
+                value: "0.0.0.0"
+            ),
+
+            InputOption("port",
+                mode: .Optional,
+                help: "The port to serve the application on.",
+                value: String(app.config.get("app.port", 8080))
+            )
         ]
     }
 

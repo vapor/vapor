@@ -24,6 +24,8 @@ internal class HelpCommand: Command {
         super.init(console: console)
     }
 
+    // swiftlint:disable function_body_length
+    // swiftlint:disable cyclomatic_complexity
     internal override func handle() {
         let arguments = command.arguments
         let options = command.options + command.defaultOptions
@@ -104,5 +106,7 @@ internal class HelpCommand: Command {
             line("  " + help)
         }
     }
+    // swiftlint:enable function_body_length
+    // swiftlint:enable cyclomatic_complexity
 
 }

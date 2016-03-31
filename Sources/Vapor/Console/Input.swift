@@ -5,15 +5,23 @@
 //  Created by Shaun Harrison on 2/20/16.
 //
 
+///Wrapper class around CLI input
 public class Input {
+    ///CLI arguments
     public let arguments: [InputArgument]
+
+    ///CLI options
     public let options: [InputOption]
 
-    public init() {
+    /**
+        Initialize input
+        - parameter input: Optional input to initialize class with
+    */
+    public init(input: [String] = Process.arguments) {
         var arguments = Array<InputArgument>()
         var options = Array<InputOption>()
 
-        var raw = Process.arguments
+        var raw = input
         raw.removeFirst()
 
         for (index, argument) in raw.enumerated() {
@@ -21,12 +29,23 @@ public class Input {
                 let components = argument.split("=")
 
                 if components.count == 1 {
-                    options.append(InputOption(components[0], mode: .None))
+                    options.append(InputOption(
+                        components[0],
+                        mode: .None
+                    ))
                 } else {
-                    options.append(InputOption(components[0], mode: .Optional, value: components[1]))
+                    options.append(InputOption(
+                        components[0],
+                        mode: .Optional,
+                        value: components[1]
+                    ))
                 }
             } else {
-                arguments.append(InputArgument(String(index), mode: .Optional, value: argument))
+                arguments.append(InputArgument(
+                    String(index),
+                    mode: .Optional,
+                    value: argument
+                ))
             }
         }
 
@@ -34,6 +53,11 @@ public class Input {
         self.options = options
     }
 
+    /**
+        Get the value of an option
+        - parameter name: Name of the option to get value of
+        - returns: Option value if present
+    */
     public func option(name: String) -> String? {
         for option in options {
             if option.name == name {
@@ -44,6 +68,11 @@ public class Input {
         return nil
     }
 
+    /**
+        Check if option is present
+        - parameter name: Name of option to check for
+        - returns: True if option is present, false if not
+    */
     public func hasParameterOption(name: String) -> Bool {
         for option in options {
             if option.name == name {

@@ -5,6 +5,7 @@
 //  Created by Shaun Harrison on 2/20/16.
 //
 
+/** Lists all available commands registered with Console */
 public class ListCommand: Command {
 
     public override var name: String {
@@ -27,7 +28,7 @@ public class ListCommand: Command {
         var maxCommandNameLength = 20
         var grouped = [String: [Command]]()
 
-        for command in console.allCommands() {
+        for command in console.commands {
             let name = command.name
             maxCommandNameLength = max(maxCommandNameLength, name.characters.count + 4)
 
@@ -56,7 +57,8 @@ public class ListCommand: Command {
             }
 
             for command in grouped[key]! {
-                line("  <info>\(command.name.pad(with: " ", to: maxCommandNameLength))</info>\(command.help ?? "")")
+                let paddedCommand = command.name.pad(with: " ", to: maxCommandNameLength)
+                line("  <info>\(paddedCommand)</info>\(command.help ?? "")")
             }
         }
     }

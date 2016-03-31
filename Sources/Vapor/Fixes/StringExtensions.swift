@@ -33,6 +33,7 @@ extension String {
         return string
     }
 
+    // swiftlint:disable line_length
     func rangeOfString(str: String) -> Range<Index>? {
         return rangeOfString(str, range: self.startIndex..<self.endIndex)
     }
@@ -58,6 +59,7 @@ extension String {
 
         return startIndex..<startIndex.advanced(by: str.characters.count)
     }
+    // swiftlint:enable line_length
 
 #if os(Linux)
     func hasPrefix(str: String) -> Bool {

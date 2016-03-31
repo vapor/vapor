@@ -186,17 +186,20 @@ public class Application {
         }
     }
 
-    /*
+    /**
         Starts console
     */
     public func start() {
         console.run()
     }
 
+    // swiftlint:disable variable_name
     /**
-        Boots the chosen server driver and
-        optionally runs on the supplied
-        ip & port overrides
+        Boots and runs the chosen server driver
+
+        - parameter ip: Optionally override default ip (0.0.0.0)
+        - parameter port: Optionally override default port (8080)
+        - throws:
     */
     public func serve(ip ip: String = "0.0.0.0", port: Int = 8080) throws {
         self.boot()
@@ -204,6 +207,7 @@ public class Application {
 
         try server.boot(ip: ip, port: port)
     }
+    // swiftlint:enable variable_name
 
     func checkFileSystem(request: Request) -> Request.Handler? {
         // Check in file system

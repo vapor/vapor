@@ -7,14 +7,26 @@
 
 import VaporConsoleOutput
 
+///Console class to interact with command line
 public class Console {
     private let defaultCommand = "list"
-    private var commands = [String: Command]()
+    private var registeredCommands = [String: Command]()
 
+    ///Input instance
     public let input = Input()
+
+    ///Output instance
     public let output = Output()
+
+    ///App instance
     public let app: Application
 
+    ///Get all registered commands
+    public var commands: [Command] {
+        return Array(registeredCommands.values)
+    }
+
+    ///Console errors
     public enum Error: ErrorProtocol {
         case TooManyArguments
         case MissingArgument(argument: String)
@@ -24,6 +36,11 @@ public class Console {
         case CommandNotFound(command: String)
     }
 
+    /**
+        Initialize console
+        - parameter application: Application to associate with this instance
+        - parameter commands: Optional commands to register with this instance
+    */
     public init(application: Application, commands: [Command.Type] = []) {
         self.app = application
 
@@ -35,6 +52,9 @@ public class Console {
         }
     }
 
+    /**
+        Run the console
+    */
     public func run() {
         app.boot()
 
@@ -59,35 +79,54 @@ public class Console {
                 throw Error.CommandNotFound(command: name)
             }
         } catch let error as Error {
-            output.writeln("<error>Error: \(error)</error>");
+            output.writeln("<error>Error: \(error)</error>")
         } catch {
-            output.writeln("<error>Error: \(error)</error>");
+            output.writeln("<error>Error: \(error)</error>")
         }
     }
 
+    /**
+        Register a command
+        - parameter command: Command class to initialize and register
+    */
     public func register(command: Command.Type) {
         register(command.init(console: self))
     }
 
+    /**
+        Register a command
+        - parameter command: Command instance to register
+    */
     public func register(command: Command) {
-        commands[command.name] = command
+        registeredCommands[command.name] = command
     }
 
+    /**
+        Unregister a command
+        - parameter command: Command name to unregister
+    */
     public func unregister(command: String) {
-        commands[command] = nil
+        registeredCommands[command] = nil
     }
 
+    /**
+        Check if a command name is registered
+        - parameter command: Name of command to check if registered
+        - returns: True if register, false if not
+    */
     public func contains(command: String) -> Bool {
-        return commands[command] != nil
+        return registeredCommands[command] != nil
     }
 
+    /**
+        Find a command instance by it’s name
+        - parameter command: Name of command to check
+        - returns: Command instance if registered, nil if not
+    */
     public func find(command: String) -> Command? {
-        // TODO: Implement alternative suggestions
-        return commands[command]
-    }
-
-    public func allCommands() -> [Command] {
-        return Array(commands.values)
+        // swiftlint:disable:next todo
+        // TODO: Evaluate implementing alternative suggestions
+        return registeredCommands[command]
     }
 
 }
