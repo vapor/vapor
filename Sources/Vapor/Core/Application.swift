@@ -2,7 +2,7 @@ import libc
 import Hummingbird
 
 public class Application {
-    public static let VERSION = "0.4.0"
+    public static let VERSION = "0.4.1"
 
     /**
         The router driver is responsible
@@ -182,6 +182,7 @@ public class Application {
         ip & port overrides
     */
     public func start(ip ip: String? = nil, port: Int? = nil) {
+        bootArguments()
         bootProviders()
         server.delegate = self
 
@@ -189,7 +190,6 @@ public class Application {
         self.port = port ?? self.port
 
         bootRoutes()
-        bootArguments()
 
         if environment == .Production {
             Log.info("Production mode detected, disabling information logs.")

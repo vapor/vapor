@@ -223,11 +223,17 @@ extension Response {
 
          - parameter status: the http status
          - parameter json: any value that will be attempted to be serialized as json.  Use 'Json' for more complex objects
-
-         - throws: SerializationErro
     */
     public convenience init(status: Status, json: Json) {
         self.init(status: status, data: json.data, contentType: .Json)
+    }
+
+    /**
+        Creates an empty response with the
+        supplied status code.
+    */
+    public convenience init(status: Status) {
+        self.init(status: status, text: "")
     }
 }
 
