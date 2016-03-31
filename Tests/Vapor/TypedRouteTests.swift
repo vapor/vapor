@@ -11,67 +11,67 @@ import XCTest
 @testable import Vapor
 
 class Post: StringInitializable {
-    
+
     required init?(from string: String) throws {
         return nil
     }
-    
+
 }
 
 class TypedRouteTests: XCTestCase {
-    
-    static var allTests : [(String, TypedRouteTests -> () throws -> Void)] {
+
+    static var allTests: [(String, TypedRouteTests -> () throws -> Void)] {
         return [
            ("testRouting", testRouting),
         ]
     }
-    
+
     func testRouting() {
-        
+
         let app = Application()
-        
-        
+
+
         app.get("users", Int.self) { request, userId in
             return ""
         }
-        
+
         app.put("posts", Post.self) { request, post in
             return ""
         }
-        
+
         app.delete("one", Int.self, "two", String.self, "three/four") { request, one, two in
             return ""
         }
-        
+
         app.host("host.com") {
             app.post("posts", Post.self) { request, post in
                 return ""
             }
         }
-        
+
         app.group("v1") {
             app.patch("posts", Post.self) { request, post in
                 return ""
             }
         }
-        
+
         self.assertRouteExists("users/:w0", method: .Get, host: "*", inRoutes: app.routes)
         self.assertRouteExists("posts/:w0", method: .Put, host: "*", inRoutes: app.routes)
         self.assertRouteExists("one/:w0/two/:w1/three/four", method: .Delete, host: "*", inRoutes: app.routes)
         self.assertRouteExists("posts/:w0", method: .Post, host: "host.com", inRoutes: app.routes)
         self.assertRouteExists("v1/posts/:w0", method: .Patch, host: "*", inRoutes: app.routes)
     }
-    
+
     func assertRouteExists(path: String, method: Request.Method, host: String, inRoutes routes: [Route]) {
         var found = false
-        
+
         for route in routes {
             if route.path == path && route.method == method && route.hostname == host {
                 found = true
             }
-            
+
         }
-        
+
         if !found {
             XCTFail("\(method) \(path) was not found")
         }

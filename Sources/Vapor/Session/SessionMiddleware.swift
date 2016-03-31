@@ -1,6 +1,6 @@
 /**
     Looks for the `vapor-session` cookie on incoming
-    requests and attempts to initialize a Session based on the 
+    requests and attempts to initialize a Session based on the
     identifier found.
 
     If an active Session is found on the request when the response

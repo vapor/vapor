@@ -10,7 +10,7 @@ import XCTest
 @testable import Vapor
 
 class ResponseTests: XCTestCase {
-    static var allTests : [(String, ResponseTests -> () throws -> Void)] {
+    static var allTests: [(String, ResponseTests -> () throws -> Void)] {
         return [
            ("testRedirect", testRedirect)
         ]
@@ -18,7 +18,7 @@ class ResponseTests: XCTestCase {
 
     func testRedirect() {
         let url = "http://tanner.xyz"
-        
+
         let redirect = Redirect(to: url)
         XCTAssert(redirect.redirectLocation == url, "redirect location should be url")
 

@@ -11,7 +11,7 @@ class FileManager {
     }
 
     static func readBytesFromFile(path: String) throws -> [UInt8] {
-        let fd = open(path, O_RDONLY);
+        let fd = open(path, O_RDONLY)
 
         if fd < 0 {
             throw Error.CouldNotOpenFile
@@ -27,19 +27,19 @@ class FileManager {
             }
             return true
         }
-        
+
         if !ret {
             throw Error.Unreadable
         }
-        
+
         let length = Int(info.st_size)
-        
+
         let rawData = malloc(length)
         var remaining = Int(info.st_size)
         var total = 0
         while remaining > 0 {
             let advanced = rawData.advanced(by: total)
-            
+
             let amt = read(fd, advanced, remaining)
             if amt < 0 {
                 break
@@ -95,7 +95,7 @@ class FileManager {
         }
 
         defer { free(result) }
-        
+
         let cstring = String(validatingUTF8: result)
 
         if let expanded = cstring {
@@ -131,7 +131,7 @@ class FileManager {
         #endif
 
         for i in 0..<count {
-            
+
             let cstring = String(validatingUTF8: gt.gl_pathv[i])
             if let path = cstring {
                 contents.append(path)
