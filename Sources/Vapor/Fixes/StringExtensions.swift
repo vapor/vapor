@@ -23,6 +23,42 @@ extension String {
         self = string
     }
 
+    func pad(with character: String, to length: Int) -> String {
+        var string = self
+
+        while string.characters.count < length {
+            string += character
+        }
+
+        return string
+    }
+
+    func rangeOfString(str: String) -> Range<Index>? {
+        return rangeOfString(str, range: self.startIndex..<self.endIndex)
+    }
+
+    func rangeOfString(str: String, range: Range<Index>) -> Range<Index>? {
+        let target = self[range]
+        var index: Index? = nil
+
+        target.withCString { (targetBytes) in
+            str.withCString { (strBytes) in
+                let p = strstr(targetBytes, strBytes)
+
+                if p != nil {
+                    index = target.startIndex.advanced(by: p - UnsafeMutablePointer<Int8>(targetBytes))
+                    index = self.startIndex.advanced(by: self.startIndex.distance(to: range.startIndex)).advanced(by: target.startIndex.distance(to: index!))
+                }
+            }
+        }
+
+        guard let startIndex = index else {
+            return nil
+        }
+
+        return startIndex..<startIndex.advanced(by: str.characters.count)
+    }
+
 #if os(Linux)
     func hasPrefix(str: String) -> Bool {
         let strGen = str.characters.makeIterator()

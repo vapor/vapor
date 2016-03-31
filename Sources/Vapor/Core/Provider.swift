@@ -11,3 +11,7 @@
 public protocol Provider {
     static func boot(application: Application)
 }
+
+public protocol ConsoleProvider: Provider {
+    static func boot(console: Console)
+}
