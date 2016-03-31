@@ -10,7 +10,7 @@ import XCTest
 @testable import Vapor
 
 class EnvironmentTests: XCTestCase {
-    static var allTests : [(String, EnvironmentTests -> () throws -> Void)] {
+    static var allTests: [(String, EnvironmentTests -> () throws -> Void)] {
         return [
            ("testEnvironment", testEnvironment),
            ("testDetectEnvironmentHandler", testDetectEnvironmentHandler),

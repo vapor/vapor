@@ -2,7 +2,7 @@ import JSON
 
 public enum Json {
     case null, bool(Bool), double(Double), int(Int), string(String), array([Json]), object([String: Json])
-    
+
     public init(_ value: JSON) {
         switch value {
         case .nullValue:
@@ -27,54 +27,54 @@ public enum Json {
             let mapped: [Json] = array.map { item in
                 return Json(item)
             }
-            
+
             self = .array(mapped)
         }
     }
-    
+
     public init(_ value: Bool) {
         self = .bool(value)
     }
-    
+
     public init(_ value: Double) {
         self = .double(value)
     }
-    
+
     public init(_ value: Int) {
         self = .int(value)
     }
-    
+
     public init(_ value: String) {
         self = .string(value)
     }
-    
+
     public init(_ value: [JsonRepresentable]) {
         let array: [Json] = value.map { item in
             return item.makeJson()
         }
         self = .array(array)
     }
-    
+
     public init(_ value: [String: JsonRepresentable]) {
         var object: [String: Json] = [:]
-        
+
         value.forEach { (key, item) in
             object[key] = item.makeJson()
         }
-        
+
         self = .object(object)
     }
-    
+
     public init(_ value: [UInt8]) throws {
         let data: Data = Data(value)
         let json = try JSONParser().parse(data)
         self.init(json)
     }
-    
+
     public var data: [UInt8] {
         return JSONSerializer().serialize(makeZewoJson()).bytes
     }
-    
+
     private func makeZewoJson() -> JSON {
         switch self {
         case .null:
@@ -92,17 +92,17 @@ public enum Json {
             object.forEach { (key, value) in
                 mapped[key] = value.makeZewoJson()
             }
-            
+
             return .objectValue(mapped)
         case .array(let array):
             let mapped: [JSON] = array.map { item in
                 return item.makeZewoJson()
             }
-            
+
             return .arrayValue(mapped)
         }
     }
-    
+
     public subscript(key: String) -> Node? {
         switch self {
         case .object(let object):
@@ -111,7 +111,7 @@ public enum Json {
             return nil
         }
     }
-    
+
     public subscript(index: Int) -> Node? {
         switch self {
         case .array(let array):
@@ -120,7 +120,7 @@ public enum Json {
             return nil
         }
     }
-    
+
     mutating func merge(with otherJson: Json) {
         switch self {
         case .object(let object):
@@ -128,7 +128,7 @@ public enum Json {
                 self = otherJson
                 return
             }
-            
+
             var merged = object
 
             for (key, value) in otherObject {
@@ -140,14 +140,14 @@ public enum Json {
                     merged[key] = value
                 }
             }
-            
+
             self = .object(merged)
         case .array(let array):
             guard case let .array(otherArray) = otherJson else {
                 self = otherJson
                 return
             }
-        
+
             self = .array(array + otherArray)
         default:
             self = otherJson
@@ -161,7 +161,7 @@ public protocol JsonRepresentable: ResponseRepresentable {
 }
 
 
-extension JsonRepresentable  {
+extension JsonRepresentable {
     ///Allows any JsonRepresentable to be returned through closures
     public func makeResponse() -> Response {
         return makeJson().makeResponse()
@@ -289,17 +289,17 @@ extension Json: Node {
         switch self {
         case .object(let object):
             var dict: [String : Node] = [:]
-            
+
             object.forEach { (key, val) in
                 dict[key] = val
             }
-            
+
             return dict
         default:
             return nil
         }
     }
-    
+
     public var json: Json? {
         return self
     }

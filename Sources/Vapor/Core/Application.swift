@@ -30,7 +30,7 @@ public class Application {
         Provides access to config settings.
     */
     public lazy var config: Config = Config(application: self)
-    
+
     /**
         Provides access to the underlying
         `HashDriver`.
@@ -190,7 +190,7 @@ public class Application {
         self.port = port ?? self.port
 
         bootRoutes()
-        
+
         if environment == .Production {
             Log.info("Production mode detected, disabling information logs.")
             Log.enabledLevels = [.Error, .Fatal]
@@ -261,7 +261,7 @@ extension Application: ServerDriverDelegate {
             if environment == .Production {
                 error = "Something went wrong"
             }
-            
+
             return Response(error: error)
         }
 

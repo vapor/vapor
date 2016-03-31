@@ -3,10 +3,10 @@
  *  An umbrella protocol used to define behavior to and from Json
  */
 public protocol NodeInitializable {
-    
+
     /**
         This function will be used to create an instance of the type from Json
-         
+
          - parameter json: the json to use in initialization
          - throws: a potential error.  ie: invalid json type
          - returns: an initialized object
@@ -23,7 +23,7 @@ extension String: NodeInitializable {
         guard let string = node.string else {
             throw NodeError.UnableToConvert(node: node, toType: "\(self.dynamicType)")
         }
-        
+
         return string
     }
 }
@@ -34,7 +34,7 @@ extension Bool: NodeInitializable {
         guard let bool = node.bool else {
             throw NodeError.UnableToConvert(node: node, toType: "\(self.dynamicType)")
         }
-        
+
         return bool
     }
 }
@@ -52,7 +52,7 @@ extension UnsignedInteger {
         guard let int = node.uint else {
             throw NodeError.UnableToConvert(node: node, toType: "\(self.dynamicType)")
         }
-        
+
         return self.init(int.toUIntMax())
     }
 }
@@ -69,7 +69,7 @@ extension SignedInteger {
         guard let int = node.int else {
             throw NodeError.UnableToConvert(node: node, toType: "\(self.dynamicType)")
         }
-        
+
         return self.init(int.toIntMax())
     }
 }
@@ -81,7 +81,7 @@ extension Float: NodeInitializable {
         guard let float = node.float else {
             throw NodeError.UnableToConvert(node: node, toType: "\(self.dynamicType)")
         }
-        
+
         return self.init(float)
     }
 }
@@ -91,12 +91,12 @@ extension Double: NodeInitializable {
         guard let double = node.double else {
             throw NodeError.UnableToConvert(node: node, toType: "\(self.dynamicType)")
         }
-        
+
         return self.init(double)
     }
 }
 
-public protocol NodeConvertibleFloatingPointType : NodeInitializable {
+public protocol NodeConvertibleFloatingPointType: NodeInitializable {
     var doubleValue: Double { get }
     init(_ other: Double)
 }
