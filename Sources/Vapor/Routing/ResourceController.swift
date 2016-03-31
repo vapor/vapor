@@ -27,22 +27,22 @@ extension ResourceController {
     public func index(request: Request) throws -> ResponseRepresentable {
         throw Abort.NotFound
     }
-    
+
     /// Create a new instance.
     public func store(request: Request) throws -> ResponseRepresentable {
         throw Abort.NotFound
     }
-    
+
     /// Show an instance.
     public func show(request: Request, item: Item) throws -> ResponseRepresentable {
         throw Abort.NotFound
     }
-    
+
     /// Update an instance.
     public func update(request: Request, item: Item) throws -> ResponseRepresentable {
         throw Abort.NotFound
     }
-    
+
     /// Delete an instance.
     public func destroy(request: Request, item: Item) throws -> ResponseRepresentable {
         throw Abort.NotFound
