@@ -2,7 +2,7 @@ import XCTest
 @testable import Vapor
 
 class ConfigTests: XCTestCase {
-    static var allTests : [(String, ConfigTests -> () throws -> Void)] {
+    static var allTests: [(String, ConfigTests -> () throws -> Void)] {
         return [
            ("testSimple", testSimple),
            ("testNesting", testNesting),
@@ -11,7 +11,7 @@ class ConfigTests: XCTestCase {
            ("testDotEnv", testDotEnv),
         ]
     }
-    
+
     #if Xcode
     let workDir = "/Users/tanner/Developer/vapor/vapor/Sources/VaporDev/"
     #else
@@ -45,7 +45,7 @@ class ConfigTests: XCTestCase {
 
 	private func config(environment: Environment) -> Config {
 		let app = self.app(environment)
-        
+
         print(workDir)
 
 		do {

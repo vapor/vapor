@@ -7,7 +7,7 @@ public class View {
     public static var renderers: [String: RenderDriver] = [:]
 
     var bytes: [UInt8]
-    
+
     enum Error: ErrorProtocol {
         case InvalidPath
     }

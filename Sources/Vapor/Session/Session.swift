@@ -35,19 +35,19 @@ public class Session {
             guard let i = identifier else {
                 return nil
             }
-            
+
             return driver.valueFor(key: key, identifier: i)
         }
         set {
             let i: String
-            
+
             if let existingIdentifier = identifier {
                 i = existingIdentifier
             } else {
                 i = driver.makeSessionIdentifier()
                 identifier = i
             }
-            
+
             driver.set(newValue, forKey: key, identifier: i)
         }
     }

@@ -1,6 +1,6 @@
 /**
     Handles the various Abort errors that can be thrown
-    in any Vapor closure. 
+    in any Vapor closure.
 
     To stop this behavior, remove the
     AbortMiddleware for the Application's `middleware` array.
@@ -24,7 +24,7 @@ public class AbortMiddleware: Middleware {
             }
         }
     }
-    
+
     class func errorResponse(status: Response.Status, message: String) throws -> Response {
         let json = Json([
             "error": "true",
@@ -32,5 +32,5 @@ public class AbortMiddleware: Middleware {
         ])
         return Response(status: status, json: json)
     }
-    
+
 }

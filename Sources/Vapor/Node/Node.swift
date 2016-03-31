@@ -17,10 +17,10 @@ public protocol Node {
 }
 
 public enum NodeError: ErrorProtocol {
-    
+
     /**
          When converting to a value from Json, if there is a type conflict, this will throw an error
-         
+
          - param Json   the json that was unable to map
          - param String a string description of the type that was attempting to map
     */
