@@ -1,10 +1,10 @@
 import CryptoKitten
 
 /**
-    Create SHA256 + HMAC hashes with the
+    Create SHA1 + HMAC hashes with the
     Hash class by applying this driver.
 */
-public class SHA256Hasher: HashDriver {
+public class SHAHasher: HashDriver {
 
     public func hash(message: String, key: String) -> String {
 
@@ -14,11 +14,11 @@ public class SHA256Hasher: HashDriver {
         var keyBuff = [UInt8]()
         keyBuff += key.utf8
 
-        if let hmac = HMAC.authenticate(key: keyBuff, message: msgBuff) {
+        if let hmac = HMAC.authenticate(key: keyBuff, message: msgBuff, variant: .sha1) {
             return hmac.toHexString()
         } else {
             Log.error("Unable to create hash, returning hash for empty string.")
-            return "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            return "da39a3ee5e6b4b0d3255bfef95601890afd80709"
         }
 
     }
