@@ -32,8 +32,9 @@ public class Command {
         // Triggers HelpCommand
         InputOption("help", mode: .None, help: "Display this help message"),
 
-        // Application reads/applies this value
-        InputOption("env", mode: .Optional, help: "Specify an environment to run in.")
+        // Application reads/applies these values
+        InputOption("env", mode: .Optional, help: "Specify an environment to run in."),
+        InputOption("workDir", mode: .Optional, help: "Change the work directory.", value: "./")
     ]
 
     private var compiledArguments = [String: InputArgument]()

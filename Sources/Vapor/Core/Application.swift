@@ -32,6 +32,11 @@ public class Application {
     public lazy var config: Config = Config(application: self)
 
     /**
+        Provides access to console.
+    */
+    public private(set) lazy var console: Console = Console(application: self)
+
+    /**
         Provides access to the underlying
         `HashDriver`.
     */
@@ -95,9 +100,7 @@ public class Application {
     var scopedMiddleware: [Middleware.Type] = []
     var scopedPrefix: String?
 
-    var port: Int = 80
-    var ip: String = "0.0.0.0"
-
+    var booted = false
     var routes: [Route] = []
 
     /**
@@ -154,6 +157,23 @@ public class Application {
         }
     }
 
+    func boot() {
+        guard !booted else {
+            return
+        }
+
+        bootArguments()
+        bootProviders()
+        bootRoutes()
+
+        if environment == .Production {
+            Log.info("Production mode detected, disabling information logs.")
+            Log.enabledLevels = [.Error, .Fatal]
+        }
+
+        booted = true
+    }
+
     func bootRoutes() {
         routes.forEach(router.register)
     }
@@ -164,16 +184,13 @@ public class Application {
             Log.info("Work dir override: \(workDir)")
             self.workDir = workDir
         }
+    }
 
-        if let ip = Process.valueFor(argument: "ip") {
-            Log.info("IP override: \(ip)")
-            self.ip = ip
-        }
-
-        if let port = Process.valueFor(argument: "port")?.int {
-            Log.info("Port override: \(port)")
-            self.port = port
-        }
+    /*
+        Starts console
+    */
+    public func start() {
+        console.run()
     }
 
     /**
@@ -181,27 +198,11 @@ public class Application {
         optionally runs on the supplied
         ip & port overrides
     */
-    public func start(ip ip: String? = nil, port: Int? = nil) {
-        bootArguments()
-        bootProviders()
+    public func serve(ip ip: String = "0.0.0.0", port: Int = 8080) throws {
+        self.boot()
         server.delegate = self
 
-        self.ip = ip ?? self.ip
-        self.port = port ?? self.port
-
-        bootRoutes()
-
-        if environment == .Production {
-            Log.info("Production mode detected, disabling information logs.")
-            Log.enabledLevels = [.Error, .Fatal]
-        }
-
-        do {
-            Log.info("Server starting on \(self.ip):\(self.port)")
-            try server.boot(ip: self.ip, port: self.port)
-        } catch {
-            Log.error("Server start error: \(error)")
-        }
+        try server.boot(ip: ip, port: port)
     }
 
     func checkFileSystem(request: Request) -> Request.Handler? {

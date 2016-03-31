@@ -132,4 +132,4 @@ app.middleware(AuthMiddleware.self) {
     }
 }
 
-app.start(port: 8080)
+app.start()

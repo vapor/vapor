@@ -36,7 +36,7 @@ public class Console {
     }
 
     public func run() {
-        app.bootProviders()
+        app.boot()
 
         for provider in app.providers {
             if let provider = provider as? ConsoleProvider.Type {
