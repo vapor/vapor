@@ -73,15 +73,15 @@ app.group("abort") {
     app.get("400") { request in
         throw Abort.badRequest
     }
-    
+
     app.get("404") { request in
         throw Abort.notFound
     }
-    
+
     app.get("420") { request in
         throw Abort.custom(status: .enhanceYourCalm, message: "Enhance your calm")
     }
-    
+
     app.get("500") { request in
         throw Abort.internalServerError
     }
@@ -110,13 +110,13 @@ app.post("login") { request in
     else {
         throw Abort.badRequest
     }
-    
+
     guard email == "user@qutheory.io" && password == "test123" else {
         throw Abort.badRequest
     }
-    
+
     request.session?["id"] = "123"
-    
+
     return Json([
         "message": "Logged in"
     ])

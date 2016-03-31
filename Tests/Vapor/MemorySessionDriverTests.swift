@@ -10,9 +10,9 @@ import XCTest
 
 class MemorySessionDriverTests: XCTestCase {
     var application = Application()
-    
+
     var identifier = "baz"
-    static var allTests : [(String, MemorySessionDriverTests -> () throws -> Void)] {
+    static var allTests: [(String, MemorySessionDriverTests -> () throws -> Void)] {
         return [
            ("testValueForKey_onNonExistantSession_isNil", testValueForKey_onNonExistantSession_isNil),
            ("testValueForKey_onExistingSession_onNonExistingKey_isNil", testValueForKey_onExistingSession_onNonExistingKey_isNil),
@@ -23,7 +23,7 @@ class MemorySessionDriverTests: XCTestCase {
            ("testDestroySession_removesSession", testDestroySession_removesSession)
         ]
     }
-    
+
     // MARK: - Obtaining Values
     func testValueForKey_onNonExistantSession_isNil() {
         let subject = MemorySessionDriver(application: application)

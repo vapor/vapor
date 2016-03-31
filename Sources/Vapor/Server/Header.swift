@@ -4,7 +4,7 @@ internal struct Header {
     enum Error: ErrorProtocol {
         case InvalidHeaderKeyPair
     }
-    
+
     let requestLine: RequestLine
     private(set) var fields: [String : String] = [:]
     
@@ -15,20 +15,20 @@ internal struct Header {
         }
         return array
     }
-    
+
     init(_ socket: SocketIO) throws {
         let requestLineRaw = try socket.readLine()
         requestLine = try RequestLine(requestLineRaw)
         try collectHeaderFields(socket)
     }
-    
+
     private mutating func collectHeaderFields(socket: SocketIO) throws {
         while let line = try nextHeaderLine(socket) {
             let (key, val) = try extractKeyPair(line)
             fields[key] = val
         }
     }
-    
+
     private func nextHeaderLine(socket: SocketIO) throws -> String? {
         let next = try socket.readLine()
         if !next.isEmpty {
@@ -37,13 +37,13 @@ internal struct Header {
             return nil
         }
     }
-    
+
     private func extractKeyPair(line: String) throws -> (key: String, value: String) {
         let components = line.split(":", maxSplits: 1)
         // Is this safe? It doesn't assert count == 2, so no `:` might get mapped directly
         // Drop first to remove leading ` ` key is actually `: `, but doesn't support splitting on substring, only char
         guard let key = components.first, let val = components.last?.characters.dropFirst() else { throw Error.InvalidHeaderKeyPair }
-        
+
         return (key, String(val))
     }
 }
@@ -68,23 +68,23 @@ extension Header {
         enum Error: ErrorProtocol {
             case InvalidComponents
         }
-        
+
         let method: String
         let uri: String
         let version: String
-        
+
         init(_ string: String) throws {
             let comps = string.split(" ")
             guard comps.count == 3 else {
                 throw Error.InvalidComponents
             }
-            
+
             method = comps[0]
             uri = comps[1]
             version = comps[2]
         }
     }
-    
+
 }
 
 extension Header.RequestLine: CustomStringConvertible {

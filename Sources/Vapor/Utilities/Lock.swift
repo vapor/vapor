@@ -39,5 +39,5 @@ class Lock {
     func tryLock() -> Bool {
         return pthread_mutex_trylock(mutex) == 0
     }
-    
+
 }

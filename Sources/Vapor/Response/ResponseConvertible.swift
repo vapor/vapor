@@ -2,7 +2,7 @@
     Any data structure that complies to this protocol
     can be returned to generic Vapor closures or route handlers.
 
-    ```app.get("/") { request in 
+    ```app.get("/") { request in
         return object //must be of type `ResponseConvertible`
     }```
 */
