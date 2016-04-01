@@ -91,6 +91,13 @@ public class Application {
         }
     }
 
+    /**
+        Resources directory relative to workDir
+    */
+    public var resourcesDir: String {
+        return workDir + "Resources/"
+    }
+
     var scopedHost: String?
     var scopedMiddleware: [Middleware.Type] = []
     var scopedPrefix: String?
