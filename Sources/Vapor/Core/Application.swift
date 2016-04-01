@@ -1,6 +1,5 @@
 import libc
 import Hummingbird
-import S4
 
 public class Application {
     public static let VERSION = "0.4.2"
@@ -18,7 +17,7 @@ public class Application {
         This property is constant since it cannot
         be changed after the server has been booted.
     */
-    public var server: S4.Server?
+    public var server: Server?
 
     /**
         The session driver is responsible for
@@ -227,13 +226,9 @@ public class Application {
     }
 }
 
-extension Application: S4.Responder {
+extension Application: Responder {
     
-    public func respond(request: S4.Request) throws -> S4.Response {
-        return self.serverDriverDidReceiveRequest(request)
-    }
-    
-    public func serverDriverDidReceiveRequest(request: Request) -> Response {
+    public func respond(request: Request) throws -> Response {
         var handler: Request.Handler
         var request = request
 
@@ -259,7 +254,7 @@ extension Application: S4.Responder {
         do {
             let response = try handler(request: request)
 
-            if response.headers["Content-Type"] == nil {
+            if response.headers["Content-Type"].first == nil {
                 Log.warning("Response had no 'Content-Type' header.")
             }
 

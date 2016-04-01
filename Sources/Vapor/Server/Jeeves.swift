@@ -3,9 +3,8 @@
 #else
     import Darwin
 #endif
-import S4
 
-public class Jeeves<Socket where Socket: Vapor.Socket, Socket: Hashable>: S4.Server {
+public class Jeeves<Socket where Socket: Vapor.Socket, Socket: Hashable>: Server {
     
     // MARK: Sockets
     private var streamSocket: Socket?
@@ -14,9 +13,9 @@ public class Jeeves<Socket where Socket: Vapor.Socket, Socket: Hashable>: S4.Ser
 
     // MARK: S4.Server
     public var ip: String?
-    public var delegate: S4.Responder!
+    public var delegate: Responder!
     
-    public func serve(responder: Responder, at port: Port) throws {
+    public func serve(responder: Responder, at port: Int) throws {
         halt()
         self.delegate = responder
         

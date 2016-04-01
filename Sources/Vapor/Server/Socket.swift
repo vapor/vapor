@@ -1,5 +1,3 @@
-import S4
-
 // MARK: Constants
 private let HeaderEndOfLine = "\r\n"
 
@@ -61,7 +59,7 @@ extension SocketIO {
 
 // MARK: Request / Response
 extension SocketIO {
-    public func readRequest() throws -> S4.Request {
+    public func readRequest() throws -> Request {
         let header = try Header(self)
         let requestLine = header.requestLine
 
@@ -72,11 +70,11 @@ extension SocketIO {
         } else {
             bytes = []
         }
-        let data = S4.Data(bytes)
+        let data = Data(bytes)
 
         
         //Method
-        let method: S4.Method
+        let method: Request.Method
         switch requestLine.method.lowercased() {
         case "get":
             method = .get
@@ -86,18 +84,18 @@ extension SocketIO {
         
         //URI
         let path = requestLine.uri
-        let uri = S4.URI(scheme: "http", userInfo: nil, host: nil, port: nil, path: path, query: [], fragment: nil)
+        let uri = URI(scheme: "http", userInfo: nil, host: nil, port: nil, path: path, query: [], fragment: nil)
         
         //Headers
-        var headers = S4.Headers([:])
+        var headers = Headers([:])
         for (key, value) in header.fields {
-            headers[CaseInsensitiveString(key)] = HeaderValues(value)
+            headers[Headers.Key(key)] = Headers.Values(value)
         }
         
-        return S4.Request(method: method, uri: uri, headers: headers, body: data)
+        return Request(method: method, uri: uri, headers: headers, body: data)
     }
 
-    public func write(response: S4.Response, keepAlive: Bool) throws {
+    public func write(response: Response, keepAlive: Bool) throws {
         let version = response.version
         let status = response.status
 

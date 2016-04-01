@@ -1,12 +1,10 @@
-import S4
-
 public typealias Host = String
 
 
 public final class BranchRouter: RouterDriver {
     
     // MARK: Private Tree Representation
-    private final var tree: [Host : [S4.Method : Branch]] = [:]
+    private final var tree: [Host : [Request.Method : Branch]] = [:]
     
     // MARK: Routing
     public final func route(request: Request) -> (parameters: [String: String], handler: Request.Handler)? {

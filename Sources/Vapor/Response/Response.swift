@@ -1,7 +1,3 @@
-import C7
-import S4
-
-public typealias Response = S4.Response
 
 /*
 /**
@@ -95,57 +91,6 @@ public class Response {
         }
     }
     
-    // MARK: Initialization
-    
-    /**
-        Designated Initializer
-
-        - parameter status: http status of response
-        - parameter data: the byte sequence that will be transmitted
-        - parameter contentType: the content type that the data represents
-    */
-    public init(status: Status, data: Data, contentType: ContentType) {
-        self.status = status
-        self.data = data
-        self.contentType = contentType
-        switch contentType {
-        case .Json:
-            self.headers = ["Content-Type": "application/json"]
-        case .Html:
-            self.headers = ["Content-Type": "text/html"]
-        case let .Other(description):
-            self.headers = ["Content-Type": description]
-        case .Text:
-            self.headers = ["Content-Type": "text"]
-        case .None:
-            self.headers = [:]
-        }
-        
-        self.headers["Server"] = "Vapor \(Application.VERSION)"
-    }
-}
-
-// MARK: - Convenience Initializers
-extension Response {
-    /**
-        When attempting to serialize an object of type 'Any' into Json,
-        invalid objects will throw
-
-        - InvalidObject: the object to serialize is not a valid Json object
-    */
-    public enum SerializationError: ErrorProtocol {
-        case InvalidObject
-    }
-    
-
-}
-
-extension Response: Equatable {}
-
-public func ==(left: Response, right: Response) -> Bool {
-    return left.status == right.status
-}
-
 */
 
 extension Response {
@@ -166,7 +111,7 @@ extension Response {
         - parameter status: http status of response
         - parameter html: the html string to be rendered as a response
      */
-    public init(status: S4.Status, html body: String) {
+    public init(status: Status, html body: String) {
         let html = "<html><meta charset=\"UTF-8\"><body>\(body)</body></html>"
         let headers: Headers = [
             "Content-Type": "text/html"
@@ -180,7 +125,7 @@ extension Response {
         - parameter status: http status
         - parameter data: response bytes
      */
-    public init(status: S4.Status, data: Data) {
+    public init(status: Status, data: Data) {
         self.init(status: status, headers: [:], body: data)
     }
 
@@ -190,9 +135,9 @@ extension Response {
         - parameter status: http status
         - parameter text: basic text response
      */
-    public init(status: S4.Status, text: String) {
+    public init(status: Status, text: String) {
         let headers: Headers = [
-            "Content-Type": "text"
+            "Content-Type": "text/plain"
         ]
         self.init(status: status, headers: headers, body: text.data)
     }
@@ -203,7 +148,7 @@ extension Response {
         - parameter status: the http status
         - parameter json: any value that will be attempted to be serialized as json.  Use 'Json' for more complex objects
      */
-    public init(status: S4.Status, json: Json) {
+    public init(status: Status, json: Json) {
         let headers: Headers = [
             "Content-Type": "application/json"
         ]
@@ -214,7 +159,7 @@ extension Response {
         Creates an empty response with the
         supplied status code.
     */
-    public init(status: S4.Status) {
+    public init(status: Status) {
         self.init(status: status, text: "")
     }
 
@@ -224,7 +169,7 @@ extension Response {
 
     public init(redirect location: String) {
         let headers: Headers = [
-            "Location": HeaderValues(location)
+            "Location": Headers.Values(location)
         ]
         self.init(status: .movedPermanently, headers: headers, body: [])
     }

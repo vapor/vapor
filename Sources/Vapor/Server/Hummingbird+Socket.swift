@@ -1,12 +1,11 @@
 import Hummingbird
-import C7
 
 extension Hummingbird.Socket: Socket {
-    public func read(bufferLength: Int) throws -> [C7.Byte] {
+    public func read(bufferLength: Int) throws -> [Byte] {
         return try receive(maximumBytes: bufferLength)
     }
     
-    public func write(bytes: [C7.Byte]) throws {
+    public func write(bytes: [Byte]) throws {
         try send(bytes)
     }
     

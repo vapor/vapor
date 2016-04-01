@@ -212,7 +212,6 @@
 		__src_cc_ref_Sources/Vapor/Server/Header.swift /* Server/Header.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Server/Header.swift /* Server/Header.swift */; };
 		"__src_cc_ref_Sources/Vapor/Server/Hummingbird+Socket.swift" /* Server/Hummingbird+Socket.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Sources/Vapor/Server/Hummingbird+Socket.swift" /* Server/Hummingbird+Socket.swift */; };
 		__src_cc_ref_Sources/Vapor/Server/Jeeves.swift /* Server/Jeeves.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Server/Jeeves.swift /* Server/Jeeves.swift */; };
-		__src_cc_ref_Sources/Vapor/Server/ServerDriver.swift /* Server/ServerDriver.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Server/ServerDriver.swift /* Server/ServerDriver.swift */; };
 		__src_cc_ref_Sources/Vapor/Server/Socket.swift /* Server/Socket.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Server/Socket.swift /* Server/Socket.swift */; };
 		__src_cc_ref_Sources/Vapor/Session/MemorySessionDriver.swift /* Session/MemorySessionDriver.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Session/MemorySessionDriver.swift /* Session/MemorySessionDriver.swift */; };
 		__src_cc_ref_Sources/Vapor/Session/Session.swift /* Session/Session.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Session/Session.swift /* Session/Session.swift */; };
@@ -462,7 +461,6 @@
 		__PBXFileRef_Sources/Vapor/Server/Header.swift /* Server/Header.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Server/Header.swift; sourceTree = "<group>"; };
 		"__PBXFileRef_Sources/Vapor/Server/Hummingbird+Socket.swift" /* Server/Hummingbird+Socket.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Server/Hummingbird+Socket.swift"; sourceTree = "<group>"; };
 		__PBXFileRef_Sources/Vapor/Server/Jeeves.swift /* Server/Jeeves.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Server/Jeeves.swift; sourceTree = "<group>"; };
-		__PBXFileRef_Sources/Vapor/Server/ServerDriver.swift /* Server/ServerDriver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Server/ServerDriver.swift; sourceTree = "<group>"; };
 		__PBXFileRef_Sources/Vapor/Server/Socket.swift /* Server/Socket.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Server/Socket.swift; sourceTree = "<group>"; };
 		__PBXFileRef_Sources/Vapor/Session/MemorySessionDriver.swift /* Session/MemorySessionDriver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Session/MemorySessionDriver.swift; sourceTree = "<group>"; };
 		__PBXFileRef_Sources/Vapor/Session/Session.swift /* Session/Session.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Session/Session.swift; sourceTree = "<group>"; };
@@ -1063,7 +1061,6 @@
 				__PBXFileRef_Sources/Vapor/Server/Header.swift /* Server/Header.swift */,
 				"__PBXFileRef_Sources/Vapor/Server/Hummingbird+Socket.swift" /* Server/Hummingbird+Socket.swift */,
 				__PBXFileRef_Sources/Vapor/Server/Jeeves.swift /* Server/Jeeves.swift */,
-				__PBXFileRef_Sources/Vapor/Server/ServerDriver.swift /* Server/ServerDriver.swift */,
 				__PBXFileRef_Sources/Vapor/Server/Socket.swift /* Server/Socket.swift */,
 				__PBXFileRef_Sources/Vapor/Session/MemorySessionDriver.swift /* Session/MemorySessionDriver.swift */,
 				__PBXFileRef_Sources/Vapor/Session/Session.swift /* Session/Session.swift */,
@@ -1823,7 +1820,6 @@
 				__src_cc_ref_Sources/Vapor/Server/Header.swift /* Server/Header.swift in Sources */,
 				"__src_cc_ref_Sources/Vapor/Server/Hummingbird+Socket.swift" /* Server/Hummingbird+Socket.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/Server/Jeeves.swift /* Server/Jeeves.swift in Sources */,
-				__src_cc_ref_Sources/Vapor/Server/ServerDriver.swift /* Server/ServerDriver.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/Server/Socket.swift /* Server/Socket.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/Session/MemorySessionDriver.swift /* Session/MemorySessionDriver.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/Session/Session.swift /* Session/Session.swift in Sources */,

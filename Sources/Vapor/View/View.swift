@@ -1,4 +1,3 @@
-import C7
 
 /**
     Loads and renders a file from the `Resources` folder
@@ -8,7 +7,7 @@ public class View {
     ///Currently applied RenderDrivers
     public static var renderers: [String: RenderDriver] = [:]
 
-    var data: C7.Data
+    var data: Data
     
     enum Error: ErrorProtocol {
         case InvalidPath
@@ -34,7 +33,7 @@ public class View {
             if path.hasSuffix(suffix) {
                 let template = try String(data: data)
                 let rendered = try renderer.render(template: template, context: context)
-                self.data = Data(rendered.utf8)
+                self.data = rendered.data
             }
         }
 

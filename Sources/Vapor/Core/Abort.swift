@@ -1,5 +1,3 @@
-import S4
-
 /**
     A handful of standard errors that can be thrown
     in any Vapor closure by calling `throw Abort.<case>`.
@@ -11,5 +9,5 @@ public enum Abort: ErrorProtocol {
     case badRequest
     case notFound
     case internalServerError
-    case custom(status: S4.Status, message: String)
+    case custom(status: Response.Status, message: String)
 }

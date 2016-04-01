@@ -1,5 +1,3 @@
-import S4
-
 /**
     Handles the various Abort errors that can be thrown
     in any Vapor closure. 
@@ -27,7 +25,7 @@ public class AbortMiddleware: Middleware {
         }
     }
     
-    class func errorResponse(status: S4.Status, message: String) throws -> Response {
+    class func errorResponse(status: Response.Status, message: String) throws -> Response {
         let json = Json([
             "error": "true",
             "message": "\(message)"

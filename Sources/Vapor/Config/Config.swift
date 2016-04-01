@@ -1,4 +1,3 @@
-import C7
 
 /**
     Parses and interprets configuration files
