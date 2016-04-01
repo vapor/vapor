@@ -21,7 +21,7 @@ public class Hash {
         It will be used to create the hashes
         request by functions like `make()`
     */
-    public var driver: HashDriver = SHA256Hasher()
+    public var driver: HashDriver = SHAHasher()
 
     /**
         Hashes a string using the `Hash` class's
