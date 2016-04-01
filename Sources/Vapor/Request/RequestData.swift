@@ -1,4 +1,5 @@
 import C7
+import S4
 
 public extension Request {
 
@@ -10,16 +11,16 @@ public extension Request {
         public let query: [String : String]
         public let json: Json?
 
-        internal init(query: [String : String] = [:], bytes: [UInt8]) {
+        internal init(query: [String : String], body: Body) {
             var mutableQuery = query
 
             do {
-                self.json = try Json(bytes)
+                self.json = try Json(body.data)
             } catch {
                 self.json = nil
 
                 // Will overwrite keys if they are duplicated from `query`
-                Data.parsePostData(bytes).forEach { key, val in
+                Data.parsePostData(body.data).forEach { key, val in
                     mutableQuery[key] = val
                 }
             }
@@ -43,8 +44,8 @@ public extension Request {
 
             - returns: a key value pair dictionary
         */
-        static func parsePostData(body: [UInt8]) -> [String: String] {
-            if let bodyString = String(data: body) {
+        static func parsePostData(data: C7.Data) -> [String: String] {
+            if let bodyString = try? String(data: data) {
                 return bodyString.keyValuePairs()
             }
 

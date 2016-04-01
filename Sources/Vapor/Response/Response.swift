@@ -1,6 +1,9 @@
 import C7
 import S4
 
+public typealias Response = S4.Response
+
+/*
 /**
     Responses that redirect to a supplied URL.
  */
@@ -134,55 +137,7 @@ extension Response {
         case InvalidObject
     }
     
-    /**
-         Convenience Initializer Error
-         
-         Will return 500
-         
-         - parameter error: a description of the server error
-    */
-    public convenience init(error: String) {
-        self.init(status: .internalServerError, data: error.data, contentType: .Json)
-    }
-    
-    /**
-         Convenience Initializer - Html
-         
-         - parameter status: http status of response
-         - parameter html: the html string to be rendered as a response
-    */
-    public convenience init(status: S4.Status, html: String) {
-        let serialised = "<html><meta charset=\"UTF-8\"><body>\(html)</body></html>"
-        self.init(status: status, data: serialised.data, contentType: .Html)
-    }
-    
-    /**
-         Convenience Initializer - Text
-         
-         - parameter status: http status
-         - parameter text: basic text response
-    */
-    public convenience init(status: S4.Status, text: String) {
-        self.init(status: status, data: text.data, contentType: .Text)
-    }
-    
-    /**
-         Convenience Initializer
-         
-         - parameter status: the http status
-         - parameter json: any value that will be attempted to be serialized as json.  Use 'Json' for more complex objects
-    */
-    public convenience init(status: S4.Status, json: Json) {
-        self.init(status: status, data: json.data, contentType: .Json)
-    }
 
-    /**
-        Creates an empty response with the
-        supplied status code.
-    */
-    public convenience init(status: S4.Status) {
-        self.init(status: status, text: "")
-    }
 }
 
 extension Response: Equatable {}
@@ -191,5 +146,85 @@ public func ==(left: Response, right: Response) -> Bool {
     return left.status == right.status
 }
 
+*/
 
+extension Response {
+    /**
+        Convenience Initializer Error
 
+        Will return 500
+
+        - parameter error: a description of the server error
+     */
+    public init(error: String) {
+        self.init(status: .internalServerError, headers: [:], body: error.data)
+    }
+
+    /**
+        Convenience Initializer - Html
+
+        - parameter status: http status of response
+        - parameter html: the html string to be rendered as a response
+     */
+    public init(status: S4.Status, html body: String) {
+        let html = "<html><meta charset=\"UTF-8\"><body>\(body)</body></html>"
+        let headers: Headers = [
+            "Content-Type": "text/html"
+        ]
+        self.init(status: status, headers: headers, body: html.data)
+    }
+
+    /**
+        Convenience Initializer - Text
+
+        - parameter status: http status
+        - parameter text: basic text response
+     */
+    public init(status: S4.Status, text: String) {
+        let headers: Headers = [
+            "Content-Type": "text"
+        ]
+        self.init(status: status, headers: headers, body: text.data)
+    }
+
+    /**
+        Convenience Initializer
+
+        - parameter status: the http status
+        - parameter json: any value that will be attempted to be serialized as json.  Use 'Json' for more complex objects
+     */
+    public init(status: S4.Status, json: Json) {
+        let headers: Headers = [
+            "Content-Type": "application/json"
+        ]
+        self.init(status: status, headers: headers, body: json.data)
+    }
+
+    /**
+        Creates an empty response with the
+        supplied status code.
+    */
+    public init(status: S4.Status) {
+        self.init(status: status, text: "")
+    }
+
+    public init(async: Void -> Void) {
+        self.init(status: .ok)
+    }
+
+    public init(redirect location: String) {
+        let headers: Headers = [
+            "Location": HeaderValues(location)
+        ]
+        self.init(status: .movedPermanently, headers: headers, body: [])
+    }
+
+    public var cookies: [String: String] {
+        get {
+            return [:] //FIXME
+        }
+        set {
+            //FIXME
+        }
+    }
+}

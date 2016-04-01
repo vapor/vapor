@@ -32,29 +32,4 @@ extension URI {
     }
 }
 
-extension S4.Request {
-    var vaporRequest: Vapor.Request {
-        return Vapor.Request.init(
-            method: method,
-            path: uri.vaporPath,
-            address: nil,
-            headers: headers,
-            body: body.data
-        )
-    }
-}
-
-extension S4.Response {
-    var vaporResponse: Vapor.Response {
-        let response = Vapor.Response(status: status, data: body.data, contentType: Vapor.Response.ContentType.None)
-        
-        for header in headers {
-            for value in header.value.values {
-                response.headers[header.key.string] = value
-            }
-        }
-        
-        return response
-    }
-}
 

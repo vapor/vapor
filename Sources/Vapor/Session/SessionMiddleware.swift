@@ -10,13 +10,15 @@ class SessionMiddleware: Middleware {
 
     static func handle(handler: Request.Handler, for app: Application) -> Request.Handler {
         return { request in
+            var request = request
+            
             if let sessionIdentifier = request.cookies["vapor-session"] {
                 request.session = Session(identifier: sessionIdentifier, driver: app.session)
             } else {
                 request.session = Session(driver: app.session)
             }
 
-            let response = try handler(request: request)
+            var response = try handler(request: request)
 
             if let identifier = request.session?.identifier {
                 response.cookies["vapor-session"] = identifier

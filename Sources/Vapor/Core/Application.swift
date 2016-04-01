@@ -217,7 +217,7 @@ public class Application {
         // File exists
         if let fileBody = try? FileManager.readBytesFromFile(filePath) {
             return { _ in
-                return Response(status: .ok, data: Data(fileBody), contentType: .None)
+                return Response(status: .ok, headers: [:], body: Data(fileBody))
             }
         } else {
             return { _ in
@@ -231,7 +231,7 @@ public class Application {
 extension Application: S4.Responder {
     
     public func respond(request: S4.Request) throws -> S4.Response {
-        return self.serverDriverDidReceiveRequest(request.vaporRequest).s4Response
+        return self.serverDriverDidReceiveRequest(request)
     }
     
 //    public func respond(request: S4.Request, result: (Void throws -> S4.Response) -> Void) {

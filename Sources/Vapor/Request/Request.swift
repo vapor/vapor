@@ -1,95 +1,61 @@
 import C7
 import S4
 
-/**
-    Requests contains data sent from a client to the
-    web server such as method, parameters, and data.
-*/
-public class Request {
+public typealias Request = S4.Request
+
+extension Session: C7.Storable {}
+
+extension Dictionary: C7.Storable { }
+
+extension Request {
     public typealias Handler = ((request: Request) throws -> Response)
 
-    ///HTTP Method used for request.
-    public let method: S4.Method
-    
-    ///Query data from the path, or POST data from the body (depends on `Method`).
-    public let data: Request.Data
-    
-    ///Browser stored data sent with every server request
-    public let cookies: [String: String]
-    
-    ///URI requested from server, not including hostname
-    public let uri: S4.URI
-    
-    ///Information or metadata about the `Request`.
-    public let headers: S4.Headers
-    
-    ///Content of the `Request`.
-    public let body: C7.Data
-    
-    ///Address from which the `Request` originated.
-    public let address: String?
-    
     ///URL parameters (ex: `:id`).
-    public var parameters: [String: String] = [:]
-    
-    ///Server stored information related from session cookie.
-    public var session: Session?
-    
-    ///Whether the connection should be kept open for multiple Requests
-    var supportsKeepAlive: Bool {
-        if let value = headers["connection"].first {
-            return "keep-alive" == value.trim()
+    public var parameters: [String: String] {
+        get {
+            guard let parameters = storage["parameters"] as? [String: String] else {
+                return [:]
+            }
+
+            return parameters
         }
-        return false
+        set(parameters) {
+            storage["parameters"] = parameters
+        }
     }
 
-    public init(method: Method, path: String, address: String?, headers: S4.Headers, body: C7.Data) {
-        self.method = method
-        self.address = address
-        
-        self.headers = headers
+    ///Server stored information related from session cookie.
+    public var session: Session? {
+        get {
+            return storage["session"] as? Session
+        }
+        set(session) {
+            storage["session"] = session
+        }
+    }
 
-        
-        let path = path.split("?").first ?? ""
-        let host = headers["Host"].first ?? "*"
-        
-        
-        self.body = body
-        self.cookies = Request.parseCookies(headers["Cookie"].first)
-        
-        
-        let query = path.queryData()
-        self.data = Data(query: query, bytes: body.bytes)
-        
-        uri = S4.URI(scheme: "http", userInfo: nil, host: host, port: nil, path: path, query: [], fragment: nil)
-        
-        Log.verbose("Received \(method) request for \(path)")
+    ///Browser stored data sent with every server request
+    public var cookies: [String: String] {
+        guard let cookies = headers["Cookie"].first else {
+            return [:]
+        }
+
+        return parseCookies(cookies)
     }
-    
-    /**
-        Quickly create a Request with an empty body.
-    */
-    public convenience init(method: Method, path: String) {
-        self.init(method: method, path: path, address: nil, headers: [:], body: [])
-    }
-    
+
     /**
         Cookies are sent to the server as `key=value` pairs
         separated by semicolons.
 
         - returns: String dictionary of parsed cookies.
-    */
-    class func parseCookies(string: String?) -> [String: String] {
+     */
+    private func parseCookies(string: String) -> [String: String] {
         var cookies: [String: String] = [:]
 
-        guard let string = string else {
-            return cookies
-        }
-        
         let cookieTokens = string.split(";")
         for cookie in cookieTokens {
             let cookieArray = cookie.split("=")
-            
+
             if cookieArray.count == 2 {
                 let split = cookieArray[0].split(" ")
                 let key = split.joined(separator: "")
@@ -99,7 +65,15 @@ public class Request {
 
         return cookies
     }
-    
+
+    ///Query data from the path, or POST data from the body (depends on `Method`).
+    public var data: Request.Data {
+        var queries: [String: String] = [:]
+        uri.query.forEach { query in
+            queries[query.key] = query.value
+        }
+        return Request.Data(query: queries, body: body)
+    }
 }
 
 extension String {

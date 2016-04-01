@@ -1,3 +1,5 @@
+import C7
+
 /**
     Parses and interprets configuration files
     included under Config in the working directory.
@@ -138,8 +140,8 @@ public class Config {
             }
 
             for file in files {
-                let data = try FileManager.readBytesFromFile(file)
-                let json = try Json(data)
+                let bytes = try FileManager.readBytesFromFile(file)
+                let json = try Json(Data(bytes))
 
                 if repository[group] == nil {
                     repository[group] = json
@@ -153,8 +155,8 @@ public class Config {
         // containing multiple groups
         if let env = files[".env"] {
             for file in env {
-                let data = try FileManager.readBytesFromFile(file)
-                let json = try Json(data)
+                let bytes = try FileManager.readBytesFromFile(file)
+                let json = try Json(Data(bytes))
 
                 guard case .object(let object) = json else {
                     return

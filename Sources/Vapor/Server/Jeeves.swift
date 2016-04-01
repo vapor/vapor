@@ -70,7 +70,7 @@ public class Jeeves<Socket where Socket: Vapor.Socket, Socket: Hashable>: Server
                         
                         try socket.write(response, keepAlive: keepAlive)
                         //FIXME: keep alive
-                        //keepAlive = request.supportsKeepAlive
+                        keepAlive = request.supportsKeepAlive
                     } while keepAlive
 
                     try socket.close()
@@ -84,6 +84,17 @@ public class Jeeves<Socket where Socket: Vapor.Socket, Socket: Hashable>: Server
     }
 
 
+}
+
+extension Request {
+    var supportsKeepAlive: Bool {
+        for value in headers["Connection"] ?? [] {
+            if value.trim() == "keep-alive" {
+                return true
+            }
+        }
+        return false
+    }
 }
 
 extension Response {

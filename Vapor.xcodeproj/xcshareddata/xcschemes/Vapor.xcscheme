@@ -126,9 +126,37 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
+               BlueprintIdentifier = "______Target_S4"
+               BuildableName = "libS4.dylib"
+               BlueprintName = "S4"
+               ReferencedContainer = "container:Vapor.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
                BlueprintIdentifier = "______Target_CryptoKitten"
                BuildableName = "libCryptoKitten.dylib"
                BlueprintName = "CryptoKitten"
+               ReferencedContainer = "container:Vapor.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "______Target_StructuredData"
+               BuildableName = "libStructuredData.dylib"
+               BlueprintName = "StructuredData"
                ReferencedContainer = "container:Vapor.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -213,6 +241,26 @@
                BlueprintIdentifier = "______Target_HummingbirdTestSuite"
                BuildableName = "Hummingbird.testsuite.xctest"
                BlueprintName = "Hummingbird.testsuite"
+               ReferencedContainer = "container:Vapor.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "______Target_S4TestSuite"
+               BuildableName = "S4.testsuite.xctest"
+               BlueprintName = "S4.testsuite"
+               ReferencedContainer = "container:Vapor.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "______Target_StructuredDataTestSuite"
+               BuildableName = "StructuredData.testsuite.xctest"
+               BlueprintName = "StructuredData.testsuite"
                ReferencedContainer = "container:Vapor.xcodeproj">
             </BuildableReference>
          </TestableReference>

@@ -45,7 +45,9 @@ public class View {
 ///Allows Views to be returned in Vapor closures
 extension View: ResponseRepresentable {
     public func makeResponse() -> Response {
-        return Response(status: .ok, data: data, contentType: .Html)
+        return Response(status: .ok, headers: [
+            "Content-Type": "text/html"
+        ], body: data)
     }
 }
 

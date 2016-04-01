@@ -58,7 +58,7 @@ app.post("json") { request in
 }
 
 app.get("redirect") { request in
-    return Redirect(to: "http://qutheory.io:8001")
+    return Response(redirect: "http://qutheory.io:8001")
 }
 
 app.post("json2") { request in
