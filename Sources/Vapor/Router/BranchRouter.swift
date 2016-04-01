@@ -9,10 +9,10 @@ public final class BranchRouter: RouterDriver {
     private final var tree: [Host : [S4.Method : Branch]] = [:]
     
     // MARK: Routing
-    public final func route(request: Request) -> Request.Handler? {
+    public final func route(request: Request) -> (parameters: [String: String], handler: Request.Handler)? {
         let path = request.uri.path ?? ""
         let host = request.uri.host ?? ""
-        
+
         //get root from hostname, or * route
         let root = tree[host] ?? tree["*"]
         
@@ -23,7 +23,7 @@ public final class BranchRouter: RouterDriver {
         
         //search branch with query path generator
         let generator = path.pathComponentGenerator()
-        return branch.handle(request, comps: generator)
+        return branch.handle([:], request: request, comps: generator)
     }
     
     // MARK: Registration

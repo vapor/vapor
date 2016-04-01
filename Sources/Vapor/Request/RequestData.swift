@@ -1,12 +1,9 @@
-import C7
-import S4
-
 public extension Request {
 
     /**
         The data received from the request in json body or url query
     */
-    public struct Data {
+    public struct Content {
         // MARK: Initialization
         public let query: [String : String]
         public let json: Json?
@@ -14,13 +11,15 @@ public extension Request {
         internal init(query: [String : String], body: Body) {
             var mutableQuery = query
 
+            var body = body
+            let data = body.buffer
             do {
-                self.json = try Json(body.data)
+                self.json = try Json(data)
             } catch {
                 self.json = nil
 
                 // Will overwrite keys if they are duplicated from `query`
-                Data.parsePostData(body.data).forEach { key, val in
+                Content.parsePostData(data).forEach { key, val in
                     mutableQuery[key] = val
                 }
             }
@@ -44,7 +43,7 @@ public extension Request {
 
             - returns: a key value pair dictionary
         */
-        static func parsePostData(data: C7.Data) -> [String: String] {
+        static func parsePostData(data: Data) -> [String: String] {
             if let bodyString = try? String(data: data) {
                 return bodyString.keyValuePairs()
             }

@@ -5,7 +5,7 @@
 #endif
 import S4
 
-public class Jeeves<Socket where Socket: Vapor.Socket, Socket: Hashable>: ServerDriver {
+public class Jeeves<Socket where Socket: Vapor.Socket, Socket: Hashable>: S4.Server {
     
     // MARK: Sockets
     private var streamSocket: Socket?
@@ -13,15 +13,10 @@ public class Jeeves<Socket where Socket: Vapor.Socket, Socket: Hashable>: Server
 
 
     // MARK: S4.Server
-    public var port: Int
     public var ip: String?
     public var delegate: S4.Responder!
     
-    public required init(port: Int) throws {
-        self.port = port
-    }
-    
-    public func serve(responder: Responder) throws {
+    public func serve(responder: Responder, at port: Port) throws {
         halt()
         self.delegate = responder
         

@@ -1,12 +1,3 @@
-import C7
-import S4
-
-public typealias Request = S4.Request
-
-extension Session: C7.Storable {}
-
-extension Dictionary: C7.Storable { }
-
 extension Request {
     public typealias Handler = ((request: Request) throws -> Response)
 
@@ -43,6 +34,10 @@ extension Request {
         return parseCookies(cookies)
     }
 
+    public init(method: Method = .get, path: String, host: String? = nil, body: Data = []) {
+        self.init(method: method, uri: URI(path: path, host: host), headers: [:], body: body)
+    }
+
     /**
         Cookies are sent to the server as `key=value` pairs
         separated by semicolons.
@@ -67,12 +62,12 @@ extension Request {
     }
 
     ///Query data from the path, or POST data from the body (depends on `Method`).
-    public var data: Request.Data {
+    public var data: Request.Content {
         var queries: [String: String] = [:]
         uri.query.forEach { query in
             queries[query.key] = query.value
         }
-        return Request.Data(query: queries, body: body)
+        return Request.Content(query: queries, body: body)
     }
 }
 

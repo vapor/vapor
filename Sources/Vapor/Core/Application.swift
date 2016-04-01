@@ -183,11 +183,11 @@ public class Application {
         ip & port overrides
     */
     public func start(ip ip: String? = nil, port: Int? = nil) {
-        bootArguments()
-        bootProviders()
-
         self.ip = ip ?? self.ip
         self.port = port ?? self.port
+
+        bootArguments()
+        bootProviders()
 
         bootRoutes()
 
@@ -198,9 +198,8 @@ public class Application {
 
         do {
             Log.info("Server starting on \(self.ip):\(self.port)")
-            let server = try Jeeves<Hummingbird.Socket>(port: self.port)
-            server.ip = self.ip
-            try server.serve(self)
+            let server = Jeeves<Hummingbird.Socket>()
+            try server.serve(self, at: self.port)
         } catch {
             Log.error("Server start error: \(error)")
         }
@@ -234,22 +233,14 @@ extension Application: S4.Responder {
         return self.serverDriverDidReceiveRequest(request)
     }
     
-//    public func respond(request: S4.Request, result: (Void throws -> S4.Response) -> Void) {
-//        result {
-//            let response = self.serverDriverDidReceiveRequest(request.vaporRequest)
-//            
-//            if let async = response as? AsyncResponse {
-//                
-//            }
-//            
-//        }
-//    }
-
     public func serverDriverDidReceiveRequest(request: Request) -> Response {
         var handler: Request.Handler
+        var request = request
 
         // Check in routes
-        if let routerHandler = router.route(request) {
+        if let (parameters, routerHandler) = router.route(request) {
+            request.parameters = parameters
+            print(parameters)
             handler = routerHandler
         } else if let fileHander = self.checkFileSystem(request) {
             handler = fileHander

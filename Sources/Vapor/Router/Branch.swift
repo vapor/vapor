@@ -61,17 +61,21 @@ internal final class Branch {
 
         - returns: a request handler or nil if not supported
      */
-    func handle(request: Request, comps: CompatibilityGenerator<String>) -> Request.Handler? {
+    func handle(parameters: [String: String], request: Request, comps: CompatibilityGenerator<String>) -> ([String: String], Request.Handler)? {
         guard let key = comps.next() else {
-            return handler
+            if let handler = handler {
+                return (parameters, handler)
+            } else {
+                return nil
+            }
         }
 
         if let next = subBranches[key] {
-            return next.handle(request, comps: comps)
+            return next.handle(parameters, request: request, comps: comps)
         } else if let wildcard = subBranches["*"] {
-            var request = request
-            request.parameters[wildcard.name] = try? String(percentEncoded: key)
-            return wildcard.handle(request, comps: comps)
+            var parameters = parameters
+            parameters[wildcard.name] = try? String(percentEncoded: key)
+            return wildcard.handle(parameters, request: request, comps: comps)
         } else {
             return nil
         }

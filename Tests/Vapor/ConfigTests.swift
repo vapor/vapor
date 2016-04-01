@@ -46,8 +46,6 @@ class ConfigTests: XCTestCase {
 	private func config(environment: Environment) -> Config {
 		let app = self.app(environment)
 
-        print(workDir)
-
 		do {
 			try app.config.populate("\(workDir)Config", application: app)
 		} catch {

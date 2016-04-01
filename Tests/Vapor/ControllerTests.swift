@@ -70,8 +70,8 @@ class ControllerTests: XCTestCase {
 
         app.bootRoutes()
 
-        let fooIndex = Request(method: .Get, path: "foo", address: nil, headers: [], body: [])
-        if let handler = app.router.route(fooIndex) {
+        let fooIndex = Request(method: .get, uri: URI(path: "foo"), headers: [:], body: [])
+        if let (_, handler) = app.router.route(fooIndex) {
             do {
                 try handler(request: fooIndex)
                 XCTAssert(TestController.lock.index == 1, "foo.index Lock not correct")

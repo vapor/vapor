@@ -175,6 +175,16 @@ extension Response {
     }
 
     /**
+        Convenience Initializer - Data
+
+        - parameter status: http status
+        - parameter data: response bytes
+     */
+    public init(status: S4.Status, data: Data) {
+        self.init(status: status, headers: [:], body: data)
+    }
+
+    /**
         Convenience Initializer - Text
 
         - parameter status: http status

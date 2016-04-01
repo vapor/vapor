@@ -24,7 +24,6 @@ extension User: CustomStringConvertible {
 
 extension User: StringInitializable {
     convenience init?(from string: String) throws {
-        print(string)
         self.init(name: string)
     }
 }
