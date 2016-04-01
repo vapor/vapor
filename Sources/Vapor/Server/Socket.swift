@@ -71,20 +71,56 @@ extension SocketIO {
             bytes = []
         }
         let data = Data(bytes)
-
         
         //Method
         let method: Request.Method
         switch requestLine.method.lowercased() {
         case "get":
             method = .get
+        case "delete":
+            method = .delete
+        case "head":
+            method = .head
+        case "post":
+            method = .post
+        case "put":
+            method = .put
+        case "connect":
+            method = .connect
+        case "options":
+            method = .options
+        case "trace":
+            method = .trace
+        case "patch":
+            method = .patch
         default:
             method = .other(method: requestLine.method)
         }
         
         //URI
-        let path = requestLine.uri
-        let uri = URI(scheme: "http", userInfo: nil, host: nil, port: nil, path: path, query: [], fragment: nil)
+        let pathParts = requestLine.uri.split("?", maxSplits: 1)
+        let path = pathParts.first ?? ""
+        let queryString = pathParts.last ?? ""
+        let queryParts = queryString.split("&")
+
+        var queries: [URI.Query] = []
+        for part in queryParts {
+            let parts = part.split("=")
+
+            let value: String?
+
+            if let v = parts.last {
+                value = (try? String(percentEncoded: v)) ?? v
+            } else {
+                value = nil
+            }
+
+            let query = URI.Query(key: parts.first ?? "", value: value)
+            queries.append(query)
+        }
+
+
+        let uri = URI(scheme: "http", userInfo: nil, host: nil, port: nil, path: path, query: queries, fragment: nil)
         
         //Headers
         var headers = Headers([:])

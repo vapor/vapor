@@ -1,3 +1,8 @@
+public protocol RequestContentSubscript {}
+
+extension String: RequestContentSubscript { }
+extension Int: RequestContentSubscript {}
+
 public extension Request {
 
     /**
@@ -8,23 +13,9 @@ public extension Request {
         public let query: [String : String]
         public let json: Json?
 
-        internal init(query: [String : String], body: Body) {
-            var mutableQuery = query
-
-            var body = body
-            let data = body.buffer
-            do {
-                self.json = try Json(data)
-            } catch {
-                self.json = nil
-
-                // Will overwrite keys if they are duplicated from `query`
-                Content.parsePostData(data).forEach { key, val in
-                    mutableQuery[key] = val
-                }
-            }
-
-            self.query = mutableQuery
+        internal init(query: [String : String], json: Json?) {
+            self.query = query
+            self.json = json
         }
 
         // MARK: Subscripting
@@ -50,7 +41,31 @@ public extension Request {
 
             return [:]
         }
+
+        public subscript(key: RequestContentSubscript) -> Node? {
+            if let index = key as? Int {
+                if let value = query["\(index)"] {
+                    return value
+                } else if let value = json?.array?[index] {
+                    return value
+                } else {
+                    return nil
+                }
+
+            } else if let key = key as? String {
+                if let value = query[key] {
+                    return value
+                } else if let value = json?.object?[key] {
+                    return value
+                } else {
+                    return nil
+                }
+            } else {
+                return nil
+            }
+        }
     }
+
 }
 
 extension String: Node {
@@ -98,6 +113,48 @@ extension String: Node {
     public var json: Json? {
         return Json(self)
     }
+}
+
+
+extension String {
+
+    /**
+        Query data is information appended to the URL path
+        as `key=value` pairs separated by `&` after
+        an initial `?`
+
+        - returns: String dictionary of parsed Query data
+     */
+    internal func queryData() -> [String: String] {
+        // First `?` indicates query, subsequent `?` should be included as part of the arguments
+        return split("?", maxSplits: 1)
+            .dropFirst()
+            .reduce("", combine: +)
+            .keyValuePairs()
+    }
+
+    /**
+        Parses `key=value` pair data separated by `&`.
+
+        - returns: String dictionary of parsed data
+     */
+    internal func keyValuePairs() -> [String: String] {
+        var data: [String: String] = [:]
+
+        for pair in self.split("&") {
+            let tokens = pair.split("=", maxSplits: 1)
+
+            if
+                let name = tokens.first,
+                let value = tokens.last,
+                let parsedName = try? String(percentEncoded: name) {
+                data[parsedName] = try? String(percentEncoded: value)
+            }
+        }
+
+        return data
+    }
+
 }
 
 extension Bool {

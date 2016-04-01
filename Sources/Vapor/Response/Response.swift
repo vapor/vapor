@@ -1,97 +1,3 @@
-
-/*
-/**
-    Responses that redirect to a supplied URL.
- */
-public class Redirect: Response {
-
-    ///The URL string for redirect
-    var redirectLocation: String {
-        didSet {
-            headers["Location"] = redirectLocation
-        }
-    }
-
-    /**
-        Creates a `Response` object that redirects
-        to a given URL string.
-
-        - parameter: redirectLocation: The URL string for redirect
-        
-        - returns: Response
-     */
-    public init(to redirectLocation: String) {
-        self.redirectLocation = redirectLocation
-        super.init(status: .movedPermanently, data: [], contentType: .None)
-        headers["Location"] = redirectLocation
-    }
-}
-
-/**
-    Allows for asynchronous responses. Passes
-    the server Socket to the Response for writing.
-    The response calls `release()` on the Socket
-    when it is complete.
-
-    Inspired by elliottminns
-*/
-public class AsyncResponse: Response {
-    public typealias Writer = SocketIO throws -> Void
-    public let writer: Writer
-
-    public init(writer: Writer) {
-        self.writer = writer
-        super.init(status: .ok, data: [], contentType: .None)
-    }
-}
-
-/**
-    Responses are objects responsible for returning
-    data to the HTTP request such as the body, status 
-    code and headers.
- */
-public class Response {
-    
-    // MARK: Types
-    
-    /**
-        The content type of the response
-
-        - Text: text content type
-        - Html: html content type
-        - Json: json content type
-        - None: no content type
-        - Other: non-explicit content type
-    */
-    public enum ContentType {
-        case Text, Html, Json, None, Other(String)
-    }
-
-    
-    // MARK: Member Variables
-
-    public var status: S4.Status
-    public var data: C7.Data
-    public var contentType: ContentType
-    public var headers: [String : String] = [:]
-    
-    public var cookies: [String : String] = [:] {
-        didSet {
-            if cookies.isEmpty {
-                headers["Set-Cookie"] = nil
-            } else {
-                let mapped = cookies.map { key, val in
-                    return "\(key)=\(val)"
-                }
-                
-                let cookiesString = mapped.joined(separator: ";")
-                headers["Set-Cookie"] = cookiesString
-                
-            }
-        }
-    }
-    
-*/
 import Foundation
 
 extension Response {
@@ -173,6 +79,11 @@ extension Response {
             "Location": Headers.Values(location)
         ]
         self.init(status: .movedPermanently, headers: headers, body: [])
+    }
+
+    public init(async closure: Stream throws -> Void) {
+        
+        self.init(error: "Async responses not yet supported")
     }
 
     public static var date: String {

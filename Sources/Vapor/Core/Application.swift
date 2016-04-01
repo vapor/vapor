@@ -235,7 +235,6 @@ extension Application: Responder {
         // Check in routes
         if let (parameters, routerHandler) = router.route(request) {
             request.parameters = parameters
-            print(parameters)
             handler = routerHandler
         } else if let fileHander = self.checkFileSystem(request) {
             handler = fileHander

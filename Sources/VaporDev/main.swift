@@ -102,6 +102,15 @@ app.get("session") { request in
     return "Session set"
 }
 
+app.get("login") { request in
+    guard let id = request.session?["id"] else {
+        throw Abort.badRequest
+    }
+
+    return Json([
+        "id": id
+    ])
+}
 
 app.post("login") { request in
     guard

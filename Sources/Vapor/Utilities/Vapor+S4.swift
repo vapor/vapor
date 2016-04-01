@@ -3,6 +3,8 @@ import C7
 
 public typealias Byte = C7.Byte
 public typealias Data = C7.Data
+public typealias Stream = C7.Stream
+
 public typealias URI = S4.URI
 
 public typealias Headers = S4.Headers

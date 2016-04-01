@@ -67,47 +67,20 @@ extension Request {
         uri.query.forEach { query in
             queries[query.key] = query.value
         }
-        return Request.Content(query: queries, body: body)
-    }
-}
 
-extension String {
-    
-    /**
-        Query data is information appended to the URL path
-        as `key=value` pairs separated by `&` after
-        an initial `?`
+        var json: Json?
 
-        - returns: String dictionary of parsed Query data
-     */
-    internal func queryData() -> [String: String] {
-        // First `?` indicates query, subsequent `?` should be included as part of the arguments
-        return split("?", maxSplits: 1)
-            .dropFirst()
-            .reduce("", combine: +)
-            .keyValuePairs()
-    }
-    
-    /**
-        Parses `key=value` pair data separated by `&`.
-
-        - returns: String dictionary of parsed data
-     */
-    internal func keyValuePairs() -> [String: String] {
-        var data: [String: String] = [:]
-        
-        for pair in self.split("&") {
-            let tokens = pair.split("=", maxSplits: 1)
-            
-            if
-                let name = tokens.first,
-                let value = tokens.last,
-                let parsedName = try? String(percentEncoded: name) {
-                data[parsedName] = try? String(percentEncoded: value)
+        if headers["Content-Type"].first == "application/json" {
+            var mutableBody = body
+            let data = mutableBody.buffer
+            do {
+                json = try Json(data)
+            } catch {
+                Log.warning("Could not parse JSON: \(error)")
             }
         }
-        
-        return data
+
+        return Request.Content(query: queries, json: json)
     }
-    
 }
+

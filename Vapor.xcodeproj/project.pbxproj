@@ -79,6 +79,7 @@
 		C39D4DC21CAF1AAE00DAF6CC /* libString.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_String" /* libString.dylib */; };
 		C39D4DC31CAF1AAE00DAF6CC /* libVapor.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Vapor" /* libVapor.dylib */; };
 		C39D4DC41CAF1AAE00DAF6CC /* liblibc.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_libc" /* liblibc.dylib */; };
+		C3D92B361CAF36EC0063A0EF /* RequestContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3D92B351CAF36EC0063A0EF /* RequestContent.swift */; };
 		_LinkFileRef_C7 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
 		_LinkFileRef_CryptoKitten /* libCryptoKitten.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoKitten" /* libCryptoKitten.dylib */; };
 		_LinkFileRef_Data /* libData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Data" /* libData.dylib */; };
@@ -197,7 +198,6 @@
 		__src_cc_ref_Sources/Vapor/Node/NodeInitializable.swift /* Node/NodeInitializable.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Node/NodeInitializable.swift /* Node/NodeInitializable.swift */; };
 		__src_cc_ref_Sources/Vapor/Process/Process.swift /* Process/Process.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Process/Process.swift /* Process/Process.swift */; };
 		__src_cc_ref_Sources/Vapor/Request/Request.swift /* Request/Request.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Request/Request.swift /* Request/Request.swift */; };
-		__src_cc_ref_Sources/Vapor/Request/RequestData.swift /* Request/RequestData.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Request/RequestData.swift /* Request/RequestData.swift */; };
 		__src_cc_ref_Sources/Vapor/Response/Response.swift /* Response/Response.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Response/Response.swift /* Response/Response.swift */; };
 		__src_cc_ref_Sources/Vapor/Response/ResponseConvertible.swift /* Response/ResponseConvertible.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Response/ResponseConvertible.swift /* Response/ResponseConvertible.swift */; };
 		__src_cc_ref_Sources/Vapor/Router/Branch.swift /* Router/Branch.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Router/Branch.swift /* Router/Branch.swift */; };
@@ -340,6 +340,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		C3D92B351CAF36EC0063A0EF /* RequestContent.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RequestContent.swift; path = Request/RequestContent.swift; sourceTree = "<group>"; };
 		__PBXFileRef_Package.swift /* Package.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Package.swift; path = /Users/tanner/Developer/vapor/vapor/Package.swift; sourceTree = "<group>"; };
 		"__PBXFileRef_Packages/C7-0.1.12/Sources/AsyncStream.swift" /* AsyncStream.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncStream.swift; sourceTree = "<group>"; };
 		"__PBXFileRef_Packages/C7-0.1.12/Sources/AsyncStreamClient.swift" /* AsyncStreamClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncStreamClient.swift; sourceTree = "<group>"; };
@@ -446,7 +447,6 @@
 		__PBXFileRef_Sources/Vapor/Node/NodeInitializable.swift /* Node/NodeInitializable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Node/NodeInitializable.swift; sourceTree = "<group>"; };
 		__PBXFileRef_Sources/Vapor/Process/Process.swift /* Process/Process.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Process/Process.swift; sourceTree = "<group>"; };
 		__PBXFileRef_Sources/Vapor/Request/Request.swift /* Request/Request.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Request/Request.swift; sourceTree = "<group>"; };
-		__PBXFileRef_Sources/Vapor/Request/RequestData.swift /* Request/RequestData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Request/RequestData.swift; sourceTree = "<group>"; };
 		__PBXFileRef_Sources/Vapor/Response/Response.swift /* Response/Response.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Response/Response.swift; sourceTree = "<group>"; };
 		__PBXFileRef_Sources/Vapor/Response/ResponseConvertible.swift /* Response/ResponseConvertible.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Response/ResponseConvertible.swift; sourceTree = "<group>"; };
 		__PBXFileRef_Sources/Vapor/Router/Branch.swift /* Router/Branch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Router/Branch.swift; sourceTree = "<group>"; };
@@ -1046,7 +1046,7 @@
 				__PBXFileRef_Sources/Vapor/Node/NodeInitializable.swift /* Node/NodeInitializable.swift */,
 				__PBXFileRef_Sources/Vapor/Process/Process.swift /* Process/Process.swift */,
 				__PBXFileRef_Sources/Vapor/Request/Request.swift /* Request/Request.swift */,
-				__PBXFileRef_Sources/Vapor/Request/RequestData.swift /* Request/RequestData.swift */,
+				C3D92B351CAF36EC0063A0EF /* RequestContent.swift */,
 				__PBXFileRef_Sources/Vapor/Response/Response.swift /* Response/Response.swift */,
 				__PBXFileRef_Sources/Vapor/Response/ResponseConvertible.swift /* Response/ResponseConvertible.swift */,
 				__PBXFileRef_Sources/Vapor/Router/Branch.swift /* Router/Branch.swift */,
@@ -1798,6 +1798,7 @@
 				__src_cc_ref_Sources/Vapor/Hash/SHA256Hasher.swift /* Hash/SHA256Hasher.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/JSON/JSON.swift /* JSON/JSON.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/Log/Log.swift /* Log/Log.swift in Sources */,
+				C3D92B361CAF36EC0063A0EF /* RequestContent.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/Log/LogDriver.swift /* Log/LogDriver.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/Middleware/AbortMiddleware.swift /* Middleware/AbortMiddleware.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/Middleware/Middleware.swift /* Middleware/Middleware.swift in Sources */,
@@ -1805,7 +1806,6 @@
 				__src_cc_ref_Sources/Vapor/Node/NodeInitializable.swift /* Node/NodeInitializable.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/Process/Process.swift /* Process/Process.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/Request/Request.swift /* Request/Request.swift in Sources */,
-				__src_cc_ref_Sources/Vapor/Request/RequestData.swift /* Request/RequestData.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/Response/Response.swift /* Response/Response.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/Response/ResponseConvertible.swift /* Response/ResponseConvertible.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/Router/Branch.swift /* Router/Branch.swift in Sources */,

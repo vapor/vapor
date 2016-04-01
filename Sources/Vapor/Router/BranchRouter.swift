@@ -13,7 +13,7 @@ public final class BranchRouter: RouterDriver {
 
         //get root from hostname, or * route
         let root = tree[host] ?? tree["*"]
-        
+
         //ensure branch for current method exists
         guard let branch = root?[request.method] else {
             return nil
