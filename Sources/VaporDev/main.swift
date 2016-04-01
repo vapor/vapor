@@ -122,6 +122,17 @@ app.post("login") { request in
     ])
 }
 
+app.get("cookies") { request in
+    var response = Json([
+        "cookies": "\(request.cookies)"
+    ]).makeResponse()
+
+    response.cookies["cookie-1"] = "value-1"
+    response.cookies["hello"] = "world"
+
+    return response
+}
+
 //MARK: Middleware
 
 app.middleware(AuthMiddleware.self) {

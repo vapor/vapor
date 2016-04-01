@@ -92,6 +92,7 @@ public class Response {
     }
     
 */
+import Foundation
 
 extension Response {
     /**
@@ -174,12 +175,39 @@ extension Response {
         self.init(status: .movedPermanently, headers: headers, body: [])
     }
 
+    public static var date: String {
+        let formatter = NSDateFormatter()
+        formatter.locale = NSLocale(localeIdentifier: "en_US")
+        formatter.timeZone = NSTimeZone(abbreviation: "GMT")
+        formatter.dateFormat = "EEE',' dd MMM yyyy HH':'mm':'ss 'GMT'"
+        return formatter.string(from: NSDate())
+    }
+
     public var cookies: [String: String] {
+        
         get {
-            return [:] //FIXME
+            var cookies: [String: String] = [:]
+
+            for value in headers["Set-Cookie"] {
+                for cookie in value.split(";") {
+                    var parts = cookie.split("=")
+                    if parts.count >= 2 {
+                        cookies[parts[0]] = parts[1]
+                    }
+                }
+            }
+
+            return cookies
         }
-        set {
-            //FIXME
+        set(newCookies) {
+            var cookies: [String] = []
+
+            for (key, value) in newCookies {
+                cookies.append("\(key)=\(value)")
+
+            }
+
+            headers["Set-Cookie"] = Headers.Value(cookies.joined(separator: ";"))
         }
     }
 }

@@ -251,23 +251,25 @@ extension Application: Responder {
             handler = middleware.handle(handler, for: self)
         }
 
+        var response: Response
         do {
-            let response = try handler(request: request)
+            response = try handler(request: request)
 
             if response.headers["Content-Type"].first == nil {
                 Log.warning("Response had no 'Content-Type' header.")
             }
-
-            return response
         } catch {
             var error = "Server Error: \(error)"
             if environment == .Production {
                 error = "Something went wrong"
             }
 
-            return Response(error: error)
+            response = Response(error: error)
         }
 
+        response.headers["Date"] = Headers.Values(Response.date)
+
+        return response
     }
 
 }
