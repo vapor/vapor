@@ -53,6 +53,13 @@ extension View: ResponseRepresentable {
 ///Adds convenience method to Application to create a view
 extension Application {
 
+    /**
+        Views directory relative to Application.resourcesDir
+    */
+    public var viewsDir: String {
+        return resourcesDir + "Views/"
+    }
+
     public func view(path: String, context: [String: Any] = [:]) throws -> View {
         return try View(application: self, path: path, context: context)
     }
