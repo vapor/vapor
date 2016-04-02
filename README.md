@@ -241,7 +241,7 @@ app.get("heartbeat", closure: HeartbeatController().index)
 To pass a function name as a closure like above, the closure must have the function signature
 
 ```swift
-func index(request: Request) -> ResponseConvertible
+func index(request: Request) -> ResponseRepresentable
 ```
 
 Here is an example of a controller for returning an API heartbeat.
@@ -252,7 +252,7 @@ import Vapor
 
 class HeartbeatController: Controller {
 
-	func index(request: Request) throws -> ResponseConvertible {
+	func index(request: Request) throws -> ResponseRepresentable {
 		return ["lub": "dub"]
 	}
 
