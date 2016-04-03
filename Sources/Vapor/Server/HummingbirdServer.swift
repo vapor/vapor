@@ -155,12 +155,9 @@ extension Hummingbird.Socket {
         }
     }
 
-
     func readRequest() throws -> Request {
-        let header = try Header(self)
-        let requestLine = header.requestLine
+        let header = try HummingbirdHeader(self)
 
-        //Body
         let bytes: [UInt8]
         if let length = header.fields["Content-Length"], let bufferSize = Int(length) {
             bytes = try receive(maximumBytes: bufferSize)
@@ -168,6 +165,12 @@ extension Hummingbird.Socket {
             bytes = []
         }
         let data = Data(bytes)
+
+        return try makeRequest(header, body: data)
+    }
+
+    func makeRequest(header: HummingbirdHeader, body data: Data) throws -> Request {
+        let requestLine = header.requestLine
 
         //Method
         let method: Request.Method

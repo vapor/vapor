@@ -2,7 +2,7 @@
 // https://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html
 import Hummingbird
 
-internal struct Header {
+internal struct HummingbirdHeader {
     enum Error: ErrorProtocol {
         case InvalidHeaderKeyPair
     }
@@ -22,6 +22,10 @@ internal struct Header {
         let requestLineRaw = try socket.readLine()
         requestLine = try RequestLine(requestLineRaw)
         try collectHeaderFields(socket)
+    }
+
+    init(requestLine: RequestLine) {
+        self.requestLine = requestLine
     }
 
     private mutating func collectHeaderFields(socket: Hummingbird.Socket) throws {
@@ -50,7 +54,7 @@ internal struct Header {
     }
 }
 
-extension Header: CustomStringConvertible {
+extension HummingbirdHeader: CustomStringConvertible {
     var description: String {
         var fieldsDescription = ""
         fields.forEach { key, val in
@@ -63,7 +67,7 @@ extension Header: CustomStringConvertible {
 
 // MARK: RequestLine
 
-extension Header {
+extension HummingbirdHeader {
     // https://www.w3.org/Protocols/rfc2616/rfc2616-sec5.html
     // Request-Line   = Method SP Request-URI SP HTTP-Version CRLF
     internal struct RequestLine {
@@ -89,7 +93,7 @@ extension Header {
 
 }
 
-extension Header.RequestLine: CustomStringConvertible {
+extension HummingbirdHeader.RequestLine: CustomStringConvertible {
     var description: String {
         return "\nMethod: \(method)\nUri: \(uri)\nVersion: \(version)"
     }
