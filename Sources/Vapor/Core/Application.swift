@@ -234,7 +234,7 @@ public class Application {
 }
 
 extension Application: Responder {
- 
+
     public func respond(request: Request) throws -> Response {
         var handler: Request.Handler
         var request = request

@@ -9,7 +9,7 @@ import Hummingbird
 private let HeaderEndOfLine = "\r\n"
 
 public class HummingbirdServer: Server {
-    
+
     // MARK: Sockets
     private var socket: Hummingbird.Socket?
     //private var activeSockets = ThreadSafeSocketStore<Socket>()
@@ -18,11 +18,11 @@ public class HummingbirdServer: Server {
     // MARK: S4.Server
     public var ip: String?
     public var delegate: Responder!
-    
+
     public func serve(responder: Responder, at port: Int) throws {
         halt()
         self.delegate = responder
-        
+
         let socket = try Hummingbird.Socket.makeStreamSocket()
         try socket.bind(toAddress: ip, onPort: "\(port)")
         try socket.listen(pendingConnectionBacklog: 100)
@@ -227,7 +227,7 @@ extension Hummingbird.Socket {
         for (key, value) in header.fields {
             headers[Headers.Key(key)] = Headers.Values(value)
         }
-        
+
         return Request(method: method, uri: uri, headers: headers, body: data)
     }
 }

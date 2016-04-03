@@ -83,4 +83,3 @@ extension Request {
         return Request.Content(query: queries, json: json)
     }
 }
-

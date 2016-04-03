@@ -3,19 +3,19 @@
     the application can take
 */
 public class Route {
-    
+
     /**
         The responder type that is used when a route is matched
      */
     public typealias Handler = Request throws -> ResponseRepresentable
 
     // MARK: Attributes
-    
+
     let method: Request.Method
     let path: String
     let handler: Request.Handler
     let hostname: String
-    
+
     /**
         Designated Initializer
 
