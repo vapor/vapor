@@ -70,10 +70,6 @@ extension Response {
         self.init(status: status, text: "")
     }
 
-    public init(async: Void -> Void) {
-        self.init(status: .ok)
-    }
-
     public init(redirect location: String) {
         let headers: Headers = [
             "Location": Headers.Values(location)
@@ -82,8 +78,7 @@ extension Response {
     }
 
     public init(async closure: Stream throws -> Void) {
-        
-        self.init(error: "Async responses not yet supported")
+        self.init(status: .ok, headers: [:], body: closure)
     }
 
     public static var date: String {

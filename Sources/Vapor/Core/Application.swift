@@ -204,7 +204,7 @@ public class Application {
 
         do {
             Log.info("Server starting on \(self.ip):\(self.port)")
-            let server = Jeeves<Hummingbird.Socket>()
+            let server = HummingbirdServer()
             try server.serve(self, at: self.port)
         } catch {
             Log.error("Server start error: \(error)")

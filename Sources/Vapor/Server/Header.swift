@@ -1,5 +1,7 @@
 // HEADERS
 // https://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html
+import Hummingbird
+
 internal struct Header {
     enum Error: ErrorProtocol {
         case InvalidHeaderKeyPair
@@ -16,20 +18,20 @@ internal struct Header {
         return array
     }
 
-    init(_ socket: SocketIO) throws {
+    init(_ socket: Hummingbird.Socket) throws {
         let requestLineRaw = try socket.readLine()
         requestLine = try RequestLine(requestLineRaw)
         try collectHeaderFields(socket)
     }
 
-    private mutating func collectHeaderFields(socket: SocketIO) throws {
+    private mutating func collectHeaderFields(socket: Hummingbird.Socket) throws {
         while let line = try nextHeaderLine(socket) {
             let (key, val) = try extractKeyPair(line)
             fields[key] = val
         }
     }
 
-    private func nextHeaderLine(socket: SocketIO) throws -> String? {
+    private func nextHeaderLine(socket: Hummingbird.Socket) throws -> String? {
         let next = try socket.readLine()
         if !next.isEmpty {
             return next

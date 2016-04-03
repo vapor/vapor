@@ -152,4 +152,16 @@ app.middleware(AuthMiddleware.self) {
     }
 }
 
+//MARK: Async
+
+app.get("async") { request in
+    var response = Response(async: { stream in
+        try stream.send("hello".data)
+    })
+    response.headers["Content-Type"] = "text/plain"
+    response.headers["Transfer-Encoding"] = ""
+    response.headers["Content-Length"] = 5
+    return response
+}
+
 app.start(port: 8080)

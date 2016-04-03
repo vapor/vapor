@@ -7,79 +7,79 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		C39D4D7D1CAF1AAE00DAF6CC /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
-		C39D4D7E1CAF1AAE00DAF6CC /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
-		C39D4D7F1CAF1AAE00DAF6CC /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
-		C39D4D801CAF1AAE00DAF6CC /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
-		C39D4D811CAF1AAE00DAF6CC /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
-		C39D4D821CAF1AAE00DAF6CC /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
-		C39D4D831CAF1AAE00DAF6CC /* libData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Data" /* libData.dylib */; };
-		C39D4D841CAF1AAE00DAF6CC /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
-		C39D4D851CAF1AAE00DAF6CC /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
-		C39D4D861CAF1AAE00DAF6CC /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
-		C39D4D871CAF1AAE00DAF6CC /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
-		C39D4D881CAF1AAE00DAF6CC /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
-		C39D4D891CAF1AAE00DAF6CC /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
-		C39D4D8A1CAF1AAE00DAF6CC /* libData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Data" /* libData.dylib */; };
-		C39D4D8B1CAF1AAE00DAF6CC /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
-		C39D4D8C1CAF1AAE00DAF6CC /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
-		C39D4D8D1CAF1AAE00DAF6CC /* libData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Data" /* libData.dylib */; };
-		C39D4D8E1CAF1AAE00DAF6CC /* libData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Data" /* libData.dylib */; };
-		C39D4D8F1CAF1AAE00DAF6CC /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
-		C39D4D901CAF1AAE00DAF6CC /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
-		C39D4D911CAF1AAE00DAF6CC /* libInterchangeData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_InterchangeData" /* libInterchangeData.dylib */; };
-		C39D4D921CAF1AAE00DAF6CC /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
-		C39D4D931CAF1AAE00DAF6CC /* libStructuredData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_StructuredData" /* libStructuredData.dylib */; };
-		C39D4D941CAF1AAE00DAF6CC /* libS4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_S4" /* libS4.dylib */; };
-		C39D4D951CAF1AAE00DAF6CC /* libHummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Hummingbird" /* libHummingbird.dylib */; };
-		C39D4D961CAF1AAE00DAF6CC /* libData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Data" /* libData.dylib */; };
-		C39D4D971CAF1AAE00DAF6CC /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
-		C39D4D981CAF1AAE00DAF6CC /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
-		C39D4D991CAF1AAE00DAF6CC /* libInterchangeData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_InterchangeData" /* libInterchangeData.dylib */; };
-		C39D4D9A1CAF1AAE00DAF6CC /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
-		C39D4D9B1CAF1AAE00DAF6CC /* libStructuredData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_StructuredData" /* libStructuredData.dylib */; };
-		C39D4D9C1CAF1AAE00DAF6CC /* libCryptoKitten.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoKitten" /* libCryptoKitten.dylib */; };
-		C39D4D9D1CAF1AAE00DAF6CC /* libS4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_S4" /* libS4.dylib */; };
-		C39D4D9E1CAF1AAE00DAF6CC /* libHummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Hummingbird" /* libHummingbird.dylib */; };
-		C39D4D9F1CAF1AAE00DAF6CC /* libJSON.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_JSON" /* libJSON.dylib */; };
-		C39D4DA01CAF1AAE00DAF6CC /* libString.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_String" /* libString.dylib */; };
-		C39D4DA11CAF1AAE00DAF6CC /* libData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Data" /* libData.dylib */; };
-		C39D4DA21CAF1AAE00DAF6CC /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
-		C39D4DA31CAF1AAE00DAF6CC /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
-		C39D4DA41CAF1AAE00DAF6CC /* libInterchangeData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_InterchangeData" /* libInterchangeData.dylib */; };
-		C39D4DA51CAF1AAE00DAF6CC /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
-		C39D4DA61CAF1AAE00DAF6CC /* libStructuredData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_StructuredData" /* libStructuredData.dylib */; };
-		C39D4DA71CAF1AAE00DAF6CC /* libCryptoKitten.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoKitten" /* libCryptoKitten.dylib */; };
-		C39D4DA81CAF1AAE00DAF6CC /* libS4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_S4" /* libS4.dylib */; };
-		C39D4DA91CAF1AAE00DAF6CC /* libHummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Hummingbird" /* libHummingbird.dylib */; };
-		C39D4DAA1CAF1AAE00DAF6CC /* libJSON.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_JSON" /* libJSON.dylib */; };
-		C39D4DAB1CAF1AAE00DAF6CC /* libString.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_String" /* libString.dylib */; };
-		C39D4DAC1CAF1AAE00DAF6CC /* libData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Data" /* libData.dylib */; };
-		C39D4DAD1CAF1AAE00DAF6CC /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
-		C39D4DAE1CAF1AAE00DAF6CC /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
-		C39D4DAF1CAF1AAE00DAF6CC /* libInterchangeData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_InterchangeData" /* libInterchangeData.dylib */; };
-		C39D4DB01CAF1AAE00DAF6CC /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
-		C39D4DB11CAF1AAE00DAF6CC /* libStructuredData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_StructuredData" /* libStructuredData.dylib */; };
-		C39D4DB21CAF1AAE00DAF6CC /* libCryptoKitten.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoKitten" /* libCryptoKitten.dylib */; };
-		C39D4DB31CAF1AAE00DAF6CC /* libS4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_S4" /* libS4.dylib */; };
-		C39D4DB41CAF1AAE00DAF6CC /* libHummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Hummingbird" /* libHummingbird.dylib */; };
-		C39D4DB51CAF1AAE00DAF6CC /* libJSON.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_JSON" /* libJSON.dylib */; };
-		C39D4DB61CAF1AAE00DAF6CC /* libString.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_String" /* libString.dylib */; };
-		C39D4DB71CAF1AAE00DAF6CC /* liblibc.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_libc" /* liblibc.dylib */; };
-		C39D4DB81CAF1AAE00DAF6CC /* libData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Data" /* libData.dylib */; };
-		C39D4DB91CAF1AAE00DAF6CC /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
-		C39D4DBA1CAF1AAE00DAF6CC /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
-		C39D4DBB1CAF1AAE00DAF6CC /* libInterchangeData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_InterchangeData" /* libInterchangeData.dylib */; };
-		C39D4DBC1CAF1AAE00DAF6CC /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
-		C39D4DBD1CAF1AAE00DAF6CC /* libStructuredData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_StructuredData" /* libStructuredData.dylib */; };
-		C39D4DBE1CAF1AAE00DAF6CC /* libCryptoKitten.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoKitten" /* libCryptoKitten.dylib */; };
-		C39D4DBF1CAF1AAE00DAF6CC /* libS4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_S4" /* libS4.dylib */; };
-		C39D4DC01CAF1AAE00DAF6CC /* libHummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Hummingbird" /* libHummingbird.dylib */; };
-		C39D4DC11CAF1AAE00DAF6CC /* libJSON.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_JSON" /* libJSON.dylib */; };
-		C39D4DC21CAF1AAE00DAF6CC /* libString.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_String" /* libString.dylib */; };
-		C39D4DC31CAF1AAE00DAF6CC /* libVapor.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Vapor" /* libVapor.dylib */; };
-		C39D4DC41CAF1AAE00DAF6CC /* liblibc.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_libc" /* liblibc.dylib */; };
-		C3D92B361CAF36EC0063A0EF /* RequestContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3D92B351CAF36EC0063A0EF /* RequestContent.swift */; };
+		C3BF65A71CB17B89003DC375 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
+		C3BF65A81CB17B89003DC375 /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
+		C3BF65A91CB17B89003DC375 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
+		C3BF65AA1CB17B89003DC375 /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
+		C3BF65AB1CB17B89003DC375 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
+		C3BF65AC1CB17B89003DC375 /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
+		C3BF65AD1CB17B89003DC375 /* libData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Data" /* libData.dylib */; };
+		C3BF65AE1CB17B89003DC375 /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
+		C3BF65AF1CB17B89003DC375 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
+		C3BF65B01CB17B89003DC375 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
+		C3BF65B11CB17B89003DC375 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
+		C3BF65B21CB17B89003DC375 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
+		C3BF65B31CB17B89003DC375 /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
+		C3BF65B41CB17B89003DC375 /* libData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Data" /* libData.dylib */; };
+		C3BF65B51CB17B89003DC375 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
+		C3BF65B61CB17B89003DC375 /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
+		C3BF65B71CB17B89003DC375 /* libData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Data" /* libData.dylib */; };
+		C3BF65B81CB17B89003DC375 /* libData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Data" /* libData.dylib */; };
+		C3BF65B91CB17B89003DC375 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
+		C3BF65BA1CB17B89003DC375 /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
+		C3BF65BB1CB17B89003DC375 /* libInterchangeData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_InterchangeData" /* libInterchangeData.dylib */; };
+		C3BF65BC1CB17B89003DC375 /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
+		C3BF65BD1CB17B89003DC375 /* libStructuredData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_StructuredData" /* libStructuredData.dylib */; };
+		C3BF65BE1CB17B89003DC375 /* libS4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_S4" /* libS4.dylib */; };
+		C3BF65BF1CB17B89003DC375 /* libHummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Hummingbird" /* libHummingbird.dylib */; };
+		C3BF65C01CB17B89003DC375 /* libData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Data" /* libData.dylib */; };
+		C3BF65C11CB17B89003DC375 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
+		C3BF65C21CB17B89003DC375 /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
+		C3BF65C31CB17B89003DC375 /* libInterchangeData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_InterchangeData" /* libInterchangeData.dylib */; };
+		C3BF65C41CB17B89003DC375 /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
+		C3BF65C51CB17B89003DC375 /* libStructuredData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_StructuredData" /* libStructuredData.dylib */; };
+		C3BF65C61CB17B89003DC375 /* libCryptoKitten.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoKitten" /* libCryptoKitten.dylib */; };
+		C3BF65C71CB17B89003DC375 /* libS4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_S4" /* libS4.dylib */; };
+		C3BF65C81CB17B89003DC375 /* libHummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Hummingbird" /* libHummingbird.dylib */; };
+		C3BF65C91CB17B89003DC375 /* libJSON.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_JSON" /* libJSON.dylib */; };
+		C3BF65CA1CB17B89003DC375 /* libString.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_String" /* libString.dylib */; };
+		C3BF65CB1CB17B89003DC375 /* libData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Data" /* libData.dylib */; };
+		C3BF65CC1CB17B89003DC375 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
+		C3BF65CD1CB17B89003DC375 /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
+		C3BF65CE1CB17B89003DC375 /* libInterchangeData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_InterchangeData" /* libInterchangeData.dylib */; };
+		C3BF65CF1CB17B89003DC375 /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
+		C3BF65D01CB17B89003DC375 /* libStructuredData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_StructuredData" /* libStructuredData.dylib */; };
+		C3BF65D11CB17B89003DC375 /* libCryptoKitten.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoKitten" /* libCryptoKitten.dylib */; };
+		C3BF65D21CB17B89003DC375 /* libS4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_S4" /* libS4.dylib */; };
+		C3BF65D31CB17B89003DC375 /* libHummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Hummingbird" /* libHummingbird.dylib */; };
+		C3BF65D41CB17B89003DC375 /* libJSON.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_JSON" /* libJSON.dylib */; };
+		C3BF65D51CB17B89003DC375 /* libString.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_String" /* libString.dylib */; };
+		C3BF65D61CB17B89003DC375 /* libData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Data" /* libData.dylib */; };
+		C3BF65D71CB17B89003DC375 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
+		C3BF65D81CB17B89003DC375 /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
+		C3BF65D91CB17B89003DC375 /* libInterchangeData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_InterchangeData" /* libInterchangeData.dylib */; };
+		C3BF65DA1CB17B89003DC375 /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
+		C3BF65DB1CB17B89003DC375 /* libStructuredData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_StructuredData" /* libStructuredData.dylib */; };
+		C3BF65DC1CB17B89003DC375 /* libCryptoKitten.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoKitten" /* libCryptoKitten.dylib */; };
+		C3BF65DD1CB17B89003DC375 /* libS4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_S4" /* libS4.dylib */; };
+		C3BF65DE1CB17B89003DC375 /* libHummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Hummingbird" /* libHummingbird.dylib */; };
+		C3BF65DF1CB17B89003DC375 /* libJSON.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_JSON" /* libJSON.dylib */; };
+		C3BF65E01CB17B89003DC375 /* libString.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_String" /* libString.dylib */; };
+		C3BF65E11CB17B89003DC375 /* liblibc.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_libc" /* liblibc.dylib */; };
+		C3BF65E21CB17B89003DC375 /* libData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Data" /* libData.dylib */; };
+		C3BF65E31CB17B89003DC375 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
+		C3BF65E41CB17B89003DC375 /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
+		C3BF65E51CB17B89003DC375 /* libInterchangeData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_InterchangeData" /* libInterchangeData.dylib */; };
+		C3BF65E61CB17B89003DC375 /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
+		C3BF65E71CB17B89003DC375 /* libStructuredData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_StructuredData" /* libStructuredData.dylib */; };
+		C3BF65E81CB17B89003DC375 /* libCryptoKitten.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoKitten" /* libCryptoKitten.dylib */; };
+		C3BF65E91CB17B89003DC375 /* libS4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_S4" /* libS4.dylib */; };
+		C3BF65EA1CB17B89003DC375 /* libHummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Hummingbird" /* libHummingbird.dylib */; };
+		C3BF65EB1CB17B89003DC375 /* libJSON.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_JSON" /* libJSON.dylib */; };
+		C3BF65EC1CB17B89003DC375 /* libString.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_String" /* libString.dylib */; };
+		C3BF65ED1CB17B89003DC375 /* libVapor.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Vapor" /* libVapor.dylib */; };
+		C3BF65EE1CB17B89003DC375 /* liblibc.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_libc" /* liblibc.dylib */; };
+		C3BF65FD1CB18494003DC375 /* Hummingbird+Stream.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3BF65FC1CB18494003DC375 /* Hummingbird+Stream.swift */; };
 		_LinkFileRef_C7 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
 		_LinkFileRef_CryptoKitten /* libCryptoKitten.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoKitten" /* libCryptoKitten.dylib */; };
 		_LinkFileRef_Data /* libData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Data" /* libData.dylib */; };
@@ -97,7 +97,6 @@
 		"__src_cc_ref_Packages/C7-0.1.12/Sources/AsyncStreamClient.swift" /* AsyncStreamClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/C7-0.1.12/Sources/AsyncStreamClient.swift" /* AsyncStreamClient.swift */; };
 		"__src_cc_ref_Packages/C7-0.1.12/Sources/AsyncStreamServer.swift" /* AsyncStreamServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/C7-0.1.12/Sources/AsyncStreamServer.swift" /* AsyncStreamServer.swift */; };
 		"__src_cc_ref_Packages/C7-0.1.12/Sources/Byte.swift" /* Byte.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/C7-0.1.12/Sources/Byte.swift" /* Byte.swift */; };
-		"__src_cc_ref_Packages/C7-0.1.12/Sources/C7.swift" /* C7.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/C7-0.1.12/Sources/C7.swift" /* C7.swift */; };
 		"__src_cc_ref_Packages/C7-0.1.12/Sources/CaseInsensitiveString.swift" /* CaseInsensitiveString.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/C7-0.1.12/Sources/CaseInsensitiveString.swift" /* CaseInsensitiveString.swift */; };
 		"__src_cc_ref_Packages/C7-0.1.12/Sources/CustomDataStore.swift" /* CustomDataStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/C7-0.1.12/Sources/CustomDataStore.swift" /* CustomDataStore.swift */; };
 		"__src_cc_ref_Packages/C7-0.1.12/Sources/Data.swift" /* Data.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/C7-0.1.12/Sources/Data.swift" /* Data.swift */; };
@@ -135,43 +134,44 @@
 		"__src_cc_ref_Packages/JSON-0.4.1/Source/JSONParser.swift" /* JSONParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/JSON-0.4.1/Source/JSONParser.swift" /* JSONParser.swift */; };
 		"__src_cc_ref_Packages/JSON-0.4.1/Source/JSONSerializer.swift" /* JSONSerializer.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/JSON-0.4.1/Source/JSONSerializer.swift" /* JSONSerializer.swift */; };
 		"__src_cc_ref_Packages/OperatingSystem-0.4.2/Sources/OperatingSystem.swift" /* OperatingSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/OperatingSystem-0.4.2/Sources/OperatingSystem.swift" /* OperatingSystem.swift */; };
-		"__src_cc_ref_Packages/S4-0.1.9/Sources/AsyncClient.swift" /* AsyncClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.9/Sources/AsyncClient.swift" /* AsyncClient.swift */; };
-		"__src_cc_ref_Packages/S4-0.1.9/Sources/AsyncMiddleware.swift" /* AsyncMiddleware.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.9/Sources/AsyncMiddleware.swift" /* AsyncMiddleware.swift */; };
-		"__src_cc_ref_Packages/S4-0.1.9/Sources/AsyncResponder.swift" /* AsyncResponder.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.9/Sources/AsyncResponder.swift" /* AsyncResponder.swift */; };
-		"__src_cc_ref_Packages/S4-0.1.9/Sources/AsyncRoute.swift" /* AsyncRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.9/Sources/AsyncRoute.swift" /* AsyncRoute.swift */; };
-		"__src_cc_ref_Packages/S4-0.1.9/Sources/AsyncRouteMatcher.swift" /* AsyncRouteMatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.9/Sources/AsyncRouteMatcher.swift" /* AsyncRouteMatcher.swift */; };
-		"__src_cc_ref_Packages/S4-0.1.9/Sources/AsyncRouter.swift" /* AsyncRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.9/Sources/AsyncRouter.swift" /* AsyncRouter.swift */; };
-		"__src_cc_ref_Packages/S4-0.1.9/Sources/AsyncServer.swift" /* AsyncServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.9/Sources/AsyncServer.swift" /* AsyncServer.swift */; };
-		"__src_cc_ref_Packages/S4-0.1.9/Sources/Body.swift" /* Body.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.9/Sources/Body.swift" /* Body.swift */; };
-		"__src_cc_ref_Packages/S4-0.1.9/Sources/Client.swift" /* Client.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.9/Sources/Client.swift" /* Client.swift */; };
-		"__src_cc_ref_Packages/S4-0.1.9/Sources/HeaderName.swift" /* HeaderName.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.9/Sources/HeaderName.swift" /* HeaderName.swift */; };
-		"__src_cc_ref_Packages/S4-0.1.9/Sources/HeaderValues.swift" /* HeaderValues.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.9/Sources/HeaderValues.swift" /* HeaderValues.swift */; };
-		"__src_cc_ref_Packages/S4-0.1.9/Sources/Headers.swift" /* Headers.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.9/Sources/Headers.swift" /* Headers.swift */; };
-		"__src_cc_ref_Packages/S4-0.1.9/Sources/Message.swift" /* Message.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.9/Sources/Message.swift" /* Message.swift */; };
-		"__src_cc_ref_Packages/S4-0.1.9/Sources/Method.swift" /* Method.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.9/Sources/Method.swift" /* Method.swift */; };
-		"__src_cc_ref_Packages/S4-0.1.9/Sources/Middleware.swift" /* Middleware.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.9/Sources/Middleware.swift" /* Middleware.swift */; };
-		"__src_cc_ref_Packages/S4-0.1.9/Sources/Port.swift" /* Port.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.9/Sources/Port.swift" /* Port.swift */; };
-		"__src_cc_ref_Packages/S4-0.1.9/Sources/Request.swift" /* Request.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.9/Sources/Request.swift" /* Request.swift */; };
-		"__src_cc_ref_Packages/S4-0.1.9/Sources/RequestConvertible.swift" /* RequestConvertible.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.9/Sources/RequestConvertible.swift" /* RequestConvertible.swift */; };
-		"__src_cc_ref_Packages/S4-0.1.9/Sources/RequestInitializable.swift" /* RequestInitializable.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.9/Sources/RequestInitializable.swift" /* RequestInitializable.swift */; };
-		"__src_cc_ref_Packages/S4-0.1.9/Sources/RequestParser.swift" /* RequestParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.9/Sources/RequestParser.swift" /* RequestParser.swift */; };
-		"__src_cc_ref_Packages/S4-0.1.9/Sources/RequestRepresentable.swift" /* RequestRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.9/Sources/RequestRepresentable.swift" /* RequestRepresentable.swift */; };
-		"__src_cc_ref_Packages/S4-0.1.9/Sources/RequestSerializer.swift" /* RequestSerializer.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.9/Sources/RequestSerializer.swift" /* RequestSerializer.swift */; };
-		"__src_cc_ref_Packages/S4-0.1.9/Sources/Responder.swift" /* Responder.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.9/Sources/Responder.swift" /* Responder.swift */; };
-		"__src_cc_ref_Packages/S4-0.1.9/Sources/Response.swift" /* Response.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.9/Sources/Response.swift" /* Response.swift */; };
-		"__src_cc_ref_Packages/S4-0.1.9/Sources/ResponseConvertible.swift" /* ResponseConvertible.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.9/Sources/ResponseConvertible.swift" /* ResponseConvertible.swift */; };
-		"__src_cc_ref_Packages/S4-0.1.9/Sources/ResponseInitializable.swift" /* ResponseInitializable.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.9/Sources/ResponseInitializable.swift" /* ResponseInitializable.swift */; };
-		"__src_cc_ref_Packages/S4-0.1.9/Sources/ResponseParser.swift" /* ResponseParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.9/Sources/ResponseParser.swift" /* ResponseParser.swift */; };
-		"__src_cc_ref_Packages/S4-0.1.9/Sources/ResponseRepresentable.swift" /* ResponseRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.9/Sources/ResponseRepresentable.swift" /* ResponseRepresentable.swift */; };
-		"__src_cc_ref_Packages/S4-0.1.9/Sources/ResponseSerializer.swift" /* ResponseSerializer.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.9/Sources/ResponseSerializer.swift" /* ResponseSerializer.swift */; };
-		"__src_cc_ref_Packages/S4-0.1.9/Sources/Route.swift" /* Route.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.9/Sources/Route.swift" /* Route.swift */; };
-		"__src_cc_ref_Packages/S4-0.1.9/Sources/RouteMatcher.swift" /* RouteMatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.9/Sources/RouteMatcher.swift" /* RouteMatcher.swift */; };
-		"__src_cc_ref_Packages/S4-0.1.9/Sources/Router.swift" /* Router.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.9/Sources/Router.swift" /* Router.swift */; };
-		"__src_cc_ref_Packages/S4-0.1.9/Sources/S4.swift" /* S4.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.9/Sources/S4.swift" /* S4.swift */; };
-		"__src_cc_ref_Packages/S4-0.1.9/Sources/Server.swift" /* Server.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.9/Sources/Server.swift" /* Server.swift */; };
-		"__src_cc_ref_Packages/S4-0.1.9/Sources/Status.swift" /* Status.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.9/Sources/Status.swift" /* Status.swift */; };
-		"__src_cc_ref_Packages/S4-0.1.9/Sources/Version.swift" /* Version.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.9/Sources/Version.swift" /* Version.swift */; };
-		"__src_cc_ref_Packages/S4-0.1.9/Tests/S4/ExampleTests.swift" /* ExampleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.1.9/Tests/S4/ExampleTests.swift" /* ExampleTests.swift */; };
+		"__src_cc_ref_Packages/S4-0.2.0/Sources/AsyncClient.swift" /* AsyncClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.2.0/Sources/AsyncClient.swift" /* AsyncClient.swift */; };
+		"__src_cc_ref_Packages/S4-0.2.0/Sources/AsyncMiddleware.swift" /* AsyncMiddleware.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.2.0/Sources/AsyncMiddleware.swift" /* AsyncMiddleware.swift */; };
+		"__src_cc_ref_Packages/S4-0.2.0/Sources/AsyncResponder.swift" /* AsyncResponder.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.2.0/Sources/AsyncResponder.swift" /* AsyncResponder.swift */; };
+		"__src_cc_ref_Packages/S4-0.2.0/Sources/AsyncRoute.swift" /* AsyncRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.2.0/Sources/AsyncRoute.swift" /* AsyncRoute.swift */; };
+		"__src_cc_ref_Packages/S4-0.2.0/Sources/AsyncRouteMatcher.swift" /* AsyncRouteMatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.2.0/Sources/AsyncRouteMatcher.swift" /* AsyncRouteMatcher.swift */; };
+		"__src_cc_ref_Packages/S4-0.2.0/Sources/AsyncRouter.swift" /* AsyncRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.2.0/Sources/AsyncRouter.swift" /* AsyncRouter.swift */; };
+		"__src_cc_ref_Packages/S4-0.2.0/Sources/AsyncServer.swift" /* AsyncServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.2.0/Sources/AsyncServer.swift" /* AsyncServer.swift */; };
+		"__src_cc_ref_Packages/S4-0.2.0/Sources/Body.swift" /* Body.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.2.0/Sources/Body.swift" /* Body.swift */; };
+		"__src_cc_ref_Packages/S4-0.2.0/Sources/Client.swift" /* Client.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.2.0/Sources/Client.swift" /* Client.swift */; };
+		"__src_cc_ref_Packages/S4-0.2.0/Sources/HeaderName.swift" /* HeaderName.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.2.0/Sources/HeaderName.swift" /* HeaderName.swift */; };
+		"__src_cc_ref_Packages/S4-0.2.0/Sources/HeaderValues.swift" /* HeaderValues.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.2.0/Sources/HeaderValues.swift" /* HeaderValues.swift */; };
+		"__src_cc_ref_Packages/S4-0.2.0/Sources/Headers.swift" /* Headers.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.2.0/Sources/Headers.swift" /* Headers.swift */; };
+		"__src_cc_ref_Packages/S4-0.2.0/Sources/Message.swift" /* Message.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.2.0/Sources/Message.swift" /* Message.swift */; };
+		"__src_cc_ref_Packages/S4-0.2.0/Sources/Method.swift" /* Method.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.2.0/Sources/Method.swift" /* Method.swift */; };
+		"__src_cc_ref_Packages/S4-0.2.0/Sources/Middleware.swift" /* Middleware.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.2.0/Sources/Middleware.swift" /* Middleware.swift */; };
+		"__src_cc_ref_Packages/S4-0.2.0/Sources/Port.swift" /* Port.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.2.0/Sources/Port.swift" /* Port.swift */; };
+		"__src_cc_ref_Packages/S4-0.2.0/Sources/Request.swift" /* Request.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.2.0/Sources/Request.swift" /* Request.swift */; };
+		"__src_cc_ref_Packages/S4-0.2.0/Sources/RequestConvertible.swift" /* RequestConvertible.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.2.0/Sources/RequestConvertible.swift" /* RequestConvertible.swift */; };
+		"__src_cc_ref_Packages/S4-0.2.0/Sources/RequestInitializable.swift" /* RequestInitializable.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.2.0/Sources/RequestInitializable.swift" /* RequestInitializable.swift */; };
+		"__src_cc_ref_Packages/S4-0.2.0/Sources/RequestParser.swift" /* RequestParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.2.0/Sources/RequestParser.swift" /* RequestParser.swift */; };
+		"__src_cc_ref_Packages/S4-0.2.0/Sources/RequestRepresentable.swift" /* RequestRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.2.0/Sources/RequestRepresentable.swift" /* RequestRepresentable.swift */; };
+		"__src_cc_ref_Packages/S4-0.2.0/Sources/RequestSerializer.swift" /* RequestSerializer.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.2.0/Sources/RequestSerializer.swift" /* RequestSerializer.swift */; };
+		"__src_cc_ref_Packages/S4-0.2.0/Sources/Responder.swift" /* Responder.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.2.0/Sources/Responder.swift" /* Responder.swift */; };
+		"__src_cc_ref_Packages/S4-0.2.0/Sources/Response.swift" /* Response.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.2.0/Sources/Response.swift" /* Response.swift */; };
+		"__src_cc_ref_Packages/S4-0.2.0/Sources/ResponseConvertible.swift" /* ResponseConvertible.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.2.0/Sources/ResponseConvertible.swift" /* ResponseConvertible.swift */; };
+		"__src_cc_ref_Packages/S4-0.2.0/Sources/ResponseInitializable.swift" /* ResponseInitializable.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.2.0/Sources/ResponseInitializable.swift" /* ResponseInitializable.swift */; };
+		"__src_cc_ref_Packages/S4-0.2.0/Sources/ResponseParser.swift" /* ResponseParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.2.0/Sources/ResponseParser.swift" /* ResponseParser.swift */; };
+		"__src_cc_ref_Packages/S4-0.2.0/Sources/ResponseRepresentable.swift" /* ResponseRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.2.0/Sources/ResponseRepresentable.swift" /* ResponseRepresentable.swift */; };
+		"__src_cc_ref_Packages/S4-0.2.0/Sources/ResponseSerializer.swift" /* ResponseSerializer.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.2.0/Sources/ResponseSerializer.swift" /* ResponseSerializer.swift */; };
+		"__src_cc_ref_Packages/S4-0.2.0/Sources/Route.swift" /* Route.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.2.0/Sources/Route.swift" /* Route.swift */; };
+		"__src_cc_ref_Packages/S4-0.2.0/Sources/RouteMatcher.swift" /* RouteMatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.2.0/Sources/RouteMatcher.swift" /* RouteMatcher.swift */; };
+		"__src_cc_ref_Packages/S4-0.2.0/Sources/Router.swift" /* Router.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.2.0/Sources/Router.swift" /* Router.swift */; };
+		"__src_cc_ref_Packages/S4-0.2.0/Sources/S4.swift" /* S4.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.2.0/Sources/S4.swift" /* S4.swift */; };
+		"__src_cc_ref_Packages/S4-0.2.0/Sources/Server.swift" /* Server.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.2.0/Sources/Server.swift" /* Server.swift */; };
+		"__src_cc_ref_Packages/S4-0.2.0/Sources/Status.swift" /* Status.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.2.0/Sources/Status.swift" /* Status.swift */; };
+		"__src_cc_ref_Packages/S4-0.2.0/Sources/Version.swift" /* Version.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.2.0/Sources/Version.swift" /* Version.swift */; };
+		"__src_cc_ref_Packages/S4-0.2.0/Tests/S4/BodyTests.swift" /* BodyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.2.0/Tests/S4/BodyTests.swift" /* BodyTests.swift */; };
+		"__src_cc_ref_Packages/S4-0.2.0/Tests/S4/ExampleTests.swift" /* ExampleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.2.0/Tests/S4/ExampleTests.swift" /* ExampleTests.swift */; };
 		"__src_cc_ref_Packages/Strand-1.1.0/Sources/Strand.swift" /* Strand.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/Strand-1.1.0/Sources/Strand.swift" /* Strand.swift */; };
 		"__src_cc_ref_Packages/String-0.4.3/Source/String.swift" /* String.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/String-0.4.3/Source/String.swift" /* String.swift */; };
 		"__src_cc_ref_Packages/StructuredData-0.5.0/Source/StructuredData.swift" /* StructuredData.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/StructuredData-0.5.0/Source/StructuredData.swift" /* StructuredData.swift */; };
@@ -198,8 +198,9 @@
 		__src_cc_ref_Sources/Vapor/Node/NodeInitializable.swift /* Node/NodeInitializable.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Node/NodeInitializable.swift /* Node/NodeInitializable.swift */; };
 		__src_cc_ref_Sources/Vapor/Process/Process.swift /* Process/Process.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Process/Process.swift /* Process/Process.swift */; };
 		__src_cc_ref_Sources/Vapor/Request/Request.swift /* Request/Request.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Request/Request.swift /* Request/Request.swift */; };
+		__src_cc_ref_Sources/Vapor/Request/RequestContent.swift /* Request/RequestContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Request/RequestContent.swift /* Request/RequestContent.swift */; };
 		__src_cc_ref_Sources/Vapor/Response/Response.swift /* Response/Response.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Response/Response.swift /* Response/Response.swift */; };
-		__src_cc_ref_Sources/Vapor/Response/ResponseConvertible.swift /* ResponseRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Response/ResponseConvertible.swift /* ResponseRepresentable.swift */; };
+		__src_cc_ref_Sources/Vapor/Response/ResponseRepresentable.swift /* Response/ResponseRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Response/ResponseRepresentable.swift /* Response/ResponseRepresentable.swift */; };
 		__src_cc_ref_Sources/Vapor/Router/Branch.swift /* Router/Branch.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Router/Branch.swift /* Router/Branch.swift */; };
 		__src_cc_ref_Sources/Vapor/Router/BranchRouter.swift /* Router/BranchRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Router/BranchRouter.swift /* Router/BranchRouter.swift */; };
 		__src_cc_ref_Sources/Vapor/Router/RouterDriver.swift /* Router/RouterDriver.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Router/RouterDriver.swift /* Router/RouterDriver.swift */; };
@@ -210,9 +211,7 @@
 		__src_cc_ref_Sources/Vapor/Routing/ResourceController.swift /* Routing/ResourceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Routing/ResourceController.swift /* Routing/ResourceController.swift */; };
 		__src_cc_ref_Sources/Vapor/Routing/Route.swift /* Routing/Route.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Routing/Route.swift /* Routing/Route.swift */; };
 		__src_cc_ref_Sources/Vapor/Server/Header.swift /* Server/Header.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Server/Header.swift /* Server/Header.swift */; };
-		"__src_cc_ref_Sources/Vapor/Server/Hummingbird+Socket.swift" /* Server/Hummingbird+Socket.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Sources/Vapor/Server/Hummingbird+Socket.swift" /* Server/Hummingbird+Socket.swift */; };
 		__src_cc_ref_Sources/Vapor/Server/Jeeves.swift /* Server/Jeeves.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Server/Jeeves.swift /* Server/Jeeves.swift */; };
-		__src_cc_ref_Sources/Vapor/Server/Socket.swift /* Server/Socket.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Server/Socket.swift /* Server/Socket.swift */; };
 		__src_cc_ref_Sources/Vapor/Session/MemorySessionDriver.swift /* Session/MemorySessionDriver.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Session/MemorySessionDriver.swift /* Session/MemorySessionDriver.swift */; };
 		__src_cc_ref_Sources/Vapor/Session/Session.swift /* Session/Session.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Session/Session.swift /* Session/Session.swift */; };
 		__src_cc_ref_Sources/Vapor/Session/SessionDriver.swift /* Session/SessionDriver.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Session/SessionDriver.swift /* Session/SessionDriver.swift */; };
@@ -246,91 +245,91 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		C39D4DC51CAF1AAE00DAF6CC /* PBXContainerItemProxy */ = {
+		C3BF65EF1CB17B89003DC375 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = __RootObject_ /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = "______Target_Data";
 			remoteInfo = Data;
 		};
-		C39D4DC61CAF1AAE00DAF6CC /* PBXContainerItemProxy */ = {
+		C3BF65F01CB17B89003DC375 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = __RootObject_ /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = "______Target_C7";
 			remoteInfo = C7;
 		};
-		C39D4DC71CAF1AAE00DAF6CC /* PBXContainerItemProxy */ = {
+		C3BF65F11CB17B89003DC375 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = __RootObject_ /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = "______Target_OperatingSystem";
 			remoteInfo = OperatingSystem;
 		};
-		C39D4DC81CAF1AAE00DAF6CC /* PBXContainerItemProxy */ = {
+		C3BF65F21CB17B89003DC375 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = __RootObject_ /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = "______Target_Strand";
 			remoteInfo = Strand;
 		};
-		C39D4DC91CAF1AAE00DAF6CC /* PBXContainerItemProxy */ = {
+		C3BF65F31CB17B89003DC375 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = __RootObject_ /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = "______Target_InterchangeData";
 			remoteInfo = InterchangeData;
 		};
-		C39D4DCA1CAF1AAE00DAF6CC /* PBXContainerItemProxy */ = {
+		C3BF65F41CB17B89003DC375 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = __RootObject_ /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = "______Target_StructuredData";
 			remoteInfo = StructuredData;
 		};
-		C39D4DCB1CAF1AAE00DAF6CC /* PBXContainerItemProxy */ = {
+		C3BF65F51CB17B89003DC375 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = __RootObject_ /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = "______Target_CryptoKitten";
 			remoteInfo = CryptoKitten;
 		};
-		C39D4DCC1CAF1AAE00DAF6CC /* PBXContainerItemProxy */ = {
+		C3BF65F61CB17B89003DC375 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = __RootObject_ /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = "______Target_S4";
 			remoteInfo = S4;
 		};
-		C39D4DCD1CAF1AAE00DAF6CC /* PBXContainerItemProxy */ = {
+		C3BF65F71CB17B89003DC375 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = __RootObject_ /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = "______Target_Hummingbird";
 			remoteInfo = Hummingbird;
 		};
-		C39D4DCE1CAF1AAE00DAF6CC /* PBXContainerItemProxy */ = {
+		C3BF65F81CB17B89003DC375 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = __RootObject_ /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = "______Target_JSON";
 			remoteInfo = JSON;
 		};
-		C39D4DCF1CAF1AAE00DAF6CC /* PBXContainerItemProxy */ = {
+		C3BF65F91CB17B89003DC375 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = __RootObject_ /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = "______Target_String";
 			remoteInfo = String;
 		};
-		C39D4DD01CAF1AAE00DAF6CC /* PBXContainerItemProxy */ = {
+		C3BF65FA1CB17B89003DC375 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = __RootObject_ /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = "______Target_Vapor";
 			remoteInfo = Vapor;
 		};
-		C39D4DD11CAF1AAE00DAF6CC /* PBXContainerItemProxy */ = {
+		C3BF65FB1CB17B89003DC375 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = __RootObject_ /* Project object */;
 			proxyType = 1;
@@ -340,13 +339,12 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		C3D92B351CAF36EC0063A0EF /* RequestContent.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RequestContent.swift; path = Request/RequestContent.swift; sourceTree = "<group>"; };
+		C3BF65FC1CB18494003DC375 /* Hummingbird+Stream.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "Hummingbird+Stream.swift"; path = "Server/Hummingbird+Stream.swift"; sourceTree = "<group>"; };
 		__PBXFileRef_Package.swift /* Package.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Package.swift; path = /Users/tanner/Developer/vapor/vapor/Package.swift; sourceTree = "<group>"; };
 		"__PBXFileRef_Packages/C7-0.1.12/Sources/AsyncStream.swift" /* AsyncStream.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncStream.swift; sourceTree = "<group>"; };
 		"__PBXFileRef_Packages/C7-0.1.12/Sources/AsyncStreamClient.swift" /* AsyncStreamClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncStreamClient.swift; sourceTree = "<group>"; };
 		"__PBXFileRef_Packages/C7-0.1.12/Sources/AsyncStreamServer.swift" /* AsyncStreamServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncStreamServer.swift; sourceTree = "<group>"; };
 		"__PBXFileRef_Packages/C7-0.1.12/Sources/Byte.swift" /* Byte.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Byte.swift; sourceTree = "<group>"; };
-		"__PBXFileRef_Packages/C7-0.1.12/Sources/C7.swift" /* C7.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = C7.swift; sourceTree = "<group>"; };
 		"__PBXFileRef_Packages/C7-0.1.12/Sources/CaseInsensitiveString.swift" /* CaseInsensitiveString.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaseInsensitiveString.swift; sourceTree = "<group>"; };
 		"__PBXFileRef_Packages/C7-0.1.12/Sources/CustomDataStore.swift" /* CustomDataStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomDataStore.swift; sourceTree = "<group>"; };
 		"__PBXFileRef_Packages/C7-0.1.12/Sources/Data.swift" /* Data.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Data.swift; sourceTree = "<group>"; };
@@ -384,43 +382,44 @@
 		"__PBXFileRef_Packages/JSON-0.4.1/Source/JSONParser.swift" /* JSONParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONParser.swift; sourceTree = "<group>"; };
 		"__PBXFileRef_Packages/JSON-0.4.1/Source/JSONSerializer.swift" /* JSONSerializer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONSerializer.swift; sourceTree = "<group>"; };
 		"__PBXFileRef_Packages/OperatingSystem-0.4.2/Sources/OperatingSystem.swift" /* OperatingSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OperatingSystem.swift; sourceTree = "<group>"; };
-		"__PBXFileRef_Packages/S4-0.1.9/Sources/AsyncClient.swift" /* AsyncClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncClient.swift; sourceTree = "<group>"; };
-		"__PBXFileRef_Packages/S4-0.1.9/Sources/AsyncMiddleware.swift" /* AsyncMiddleware.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncMiddleware.swift; sourceTree = "<group>"; };
-		"__PBXFileRef_Packages/S4-0.1.9/Sources/AsyncResponder.swift" /* AsyncResponder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncResponder.swift; sourceTree = "<group>"; };
-		"__PBXFileRef_Packages/S4-0.1.9/Sources/AsyncRoute.swift" /* AsyncRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncRoute.swift; sourceTree = "<group>"; };
-		"__PBXFileRef_Packages/S4-0.1.9/Sources/AsyncRouteMatcher.swift" /* AsyncRouteMatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncRouteMatcher.swift; sourceTree = "<group>"; };
-		"__PBXFileRef_Packages/S4-0.1.9/Sources/AsyncRouter.swift" /* AsyncRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncRouter.swift; sourceTree = "<group>"; };
-		"__PBXFileRef_Packages/S4-0.1.9/Sources/AsyncServer.swift" /* AsyncServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncServer.swift; sourceTree = "<group>"; };
-		"__PBXFileRef_Packages/S4-0.1.9/Sources/Body.swift" /* Body.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Body.swift; sourceTree = "<group>"; };
-		"__PBXFileRef_Packages/S4-0.1.9/Sources/Client.swift" /* Client.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Client.swift; sourceTree = "<group>"; };
-		"__PBXFileRef_Packages/S4-0.1.9/Sources/HeaderName.swift" /* HeaderName.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeaderName.swift; sourceTree = "<group>"; };
-		"__PBXFileRef_Packages/S4-0.1.9/Sources/HeaderValues.swift" /* HeaderValues.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeaderValues.swift; sourceTree = "<group>"; };
-		"__PBXFileRef_Packages/S4-0.1.9/Sources/Headers.swift" /* Headers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Headers.swift; sourceTree = "<group>"; };
-		"__PBXFileRef_Packages/S4-0.1.9/Sources/Message.swift" /* Message.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Message.swift; sourceTree = "<group>"; };
-		"__PBXFileRef_Packages/S4-0.1.9/Sources/Method.swift" /* Method.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Method.swift; sourceTree = "<group>"; };
-		"__PBXFileRef_Packages/S4-0.1.9/Sources/Middleware.swift" /* Middleware.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Middleware.swift; sourceTree = "<group>"; };
-		"__PBXFileRef_Packages/S4-0.1.9/Sources/Port.swift" /* Port.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Port.swift; sourceTree = "<group>"; };
-		"__PBXFileRef_Packages/S4-0.1.9/Sources/Request.swift" /* Request.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Request.swift; sourceTree = "<group>"; };
-		"__PBXFileRef_Packages/S4-0.1.9/Sources/RequestConvertible.swift" /* RequestConvertible.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestConvertible.swift; sourceTree = "<group>"; };
-		"__PBXFileRef_Packages/S4-0.1.9/Sources/RequestInitializable.swift" /* RequestInitializable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestInitializable.swift; sourceTree = "<group>"; };
-		"__PBXFileRef_Packages/S4-0.1.9/Sources/RequestParser.swift" /* RequestParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestParser.swift; sourceTree = "<group>"; };
-		"__PBXFileRef_Packages/S4-0.1.9/Sources/RequestRepresentable.swift" /* RequestRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestRepresentable.swift; sourceTree = "<group>"; };
-		"__PBXFileRef_Packages/S4-0.1.9/Sources/RequestSerializer.swift" /* RequestSerializer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestSerializer.swift; sourceTree = "<group>"; };
-		"__PBXFileRef_Packages/S4-0.1.9/Sources/Responder.swift" /* Responder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Responder.swift; sourceTree = "<group>"; };
-		"__PBXFileRef_Packages/S4-0.1.9/Sources/Response.swift" /* Response.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Response.swift; sourceTree = "<group>"; };
-		"__PBXFileRef_Packages/S4-0.1.9/Sources/ResponseConvertible.swift" /* ResponseConvertible.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResponseConvertible.swift; sourceTree = "<group>"; };
-		"__PBXFileRef_Packages/S4-0.1.9/Sources/ResponseInitializable.swift" /* ResponseInitializable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResponseInitializable.swift; sourceTree = "<group>"; };
-		"__PBXFileRef_Packages/S4-0.1.9/Sources/ResponseParser.swift" /* ResponseParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResponseParser.swift; sourceTree = "<group>"; };
-		"__PBXFileRef_Packages/S4-0.1.9/Sources/ResponseRepresentable.swift" /* ResponseRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResponseRepresentable.swift; sourceTree = "<group>"; };
-		"__PBXFileRef_Packages/S4-0.1.9/Sources/ResponseSerializer.swift" /* ResponseSerializer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResponseSerializer.swift; sourceTree = "<group>"; };
-		"__PBXFileRef_Packages/S4-0.1.9/Sources/Route.swift" /* Route.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Route.swift; sourceTree = "<group>"; };
-		"__PBXFileRef_Packages/S4-0.1.9/Sources/RouteMatcher.swift" /* RouteMatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteMatcher.swift; sourceTree = "<group>"; };
-		"__PBXFileRef_Packages/S4-0.1.9/Sources/Router.swift" /* Router.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Router.swift; sourceTree = "<group>"; };
-		"__PBXFileRef_Packages/S4-0.1.9/Sources/S4.swift" /* S4.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = S4.swift; sourceTree = "<group>"; };
-		"__PBXFileRef_Packages/S4-0.1.9/Sources/Server.swift" /* Server.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Server.swift; sourceTree = "<group>"; };
-		"__PBXFileRef_Packages/S4-0.1.9/Sources/Status.swift" /* Status.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Status.swift; sourceTree = "<group>"; };
-		"__PBXFileRef_Packages/S4-0.1.9/Sources/Version.swift" /* Version.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Version.swift; sourceTree = "<group>"; };
-		"__PBXFileRef_Packages/S4-0.1.9/Tests/S4/ExampleTests.swift" /* ExampleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExampleTests.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.2.0/Sources/AsyncClient.swift" /* AsyncClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncClient.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.2.0/Sources/AsyncMiddleware.swift" /* AsyncMiddleware.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncMiddleware.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.2.0/Sources/AsyncResponder.swift" /* AsyncResponder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncResponder.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.2.0/Sources/AsyncRoute.swift" /* AsyncRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncRoute.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.2.0/Sources/AsyncRouteMatcher.swift" /* AsyncRouteMatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncRouteMatcher.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.2.0/Sources/AsyncRouter.swift" /* AsyncRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncRouter.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.2.0/Sources/AsyncServer.swift" /* AsyncServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncServer.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.2.0/Sources/Body.swift" /* Body.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Body.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.2.0/Sources/Client.swift" /* Client.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Client.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.2.0/Sources/HeaderName.swift" /* HeaderName.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeaderName.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.2.0/Sources/HeaderValues.swift" /* HeaderValues.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeaderValues.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.2.0/Sources/Headers.swift" /* Headers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Headers.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.2.0/Sources/Message.swift" /* Message.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Message.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.2.0/Sources/Method.swift" /* Method.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Method.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.2.0/Sources/Middleware.swift" /* Middleware.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Middleware.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.2.0/Sources/Port.swift" /* Port.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Port.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.2.0/Sources/Request.swift" /* Request.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Request.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.2.0/Sources/RequestConvertible.swift" /* RequestConvertible.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestConvertible.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.2.0/Sources/RequestInitializable.swift" /* RequestInitializable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestInitializable.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.2.0/Sources/RequestParser.swift" /* RequestParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestParser.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.2.0/Sources/RequestRepresentable.swift" /* RequestRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestRepresentable.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.2.0/Sources/RequestSerializer.swift" /* RequestSerializer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestSerializer.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.2.0/Sources/Responder.swift" /* Responder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Responder.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.2.0/Sources/Response.swift" /* Response.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Response.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.2.0/Sources/ResponseConvertible.swift" /* ResponseConvertible.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResponseConvertible.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.2.0/Sources/ResponseInitializable.swift" /* ResponseInitializable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResponseInitializable.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.2.0/Sources/ResponseParser.swift" /* ResponseParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResponseParser.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.2.0/Sources/ResponseRepresentable.swift" /* ResponseRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResponseRepresentable.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.2.0/Sources/ResponseSerializer.swift" /* ResponseSerializer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResponseSerializer.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.2.0/Sources/Route.swift" /* Route.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Route.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.2.0/Sources/RouteMatcher.swift" /* RouteMatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteMatcher.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.2.0/Sources/Router.swift" /* Router.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Router.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.2.0/Sources/S4.swift" /* S4.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = S4.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.2.0/Sources/Server.swift" /* Server.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Server.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.2.0/Sources/Status.swift" /* Status.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Status.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.2.0/Sources/Version.swift" /* Version.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Version.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.2.0/Tests/S4/BodyTests.swift" /* BodyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BodyTests.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/S4-0.2.0/Tests/S4/ExampleTests.swift" /* ExampleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExampleTests.swift; sourceTree = "<group>"; };
 		"__PBXFileRef_Packages/Strand-1.1.0/Sources/Strand.swift" /* Strand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Strand.swift; sourceTree = "<group>"; };
 		"__PBXFileRef_Packages/String-0.4.3/Source/String.swift" /* String.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = String.swift; sourceTree = "<group>"; };
 		"__PBXFileRef_Packages/StructuredData-0.5.0/Source/StructuredData.swift" /* StructuredData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StructuredData.swift; sourceTree = "<group>"; };
@@ -447,8 +446,9 @@
 		__PBXFileRef_Sources/Vapor/Node/NodeInitializable.swift /* Node/NodeInitializable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Node/NodeInitializable.swift; sourceTree = "<group>"; };
 		__PBXFileRef_Sources/Vapor/Process/Process.swift /* Process/Process.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Process/Process.swift; sourceTree = "<group>"; };
 		__PBXFileRef_Sources/Vapor/Request/Request.swift /* Request/Request.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Request/Request.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Sources/Vapor/Request/RequestContent.swift /* Request/RequestContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Request/RequestContent.swift; sourceTree = "<group>"; };
 		__PBXFileRef_Sources/Vapor/Response/Response.swift /* Response/Response.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Response/Response.swift; sourceTree = "<group>"; };
-		__PBXFileRef_Sources/Vapor/Response/ResponseConvertible.swift /* ResponseRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ResponseRepresentable.swift; path = Response/ResponseRepresentable.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Sources/Vapor/Response/ResponseRepresentable.swift /* Response/ResponseRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Response/ResponseRepresentable.swift; sourceTree = "<group>"; };
 		__PBXFileRef_Sources/Vapor/Router/Branch.swift /* Router/Branch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Router/Branch.swift; sourceTree = "<group>"; };
 		__PBXFileRef_Sources/Vapor/Router/BranchRouter.swift /* Router/BranchRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Router/BranchRouter.swift; sourceTree = "<group>"; };
 		__PBXFileRef_Sources/Vapor/Router/RouterDriver.swift /* Router/RouterDriver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Router/RouterDriver.swift; sourceTree = "<group>"; };
@@ -459,9 +459,7 @@
 		__PBXFileRef_Sources/Vapor/Routing/ResourceController.swift /* Routing/ResourceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Routing/ResourceController.swift; sourceTree = "<group>"; };
 		__PBXFileRef_Sources/Vapor/Routing/Route.swift /* Routing/Route.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Routing/Route.swift; sourceTree = "<group>"; };
 		__PBXFileRef_Sources/Vapor/Server/Header.swift /* Server/Header.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Server/Header.swift; sourceTree = "<group>"; };
-		"__PBXFileRef_Sources/Vapor/Server/Hummingbird+Socket.swift" /* Server/Hummingbird+Socket.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Server/Hummingbird+Socket.swift"; sourceTree = "<group>"; };
 		__PBXFileRef_Sources/Vapor/Server/Jeeves.swift /* Server/Jeeves.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Server/Jeeves.swift; sourceTree = "<group>"; };
-		__PBXFileRef_Sources/Vapor/Server/Socket.swift /* Server/Socket.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Server/Socket.swift; sourceTree = "<group>"; };
 		__PBXFileRef_Sources/Vapor/Session/MemorySessionDriver.swift /* Session/MemorySessionDriver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Session/MemorySessionDriver.swift; sourceTree = "<group>"; };
 		__PBXFileRef_Sources/Vapor/Session/Session.swift /* Session/Session.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Session/Session.swift; sourceTree = "<group>"; };
 		__PBXFileRef_Sources/Vapor/Session/SessionDriver.swift /* Session/SessionDriver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Session/SessionDriver.swift; sourceTree = "<group>"; };
@@ -493,24 +491,24 @@
 		__PBXFileRef_Tests/Vapor/SessionTests.swift /* SessionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionTests.swift; sourceTree = "<group>"; };
 		__PBXFileRef_Tests/Vapor/TypedRouteTests.swift /* TypedRouteTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TypedRouteTests.swift; sourceTree = "<group>"; };
 		"_____Product_C7" /* libC7.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libC7.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
-		"_____Product_C7TestSuite" /* C7.testsuite.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = C7.testsuite.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		"_____Product_C7TestSuite" /* C7TestSuite.xctest */ = {isa = PBXFileReference; lastKnownFileType = file; name = C7TestSuite.xctest; path = C7.testsuite.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		"_____Product_CryptoKitten" /* libCryptoKitten.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libCryptoKitten.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		"_____Product_Data" /* libData.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libData.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		"_____Product_Generator" /* Generator */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; path = Generator; sourceTree = BUILT_PRODUCTS_DIR; };
 		"_____Product_Hummingbird" /* libHummingbird.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libHummingbird.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
-		"_____Product_HummingbirdTestSuite" /* Hummingbird.testsuite.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = Hummingbird.testsuite.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		"_____Product_HummingbirdTestSuite" /* HummingbirdTestSuite.xctest */ = {isa = PBXFileReference; lastKnownFileType = file; name = HummingbirdTestSuite.xctest; path = Hummingbird.testsuite.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		"_____Product_InterchangeData" /* libInterchangeData.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libInterchangeData.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		"_____Product_JSON" /* libJSON.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libJSON.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		"_____Product_OperatingSystem" /* libOperatingSystem.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libOperatingSystem.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		"_____Product_S4" /* libS4.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libS4.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
-		"_____Product_S4TestSuite" /* S4.testsuite.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = S4.testsuite.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		"_____Product_S4TestSuite" /* S4TestSuite.xctest */ = {isa = PBXFileReference; lastKnownFileType = file; name = S4TestSuite.xctest; path = S4.testsuite.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		"_____Product_Strand" /* libStrand.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libStrand.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		"_____Product_String" /* libString.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libString.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		"_____Product_StructuredData" /* libStructuredData.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libStructuredData.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
-		"_____Product_StructuredDataTestSuite" /* StructuredData.testsuite.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = StructuredData.testsuite.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		"_____Product_StructuredDataTestSuite" /* StructuredDataTestSuite.xctest */ = {isa = PBXFileReference; lastKnownFileType = file; name = StructuredDataTestSuite.xctest; path = StructuredData.testsuite.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		"_____Product_Vapor" /* libVapor.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libVapor.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		"_____Product_VaporDev" /* VaporDev */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; path = VaporDev; sourceTree = BUILT_PRODUCTS_DIR; };
-		"_____Product_VaporTestSuite" /* Vapor.testsuite.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = Vapor.testsuite.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		"_____Product_VaporTestSuite" /* VaporTestSuite.xctest */ = {isa = PBXFileReference; lastKnownFileType = file; name = VaporTestSuite.xctest; path = Vapor.testsuite.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		"_____Product_libc" /* liblibc.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = liblibc.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -534,7 +532,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
-				C39D4D871CAF1AAE00DAF6CC /* libC7.dylib in Frameworks */,
+				C3BF65B11CB17B89003DC375 /* libC7.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -542,8 +540,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
-				C39D4D7D1CAF1AAE00DAF6CC /* libC7.dylib in Frameworks */,
-				C39D4D7E1CAF1AAE00DAF6CC /* libOperatingSystem.dylib in Frameworks */,
+				C3BF65A71CB17B89003DC375 /* libC7.dylib in Frameworks */,
+				C3BF65A81CB17B89003DC375 /* libOperatingSystem.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -551,15 +549,15 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
-				C39D4D8E1CAF1AAE00DAF6CC /* libData.dylib in Frameworks */,
-				C39D4D8F1CAF1AAE00DAF6CC /* libC7.dylib in Frameworks */,
-				C39D4D901CAF1AAE00DAF6CC /* libStrand.dylib in Frameworks */,
-				C39D4D911CAF1AAE00DAF6CC /* libInterchangeData.dylib in Frameworks */,
-				C39D4D921CAF1AAE00DAF6CC /* libOperatingSystem.dylib in Frameworks */,
-				C39D4D931CAF1AAE00DAF6CC /* libStructuredData.dylib in Frameworks */,
+				C3BF65B81CB17B89003DC375 /* libData.dylib in Frameworks */,
+				C3BF65B91CB17B89003DC375 /* libC7.dylib in Frameworks */,
+				C3BF65BA1CB17B89003DC375 /* libStrand.dylib in Frameworks */,
+				C3BF65BB1CB17B89003DC375 /* libInterchangeData.dylib in Frameworks */,
+				C3BF65BC1CB17B89003DC375 /* libOperatingSystem.dylib in Frameworks */,
+				C3BF65BD1CB17B89003DC375 /* libStructuredData.dylib in Frameworks */,
 				_LinkFileRef_CryptoKitten /* libCryptoKitten.dylib in Frameworks */,
-				C39D4D941CAF1AAE00DAF6CC /* libS4.dylib in Frameworks */,
-				C39D4D951CAF1AAE00DAF6CC /* libHummingbird.dylib in Frameworks */,
+				C3BF65BE1CB17B89003DC375 /* libS4.dylib in Frameworks */,
+				C3BF65BF1CB17B89003DC375 /* libHummingbird.dylib in Frameworks */,
 				_LinkFileRef_JSON /* libJSON.dylib in Frameworks */,
 				_LinkFileRef_String /* libString.dylib in Frameworks */,
 			);
@@ -577,7 +575,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
-				C39D4D841CAF1AAE00DAF6CC /* libStrand.dylib in Frameworks */,
+				C3BF65AE1CB17B89003DC375 /* libStrand.dylib in Frameworks */,
 				_LinkFileRef_Hummingbird /* libHummingbird.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -586,8 +584,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
-				C39D4D7F1CAF1AAE00DAF6CC /* libC7.dylib in Frameworks */,
-				C39D4D801CAF1AAE00DAF6CC /* libOperatingSystem.dylib in Frameworks */,
+				C3BF65A91CB17B89003DC375 /* libC7.dylib in Frameworks */,
+				C3BF65AA1CB17B89003DC375 /* libOperatingSystem.dylib in Frameworks */,
 				_LinkFileRef_Data /* libData.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -596,9 +594,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
-				C39D4D811CAF1AAE00DAF6CC /* libC7.dylib in Frameworks */,
-				C39D4D821CAF1AAE00DAF6CC /* libOperatingSystem.dylib in Frameworks */,
-				C39D4D831CAF1AAE00DAF6CC /* libData.dylib in Frameworks */,
+				C3BF65AB1CB17B89003DC375 /* libC7.dylib in Frameworks */,
+				C3BF65AC1CB17B89003DC375 /* libOperatingSystem.dylib in Frameworks */,
+				C3BF65AD1CB17B89003DC375 /* libData.dylib in Frameworks */,
 				_LinkFileRef_InterchangeData /* libInterchangeData.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -614,7 +612,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
-				C39D4D851CAF1AAE00DAF6CC /* libC7.dylib in Frameworks */,
+				C3BF65AF1CB17B89003DC375 /* libC7.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -622,7 +620,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
-				C39D4D861CAF1AAE00DAF6CC /* libC7.dylib in Frameworks */,
+				C3BF65B01CB17B89003DC375 /* libC7.dylib in Frameworks */,
 				_LinkFileRef_S4 /* libS4.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -646,9 +644,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
-				C39D4D881CAF1AAE00DAF6CC /* libC7.dylib in Frameworks */,
-				C39D4D891CAF1AAE00DAF6CC /* libOperatingSystem.dylib in Frameworks */,
-				C39D4D8A1CAF1AAE00DAF6CC /* libData.dylib in Frameworks */,
+				C3BF65B21CB17B89003DC375 /* libC7.dylib in Frameworks */,
+				C3BF65B31CB17B89003DC375 /* libOperatingSystem.dylib in Frameworks */,
+				C3BF65B41CB17B89003DC375 /* libData.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -656,9 +654,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
-				C39D4D8B1CAF1AAE00DAF6CC /* libC7.dylib in Frameworks */,
-				C39D4D8C1CAF1AAE00DAF6CC /* libOperatingSystem.dylib in Frameworks */,
-				C39D4D8D1CAF1AAE00DAF6CC /* libData.dylib in Frameworks */,
+				C3BF65B51CB17B89003DC375 /* libC7.dylib in Frameworks */,
+				C3BF65B61CB17B89003DC375 /* libOperatingSystem.dylib in Frameworks */,
+				C3BF65B71CB17B89003DC375 /* libData.dylib in Frameworks */,
 				_LinkFileRef_StructuredData /* libStructuredData.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -667,17 +665,17 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
-				C39D4DA11CAF1AAE00DAF6CC /* libData.dylib in Frameworks */,
-				C39D4DA21CAF1AAE00DAF6CC /* libC7.dylib in Frameworks */,
-				C39D4DA31CAF1AAE00DAF6CC /* libStrand.dylib in Frameworks */,
-				C39D4DA41CAF1AAE00DAF6CC /* libInterchangeData.dylib in Frameworks */,
-				C39D4DA51CAF1AAE00DAF6CC /* libOperatingSystem.dylib in Frameworks */,
-				C39D4DA61CAF1AAE00DAF6CC /* libStructuredData.dylib in Frameworks */,
-				C39D4DA71CAF1AAE00DAF6CC /* libCryptoKitten.dylib in Frameworks */,
-				C39D4DA81CAF1AAE00DAF6CC /* libS4.dylib in Frameworks */,
-				C39D4DA91CAF1AAE00DAF6CC /* libHummingbird.dylib in Frameworks */,
-				C39D4DAA1CAF1AAE00DAF6CC /* libJSON.dylib in Frameworks */,
-				C39D4DAB1CAF1AAE00DAF6CC /* libString.dylib in Frameworks */,
+				C3BF65CB1CB17B89003DC375 /* libData.dylib in Frameworks */,
+				C3BF65CC1CB17B89003DC375 /* libC7.dylib in Frameworks */,
+				C3BF65CD1CB17B89003DC375 /* libStrand.dylib in Frameworks */,
+				C3BF65CE1CB17B89003DC375 /* libInterchangeData.dylib in Frameworks */,
+				C3BF65CF1CB17B89003DC375 /* libOperatingSystem.dylib in Frameworks */,
+				C3BF65D01CB17B89003DC375 /* libStructuredData.dylib in Frameworks */,
+				C3BF65D11CB17B89003DC375 /* libCryptoKitten.dylib in Frameworks */,
+				C3BF65D21CB17B89003DC375 /* libS4.dylib in Frameworks */,
+				C3BF65D31CB17B89003DC375 /* libHummingbird.dylib in Frameworks */,
+				C3BF65D41CB17B89003DC375 /* libJSON.dylib in Frameworks */,
+				C3BF65D51CB17B89003DC375 /* libString.dylib in Frameworks */,
 				_LinkFileRef_libc /* liblibc.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -686,19 +684,19 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
-				C39D4DAC1CAF1AAE00DAF6CC /* libData.dylib in Frameworks */,
-				C39D4DAD1CAF1AAE00DAF6CC /* libC7.dylib in Frameworks */,
-				C39D4DAE1CAF1AAE00DAF6CC /* libStrand.dylib in Frameworks */,
-				C39D4DAF1CAF1AAE00DAF6CC /* libInterchangeData.dylib in Frameworks */,
-				C39D4DB01CAF1AAE00DAF6CC /* libOperatingSystem.dylib in Frameworks */,
-				C39D4DB11CAF1AAE00DAF6CC /* libStructuredData.dylib in Frameworks */,
-				C39D4DB21CAF1AAE00DAF6CC /* libCryptoKitten.dylib in Frameworks */,
-				C39D4DB31CAF1AAE00DAF6CC /* libS4.dylib in Frameworks */,
-				C39D4DB41CAF1AAE00DAF6CC /* libHummingbird.dylib in Frameworks */,
-				C39D4DB51CAF1AAE00DAF6CC /* libJSON.dylib in Frameworks */,
-				C39D4DB61CAF1AAE00DAF6CC /* libString.dylib in Frameworks */,
+				C3BF65D61CB17B89003DC375 /* libData.dylib in Frameworks */,
+				C3BF65D71CB17B89003DC375 /* libC7.dylib in Frameworks */,
+				C3BF65D81CB17B89003DC375 /* libStrand.dylib in Frameworks */,
+				C3BF65D91CB17B89003DC375 /* libInterchangeData.dylib in Frameworks */,
+				C3BF65DA1CB17B89003DC375 /* libOperatingSystem.dylib in Frameworks */,
+				C3BF65DB1CB17B89003DC375 /* libStructuredData.dylib in Frameworks */,
+				C3BF65DC1CB17B89003DC375 /* libCryptoKitten.dylib in Frameworks */,
+				C3BF65DD1CB17B89003DC375 /* libS4.dylib in Frameworks */,
+				C3BF65DE1CB17B89003DC375 /* libHummingbird.dylib in Frameworks */,
+				C3BF65DF1CB17B89003DC375 /* libJSON.dylib in Frameworks */,
+				C3BF65E01CB17B89003DC375 /* libString.dylib in Frameworks */,
 				_LinkFileRef_Vapor /* libVapor.dylib in Frameworks */,
-				C39D4DB71CAF1AAE00DAF6CC /* liblibc.dylib in Frameworks */,
+				C3BF65E11CB17B89003DC375 /* liblibc.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -706,19 +704,19 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
-				C39D4DB81CAF1AAE00DAF6CC /* libData.dylib in Frameworks */,
-				C39D4DB91CAF1AAE00DAF6CC /* libC7.dylib in Frameworks */,
-				C39D4DBA1CAF1AAE00DAF6CC /* libStrand.dylib in Frameworks */,
-				C39D4DBB1CAF1AAE00DAF6CC /* libInterchangeData.dylib in Frameworks */,
-				C39D4DBC1CAF1AAE00DAF6CC /* libOperatingSystem.dylib in Frameworks */,
-				C39D4DBD1CAF1AAE00DAF6CC /* libStructuredData.dylib in Frameworks */,
-				C39D4DBE1CAF1AAE00DAF6CC /* libCryptoKitten.dylib in Frameworks */,
-				C39D4DBF1CAF1AAE00DAF6CC /* libS4.dylib in Frameworks */,
-				C39D4DC01CAF1AAE00DAF6CC /* libHummingbird.dylib in Frameworks */,
-				C39D4DC11CAF1AAE00DAF6CC /* libJSON.dylib in Frameworks */,
-				C39D4DC21CAF1AAE00DAF6CC /* libString.dylib in Frameworks */,
-				C39D4DC31CAF1AAE00DAF6CC /* libVapor.dylib in Frameworks */,
-				C39D4DC41CAF1AAE00DAF6CC /* liblibc.dylib in Frameworks */,
+				C3BF65E21CB17B89003DC375 /* libData.dylib in Frameworks */,
+				C3BF65E31CB17B89003DC375 /* libC7.dylib in Frameworks */,
+				C3BF65E41CB17B89003DC375 /* libStrand.dylib in Frameworks */,
+				C3BF65E51CB17B89003DC375 /* libInterchangeData.dylib in Frameworks */,
+				C3BF65E61CB17B89003DC375 /* libOperatingSystem.dylib in Frameworks */,
+				C3BF65E71CB17B89003DC375 /* libStructuredData.dylib in Frameworks */,
+				C3BF65E81CB17B89003DC375 /* libCryptoKitten.dylib in Frameworks */,
+				C3BF65E91CB17B89003DC375 /* libS4.dylib in Frameworks */,
+				C3BF65EA1CB17B89003DC375 /* libHummingbird.dylib in Frameworks */,
+				C3BF65EB1CB17B89003DC375 /* libJSON.dylib in Frameworks */,
+				C3BF65EC1CB17B89003DC375 /* libString.dylib in Frameworks */,
+				C3BF65ED1CB17B89003DC375 /* libVapor.dylib in Frameworks */,
+				C3BF65EE1CB17B89003DC375 /* liblibc.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -726,17 +724,17 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
-				C39D4D961CAF1AAE00DAF6CC /* libData.dylib in Frameworks */,
-				C39D4D971CAF1AAE00DAF6CC /* libC7.dylib in Frameworks */,
-				C39D4D981CAF1AAE00DAF6CC /* libStrand.dylib in Frameworks */,
-				C39D4D991CAF1AAE00DAF6CC /* libInterchangeData.dylib in Frameworks */,
-				C39D4D9A1CAF1AAE00DAF6CC /* libOperatingSystem.dylib in Frameworks */,
-				C39D4D9B1CAF1AAE00DAF6CC /* libStructuredData.dylib in Frameworks */,
-				C39D4D9C1CAF1AAE00DAF6CC /* libCryptoKitten.dylib in Frameworks */,
-				C39D4D9D1CAF1AAE00DAF6CC /* libS4.dylib in Frameworks */,
-				C39D4D9E1CAF1AAE00DAF6CC /* libHummingbird.dylib in Frameworks */,
-				C39D4D9F1CAF1AAE00DAF6CC /* libJSON.dylib in Frameworks */,
-				C39D4DA01CAF1AAE00DAF6CC /* libString.dylib in Frameworks */,
+				C3BF65C01CB17B89003DC375 /* libData.dylib in Frameworks */,
+				C3BF65C11CB17B89003DC375 /* libC7.dylib in Frameworks */,
+				C3BF65C21CB17B89003DC375 /* libStrand.dylib in Frameworks */,
+				C3BF65C31CB17B89003DC375 /* libInterchangeData.dylib in Frameworks */,
+				C3BF65C41CB17B89003DC375 /* libOperatingSystem.dylib in Frameworks */,
+				C3BF65C51CB17B89003DC375 /* libStructuredData.dylib in Frameworks */,
+				C3BF65C61CB17B89003DC375 /* libCryptoKitten.dylib in Frameworks */,
+				C3BF65C71CB17B89003DC375 /* libS4.dylib in Frameworks */,
+				C3BF65C81CB17B89003DC375 /* libHummingbird.dylib in Frameworks */,
+				C3BF65C91CB17B89003DC375 /* libJSON.dylib in Frameworks */,
+				C3BF65CA1CB17B89003DC375 /* libString.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -746,11 +744,11 @@
 		TestProducts_ /* Tests */ = {
 			isa = PBXGroup;
 			children = (
-				"_____Product_C7TestSuite" /* C7.testsuite.xctest */,
-				"_____Product_HummingbirdTestSuite" /* Hummingbird.testsuite.xctest */,
-				"_____Product_S4TestSuite" /* S4.testsuite.xctest */,
-				"_____Product_StructuredDataTestSuite" /* StructuredData.testsuite.xctest */,
-				"_____Product_VaporTestSuite" /* Vapor.testsuite.xctest */,
+				"_____Product_C7TestSuite" /* C7TestSuite.xctest */,
+				"_____Product_HummingbirdTestSuite" /* HummingbirdTestSuite.xctest */,
+				"_____Product_S4TestSuite" /* S4TestSuite.xctest */,
+				"_____Product_StructuredDataTestSuite" /* StructuredDataTestSuite.xctest */,
+				"_____Product_VaporTestSuite" /* VaporTestSuite.xctest */,
 			);
 			name = Tests;
 			sourceTree = "<group>";
@@ -817,7 +815,6 @@
 				"__PBXFileRef_Packages/C7-0.1.12/Sources/AsyncStreamClient.swift" /* AsyncStreamClient.swift */,
 				"__PBXFileRef_Packages/C7-0.1.12/Sources/AsyncStreamServer.swift" /* AsyncStreamServer.swift */,
 				"__PBXFileRef_Packages/C7-0.1.12/Sources/Byte.swift" /* Byte.swift */,
-				"__PBXFileRef_Packages/C7-0.1.12/Sources/C7.swift" /* C7.swift */,
 				"__PBXFileRef_Packages/C7-0.1.12/Sources/CaseInsensitiveString.swift" /* CaseInsensitiveString.swift */,
 				"__PBXFileRef_Packages/C7-0.1.12/Sources/CustomDataStore.swift" /* CustomDataStore.swift */,
 				"__PBXFileRef_Packages/C7-0.1.12/Sources/Data.swift" /* Data.swift */,
@@ -936,54 +933,55 @@
 		"_______Group_S4" /* S4 */ = {
 			isa = PBXGroup;
 			children = (
-				"__PBXFileRef_Packages/S4-0.1.9/Sources/AsyncClient.swift" /* AsyncClient.swift */,
-				"__PBXFileRef_Packages/S4-0.1.9/Sources/AsyncMiddleware.swift" /* AsyncMiddleware.swift */,
-				"__PBXFileRef_Packages/S4-0.1.9/Sources/AsyncResponder.swift" /* AsyncResponder.swift */,
-				"__PBXFileRef_Packages/S4-0.1.9/Sources/AsyncRoute.swift" /* AsyncRoute.swift */,
-				"__PBXFileRef_Packages/S4-0.1.9/Sources/AsyncRouteMatcher.swift" /* AsyncRouteMatcher.swift */,
-				"__PBXFileRef_Packages/S4-0.1.9/Sources/AsyncRouter.swift" /* AsyncRouter.swift */,
-				"__PBXFileRef_Packages/S4-0.1.9/Sources/AsyncServer.swift" /* AsyncServer.swift */,
-				"__PBXFileRef_Packages/S4-0.1.9/Sources/Body.swift" /* Body.swift */,
-				"__PBXFileRef_Packages/S4-0.1.9/Sources/Client.swift" /* Client.swift */,
-				"__PBXFileRef_Packages/S4-0.1.9/Sources/HeaderName.swift" /* HeaderName.swift */,
-				"__PBXFileRef_Packages/S4-0.1.9/Sources/Headers.swift" /* Headers.swift */,
-				"__PBXFileRef_Packages/S4-0.1.9/Sources/HeaderValues.swift" /* HeaderValues.swift */,
-				"__PBXFileRef_Packages/S4-0.1.9/Sources/Message.swift" /* Message.swift */,
-				"__PBXFileRef_Packages/S4-0.1.9/Sources/Method.swift" /* Method.swift */,
-				"__PBXFileRef_Packages/S4-0.1.9/Sources/Middleware.swift" /* Middleware.swift */,
-				"__PBXFileRef_Packages/S4-0.1.9/Sources/Port.swift" /* Port.swift */,
-				"__PBXFileRef_Packages/S4-0.1.9/Sources/Request.swift" /* Request.swift */,
-				"__PBXFileRef_Packages/S4-0.1.9/Sources/RequestConvertible.swift" /* RequestConvertible.swift */,
-				"__PBXFileRef_Packages/S4-0.1.9/Sources/RequestInitializable.swift" /* RequestInitializable.swift */,
-				"__PBXFileRef_Packages/S4-0.1.9/Sources/RequestParser.swift" /* RequestParser.swift */,
-				"__PBXFileRef_Packages/S4-0.1.9/Sources/RequestRepresentable.swift" /* RequestRepresentable.swift */,
-				"__PBXFileRef_Packages/S4-0.1.9/Sources/RequestSerializer.swift" /* RequestSerializer.swift */,
-				"__PBXFileRef_Packages/S4-0.1.9/Sources/Responder.swift" /* Responder.swift */,
-				"__PBXFileRef_Packages/S4-0.1.9/Sources/Response.swift" /* Response.swift */,
-				"__PBXFileRef_Packages/S4-0.1.9/Sources/ResponseConvertible.swift" /* ResponseConvertible.swift */,
-				"__PBXFileRef_Packages/S4-0.1.9/Sources/ResponseInitializable.swift" /* ResponseInitializable.swift */,
-				"__PBXFileRef_Packages/S4-0.1.9/Sources/ResponseParser.swift" /* ResponseParser.swift */,
-				"__PBXFileRef_Packages/S4-0.1.9/Sources/ResponseRepresentable.swift" /* ResponseRepresentable.swift */,
-				"__PBXFileRef_Packages/S4-0.1.9/Sources/ResponseSerializer.swift" /* ResponseSerializer.swift */,
-				"__PBXFileRef_Packages/S4-0.1.9/Sources/Route.swift" /* Route.swift */,
-				"__PBXFileRef_Packages/S4-0.1.9/Sources/RouteMatcher.swift" /* RouteMatcher.swift */,
-				"__PBXFileRef_Packages/S4-0.1.9/Sources/Router.swift" /* Router.swift */,
-				"__PBXFileRef_Packages/S4-0.1.9/Sources/S4.swift" /* S4.swift */,
-				"__PBXFileRef_Packages/S4-0.1.9/Sources/Server.swift" /* Server.swift */,
-				"__PBXFileRef_Packages/S4-0.1.9/Sources/Status.swift" /* Status.swift */,
-				"__PBXFileRef_Packages/S4-0.1.9/Sources/Version.swift" /* Version.swift */,
+				"__PBXFileRef_Packages/S4-0.2.0/Sources/AsyncClient.swift" /* AsyncClient.swift */,
+				"__PBXFileRef_Packages/S4-0.2.0/Sources/AsyncMiddleware.swift" /* AsyncMiddleware.swift */,
+				"__PBXFileRef_Packages/S4-0.2.0/Sources/AsyncResponder.swift" /* AsyncResponder.swift */,
+				"__PBXFileRef_Packages/S4-0.2.0/Sources/AsyncRoute.swift" /* AsyncRoute.swift */,
+				"__PBXFileRef_Packages/S4-0.2.0/Sources/AsyncRouteMatcher.swift" /* AsyncRouteMatcher.swift */,
+				"__PBXFileRef_Packages/S4-0.2.0/Sources/AsyncRouter.swift" /* AsyncRouter.swift */,
+				"__PBXFileRef_Packages/S4-0.2.0/Sources/AsyncServer.swift" /* AsyncServer.swift */,
+				"__PBXFileRef_Packages/S4-0.2.0/Sources/Body.swift" /* Body.swift */,
+				"__PBXFileRef_Packages/S4-0.2.0/Sources/Client.swift" /* Client.swift */,
+				"__PBXFileRef_Packages/S4-0.2.0/Sources/HeaderName.swift" /* HeaderName.swift */,
+				"__PBXFileRef_Packages/S4-0.2.0/Sources/Headers.swift" /* Headers.swift */,
+				"__PBXFileRef_Packages/S4-0.2.0/Sources/HeaderValues.swift" /* HeaderValues.swift */,
+				"__PBXFileRef_Packages/S4-0.2.0/Sources/Message.swift" /* Message.swift */,
+				"__PBXFileRef_Packages/S4-0.2.0/Sources/Method.swift" /* Method.swift */,
+				"__PBXFileRef_Packages/S4-0.2.0/Sources/Middleware.swift" /* Middleware.swift */,
+				"__PBXFileRef_Packages/S4-0.2.0/Sources/Port.swift" /* Port.swift */,
+				"__PBXFileRef_Packages/S4-0.2.0/Sources/Request.swift" /* Request.swift */,
+				"__PBXFileRef_Packages/S4-0.2.0/Sources/RequestConvertible.swift" /* RequestConvertible.swift */,
+				"__PBXFileRef_Packages/S4-0.2.0/Sources/RequestInitializable.swift" /* RequestInitializable.swift */,
+				"__PBXFileRef_Packages/S4-0.2.0/Sources/RequestParser.swift" /* RequestParser.swift */,
+				"__PBXFileRef_Packages/S4-0.2.0/Sources/RequestRepresentable.swift" /* RequestRepresentable.swift */,
+				"__PBXFileRef_Packages/S4-0.2.0/Sources/RequestSerializer.swift" /* RequestSerializer.swift */,
+				"__PBXFileRef_Packages/S4-0.2.0/Sources/Responder.swift" /* Responder.swift */,
+				"__PBXFileRef_Packages/S4-0.2.0/Sources/Response.swift" /* Response.swift */,
+				"__PBXFileRef_Packages/S4-0.2.0/Sources/ResponseConvertible.swift" /* ResponseConvertible.swift */,
+				"__PBXFileRef_Packages/S4-0.2.0/Sources/ResponseInitializable.swift" /* ResponseInitializable.swift */,
+				"__PBXFileRef_Packages/S4-0.2.0/Sources/ResponseParser.swift" /* ResponseParser.swift */,
+				"__PBXFileRef_Packages/S4-0.2.0/Sources/ResponseRepresentable.swift" /* ResponseRepresentable.swift */,
+				"__PBXFileRef_Packages/S4-0.2.0/Sources/ResponseSerializer.swift" /* ResponseSerializer.swift */,
+				"__PBXFileRef_Packages/S4-0.2.0/Sources/Route.swift" /* Route.swift */,
+				"__PBXFileRef_Packages/S4-0.2.0/Sources/RouteMatcher.swift" /* RouteMatcher.swift */,
+				"__PBXFileRef_Packages/S4-0.2.0/Sources/Router.swift" /* Router.swift */,
+				"__PBXFileRef_Packages/S4-0.2.0/Sources/S4.swift" /* S4.swift */,
+				"__PBXFileRef_Packages/S4-0.2.0/Sources/Server.swift" /* Server.swift */,
+				"__PBXFileRef_Packages/S4-0.2.0/Sources/Status.swift" /* Status.swift */,
+				"__PBXFileRef_Packages/S4-0.2.0/Sources/Version.swift" /* Version.swift */,
 			);
 			name = S4;
-			path = "Packages/S4-0.1.9/Sources";
+			path = "Packages/S4-0.2.0/Sources";
 			sourceTree = "<group>";
 		};
 		"_______Group_S4TestSuite" /* S4.testsuite */ = {
 			isa = PBXGroup;
 			children = (
-				"__PBXFileRef_Packages/S4-0.1.9/Tests/S4/ExampleTests.swift" /* ExampleTests.swift */,
+				"__PBXFileRef_Packages/S4-0.2.0/Tests/S4/BodyTests.swift" /* BodyTests.swift */,
+				"__PBXFileRef_Packages/S4-0.2.0/Tests/S4/ExampleTests.swift" /* ExampleTests.swift */,
 			);
 			name = S4.testsuite;
-			path = "Packages/S4-0.1.9/Tests/S4";
+			path = "Packages/S4-0.2.0/Tests/S4";
 			sourceTree = "<group>";
 		};
 		"_______Group_Strand" /* Strand */ = {
@@ -1046,9 +1044,9 @@
 				__PBXFileRef_Sources/Vapor/Node/NodeInitializable.swift /* Node/NodeInitializable.swift */,
 				__PBXFileRef_Sources/Vapor/Process/Process.swift /* Process/Process.swift */,
 				__PBXFileRef_Sources/Vapor/Request/Request.swift /* Request/Request.swift */,
-				C3D92B351CAF36EC0063A0EF /* RequestContent.swift */,
+				__PBXFileRef_Sources/Vapor/Request/RequestContent.swift /* Request/RequestContent.swift */,
 				__PBXFileRef_Sources/Vapor/Response/Response.swift /* Response/Response.swift */,
-				__PBXFileRef_Sources/Vapor/Response/ResponseConvertible.swift /* ResponseRepresentable.swift */,
+				__PBXFileRef_Sources/Vapor/Response/ResponseRepresentable.swift /* Response/ResponseRepresentable.swift */,
 				__PBXFileRef_Sources/Vapor/Router/Branch.swift /* Router/Branch.swift */,
 				__PBXFileRef_Sources/Vapor/Router/BranchRouter.swift /* Router/BranchRouter.swift */,
 				__PBXFileRef_Sources/Vapor/Router/RouterDriver.swift /* Router/RouterDriver.swift */,
@@ -1058,10 +1056,9 @@
 				__PBXFileRef_Sources/Vapor/Routing/DefaultInitializable.swift /* Routing/DefaultInitializable.swift */,
 				__PBXFileRef_Sources/Vapor/Routing/ResourceController.swift /* Routing/ResourceController.swift */,
 				__PBXFileRef_Sources/Vapor/Routing/Route.swift /* Routing/Route.swift */,
+				C3BF65FC1CB18494003DC375 /* Hummingbird+Stream.swift */,
 				__PBXFileRef_Sources/Vapor/Server/Header.swift /* Server/Header.swift */,
-				"__PBXFileRef_Sources/Vapor/Server/Hummingbird+Socket.swift" /* Server/Hummingbird+Socket.swift */,
 				__PBXFileRef_Sources/Vapor/Server/Jeeves.swift /* Server/Jeeves.swift */,
-				__PBXFileRef_Sources/Vapor/Server/Socket.swift /* Server/Socket.swift */,
 				__PBXFileRef_Sources/Vapor/Session/MemorySessionDriver.swift /* Session/MemorySessionDriver.swift */,
 				__PBXFileRef_Sources/Vapor/Session/Session.swift /* Session/Session.swift */,
 				__PBXFileRef_Sources/Vapor/Session/SessionDriver.swift /* Session/SessionDriver.swift */,
@@ -1166,7 +1163,7 @@
 			);
 			name = C7.testsuite;
 			productName = C7TestSuite;
-			productReference = "_____Product_C7TestSuite" /* C7.testsuite.xctest */;
+			productReference = "_____Product_C7TestSuite" /* C7TestSuite.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 		"______Target_CryptoKitten" /* CryptoKitten */ = {
@@ -1263,7 +1260,7 @@
 			);
 			name = Hummingbird.testsuite;
 			productName = HummingbirdTestSuite;
-			productReference = "_____Product_HummingbirdTestSuite" /* Hummingbird.testsuite.xctest */;
+			productReference = "_____Product_HummingbirdTestSuite" /* HummingbirdTestSuite.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 		"______Target_InterchangeData" /* InterchangeData */ = {
@@ -1353,7 +1350,7 @@
 			);
 			name = S4.testsuite;
 			productName = S4TestSuite;
-			productReference = "_____Product_S4TestSuite" /* S4.testsuite.xctest */;
+			productReference = "_____Product_S4TestSuite" /* S4TestSuite.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 		"______Target_Strand" /* Strand */ = {
@@ -1425,7 +1422,7 @@
 			);
 			name = StructuredData.testsuite;
 			productName = StructuredDataTestSuite;
-			productReference = "_____Product_StructuredDataTestSuite" /* StructuredData.testsuite.xctest */;
+			productReference = "_____Product_StructuredDataTestSuite" /* StructuredDataTestSuite.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 		"______Target_Vapor" /* Vapor */ = {
@@ -1509,7 +1506,7 @@
 			);
 			name = Vapor.testsuite;
 			productName = VaporTestSuite;
-			productReference = "_____Product_VaporTestSuite" /* Vapor.testsuite.xctest */;
+			productReference = "_____Product_VaporTestSuite" /* VaporTestSuite.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 		"______Target_libc" /* libc */ = {
@@ -1592,7 +1589,6 @@
 				"__src_cc_ref_Packages/C7-0.1.12/Sources/AsyncStreamClient.swift" /* AsyncStreamClient.swift in Sources */,
 				"__src_cc_ref_Packages/C7-0.1.12/Sources/AsyncStreamServer.swift" /* AsyncStreamServer.swift in Sources */,
 				"__src_cc_ref_Packages/C7-0.1.12/Sources/Byte.swift" /* Byte.swift in Sources */,
-				"__src_cc_ref_Packages/C7-0.1.12/Sources/C7.swift" /* C7.swift in Sources */,
 				"__src_cc_ref_Packages/C7-0.1.12/Sources/CaseInsensitiveString.swift" /* CaseInsensitiveString.swift in Sources */,
 				"__src_cc_ref_Packages/C7-0.1.12/Sources/CustomDataStore.swift" /* CustomDataStore.swift in Sources */,
 				"__src_cc_ref_Packages/C7-0.1.12/Sources/Data.swift" /* Data.swift in Sources */,
@@ -1701,42 +1697,42 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 0;
 			files = (
-				"__src_cc_ref_Packages/S4-0.1.9/Sources/AsyncClient.swift" /* AsyncClient.swift in Sources */,
-				"__src_cc_ref_Packages/S4-0.1.9/Sources/AsyncMiddleware.swift" /* AsyncMiddleware.swift in Sources */,
-				"__src_cc_ref_Packages/S4-0.1.9/Sources/AsyncResponder.swift" /* AsyncResponder.swift in Sources */,
-				"__src_cc_ref_Packages/S4-0.1.9/Sources/AsyncRoute.swift" /* AsyncRoute.swift in Sources */,
-				"__src_cc_ref_Packages/S4-0.1.9/Sources/AsyncRouteMatcher.swift" /* AsyncRouteMatcher.swift in Sources */,
-				"__src_cc_ref_Packages/S4-0.1.9/Sources/AsyncRouter.swift" /* AsyncRouter.swift in Sources */,
-				"__src_cc_ref_Packages/S4-0.1.9/Sources/AsyncServer.swift" /* AsyncServer.swift in Sources */,
-				"__src_cc_ref_Packages/S4-0.1.9/Sources/Body.swift" /* Body.swift in Sources */,
-				"__src_cc_ref_Packages/S4-0.1.9/Sources/Client.swift" /* Client.swift in Sources */,
-				"__src_cc_ref_Packages/S4-0.1.9/Sources/HeaderName.swift" /* HeaderName.swift in Sources */,
-				"__src_cc_ref_Packages/S4-0.1.9/Sources/Headers.swift" /* Headers.swift in Sources */,
-				"__src_cc_ref_Packages/S4-0.1.9/Sources/HeaderValues.swift" /* HeaderValues.swift in Sources */,
-				"__src_cc_ref_Packages/S4-0.1.9/Sources/Message.swift" /* Message.swift in Sources */,
-				"__src_cc_ref_Packages/S4-0.1.9/Sources/Method.swift" /* Method.swift in Sources */,
-				"__src_cc_ref_Packages/S4-0.1.9/Sources/Middleware.swift" /* Middleware.swift in Sources */,
-				"__src_cc_ref_Packages/S4-0.1.9/Sources/Port.swift" /* Port.swift in Sources */,
-				"__src_cc_ref_Packages/S4-0.1.9/Sources/Request.swift" /* Request.swift in Sources */,
-				"__src_cc_ref_Packages/S4-0.1.9/Sources/RequestConvertible.swift" /* RequestConvertible.swift in Sources */,
-				"__src_cc_ref_Packages/S4-0.1.9/Sources/RequestInitializable.swift" /* RequestInitializable.swift in Sources */,
-				"__src_cc_ref_Packages/S4-0.1.9/Sources/RequestParser.swift" /* RequestParser.swift in Sources */,
-				"__src_cc_ref_Packages/S4-0.1.9/Sources/RequestRepresentable.swift" /* RequestRepresentable.swift in Sources */,
-				"__src_cc_ref_Packages/S4-0.1.9/Sources/RequestSerializer.swift" /* RequestSerializer.swift in Sources */,
-				"__src_cc_ref_Packages/S4-0.1.9/Sources/Responder.swift" /* Responder.swift in Sources */,
-				"__src_cc_ref_Packages/S4-0.1.9/Sources/Response.swift" /* Response.swift in Sources */,
-				"__src_cc_ref_Packages/S4-0.1.9/Sources/ResponseConvertible.swift" /* ResponseConvertible.swift in Sources */,
-				"__src_cc_ref_Packages/S4-0.1.9/Sources/ResponseInitializable.swift" /* ResponseInitializable.swift in Sources */,
-				"__src_cc_ref_Packages/S4-0.1.9/Sources/ResponseParser.swift" /* ResponseParser.swift in Sources */,
-				"__src_cc_ref_Packages/S4-0.1.9/Sources/ResponseRepresentable.swift" /* ResponseRepresentable.swift in Sources */,
-				"__src_cc_ref_Packages/S4-0.1.9/Sources/ResponseSerializer.swift" /* ResponseSerializer.swift in Sources */,
-				"__src_cc_ref_Packages/S4-0.1.9/Sources/Route.swift" /* Route.swift in Sources */,
-				"__src_cc_ref_Packages/S4-0.1.9/Sources/RouteMatcher.swift" /* RouteMatcher.swift in Sources */,
-				"__src_cc_ref_Packages/S4-0.1.9/Sources/Router.swift" /* Router.swift in Sources */,
-				"__src_cc_ref_Packages/S4-0.1.9/Sources/S4.swift" /* S4.swift in Sources */,
-				"__src_cc_ref_Packages/S4-0.1.9/Sources/Server.swift" /* Server.swift in Sources */,
-				"__src_cc_ref_Packages/S4-0.1.9/Sources/Status.swift" /* Status.swift in Sources */,
-				"__src_cc_ref_Packages/S4-0.1.9/Sources/Version.swift" /* Version.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.2.0/Sources/AsyncClient.swift" /* AsyncClient.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.2.0/Sources/AsyncMiddleware.swift" /* AsyncMiddleware.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.2.0/Sources/AsyncResponder.swift" /* AsyncResponder.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.2.0/Sources/AsyncRoute.swift" /* AsyncRoute.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.2.0/Sources/AsyncRouteMatcher.swift" /* AsyncRouteMatcher.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.2.0/Sources/AsyncRouter.swift" /* AsyncRouter.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.2.0/Sources/AsyncServer.swift" /* AsyncServer.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.2.0/Sources/Body.swift" /* Body.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.2.0/Sources/Client.swift" /* Client.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.2.0/Sources/HeaderName.swift" /* HeaderName.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.2.0/Sources/Headers.swift" /* Headers.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.2.0/Sources/HeaderValues.swift" /* HeaderValues.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.2.0/Sources/Message.swift" /* Message.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.2.0/Sources/Method.swift" /* Method.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.2.0/Sources/Middleware.swift" /* Middleware.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.2.0/Sources/Port.swift" /* Port.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.2.0/Sources/Request.swift" /* Request.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.2.0/Sources/RequestConvertible.swift" /* RequestConvertible.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.2.0/Sources/RequestInitializable.swift" /* RequestInitializable.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.2.0/Sources/RequestParser.swift" /* RequestParser.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.2.0/Sources/RequestRepresentable.swift" /* RequestRepresentable.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.2.0/Sources/RequestSerializer.swift" /* RequestSerializer.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.2.0/Sources/Responder.swift" /* Responder.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.2.0/Sources/Response.swift" /* Response.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.2.0/Sources/ResponseConvertible.swift" /* ResponseConvertible.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.2.0/Sources/ResponseInitializable.swift" /* ResponseInitializable.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.2.0/Sources/ResponseParser.swift" /* ResponseParser.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.2.0/Sources/ResponseRepresentable.swift" /* ResponseRepresentable.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.2.0/Sources/ResponseSerializer.swift" /* ResponseSerializer.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.2.0/Sources/Route.swift" /* Route.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.2.0/Sources/RouteMatcher.swift" /* RouteMatcher.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.2.0/Sources/Router.swift" /* Router.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.2.0/Sources/S4.swift" /* S4.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.2.0/Sources/Server.swift" /* Server.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.2.0/Sources/Status.swift" /* Status.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.2.0/Sources/Version.swift" /* Version.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1744,7 +1740,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 0;
 			files = (
-				"__src_cc_ref_Packages/S4-0.1.9/Tests/S4/ExampleTests.swift" /* ExampleTests.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.2.0/Tests/S4/BodyTests.swift" /* BodyTests.swift in Sources */,
+				"__src_cc_ref_Packages/S4-0.2.0/Tests/S4/ExampleTests.swift" /* ExampleTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1798,16 +1795,17 @@
 				__src_cc_ref_Sources/Vapor/Hash/SHA256Hasher.swift /* Hash/SHA256Hasher.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/JSON/JSON.swift /* JSON/JSON.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/Log/Log.swift /* Log/Log.swift in Sources */,
-				C3D92B361CAF36EC0063A0EF /* RequestContent.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/Log/LogDriver.swift /* Log/LogDriver.swift in Sources */,
+				C3BF65FD1CB18494003DC375 /* Hummingbird+Stream.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/Middleware/AbortMiddleware.swift /* Middleware/AbortMiddleware.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/Middleware/Middleware.swift /* Middleware/Middleware.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/Node/Node.swift /* Node/Node.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/Node/NodeInitializable.swift /* Node/NodeInitializable.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/Process/Process.swift /* Process/Process.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/Request/Request.swift /* Request/Request.swift in Sources */,
+				__src_cc_ref_Sources/Vapor/Request/RequestContent.swift /* Request/RequestContent.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/Response/Response.swift /* Response/Response.swift in Sources */,
-				__src_cc_ref_Sources/Vapor/Response/ResponseConvertible.swift /* ResponseRepresentable.swift in Sources */,
+				__src_cc_ref_Sources/Vapor/Response/ResponseRepresentable.swift /* Response/ResponseRepresentable.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/Router/Branch.swift /* Router/Branch.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/Router/BranchRouter.swift /* Router/BranchRouter.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/Router/RouterDriver.swift /* Router/RouterDriver.swift in Sources */,
@@ -1818,9 +1816,7 @@
 				__src_cc_ref_Sources/Vapor/Routing/ResourceController.swift /* Routing/ResourceController.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/Routing/Route.swift /* Routing/Route.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/Server/Header.swift /* Server/Header.swift in Sources */,
-				"__src_cc_ref_Sources/Vapor/Server/Hummingbird+Socket.swift" /* Server/Hummingbird+Socket.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/Server/Jeeves.swift /* Server/Jeeves.swift in Sources */,
-				__src_cc_ref_Sources/Vapor/Server/Socket.swift /* Server/Socket.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/Session/MemorySessionDriver.swift /* Session/MemorySessionDriver.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/Session/Session.swift /* Session/Session.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/Session/SessionDriver.swift /* Session/SessionDriver.swift in Sources */,
@@ -1881,67 +1877,67 @@
 		__Dependency_C7 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_C7" /* C7 */;
-			targetProxy = C39D4DC61CAF1AAE00DAF6CC /* PBXContainerItemProxy */;
+			targetProxy = C3BF65F01CB17B89003DC375 /* PBXContainerItemProxy */;
 		};
 		__Dependency_CryptoKitten /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_CryptoKitten" /* CryptoKitten */;
-			targetProxy = C39D4DCB1CAF1AAE00DAF6CC /* PBXContainerItemProxy */;
+			targetProxy = C3BF65F51CB17B89003DC375 /* PBXContainerItemProxy */;
 		};
 		__Dependency_Data /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_Data" /* Data */;
-			targetProxy = C39D4DC51CAF1AAE00DAF6CC /* PBXContainerItemProxy */;
+			targetProxy = C3BF65EF1CB17B89003DC375 /* PBXContainerItemProxy */;
 		};
 		__Dependency_Hummingbird /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_Hummingbird" /* Hummingbird */;
-			targetProxy = C39D4DCD1CAF1AAE00DAF6CC /* PBXContainerItemProxy */;
+			targetProxy = C3BF65F71CB17B89003DC375 /* PBXContainerItemProxy */;
 		};
 		__Dependency_InterchangeData /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_InterchangeData" /* InterchangeData */;
-			targetProxy = C39D4DC91CAF1AAE00DAF6CC /* PBXContainerItemProxy */;
+			targetProxy = C3BF65F31CB17B89003DC375 /* PBXContainerItemProxy */;
 		};
 		__Dependency_JSON /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_JSON" /* JSON */;
-			targetProxy = C39D4DCE1CAF1AAE00DAF6CC /* PBXContainerItemProxy */;
+			targetProxy = C3BF65F81CB17B89003DC375 /* PBXContainerItemProxy */;
 		};
 		__Dependency_OperatingSystem /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_OperatingSystem" /* OperatingSystem */;
-			targetProxy = C39D4DC71CAF1AAE00DAF6CC /* PBXContainerItemProxy */;
+			targetProxy = C3BF65F11CB17B89003DC375 /* PBXContainerItemProxy */;
 		};
 		__Dependency_S4 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_S4" /* S4 */;
-			targetProxy = C39D4DCC1CAF1AAE00DAF6CC /* PBXContainerItemProxy */;
+			targetProxy = C3BF65F61CB17B89003DC375 /* PBXContainerItemProxy */;
 		};
 		__Dependency_Strand /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_Strand" /* Strand */;
-			targetProxy = C39D4DC81CAF1AAE00DAF6CC /* PBXContainerItemProxy */;
+			targetProxy = C3BF65F21CB17B89003DC375 /* PBXContainerItemProxy */;
 		};
 		__Dependency_String /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_String" /* String */;
-			targetProxy = C39D4DCF1CAF1AAE00DAF6CC /* PBXContainerItemProxy */;
+			targetProxy = C3BF65F91CB17B89003DC375 /* PBXContainerItemProxy */;
 		};
 		__Dependency_StructuredData /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_StructuredData" /* StructuredData */;
-			targetProxy = C39D4DCA1CAF1AAE00DAF6CC /* PBXContainerItemProxy */;
+			targetProxy = C3BF65F41CB17B89003DC375 /* PBXContainerItemProxy */;
 		};
 		__Dependency_Vapor /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_Vapor" /* Vapor */;
-			targetProxy = C39D4DD01CAF1AAE00DAF6CC /* PBXContainerItemProxy */;
+			targetProxy = C3BF65FA1CB17B89003DC375 /* PBXContainerItemProxy */;
 		};
 		__Dependency_libc /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_libc" /* libc */;
-			targetProxy = C39D4DD11CAF1AAE00DAF6CC /* PBXContainerItemProxy */;
+			targetProxy = C3BF65FB1CB17B89003DC375 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
