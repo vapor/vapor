@@ -79,6 +79,7 @@
 		C3BF66431CB190B6003DC375 /* libString.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_String" /* libString.dylib */; };
 		C3BF66441CB190B6003DC375 /* libVapor.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Vapor" /* libVapor.dylib */; };
 		C3BF66451CB190B6003DC375 /* liblibc.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_libc" /* liblibc.dylib */; };
+		C3BF66551CB19DEF003DC375 /* Vapor+Stream.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3BF66541CB19DEF003DC375 /* Vapor+Stream.swift */; };
 		_LinkFileRef_C7 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
 		_LinkFileRef_CryptoKitten /* libCryptoKitten.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoKitten" /* libCryptoKitten.dylib */; };
 		_LinkFileRef_Data /* libData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Data" /* libData.dylib */; };
@@ -209,9 +210,9 @@
 		__src_cc_ref_Sources/Vapor/Routing/DefaultInitializable.swift /* Routing/DefaultInitializable.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Routing/DefaultInitializable.swift /* Routing/DefaultInitializable.swift */; };
 		__src_cc_ref_Sources/Vapor/Routing/ResourceController.swift /* Routing/ResourceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Routing/ResourceController.swift /* Routing/ResourceController.swift */; };
 		__src_cc_ref_Sources/Vapor/Routing/Route.swift /* Routing/Route.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Routing/Route.swift /* Routing/Route.swift */; };
-		__src_cc_ref_Sources/Vapor/Server/HummingbirdHeader.swift /* Server/HummingbirdHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Server/HummingbirdHeader.swift /* Server/HummingbirdHeader.swift */; };
+		__src_cc_ref_Sources/Vapor/Server/HummingbirdHeader.swift /* StreamHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Server/HummingbirdHeader.swift /* StreamHeader.swift */; };
 		__src_cc_ref_Sources/Vapor/Server/HummingbirdServer.swift /* Server/HummingbirdServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Server/HummingbirdServer.swift /* Server/HummingbirdServer.swift */; };
-		__src_cc_ref_Sources/Vapor/Server/HummingbirdStream.swift /* Server/HummingbirdStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Server/HummingbirdStream.swift /* Server/HummingbirdStream.swift */; };
+		__src_cc_ref_Sources/Vapor/Server/HummingbirdStream.swift /* Hummingbird+Stream.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Server/HummingbirdStream.swift /* Hummingbird+Stream.swift */; };
 		__src_cc_ref_Sources/Vapor/Session/MemorySessionDriver.swift /* Session/MemorySessionDriver.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Session/MemorySessionDriver.swift /* Session/MemorySessionDriver.swift */; };
 		__src_cc_ref_Sources/Vapor/Session/Session.swift /* Session/Session.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Session/Session.swift /* Session/Session.swift */; };
 		__src_cc_ref_Sources/Vapor/Session/SessionDriver.swift /* Session/SessionDriver.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Session/SessionDriver.swift /* Session/SessionDriver.swift */; };
@@ -338,6 +339,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		C3BF66541CB19DEF003DC375 /* Vapor+Stream.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "Vapor+Stream.swift"; path = "Server/Vapor+Stream.swift"; sourceTree = "<group>"; };
 		__PBXFileRef_Package.swift /* Package.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Package.swift; path = /Users/tanner/Developer/vapor/vapor/Package.swift; sourceTree = "<group>"; };
 		"__PBXFileRef_Packages/C7-0.1.12/Sources/AsyncStream.swift" /* AsyncStream.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncStream.swift; sourceTree = "<group>"; };
 		"__PBXFileRef_Packages/C7-0.1.12/Sources/AsyncStreamClient.swift" /* AsyncStreamClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncStreamClient.swift; sourceTree = "<group>"; };
@@ -456,9 +458,9 @@
 		__PBXFileRef_Sources/Vapor/Routing/DefaultInitializable.swift /* Routing/DefaultInitializable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Routing/DefaultInitializable.swift; sourceTree = "<group>"; };
 		__PBXFileRef_Sources/Vapor/Routing/ResourceController.swift /* Routing/ResourceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Routing/ResourceController.swift; sourceTree = "<group>"; };
 		__PBXFileRef_Sources/Vapor/Routing/Route.swift /* Routing/Route.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Routing/Route.swift; sourceTree = "<group>"; };
-		__PBXFileRef_Sources/Vapor/Server/HummingbirdHeader.swift /* Server/HummingbirdHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Server/HummingbirdHeader.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Sources/Vapor/Server/HummingbirdHeader.swift /* StreamHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = StreamHeader.swift; path = Server/StreamHeader.swift; sourceTree = "<group>"; };
 		__PBXFileRef_Sources/Vapor/Server/HummingbirdServer.swift /* Server/HummingbirdServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Server/HummingbirdServer.swift; sourceTree = "<group>"; };
-		__PBXFileRef_Sources/Vapor/Server/HummingbirdStream.swift /* Server/HummingbirdStream.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Server/HummingbirdStream.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Sources/Vapor/Server/HummingbirdStream.swift /* Hummingbird+Stream.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "Hummingbird+Stream.swift"; path = "Server/Hummingbird+Stream.swift"; sourceTree = "<group>"; };
 		__PBXFileRef_Sources/Vapor/Session/MemorySessionDriver.swift /* Session/MemorySessionDriver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Session/MemorySessionDriver.swift; sourceTree = "<group>"; };
 		__PBXFileRef_Sources/Vapor/Session/Session.swift /* Session/Session.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Session/Session.swift; sourceTree = "<group>"; };
 		__PBXFileRef_Sources/Vapor/Session/SessionDriver.swift /* Session/SessionDriver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Session/SessionDriver.swift; sourceTree = "<group>"; };
@@ -1054,9 +1056,10 @@
 				__PBXFileRef_Sources/Vapor/Routing/DefaultInitializable.swift /* Routing/DefaultInitializable.swift */,
 				__PBXFileRef_Sources/Vapor/Routing/ResourceController.swift /* Routing/ResourceController.swift */,
 				__PBXFileRef_Sources/Vapor/Routing/Route.swift /* Routing/Route.swift */,
-				__PBXFileRef_Sources/Vapor/Server/HummingbirdHeader.swift /* Server/HummingbirdHeader.swift */,
+				__PBXFileRef_Sources/Vapor/Server/HummingbirdHeader.swift /* StreamHeader.swift */,
+				C3BF66541CB19DEF003DC375 /* Vapor+Stream.swift */,
 				__PBXFileRef_Sources/Vapor/Server/HummingbirdServer.swift /* Server/HummingbirdServer.swift */,
-				__PBXFileRef_Sources/Vapor/Server/HummingbirdStream.swift /* Server/HummingbirdStream.swift */,
+				__PBXFileRef_Sources/Vapor/Server/HummingbirdStream.swift /* Hummingbird+Stream.swift */,
 				__PBXFileRef_Sources/Vapor/Session/MemorySessionDriver.swift /* Session/MemorySessionDriver.swift */,
 				__PBXFileRef_Sources/Vapor/Session/Session.swift /* Session/Session.swift */,
 				__PBXFileRef_Sources/Vapor/Session/SessionDriver.swift /* Session/SessionDriver.swift */,
@@ -1428,7 +1431,6 @@
 			buildPhases = (
 				CompilePhase_Vapor /* Sources */,
 				"___LinkPhase_Vapor" /* Frameworks */,
-				C3BF66531CB195F1003DC375 /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -1577,22 +1579,6 @@
 			);
 		};
 /* End PBXProject section */
-
-/* Begin PBXShellScriptBuildPhase section */
-		C3BF66531CB195F1003DC375 /* ShellScript */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "if which swiftlint >/dev/null; then\n    swiftlint\nelse\n    echo \"warning: SwiftLint not installed, download from https://github.com/realm/SwiftLint\"\nfi";
-		};
-/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		CompilePhase_C7 /* Sources */ = {
@@ -1828,9 +1814,9 @@
 				__src_cc_ref_Sources/Vapor/Routing/DefaultInitializable.swift /* Routing/DefaultInitializable.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/Routing/ResourceController.swift /* Routing/ResourceController.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/Routing/Route.swift /* Routing/Route.swift in Sources */,
-				__src_cc_ref_Sources/Vapor/Server/HummingbirdHeader.swift /* Server/HummingbirdHeader.swift in Sources */,
+				__src_cc_ref_Sources/Vapor/Server/HummingbirdHeader.swift /* StreamHeader.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/Server/HummingbirdServer.swift /* Server/HummingbirdServer.swift in Sources */,
-				__src_cc_ref_Sources/Vapor/Server/HummingbirdStream.swift /* Server/HummingbirdStream.swift in Sources */,
+				__src_cc_ref_Sources/Vapor/Server/HummingbirdStream.swift /* Hummingbird+Stream.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/Session/MemorySessionDriver.swift /* Session/MemorySessionDriver.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/Session/Session.swift /* Session/Session.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/Session/SessionDriver.swift /* Session/SessionDriver.swift in Sources */,
@@ -1838,6 +1824,7 @@
 				__src_cc_ref_Sources/Vapor/Utilities/Dispatch.swift /* Utilities/Dispatch.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/Utilities/Lock.swift /* Utilities/Lock.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/Utilities/ThreadSafeStore.swift /* Utilities/ThreadSafeStore.swift in Sources */,
+				C3BF66551CB19DEF003DC375 /* Vapor+Stream.swift in Sources */,
 				"__src_cc_ref_Sources/Vapor/Utilities/Vapor+S4.swift" /* Utilities/Vapor+S4.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/View/RenderDriver.swift /* View/RenderDriver.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/View/View.swift /* View/View.swift in Sources */,

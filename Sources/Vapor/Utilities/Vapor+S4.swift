@@ -7,8 +7,7 @@ public typealias Stream = C7.Stream
 
 public typealias URI = S4.URI
 
-public typealias Headers = S4.Headers
-extension Headers {
+extension S4.Headers {
     public typealias Values = S4.HeaderValues
     public typealias Key = C7.CaseInsensitiveString
 }
@@ -17,12 +16,15 @@ public typealias Request = S4.Request
 extension Request {
     public typealias Method = S4.Method
     public typealias Body = S4.Body
-
+    public typealias Headers = S4.Headers
 }
+
 
 public typealias Response = S4.Response
 extension Response {
     public typealias Status = S4.Status
+    public typealias Body = S4.Body
+    public typealias Headers = S4.Headers
 }
 
 public typealias Server = S4.Server

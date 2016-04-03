@@ -273,7 +273,7 @@ extension Application: Responder {
             response = Response(error: error)
         }
 
-        response.headers["Date"] = Headers.Values(Response.date)
+        response.headers["Date"] = Response.Headers.Values(Response.date)
 
         return response
     }
