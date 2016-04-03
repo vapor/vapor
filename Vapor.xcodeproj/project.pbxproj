@@ -199,7 +199,7 @@
 		__src_cc_ref_Sources/Vapor/Process/Process.swift /* Process/Process.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Process/Process.swift /* Process/Process.swift */; };
 		__src_cc_ref_Sources/Vapor/Request/Request.swift /* Request/Request.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Request/Request.swift /* Request/Request.swift */; };
 		__src_cc_ref_Sources/Vapor/Response/Response.swift /* Response/Response.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Response/Response.swift /* Response/Response.swift */; };
-		__src_cc_ref_Sources/Vapor/Response/ResponseConvertible.swift /* Response/ResponseConvertible.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Response/ResponseConvertible.swift /* Response/ResponseConvertible.swift */; };
+		__src_cc_ref_Sources/Vapor/Response/ResponseConvertible.swift /* ResponseRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Response/ResponseConvertible.swift /* ResponseRepresentable.swift */; };
 		__src_cc_ref_Sources/Vapor/Router/Branch.swift /* Router/Branch.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Router/Branch.swift /* Router/Branch.swift */; };
 		__src_cc_ref_Sources/Vapor/Router/BranchRouter.swift /* Router/BranchRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Router/BranchRouter.swift /* Router/BranchRouter.swift */; };
 		__src_cc_ref_Sources/Vapor/Router/RouterDriver.swift /* Router/RouterDriver.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Router/RouterDriver.swift /* Router/RouterDriver.swift */; };
@@ -448,7 +448,7 @@
 		__PBXFileRef_Sources/Vapor/Process/Process.swift /* Process/Process.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Process/Process.swift; sourceTree = "<group>"; };
 		__PBXFileRef_Sources/Vapor/Request/Request.swift /* Request/Request.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Request/Request.swift; sourceTree = "<group>"; };
 		__PBXFileRef_Sources/Vapor/Response/Response.swift /* Response/Response.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Response/Response.swift; sourceTree = "<group>"; };
-		__PBXFileRef_Sources/Vapor/Response/ResponseConvertible.swift /* Response/ResponseConvertible.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Response/ResponseConvertible.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Sources/Vapor/Response/ResponseConvertible.swift /* ResponseRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ResponseRepresentable.swift; path = Response/ResponseRepresentable.swift; sourceTree = "<group>"; };
 		__PBXFileRef_Sources/Vapor/Router/Branch.swift /* Router/Branch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Router/Branch.swift; sourceTree = "<group>"; };
 		__PBXFileRef_Sources/Vapor/Router/BranchRouter.swift /* Router/BranchRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Router/BranchRouter.swift; sourceTree = "<group>"; };
 		__PBXFileRef_Sources/Vapor/Router/RouterDriver.swift /* Router/RouterDriver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Router/RouterDriver.swift; sourceTree = "<group>"; };
@@ -1048,7 +1048,7 @@
 				__PBXFileRef_Sources/Vapor/Request/Request.swift /* Request/Request.swift */,
 				C3D92B351CAF36EC0063A0EF /* RequestContent.swift */,
 				__PBXFileRef_Sources/Vapor/Response/Response.swift /* Response/Response.swift */,
-				__PBXFileRef_Sources/Vapor/Response/ResponseConvertible.swift /* Response/ResponseConvertible.swift */,
+				__PBXFileRef_Sources/Vapor/Response/ResponseConvertible.swift /* ResponseRepresentable.swift */,
 				__PBXFileRef_Sources/Vapor/Router/Branch.swift /* Router/Branch.swift */,
 				__PBXFileRef_Sources/Vapor/Router/BranchRouter.swift /* Router/BranchRouter.swift */,
 				__PBXFileRef_Sources/Vapor/Router/RouterDriver.swift /* Router/RouterDriver.swift */,
@@ -1807,7 +1807,7 @@
 				__src_cc_ref_Sources/Vapor/Process/Process.swift /* Process/Process.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/Request/Request.swift /* Request/Request.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/Response/Response.swift /* Response/Response.swift in Sources */,
-				__src_cc_ref_Sources/Vapor/Response/ResponseConvertible.swift /* Response/ResponseConvertible.swift in Sources */,
+				__src_cc_ref_Sources/Vapor/Response/ResponseConvertible.swift /* ResponseRepresentable.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/Router/Branch.swift /* Router/Branch.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/Router/BranchRouter.swift /* Router/BranchRouter.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/Router/RouterDriver.swift /* Router/RouterDriver.swift in Sources */,

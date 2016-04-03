@@ -3,7 +3,7 @@
     can be returned to generic Vapor closures or route handlers.
 
     ```app.get("/") { request in
-        return object //must be of type `ResponseConvertible`
+        return object //must be of type `ResponseRepresentable`
     }```
 */
 public protocol ResponseRepresentable {
