@@ -18,7 +18,6 @@
     This file should be included in the `.gitignore` by default so that
     sensitive information does not get added to version control.
 */
-
 public class Config {
     //The internal store of configuration options
     //backed by `Json`
@@ -182,7 +181,7 @@ public class Config {
 
             let name: String
 
-            if (fileName == ".env.json") {
+            if fileName == ".env.json" {
                 name = ".env"
             } else if fileName.hasSuffix(".json"), let value = fileName.split(".").first {
                 name = value
