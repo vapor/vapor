@@ -216,7 +216,6 @@
 		__src_cc_ref_Sources/Vapor/Session/Session.swift /* Session/Session.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Session/Session.swift /* Session/Session.swift */; };
 		__src_cc_ref_Sources/Vapor/Session/SessionDriver.swift /* Session/SessionDriver.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Session/SessionDriver.swift /* Session/SessionDriver.swift */; };
 		__src_cc_ref_Sources/Vapor/Session/SessionMiddleware.swift /* Session/SessionMiddleware.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Session/SessionMiddleware.swift /* Session/SessionMiddleware.swift */; };
-		"__src_cc_ref_Sources/Vapor/Utilities/Character+Extensions.swift" /* Utilities/Character+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Sources/Vapor/Utilities/Character+Extensions.swift" /* Utilities/Character+Extensions.swift */; };
 		__src_cc_ref_Sources/Vapor/Utilities/Dispatch.swift /* Utilities/Dispatch.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Utilities/Dispatch.swift /* Utilities/Dispatch.swift */; };
 		__src_cc_ref_Sources/Vapor/Utilities/Lock.swift /* Utilities/Lock.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Utilities/Lock.swift /* Utilities/Lock.swift */; };
 		__src_cc_ref_Sources/Vapor/Utilities/ThreadSafeStore.swift /* Utilities/ThreadSafeStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Utilities/ThreadSafeStore.swift /* Utilities/ThreadSafeStore.swift */; };
@@ -464,7 +463,6 @@
 		__PBXFileRef_Sources/Vapor/Session/Session.swift /* Session/Session.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Session/Session.swift; sourceTree = "<group>"; };
 		__PBXFileRef_Sources/Vapor/Session/SessionDriver.swift /* Session/SessionDriver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Session/SessionDriver.swift; sourceTree = "<group>"; };
 		__PBXFileRef_Sources/Vapor/Session/SessionMiddleware.swift /* Session/SessionMiddleware.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Session/SessionMiddleware.swift; sourceTree = "<group>"; };
-		"__PBXFileRef_Sources/Vapor/Utilities/Character+Extensions.swift" /* Utilities/Character+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Utilities/Character+Extensions.swift"; sourceTree = "<group>"; };
 		__PBXFileRef_Sources/Vapor/Utilities/Dispatch.swift /* Utilities/Dispatch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utilities/Dispatch.swift; sourceTree = "<group>"; };
 		__PBXFileRef_Sources/Vapor/Utilities/Lock.swift /* Utilities/Lock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utilities/Lock.swift; sourceTree = "<group>"; };
 		__PBXFileRef_Sources/Vapor/Utilities/ThreadSafeStore.swift /* Utilities/ThreadSafeStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utilities/ThreadSafeStore.swift; sourceTree = "<group>"; };
@@ -1063,7 +1061,6 @@
 				__PBXFileRef_Sources/Vapor/Session/Session.swift /* Session/Session.swift */,
 				__PBXFileRef_Sources/Vapor/Session/SessionDriver.swift /* Session/SessionDriver.swift */,
 				__PBXFileRef_Sources/Vapor/Session/SessionMiddleware.swift /* Session/SessionMiddleware.swift */,
-				"__PBXFileRef_Sources/Vapor/Utilities/Character+Extensions.swift" /* Utilities/Character+Extensions.swift */,
 				__PBXFileRef_Sources/Vapor/Utilities/Dispatch.swift /* Utilities/Dispatch.swift */,
 				__PBXFileRef_Sources/Vapor/Utilities/Lock.swift /* Utilities/Lock.swift */,
 				__PBXFileRef_Sources/Vapor/Utilities/ThreadSafeStore.swift /* Utilities/ThreadSafeStore.swift */,
@@ -1838,7 +1835,6 @@
 				__src_cc_ref_Sources/Vapor/Session/Session.swift /* Session/Session.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/Session/SessionDriver.swift /* Session/SessionDriver.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/Session/SessionMiddleware.swift /* Session/SessionMiddleware.swift in Sources */,
-				"__src_cc_ref_Sources/Vapor/Utilities/Character+Extensions.swift" /* Utilities/Character+Extensions.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/Utilities/Dispatch.swift /* Utilities/Dispatch.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/Utilities/Lock.swift /* Utilities/Lock.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/Utilities/ThreadSafeStore.swift /* Utilities/ThreadSafeStore.swift in Sources */,

@@ -5,6 +5,7 @@ import Hummingbird
 internal struct HummingbirdHeader {
     enum Error: ErrorProtocol {
         case InvalidHeaderKeyPair
+        case InvalidComponents
     }
 
     let requestLine: RequestLine
@@ -71,9 +72,7 @@ extension HummingbirdHeader {
     // https://www.w3.org/Protocols/rfc2616/rfc2616-sec5.html
     // Request-Line   = Method SP Request-URI SP HTTP-Version CRLF
     internal struct RequestLine {
-        enum Error: ErrorProtocol {
-            case InvalidComponents
-        }
+
 
         let method: String
         let uri: String

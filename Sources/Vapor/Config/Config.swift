@@ -1,4 +1,3 @@
-
 /**
     Parses and interprets configuration files
     included under Config in the working directory.

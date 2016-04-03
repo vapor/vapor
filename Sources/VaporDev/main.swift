@@ -27,10 +27,7 @@ app.post("jsondata") { request in
 
 //MARK: Type safe routing
 
-let i = Int.self
-let s = String.self
-
-app.get("test", i, s) { request, int, string in
+app.get("test", Int.self, String.self) { request, int, string in
     return Json([
         "message": "Int \(int) String \(string)"
     ])

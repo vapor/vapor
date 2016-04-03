@@ -18,7 +18,10 @@ public class AbortMiddleware: Middleware {
             } catch Abort.internalServerError {
                 return try self.errorResponse(.internalServerError, message: "Something went wrong")
             } catch Abort.invalidParameter(let name, let type) {
-                return try self.errorResponse(.badRequest, message: "Invalid request. Expected parameter \(name) to be type \(type)")
+                return try self.errorResponse(
+                    .badRequest,
+                    message: "Invalid request. Expected parameter \(name) to be type \(type)"
+                )
             } catch Abort.custom(let status, let message) {
                 return try self.errorResponse(status, message: message)
             }

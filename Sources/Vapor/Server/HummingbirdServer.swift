@@ -6,7 +6,18 @@
 
 import Hummingbird
 
-private let HeaderEndOfLine = "\r\n"
+private let headerEndOfLine = "\r\n"
+private let newLine: Byte = 10
+private let carriageReturn: Byte = 13
+private let minimumValidAsciiCharacter = carriageReturn + 1
+
+// MARK: Byte => Character
+extension Character {
+    init(_ byte: Byte) {
+        let scalar = UnicodeScalar(byte)
+        self.init(scalar)
+    }
+}
 
 public class HummingbirdServer: Server {
 
@@ -88,7 +99,7 @@ extension Response {
 extension Hummingbird.Socket {
 
     func writeHeader(line line: String) throws {
-        try write(line + HeaderEndOfLine)
+        try write(line + headerEndOfLine)
     }
 
     func writeHeader(key key: String, val: String) throws {
@@ -111,11 +122,11 @@ extension Hummingbird.Socket {
         var line: String = ""
         func append(byte: Byte) {
             // Possible minimum bad name here because we expect `>=`. Or make minimum '14'
-            guard byte >= MinimumValidAsciiCharacter else { return }
+            guard byte >= minimumValidAsciiCharacter else { return }
             line.append(Character(byte))
         }
 
-        while let next = try nextByte() where next != NewLine {
+        while let next = try nextByte() where next != newLine {
             append(next)
         }
 
@@ -139,7 +150,7 @@ extension Hummingbird.Socket {
                 try writeHeader(key: key.string, val: value)
             }
         }
-        try write(HeaderEndOfLine)
+        try write(headerEndOfLine)
 
         switch response.body {
         case .buffer(let data):

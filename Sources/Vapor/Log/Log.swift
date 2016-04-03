@@ -120,6 +120,6 @@ public class Log {
     }
 }
 
-public func ==(lhs: Log.Level, rhs: Log.Level) -> Bool {
+public func == (lhs: Log.Level, rhs: Log.Level) -> Bool {
     return lhs.description == rhs.description
 }

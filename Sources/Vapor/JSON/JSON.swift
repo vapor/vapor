@@ -1,7 +1,13 @@
 import JSON
 
 public enum Json {
-    case null, bool(Bool), double(Double), int(Int), string(String), array([Json]), object([String: Json])
+    case null
+    case bool(Bool)
+    case double(Double)
+    case int(Int)
+    case string(String)
+    case array([Json])
+    case object([String: Json])
 
     public init(_ value: JSON) {
         switch value {
