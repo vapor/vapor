@@ -27,11 +27,16 @@ extension Request {
 
     ///Browser stored data sent with every server request
     public var cookies: [String: String] {
-        guard let cookies = headers["Cookie"].first else {
-            return [:]
+        var cookies: [String: String] = [:]
+
+        for cookieString in headers["Cookie"] {
+            for (key, val) in parseCookies(cookieString) {
+                cookies[key] = val
+            }
         }
 
-        return parseCookies(cookies)
+        return cookies
+
     }
 
     public init(method: Method = .get, path: String, host: String? = nil, body: Data = []) {

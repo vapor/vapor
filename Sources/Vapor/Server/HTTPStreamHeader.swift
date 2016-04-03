@@ -32,8 +32,13 @@ struct HTTPStreamHeader {
 
     private mutating func collectHeaderFields(socket: HTTPStream) throws {
         while let line = try nextHeaderLine(socket) where !socket.closed {
-            let (key, value) = try extractKeyPair(line)
-            fields[Request.Headers.Key(key)] = Request.Headers.Values(value)
+            let pair = try extractKeyPair(line)
+
+            let key = Request.Headers.Key(pair.key)
+
+            var values = fields[key]
+            values.append(pair.value)
+            fields[key] = values
         }
     }
 

@@ -25,6 +25,8 @@ final class TestHTTPStream: HTTPStream {
         request += "Accept-Encoding: gzip, deflate\r\n"
         request += "Accept: */*\r\n"
         request += "Accept-Language: en-us\r\n"
+        request += "Cookie: 1=1\r\n"
+        request += "Cookie: 2=2\r\n"
         request += "Content-Type: application/json\r\n"
         request += "Content-Length: \(content.characters.count)\r\n"
         request += "\r\n"
@@ -108,7 +110,14 @@ class HTTPStreamTests: XCTestCase {
 
         XCTAssert(request.method == Request.Method.post, "Incorrect method \(request.method)")
 
-        print(request.headers)
+        XCTAssert(request.uri.path == "/json", "Incorrect path \(request.uri.path)")
+
+        XCTAssert(request.version.major == 1 && request.version.minor == 1, "Incorrect version")
+
+        print(request.headers["cookie"])
+        XCTAssert(request.headers["cookie"].count == 2, "Incorrect cookies count")
+
+        XCTAssert(request.cookies["1"] == "1" && request.cookies["2"] == "2", "Cookies not parsed")
 
         XCTAssert(request.data["hello"]?.string == "world")
     }
