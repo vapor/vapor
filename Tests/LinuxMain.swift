@@ -17,7 +17,7 @@ XCTMain([
     testCase(QueryParameterTests.allTests),
     testCase(SessionTests.allTests),
     testCase(TypedRouteTests.allTests),
-    testCase(JeevesTests.allTests)
+    testCase(HTTPStreamTests.allTests)
 ])
 
 #endif

@@ -1,24 +1,16 @@
 
 
-struct StreamHeader {
+struct HTTPStreamHeader {
     enum Error: ErrorProtocol {
         case InvalidHeaderKeyPair
-        case InvalidComponents
+        case InvalidRequestLine
     }
 
     let requestLine: RequestLine
-    private(set) var fields: [String : String] = [:]
-
-    var fieldsArray: [(String, String)] {
-        var array: [(String, String)] = []
-        for (key, val) in fields {
-            array.append((key, val))
-        }
-        return array
-    }
+    var fields: Request.Headers
 
     var contentLength: Int? {
-        guard let lengthString = fields["Content-Length"] else {
+        guard let lengthString = fields["Content-Length"].first else {
             return nil
         }
 
@@ -29,28 +21,23 @@ struct StreamHeader {
         return length
     }
 
-    var headers: Request.Headers {
-        var headers = Request.Headers([:])
-        for (key, value) in fields {
-            headers[Request.Headers.Key(key)] = Request.Headers.Values(value)
-        }
-        return headers
-    }
+    init(stream: HTTPStream) throws {
+        fields = Request.Headers()
 
-    init(_ socket: Stream) throws {
-        let requestLineRaw = try socket.receiveLine()
+        let requestLineRaw = try stream.receiveLine()
         requestLine = try RequestLine(requestLineRaw)
-        try collectHeaderFields(socket)
+
+        try collectHeaderFields(stream)
     }
 
-    private mutating func collectHeaderFields(socket: Stream) throws {
-        while let line = try nextHeaderLine(socket) {
-            let (key, val) = try extractKeyPair(line)
-            fields[key] = val
+    private mutating func collectHeaderFields(socket: HTTPStream) throws {
+        while let line = try nextHeaderLine(socket) where !socket.closed {
+            let (key, value) = try extractKeyPair(line)
+            fields[Request.Headers.Key(key)] = Request.Headers.Values(value)
         }
     }
 
-    private func nextHeaderLine(socket: Stream) throws -> String? {
+    private func nextHeaderLine(socket: HTTPStream) throws -> String? {
         let next = try socket.receiveLine()
         if !next.isEmpty {
             return next
@@ -67,19 +54,8 @@ struct StreamHeader {
     }
 }
 
-extension StreamHeader: CustomStringConvertible {
-    var description: String {
-        var fieldsDescription = ""
-        fields.forEach { key, val in
-            Log.info("K**\(key)**")
-            fieldsDescription += "    \(key): \(val)\n"
-        }
-        return "\n\(requestLine)\n\n\(fieldsDescription)"
-    }
-}
-
-extension StreamHeader {
-    internal struct RequestLine {
+extension HTTPStreamHeader {
+    struct RequestLine {
         let methodString: String
         let uriString: String
         let version: String
@@ -87,7 +63,7 @@ extension StreamHeader {
         init(_ string: String) throws {
             let comps = string.split(" ")
             guard comps.count == 3 else {
-                throw Error.InvalidComponents
+                throw Error.InvalidRequestLine
             }
 
             methodString = comps[0]
@@ -149,10 +125,4 @@ extension StreamHeader {
         }
     }
 
-}
-
-extension StreamHeader.RequestLine: CustomStringConvertible {
-    var description: String {
-        return "\nMethod: \(method)\nUri: \(uri)\nVersion: \(version)"
-    }
 }

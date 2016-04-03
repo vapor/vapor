@@ -1,5 +1,4 @@
 import libc
-import Hummingbird
 
 public class Application {
     public static let VERSION = "0.4.2"
@@ -9,7 +8,7 @@ public class Application {
         for returning registered `Route` handlers
         for a given request.
     */
-    public var router: RouterDriver = BranchRouter()
+    public lazy var router: RouterDriver = BranchRouter()
 
     /**
         The server driver is responsible
@@ -17,7 +16,7 @@ public class Application {
         This property is constant since it cannot
         be changed after the server has been booted.
     */
-    public var server: Server?
+    public lazy var server: Server = HTTPStreamServer<Socket>()
 
     /**
         The session driver is responsible for
@@ -204,7 +203,6 @@ public class Application {
 
         do {
             Log.info("Server starting on \(self.ip):\(self.port)")
-            let server = HummingbirdServer()
             try server.serve(self, at: self.port)
         } catch {
             Log.error("Server start error: \(error)")
@@ -236,6 +234,8 @@ public class Application {
 extension Application: Responder {
 
     public func respond(request: Request) throws -> Response {
+        Log.info("\(request.method) \(request.uri.path ?? "/")")
+
         var handler: Request.Handler
         var request = request
 
