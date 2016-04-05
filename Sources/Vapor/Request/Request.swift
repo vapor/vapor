@@ -77,8 +77,8 @@ extension Request {
 
         if headers["Content-Type"].first == "application/json" {
             var mutableBody = body
-            let data = mutableBody.buffer
             do {
+                let data = try mutableBody.becomeBuffer()
                 json = try Json(data)
             } catch {
                 Log.warning("Could not parse JSON: \(error)")

@@ -15,14 +15,13 @@ extension Character {
 
 class HTTPStreamServer<StreamType: HTTPStream>: Server {
     var stream: StreamType
-    var ip: String?
     var delegate: Responder!
 
-    func serve(responder: Responder, at port: Int) throws {
+    func serve(responder: Responder, on host: String, at port: Int) throws {
         halt()
         self.delegate = responder
 
-        try stream.bind(to: ip, on: port)
+        try stream.bind(to: host, on: port)
         try stream.listen()
 
         do {

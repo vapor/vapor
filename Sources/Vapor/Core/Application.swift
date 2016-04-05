@@ -203,7 +203,7 @@ public class Application {
 
         do {
             Log.info("Server starting on \(self.ip):\(self.port)")
-            try server.serve(self, at: self.port)
+            try server.serve(self, on: self.ip, at: self.port)
         } catch {
             Log.error("Server start error: \(error)")
         }
