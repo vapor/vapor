@@ -7,7 +7,7 @@ public final class BranchRouter: RouterDriver {
     private final var tree: [Host : [Request.Method : Branch]] = [:]
 
     // MARK: Routing
-    public final func route(request: Request) -> (parameters: [String: String], handler: Request.Handler)? {
+    public final func route(request: Request) -> (parameters: [String: String], handler: Responder)? {
         let path = request.uri.path ?? ""
         let host = request.uri.host ?? ""
 
@@ -38,7 +38,7 @@ public final class BranchRouter: RouterDriver {
         let branch = base[method] ?? Branch(name: "")
 
         //extend the branch
-        branch.extendBranch(generator, handler: route.handler)
+        branch.extendBranch(generator, handler: route.responder)
 
         //assign the branch and root to the tree
         base[method] = branch

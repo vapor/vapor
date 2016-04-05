@@ -1,6 +1,4 @@
 extension Request {
-    public typealias Handler = ((request: Request) throws -> Response)
-
     ///URL parameters (ex: `:id`).
     public var parameters: [String: String] {
         get {
@@ -86,5 +84,24 @@ extension Request {
         }
 
         return Request.Content(query: queries, json: json)
+    }
+
+    public var app: Application? {
+        get {
+            return storage["app"] as? Application
+        }
+        set {
+            storage["app"] = app
+        }
+    }
+
+    public struct Handler: Responder {
+        public typealias Closure = Request throws -> Response
+
+        let closure: Closure
+
+        public func respond(request: Request) throws -> Response {
+            return try closure(request)
+        }
     }
 }

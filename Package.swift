@@ -8,7 +8,6 @@ let package = Package(
         .Package(url: "https://github.com/ketzusaka/Hummingbird.git", majorVersion: 1, minor: 1),
         .Package(url: "https://github.com/swiftx/s4.git", majorVersion: 0, minor: 2),
         .Package(url: "https://github.com/qutheory/HMAC.git", majorVersion: 0, minor: 2),
-        .Package(url: "https://github.com/qutheory/structured-data.git", majorVersion: 0, minor: 5),
     ],
     exclude: [
         "XcodeProject",

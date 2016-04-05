@@ -43,13 +43,13 @@ public class Application {
         Make sure to append your custom `Middleware`
         if you don't want to overwrite default behavior.
     */
-    public var middleware: [Middleware.Type]
+    public var middleware: [Middleware]
 
     /**
         Provider classes that have been registered
         with this application
     */
-    public var providers: [Provider.Type]
+    public var providers: [Provider]
 
     /**
         Internal value populated the first time
@@ -111,8 +111,8 @@ public class Application {
     */
     public init() {
         self.middleware = [
-            AbortMiddleware.self,
-            SessionMiddleware.self
+            AbortMiddleware(),
+            SessionMiddleware()
         ]
 
         self.providers = []
@@ -219,11 +219,11 @@ public class Application {
 
         // File exists
         if let fileBody = try? FileManager.readBytesFromFile(filePath) {
-            return { _ in
+            return Request.Handler { _ in
                 return Response(status: .ok, headers: [:], body: Data(fileBody))
             }
         } else {
-            return { _ in
+            return Request.Handler { _ in
                 Log.warning("Could not open file, returning 404")
                 return Response(status: .notFound, text: "Page not found")
             }
@@ -236,30 +236,30 @@ extension Application: Responder {
     public func respond(request: Request) throws -> Response {
         Log.info("\(request.method) \(request.uri.path ?? "/")")
 
-        var handler: Request.Handler
+        var responder: Responder
         var request = request
 
         // Check in routes
         if let (parameters, routerHandler) = router.route(request) {
             request.parameters = parameters
-            handler = routerHandler
+            responder = routerHandler
         } else if let fileHander = self.checkFileSystem(request) {
-            handler = fileHander
+            responder = fileHander
         } else {
             // Default not found handler
-            handler = { _ in
+            responder = Request.Handler { _ in
                 return Response(status: .notFound, text: "Page not found")
             }
         }
 
         // Loop through middlewares in order
         for middleware in self.middleware {
-            handler = middleware.handle(handler, for: self)
+            responder = middleware.intercept(responder)
         }
 
         var response: Response
         do {
-            response = try handler(request: request)
+            response = try responder.respond(request)
 
             if response.headers["Content-Type"].first == nil {
                 Log.warning("Response had no 'Content-Type' header.")

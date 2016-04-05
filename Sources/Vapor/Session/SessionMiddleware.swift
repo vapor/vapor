@@ -8,24 +8,26 @@
 */
 class SessionMiddleware: Middleware {
 
-    static func handle(handler: Request.Handler, for app: Application) -> Request.Handler {
-        return { request in
-            var request = request
-
-            if let sessionIdentifier = request.cookies["vapor-session"] {
-                request.session = Session(identifier: sessionIdentifier, driver: app.session)
-            } else {
-                request.session = Session(driver: app.session)
-            }
-
-            var response = try handler(request: request)
-
-            if let identifier = request.session?.identifier {
-                response.cookies["vapor-session"] = identifier
-            }
-
-            return response
+    func respond(request: Request, chain: Responder) throws -> Response {
+        guard let app = request.app else {
+            return try chain.respond(request)
         }
+
+        var request = request
+
+        if let sessionIdentifier = request.cookies["vapor-session"] {
+            request.session = Session(identifier: sessionIdentifier, driver: app.session)
+        } else {
+            request.session = Session(driver: app.session)
+        }
+
+        var response = try chain.respond(request)
+
+        if let identifier = request.session?.identifier {
+            response.cookies["vapor-session"] = identifier
+        }
+
+        return response
     }
 
 }

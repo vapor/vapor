@@ -83,13 +83,13 @@ extension Application {
 
     final func add(method: Request.Method, path: String, handler: Route.Handler) {
         //Convert Route.Handler to Request.Handler
-        var handler = { request in
+        var responder: Responder = Request.Handler { request in
             return try handler(request).makeResponse()
         }
 
         //Apply any scoped middlewares
-        for middleware in scopedMiddleware {
-            handler = middleware.handle(handler, for: self)
+        for middleware in self.middleware {
+            responder = middleware.intercept(responder)
         }
 
         //Store the route for registering with Router later
@@ -101,7 +101,7 @@ extension Application {
             path = prefix + "/" + path
         }
 
-        let route = Route(host: host, method: method, path: path, handler: handler)
+        let route = Route(host: host, method: method, path: path, responder: responder)
         self.routes.append(route)
     }
 
