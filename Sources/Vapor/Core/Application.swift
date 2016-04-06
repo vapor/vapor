@@ -98,7 +98,7 @@ public class Application {
     }
 
     var scopedHost: String?
-    var scopedMiddleware: [Middleware.Type] = []
+    var scopedMiddleware: [Middleware] = []
     var scopedPrefix: String?
 
     var port: Int = 80

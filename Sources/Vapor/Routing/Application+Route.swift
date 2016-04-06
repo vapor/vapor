@@ -88,7 +88,7 @@ extension Application {
         }
 
         //Apply any scoped middlewares
-        for middleware in self.middleware {
+        for middleware in self.scopedMiddleware {
             responder = middleware.intercept(responder)
         }
 
@@ -110,11 +110,11 @@ extension Application {
         inside the closure. This method can be nested within
         itself safely.
     */
-    public final func middleware(middleware: Middleware.Type, handler: () -> ()) {
+    public final func middleware(middleware: Middleware, handler: () -> ()) {
        self.middleware([middleware], handler: handler)
     }
 
-    public final func middleware(middleware: [Middleware.Type], handler: () -> ()) {
+    public final func middleware(middleware: [Middleware], handler: () -> ()) {
         let original = scopedMiddleware
         scopedMiddleware += middleware
 

@@ -83,10 +83,14 @@ class RouteTests: XCTestCase {
         let app = Application()
 
         app.get("400") { request in
+            print("from 400")
             throw Abort.badRequest
         }
 
         app.bootRoutes()
+
+
+        print(app.routes)
 
         let request = Request(method: .get, uri: URI(path: "400"), headers: [:], body: [])
         guard var handler = app.router.route(request)?.handler else {
@@ -95,7 +99,13 @@ class RouteTests: XCTestCase {
         }
 
         do {
-            try handler(request: request)
+            let response = try handler.respond(request)
+            print(response)
+            var body = response.body
+            let data = try body.becomeBuffer()
+            let string = try String(data: data)
+            print(string)
+
             XCTFail("Handler did not throw error")
         } catch Abort.badRequest {
             //pass
@@ -103,12 +113,10 @@ class RouteTests: XCTestCase {
             XCTFail("Handler threw incorrect error")
         }
 
-        for middleware in app.middleware {
-            handler = middleware.handle(handler, for: app)
-        }
+        handler = AbortMiddleware().intercept(handler)
 
         do {
-            let request = try handler(request: request)
+            let request = try handler.respond(request)
             XCTAssert(request.status.statusCode == 400, "Incorrect response status")
         } catch {
             XCTFail("Middleware did not handle abort")

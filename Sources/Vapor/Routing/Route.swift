@@ -2,7 +2,7 @@
     The route class that will be used to model the various paths
     the application can take
 */
-public class Route {
+public struct Route {
 
     /**
         The responder type that is used when a route is matched
@@ -28,6 +28,11 @@ public class Route {
         self.method = method
         self.path = path
         self.responder = responder
+    }
+
+    init(host: String = "*", method: Request.Method = .get, path: String = "/", closure: Request.Handler.Closure) {
+        let responder = Request.Handler(closure: closure)
+        self.init(host: host, method: method, path: path, responder: responder)
     }
 }
 
