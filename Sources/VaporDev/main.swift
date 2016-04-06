@@ -33,7 +33,6 @@ app.get("test", Int.self, String.self) { request, int, string in
     ])
 }
 
-
 //MARK: Json
 
 app.get("json") { request in
@@ -44,7 +43,6 @@ app.get("json") { request in
         "nested": ["one", 2, false]
     ])
 }
-
 
 app.post("json") { request in
     //parse a key inside the received json

@@ -284,6 +284,7 @@ extension Application: Responder {
         }
 
         response.headers["Date"] = Response.Headers.Values(Response.date)
+        response.headers["Server"] = Response.Headers.Values("Vapor \(Application.VERSION)")
 
         return response
     }

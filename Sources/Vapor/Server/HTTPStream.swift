@@ -117,7 +117,12 @@ extension HTTPStream {
         } else {
             data = []
         }
+
+        var uri = requestLine.uri
+        if let host = header.fields["host"].first {
+            uri.host = host
+        }
         
-        return Request(method: requestLine.method, uri: requestLine.uri, headers: header.fields, body: data)
+        return Request(method: requestLine.method, uri: uri, headers: header.fields, body: data)
     }
 }
