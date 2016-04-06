@@ -6,7 +6,6 @@
 //  Copyright © 2016 Tanner Nelson. All rights reserved.
 //
 
-import Foundation
 import XCTest
 
 @testable import Vapor
@@ -119,13 +118,8 @@ class PerformanceTests: XCTestCase {
 
         Log.enabledLevels = [.Error, .Warning]
 
-        let start = NSDate()
-
         for _ in 0...100 {
             let p = TestPerformanceStream(request: request) { data in
-                let finish = NSDate()
-                let time = finish.timeInterval(since: start)
-                print(time)
             }
             stream.handler?(p)
         }
