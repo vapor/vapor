@@ -18,6 +18,12 @@ public class Input {
         - parameter input: Optional input to initialize class with
     */
     public init(input: [String] = Process.arguments) {
+        guard input.count > 0 else {
+            self.arguments = []
+            self.options = []
+            return
+        }
+
         var arguments = Array<InputArgument>()
         var options = Array<InputOption>()
 
