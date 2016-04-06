@@ -11,6 +11,7 @@ public final class Event<T> {
     private typealias Subscriber = (token: Subscription, handler: Handler)
     private var subscribers: [Subscriber] = []
 
+    @warn_unused_result(message: "subscription must be retained to receive events")
     public func subscribe(handler: Handler) -> Subscription {
         let newToken = Subscription()
         subscribers.append((newToken, handler))
