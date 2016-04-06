@@ -33,6 +33,6 @@ public protocol ConsoleProvider: Provider {
 
         - parameter console: Console instance that’s booting
     */
-    static func boot(console: Console)
+    func boot(console: Console)
 
 }

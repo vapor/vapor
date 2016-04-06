@@ -59,7 +59,7 @@ public class Console {
         app.boot()
 
         for provider in app.providers {
-            if let provider = provider as? ConsoleProvider.Type {
+            if let provider = provider as? ConsoleProvider {
                 provider.boot(self)
             }
         }
