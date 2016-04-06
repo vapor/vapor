@@ -19,17 +19,8 @@ class ResponseTests: XCTestCase {
     func testRedirect() {
         let url = "http://tanner.xyz"
 
-        let redirect = Redirect(to: url)
-        XCTAssert(redirect.redirectLocation == url, "redirect location should be url")
-
-
-        var found = false
-        for (key, val) in redirect.headers {
-            if key == "Location" && val == url {
-                found = true
-            }
-        }
-        XCTAssert(found, "Location header should be in headers")
+        let redirect = Response(redirect: url)
+        XCTAssert(redirect.headers["location"].first == url, "Location header should be in headers")
     }
 
 }

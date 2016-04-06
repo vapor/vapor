@@ -15,7 +15,7 @@ public protocol Provider {
 
         - parameter application: Application instance that’s booting
     */
-    static func boot(application: Application)
+    func boot(application: Application)
 
 }
 

@@ -3,7 +3,7 @@
     can be returned to generic Vapor closures or route handlers.
 
     ```app.get("/") { request in
-        return object //must be of type `ResponseConvertible`
+        return object //must be of type `ResponseRepresentable`
     }```
 */
 public protocol ResponseRepresentable {
@@ -20,6 +20,6 @@ extension Response: ResponseRepresentable {
 ///Allows Swift Strings to be returned through closures
 extension Swift.String: ResponseRepresentable {
     public func makeResponse() -> Response {
-        return Response(status: .OK, html: self)
+        return Response(status: .ok, text: self)
     }
 }

@@ -1,115 +1,44 @@
-/**
-    Requests contains data sent from a client to the
-    web server such as method, parameters, and data.
-*/
-public class Request {
-    public struct Header {
-        public struct Key: StringLiteralConvertible, Hashable, Equatable, CustomStringConvertible {
-            var string: String
-
-            public init(_ string: String) {
-                self.string = string
+extension Request {
+    ///URL parameters (ex: `:id`).
+    public var parameters: [String: String] {
+        get {
+            guard let parameters = storage["parameters"] as? [String: String] else {
+                return [:]
             }
 
-            public init(unicodeScalarLiteral value: String) {
-                string = "\(value)"
-            }
-
-            public init(extendedGraphemeClusterLiteral value: String) {
-                string = value
-            }
-
-            public init(stringLiteral value: StringLiteralType) {
-                string = value
-            }
-
-            public var description: String {
-                return string
-            }
-
-            public var hashValue: Int {
-                return string.lowercased().hashValue
-            }
+            return parameters
+        }
+        set(parameters) {
+            storage["parameters"] = parameters
         }
     }
-
-    ///Available HTTP Methods
-    public enum Method: String {
-        case Get = "GET"
-        case Post = "POST"
-        case Put = "PUT"
-        case Patch = "PATCH"
-        case Delete = "DELETE"
-        case Options = "OPTIONS"
-        case Unknown = "x"
-    }
-
-    public typealias Handler = ((request: Request) throws -> Response)
-
-    ///HTTP Method used for request.
-    public let method: Method
-
-    ///Query data from the path, or POST data from the body (depends on `Method`).
-    public let data: Data
-
-    ///Browser stored data sent with every server request
-    public let cookies: [String: String]
-
-    ///Path requested from server, not including hostname.
-    public let path: String
-
-    ///Information or metadata about the `Request`.
-    public let headers: [Header.Key: String]
-
-    ///Content of the `Request`.
-    public let body: [UInt8]
-
-    ///Address from which the `Request` originated.
-    public let address: String?
-
-    ///URL parameters (ex: `:id`).
-    public var parameters: [String: String] = [:]
 
     ///Server stored information related from session cookie.
-    public var session: Session?
-
-    ///Requested hostname
-    public let hostname: String
-
-    ///Whether the connection should be kept open for multiple Requests
-    var supportsKeepAlive: Bool {
-        if let value = self.headers["connection"] {
-            return "keep-alive" == value.trim()
+    public var session: Session? {
+        get {
+            return storage["session"] as? Session
         }
-        return false
+        set(session) {
+            storage["session"] = session
+        }
     }
 
-    public init(method: Method, path: String, address: String?, headers headersArray: [(String, String)], body: [UInt8]) {
-        self.method = method
-        self.path = path.split("?").first ?? ""
-        self.address = address
+    ///Browser stored data sent with every server request
+    public var cookies: [String: String] {
+        var cookies: [String: String] = [:]
 
-        var headersBuffer: [Header.Key: String] = [:]
-        for (key, value) in headersArray {
-            headersBuffer[Request.Header.Key(key)] = value
+        for cookieString in headers["Cookie"] {
+            for (key, val) in parseCookies(cookieString) {
+                cookies[key] = val
+            }
         }
-        headers = headersBuffer
 
-        self.body = body
-        self.cookies = Request.parseCookies(headers["Cookie"])
-        self.hostname = headers["Host"] ?? "*"
+        return cookies
 
-        let query = path.queryData()
-        self.data = Data(query: query, bytes: body)
-
-        Log.verbose("Received \(method) request for \(path)")
     }
 
-    /**
-        Quickly create a Request with an empty body.
-    */
-    public convenience init(method: Method, path: String) {
-        self.init(method: method, path: path, address: nil, headers: [], body: [])
+    public init(method: Method = .get, path: String, host: String? = nil, body: Data = []) {
+        self.init(method: method, uri: URI(path: path, host: host), headers: [:], body: body)
     }
 
     /**
@@ -117,13 +46,9 @@ public class Request {
         separated by semicolons.
 
         - returns: String dictionary of parsed cookies.
-    */
-    class func parseCookies(string: String?) -> [String: String] {
+     */
+    private func parseCookies(string: String) -> [String: String] {
         var cookies: [String: String] = [:]
-
-        guard let string = string else {
-            return cookies
-        }
 
         let cookieTokens = string.split(";")
         for cookie in cookieTokens {
@@ -132,55 +57,85 @@ public class Request {
             if cookieArray.count == 2 {
                 let split = cookieArray[0].split(" ")
                 let key = split.joined(separator: "")
-                cookies[key] = cookieArray[1]
+                let validKey = String(validatingUTF8: key) ?? ""
+                cookies[validKey] = String(validatingUTF8: cookieArray[1])
             }
         }
 
         return cookies
     }
 
-}
-public func ==(lhs: Request.Header.Key, rhs: Request.Header.Key) -> Bool {
-    return lhs.string == rhs.string
-}
+    private func parseFormEncoded(string: String) -> [String: String] {
+        var formEncoded: [String: String] = [:]
 
-extension String {
-
-    /**
-        Query data is information appended to the URL path
-        as `key=value` pairs separated by `&` after
-        an initial `?`
-
-        - returns: String dictionary of parsed Query data
-     */
-    internal func queryData() -> [String: String] {
-        // First `?` indicates query, subsequent `?` should be included as part of the arguments
-        return split("?", maxSplits: 1)
-            .dropFirst()
-            .reduce("", combine: +)
-            .keyValuePairs()
-    }
-
-    /**
-        Parses `key=value` pair data separated by `&`.
-
-        - returns: String dictionary of parsed data
-     */
-    internal func keyValuePairs() -> [String: String] {
-        var data: [String: String] = [:]
-
-        for pair in self.split("&") {
-            let tokens = pair.split("=", maxSplits: 1)
-
-            if
-                let name = tokens.first,
-                let value = tokens.last,
-                let parsedName = try? String(percentEncoded: name) {
-                data[parsedName] = try? String(percentEncoded: value)
+        for pair in string.split("&") {
+            let token = pair.split("=", maxSplits: 1)
+            if token.count == 2 {
+                let key = String(validatingUTF8: token[0]) ?? ""
+                let value = String(validatingUTF8: token[1]) ?? ""
+                formEncoded[key] = value
             }
         }
 
-        return data
+        return formEncoded
     }
 
+    mutating func parseData() {
+        data = parseContent()
+    }
+
+    private func parseContent() -> Request.Content {
+        var queries: [String: String] = [:]
+        uri.query.forEach { query in
+            queries[query.key] = query.value
+        }
+
+        var json: Json?
+        var formEncoded: [String: String]?
+        var mutableBody = body
+
+        if headers["Content-Type"].first == "application/json" {
+            do {
+                let data = try mutableBody.becomeBuffer()
+                json = try Json(data)
+            } catch {
+                Log.warning("Could not parse JSON: \(error)")
+            }
+        } else {
+            do {
+                let data = try mutableBody.becomeBuffer()
+                let string = try String(data: data)
+                formEncoded = parseFormEncoded(string)
+            } catch {
+                Log.warning("Could not parse form encoded data: \(error)")
+            }
+        }
+
+        return Request.Content(query: queries, json: json, formEncoded: formEncoded)
+    }
+
+    ///Query data from the path, or POST data from the body (depends on `Method`).
+    public var data: Request.Content {
+        get {
+            guard let data = storage["data"] as? Request.Content else {
+                Log.warning("Data has not been parsed.")
+                return Request.Content(query: [:], json: nil, formEncoded: nil)
+            }
+
+            return data
+        }
+        set(data) {
+            storage["data"] = data
+        }
+    }
+
+    public struct Handler: Responder {
+        public typealias Closure = Request throws -> Response
+
+        let closure: Closure
+
+        public func respond(request: Request) throws -> Response {
+            return try closure(request)
+        }
+    }
 }

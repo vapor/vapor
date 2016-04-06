@@ -21,7 +21,7 @@ class HashTests: XCTestCase {
         let app = Application()
 
         let string = "vapor"
-        let expected = "97ce9a45eaf0b1ceafc3bba00dfec047526386bbd69241e4a4f0c9fde7c638ea"
+        let expected = "01c99e8ec3c38b91c1c7a7add05044438d9aaa16"
         app.hash.key = "123"
 
         let result = app.hash.make(string)

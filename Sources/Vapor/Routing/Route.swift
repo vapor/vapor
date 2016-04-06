@@ -1,9 +1,8 @@
-
 /**
     The route class that will be used to model the various paths
     the application can take
 */
-public class Route {
+public struct Route {
 
     /**
         The responder type that is used when a route is matched
@@ -14,7 +13,7 @@ public class Route {
 
     let method: Request.Method
     let path: String
-    let handler: Request.Handler
+    let responder: Responder
     let hostname: String
 
     /**
@@ -24,11 +23,16 @@ public class Route {
         - parameter path: the path to use when deciding the route
         - parameter handler: the handler to route when the path is called
      */
-    init(host: String = "*", method: Request.Method, path: String, handler: Request.Handler) {
+    init(host: String = "*", method: Request.Method, path: String, responder: Responder) {
         self.hostname = host
         self.method = method
         self.path = path
-        self.handler = handler
+        self.responder = responder
+    }
+
+    init(host: String = "*", method: Request.Method = .get, path: String = "/", closure: Request.Handler.Closure) {
+        let responder = Request.Handler(closure: closure)
+        self.init(host: host, method: method, path: path, responder: responder)
     }
 }
 

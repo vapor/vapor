@@ -1,15 +1,14 @@
 import libc
-import Hummingbird
 
 public class Application {
-    public static let VERSION = "0.4.1"
+    public static let VERSION = "0.5.0"
 
     /**
         The router driver is responsible
         for returning registered `Route` handlers
         for a given request.
     */
-    public var router: RouterDriver = BranchRouter()
+    public lazy var router: RouterDriver = BranchRouter()
 
     /**
         The server driver is responsible
@@ -17,14 +16,14 @@ public class Application {
         This property is constant since it cannot
         be changed after the server has been booted.
     */
-    public var server: ServerDriver = Jeeves<Hummingbird.Socket>()
+    public lazy var server: Server = HTTPStreamServer<Socket>()
 
     /**
         The session driver is responsible for
         storing and reading values written to the
         users session.
     */
-    public lazy var session: SessionDriver = MemorySessionDriver(application: self)
+    public let session: SessionDriver
 
     /**
         Provides access to config settings.
@@ -40,7 +39,7 @@ public class Application {
         Provides access to the underlying
         `HashDriver`.
     */
-    public private(set) lazy var hash: Hash = Hash()
+    public let hash: Hash
 
     /**
         `Middleware` will be applied in the order
@@ -49,13 +48,13 @@ public class Application {
         Make sure to append your custom `Middleware`
         if you don't want to overwrite default behavior.
     */
-    public var middleware: [Middleware.Type]
+    public var middleware: [Middleware]
 
     /**
         Provider classes that have been registered
         with this application
     */
-    public var providers: [Provider.Type]
+    public var providers: [Provider]
 
     /**
         Internal value populated the first time
@@ -96,8 +95,15 @@ public class Application {
         }
     }
 
+    /**
+        Resources directory relative to workDir
+    */
+    public var resourcesDir: String {
+        return workDir + "Resources/"
+    }
+
     var scopedHost: String?
-    var scopedMiddleware: [Middleware.Type] = []
+    var scopedMiddleware: [Middleware] = []
     var scopedPrefix: String?
 
     var booted = false
@@ -106,13 +112,21 @@ public class Application {
     /**
         Initialize the Application.
     */
-    public init() {
+    public init(sessionDriver: SessionDriver? = nil) {
         self.middleware = [
-            AbortMiddleware.self,
-            SessionMiddleware.self
+            AbortMiddleware(),
         ]
 
         self.providers = []
+
+        let hash = Hash()
+
+        self.session = sessionDriver ?? MemorySessionDriver(hash: hash)
+        self.hash = hash
+
+        self.middleware.append(
+            SessionMiddleware(session: session)
+        )
     }
 
     public func bootProviders() {
@@ -203,15 +217,14 @@ public class Application {
     */
     public func serve(ip ip: String = "0.0.0.0", port: Int = 8080) throws {
         self.boot()
-        server.delegate = self
 
-        try server.boot(ip: ip, port: port)
+        try server.serve(self, on: ip, at: port)
     }
     // swiftlint:enable variable_name
 
     func checkFileSystem(request: Request) -> Request.Handler? {
         // Check in file system
-        let filePath = self.workDir + "Public" + request.path
+        let filePath = self.workDir + "Public" + (request.uri.path ?? "")
 
         guard FileManager.fileAtPath(filePath).exists else {
             return nil
@@ -219,57 +232,66 @@ public class Application {
 
         // File exists
         if let fileBody = try? FileManager.readBytesFromFile(filePath) {
-            return { _ in
-                return Response(status: .OK, data: fileBody, contentType: .None)
+            return Request.Handler { _ in
+                return Response(status: .ok, headers: [:], body: Data(fileBody))
             }
         } else {
-            return { _ in
+            return Request.Handler { _ in
                 Log.warning("Could not open file, returning 404")
-                return Response(status: .NotFound, text: "Page not found")
+                return Response(status: .notFound, text: "Page not found")
             }
         }
     }
 }
 
-extension Application: ServerDriverDelegate {
+extension Application: Responder {
 
-    public func serverDriverDidReceiveRequest(request: Request) -> Response {
-        var handler: Request.Handler
+    public func respond(request: Request) throws -> Response {
+        Log.info("\(request.method) \(request.uri.path ?? "/")")
+
+        var responder: Responder
+        var request = request
+
+        request.parseData()
 
         // Check in routes
-        if let routerHandler = router.route(request) {
-            handler = routerHandler
+        if let (parameters, routerHandler) = router.route(request) {
+            request.parameters = parameters
+            responder = routerHandler
         } else if let fileHander = self.checkFileSystem(request) {
-            handler = fileHander
+            responder = fileHander
         } else {
             // Default not found handler
-            handler = { _ in
-                return Response(status: .NotFound, text: "Page not found")
+            responder = Request.Handler { _ in
+                return Response(status: .notFound, text: "Page not found")
             }
         }
 
         // Loop through middlewares in order
         for middleware in self.middleware {
-            handler = middleware.handle(handler, for: self)
+            responder = middleware.intercept(responder)
         }
 
+        var response: Response
         do {
-            let response = try handler(request: request)
+            response = try responder.respond(request)
 
-            if response.headers["Content-Type"] == nil {
+            if response.headers["Content-Type"].first == nil {
                 Log.warning("Response had no 'Content-Type' header.")
             }
-
-            return response
         } catch {
             var error = "Server Error: \(error)"
             if environment == .Production {
                 error = "Something went wrong"
             }
 
-            return Response(error: error)
+            response = Response(error: error)
         }
 
+        response.headers["Date"] = Response.Headers.Values(Response.date)
+        response.headers["Server"] = Response.Headers.Values("Vapor \(Application.VERSION)")
+
+        return response
     }
 
 }

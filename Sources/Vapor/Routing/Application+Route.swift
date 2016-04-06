@@ -83,13 +83,13 @@ extension Application {
 
     final func add(method: Request.Method, path: String, handler: Route.Handler) {
         //Convert Route.Handler to Request.Handler
-        var handler = { request in
+        var responder: Responder = Request.Handler { request in
             return try handler(request).makeResponse()
         }
 
         //Apply any scoped middlewares
-        for middleware in scopedMiddleware {
-            handler = middleware.handle(handler, for: self)
+        for middleware in self.scopedMiddleware {
+            responder = middleware.intercept(responder)
         }
 
         //Store the route for registering with Router later
@@ -101,7 +101,7 @@ extension Application {
             path = prefix + "/" + path
         }
 
-        let route = Route(host: host, method: method, path: path, handler: handler)
+        let route = Route(host: host, method: method, path: path, responder: responder)
         self.routes.append(route)
     }
 
@@ -110,11 +110,11 @@ extension Application {
         inside the closure. This method can be nested within
         itself safely.
     */
-    public final func middleware(middleware: Middleware.Type, handler: () -> ()) {
+    public final func middleware(middleware: Middleware, handler: () -> ()) {
        self.middleware([middleware], handler: handler)
     }
 
-    public final func middleware(middleware: [Middleware.Type], handler: () -> ()) {
+    public final func middleware(middleware: [Middleware], handler: () -> ()) {
         let original = scopedMiddleware
         scopedMiddleware += middleware
 
