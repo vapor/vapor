@@ -10,56 +10,36 @@ public extension Request {
     */
     public struct Content {
         // MARK: Initialization
-        public let query: [String : String]
+        public let query: [String: String]
         public let json: Json?
+        public let formEncoded: [String: String]?
 
-        internal init(query: [String : String], json: Json?) {
+        internal init(query: [String: String], json: Json?, formEncoded: [String: String]?) {
             self.query = query
             self.json = json
+            self.formEncoded = formEncoded
         }
 
         // MARK: Subscripting
-        public subscript(key: String) -> Node? {
-            return query[key] ?? json?.object?[key]
-        }
-
         public subscript(index: Int) -> Node? {
-            return json?.array?[index]
-        }
-
-        /**
-            Checks for form encoding of body if Json fails
-
-            - parameter body: byte array from body
-
-            - returns: a key value pair dictionary
-        */
-        static func parsePostData(data: Data) -> [String: String] {
-            if let bodyString = try? String(data: data) {
-                return bodyString.keyValuePairs()
+            if let value = query["\(index)"] {
+                return value
+            } else if let value = json?.array?[index] {
+                return value
+            } else if let value = formEncoded?["\(index)"] {
+                return value
+            } else {
+                return nil
             }
-
-            return [:]
         }
 
-        public subscript(key: RequestContentSubscript) -> Node? {
-            if let index = key as? Int {
-                if let value = query["\(index)"] {
-                    return value
-                } else if let value = json?.array?[index] {
-                    return value
-                } else {
-                    return nil
-                }
-
-            } else if let key = key as? String {
-                if let value = query[key] {
-                    return value
-                } else if let value = json?.object?[key] {
-                    return value
-                } else {
-                    return nil
-                }
+        public subscript(key: String) -> Node? {
+            if let value = query[key] {
+                return value
+            } else if let value = json?.object?[key] {
+                return value
+            } else if let value = formEncoded?[key] {
+                return value
             } else {
                 return nil
             }

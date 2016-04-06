@@ -247,6 +247,8 @@ extension Application: Responder {
         var responder: Responder
         var request = request
 
+        request.parseData()
+
         // Check in routes
         if let (parameters, routerHandler) = router.route(request) {
             request.parameters = parameters

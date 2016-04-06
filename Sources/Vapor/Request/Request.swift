@@ -57,41 +57,75 @@ extension Request {
             if cookieArray.count == 2 {
                 let split = cookieArray[0].split(" ")
                 let key = split.joined(separator: "")
-                cookies[key] = cookieArray[1]
+                let validKey = String(validatingUTF8: key) ?? ""
+                cookies[validKey] = String(validatingUTF8: cookieArray[1])
             }
         }
 
         return cookies
     }
 
-    ///Query data from the path, or POST data from the body (depends on `Method`).
-    public var data: Request.Content {
+    private func parseFormEncoded(string: String) -> [String: String] {
+        var formEncoded: [String: String] = [:]
+
+        for pair in string.split("&") {
+            let token = pair.split("=", maxSplits: 1)
+            if token.count == 2 {
+                let key = String(validatingUTF8: token[0]) ?? ""
+                let value = String(validatingUTF8: token[1]) ?? ""
+                formEncoded[key] = value
+            }
+        }
+
+        return formEncoded
+    }
+
+    mutating func parseData() {
+        data = parseContent()
+    }
+
+    private func parseContent() -> Request.Content {
         var queries: [String: String] = [:]
         uri.query.forEach { query in
             queries[query.key] = query.value
         }
 
         var json: Json?
+        var formEncoded: [String: String]?
+        var mutableBody = body
 
         if headers["Content-Type"].first == "application/json" {
-            var mutableBody = body
             do {
                 let data = try mutableBody.becomeBuffer()
                 json = try Json(data)
             } catch {
                 Log.warning("Could not parse JSON: \(error)")
             }
+        } else {
+            do {
+                let data = try mutableBody.becomeBuffer()
+                let string = try String(data: data)
+                formEncoded = parseFormEncoded(string)
+            } catch {
+                Log.warning("Could not parse form encoded data: \(error)")
+            }
         }
 
-        return Request.Content(query: queries, json: json)
+        return Request.Content(query: queries, json: json, formEncoded: formEncoded)
     }
 
-    public var app: Application? {
+    ///Query data from the path, or POST data from the body (depends on `Method`).
+    public var data: Request.Content {
         get {
-            return storage["app"] as? Application
+            guard let data = storage["data"] as? Request.Content else {
+                Log.warning("Data has not been parsed.")
+                return Request.Content(query: [:], json: nil, formEncoded: nil)
+            }
+
+            return data
         }
-        set {
-            storage["app"] = app
+        set(data) {
+            storage["data"] = data
         }
     }
 

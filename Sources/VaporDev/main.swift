@@ -54,6 +54,14 @@ app.post("json") { request in
     return "Received \(count) unicorns"
 }
 
+app.post("form") { request in
+    guard let name = request.data["name"]?.string else {
+        return Response(error: "No name provided")
+    }
+
+    return "Hello \(name)"
+}
+
 app.get("redirect") { request in
     return Response(redirect: "http://qutheory.io:8001")
 }
@@ -141,7 +149,7 @@ app.get("cookies") { request in
 
 //MARK: Middleware
 
-app.middleware(AuthMiddleware.self) {
+app.middleware(AuthMiddleware()) {
     app.get("protected") { request in
         return Json([
             "message": "Welcome authorized user"

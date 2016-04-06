@@ -40,13 +40,15 @@ class HTTPStreamTests: XCTestCase {
         try stream.send(data)
 
         //MARK: Read Request
-        let request: Request
+        var request: Request
         do {
             request = try stream.receive()
         } catch {
             XCTFail("Error receiving from stream: \(error)")
             return
         }
+
+        request.parseData()
 
         //MARK: Verify Request
         XCTAssert(request.method == Request.Method.post, "Incorrect method \(request.method)")
