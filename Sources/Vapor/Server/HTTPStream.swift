@@ -78,7 +78,7 @@ extension HTTPStream {
             try send(headerKey: "Connection", headerValue: "keep-alive")
         }
 
-        var headers = response.headers.sorted { a, b in
+        let headers = response.headers.sorted { a, b in
             return a.key.string < b.key.string
         }
 
