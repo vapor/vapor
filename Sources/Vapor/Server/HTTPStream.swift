@@ -78,7 +78,11 @@ extension HTTPStream {
             try send(headerKey: "Connection", headerValue: "keep-alive")
         }
 
-        try response.headers.forEach { (key, values) in
+        var headers = response.headers.sorted { a, b in
+            return a.key.string < b.key.string
+        }
+
+        try headers.forEach { (key, values) in
             for value in values {
                 try send(headerKey: key.string, headerValue: value)
             }
