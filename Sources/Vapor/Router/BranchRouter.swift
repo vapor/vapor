@@ -7,9 +7,12 @@ public final class BranchRouter: RouterDriver {
     private final var tree: [Host : [Request.Method : Branch]] = [:]
 
     // MARK: Routing
-    public final func route(request: Request) -> Request.Handler? {
+    public final func route(request: Request) -> (parameters: [String: String], handler: Responder)? {
+        let path = request.uri.path ?? ""
+        let host = request.uri.host ?? ""
+
         //get root from hostname, or * route
-        let root = tree[request.hostname] ?? tree["*"]
+        let root = tree[host] ?? tree["*"]
 
         //ensure branch for current method exists
         guard let branch = root?[request.method] else {
@@ -17,8 +20,8 @@ public final class BranchRouter: RouterDriver {
         }
 
         //search branch with query path generator
-        let generator = request.path.pathComponentGenerator()
-        return branch.handle(request, comps: generator)
+        let generator = path.pathComponentGenerator()
+        return branch.handle([:], request: request, comps: generator)
     }
 
     // MARK: Registration
@@ -35,7 +38,7 @@ public final class BranchRouter: RouterDriver {
         let branch = base[method] ?? Branch(name: "")
 
         //extend the branch
-        branch.extendBranch(generator, handler: route.handler)
+        branch.extendBranch(generator, handler: route.responder)
 
         //assign the branch and root to the tree
         base[method] = branch

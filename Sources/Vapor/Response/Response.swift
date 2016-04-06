@@ -1,244 +1,132 @@
-/**
-    Responses that redirect to a supplied URL.
- */
-public class Redirect: Response {
+import libc
 
-    ///The URL string for redirect
-    var redirectLocation: String {
-        didSet {
-            headers["Location"] = redirectLocation
-        }
-    }
-
-    /**
-        Creates a `Response` object that redirects
-        to a given URL string.
-
-        - parameter: redirectLocation: The URL string for redirect
-
-        - returns: Response
-     */
-    public init(to redirectLocation: String) {
-        self.redirectLocation = redirectLocation
-        super.init(status: .MovedPermanently, data: [], contentType: .None)
-        headers["Location"] = redirectLocation
-    }
-}
-
-/**
-    Allows for asynchronous responses. Passes
-    the server Socket to the Response for writing.
-    The response calls `release()` on the Socket
-    when it is complete.
-
-    Inspired by elliottminns
-*/
-public class AsyncResponse: Response {
-    public typealias Writer = SocketIO throws -> Void
-    public let writer: Writer
-
-    public init(writer: Writer) {
-        self.writer = writer
-        super.init(status: .OK, data: [], contentType: .None)
-    }
-}
-
-/**
-    Responses are objects responsible for returning
-    data to the HTTP request such as the body, status
-    code and headers.
- */
-public class Response {
-
-    // MARK: Types
-
-    /**
-        The content type of the response
-
-        - Text: text content type
-        - Html: html content type
-        - Json: json content type
-        - None: no content type
-        - Other: non-explicit content type
-    */
-    public enum ContentType {
-        case Text, Html, Json, None, Other(String)
-    }
-
-    /**
-        Http status representing the response
-    */
-    public enum Status {
-        case OK, Created, Accepted
-        case NoContent
-        case MovedPermanently
-        case BadRequest, Unauthorized, Forbidden, NotFound
-        case Error
-        case Unknown
-        case Custom(Int)
-
-        public var code: Int {
-            switch self {
-            case .OK: return 200
-            case .Created: return 201
-            case .Accepted: return 202
-            case .NoContent: return 204
-
-            case .MovedPermanently: return 301
-
-            case .BadRequest: return 400
-            case .Unauthorized: return 401
-            case .Forbidden: return 403
-            case .NotFound: return 404
-
-            case .Error: return 500
-
-            case .Unknown: return 0
-            case .Custom(let code):
-                return code
-            }
-        }
-
-        public var reasonPhrase: String {
-            switch self {
-            case .OK: return "OK"
-            case .Created: return "Created"
-            case .Accepted: return "Accepted"
-            case .NoContent: return "No Content"
-
-            case .MovedPermanently: return "Moved Permanently"
-
-            case .BadRequest: return "Bad Request"
-            case .Unauthorized: return "Unauthorized"
-            case .Forbidden: return "Forbidden"
-            case .NotFound: return "Not Found"
-
-            case .Error: return "Internal Server Error"
-
-            case .Unknown: return "Unknown"
-            case .Custom(let code): return "Custom \(code)"
-            }
-        }
-    }
-
-    // MARK: Member Variables
-
-    public var status: Status
-    public var data: [UInt8]
-    public var contentType: ContentType
-    public var headers: [String : String] = [:]
-
-    public var cookies: [String : String] = [:] {
-        didSet {
-            if cookies.isEmpty {
-                headers["Set-Cookie"] = nil
-            } else {
-                let mapped = cookies.map { key, val in
-                    return "\(key)=\(val)"
-                }
-
-                let cookiesString = mapped.joined(separator: ";")
-                headers["Set-Cookie"] = cookiesString
-
-            }
-        }
-    }
-
-    // MARK: Initialization
-
-    /**
-        Designated Initializer
-
-        - parameter status: http status of response
-        - parameter data: the byte sequence that will be transmitted
-        - parameter contentType: the content type that the data represents
-    */
-    public init<T: Sequence where T.Iterator.Element == UInt8>(status: Status, data: T, contentType: ContentType) {
-        self.status = status
-        self.data = [UInt8](data)
-        self.contentType = contentType
-        switch contentType {
-        case .Json:
-            self.headers = ["Content-Type": "application/json"]
-        case .Html:
-            self.headers = ["Content-Type": "text/html"]
-        case let .Other(description):
-            self.headers = ["Content-Type": description]
-        case .Text:
-            self.headers = ["Content-Type": "text"]
-        case .None:
-            self.headers = [:]
-        }
-
-        self.headers["Server"] = "Vapor \(Application.VERSION)"
-    }
-}
-
-// MARK: - Convenience Initializers
 extension Response {
     /**
-        When attempting to serialize an object of type 'Any' into Json,
-        invalid objects will throw
+        Convenience Initializer Error
 
-        - InvalidObject: the object to serialize is not a valid Json object
-    */
-    public enum SerializationError: ErrorProtocol {
-        case InvalidObject
+        Will return 500
+
+        - parameter error: a description of the server error
+     */
+    public init(error: String) {
+        self.init(status: .internalServerError, headers: [:], body: error.data)
     }
 
     /**
-         Convenience Initializer Error
+        Convenience Initializer - Html
 
-         Will return 500
-
-         - parameter error: a description of the server error
-    */
-    public convenience init(error: String) {
-        self.init(status: .Error, data: error.utf8, contentType: .Json)
+        - parameter status: http status of response
+        - parameter html: the html string to be rendered as a response
+     */
+    public init(status: Status, html body: String) {
+        let html = "<html><meta charset=\"UTF-8\"><body>\(body)</body></html>"
+        let headers: Headers = [
+            "Content-Type": "text/html"
+        ]
+        self.init(status: status, headers: headers, body: html.data)
     }
 
     /**
-         Convenience Initializer - Html
+        Convenience Initializer - Data
 
-         - parameter status: http status of response
-         - parameter html: the html string to be rendered as a response
-    */
-    public convenience init(status: Status, html: String) {
-        let serialised = "<html><meta charset=\"UTF-8\"><body>\(html)</body></html>"
-        self.init(status: status, data: serialised.utf8, contentType: .Html)
+        - parameter status: http status
+        - parameter data: response bytes
+     */
+    public init(status: Status, data: Data) {
+        self.init(status: status, headers: [:], body: data)
     }
 
     /**
-         Convenience Initializer - Text
+        Convenience Initializer - Text
 
-         - parameter status: http status
-         - parameter text: basic text response
-    */
-    public convenience init(status: Status, text: String) {
-        self.init(status: status, data: text.utf8, contentType: .Text)
+        - parameter status: http status
+        - parameter text: basic text response
+     */
+    public init(status: Status, text: String) {
+        let headers: Headers = [
+            "Content-Type": "text/plain"
+        ]
+        self.init(status: status, headers: headers, body: text.data)
     }
 
     /**
-         Convenience Initializer
+        Convenience Initializer
 
-         - parameter status: the http status
-         - parameter json: any value that will be attempted to be serialized as json.  Use 'Json' for more complex objects
-    */
-    public convenience init(status: Status, json: Json) {
-        self.init(status: status, data: json.data, contentType: .Json)
+        - parameter status: the http status
+        - parameter json: any value that will be attempted to be serialized as json.  Use 'Json' for more complex objects
+     */
+    public init(status: Status, json: Json) {
+        let headers: Headers = [
+            "Content-Type": "application/json"
+        ]
+        self.init(status: status, headers: headers, body: json.data)
     }
 
     /**
         Creates an empty response with the
         supplied status code.
     */
-    public convenience init(status: Status) {
+    public init(status: Status) {
         self.init(status: status, text: "")
     }
-}
 
-extension Response: Equatable {}
+    public init(redirect location: String) {
+        let headers: Headers = [
+            "Location": Headers.Values(location)
+        ]
+        self.init(status: .movedPermanently, headers: headers, body: [])
+    }
 
-public func ==(left: Response, right: Response) -> Bool {
-    return left.status.code == right.status.code
+    public init(async closure: Stream throws -> Void) {
+        self.init(status: .ok, headers: [:], body: closure)
+    }
+
+    public static var date: String {
+        let DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+        let MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+
+        let RFC1123_TIME_LEN = 29
+        var t: time_t = 0
+        var tm: libc.tm = libc.tm()
+
+        let buf = UnsafeMutablePointer<Int8>.init(allocatingCapacity: RFC1123_TIME_LEN + 1)
+
+        time(&t)
+        gmtime_r(&t, &tm)
+
+        strftime(buf, RFC1123_TIME_LEN+1, "---, %d --- %Y %H:%M:%S GMT", &tm)
+        memcpy(buf, DAY_NAMES[Int(tm.tm_wday)], 3)
+        memcpy(buf+8, MONTH_NAMES[Int(tm.tm_mon)], 3)
+
+
+        return String(pointer: buf, length: RFC1123_TIME_LEN + 1) ?? ""
+    }
+
+    public var cookies: [String: String] {
+
+        get {
+            var cookies: [String: String] = [:]
+
+            for value in headers["Set-Cookie"] {
+                for cookie in value.split(";") {
+                    var parts = cookie.split("=")
+                    if parts.count >= 2 {
+                        cookies[parts[0]] = parts[1]
+                    }
+                }
+            }
+
+            return cookies
+        }
+        set(newCookies) {
+            var cookies: [String] = []
+
+            for (key, value) in newCookies {
+                cookies.append("\(key)=\(value)")
+
+            }
+
+            headers["Set-Cookie"] = Headers.Value(cookies.joined(separator: ";"))
+        }
+    }
 }

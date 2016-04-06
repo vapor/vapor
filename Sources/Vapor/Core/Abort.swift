@@ -5,9 +5,9 @@
     a desired response.
 */
 public enum Abort: ErrorProtocol {
-    case InvalidParameter(String, StringInitializable.Type)
-    case BadRequest
-    case NotFound
-    case InternalServerError
-    case Custom(status: Response.Status, message: String)
+    case invalidParameter(String, StringInitializable.Type)
+    case badRequest
+    case notFound
+    case internalServerError
+    case custom(status: Response.Status, message: String)
 }

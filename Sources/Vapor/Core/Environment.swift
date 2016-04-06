@@ -33,6 +33,6 @@ extension Environment: CustomStringConvertible {
 
 }
 
-public func ==(lhs: Environment, rhs: Environment) -> Bool {
+public func == (lhs: Environment, rhs: Environment) -> Bool {
     return lhs.description == rhs.description
 }

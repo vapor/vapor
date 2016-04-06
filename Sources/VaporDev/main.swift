@@ -27,10 +27,7 @@ app.post("jsondata") { request in
 
 //MARK: Type safe routing
 
-let i = Int.self
-let s = String.self
-
-app.get("test", i, s) { request, int, string in
+app.get("test", Int.self, String.self) { request, int, string in
     return Json([
         "message": "Int \(int) String \(string)"
     ])
@@ -57,8 +54,16 @@ app.post("json") { request in
     return "Received \(count) unicorns"
 }
 
+app.post("form") { request in
+    guard let name = request.data["name"]?.string else {
+        return Response(error: "No name provided")
+    }
+
+    return "Hello \(name)"
+}
+
 app.get("redirect") { request in
-    return Redirect(to: "http://qutheory.io:8001")
+    return Response(redirect: "http://qutheory.io:8001")
 }
 
 app.post("json2") { request in
@@ -66,24 +71,24 @@ app.post("json2") { request in
     guard let count = request.data["unicorns"]?.int else {
         return Response(error: "No unicorn count provided")
     }
-    return Response(status: .Created, json: Json(["message":"Received \(count) unicorns"]))
+    return Response(status: .created, json: Json(["message":"Received \(count) unicorns"]))
 }
 
 app.group("abort") {
     app.get("400") { request in
-        throw Abort.BadRequest
+        throw Abort.badRequest
     }
 
     app.get("404") { request in
-        throw Abort.NotFound
+        throw Abort.notFound
     }
 
     app.get("420") { request in
-        throw Abort.Custom(status: .Custom(420), message: "Enhance your calm")
+        throw Abort.custom(status: .enhanceYourCalm, message: "Enhance your calm")
     }
 
     app.get("500") { request in
-        throw Abort.InternalServerError
+        throw Abort.internalServerError
     }
 }
 
@@ -102,17 +107,26 @@ app.get("session") { request in
     return "Session set"
 }
 
+app.get("login") { request in
+    guard let id = request.session?["id"] else {
+        throw Abort.badRequest
+    }
+
+    return Json([
+        "id": id
+    ])
+}
 
 app.post("login") { request in
     guard
         let email = request.data["email"]?.string,
         let password = request.data["password"]?.string
     else {
-        throw Abort.BadRequest
+        throw Abort.badRequest
     }
 
     guard email == "user@qutheory.io" && password == "test123" else {
-        throw Abort.BadRequest
+        throw Abort.badRequest
     }
 
     request.session?["id"] = "123"
@@ -122,14 +136,37 @@ app.post("login") { request in
     ])
 }
 
+app.get("cookies") { request in
+    var response = Json([
+        "cookies": "\(request.cookies)"
+    ]).makeResponse()
+
+    response.cookies["cookie-1"] = "value-1"
+    response.cookies["hello"] = "world"
+
+    return response
+}
+
 //MARK: Middleware
 
-app.middleware(AuthMiddleware.self) {
+app.middleware(AuthMiddleware()) {
     app.get("protected") { request in
         return Json([
             "message": "Welcome authorized user"
         ])
     }
+}
+
+//MARK: Async
+
+app.get("async") { request in
+    var response = Response(async: { stream in
+        try stream.send("hello".data)
+    })
+    response.headers["Content-Type"] = "text/plain"
+    response.headers["Transfer-Encoding"] = ""
+    response.headers["Content-Length"] = 5
+    return response
 }
 
 app.start(port: 8080)

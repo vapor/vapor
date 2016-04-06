@@ -37,9 +37,9 @@ class RouteTests: XCTestCase {
             }
         }
 
-        self.assertRouteExists("foo", method: .Get, host: "*", inRoutes: app.routes)
-        self.assertRouteExists("bar", method: .Post, host: "*", inRoutes: app.routes)
-        self.assertRouteExists("baz", method: .Put, host: "google.com", inRoutes: app.routes)
+        self.assertRouteExists("foo", method: .get, host: "*", inRoutes: app.routes)
+        self.assertRouteExists("bar", method: .post, host: "*", inRoutes: app.routes)
+        self.assertRouteExists("baz", method: .put, host: "google.com", inRoutes: app.routes)
     }
 
 
@@ -56,8 +56,8 @@ class RouteTests: XCTestCase {
             }
         }
 
-        self.assertRouteExists("group/path/1", method: .Get, host: "*", inRoutes: app.routes)
-        self.assertRouteExists("group/path/2", method: .Options, host: "*", inRoutes: app.routes)
+        self.assertRouteExists("group/path/1", method: .get, host: "*", inRoutes: app.routes)
+        self.assertRouteExists("group/path/2", method: .options, host: "*", inRoutes: app.routes)
     }
 
     func testNestedRouteScopedPrefixPopsCorrectly() {
@@ -75,41 +75,49 @@ class RouteTests: XCTestCase {
             }
         }
 
-        self.assertRouteExists("group/subgroup/1", method: .Get, host: "*", inRoutes: app.routes)
-        self.assertRouteExists("group/2", method: .Options, host: "*", inRoutes: app.routes)
+        self.assertRouteExists("group/subgroup/1", method: .get, host: "*", inRoutes: app.routes)
+        self.assertRouteExists("group/2", method: .options, host: "*", inRoutes: app.routes)
     }
 
     func testRouteAbort() {
         let app = Application()
 
         app.get("400") { request in
-            throw Abort.BadRequest
+            print("from 400")
+            throw Abort.badRequest
         }
 
         app.bootRoutes()
 
-        let request = Request(method: .Get, path: "400")
-        guard var handler = app.router.route(request) else {
+
+        print(app.routes)
+
+        let request = Request(method: .get, uri: URI(path: "400"), headers: [:], body: [])
+        guard var handler = app.router.route(request)?.handler else {
             XCTFail("No handler found")
             return
         }
 
         do {
-            try handler(request: request)
+            let response = try handler.respond(request)
+            print(response)
+            var body = response.body
+            let data = try body.becomeBuffer()
+            let string = try String(data: data)
+            print(string)
+
             XCTFail("Handler did not throw error")
-        } catch Abort.BadRequest {
+        } catch Abort.badRequest {
             //pass
         } catch {
             XCTFail("Handler threw incorrect error")
         }
 
-        for middleware in app.middleware {
-            handler = middleware.handle(handler, for: app)
-        }
+        handler = AbortMiddleware().intercept(handler)
 
         do {
-            let request = try handler(request: request)
-            XCTAssert(request.status.code == 400, "Incorrect response status")
+            let request = try handler.respond(request)
+            XCTAssert(request.status.statusCode == 400, "Incorrect response status")
         } catch {
             XCTFail("Middleware did not handle abort")
         }

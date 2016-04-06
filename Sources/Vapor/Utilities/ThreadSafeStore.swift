@@ -1,4 +1,4 @@
-internal final class ThreadSafeSocketStore<Socket where Socket: Vapor.Socket, Socket: Hashable> {
+/*internal final class ThreadSafeSocketStore<Socket where Socket: Vapor.Socket, Socket: Hashable> {
 
     // MARK: Properties
     private let lock = Lock()
@@ -33,3 +33,4 @@ internal final class ThreadSafeSocketStore<Socket where Socket: Vapor.Socket, So
         }
     }
 }
+*/

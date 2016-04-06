@@ -1,7 +1,13 @@
 import JSON
 
 public enum Json {
-    case null, bool(Bool), double(Double), int(Int), string(String), array([Json]), object([String: Json])
+    case null
+    case bool(Bool)
+    case double(Double)
+    case int(Int)
+    case string(String)
+    case array([Json])
+    case object([String: Json])
 
     public init(_ value: JSON) {
         switch value {
@@ -65,14 +71,13 @@ public enum Json {
         self = .object(object)
     }
 
-    public init(_ value: [UInt8]) throws {
-        let data: Data = Data(value)
-        let json = try JSONParser().parse(data)
+    public init(_ value: Data) throws {
+        let json = try JSONParser().parse(value)
         self.init(json)
     }
 
-    public var data: [UInt8] {
-        return JSONSerializer().serialize(makeZewoJson()).bytes
+    public var data: Data {
+        return JSONSerializer().serialize(makeZewoJson())
     }
 
     private func makeZewoJson() -> JSON {
@@ -206,7 +211,7 @@ extension Json: CustomStringConvertible {
 
 extension Json: ResponseRepresentable {
     public func makeResponse() -> Response {
-        return Response(status: .OK, data: data, contentType: .Json)
+        return Response(status: .ok, json: self)
     }
 }
 

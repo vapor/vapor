@@ -1,4 +1,5 @@
-import CryptoKitten
+import HMAC
+import SHA1
 
 /**
     Create SHA1 + HMAC hashes with the
@@ -14,13 +15,8 @@ public class SHAHasher: HashDriver {
         var keyBuff = [UInt8]()
         keyBuff += key.utf8
 
-        if let hmac = HMAC.authenticate(key: keyBuff, message: msgBuff, variant: .sha1) {
-            return hmac.toHexString()
-        } else {
-            Log.error("Unable to create hash, returning hash for empty string.")
-            return "da39a3ee5e6b4b0d3255bfef95601890afd80709"
-        }
-
+        let hmac = HMAC.authenticate(key: keyBuff, message: msgBuff, variant: SHA1.self)
+        return hmac.toHexString()
     }
 
 }

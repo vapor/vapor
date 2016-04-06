@@ -6,7 +6,7 @@ public class View {
     ///Currently applied RenderDrivers
     public static var renderers: [String: RenderDriver] = [:]
 
-    var bytes: [UInt8]
+    var data: Data
 
     enum Error: ErrorProtocol {
         case InvalidPath
@@ -22,17 +22,17 @@ public class View {
         let filesPath = application.workDir + "Resources/Views/" + path
 
         guard let fileBody = try? FileManager.readBytesFromFile(filesPath) else {
-            self.bytes = []
+            self.data = Data()
             Log.error("No view found in path: \(filesPath)")
             throw Error.InvalidPath
         }
-        self.bytes = fileBody
+        self.data = Data(fileBody)
 
         for (suffix, renderer) in View.renderers {
             if path.hasSuffix(suffix) {
-                let template = String(data: bytes) ?? ""
+                let template = try String(data: data)
                 let rendered = try renderer.render(template: template, context: context)
-                self.bytes = [UInt8](rendered.utf8)
+                self.data = rendered.data
             }
         }
 
@@ -43,7 +43,9 @@ public class View {
 ///Allows Views to be returned in Vapor closures
 extension View: ResponseRepresentable {
     public func makeResponse() -> Response {
-        return Response(status: .OK, data: self.bytes, contentType: .Html)
+        return Response(status: .ok, headers: [
+            "Content-Type": "text/html"
+        ], body: data)
     }
 }
 

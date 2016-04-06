@@ -23,27 +23,25 @@ class RouterTests: XCTestCase {
     func testSingleHostRouting() {
         let router = BranchRouter()
         let compare = "Hello Text Data Processing Test"
-        let data = [UInt8](compare.utf8)
+        let data = Data(compare.utf8)
 
-        let route = Route.init(host: "other.test", method: .Get, path: "test") { request in
-            return Response(status: .OK, data: data, contentType: .Text)
+        let route = Route.init(host: "other.test", method: .get, path: "test") { request in
+            return Response(status: .ok, headers: [:], body: data)
         }
         router.register(route)
 
-        let request = Request(
-            method: .Get,
-            path: "test",
-            address: nil,
-            headers: [("Host", "other.test")],
-            body: []
-        )
+        let request = Request(method: .get, path: "test", host: "other.test")
 
         do {
-            let result = router.route(request)!
-            var bytes = try result(request: request).data
+            guard let (_, result) = router.route(request) else {
+                XCTFail("no route found")
+                return
+            }
 
-            let utf8 = NSData(bytes: &bytes, length: bytes.count)
-            let string = String(data: utf8, encoding: NSUTF8StringEncoding)
+            var body = try result.respond(request).body
+
+            let data = try body.becomeBuffer()
+            let string = try String(data: data)
             XCTAssert(string == compare)
         } catch {
             XCTFail()
@@ -53,33 +51,38 @@ class RouterTests: XCTestCase {
     func testMultipleHostsRouting() {
         let router = BranchRouter()
 
-        let data_1 = [UInt8]("1".utf8)
-        let data_2 = [UInt8]("2".utf8)
+        let data_1 = "1".data
+        let data_2 = "2".data
 
-        let route_1 = Route.init(method: .Get, path: "test") { request in
-            return Response(status: .OK, data: data_1, contentType: .Text)
+        let route_1 = Route.init(method: .get, path: "test") { request in
+            return Response(status: .ok, data: data_1)
         }
         router.register(route_1)
 
-        let route_2 = Route.init(host: "vapor.test", method: .Get, path: "test") { request in
-            return Response(status: .OK, data: data_2, contentType: .Text)
+        let route_2 = Route.init(host: "vapor.test", method: .get, path: "test") { request in
+            return Response(status: .ok, data: data_2)
         }
         router.register(route_2)
 
-        let request_1 = Request(method: .Get, path: "test", address: nil, headers: [("Host", "other.test")], body: [])
-        let request_2 = Request(method: .Get, path: "test", address: nil, headers: [("Host", "vapor.test")], body: [])
+        let request_1 = Request(method: .get, path: "test", host: "other.test")
+
+        let request_2 = Request(method: .get, path: "test", host: "vapor.test")
 
         let handler_1 = router.route(request_1)
         let handler_2 = router.route(request_2)
 
-        if let response_1 = try? handler_1?(request: request_1) {
-            XCTAssert(response_1!.data == data_1, "Incorrect response returned by Handler 1")
+        if let response_1 = try? handler_1?.handler.respond(request_1) {
+            var body = response_1!.body
+            let buffer = try? body.becomeBuffer()
+            XCTAssert(buffer == data_1, "Incorrect response returned by Handler 1")
         } else {
             XCTFail("Handler 1 did not return a response")
         }
 
-        if let response_2 = try? handler_2?(request: request_2) {
-            XCTAssert(response_2!.data == data_2, "Incorrect response returned by Handler 2")
+        if let response_2 = try? handler_2?.handler.respond(request_2) {
+            var body = response_2!.body
+            let buffer = try? body.becomeBuffer()
+            XCTAssert(buffer == data_2, "Incorrect response returned by Handler 2")
         } else {
             XCTFail("Handler 2 did not return a response")
         }
@@ -93,22 +96,32 @@ class RouterTests: XCTestCase {
 
         var handlerRan = false
 
-        let route = Route(method: .Get, path: "test/:string") { request in
+        let route = Route(method: .get, path: "test/:string") { request in
 
             let testParameter = request.parameters["string"]
+            print(request.parameters)
+            print("hi")
 
             XCTAssert(testParameter == decodedString, "URL parameter was not decoded properly")
 
             handlerRan = true
 
-            return Response(status: .OK, data: [], contentType: .None)
+            return Response(status: .ok, data: [])
         }
         router.register(route)
 
-        let request = Request(method: .Get, path: "test/\(percentEncodedString)", address: nil, headers: [], body: [])
-        let handler = router.route(request)
+        var request = Request(method: .get, path: "test/\(percentEncodedString)")
+        guard let handler = router.route(request) else {
+            XCTFail("Route not found")
+            return
+        }
 
-        let _ = try? handler?(request: request)
+        do {
+            request.parameters = handler.parameters
+            try handler.handler.respond(request)
+        } catch {
+            XCTFail("Handler threw error \(error)")
+        }
 
         XCTAssert(handlerRan, "The handler did not run, and the parameter test also did not run")
     }
