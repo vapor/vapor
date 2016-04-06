@@ -23,7 +23,7 @@ public class Application {
         storing and reading values written to the
         users session.
     */
-    public lazy var session: SessionDriver = MemorySessionDriver(application: self)
+    public let session: SessionDriver
 
     /**
         Provides access to config settings.
@@ -34,7 +34,7 @@ public class Application {
         Provides access to the underlying
         `HashDriver`.
     */
-    public private(set) lazy var hash: Hash = Hash()
+    public let hash: Hash
 
     /**
         `Middleware` will be applied in the order
@@ -109,13 +109,21 @@ public class Application {
     /**
         Initialize the Application.
     */
-    public init() {
+    public init(sessionDriver: SessionDriver? = nil) {
         self.middleware = [
             AbortMiddleware(),
-            SessionMiddleware()
         ]
 
         self.providers = []
+
+        let hash = Hash()
+        
+        self.session = sessionDriver ?? MemorySessionDriver(hash: hash)
+        self.hash = hash
+
+        self.middleware.append(
+            SessionMiddleware(session: session)
+        )
     }
 
     public func bootProviders() {

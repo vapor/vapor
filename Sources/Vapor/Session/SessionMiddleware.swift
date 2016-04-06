@@ -8,17 +8,19 @@
 */
 class SessionMiddleware: Middleware {
 
-    func respond(request: Request, chain: Responder) throws -> Response {
-        guard let app = request.app else {
-            return try chain.respond(request)
-        }
+    var driver: SessionDriver
 
+    init(session: SessionDriver) {
+        driver = session
+    }
+
+    func respond(request: Request, chain: Responder) throws -> Response {
         var request = request
 
         if let sessionIdentifier = request.cookies["vapor-session"] {
-            request.session = Session(identifier: sessionIdentifier, driver: app.session)
+            request.session = Session(identifier: sessionIdentifier, driver: driver)
         } else {
-            request.session = Session(driver: app.session)
+            request.session = Session(driver: driver)
         }
 
         var response = try chain.respond(request)
