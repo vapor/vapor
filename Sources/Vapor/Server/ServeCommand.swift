@@ -32,7 +32,7 @@ public class ServeCommand: Command {
         ]
     }
 
-    public override func handle() {
+    public override func handle() throws {
         let ip = option("ip")
         let port: Int
 

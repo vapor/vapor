@@ -26,7 +26,7 @@ internal class HelpCommand: Command {
 
     // swiftlint:disable function_body_length
     // swiftlint:disable cyclomatic_complexity
-    internal override func handle() {
+    internal override func handle() throws {
         let arguments = command.arguments
         let options = command.options + command.defaultOptions
 
