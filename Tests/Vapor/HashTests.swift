@@ -45,6 +45,7 @@ class HashTests: XCTestCase {
             let result = hasher.hash(string, key: defaultKey)
             XCTAssert(result == expect, "Hash for \(variant) did not match")
         }
+        
     }
 
 }
