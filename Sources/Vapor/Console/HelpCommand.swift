@@ -1,5 +1,8 @@
 internal class HelpCommand: Command {
+    private typealias OutputGroup = [(String, String?, String?)]
+
     private let command: Command
+    private var maxNameLength = 10
 
     internal let console: Console
     internal let name = "help"
@@ -14,8 +17,6 @@ internal class HelpCommand: Command {
         self.console = console
     }
 
-    // swiftlint:disable function_body_length
-    // swiftlint:disable cyclomatic_complexity
     internal func handle(input: Input) throws {
         let arguments = command.arguments
         let options = command.options + command.defaultOptions
@@ -37,41 +38,60 @@ internal class HelpCommand: Command {
         comment("Usage:")
         line(usage)
 
-        var maxNameLength = 10
-        var groups: [String: [(String, String?, String?)]] = [:]
+        var groups = [String: OutputGroup]()
+        self.build(arguments: arguments, to: &groups)
+        self.build(options: options, to: &groups)
+        self.writeGroups(groups)
 
-        if arguments.count > 0 {
-            groups["Arguments"] = []
+        if let help = command.help {
+            line("")
+            comment("Help:")
+            line("  " + help)
+        }
+    }
 
-            for argument in arguments {
-                maxNameLength = max(maxNameLength, argument.name.characters.count + 4)
-
-                groups["Arguments"]!.append((argument.name, argument.help, argument.value))
-            }
+    private func build(arguments args: [InputArgument], to groups: inout [String: OutputGroup]) {
+        guard args.count > 0  else {
+            return
         }
 
-        if options.count > 0 {
-            groups["Options"] = []
+        var group = OutputGroup()
 
-            for option in options {
-                var name = "--\(option.name)"
-
-                if option.mode != .None {
-                    name += "[=\(option.name.uppercased())]"
-                }
-
-                maxNameLength = max(maxNameLength, name.characters.count + 4)
-
-
-                groups["Options"]!.append((name, option.help, option.value))
-            }
+        for argument in args {
+            maxNameLength = max(maxNameLength, argument.name.characters.count + 4)
+            group.append((argument.name, argument.help, argument.value))
         }
 
-        for (title, infos) in groups {
+        groups["Arguments"] = group
+    }
+
+    private func build(options options: [InputOption], to groups: inout [String: OutputGroup]) {
+        guard options.count > 0  else {
+            return
+        }
+
+        var group = OutputGroup()
+
+        for option in options {
+            var name = "--\(option.name)"
+
+            if option.mode != .None {
+                name += "[=\(option.name.uppercased())]"
+            }
+
+            maxNameLength = max(maxNameLength, name.characters.count + 4)
+            group.append((name, option.help, option.value))
+        }
+
+        groups["Options"] = group
+    }
+
+    private func writeGroups(groups: [String: OutputGroup]) {
+        for (title, group) in groups {
             line("")
             comment(title + ":")
 
-            for info in infos {
+            for info in group {
                 var line = "<info>\(info.0.pad(with: " ", to: maxNameLength))</info>"
 
                 if let value = info.1 where value.characters.count > 0 {
@@ -89,14 +109,6 @@ internal class HelpCommand: Command {
                 self.line("  \(line)")
             }
         }
-
-        if let help = command.help {
-            line("")
-            comment("Help:")
-            line("  " + help)
-        }
     }
-    // swiftlint:enable function_body_length
-    // swiftlint:enable cyclomatic_complexity
 
 }

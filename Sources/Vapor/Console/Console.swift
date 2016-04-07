@@ -72,9 +72,9 @@ public class Console {
                 throw Error.CommandNotFound(command: name)
             }
         } catch let error as Error {
-            output.writeln("<error>Error: \(error)</error>")
+            output.write("<error>Error: \(error)</error>")
         } catch {
-            output.writeln("<error>Error: \(error)</error>")
+            output.write("<error>Error: \(error)</error>")
         }
     }
 

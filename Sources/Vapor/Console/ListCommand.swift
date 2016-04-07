@@ -2,6 +2,7 @@
 public class ListCommand: Command {
     public let console: Console
     public let name = "list"
+    public let help: String? = "Lists all available commands"
 
     public required init(console: Console) {
         self.console = console

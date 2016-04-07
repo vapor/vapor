@@ -71,36 +71,31 @@ extension Command {
         ]
     }
 
-    // swiftlint:disable cyclomatic_complexity
     /**
         Run the command
         - parameter rawInput: Raw Input instance generated from Process.arguments
         - throws: Console.Error
     */
     public func run(rawInput: Input) throws {
+        try handle(Input(
+            arguments: try self.compile(arguments: rawInput.arguments),
+            options: try self.compile(options: rawInput.options)
+        ))
+    }
+
+    private func compile(arguments rawArguments: [InputArgument]) throws -> [InputArgument] {
         let arguments = self.arguments
-        var options = [String: InputOption]()
-
-        for option in self.options {
-            options[option.name] = option
-        }
-
-        for option in defaultOptions {
-            options[option.name] = option
-        }
+        var compiledArguments = [String: InputArgument]()
 
         // Ensure the input arguments doesn’t exceed the
         // number of defined arguments
-        if rawInput.arguments.count - 1 > arguments.count {
+        if rawArguments.count - 1 > arguments.count {
             throw Console.Error.TooManyArguments
         }
 
-        var compiledArguments = [String: InputArgument]()
-        var compiledOptions = [String: InputOption]()
-
         // Iterate through input arguments and match them to
         // to the defined arguments
-        for (index, argument) in rawInput.arguments.enumerated() {
+        for (index, argument) in rawArguments.enumerated() {
             if index == 0 {
                 // Skip first argument as it’s the command name
                 continue
@@ -129,9 +124,21 @@ extension Command {
             }
         }
 
+        return Array(compiledArguments.values)
+    }
+
+    private func compile(options rawOptions: [InputOption]) throws -> [InputOption] {
+        var options = [String: InputOption]()
+
+        for option in self.options + defaultOptions {
+            options[option.name] = option
+        }
+
+        var compiledOptions = [String: InputOption]()
+
         // Iterate through input options and match them to
         // the defined options
-        for option in rawInput.options {
+        for option in rawOptions {
             guard let definedOption = options[option.name] else {
                 throw Console.Error.InvalidOption(option: option.name)
             }
@@ -160,19 +167,15 @@ extension Command {
             }
         }
 
-        try handle(Input(
-            arguments: Array(compiledArguments.values),
-            options: Array(compiledOptions.values)
-        ))
+        return Array(compiledOptions.values)
     }
-    // swiftlint:enable cyclomatic_complexity
 
     /**
         Write a message without any formatting
         - parameter message: Message to write
     */
     public func line(message: String) {
-        output.writeln(message)
+        output.write(message)
     }
 
     /**
@@ -180,7 +183,7 @@ extension Command {
         - parameter message: Info message to write
     */
     public func info(message: String) {
-        output.writeln("<info>\(message)</info>")
+        output.write("<info>\(message)</info>")
     }
 
     /**
@@ -188,7 +191,7 @@ extension Command {
         - parameter message: Comment message to write
     */
     public func comment(message: String) {
-        output.writeln("<comment>\(message)</comment>")
+        output.write("<comment>\(message)</comment>")
     }
 
     /**
@@ -196,7 +199,7 @@ extension Command {
         - parameter message: Error message to write
     */
     public func error(message: String) {
-        output.writeln("<error>\(message)</error>")
+        output.write("<error>\(message)</error>")
     }
 
 }
