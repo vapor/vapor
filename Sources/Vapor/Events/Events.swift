@@ -61,16 +61,16 @@ public final class Event<T> {
      */
     @warn_unused_result(message: "subscription must be retained to receive events")
     public func subscribe(handler: Handler) -> Subscription {
-        let newToken = Subscription()
-        let holder = SubscriptionHolder(subscription: newToken)
+        let newSubscription = Subscription()
+        let holder = SubscriptionHolder(subscription: newSubscription)
         subscribers.append((holder, handler))
-        newToken.completion = { [weak self, weak newToken] in
+        newSubscription.completion = { [weak self, weak newSubscription] in
             guard let welf = self else { return }
             welf.subscribers = welf.subscribers.filter { holder, _ in
-                return holder.subscription !== newToken
+                return holder.subscription !== newSubscription
             }
         }
-        return newToken
+        return newSubscription
     }
     
     /**
