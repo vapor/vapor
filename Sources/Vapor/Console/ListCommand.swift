@@ -7,16 +7,14 @@
 
 /** Lists all available commands registered with Console */
 public class ListCommand: Command {
+    public let console: Console
+    public let name = "list"
 
-    public override var name: String {
-        return "list"
+    public required init(console: Console) {
+        self.console = console
     }
 
-    public override var help: String? {
-        return "Lists commands"
-    }
-
-    public override func handle(input: Input) throws {
+    public func handle(input: Input) throws {
         line("<info>Vapor</info> version <comment>\(Application.VERSION)</comment>")
         line("")
 

@@ -8,11 +8,9 @@
 internal class HelpCommand: Command {
     private let command: Command
 
-    internal override var options: [InputOption] {
-        return [
-            InputOption("h", mode: .Optional)
-        ]
-    }
+    internal let console: Console
+    internal let name = "help"
+    internal let options = [ InputOption("h", mode: .Optional) ]
 
     internal required init(console: Console) {
         fatalError("HelpCommand should not be invoked this way.")
@@ -20,13 +18,12 @@ internal class HelpCommand: Command {
 
     internal init(command: Command, console: Console) {
         self.command = command
-
-        super.init(console: console)
+        self.console = console
     }
 
     // swiftlint:disable function_body_length
     // swiftlint:disable cyclomatic_complexity
-    internal override func handle(input: Input) throws {
+    internal func handle(input: Input) throws {
         let arguments = command.arguments
         let options = command.options + command.defaultOptions
 

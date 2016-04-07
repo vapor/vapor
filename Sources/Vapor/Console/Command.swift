@@ -5,19 +5,60 @@
 //  Created by Shaun Harrison on 2/20/16.
 //
 
-/** Console command base class */
-public class Command {
+import VaporConsoleOutput
+
+/** Console command protocol */
+public protocol Command {
     ///Console this command is registered to
-    public let console: Console
+    var console: Console { get }
+
+    ///Name of the command
+    var name: String { get }
+
+    ///Optional help info for the command
+    var help: String? { get }
+
+    ///Arguments for this command
+    var arguments: [InputArgument] { get }
+
+    ///Options for this command
+    var options: [InputOption] { get }
+
+    /**
+        Initialize the command
+        - parameter console: Console instance this command will be registered on
+    */
+    init(console: Console)
+
+    /**
+        Called by `run()` after input has been compiled
+        - parameter input: CLI input
+        - throws: Console.Error
+    */
+    func handle(input: Input) throws
+
+}
+
+extension Command {
 
     ///Convenience accessor for the console’s app
     public var app: Application {
         return console.app
     }
 
-    ///Name of the command (Subclasses must override)
-    public var name: String {
-        fatalError("Subclasses must override the name var")
+    ///Convenience accessor for the console’s app
+    public var output: Output {
+        return console.output
+    }
+
+    ///Arguments for this command
+    public var arguments: [InputArgument] {
+        return []
+    }
+
+    ///Options for this command
+    public var options: [InputOption] {
+        return []
     }
 
     ///Optional help info for the command
@@ -25,32 +66,16 @@ public class Command {
         return nil
     }
 
-    ///Arguments for this command (Subclasses should override to populate)
-    public var arguments: [InputArgument] {
-        return []
-    }
-
-    ///Options for this command (Subclasses should override to populate)
-    public var options: [InputOption] {
-        return []
-    }
-
     ///Default options every command has
-    internal let defaultOptions = [
-        // Triggers HelpCommand
-        InputOption("help", mode: .None, help: "Display this help message"),
+    internal var defaultOptions: [InputOption] {
+        return [
+            // Triggers HelpCommand
+            InputOption("help", mode: .None, help: "Display this help message"),
 
-        // Application reads/applies these values
-        InputOption("env", mode: .Optional, help: "Specify an environment to run in."),
-        InputOption("workDir", mode: .Optional, help: "Change the work directory.", value: "./")
-    ]
-
-    /**
-        Initialize the command
-        - parameter console: Console instance this command will be registered on
-    */
-    public required init(console: Console) {
-        self.console = console
+            // Application reads/applies these values
+            InputOption("env", mode: .Optional, help: "Specify an environment to run in."),
+            InputOption("workDir", mode: .Optional, help: "Change the work directory.", value: "./")
+        ]
     }
 
     // swiftlint:disable cyclomatic_complexity
@@ -149,23 +174,12 @@ public class Command {
     }
     // swiftlint:enable cyclomatic_complexity
 
-
-    /**
-        Called by `run()` for subclasses to override
-        and implement their command logic
-        - parameter input: CLI input
-        - throws: Console.Error
-    */
-    public func handle(input: Input) throws {
-
-    }
-
     /**
         Write a message without any formatting
         - parameter message: Message to write
     */
     public func line(message: String) {
-        console.output.writeln(message)
+        output.writeln(message)
     }
 
     /**
@@ -173,7 +187,7 @@ public class Command {
         - parameter message: Info message to write
     */
     public func info(message: String) {
-        console.output.writeln("<info>\(message)</info>")
+        output.writeln("<info>\(message)</info>")
     }
 
     /**
@@ -181,7 +195,7 @@ public class Command {
         - parameter message: Comment message to write
     */
     public func comment(message: String) {
-        console.output.writeln("<comment>\(message)</comment>")
+        output.writeln("<comment>\(message)</comment>")
     }
 
     /**
@@ -189,7 +203,7 @@ public class Command {
         - parameter message: Error message to write
     */
     public func error(message: String) {
-        console.output.writeln("<error>\(message)</error>")
+        output.writeln("<error>\(message)</error>")
     }
 
 }

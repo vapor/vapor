@@ -7,16 +7,11 @@
 
 /** Command to start the server */
 public class ServeCommand: Command {
+    public let console: Console
+    public let name = "serve"
+    public var help: String? = "Serve the application"
 
-    public override var name: String {
-        return "serve"
-    }
-
-    public override var help: String? {
-        return "Serve the application"
-    }
-
-    public override var options: [InputOption] {
+    public var options: [InputOption] {
         return [
             InputOption("ip",
                 mode: .Optional,
@@ -32,7 +27,11 @@ public class ServeCommand: Command {
         ]
     }
 
-    public override func handle(input: Input) throws {
+    public required init(console: Console) {
+        self.console = console
+    }
+
+    public func handle(input: Input) throws {
         let ip = input.option("ip")
         let port: Int
 
