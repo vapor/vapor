@@ -16,7 +16,7 @@ public class ListCommand: Command {
         return "Lists commands"
     }
 
-    public override func handle() throws {
+    public override func handle(input: Input) throws {
         line("<info>Vapor</info> version <comment>\(Application.VERSION)</comment>")
         line("")
 

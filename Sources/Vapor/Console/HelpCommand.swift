@@ -26,7 +26,7 @@ internal class HelpCommand: Command {
 
     // swiftlint:disable function_body_length
     // swiftlint:disable cyclomatic_complexity
-    internal override func handle() throws {
+    internal override func handle(input: Input) throws {
         let arguments = command.arguments
         let options = command.options + command.defaultOptions
 
@@ -48,10 +48,10 @@ internal class HelpCommand: Command {
         line(usage)
 
         var maxNameLength = 10
-        var groups = Dictionary<String, Array<(String, String?, String?)>>()
+        var groups: [String: [(String, String?, String?)]] = [:]
 
         if arguments.count > 0 {
-            groups["Arguments"] = Array()
+            groups["Arguments"] = []
 
             for argument in arguments {
                 maxNameLength = max(maxNameLength, argument.name.characters.count + 4)
@@ -61,7 +61,7 @@ internal class HelpCommand: Command {
         }
 
         if options.count > 0 {
-            groups["Options"] = Array()
+            groups["Options"] = []
 
             for option in options {
                 var name = "--\(option.name)"

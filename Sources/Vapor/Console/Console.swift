@@ -70,7 +70,7 @@ public class Console {
             if let command = find(name) {
                 var run = command
 
-                if input.hasParameterOption("help") || input.hasParameterOption("h") {
+                if input.hasOption("help") || input.hasOption("h") {
                     run = HelpCommand(command: command, console: self)
                 }
 

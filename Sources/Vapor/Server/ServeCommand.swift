@@ -32,11 +32,11 @@ public class ServeCommand: Command {
         ]
     }
 
-    public override func handle() throws {
-        let ip = option("ip")
+    public override func handle(input: Input) throws {
+        let ip = input.option("ip")
         let port: Int
 
-        if let value = option("port")?.int {
+        if let value = input.option("port")?.int {
             port = value
         } else {
             port = 8080

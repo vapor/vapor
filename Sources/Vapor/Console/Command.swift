@@ -45,9 +45,6 @@ public class Command {
         InputOption("workDir", mode: .Optional, help: "Change the work directory.", value: "./")
     ]
 
-    private var compiledArguments = [String: InputArgument]()
-    private var compiledOptions = [String: InputOption]()
-
     /**
         Initialize the command
         - parameter console: Console instance this command will be registered on
@@ -59,13 +56,10 @@ public class Command {
     // swiftlint:disable cyclomatic_complexity
     /**
         Run the command
-        - parameter input: Instance of input to provide arguments/options for this command
+        - parameter rawInput: Raw Input instance generated from Process.arguments
         - throws: Console.Error
     */
-    public final func run(input: Input) throws {
-        compiledArguments.removeAll()
-        compiledOptions.removeAll()
-
+    public func run(rawInput: Input) throws {
         let arguments = self.arguments
         var options = [String: InputOption]()
 
@@ -79,18 +73,27 @@ public class Command {
 
         // Ensure the input arguments doesn’t exceed the
         // number of defined arguments
-        if input.arguments.count - 1 > arguments.count {
+        if rawInput.arguments.count - 1 > arguments.count {
             throw Console.Error.TooManyArguments
         }
 
+        var compiledArguments = [String: InputArgument]()
+        var compiledOptions = [String: InputOption]()
+
         // Iterate through input arguments and match them to
         // to the defined arguments
-        for (index, argument) in input.arguments.enumerated() {
+        for (index, argument) in rawInput.arguments.enumerated() {
             if index == 0 {
+                // Skip first argument as it’s the command name
                 continue
             }
 
-            compiledArguments[arguments[index - 1].name] = argument
+            let name = arguments[index - 1].name
+            compiledArguments[name] = InputArgument(
+                name,
+                mode: argument.mode,
+                value: argument.value
+            )
         }
 
         // If the input argument count isn’t the same as the
@@ -110,7 +113,7 @@ public class Command {
 
         // Iterate through input options and match them to
         // the defined options
-        for option in input.options {
+        for option in rawInput.options {
             guard let definedOption = options[option.name] else {
                 throw Console.Error.InvalidOption(option: option.name)
             }
@@ -139,16 +142,21 @@ public class Command {
             }
         }
 
-        try handle()
+        try handle(Input(
+            arguments: Array(compiledArguments.values),
+            options: Array(compiledOptions.values)
+        ))
     }
     // swiftlint:enable cyclomatic_complexity
+
 
     /**
         Called by `run()` for subclasses to override
         and implement their command logic
+        - parameter input: CLI input
         - throws: Console.Error
     */
-    public func handle() throws {
+    public func handle(input: Input) throws {
 
     }
 
@@ -182,34 +190,6 @@ public class Command {
     */
     public func error(message: String) {
         console.output.writeln("<error>\(message)</error>")
-    }
-
-    /**
-        Get an argument value
-        - parameter name: Name of argument to get value for
-        - returns: Argument value, if present
-    */
-    public func argument(name: String) -> String? {
-        return compiledArguments[name]?.value
-    }
-
-    /**
-        Get an option value
-        - parameter name: Name of option to get value for
-        - returns: Option value, if present
-    */
-    public func option(name: String) -> String? {
-        return compiledOptions[name]?.value
-    }
-
-    /**
-        Check if an option is present
-        This is useful for flag options with no value
-        - parameter name: Name of option to check for
-        - returns: True if option is present, false if not
-    */
-    public func hasOption(name: String) -> Bool {
-        return compiledOptions[name] != nil
     }
 
 }

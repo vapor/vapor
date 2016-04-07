@@ -9,23 +9,26 @@
 public class Input {
     ///CLI arguments
     public let arguments: [InputArgument]
+    private let namedArguments: [String: InputArgument]
 
     ///CLI options
     public let options: [InputOption]
+    private let namedOptions: [String: InputOption]
 
     /**
-        Initialize input
+        Convenience initialize to create Input class with
+        process arguments
+
         - parameter input: Optional input to initialize class with
     */
-    public init(input: [String] = Process.arguments) {
+    public convenience init(input: [String] = Process.arguments) {
         guard input.count > 0 else {
-            self.arguments = []
-            self.options = []
+            self.init(arguments: [], options: [ ])
             return
         }
 
-        var arguments = Array<InputArgument>()
-        var options = Array<InputOption>()
+        var arguments: [InputArgument] = []
+        var options: [InputOption] = []
 
         var raw = input
         raw.removeFirst()
@@ -55,23 +58,47 @@ public class Input {
             }
         }
 
+        self.init(arguments: arguments, options: options)
+    }
+
+     /**
+        Initialize input
+        - parameter arguments: CLI arguments
+        - parameter options: CLI options
+    */
+   public init(arguments: [InputArgument], options: [InputOption]) {
         self.arguments = arguments
         self.options = options
+
+        var namedArguments: [String: InputArgument] = [:]
+        for argument in arguments {
+            namedArguments[argument.name] = argument
+        }
+        self.namedArguments = namedArguments
+
+        var namedOptions: [String: InputOption] = [:]
+        for option in options {
+            namedOptions[option.name] = option
+        }
+        self.namedOptions = namedOptions
+    }
+
+    /**
+        Get the value of an argument
+        - parameter name: Name of the argument to get value of
+        - returns: Argument value, if present
+    */
+    public func argument(name: String) -> String? {
+        return namedArguments[name]?.value
     }
 
     /**
         Get the value of an option
         - parameter name: Name of the option to get value of
-        - returns: Option value if present
+        - returns: Option value, if present
     */
     public func option(name: String) -> String? {
-        for option in options {
-            if option.name == name {
-                return option.value
-            }
-        }
-
-        return nil
+        return namedOptions[name]?.value
     }
 
     /**
@@ -79,14 +106,8 @@ public class Input {
         - parameter name: Name of option to check for
         - returns: True if option is present, false if not
     */
-    public func hasParameterOption(name: String) -> Bool {
-        for option in options {
-            if option.name == name {
-                return true
-            }
-        }
-
-        return false
+    public func hasOption(name: String) -> Bool {
+        return namedOptions[name] != nil
     }
 
 }
