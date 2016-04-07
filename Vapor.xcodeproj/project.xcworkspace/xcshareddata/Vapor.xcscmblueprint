@@ -51,7 +51,7 @@
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "4A88C7F5F6EA13C3C2A03CD1950D7F655F1E4F26"
     },
     {
-      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "github.com:LoganWright\/vapor.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "github.com:qutheory\/vapor.git",
       "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "52AFDBC9624F22D94526E36BBEE271C6D7FC65D3"
     },

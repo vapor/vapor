@@ -6,7 +6,7 @@
 public final class Subscription {
     
     /**
-     Completiont to run on deinit.
+     Completion to run on deinit.
      
      - Warning: This should only be used by an event to clear the subscription on deinitialization
      */
