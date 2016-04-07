@@ -1,7 +1,3 @@
-disabled_rules:
-  #- valid_docs
-  #- type_name
-  #- line_length
 opt_in_rules:
   - missing_docs
 excluded:
