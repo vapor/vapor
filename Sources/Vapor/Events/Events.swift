@@ -16,7 +16,14 @@ public final class Subscription {
     }
 }
 
+/**
+ *  This is used to contain subscriptions w/o reference
+ *  it is necessary for the reference management to work
+ *  
+ *  It should only be used internally.
+ */
 private struct SubscriptionHolder {
+    /// The subscription that should be contained
     weak var subscription: Subscription?
 }
 
@@ -42,7 +49,6 @@ private struct SubscriptionHolder {
  */
 public final class Event<T> {
     
-    
     /// Closure called when event emits
     public typealias Handler = T -> Void
     
@@ -57,19 +63,21 @@ public final class Event<T> {
      
      - Warning: subscription returned from this function must be retained to receive events
      
-     - returns: as long as the subscription is retained, the passed handler will fire
+     - returns: a subscription. As long as it's retained, the passed handler will fire
      */
     @warn_unused_result(message: "subscription must be retained to receive events")
     public func subscribe(handler: Handler) -> Subscription {
         let newSubscription = Subscription()
-        let holder = SubscriptionHolder(subscription: newSubscription)
-        subscribers.append((holder, handler))
         newSubscription.completion = { [weak self, weak newSubscription] in
             guard let welf = self else { return }
             welf.subscribers = welf.subscribers.filter { holder, _ in
                 return holder.subscription !== newSubscription
             }
         }
+
+        let holder = SubscriptionHolder(subscription: newSubscription)
+        subscribers.append((holder, handler))
+        
         return newSubscription
     }
     
