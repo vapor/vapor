@@ -12,9 +12,10 @@ import XCTest
 class EventTests: XCTestCase {
     static var allTests: [(String, EventTests -> () throws -> Void)] {
         return [
+            ("testEventRemovedOnSubscriptionDeallocation", testEventRemovedOnSubscriptionDeallocation),
+            ("testInputAndEventRun", testInputAndEventRun)
         ]
     }
-    
     
     func testEventRemovedOnSubscriptionDeallocation() {
         let emptyEvent = Event<Void>()
