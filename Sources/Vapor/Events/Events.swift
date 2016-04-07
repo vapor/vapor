@@ -16,6 +16,10 @@ public final class Subscription {
     }
 }
 
+private struct SubscriptionHolder {
+    weak var subscription: Subscription?
+}
+
 /**
  This class can be used to create event hubs where data
  can be posted to multiple subscribers.
@@ -24,7 +28,7 @@ public final class Subscription {
  a specific class
  
      let BatteryEvent = Event<BatteryLevel>()
-     
+ 
  Then, subscribe to that event
  
      // Must retain subscription to keep receiving events!
@@ -38,11 +42,12 @@ public final class Subscription {
  */
 public final class Event<T> {
     
+    
     /// Closure called when event emits
     public typealias Handler = T -> Void
     
     /// A subscriber tuple
-    private typealias Subscriber = (token: Subscription, handler: Handler)
+    private typealias Subscriber = (token: SubscriptionHolder, handler: Handler)
     
     /// The current subscribers for this event
     private var subscribers: [Subscriber] = []
@@ -57,11 +62,12 @@ public final class Event<T> {
     @warn_unused_result(message: "subscription must be retained to receive events")
     public func subscribe(handler: Handler) -> Subscription {
         let newToken = Subscription()
-        subscribers.append((newToken, handler))
-        newToken.completion = { [weak self] in
+        let holder = SubscriptionHolder(subscription: newToken)
+        subscribers.append((holder, handler))
+        newToken.completion = { [weak self, weak newToken] in
             guard let welf = self else { return }
-            welf.subscribers = welf.subscribers.filter { token, _ in
-                return token !== newToken
+            welf.subscribers = welf.subscribers.filter { holder, _ in
+                return holder.subscription !== newToken
             }
         }
         return newToken
