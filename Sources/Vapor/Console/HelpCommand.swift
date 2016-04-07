@@ -1,10 +1,3 @@
-//
-//  HelpCommand.swift
-//  Vapor
-//
-//  Created by Shaun Harrison on 2/20/16.
-//
-
 internal class HelpCommand: Command {
     private let command: Command
 

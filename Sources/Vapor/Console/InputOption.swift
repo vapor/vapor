@@ -1,10 +1,3 @@
-//
-//  InputOption.swift
-//  Vapor
-//
-//  Created by Shaun Harrison on 2/20/16.
-//
-
 /** Interface for reading/requiring CLI options */
 public class InputOption {
     ///Name of the option

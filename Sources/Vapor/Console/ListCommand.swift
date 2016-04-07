@@ -1,10 +1,3 @@
-//
-//  ListCommand.swift
-//  Vapor
-//
-//  Created by Shaun Harrison on 2/20/16.
-//
-
 /** Lists all available commands registered with Console */
 public class ListCommand: Command {
     public let console: Console

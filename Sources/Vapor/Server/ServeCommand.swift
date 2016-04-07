@@ -1,10 +1,3 @@
-//
-//  ServeCommand.swift
-//  Vapor
-//
-//  Created by Shaun Harrison on 2/20/16.
-//
-
 /** Command to start the server */
 public class ServeCommand: Command {
     public let console: Console

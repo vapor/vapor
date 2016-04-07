@@ -1,10 +1,3 @@
-//
-//  Command.swift
-//  Vapor
-//
-//  Created by Shaun Harrison on 2/20/16.
-//
-
 import VaporConsoleOutput
 
 /** Console command protocol */

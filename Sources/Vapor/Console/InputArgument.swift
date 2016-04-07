@@ -1,10 +1,3 @@
-//
-//  InputArgument.swift
-//  Vapor
-//
-//  Created by Shaun Harrison on 2/20/16.
-//
-
 /** Interface for reading/requiring CLI arguments */
 public class InputArgument {
     ///Name of the argument

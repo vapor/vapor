@@ -1,10 +1,3 @@
-//
-//  Input.swift
-//  Vapor
-//
-//  Created by Shaun Harrison on 2/20/16.
-//
-
 ///Wrapper class around CLI input
 public class Input {
     ///CLI arguments

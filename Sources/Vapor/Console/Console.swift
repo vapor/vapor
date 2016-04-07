@@ -1,10 +1,3 @@
-//
-//  Console.swift
-//  Vapor
-//
-//  Created by Shaun Harrison on 2/20/16.
-//
-
 import VaporConsoleOutput
 
 ///Console class to interact with command line
