@@ -12,11 +12,13 @@ import XCTest
 class EventTests: XCTestCase {
     static var allTests: [(String, EventTests -> () throws -> Void)] {
         return [
-            ("testEventRemovedOnSubscriptionDeallocation", testEventRemovedOnSubscriptionDeallocation),
-            ("testInputAndEventRun", testInputAndEventRun)
+            ("testEventRemovedOnSubscriptionDeallocation",
+             testEventRemovedOnSubscriptionDeallocation),
+            ("testInputAndEventRun",
+             testInputAndEventRun)
         ]
     }
-    
+
     func testEventRemovedOnSubscriptionDeallocation() {
         let emptyEvent = Event<Void>()
         let _ = emptyEvent.subscribe {
@@ -24,7 +26,7 @@ class EventTests: XCTestCase {
         }
         emptyEvent.post()
     }
-    
+
     func testInputAndEventRun() {
         let stringEvent = Event<String>()
         var ran = false
@@ -35,6 +37,7 @@ class EventTests: XCTestCase {
         stringEvent.post("input")
         subscriber = nil
         XCTAssert(ran == true, "subscription didn't run")
-        XCTAssertNil(subscriber, "subscriber should be nil -- This is obvious, but silences 'variable not read' warning")
+        let msg = "subscriber must be nil -- silences 'variable not read' warning"
+        XCTAssertNil(subscriber, msg)
     }
 }
