@@ -58,6 +58,7 @@ public final class Event<T> {
     /// The current subscribers for this event
     private var subscribers: [Subscriber] = []
 
+    @warn_unused_result(message: "subscription must be retained to receive events")
     /**
      Adds a subscriber for this event with a handler to fire on post.
 
@@ -67,7 +68,6 @@ public final class Event<T> {
 
      - returns: a subscription. As long as it's retained, the passed handler will fire
      */
-    @warn_unused_result(message: "subscription must be retained to receive events")
     public func subscribe(handler: Handler) -> Subscription {
         let newSubscription = Subscription()
         newSubscription.completion = { [weak self, weak newSubscription] in
