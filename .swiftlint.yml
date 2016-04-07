@@ -1,5 +1,7 @@
+disabled_rules:
 opt_in_rules:
   - missing_docs
+included:
 excluded:
   - Packages
   - Sources/Vapor/Core/Generated.swift
