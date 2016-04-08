@@ -21,6 +21,7 @@ let package = Package(
     ],
     exclude: [
         "XcodeProject",
+        "Sources/Generator"
     ],
     targets: [
         Target(
@@ -30,7 +31,13 @@ let package = Package(
             ]
         ),
         Target(
-            name: "VaporDev",
+            name: "Development",
+            dependencies: [
+                .Target(name: "Vapor")
+            ]
+        ),
+        Target(
+            name: "Performance",
             dependencies: [
                 .Target(name: "Vapor")
             ]
