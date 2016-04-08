@@ -32,15 +32,24 @@ extension HTTPStream {
 
     func receiveLine() throws -> String {
         var line: String = ""
-        func append(byte: Byte) {
-            guard byte >= minimumValidAsciiCharacter else { return }
+
+        func append(byte: Byte?) {
+            guard let byte = byte else {
+                return
+            }
+            guard byte >= minimumValidAsciiCharacter else {
+                return
+            }
+
             line.append(Character(byte))
         }
 
-        while
-            let next = try receiveByte()
-            where next != newLine
-            && !closed {
+        var next: Byte?
+        while next != newLine && !closed {
+            repeat {
+                next = try receiveByte()
+            } while next == nil
+
             append(next)
         }
 

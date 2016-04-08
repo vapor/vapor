@@ -5,31 +5,35 @@
   },
   "DVTSourceControlWorkspaceBlueprintWorkingCopyStatesKey" : {
     "8D2296B3978D73F29F92A5319CC4250CE078B90B" : 0,
-    "901D39F10963DCBC990E02C949E08901C0DDB8E3" : 0,
+    "1D611DFB0C8941722678616BE789B5765AA3A46E" : 0,
     "F1BC52561A710CF215ADD0AA3A71C2520A285287" : 0,
-    "23A93BD79D6F4162360D9B57530A0BAC7A3E8EEA" : 0,
+    "901D39F10963DCBC990E02C949E08901C0DDB8E3" : 0,
     "1E72C4C11736864B9AA36A7CE5A7583666A1B027" : 0,
+    "23A93BD79D6F4162360D9B57530A0BAC7A3E8EEA" : 0,
     "52AFDBC9624F22D94526E36BBEE271C6D7FC65D3" : 0,
     "AB3B39DF79E140C049FAA89F0028F2088162E212" : 0,
     "4A88C7F5F6EA13C3C2A03CD1950D7F655F1E4F26" : 0,
     "287F3CCB1287376788CD8C8A6441419AFFC4A554" : 0,
     "10A2CB6C4392F0E306FF8D509BE5E88232276EA4" : 0,
     "48D51A061B4CAA12BB1778714EEA3375428E1708" : 0,
+    "BC4F18C8C7F08249E9651E82076CAED54BEAADF7" : 0,
     "704B817219E4CBC31AA92368EF54A4E2835A8C3D" : 0
   },
   "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "BE5BA627-C660-464B-A66A-B6985165D794",
   "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
     "8D2296B3978D73F29F92A5319CC4250CE078B90B" : "vapor\/Packages\/C7-0.2.0\/",
-    "901D39F10963DCBC990E02C949E08901C0DDB8E3" : "vapor\/Packages\/InterchangeData-0.4.2\/",
+    "1D611DFB0C8941722678616BE789B5765AA3A46E" : "vapor\/Packages\/Hummingbird-2.0.0\/",
     "F1BC52561A710CF215ADD0AA3A71C2520A285287" : "vapor\/Packages\/Data-0.4.8\/",
-    "23A93BD79D6F4162360D9B57530A0BAC7A3E8EEA" : "vapor\/Packages\/Strand-1.1.0\/",
+    "901D39F10963DCBC990E02C949E08901C0DDB8E3" : "vapor\/Packages\/InterchangeData-0.4.2\/",
     "1E72C4C11736864B9AA36A7CE5A7583666A1B027" : "vapor\/Packages\/SHA2-0.1.0\/",
+    "23A93BD79D6F4162360D9B57530A0BAC7A3E8EEA" : "vapor\/Packages\/Strand-1.1.0\/",
     "52AFDBC9624F22D94526E36BBEE271C6D7FC65D3" : "vapor\/",
     "AB3B39DF79E140C049FAA89F0028F2088162E212" : "vapor\/Packages\/CryptoEssentials-0.2.0\/",
     "4A88C7F5F6EA13C3C2A03CD1950D7F655F1E4F26" : "vapor\/Packages\/SHA1-0.2.1\/",
     "287F3CCB1287376788CD8C8A6441419AFFC4A554" : "vapor\/Packages\/HMAC-0.2.1\/",
     "10A2CB6C4392F0E306FF8D509BE5E88232276EA4" : "vapor\/Packages\/String-0.4.3\/",
     "48D51A061B4CAA12BB1778714EEA3375428E1708" : "vapor\/Packages\/CryptoKitten-0.1.3\/",
+    "BC4F18C8C7F08249E9651E82076CAED54BEAADF7" : "vapor\/Packages\/JSON-0.4.2\/",
     "704B817219E4CBC31AA92368EF54A4E2835A8C3D" : "vapor\/Packages\/OperatingSystem-0.4.2\/"
   },
   "DVTSourceControlWorkspaceBlueprintNameKey" : "Vapor",
@@ -40,6 +44,11 @@
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/Zewo\/String.git",
       "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "10A2CB6C4392F0E306FF8D509BE5E88232276EA4"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/qutheory\/Hummingbird.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "1D611DFB0C8941722678616BE789B5765AA3A46E"
     },
     {
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/CryptoKitten\/SHA2.git",
@@ -90,6 +99,11 @@
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/qutheory\/CryptoEssentials.git",
       "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "AB3B39DF79E140C049FAA89F0028F2088162E212"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/Zewo\/JSON.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "BC4F18C8C7F08249E9651E82076CAED54BEAADF7"
     },
     {
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/Zewo\/Data.git",
