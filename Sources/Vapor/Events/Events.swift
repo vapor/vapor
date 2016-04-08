@@ -4,7 +4,6 @@
  Set all references to `nil` to no longer receive events
  */
 public final class Subscription {
-
     /**
      Completion to run on deinit.
 
@@ -16,15 +15,17 @@ public final class Subscription {
     }
 }
 
-/**
- This is used to contain subscriptions w/o reference
- it is necessary for the reference management to work
+extension Subscription {
+    /**
+     This is used to contain subscriptions w/o reference
+     it is necessary for the reference management to work
 
- It should only be used internally.
- */
-private struct SubscriptionHolder {
-    /// The subscription that should be contained
-    weak var subscription: Subscription?
+     It should only be used internally.
+     */
+    private struct Holder {
+        /// The subscription that should be contained
+        weak var subscription: Subscription?
+    }
 }
 
 /**
@@ -53,7 +54,7 @@ public final class Event<T> {
     public typealias Handler = T -> Void
 
     /// A subscriber tuple
-    private typealias Subscriber = (token: SubscriptionHolder, handler: Handler)
+    private typealias Subscriber = (token: Subscription.Holder, handler: Handler)
 
     /// The current subscribers for this event
     private var subscribers: [Subscriber] = []
@@ -77,7 +78,7 @@ public final class Event<T> {
             }
         }
 
-        let holder = SubscriptionHolder(subscription: newSubscription)
+        let holder = Subscription.Holder(subscription: newSubscription)
         subscribers.append((holder, handler))
 
         return newSubscription
