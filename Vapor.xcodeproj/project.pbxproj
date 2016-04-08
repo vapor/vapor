@@ -495,7 +495,7 @@
 		"_____Product_String" /* libString.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libString.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		"_____Product_Vapor" /* libVapor.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libVapor.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		"_____Product_VaporDev" /* VaporDev */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; path = VaporDev; sourceTree = BUILT_PRODUCTS_DIR; };
-		"_____Product_VaporTestSuite" /* VaporTestSuite.xctest */ = {isa = PBXFileReference; lastKnownFileType = file; name = VaporTestSuite.xctest; path = Vapor.testsuite.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		"_____Product_VaporTestSuite" /* Vapor.testsuite.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = Vapor.testsuite.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		"_____Product_libc" /* liblibc.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = liblibc.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -707,7 +707,7 @@
 		TestProducts_ /* Tests */ = {
 			isa = PBXGroup;
 			children = (
-				"_____Product_VaporTestSuite" /* VaporTestSuite.xctest */,
+				"_____Product_VaporTestSuite" /* Vapor.testsuite.xctest */,
 			);
 			name = Tests;
 			sourceTree = "<group>";
@@ -1380,7 +1380,7 @@
 			);
 			name = Vapor.testsuite;
 			productName = VaporTestSuite;
-			productReference = "_____Product_VaporTestSuite" /* VaporTestSuite.xctest */;
+			productReference = "_____Product_VaporTestSuite" /* Vapor.testsuite.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 		"______Target_libc" /* libc */ = {

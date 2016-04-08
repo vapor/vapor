@@ -1,9 +1,9 @@
 extension Subscription {
     /**
-     This is used to contain subscriptions w/o reference
-     it is necessary for the reference management to work
+        This is used to contain subscriptions w/o reference
+        it is necessary for the reference management to work
 
-     It should only be used internally.
+        It should only be used internally.
      */
     private struct Holder {
         /// The subscription that should be contained
@@ -12,24 +12,24 @@ extension Subscription {
 }
 
 /**
- This class can be used to create event hubs where data
- can be posted to multiple subscribers.
+    This class can be used to create event hubs where data
+    can be posted to multiple subscribers.
 
- First create a global event hub or associate it with
- a specific class
+    First create a global event hub or associate it with
+    a specific class
 
-     let BatteryEvent = Event<BatteryLevel>()
+        let BatteryEvent = Event<BatteryLevel>()
 
- Then, subscribe to that event
+    Then, subscribe to that event
 
-     // Must retain subscription to keep receiving events!
-     self.subscription = BatteryEvent.subscribe { level in
-         print("Battery level is now: \(level)
-     }
+        // Must retain subscription to keep receiving events!
+        self.subscription = BatteryEvent.subscribe { level in
+            print("Battery level is now: \(level)
+        }
 
- Whenever someone has access to the event, they can post data to it like so:
+    Whenever someone has access to the event, they can post data to it like so:
 
-     BatteryEvent.post(80)
+        BatteryEvent.post(80)
  */
 public final class Event<T> {
 
@@ -44,13 +44,13 @@ public final class Event<T> {
 
     @warn_unused_result(message: "subscription must be retained to receive events")
     /**
-     Adds a subscriber for this event with a handler to fire on post.
+        Adds a subscriber for this event with a handler to fire on post.
 
-     - parameter handler: the closure to fire when event data is posted
+        - parameter handler: the closure to fire when event data is posted
 
-     - Warning: subscription returned from this function must be retained to receive events
+        - Warning: subscription returned from this function must be retained to receive events
 
-     - returns: a subscription. As long as it's retained, the passed handler will fire
+        - returns: a subscription. As long as it's retained, the passed handler will fire
      */
     public func subscribe(handler: Handler) -> Subscription {
         let newSubscription = Subscription()
@@ -68,9 +68,9 @@ public final class Event<T> {
     }
 
     /**
-     Post an event to all subscribers.
+        Post an event to all subscribers.
 
-     - parameter data: the data to be passed to subscribers
+        - parameter data: the data to be passed to subscribers
      */
     public func post(data: T) {
         subscribers.forEach { _, handler in handler(data) }
