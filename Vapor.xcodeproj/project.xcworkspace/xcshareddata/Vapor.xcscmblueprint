@@ -14,7 +14,7 @@
     "52AFDBC9624F22D94526E36BBEE271C6D7FC65D3" : 0,
     "704B817219E4CBC31AA92368EF54A4E2835A8C3D" : 0
   },
-  "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "A3D598A1-2A72-443C-9E5D-0504F0E87C4D",
+  "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "64F12B38-3A58-48A0-A94D-7CADC6FC7D3B",
   "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
     "23A93BD79D6F4162360D9B57530A0BAC7A3E8EEA" : "vapor\/Packages\/Strand-1.1.0\/",
     "901D39F10963DCBC990E02C949E08901C0DDB8E3" : "vapor\/Packages\/InterchangeData-0.4.3\/",
@@ -51,7 +51,7 @@
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "287F3CCB1287376788CD8C8A6441419AFFC4A554"
     },
     {
-      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "github.com:qutheory\/vapor.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "github.com:LoganWright\/vapor.git",
       "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "52AFDBC9624F22D94526E36BBEE271C6D7FC65D3"
     },
