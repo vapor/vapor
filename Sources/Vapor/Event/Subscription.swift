@@ -7,7 +7,7 @@ public final class Subscription {
     /**
         Completion to run on deinit.
 
-        - Warning: This should only be used by an event to clear the subscription on deinitialization
+        - Warning: This should only be used by an event to clear subscription on deinitialization
      */
     internal var completion: Void -> Void = {}
     deinit {
