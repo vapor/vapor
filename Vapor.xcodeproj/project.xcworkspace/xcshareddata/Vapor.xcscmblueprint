@@ -14,7 +14,7 @@
     "52AFDBC9624F22D94526E36BBEE271C6D7FC65D3" : 0,
     "704B817219E4CBC31AA92368EF54A4E2835A8C3D" : 0
   },
-  "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "64F12B38-3A58-48A0-A94D-7CADC6FC7D3B",
+  "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "7AF6FC70-0EAD-457F-BD0D-1C1C705849AE",
   "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
     "23A93BD79D6F4162360D9B57530A0BAC7A3E8EEA" : "vapor\/Packages\/Strand-1.1.0\/",
     "901D39F10963DCBC990E02C949E08901C0DDB8E3" : "vapor\/Packages\/InterchangeData-0.4.3\/",
