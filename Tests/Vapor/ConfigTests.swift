@@ -13,9 +13,9 @@ class ConfigTests: XCTestCase {
     }
 
     #if Xcode
-    let workDir = "/Users/tanner/Developer/vapor/vapor/Sources/VaporDev/"
+    let workDir = "/Users/tanner/Developer/vapor/vapor/Sources/Development/"
     #else
-    let workDir = "Sources/VaporDev/"
+    let workDir = "Sources/Development/"
     #endif
 
 	func testSimple() {
