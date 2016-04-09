@@ -40,7 +40,7 @@ class HTTPStreamServer<StreamType: HTTPStream>: Server {
 
     private func handle(socket: HTTPStream) {
         var keepAlive = false
-        
+
         repeat {
             let request: Request
             do {
