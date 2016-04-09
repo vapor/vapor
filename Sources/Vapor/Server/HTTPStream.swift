@@ -10,7 +10,7 @@ protocol HTTPStream: Stream {
 
     func listen() throws
 
-    func receiveByte() throws -> Byte?
+    func receiveByte() throws -> Byte
     func receiveLine() throws -> String
 
     func sendHeaderEndOfLine() throws
@@ -26,8 +26,12 @@ protocol HTTPStream: Stream {
 }
 
 extension HTTPStream {
-    func receiveByte() throws -> Byte? {
-        return try receive(max: 1).first
+    func receiveByte() throws -> Byte {
+        repeat {
+            if let byte = try receive(max: 1).first {
+                return byte
+            }
+        } while true
     }
 
     func receiveLine() throws -> String {
@@ -44,13 +48,10 @@ extension HTTPStream {
             line.append(Character(byte))
         }
 
-        var next: Byte?
-        while next != newLine && !closed {
-            repeat {
-                next = try receiveByte()
-            } while next == nil
-
-            append(next)
+        var byte: Byte?
+        while byte != newLine && !closed {
+            byte = try receiveByte()
+            append(byte)
         }
 
         return line
