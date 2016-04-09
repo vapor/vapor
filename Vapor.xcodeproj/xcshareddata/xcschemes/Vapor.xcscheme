@@ -242,36 +242,6 @@
             skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "______Target_C7TestSuite"
-               BuildableName = "C7.testsuite.xctest"
-               BlueprintName = "C7.testsuite"
-               ReferencedContainer = "container:Vapor.xcodeproj">
-            </BuildableReference>
-         </TestableReference>
-         <TestableReference
-            skipped = "NO">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "______Target_S4TestSuite"
-               BuildableName = "S4.testsuite.xctest"
-               BlueprintName = "S4.testsuite"
-               ReferencedContainer = "container:Vapor.xcodeproj">
-            </BuildableReference>
-         </TestableReference>
-         <TestableReference
-            skipped = "NO">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "______Target_HummingbirdTestSuite"
-               BuildableName = "Hummingbird.testsuite.xctest"
-               BlueprintName = "Hummingbird.testsuite"
-               ReferencedContainer = "container:Vapor.xcodeproj">
-            </BuildableReference>
-         </TestableReference>
-         <TestableReference
-            skipped = "NO">
-            <BuildableReference
-               BuildableIdentifier = "primary"
                BlueprintIdentifier = "______Target_VaporTestSuite"
                BuildableName = "Vapor.testsuite.xctest"
                BlueprintName = "Vapor.testsuite"
