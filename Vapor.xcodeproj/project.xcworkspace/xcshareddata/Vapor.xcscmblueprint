@@ -4,27 +4,31 @@
 
   },
   "DVTSourceControlWorkspaceBlueprintWorkingCopyStatesKey" : {
-    "23A93BD79D6F4162360D9B57530A0BAC7A3E8EEA" : 0,
+    "704B817219E4CBC31AA92368EF54A4E2835A8C3D" : 0,
     "901D39F10963DCBC990E02C949E08901C0DDB8E3" : 0,
     "F1BC52561A710CF215ADD0AA3A71C2520A285287" : 0,
     "1E72C4C11736864B9AA36A7CE5A7583666A1B027" : 0,
     "AB3B39DF79E140C049FAA89F0028F2088162E212" : 0,
     "287F3CCB1287376788CD8C8A6441419AFFC4A554" : 0,
+    "23A93BD79D6F4162360D9B57530A0BAC7A3E8EEA" : 0,
+    "BC4F18C8C7F08249E9651E82076CAED54BEAADF7" : 0,
     "10A2CB6C4392F0E306FF8D509BE5E88232276EA4" : 0,
     "52AFDBC9624F22D94526E36BBEE271C6D7FC65D3" : 0,
-    "704B817219E4CBC31AA92368EF54A4E2835A8C3D" : 0
+    "8D2296B3978D73F29F92A5319CC4250CE078B90B" : 0
   },
   "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "7AF6FC70-0EAD-457F-BD0D-1C1C705849AE",
   "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
-    "23A93BD79D6F4162360D9B57530A0BAC7A3E8EEA" : "vapor\/Packages\/Strand-1.1.0\/",
+    "704B817219E4CBC31AA92368EF54A4E2835A8C3D" : "vapor\/Packages\/OperatingSystem-0.4.2\/",
     "901D39F10963DCBC990E02C949E08901C0DDB8E3" : "vapor\/Packages\/InterchangeData-0.4.3\/",
     "F1BC52561A710CF215ADD0AA3A71C2520A285287" : "vapor\/Packages\/Data-0.4.9\/",
     "1E72C4C11736864B9AA36A7CE5A7583666A1B027" : "vapor\/Packages\/SHA2-0.1.0\/",
     "AB3B39DF79E140C049FAA89F0028F2088162E212" : "vapor\/Packages\/CryptoEssentials-0.2.1\/",
     "287F3CCB1287376788CD8C8A6441419AFFC4A554" : "vapor\/Packages\/HMAC-0.3.1\/",
+    "23A93BD79D6F4162360D9B57530A0BAC7A3E8EEA" : "vapor\/Packages\/Strand-1.1.0\/",
+    "BC4F18C8C7F08249E9651E82076CAED54BEAADF7" : "vapor\/Packages\/JSON-0.4.2\/",
     "10A2CB6C4392F0E306FF8D509BE5E88232276EA4" : "vapor\/Packages\/String-0.4.3\/",
     "52AFDBC9624F22D94526E36BBEE271C6D7FC65D3" : "vapor\/",
-    "704B817219E4CBC31AA92368EF54A4E2835A8C3D" : "vapor\/Packages\/OperatingSystem-0.4.2\/"
+    "8D2296B3978D73F29F92A5319CC4250CE078B90B" : "vapor\/Packages\/C7-0.2.0\/"
   },
   "DVTSourceControlWorkspaceBlueprintNameKey" : "Vapor",
   "DVTSourceControlWorkspaceBlueprintVersion" : 204,
@@ -61,6 +65,11 @@
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "704B817219E4CBC31AA92368EF54A4E2835A8C3D"
     },
     {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/SwiftX\/C7.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "8D2296B3978D73F29F92A5319CC4250CE078B90B"
+    },
+    {
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/Zewo\/InterchangeData.git",
       "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "901D39F10963DCBC990E02C949E08901C0DDB8E3"
@@ -69,6 +78,11 @@
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/CryptoKitten\/CryptoEssentials.git",
       "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "AB3B39DF79E140C049FAA89F0028F2088162E212"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/Zewo\/JSON.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "BC4F18C8C7F08249E9651E82076CAED54BEAADF7"
     },
     {
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/Zewo\/Data.git",
