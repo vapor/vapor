@@ -3,8 +3,8 @@ extension String: ErrorProtocol {}
 /*
  Possible Naming Conventions
 
- validated passes Tester -> Verified<T: Tester>
- validated passes TestSuite -> Verified<T: TestSuite>
+ validated by Tester -> Verified<T: Tester>
+ validated by TestSuite -> Verified<T: TestSuite>
 
  tested with (Self -> Bool) -> Self
  tested with Tester -> Self
@@ -17,7 +17,7 @@ public protocol Validatable {}
 
 extension Validatable {
     // MARK: Designated
-    public func tested(@noescape passes tester: (input: Self) throws -> Bool) throws -> Self {
+    public func tested(@noescape by tester: (input: Self) throws -> Bool) throws -> Self {
         guard try tester(input: self) else { throw "up" }
         return self
     }
@@ -32,20 +32,20 @@ public protocol Validator {
 
 
 extension Validatable {
-    public func tested<T: Validator where T.InputType == Self>(passes tester: T) throws -> Self {
-        return try tested(passes: tester.test)
+    public func tested<T: Validator where T.InputType == Self>(by tester: T) throws -> Self {
+        return try tested(by: tester.test)
     }
 
 }
 
 extension Optional where Wrapped: Validatable {
-    public func tested(passes tester: (input: Wrapped) throws -> Bool) throws -> Wrapped {
+    public func tested(by tester: (input: Wrapped) throws -> Bool) throws -> Wrapped {
         guard case .some(let value) = self else { throw "error" }
-        return try value.tested(passes: tester)
+        return try value.tested(by: tester)
     }
 
-    public func tested<V: Validator where V.InputType == Wrapped>(passes validator: V) throws -> Wrapped {
-        return try tested(passes: validator.test)
+    public func tested<V: Validator where V.InputType == Wrapped>(by validator: V) throws -> Wrapped {
+        return try tested(by: validator.test)
     }
 
     // TODO: Add validated(by: ` for optional versions
@@ -63,14 +63,14 @@ extension Validatable {
 }
 
 extension Validatable {
-    public func tested(passes collection: [(input: Self) throws -> Bool]) throws -> Self {
+    public func tested(by collection: [(input: Self) throws -> Bool]) throws -> Self {
         for test in collection where !(try test(input: self)) {
             throw "up"
         }
         return self
     }
 
-    public func tested<T: ValidationSuite where T.InputType == Self>(passes suite: T.Type) throws -> Self {
+    public func tested<T: ValidationSuite where T.InputType == Self>(by suite: T.Type) throws -> Self {
         guard try T.test(input: self) else { throw "up" }
         return self
     }
@@ -101,13 +101,13 @@ public struct Validated<V: Validator> {
     public let value: V.InputType
 
     public init(_ value: V.InputType, with validator: V) throws {
-        try self.value = value.tested(passes: validator)
+        try self.value = value.tested(by: validator)
     }
 }
 
 extension Validated where V: ValidationSuite {
     public init(_ value: V.InputType, with suite: V.Type = V.self) throws {
-        try self.value = value.tested(passes: suite)
+        try self.value = value.tested(by: suite)
     }
 }
 
@@ -133,8 +133,8 @@ public enum StringLength: Validator {
 }
 
 extension String {
-    func tested(passes tester: StringLength) throws -> String {
-        return try self.tested(passes: tester.test)
+    func tested(by tester: StringLength) throws -> String {
+        return try self.tested(by: tester.test)
     }
 }
 
@@ -170,10 +170,10 @@ let lastPassword = ""
 
 let DoesntContainUsername: String -> Bool = { _ in return true }
 let val = try? "password"
-    .tested(passes: .`in`(5...10))
-    .tested(passes: { $0.characters.contains(nonAlphanumeric) })
-    .tested(passes: { $0 != lastPassword })
-    .tested(passes: DoesntContainUsername)
+    .tested(by: .`in`(5...10))
+    .tested(by: { $0.characters.contains(nonAlphanumeric) })
+    .tested(by: { $0 != lastPassword })
+    .tested(by: DoesntContainUsername)
 
 
 //try! "adsf".testWith(StringLength.min(5), DoesntContainUsername
@@ -187,7 +187,7 @@ let val = try? "password"
  - Syntax
  */
 
-//try! [1,2,3,4].tested(passes: { $0 == [1,2,3,4] })
+//try! [1,2,3,4].tested(by: { $0 == [1,2,3,4] })
 
 
 // MARK: *************
