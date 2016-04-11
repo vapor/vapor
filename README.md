@@ -64,7 +64,7 @@ Simply add Vapor as a dependency to your project's `Package.swift`.
 .Package(url: "https://github.com/qutheory/vapor.git", majorVersion: 0)
 ```
 
-For more detailed installation instructions, visit the Getting Started section in the [Documentation](https://docs.qutheory.io) section of the Wiki.
+For more detailed installation instructions, visit the Getting Started section in the [Documentation](https://docs.qutheory.io).
 
 ## Application
 
