@@ -4,7 +4,7 @@ let package = Package(
     name: "Vapor",
     dependencies: [
         //Standards package. Contains protocols for cross-project compatability.
-        .Package(url: "https://github.com/open-swift/s4.git", majorVersion: 0, minor: 2),
+        .Package(url: "https://github.com/open-swift/s4.git", majorVersion: 0, minor: 3),
 
         //Provides critical String functions Foundation is missing on Linux
         .Package(url: "https://github.com/Zewo/String.git", majorVersion: 0, minor: 4),
