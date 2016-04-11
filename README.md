@@ -28,7 +28,7 @@ This is a work in progress, so *do not* rely on this for anything important. And
 
 ## Documentation
 
-Visit the [Vapor Wiki](https://github.com/qutheory/vapor/wiki) for extensive documentation on getting setup, using, and contributing to Vapor.
+Visit the [Documentation](https://docs.qutheory.io) for extensive documentation on getting setup, using, and contributing to Vapor.
 
 ## Installation
 
@@ -64,7 +64,7 @@ Simply add Vapor as a dependency to your project's `Package.swift`.
 .Package(url: "https://github.com/qutheory/vapor.git", majorVersion: 0)
 ```
 
-For more detailed installation instructions, visit the [Getting Started](https://github.com/qutheory/vapor/wiki/Setup) section of the Wiki.
+For more detailed installation instructions, visit the Getting Started section in the [Documentation](https://docs.qutheory.io) section of the Wiki.
 
 ## Application
 
