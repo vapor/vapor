@@ -22,3 +22,10 @@ extension Validatable {
         return self
     }
 }
+
+// MARK: Validators
+
+public protocol Validator {
+    associatedtype InputType: Validatable
+    func test(input value: InputType) throws -> Bool
+}
