@@ -33,25 +33,49 @@ extension ValidationSuite {
 
 public protocol Validatable {}
 
-// MARK: Validated Returns
+// MARK: Conformance
+
+extension String: Validatable {}
+
+extension Set: Validatable {}
+extension Array: Validatable {}
+extension Dictionary: Validatable {}
+
+extension Int: Validatable {}
+extension Int8: Validatable {}
+extension Int16: Validatable {}
+extension Int32: Validatable {}
+extension Int64: Validatable {}
+
+extension UInt: Validatable {}
+extension UInt8: Validatable {}
+extension UInt16: Validatable {}
+extension UInt32: Validatable {}
+extension UInt64: Validatable {}
+
+extension Float: Validatable {}
+extension Double: Validatable {}
+
+// MARK: Testing
 
 extension Validatable {
-    // MARK: Designated
     public func tested(@noescape by tester: (input: Self) throws -> Bool) throws -> Self {
         guard try tester(input: self) else { throw "up" }
         return self
     }
-}
 
-extension Validatable {
-    public func tested<T: Validator where T.InputType == Self>(by tester: T) throws -> Self {
+    public func tested<V: Validator where V.InputType == Self>(by tester: V) throws -> Self {
+        return try tested(by: tester.test)
+    }
+
+    public func tested<S: ValidationSuite where S.InputType == Self>(by tester: S.Type) throws -> Self {
         return try tested(by: tester.test)
     }
 
 }
 
 extension Optional where Wrapped: Validatable {
-    public func tested(by tester: (input: Wrapped) throws -> Bool) throws -> Wrapped {
+    public func tested(@noescape by tester: (input: Wrapped) throws -> Bool) throws -> Wrapped {
         guard case .some(let value) = self else { throw "error" }
         return try value.tested(by: tester)
     }
@@ -60,54 +84,45 @@ extension Optional where Wrapped: Validatable {
         return try tested(by: validator.test)
     }
 
-    // TODO: Add validated(by: ` for optional versions
+    public func tested<S: ValidationSuite where S.InputType == Wrapped>(by suite: S.Type) throws -> Wrapped {
+        return try tested(by: suite.test)
+    }
 }
 
-// MARK: Valiidation on Input
+// MARK: Validation
 
 extension Validatable {
     public func validated<V: Validator where V.InputType == Self>(by validator: V) throws -> Validated<V> {
-        return try Validated<V>(self, with: validator)
+        return try Validated<V>(self, by: validator)
     }
     public func validated<S: ValidationSuite where S.InputType == Self>(by type: S.Type = S.self) throws -> Validated<S> {
-        return try Validated<S>(self, with: S.self)
+        return try Validated<S>(self, by: S.self)
     }
 }
 
-extension Validatable {
-    public func tested(by collection: [(input: Self) throws -> Bool]) throws -> Self {
-        for test in collection where !(try test(input: self)) {
-            throw "up"
-        }
-        return self
+extension Optional where Wrapped: Validatable {
+    public func validated<V: Validator where V.InputType == Wrapped>(by validator: V) throws -> Validated<V> {
+        guard case .some(let value) = self else { throw "error" }
+        return try Validated<V>(value, by: validator)
     }
-
-    public func tested<T: ValidationSuite where T.InputType == Self>(by suite: T.Type) throws -> Self {
-        guard try T.test(input: self) else { throw "up" }
-        return self
+    public func validated<S: ValidationSuite where S.InputType == Wrapped>(by type: S.Type = S.self) throws -> Validated<S> {
+        guard case .some(let value) = self else { throw "error" }
+        return try Validated<S>(value, by: S.self)
     }
 }
-
-
-// MARK: Conformance
-
-extension String: Validatable {}
-extension Int: Validatable {}
-extension Array: Validatable {}
-extension Dictionary: Validatable {}
 
 // MARK: Validated
 
 public struct Validated<V: Validator> {
     public let value: V.InputType
 
-    public init(_ value: V.InputType, with validator: V) throws {
+    public init(_ value: V.InputType, by validator: V) throws {
         try self.value = value.tested(by: validator)
     }
 }
 
 extension Validated where V: ValidationSuite {
-    public init(_ value: V.InputType, with suite: V.Type = V.self) throws {
+    public init(_ value: V.InputType, by suite: V.Type = V.self) throws {
         try self.value = value.tested(by: suite)
     }
 }
