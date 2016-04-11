@@ -11,6 +11,26 @@ extension String: ErrorProtocol {}
  tested with TestSuite -> Self
  */
 
+// MARK: Validators
+
+public protocol Validator {
+    associatedtype InputType: Validatable
+    func test(input value: InputType) throws -> Bool
+}
+
+public protocol ValidationSuite: Validator {
+    associatedtype InputType: Validatable
+    static func test(input value: InputType) throws -> Bool
+}
+
+extension ValidationSuite {
+    public func test(input value: InputType) throws -> Bool {
+        return try self.dynamicType.test(input: value)
+    }
+}
+
+// MARK: Validatable
+
 public protocol Validatable {}
 
 // MARK: Validated Returns
@@ -22,14 +42,6 @@ extension Validatable {
         return self
     }
 }
-
-// MARK: Validators
-
-public protocol Validator {
-    associatedtype InputType: Validatable
-    func test(input value: InputType) throws -> Bool
-}
-
 
 extension Validatable {
     public func tested<T: Validator where T.InputType == Self>(by tester: T) throws -> Self {
@@ -83,17 +95,6 @@ extension String: Validatable {}
 extension Int: Validatable {}
 extension Array: Validatable {}
 extension Dictionary: Validatable {}
-
-public protocol ValidationSuite: Validator {
-    associatedtype InputType: Validatable
-    static func test(input value: InputType) throws -> Bool
-}
-
-extension ValidationSuite {
-    public func test(input value: InputType) throws -> Bool {
-        return try self.dynamicType.test(input: value)
-    }
-}
 
 // MARK: Validated
 
