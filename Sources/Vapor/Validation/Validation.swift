@@ -188,3 +188,47 @@ let val = try? "password"
  */
 
 //try! [1,2,3,4].tested(passes: { $0 == [1,2,3,4] })
+
+
+// MARK: *************
+// MARK: Composition
+
+public struct CombinationTester<T: Validatable>: Validator {
+    private let _test: (input: T) throws -> Bool
+
+    private init<
+        V1: Validator, V2: Validator
+        where V1.InputType == V2.InputType, V1.InputType == T>
+        (_ v1: V1, _ v2: V2) {
+
+        self.init(v1.test, v2.test)
+    }
+
+    private init<V1: Validator where V1.InputType == T>(_ v1: V1, _ test: (input: T) throws -> Bool) {
+        self.init(v1.test, test)
+    }
+
+    private init(_ lhs: (input: T) throws -> Bool, _ rhs: (input: T) throws -> Bool) {
+        _test = { value in
+            // TODO: Might be cleaner way
+            return try (try lhs(input: value)) && (try rhs(input: value))
+        }
+    }
+
+    public func test(input value: T) throws -> Bool {
+        return try _test(input: value)
+    }
+}
+
+func + <V1: Validator, V2: Validator where V1.InputType == V2.InputType>(lhs: V1, rhs: V2) -> CombinationTester<V1.InputType> {
+    return CombinationTester(lhs, rhs)
+}
+
+func + <V1: Validator>(lhs: V1, rhs: V1.InputType throws -> Bool) -> CombinationTester<V1.InputType> {
+    return CombinationTester(lhs, rhs)
+}
+
+func + <T: Validatable>(lhs: (input: T) throws -> Bool, rhs: (input: T) throws -> Bool) -> CombinationTester<T> {
+    return CombinationTester(lhs, rhs)
+}
+
