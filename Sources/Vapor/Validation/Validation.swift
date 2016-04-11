@@ -111,3 +111,80 @@ extension Validated where V: ValidationSuite {
     }
 }
 
+// MARK: Implementation Possiblities / Testing Ground
+
+public enum StringLength: Validator {
+    case min(Int)
+    case max(Int)
+    case `in`(Range<Int>)
+
+    public func test(input value: String) throws -> Bool {
+        print("Testing: \(value)")
+        let length = value.characters.count
+        switch self {
+        case .min(let m):
+            return length >= m
+        case .max(let m):
+            return length <= m
+        case .`in`(let range):
+            return range ~= length
+        }
+    }
+}
+
+extension String {
+    func tested(passes tester: StringLength) throws -> String {
+        return try self.tested(passes: tester.test)
+    }
+}
+
+public class EmailValidator: ValidationSuite {
+    public static func test(input value: String) throws -> Bool {
+        return true
+    }
+}
+
+public typealias EmailAddress = Validated<EmailValidator>
+
+let name = try! "*****".validated(by: StringLength.min(5))
+let emailExplicit: EmailAddress = try! "joe@google.com".validated()
+let emailInferred = try! "joe@google.com".validated(by: EmailValidator.self)
+
+/*
+ Chain Validators to create Validated<And<Original, New>>
+ */
+
+//struct _Tester<T: Testable> {
+//
+//
+//
+//    static func makeWith<ValidatorType: Validator where ValidatorType.ValidationType == T>(validator: ValidatorType) -> _Tester {
+//        return
+//    }
+//}
+
+public struct TestableNamespace {}
+
+func nonAlphanumeric(char: Character) -> Bool { return true }
+let lastPassword = ""
+
+let DoesntContainUsername: String -> Bool = { _ in return true }
+let val = try? "password"
+    .tested(passes: .`in`(5...10))
+    .tested(passes: { $0.characters.contains(nonAlphanumeric) })
+    .tested(passes: { $0 != lastPassword })
+    .tested(passes: DoesntContainUsername)
+
+
+//try! "adsf".testWith(StringLength.min(5), DoesntContainUsername
+//print("Val: \(val)")
+
+/*
+ Goals:
+ - ValueSafety -- if possible
+ - Composition
+ - TypeSafety
+ - Syntax
+ */
+
+//try! [1,2,3,4].tested(passes: { $0 == [1,2,3,4] })
