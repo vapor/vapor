@@ -523,27 +523,27 @@
 		__PBXFileRef_Tests/Vapor/TestHTTPStream.swift /* TestHTTPStream.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestHTTPStream.swift; sourceTree = "<group>"; };
 		__PBXFileRef_Tests/Vapor/TypedRouteTests.swift /* TypedRouteTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TypedRouteTests.swift; sourceTree = "<group>"; };
 		"_____Product_C7" /* libC7.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libC7.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
-		"_____Product_C7TestSuite" /* C7TestSuite.xctest */ = {isa = PBXFileReference; lastKnownFileType = file; name = C7TestSuite.xctest; path = C7.testsuite.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		"_____Product_C7TestSuite" /* C7.testsuite.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = C7.testsuite.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		"_____Product_CryptoEssentials" /* libCryptoEssentials.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libCryptoEssentials.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		"_____Product_Data" /* libData.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libData.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		"_____Product_Generator" /* Generator */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; path = Generator; sourceTree = BUILT_PRODUCTS_DIR; };
 		"_____Product_HMAC" /* libHMAC.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libHMAC.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		"_____Product_Hummingbird" /* libHummingbird.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libHummingbird.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
-		"_____Product_HummingbirdTestSuite" /* HummingbirdTestSuite.xctest */ = {isa = PBXFileReference; lastKnownFileType = file; name = HummingbirdTestSuite.xctest; path = Hummingbird.testsuite.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		"_____Product_HummingbirdTestSuite" /* Hummingbird.testsuite.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = Hummingbird.testsuite.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		"_____Product_InterchangeData" /* libInterchangeData.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libInterchangeData.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		"_____Product_JSON" /* libJSON.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libJSON.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
-		"_____Product_JSONTestSuite" /* JSONTestSuite.xctest */ = {isa = PBXFileReference; lastKnownFileType = file; name = JSONTestSuite.xctest; path = JSON.testsuite.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		"_____Product_JSONTestSuite" /* JSON.testsuite.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = JSON.testsuite.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		"_____Product_OperatingSystem" /* libOperatingSystem.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libOperatingSystem.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		"_____Product_S4" /* libS4.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libS4.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
-		"_____Product_S4TestSuite" /* S4TestSuite.xctest */ = {isa = PBXFileReference; lastKnownFileType = file; name = S4TestSuite.xctest; path = S4.testsuite.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		"_____Product_S4TestSuite" /* S4.testsuite.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = S4.testsuite.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		"_____Product_SHA2" /* libSHA2.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libSHA2.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		"_____Product_Strand" /* libStrand.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libStrand.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		"_____Product_String" /* libString.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libString.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		"_____Product_Validated" /* libValidated.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libValidated.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		"_____Product_Vapor" /* libVapor.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libVapor.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		"_____Product_VaporDev" /* VaporDev */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; path = VaporDev; sourceTree = BUILT_PRODUCTS_DIR; };
-		"_____Product_VaporTestSuite" /* VaporTestSuite.xctest */ = {isa = PBXFileReference; lastKnownFileType = file; name = VaporTestSuite.xctest; path = Vapor.testsuite.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		"_____Product_helpersTestSuite" /* helpersTestSuite.xctest */ = {isa = PBXFileReference; lastKnownFileType = file; name = helpersTestSuite.xctest; path = helpers.testsuite.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		"_____Product_VaporTestSuite" /* Vapor.testsuite.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = Vapor.testsuite.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		"_____Product_helpersTestSuite" /* helpers.testsuite.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = helpers.testsuite.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		"_____Product_libc" /* liblibc.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = liblibc.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -812,12 +812,12 @@
 		TestProducts_ /* Tests */ = {
 			isa = PBXGroup;
 			children = (
-				"_____Product_C7TestSuite" /* C7TestSuite.xctest */,
-				"_____Product_S4TestSuite" /* S4TestSuite.xctest */,
-				"_____Product_JSONTestSuite" /* JSONTestSuite.xctest */,
-				"_____Product_HummingbirdTestSuite" /* HummingbirdTestSuite.xctest */,
-				"_____Product_helpersTestSuite" /* helpersTestSuite.xctest */,
-				"_____Product_VaporTestSuite" /* VaporTestSuite.xctest */,
+				"_____Product_C7TestSuite" /* C7.testsuite.xctest */,
+				"_____Product_S4TestSuite" /* S4.testsuite.xctest */,
+				"_____Product_JSONTestSuite" /* JSON.testsuite.xctest */,
+				"_____Product_HummingbirdTestSuite" /* Hummingbird.testsuite.xctest */,
+				"_____Product_helpersTestSuite" /* helpers.testsuite.xctest */,
+				"_____Product_VaporTestSuite" /* Vapor.testsuite.xctest */,
 			);
 			name = Tests;
 			sourceTree = "<group>";
@@ -1264,7 +1264,7 @@
 			);
 			name = C7.testsuite;
 			productName = C7TestSuite;
-			productReference = "_____Product_C7TestSuite" /* C7TestSuite.xctest */;
+			productReference = "_____Product_C7TestSuite" /* C7.testsuite.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 		"______Target_CryptoEssentials" /* CryptoEssentials */ = {
@@ -1381,7 +1381,7 @@
 			);
 			name = Hummingbird.testsuite;
 			productName = HummingbirdTestSuite;
-			productReference = "_____Product_HummingbirdTestSuite" /* HummingbirdTestSuite.xctest */;
+			productReference = "_____Product_HummingbirdTestSuite" /* Hummingbird.testsuite.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 		"______Target_InterchangeData" /* InterchangeData */ = {
@@ -1441,7 +1441,7 @@
 			);
 			name = JSON.testsuite;
 			productName = JSONTestSuite;
-			productReference = "_____Product_JSONTestSuite" /* JSONTestSuite.xctest */;
+			productReference = "_____Product_JSONTestSuite" /* JSON.testsuite.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 		"______Target_OperatingSystem" /* OperatingSystem */ = {
@@ -1492,7 +1492,7 @@
 			);
 			name = S4.testsuite;
 			productName = S4TestSuite;
-			productReference = "_____Product_S4TestSuite" /* S4TestSuite.xctest */;
+			productReference = "_____Product_S4TestSuite" /* S4.testsuite.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 		"______Target_SHA2" /* SHA2 */ = {
@@ -1649,7 +1649,7 @@
 			);
 			name = Vapor.testsuite;
 			productName = VaporTestSuite;
-			productReference = "_____Product_VaporTestSuite" /* VaporTestSuite.xctest */;
+			productReference = "_____Product_VaporTestSuite" /* Vapor.testsuite.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 		"______Target_helpersTestSuite" /* helpers.testsuite */ = {
@@ -1665,7 +1665,7 @@
 			);
 			name = helpers.testsuite;
 			productName = helpersTestSuite;
-			productReference = "_____Product_helpersTestSuite" /* helpersTestSuite.xctest */;
+			productReference = "_____Product_helpersTestSuite" /* helpers.testsuite.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 		"______Target_libc" /* libc */ = {
