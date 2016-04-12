@@ -1,16 +1,5 @@
 extension String: ErrorProtocol {}
 
-/*
- Possible Naming Conventions
-
- validated by Tester -> Verified<T: Tester>
- validated by TestSuite -> Verified<T: TestSuite>
-
- tested by (Self -> Bool) -> Self
- tested by Tester -> Self
- tested by TestSuite -> Self
- */
-
 // MARK: Validators
 
 public protocol Validator {
@@ -27,63 +16,6 @@ extension ValidationSuite {
     public func test(input value: InputType) -> Bool {
         return self.dynamicType.test(input: value)
     }
-}
-
-// MARK: Operators
-
-public prefix func ! <V: Validator> (rhs: V) -> Not<V> {
-    return Not(rhs)
-}
-public prefix func ! <V: ValidationSuite> (rhs: V.Type) -> Not<V> {
-    return Not(rhs)
-}
-
-public func || <V: Validator, U: Validator where V.InputType == U.InputType> (lhs: V, rhs: U) -> Or<V, U> {
-    return Or(lhs, rhs)
-}
-
-public func || <V: Validator, U: ValidationSuite where V.InputType == U.InputType> (lhs: V, rhs: U.Type) -> Or<V, U> {
-    return Or(lhs, rhs)
-}
-
-public func || <V: ValidationSuite, U: Validator where V.InputType == U.InputType> (lhs: V.Type, rhs: U) -> Or<V, U> {
-    return Or(lhs, rhs)
-}
-
-public func || <V: ValidationSuite, U: ValidationSuite where V.InputType == U.InputType> (lhs: V.Type, rhs: U.Type) -> Or<V, U> {
-    return Or(lhs, rhs)
-}
-
-public func && <V: Validator, U: Validator where V.InputType == U.InputType> (lhs: V, rhs: U) -> And<V, U> {
-    return And(lhs, rhs)
-}
-
-public func && <V: Validator, U: ValidationSuite where V.InputType == U.InputType> (lhs: V, rhs: U.Type) -> And<V, U> {
-    return And(lhs, rhs)
-}
-
-public func && <V: ValidationSuite, U: Validator where V.InputType == U.InputType> (lhs: V.Type, rhs: U) -> And<V, U> {
-    return And(lhs, rhs)
-}
-
-public func && <V: ValidationSuite, U: ValidationSuite where V.InputType == U.InputType> (lhs: V.Type, rhs: U.Type) -> And<V, U> {
-    return And(lhs, rhs)
-}
-
-public func + <V: Validator, U: Validator where V.InputType == U.InputType>(lhs: V, rhs: U) -> And<V, U> {
-    return And(lhs, rhs)
-}
-
-public func + <V: Validator, U: ValidationSuite where V.InputType == U.InputType>(lhs: V, rhs: U.Type) -> And<V, U> {
-    return And(lhs, rhs)
-}
-
-public func + <V: ValidationSuite, U: Validator where V.InputType == U.InputType>(lhs: V.Type, rhs: U) -> And<V, U> {
-    return And(lhs, rhs)
-}
-
-public func + <V: ValidationSuite, U: ValidationSuite where V.InputType == U.InputType>(lhs: V.Type, rhs: U.Type) -> And<V, U> {
-    return And(lhs, rhs)
 }
 
 // MARK: Validated
