@@ -182,20 +182,6 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "______Target_Validated"
-               BuildableName = "libValidated.dylib"
-               BlueprintName = "Validated"
-               ReferencedContainer = "container:Vapor.xcodeproj">
-            </BuildableReference>
-         </BuildActionEntry>
-         <BuildActionEntry
-            buildForTesting = "YES"
-            buildForRunning = "YES"
-            buildForProfiling = "YES"
-            buildForArchiving = "YES"
-            buildForAnalyzing = "YES">
-            <BuildableReference
-               BuildableIdentifier = "primary"
                BlueprintIdentifier = "______Target_Generator"
                BuildableName = "Generator"
                BlueprintName = "Generator"
@@ -289,16 +275,6 @@
                BlueprintIdentifier = "______Target_HummingbirdTestSuite"
                BuildableName = "Hummingbird.testsuite.xctest"
                BlueprintName = "Hummingbird.testsuite"
-               ReferencedContainer = "container:Vapor.xcodeproj">
-            </BuildableReference>
-         </TestableReference>
-         <TestableReference
-            skipped = "NO">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "______Target_helpersTestSuite"
-               BuildableName = "helpers.testsuite.xctest"
-               BlueprintName = "helpers.testsuite"
                ReferencedContainer = "container:Vapor.xcodeproj">
             </BuildableReference>
          </TestableReference>
