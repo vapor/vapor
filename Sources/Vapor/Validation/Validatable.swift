@@ -32,11 +32,11 @@ extension Validatable {
     }
 
     public func tested<V: Validator where V.InputType == Self>(by tester: V) throws -> Self {
-        return try tested(by: tester.test)
+        return try tested(by: tester.validate)
     }
 
     public func tested<S: ValidationSuite where S.InputType == Self>(by tester: S.Type) throws -> Self {
-        return try tested(by: tester.test)
+        return try tested(by: tester.validate)
     }
 
 }
@@ -48,11 +48,11 @@ extension Optional where Wrapped: Validatable {
     }
 
     public func tested<V: Validator where V.InputType == Wrapped>(by validator: V) throws -> Wrapped {
-        return try tested(by: validator.test)
+        return try tested(by: validator.validate)
     }
 
     public func tested<S: ValidationSuite where S.InputType == Wrapped>(by suite: S.Type) throws -> Wrapped {
-        return try tested(by: suite.test)
+        return try tested(by: suite.validate)
     }
 }
 

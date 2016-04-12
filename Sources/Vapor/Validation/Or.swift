@@ -20,48 +20,47 @@
 public struct Or<
     V: Validator,
     U: Validator where V.InputType == U.InputType> {
-
-    private typealias Closure = (input: V.InputType) -> Bool
-    private let _test: Closure
+    private typealias Validator = (input: V.InputType) -> Bool
+    private let validator: Validator
 
     /**
      CONVENIENCE ONLY.
      
      MUST STAY PRIVATE
      */
-    private init(_ lhs: Closure, _ rhs: Closure) {
-        _test = { value in
+    private init(_ lhs: Validator, _ rhs: Validator) {
+        validator = { value in
             return lhs(input: value) || rhs(input: value)
         }
     }
 }
 
 extension Or: Validator {
-    public func test(input value: V.InputType) -> Bool {
-        return _test(input: value)
+    public func validate(input value: V.InputType) -> Bool {
+        return validator(input: value)
     }
 }
 
 extension Or {
     public init(_ lhs: V, _ rhs: U) {
-        self.init(lhs.test, rhs.test)
+        self.init(lhs.validate, rhs.validate)
     }
 }
 
 extension Or where V: ValidationSuite {
     public init(_ lhs: V.Type = V.self, _ rhs: U) {
-        self.init(lhs.test, rhs.test)
+        self.init(lhs.validate, rhs.validate)
     }
 }
 
 extension Or where U: ValidationSuite {
     public init(_ lhs: V, _ rhs: U.Type = U.self) {
-        self.init(lhs.test, rhs.test)
+        self.init(lhs.validate, rhs.validate)
     }
 }
 
 extension Or where V: ValidationSuite, U: ValidationSuite {
     public init(_ lhs: V.Type = V.self, _ rhs: U.Type = U.self) {
-        self.init(lhs.test, rhs.test)
+        self.init(lhs.validate, rhs.validate)
     }
 }

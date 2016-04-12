@@ -18,34 +18,33 @@
  */
 
 public struct Not<V: Validator> {
-    private typealias Closure = (input: V.InputType) -> Bool
-    private let _test: Closure
+    private typealias Validator = (input: V.InputType) -> Bool
+    private let validator: Validator
 
     /**
      CONVENIENCE ONLY.
 
      MUST STAY PRIVATE
      */
-    private init(_ v1: Closure) {
-        _test = { value in !v1(input: value) }
+    private init(_ validator: Validator) {
+        self.validator = { value in !validator(input: value) }
     }
 }
 
 extension Not: Validator {
-    public func test(input value: V.InputType) -> Bool {
-        return _test(input: value)
+    public func validate(input value: V.InputType) -> Bool {
+        return validator(input: value)
     }
 }
 
 extension Not {
     public init(_ lhs: V) {
-        self.init(lhs.test)
+        self.init(lhs.validate)
     }
 }
 
-
 extension Not where V: ValidationSuite {
     public init(_ lhs: V.Type = V.self) {
-        self.init(lhs.test)
+        self.init(lhs.validate)
     }
 }

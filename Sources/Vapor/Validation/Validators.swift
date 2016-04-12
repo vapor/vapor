@@ -18,41 +18,44 @@
  */
 
 public struct Validation {
-    enum Error: ErrorProtocol {
+    public enum Error: ErrorProtocol {
         case FailedValidation(Any)
     }
 }
+
 public protocol Validator {
     associatedtype InputType: Validatable
-    func test(input value: InputType) -> Bool
+    func validate(input value: InputType) -> Bool
 }
 
 public protocol ValidationSuite: Validator {
     associatedtype InputType: Validatable
-    static func test(input value: InputType) -> Bool
+    static func validate(input value: InputType) -> Bool
 }
 
 extension ValidationSuite {
-    public func test(input value: InputType) -> Bool {
-        return self.dynamicType.test(input: value)
+    public func validate(input value: InputType) -> Bool {
+        return self.dynamicType.validate(input: value)
     }
 }
 
 // MARK: Validated
 
 class ContainsEmoji: ValidationSuite {
-    static func test(input value: String) -> Bool {
+    static func validate(input value: String) -> Bool {
         return true
     }
 }
+
 class AlreadyTaken: ValidationSuite {
-    static func test(input value: String) -> Bool {
+    static func validate(input value: String) -> Bool {
         return true
     }
 }
+
 class OwnedBy: Validator {
     init(user: String) {}
-    func test(input value: String) -> Bool {
+    func validate(input value: String) -> Bool {
         return true
     }
 }
@@ -62,7 +65,7 @@ public enum StringLength: Validator {
     case max(Int)
     case `in`(Range<Int>)
 
-    public func test(input value: String) -> Bool {
+    public func validate(input value: String) -> Bool {
         print("Testing: \(value)")
         let length = value.characters.count
         switch self {
