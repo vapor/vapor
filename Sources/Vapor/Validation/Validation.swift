@@ -66,7 +66,7 @@ public struct And<
 }
 
 extension And {
-    init(_ lhs: V, _ rhs: U) {
+    public init(_ lhs: V, _ rhs: U) {
         self.init(lhs.test, rhs.test)
     }
 }
@@ -78,19 +78,19 @@ extension And: Validator {
 }
 
 extension And where V: ValidationSuite {
-    init(_ lhs: V.Type = V.self, _ rhs: U) {
+    public init(_ lhs: V.Type = V.self, _ rhs: U) {
         self.init(lhs.test, rhs.test)
     }
 }
 
 extension And where U: ValidationSuite {
-    init(_ lhs: V, _ rhs: U.Type = U.self) {
+    public init(_ lhs: V, _ rhs: U.Type = U.self) {
         self.init(lhs.test, rhs.test)
     }
 }
 
 extension And where V: ValidationSuite, U: ValidationSuite {
-    init(_ lhs: V.Type = V.self, _ rhs: U.Type = U.self) {
+    public init(_ lhs: V.Type = V.self, _ rhs: U.Type = U.self) {
         self.init(lhs.test, rhs.test)
     }
 }
