@@ -15,7 +15,7 @@ class Name: ValidationSuite {
             + StringLength.min(5)
             + StringLength.max(20)
 
-        return value.passes(evaluation)
+        return evaluation.validate(input: value)
     }
 }
 
