@@ -17,16 +17,50 @@
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-public struct Validated<V: Validator> {
-    public let value: V.InputType
+public struct And<
+    V: Validator,
+    U: Validator where V.InputType == U.InputType> {
+    private typealias Closure = (input: V.InputType) -> Bool
+    private let _test: Closure
 
-    public init(_ value: V.InputType, by validator: V) throws {
-        try self.value = value.tested(by: validator)
+    /**
+     CONVENIENCE ONLY.
+
+     MUST STAY PRIVATE
+     */
+    private init(_ lhs: Closure, _ rhs: Closure) {
+        _test = { value in
+            return lhs(input: value) && rhs(input: value)
+        }
     }
 }
 
-extension Validated where V: ValidationSuite {
-    public init(_ value: V.InputType, by suite: V.Type = V.self) throws {
-        try self.value = value.tested(by: suite)
+extension And {
+    public init(_ lhs: V, _ rhs: U) {
+        self.init(lhs.test, rhs.test)
+    }
+}
+
+extension And: Validator {
+    public func test(input value: V.InputType) -> Bool {
+        return _test(input: value)
+    }
+}
+
+extension And where V: ValidationSuite {
+    public init(_ lhs: V.Type = V.self, _ rhs: U) {
+        self.init(lhs.test, rhs.test)
+    }
+}
+
+extension And where U: ValidationSuite {
+    public init(_ lhs: V, _ rhs: U.Type = U.self) {
+        self.init(lhs.test, rhs.test)
+    }
+}
+
+extension And where V: ValidationSuite, U: ValidationSuite {
+    public init(_ lhs: V.Type = V.self, _ rhs: U.Type = U.self) {
+        self.init(lhs.test, rhs.test)
     }
 }

@@ -17,16 +17,35 @@
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-public struct Validated<V: Validator> {
-    public let value: V.InputType
+public struct Not<V: Validator> {
+    private typealias Closure = (input: V.InputType) -> Bool
+    private let _test: Closure
 
-    public init(_ value: V.InputType, by validator: V) throws {
-        try self.value = value.tested(by: validator)
+    /**
+     CONVENIENCE ONLY.
+
+     MUST STAY PRIVATE
+     */
+    private init(_ v1: Closure) {
+        _test = { value in !v1(input: value) }
     }
 }
 
-extension Validated where V: ValidationSuite {
-    public init(_ value: V.InputType, by suite: V.Type = V.self) throws {
-        try self.value = value.tested(by: suite)
+extension Not: Validator {
+    public func test(input value: V.InputType) -> Bool {
+        return _test(input: value)
+    }
+}
+
+extension Not {
+    public init(_ lhs: V) {
+        self.init(lhs.test)
+    }
+}
+
+
+extension Not where V: ValidationSuite {
+    public init(_ lhs: V.Type = V.self) {
+        self.init(lhs.test)
     }
 }
