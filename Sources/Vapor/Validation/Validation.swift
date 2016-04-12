@@ -1,5 +1,88 @@
 extension String: ErrorProtocol {}
 
+// MARK: Validatable
+
+public protocol Validatable {}
+
+// MARK: Conformance
+
+extension String: Validatable {}
+
+extension Set: Validatable {}
+extension Array: Validatable {}
+extension Dictionary: Validatable {}
+
+extension Int: Validatable {}
+extension Int8: Validatable {}
+extension Int16: Validatable {}
+extension Int32: Validatable {}
+extension Int64: Validatable {}
+
+extension UInt: Validatable {}
+extension UInt8: Validatable {}
+extension UInt16: Validatable {}
+extension UInt32: Validatable {}
+extension UInt64: Validatable {}
+
+extension Float: Validatable {}
+extension Double: Validatable {}
+
+// MARK: Testing
+
+extension Validatable {
+    public func tested(@noescape by tester: (input: Self) throws -> Bool) throws -> Self {
+        guard try tester(input: self) else { throw "up" }
+        return self
+    }
+
+    public func tested<V: Validator where V.InputType == Self>(by tester: V) throws -> Self {
+        return try tested(by: tester.test)
+    }
+
+    public func tested<S: ValidationSuite where S.InputType == Self>(by tester: S.Type) throws -> Self {
+        return try tested(by: tester.test)
+    }
+
+}
+
+extension Optional where Wrapped: Validatable {
+    public func tested(@noescape by tester: (input: Wrapped) throws -> Bool) throws -> Wrapped {
+        guard case .some(let value) = self else { throw "error" }
+        return try value.tested(by: tester)
+    }
+
+    public func tested<V: Validator where V.InputType == Wrapped>(by validator: V) throws -> Wrapped {
+        return try tested(by: validator.test)
+    }
+
+    public func tested<S: ValidationSuite where S.InputType == Wrapped>(by suite: S.Type) throws -> Wrapped {
+        return try tested(by: suite.test)
+    }
+}
+
+// MARK: Validation
+
+extension Validatable {
+    public func validated<V: Validator where V.InputType == Self>(by validator: V) throws -> Validated<V> {
+        return try Validated<V>(self, by: validator)
+    }
+    public func validated<S: ValidationSuite where S.InputType == Self>(by type: S.Type = S.self) throws -> Validated<S> {
+        return try Validated<S>(self, by: S.self)
+    }
+}
+
+extension Optional where Wrapped: Validatable {
+    public func validated<V: Validator where V.InputType == Wrapped>(by validator: V) throws -> Validated<V> {
+        guard case .some(let value) = self else { throw "error" }
+        return try Validated<V>(value, by: validator)
+    }
+    public func validated<S: ValidationSuite where S.InputType == Wrapped>(by type: S.Type = S.self) throws -> Validated<S> {
+        guard case .some(let value) = self else { throw "error" }
+        return try Validated<S>(value, by: S.self)
+    }
+}
+
+
 /*
  Possible Naming Conventions
 
@@ -29,6 +112,63 @@ extension ValidationSuite {
     }
 }
 
+// MARK: Operators
+
+public prefix func ! <V: Validator> (rhs: V) -> Not<V> {
+    return Not(rhs)
+}
+public prefix func ! <V: ValidationSuite> (rhs: V.Type) -> Not<V> {
+    return Not(rhs)
+}
+
+public func || <V: Validator, U: Validator where V.InputType == U.InputType> (lhs: V, rhs: U) -> Or<V, U> {
+    return Or(lhs, rhs)
+}
+
+public func || <V: Validator, U: ValidationSuite where V.InputType == U.InputType> (lhs: V, rhs: U.Type) -> Or<V, U> {
+    return Or(lhs, rhs)
+}
+
+public func || <V: ValidationSuite, U: Validator where V.InputType == U.InputType> (lhs: V.Type, rhs: U) -> Or<V, U> {
+    return Or(lhs, rhs)
+}
+
+public func || <V: ValidationSuite, U: ValidationSuite where V.InputType == U.InputType> (lhs: V.Type, rhs: U.Type) -> Or<V, U> {
+    return Or(lhs, rhs)
+}
+
+public func && <V: Validator, U: Validator where V.InputType == U.InputType> (lhs: V, rhs: U) -> And<V, U> {
+    return And(lhs, rhs)
+}
+
+public func && <V: Validator, U: ValidationSuite where V.InputType == U.InputType> (lhs: V, rhs: U.Type) -> And<V, U> {
+    return And(lhs, rhs)
+}
+
+public func && <V: ValidationSuite, U: Validator where V.InputType == U.InputType> (lhs: V.Type, rhs: U) -> And<V, U> {
+    return And(lhs, rhs)
+}
+
+public func && <V: ValidationSuite, U: ValidationSuite where V.InputType == U.InputType> (lhs: V.Type, rhs: U.Type) -> And<V, U> {
+    return And(lhs, rhs)
+}
+
+public func + <V: Validator, U: Validator where V.InputType == U.InputType>(lhs: V, rhs: U) -> And<V, U> {
+    return And(lhs, rhs)
+}
+
+public func + <V: Validator, U: ValidationSuite where V.InputType == U.InputType>(lhs: V, rhs: U.Type) -> And<V, U> {
+    return And(lhs, rhs)
+}
+
+public func + <V: ValidationSuite, U: Validator where V.InputType == U.InputType>(lhs: V.Type, rhs: U) -> And<V, U> {
+    return And(lhs, rhs)
+}
+
+public func + <V: ValidationSuite, U: ValidationSuite where V.InputType == U.InputType>(lhs: V.Type, rhs: U.Type) -> And<V, U> {
+    return And(lhs, rhs)
+}
+
 // MARK: Validated
 
 public struct Validated<V: Validator> {
@@ -44,6 +184,29 @@ extension Validated where V: ValidationSuite {
         try self.value = value.tested(by: suite)
     }
 }
+
+class ContainsEmoji: ValidationSuite {
+    static func test(input value: String) -> Bool {
+        return true
+    }
+}
+class AlreadyTaken: ValidationSuite {
+    static func test(input value: String) -> Bool {
+        return true
+    }
+}
+class OwnedBy: Validator {
+    init(user: String) {}
+    func test(input value: String) -> Bool {
+        return true
+    }
+}
+
+let user = ""
+
+let available = !AlreadyTaken.self || OwnedBy(user: user)
+let appropriateLength = StringLength.min(5) + StringLength.max(20)
+let blename = try! "new name".validated(by: !ContainsEmoji.self + appropriateLength + available)
 
 // MARK: And
 
@@ -182,90 +345,3 @@ extension Not where V: ValidationSuite {
 }
 
 // MARK: Composition
-
-func + <V1: Validator, V2: Validator where V1.InputType == V2.InputType>(lhs: V1, rhs: V2) -> And<V1, V2> {
-    return And(lhs, rhs)
-}
-
-
-// MARK: Validatable
-
-public protocol Validatable {}
-
-// MARK: Conformance
-
-extension String: Validatable {}
-
-extension Set: Validatable {}
-extension Array: Validatable {}
-extension Dictionary: Validatable {}
-
-extension Int: Validatable {}
-extension Int8: Validatable {}
-extension Int16: Validatable {}
-extension Int32: Validatable {}
-extension Int64: Validatable {}
-
-extension UInt: Validatable {}
-extension UInt8: Validatable {}
-extension UInt16: Validatable {}
-extension UInt32: Validatable {}
-extension UInt64: Validatable {}
-
-extension Float: Validatable {}
-extension Double: Validatable {}
-
-// MARK: Testing
-
-extension Validatable {
-    public func tested(@noescape by tester: (input: Self) throws -> Bool) throws -> Self {
-        guard try tester(input: self) else { throw "up" }
-        return self
-    }
-
-    public func tested<V: Validator where V.InputType == Self>(by tester: V) throws -> Self {
-        return try tested(by: tester.test)
-    }
-
-    public func tested<S: ValidationSuite where S.InputType == Self>(by tester: S.Type) throws -> Self {
-        return try tested(by: tester.test)
-    }
-
-}
-
-extension Optional where Wrapped: Validatable {
-    public func tested(@noescape by tester: (input: Wrapped) throws -> Bool) throws -> Wrapped {
-        guard case .some(let value) = self else { throw "error" }
-        return try value.tested(by: tester)
-    }
-
-    public func tested<V: Validator where V.InputType == Wrapped>(by validator: V) throws -> Wrapped {
-        return try tested(by: validator.test)
-    }
-
-    public func tested<S: ValidationSuite where S.InputType == Wrapped>(by suite: S.Type) throws -> Wrapped {
-        return try tested(by: suite.test)
-    }
-}
-
-// MARK: Validation
-
-extension Validatable {
-    public func validated<V: Validator where V.InputType == Self>(by validator: V) throws -> Validated<V> {
-        return try Validated<V>(self, by: validator)
-    }
-    public func validated<S: ValidationSuite where S.InputType == Self>(by type: S.Type = S.self) throws -> Validated<S> {
-        return try Validated<S>(self, by: S.self)
-    }
-}
-
-extension Optional where Wrapped: Validatable {
-    public func validated<V: Validator where V.InputType == Wrapped>(by validator: V) throws -> Validated<V> {
-        guard case .some(let value) = self else { throw "error" }
-        return try Validated<V>(value, by: validator)
-    }
-    public func validated<S: ValidationSuite where S.InputType == Wrapped>(by type: S.Type = S.self) throws -> Validated<S> {
-        guard case .some(let value) = self else { throw "error" }
-        return try Validated<S>(value, by: S.self)
-    }
-}

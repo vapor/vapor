@@ -1,3 +1,14 @@
+
+public protocol LengthAttribute {
+    static var length: Int { get }
+}
+
+public struct _StrLength<LengthType: LengthAttribute>: ValidationSuite {
+    public static func test(input value: String) -> Bool {
+        return value.characters.count >= LengthType.length
+    }
+}
+
 /// This protocol needs to be implemented in order to add a requirement to
 /// a wrapped type.
 /// Implementers receive the wrapped type and need to determine if its values
