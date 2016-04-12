@@ -56,6 +56,37 @@ extension Optional where Wrapped: Validatable {
     }
 }
 
+// MARK: Passing
+
+extension Validatable {
+    public func passes(@noescape tester: (input: Self) -> Bool) -> Bool {
+        return tester(input: self)
+    }
+
+    public func passes<V: Validator where V.InputType == Self>(tester: V) -> Bool {
+        return passes(tester.validate)
+    }
+
+    public func passes<S: ValidationSuite where S.InputType == Self>(tester: S.Type) -> Bool {
+        return passes(tester.validate)
+    }
+}
+
+extension Optional where Wrapped: Validatable {
+    public func passes(@noescape tester: (input: Wrapped) -> Bool) -> Bool {
+        guard case .some(let value) = self else { return false }
+        return value.passes(tester)
+    }
+
+    public func passes<V: Validator where V.InputType == Wrapped>(validator: V) -> Bool {
+        return passes(validator.validate)
+    }
+
+    public func passes<S: ValidationSuite where S.InputType == Wrapped>(by suite: S.Type) -> Bool {
+        return passes(suite.validate)
+    }
+}
+
 // MARK: Validation
 
 extension Validatable {
