@@ -30,8 +30,14 @@ public struct Not<V: Validator> {
         self.validator = { value in
             do {
                 try validator(input: value)
-                throw Not<V>.error
-            } catch {}
+            } catch {
+                return
+            }
+            /**
+             We only arrive here if we passed validation. 
+             We can't throw in the `do` or it moves to catch.
+             */
+            throw Not<V>.error
         }
     }
 }

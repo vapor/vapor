@@ -45,6 +45,11 @@ class ValidationTests: XCTestCase {
         XCTAssert(yes != nil)
     }
 
+    func testNot() throws {
+        let a = try? "a".validated(by: !OnlyAlphanumeric.self)
+        XCTAssertNil(a)
+    }
+
     func testComposition() throws {
         let contrived = StringLength.max(9)
             || StringLength.min(11)
