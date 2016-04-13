@@ -81,7 +81,7 @@ extension Application {
         }
     }
 
-    final func add(_ method: Request.Method, path: String, handler: Route.Handler) {
+    public final func add(_ method: Request.Method, path: String, handler: Route.Handler) {
         //Convert Route.Handler to Request.Handler
         var responder: Responder = Request.Handler { request in
             return try handler(request).makeResponse()
