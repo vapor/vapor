@@ -14,7 +14,7 @@ public enum StringLength: Validator {
         case .containedIn(let range) where range ~= length:
             break
         default:
-            throw error
+            throw error(with: value)
         }
     }
 }

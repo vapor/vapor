@@ -4,7 +4,7 @@ import Foundation
 public class Email: ValidationSuite {
     public static func validate(input value: String) throws {
         guard value.range(of: ".@.+\\..", options: .regularExpressionSearch) != nil else {
-            throw Email()
+            throw error(with: value)
         }
     }
 }

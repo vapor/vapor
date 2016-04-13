@@ -9,8 +9,8 @@ public struct OnlyAlphanumeric: ValidationSuite {
             .characters
             .filter(alphanumeric.contains)
 
-        guard validCharacters.count == value.characters.count else {
-            throw error
+        if validCharacters.count != value.characters.count {
+            throw error(with: value)
         }
     }
 }

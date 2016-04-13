@@ -37,7 +37,7 @@ public struct Not<V: Validator> {
              We only arrive here if we passed validation. 
              We can't throw in the `do` or it moves to catch.
              */
-            throw Not<V>.error
+            throw Not<V>.error(with: value)
         }
     }
 }

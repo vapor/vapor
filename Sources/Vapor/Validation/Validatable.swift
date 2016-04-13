@@ -43,7 +43,7 @@ extension Validatable {
 
 extension Optional where Wrapped: Validatable {
     public func tested(@noescape by tester: (input: Wrapped) throws -> Void) throws -> Wrapped {
-        guard case .some(let value) = self else { throw Validation.Error.Failed(self) }
+        guard case .some(let value) = self else { throw Failure<Wrapped>(input: nil) }
         return try value.tested(by: tester)
     }
 
@@ -105,11 +105,11 @@ extension Validatable {
 
 extension Optional where Wrapped: Validatable {
     public func validated<V: Validator where V.InputType == Wrapped>(by validator: V) throws -> Validated<V> {
-        guard case .some(let value) = self else { throw Validation.Error.Failed(self) }
+        guard case .some(let value) = self else { throw Failure<Wrapped>(input: nil) }
         return try Validated<V>(value, by: validator)
     }
     public func validated<S: ValidationSuite where S.InputType == Wrapped>(by type: S.Type = S.self) throws -> Validated<S> {
-        guard case .some(let value) = self else { throw Validation.Error.Failed(self) }
+        guard case .some(let value) = self else { throw Failure<Wrapped>(input: nil) }
         return try Validated<S>(value, by: S.self)
     }
 }

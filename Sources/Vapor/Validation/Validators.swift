@@ -17,7 +17,7 @@
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-public protocol Validator: ErrorProtocol {
+public protocol Validator {
     associatedtype InputType: Validatable
     func validate(input value: InputType) throws
 }
