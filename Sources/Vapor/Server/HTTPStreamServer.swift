@@ -18,7 +18,6 @@ class HTTPStreamServer<StreamType: HTTPStream>: Server {
     var delegate: Responder!
 
     func serve(responder: Responder, on host: String, at port: Int) throws {
-        halt()
         self.delegate = responder
 
         try stream.bind(to: host, on: port)
@@ -40,40 +39,35 @@ class HTTPStreamServer<StreamType: HTTPStream>: Server {
     }
 
     private func handle(socket: HTTPStream) {
-        do {
-            try Background {
-                var keepAlive = false
-                repeat {
-                    let request: Request
-                    do {
-                        request = try socket.receive()
-                    } catch {
-                        Log.error("Error receiving request: \(error)")
-                        return
-                    }
+        var keepAlive = false
 
-                    let response: Response
-                    do {
-                        response = try self.delegate.respond(request)
-                    } catch {
-                        Log.error("Error parsing response: \(error)")
-                        return
-                    }
-
-                    do {
-                        try socket.send(response, keepAlive: keepAlive)
-                    } catch {
-                        Log.error("Error sending response: \(error)")
-                    }
-
-                    keepAlive = request.supportsKeepAlive
-                } while keepAlive && !socket.closed
-
-                socket.close()
+        repeat {
+            let request: Request
+            do {
+                request = try socket.receive()
+            } catch {
+                Log.error("Error receiving request: \(error)")
+                return
             }
-        } catch {
-            Log.error("Error accepting request in background: \(error)")
-        }
+
+            let response: Response
+            do {
+                response = try self.delegate.respond(request)
+            } catch {
+                Log.error("Error parsing response: \(error)")
+                return
+            }
+
+            do {
+                try socket.send(response, keepAlive: keepAlive)
+            } catch {
+                Log.error("Error sending response: \(error)")
+            }
+
+            keepAlive = request.supportsKeepAlive
+        } while keepAlive && !socket.closed
+
+        socket.close()
     }
 
 }
