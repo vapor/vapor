@@ -28,7 +28,7 @@ This is a work in progress, so *do not* rely on this for anything important. And
 
 ## Documentation
 
-Visit the [Documentation](https://docs.qutheory.io) for extensive documentation on getting setup, using, and contributing to Vapor.
+Visit the [Documentation](http://docs.qutheory.io) for extensive documentation on getting setup, using, and contributing to Vapor.
 
 ## Installation
 
