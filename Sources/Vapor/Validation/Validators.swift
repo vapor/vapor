@@ -17,46 +17,40 @@
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-public struct Validation {
-    public enum Error: ErrorProtocol {
-        case FailedValidation(Any)
-    }
-}
-
-public protocol Validator {
+public protocol Validator: ErrorProtocol {
     associatedtype InputType: Validatable
-    func validate(input value: InputType) -> Bool
+    func validate(input value: InputType) throws
 }
 
 public protocol ValidationSuite: Validator {
     associatedtype InputType: Validatable
-    static func validate(input value: InputType) -> Bool
+    static func validate(input value: InputType) throws
 }
 
 extension ValidationSuite {
-    public func validate(input value: InputType) -> Bool {
-        return self.dynamicType.validate(input: value)
+    public func validate(input value: InputType) throws {
+        try self.dynamicType.validate(input: value)
     }
 }
 
 // MARK: Validated
 
 class ContainsEmoji: ValidationSuite {
-    static func validate(input value: String) -> Bool {
-        return true
+    static func validate(input value: String) throws {
+        // pass
     }
 }
 
 class AlreadyTaken: ValidationSuite {
-    static func validate(input value: String) -> Bool {
-        return true
+    static func validate(input value: String) throws {
+        // pass
     }
 }
 
 class OwnedBy: Validator {
     init(user: String) {}
-    func validate(input value: String) -> Bool {
-        return true
+    func validate(input value: String) throws {
+        // pass
     }
 }
 

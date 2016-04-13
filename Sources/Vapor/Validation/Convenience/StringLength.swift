@@ -3,16 +3,18 @@ public enum StringLength: Validator {
     case max(Int)
     case containedIn(Range<Int>)
 
-    public func validate(input value: String) -> Bool {
+    public func validate(input value: String) throws {
         print("Testing: \(value)")
         let length = value.characters.count
         switch self {
-        case .min(let m):
-            return length >= m
-        case .max(let m):
-            return length <= m
-        case .containedIn(let range):
-            return range ~= length
+        case .min(let m) where length >= m:
+            break
+        case .max(let m) where length <= m:
+            break
+        case .containedIn(let range) where range ~= length:
+            break
+        default:
+            throw error
         }
     }
 }

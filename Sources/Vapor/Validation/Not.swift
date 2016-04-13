@@ -18,7 +18,7 @@
  */
 
 public struct Not<V: Validator> {
-    private typealias Validator = (input: V.InputType) -> Bool
+    private typealias Validator = (input: V.InputType) throws -> Void
     private let validator: Validator
 
     /**
@@ -27,13 +27,18 @@ public struct Not<V: Validator> {
      MUST STAY PRIVATE
      */
     private init(_ validator: Validator) {
-        self.validator = { value in !validator(input: value) }
+        self.validator = { value in
+            do {
+                try validator(input: value)
+                throw Not<V>.error
+            } catch {}
+        }
     }
 }
 
 extension Not: Validator {
-    public func validate(input value: V.InputType) -> Bool {
-        return validator(input: value)
+    public func validate(input value: V.InputType) throws {
+        try validator(input: value)
     }
 }
 

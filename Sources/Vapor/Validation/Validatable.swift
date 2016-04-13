@@ -26,8 +26,8 @@ extension Double: Validatable {}
 // MARK: Testing
 
 extension Validatable {
-    public func tested(@noescape by tester: (input: Self) throws -> Bool) throws -> Self {
-        guard try tester(input: self) else { throw Validation.Error.FailedValidation(self) }
+    public func tested(@noescape by tester: (input: Self) throws -> Void) throws -> Self {
+        try tester(input: self)
         return self
     }
 
@@ -42,8 +42,8 @@ extension Validatable {
 }
 
 extension Optional where Wrapped: Validatable {
-    public func tested(@noescape by tester: (input: Wrapped) throws -> Bool) throws -> Wrapped {
-        guard case .some(let value) = self else { throw Validation.Error.FailedValidation(self) }
+    public func tested(@noescape by tester: (input: Wrapped) throws -> Void) throws -> Wrapped {
+        guard case .some(let value) = self else { throw Validation.Error.Failed(self) }
         return try value.tested(by: tester)
     }
 
@@ -59,8 +59,13 @@ extension Optional where Wrapped: Validatable {
 // MARK: Passing
 
 extension Validatable {
-    public func passes(@noescape tester: (input: Self) -> Bool) -> Bool {
-        return tester(input: self)
+    public func passes(@noescape tester: (input: Self) throws -> Void) -> Bool {
+        do {
+            try tester(input: self)
+            return true
+        } catch {
+            return false
+        }
     }
 
     public func passes<V: Validator where V.InputType == Self>(tester: V) -> Bool {
@@ -73,7 +78,7 @@ extension Validatable {
 }
 
 extension Optional where Wrapped: Validatable {
-    public func passes(@noescape tester: (input: Wrapped) -> Bool) -> Bool {
+    public func passes(@noescape tester: (input: Wrapped) throws -> Void) -> Bool {
         guard case .some(let value) = self else { return false }
         return value.passes(tester)
     }
@@ -100,11 +105,11 @@ extension Validatable {
 
 extension Optional where Wrapped: Validatable {
     public func validated<V: Validator where V.InputType == Wrapped>(by validator: V) throws -> Validated<V> {
-        guard case .some(let value) = self else { throw Validation.Error.FailedValidation(self) }
+        guard case .some(let value) = self else { throw Validation.Error.Failed(self) }
         return try Validated<V>(value, by: validator)
     }
     public func validated<S: ValidationSuite where S.InputType == Wrapped>(by type: S.Type = S.self) throws -> Validated<S> {
-        guard case .some(let value) = self else { throw Validation.Error.FailedValidation(self) }
+        guard case .some(let value) = self else { throw Validation.Error.Failed(self) }
         return try Validated<S>(value, by: S.self)
     }
 }

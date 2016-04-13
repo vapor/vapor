@@ -20,7 +20,7 @@
 public struct Or<
     V: Validator,
     U: Validator where V.InputType == U.InputType> {
-    private typealias Validator = (input: V.InputType) -> Bool
+    private typealias Validator = (input: V.InputType) throws -> Void
     private let validator: Validator
 
     /**
@@ -30,14 +30,18 @@ public struct Or<
      */
     private init(_ lhs: Validator, _ rhs: Validator) {
         validator = { value in
-            return lhs(input: value) || rhs(input: value)
+            do {
+                try lhs(input: value)
+            } catch {
+                try rhs(input: value)
+            }
         }
     }
 }
 
 extension Or: Validator {
-    public func validate(input value: V.InputType) -> Bool {
-        return validator(input: value)
+    public func validate(input value: V.InputType) throws {
+        try validator(input: value)
     }
 }
 

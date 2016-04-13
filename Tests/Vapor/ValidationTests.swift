@@ -10,12 +10,12 @@ import XCTest
 @testable import Vapor
 
 class Name: ValidationSuite {
-    static func validate(input value: String) -> Bool {
+    static func validate(input value: String) throws {
         let evaluation = OnlyAlphanumeric.self
             + StringLength.min(5)
             + StringLength.max(20)
 
-        return evaluation.validate(input: value)
+        try evaluation.validate(input: value)
     }
 }
 

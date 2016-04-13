@@ -20,7 +20,7 @@
 public struct And<
     V: Validator,
     U: Validator where V.InputType == U.InputType> {
-    private typealias Validator = (input: V.InputType) -> Bool
+    private typealias Validator = (input: V.InputType) throws -> Void
     private let validator: Validator
 
     /**
@@ -30,7 +30,8 @@ public struct And<
      */
     private init(_ lhs: Validator, _ rhs: Validator) {
         validator = { value in
-            return lhs(input: value) && rhs(input: value)
+            try lhs(input: value)
+            try rhs(input: value)
         }
     }
 }
@@ -42,8 +43,8 @@ extension And {
 }
 
 extension And: Validator {
-    public func validate(input value: V.InputType) -> Bool {
-        return validator(input: value)
+    public func validate(input value: V.InputType) throws {
+        try validator(input: value)
     }
 }
 
