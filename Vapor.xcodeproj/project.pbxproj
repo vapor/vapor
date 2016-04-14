@@ -78,6 +78,7 @@
 		80DC347D1CBF3E1D00C894CF /* libS4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_S4" /* libS4.dylib */; };
 		80DC347E1CBF3E1D00C894CF /* libVapor.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Vapor" /* libVapor.dylib */; };
 		80DC347F1CBF3E1D00C894CF /* liblibc.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_libc" /* liblibc.dylib */; };
+		C3E51CC41CBF44C40079B201 /* ValidationMiddleware.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3E51CC31CBF44C40079B201 /* ValidationMiddleware.swift */; };
 		_LinkFileRef_C7 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
 		_LinkFileRef_CryptoEssentials /* libCryptoEssentials.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentials" /* libCryptoEssentials.dylib */; };
 		_LinkFileRef_Data /* libData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Data" /* libData.dylib */; };
@@ -353,6 +354,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		C3E51CC31CBF44C40079B201 /* ValidationMiddleware.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = ValidationMiddleware.swift; path = Validation/ValidationMiddleware.swift; sourceTree = "<group>"; };
 		__PBXFileRef_Package.swift /* Package.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Package.swift; path = /Users/loganwright/Dropbox/Programming/xCode/vapor/Package.swift; sourceTree = "<group>"; };
 		"__PBXFileRef_Packages/C7-0.2.0/Sources/AsyncStream.swift" /* AsyncStream.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncStream.swift; sourceTree = "<group>"; };
 		"__PBXFileRef_Packages/C7-0.2.0/Sources/AsyncStreamClient.swift" /* AsyncStreamClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncStreamClient.swift; sourceTree = "<group>"; };
@@ -1055,6 +1057,7 @@
 				__PBXFileRef_Sources/Vapor/Validation/Not.swift /* Validation/Not.swift */,
 				__PBXFileRef_Sources/Vapor/Validation/Operators.swift /* Validation/Operators.swift */,
 				__PBXFileRef_Sources/Vapor/Validation/Or.swift /* Validation/Or.swift */,
+				C3E51CC31CBF44C40079B201 /* ValidationMiddleware.swift */,
 				__PBXFileRef_Sources/Vapor/Validation/Valid.swift /* Validation/Valid.swift */,
 				__PBXFileRef_Sources/Vapor/Validation/Validatable.swift /* Validation/Validatable.swift */,
 				__PBXFileRef_Sources/Vapor/Validation/Validators.swift /* Validation/Validators.swift */,
@@ -1723,6 +1726,7 @@
 				__src_cc_ref_Sources/Vapor/Routing/Controller.swift /* Routing/Controller.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/Routing/DefaultInitializable.swift /* Routing/DefaultInitializable.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/Routing/ResourceController.swift /* Routing/ResourceController.swift in Sources */,
+				C3E51CC41CBF44C40079B201 /* ValidationMiddleware.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/Routing/Route.swift /* Routing/Route.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/Server/HTTPStream.swift /* Server/HTTPStream.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/Server/HTTPStreamHeader.swift /* Server/HTTPStreamHeader.swift in Sources */,

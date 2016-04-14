@@ -147,9 +147,11 @@ app.get("cookies") { request in
 
 class Name: ValidationSuite {
     static func validate(input value: String) throws {
-        if value != "Tanner" {
-            throw Abort.badRequest
-        }
+        let evaluation = OnlyAlphanumeric.self
+            + Count.min(5)
+            + Count.max(20)
+
+        try evaluation.validate(input: value)
     }
 }
 
@@ -157,8 +159,7 @@ class Employee {
     var name: Valid<Name>
 
     init(request: Request) throws {
-
-        name = try request.data["name"]!.validated()
+        name = try request.data["name"].validated()
     }
 }
 
