@@ -1,5 +1,3 @@
-public struct NodeExtraction: ErrorProtocol {}
-
 extension Node {
     public func validated<
         T: ValidationSuite
