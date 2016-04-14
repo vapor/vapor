@@ -17,45 +17,81 @@
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+/**
+ The core validator, used for validations that require 
+ parameters. For example, a string length validator that
+ uses a dynamic value to evaluate by.
+ 
+     public enum StringLength: Validator {
+         case min(Int)
+         case max(Int)
+         case containedIn(Range<Int>)
+
+         public func validate(input value: String) throws {
+             let length = value.characters.count
+             switch self {
+                case .min(let m) where length >= m:
+                    break
+                case .max(let m) where length <= m:
+                    break
+                case .containedIn(let range) where range ~= length:
+                    break
+                default:
+                    throw error(with: value)
+             }
+         }
+     }
+ 
+ And used like:
+ 
+     let validated = try "string".validated(by: StringLength.min(4))
+ */
 public protocol Validator {
+    /**
+     The type of value that this validator is capable
+     of evaluating
+     */
     associatedtype InputType: Validatable
+
+    /**
+     Used to validate a given input. Should throw 
+     error if validation fails using:
+     
+         throw error(with: value)
+     
+     A function that does not throw will be considered a pass.
+     */
     func validate(input value: InputType) throws
 }
 
 public protocol ValidationSuite: Validator {
+    /**
+     The type of value that this validator is capable
+     of evaluating
+     */
     associatedtype InputType: Validatable
+
+    /**
+     Used to validate a given input. Should throw
+     error if validation fails using:
+
+         throw error(with: value)
+
+     A function that does not throw will be considered a pass.
+     */
     static func validate(input value: InputType) throws
 }
 
 extension ValidationSuite {
+    /**
+     ValidationSuite objects automatically conform to Validator
+     by envoking the static validation
+
+     - parameter value: input value to validate
+
+     - throws: an error if validation fails
+     */
     public func validate(input value: InputType) throws {
         try self.dynamicType.validate(input: value)
     }
 }
-
-// MARK: Validated
-
-class ContainsEmoji: ValidationSuite {
-    static func validate(input value: String) throws {
-        // pass
-    }
-}
-
-class AlreadyTaken: ValidationSuite {
-    static func validate(input value: String) throws {
-        // pass
-    }
-}
-
-class OwnedBy: Validator {
-    init(user: String) {}
-    func validate(input value: String) throws {
-        // pass
-    }
-}
-
-let user = ""
-
-let available = !AlreadyTaken.self || OwnedBy(user: user)
-let appropriateLength = StringLength.min(5) + StringLength.max(20)
-let blename = try! "new name".validated(by: !ContainsEmoji.self + appropriateLength + available)

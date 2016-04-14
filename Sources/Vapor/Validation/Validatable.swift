@@ -1,3 +1,18 @@
+/**
+ Validatable struct is used to indicate that a value can be validated.
+ It requires no special attributes or conformance.
+ 
+ It's purpose is largely based on convenient code share and by
+ conforming an object inherits a great deal of syntax to more 
+ conveniently work with validators.
+ 
+ Naming Conventions
+
+ - tested throws -> Self
+ - passed -> Bool
+ - validated throws -> Validated<Validator>
+ 
+ */
 public protocol Validatable {}
 
 // MARK: Conformance
@@ -26,40 +41,121 @@ extension Double: Validatable {}
 // MARK: Testing
 
 extension Validatable {
-    public func tested(@noescape by tester: (input: Self) throws -> Void) throws -> Self {
-        try tester(input: self)
-        return self
+    /**
+     Test whether or not the caller passes the given tester
+
+     - parameter tester: a closure that might potentially fail testing
+
+     - rethrows: the encompassed error of the tester
+
+     - returns: self if passed tester
+     */
+    public func tested(
+        @noescape by tester: (input: Self) throws -> Void)
+        rethrows -> Self {
+            try tester(input: self)
+            return self
     }
 
-    public func tested<V: Validator where V.InputType == Self>(by tester: V) throws -> Self {
-        return try tested(by: tester.validate)
+    /**
+     Test whether or not the caller passes the given Validator
+
+     - parameter validator: the validator to validate with
+
+     - throws: an error if test fails
+
+     - returns: self if passed validator
+     */
+    public func tested<
+        V: Validator
+        where V.InputType == Self>(by validator: V)
+        throws -> Self {
+            return try tested(by: validator.validate)
     }
 
-    public func tested<S: ValidationSuite where S.InputType == Self>(by tester: S.Type) throws -> Self {
-        return try tested(by: tester.validate)
-    }
+    /**
+     Test whether or not the caller passes the given ValidationSuite
 
+     - parameter suite: the suite to validate with
+
+     - throws: an error if test fails
+
+     - returns: self if passed suite
+     */
+    public func tested<
+        S: ValidationSuite
+        where S.InputType == Self>(by suite: S.Type)
+        throws -> Self {
+            return try tested(by: suite.validate)
+    }
 }
 
 extension Optional where Wrapped: Validatable {
-    public func tested(@noescape by tester: (input: Wrapped) throws -> Void) throws -> Wrapped {
-        guard case .some(let value) = self else { throw Failure<Wrapped>(input: nil) }
-        return try value.tested(by: tester)
+    /**
+     Test whether or not the underlying value passes the given tester
+     Fails if `== .None`
+
+     - parameter tester: a closure that might potentially fail testing
+
+     - rethrows: the encompassed error of the tester
+
+     - returns: self if passed tester
+     */
+    public func tested(
+        @noescape by tester: (input: Wrapped) throws -> Void)
+        throws -> Wrapped {
+            guard case .some(let value) = self else {
+                throw Failure<Wrapped>(input: nil)
+            }
+            return try value.tested(by: tester)
     }
 
-    public func tested<V: Validator where V.InputType == Wrapped>(by validator: V) throws -> Wrapped {
-        return try tested(by: validator.validate)
+    /**
+     Test whether or not the caller passes the given Validator
+     Fails if `== .None`
+
+     - parameter validator: the validator to validate with
+
+     - throws: an error if test fails
+
+     - returns: self if passed validator
+     */
+    public func tested<
+        V: Validator
+        where V.InputType == Wrapped>(by validator: V)
+        throws -> Wrapped {
+            return try tested(by: validator.validate)
     }
 
-    public func tested<S: ValidationSuite where S.InputType == Wrapped>(by suite: S.Type) throws -> Wrapped {
-        return try tested(by: suite.validate)
+    /**
+     Test whether or not the caller passes the given ValidationSuite
+     Fails if `== .None`
+
+     - parameter suite: the suite to validate with
+
+     - throws: an error if test fails
+
+     - returns: self if passed suite
+     */
+    public func tested<
+        S: ValidationSuite
+        where S.InputType == Wrapped>(by suite: S.Type)
+        throws -> Wrapped {
+            return try tested(by: suite.validate)
     }
 }
 
 // MARK: Passing
 
 extension Validatable {
-    public func passes(@noescape tester: (input: Self) throws -> Void) -> Bool {
+    /**
+     Test whether or not the caller passes the given tester
+
+     - parameter tester: the tester to evaluate with
+
+     - returns: whether or not the caller passed
+     */
+    public func passes(@noescape _ tester: (input: Self) throws -> Void) -> Bool {
         do {
             try tester(input: self)
             return true
@@ -68,26 +164,64 @@ extension Validatable {
         }
     }
 
-    public func passes<V: Validator where V.InputType == Self>(tester: V) -> Bool {
-        return passes(tester.validate)
+    /**
+     Test whether or not the caller passes the given Validator
+
+     - parameter validator: the validator to evaluate with
+
+     - returns: whether or not the caller passed
+     */
+    public func passes<V: Validator where V.InputType == Self>(_ validator: V) -> Bool {
+        return passes(validator.validate)
     }
 
-    public func passes<S: ValidationSuite where S.InputType == Self>(tester: S.Type) -> Bool {
-        return passes(tester.validate)
+    /**
+     Test whether or not the caller passes the given ValidationSuite
+
+     - parameter suite: the validation suite to evaluate with
+
+     - returns: whether or not the caller passed
+     */
+    public func passes<S: ValidationSuite where S.InputType == Self>(_ suite: S.Type) -> Bool {
+        return passes(suite.validate)
     }
 }
 
 extension Optional where Wrapped: Validatable {
-    public func passes(@noescape tester: (input: Wrapped) throws -> Void) -> Bool {
+    /**
+     Test whether or not the caller passes the given tester
+     Fails if `== .None`
+
+     - parameter tester: the tester to evaluate with
+
+     - returns: whether or not the caller passed
+     */
+    public func passes(@noescape _ tester: (input: Wrapped) throws -> Void) -> Bool {
         guard case .some(let value) = self else { return false }
         return value.passes(tester)
     }
 
-    public func passes<V: Validator where V.InputType == Wrapped>(validator: V) -> Bool {
+    /**
+     Test whether or not the caller passes the given Validator
+     Fails if `== .None`
+
+     - parameter validator: the validator to evaluate with
+
+     - returns: whether or not the caller passed
+     */
+    public func passes<V: Validator where V.InputType == Wrapped>(_ validator: V) -> Bool {
         return passes(validator.validate)
     }
 
-    public func passes<S: ValidationSuite where S.InputType == Wrapped>(by suite: S.Type) -> Bool {
+    /**
+     Test whether or not the caller passes the given ValidationSuite
+     Fails if `== .None`
+
+     - parameter suite: the validation suite to evaluate with
+
+     - returns: whether or not the caller passed
+     */
+    public func passes<S: ValidationSuite where S.InputType == Wrapped>(_ suite: S.Type) -> Bool {
         return passes(suite.validate)
     }
 }
@@ -95,21 +229,77 @@ extension Optional where Wrapped: Validatable {
 // MARK: Validation
 
 extension Validatable {
-    public func validated<V: Validator where V.InputType == Self>(by validator: V) throws -> Validated<V> {
-        return try Validated<V>(self, by: validator)
+    /**
+     Validates a given value if possible
+
+     - parameter validator: the validator to use in evaluating the value
+
+     - throws: an error if validation fails
+
+     - returns: a Validated<V> protecting a successfully validated value
+     */
+    public func validated<
+        V: Validator
+        where V.InputType == Self>(by validator: V)
+        throws -> Validated<V> {
+            return try Validated<V>(self, by: validator)
     }
-    public func validated<S: ValidationSuite where S.InputType == Self>(by type: S.Type = S.self) throws -> Validated<S> {
-        return try Validated<S>(self, by: S.self)
+
+    /**
+     Validates a given value if possible
+
+     - parameter suite: the validation suite to use in evaluating the value
+
+     - throws: an error if validation fails
+
+     - returns: a Validated<V> protecting a successfully validated value
+     */
+    public func validated<
+        S: ValidationSuite
+        where S.InputType == Self>(by suite: S.Type = S.self)
+        throws -> Validated<S> {
+            return try Validated<S>(self, by: suite)
     }
 }
 
 extension Optional where Wrapped: Validatable {
-    public func validated<V: Validator where V.InputType == Wrapped>(by validator: V) throws -> Validated<V> {
-        guard case .some(let value) = self else { throw Failure<Wrapped>(input: nil) }
-        return try Validated<V>(value, by: validator)
+    /**
+     Validates a given value if possible
+     Fails if `== .None`
+
+     - parameter validator: the validator to use in evaluating the value
+
+     - throws: an error if validation fails
+
+     - returns: a Validated<V> protecting a successfully validated value
+     */
+    public func validated<
+        V: Validator
+        where V.InputType == Wrapped>(by validator: V)
+        throws -> Validated<V> {
+            guard case .some(let value) = self else {
+                throw Failure<Wrapped>(input: nil)
+            }
+            return try Validated<V>(value, by: validator)
     }
-    public func validated<S: ValidationSuite where S.InputType == Wrapped>(by type: S.Type = S.self) throws -> Validated<S> {
-        guard case .some(let value) = self else { throw Failure<Wrapped>(input: nil) }
-        return try Validated<S>(value, by: S.self)
+
+    /**
+     Validates a given value if possible
+     Fails if `== .None`
+
+     - parameter suite: the validation suite to use in evaluating the value
+
+     - throws: an error if validation fails
+
+     - returns: a Validated<V> protecting a successfully validated value
+     */
+    public func validated<
+        S: ValidationSuite
+        where S.InputType == Wrapped>(by suite: S.Type = S.self)
+        throws -> Validated<S> {
+            guard case .some(let value) = self else {
+                throw Failure<Wrapped>(input: nil)
+            }
+            return try Validated<S>(value, by: suite)
     }
 }

@@ -17,6 +17,18 @@
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+/**
+ Use this to invert the logic of a Validator.
+ This type can be created two ways
+ 
+ 1. Not.init(_:)
+ 
+     Not(validatorToInvert)
+ 
+ 2. The `!` operator can be used to invert a validator
+ 
+     !validatorToInvert
+ */
 public struct Not<V: Validator> {
     private typealias Validator = (input: V.InputType) throws -> Void
     private let validator: Validator
@@ -43,18 +55,35 @@ public struct Not<V: Validator> {
 }
 
 extension Not: Validator {
+    /**
+     Use this to validate with a `Not<T>` type.
+
+     - parameter value: value to validate
+     */
     public func validate(input value: V.InputType) throws {
         try validator(input: value)
     }
 }
 
 extension Not {
+
+    /**
+     Use this to invert a Validator
+
+     - parameter lhs: the validator to invert
+     */
     public init(_ lhs: V) {
         self.init(lhs.validate)
     }
 }
 
 extension Not where V: ValidationSuite {
+
+    /**
+     Use this to initialize with a ValidationSuite.
+
+     - parameter lhs: validationSuite to initialize with. Can be inferred
+     */
     public init(_ lhs: V.Type = V.self) {
         self.init(lhs.validate)
     }

@@ -1,15 +1,28 @@
 
-// Temporary, probably better way to write
+/**
+ A validator that can be used to check that a
+ given string contains only alphanumeric characters
+ */
 public struct OnlyAlphanumeric: ValidationSuite {
+    private static let alphanumeric = "abcdefghijklmnopqrstuvwxyz0123456789"
+    private static let validCharacters = alphanumeric.characters
+
+    /**
+     Validate whether or not an input string contains only 
+     alphanumeric characters. a...z0...9
+
+     - parameter value: input value to validate
+
+     - throws: an error if validation fails
+     */
     public static func validate(input value: String) throws {
-        let alphanumeric = "abcdefghijklmnopqrstuvwxyz0123456789"
-            .characters
-        let validCharacters = value
+        let passed = value
             .lowercased()
             .characters
-            .filter(alphanumeric.contains)
+            .filter(validCharacters.contains)
+            .count
 
-        if validCharacters.count != value.characters.count {
+        if passed != value.characters.count {
             throw error(with: value)
         }
     }

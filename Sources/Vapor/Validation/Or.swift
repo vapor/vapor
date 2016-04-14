@@ -17,6 +17,20 @@
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+/**
+ This struct is used to encompass multiple Validators into one entity
+ representing a logical ||
+ 
+ If left fails, right will be validated
+
+ It is possible to access this struct directly using
+
+     Or(validatorOne, validatorTwo)
+
+ But it is more common to create And objects using the `||` operator:
+
+     validatorOne || validatorTwo
+ */
 public struct Or<
     V: Validator,
     U: Validator where V.InputType == U.InputType> {
@@ -40,30 +54,50 @@ public struct Or<
 }
 
 extension Or: Validator {
+    /**
+     Validator conformance that allows the 'Or' struct
+     to concatenate multiple Validator types.
+
+     - parameter value: the value to validate
+
+     - throws: an error on failed validation
+     */
     public func validate(input value: V.InputType) throws {
         try validator(input: value)
     }
 }
 
 extension Or {
+    /**
+     Used to combine two Validator types
+     */
     public init(_ lhs: V, _ rhs: U) {
         self.init(lhs.validate, rhs.validate)
     }
 }
 
 extension Or where V: ValidationSuite {
+    /**
+     Used to combine two Validator types where one is a validation suite
+     */
     public init(_ lhs: V.Type = V.self, _ rhs: U) {
         self.init(lhs.validate, rhs.validate)
     }
 }
 
 extension Or where U: ValidationSuite {
+    /**
+     Used to combine two Validator types where one is a validation suite
+     */
     public init(_ lhs: V, _ rhs: U.Type = U.self) {
         self.init(lhs.validate, rhs.validate)
     }
 }
 
 extension Or where V: ValidationSuite, U: ValidationSuite {
+    /**
+     Used to combine two ValidationSuite types
+     */
     public init(_ lhs: V.Type = V.self, _ rhs: U.Type = U.self) {
         self.init(lhs.validate, rhs.validate)
     }
