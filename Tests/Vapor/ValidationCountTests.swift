@@ -9,16 +9,6 @@
 import XCTest
 @testable import Vapor
 
-extension Node {
-    public func validated<T: Validator where T.InputType == String>(by validator: T) throws -> Validated<T> {
-        guard let string = self.string else {
-            throw Failure<String>(input: nil)
-        }
-
-        return try string.validated(by: validator)
-    }
-}
-
 class ValidationCountTests: XCTestCase {
     static var allTests: [(String, ValidationCountTests -> () throws -> Void)] {
         return [

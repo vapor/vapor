@@ -28,13 +28,13 @@
  but the flexible composition structure of validators
  allows for more complex validations.
  */
-public struct Validated<V: Validator> {
+public struct Valid<V: Validator> {
 
     /// The underlying value that has passed validation
     public let value: V.InputType
 
     /**
-     Validated initializer.
+     Valid initializer.
      
      As opposed to using this initializer, 
      it is more common to validate an object using:
@@ -51,11 +51,11 @@ public struct Validated<V: Validator> {
     }
 }
 
-extension Validated where V: ValidationSuite {
+extension Valid where V: ValidationSuite {
 
 
     /**
-     Validated initializer.
+     Valid initializer.
 
      As opposed to using this initializer,
      it is more common to validate an object using:

@@ -10,7 +10,7 @@
 
  - tested throws -> Self
  - passed -> Bool
- - validated throws -> Validated<Validator>
+ - validated throws -> Valid<Validator>
  
  */
 public protocol Validatable {}
@@ -238,13 +238,13 @@ extension Validatable {
 
      - throws: an error if validation fails
 
-     - returns: a Validated<V> protecting a successfully validated value
+     - returns: a Valid<V> protecting a successfully validated value
      */
     public func validated<
         V: Validator
         where V.InputType == Self>(by validator: V)
-        throws -> Validated<V> {
-            return try Validated<V>(self, by: validator)
+        throws -> Valid<V> {
+            return try Valid<V>(self, by: validator)
     }
 
     /**
@@ -254,13 +254,13 @@ extension Validatable {
 
      - throws: an error if validation fails
 
-     - returns: a Validated<V> protecting a successfully validated value
+     - returns: a Valid<V> protecting a successfully validated value
      */
     public func validated<
         S: ValidationSuite
         where S.InputType == Self>(by suite: S.Type = S.self)
-        throws -> Validated<S> {
-            return try Validated<S>(self, by: suite)
+        throws -> Valid<S> {
+            return try Valid<S>(self, by: suite)
     }
 }
 
@@ -273,16 +273,16 @@ extension Optional where Wrapped: Validatable {
 
      - throws: an error if validation fails
 
-     - returns: a Validated<V> protecting a successfully validated value
+     - returns: a Valid<V> protecting a successfully validated value
      */
     public func validated<
         V: Validator
         where V.InputType == Wrapped>(by validator: V)
-        throws -> Validated<V> {
+        throws -> Valid<V> {
             guard case .some(let value) = self else {
                 throw Failure<Wrapped>(input: nil)
             }
-            return try Validated<V>(value, by: validator)
+            return try Valid<V>(value, by: validator)
     }
 
     /**
@@ -293,15 +293,15 @@ extension Optional where Wrapped: Validatable {
 
      - throws: an error if validation fails
 
-     - returns: a Validated<V> protecting a successfully validated value
+     - returns: a Valid<V> protecting a successfully validated value
      */
     public func validated<
         S: ValidationSuite
         where S.InputType == Wrapped>(by suite: S.Type = S.self)
-        throws -> Validated<S> {
+        throws -> Valid<S> {
             guard case .some(let value) = self else {
                 throw Failure<Wrapped>(input: nil)
             }
-            return try Validated<S>(value, by: suite)
+            return try Valid<S>(value, by: suite)
     }
 }

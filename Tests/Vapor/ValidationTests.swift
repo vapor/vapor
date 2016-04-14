@@ -33,7 +33,7 @@ class ValidationTests: XCTestCase {
         let validName = try "fancyUser".validated(by: Name.self)
         XCTAssert(validName.value == "fancyUser")
 
-        let failed: Validated<Name>? = try? "a*cd".validated()
+        let failed: Valid<Name>? = try? "a*cd".validated()
         XCTAssert(failed == nil)
     }
 
@@ -61,6 +61,6 @@ class ValidationTests: XCTestCase {
     }
 
     func testAlternateSyntax() throws {
-        let _ = try Validated<Name>("Vapor")
+        let _ = try Valid<Name>("Vapor")
     }
 }
