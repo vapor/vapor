@@ -1,10 +1,10 @@
-///Wrapper class around CLI input
+/// Wrapper class around CLI input
 public class Input {
-    ///CLI arguments
+    /// CLI arguments
     public let arguments: [InputArgument]
     private let namedArguments: [String: InputArgument]
 
-    ///CLI options
+    /// CLI options
     public let options: [InputOption]
     private let namedOptions: [String: InputOption]
 

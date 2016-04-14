@@ -1,20 +1,20 @@
 import VaporConsoleOutput
 
-/** Console command protocol */
+/// Console command protocol
 public protocol Command {
-    ///Console this command is registered to
+    /// Console this command is registered to
     var console: Console { get }
 
-    ///Name of the command
+    /// Name of the command
     var name: String { get }
 
-    ///Optional help info for the command
+    /// Optional help info for the command
     var help: String? { get }
 
-    ///Arguments for this command
+    /// Arguments for this command
     var arguments: [InputArgument] { get }
 
-    ///Options for this command
+    /// Options for this command
     var options: [InputOption] { get }
 
     /**
@@ -34,32 +34,32 @@ public protocol Command {
 
 extension Command {
 
-    ///Convenience accessor for the console’s app
+    /// Convenience accessor for the console’s app
     public var app: Application {
         return console.app
     }
 
-    ///Convenience accessor for the console’s app
+    /// Convenience accessor for the console’s app
     public var output: Output {
         return console.output
     }
 
-    ///Arguments for this command
+    /// Arguments for this command
     public var arguments: [InputArgument] {
         return []
     }
 
-    ///Options for this command
+    /// Options for this command
     public var options: [InputOption] {
         return []
     }
 
-    ///Optional help info for the command
+    /// Optional help info for the command
     public var help: String? {
         return nil
     }
 
-    ///Default options every command has
+    /// Default options every command has
     internal var defaultOptions: [InputOption] {
         return [
             // Triggers HelpCommand

@@ -1,18 +1,18 @@
-/** Interface for reading/requiring CLI arguments */
+/// Interface for reading/requiring CLI arguments
 public class InputArgument {
-    ///Name of the argument
+    /// Name of the argument
     public let name: String
 
-    ///Argument mode
+    /// Argument mode
     public let mode: ValueMode
 
-    ///Value of the argument, if present
+    /// Value of the argument, if present
     public let value: String?
 
-    ///Help for the option
+    /// Help for the option
     public let help: String?
 
-    ///Mode for the argument
+    /// Mode for the argument
     public enum ValueMode {
         ///Indicates this argument is required and must have a value
         case Required
@@ -38,7 +38,7 @@ public class InputArgument {
 
 extension InputArgument: CustomStringConvertible {
 
-    ///Argument description
+    /// Argument description
     public var description: String {
         if let value = value {
             return name + "=" + value

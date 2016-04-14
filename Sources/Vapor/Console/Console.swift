@@ -1,25 +1,25 @@
 import VaporConsoleOutput
 
-///Console class to interact with command line
+/// Console class to interact with command line
 public class Console {
     private let defaultCommand = "list"
     private var registeredCommands = [String: Command]()
 
-    ///Input instance
+    /// Input instance
     public let input = Input()
 
-    ///Output instance
+    /// Output instance
     public let output = Output()
 
-    ///App instance
+    /// App instance
     public let app: Application
 
-    ///Get all registered commands
+    /// Get all registered commands
     public var commands: [Command] {
         return Array(registeredCommands.values)
     }
 
-    ///Console errors
+    /// Console errors
     public enum Error: ErrorProtocol {
         case TooManyArguments
         case MissingArgument(argument: String)

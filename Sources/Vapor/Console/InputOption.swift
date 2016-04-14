@@ -1,24 +1,24 @@
-/** Interface for reading/requiring CLI options */
+/// Interface for reading/requiring CLI options
 public class InputOption {
-    ///Name of the option
+    /// Name of the option
     public let name: String
 
-    ///Option mode
+    /// Option mode
     public let mode: ValueMode
 
-    ///Value of the option, if present
+    /// Value of the option, if present
     public let value: String?
 
-    ///Help for the option
+    /// Help for the option
     public let help: String?
 
-    ///Mode for the option
+    /// Mode for the option
     public enum ValueMode {
-        ///Indicates this option is a boolean flag and should have no value
+        /// Indicates this option is a boolean flag and should have no value
         case None
-        ///Indicates this option is required
+        /// Indicates this option is required
         case Required
-        ///Indicates this option is optional and may or may not be present
+        /// Indicates this option is optional and may or may not be present
         case Optional
     }
 
@@ -47,7 +47,7 @@ public class InputOption {
 
 extension InputOption: CustomStringConvertible {
 
-    ///Option description
+    /// Option description
     public var description: String {
         if let value = value {
             return name + "=" + value

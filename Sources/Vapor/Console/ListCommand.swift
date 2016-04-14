@@ -1,13 +1,28 @@
-/** Lists all available commands registered with Console */
+/// Lists all available commands registered with Console
 public class ListCommand: Command {
+
+    /// Console this command is registered to
     public let console: Console
+
+    /// Name of the command
     public let name = "list"
+
+    /// Optional help info for the command
     public let help: String? = "Lists all available commands"
 
+    /**
+        Initialize the command
+        - parameter console: Console instance this command will be registered on
+    */
     public required init(console: Console) {
         self.console = console
     }
 
+    /**
+        Called by `run()` after input has been compiled
+        - parameter input: CLI input
+        - throws: Console.Error
+    */
     public func handle(input: Input) throws {
         line("<info>Vapor</info> version <comment>\(Application.VERSION)</comment>")
         line("")

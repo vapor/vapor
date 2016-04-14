@@ -1,9 +1,16 @@
 /** Command to start the server */
 public class ServeCommand: Command {
-    public let console: Console
-    public let name = "serve"
-    public var help: String? = "Serve the application"
 
+    /// Console this command is registered to
+    public let console: Console
+
+    /// Name of the command
+    public let name = "serve"
+
+    /// Optional help info for the command
+    public let help: String? = "Serve the application"
+
+    /// Options for this command
     public var options: [InputOption] {
         return [
             InputOption("ip",
@@ -20,10 +27,19 @@ public class ServeCommand: Command {
         ]
     }
 
+    /**
+        Initialize the command
+        - parameter console: Console instance this command will be registered on
+    */
     public required init(console: Console) {
         self.console = console
     }
 
+    /**
+        Called by `run()` after input has been compiled
+        - parameter input: CLI input
+        - throws: Console.Error
+    */
     public func handle(input: Input) throws {
         let ip = input.option("ip")
         let port: Int
