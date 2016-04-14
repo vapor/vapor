@@ -37,10 +37,5 @@ extension Extractable where Wrapped == Node {
 extension Optional: Extractable {
     public func extract() -> Wrapped? {
         return self
-//        guard let value = self else {
-//            // TODO: Better Error
-//            throw NodeExtraction()
-//        }
-//        return value
     }
 }
