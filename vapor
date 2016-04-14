@@ -11,9 +11,10 @@ class Vapor {
 
     var release = false
     var swift2 = false
-    var appBin = "App"
+    var appModule = "App"
 
     var flags: [String]
+    var wantsHelp = false
 
     init(arguments: [String]) {
         var commands: [String] = []
@@ -25,6 +26,11 @@ class Vapor {
                     release = true
                 } else if argument == "--swift2.2" {
                     swift2 = true
+                } else if argument == "--help" {
+                    wantsHelp = true
+                } else if argument.hasPrefix("--module=") {
+                    let startIndex = argument.startIndex
+                    appModule = argument[startIndex.advanced(by: 9)..<startIndex.advanced(by: argument.characters.count)]
                 } else {
                     flags.append(argument)
                 }
@@ -33,24 +39,12 @@ class Vapor {
             }
         }
 
-        #if swift(>=3.0)
-            let appBin = getenv("VAPOR_APP_BIN")
-            if appBin != nil, let value = String(validatingUTF8: appBin) {
-                self.appBin = value
-            }
-        #endif
-
         self.arguments = commands
         self.flags = flags
-
-        if commands.count < 2 {
-            printUsage()
-            fail("Invalid number of arguments.")
-        }
     }
 
     func start() {
-        if let command = Command(rawValue: arguments[1]) {
+        if arguments.count > 1, let command = Command(rawValue: arguments[1]) {
             switch command {
             case .Clean:
                 clean()
@@ -60,9 +54,9 @@ class Vapor {
                 run()
             case .New:
                 newProject()
-            case .Help:
-                help()
             }
+        } else if(wantsHelp && arguments.count < 2) {
+            help()
         } else if(!swift2) {
             delegate()
         } else {
@@ -83,9 +77,8 @@ class Vapor {
         case Build = "build"
         case Run = "run"
         case New = "new"
-        case Help = "help"
 
-        static var all: [Command] = [.Clean, .Build, .Run, .New, .Help]
+        static var all: [Command] = [.Clean, .Build, .Run, .New]
     }
 
     func printUsage() {
@@ -197,8 +190,18 @@ class Vapor {
     }
 
     func run() {
-        self.arguments.removeFirst() // Shifts off first element so 'run' isn’t passed to the app
-        self.delegate()
+        if arguments.count <= 2 {
+            if wantsHelp {
+                wantsHelp = false
+                arguments[1] = "list"
+            } else {
+                arguments[1] = "serve"
+            }
+        } else {
+            arguments.removeFirst()
+        }
+
+        delegate()
     }
 
     func delegate() {
@@ -223,13 +226,17 @@ class Vapor {
                     args = flags.joinWithSeparator(" ")
                 #endif
 
+                if wantsHelp {
+                    args += " --help"
+                }
+
                 #if swift(>=3.0)
                     args += " " + arguments.joined(separator: " ")
                 #else
                     args += " " + arguments.joinWithSeparator(" ")
                 #endif
 
-                try run(".build/\(folder)/\(appBin) \(args)")
+                try run(".build/\(folder)/\(appModule) \(args)")
             }
         } catch Error.System(let result) {
             if result != 2 {
