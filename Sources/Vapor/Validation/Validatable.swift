@@ -280,7 +280,7 @@ extension Optional where Wrapped: Validatable {
         where V.InputType == Wrapped>(by validator: V)
         throws -> Valid<V> {
             guard case .some(let value) = self else {
-                throw Failure<Wrapped>(input: nil)
+                throw ValidationFailure<V>(input: nil)
             }
             return try Valid<V>(value, by: validator)
     }
@@ -300,7 +300,7 @@ extension Optional where Wrapped: Validatable {
         where S.InputType == Wrapped>(by suite: S.Type = S.self)
         throws -> Valid<S> {
             guard case .some(let value) = self else {
-                throw Failure<Wrapped>(input: nil)
+                throw ValidationFailure<S>(input: nil)
             }
             return try Valid<S>(value, by: suite)
     }
