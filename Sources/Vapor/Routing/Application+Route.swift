@@ -81,6 +81,15 @@ extension Application {
         }
     }
 
+    /**
+     Adds a route handler for an HTTP request using a given HTTP verb at a given
+     path. The provided handler will be ran whenever the path is requested with 
+     the given method.
+     
+     - parameter    method:     The `Request.Method` that the handler should be executed for.
+     - parameter    path:       The HTTP path that handler can run at.
+     - parameter    handler:    The code to process the request with.
+    */
     public final func add(_ method: Request.Method, path: String, handler: Route.Handler) {
         //Convert Route.Handler to Request.Handler
         var responder: Responder = Request.Handler { request in
