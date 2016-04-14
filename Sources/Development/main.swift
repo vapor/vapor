@@ -134,6 +134,18 @@ app.post("login") { request in
     ])
 }
 
+/**
+    This example is in the docs. If it changes,
+    make sure to update the Response section.
+ */
+app.get("cookie") { request in
+    var response = Response(status: .ok, text: "Cookie set")
+    response.cookies["id"] = "123"
+
+    return response
+}
+
+
 app.get("cookies") { request in
     var response = Json([
         "cookies": "\(request.cookies)"
