@@ -4,8 +4,10 @@
  */
 public class Failure<T: Validatable>: ErrorProtocol {
     public let input: T?
-    public init(input: T?) {
+    public var name: String
+    public init(name: String, input: T?) {
         self.input = input
+        self.name = name
     }
 }
 
@@ -18,11 +20,11 @@ public class Failure<T: Validatable>: ErrorProtocol {
      throw error(with: value)
  */
 public final class ValidationFailure<V: Validator>: Failure<V.InputType> {
-    public init(_ validator: V.Type = V.self, input: V.InputType?) {
-        super.init(input: input)
+    public init(_ validator: V.Type = V.self, name: String, input: V.InputType?) {
+        super.init(name: name, input: input)
     }
-    public init(_ validator: V, input: V.InputType?) {
-        super.init(input: input)
+    public init(_ validator: V, name: String, input: V.InputType?) {
+        super.init(name: name, input: input)
     }
 }
 
@@ -36,7 +38,7 @@ extension Validator {
      - returns: a ValidationFailure object to throw
      */
     public static func error(with input: InputType) -> ErrorProtocol {
-        return ValidationFailure(self, input: input)
+        return ValidationFailure(self, name: "Input", input: input)
     }
 
     /**
@@ -48,6 +50,6 @@ extension Validator {
      - returns: a ValidationFailure object to throw
      */
     public func error(with input: InputType) -> ErrorProtocol {
-        return ValidationFailure(self, input: input)
+        return ValidationFailure(self, name: "Input", input: input)
     }
 }
