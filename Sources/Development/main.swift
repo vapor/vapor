@@ -145,6 +145,35 @@ app.get("cookies") { request in
     return response
 }
 
+class Name: ValidationSuite {
+    static func validate(input value: String) throws {
+        if value != "Tanner" {
+            throw Abort.badRequest
+        }
+    }
+}
+
+class Employee {
+    var name: Validated<Name>
+
+    init(request: Request) throws {
+        name = try request.data["name"]!.string!.validated()
+    }
+}
+
+extension Employee: JsonRepresentable {
+    func makeJson() -> Json {
+        return Json([
+            "name": name.value
+        ])
+    }
+}
+
+app.get("validation") { request in
+    let employee = try Employee(request: request)
+    return employee
+}
+
 //MARK: Middleware
 
 app.middleware(AuthMiddleware()) {
