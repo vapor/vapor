@@ -27,7 +27,7 @@ extension Extractable where Wrapped == Node {
         where V.InputType: NodeInitializable>(by suite: V.Type = V.self)
         throws -> Valid<V> {
             guard let wrapped = extract() else {
-                throw ValidationFailure<V>(input: nil)
+                throw ValidationFailure(suite, input: nil)
             }
             let value = try V.InputType.makeWith(wrapped)
             return try value.validated(by: suite)

@@ -2,10 +2,11 @@
  Failure object for basic failures that aren't 
  part of a validation operation
  */
-public class Failure<T: Validatable>: ErrorProtocol {
-    public let input: T?
-    public init(input: T?) {
-        self.input = input
+public class Failure: ErrorProtocol {
+    public let inputDescription: String
+
+    public init(input: String?) {
+        self.inputDescription = input ?? "nil"
     }
 }
 
@@ -17,12 +18,15 @@ public class Failure<T: Validatable>: ErrorProtocol {
      
      throw error(with: value)
  */
-public final class ValidationFailure<V: Validator>: Failure<V.InputType> {
-    public init(_ validator: V.Type = V.self, input: V.InputType?) {
-        super.init(input: input)
+public final class ValidationFailure: Failure {
+    let validator: String
+    public init<V: Validator>(_ validator: V.Type = V.self, input: V.InputType?) {
+        self.validator = "\(V.self)"
+        super.init(input: "\(input)")
     }
-    public init(_ validator: V, input: V.InputType?) {
-        super.init(input: input)
+    public init<V: Validator>(_ validator: V, input: V.InputType?) {
+        self.validator = "\(V.self)"
+        super.init(input: "\(input)")
     }
 }
 
