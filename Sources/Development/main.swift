@@ -154,7 +154,7 @@ class Name: ValidationSuite {
 }
 
 class Employee {
-    var name: Validated<Name>
+    var name: Valid<Name>
 
     init(request: Request) throws {
         name = try request.data["name"]!.string!.validated()
