@@ -8,10 +8,11 @@
 
 class Vapor {
     var arguments: [String]
-    
+
     var release = false
     var swift2 = false
-    
+    var appBin = "App"
+
     var flags: [String]
 
     init(arguments: [String]) {
@@ -28,9 +29,16 @@ class Vapor {
                     flags.append(argument)
                 }
             } else {
-                commands.append(argument)        
+                commands.append(argument)
             }
         }
+
+        #if swift(>=3.0)
+            let appBin = getenv("VAPOR_APP_BIN")
+            if appBin != nil, let value = String(validatingUTF8: appBin) {
+                self.appBin = value
+            }
+        #endif
 
         self.arguments = commands
         self.flags = flags
@@ -55,7 +63,8 @@ class Vapor {
             case .Help:
                 help()
             }
-
+        } else if(!swift2) {
+            delegate()
         } else {
             fail("Unknown command: \(Process.arguments[1])")
         }
@@ -116,7 +125,7 @@ class Vapor {
         run("rm -rf Packages .build", orFail: "Could not clean")
         print("Cleaned.")
     }
-    
+
     func build() {
         if swift2 {
             buildSwift2()
@@ -124,7 +133,7 @@ class Vapor {
             buildSwift3()
         }
     }
-    
+
     func buildSwift3() {
         do {
             var buildFlags = ""
@@ -159,8 +168,8 @@ class Vapor {
             let lib = "/usr/local/opt/vapor/lib/"
             let rpath = ""
         #endif
-        
-        var cflags = ""        
+
+        var cflags = ""
         if release {
             cflags = "-O"
         }
@@ -189,26 +198,42 @@ class Vapor {
 
     func run() {
         print("Running...")
-        do {
+        self.execAppBin()
+    }
 
-            
+    func delegate() {
+        var arguments: [String]
+
+        if self.arguments.count >= 2 {
+            arguments = Array(self.arguments[1..<self.arguments.count])
+        } else {
+            arguments = []
+        }
+
+        execAppBin(with: arguments)
+    }
+
+    func execAppBin(with arguments: [String] = []) {
+        do {
             if swift2 {
                 try run(".build/VaporApp")
             } else {
-                var name = "App"
                 let folder = release ? "release" : "debug"
-                
+                var args: String
+
                 #if swift(>=3.0)
-                    let args = flags.joined(separator: " ")
+                    args = flags.joined(separator: " ")
                 #else
-                    let args = flags.joinWithSeparator(" ")
+                    args = flags.joinWithSeparator(" ")
                 #endif
-                
-                if arguments.count >= 3 {
-                    name = arguments[2]
-                }
-                
-                try run(".build/\(folder)/\(name) \(args)")
+
+                #if swift(>=3.0)
+                    args += " " + arguments.joined(separator: " ")
+                #else
+                    args += " " + arguments.joinWithSeparator(" ")
+                #endif
+
+                try run(".build/\(folder)/\(appBin) \(args)")
             }
         } catch Error.System(let result) {
             if result != 2 {
