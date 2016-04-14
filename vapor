@@ -197,8 +197,8 @@ class Vapor {
     }
 
     func run() {
-        print("Running...")
-        self.execAppBin()
+        self.arguments.removeFirst() // Shifts off first element so 'run' isn’t passed to the app
+        self.delegate()
     }
 
     func delegate() {
@@ -210,10 +210,6 @@ class Vapor {
             arguments = []
         }
 
-        execAppBin(with: arguments)
-    }
-
-    func execAppBin(with arguments: [String] = []) {
         do {
             if swift2 {
                 try run(".build/VaporApp")
