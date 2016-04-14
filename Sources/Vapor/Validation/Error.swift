@@ -19,10 +19,10 @@ public class Failure<T: Validatable>: ErrorProtocol {
      throw error(with: value)
  */
 public final class ValidationFailure<V: Validator>: Failure<V.InputType> {
-    public init(_ validator: V.Type = V.self, input: V.InputType) {
+    public init(_ validator: V.Type = V.self, input: V.InputType?) {
         super.init(input: input)
     }
-    public init(_ validator: V, input: V.InputType) {
+    public init(_ validator: V, input: V.InputType?) {
         super.init(input: input)
     }
 }

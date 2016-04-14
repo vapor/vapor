@@ -23,6 +23,8 @@ extension Set: Validatable {}
 extension Array: Validatable {}
 extension Dictionary: Validatable {}
 
+extension Bool: Validatable {}
+
 extension Int: Validatable {}
 extension Int8: Validatable {}
 extension Int16: Validatable {}
