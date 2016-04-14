@@ -1,3 +1,4 @@
+public struct NodeExtraction: ErrorProtocol {}
 
 extension Node {
     public func validated<
@@ -17,17 +18,28 @@ extension Node {
  */
 
 
-// TODO: New File
+public protocol Extractable {
+    associatedtype Wrapped
+    func extract() throws -> Wrapped
+}
 
-extension Request {
+extension Extractable where Wrapped == Node {
     public func validated<
         T: ValidationSuite
-        where T.InputType: NodeInitializable>(by suite: T.Type = T.self, key: String)
+        where T.InputType: NodeInitializable>(by suite: T.Type = T.self)
         throws -> Valid<T> {
-            guard let node = data[key] else {
-                throw ValidationFailure<T>(input: nil)
-            }
-            
-            return try node.validated(by: suite)
+            let wrapped = try extract()
+            let value = try T.InputType.makeWith(wrapped)
+            return try value.validated(by: suite)
+    }
+}
+
+extension Optional: Extractable {
+    public func extract() throws -> Wrapped {
+        guard let value = self else {
+            // TODO: Better Error
+            throw NodeExtraction()
+        }
+        return value
     }
 }

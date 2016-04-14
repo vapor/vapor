@@ -1,4 +1,3 @@
-
 /**
  Failure object for basic failures that aren't 
  part of a validation operation

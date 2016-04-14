@@ -157,7 +157,8 @@ class Employee {
     var name: Valid<Name>
 
     init(request: Request) throws {
-        name = try request.data["name"]!.string!.validated()
+
+        name = try request.data["name"]!.validated()
     }
 }
 
