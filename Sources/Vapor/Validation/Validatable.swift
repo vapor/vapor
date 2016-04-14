@@ -107,7 +107,7 @@ extension Optional where Wrapped: Validatable {
         @noescape by tester: (input: Wrapped) throws -> Void)
         throws -> Wrapped {
             guard case .some(let value) = self else {
-                throw Failure<Wrapped>(input: nil)
+                throw Failure<Wrapped>(name: "Input", input: nil)
             }
             return try value.tested(by: tester)
     }
@@ -280,7 +280,7 @@ extension Optional where Wrapped: Validatable {
         where V.InputType == Wrapped>(by validator: V)
         throws -> Valid<V> {
             guard case .some(let value) = self else {
-                throw ValidationFailure<V>(input: nil)
+                throw ValidationFailure<V>(name: "Input", input: nil)
             }
             return try Valid<V>(value, by: validator)
     }
@@ -300,7 +300,7 @@ extension Optional where Wrapped: Validatable {
         where S.InputType == Wrapped>(by suite: S.Type = S.self)
         throws -> Valid<S> {
             guard case .some(let value) = self else {
-                throw ValidationFailure<S>(input: nil)
+                throw ValidationFailure<S>(name: "Input", input: nil)
             }
             return try Valid<S>(value, by: suite)
     }

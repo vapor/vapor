@@ -3,6 +3,11 @@ public protocol RequestContentSubscript {}
 extension String: RequestContentSubscript { }
 extension Int: RequestContentSubscript {}
 
+public struct KeyedNode {
+    var key: String
+    var node: Node?
+}
+
 public extension Request {
 
     /**
@@ -43,6 +48,10 @@ public extension Request {
             } else {
                 return nil
             }
+        }
+
+        public subscript(key: String) -> KeyedNode {
+            return KeyedNode(key: key, node: self[key])
         }
     }
 
