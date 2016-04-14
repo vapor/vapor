@@ -3,9 +3,11 @@
  part of a validation operation
  */
 public class Failure: ErrorProtocol {
+    public let name: String
     public let inputDescription: String
 
-    public init(input: String?) {
+    public init(name: String = "", input: String?) {
+        self.name = name
         self.inputDescription = input ?? "nil"
     }
 }
