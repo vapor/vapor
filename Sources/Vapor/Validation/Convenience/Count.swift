@@ -6,7 +6,7 @@
  */
 public protocol Countable: Validatable {
     // The type that will be used to evaluate the count
-    associatedtype CountType: Comparable
+    associatedtype CountType: Comparable, Equatable
 
     // The count of the object
     var count: CountType { get }
@@ -19,14 +19,16 @@ public protocol Countable: Validatable {
  
      "someString".validated(by: Count.min(3) + Count.min(10))
 
- - min:         validate length is >= associated value
- - max:         validate length <= associated value
- - containedIn: validate low is <= length and length is <= max
+ - min:         validate count is >= associated value
+ - max:         validate count <= associated value
+ - equals:      validate count == associated value
+ - containedIn: validate low is <= count and count is <= max
  */
 public enum Count<CountableType: Countable>: Validator {
     public typealias CountType = CountableType.CountType
     case min(CountType)
     case max(CountType)
+    case equals(CountType)
     case containedIn(low: CountType, high: CountType)
 
     /**
@@ -37,13 +39,15 @@ public enum Count<CountableType: Countable>: Validator {
      - throws: an error if validation fails
      */
     public func validate(input value: CountableType) throws {
-        let length = value.count
+        let count = value.count
         switch self {
-        case .min(let m) where length >= m:
+        case .min(let m) where count >= m:
             break
-        case .max(let m) where length <= m:
+        case .max(let m) where count <= m:
             break
-        case .containedIn(low: let l, high: let h) where l <= length && length <= h:
+        case .equals(let e) where count == e:
+            break
+        case .containedIn(low: let l, high: let h) where l <= count && count <= h:
             break
         default:
             throw error(with: value)

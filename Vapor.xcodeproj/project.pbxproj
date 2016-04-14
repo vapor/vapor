@@ -7,77 +7,77 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		80DCCECF1CBEDCE600124B28 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
-		80DCCED01CBEDCE600124B28 /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
-		80DCCED11CBEDCE600124B28 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
-		80DCCED21CBEDCE600124B28 /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
-		80DCCED31CBEDCE600124B28 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
-		80DCCED41CBEDCE600124B28 /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
-		80DCCED51CBEDCE600124B28 /* libData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Data" /* libData.dylib */; };
-		80DCCED61CBEDCE600124B28 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
-		80DCCED71CBEDCE600124B28 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
-		80DCCED81CBEDCE600124B28 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
-		80DCCED91CBEDCE600124B28 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
-		80DCCEDA1CBEDCE600124B28 /* libCryptoEssentials.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentials" /* libCryptoEssentials.dylib */; };
-		80DCCEDB1CBEDCE600124B28 /* libData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Data" /* libData.dylib */; };
-		80DCCEDC1CBEDCE600124B28 /* libCryptoEssentials.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentials" /* libCryptoEssentials.dylib */; };
-		80DCCEDD1CBEDCE600124B28 /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
-		80DCCEDE1CBEDCE600124B28 /* libInterchangeData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_InterchangeData" /* libInterchangeData.dylib */; };
-		80DCCEDF1CBEDCE600124B28 /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
-		80DCCEE01CBEDCE600124B28 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
-		80DCCEE11CBEDCE600124B28 /* libSHA2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_SHA2" /* libSHA2.dylib */; };
-		80DCCEE21CBEDCE600124B28 /* libHMAC.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_HMAC" /* libHMAC.dylib */; };
-		80DCCEE31CBEDCE600124B28 /* libHummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Hummingbird" /* libHummingbird.dylib */; };
-		80DCCEE41CBEDCE600124B28 /* libJSON.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_JSON" /* libJSON.dylib */; };
-		80DCCEE51CBEDCE600124B28 /* libString.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_String" /* libString.dylib */; };
-		80DCCEE61CBEDCE600124B28 /* libS4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_S4" /* libS4.dylib */; };
-		80DCCEE71CBEDCE600124B28 /* liblibc.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_libc" /* liblibc.dylib */; };
-		80DCCEE81CBEDCE600124B28 /* libData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Data" /* libData.dylib */; };
-		80DCCEE91CBEDCE600124B28 /* libCryptoEssentials.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentials" /* libCryptoEssentials.dylib */; };
-		80DCCEEA1CBEDCE600124B28 /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
-		80DCCEEB1CBEDCE600124B28 /* libInterchangeData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_InterchangeData" /* libInterchangeData.dylib */; };
-		80DCCEEC1CBEDCE600124B28 /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
-		80DCCEED1CBEDCE600124B28 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
-		80DCCEEE1CBEDCE600124B28 /* libSHA2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_SHA2" /* libSHA2.dylib */; };
-		80DCCEEF1CBEDCE600124B28 /* libHMAC.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_HMAC" /* libHMAC.dylib */; };
-		80DCCEF01CBEDCE600124B28 /* libHummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Hummingbird" /* libHummingbird.dylib */; };
-		80DCCEF11CBEDCE600124B28 /* libJSON.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_JSON" /* libJSON.dylib */; };
-		80DCCEF21CBEDCE600124B28 /* libString.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_String" /* libString.dylib */; };
-		80DCCEF31CBEDCE600124B28 /* libS4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_S4" /* libS4.dylib */; };
-		80DCCEF41CBEDCE600124B28 /* libData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Data" /* libData.dylib */; };
-		80DCCEF51CBEDCE600124B28 /* libCryptoEssentials.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentials" /* libCryptoEssentials.dylib */; };
-		80DCCEF61CBEDCE600124B28 /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
-		80DCCEF71CBEDCE600124B28 /* libInterchangeData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_InterchangeData" /* libInterchangeData.dylib */; };
-		80DCCEF81CBEDCE600124B28 /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
-		80DCCEF91CBEDCE600124B28 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
-		80DCCEFA1CBEDCE600124B28 /* libData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Data" /* libData.dylib */; };
-		80DCCEFB1CBEDCE600124B28 /* libCryptoEssentials.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentials" /* libCryptoEssentials.dylib */; };
-		80DCCEFC1CBEDCE600124B28 /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
-		80DCCEFD1CBEDCE600124B28 /* libInterchangeData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_InterchangeData" /* libInterchangeData.dylib */; };
-		80DCCEFE1CBEDCE600124B28 /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
-		80DCCEFF1CBEDCE600124B28 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
-		80DCCF001CBEDCE600124B28 /* libSHA2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_SHA2" /* libSHA2.dylib */; };
-		80DCCF011CBEDCE600124B28 /* libHMAC.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_HMAC" /* libHMAC.dylib */; };
-		80DCCF021CBEDCE600124B28 /* libHummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Hummingbird" /* libHummingbird.dylib */; };
-		80DCCF031CBEDCE600124B28 /* libJSON.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_JSON" /* libJSON.dylib */; };
-		80DCCF041CBEDCE600124B28 /* libString.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_String" /* libString.dylib */; };
-		80DCCF051CBEDCE600124B28 /* libS4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_S4" /* libS4.dylib */; };
-		80DCCF061CBEDCE600124B28 /* libVapor.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Vapor" /* libVapor.dylib */; };
-		80DCCF071CBEDCE600124B28 /* liblibc.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_libc" /* liblibc.dylib */; };
-		80DCCF081CBEDCE600124B28 /* libData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Data" /* libData.dylib */; };
-		80DCCF091CBEDCE600124B28 /* libCryptoEssentials.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentials" /* libCryptoEssentials.dylib */; };
-		80DCCF0A1CBEDCE600124B28 /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
-		80DCCF0B1CBEDCE600124B28 /* libInterchangeData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_InterchangeData" /* libInterchangeData.dylib */; };
-		80DCCF0C1CBEDCE600124B28 /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
-		80DCCF0D1CBEDCE600124B28 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
-		80DCCF0E1CBEDCE600124B28 /* libSHA2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_SHA2" /* libSHA2.dylib */; };
-		80DCCF0F1CBEDCE600124B28 /* libHMAC.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_HMAC" /* libHMAC.dylib */; };
-		80DCCF101CBEDCE600124B28 /* libHummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Hummingbird" /* libHummingbird.dylib */; };
-		80DCCF111CBEDCE600124B28 /* libJSON.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_JSON" /* libJSON.dylib */; };
-		80DCCF121CBEDCE600124B28 /* libString.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_String" /* libString.dylib */; };
-		80DCCF131CBEDCE600124B28 /* libS4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_S4" /* libS4.dylib */; };
-		80DCCF141CBEDCE600124B28 /* libVapor.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Vapor" /* libVapor.dylib */; };
-		80DCCF151CBEDCE600124B28 /* liblibc.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_libc" /* liblibc.dylib */; };
+		80DC338F1CBF21E800C894CF /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
+		80DC33901CBF21E800C894CF /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
+		80DC33911CBF21E800C894CF /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
+		80DC33921CBF21E800C894CF /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
+		80DC33931CBF21E800C894CF /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
+		80DC33941CBF21E800C894CF /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
+		80DC33951CBF21E800C894CF /* libData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Data" /* libData.dylib */; };
+		80DC33961CBF21E800C894CF /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
+		80DC33971CBF21E800C894CF /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
+		80DC33981CBF21E800C894CF /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
+		80DC33991CBF21E800C894CF /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
+		80DC339A1CBF21E800C894CF /* libCryptoEssentials.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentials" /* libCryptoEssentials.dylib */; };
+		80DC339B1CBF21E800C894CF /* libData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Data" /* libData.dylib */; };
+		80DC339C1CBF21E800C894CF /* libCryptoEssentials.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentials" /* libCryptoEssentials.dylib */; };
+		80DC339D1CBF21E800C894CF /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
+		80DC339E1CBF21E800C894CF /* libInterchangeData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_InterchangeData" /* libInterchangeData.dylib */; };
+		80DC339F1CBF21E800C894CF /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
+		80DC33A01CBF21E800C894CF /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
+		80DC33A11CBF21E800C894CF /* libSHA2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_SHA2" /* libSHA2.dylib */; };
+		80DC33A21CBF21E800C894CF /* libHMAC.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_HMAC" /* libHMAC.dylib */; };
+		80DC33A31CBF21E800C894CF /* libHummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Hummingbird" /* libHummingbird.dylib */; };
+		80DC33A41CBF21E800C894CF /* libJSON.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_JSON" /* libJSON.dylib */; };
+		80DC33A51CBF21E800C894CF /* libString.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_String" /* libString.dylib */; };
+		80DC33A61CBF21E800C894CF /* libS4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_S4" /* libS4.dylib */; };
+		80DC33A71CBF21E800C894CF /* liblibc.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_libc" /* liblibc.dylib */; };
+		80DC33A81CBF21E800C894CF /* libData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Data" /* libData.dylib */; };
+		80DC33A91CBF21E800C894CF /* libCryptoEssentials.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentials" /* libCryptoEssentials.dylib */; };
+		80DC33AA1CBF21E800C894CF /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
+		80DC33AB1CBF21E800C894CF /* libInterchangeData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_InterchangeData" /* libInterchangeData.dylib */; };
+		80DC33AC1CBF21E800C894CF /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
+		80DC33AD1CBF21E800C894CF /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
+		80DC33AE1CBF21E800C894CF /* libSHA2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_SHA2" /* libSHA2.dylib */; };
+		80DC33AF1CBF21E800C894CF /* libHMAC.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_HMAC" /* libHMAC.dylib */; };
+		80DC33B01CBF21E800C894CF /* libHummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Hummingbird" /* libHummingbird.dylib */; };
+		80DC33B11CBF21E800C894CF /* libJSON.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_JSON" /* libJSON.dylib */; };
+		80DC33B21CBF21E800C894CF /* libString.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_String" /* libString.dylib */; };
+		80DC33B31CBF21E800C894CF /* libS4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_S4" /* libS4.dylib */; };
+		80DC33B41CBF21E800C894CF /* libData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Data" /* libData.dylib */; };
+		80DC33B51CBF21E800C894CF /* libCryptoEssentials.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentials" /* libCryptoEssentials.dylib */; };
+		80DC33B61CBF21E800C894CF /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
+		80DC33B71CBF21E800C894CF /* libInterchangeData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_InterchangeData" /* libInterchangeData.dylib */; };
+		80DC33B81CBF21E800C894CF /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
+		80DC33B91CBF21E800C894CF /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
+		80DC33BA1CBF21E800C894CF /* libData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Data" /* libData.dylib */; };
+		80DC33BB1CBF21E800C894CF /* libCryptoEssentials.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentials" /* libCryptoEssentials.dylib */; };
+		80DC33BC1CBF21E800C894CF /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
+		80DC33BD1CBF21E800C894CF /* libInterchangeData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_InterchangeData" /* libInterchangeData.dylib */; };
+		80DC33BE1CBF21E800C894CF /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
+		80DC33BF1CBF21E800C894CF /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
+		80DC33C01CBF21E800C894CF /* libSHA2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_SHA2" /* libSHA2.dylib */; };
+		80DC33C11CBF21E800C894CF /* libHMAC.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_HMAC" /* libHMAC.dylib */; };
+		80DC33C21CBF21E800C894CF /* libHummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Hummingbird" /* libHummingbird.dylib */; };
+		80DC33C31CBF21E800C894CF /* libJSON.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_JSON" /* libJSON.dylib */; };
+		80DC33C41CBF21E800C894CF /* libString.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_String" /* libString.dylib */; };
+		80DC33C51CBF21E800C894CF /* libS4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_S4" /* libS4.dylib */; };
+		80DC33C61CBF21E800C894CF /* libVapor.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Vapor" /* libVapor.dylib */; };
+		80DC33C71CBF21E800C894CF /* liblibc.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_libc" /* liblibc.dylib */; };
+		80DC33C81CBF21E800C894CF /* libData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Data" /* libData.dylib */; };
+		80DC33C91CBF21E800C894CF /* libCryptoEssentials.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentials" /* libCryptoEssentials.dylib */; };
+		80DC33CA1CBF21E800C894CF /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
+		80DC33CB1CBF21E800C894CF /* libInterchangeData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_InterchangeData" /* libInterchangeData.dylib */; };
+		80DC33CC1CBF21E800C894CF /* libOperatingSystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_OperatingSystem" /* libOperatingSystem.dylib */; };
+		80DC33CD1CBF21E800C894CF /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
+		80DC33CE1CBF21E800C894CF /* libSHA2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_SHA2" /* libSHA2.dylib */; };
+		80DC33CF1CBF21E800C894CF /* libHMAC.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_HMAC" /* libHMAC.dylib */; };
+		80DC33D01CBF21E800C894CF /* libHummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Hummingbird" /* libHummingbird.dylib */; };
+		80DC33D11CBF21E800C894CF /* libJSON.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_JSON" /* libJSON.dylib */; };
+		80DC33D21CBF21E800C894CF /* libString.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_String" /* libString.dylib */; };
+		80DC33D31CBF21E800C894CF /* libS4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_S4" /* libS4.dylib */; };
+		80DC33D41CBF21E800C894CF /* libVapor.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Vapor" /* libVapor.dylib */; };
+		80DC33D51CBF21E800C894CF /* liblibc.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_libc" /* liblibc.dylib */; };
 		_LinkFileRef_C7 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
 		_LinkFileRef_CryptoEssentials /* libCryptoEssentials.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentials" /* libCryptoEssentials.dylib */; };
 		_LinkFileRef_Data /* libData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Data" /* libData.dylib */; };
@@ -217,8 +217,8 @@
 		"__src_cc_ref_Sources/Vapor/Utilities/Vapor+S4.swift" /* Utilities/Vapor+S4.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Sources/Vapor/Utilities/Vapor+S4.swift" /* Utilities/Vapor+S4.swift */; };
 		__src_cc_ref_Sources/Vapor/Validation/And.swift /* Validation/And.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Validation/And.swift /* Validation/And.swift */; };
 		__src_cc_ref_Sources/Vapor/Validation/Convenience/Alphanumeric.swift /* Validation/Convenience/Alphanumeric.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Validation/Convenience/Alphanumeric.swift /* Validation/Convenience/Alphanumeric.swift */; };
+		__src_cc_ref_Sources/Vapor/Validation/Convenience/Count.swift /* Validation/Convenience/Count.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Validation/Convenience/Count.swift /* Validation/Convenience/Count.swift */; };
 		__src_cc_ref_Sources/Vapor/Validation/Convenience/Email.swift /* Validation/Convenience/Email.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Validation/Convenience/Email.swift /* Validation/Convenience/Email.swift */; };
-		__src_cc_ref_Sources/Vapor/Validation/Convenience/StringLength.swift /* Validation/Convenience/StringLength.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Validation/Convenience/StringLength.swift /* Validation/Convenience/StringLength.swift */; };
 		__src_cc_ref_Sources/Vapor/Validation/Error.swift /* Validation/Error.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Validation/Error.swift /* Validation/Error.swift */; };
 		__src_cc_ref_Sources/Vapor/Validation/Not.swift /* Validation/Not.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Validation/Not.swift /* Validation/Not.swift */; };
 		__src_cc_ref_Sources/Vapor/Validation/Operators.swift /* Validation/Operators.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/Validation/Operators.swift /* Validation/Operators.swift */; };
@@ -246,102 +246,103 @@
 		__src_cc_ref_Tests/Vapor/SessionTests.swift /* SessionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Tests/Vapor/SessionTests.swift /* SessionTests.swift */; };
 		__src_cc_ref_Tests/Vapor/TestHTTPStream.swift /* TestHTTPStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Tests/Vapor/TestHTTPStream.swift /* TestHTTPStream.swift */; };
 		__src_cc_ref_Tests/Vapor/TypedRouteTests.swift /* TypedRouteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Tests/Vapor/TypedRouteTests.swift /* TypedRouteTests.swift */; };
+		__src_cc_ref_Tests/Vapor/ValidationCountTests.swift /* ValidationCountTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Tests/Vapor/ValidationCountTests.swift /* ValidationCountTests.swift */; };
 		__src_cc_ref_Tests/Vapor/ValidationTests.swift /* ValidationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Tests/Vapor/ValidationTests.swift /* ValidationTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		80DCCF161CBEDCE700124B28 /* PBXContainerItemProxy */ = {
+		80DC33D61CBF21E800C894CF /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = __RootObject_ /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = "______Target_C7";
 			remoteInfo = C7;
 		};
-		80DCCF171CBEDCE700124B28 /* PBXContainerItemProxy */ = {
+		80DC33D71CBF21E800C894CF /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = __RootObject_ /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = "______Target_OperatingSystem";
 			remoteInfo = OperatingSystem;
 		};
-		80DCCF181CBEDCE700124B28 /* PBXContainerItemProxy */ = {
+		80DC33D81CBF21E800C894CF /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = __RootObject_ /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = "______Target_Data";
 			remoteInfo = Data;
 		};
-		80DCCF191CBEDCE700124B28 /* PBXContainerItemProxy */ = {
+		80DC33D91CBF21E800C894CF /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = __RootObject_ /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = "______Target_InterchangeData";
 			remoteInfo = InterchangeData;
 		};
-		80DCCF1A1CBEDCE700124B28 /* PBXContainerItemProxy */ = {
+		80DC33DA1CBF21E800C894CF /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = __RootObject_ /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = "______Target_Strand";
 			remoteInfo = Strand;
 		};
-		80DCCF1B1CBEDCE700124B28 /* PBXContainerItemProxy */ = {
+		80DC33DB1CBF21E800C894CF /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = __RootObject_ /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = "______Target_CryptoEssentials";
 			remoteInfo = CryptoEssentials;
 		};
-		80DCCF1C1CBEDCE700124B28 /* PBXContainerItemProxy */ = {
+		80DC33DC1CBF21E800C894CF /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = __RootObject_ /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = "______Target_SHA2";
 			remoteInfo = SHA2;
 		};
-		80DCCF1D1CBEDCE700124B28 /* PBXContainerItemProxy */ = {
+		80DC33DD1CBF21E800C894CF /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = __RootObject_ /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = "______Target_HMAC";
 			remoteInfo = HMAC;
 		};
-		80DCCF1E1CBEDCE700124B28 /* PBXContainerItemProxy */ = {
+		80DC33DE1CBF21E800C894CF /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = __RootObject_ /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = "______Target_Hummingbird";
 			remoteInfo = Hummingbird;
 		};
-		80DCCF1F1CBEDCE700124B28 /* PBXContainerItemProxy */ = {
+		80DC33DF1CBF21E800C894CF /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = __RootObject_ /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = "______Target_JSON";
 			remoteInfo = JSON;
 		};
-		80DCCF201CBEDCE700124B28 /* PBXContainerItemProxy */ = {
+		80DC33E01CBF21E800C894CF /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = __RootObject_ /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = "______Target_String";
 			remoteInfo = String;
 		};
-		80DCCF211CBEDCE700124B28 /* PBXContainerItemProxy */ = {
+		80DC33E11CBF21E800C894CF /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = __RootObject_ /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = "______Target_S4";
 			remoteInfo = S4;
 		};
-		80DCCF221CBEDCE700124B28 /* PBXContainerItemProxy */ = {
+		80DC33E21CBF21E800C894CF /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = __RootObject_ /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = "______Target_Vapor";
 			remoteInfo = Vapor;
 		};
-		80DCCF231CBEDCE700124B28 /* PBXContainerItemProxy */ = {
+		80DC33E31CBF21E800C894CF /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = __RootObject_ /* Project object */;
 			proxyType = 1;
@@ -477,8 +478,8 @@
 		"__PBXFileRef_Sources/Vapor/Utilities/Vapor+S4.swift" /* Utilities/Vapor+S4.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Utilities/Vapor+S4.swift"; sourceTree = "<group>"; };
 		__PBXFileRef_Sources/Vapor/Validation/And.swift /* Validation/And.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Validation/And.swift; sourceTree = "<group>"; };
 		__PBXFileRef_Sources/Vapor/Validation/Convenience/Alphanumeric.swift /* Validation/Convenience/Alphanumeric.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Validation/Convenience/Alphanumeric.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Sources/Vapor/Validation/Convenience/Count.swift /* Validation/Convenience/Count.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Validation/Convenience/Count.swift; sourceTree = "<group>"; };
 		__PBXFileRef_Sources/Vapor/Validation/Convenience/Email.swift /* Validation/Convenience/Email.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Validation/Convenience/Email.swift; sourceTree = "<group>"; };
-		__PBXFileRef_Sources/Vapor/Validation/Convenience/StringLength.swift /* Validation/Convenience/StringLength.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Validation/Convenience/StringLength.swift; sourceTree = "<group>"; };
 		__PBXFileRef_Sources/Vapor/Validation/Error.swift /* Validation/Error.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Validation/Error.swift; sourceTree = "<group>"; };
 		__PBXFileRef_Sources/Vapor/Validation/Not.swift /* Validation/Not.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Validation/Not.swift; sourceTree = "<group>"; };
 		__PBXFileRef_Sources/Vapor/Validation/Operators.swift /* Validation/Operators.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Validation/Operators.swift; sourceTree = "<group>"; };
@@ -506,6 +507,7 @@
 		__PBXFileRef_Tests/Vapor/SessionTests.swift /* SessionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionTests.swift; sourceTree = "<group>"; };
 		__PBXFileRef_Tests/Vapor/TestHTTPStream.swift /* TestHTTPStream.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestHTTPStream.swift; sourceTree = "<group>"; };
 		__PBXFileRef_Tests/Vapor/TypedRouteTests.swift /* TypedRouteTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TypedRouteTests.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Tests/Vapor/ValidationCountTests.swift /* ValidationCountTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ValidationCountTests.swift; sourceTree = "<group>"; };
 		__PBXFileRef_Tests/Vapor/ValidationTests.swift /* ValidationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ValidationTests.swift; sourceTree = "<group>"; };
 		"_____Product_C7" /* libC7.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libC7.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		"_____Product_CryptoEssentials" /* libCryptoEssentials.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libCryptoEssentials.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -522,7 +524,7 @@
 		"_____Product_Strand" /* libStrand.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libStrand.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		"_____Product_String" /* libString.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libString.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		"_____Product_Vapor" /* libVapor.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libVapor.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
-		"_____Product_VaporTestSuite" /* Vapor.testsuite.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = Vapor.testsuite.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		"_____Product_VaporTestSuite" /* VaporTestSuite.xctest */ = {isa = PBXFileReference; lastKnownFileType = file; name = VaporTestSuite.xctest; path = Vapor.testsuite.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		"_____Product_libc" /* liblibc.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = liblibc.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -538,7 +540,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
-				80DCCED71CBEDCE600124B28 /* libC7.dylib in Frameworks */,
+				80DC33971CBF21E800C894CF /* libC7.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -546,8 +548,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
-				80DCCECF1CBEDCE600124B28 /* libC7.dylib in Frameworks */,
-				80DCCED01CBEDCE600124B28 /* libOperatingSystem.dylib in Frameworks */,
+				80DC338F1CBF21E800C894CF /* libC7.dylib in Frameworks */,
+				80DC33901CBF21E800C894CF /* libOperatingSystem.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -555,20 +557,20 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
-				80DCCEDB1CBEDCE600124B28 /* libData.dylib in Frameworks */,
-				80DCCEDC1CBEDCE600124B28 /* libCryptoEssentials.dylib in Frameworks */,
-				80DCCEDD1CBEDCE600124B28 /* libStrand.dylib in Frameworks */,
-				80DCCEDE1CBEDCE600124B28 /* libInterchangeData.dylib in Frameworks */,
-				80DCCEDF1CBEDCE600124B28 /* libOperatingSystem.dylib in Frameworks */,
-				80DCCEE01CBEDCE600124B28 /* libC7.dylib in Frameworks */,
-				80DCCEE11CBEDCE600124B28 /* libSHA2.dylib in Frameworks */,
-				80DCCEE21CBEDCE600124B28 /* libHMAC.dylib in Frameworks */,
-				80DCCEE31CBEDCE600124B28 /* libHummingbird.dylib in Frameworks */,
-				80DCCEE41CBEDCE600124B28 /* libJSON.dylib in Frameworks */,
-				80DCCEE51CBEDCE600124B28 /* libString.dylib in Frameworks */,
-				80DCCEE61CBEDCE600124B28 /* libS4.dylib in Frameworks */,
+				80DC339B1CBF21E800C894CF /* libData.dylib in Frameworks */,
+				80DC339C1CBF21E800C894CF /* libCryptoEssentials.dylib in Frameworks */,
+				80DC339D1CBF21E800C894CF /* libStrand.dylib in Frameworks */,
+				80DC339E1CBF21E800C894CF /* libInterchangeData.dylib in Frameworks */,
+				80DC339F1CBF21E800C894CF /* libOperatingSystem.dylib in Frameworks */,
+				80DC33A01CBF21E800C894CF /* libC7.dylib in Frameworks */,
+				80DC33A11CBF21E800C894CF /* libSHA2.dylib in Frameworks */,
+				80DC33A21CBF21E800C894CF /* libHMAC.dylib in Frameworks */,
+				80DC33A31CBF21E800C894CF /* libHummingbird.dylib in Frameworks */,
+				80DC33A41CBF21E800C894CF /* libJSON.dylib in Frameworks */,
+				80DC33A51CBF21E800C894CF /* libString.dylib in Frameworks */,
+				80DC33A61CBF21E800C894CF /* libS4.dylib in Frameworks */,
 				_LinkFileRef_Vapor /* libVapor.dylib in Frameworks */,
-				80DCCEE71CBEDCE600124B28 /* liblibc.dylib in Frameworks */,
+				80DC33A71CBF21E800C894CF /* liblibc.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -576,7 +578,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
-				80DCCED81CBEDCE600124B28 /* libC7.dylib in Frameworks */,
+				80DC33981CBF21E800C894CF /* libC7.dylib in Frameworks */,
 				_LinkFileRef_CryptoEssentials /* libCryptoEssentials.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -585,7 +587,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
-				80DCCED61CBEDCE600124B28 /* libC7.dylib in Frameworks */,
+				80DC33961CBF21E800C894CF /* libC7.dylib in Frameworks */,
 				_LinkFileRef_Strand /* libStrand.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -594,8 +596,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
-				80DCCED11CBEDCE600124B28 /* libC7.dylib in Frameworks */,
-				80DCCED21CBEDCE600124B28 /* libOperatingSystem.dylib in Frameworks */,
+				80DC33911CBF21E800C894CF /* libC7.dylib in Frameworks */,
+				80DC33921CBF21E800C894CF /* libOperatingSystem.dylib in Frameworks */,
 				_LinkFileRef_Data /* libData.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -604,9 +606,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
-				80DCCED31CBEDCE600124B28 /* libC7.dylib in Frameworks */,
-				80DCCED41CBEDCE600124B28 /* libOperatingSystem.dylib in Frameworks */,
-				80DCCED51CBEDCE600124B28 /* libData.dylib in Frameworks */,
+				80DC33931CBF21E800C894CF /* libC7.dylib in Frameworks */,
+				80DC33941CBF21E800C894CF /* libOperatingSystem.dylib in Frameworks */,
+				80DC33951CBF21E800C894CF /* libData.dylib in Frameworks */,
 				_LinkFileRef_InterchangeData /* libInterchangeData.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -622,20 +624,20 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
-				80DCCEFA1CBEDCE600124B28 /* libData.dylib in Frameworks */,
-				80DCCEFB1CBEDCE600124B28 /* libCryptoEssentials.dylib in Frameworks */,
-				80DCCEFC1CBEDCE600124B28 /* libStrand.dylib in Frameworks */,
-				80DCCEFD1CBEDCE600124B28 /* libInterchangeData.dylib in Frameworks */,
-				80DCCEFE1CBEDCE600124B28 /* libOperatingSystem.dylib in Frameworks */,
-				80DCCEFF1CBEDCE600124B28 /* libC7.dylib in Frameworks */,
-				80DCCF001CBEDCE600124B28 /* libSHA2.dylib in Frameworks */,
-				80DCCF011CBEDCE600124B28 /* libHMAC.dylib in Frameworks */,
-				80DCCF021CBEDCE600124B28 /* libHummingbird.dylib in Frameworks */,
-				80DCCF031CBEDCE600124B28 /* libJSON.dylib in Frameworks */,
-				80DCCF041CBEDCE600124B28 /* libString.dylib in Frameworks */,
-				80DCCF051CBEDCE600124B28 /* libS4.dylib in Frameworks */,
-				80DCCF061CBEDCE600124B28 /* libVapor.dylib in Frameworks */,
-				80DCCF071CBEDCE600124B28 /* liblibc.dylib in Frameworks */,
+				80DC33BA1CBF21E800C894CF /* libData.dylib in Frameworks */,
+				80DC33BB1CBF21E800C894CF /* libCryptoEssentials.dylib in Frameworks */,
+				80DC33BC1CBF21E800C894CF /* libStrand.dylib in Frameworks */,
+				80DC33BD1CBF21E800C894CF /* libInterchangeData.dylib in Frameworks */,
+				80DC33BE1CBF21E800C894CF /* libOperatingSystem.dylib in Frameworks */,
+				80DC33BF1CBF21E800C894CF /* libC7.dylib in Frameworks */,
+				80DC33C01CBF21E800C894CF /* libSHA2.dylib in Frameworks */,
+				80DC33C11CBF21E800C894CF /* libHMAC.dylib in Frameworks */,
+				80DC33C21CBF21E800C894CF /* libHummingbird.dylib in Frameworks */,
+				80DC33C31CBF21E800C894CF /* libJSON.dylib in Frameworks */,
+				80DC33C41CBF21E800C894CF /* libString.dylib in Frameworks */,
+				80DC33C51CBF21E800C894CF /* libS4.dylib in Frameworks */,
+				80DC33C61CBF21E800C894CF /* libVapor.dylib in Frameworks */,
+				80DC33C71CBF21E800C894CF /* liblibc.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -651,8 +653,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
-				80DCCED91CBEDCE600124B28 /* libC7.dylib in Frameworks */,
-				80DCCEDA1CBEDCE600124B28 /* libCryptoEssentials.dylib in Frameworks */,
+				80DC33991CBF21E800C894CF /* libC7.dylib in Frameworks */,
+				80DC339A1CBF21E800C894CF /* libCryptoEssentials.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -675,18 +677,18 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
-				80DCCEE81CBEDCE600124B28 /* libData.dylib in Frameworks */,
-				80DCCEE91CBEDCE600124B28 /* libCryptoEssentials.dylib in Frameworks */,
-				80DCCEEA1CBEDCE600124B28 /* libStrand.dylib in Frameworks */,
-				80DCCEEB1CBEDCE600124B28 /* libInterchangeData.dylib in Frameworks */,
-				80DCCEEC1CBEDCE600124B28 /* libOperatingSystem.dylib in Frameworks */,
-				80DCCEED1CBEDCE600124B28 /* libC7.dylib in Frameworks */,
-				80DCCEEE1CBEDCE600124B28 /* libSHA2.dylib in Frameworks */,
-				80DCCEEF1CBEDCE600124B28 /* libHMAC.dylib in Frameworks */,
-				80DCCEF01CBEDCE600124B28 /* libHummingbird.dylib in Frameworks */,
-				80DCCEF11CBEDCE600124B28 /* libJSON.dylib in Frameworks */,
-				80DCCEF21CBEDCE600124B28 /* libString.dylib in Frameworks */,
-				80DCCEF31CBEDCE600124B28 /* libS4.dylib in Frameworks */,
+				80DC33A81CBF21E800C894CF /* libData.dylib in Frameworks */,
+				80DC33A91CBF21E800C894CF /* libCryptoEssentials.dylib in Frameworks */,
+				80DC33AA1CBF21E800C894CF /* libStrand.dylib in Frameworks */,
+				80DC33AB1CBF21E800C894CF /* libInterchangeData.dylib in Frameworks */,
+				80DC33AC1CBF21E800C894CF /* libOperatingSystem.dylib in Frameworks */,
+				80DC33AD1CBF21E800C894CF /* libC7.dylib in Frameworks */,
+				80DC33AE1CBF21E800C894CF /* libSHA2.dylib in Frameworks */,
+				80DC33AF1CBF21E800C894CF /* libHMAC.dylib in Frameworks */,
+				80DC33B01CBF21E800C894CF /* libHummingbird.dylib in Frameworks */,
+				80DC33B11CBF21E800C894CF /* libJSON.dylib in Frameworks */,
+				80DC33B21CBF21E800C894CF /* libString.dylib in Frameworks */,
+				80DC33B31CBF21E800C894CF /* libS4.dylib in Frameworks */,
 				_LinkFileRef_libc /* liblibc.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -695,20 +697,20 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
-				80DCCF081CBEDCE600124B28 /* libData.dylib in Frameworks */,
-				80DCCF091CBEDCE600124B28 /* libCryptoEssentials.dylib in Frameworks */,
-				80DCCF0A1CBEDCE600124B28 /* libStrand.dylib in Frameworks */,
-				80DCCF0B1CBEDCE600124B28 /* libInterchangeData.dylib in Frameworks */,
-				80DCCF0C1CBEDCE600124B28 /* libOperatingSystem.dylib in Frameworks */,
-				80DCCF0D1CBEDCE600124B28 /* libC7.dylib in Frameworks */,
-				80DCCF0E1CBEDCE600124B28 /* libSHA2.dylib in Frameworks */,
-				80DCCF0F1CBEDCE600124B28 /* libHMAC.dylib in Frameworks */,
-				80DCCF101CBEDCE600124B28 /* libHummingbird.dylib in Frameworks */,
-				80DCCF111CBEDCE600124B28 /* libJSON.dylib in Frameworks */,
-				80DCCF121CBEDCE600124B28 /* libString.dylib in Frameworks */,
-				80DCCF131CBEDCE600124B28 /* libS4.dylib in Frameworks */,
-				80DCCF141CBEDCE600124B28 /* libVapor.dylib in Frameworks */,
-				80DCCF151CBEDCE600124B28 /* liblibc.dylib in Frameworks */,
+				80DC33C81CBF21E800C894CF /* libData.dylib in Frameworks */,
+				80DC33C91CBF21E800C894CF /* libCryptoEssentials.dylib in Frameworks */,
+				80DC33CA1CBF21E800C894CF /* libStrand.dylib in Frameworks */,
+				80DC33CB1CBF21E800C894CF /* libInterchangeData.dylib in Frameworks */,
+				80DC33CC1CBF21E800C894CF /* libOperatingSystem.dylib in Frameworks */,
+				80DC33CD1CBF21E800C894CF /* libC7.dylib in Frameworks */,
+				80DC33CE1CBF21E800C894CF /* libSHA2.dylib in Frameworks */,
+				80DC33CF1CBF21E800C894CF /* libHMAC.dylib in Frameworks */,
+				80DC33D01CBF21E800C894CF /* libHummingbird.dylib in Frameworks */,
+				80DC33D11CBF21E800C894CF /* libJSON.dylib in Frameworks */,
+				80DC33D21CBF21E800C894CF /* libString.dylib in Frameworks */,
+				80DC33D31CBF21E800C894CF /* libS4.dylib in Frameworks */,
+				80DC33D41CBF21E800C894CF /* libVapor.dylib in Frameworks */,
+				80DC33D51CBF21E800C894CF /* liblibc.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -716,12 +718,12 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
-				80DCCEF41CBEDCE600124B28 /* libData.dylib in Frameworks */,
-				80DCCEF51CBEDCE600124B28 /* libCryptoEssentials.dylib in Frameworks */,
-				80DCCEF61CBEDCE600124B28 /* libStrand.dylib in Frameworks */,
-				80DCCEF71CBEDCE600124B28 /* libInterchangeData.dylib in Frameworks */,
-				80DCCEF81CBEDCE600124B28 /* libOperatingSystem.dylib in Frameworks */,
-				80DCCEF91CBEDCE600124B28 /* libC7.dylib in Frameworks */,
+				80DC33B41CBF21E800C894CF /* libData.dylib in Frameworks */,
+				80DC33B51CBF21E800C894CF /* libCryptoEssentials.dylib in Frameworks */,
+				80DC33B61CBF21E800C894CF /* libStrand.dylib in Frameworks */,
+				80DC33B71CBF21E800C894CF /* libInterchangeData.dylib in Frameworks */,
+				80DC33B81CBF21E800C894CF /* libOperatingSystem.dylib in Frameworks */,
+				80DC33B91CBF21E800C894CF /* libC7.dylib in Frameworks */,
 				_LinkFileRef_SHA2 /* libSHA2.dylib in Frameworks */,
 				_LinkFileRef_HMAC /* libHMAC.dylib in Frameworks */,
 				_LinkFileRef_Hummingbird /* libHummingbird.dylib in Frameworks */,
@@ -756,7 +758,7 @@
 		TestProducts_ /* Tests */ = {
 			isa = PBXGroup;
 			children = (
-				"_____Product_VaporTestSuite" /* Vapor.testsuite.xctest */,
+				"_____Product_VaporTestSuite" /* VaporTestSuite.xctest */,
 			);
 			name = Tests;
 			sourceTree = "<group>";
@@ -1056,8 +1058,8 @@
 				__PBXFileRef_Sources/Vapor/View/RenderDriver.swift /* View/RenderDriver.swift */,
 				__PBXFileRef_Sources/Vapor/View/View.swift /* View/View.swift */,
 				__PBXFileRef_Sources/Vapor/Validation/Convenience/Alphanumeric.swift /* Validation/Convenience/Alphanumeric.swift */,
+				__PBXFileRef_Sources/Vapor/Validation/Convenience/Count.swift /* Validation/Convenience/Count.swift */,
 				__PBXFileRef_Sources/Vapor/Validation/Convenience/Email.swift /* Validation/Convenience/Email.swift */,
-				__PBXFileRef_Sources/Vapor/Validation/Convenience/StringLength.swift /* Validation/Convenience/StringLength.swift */,
 			);
 			name = Vapor;
 			path = Sources/Vapor;
@@ -1083,6 +1085,7 @@
 				__PBXFileRef_Tests/Vapor/SessionTests.swift /* SessionTests.swift */,
 				__PBXFileRef_Tests/Vapor/TestHTTPStream.swift /* TestHTTPStream.swift */,
 				__PBXFileRef_Tests/Vapor/TypedRouteTests.swift /* TypedRouteTests.swift */,
+				__PBXFileRef_Tests/Vapor/ValidationCountTests.swift /* ValidationCountTests.swift */,
 				__PBXFileRef_Tests/Vapor/ValidationTests.swift /* ValidationTests.swift */,
 			);
 			name = Vapor.testsuite;
@@ -1432,7 +1435,7 @@
 			);
 			name = Vapor.testsuite;
 			productName = VaporTestSuite;
-			productReference = "_____Product_VaporTestSuite" /* Vapor.testsuite.xctest */;
+			productReference = "_____Product_VaporTestSuite" /* VaporTestSuite.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 		"______Target_libc" /* libc */ = {
@@ -1741,8 +1744,8 @@
 				__src_cc_ref_Sources/Vapor/View/RenderDriver.swift /* View/RenderDriver.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/View/View.swift /* View/View.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/Validation/Convenience/Alphanumeric.swift /* Validation/Convenience/Alphanumeric.swift in Sources */,
+				__src_cc_ref_Sources/Vapor/Validation/Convenience/Count.swift /* Validation/Convenience/Count.swift in Sources */,
 				__src_cc_ref_Sources/Vapor/Validation/Convenience/Email.swift /* Validation/Convenience/Email.swift in Sources */,
-				__src_cc_ref_Sources/Vapor/Validation/Convenience/StringLength.swift /* Validation/Convenience/StringLength.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1767,6 +1770,7 @@
 				__src_cc_ref_Tests/Vapor/SessionTests.swift /* SessionTests.swift in Sources */,
 				__src_cc_ref_Tests/Vapor/TestHTTPStream.swift /* TestHTTPStream.swift in Sources */,
 				__src_cc_ref_Tests/Vapor/TypedRouteTests.swift /* TypedRouteTests.swift in Sources */,
+				__src_cc_ref_Tests/Vapor/ValidationCountTests.swift /* ValidationCountTests.swift in Sources */,
 				__src_cc_ref_Tests/Vapor/ValidationTests.swift /* ValidationTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1785,72 +1789,72 @@
 		__Dependency_C7 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_C7" /* C7 */;
-			targetProxy = 80DCCF161CBEDCE700124B28 /* PBXContainerItemProxy */;
+			targetProxy = 80DC33D61CBF21E800C894CF /* PBXContainerItemProxy */;
 		};
 		__Dependency_CryptoEssentials /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_CryptoEssentials" /* CryptoEssentials */;
-			targetProxy = 80DCCF1B1CBEDCE700124B28 /* PBXContainerItemProxy */;
+			targetProxy = 80DC33DB1CBF21E800C894CF /* PBXContainerItemProxy */;
 		};
 		__Dependency_Data /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_Data" /* Data */;
-			targetProxy = 80DCCF181CBEDCE700124B28 /* PBXContainerItemProxy */;
+			targetProxy = 80DC33D81CBF21E800C894CF /* PBXContainerItemProxy */;
 		};
 		__Dependency_HMAC /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_HMAC" /* HMAC */;
-			targetProxy = 80DCCF1D1CBEDCE700124B28 /* PBXContainerItemProxy */;
+			targetProxy = 80DC33DD1CBF21E800C894CF /* PBXContainerItemProxy */;
 		};
 		__Dependency_Hummingbird /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_Hummingbird" /* Hummingbird */;
-			targetProxy = 80DCCF1E1CBEDCE700124B28 /* PBXContainerItemProxy */;
+			targetProxy = 80DC33DE1CBF21E800C894CF /* PBXContainerItemProxy */;
 		};
 		__Dependency_InterchangeData /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_InterchangeData" /* InterchangeData */;
-			targetProxy = 80DCCF191CBEDCE700124B28 /* PBXContainerItemProxy */;
+			targetProxy = 80DC33D91CBF21E800C894CF /* PBXContainerItemProxy */;
 		};
 		__Dependency_JSON /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_JSON" /* JSON */;
-			targetProxy = 80DCCF1F1CBEDCE700124B28 /* PBXContainerItemProxy */;
+			targetProxy = 80DC33DF1CBF21E800C894CF /* PBXContainerItemProxy */;
 		};
 		__Dependency_OperatingSystem /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_OperatingSystem" /* OperatingSystem */;
-			targetProxy = 80DCCF171CBEDCE700124B28 /* PBXContainerItemProxy */;
+			targetProxy = 80DC33D71CBF21E800C894CF /* PBXContainerItemProxy */;
 		};
 		__Dependency_S4 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_S4" /* S4 */;
-			targetProxy = 80DCCF211CBEDCE700124B28 /* PBXContainerItemProxy */;
+			targetProxy = 80DC33E11CBF21E800C894CF /* PBXContainerItemProxy */;
 		};
 		__Dependency_SHA2 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_SHA2" /* SHA2 */;
-			targetProxy = 80DCCF1C1CBEDCE700124B28 /* PBXContainerItemProxy */;
+			targetProxy = 80DC33DC1CBF21E800C894CF /* PBXContainerItemProxy */;
 		};
 		__Dependency_Strand /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_Strand" /* Strand */;
-			targetProxy = 80DCCF1A1CBEDCE700124B28 /* PBXContainerItemProxy */;
+			targetProxy = 80DC33DA1CBF21E800C894CF /* PBXContainerItemProxy */;
 		};
 		__Dependency_String /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_String" /* String */;
-			targetProxy = 80DCCF201CBEDCE700124B28 /* PBXContainerItemProxy */;
+			targetProxy = 80DC33E01CBF21E800C894CF /* PBXContainerItemProxy */;
 		};
 		__Dependency_Vapor /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_Vapor" /* Vapor */;
-			targetProxy = 80DCCF221CBEDCE700124B28 /* PBXContainerItemProxy */;
+			targetProxy = 80DC33E21CBF21E800C894CF /* PBXContainerItemProxy */;
 		};
 		__Dependency_libc /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_libc" /* libc */;
-			targetProxy = 80DCCF231CBEDCE700124B28 /* PBXContainerItemProxy */;
+			targetProxy = 80DC33E31CBF21E800C894CF /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
