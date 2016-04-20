@@ -4,7 +4,7 @@
 */
 public protocol SessionDriver: class {
     func makeSessionIdentifier() -> String
-    func valueFor(key key: String, identifier: String) -> String?
-    func set(value: String?, forKey key: String, identifier: String)
-    func destroy(identifier: String)
+    func valueFor(key: String, identifier: String) -> String?
+    func set(_ value: String?, forKey key: String, identifier: String)
+    func destroy(_ identifier: String)
 }

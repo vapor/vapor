@@ -14,7 +14,7 @@ public class MemorySessionDriver: SessionDriver {
         self.hash = hash
     }
 
-    public func valueFor(key key: String, identifier: String) -> String? {
+    public func valueFor(key: String, identifier: String) -> String? {
         var value: String?
         sessionsLock.locked {
             value = sessions[identifier]?[key]
@@ -23,7 +23,7 @@ public class MemorySessionDriver: SessionDriver {
         return value
     }
 
-    public func set(value: String?, forKey key: String, identifier: String) {
+    public func set(_ value: String?, forKey key: String, identifier: String) {
         sessionsLock.locked {
             if sessions[identifier] == nil {
                 sessions[identifier] = [String: String]()
@@ -44,7 +44,7 @@ public class MemorySessionDriver: SessionDriver {
         return hash.make(identifier)
     }
 
-    public func destroy(identifier: String) {
+    public func destroy(_ identifier: String) {
         sessionsLock.locked {
             sessions[identifier] = nil
         }
