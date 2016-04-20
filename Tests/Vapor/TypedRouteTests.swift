@@ -63,22 +63,3 @@ class TypedRouteTests: XCTestCase {
     }
 
 }
-
-/**
- Global functions because any function that takes an argument on an XCTest class fails on Linux.
- */
-
-func assertRouteExists(at path: String, method: Request.Method, host: String, inRoutes routes: [Route]) {
-    var found = false
-
-    for route in routes {
-        if route.path == path && route.method == method && route.hostname == host {
-            found = true
-        }
-
-    }
-
-    if !found {
-        XCTFail("\(method) \(path) was not found")
-    }
-}

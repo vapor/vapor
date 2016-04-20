@@ -129,7 +129,7 @@ class RouteTests: XCTestCase {
  Global functions because any function that takes an argument on an XCTest class fails on Linux.
  */
 
-private func assertRouteExists(at path: String, method: Request.Method, host: String, inRoutes routes: [Route]) {
+internal func assertRouteExists(at path: String, method: Request.Method, host: String, inRoutes routes: [Route]) {
     var found = false
 
     for route in routes {
