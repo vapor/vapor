@@ -10,7 +10,7 @@ class FileManager {
         case Unreadable
     }
 
-    static func readBytesFromFile(path: String) throws -> [UInt8] {
+    static func readBytesFromFile(_ path: String) throws -> [UInt8] {
         let fd = open(path, O_RDONLY)
 
         if fd < 0 {
@@ -58,7 +58,7 @@ class FileManager {
         return Array(buffer)
     }
 
-    static func fileAtPath(path: String) -> (exists: Bool, isDirectory: Bool) {
+    static func fileAtPath(_ path: String) -> (exists: Bool, isDirectory: Bool) {
         var isDirectory = false
         var s = stat()
         if lstat(path, &s) >= 0 {
@@ -87,7 +87,7 @@ class FileManager {
         return (true, isDirectory)
     }
 
-    static func expandPath(path: String) throws -> String {
+    static func expandPath(_ path: String) throws -> String {
         let result = realpath(path, nil)
 
         guard result != nil else {
@@ -105,7 +105,7 @@ class FileManager {
         }
     }
 
-    static func contentsOfDirectory(path: String) throws -> [String] {
+    static func contentsOfDirectory(_ path: String) throws -> [String] {
         var gt = glob_t()
         defer { globfree(&gt) }
 
@@ -131,8 +131,8 @@ class FileManager {
         #endif
 
         for i in 0..<count {
-
-            let cstring = String(validatingUTF8: gt.gl_pathv[i])
+            guard let utf8 = gt.gl_pathv[i] else { continue }
+            let cstring = String(validatingUTF8: utf8)
             if let path = cstring {
                 contents.append(path)
             }

@@ -2,7 +2,7 @@
 import libc
 
 extension String {
-    public func finish(ending: String) -> String {
+    public func finish(_ ending: String) -> String {
         if hasSuffix(ending) {
             return self
         } else {
@@ -24,7 +24,7 @@ extension String {
     }
 
 #if os(Linux)
-    func hasPrefix(str: String) -> Bool {
+    func hasPrefix(_ str: String) -> Bool {
         let strGen = str.characters.makeIterator()
         let selfGen = self.characters.makeIterator()
         let seq = zip(strGen, selfGen)
@@ -34,7 +34,7 @@ extension String {
         return true
     }
 
-    func hasSuffix(str: String) -> Bool {
+    func hasSuffix(_ str: String) -> Bool {
         let strGen = str.characters.reversed().makeIterator()
         let selfGen = self.characters.reversed().makeIterator()
         let seq = zip(strGen, selfGen)
