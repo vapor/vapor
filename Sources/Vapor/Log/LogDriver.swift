@@ -5,7 +5,7 @@ import libc
     to this protocol
 */
 public protocol LogDriver {
-    func log(level: Log.Level, message: String)
+    func log(_ level: Log.Level, message: String)
 }
 
 /**
@@ -16,7 +16,7 @@ public protocol LogDriver {
 */
 public class ConsoleLogger: LogDriver {
 
-    public func log(level: Log.Level, message: String) {
+    public func log(_ level: Log.Level, message: String) {
         let date = time(nil)
         print("[\(date)] [\(level)] \(message)")
     }
