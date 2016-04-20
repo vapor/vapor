@@ -70,7 +70,7 @@ public class Config {
     //Returns the value for a given type from the Config or throws
     public func get<T: NodeInitializable>(_ keyPath: String) throws -> T {
         let result: Node = try get(keyPath)
-        return try T.makeWith(result)
+        return try T.make(with: result)
     }
 
 
@@ -174,7 +174,7 @@ public class Config {
         let contents = try FileManager.contentsOfDirectory(path)
 
         for file in contents {
-            guard let fileName = file.split("/").last else {
+            guard let fileName = file.split(byString: "/").last else {
                 continue
             }
 
