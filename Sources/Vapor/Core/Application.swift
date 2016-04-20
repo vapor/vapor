@@ -128,7 +128,7 @@ public class Application {
 
     public func bootProviders() {
         for provider in self.providers {
-            provider.boot(self)
+            provider.boot(with: self)
         }
     }
 

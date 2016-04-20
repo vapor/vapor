@@ -9,5 +9,5 @@
     necessary configurations on itself and the Application.
 */
 public protocol Provider {
-    func boot(application: Application)
+    func boot(with application: Application)
 }
