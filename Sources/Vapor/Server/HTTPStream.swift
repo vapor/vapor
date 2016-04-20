@@ -16,18 +16,18 @@ protocol HTTPStream: Stream {
     func sendHeaderEndOfLine() throws
     func send(headerLine line: String) throws
     func send(headerKey key: String, headerValue value: String) throws
-    func send(string: String) throws
+    func send(_ string: String) throws
 
     func receive() throws -> HTTPStreamHeader
     func receive() throws -> Request
 
-    func send(response: Response, keepAlive: Bool) throws
-    func send(body: Response.Body) throws
+    func send(_ response: Response, keepAlive: Bool) throws
+    func send(_ body: Response.Body) throws
 }
 
 extension HTTPStream {
     func receiveByte() throws -> Byte? {
-        return try receive(max: 1).first
+        return try receive(upTo: 1).first
     }
 
     func receiveLine() throws -> String {
@@ -42,7 +42,7 @@ extension HTTPStream {
         }
 
         while !closed, let byte = try receiveByte() where byte != newLine {
-            append(byte)
+            append(byte: byte)
         }
 
         return line
@@ -60,7 +60,7 @@ extension HTTPStream {
         try send(headerLine: "\(key): \(value)")
     }
 
-    func send(string: String) throws {
+    func send(_ string: String) throws {
         try send(string.data)
     }
 
@@ -68,7 +68,7 @@ extension HTTPStream {
         return try HTTPStreamHeader(stream: self)
     }
 
-    func send(response: Response, keepAlive: Bool) throws {
+    func send(_ response: Response, keepAlive: Bool) throws {
         let version = response.version
         let status = response.status
 
@@ -93,13 +93,13 @@ extension HTTPStream {
         try send(response.body)
     }
 
-    func send(body: Response.Body) throws {
+    func send(_ body: Response.Body) throws {
         switch body {
         case .buffer(let data):
             try send(data)
         case .receiver(let receiver):
             while !receiver.closed {
-                let chunk = try receiver.receive(max: Int.max)
+                let chunk = try receiver.receive(upTo: Int.max)
                 try send(chunk)
             }
         case .sender(let closure):
@@ -114,7 +114,7 @@ extension HTTPStream {
 
         let data: Data
         if let length = header.contentLength {
-            data = try receive(max: length)
+            data = try receive(upTo: length)
         } else {
             data = []
         }
