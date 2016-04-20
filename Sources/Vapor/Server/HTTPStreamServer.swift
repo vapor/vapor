@@ -35,7 +35,11 @@ class HTTPStreamServer<StreamType: HTTPStream>: Server {
     }
 
     func halt() {
-        stream.close()
+        do {
+            try stream.close()
+        } catch {
+            Log.error("Failed to close stream: \(error)")
+        }
     }
 
     private func handle(socket: HTTPStream) {
@@ -52,7 +56,7 @@ class HTTPStreamServer<StreamType: HTTPStream>: Server {
 
             let response: Response
             do {
-                response = try self.delegate.respond(request)
+                response = try self.delegate.respond(to: request)
             } catch {
                 Log.error("Error parsing response: \(error)")
                 return
@@ -67,7 +71,7 @@ class HTTPStreamServer<StreamType: HTTPStream>: Server {
             keepAlive = request.supportsKeepAlive
         } while keepAlive && !socket.closed
 
-        socket.close()
+        halt()
     }
 
 }
