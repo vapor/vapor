@@ -20,8 +20,7 @@ let package = Package(
         .Package(url: "https://github.com/qutheory/SHA2.git", majorVersion: 0, minor: 3)
     ],
     exclude: [
-        "XcodeProject",
-        "Sources/Generator"
+        "XcodeProject"
     ],
     targets: [
         Target(
@@ -41,6 +40,9 @@ let package = Package(
             dependencies: [
                 .Target(name: "Vapor")
             ]
+        ),
+        Target(
+            name: "Generator"
         )
     ]
 )
