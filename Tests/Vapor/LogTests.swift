@@ -33,7 +33,7 @@ class LogTests: XCTestCase {
 
         static var output: String?
 
-        func log(level: Log.Level, message: String) {
+        func log(_ level: Log.Level, message: String) {
             DummyLogger.output = "\(level.description) \(message)"
         }
     }

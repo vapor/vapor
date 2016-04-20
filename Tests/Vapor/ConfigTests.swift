@@ -45,7 +45,7 @@ class ConfigTests: XCTestCase {
 		XCTAssert(config.get("app.port", 0) == 9000, ".env config incorrectly loaded.")
 	}
 
-	private func config(environment: Environment) -> Config {
+	private func config(_ environment: Environment) -> Config {
 		let app = self.app(environment)
 
 		do {
@@ -57,7 +57,7 @@ class ConfigTests: XCTestCase {
 		return app.config
 	}
 
-	private func app(environment: Environment) -> Application {
+	private func app(_ environment: Environment) -> Application {
 		let app = Application()
 
 		app.detectEnvironmentHandler = { _ in

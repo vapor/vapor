@@ -7,7 +7,7 @@ public final class BranchRouter: RouterDriver {
     private final var tree: [Host : [Request.Method : Branch]] = [:]
 
     // MARK: Routing
-    public final func route(request: Request) -> (parameters: [String: String], handler: Responder)? {
+    public final func route(_ request: Request) -> (parameters: [String: String], handler: Responder)? {
         let path = request.uri.path ?? ""
         let host = request.uri.host ?? ""
 
@@ -25,7 +25,7 @@ public final class BranchRouter: RouterDriver {
     }
 
     // MARK: Registration
-    public final func register(route: Route) {
+    public final func register(_ route: Route) {
         let generator = route.path.pathComponentGenerator()
 
 

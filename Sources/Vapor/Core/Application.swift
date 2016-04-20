@@ -160,12 +160,8 @@ public class Application {
         value will be true if the the passed in environment
         matches the app environment.
     */
-    public func inEnvironment(environments: Environment...) -> Bool {
-        if environments.count == 1 {
-            return self.environment == environments[0]
-        } else {
-            return environments.contains(self.environment)
-        }
+    public func inEnvironment(_ environments: Environment...) -> Bool {
+        return environments.contains(self.environment)
     }
 
     func bootRoutes() {
@@ -250,7 +246,7 @@ extension Application: Responder {
         request.parseData()
 
         // Check in routes
-        if let (parameters, routerHandler) = router.route(request: request) {
+        if let (parameters, routerHandler) = router.route(request) {
             request.parameters = parameters
             responder = routerHandler
         } else if let fileHander = self.checkFileSystem(for: request) {

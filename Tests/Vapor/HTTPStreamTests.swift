@@ -73,7 +73,7 @@ class HTTPStreamTests: XCTestCase {
 
         //MARK: Read Response
         do {
-            let data = try stream.receive(max: Int.max)
+            let data = try stream.receive(upTo: Int.max)
             print(data)
 
             let expected = "HTTP/1.1 420 Enhance Your Calm\r\nConnection: keep-alive\r\nContent-Type: text/plain\r\nSet-Cookie: key=val\r\nTest: 123\r\nTest: 456\r\nTransfer-Encoding: chunked\r\n\r\nHello, world"

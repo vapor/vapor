@@ -55,14 +55,14 @@ class TypedRouteTests: XCTestCase {
             }
         }
 
-        self.assertRouteExists("users/:w0", method: .get, host: "*", inRoutes: app.routes)
-        self.assertRouteExists("posts/:w0", method: .put, host: "*", inRoutes: app.routes)
-        self.assertRouteExists("one/:w0/two/:w1/three/four", method: .delete, host: "*", inRoutes: app.routes)
-        self.assertRouteExists("posts/:w0", method: .post, host: "host.com", inRoutes: app.routes)
-        self.assertRouteExists("v1/posts/:w0", method: .patch, host: "*", inRoutes: app.routes)
+        self.assertRouteExists(at: "users/:w0", method: .get, host: "*", inRoutes: app.routes)
+        self.assertRouteExists(at: "posts/:w0", method: .put, host: "*", inRoutes: app.routes)
+        self.assertRouteExists(at: "one/:w0/two/:w1/three/four", method: .delete, host: "*", inRoutes: app.routes)
+        self.assertRouteExists(at: "posts/:w0", method: .post, host: "host.com", inRoutes: app.routes)
+        self.assertRouteExists(at: "v1/posts/:w0", method: .patch, host: "*", inRoutes: app.routes)
     }
 
-    func assertRouteExists(path: String, method: Request.Method, host: String, inRoutes routes: [Route]) {
+    func assertRouteExists(at path: String, method: Request.Method, host: String, inRoutes routes: [Route]) {
         var found = false
 
         for route in routes {
