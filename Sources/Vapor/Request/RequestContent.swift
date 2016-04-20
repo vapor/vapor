@@ -82,7 +82,7 @@ extension String: Node {
 
     public var array: [Node]? {
         return self
-            .split(",")
+            .split(byString: ",")
             .map { $0 as Node }
     }
 
@@ -107,7 +107,7 @@ extension String {
      */
     internal func queryData() -> [String: String] {
         // First `?` indicates query, subsequent `?` should be included as part of the arguments
-        return split("?", maxSplits: 1)
+        return split(separator: "?", maxSplits: 1)
             .dropFirst()
             .reduce("", combine: +)
             .keyValuePairs()
@@ -121,8 +121,8 @@ extension String {
     internal func keyValuePairs() -> [String: String] {
         var data: [String: String] = [:]
 
-        for pair in self.split("&") {
-            let tokens = pair.split("=", maxSplits: 1)
+        for pair in self.split(byString: "&") {
+            let tokens = pair.split(separator: "=", maxSplits: 1)
 
             if
                 let name = tokens.first,
