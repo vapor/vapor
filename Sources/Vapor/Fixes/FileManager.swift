@@ -13,7 +13,10 @@ class FileManager {
 
     static func readBytesFromFile(_ path: String) throws -> [UInt8] {
         let data = NSData(contentsOfFile: path)
-        return data?.byteArray ?? []
+        print("Loaded data: \(data)")
+        let byteArray = data?.byteArray ?? []
+        print("Byte array: \(byteArray)")
+        return byteArray
     }
 
     static func fileAtPath(_ path: String) -> (exists: Bool, isDirectory: Bool) {
