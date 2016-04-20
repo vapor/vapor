@@ -59,7 +59,7 @@ extension Application {
         return resourcesDir + "Views/"
     }
 
-    public func view(path: String, context: [String: Any] = [:]) throws -> View {
+    public func view(_ path: String, context: [String: Any] = [:]) throws -> View {
         return try View(application: self, path: path, context: context)
     }
 
