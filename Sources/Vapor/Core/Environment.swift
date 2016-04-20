@@ -9,13 +9,16 @@ public enum Environment: Equatable {
     case Development
     case Custom(String)
 
-    static func fromString(string: String) -> Environment {
-        let string = string.lowercased()
-        switch string {
-        case "production", "prod": return .Production
-        case "test": return .Test
-        case "development", "dev": return .Development
-        default: return .Custom(string)
+    init(id string: String) {
+        switch string.lowercased() {
+        case "production", "prod":
+            self = .Production
+        case "test":
+            self = .Test
+        case "development", "dev":
+            self = .Development
+        default:
+            self = .Custom(string)
         }
     }
 }
