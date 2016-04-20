@@ -72,12 +72,12 @@ public enum Json {
     }
 
     public init(_ value: Data) throws {
-        let json = try JSONParser().parse(value)
+        let json = try JSONParser().parse(data: value)
         self.init(json)
     }
 
     public var data: Data {
-        return JSONSerializer().serialize(makeZewoJson())
+        return JSONSerializer().serialize(json: makeZewoJson())
     }
 
     private func makeZewoJson() -> JSON {
