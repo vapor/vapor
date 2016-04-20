@@ -41,13 +41,13 @@ public class Config {
     }
 
     ///Returns whether this instance of `Config` contains the key
-    public func has(keyPath: String) -> Bool {
+    public func has(_ keyPath: String) -> Bool {
         let result: Node? = try? get(keyPath)
         return result != nil
     }
 
     ///Returns the generic Json representation for an item at a given path or throws
-    public func get(keyPath: String) throws -> Node {
+    public func get(_ keyPath: String) throws -> Node {
         var keys = keyPath.keys
 
         guard let json: Json = repository[keys.removeFirst()] else {
@@ -68,21 +68,21 @@ public class Config {
     }
 
     //Returns the value for a given type from the Config or throws
-    public func get<T: NodeInitializable>(keyPath: String) throws -> T {
+    public func get<T: NodeInitializable>(_ keyPath: String) throws -> T {
         let result: Node = try get(keyPath)
         return try T.makeWith(result)
     }
 
 
     ///Returns the result of `get(key: String)` but with a `String` fallback for `nil` cases
-    public func get<T: NodeInitializable>(keyPath: String, _ fallback: T) -> T {
+    public func get<T: NodeInitializable>(_ keyPath: String, _ fallback: T) -> T {
         let string: T? = try? get(keyPath)
         return string ?? fallback
     }
 
 
     ///Temporarily sets a value for a given key path
-    public func set(value: Json, forKeyPath keyPath: String) {
+    public func set(_ value: Json, forKeyPath keyPath: String) {
         var keys = keyPath.keys
         let group = keys.removeFirst()
 
@@ -94,7 +94,7 @@ public class Config {
     }
 
     ///Calls populate() in a convenient non-throwing manner
-    public func populate(application: Application) -> Bool {
+    public func populate(_ application: Application) -> Bool {
         let configDir = application.workDir + "Config"
 
         if FileManager.fileAtPath(configDir).exists {
@@ -113,7 +113,7 @@ public class Config {
 
 
     ///Attempts to populate the internal configuration store
-    public func populate(path: String, application: Application) throws {
+    public func populate(_ path: String, application: Application) throws {
         var path = path.finish("/")
         var files = [String: [String]]()
 
@@ -170,7 +170,7 @@ public class Config {
         }
     }
 
-    private func populateConfigFiles(files: inout [String: [String]], in path: String) throws {
+    private func populateConfigFiles(_ files: inout [String: [String]], in path: String) throws {
         let contents = try FileManager.contentsOfDirectory(path)
 
         for file in contents {
@@ -182,7 +182,7 @@ public class Config {
 
             if fileName == ".env.json" {
                 name = ".env"
-            } else if fileName.hasSuffix(".json"), let value = fileName.split(".").first {
+            } else if fileName.hasSuffix(".json"), let value = fileName.split(byString: ".").first {
                 name = value
             } else {
                 continue
@@ -200,7 +200,7 @@ public class Config {
 
 extension Json {
 
-    private mutating func set(value: Json, keys: [Swift.String]) {
+    private mutating func set(_ value: Json, keys: [Swift.String]) {
         var keys = keys
 
         guard keys.count > 0 else {
@@ -229,7 +229,7 @@ extension Json {
 extension String {
 
     private var keys: [String] {
-        return split(".")
+        return split(byString: ".")
     }
 
 }
