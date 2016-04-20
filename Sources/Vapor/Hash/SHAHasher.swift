@@ -19,7 +19,7 @@ public class SHA2Hasher: HashDriver {
         case sha512
     }
 
-    public func hash(message: String, key: String) -> String {
+    public func hash(_ message: String, key: String) -> String {
         let keyBuff = key.data.bytes
         let msgBuff = message.data.bytes
 
@@ -27,14 +27,14 @@ public class SHA2Hasher: HashDriver {
 
         switch variant {
         case .sha256:
-            hashed = HMAC<SHA2<SHA256>>.authenticate(msgBuff, withKey: keyBuff)
+            hashed = HMAC<SHA2<SHA256>>.authenticate(message: msgBuff, withKey: keyBuff)
         case .sha384:
-            hashed = HMAC<SHA2<SHA384>>.authenticate(msgBuff, withKey: keyBuff)
+            hashed = HMAC<SHA2<SHA384>>.authenticate(message: msgBuff, withKey: keyBuff)
         case .sha512:
-            hashed = HMAC<SHA2<SHA512>>.authenticate(msgBuff, withKey: keyBuff)
+            hashed = HMAC<SHA2<SHA512>>.authenticate(message: msgBuff, withKey: keyBuff)
         }
 
-        return hashed.toHexString()
+        return hashed.hexString
     }
 
 }
