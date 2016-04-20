@@ -10,7 +10,7 @@ public protocol NodeInitializable {
          - throws: a potential error.  ie: invalid json type
          - returns: an initialized object
     */
-    static func makeWith(node: Node) throws -> Self
+    static func make(with node: Node) throws -> Self
 }
 
 
@@ -18,7 +18,7 @@ public protocol NodeInitializable {
 // MARK: String
 
 extension String: NodeInitializable {
-    public static func makeWith(node: Node) throws -> String {
+    public static func make(with node: Node) throws -> String {
         guard let string = node.string else {
             throw NodeError.UnableToConvert(node: node, toType: "\(self.dynamicType)")
         }
@@ -29,7 +29,7 @@ extension String: NodeInitializable {
 
 // MARK: Boolean
 extension Bool: NodeInitializable {
-    public static func makeWith(node: Node) throws -> Bool {
+    public static func make(with node: Node) throws -> Bool {
         guard let bool = node.bool else {
             throw NodeError.UnableToConvert(node: node, toType: "\(self.dynamicType)")
         }
@@ -47,7 +47,7 @@ extension UInt32: NodeInitializable {}
 extension UInt64: NodeInitializable {}
 
 extension UnsignedInteger {
-    public static func makeWith(node: Node) throws -> Self {
+    public static func make(with node: Node) throws -> Self {
         guard let int = node.uint else {
             throw NodeError.UnableToConvert(node: node, toType: "\(self.dynamicType)")
         }
@@ -64,7 +64,7 @@ extension Int32: NodeInitializable {}
 extension Int64: NodeInitializable {}
 
 extension SignedInteger {
-    public static func makeWith(node: Node) throws -> Self {
+    public static func make(with node: Node) throws -> Self {
         guard let int = node.int else {
             throw NodeError.UnableToConvert(node: node, toType: "\(self.dynamicType)")
         }
@@ -76,7 +76,7 @@ extension SignedInteger {
 
 // MARK: FloatingPointType
 extension Float: NodeInitializable {
-    public static func makeWith(node: Node) throws -> Float {
+    public static func make(with node: Node) throws -> Float {
         guard let float = node.float else {
             throw NodeError.UnableToConvert(node: node, toType: "\(self.dynamicType)")
         }
@@ -86,7 +86,7 @@ extension Float: NodeInitializable {
 }
 
 extension Double: NodeInitializable {
-    public static func makeWith(node: Node) throws -> Double {
+    public static func make(with node: Node) throws -> Double {
         guard let double = node.double else {
             throw NodeError.UnableToConvert(node: node, toType: "\(self.dynamicType)")
         }
