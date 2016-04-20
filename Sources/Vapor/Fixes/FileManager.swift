@@ -29,6 +29,7 @@ class FileManager {
         }
 
         if !ret {
+            print("Read bytes 1")
             throw Error.Unreadable
         }
 
@@ -49,6 +50,7 @@ class FileManager {
         }
 
         if remaining != 0 {
+            print("Read bytes 2")
             throw Error.Unreadable
         }
 
@@ -91,6 +93,7 @@ class FileManager {
         let result = realpath(path, nil)
 
         guard result != nil else {
+            print("Expand path 1")
             throw Error.Unreadable
         }
 
@@ -101,6 +104,7 @@ class FileManager {
         if let expanded = cstring {
             return expanded
         } else {
+            print("Expand path 2")
             throw Error.Unreadable
         }
     }
@@ -116,6 +120,7 @@ class FileManager {
         case GLOB_NOMATCH:
             return [ ]
         case GLOB_ABORTED:
+            print("Contents of directory 1")
             throw Error.Unreadable
         default:
             break
