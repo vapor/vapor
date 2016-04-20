@@ -1,4 +1,9 @@
 import Hummingbird
+#if os(Linux)
+    import Glibc
+#else
+    import Darwin.C
+#endif
 
 typealias Socket = Hummingbird.Socket
 
@@ -7,8 +12,8 @@ extension Hummingbird.Socket: HTTPStream {
         return try! Hummingbird.Socket.makeStreamSocket()
     }
 
-    func accept(max connectionCount: Int, handler: (HTTPStream -> Void)) throws {
-        try accept(Int(SOMAXCONN), connectionHandler: handler)
+    func accept(max connectionCount: Int = Int(SOMAXCONN), handler: (HTTPStream -> Void)) throws {
+        try accept(maximumConsecutiveFailures: connectionCount, connectionHandler: handler)
     }
 
     func bind(to ip: String?, on port: Int) throws {
