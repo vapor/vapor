@@ -55,25 +55,30 @@ class TypedRouteTests: XCTestCase {
             }
         }
 
-        self.assertRouteExists(at: "users/:w0", method: .get, host: "*", inRoutes: app.routes)
-        self.assertRouteExists(at: "posts/:w0", method: .put, host: "*", inRoutes: app.routes)
-        self.assertRouteExists(at: "one/:w0/two/:w1/three/four", method: .delete, host: "*", inRoutes: app.routes)
-        self.assertRouteExists(at: "posts/:w0", method: .post, host: "host.com", inRoutes: app.routes)
-        self.assertRouteExists(at: "v1/posts/:w0", method: .patch, host: "*", inRoutes: app.routes)
+        assertRouteExists(at: "users/:w0", method: .get, host: "*", inRoutes: app.routes)
+        assertRouteExists(at: "posts/:w0", method: .put, host: "*", inRoutes: app.routes)
+        assertRouteExists(at: "one/:w0/two/:w1/three/four", method: .delete, host: "*", inRoutes: app.routes)
+        assertRouteExists(at: "posts/:w0", method: .post, host: "host.com", inRoutes: app.routes)
+        assertRouteExists(at: "v1/posts/:w0", method: .patch, host: "*", inRoutes: app.routes)
     }
 
-    func assertRouteExists(at path: String, method: Request.Method, host: String, inRoutes routes: [Route]) {
-        var found = false
+}
 
-        for route in routes {
-            if route.path == path && route.method == method && route.hostname == host {
-                found = true
-            }
+/**
+ Global functions because any function that takes an argument on an XCTest class fails on Linux.
+ */
 
+func assertRouteExists(at path: String, method: Request.Method, host: String, inRoutes routes: [Route]) {
+    var found = false
+
+    for route in routes {
+        if route.path == path && route.method == method && route.hostname == host {
+            found = true
         }
 
-        if !found {
-            XCTFail("\(method) \(path) was not found")
-        }
+    }
+
+    if !found {
+        XCTFail("\(method) \(path) was not found")
     }
 }

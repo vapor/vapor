@@ -37,9 +37,9 @@ class RouteTests: XCTestCase {
             }
         }
 
-        self.assertRouteExists(at: "foo", method: .get, host: "*", inRoutes: app.routes)
-        self.assertRouteExists(at: "bar", method: .post, host: "*", inRoutes: app.routes)
-        self.assertRouteExists(at: "baz", method: .put, host: "google.com", inRoutes: app.routes)
+        assertRouteExists(at: "foo", method: .get, host: "*", inRoutes: app.routes)
+        assertRouteExists(at: "bar", method: .post, host: "*", inRoutes: app.routes)
+        assertRouteExists(at: "baz", method: .put, host: "google.com", inRoutes: app.routes)
     }
 
 
@@ -56,8 +56,8 @@ class RouteTests: XCTestCase {
             }
         }
 
-        self.assertRouteExists(at: "group/path/1", method: .get, host: "*", inRoutes: app.routes)
-        self.assertRouteExists(at: "group/path/2", method: .options, host: "*", inRoutes: app.routes)
+        assertRouteExists(at: "group/path/1", method: .get, host: "*", inRoutes: app.routes)
+        assertRouteExists(at: "group/path/2", method: .options, host: "*", inRoutes: app.routes)
     }
 
     func testNestedRouteScopedPrefixPopsCorrectly() {
@@ -75,8 +75,8 @@ class RouteTests: XCTestCase {
             }
         }
 
-        self.assertRouteExists(at: "group/subgroup/1", method: .get, host: "*", inRoutes: app.routes)
-        self.assertRouteExists(at: "group/2", method: .options, host: "*", inRoutes: app.routes)
+        assertRouteExists(at: "group/subgroup/1", method: .get, host: "*", inRoutes: app.routes)
+        assertRouteExists(at: "group/2", method: .options, host: "*", inRoutes: app.routes)
     }
 
     func testRouteAbort() {
@@ -123,19 +123,23 @@ class RouteTests: XCTestCase {
         }
     }
 
+}
 
-    func assertRouteExists(at path: String, method: Request.Method, host: String, inRoutes routes: [Route]) {
-        var found = false
+/**
+ Global functions because any function that takes an argument on an XCTest class fails on Linux.
+ */
 
-        for route in routes {
-            if route.path == path && route.method == method && route.hostname == host {
-                found = true
-            }
+private func assertRouteExists(at path: String, method: Request.Method, host: String, inRoutes routes: [Route]) {
+    var found = false
 
+    for route in routes {
+        if route.path == path && route.method == method && route.hostname == host {
+            found = true
         }
 
-        if !found {
-            XCTFail("\(method) \(path) was not found")
-        }
+    }
+
+    if !found {
+        XCTFail("\(method) \(path) was not found")
     }
 }
