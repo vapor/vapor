@@ -9,6 +9,15 @@
 import XCTest
 @testable import Vapor
 
+class DummyLogger: LogDriver {
+    
+    static var output: String?
+    
+    func log(_ level: Log.Level, message: String) {
+        DummyLogger.output = "\(level.description) \(message)"
+    }
+}
+
 class LogTests: XCTestCase {
 
     static var allTests: [(String, LogTests -> () throws -> Void)] {
@@ -26,16 +35,6 @@ class LogTests: XCTestCase {
            ("testCustomDidLog", testCustomDidLog),
            ("testConsoleLoggerDidPrintToConsole", testConsoleLoggerDidPrintToConsole)
         ]
-    }
-
-
-    class DummyLogger: LogDriver {
-
-        static var output: String?
-
-        func log(_ level: Log.Level, message: String) {
-            DummyLogger.output = "\(level.description) \(message)"
-        }
     }
 
     /* Resets the logger for each test
