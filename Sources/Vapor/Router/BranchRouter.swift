@@ -21,7 +21,7 @@ public final class BranchRouter: RouterDriver {
 
         //search branch with query path generator
         let generator = path.pathComponentGenerator()
-        return branch.handle([:], request: request, comps: generator)
+        return branch.handle(parameters: [:], request: request, comps: generator)
     }
 
     // MARK: Registration
