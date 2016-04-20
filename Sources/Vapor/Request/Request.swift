@@ -47,15 +47,15 @@ extension Request {
 
         - returns: String dictionary of parsed cookies.
      */
-    private func parseCookies(string: String) -> [String: String] {
+    private func parseCookies(_ string: String) -> [String: String] {
         var cookies: [String: String] = [:]
 
-        let cookieTokens = string.split(";")
+        let cookieTokens = string.split(byString: ";")
         for cookie in cookieTokens {
-            let cookieArray = cookie.split("=")
+            let cookieArray = cookie.split(byString: "=")
 
             if cookieArray.count == 2 {
-                let split = cookieArray[0].split(" ")
+                let split = cookieArray[0].split(byString: " ")
                 let key = split.joined(separator: "")
                 let validKey = String(validatingUTF8: key) ?? ""
                 cookies[validKey] = String(validatingUTF8: cookieArray[1])
@@ -65,11 +65,11 @@ extension Request {
         return cookies
     }
 
-    private func parseFormEncoded(string: String) -> [String: String] {
+    private func parseFormEncoded(_ string: String) -> [String: String] {
         var formEncoded: [String: String] = [:]
 
-        for pair in string.split("&") {
-            let token = pair.split("=", maxSplits: 1)
+        for pair in string.split(byString: "&") {
+            let token = pair.split(separator: "=", maxSplits: 1)
             if token.count == 2 {
                 let key = String(validatingUTF8: token[0]) ?? ""
                 let value = String(validatingUTF8: token[1]) ?? ""
@@ -86,8 +86,11 @@ extension Request {
 
     private func parseContent() -> Request.Content {
         var queries: [String: String] = [:]
-        uri.query.forEach { query in
-            queries[query.key] = query.value
+        uri.query.forEach { (key, queryField) in
+            queries[key] = queryField
+                .values
+                .flatMap { $0 }
+                .joined(separator: ",")
         }
 
         var json: Json?
@@ -134,7 +137,7 @@ extension Request {
 
         let closure: Closure
 
-        public func respond(request: Request) throws -> Response {
+        public func respond(to request: Request) throws -> Response {
             return try closure(request)
         }
     }
