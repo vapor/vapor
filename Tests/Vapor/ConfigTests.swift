@@ -17,10 +17,11 @@ class ConfigTests: XCTestCase {
     //hardcoded unfortunately.
     let workDir = "/Users/tanner/Developer/vapor/vapor/Sources/Development/"
     #else
-    let workDir = "Sources/Development/Config"
+    let workDir = "Sources/Development/"
     #endif
 
 	func testSimple() {
+        print("\n\n\n**** CONFIG: \(workDir) \n\n*****\n\n\n")
 		let config = makeConfig(.Development, workDir: workDir)
 		XCTAssert(config.get("app.debug", false) == true, "Config incorrectly loaded.")
 	}
