@@ -17,7 +17,7 @@ class HTTPStreamServer<StreamType: HTTPStream>: Server {
     var stream: StreamType
     var delegate: Responder!
 
-    func serve(responder: Responder, on host: String, at port: Int) throws {
+    func serve(_ responder: Responder, on host: String, at port: Int) throws {
         self.delegate = responder
 
         try stream.bind(to: host, on: port)
