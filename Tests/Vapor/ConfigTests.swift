@@ -17,7 +17,7 @@ class ConfigTests: XCTestCase {
     //hardcoded unfortunately.
     let workDir = "/Users/tanner/Developer/vapor/vapor/Sources/Development/"
     #else
-    let workDir = "Sources/Development/"
+    let workDir = "Sources/Development/Config"
     #endif
 
 	func testSimple() {

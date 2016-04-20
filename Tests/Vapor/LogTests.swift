@@ -9,10 +9,13 @@
 import XCTest
 @testable import Vapor
 
-class DummyLogger: LogDriver {
-    
+/**
+ File level to prevent issues w/ linux testing on 04-12 snapshot
+ */
+private class DummyLogger: LogDriver {
+
     static var output: String?
-    
+
     func log(_ level: Log.Level, message: String) {
         DummyLogger.output = "\(level.description) \(message)"
     }
@@ -22,18 +25,18 @@ class LogTests: XCTestCase {
 
     static var allTests: [(String, LogTests -> () throws -> Void)] {
         return [
-           ("testCanOverrideDefaultLogger", testCanOverrideDefaultLogger),
-           ("testAllLevelsEnabledByDefault", testAllLevelsEnabledByDefault),
-           ("testCanOverrideDefaultEnabledLevels", testCanOverrideDefaultEnabledLevels),
-           ("testDisabledLogsDoNoOutput", testDisabledLogsDoNoOutput),
-           ("testVerboseDidLog", testVerboseDidLog),
-           ("testDebugDidLog", testDebugDidLog),
-           ("testInfoDidLog", testInfoDidLog),
-           ("testWarningDidLog", testWarningDidLog),
-           ("testErrorDidLog", testErrorDidLog),
-           ("testFatalDidLog", testFatalDidLog),
-           ("testCustomDidLog", testCustomDidLog),
-           ("testConsoleLoggerDidPrintToConsole", testConsoleLoggerDidPrintToConsole)
+            ("testCanOverrideDefaultLogger", testCanOverrideDefaultLogger),
+            ("testAllLevelsEnabledByDefault", testAllLevelsEnabledByDefault),
+            ("testCanOverrideDefaultEnabledLevels", testCanOverrideDefaultEnabledLevels),
+            ("testDisabledLogsDoNoOutput", testDisabledLogsDoNoOutput),
+            ("testVerboseDidLog", testVerboseDidLog),
+            ("testDebugDidLog", testDebugDidLog),
+            ("testInfoDidLog", testInfoDidLog),
+            ("testWarningDidLog", testWarningDidLog),
+            ("testErrorDidLog", testErrorDidLog),
+            ("testFatalDidLog", testFatalDidLog),
+            ("testCustomDidLog", testCustomDidLog),
+            ("testConsoleLoggerDidPrintToConsole", testConsoleLoggerDidPrintToConsole)
         ]
     }
 

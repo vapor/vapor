@@ -8,7 +8,10 @@
 import XCTest
 @testable import Vapor
 
-class MSDTHelper {
+/**
+ Working around linux testing bug
+ */
+private class MSDTHelper {
     static var application = Application()
     static var identifier = "baz"
 }
@@ -16,13 +19,13 @@ class MSDTHelper {
 class MemorySessionDriverTests: XCTestCase {
     static var allTests: [(String, MemorySessionDriverTests -> () throws -> Void)] {
         return [
-           ("testValueForKey_onNonExistantSession_isNil", testValueForKey_onNonExistantSession_isNil),
-           ("testValueForKey_onExistingSession_onNonExistingKey_isNil", testValueForKey_onExistingSession_onNonExistingKey_isNil),
-           ("testValueForKey_onExistingSession_onExistingKey_isKeyValue", testValueForKey_onExistingSession_onExistingKey_isKeyValue),
-           ("testSetValueForKey_setsValueCorrectly", testSetValueForKey_setsValueCorrectly),
-           ("testSetValueForKey_withExistingValue_overwritesValueCorrectly", testSetValueForKey_withExistingValue_overwritesValueCorrectly),
-           ("testSetValueForKey_withExistingValue_toNilErasesValue", testSetValueForKey_withExistingValue_toNilErasesValue),
-           ("testDestroySession_removesSession", testDestroySession_removesSession)
+            ("testValueForKey_onNonExistantSession_isNil", testValueForKey_onNonExistantSession_isNil),
+            ("testValueForKey_onExistingSession_onNonExistingKey_isNil", testValueForKey_onExistingSession_onNonExistingKey_isNil),
+            ("testValueForKey_onExistingSession_onExistingKey_isKeyValue", testValueForKey_onExistingSession_onExistingKey_isKeyValue),
+            ("testSetValueForKey_setsValueCorrectly", testSetValueForKey_setsValueCorrectly),
+            ("testSetValueForKey_withExistingValue_overwritesValueCorrectly", testSetValueForKey_withExistingValue_overwritesValueCorrectly),
+            ("testSetValueForKey_withExistingValue_toNilErasesValue", testSetValueForKey_withExistingValue_toNilErasesValue),
+            ("testDestroySession_removesSession", testDestroySession_removesSession)
         ]
     }
 
