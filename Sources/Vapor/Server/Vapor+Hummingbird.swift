@@ -26,3 +26,10 @@ extension Hummingbird.Socket: HTTPStream {
     }
 
 }
+
+extension SocketError: HTTPStreamError {
+    /// `true` if the case is `.connectionClosedByPeer`
+    public var isClosedByPeer: Bool {
+        return self == .connectionClosedByPeer
+    }
+}

@@ -127,3 +127,15 @@ extension HTTPStream {
         return Request(method: requestLine.method, uri: uri, headers: header.fields, body: data)
     }
 }
+
+/**
+    One of the error types thrown by your conformers of `HTTPStream` should
+    conform to this protocol. This error type specially handles when a receive
+    fails because the other side closed the connection. This is an expected
+    issue when the client decides they don't want to communicate with the
+    server anymore.
+ */
+public protocol HTTPStreamError: ErrorProtocol {
+    /// `true` if the error indicates the socket was closed, otherwise `false`
+    var isClosedByPeer: Bool { get }
+}
