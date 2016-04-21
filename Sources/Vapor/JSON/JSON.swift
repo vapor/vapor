@@ -404,7 +404,9 @@ internal final class JsonDeserializer: Parser {
     internal required init(_ source: ByteSequence) {
         self.source = source
         self.cur = source.startIndex
+        print("start: \(self.cur)")
         self.end = source.endIndex
+        print("end: \(self.end)")
     }
 
     // MARK: Serialize
@@ -420,7 +422,15 @@ internal final class JsonDeserializer: Parser {
         return json
     }
 
+
     private func deserializeNextValue() throws -> Json {
+        let next = try _deserializeNextValue()
+        print("Next value serialized: \(next)")
+        return next
+    }
+
+
+    private func _deserializeNextValue() throws -> Json {
         skipWhitespaces()
         guard cur != end else {
             throw InsufficientTokenError("unexpected end of tokens", self)
