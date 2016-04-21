@@ -237,6 +237,15 @@ public class Application {
 
 extension Application: Responder {
 
+    /**
+        Returns a response to the given request
+
+        - parameter request: received request
+
+        - throws: error if something fails in finding response
+
+        - returns: response if possible
+     */
     public func respond(to request: Request) throws -> Response {
         Log.info("\(request.method) \(request.uri.path ?? "/")")
 

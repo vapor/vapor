@@ -15,7 +15,12 @@ public protocol LogDriver {
     - parameter message: String to log
 */
 public class ConsoleLogger: LogDriver {
+    /**
+        The basic log function of the console.
 
+        - parameter level: the level with which to filter
+        - parameter message: the message to log to console
+     */
     public func log(_ level: Log.Level, message: String) {
         let date = time(nil)
         print("[\(date)] [\(level)] \(message)")

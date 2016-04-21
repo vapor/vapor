@@ -13,12 +13,23 @@ public class SHA2Hasher: HashDriver {
         self.variant = variant
     }
 
+    /**
+        Hashing variant to use
+     */
     public enum Variant  {
         case sha256
         case sha384
         case sha512
     }
 
+    /**
+        Hash given string with key
+
+        - parameter message: message to hash
+        - parameter key: key to hash with
+
+        - returns: a hashed string
+     */
     public func hash(_ message: String, key: String) -> String {
         let keyBuff = key.data.bytes
         let msgBuff = message.data.bytes

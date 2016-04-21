@@ -18,8 +18,10 @@
     sensitive information does not get added to version control.
 */
 public class Config {
-    //The internal store of configuration options
-    //backed by `Json`
+    /**
+        The internal store of configuration options
+        backed by `Json`
+     */
     private var repository: [String: Json]
 
     public enum Error: ErrorProtocol {
@@ -40,24 +42,23 @@ public class Config {
         }
     }
 
-    ///Returns whether this instance of `Config` contains the key
+    /**
+        Returns whether this instance of `Config` contains the key
+     */
     public func has(_ keyPath: String) -> Bool {
         let result: Node? = try? get(keyPath)
         return result != nil
     }
 
-    ///Returns the generic Json representation for an item at a given path or throws
+    /**
+        Returns the generic Json representation for an item at a given path or throws
+     */
     public func get(_ keyPath: String) throws -> Node {
         var keys = keyPath.keys
-        if keys.contains("env") {
-                print("Found env: \(keys)")
-        }
         guard let json: Json = repository[keys.removeFirst()] else {
             throw Error.NoFileFound
         }
 
-        print("Found JSON: \(json)")
-        
         var node: Node? = json
 
         for key in keys {
@@ -71,21 +72,27 @@ public class Config {
         return result
     }
 
-    //Returns the value for a given type from the Config or throws
+    /**
+        Returns the value for a given type from the Config or throws
+     */
     public func get<T: NodeInitializable>(_ keyPath: String) throws -> T {
         let result: Node = try get(keyPath)
         return try T.make(with: result)
     }
 
 
-    ///Returns the result of `get(key: String)` but with a `String` fallback for `nil` cases
+    /**
+        Returns the result of `get(key: String)` but with a `String` fallback for `nil` cases
+     */
     public func get<T: NodeInitializable>(_ keyPath: String, _ fallback: T) -> T {
         let string: T? = try? get(keyPath)
         return string ?? fallback
     }
 
 
-    ///Temporarily sets a value for a given key path
+    /**
+        Temporarily sets a value for a given key path
+     */
     public func set(_ value: Json, forKeyPath keyPath: String) {
         var keys = keyPath.keys
         let group = keys.removeFirst()
@@ -97,7 +104,9 @@ public class Config {
         }
     }
 
-    ///Calls populate() in a convenient non-throwing manner
+    /**
+        Calls populate() in a convenient non-throwing manner
+     */
     public func populate(_ application: Application) -> Bool {
         let configDir = application.workDir + "Config"
 
@@ -116,7 +125,9 @@ public class Config {
 
 
 
-    ///Attempts to populate the internal configuration store
+    /**
+        Attempts to populate the internal configuration store
+     */
     public func populate(_ path: String, application: Application) throws {
         var path = path.finish("/")
         var files = [String: [String]]()
@@ -131,8 +142,6 @@ public class Config {
                 try populateConfigFiles(&files, in: path)
             }
         }
-
-        print("Looking at files: \(files)")
         // Loop through files and merge config upwards so the
         // environment always overrides the base config
         // TODO: The isEmpty check is a workaround for the Linux system and is necessary until
@@ -159,9 +168,7 @@ public class Config {
         // Apply .env overrides, which is a single file
         // containing multiple groups
         if let env = files[".env"] {
-            print("Reading env: \(env)")
             for file in env {
-                print("Reading file: \(file)")
                 let bytes = try FileManager.readBytesFromFile(file)
                 let json = try Json(Data(bytes))
 

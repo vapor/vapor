@@ -2,6 +2,13 @@
 import libc
 
 extension String {
+    /**
+        Append a trailing suffix to the string if necessary.
+
+        - parameter ending: the ending to append if it doesn't already exist
+
+        - returns: the new string
+     */
     public func finish(_ ending: String) -> String {
         if hasSuffix(ending) {
             return self
