@@ -145,8 +145,8 @@ public class Config {
             }
 
             for file in files {
-                let jsonString = try FileManager.readStringFromFile(file)
-                let json = try Json.deserialize(jsonString)
+                let bytes = try FileManager.readBytesFromFile(file)
+                let json = try Json(Data(bytes))
 
                 if repository[group] == nil {
                     repository[group] = json
@@ -162,8 +162,8 @@ public class Config {
             print("Reading env: \(env)")
             for file in env {
                 print("Reading file: \(file)")
-                let jsonString = try FileManager.readStringFromFile(file)
-                let json = try Json.deserialize(jsonString)
+                let bytes = try FileManager.readBytesFromFile(file)
+                let json = try Json(Data(bytes))
 
                 guard case .object(let object) = json else {
                     return
