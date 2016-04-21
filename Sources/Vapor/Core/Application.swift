@@ -1,7 +1,7 @@
 import libc
 
 public class Application {
-    public static let VERSION = "0.5.1"
+    public static let VERSION = "0.5.3"
 
     /**
         The router driver is responsible
