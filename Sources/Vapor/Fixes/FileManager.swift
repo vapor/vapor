@@ -21,6 +21,16 @@ class FileManager {
         return byteArray
     }
 
+    static func readStringFromFile(_ path: String) throws -> String {
+        let data = NSData(contentsOfFile: path)
+        print("Loaded data: \(data)")
+        let byteArray = data?.byteArray ?? []
+        print("Byte array: \(byteArray)")
+        let string = String.init(data: byteArray) ?? "<unknown>"
+        print("Got json string: \n\n\n********\n\n\(string)\n\n********\n\n\n")
+        return string
+    }
+
     static func fileAtPath(_ path: String) -> (exists: Bool, isDirectory: Bool) {
         var isDirectory = false
         var s = stat()

@@ -49,11 +49,15 @@ public class Config {
     ///Returns the generic Json representation for an item at a given path or throws
     public func get(_ keyPath: String) throws -> Node {
         var keys = keyPath.keys
-
+        if keys.contains("env") {
+                print("Found env: \(keys)")
+        }
         guard let json: Json = repository[keys.removeFirst()] else {
             throw Error.NoFileFound
         }
 
+        print("Found JSON: \(json)")
+        
         var node: Node? = json
 
         for key in keys {
@@ -137,8 +141,8 @@ public class Config {
             }
 
             for file in files {
-                let bytes = try FileManager.readBytesFromFile(file)
-                let json = try Json(Data(bytes))
+                let jsonString = try FileManager.readStringFromFile(file)
+                let json = try Json.deserialize(jsonString)
 
                 if repository[group] == nil {
                     repository[group] = json
@@ -152,8 +156,8 @@ public class Config {
         // containing multiple groups
         if let env = files[".env"] {
             for file in env {
-                let bytes = try FileManager.readBytesFromFile(file)
-                let json = try Json(Data(bytes))
+                let jsonString = try FileManager.readStringFromFile(file)
+                let json = try Json.deserialize(jsonString)
 
                 guard case .object(let object) = json else {
                     return
