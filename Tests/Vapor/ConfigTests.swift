@@ -15,7 +15,7 @@ class ConfigTests: XCTestCase {
     #if Xcode
     //Xcode doesn't allow a working directory to be set, so this needs to be
     //hardcoded unfortunately.
-    let workDir = "/Users/loganwright/Dropbox/Programming/xCode/vapor/Sources/Development/"
+    let workDir = "/Users/tanner/Developer/vapor/vapor/Sources/Development/"
     #else
     let workDir = "Sources/Development/"
     #endif

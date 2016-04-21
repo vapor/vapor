@@ -71,7 +71,11 @@ class HTTPStreamServer<StreamType: HTTPStream>: Server {
             keepAlive = request.supportsKeepAlive
         } while keepAlive && !socket.closed
 
-        socket.close()
+        do {
+            try socket.close()
+        } catch {
+            Log.error("Failed to close stream: \(error)")
+        }
     }
 
 }
