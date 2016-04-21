@@ -132,9 +132,13 @@ public class Config {
             }
         }
 
+        print("Looking at files: \(files)")
         // Loop through files and merge config upwards so the
         // environment always overrides the base config
-        for (group, files) in files {
+        // TODO: The isEmpty check is a workaround for the Linux system and is necessary until
+        // an alternative solution is fixed, or it's confirmed appropriate
+        // This is duplicated below in `populateConfigFiles`. just doubling down.
+        for (group, files) in files where !group.isEmpty {
             if group == ".env" {
                 // .env is handled differently below
                 continue
@@ -155,7 +159,9 @@ public class Config {
         // Apply .env overrides, which is a single file
         // containing multiple groups
         if let env = files[".env"] {
+            print("Reading env: \(env)")
             for file in env {
+                print("Reading file: \(file)")
                 let jsonString = try FileManager.readStringFromFile(file)
                 let json = try Json.deserialize(jsonString)
 
@@ -178,7 +184,10 @@ public class Config {
         let contents = try FileManager.contentsOfDirectory(path)
 
         for file in contents {
-            guard let fileName = file.split(byString: "/").last else {
+            // TODO: The isEmpty check is a workaround for the Linux system and is necessary until
+            // an alternative solution is fixed, or it's confirmed appropriate
+            // This is duplicated above. just doubling down.
+            guard let fileName = file.split(byString: "/").last where !fileName.isEmpty else {
                 continue
             }
 

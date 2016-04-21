@@ -23,7 +23,8 @@ class FileManager {
 
     static func readStringFromFile(_ path: String) throws -> String {
         let data = NSData(contentsOfFile: path)
-        print("Loaded data: \(data)")
+        print("PATH: \(path)")
+        print("Loaded: \(data)")
         let byteArray = data?.byteArray ?? []
         print("Byte array: \(byteArray)")
         let string = String.init(data: byteArray) ?? "<unknown>"
