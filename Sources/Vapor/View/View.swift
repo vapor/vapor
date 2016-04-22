@@ -59,6 +59,14 @@ extension Application {
         return resourcesDir + "Views/"
     }
 
+    /**
+     Loads a view with a given context
+
+     - parameter path: the path to the view
+     - parameter context: the context to use when loading the view
+
+     - throws: an error if loading fails
+     */
     public func view(_ path: String, context: [String: Any] = [:]) throws -> View {
         return try View(application: self, path: path, context: context)
     }

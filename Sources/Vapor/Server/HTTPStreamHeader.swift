@@ -53,7 +53,12 @@ struct HTTPStreamHeader {
 
     private func extractKeyPair(in line: String) throws -> (key: String, value: String) {
         let components = line.split(separator: ":", maxSplits: 1)
-        guard let key = components.first, let val = components.last?.characters.dropFirst() else { throw Error.InvalidHeaderKeyPair }
+        guard
+            let key = components.first,
+            let val = components.last?
+                .characters
+                .dropFirst()
+            else { throw Error.InvalidHeaderKeyPair }
 
         return (key, String(val))
     }
@@ -126,7 +131,13 @@ extension HTTPStreamHeader {
             }
 
 
-            return URI(scheme: "http", userInfo: nil, host: nil, port: nil, path: path, query: Query(fields), fragment: nil)
+            return URI(scheme: "http",
+                       userInfo: nil,
+                       host: nil,
+                       port: nil,
+                       path: path,
+                       query: Query(fields),
+                       fragment: nil)
         }
     }
 

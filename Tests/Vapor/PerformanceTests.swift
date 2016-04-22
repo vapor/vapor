@@ -14,7 +14,7 @@ final class TestPerformanceStream: HTTPStream {
     var buffer: Data
     var handler: (Data -> Void)
     var closed: Bool = false
-    
+
     init(request: Request, handler: (Data -> Void)) {
         var data = "\(request.method) \(request.uri.path ?? "/") HTTP/1.1\r\n"
         data += "Accept: /*/\r\n"

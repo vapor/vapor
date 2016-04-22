@@ -18,6 +18,16 @@ public protocol NodeInitializable {
 // MARK: String
 
 extension String: NodeInitializable {
+
+    /**
+     Make new instance if possible w/ given Node
+
+     - parameter node: node to create with
+
+     - throws: an error if creation fails
+
+     - returns: valid instance of 'Self' if possible
+     */
     public static func make(with node: Node) throws -> String {
         guard let string = node.string else {
             throw NodeError.UnableToConvert(node: node, toType: "\(self.dynamicType)")
@@ -29,6 +39,16 @@ extension String: NodeInitializable {
 
 // MARK: Boolean
 extension Bool: NodeInitializable {
+
+    /**
+     Make new instance if possible w/ given Node
+
+     - parameter node: node to create with
+
+     - throws: an error if creation fails
+
+     - returns: valid instance of 'Self' if possible
+     */
     public static func make(with node: Node) throws -> Bool {
         guard let bool = node.bool else {
             throw NodeError.UnableToConvert(node: node, toType: "\(self.dynamicType)")
@@ -47,6 +67,16 @@ extension UInt32: NodeInitializable {}
 extension UInt64: NodeInitializable {}
 
 extension UnsignedInteger {
+
+    /**
+     Make new instance if possible w/ given Node
+
+     - parameter node: node to create with
+
+     - throws: an error if creation fails
+
+     - returns: valid instance of 'Self' if possible
+     */
     public static func make(with node: Node) throws -> Self {
         guard let int = node.uint else {
             throw NodeError.UnableToConvert(node: node, toType: "\(self.dynamicType)")
@@ -64,6 +94,16 @@ extension Int32: NodeInitializable {}
 extension Int64: NodeInitializable {}
 
 extension SignedInteger {
+
+    /**
+     Make new instance if possible w/ given Node
+
+     - parameter node: node to create with
+
+     - throws: an error if creation fails
+
+     - returns: valid instance of 'Self' if possible
+     */
     public static func make(with node: Node) throws -> Self {
         guard let int = node.int else {
             throw NodeError.UnableToConvert(node: node, toType: "\(self.dynamicType)")
@@ -76,6 +116,16 @@ extension SignedInteger {
 
 // MARK: FloatingPointType
 extension Float: NodeInitializable {
+
+    /**
+     Make new instance if possible w/ given Node
+
+     - parameter node: node to create with
+
+     - throws: an error if creation fails
+
+     - returns: valid instance of 'Self' if possible
+     */
     public static func make(with node: Node) throws -> Float {
         guard let float = node.float else {
             throw NodeError.UnableToConvert(node: node, toType: "\(self.dynamicType)")
@@ -86,6 +136,16 @@ extension Float: NodeInitializable {
 }
 
 extension Double: NodeInitializable {
+
+    /**
+     Make new instance if possible w/ given Node
+
+     - parameter node: node to create with
+
+     - throws: an error if creation fails
+
+     - returns: valid instance of 'Self' if possible
+     */
     public static func make(with node: Node) throws -> Double {
         guard let double = node.double else {
             throw NodeError.UnableToConvert(node: node, toType: "\(self.dynamicType)")

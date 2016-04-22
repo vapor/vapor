@@ -7,6 +7,16 @@
 */
 public class AbortMiddleware: Middleware {
 
+    /**
+     Respond to a given request chaining to the next
+
+     - parameter request: request to process
+     - parameter chain: next responder to pass request to
+
+     - throws: an error on failure
+
+     - returns: a valid response
+     */
     public func respond(to request: Request, chainingTo chain: Responder) throws -> Response {
         do {
             return try chain.respond(to: request)

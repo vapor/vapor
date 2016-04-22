@@ -3,8 +3,36 @@
     protocol can be used to power the Session class.
 */
 public protocol SessionDriver: class {
+     /**
+        Make a randomized session identifier
+
+        - returns: a session identifier to use with a new session
+     */
     func makeSessionIdentifier() -> String
+
+    /**
+        Load the value at a specified key for a session with the given identifier
+
+        - parameter key: the key to load value for
+        - parameter identifier: the identifier of the session to get the key value for
+
+        - returns: the value for given key, if exists
+     */
     func valueFor(key: String, identifier: String) -> String?
+
+    /**
+        Set a alue for the given key associated with a session of the given identifier
+
+        - parameter value: value to set, nil if should remove
+        - parameter key: key to set
+        - parameter identifier: identifier of session
+     */
     func set(_ value: String?, forKey key: String, identifier: String)
+
+    /**
+        Destroy the session associated with given identifier
+
+        - parameter identifier: id of session
+     */
     func destroy(_ identifier: String)
 }

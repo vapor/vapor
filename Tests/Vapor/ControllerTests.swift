@@ -22,31 +22,40 @@ private class TestController: Controller {
         destroy: Int
         ) = (0, 0, 0, 0, 0)
 
-    /// Display many instances
+    /**
+        Display many instances
+     */
     func index(_ request: Request) throws -> ResponseRepresentable {
         TestController.lock.index += 1
         return "index"
     }
 
-    /// Create a new instance.
+    /**
+        Create a new instance.
+     */
     func store(_ request: Request) throws -> ResponseRepresentable {
         TestController.lock.store += 1
         return "store"
     }
-
-    /// Show an instance.
+    /**
+        Show an instance.
+     */
     func show(_ request: Request, item: String) throws -> ResponseRepresentable {
         TestController.lock.show += 1
         return "show"
     }
 
-    /// Update an instance.
+    /**
+        Update an instance.
+     */
     func update(_ request: Request, item: String) throws -> ResponseRepresentable {
         TestController.lock.update += 1
         return "update"
     }
 
-    /// Delete an instance.
+    /**
+        Delete an instance
+     */
     func destroy(_ request: Request, item: String) throws -> ResponseRepresentable {
         TestController.lock.destroy += 1
         return "destroy"

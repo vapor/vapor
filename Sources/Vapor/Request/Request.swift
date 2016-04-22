@@ -137,6 +137,15 @@ extension Request {
 
         let closure: Closure
 
+        /**
+         Respond to a given request or throw if fails
+
+         - parameter request: request to respond to
+
+         - throws: an error if response fails
+
+         - returns: a response if possible
+         */
         public func respond(to request: Request) throws -> Response {
             return try closure(request)
         }

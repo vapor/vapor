@@ -144,7 +144,9 @@ public class Config {
         }
         // Loop through files and merge config upwards so the
         // environment always overrides the base config
-        // TODO: The isEmpty check is a workaround for the Linux system and is necessary until
+        //
+        //
+        // The isEmpty check is a workaround for the Linux system and is necessary until
         // an alternative solution is fixed, or it's confirmed appropriate
         // This is duplicated below in `populateConfigFiles`. just doubling down.
         for (group, files) in files where !group.isEmpty {
@@ -191,7 +193,9 @@ public class Config {
         let contents = try FileManager.contentsOfDirectory(path)
 
         for file in contents {
-            // TODO: The isEmpty check is a workaround for the Linux system and is necessary until
+            //
+            //
+            // The isEmpty check is a workaround for the Linux system and is necessary until
             // an alternative solution is fixed, or it's confirmed appropriate
             // This is duplicated above. just doubling down.
             guard let fileName = file.split(byString: "/").last where !fileName.isEmpty else {

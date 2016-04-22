@@ -68,6 +68,6 @@ private func makeApp(_ environment: Environment) -> Application {
     app.detectEnvironmentHandler = { _ in
         return environment
     }
-    
+
     return app
 }

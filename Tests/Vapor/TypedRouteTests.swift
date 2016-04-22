@@ -55,11 +55,26 @@ class TypedRouteTests: XCTestCase {
             }
         }
 
-        assertRouteExists(at: "users/:w0", method: .get, host: "*", inRoutes: app.routes)
-        assertRouteExists(at: "posts/:w0", method: .put, host: "*", inRoutes: app.routes)
-        assertRouteExists(at: "one/:w0/two/:w1/three/four", method: .delete, host: "*", inRoutes: app.routes)
-        assertRouteExists(at: "posts/:w0", method: .post, host: "host.com", inRoutes: app.routes)
-        assertRouteExists(at: "v1/posts/:w0", method: .patch, host: "*", inRoutes: app.routes)
+        assertRouteExists(at: "users/:w0",
+                          method: .get,
+                          host: "*",
+                          inRoutes: app.routes)
+        assertRouteExists(at: "posts/:w0",
+                          method: .put,
+                          host: "*",
+                          inRoutes: app.routes)
+        assertRouteExists(at: "one/:w0/two/:w1/three/four",
+                          method: .delete,
+                          host: "*",
+                          inRoutes: app.routes)
+        assertRouteExists(at: "posts/:w0",
+                          method: .post,
+                          host: "host.com",
+                          inRoutes: app.routes)
+        assertRouteExists(at: "v1/posts/:w0",
+                          method: .patch,
+                          host: "*",
+                          inRoutes: app.routes)
     }
 
 }

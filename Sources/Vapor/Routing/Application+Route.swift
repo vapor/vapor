@@ -41,7 +41,9 @@ extension Application {
 
         Note: You are responsible for pluralizing your endpoints.
     */
-    public final func resource<Resource: ResourceController>(_ path: String, makeControllerWith controllerFactory: () -> Resource) {
+    public final func resource<Resource: ResourceController>(
+                                _ path: String,
+                               makeControllerWith controllerFactory: () -> Resource) {
         //GET /entities
         self.get(path) { request in
             return try controllerFactory().index(request)
@@ -69,13 +71,31 @@ extension Application {
 
     }
 
-    public final func resource<Resource: ResourceController where Resource: ApplicationInitializable>(_ path: String, controller: Resource.Type) {
+    /**
+        Add resource controller for specified path
+
+        - parameter path: path associated w/ resource controller
+        - parameter controller: controller type to use
+     */
+    public final func resource<Resource: ResourceController
+                               where Resource: ApplicationInitializable>(
+                                    _ path: String,
+                                    controller: Resource.Type) {
         resource(path) {
             return controller.init(application: self)
         }
     }
 
-    public final func resource<Resource: ResourceController where Resource: DefaultInitializable>(_ path: String, controller: Resource.Type) {
+    /**
+     Add resource controller for specified path
+
+     - parameter path: path associated w/ resource controller
+     - parameter controller: controller type to use
+     */
+    public final func resource<Resource: ResourceController
+                               where Resource: DefaultInitializable>(
+                                    _ path: String,
+                                    controller: Resource.Type) {
         resource(path) {
             return controller.init()
         }
@@ -123,6 +143,11 @@ extension Application {
        self.middleware([middleware], handler: handler)
     }
 
+    /**
+        Applies the middleware to the routes defined
+        inside the closure. This method can be nested within
+        itself safely.
+     */
     public final func middleware(_ middleware: [Middleware], handler: () -> ()) {
         let original = scopedMiddleware
         scopedMiddleware += middleware
@@ -132,6 +157,10 @@ extension Application {
         scopedMiddleware = original
     }
 
+    /**
+        Create multiple routes with the same host
+        without repeating yourself.
+     */
     public final func host(_ host: String, handler: () -> Void) {
         let original = scopedHost
         scopedHost = host

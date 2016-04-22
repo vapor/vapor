@@ -6,44 +6,66 @@
 */
 public protocol ResourceController {
     associatedtype Item: StringInitializable
-    /// Display many instances
+
+    /**
+        Display many instances
+     */
     func index(_ request: Request) throws -> ResponseRepresentable
 
-    /// Create a new instance.
+    /**
+        Create a new instance.
+     */
     func store(_ request: Request) throws -> ResponseRepresentable
 
-    /// Show an instance.
+    /**
+        Show an instance.
+     */
     func show(_ request: Request, item: Item) throws -> ResponseRepresentable
 
-    /// Update an instance.
+    /**
+        Update an instance.
+     */
     func update(_ request: Request, item: Item) throws -> ResponseRepresentable
 
-    /// Delete an instance.
+    /** 
+        Delete an instance.
+     */
     func destroy(_ request: Request, item: Item) throws -> ResponseRepresentable
 }
 
 extension ResourceController {
-    /// Display many instances
+
+    /**
+        Display many instances
+     */
     public func index(_ request: Request) throws -> ResponseRepresentable {
         throw Abort.notFound
     }
 
-    /// Create a new instance.
+    /**
+        Create a new instance.
+     */
     public func store(_ request: Request) throws -> ResponseRepresentable {
         throw Abort.notFound
     }
 
-    /// Show an instance.
+    /**
+        Show an instance.
+     */
     public func show(_ request: Request, item: Item) throws -> ResponseRepresentable {
         throw Abort.notFound
     }
 
-    /// Update an instance.
+    /**
+        Update an instance.
+     */
     public func update(_ request: Request, item: Item) throws -> ResponseRepresentable {
         throw Abort.notFound
     }
 
-    /// Delete an instance.
+    /**
+        Delete an instance.
+     */
     public func destroy(_ request: Request, item: Item) throws -> ResponseRepresentable {
         throw Abort.notFound
     }

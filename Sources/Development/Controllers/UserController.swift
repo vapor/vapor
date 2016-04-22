@@ -5,21 +5,29 @@ class UserController: Controller {
         Log.info("User controller created")
     }
 
-    /// Display many instances
+    /**
+        Display many instances
+     */
     func index(_ request: Request) throws -> ResponseRepresentable {
         return Json([
             "controller": "MyController.index"
         ])
     }
 
-    /// Create a new instance.
+
+    /**
+        Create a new instance.
+     */
     func store(_ request: Request) throws -> ResponseRepresentable {
         return Json([
             "controller": "MyController.store"
         ])
     }
 
-    /// Show an instance.
+
+    /**
+        Show an instance.
+     */
     func show(_ request: Request, item user: User) throws -> ResponseRepresentable {
         //User can be used like JSON with JsonRepresentable
         return Json([
@@ -28,13 +36,18 @@ class UserController: Controller {
         ])
     }
 
-    /// Update an instance.
+    /** 
+        Update an instance.
+     */
     func update(_ request: Request, item user: User) throws -> ResponseRepresentable {
         //Testing JsonRepresentable
         return user.makeJson()
     }
 
-    /// Delete an instance.
+
+    /**
+        Delete an instance.
+     */
     func destroy(_ request: Request, item user: User) throws -> ResponseRepresentable {
         //User is ResponseRepresentable by proxy of JsonRepresentable
         return user
