@@ -35,13 +35,9 @@ struct Func: CustomStringConvertible {
             f += "<\(genericsString)>"
         }
         
-        let paramsString = params.enumerated().map { (index, param) in
-            if index > 0 {
-                return "_ \(param)"
-            } else {
-                return param.description
-            }
-        }.joined(separator: ", ")
+        let paramsString = params
+            .map { param in "_ \(param)" }
+            .joined(separator: ", ")
 
         f += "(\(paramsString), handler: (Request"
         
@@ -113,7 +109,7 @@ struct Func: CustomStringConvertible {
     }
 }
 
-func paramTypeCount(type: Param.`Type`, params: [Param]) -> Int {
+func paramTypeCount(_ type: Param.`Type`, params: [Param]) -> Int {
     var i = 0
     
     for param in params {

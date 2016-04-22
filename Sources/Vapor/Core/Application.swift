@@ -128,7 +128,7 @@ public class Application {
 
     public func bootProviders() {
         for provider in self.providers {
-            provider.boot(self)
+            provider.boot(with: self)
         }
     }
 
@@ -146,7 +146,7 @@ public class Application {
         if let handler = self.detectEnvironmentHandler {
             return handler(environment)
         } else {
-            return Environment.fromString(environment)
+            return Environment(id: environment)
         }
     }
 
@@ -160,12 +160,8 @@ public class Application {
         value will be true if the the passed in environment
         matches the app environment.
     */
-    public func inEnvironment(environments: Environment...) -> Bool {
-        if environments.count == 1 {
-            return self.environment == environments[0]
-        } else {
-            return environments.contains(self.environment)
-        }
+    public func inEnvironment(_ environments: Environment...) -> Bool {
+        return environments.contains(self.environment)
     }
 
     func bootRoutes() {
@@ -195,7 +191,7 @@ public class Application {
         optionally runs on the supplied
         ip & port overrides
     */
-    public func start(ip ip: String? = nil, port: Int? = nil) {
+    public func start(ip: String? = nil, port: Int? = nil) {
         self.ip = ip ?? self.ip
         self.port = port ?? self.port
 
@@ -217,7 +213,7 @@ public class Application {
         }
     }
 
-    func checkFileSystem(request: Request) -> Request.Handler? {
+    func checkFileSystem(for request: Request) -> Request.Handler? {
         // Check in file system
         let filePath = self.workDir + "Public" + (request.uri.path ?? "")
 
@@ -241,7 +237,16 @@ public class Application {
 
 extension Application: Responder {
 
-    public func respond(request: Request) throws -> Response {
+    /**
+        Returns a response to the given request
+
+        - parameter request: received request
+
+        - throws: error if something fails in finding response
+
+        - returns: response if possible
+     */
+    public func respond(to request: Request) throws -> Response {
         Log.info("\(request.method) \(request.uri.path ?? "/")")
 
         var responder: Responder
@@ -253,7 +258,7 @@ extension Application: Responder {
         if let (parameters, routerHandler) = router.route(request) {
             request.parameters = parameters
             responder = routerHandler
-        } else if let fileHander = self.checkFileSystem(request) {
+        } else if let fileHander = self.checkFileSystem(for: request) {
             responder = fileHander
         } else {
             // Default not found handler
@@ -264,12 +269,12 @@ extension Application: Responder {
 
         // Loop through middlewares in order
         for middleware in self.middleware {
-            responder = middleware.intercept(responder)
+            responder = middleware.chain(to: responder)
         }
 
         var response: Response
         do {
-            response = try responder.respond(request)
+            response = try responder.respond(to: request)
 
             if response.headers["Content-Type"].first == nil {
                 Log.warning("Response had no 'Content-Type' header.")

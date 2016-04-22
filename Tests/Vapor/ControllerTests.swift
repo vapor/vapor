@@ -9,57 +9,66 @@
 import XCTest
 @testable import Vapor
 
+private class TestController: Controller {
+    required init(application: Application) {
+        print("TestController online")
+    }
+
+    static var lock: (
+        index: Int,
+        store: Int,
+        show: Int,
+        update: Int,
+        destroy: Int
+        ) = (0, 0, 0, 0, 0)
+
+    /**
+        Display many instances
+     */
+    func index(_ request: Request) throws -> ResponseRepresentable {
+        TestController.lock.index += 1
+        return "index"
+    }
+
+    /**
+        Create a new instance.
+     */
+    func store(_ request: Request) throws -> ResponseRepresentable {
+        TestController.lock.store += 1
+        return "store"
+    }
+    /**
+        Show an instance.
+     */
+    func show(_ request: Request, item: String) throws -> ResponseRepresentable {
+        TestController.lock.show += 1
+        return "show"
+    }
+
+    /**
+        Update an instance.
+     */
+    func update(_ request: Request, item: String) throws -> ResponseRepresentable {
+        TestController.lock.update += 1
+        return "update"
+    }
+
+    /**
+        Delete an instance
+     */
+    func destroy(_ request: Request, item: String) throws -> ResponseRepresentable {
+        TestController.lock.destroy += 1
+        return "destroy"
+    }
+
+}
+
 class ControllerTests: XCTestCase {
 
     static var allTests: [(String, ControllerTests -> () throws -> Void)] {
         return [
             ("testController", testController)
         ]
-    }
-
-    class TestController: Controller {
-        required init(application: Application) {
-            print("TestController online")
-        }
-
-        static var lock: (
-            index: Int,
-            store: Int,
-            show: Int,
-            update: Int,
-            destroy: Int
-        ) = (0, 0, 0, 0, 0)
-
-        /// Display many instances
-        func index(request: Request) throws -> ResponseRepresentable {
-            TestController.lock.index += 1
-            return "index"
-        }
-
-        /// Create a new instance.
-        func store(request: Request) throws -> ResponseRepresentable {
-            TestController.lock.store += 1
-            return "store"
-        }
-
-        /// Show an instance.
-        func show(request: Request, item: String) throws -> ResponseRepresentable {
-            TestController.lock.show += 1
-            return "show"
-        }
-
-        /// Update an instance.
-        func update(request: Request, item: String) throws -> ResponseRepresentable {
-            TestController.lock.update += 1
-            return "update"
-        }
-
-        /// Delete an instance.
-        func destroy(request: Request, item: String) throws -> ResponseRepresentable {
-            TestController.lock.destroy += 1
-            return "destroy"
-        }
-
     }
 
     func testController() {
@@ -73,7 +82,7 @@ class ControllerTests: XCTestCase {
         let fooIndex = Request(method: .get, uri: URI(path: "foo"), headers: [:], body: [])
         if let (_, handler) = app.router.route(fooIndex) {
             do {
-                try handler.respond(fooIndex)
+                try handler.respond(to: fooIndex)
                 XCTAssert(TestController.lock.index == 1, "foo.index Lock not correct")
             } catch {
                 XCTFail("foo.index handler failed")

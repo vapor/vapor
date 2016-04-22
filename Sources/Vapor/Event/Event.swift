@@ -52,7 +52,7 @@ public final class Event<T> {
 
         - returns: a subscription. As long as it's retained, the passed handler will fire
      */
-    public func subscribe(handler: Handler) -> Subscription {
+    public func subscribe(_ handler: Handler) -> Subscription {
         let newSubscription = Subscription()
         newSubscription.completion = { [weak self, weak newSubscription] in
             guard let welf = self else { return }
@@ -72,7 +72,7 @@ public final class Event<T> {
 
         - parameter data: the data to be passed to subscribers
      */
-    public func post(data: T) {
+    public func post(_ data: T) {
         subscribers.forEach { _, handler in handler(data) }
     }
 }

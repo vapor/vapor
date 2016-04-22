@@ -2,7 +2,14 @@
 import libc
 
 extension String {
-    public func finish(ending: String) -> String {
+    /**
+        Append a trailing suffix to the string if necessary.
+
+        - parameter ending: the ending to append if it doesn't already exist
+
+        - returns: the new string
+     */
+    public func finish(_ ending: String) -> String {
         if hasSuffix(ending) {
             return self
         } else {
@@ -24,7 +31,7 @@ extension String {
     }
 
 #if os(Linux)
-    func hasPrefix(str: String) -> Bool {
+    func hasPrefix(_ str: String) -> Bool {
         let strGen = str.characters.makeIterator()
         let selfGen = self.characters.makeIterator()
         let seq = zip(strGen, selfGen)
@@ -34,7 +41,7 @@ extension String {
         return true
     }
 
-    func hasSuffix(str: String) -> Bool {
+    func hasSuffix(_ str: String) -> Bool {
         let strGen = str.characters.reversed().makeIterator()
         let selfGen = self.characters.reversed().makeIterator()
         let seq = zip(strGen, selfGen)

@@ -21,50 +21,53 @@ class ConfigTests: XCTestCase {
     #endif
 
 	func testSimple() {
-		let config = self.config(.Development)
+		let config = makeConfig(.Development, workDir: workDir)
 		XCTAssert(config.get("app.debug", false) == true, "Config incorrectly loaded.")
 	}
 
 	func testNesting() {
-		let config = self.config(.Development)
+		let config = makeConfig(.Development, workDir: workDir)
 		XCTAssert(config.get("app.nested.c.true", false) == true, "Nesting config incorrectly loaded.")
 	}
 
 	func testEnvironmentCascading() {
-		let config = self.config(.Production)
+		let config = makeConfig(.Production, workDir: workDir)
 		XCTAssert(config.get("app.debug", true) == false, "Cascading config incorrectly loaded.")
 	}
 
 	func testEnvironmentCascadingNesting() {
-		let config = self.config(.Production)
+		let config = makeConfig(.Production, workDir: workDir)
 		XCTAssert(config.get("app.nested.c.true", true) == false, "Nesting config incorrectly loaded.")
 	}
 
 	func testDotEnv() {
-		let config = self.config(.Development)
+		let config = makeConfig(.Development, workDir: workDir)
 		XCTAssert(config.get("app.port", 0) == 9000, ".env config incorrectly loaded.")
 	}
+}
 
-	private func config(environment: Environment) -> Config {
-		let app = self.app(environment)
+/**
+ Global functions because any function that takes an argument on an XCTest class fails on Linux.
+ */
 
-		do {
-			try app.config.populate("\(workDir)Config", application: app)
-		} catch {
-			XCTAssert(false, "Failed to load config: \(error)")
-		}
+private func makeConfig(_ environment: Environment, workDir: String) -> Config {
+    let app = makeApp(environment)
 
-		return app.config
-	}
+    do {
+        try app.config.populate("\(workDir)Config", application: app)
+    } catch {
+        XCTAssert(false, "Failed to load config: \(error)")
+    }
 
-	private func app(environment: Environment) -> Application {
-		let app = Application()
+    return app.config
+}
 
-		app.detectEnvironmentHandler = { _ in
-			return environment
-		}
+private func makeApp(_ environment: Environment) -> Application {
+    let app = Application()
 
-		return app
-	}
+    app.detectEnvironmentHandler = { _ in
+        return environment
+    }
 
+    return app
 }

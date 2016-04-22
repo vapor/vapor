@@ -1,3 +1,4 @@
+import Foundation
 import libc
 
 /**
@@ -10,55 +11,12 @@ class FileManager {
         case Unreadable
     }
 
-    static func readBytesFromFile(path: String) throws -> [UInt8] {
-        let fd = open(path, O_RDONLY)
-
-        if fd < 0 {
-            throw Error.CouldNotOpenFile
-        }
-        defer {
-            close(fd)
-        }
-
-        var info = stat()
-        let ret = withUnsafeMutablePointer(&info) { infoPointer -> Bool in
-            if fstat(fd, infoPointer) < 0 {
-                return false
-            }
-            return true
-        }
-
-        if !ret {
-            throw Error.Unreadable
-        }
-
-        let length = Int(info.st_size)
-
-        let rawData = malloc(length)
-        var remaining = Int(info.st_size)
-        var total = 0
-        while remaining > 0 {
-            let advanced = rawData.advanced(by: total)
-
-            let amt = read(fd, advanced, remaining)
-            if amt < 0 {
-                break
-            }
-            remaining -= amt
-            total += amt
-        }
-
-        if remaining != 0 {
-            throw Error.Unreadable
-        }
-
-        //thanks @Danappelxx
-        let data = UnsafeMutablePointer<UInt8>(rawData)
-        let buffer = UnsafeMutableBufferPointer<UInt8>(start: data, count: length)
-        return Array(buffer)
+    static func readBytesFromFile(_ path: String) throws -> [UInt8] {
+        let data = NSData(contentsOfFile: path)
+        return data?.byteArray ?? []
     }
 
-    static func fileAtPath(path: String) -> (exists: Bool, isDirectory: Bool) {
+    static func fileAtPath(_ path: String) -> (exists: Bool, isDirectory: Bool) {
         var isDirectory = false
         var s = stat()
         if lstat(path, &s) >= 0 {
@@ -87,7 +45,7 @@ class FileManager {
         return (true, isDirectory)
     }
 
-    static func expandPath(path: String) throws -> String {
+    static func expandPath(_ path: String) throws -> String {
         let result = realpath(path, nil)
 
         guard result != nil else {
@@ -105,7 +63,7 @@ class FileManager {
         }
     }
 
-    static func contentsOfDirectory(path: String) throws -> [String] {
+    static func contentsOfDirectory(_ path: String) throws -> [String] {
         var gt = glob_t()
         defer { globfree(&gt) }
 
@@ -131,8 +89,8 @@ class FileManager {
         #endif
 
         for i in 0..<count {
-
-            let cstring = String(validatingUTF8: gt.gl_pathv[i])
+            guard let utf8 = gt.gl_pathv[i] else { continue }
+            let cstring = String(validatingUTF8: utf8)
             if let path = cstring {
                 contents.append(path)
             }

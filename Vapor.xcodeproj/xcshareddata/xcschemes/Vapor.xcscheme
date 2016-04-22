@@ -42,20 +42,6 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "______Target_OperatingSystem"
-               BuildableName = "libOperatingSystem.dylib"
-               BlueprintName = "OperatingSystem"
-               ReferencedContainer = "container:Vapor.xcodeproj">
-            </BuildableReference>
-         </BuildActionEntry>
-         <BuildActionEntry
-            buildForTesting = "YES"
-            buildForRunning = "YES"
-            buildForProfiling = "YES"
-            buildForArchiving = "YES"
-            buildForAnalyzing = "YES">
-            <BuildableReference
-               BuildableIdentifier = "primary"
                BlueprintIdentifier = "______Target_String"
                BuildableName = "libString.dylib"
                BlueprintName = "String"
@@ -70,23 +56,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "______Target_Data"
-               BuildableName = "libData.dylib"
-               BlueprintName = "Data"
-               ReferencedContainer = "container:Vapor.xcodeproj">
-            </BuildableReference>
-         </BuildActionEntry>
-         <BuildActionEntry
-            buildForTesting = "YES"
-            buildForRunning = "YES"
-            buildForProfiling = "YES"
-            buildForArchiving = "YES"
-            buildForAnalyzing = "YES">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "______Target_InterchangeData"
-               BuildableName = "libInterchangeData.dylib"
-               BlueprintName = "InterchangeData"
+               BlueprintIdentifier = "______Target_StructuredData"
+               BuildableName = "libStructuredData.dylib"
+               BlueprintName = "StructuredData"
                ReferencedContainer = "container:Vapor.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -196,6 +168,20 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
+               BlueprintIdentifier = "______Target_Generator"
+               BuildableName = "Generator"
+               BlueprintName = "Generator"
+               ReferencedContainer = "container:Vapor.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
                BlueprintIdentifier = "______Target_libc"
                BuildableName = "liblibc.dylib"
                BlueprintName = "libc"
@@ -238,46 +224,6 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       shouldUseLaunchSchemeArgsEnv = "YES">
       <Testables>
-         <TestableReference
-            skipped = "NO">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "______Target_C7TestSuite"
-               BuildableName = "C7.testsuite.xctest"
-               BlueprintName = "C7.testsuite"
-               ReferencedContainer = "container:Vapor.xcodeproj">
-            </BuildableReference>
-         </TestableReference>
-         <TestableReference
-            skipped = "NO">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "______Target_S4TestSuite"
-               BuildableName = "S4.testsuite.xctest"
-               BlueprintName = "S4.testsuite"
-               ReferencedContainer = "container:Vapor.xcodeproj">
-            </BuildableReference>
-         </TestableReference>
-         <TestableReference
-            skipped = "NO">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "______Target_JSONTestSuite"
-               BuildableName = "JSON.testsuite.xctest"
-               BlueprintName = "JSON.testsuite"
-               ReferencedContainer = "container:Vapor.xcodeproj">
-            </BuildableReference>
-         </TestableReference>
-         <TestableReference
-            skipped = "NO">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "______Target_HummingbirdTestSuite"
-               BuildableName = "Hummingbird.testsuite.xctest"
-               BlueprintName = "Hummingbird.testsuite"
-               ReferencedContainer = "container:Vapor.xcodeproj">
-            </BuildableReference>
-         </TestableReference>
          <TestableReference
             skipped = "NO">
             <BuildableReference

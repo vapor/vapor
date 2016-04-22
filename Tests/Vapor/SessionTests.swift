@@ -71,16 +71,16 @@ private class TestDriver: SessionDriver {
         return "Foo"
     }
 
-    func valueFor(key key: String, identifier: String) -> String? {
+    func valueFor(key: String, identifier: String) -> String? {
         actions.append(.ValueFor(key: key, identifier: identifier))
         return nil
     }
 
-    func set(value: String?, forKey key: String, identifier: String) {
+    func set(_ value: String?, forKey key: String, identifier: String) {
         actions.append(.SetValue(value: value, key: key, identifier: identifier))
     }
 
-    func destroy(identifier: String) {
+    func destroy(_ identifier: String) {
         actions.append(.Destroy(identifier: identifier))
     }
 

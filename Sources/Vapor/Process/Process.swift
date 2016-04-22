@@ -1,3 +1,5 @@
+import Foundation
+
 extension Process {
 
     /**
@@ -10,11 +12,12 @@ extension Process {
 
      - returns: the value matching the argument if possible
      */
-    public static func valueFor(argument name: String, inArguments arguments: [String] = Process.arguments) -> String? {
+    public static func valueFor(argument name: String,
+                                inArguments arguments: [String]
+                                = NSProcessInfo.processInfo().arguments) -> String? {
         for argument in arguments where argument.hasPrefix("--\(name)=") {
-            return argument.split("=").last
+            return argument.split(byString: "=").last
         }
         return nil
     }
-
 }

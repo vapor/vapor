@@ -4,7 +4,6 @@ public enum Json {
     case null
     case bool(Bool)
     case double(Double)
-    case int(Int)
     case string(String)
     case array([Json])
     case object([String: Json])
@@ -16,11 +15,7 @@ public enum Json {
         case .booleanValue(let bool):
             self = .bool(bool)
         case .numberValue(let number):
-            if floor(number) == number {
-                self = .int(Int(number))
-            } else {
-                self = .double(number)
-            }
+            self = .double(number)
         case .stringValue(let string):
             self = .string(string)
         case .objectValue(let object):
@@ -47,7 +42,7 @@ public enum Json {
     }
 
     public init(_ value: Int) {
-        self = .int(value)
+        self = .double(Double(value))
     }
 
     public init(_ value: String) {
@@ -72,12 +67,12 @@ public enum Json {
     }
 
     public init(_ value: Data) throws {
-        let json = try JSONParser().parse(value)
+        let json = try JSONParser().parse(data: value)
         self.init(json)
     }
 
     public var data: Data {
-        return JSONSerializer().serialize(makeZewoJson())
+        return JSONSerializer().serialize(json: makeZewoJson())
     }
 
     private func makeZewoJson() -> JSON {
@@ -86,8 +81,6 @@ public enum Json {
             return .nullValue
         case .bool(let bool):
             return .booleanValue(bool)
-        case .int(let int):
-            return .numberValue(Double(int))
         case .double(let double):
             return .numberValue(double)
         case .string(let string):
@@ -159,7 +152,6 @@ public enum Json {
         }
     }
 }
-
 
 public protocol JsonRepresentable: ResponseRepresentable {
     func makeJson() -> Json
@@ -236,20 +228,18 @@ extension Json: Node {
 
     public var int: Int? {
         switch self {
-        case .int(let int):
-            return Int(int)
+        case .double(let double) where double % 1 == 0:
+            return Int(double)
         default:
             return nil
         }
     }
 
     public var uint: UInt? {
-        switch self {
-        case .int(let int):
-            return UInt(int)
-        default:
+        guard let int = self.int where int >= 0 else {
             return nil
         }
+        return UInt(int)
     }
 
     public var float: Float? {
