@@ -90,6 +90,7 @@ extension Response {
         var tm: libc.tm = libc.tm()
 
         let buf = UnsafeMutablePointer<Int8>.init(allocatingCapacity: RFC1123_TIME_LEN + 1)
+        defer { buf.deallocateCapacity(RFC1123_TIME_LEN + 1) }
 
         time(&t)
         gmtime_r(&t, &tm)
