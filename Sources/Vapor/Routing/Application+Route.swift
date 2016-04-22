@@ -102,6 +102,75 @@ extension Application {
     }
 
     /**
+        Adds a route handled by a type that can be initialized with an `Application`.
+        This method is useful if you have a controller and would like to add an action
+        that is not a common REST action.
+
+        Here's an example of how you would add a route with this method:
+
+        ```app.add(.get, path: "/foo", action: TestController.foo)```
+
+        - parameter     method:     The `Request.Method` that the action should be executed for.
+        - parameter     path:       The HTTP path that the action can run at.
+        - parameter     action:     The curried action to run on the provided type.
+     */
+    public final func add<ActionController: ApplicationInitializable>(
+        _ method: Request.Method,
+        path: String,
+        action: (ActionController) -> (Request) throws -> ResponseRepresentable) {
+        add(method, path: path, action: action) {
+            ActionController(application: self)
+        }
+    }
+
+    /**
+         Adds a route handled by a type that can be defaultly initialized.
+         This method is useful if you have a controller and would like to add an action
+         that is not a common REST action.
+
+         Here's an example of how you would add a route with this method:
+
+         ```app.add(.get, path: "/bar", action: TestController.bar)```
+
+         - parameter     method:     The `Request.Method` that the action should be executed for.
+         - parameter     path:       The HTTP path that the action can run at.
+         - parameter     action:     The curried action to run on the provided type.
+     */
+    public final func add<ActionController: DefaultInitializable>(
+        _ method: Request.Method,
+        path: String,
+        action: (ActionController) -> (Request) throws -> ResponseRepresentable) {
+        add(method, path: path, action: action) {
+            ActionController()
+        }
+    }
+
+    /**
+        Adds a route handled by a type that can be initialized via the provided factory.
+        This method is useful if you have a controller and would like to add an action
+        that is not a common REST action, and you need to handle initialization yourself.
+
+        Here's an example of how you would add a route with this method:
+
+        ```app.add(.get, path: "/baz", action: TestController.baz) { TestController() }```
+
+        - parameter     method:     The `Request.Method` that the action should be executed for.
+        - parameter     path:       The HTTP path that the action can run at.
+        - parameter     action:     The curried action to run on the provided type.
+        - parameter     factory:    The closure to instantiate the controller type.
+     */
+    public final func add<ActionController>(
+        _ method: Request.Method,
+        path: String,
+        action: (ActionController) -> (Request) throws -> ResponseRepresentable,
+        makeControllerWith factory: () throws -> ActionController) {
+        add(method, path: path) { request in
+            let controller = try factory()
+            return try action(controller)(request).makeResponse()
+        }
+    }
+
+    /**
         Adds a route handler for an HTTP request using a given HTTP verb at a given
         path. The provided handler will be ran whenever the path is requested with
         the given method.
