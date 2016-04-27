@@ -110,9 +110,9 @@ extension Application {
 
         ```app.add(.get, path: "/foo", action: TestController.foo)```
 
-        - parameter     method:     The `Request.Method` that the action should be executed for.
-        - parameter     path:       The HTTP path that the action can run at.
-        - parameter     action:     The curried action to run on the provided type.
+        - parameter method: The `Request.Method` that the action should be executed for.
+        - parameter path: The HTTP path that the action can run at.
+        - parameter action: The curried action to run on the provided type.
      */
     public final func add<ActionController: ApplicationInitializable>(
         _ method: Request.Method,
@@ -132,9 +132,9 @@ extension Application {
 
          ```app.add(.get, path: "/bar", action: TestController.bar)```
 
-         - parameter     method:     The `Request.Method` that the action should be executed for.
-         - parameter     path:       The HTTP path that the action can run at.
-         - parameter     action:     The curried action to run on the provided type.
+         - parameter method: The `Request.Method` that the action should be executed for.
+         - parameter path: The HTTP path that the action can run at.
+         - parameter action: The curried action to run on the provided type.
      */
     public final func add<ActionController: DefaultInitializable>(
         _ method: Request.Method,
@@ -154,10 +154,10 @@ extension Application {
 
         ```app.add(.get, path: "/baz", action: TestController.baz) { TestController() }```
 
-        - parameter     method:     The `Request.Method` that the action should be executed for.
-        - parameter     path:       The HTTP path that the action can run at.
-        - parameter     action:     The curried action to run on the provided type.
-        - parameter     factory:    The closure to instantiate the controller type.
+        - parameter method: The `Request.Method` that the action should be executed for.
+        - parameter path: The HTTP path that the action can run at.
+        - parameter action: The curried action to run on the provided type.
+        - parameter factory: The closure to instantiate the controller type.
      */
     public final func add<ActionController>(
         _ method: Request.Method,
@@ -175,9 +175,9 @@ extension Application {
         path. The provided handler will be ran whenever the path is requested with
         the given method.
 
-        - parameter    method:     The `Request.Method` that the handler should be executed for.
-        - parameter    path:       The HTTP path that handler can run at.
-        - parameter    handler:    The code to process the request with.
+        - parameter method: The `Request.Method` that the handler should be executed for.
+        - parameter path: The HTTP path that handler can run at.
+        - parameter handler: The code to process the request with.
     */
     public final func add(_ method: Request.Method, path: String, handler: Route.Handler) {
         //Convert Route.Handler to Request.Handler
