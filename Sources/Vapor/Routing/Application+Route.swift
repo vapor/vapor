@@ -243,6 +243,7 @@ extension Application {
         Create multiple routes with the same base URL
         without repeating yourself.
     */
+    #if swift(>=3.0)
     public func group(_ prefix: String, handler: @noescape () -> Void) {
         let original = scopedPrefix
 
@@ -257,4 +258,20 @@ extension Application {
 
         scopedPrefix = original
     }
+    #else
+    public func group(_ prefix: String, @noescape handler: () -> Void) {
+        let original = scopedPrefix
+        
+        //append original with a trailing slash
+        if let original = original {
+        scopedPrefix = original + "/" + prefix
+        } else {
+        scopedPrefix = prefix
+        }
+        
+        handler()
+        
+        scopedPrefix = original
+    }
+    #endif
 }
