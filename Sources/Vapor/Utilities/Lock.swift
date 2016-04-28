@@ -29,20 +29,12 @@ class Lock {
     func unlock() {
         pthread_mutex_unlock(mutex)
     }
-    
-    #if swift(>=3.0)
+
     func locked(closure: @noescape () throws -> Void) rethrows {
         lock()
         defer { unlock() }
         try closure()
     }
-    #else
-    func locked(@noescape closure: () throws -> Void) rethrows {
-        lock()
-        defer { unlock() }
-        try closure()
-    }
-    #endif
 
     func tryLock() -> Bool {
         return pthread_mutex_trylock(mutex) == 0
