@@ -243,7 +243,7 @@ extension Application {
         Create multiple routes with the same base URL
         without repeating yourself.
     */
-    public func group(_ prefix: String, @noescape handler: () -> Void) {
+    public func group(_ prefix: String, handler: @noescape () -> Void) {
         let original = scopedPrefix
 
         //append original with a trailing slash
