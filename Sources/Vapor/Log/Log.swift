@@ -42,7 +42,7 @@ public class Log {
         Enabled log levels. Default is to log all levels. This
         can be overridden.
      */
-    public static var enabledLevels: [Log.Level] = Log.Level.all
+    public static var enabledLevels: [Level] = Log.Level.all
 
     /**
         Logs verbose messages if .Verbose is enabled
