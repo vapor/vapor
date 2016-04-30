@@ -13,7 +13,7 @@ let package = Package(
         .Package(url: "https://github.com/Zewo/JSON.git", majorVersion: 0, minor: 6),
 
         //Swift wrapper around Sockets, used for built-in HTTP server
-        .Package(url: "https://github.com/czechboy0/Hummingbird.git", majorVersion: 1, minor: 5),
+        .Package(url: "https://github.com/ketzusaka/Hummingbird.git", majorVersion: 1, minor: 5),
 
         //SHA2 + HMAC hashing. Used by the core to create session identifiers.
         .Package(url: "https://github.com/CryptoKitten/HMAC.git", majorVersion: 0, minor: 5),
