@@ -12,13 +12,11 @@ class ConfigTests: XCTestCase {
         ]
     }
 
-    #if Xcode
-    //Xcode doesn't allow a working directory to be set, so this needs to be
-    //hardcoded unfortunately.
-    let workDir = "/Users/tanner/Developer/vapor/vapor/Sources/Development/"
-    #else
-    let workDir = "Sources/Development/"
-    #endif
+    var workDir: String {
+        let parent = #file.characters.split(separator: "/").map(String.init).dropLast().joined(separator: "/")
+        let path = "/\(parent)/../../Sources/Development/"
+        return path
+    }
 
 	func testSimple() {
 		let config = makeConfig(.Development, workDir: workDir)

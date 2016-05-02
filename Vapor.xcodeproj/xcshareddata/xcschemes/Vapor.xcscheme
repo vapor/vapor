@@ -126,6 +126,34 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
+               BlueprintIdentifier = "______Target_CryptoEssentialsSwift2"
+               BuildableName = "libCryptoEssentialsSwift2.dylib"
+               BlueprintName = "CryptoEssentialsSwift2"
+               ReferencedContainer = "container:Vapor.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "______Target_CryptoEssentialsSwift3"
+               BuildableName = "libCryptoEssentialsSwift3.dylib"
+               BlueprintName = "CryptoEssentialsSwift3"
+               ReferencedContainer = "container:Vapor.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
                BlueprintIdentifier = "______Target_HMAC"
                BuildableName = "libHMAC.dylib"
                BlueprintName = "HMAC"
