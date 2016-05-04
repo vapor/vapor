@@ -40,7 +40,7 @@ app.get("json") { request in
         "number": 123,
         "text": "unicorns",
         "bool": false,
-        "nested": ["one", 2, false]
+        "nested": Json(["one", 2, false])
     ])
 }
 

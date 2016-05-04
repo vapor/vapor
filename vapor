@@ -91,7 +91,7 @@ class Vapor {
         #endif
     }
 
-    func run(command: String) throws {
+    func run(_ command: String) throws {
         let result = system(command)
 
         if result != 0 {
@@ -99,7 +99,7 @@ class Vapor {
         }
     }
 
-    func run(command: String, orFail errorMessage: String) {
+    func run(_ command: String, orFail errorMessage: String) {
         do {
             try run(command)
         } catch {
@@ -107,7 +107,7 @@ class Vapor {
         }
     }
 
-    func fail(message: String) {
+    func fail(_ message: String) {
         print("Error: \(message)")
         exit(1)
     }

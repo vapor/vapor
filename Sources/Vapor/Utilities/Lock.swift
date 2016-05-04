@@ -30,7 +30,7 @@ class Lock {
         pthread_mutex_unlock(mutex)
     }
 
-    func locked(@noescape closure: () throws -> Void) rethrows {
+    func locked(closure: @noescape () throws -> Void) rethrows {
         lock()
         defer { unlock() }
         try closure()

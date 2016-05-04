@@ -195,6 +195,12 @@ extension Bool: JsonRepresentable {
     }
 }
 
+extension Json: JsonRepresentable {
+    public func makeJson() -> Json {
+        return self
+    }
+}
+
 extension Json: CustomStringConvertible {
     public var description: String {
         return makeZewoJson().description
