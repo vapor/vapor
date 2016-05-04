@@ -7,99 +7,99 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		1A4675481CDA431B005FAE7C /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
-		1A4675491CDA431B005FAE7C /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
-		1A46754A1CDA431B005FAE7C /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
-		1A46754B1CDA431B005FAE7C /* libCryptoEssentialsSwift2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentialsSwift2" /* libCryptoEssentialsSwift2.dylib */; };
-		1A46754C1CDA431B005FAE7C /* libCryptoEssentialsSwift3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentialsSwift3" /* libCryptoEssentialsSwift3.dylib */; };
-		1A46754D1CDA431B005FAE7C /* libCryptoEssentials.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentials" /* libCryptoEssentials.dylib */; };
-		1A46754E1CDA431B005FAE7C /* libCryptoEssentialsSwift2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentialsSwift2" /* libCryptoEssentialsSwift2.dylib */; };
-		1A46754F1CDA431B005FAE7C /* libCryptoEssentialsSwift3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentialsSwift3" /* libCryptoEssentialsSwift3.dylib */; };
-		1A4675501CDA431B005FAE7C /* libCryptoEssentials.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentials" /* libCryptoEssentials.dylib */; };
-		1A4675511CDA431B005FAE7C /* libCryptoEssentialsSwift2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentialsSwift2" /* libCryptoEssentialsSwift2.dylib */; };
-		1A4675521CDA431B005FAE7C /* libCryptoEssentialsSwift3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentialsSwift3" /* libCryptoEssentialsSwift3.dylib */; };
-		1A4675531CDA431B005FAE7C /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
-		1A4675541CDA431B005FAE7C /* libStructuredData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_StructuredData" /* libStructuredData.dylib */; };
-		1A4675551CDA431B005FAE7C /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
-		1A4675561CDA431B005FAE7C /* libSHA2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_SHA2" /* libSHA2.dylib */; };
-		1A4675571CDA431B005FAE7C /* libHMAC.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_HMAC" /* libHMAC.dylib */; };
-		1A4675581CDA431B005FAE7C /* libHummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Hummingbird" /* libHummingbird.dylib */; };
-		1A4675591CDA431B005FAE7C /* libJSON.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_JSON" /* libJSON.dylib */; };
-		1A46755A1CDA431B005FAE7C /* libString.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_String" /* libString.dylib */; };
-		1A46755B1CDA431B005FAE7C /* libS4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_S4" /* libS4.dylib */; };
-		1A46755C1CDA431B005FAE7C /* liblibc.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_libc" /* liblibc.dylib */; };
-		1A46755D1CDA431B005FAE7C /* libCryptoEssentials.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentials" /* libCryptoEssentials.dylib */; };
-		1A46755E1CDA431B005FAE7C /* libCryptoEssentialsSwift2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentialsSwift2" /* libCryptoEssentialsSwift2.dylib */; };
-		1A46755F1CDA431B005FAE7C /* libCryptoEssentialsSwift3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentialsSwift3" /* libCryptoEssentialsSwift3.dylib */; };
-		1A4675601CDA431B005FAE7C /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
-		1A4675611CDA431B005FAE7C /* libStructuredData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_StructuredData" /* libStructuredData.dylib */; };
-		1A4675621CDA431B005FAE7C /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
-		1A4675631CDA431B005FAE7C /* libSHA2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_SHA2" /* libSHA2.dylib */; };
-		1A4675641CDA431B005FAE7C /* libHMAC.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_HMAC" /* libHMAC.dylib */; };
-		1A4675651CDA431B005FAE7C /* libHummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Hummingbird" /* libHummingbird.dylib */; };
-		1A4675661CDA431B005FAE7C /* libJSON.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_JSON" /* libJSON.dylib */; };
-		1A4675671CDA431B005FAE7C /* libString.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_String" /* libString.dylib */; };
-		1A4675681CDA431B005FAE7C /* libS4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_S4" /* libS4.dylib */; };
-		1A4675691CDA431B005FAE7C /* libCryptoEssentials.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentials" /* libCryptoEssentials.dylib */; };
-		1A46756A1CDA431B005FAE7C /* libCryptoEssentialsSwift2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentialsSwift2" /* libCryptoEssentialsSwift2.dylib */; };
-		1A46756B1CDA431B005FAE7C /* libCryptoEssentialsSwift3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentialsSwift3" /* libCryptoEssentialsSwift3.dylib */; };
-		1A46756C1CDA431B005FAE7C /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
-		1A46756D1CDA431B005FAE7C /* libStructuredData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_StructuredData" /* libStructuredData.dylib */; };
-		1A46756E1CDA431B005FAE7C /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
-		1A46756F1CDA431B005FAE7C /* libCryptoEssentials.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentials" /* libCryptoEssentials.dylib */; };
-		1A4675701CDA431B005FAE7C /* libCryptoEssentialsSwift2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentialsSwift2" /* libCryptoEssentialsSwift2.dylib */; };
-		1A4675711CDA431B005FAE7C /* libCryptoEssentialsSwift3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentialsSwift3" /* libCryptoEssentialsSwift3.dylib */; };
-		1A4675721CDA431B005FAE7C /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
-		1A4675731CDA431B005FAE7C /* libStructuredData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_StructuredData" /* libStructuredData.dylib */; };
-		1A4675741CDA431B005FAE7C /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
-		1A4675751CDA431B005FAE7C /* libSHA2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_SHA2" /* libSHA2.dylib */; };
-		1A4675761CDA431B005FAE7C /* libHMAC.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_HMAC" /* libHMAC.dylib */; };
-		1A4675771CDA431B005FAE7C /* libHummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Hummingbird" /* libHummingbird.dylib */; };
-		1A4675781CDA431B005FAE7C /* libJSON.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_JSON" /* libJSON.dylib */; };
-		1A4675791CDA431B005FAE7C /* libString.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_String" /* libString.dylib */; };
-		1A46757A1CDA431B005FAE7C /* libS4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_S4" /* libS4.dylib */; };
-		1A46757B1CDA431B005FAE7C /* libCryptoEssentials.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentials" /* libCryptoEssentials.dylib */; };
-		1A46757C1CDA431B005FAE7C /* libCryptoEssentialsSwift2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentialsSwift2" /* libCryptoEssentialsSwift2.dylib */; };
-		1A46757D1CDA431B005FAE7C /* libCryptoEssentialsSwift3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentialsSwift3" /* libCryptoEssentialsSwift3.dylib */; };
-		1A46757E1CDA431B005FAE7C /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
-		1A46757F1CDA431B005FAE7C /* libStructuredData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_StructuredData" /* libStructuredData.dylib */; };
-		1A4675801CDA431B005FAE7C /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
-		1A4675811CDA431B005FAE7C /* libSHA2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_SHA2" /* libSHA2.dylib */; };
-		1A4675821CDA431B005FAE7C /* libHMAC.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_HMAC" /* libHMAC.dylib */; };
-		1A4675831CDA431B005FAE7C /* libHummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Hummingbird" /* libHummingbird.dylib */; };
-		1A4675841CDA431B005FAE7C /* libJSON.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_JSON" /* libJSON.dylib */; };
-		1A4675851CDA431B005FAE7C /* libString.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_String" /* libString.dylib */; };
-		1A4675861CDA431B005FAE7C /* libS4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_S4" /* libS4.dylib */; };
-		1A4675871CDA431B005FAE7C /* libVapor.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Vapor" /* libVapor.dylib */; };
-		1A4675881CDA431B005FAE7C /* liblibc.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_libc" /* liblibc.dylib */; };
-		1A4675891CDA431B005FAE7C /* libCryptoEssentials.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentials" /* libCryptoEssentials.dylib */; };
-		1A46758A1CDA431B005FAE7C /* libCryptoEssentialsSwift2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentialsSwift2" /* libCryptoEssentialsSwift2.dylib */; };
-		1A46758B1CDA431B005FAE7C /* libCryptoEssentialsSwift3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentialsSwift3" /* libCryptoEssentialsSwift3.dylib */; };
-		1A46758C1CDA431B005FAE7C /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
-		1A46758D1CDA431B005FAE7C /* libStructuredData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_StructuredData" /* libStructuredData.dylib */; };
-		1A46758E1CDA431B005FAE7C /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
-		1A46758F1CDA431B005FAE7C /* libSHA2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_SHA2" /* libSHA2.dylib */; };
-		1A4675901CDA431B005FAE7C /* libHMAC.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_HMAC" /* libHMAC.dylib */; };
-		1A4675911CDA431B005FAE7C /* libHummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Hummingbird" /* libHummingbird.dylib */; };
-		1A4675921CDA431B005FAE7C /* libJSON.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_JSON" /* libJSON.dylib */; };
-		1A4675931CDA431B005FAE7C /* libString.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_String" /* libString.dylib */; };
-		1A4675941CDA431B005FAE7C /* libS4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_S4" /* libS4.dylib */; };
-		1A4675951CDA431B005FAE7C /* libVapor.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Vapor" /* libVapor.dylib */; };
-		1A4675961CDA431B005FAE7C /* liblibc.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_libc" /* liblibc.dylib */; };
-		_LinkFileRef_C7 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
-		_LinkFileRef_CryptoEssentials /* libCryptoEssentials.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentials" /* libCryptoEssentials.dylib */; };
-		_LinkFileRef_CryptoEssentialsSwift2 /* libCryptoEssentialsSwift2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentialsSwift2" /* libCryptoEssentialsSwift2.dylib */; };
-		_LinkFileRef_CryptoEssentialsSwift3 /* libCryptoEssentialsSwift3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentialsSwift3" /* libCryptoEssentialsSwift3.dylib */; };
-		_LinkFileRef_HMAC /* libHMAC.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_HMAC" /* libHMAC.dylib */; };
-		_LinkFileRef_Hummingbird /* libHummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Hummingbird" /* libHummingbird.dylib */; };
-		_LinkFileRef_JSON /* libJSON.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_JSON" /* libJSON.dylib */; };
-		_LinkFileRef_S4 /* libS4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_S4" /* libS4.dylib */; };
-		_LinkFileRef_SHA2 /* libSHA2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_SHA2" /* libSHA2.dylib */; };
-		_LinkFileRef_Strand /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
-		_LinkFileRef_String /* libString.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_String" /* libString.dylib */; };
-		_LinkFileRef_StructuredData /* libStructuredData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_StructuredData" /* libStructuredData.dylib */; };
-		_LinkFileRef_Vapor /* libVapor.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Vapor" /* libVapor.dylib */; };
-		_LinkFileRef_libc /* liblibc.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_libc" /* liblibc.dylib */; };
+		C3EDEC5E1CDAA51100028475 /* C7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* C7.dylib */; };
+		C3EDEC5F1CDAA51100028475 /* C7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* C7.dylib */; };
+		C3EDEC601CDAA51100028475 /* C7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* C7.dylib */; };
+		C3EDEC611CDAA51100028475 /* CryptoEssentialsSwift2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentialsSwift2" /* CryptoEssentialsSwift2.dylib */; };
+		C3EDEC621CDAA51100028475 /* CryptoEssentialsSwift3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentialsSwift3" /* CryptoEssentialsSwift3.dylib */; };
+		C3EDEC631CDAA51100028475 /* CryptoEssentials.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentials" /* CryptoEssentials.dylib */; };
+		C3EDEC641CDAA51100028475 /* CryptoEssentialsSwift2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentialsSwift2" /* CryptoEssentialsSwift2.dylib */; };
+		C3EDEC651CDAA51100028475 /* CryptoEssentialsSwift3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentialsSwift3" /* CryptoEssentialsSwift3.dylib */; };
+		C3EDEC661CDAA51100028475 /* CryptoEssentials.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentials" /* CryptoEssentials.dylib */; };
+		C3EDEC671CDAA51100028475 /* CryptoEssentialsSwift2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentialsSwift2" /* CryptoEssentialsSwift2.dylib */; };
+		C3EDEC681CDAA51100028475 /* CryptoEssentialsSwift3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentialsSwift3" /* CryptoEssentialsSwift3.dylib */; };
+		C3EDEC691CDAA51100028475 /* Strand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* Strand.dylib */; };
+		C3EDEC6A1CDAA51100028475 /* StructuredData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_StructuredData" /* StructuredData.dylib */; };
+		C3EDEC6B1CDAA51100028475 /* C7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* C7.dylib */; };
+		C3EDEC6C1CDAA51100028475 /* SHA2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_SHA2" /* SHA2.dylib */; };
+		C3EDEC6D1CDAA51100028475 /* HMAC.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_HMAC" /* HMAC.dylib */; };
+		C3EDEC6E1CDAA51100028475 /* Hummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Hummingbird" /* Hummingbird.dylib */; };
+		C3EDEC6F1CDAA51100028475 /* JSON.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_JSON" /* JSON.dylib */; };
+		C3EDEC701CDAA51100028475 /* String.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_String" /* String.dylib */; };
+		C3EDEC711CDAA51100028475 /* S4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_S4" /* S4.dylib */; };
+		C3EDEC721CDAA51100028475 /* libc.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_libc" /* libc.dylib */; };
+		C3EDEC731CDAA51100028475 /* CryptoEssentials.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentials" /* CryptoEssentials.dylib */; };
+		C3EDEC741CDAA51100028475 /* CryptoEssentialsSwift2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentialsSwift2" /* CryptoEssentialsSwift2.dylib */; };
+		C3EDEC751CDAA51100028475 /* CryptoEssentialsSwift3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentialsSwift3" /* CryptoEssentialsSwift3.dylib */; };
+		C3EDEC761CDAA51100028475 /* Strand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* Strand.dylib */; };
+		C3EDEC771CDAA51100028475 /* StructuredData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_StructuredData" /* StructuredData.dylib */; };
+		C3EDEC781CDAA51100028475 /* C7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* C7.dylib */; };
+		C3EDEC791CDAA51100028475 /* SHA2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_SHA2" /* SHA2.dylib */; };
+		C3EDEC7A1CDAA51100028475 /* HMAC.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_HMAC" /* HMAC.dylib */; };
+		C3EDEC7B1CDAA51100028475 /* Hummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Hummingbird" /* Hummingbird.dylib */; };
+		C3EDEC7C1CDAA51100028475 /* JSON.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_JSON" /* JSON.dylib */; };
+		C3EDEC7D1CDAA51100028475 /* String.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_String" /* String.dylib */; };
+		C3EDEC7E1CDAA51100028475 /* S4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_S4" /* S4.dylib */; };
+		C3EDEC7F1CDAA51100028475 /* CryptoEssentials.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentials" /* CryptoEssentials.dylib */; };
+		C3EDEC801CDAA51100028475 /* CryptoEssentialsSwift2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentialsSwift2" /* CryptoEssentialsSwift2.dylib */; };
+		C3EDEC811CDAA51100028475 /* CryptoEssentialsSwift3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentialsSwift3" /* CryptoEssentialsSwift3.dylib */; };
+		C3EDEC821CDAA51100028475 /* Strand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* Strand.dylib */; };
+		C3EDEC831CDAA51100028475 /* StructuredData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_StructuredData" /* StructuredData.dylib */; };
+		C3EDEC841CDAA51100028475 /* C7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* C7.dylib */; };
+		C3EDEC851CDAA51100028475 /* CryptoEssentials.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentials" /* CryptoEssentials.dylib */; };
+		C3EDEC861CDAA51100028475 /* CryptoEssentialsSwift2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentialsSwift2" /* CryptoEssentialsSwift2.dylib */; };
+		C3EDEC871CDAA51100028475 /* CryptoEssentialsSwift3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentialsSwift3" /* CryptoEssentialsSwift3.dylib */; };
+		C3EDEC881CDAA51100028475 /* Strand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* Strand.dylib */; };
+		C3EDEC891CDAA51100028475 /* StructuredData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_StructuredData" /* StructuredData.dylib */; };
+		C3EDEC8A1CDAA51100028475 /* C7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* C7.dylib */; };
+		C3EDEC8B1CDAA51100028475 /* SHA2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_SHA2" /* SHA2.dylib */; };
+		C3EDEC8C1CDAA51100028475 /* HMAC.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_HMAC" /* HMAC.dylib */; };
+		C3EDEC8D1CDAA51100028475 /* Hummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Hummingbird" /* Hummingbird.dylib */; };
+		C3EDEC8E1CDAA51100028475 /* JSON.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_JSON" /* JSON.dylib */; };
+		C3EDEC8F1CDAA51100028475 /* String.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_String" /* String.dylib */; };
+		C3EDEC901CDAA51100028475 /* S4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_S4" /* S4.dylib */; };
+		C3EDEC911CDAA51100028475 /* CryptoEssentials.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentials" /* CryptoEssentials.dylib */; };
+		C3EDEC921CDAA51100028475 /* CryptoEssentialsSwift2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentialsSwift2" /* CryptoEssentialsSwift2.dylib */; };
+		C3EDEC931CDAA51100028475 /* CryptoEssentialsSwift3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentialsSwift3" /* CryptoEssentialsSwift3.dylib */; };
+		C3EDEC941CDAA51100028475 /* Strand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* Strand.dylib */; };
+		C3EDEC951CDAA51100028475 /* StructuredData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_StructuredData" /* StructuredData.dylib */; };
+		C3EDEC961CDAA51100028475 /* C7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* C7.dylib */; };
+		C3EDEC971CDAA51100028475 /* SHA2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_SHA2" /* SHA2.dylib */; };
+		C3EDEC981CDAA51100028475 /* HMAC.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_HMAC" /* HMAC.dylib */; };
+		C3EDEC991CDAA51100028475 /* Hummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Hummingbird" /* Hummingbird.dylib */; };
+		C3EDEC9A1CDAA51100028475 /* JSON.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_JSON" /* JSON.dylib */; };
+		C3EDEC9B1CDAA51100028475 /* String.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_String" /* String.dylib */; };
+		C3EDEC9C1CDAA51100028475 /* S4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_S4" /* S4.dylib */; };
+		C3EDEC9D1CDAA51100028475 /* Vapor.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Vapor" /* Vapor.dylib */; };
+		C3EDEC9E1CDAA51100028475 /* libc.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_libc" /* libc.dylib */; };
+		C3EDEC9F1CDAA51100028475 /* CryptoEssentials.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentials" /* CryptoEssentials.dylib */; };
+		C3EDECA01CDAA51100028475 /* CryptoEssentialsSwift2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentialsSwift2" /* CryptoEssentialsSwift2.dylib */; };
+		C3EDECA11CDAA51100028475 /* CryptoEssentialsSwift3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentialsSwift3" /* CryptoEssentialsSwift3.dylib */; };
+		C3EDECA21CDAA51100028475 /* Strand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* Strand.dylib */; };
+		C3EDECA31CDAA51100028475 /* StructuredData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_StructuredData" /* StructuredData.dylib */; };
+		C3EDECA41CDAA51100028475 /* C7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* C7.dylib */; };
+		C3EDECA51CDAA51100028475 /* SHA2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_SHA2" /* SHA2.dylib */; };
+		C3EDECA61CDAA51100028475 /* HMAC.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_HMAC" /* HMAC.dylib */; };
+		C3EDECA71CDAA51100028475 /* Hummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Hummingbird" /* Hummingbird.dylib */; };
+		C3EDECA81CDAA51100028475 /* JSON.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_JSON" /* JSON.dylib */; };
+		C3EDECA91CDAA51100028475 /* String.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_String" /* String.dylib */; };
+		C3EDECAA1CDAA51100028475 /* S4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_S4" /* S4.dylib */; };
+		C3EDECAB1CDAA51100028475 /* Vapor.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Vapor" /* Vapor.dylib */; };
+		C3EDECAC1CDAA51100028475 /* libc.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_libc" /* libc.dylib */; };
+		_LinkFileRef_C7 /* C7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* C7.dylib */; };
+		_LinkFileRef_CryptoEssentials /* CryptoEssentials.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentials" /* CryptoEssentials.dylib */; };
+		_LinkFileRef_CryptoEssentialsSwift2 /* CryptoEssentialsSwift2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentialsSwift2" /* CryptoEssentialsSwift2.dylib */; };
+		_LinkFileRef_CryptoEssentialsSwift3 /* CryptoEssentialsSwift3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentialsSwift3" /* CryptoEssentialsSwift3.dylib */; };
+		_LinkFileRef_HMAC /* HMAC.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_HMAC" /* HMAC.dylib */; };
+		_LinkFileRef_Hummingbird /* Hummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Hummingbird" /* Hummingbird.dylib */; };
+		_LinkFileRef_JSON /* JSON.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_JSON" /* JSON.dylib */; };
+		_LinkFileRef_S4 /* S4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_S4" /* S4.dylib */; };
+		_LinkFileRef_SHA2 /* SHA2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_SHA2" /* SHA2.dylib */; };
+		_LinkFileRef_Strand /* Strand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* Strand.dylib */; };
+		_LinkFileRef_String /* String.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_String" /* String.dylib */; };
+		_LinkFileRef_StructuredData /* StructuredData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_StructuredData" /* StructuredData.dylib */; };
+		_LinkFileRef_Vapor /* Vapor.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Vapor" /* Vapor.dylib */; };
+		_LinkFileRef_libc /* libc.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_libc" /* libc.dylib */; };
 		"__src_cc_ref_Packages/C7-0.6.0/Sources/AsyncConnection.swift" /* AsyncConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/C7-0.6.0/Sources/AsyncConnection.swift" /* AsyncConnection.swift */; };
 		"__src_cc_ref_Packages/C7-0.6.0/Sources/AsyncHost.swift" /* AsyncHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/C7-0.6.0/Sources/AsyncHost.swift" /* AsyncHost.swift */; };
 		"__src_cc_ref_Packages/C7-0.6.0/Sources/AsyncStream.swift" /* AsyncStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/C7-0.6.0/Sources/AsyncStream.swift" /* AsyncStream.swift */; };
@@ -179,7 +179,7 @@
 		"__src_cc_ref_Packages/S4-0.5.0/Sources/Version.swift" /* Version.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.5.0/Sources/Version.swift" /* Version.swift */; };
 		"__src_cc_ref_Packages/SHA2-0.5.1/Sources/SHA2.swift" /* SHA2.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/SHA2-0.5.1/Sources/SHA2.swift" /* SHA2.swift */; };
 		"__src_cc_ref_Packages/Strand-1.2.3/Sources/Strand.swift" /* Strand.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/Strand-1.2.3/Sources/Strand.swift" /* Strand.swift */; };
-		"__src_cc_ref_Packages/String-0.5.1/Source/String.swift" /* String.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/String-0.5.1/Source/String.swift" /* String.swift */; };
+		"__src_cc_ref_Packages/String-0.7.0/Source/String.swift" /* String.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/String-0.7.0/Source/String.swift" /* String.swift */; };
 		"__src_cc_ref_Packages/StructuredData-0.6.0/Sources/StructuredData.swift" /* StructuredData.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/StructuredData-0.6.0/Sources/StructuredData.swift" /* StructuredData.swift */; };
 		__src_cc_ref_Sources/Development/Controllers/UserController.swift /* Controllers/UserController.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Development/Controllers/UserController.swift /* Controllers/UserController.swift */; };
 		__src_cc_ref_Sources/Development/Middleware/AuthMiddleware.swift /* Middleware/AuthMiddleware.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Development/Middleware/AuthMiddleware.swift /* Middleware/AuthMiddleware.swift */; };
@@ -256,98 +256,98 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		1A4675971CDA431B005FAE7C /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = __RootObject_ /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = "______Target_C7";
-			remoteInfo = C7;
-		};
-		1A4675981CDA431B005FAE7C /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = __RootObject_ /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = "______Target_StructuredData";
-			remoteInfo = StructuredData;
-		};
-		1A4675991CDA431B005FAE7C /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = __RootObject_ /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = "______Target_Strand";
-			remoteInfo = Strand;
-		};
-		1A46759A1CDA431B005FAE7C /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = __RootObject_ /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = "______Target_CryptoEssentialsSwift2";
-			remoteInfo = CryptoEssentialsSwift2;
-		};
-		1A46759B1CDA431B005FAE7C /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = __RootObject_ /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = "______Target_CryptoEssentialsSwift3";
-			remoteInfo = CryptoEssentialsSwift3;
-		};
-		1A46759C1CDA431B005FAE7C /* PBXContainerItemProxy */ = {
+		C3EDECAD1CDAA51100028475 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = __RootObject_ /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = "______Target_CryptoEssentials";
 			remoteInfo = CryptoEssentials;
 		};
-		1A46759D1CDA431B005FAE7C /* PBXContainerItemProxy */ = {
+		C3EDECAE1CDAA51100028475 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = __RootObject_ /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = "______Target_CryptoEssentialsSwift2";
+			remoteInfo = CryptoEssentialsSwift2;
+		};
+		C3EDECAF1CDAA51100028475 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = __RootObject_ /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = "______Target_CryptoEssentialsSwift3";
+			remoteInfo = CryptoEssentialsSwift3;
+		};
+		C3EDECB01CDAA51100028475 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = __RootObject_ /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = "______Target_Strand";
+			remoteInfo = Strand;
+		};
+		C3EDECB11CDAA51100028475 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = __RootObject_ /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = "______Target_StructuredData";
+			remoteInfo = StructuredData;
+		};
+		C3EDECB21CDAA51100028475 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = __RootObject_ /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = "______Target_C7";
+			remoteInfo = C7;
+		};
+		C3EDECB31CDAA51100028475 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = __RootObject_ /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = "______Target_SHA2";
 			remoteInfo = SHA2;
 		};
-		1A46759E1CDA431B005FAE7C /* PBXContainerItemProxy */ = {
+		C3EDECB41CDAA51100028475 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = __RootObject_ /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = "______Target_HMAC";
 			remoteInfo = HMAC;
 		};
-		1A46759F1CDA431B005FAE7C /* PBXContainerItemProxy */ = {
+		C3EDECB51CDAA51100028475 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = __RootObject_ /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = "______Target_Hummingbird";
 			remoteInfo = Hummingbird;
 		};
-		1A4675A01CDA431B005FAE7C /* PBXContainerItemProxy */ = {
+		C3EDECB61CDAA51100028475 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = __RootObject_ /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = "______Target_JSON";
 			remoteInfo = JSON;
 		};
-		1A4675A11CDA431B005FAE7C /* PBXContainerItemProxy */ = {
+		C3EDECB71CDAA51100028475 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = __RootObject_ /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = "______Target_String";
 			remoteInfo = String;
 		};
-		1A4675A21CDA431B005FAE7C /* PBXContainerItemProxy */ = {
+		C3EDECB81CDAA51100028475 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = __RootObject_ /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = "______Target_S4";
 			remoteInfo = S4;
 		};
-		1A4675A31CDA431B005FAE7C /* PBXContainerItemProxy */ = {
+		C3EDECB91CDAA51100028475 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = __RootObject_ /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = "______Target_Vapor";
 			remoteInfo = Vapor;
 		};
-		1A4675A41CDA431B005FAE7C /* PBXContainerItemProxy */ = {
+		C3EDECBA1CDAA51100028475 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = __RootObject_ /* Project object */;
 			proxyType = 1;
@@ -357,7 +357,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		__PBXFileRef_Package.swift /* Package.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Package.swift; path = "/Users/james/Documents/vagrant-swift/vapor/Package.swift"; sourceTree = "<group>"; };
+		__PBXFileRef_Package.swift /* Package.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Package.swift; sourceTree = "<group>"; };
 		"__PBXFileRef_Packages/C7-0.6.0/Sources/AsyncConnection.swift" /* AsyncConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncConnection.swift; sourceTree = "<group>"; };
 		"__PBXFileRef_Packages/C7-0.6.0/Sources/AsyncHost.swift" /* AsyncHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncHost.swift; sourceTree = "<group>"; };
 		"__PBXFileRef_Packages/C7-0.6.0/Sources/AsyncStream.swift" /* AsyncStream.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncStream.swift; sourceTree = "<group>"; };
@@ -437,7 +437,7 @@
 		"__PBXFileRef_Packages/S4-0.5.0/Sources/Version.swift" /* Version.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Version.swift; sourceTree = "<group>"; };
 		"__PBXFileRef_Packages/SHA2-0.5.1/Sources/SHA2.swift" /* SHA2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SHA2.swift; sourceTree = "<group>"; };
 		"__PBXFileRef_Packages/Strand-1.2.3/Sources/Strand.swift" /* Strand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Strand.swift; sourceTree = "<group>"; };
-		"__PBXFileRef_Packages/String-0.5.1/Source/String.swift" /* String.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = String.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/String-0.7.0/Source/String.swift" /* String.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = String.swift; sourceTree = "<group>"; };
 		"__PBXFileRef_Packages/StructuredData-0.6.0/Sources/StructuredData.swift" /* StructuredData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StructuredData.swift; sourceTree = "<group>"; };
 		__PBXFileRef_Sources/Development/Controllers/UserController.swift /* Controllers/UserController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Controllers/UserController.swift; sourceTree = "<group>"; };
 		__PBXFileRef_Sources/Development/Middleware/AuthMiddleware.swift /* Middleware/AuthMiddleware.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Middleware/AuthMiddleware.swift; sourceTree = "<group>"; };
@@ -511,24 +511,25 @@
 		__PBXFileRef_Tests/Vapor/SessionTests.swift /* SessionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionTests.swift; sourceTree = "<group>"; };
 		__PBXFileRef_Tests/Vapor/TestHTTPStream.swift /* TestHTTPStream.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestHTTPStream.swift; sourceTree = "<group>"; };
 		__PBXFileRef_Tests/Vapor/TypedRouteTests.swift /* TypedRouteTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TypedRouteTests.swift; sourceTree = "<group>"; };
-		"_____Product_C7" /* libC7.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libC7.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
-		"_____Product_CryptoEssentials" /* libCryptoEssentials.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libCryptoEssentials.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
-		"_____Product_CryptoEssentialsSwift2" /* libCryptoEssentialsSwift2.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libCryptoEssentialsSwift2.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
-		"_____Product_CryptoEssentialsSwift3" /* libCryptoEssentialsSwift3.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libCryptoEssentialsSwift3.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		__PBXFileRef_Vapor.xcodeproj/Configs/Project.xcconfig /* Project.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Project.xcconfig; path = Vapor.xcodeproj/Configs/Project.xcconfig; sourceTree = "<group>"; };
+		"_____Product_C7" /* C7.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = C7.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		"_____Product_CryptoEssentials" /* CryptoEssentials.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = CryptoEssentials.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		"_____Product_CryptoEssentialsSwift2" /* CryptoEssentialsSwift2.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = CryptoEssentialsSwift2.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		"_____Product_CryptoEssentialsSwift3" /* CryptoEssentialsSwift3.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = CryptoEssentialsSwift3.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		"_____Product_Development" /* Development */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; path = Development; sourceTree = BUILT_PRODUCTS_DIR; };
 		"_____Product_Generator" /* Generator */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; path = Generator; sourceTree = BUILT_PRODUCTS_DIR; };
-		"_____Product_HMAC" /* libHMAC.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libHMAC.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
-		"_____Product_Hummingbird" /* libHummingbird.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libHummingbird.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
-		"_____Product_JSON" /* libJSON.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libJSON.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		"_____Product_HMAC" /* HMAC.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = HMAC.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		"_____Product_Hummingbird" /* Hummingbird.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = Hummingbird.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		"_____Product_JSON" /* JSON.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = JSON.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		"_____Product_Performance" /* Performance */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; path = Performance; sourceTree = BUILT_PRODUCTS_DIR; };
-		"_____Product_S4" /* libS4.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libS4.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
-		"_____Product_SHA2" /* libSHA2.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libSHA2.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
-		"_____Product_Strand" /* libStrand.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libStrand.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
-		"_____Product_String" /* libString.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libString.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
-		"_____Product_StructuredData" /* libStructuredData.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libStructuredData.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
-		"_____Product_Vapor" /* libVapor.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libVapor.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
-		"_____Product_VaporTestSuite" /* VaporTestSuite.xctest */ = {isa = PBXFileReference; lastKnownFileType = file; name = VaporTestSuite.xctest; path = Vapor.testsuite.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		"_____Product_libc" /* liblibc.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = liblibc.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		"_____Product_S4" /* S4.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = S4.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		"_____Product_SHA2" /* SHA2.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = SHA2.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		"_____Product_Strand" /* Strand.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = Strand.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		"_____Product_String" /* String.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = String.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		"_____Product_StructuredData" /* StructuredData.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = StructuredData.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		"_____Product_Vapor" /* Vapor.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = Vapor.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		"_____Product_VaporTestSuite" /* VaporTestSuite.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = VaporTestSuite.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		"_____Product_libc" /* libc.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libc.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -543,8 +544,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
-				_LinkFileRef_CryptoEssentialsSwift2 /* libCryptoEssentialsSwift2.dylib in Frameworks */,
-				_LinkFileRef_CryptoEssentialsSwift3 /* libCryptoEssentialsSwift3.dylib in Frameworks */,
+				_LinkFileRef_CryptoEssentialsSwift2 /* CryptoEssentialsSwift2.dylib in Frameworks */,
+				_LinkFileRef_CryptoEssentialsSwift3 /* CryptoEssentialsSwift3.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -566,20 +567,20 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
-				1A4675501CDA431B005FAE7C /* libCryptoEssentials.dylib in Frameworks */,
-				1A4675511CDA431B005FAE7C /* libCryptoEssentialsSwift2.dylib in Frameworks */,
-				1A4675521CDA431B005FAE7C /* libCryptoEssentialsSwift3.dylib in Frameworks */,
-				1A4675531CDA431B005FAE7C /* libStrand.dylib in Frameworks */,
-				1A4675541CDA431B005FAE7C /* libStructuredData.dylib in Frameworks */,
-				1A4675551CDA431B005FAE7C /* libC7.dylib in Frameworks */,
-				1A4675561CDA431B005FAE7C /* libSHA2.dylib in Frameworks */,
-				1A4675571CDA431B005FAE7C /* libHMAC.dylib in Frameworks */,
-				1A4675581CDA431B005FAE7C /* libHummingbird.dylib in Frameworks */,
-				1A4675591CDA431B005FAE7C /* libJSON.dylib in Frameworks */,
-				1A46755A1CDA431B005FAE7C /* libString.dylib in Frameworks */,
-				1A46755B1CDA431B005FAE7C /* libS4.dylib in Frameworks */,
-				_LinkFileRef_Vapor /* libVapor.dylib in Frameworks */,
-				1A46755C1CDA431B005FAE7C /* liblibc.dylib in Frameworks */,
+				C3EDEC661CDAA51100028475 /* CryptoEssentials.dylib in Frameworks */,
+				C3EDEC671CDAA51100028475 /* CryptoEssentialsSwift2.dylib in Frameworks */,
+				C3EDEC681CDAA51100028475 /* CryptoEssentialsSwift3.dylib in Frameworks */,
+				C3EDEC691CDAA51100028475 /* Strand.dylib in Frameworks */,
+				C3EDEC6A1CDAA51100028475 /* StructuredData.dylib in Frameworks */,
+				C3EDEC6B1CDAA51100028475 /* C7.dylib in Frameworks */,
+				C3EDEC6C1CDAA51100028475 /* SHA2.dylib in Frameworks */,
+				C3EDEC6D1CDAA51100028475 /* HMAC.dylib in Frameworks */,
+				C3EDEC6E1CDAA51100028475 /* Hummingbird.dylib in Frameworks */,
+				C3EDEC6F1CDAA51100028475 /* JSON.dylib in Frameworks */,
+				C3EDEC701CDAA51100028475 /* String.dylib in Frameworks */,
+				C3EDEC711CDAA51100028475 /* S4.dylib in Frameworks */,
+				_LinkFileRef_Vapor /* Vapor.dylib in Frameworks */,
+				C3EDEC721CDAA51100028475 /* libc.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -587,18 +588,18 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
-				1A46756F1CDA431B005FAE7C /* libCryptoEssentials.dylib in Frameworks */,
-				1A4675701CDA431B005FAE7C /* libCryptoEssentialsSwift2.dylib in Frameworks */,
-				1A4675711CDA431B005FAE7C /* libCryptoEssentialsSwift3.dylib in Frameworks */,
-				1A4675721CDA431B005FAE7C /* libStrand.dylib in Frameworks */,
-				1A4675731CDA431B005FAE7C /* libStructuredData.dylib in Frameworks */,
-				1A4675741CDA431B005FAE7C /* libC7.dylib in Frameworks */,
-				1A4675751CDA431B005FAE7C /* libSHA2.dylib in Frameworks */,
-				1A4675761CDA431B005FAE7C /* libHMAC.dylib in Frameworks */,
-				1A4675771CDA431B005FAE7C /* libHummingbird.dylib in Frameworks */,
-				1A4675781CDA431B005FAE7C /* libJSON.dylib in Frameworks */,
-				1A4675791CDA431B005FAE7C /* libString.dylib in Frameworks */,
-				1A46757A1CDA431B005FAE7C /* libS4.dylib in Frameworks */,
+				C3EDEC851CDAA51100028475 /* CryptoEssentials.dylib in Frameworks */,
+				C3EDEC861CDAA51100028475 /* CryptoEssentialsSwift2.dylib in Frameworks */,
+				C3EDEC871CDAA51100028475 /* CryptoEssentialsSwift3.dylib in Frameworks */,
+				C3EDEC881CDAA51100028475 /* Strand.dylib in Frameworks */,
+				C3EDEC891CDAA51100028475 /* StructuredData.dylib in Frameworks */,
+				C3EDEC8A1CDAA51100028475 /* C7.dylib in Frameworks */,
+				C3EDEC8B1CDAA51100028475 /* SHA2.dylib in Frameworks */,
+				C3EDEC8C1CDAA51100028475 /* HMAC.dylib in Frameworks */,
+				C3EDEC8D1CDAA51100028475 /* Hummingbird.dylib in Frameworks */,
+				C3EDEC8E1CDAA51100028475 /* JSON.dylib in Frameworks */,
+				C3EDEC8F1CDAA51100028475 /* String.dylib in Frameworks */,
+				C3EDEC901CDAA51100028475 /* S4.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -606,9 +607,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
-				_LinkFileRef_CryptoEssentials /* libCryptoEssentials.dylib in Frameworks */,
-				1A46754B1CDA431B005FAE7C /* libCryptoEssentialsSwift2.dylib in Frameworks */,
-				1A46754C1CDA431B005FAE7C /* libCryptoEssentialsSwift3.dylib in Frameworks */,
+				_LinkFileRef_CryptoEssentials /* CryptoEssentials.dylib in Frameworks */,
+				C3EDEC611CDAA51100028475 /* CryptoEssentialsSwift2.dylib in Frameworks */,
+				C3EDEC621CDAA51100028475 /* CryptoEssentialsSwift3.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -616,8 +617,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
-				1A46754A1CDA431B005FAE7C /* libC7.dylib in Frameworks */,
-				_LinkFileRef_Strand /* libStrand.dylib in Frameworks */,
+				C3EDEC601CDAA51100028475 /* C7.dylib in Frameworks */,
+				_LinkFileRef_Strand /* Strand.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -625,8 +626,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
-				1A4675491CDA431B005FAE7C /* libC7.dylib in Frameworks */,
-				_LinkFileRef_StructuredData /* libStructuredData.dylib in Frameworks */,
+				C3EDEC5F1CDAA51100028475 /* C7.dylib in Frameworks */,
+				_LinkFileRef_StructuredData /* StructuredData.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -634,20 +635,20 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
-				1A46757B1CDA431B005FAE7C /* libCryptoEssentials.dylib in Frameworks */,
-				1A46757C1CDA431B005FAE7C /* libCryptoEssentialsSwift2.dylib in Frameworks */,
-				1A46757D1CDA431B005FAE7C /* libCryptoEssentialsSwift3.dylib in Frameworks */,
-				1A46757E1CDA431B005FAE7C /* libStrand.dylib in Frameworks */,
-				1A46757F1CDA431B005FAE7C /* libStructuredData.dylib in Frameworks */,
-				1A4675801CDA431B005FAE7C /* libC7.dylib in Frameworks */,
-				1A4675811CDA431B005FAE7C /* libSHA2.dylib in Frameworks */,
-				1A4675821CDA431B005FAE7C /* libHMAC.dylib in Frameworks */,
-				1A4675831CDA431B005FAE7C /* libHummingbird.dylib in Frameworks */,
-				1A4675841CDA431B005FAE7C /* libJSON.dylib in Frameworks */,
-				1A4675851CDA431B005FAE7C /* libString.dylib in Frameworks */,
-				1A4675861CDA431B005FAE7C /* libS4.dylib in Frameworks */,
-				1A4675871CDA431B005FAE7C /* libVapor.dylib in Frameworks */,
-				1A4675881CDA431B005FAE7C /* liblibc.dylib in Frameworks */,
+				C3EDEC911CDAA51100028475 /* CryptoEssentials.dylib in Frameworks */,
+				C3EDEC921CDAA51100028475 /* CryptoEssentialsSwift2.dylib in Frameworks */,
+				C3EDEC931CDAA51100028475 /* CryptoEssentialsSwift3.dylib in Frameworks */,
+				C3EDEC941CDAA51100028475 /* Strand.dylib in Frameworks */,
+				C3EDEC951CDAA51100028475 /* StructuredData.dylib in Frameworks */,
+				C3EDEC961CDAA51100028475 /* C7.dylib in Frameworks */,
+				C3EDEC971CDAA51100028475 /* SHA2.dylib in Frameworks */,
+				C3EDEC981CDAA51100028475 /* HMAC.dylib in Frameworks */,
+				C3EDEC991CDAA51100028475 /* Hummingbird.dylib in Frameworks */,
+				C3EDEC9A1CDAA51100028475 /* JSON.dylib in Frameworks */,
+				C3EDEC9B1CDAA51100028475 /* String.dylib in Frameworks */,
+				C3EDEC9C1CDAA51100028475 /* S4.dylib in Frameworks */,
+				C3EDEC9D1CDAA51100028475 /* Vapor.dylib in Frameworks */,
+				C3EDEC9E1CDAA51100028475 /* libc.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -655,7 +656,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
-				_LinkFileRef_C7 /* libC7.dylib in Frameworks */,
+				_LinkFileRef_C7 /* C7.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -663,9 +664,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
-				1A46754D1CDA431B005FAE7C /* libCryptoEssentials.dylib in Frameworks */,
-				1A46754E1CDA431B005FAE7C /* libCryptoEssentialsSwift2.dylib in Frameworks */,
-				1A46754F1CDA431B005FAE7C /* libCryptoEssentialsSwift3.dylib in Frameworks */,
+				C3EDEC631CDAA51100028475 /* CryptoEssentials.dylib in Frameworks */,
+				C3EDEC641CDAA51100028475 /* CryptoEssentialsSwift2.dylib in Frameworks */,
+				C3EDEC651CDAA51100028475 /* CryptoEssentialsSwift3.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -687,7 +688,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
-				1A4675481CDA431B005FAE7C /* libC7.dylib in Frameworks */,
+				C3EDEC5E1CDAA51100028475 /* C7.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -695,19 +696,19 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
-				1A46755D1CDA431B005FAE7C /* libCryptoEssentials.dylib in Frameworks */,
-				1A46755E1CDA431B005FAE7C /* libCryptoEssentialsSwift2.dylib in Frameworks */,
-				1A46755F1CDA431B005FAE7C /* libCryptoEssentialsSwift3.dylib in Frameworks */,
-				1A4675601CDA431B005FAE7C /* libStrand.dylib in Frameworks */,
-				1A4675611CDA431B005FAE7C /* libStructuredData.dylib in Frameworks */,
-				1A4675621CDA431B005FAE7C /* libC7.dylib in Frameworks */,
-				1A4675631CDA431B005FAE7C /* libSHA2.dylib in Frameworks */,
-				1A4675641CDA431B005FAE7C /* libHMAC.dylib in Frameworks */,
-				1A4675651CDA431B005FAE7C /* libHummingbird.dylib in Frameworks */,
-				1A4675661CDA431B005FAE7C /* libJSON.dylib in Frameworks */,
-				1A4675671CDA431B005FAE7C /* libString.dylib in Frameworks */,
-				1A4675681CDA431B005FAE7C /* libS4.dylib in Frameworks */,
-				_LinkFileRef_libc /* liblibc.dylib in Frameworks */,
+				C3EDEC731CDAA51100028475 /* CryptoEssentials.dylib in Frameworks */,
+				C3EDEC741CDAA51100028475 /* CryptoEssentialsSwift2.dylib in Frameworks */,
+				C3EDEC751CDAA51100028475 /* CryptoEssentialsSwift3.dylib in Frameworks */,
+				C3EDEC761CDAA51100028475 /* Strand.dylib in Frameworks */,
+				C3EDEC771CDAA51100028475 /* StructuredData.dylib in Frameworks */,
+				C3EDEC781CDAA51100028475 /* C7.dylib in Frameworks */,
+				C3EDEC791CDAA51100028475 /* SHA2.dylib in Frameworks */,
+				C3EDEC7A1CDAA51100028475 /* HMAC.dylib in Frameworks */,
+				C3EDEC7B1CDAA51100028475 /* Hummingbird.dylib in Frameworks */,
+				C3EDEC7C1CDAA51100028475 /* JSON.dylib in Frameworks */,
+				C3EDEC7D1CDAA51100028475 /* String.dylib in Frameworks */,
+				C3EDEC7E1CDAA51100028475 /* S4.dylib in Frameworks */,
+				_LinkFileRef_libc /* libc.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -715,20 +716,20 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
-				1A4675891CDA431B005FAE7C /* libCryptoEssentials.dylib in Frameworks */,
-				1A46758A1CDA431B005FAE7C /* libCryptoEssentialsSwift2.dylib in Frameworks */,
-				1A46758B1CDA431B005FAE7C /* libCryptoEssentialsSwift3.dylib in Frameworks */,
-				1A46758C1CDA431B005FAE7C /* libStrand.dylib in Frameworks */,
-				1A46758D1CDA431B005FAE7C /* libStructuredData.dylib in Frameworks */,
-				1A46758E1CDA431B005FAE7C /* libC7.dylib in Frameworks */,
-				1A46758F1CDA431B005FAE7C /* libSHA2.dylib in Frameworks */,
-				1A4675901CDA431B005FAE7C /* libHMAC.dylib in Frameworks */,
-				1A4675911CDA431B005FAE7C /* libHummingbird.dylib in Frameworks */,
-				1A4675921CDA431B005FAE7C /* libJSON.dylib in Frameworks */,
-				1A4675931CDA431B005FAE7C /* libString.dylib in Frameworks */,
-				1A4675941CDA431B005FAE7C /* libS4.dylib in Frameworks */,
-				1A4675951CDA431B005FAE7C /* libVapor.dylib in Frameworks */,
-				1A4675961CDA431B005FAE7C /* liblibc.dylib in Frameworks */,
+				C3EDEC9F1CDAA51100028475 /* CryptoEssentials.dylib in Frameworks */,
+				C3EDECA01CDAA51100028475 /* CryptoEssentialsSwift2.dylib in Frameworks */,
+				C3EDECA11CDAA51100028475 /* CryptoEssentialsSwift3.dylib in Frameworks */,
+				C3EDECA21CDAA51100028475 /* Strand.dylib in Frameworks */,
+				C3EDECA31CDAA51100028475 /* StructuredData.dylib in Frameworks */,
+				C3EDECA41CDAA51100028475 /* C7.dylib in Frameworks */,
+				C3EDECA51CDAA51100028475 /* SHA2.dylib in Frameworks */,
+				C3EDECA61CDAA51100028475 /* HMAC.dylib in Frameworks */,
+				C3EDECA71CDAA51100028475 /* Hummingbird.dylib in Frameworks */,
+				C3EDECA81CDAA51100028475 /* JSON.dylib in Frameworks */,
+				C3EDECA91CDAA51100028475 /* String.dylib in Frameworks */,
+				C3EDECAA1CDAA51100028475 /* S4.dylib in Frameworks */,
+				C3EDECAB1CDAA51100028475 /* Vapor.dylib in Frameworks */,
+				C3EDECAC1CDAA51100028475 /* libc.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -736,18 +737,18 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
-				1A4675691CDA431B005FAE7C /* libCryptoEssentials.dylib in Frameworks */,
-				1A46756A1CDA431B005FAE7C /* libCryptoEssentialsSwift2.dylib in Frameworks */,
-				1A46756B1CDA431B005FAE7C /* libCryptoEssentialsSwift3.dylib in Frameworks */,
-				1A46756C1CDA431B005FAE7C /* libStrand.dylib in Frameworks */,
-				1A46756D1CDA431B005FAE7C /* libStructuredData.dylib in Frameworks */,
-				1A46756E1CDA431B005FAE7C /* libC7.dylib in Frameworks */,
-				_LinkFileRef_SHA2 /* libSHA2.dylib in Frameworks */,
-				_LinkFileRef_HMAC /* libHMAC.dylib in Frameworks */,
-				_LinkFileRef_Hummingbird /* libHummingbird.dylib in Frameworks */,
-				_LinkFileRef_JSON /* libJSON.dylib in Frameworks */,
-				_LinkFileRef_String /* libString.dylib in Frameworks */,
-				_LinkFileRef_S4 /* libS4.dylib in Frameworks */,
+				C3EDEC7F1CDAA51100028475 /* CryptoEssentials.dylib in Frameworks */,
+				C3EDEC801CDAA51100028475 /* CryptoEssentialsSwift2.dylib in Frameworks */,
+				C3EDEC811CDAA51100028475 /* CryptoEssentialsSwift3.dylib in Frameworks */,
+				C3EDEC821CDAA51100028475 /* Strand.dylib in Frameworks */,
+				C3EDEC831CDAA51100028475 /* StructuredData.dylib in Frameworks */,
+				C3EDEC841CDAA51100028475 /* C7.dylib in Frameworks */,
+				_LinkFileRef_SHA2 /* SHA2.dylib in Frameworks */,
+				_LinkFileRef_HMAC /* HMAC.dylib in Frameworks */,
+				_LinkFileRef_Hummingbird /* Hummingbird.dylib in Frameworks */,
+				_LinkFileRef_JSON /* JSON.dylib in Frameworks */,
+				_LinkFileRef_String /* String.dylib in Frameworks */,
+				_LinkFileRef_S4 /* S4.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -785,6 +786,7 @@
 			isa = PBXGroup;
 			children = (
 				__PBXFileRef_Package.swift /* Package.swift */,
+				"_____Configs_" /* Configs */,
 				"_____Sources_" /* Sources */,
 				Dependencies_ /* Dependencies */,
 				"_______Tests_" /* Tests */,
@@ -796,25 +798,33 @@
 			isa = PBXGroup;
 			children = (
 				TestProducts_ /* Tests */,
-				"_____Product_C7" /* libC7.dylib */,
-				"_____Product_S4" /* libS4.dylib */,
-				"_____Product_String" /* libString.dylib */,
-				"_____Product_StructuredData" /* libStructuredData.dylib */,
-				"_____Product_JSON" /* libJSON.dylib */,
-				"_____Product_Strand" /* libStrand.dylib */,
-				"_____Product_Hummingbird" /* libHummingbird.dylib */,
-				"_____Product_CryptoEssentials" /* libCryptoEssentials.dylib */,
-				"_____Product_CryptoEssentialsSwift2" /* libCryptoEssentialsSwift2.dylib */,
-				"_____Product_CryptoEssentialsSwift3" /* libCryptoEssentialsSwift3.dylib */,
-				"_____Product_HMAC" /* libHMAC.dylib */,
-				"_____Product_SHA2" /* libSHA2.dylib */,
+				"_____Product_C7" /* C7.dylib */,
+				"_____Product_S4" /* S4.dylib */,
+				"_____Product_String" /* String.dylib */,
+				"_____Product_StructuredData" /* StructuredData.dylib */,
+				"_____Product_JSON" /* JSON.dylib */,
+				"_____Product_Strand" /* Strand.dylib */,
+				"_____Product_Hummingbird" /* Hummingbird.dylib */,
+				"_____Product_CryptoEssentials" /* CryptoEssentials.dylib */,
+				"_____Product_CryptoEssentialsSwift2" /* CryptoEssentialsSwift2.dylib */,
+				"_____Product_CryptoEssentialsSwift3" /* CryptoEssentialsSwift3.dylib */,
+				"_____Product_HMAC" /* HMAC.dylib */,
+				"_____Product_SHA2" /* SHA2.dylib */,
 				"_____Product_Development" /* Development */,
 				"_____Product_Generator" /* Generator */,
-				"_____Product_libc" /* liblibc.dylib */,
+				"_____Product_libc" /* libc.dylib */,
 				"_____Product_Performance" /* Performance */,
-				"_____Product_Vapor" /* libVapor.dylib */,
+				"_____Product_Vapor" /* Vapor.dylib */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		"_____Configs_" /* Configs */ = {
+			isa = PBXGroup;
+			children = (
+				__PBXFileRef_Vapor.xcodeproj/Configs/Project.xcconfig /* Project.xcconfig */,
+			);
+			name = Configs;
 			sourceTree = "<group>";
 		};
 		"_____Sources_" /* Sources */ = {
@@ -1021,10 +1031,10 @@
 		"_______Group_String" /* String */ = {
 			isa = PBXGroup;
 			children = (
-				"__PBXFileRef_Packages/String-0.5.1/Source/String.swift" /* String.swift */,
+				"__PBXFileRef_Packages/String-0.7.0/Source/String.swift" /* String.swift */,
 			);
 			name = String;
-			path = "Packages/String-0.5.1/Source";
+			path = "Packages/String-0.7.0/Source";
 			sourceTree = "<group>";
 		};
 		"_______Group_StructuredData" /* StructuredData */ = {
@@ -1092,7 +1102,7 @@
 			path = Sources/Vapor;
 			sourceTree = "<group>";
 		};
-		"_______Group_VaporTestSuite" /* Vapor.testsuite */ = {
+		"_______Group_VaporTestSuite" /* VaporTestSuite */ = {
 			isa = PBXGroup;
 			children = (
 				__PBXFileRef_Tests/Vapor/ConfigTests.swift /* ConfigTests.swift */,
@@ -1113,7 +1123,7 @@
 				__PBXFileRef_Tests/Vapor/TestHTTPStream.swift /* TestHTTPStream.swift */,
 				__PBXFileRef_Tests/Vapor/TypedRouteTests.swift /* TypedRouteTests.swift */,
 			);
-			name = Vapor.testsuite;
+			name = VaporTestSuite;
 			path = Tests/Vapor;
 			sourceTree = "<group>";
 		};
@@ -1129,7 +1139,7 @@
 		"_______Tests_" /* Tests */ = {
 			isa = PBXGroup;
 			children = (
-				"_______Group_VaporTestSuite" /* Vapor.testsuite */,
+				"_______Group_VaporTestSuite" /* VaporTestSuite */,
 			);
 			name = Tests;
 			sourceTree = "<group>";
@@ -1150,7 +1160,7 @@
 			);
 			name = C7;
 			productName = C7;
-			productReference = "_____Product_C7" /* libC7.dylib */;
+			productReference = "_____Product_C7" /* C7.dylib */;
 			productType = "com.apple.product-type.library.dynamic";
 		};
 		"______Target_CryptoEssentials" /* CryptoEssentials */ = {
@@ -1168,7 +1178,7 @@
 			);
 			name = CryptoEssentials;
 			productName = CryptoEssentials;
-			productReference = "_____Product_CryptoEssentials" /* libCryptoEssentials.dylib */;
+			productReference = "_____Product_CryptoEssentials" /* CryptoEssentials.dylib */;
 			productType = "com.apple.product-type.library.dynamic";
 		};
 		"______Target_CryptoEssentialsSwift2" /* CryptoEssentialsSwift2 */ = {
@@ -1184,7 +1194,7 @@
 			);
 			name = CryptoEssentialsSwift2;
 			productName = CryptoEssentialsSwift2;
-			productReference = "_____Product_CryptoEssentialsSwift2" /* libCryptoEssentialsSwift2.dylib */;
+			productReference = "_____Product_CryptoEssentialsSwift2" /* CryptoEssentialsSwift2.dylib */;
 			productType = "com.apple.product-type.library.dynamic";
 		};
 		"______Target_CryptoEssentialsSwift3" /* CryptoEssentialsSwift3 */ = {
@@ -1200,7 +1210,7 @@
 			);
 			name = CryptoEssentialsSwift3;
 			productName = CryptoEssentialsSwift3;
-			productReference = "_____Product_CryptoEssentialsSwift3" /* libCryptoEssentialsSwift3.dylib */;
+			productReference = "_____Product_CryptoEssentialsSwift3" /* CryptoEssentialsSwift3.dylib */;
 			productType = "com.apple.product-type.library.dynamic";
 		};
 		"______Target_Development" /* Development */ = {
@@ -1276,7 +1286,7 @@
 			);
 			name = HMAC;
 			productName = HMAC;
-			productReference = "_____Product_HMAC" /* libHMAC.dylib */;
+			productReference = "_____Product_HMAC" /* HMAC.dylib */;
 			productType = "com.apple.product-type.library.dynamic";
 		};
 		"______Target_Hummingbird" /* Hummingbird */ = {
@@ -1294,7 +1304,7 @@
 			);
 			name = Hummingbird;
 			productName = Hummingbird;
-			productReference = "_____Product_Hummingbird" /* libHummingbird.dylib */;
+			productReference = "_____Product_Hummingbird" /* Hummingbird.dylib */;
 			productType = "com.apple.product-type.library.dynamic";
 		};
 		"______Target_JSON" /* JSON */ = {
@@ -1312,7 +1322,7 @@
 			);
 			name = JSON;
 			productName = JSON;
-			productReference = "_____Product_JSON" /* libJSON.dylib */;
+			productReference = "_____Product_JSON" /* JSON.dylib */;
 			productType = "com.apple.product-type.library.dynamic";
 		};
 		"______Target_Performance" /* Performance */ = {
@@ -1358,7 +1368,7 @@
 			);
 			name = S4;
 			productName = S4;
-			productReference = "_____Product_S4" /* libS4.dylib */;
+			productReference = "_____Product_S4" /* S4.dylib */;
 			productType = "com.apple.product-type.library.dynamic";
 		};
 		"______Target_SHA2" /* SHA2 */ = {
@@ -1377,7 +1387,7 @@
 			);
 			name = SHA2;
 			productName = SHA2;
-			productReference = "_____Product_SHA2" /* libSHA2.dylib */;
+			productReference = "_____Product_SHA2" /* SHA2.dylib */;
 			productType = "com.apple.product-type.library.dynamic";
 		};
 		"______Target_Strand" /* Strand */ = {
@@ -1393,7 +1403,7 @@
 			);
 			name = Strand;
 			productName = Strand;
-			productReference = "_____Product_Strand" /* libStrand.dylib */;
+			productReference = "_____Product_Strand" /* Strand.dylib */;
 			productType = "com.apple.product-type.library.dynamic";
 		};
 		"______Target_String" /* String */ = {
@@ -1409,7 +1419,7 @@
 			);
 			name = String;
 			productName = String;
-			productReference = "_____Product_String" /* libString.dylib */;
+			productReference = "_____Product_String" /* String.dylib */;
 			productType = "com.apple.product-type.library.dynamic";
 		};
 		"______Target_StructuredData" /* StructuredData */ = {
@@ -1426,7 +1436,7 @@
 			);
 			name = StructuredData;
 			productName = StructuredData;
-			productReference = "_____Product_StructuredData" /* libStructuredData.dylib */;
+			productReference = "_____Product_StructuredData" /* StructuredData.dylib */;
 			productType = "com.apple.product-type.library.dynamic";
 		};
 		"______Target_Vapor" /* Vapor */ = {
@@ -1455,12 +1465,12 @@
 			);
 			name = Vapor;
 			productName = Vapor;
-			productReference = "_____Product_Vapor" /* libVapor.dylib */;
+			productReference = "_____Product_Vapor" /* Vapor.dylib */;
 			productType = "com.apple.product-type.library.dynamic";
 		};
-		"______Target_VaporTestSuite" /* Vapor.testsuite */ = {
+		"______Target_VaporTestSuite" /* VaporTestSuite */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = "_______Confs_VaporTestSuite" /* Build configuration list for PBXNativeTarget "Vapor.testsuite" */;
+			buildConfigurationList = "_______Confs_VaporTestSuite" /* Build configuration list for PBXNativeTarget "VaporTestSuite" */;
 			buildPhases = (
 				CompilePhase_VaporTestSuite /* Sources */,
 				"___LinkPhase_VaporTestSuite" /* Frameworks */,
@@ -1482,7 +1492,7 @@
 				__Dependency_S4 /* PBXTargetDependency */,
 				__Dependency_Vapor /* PBXTargetDependency */,
 			);
-			name = Vapor.testsuite;
+			name = VaporTestSuite;
 			productName = VaporTestSuite;
 			productReference = "_____Product_VaporTestSuite" /* VaporTestSuite.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
@@ -1512,7 +1522,7 @@
 			);
 			name = libc;
 			productName = libc;
-			productReference = "_____Product_libc" /* liblibc.dylib */;
+			productReference = "_____Product_libc" /* libc.dylib */;
 			productType = "com.apple.product-type.library.dynamic";
 		};
 /* End PBXNativeTarget section */
@@ -1552,7 +1562,7 @@
 				"______Target_libc" /* libc */,
 				"______Target_Performance" /* Performance */,
 				"______Target_Vapor" /* Vapor */,
-				"______Target_VaporTestSuite" /* Vapor.testsuite */,
+				"______Target_VaporTestSuite" /* VaporTestSuite */,
 			);
 		};
 /* End PBXProject section */
@@ -1738,7 +1748,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 0;
 			files = (
-				"__src_cc_ref_Packages/String-0.5.1/Source/String.swift" /* String.swift in Sources */,
+				"__src_cc_ref_Packages/String-0.7.0/Source/String.swift" /* String.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1843,72 +1853,72 @@
 		__Dependency_C7 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_C7" /* C7 */;
-			targetProxy = 1A4675971CDA431B005FAE7C /* PBXContainerItemProxy */;
+			targetProxy = C3EDECB21CDAA51100028475 /* PBXContainerItemProxy */;
 		};
 		__Dependency_CryptoEssentials /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_CryptoEssentials" /* CryptoEssentials */;
-			targetProxy = 1A46759C1CDA431B005FAE7C /* PBXContainerItemProxy */;
+			targetProxy = C3EDECAD1CDAA51100028475 /* PBXContainerItemProxy */;
 		};
 		__Dependency_CryptoEssentialsSwift2 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_CryptoEssentialsSwift2" /* CryptoEssentialsSwift2 */;
-			targetProxy = 1A46759A1CDA431B005FAE7C /* PBXContainerItemProxy */;
+			targetProxy = C3EDECAE1CDAA51100028475 /* PBXContainerItemProxy */;
 		};
 		__Dependency_CryptoEssentialsSwift3 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_CryptoEssentialsSwift3" /* CryptoEssentialsSwift3 */;
-			targetProxy = 1A46759B1CDA431B005FAE7C /* PBXContainerItemProxy */;
+			targetProxy = C3EDECAF1CDAA51100028475 /* PBXContainerItemProxy */;
 		};
 		__Dependency_HMAC /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_HMAC" /* HMAC */;
-			targetProxy = 1A46759E1CDA431B005FAE7C /* PBXContainerItemProxy */;
+			targetProxy = C3EDECB41CDAA51100028475 /* PBXContainerItemProxy */;
 		};
 		__Dependency_Hummingbird /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_Hummingbird" /* Hummingbird */;
-			targetProxy = 1A46759F1CDA431B005FAE7C /* PBXContainerItemProxy */;
+			targetProxy = C3EDECB51CDAA51100028475 /* PBXContainerItemProxy */;
 		};
 		__Dependency_JSON /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_JSON" /* JSON */;
-			targetProxy = 1A4675A01CDA431B005FAE7C /* PBXContainerItemProxy */;
+			targetProxy = C3EDECB61CDAA51100028475 /* PBXContainerItemProxy */;
 		};
 		__Dependency_S4 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_S4" /* S4 */;
-			targetProxy = 1A4675A21CDA431B005FAE7C /* PBXContainerItemProxy */;
+			targetProxy = C3EDECB81CDAA51100028475 /* PBXContainerItemProxy */;
 		};
 		__Dependency_SHA2 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_SHA2" /* SHA2 */;
-			targetProxy = 1A46759D1CDA431B005FAE7C /* PBXContainerItemProxy */;
+			targetProxy = C3EDECB31CDAA51100028475 /* PBXContainerItemProxy */;
 		};
 		__Dependency_Strand /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_Strand" /* Strand */;
-			targetProxy = 1A4675991CDA431B005FAE7C /* PBXContainerItemProxy */;
+			targetProxy = C3EDECB01CDAA51100028475 /* PBXContainerItemProxy */;
 		};
 		__Dependency_String /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_String" /* String */;
-			targetProxy = 1A4675A11CDA431B005FAE7C /* PBXContainerItemProxy */;
+			targetProxy = C3EDECB71CDAA51100028475 /* PBXContainerItemProxy */;
 		};
 		__Dependency_StructuredData /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_StructuredData" /* StructuredData */;
-			targetProxy = 1A4675981CDA431B005FAE7C /* PBXContainerItemProxy */;
+			targetProxy = C3EDECB11CDAA51100028475 /* PBXContainerItemProxy */;
 		};
 		__Dependency_Vapor /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_Vapor" /* Vapor */;
-			targetProxy = 1A4675A31CDA431B005FAE7C /* PBXContainerItemProxy */;
+			targetProxy = C3EDECB91CDAA51100028475 /* PBXContainerItemProxy */;
 		};
 		__Dependency_libc /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_libc" /* libc */;
-			targetProxy = 1A4675A41CDA431B005FAE7C /* PBXContainerItemProxy */;
+			targetProxy = C3EDECBA1CDAA51100028475 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -1916,78 +1926,39 @@
 		_ReleaseConf_C7 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
-				DYLIB_INSTALL_NAME_BASE = "$(CONFIGURATION_BUILD_DIR)";
 				ENABLE_TESTABILITY = YES;
 				LD_RUNPATH_SEARCH_PATHS = "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_SWIFT_FLAGS = "-DXcode";
-				PRODUCT_MODULE_NAME = C7;
-				PRODUCT_NAME = "lib$(TARGET_NAME)";
 			};
 			name = Release;
 		};
 		_ReleaseConf_CryptoEssentials /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
-				DYLIB_INSTALL_NAME_BASE = "$(CONFIGURATION_BUILD_DIR)";
 				ENABLE_TESTABILITY = YES;
 				LD_RUNPATH_SEARCH_PATHS = "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_SWIFT_FLAGS = "-DXcode";
-				PRODUCT_MODULE_NAME = CryptoEssentials;
-				PRODUCT_NAME = "lib$(TARGET_NAME)";
 			};
 			name = Release;
 		};
 		_ReleaseConf_CryptoEssentialsSwift2 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
-				DYLIB_INSTALL_NAME_BASE = "$(CONFIGURATION_BUILD_DIR)";
 				ENABLE_TESTABILITY = YES;
 				LD_RUNPATH_SEARCH_PATHS = "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_SWIFT_FLAGS = "-DXcode";
-				PRODUCT_MODULE_NAME = CryptoEssentialsSwift2;
-				PRODUCT_NAME = "lib$(TARGET_NAME)";
 			};
 			name = Release;
 		};
 		_ReleaseConf_CryptoEssentialsSwift3 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
-				DYLIB_INSTALL_NAME_BASE = "$(CONFIGURATION_BUILD_DIR)";
 				ENABLE_TESTABILITY = YES;
 				LD_RUNPATH_SEARCH_PATHS = "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_SWIFT_FLAGS = "-DXcode";
-				PRODUCT_MODULE_NAME = CryptoEssentialsSwift3;
-				PRODUCT_NAME = "lib$(TARGET_NAME)";
 			};
 			name = Release;
 		};
 		_ReleaseConf_Development /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
 				LD_RUNPATH_SEARCH_PATHS = "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_SWIFT_FLAGS = "-DXcode";
-				PRODUCT_MODULE_NAME = Development;
-				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_FORCE_DYNAMIC_LINK_STDLIB = YES;
 				SWIFT_FORCE_STATIC_LINK_STDLIB = NO;
 			};
@@ -1996,14 +1967,7 @@
 		_ReleaseConf_Generator /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
 				LD_RUNPATH_SEARCH_PATHS = "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_SWIFT_FLAGS = "-DXcode";
-				PRODUCT_MODULE_NAME = Generator;
-				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_FORCE_DYNAMIC_LINK_STDLIB = YES;
 				SWIFT_FORCE_STATIC_LINK_STDLIB = NO;
 			};
@@ -2012,62 +1976,31 @@
 		_ReleaseConf_HMAC /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
-				DYLIB_INSTALL_NAME_BASE = "$(CONFIGURATION_BUILD_DIR)";
 				ENABLE_TESTABILITY = YES;
 				LD_RUNPATH_SEARCH_PATHS = "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_SWIFT_FLAGS = "-DXcode";
-				PRODUCT_MODULE_NAME = HMAC;
-				PRODUCT_NAME = "lib$(TARGET_NAME)";
 			};
 			name = Release;
 		};
 		_ReleaseConf_Hummingbird /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
-				DYLIB_INSTALL_NAME_BASE = "$(CONFIGURATION_BUILD_DIR)";
 				ENABLE_TESTABILITY = YES;
 				LD_RUNPATH_SEARCH_PATHS = "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_SWIFT_FLAGS = "-DXcode";
-				PRODUCT_MODULE_NAME = Hummingbird;
-				PRODUCT_NAME = "lib$(TARGET_NAME)";
 			};
 			name = Release;
 		};
 		_ReleaseConf_JSON /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
-				DYLIB_INSTALL_NAME_BASE = "$(CONFIGURATION_BUILD_DIR)";
 				ENABLE_TESTABILITY = YES;
 				LD_RUNPATH_SEARCH_PATHS = "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_SWIFT_FLAGS = "-DXcode";
-				PRODUCT_MODULE_NAME = JSON;
-				PRODUCT_NAME = "lib$(TARGET_NAME)";
 			};
 			name = Release;
 		};
 		_ReleaseConf_Performance /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
 				LD_RUNPATH_SEARCH_PATHS = "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_SWIFT_FLAGS = "-DXcode";
-				PRODUCT_MODULE_NAME = Performance;
-				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_FORCE_DYNAMIC_LINK_STDLIB = YES;
 				SWIFT_FORCE_STATIC_LINK_STDLIB = NO;
 			};
@@ -2076,143 +2009,72 @@
 		_ReleaseConf_S4 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
-				DYLIB_INSTALL_NAME_BASE = "$(CONFIGURATION_BUILD_DIR)";
 				ENABLE_TESTABILITY = YES;
 				LD_RUNPATH_SEARCH_PATHS = "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_SWIFT_FLAGS = "-DXcode";
-				PRODUCT_MODULE_NAME = S4;
-				PRODUCT_NAME = "lib$(TARGET_NAME)";
 			};
 			name = Release;
 		};
 		_ReleaseConf_SHA2 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
-				DYLIB_INSTALL_NAME_BASE = "$(CONFIGURATION_BUILD_DIR)";
 				ENABLE_TESTABILITY = YES;
 				LD_RUNPATH_SEARCH_PATHS = "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_SWIFT_FLAGS = "-DXcode";
-				PRODUCT_MODULE_NAME = SHA2;
-				PRODUCT_NAME = "lib$(TARGET_NAME)";
 			};
 			name = Release;
 		};
 		_ReleaseConf_Strand /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
-				DYLIB_INSTALL_NAME_BASE = "$(CONFIGURATION_BUILD_DIR)";
 				ENABLE_TESTABILITY = YES;
 				LD_RUNPATH_SEARCH_PATHS = "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_SWIFT_FLAGS = "-DXcode";
-				PRODUCT_MODULE_NAME = Strand;
-				PRODUCT_NAME = "lib$(TARGET_NAME)";
 			};
 			name = Release;
 		};
 		_ReleaseConf_String /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
-				DYLIB_INSTALL_NAME_BASE = "$(CONFIGURATION_BUILD_DIR)";
 				ENABLE_TESTABILITY = YES;
 				LD_RUNPATH_SEARCH_PATHS = "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_SWIFT_FLAGS = "-DXcode";
-				PRODUCT_MODULE_NAME = String;
-				PRODUCT_NAME = "lib$(TARGET_NAME)";
 			};
 			name = Release;
 		};
 		_ReleaseConf_StructuredData /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
-				DYLIB_INSTALL_NAME_BASE = "$(CONFIGURATION_BUILD_DIR)";
 				ENABLE_TESTABILITY = YES;
 				LD_RUNPATH_SEARCH_PATHS = "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_SWIFT_FLAGS = "-DXcode";
-				PRODUCT_MODULE_NAME = StructuredData;
-				PRODUCT_NAME = "lib$(TARGET_NAME)";
 			};
 			name = Release;
 		};
 		_ReleaseConf_Vapor /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
-				DYLIB_INSTALL_NAME_BASE = "$(CONFIGURATION_BUILD_DIR)";
 				ENABLE_TESTABILITY = YES;
 				LD_RUNPATH_SEARCH_PATHS = "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_SWIFT_FLAGS = "-DXcode";
-				PRODUCT_MODULE_NAME = Vapor;
-				PRODUCT_NAME = "lib$(TARGET_NAME)";
 			};
 			name = Release;
 		};
 		_ReleaseConf_VaporTestSuite /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
 				EMBEDDED_CONTENT_CONTAINS_SWIFT = YES;
 				LD_RUNPATH_SEARCH_PATHS = "@loader_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_SWIFT_FLAGS = "-DXcode";
-				PRODUCT_MODULE_NAME = VaporTestSuite;
-				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
 		};
 		_ReleaseConf_libc /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
-				DYLIB_INSTALL_NAME_BASE = "$(CONFIGURATION_BUILD_DIR)";
 				ENABLE_TESTABILITY = YES;
 				LD_RUNPATH_SEARCH_PATHS = "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_SWIFT_FLAGS = "-DXcode";
-				PRODUCT_MODULE_NAME = libc;
-				PRODUCT_NAME = "lib$(TARGET_NAME)";
 			};
 			name = Release;
 		};
 		"___DebugConf_C7" /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
-				DYLIB_INSTALL_NAME_BASE = "$(CONFIGURATION_BUILD_DIR)";
 				ENABLE_TESTABILITY = YES;
 				LD_RUNPATH_SEARCH_PATHS = "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_SWIFT_FLAGS = "-DXcode";
-				PRODUCT_MODULE_NAME = C7;
-				PRODUCT_NAME = "lib$(TARGET_NAME)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
@@ -2220,16 +2082,8 @@
 		"___DebugConf_CryptoEssentials" /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
-				DYLIB_INSTALL_NAME_BASE = "$(CONFIGURATION_BUILD_DIR)";
 				ENABLE_TESTABILITY = YES;
 				LD_RUNPATH_SEARCH_PATHS = "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_SWIFT_FLAGS = "-DXcode";
-				PRODUCT_MODULE_NAME = CryptoEssentials;
-				PRODUCT_NAME = "lib$(TARGET_NAME)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
@@ -2237,16 +2091,8 @@
 		"___DebugConf_CryptoEssentialsSwift2" /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
-				DYLIB_INSTALL_NAME_BASE = "$(CONFIGURATION_BUILD_DIR)";
 				ENABLE_TESTABILITY = YES;
 				LD_RUNPATH_SEARCH_PATHS = "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_SWIFT_FLAGS = "-DXcode";
-				PRODUCT_MODULE_NAME = CryptoEssentialsSwift2;
-				PRODUCT_NAME = "lib$(TARGET_NAME)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
@@ -2254,16 +2100,8 @@
 		"___DebugConf_CryptoEssentialsSwift3" /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
-				DYLIB_INSTALL_NAME_BASE = "$(CONFIGURATION_BUILD_DIR)";
 				ENABLE_TESTABILITY = YES;
 				LD_RUNPATH_SEARCH_PATHS = "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_SWIFT_FLAGS = "-DXcode";
-				PRODUCT_MODULE_NAME = CryptoEssentialsSwift3;
-				PRODUCT_NAME = "lib$(TARGET_NAME)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
@@ -2271,14 +2109,7 @@
 		"___DebugConf_Development" /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
 				LD_RUNPATH_SEARCH_PATHS = "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_SWIFT_FLAGS = "-DXcode";
-				PRODUCT_MODULE_NAME = Development;
-				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_FORCE_DYNAMIC_LINK_STDLIB = YES;
 				SWIFT_FORCE_STATIC_LINK_STDLIB = NO;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -2288,14 +2119,7 @@
 		"___DebugConf_Generator" /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
 				LD_RUNPATH_SEARCH_PATHS = "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_SWIFT_FLAGS = "-DXcode";
-				PRODUCT_MODULE_NAME = Generator;
-				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_FORCE_DYNAMIC_LINK_STDLIB = YES;
 				SWIFT_FORCE_STATIC_LINK_STDLIB = NO;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -2305,16 +2129,8 @@
 		"___DebugConf_HMAC" /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
-				DYLIB_INSTALL_NAME_BASE = "$(CONFIGURATION_BUILD_DIR)";
 				ENABLE_TESTABILITY = YES;
 				LD_RUNPATH_SEARCH_PATHS = "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_SWIFT_FLAGS = "-DXcode";
-				PRODUCT_MODULE_NAME = HMAC;
-				PRODUCT_NAME = "lib$(TARGET_NAME)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
@@ -2322,16 +2138,8 @@
 		"___DebugConf_Hummingbird" /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
-				DYLIB_INSTALL_NAME_BASE = "$(CONFIGURATION_BUILD_DIR)";
 				ENABLE_TESTABILITY = YES;
 				LD_RUNPATH_SEARCH_PATHS = "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_SWIFT_FLAGS = "-DXcode";
-				PRODUCT_MODULE_NAME = Hummingbird;
-				PRODUCT_NAME = "lib$(TARGET_NAME)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
@@ -2339,16 +2147,8 @@
 		"___DebugConf_JSON" /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
-				DYLIB_INSTALL_NAME_BASE = "$(CONFIGURATION_BUILD_DIR)";
 				ENABLE_TESTABILITY = YES;
 				LD_RUNPATH_SEARCH_PATHS = "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_SWIFT_FLAGS = "-DXcode";
-				PRODUCT_MODULE_NAME = JSON;
-				PRODUCT_NAME = "lib$(TARGET_NAME)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
@@ -2356,14 +2156,7 @@
 		"___DebugConf_Performance" /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
 				LD_RUNPATH_SEARCH_PATHS = "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_SWIFT_FLAGS = "-DXcode";
-				PRODUCT_MODULE_NAME = Performance;
-				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_FORCE_DYNAMIC_LINK_STDLIB = YES;
 				SWIFT_FORCE_STATIC_LINK_STDLIB = NO;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -2373,16 +2166,8 @@
 		"___DebugConf_S4" /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
-				DYLIB_INSTALL_NAME_BASE = "$(CONFIGURATION_BUILD_DIR)";
 				ENABLE_TESTABILITY = YES;
 				LD_RUNPATH_SEARCH_PATHS = "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_SWIFT_FLAGS = "-DXcode";
-				PRODUCT_MODULE_NAME = S4;
-				PRODUCT_NAME = "lib$(TARGET_NAME)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
@@ -2390,16 +2175,8 @@
 		"___DebugConf_SHA2" /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
-				DYLIB_INSTALL_NAME_BASE = "$(CONFIGURATION_BUILD_DIR)";
 				ENABLE_TESTABILITY = YES;
 				LD_RUNPATH_SEARCH_PATHS = "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_SWIFT_FLAGS = "-DXcode";
-				PRODUCT_MODULE_NAME = SHA2;
-				PRODUCT_NAME = "lib$(TARGET_NAME)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
@@ -2407,16 +2184,8 @@
 		"___DebugConf_Strand" /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
-				DYLIB_INSTALL_NAME_BASE = "$(CONFIGURATION_BUILD_DIR)";
 				ENABLE_TESTABILITY = YES;
 				LD_RUNPATH_SEARCH_PATHS = "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_SWIFT_FLAGS = "-DXcode";
-				PRODUCT_MODULE_NAME = Strand;
-				PRODUCT_NAME = "lib$(TARGET_NAME)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
@@ -2424,16 +2193,8 @@
 		"___DebugConf_String" /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
-				DYLIB_INSTALL_NAME_BASE = "$(CONFIGURATION_BUILD_DIR)";
 				ENABLE_TESTABILITY = YES;
 				LD_RUNPATH_SEARCH_PATHS = "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_SWIFT_FLAGS = "-DXcode";
-				PRODUCT_MODULE_NAME = String;
-				PRODUCT_NAME = "lib$(TARGET_NAME)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
@@ -2441,16 +2202,8 @@
 		"___DebugConf_StructuredData" /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
-				DYLIB_INSTALL_NAME_BASE = "$(CONFIGURATION_BUILD_DIR)";
 				ENABLE_TESTABILITY = YES;
 				LD_RUNPATH_SEARCH_PATHS = "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_SWIFT_FLAGS = "-DXcode";
-				PRODUCT_MODULE_NAME = StructuredData;
-				PRODUCT_NAME = "lib$(TARGET_NAME)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
@@ -2458,16 +2211,8 @@
 		"___DebugConf_Vapor" /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
-				DYLIB_INSTALL_NAME_BASE = "$(CONFIGURATION_BUILD_DIR)";
 				ENABLE_TESTABILITY = YES;
 				LD_RUNPATH_SEARCH_PATHS = "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_SWIFT_FLAGS = "-DXcode";
-				PRODUCT_MODULE_NAME = Vapor;
-				PRODUCT_NAME = "lib$(TARGET_NAME)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
@@ -2475,15 +2220,8 @@
 		"___DebugConf_VaporTestSuite" /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
 				EMBEDDED_CONTENT_CONTAINS_SWIFT = YES;
 				LD_RUNPATH_SEARCH_PATHS = "@loader_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_SWIFT_FLAGS = "-DXcode";
-				PRODUCT_MODULE_NAME = VaporTestSuite;
-				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
@@ -2491,28 +2229,22 @@
 		"___DebugConf_libc" /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
-				DYLIB_INSTALL_NAME_BASE = "$(CONFIGURATION_BUILD_DIR)";
 				ENABLE_TESTABILITY = YES;
 				LD_RUNPATH_SEARCH_PATHS = "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_SWIFT_FLAGS = "-DXcode";
-				PRODUCT_MODULE_NAME = libc;
-				PRODUCT_NAME = "lib$(TARGET_NAME)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
 		};
 		"_____Release_" /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = __PBXFileRef_Vapor.xcodeproj/Configs/Project.xcconfig /* Project.xcconfig */;
 			buildSettings = {
 			};
 			name = Release;
 		};
 		"_______Debug_" /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = __PBXFileRef_Vapor.xcodeproj/Configs/Project.xcconfig /* Project.xcconfig */;
 			buildSettings = {
 			};
 			name = Debug;
@@ -2673,7 +2405,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
-		"_______Confs_VaporTestSuite" /* Build configuration list for PBXNativeTarget "Vapor.testsuite" */ = {
+		"_______Confs_VaporTestSuite" /* Build configuration list for PBXNativeTarget "VaporTestSuite" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				"___DebugConf_VaporTestSuite" /* Debug */,
