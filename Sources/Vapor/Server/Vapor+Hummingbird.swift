@@ -5,20 +5,18 @@ import Hummingbird
     import Darwin.C
 #endif
 
+typealias ServerSocket = Hummingbird.ServerSocket
 typealias Socket = Hummingbird.Socket
 
-extension Hummingbird.Socket: HTTPStream {
-    static func makeStream() -> Hummingbird.Socket {
-        return try! Hummingbird.Socket.makeStreamSocket()
+extension Hummingbird.Socket: HTTPStream { }
+
+extension Hummingbird.ServerSocket: HTTPListenerStream {
+    convenience init(address: String?, port: Int) throws {
+        try self.init(address: address, port: String(port))
     }
 
     func accept(max connectionCount: Int = Int(SOMAXCONN), handler: (HTTPStream -> Void)) throws {
         try accept(maximumConsecutiveFailures: connectionCount, connectionHandler: handler)
-    }
-
-    func bind(to ip: String?, on port: Int) throws {
-        try bind(toAddress: ip, onPort: "\(port)")
-
     }
 
     func listen() throws {

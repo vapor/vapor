@@ -16,7 +16,7 @@ public class Application {
         This property is constant since it cannot
         be changed after the server has been booted.
     */
-    public lazy var server: Server = HTTPStreamServer<Socket>()
+    public lazy var server: Server = HTTPStreamServer<ServerSocket>()
 
     /**
         The session driver is responsible for
