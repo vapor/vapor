@@ -10,7 +10,7 @@ import XCTest
 
 @testable import Vapor
 
-final class TestPerformanceStream: HTTPStream {
+final class TestPerformanceStream: HTTPListenerStream {
     var buffer: Data
     var handler: (Data -> Void)
     var closed: Bool = false
@@ -29,7 +29,7 @@ final class TestPerformanceStream: HTTPStream {
     }
 
 
-    static func makeStream() -> TestPerformanceStream {
+    init(address: String?, port: Int) throws {
         fatalError("Unsupported")
     }
 
@@ -37,7 +37,7 @@ final class TestPerformanceStream: HTTPStream {
         throw Error.Unsupported
     }
 
-    func bind(to ip: String?, on port: Int) throws {
+    func bind() throws {
         throw Error.Unsupported
     }
 

@@ -20,7 +20,7 @@ class HTTPStreamTests: XCTestCase {
     }
 
     func testStream() throws {
-        let stream = TestHTTPStream.makeStream()
+        let stream = TestHTTPStream()
 
         //MARK: Create Request
         let content = "{\"hello\": \"world\"}"

@@ -13,14 +13,15 @@ extension Character {
     }
 }
 
-class HTTPStreamServer<StreamType: HTTPStream>: Server {
-    var stream: StreamType
+class HTTPStreamServer<StreamType: HTTPListenerStream>: Server {
+    var stream: StreamType!
     var delegate: Responder!
 
     func serve(_ responder: Responder, on host: String, at port: Int) throws {
-        self.delegate = responder
+        stream = try StreamType(address: host, port: port)
+        delegate = responder
 
-        try stream.bind(to: host, on: port)
+        try stream.bind()
         try stream.listen()
 
         do {
@@ -28,10 +29,6 @@ class HTTPStreamServer<StreamType: HTTPStream>: Server {
         } catch {
             Log.error("Failed to accept: \(socket) error: \(error)")
         }
-    }
-
-    init() {
-        self.stream = StreamType.makeStream()
     }
 
     func halt() {

@@ -4,12 +4,6 @@ private let carriageReturn: Byte = 13
 private let minimumValidAsciiCharacter = carriageReturn + 1
 
 protocol HTTPStream: Stream {
-    static func makeStream() -> Self
-    func bind(to ip: String?, on port: Int) throws
-    func accept(max connectionCount: Int, handler: (HTTPStream -> Void)) throws
-
-    func listen() throws
-
     func receiveByte() throws -> Byte?
     func receiveLine() throws -> String
 
@@ -23,6 +17,13 @@ protocol HTTPStream: Stream {
 
     func send(_ response: Response, keepAlive: Bool) throws
     func send(_ body: Response.Body) throws
+}
+
+protocol HTTPListenerStream: HTTPStream {
+    init(address: String?, port: Int) throws
+    func bind() throws
+    func listen() throws
+    func accept(max connectionCount: Int, handler: (HTTPStream -> Void)) throws
 }
 
 extension HTTPStream {
