@@ -65,4 +65,17 @@ class ValidationTests: XCTestCase {
     func testAlternateSyntax() throws {
         let _ = try Valid<Name>("Vapor")
     }
+
+    func testDetailedFailure() throws {
+        let fail = Count<Int>.min(10)
+        let pass = Count<Int>.max(30)
+        let combo = pass + fail
+        do {
+            let _ = try 2.tested(by: combo)
+            XCTFail("should throw error")
+        } catch let e as ValidationError<Count<Int>> {
+            XCTAssertNotNil(e.validator)
+            XCTAssertNotNil(e.input == 2)
+        }
+    }
 }
