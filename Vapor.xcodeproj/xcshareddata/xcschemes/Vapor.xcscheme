@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "______Target_C7"
-               BuildableName = "C7.dylib"
+               BuildableName = "libC7.dylib"
                BlueprintName = "C7"
                ReferencedContainer = "container:Vapor.xcodeproj">
             </BuildableReference>
@@ -29,7 +29,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "______Target_S4"
-               BuildableName = "S4.dylib"
+               BuildableName = "libS4.dylib"
                BlueprintName = "S4"
                ReferencedContainer = "container:Vapor.xcodeproj">
             </BuildableReference>
@@ -43,7 +43,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "______Target_String"
-               BuildableName = "String.dylib"
+               BuildableName = "libString.dylib"
                BlueprintName = "String"
                ReferencedContainer = "container:Vapor.xcodeproj">
             </BuildableReference>
@@ -57,7 +57,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "______Target_StructuredData"
-               BuildableName = "StructuredData.dylib"
+               BuildableName = "libStructuredData.dylib"
                BlueprintName = "StructuredData"
                ReferencedContainer = "container:Vapor.xcodeproj">
             </BuildableReference>
@@ -71,7 +71,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "______Target_JSON"
-               BuildableName = "JSON.dylib"
+               BuildableName = "libJSON.dylib"
                BlueprintName = "JSON"
                ReferencedContainer = "container:Vapor.xcodeproj">
             </BuildableReference>
@@ -85,7 +85,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "______Target_Strand"
-               BuildableName = "Strand.dylib"
+               BuildableName = "libStrand.dylib"
                BlueprintName = "Strand"
                ReferencedContainer = "container:Vapor.xcodeproj">
             </BuildableReference>
@@ -99,7 +99,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "______Target_Hummingbird"
-               BuildableName = "Hummingbird.dylib"
+               BuildableName = "libHummingbird.dylib"
                BlueprintName = "Hummingbird"
                ReferencedContainer = "container:Vapor.xcodeproj">
             </BuildableReference>
@@ -113,7 +113,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "______Target_CryptoEssentials"
-               BuildableName = "CryptoEssentials.dylib"
+               BuildableName = "libCryptoEssentials.dylib"
                BlueprintName = "CryptoEssentials"
                ReferencedContainer = "container:Vapor.xcodeproj">
             </BuildableReference>
@@ -127,7 +127,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "______Target_CryptoEssentialsSwift2"
-               BuildableName = "CryptoEssentialsSwift2.dylib"
+               BuildableName = "libCryptoEssentialsSwift2.dylib"
                BlueprintName = "CryptoEssentialsSwift2"
                ReferencedContainer = "container:Vapor.xcodeproj">
             </BuildableReference>
@@ -141,7 +141,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "______Target_CryptoEssentialsSwift3"
-               BuildableName = "CryptoEssentialsSwift3.dylib"
+               BuildableName = "libCryptoEssentialsSwift3.dylib"
                BlueprintName = "CryptoEssentialsSwift3"
                ReferencedContainer = "container:Vapor.xcodeproj">
             </BuildableReference>
@@ -155,7 +155,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "______Target_HMAC"
-               BuildableName = "HMAC.dylib"
+               BuildableName = "libHMAC.dylib"
                BlueprintName = "HMAC"
                ReferencedContainer = "container:Vapor.xcodeproj">
             </BuildableReference>
@@ -169,7 +169,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "______Target_SHA2"
-               BuildableName = "SHA2.dylib"
+               BuildableName = "libSHA2.dylib"
                BlueprintName = "SHA2"
                ReferencedContainer = "container:Vapor.xcodeproj">
             </BuildableReference>
@@ -211,7 +211,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "______Target_libc"
-               BuildableName = "libc.dylib"
+               BuildableName = "liblibc.dylib"
                BlueprintName = "libc"
                ReferencedContainer = "container:Vapor.xcodeproj">
             </BuildableReference>
@@ -239,7 +239,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "______Target_Vapor"
-               BuildableName = "Vapor.dylib"
+               BuildableName = "libVapor.dylib"
                BlueprintName = "Vapor"
                ReferencedContainer = "container:Vapor.xcodeproj">
             </BuildableReference>
@@ -257,8 +257,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "______Target_VaporTestSuite"
-               BuildableName = "VaporTestSuite.xctest"
-               BlueprintName = "VaporTestSuite"
+               BuildableName = "Vapor.testsuite.xctest"
+               BlueprintName = "Vapor.testsuite"
                ReferencedContainer = "container:Vapor.xcodeproj">
             </BuildableReference>
          </TestableReference>
@@ -280,7 +280,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "______Target_C7"
-            BuildableName = "C7.dylib"
+            BuildableName = "libC7.dylib"
             BlueprintName = "C7"
             ReferencedContainer = "container:Vapor.xcodeproj">
          </BuildableReference>
