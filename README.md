@@ -48,4 +48,4 @@ This is a work in progress, so *do not* rely on this for anything important. And
 
 ## 👥Authors
 
-Made by [Tanner Nelson](https://twitter.com/tanner0101), [Logan Wright](https://twitter.com/logmaestro), and the hundreds of members of the Qutheory commlunity.
+Made by [Tanner Nelson](https://twitter.com/tanner0101), [Logan Wright](https://twitter.com/logmaestro), and the hundreds of members of the Qutheory community.
