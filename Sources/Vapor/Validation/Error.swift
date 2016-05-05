@@ -1,38 +1,31 @@
+public protocol ValidationErrorProtocol: ErrorProtocol {
+    var message: String { get }
+}
+
 /**
     Failure object for validation operations
 */
-public class ValidationError: ErrorProtocol {
-    public let message: String
-    public init(message: String) {
-        self.message = message
-    }
-}
-
-public enum NameBetter<T: Validator> {
-    case suite(T.Type)
-    case validator(T)
-}
-
-public class ValidatorFailure<ValidatorType: Validator>: ValidationError {
+public class ValidationError<ValidatorType: Validator>: ValidationErrorProtocol {
     public let input: ValidatorType.InputType?
-    public let validator: NameBetter<ValidatorType>
+    public let validator: ValidatorType?
+    public let message: String
 
     public init(_ validator: ValidatorType, input: ValidatorType.InputType?, message: String? = nil) {
         self.input = input
-        self.validator = .validator(validator)
+        self.validator = validator
 
         let inputDescription = input.flatMap { "\($0)" } ?? "nil"
-        let message = message ?? "\(validator) failed with input: \(inputDescription)"
-        super.init(message: message)
+        self.message = message ?? "\(validator) failed with input: \(inputDescription)"
     }
 
-    public init(_ type: ValidatorType.Type = ValidatorType.self, input: ValidatorType.InputType?, message: String? = nil) {
+    public init(_ type: ValidatorType.Type = ValidatorType.self,
+                input: ValidatorType.InputType?,
+                message: String? = nil) {
         self.input = input
-        self.validator = .suite(type)
+        self.validator = nil
 
         let inputDescription = input.flatMap { "\($0)" } ?? "nil"
-        let message = message ?? "\(type) failed with input: \(inputDescription)"
-        super.init(message: message)
+        self.message = message ?? "\(type) failed with input: \(inputDescription)"
     }
 }
 
@@ -46,7 +39,7 @@ extension Validator {
         - returns: a ValidationFailure object to throw
     */
     public static func error(with input: InputType, message: String? = nil) -> ErrorProtocol {
-        return ValidatorFailure(self, input: input, message: message)
+        return ValidationError(self, input: input, message: message)
     }
 
     /**
@@ -58,6 +51,6 @@ extension Validator {
         - returns: a ValidationFailure object to throw
     */
     public func error(with input: InputType, message: String? = nil) -> ErrorProtocol {
-        return ValidatorFailure(self, input: input, message: message)
+        return ValidationError(self, input: input, message: message)
     }
 }

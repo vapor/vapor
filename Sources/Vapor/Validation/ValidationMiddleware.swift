@@ -7,7 +7,7 @@ class ValidationMiddleware: Middleware {
     func respond(to request: Request, chainingTo chain: Responder) throws -> Response {
         do {
             return try chain.respond(to: request)
-        } catch let error as ValidationError {
+        } catch let error as ValidationErrorProtocol {
             let json = Json([
                 "error": true,
                 "message": error.message

@@ -93,25 +93,6 @@ extension Validatable {
 
 extension Optional where Wrapped: Validatable {
     /**
-        Test whether or not the underlying value passes the given tester
-        Fails if `== .None`
-
-        - parameter tester: a closure that might potentially fail testing
-
-        - rethrows: the encompassed error of the tester
-
-        - returns: self if passed tester
-    */
-    public func tested(
-        by tester: @noescape (input: Wrapped) throws -> Void)
-        throws -> Wrapped {
-            guard case .some(let value) = self else {
-                throw ValidationError(message: "unexpectedly found 'nil'")
-            }
-            return try value.tested(by: tester)
-    }
-
-    /**
         Test whether or not the caller passes the given Validator
         Fails if `== .None`
 
@@ -125,7 +106,10 @@ extension Optional where Wrapped: Validatable {
         V: Validator
         where V.InputType == Wrapped>(by validator: V)
         throws -> Wrapped {
-            return try tested(by: validator.validate)
+            guard case .some(let value) = self else {
+                throw ValidationError(validator, input: nil)
+            }
+            return try value.tested(by: validator)
     }
 
     /**
@@ -142,7 +126,10 @@ extension Optional where Wrapped: Validatable {
         S: ValidationSuite
         where S.InputType == Wrapped>(by suite: S.Type)
         throws -> Wrapped {
-            return try tested(by: suite.validate)
+            guard case .some(let value) = self else {
+                throw ValidationError(suite, input: nil)
+            }
+            return try value.tested(by: suite)
     }
 }
 
@@ -279,7 +266,7 @@ extension Optional where Wrapped: Validatable {
         where V.InputType == Wrapped>(by validator: V)
         throws -> Valid<V> {
             guard case .some(let value) = self else {
-                throw ValidatorFailure(validator, input: nil)
+                throw ValidationError(validator, input: nil)
             }
             return try Valid<V>(value, by: validator)
     }
@@ -299,7 +286,7 @@ extension Optional where Wrapped: Validatable {
         where S.InputType == Wrapped>(by suite: S.Type = S.self)
         throws -> Valid<S> {
             guard case .some(let value) = self else {
-                throw ValidatorFailure(suite, input: nil)
+                throw ValidationError(suite, input: nil)
             }
             return try Valid<S>(value, by: suite)
     }
