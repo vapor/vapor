@@ -49,7 +49,6 @@ final class HTTPStreamServer<StreamType: HTTPListenerStream>: Server {
             do {
                 request = try socket.receive()
             } catch let error as HTTPStreamError where error.isClosedByPeer {
-                Log.debug("Remote peer has closed connection")
                 return
             } catch {
                 Log.error("Error receiving request: \(error)")
