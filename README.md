@@ -38,7 +38,7 @@ Our goal is to create a safe and empowering environment for anyone who decides t
 
 Vapor has been tested on OS X 10.11, Ubuntu 14.04, and Ubuntu 15.10. 
 
-Our homepage `http://qutheory.io` is currently running using Vapor on DigitalOcean.
+Our homepage [http://qutheory.io](http://qutheory.io) is currently running using Vapor on DigitalOcean.
 
 
 ## ⚠️ Work in Progress
@@ -48,4 +48,4 @@ This is a work in progress, so *do not* rely on this for anything important. And
 
 ## 👥Authors
 
-Made by [Tanner Nelson](http://tanner.xyz), Logan Wright, and the hundreds of members of the Qutheory commlunity.
+Made by [Tanner Nelson](https://twitter.com/tanner0101), [Logan Wright](https://twitter.com/logmaestro), and the hundreds of members of the Qutheory commlunity.
