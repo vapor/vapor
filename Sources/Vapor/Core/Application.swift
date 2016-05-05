@@ -16,7 +16,7 @@ public class Application {
         This property is constant since it cannot
         be changed after the server has been booted.
     */
-    public lazy var server: Server = HTTPStreamServer<ServerSocket>()
+    public var server: Server?
 
     /**
         The session driver is responsible for
@@ -207,7 +207,20 @@ public class Application {
 
         do {
             Log.info("Server starting on \(self.ip):\(self.port)")
-            try server.serve(self, on: self.ip, at: self.port)
+
+            let server: Server
+            if let presetServer = self.server {
+                server = presetServer
+            } else {
+                server = try HTTPStreamServer<ServerSocket>(
+                    host: self.ip,
+                    port: self.port,
+                    responder: self
+                )
+                self.server = server
+            }
+
+            try server.start()
         } catch {
             Log.error("Server start error: \(error)")
         }
