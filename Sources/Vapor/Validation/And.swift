@@ -18,16 +18,16 @@
  */
 
 /**
- This struct is used to encompass multiple Validators into one entity.
- 
- It is possible to access this struct directly using 
+    This struct is used to encompass multiple Validators into one entity.
+
+    It is possible to access this struct directly using 
      
      And(validatorOne, validatorTwo)
- 
- But it is more common to create And objects using the `+` operator:
+
+    But it is more common to create And objects using the `+` operator:
      
      validatorOne + validatorTwo
- */
+*/
 public struct And<
     V: Validator,
     U: Validator where V.InputType == U.InputType> {
@@ -35,10 +35,10 @@ public struct And<
     private let validator: Validator
 
     /**
-     CONVENIENCE ONLY.
+        Convenience only.
 
-     MUST STAY PRIVATE
-     */
+        Must stay private.
+    */
     private init(_ lhs: Validator, _ rhs: Validator) {
         validator = { value in
             try lhs(input: value)
@@ -49,13 +49,13 @@ public struct And<
 
 extension And: Validator {
     /**
-     Validator conformance that allows the 'And' struct
-     to concatenate multiple Validator types.
+        Validator conformance that allows the 'And' struct
+        to concatenate multiple Validator types.
 
-     - parameter value: the value to validate
+        - parameter value: the value to validate
 
-     - throws: an error on failed validation
-     */
+        - throws: an error on failed validation
+    */
     public func validate(input value: V.InputType) throws {
         try validator(input: value)
     }
@@ -63,8 +63,8 @@ extension And: Validator {
 
 extension And {
     /**
-     Used to combine two Validator types
-     */
+        Used to combine two Validator types
+    */
     public init(_ lhs: V, _ rhs: U) {
         self.init(lhs.validate, rhs.validate)
     }
@@ -72,8 +72,8 @@ extension And {
 
 extension And where V: ValidationSuite {
     /**
-     Used to combine two Validator types where one is a ValidationSuite
-     */
+        Used to combine two Validator types where one is a ValidationSuite
+    */
     public init(_ lhs: V.Type = V.self, _ rhs: U) {
         self.init(lhs.validate, rhs.validate)
     }
@@ -81,8 +81,8 @@ extension And where V: ValidationSuite {
 
 extension And where U: ValidationSuite {
     /**
-     Used to combine two Validators where one is a ValidationSuite
-     */
+        Used to combine two Validators where one is a ValidationSuite
+    */
     public init(_ lhs: V, _ rhs: U.Type = U.self) {
         self.init(lhs.validate, rhs.validate)
     }
@@ -90,8 +90,8 @@ extension And where U: ValidationSuite {
 
 extension And where V: ValidationSuite, U: ValidationSuite {
     /**
-     Used to combine two ValidationSuite types
-     */
+        Used to combine two ValidationSuite types
+    */
     public init(_ lhs: V.Type = V.self, _ rhs: U.Type = U.self) {
         self.init(lhs.validate, rhs.validate)
     }

@@ -10,10 +10,10 @@ extension Node {
 
 // TODO:
 /*
- var array: [Node]? { get }
- var object: [String : Node]? { get }
- var json: Json? { get }
- */
+    var array: [Node]? { get }
+    var object: [String : Node]? { get }
+    var json: Json? { get }
+*/
 
 
 public protocol Extractable {
