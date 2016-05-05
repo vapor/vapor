@@ -2,8 +2,8 @@
 // sequenceType gets free conformance
 
 /**
- Indicates that a particular type can be validated by count or length
- */
+    Indicates that a particular type can be validated by count or length
+*/
 public protocol Countable: Validatable {
     // The type that will be used to evaluate the count
     associatedtype CountType: Comparable, Equatable
@@ -15,15 +15,15 @@ public protocol Countable: Validatable {
 // MARK: Count
 
 /**
- Use this to validate the count of a given countable type
- 
+    Use this to validate the count of a given countable type
+
      "someString".validated(by: Count.min(3) + Count.min(10))
 
- - min:         validate count is >= associated value
- - max:         validate count <= associated value
- - equals:      validate count == associated value
- - containedIn: validate low is <= count and count is <= max
- */
+    - min:         validate count is >= associated value
+    - max:         validate count <= associated value
+    - equals:      validate count == associated value
+    - containedIn: validate low is <= count and count is <= max
+*/
 public enum Count<CountableType: Countable>: Validator {
     public typealias CountType = CountableType.CountType
     case min(CountType)
@@ -32,12 +32,12 @@ public enum Count<CountableType: Countable>: Validator {
     case containedIn(low: CountType, high: CountType)
 
     /**
-     Validate that a string passes associated length evaluation
+        Validate that a string passes associated length evaluation
 
-     - parameter value: input string to validate
+        - parameter value: input string to validate
 
-     - throws: an error if validation fails
-     */
+        - throws: an error if validation fails
+    */
     public func validate(input value: CountableType) throws {
         let count = value.count
         switch self {

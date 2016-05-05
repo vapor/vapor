@@ -18,26 +18,26 @@
  */
 
 /**
- Use this to invert the logic of a Validator.
- This type can be created two ways
- 
- 1. Not.init(_:)
- 
+    Use this to invert the logic of a Validator.
+    This type can be created two ways
+
+    1. Not.init(_:)
+
      Not(validatorToInvert)
- 
- 2. The `!` operator can be used to invert a validator
- 
+
+    2. The `!` operator can be used to invert a validator
+
      !validatorToInvert
- */
+*/
 public struct Not<V: Validator> {
     private typealias Validator = (input: V.InputType) throws -> Void
     private let validator: Validator
 
     /**
-     CONVENIENCE ONLY.
+        Convenience only.
 
-     MUST STAY PRIVATE
-     */
+        Must stay private.
+    */
     private init(_ validator: Validator) {
         self.validator = { value in
             do {
@@ -46,9 +46,9 @@ public struct Not<V: Validator> {
                 return
             }
             /**
-             We only arrive here if we passed validation. 
-             We can't throw in the `do` or it moves to catch.
-             */
+                We only arrive here if we passed validation.
+                We can't throw in the `do` or it moves to catch.
+            */
             throw Not<V>.error(with: value)
         }
     }
@@ -56,10 +56,10 @@ public struct Not<V: Validator> {
 
 extension Not: Validator {
     /**
-     Use this to validate with a `Not<T>` type.
+        Use this to validate with a `Not<T>` type.
 
-     - parameter value: value to validate
-     */
+        - parameter value: value to validate
+    */
     public func validate(input value: V.InputType) throws {
         try validator(input: value)
     }
@@ -68,10 +68,10 @@ extension Not: Validator {
 extension Not {
 
     /**
-     Use this to invert a Validator
+        Use this to invert a Validator
 
-     - parameter lhs: the validator to invert
-     */
+        - parameter lhs: the validator to invert
+    */
     public init(_ lhs: V) {
         self.init(lhs.validate)
     }
@@ -80,10 +80,10 @@ extension Not {
 extension Not where V: ValidationSuite {
 
     /**
-     Use this to initialize with a ValidationSuite.
+        Use this to initialize with a ValidationSuite.
 
-     - parameter lhs: validationSuite to initialize with. Can be inferred
-     */
+        - parameter lhs: validationSuite to initialize with. Can be inferred
+    */
     public init(_ lhs: V.Type = V.self) {
         self.init(lhs.validate)
     }
