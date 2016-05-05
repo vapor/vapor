@@ -90,6 +90,7 @@ extension Response {
         var tm: libc.tm = libc.tm()
 
         let buf = UnsafeMutablePointer<Int8>.init(allocatingCapacity: RFC1123_TIME_LEN + 1)
+        defer { buf.deallocateCapacity(RFC1123_TIME_LEN + 1) }
 
         time(&t)
         gmtime_r(&t, &tm)
@@ -108,8 +109,8 @@ extension Response {
             var cookies: [String: String] = [:]
 
             for value in headers["Set-Cookie"] {
-                for cookie in value.split(";") {
-                    var parts = cookie.split("=")
+                for cookie in value.split(byString: ";") {
+                    var parts = cookie.split(byString: "=")
                     if parts.count >= 2 {
                         cookies[parts[0]] = parts[1]
                     }

@@ -1,6 +1,6 @@
 @testable import Vapor
 
-final class TestHTTPStream: HTTPStream {
+final class TestHTTPStream: HTTPListenerStream {
     enum Error: ErrorProtocol {
         case Closed
     }
@@ -12,8 +12,8 @@ final class TestHTTPStream: HTTPStream {
         buffer = []
     }
 
-    static func makeStream() -> TestHTTPStream {
-        return TestHTTPStream()
+    convenience init(address: String?, port: Int) throws {
+        self.init()
     }
 
     func accept(max connectionCount: Int, handler: (HTTPStream -> Void)) throws {
@@ -21,8 +21,8 @@ final class TestHTTPStream: HTTPStream {
         self.handler = handler
     }
 
-    func bind(to ip: String?, on port: Int) throws {
-        print("Binding to \(ip) on \(port)")
+    func bind() throws {
+        print("Binding...")
     }
 
     func listen() throws {
@@ -31,15 +31,13 @@ final class TestHTTPStream: HTTPStream {
 
     var closed: Bool = false
 
-    func close() -> Bool {
+    func close() {
         if !closed {
             closed = true
-            return true
         }
-        return false
     }
 
-    func receive(max byteCount: Int) throws -> Data {
+    func receive(upTo byteCount: Int, timingOut deadline: Double = 0) throws -> Data {
         if buffer.count == 0 {
             close()
             return []
@@ -59,13 +57,13 @@ final class TestHTTPStream: HTTPStream {
         return result
     }
 
-    func send(data: Data) throws {
+    func send(_ data: Data, timingOut deadline: Double = 0) throws {
         closed = false
         buffer.append(contentsOf: data)
     }
-    
-    func flush() throws {
-        
+
+    func flush(timingOut deadline: Double = 0) throws {
+        print("flushing")
+        buffer = Data()
     }
-    
 }

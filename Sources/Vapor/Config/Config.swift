@@ -18,8 +18,10 @@
     sensitive information does not get added to version control.
 */
 public class Config {
-    //The internal store of configuration options
-    //backed by `Json`
+    /**
+        The internal store of configuration options
+        backed by `Json`
+     */
     private var repository: [String: Json]
 
     public enum Error: ErrorProtocol {
@@ -40,16 +42,19 @@ public class Config {
         }
     }
 
-    ///Returns whether this instance of `Config` contains the key
-    public func has(keyPath: String) -> Bool {
+    /**
+        Returns whether this instance of `Config` contains the key
+     */
+    public func has(_ keyPath: String) -> Bool {
         let result: Node? = try? get(keyPath)
         return result != nil
     }
 
-    ///Returns the generic Json representation for an item at a given path or throws
-    public func get(keyPath: String) throws -> Node {
+    /**
+        Returns the generic Json representation for an item at a given path or throws
+     */
+    public func get(_ keyPath: String) throws -> Node {
         var keys = keyPath.keys
-
         guard let json: Json = repository[keys.removeFirst()] else {
             throw Error.NoFileFound
         }
@@ -67,22 +72,28 @@ public class Config {
         return result
     }
 
-    //Returns the value for a given type from the Config or throws
-    public func get<T: NodeInitializable>(keyPath: String) throws -> T {
+    /**
+        Returns the value for a given type from the Config or throws
+     */
+    public func get<T: NodeInitializable>(_ keyPath: String) throws -> T {
         let result: Node = try get(keyPath)
-        return try T.makeWith(result)
+        return try T.make(with: result)
     }
 
 
-    ///Returns the result of `get(key: String)` but with a `String` fallback for `nil` cases
-    public func get<T: NodeInitializable>(keyPath: String, _ fallback: T) -> T {
+    /**
+        Returns the result of `get(key: String)` but with a `String` fallback for `nil` cases
+     */
+    public func get<T: NodeInitializable>(_ keyPath: String, _ fallback: T) -> T {
         let string: T? = try? get(keyPath)
         return string ?? fallback
     }
 
 
-    ///Temporarily sets a value for a given key path
-    public func set(value: Json, forKeyPath keyPath: String) {
+    /**
+        Temporarily sets a value for a given key path
+     */
+    public func set(_ value: Json, forKeyPath keyPath: String) {
         var keys = keyPath.keys
         let group = keys.removeFirst()
 
@@ -93,8 +104,10 @@ public class Config {
         }
     }
 
-    ///Calls populate() in a convenient non-throwing manner
-    public func populate(application: Application) -> Bool {
+    /**
+        Calls populate() in a convenient non-throwing manner
+     */
+    public func populate(_ application: Application) -> Bool {
         let configDir = application.workDir + "Config"
 
         if FileManager.fileAtPath(configDir).exists {
@@ -112,8 +125,10 @@ public class Config {
 
 
 
-    ///Attempts to populate the internal configuration store
-    public func populate(path: String, application: Application) throws {
+    /**
+        Attempts to populate the internal configuration store
+     */
+    public func populate(_ path: String, application: Application) throws {
         var path = path.finish("/")
         var files = [String: [String]]()
 
@@ -127,10 +142,14 @@ public class Config {
                 try populateConfigFiles(&files, in: path)
             }
         }
-
         // Loop through files and merge config upwards so the
         // environment always overrides the base config
-        for (group, files) in files {
+        //
+        //
+        // The isEmpty check is a workaround for the Linux system and is necessary until
+        // an alternative solution is fixed, or it's confirmed appropriate
+        // This is duplicated below in `populateConfigFiles`. just doubling down.
+        for (group, files) in files where !group.isEmpty {
             if group == ".env" {
                 // .env is handled differently below
                 continue
@@ -170,11 +189,16 @@ public class Config {
         }
     }
 
-    private func populateConfigFiles(files: inout [String: [String]], in path: String) throws {
+    private func populateConfigFiles(_ files: inout [String: [String]], in path: String) throws {
         let contents = try FileManager.contentsOfDirectory(path)
 
         for file in contents {
-            guard let fileName = file.split("/").last else {
+            //
+            //
+            // The isEmpty check is a workaround for the Linux system and is necessary until
+            // an alternative solution is fixed, or it's confirmed appropriate
+            // This is duplicated above. just doubling down.
+            guard let fileName = file.split(byString: "/").last where !fileName.isEmpty else {
                 continue
             }
 
@@ -182,7 +206,7 @@ public class Config {
 
             if fileName == ".env.json" {
                 name = ".env"
-            } else if fileName.hasSuffix(".json"), let value = fileName.split(".").first {
+            } else if fileName.hasSuffix(".json"), let value = fileName.split(byString: ".").first {
                 name = value
             } else {
                 continue
@@ -200,7 +224,7 @@ public class Config {
 
 extension Json {
 
-    private mutating func set(value: Json, keys: [Swift.String]) {
+    private mutating func set(_ value: Json, keys: [Swift.String]) {
         var keys = keys
 
         guard keys.count > 0 else {
@@ -229,7 +253,7 @@ extension Json {
 extension String {
 
     private var keys: [String] {
-        return split(".")
+        return split(byString: ".")
     }
 
 }

@@ -9,5 +9,5 @@ public protocol HashDriver {
         return the hashed string according
         to whatever algorithm it chooses to implement.
     */
-    func hash(message: String, key: String) -> String
+    func hash(_ message: String, key: String) -> String
 }

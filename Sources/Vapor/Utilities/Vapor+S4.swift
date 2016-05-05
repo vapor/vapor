@@ -8,7 +8,7 @@ public typealias Stream = C7.Stream
 public typealias URI = S4.URI
 
 extension S4.Headers {
-    public typealias Values = S4.HeaderValues
+    public typealias Values = S4.Header
     public typealias Key = C7.CaseInsensitiveString
 }
 

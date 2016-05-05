@@ -5,7 +5,10 @@ import libc
     to this protocol
 */
 public protocol LogDriver {
-    func log(level: Log.Level, message: String)
+    /**
+        Log the given message at the passed filter level
+     */
+    func log(_ level: Log.Level, message: String)
 }
 
 /**
@@ -15,8 +18,13 @@ public protocol LogDriver {
     - parameter message: String to log
 */
 public class ConsoleLogger: LogDriver {
+    /**
+        The basic log function of the console.
 
-    public func log(level: Log.Level, message: String) {
+        - parameter level: the level with which to filter
+        - parameter message: the message to log to console
+     */
+    public func log(_ level: Log.Level, message: String) {
         let date = time(nil)
         print("[\(date)] [\(level)] \(message)")
     }

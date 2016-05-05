@@ -187,7 +187,7 @@ To access JSON, Query, and form-encoded data from the `Request`.
 
 ```swift
 app.post("hello") { request in
-	guard let name = request.data["name"]?.string {
+	guard let name = request.data["name"]?.string else {
 		return "Please include a name"
 	}
 

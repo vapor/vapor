@@ -15,5 +15,5 @@ public protocol RenderDriver {
 
         - returns: The rendered template with inserted context information.
     */
-    func render(template template: String, context: [String: Any]) throws -> String
+    func render(template: String, context: [String: Any]) throws -> String
 }

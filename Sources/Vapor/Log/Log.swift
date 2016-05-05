@@ -42,14 +42,14 @@ public class Log {
         Enabled log levels. Default is to log all levels. This
         can be overridden.
      */
-    public static var enabledLevels: [Log.Level] = Log.Level.all
+    public static var enabledLevels: [Level] = Log.Level.all
 
     /**
         Logs verbose messages if .Verbose is enabled
 
         - parameter message: String to log
      */
-    public static func verbose(message: String) {
+    public static func verbose(_ message: String) {
         if Log.enabledLevels.contains(.Verbose) {
             driver.log(.Verbose, message: message)
         }
@@ -60,7 +60,7 @@ public class Log {
 
         - parameter message: String to log
      */
-    public static func debug(message: String) {
+    public static func debug(_ message: String) {
         if Log.enabledLevels.contains(.Debug) {
             driver.log(.Debug, message: message)
         }
@@ -71,7 +71,7 @@ public class Log {
 
         - parameter message: String to log
      */
-    public static func info(message: String) {
+    public static func info(_ message: String) {
         if Log.enabledLevels.contains(.Info) {
             driver.log(.Info, message: message)
         }
@@ -82,7 +82,7 @@ public class Log {
 
         - parameter message: String to log
      */
-    public static func warning(message: String) {
+    public static func warning(_ message: String) {
         if Log.enabledLevels.contains(.Warning) {
              driver.log(.Warning, message: message)
         }
@@ -93,7 +93,7 @@ public class Log {
 
         - parameter message: String to log
      */
-    public static func error(message: String) {
+    public static func error(_ message: String) {
         if Log.enabledLevels.contains(.Error) {
             driver.log(.Error, message: message)
         }
@@ -104,7 +104,7 @@ public class Log {
 
         - parameter message: String to log
      */
-    public static func fatal(message: String) {
+    public static func fatal(_ message: String) {
         if Log.enabledLevels.contains(.Fatal) {
             driver.log(.Fatal, message: message)
         }
@@ -115,7 +115,7 @@ public class Log {
 
         - parameter message: String to log
      */
-    public static func custom(message: String, label: String) {
+    public static func custom(_ message: String, label: String) {
         driver.log(.Custom(label), message: message)
     }
 }

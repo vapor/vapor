@@ -71,11 +71,11 @@ internal final class Branch {
         }
 
         if let next = subBranches[key] {
-            return next.handle(parameters, request: request, comps: comps)
+            return next.handle(parameters: parameters, request: request, comps: comps)
         } else if let wildcard = subBranches["*"] {
             var parameters = parameters
             parameters[wildcard.name] = try? String(percentEncoded: key)
-            return wildcard.handle(parameters, request: request, comps: comps)
+            return wildcard.handle(parameters: parameters, request: request, comps: comps)
         } else {
             return nil
         }
@@ -91,7 +91,7 @@ internal final class Branch {
         - parameter generator: the generator that will be used to match the path components.  /users/messages/:id will return a generator that is 'users' <- 'messages' <- '*id'
         - parameter handler:   the handler to assign to the end path component
      */
-    func extendBranch(generator: CompatibilityGenerator<String>, handler: Responder) {
+    func extendBranch(_ generator: CompatibilityGenerator<String>, handler: Responder) {
         guard let key = generator.next() else {
             self.handler = handler
             return
