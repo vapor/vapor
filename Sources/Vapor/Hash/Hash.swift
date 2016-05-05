@@ -32,5 +32,4 @@ public class Hash {
     public func make(_ string: String) -> String {
         return driver.hash(string, key: key)
     }
-
 }

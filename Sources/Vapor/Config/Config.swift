@@ -219,11 +219,9 @@ public class Config {
             files[name]?.append(file)
         }
     }
-
 }
 
 extension Json {
-
     private mutating func set(_ value: Json, keys: [Swift.String]) {
         var keys = keys
 
@@ -246,7 +244,6 @@ extension Json {
             child.set(value, keys: keys)
         }
     }
-
 }
 
 
@@ -255,5 +252,4 @@ extension String {
     private var keys: [String] {
         return split(byString: ".")
     }
-
 }

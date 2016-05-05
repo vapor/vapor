@@ -77,7 +77,6 @@ class HTTPStreamServer<StreamType: HTTPListenerStream>: Server {
             Log.error("Failed to close stream: \(error)")
         }
     }
-
 }
 
 extension Request {

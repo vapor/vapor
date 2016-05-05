@@ -35,9 +35,7 @@ public class View {
                 self.data = rendered.data
             }
         }
-
     }
-
 }
 
 ///Allows Views to be returned in Vapor closures
@@ -70,5 +68,4 @@ extension Application {
     public func view(_ path: String, context: [String: Any] = [:]) throws -> View {
         return try View(application: self, path: path, context: context)
     }
-
 }

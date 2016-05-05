@@ -31,5 +31,4 @@ class SessionMiddleware: Middleware {
 
         return response
     }
-
 }
