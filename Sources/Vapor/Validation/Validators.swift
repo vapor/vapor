@@ -85,7 +85,7 @@ public protocol ValidationSuite: Validator {
 extension ValidationSuite {
     /**
         ValidationSuite objects automatically conform to Validator
-        by envoking the static validation
+        by invoking the static validation
 
         - parameter value: input value to validate
 
