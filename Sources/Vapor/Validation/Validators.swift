@@ -18,10 +18,10 @@
  */
 
 /**
- The core validator, used for validations that require 
- parameters. For example, a string length validator that
- uses a dynamic value to evaluate by.
- 
+    The core validator, used for validations that require
+    parameters. For example, a string length validator that
+    uses a dynamic value to evaluate by.
+
      public enum StringLength: Validator {
          case min(Int)
          case max(Int)
@@ -41,56 +41,56 @@
              }
          }
      }
- 
- And used like:
- 
+
+    And used like:
+
      let validated = try "string".validated(by: StringLength.min(4))
- */
+*/
 public protocol Validator {
     /**
-     The type of value that this validator is capable
-     of evaluating
-     */
+        The type of value that this validator is capable
+        of evaluating
+    */
     associatedtype InputType: Validatable
 
     /**
-     Used to validate a given input. Should throw 
-     error if validation fails using:
-     
+        Used to validate a given input. Should throw
+        error if validation fails using:
+
          throw error(with: value)
-     
-     A function that does not throw will be considered a pass.
-     */
+
+        A function that does not throw will be considered a pass.
+    */
     func validate(input value: InputType) throws
 }
 
 public protocol ValidationSuite: Validator {
     /**
-     The type of value that this validator is capable
-     of evaluating
-     */
+        The type of value that this validator is capable
+        of evaluating
+    */
     associatedtype InputType: Validatable
 
     /**
-     Used to validate a given input. Should throw
-     error if validation fails using:
+        Used to validate a given input. Should throw
+        error if validation fails using:
 
          throw error(with: value)
 
-     A function that does not throw will be considered a pass.
-     */
+        A function that does not throw will be considered a pass.
+    */
     static func validate(input value: InputType) throws
 }
 
 extension ValidationSuite {
     /**
-     ValidationSuite objects automatically conform to Validator
-     by envoking the static validation
+        ValidationSuite objects automatically conform to Validator
+        by envoking the static validation
 
-     - parameter value: input value to validate
+        - parameter value: input value to validate
 
-     - throws: an error if validation fails
-     */
+        - throws: an error if validation fails
+    */
     public func validate(input value: InputType) throws {
         try self.dynamicType.validate(input: value)
     }
