@@ -1,26 +1,75 @@
+
+
+/**
+    Used to indicate when validation of some value fails. 
+ 
+    Will be caught automatically by ValidationMiddleware
+*/
 public protocol ValidationErrorProtocol: ErrorProtocol {
+    /**
+        Description of what went wrong
+    */
     var message: String { get }
+
+    /**
+        Description of what went wrong
+    */
     var validatorDescription: String { get }
+
+    /**
+        Description of failed input
+    */
     var inputDescription: String { get }
 }
 
 /**
-    Failure object for validation operations
+    When a validation fails, usually passed through this protocol from
+ 
+        throw error(with: inputValue)
+ 
+    Will be caught by ValidationMiddleware
 */
-public class ValidationError<ValidatorType: Validator>: ValidationErrorProtocol {
+public final class ValidationError<ValidatorType: Validator>: ValidationErrorProtocol {
+
+    /**
+        Input passed into validation
+    */
     public let input: ValidatorType.InputType?
+
+    /**
+        Validator that raised the error
+    */
     public let validator: ValidatorType?
+
+    /**
+        Message describing error. This will be passed to user by ValidationMiddleware.
+    */
     public let message: String
 
+    /**
+        Description of validator or suite
+    */
     public var validatorDescription: String {
         return validator.flatMap { "\($0)" } ?? "\(ValidatorType.self)"
     }
 
+    /**
+        Description of input
+    */
     public var inputDescription: String {
         return input.flatMap { "\($0)" } ?? "nil"
     }
 
-    public init(_ validator: ValidatorType, input: ValidatorType.InputType?, message: String? = nil) {
+    /**
+        Initialize a new validation error
+
+        - parameter validator: validator that failed
+        - parameter input: the input type passed
+        - parameter message: custom message if desired
+     */
+    public init(_ validator: ValidatorType,
+                input: ValidatorType.InputType?,
+                message: String? = nil) {
         self.input = input
         self.validator = validator
 
@@ -28,6 +77,13 @@ public class ValidationError<ValidatorType: Validator>: ValidationErrorProtocol 
         self.message = message ?? "\(validator) failed with input: \(inputDescription)"
     }
 
+    /**
+        Initialize a new validation error
+
+        - parameter type: validation suite that failed
+        - parameter input: input that caused the failure
+        - parameter message: custom message if desired
+     */
     public init(_ type: ValidatorType.Type = ValidatorType.self,
                 input: ValidatorType.InputType?,
                 message: String? = nil) {
