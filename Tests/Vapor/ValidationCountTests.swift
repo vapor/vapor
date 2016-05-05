@@ -41,7 +41,7 @@ class ValidationCountTests: XCTestCase {
     }
 
     func testCountArray() {
-        let array = [1,2,3,4,5]
+        let array = [1, 2, 3, 4, 5]
         XCTAssertTrue(array.passes(Count.equals(5)))
         XCTAssertTrue(array.passes(Count.containedIn(low: 0, high: 10)))
 
