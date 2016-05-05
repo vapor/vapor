@@ -25,7 +25,9 @@ class ValidationTests: XCTestCase {
         return [
             ("testName", testName),
             ("testPassword", testPassword),
+            ("testNot", testNot),
             ("testComposition", testComposition)
+            ("testAlternateSyntax", testAlternateSyntax)
         ]
     }
 
