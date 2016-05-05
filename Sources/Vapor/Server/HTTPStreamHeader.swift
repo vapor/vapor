@@ -140,5 +140,4 @@ extension HTTPStreamHeader {
                        fragment: nil)
         }
     }
-
 }

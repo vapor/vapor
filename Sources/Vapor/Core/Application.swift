@@ -293,5 +293,4 @@ extension Application: Responder {
 
         return response
     }
-
 }

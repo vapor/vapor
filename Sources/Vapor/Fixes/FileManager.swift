@@ -98,5 +98,4 @@ class FileManager {
 
         return contents
     }
-
 }

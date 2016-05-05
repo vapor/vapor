@@ -106,7 +106,6 @@ extension HTTPStream {
         case .sender(let closure):
             try closure(self)
         }
-
     }
 
     func receive() throws -> Request {

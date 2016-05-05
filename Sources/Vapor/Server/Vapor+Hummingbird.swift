@@ -22,7 +22,6 @@ extension Hummingbird.ServerSocket: HTTPListenerStream {
     func listen() throws {
         try listen(pendingConnectionBacklog: 100)
     }
-
 }
 
 extension SocketError: HTTPStreamError {

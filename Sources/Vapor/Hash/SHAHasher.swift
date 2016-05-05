@@ -47,5 +47,4 @@ public class SHA2Hasher: HashDriver {
 
         return hashed.hexString
     }
-
 }

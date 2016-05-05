@@ -8680,5 +8680,4 @@ extension Application {
 			return try handler(request, cw0, cw1, cw2, cw3, cw4)
 		}
 	}
-
 }

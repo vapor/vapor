@@ -43,5 +43,4 @@ public class AbortMiddleware: Middleware {
         ])
         return Response(status: status, json: json)
     }
-
 }

@@ -33,7 +33,6 @@ extension Environment: CustomStringConvertible {
         case Custom(let string): return string
         }
     }
-
 }
 
 public func == (lhs: Environment, rhs: Environment) -> Bool {

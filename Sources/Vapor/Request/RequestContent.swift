@@ -45,7 +45,6 @@ public extension Request {
             }
         }
     }
-
 }
 
 extension String: Node {
