@@ -207,8 +207,15 @@ public class Application {
 
         do {
             Log.info("Server starting on \(self.ip):\(self.port)")
-            let server = try HTTPStreamServer<ServerSocket>(host: self.ip, port: self.port, responder: self)
-            self.server = server
+
+            let server: Server
+            if let presetServer = self.server {
+                server = presetServer
+            } else {
+                server = try HTTPStreamServer<ServerSocket>(host: self.ip, port: self.port, responder: self)
+                self.server = server
+            }
+
             try server.start()
         } catch {
             Log.error("Server start error: \(error)")
