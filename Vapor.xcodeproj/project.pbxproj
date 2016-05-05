@@ -78,6 +78,7 @@
 		C3931CC41CDC08FB0026D877 /* libS4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_S4" /* libS4.dylib */; };
 		C3931CC51CDC08FB0026D877 /* libVapor.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Vapor" /* libVapor.dylib */; };
 		C3931CC61CDC08FB0026D877 /* liblibc.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_libc" /* liblibc.dylib */; };
+		C3931CD51CDC0F700026D877 /* ApplicationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3931CD41CDC0F700026D877 /* ApplicationTests.swift */; };
 		_LinkFileRef_C7 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
 		_LinkFileRef_CryptoEssentials /* libCryptoEssentials.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentials" /* libCryptoEssentials.dylib */; };
 		_LinkFileRef_HMAC /* libHMAC.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_HMAC" /* libHMAC.dylib */; };
@@ -331,6 +332,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		C3931CD41CDC0F700026D877 /* ApplicationTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ApplicationTests.swift; sourceTree = "<group>"; };
 		__PBXFileRef_Package.swift /* Package.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Package.swift; path = /Users/tanner/Developer/vapor/vapor/Package.swift; sourceTree = "<group>"; };
 		"__PBXFileRef_Packages/C7-0.7.0/Sources/AsyncConnection.swift" /* AsyncConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncConnection.swift; sourceTree = "<group>"; };
 		"__PBXFileRef_Packages/C7-0.7.0/Sources/AsyncHost.swift" /* AsyncHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncHost.swift; sourceTree = "<group>"; };
@@ -1022,6 +1024,7 @@
 		"_______Group_VaporTestSuite" /* Vapor.testsuite */ = {
 			isa = PBXGroup;
 			children = (
+				C3931CD41CDC0F700026D877 /* ApplicationTests.swift */,
 				__PBXFileRef_Tests/Vapor/ConfigTests.swift /* ConfigTests.swift */,
 				__PBXFileRef_Tests/Vapor/ControllerTests.swift /* ControllerTests.swift */,
 				__PBXFileRef_Tests/Vapor/EnvironmentTests.swift /* EnvironmentTests.swift */,
@@ -1695,6 +1698,7 @@
 			files = (
 				__src_cc_ref_Tests/Vapor/ConfigTests.swift /* ConfigTests.swift in Sources */,
 				__src_cc_ref_Tests/Vapor/ControllerTests.swift /* ControllerTests.swift in Sources */,
+				C3931CD51CDC0F700026D877 /* ApplicationTests.swift in Sources */,
 				__src_cc_ref_Tests/Vapor/EnvironmentTests.swift /* EnvironmentTests.swift in Sources */,
 				__src_cc_ref_Tests/Vapor/EventTests.swift /* EventTests.swift in Sources */,
 				__src_cc_ref_Tests/Vapor/HashTests.swift /* HashTests.swift in Sources */,
