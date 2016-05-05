@@ -1,0 +1,51 @@
+{
+  "DVTSourceControlWorkspaceBlueprintPrimaryRemoteRepositoryKey" : "52AFDBC9624F22D94526E36BBEE271C6D7FC65D3",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyRepositoryLocationsKey" : {
+
+  },
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyStatesKey" : {
+    "287F3CCB1287376788CD8C8A6441419AFFC4A554" : 0,
+    "52AFDBC9624F22D94526E36BBEE271C6D7FC65D3" : 0,
+    "1D611DFB0C8941722678616BE789B5765AA3A46E" : 0,
+    "1E72C4C11736864B9AA36A7CE5A7583666A1B027" : 0,
+    "10A2CB6C4392F0E306FF8D509BE5E88232276EA4" : 0
+  },
+  "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "16C42E9E-E226-4E9F-A512-A664BCDFA4A1",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
+    "287F3CCB1287376788CD8C8A6441419AFFC4A554" : "vapor\/Packages\/HMAC-0.6.0\/",
+    "52AFDBC9624F22D94526E36BBEE271C6D7FC65D3" : "vapor\/",
+    "1D611DFB0C8941722678616BE789B5765AA3A46E" : "vapor\/Packages\/Hummingbird-1.7.0\/",
+    "1E72C4C11736864B9AA36A7CE5A7583666A1B027" : "vapor\/Packages\/SHA2-0.6.0\/",
+    "10A2CB6C4392F0E306FF8D509BE5E88232276EA4" : "vapor\/Packages\/String-0.7.0\/"
+  },
+  "DVTSourceControlWorkspaceBlueprintNameKey" : "Vapor",
+  "DVTSourceControlWorkspaceBlueprintVersion" : 204,
+  "DVTSourceControlWorkspaceBlueprintRelativePathToProjectKey" : "Vapor.xcodeproj",
+  "DVTSourceControlWorkspaceBlueprintRemoteRepositoriesKey" : [
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/Zewo\/String.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "10A2CB6C4392F0E306FF8D509BE5E88232276EA4"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/ketzusaka\/Hummingbird.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "1D611DFB0C8941722678616BE789B5765AA3A46E"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/CryptoKitten\/SHA2.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "1E72C4C11736864B9AA36A7CE5A7583666A1B027"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/CryptoKitten\/HMAC.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "287F3CCB1287376788CD8C8A6441419AFFC4A554"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "github.com:LoganWright\/vapor.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "52AFDBC9624F22D94526E36BBEE271C6D7FC65D3"
+    }
+  ]
+}

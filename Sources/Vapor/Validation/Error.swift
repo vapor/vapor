@@ -1,34 +1,38 @@
 /**
-    Failure object for basic failures that aren't
-    part of a validation operation
+    Failure object for validation operations
 */
-public class Failure: ErrorProtocol {
-    public let name: String
-    public let inputDescription: String
-
-    public init(name: String = "", input: String?) {
-        self.name = name
-        self.inputDescription = input ?? "nil"
+public class ValidationError: ErrorProtocol {
+    public let message: String
+    public init(message: String) {
+        self.message = message
     }
 }
 
-/**
-    Failure object for failures during a validation
-    operation.
+public enum NameBetter<T: Validator> {
+    case suite(T.Type)
+    case validator(T)
+}
 
-    To throw within a custom Validator, use:
-     
-     throw error(with: value)
-*/
-public final class ValidationFailure: Failure {
-    let validator: String
-    public init<V: Validator>(_ validator: V.Type = V.self, input: V.InputType?) {
-        self.validator = "\(V.self)"
-        super.init(input: "\(input)")
+public class ValidatorFailure<ValidatorType: Validator>: ValidationError {
+    public let input: ValidatorType.InputType?
+    public let validator: NameBetter<ValidatorType>
+
+    public init(_ validator: ValidatorType, input: ValidatorType.InputType?, message: String? = nil) {
+        self.input = input
+        self.validator = .validator(validator)
+
+        let inputDescription = input.flatMap { "\($0)" } ?? "nil"
+        let message = message ?? "\(validator) failed with input: \(inputDescription)"
+        super.init(message: message)
     }
-    public init<V: Validator>(_ validator: V, input: V.InputType?) {
-        self.validator = "\(V.self)"
-        super.init(input: "\(input)")
+
+    public init(_ type: ValidatorType.Type = ValidatorType.self, input: ValidatorType.InputType?, message: String? = nil) {
+        self.input = input
+        self.validator = .suite(type)
+
+        let inputDescription = input.flatMap { "\($0)" } ?? "nil"
+        let message = message ?? "\(type) failed with input: \(inputDescription)"
+        super.init(message: message)
     }
 }
 
@@ -41,8 +45,8 @@ extension Validator {
 
         - returns: a ValidationFailure object to throw
     */
-    public static func error(with input: InputType) -> ErrorProtocol {
-        return ValidationFailure(self, input: input)
+    public static func error(with input: InputType, message: String? = nil) -> ErrorProtocol {
+        return ValidatorFailure(self, input: input, message: message)
     }
 
     /**
@@ -53,7 +57,7 @@ extension Validator {
 
         - returns: a ValidationFailure object to throw
     */
-    public func error(with input: InputType) -> ErrorProtocol {
-        return ValidationFailure(self, input: input)
+    public func error(with input: InputType, message: String? = nil) -> ErrorProtocol {
+        return ValidatorFailure(self, input: input, message: message)
     }
 }

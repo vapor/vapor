@@ -106,7 +106,7 @@ extension Optional where Wrapped: Validatable {
         by tester: @noescape (input: Wrapped) throws -> Void)
         throws -> Wrapped {
             guard case .some(let value) = self else {
-                throw Failure(input: nil)
+                throw ValidationError(message: "unexpectedly found 'nil'")
             }
             return try value.tested(by: tester)
     }
@@ -279,7 +279,7 @@ extension Optional where Wrapped: Validatable {
         where V.InputType == Wrapped>(by validator: V)
         throws -> Valid<V> {
             guard case .some(let value) = self else {
-                throw ValidationFailure(validator, input: nil)
+                throw ValidatorFailure(validator, input: nil)
             }
             return try Valid<V>(value, by: validator)
     }
@@ -299,7 +299,7 @@ extension Optional where Wrapped: Validatable {
         where S.InputType == Wrapped>(by suite: S.Type = S.self)
         throws -> Valid<S> {
             guard case .some(let value) = self else {
-                throw ValidationFailure(suite, input: nil)
+                throw ValidatorFailure(suite, input: nil)
             }
             return try Valid<S>(value, by: suite)
     }
