@@ -212,7 +212,11 @@ public class Application {
             if let presetServer = self.server {
                 server = presetServer
             } else {
-                server = try HTTPStreamServer<ServerSocket>(host: self.ip, port: self.port, responder: self)
+                server = try HTTPStreamServer<ServerSocket>(
+                    host: self.ip,
+                    port: self.port,
+                    responder: self
+                )
                 self.server = server
             }
 
