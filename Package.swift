@@ -16,8 +16,8 @@ let package = Package(
         .Package(url: "https://github.com/ketzusaka/Hummingbird.git", majorVersion: 1, minor: 7),
 
         //SHA2 + HMAC hashing. Used by the core to create session identifiers.
-        .Package(url: "https://github.com/CryptoKitten/HMAC.git", majorVersion: 0, minor: 5),
-        .Package(url: "https://github.com/CryptoKitten/SHA2.git", majorVersion: 0, minor: 5)
+        .Package(url: "https://github.com/CryptoKitten/HMAC.git", majorVersion: 0, minor: 6),
+        .Package(url: "https://github.com/CryptoKitten/SHA2.git", majorVersion: 0, minor: 6)
     ],
     exclude: [
         "XcodeProject"
