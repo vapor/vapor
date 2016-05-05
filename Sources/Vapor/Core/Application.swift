@@ -1,4 +1,5 @@
 import libc
+import MediaType
 
 public class Application {
     public static let VERSION = "0.5.3"
@@ -237,7 +238,16 @@ public class Application {
         // File exists
         if let fileBody = try? FileManager.readBytesFromFile(filePath) {
             return Request.Handler { _ in
-                return Response(status: .ok, headers: [:], body: Data(fileBody))
+                var headers: Response.Headers = [:]
+
+                if
+                    let fileExtension = filePath.split(byString: ".").last,
+                    let type = mediaType(forFileExtension: fileExtension) {
+
+                    headers["Content-Type"] = Response.Headers.Values(type.description)
+                }
+                
+                return Response(status: .ok, headers: headers, body: Data(fileBody))
             }
         } else {
             return Request.Handler { _ in
