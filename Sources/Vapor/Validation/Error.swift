@@ -1,5 +1,7 @@
 public protocol ValidationErrorProtocol: ErrorProtocol {
     var message: String { get }
+    var validatorDescription: String { get }
+    var inputDescription: String { get }
 }
 
 /**
@@ -9,6 +11,14 @@ public class ValidationError<ValidatorType: Validator>: ValidationErrorProtocol 
     public let input: ValidatorType.InputType?
     public let validator: ValidatorType?
     public let message: String
+
+    public var validatorDescription: String {
+        return validator.flatMap { "\($0)" } ?? "\(ValidatorType.self)"
+    }
+
+    public var inputDescription: String {
+        return input.flatMap { "\($0)" } ?? "nil"
+    }
 
     public init(_ validator: ValidatorType, input: ValidatorType.InputType?, message: String? = nil) {
         self.input = input
