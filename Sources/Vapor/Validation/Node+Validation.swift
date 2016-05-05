@@ -3,7 +3,7 @@ extension Node {
         T: ValidationSuite
         where T.InputType: NodeInitializable>(by suite: T.Type = T.self)
         throws -> Valid<T> {
-            let value = try T.InputType.makeWith(self)
+            let value = try T.InputType.make(with: self)
             return try value.validated(by: suite)
     }
 }
@@ -29,7 +29,7 @@ extension Extractable where Wrapped == Node {
             guard let wrapped = extract() else {
                 throw ValidationFailure(suite, input: nil)
             }
-            let value = try V.InputType.makeWith(wrapped)
+            let value = try V.InputType.make(with: wrapped)
             return try value.validated(by: suite)
     }
 }

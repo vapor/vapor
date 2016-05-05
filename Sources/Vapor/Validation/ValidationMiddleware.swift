@@ -4,10 +4,10 @@
  */
 class ValidationMiddleware: Middleware {
 
-    func respond(request: Request, chain: Responder) throws -> Response {
+    func respond(to request: Request, chainingTo chain: Responder) throws -> Response {
         do {
-            return try chain.respond(request)
-        } catch is ValidationFailure<OnlyAlphanumeric> {
+            return try chain.respond(to: request)
+        } catch is ValidationFailure {
             let json = Json([
                 "error": true,
                 "message": "Validation failed."
