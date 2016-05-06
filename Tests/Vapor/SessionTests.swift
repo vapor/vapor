@@ -14,7 +14,8 @@ class SessionTests: XCTestCase {
         return [
            ("testDestroy_asksDriverToDestroy", testDestroy_asksDriverToDestroy),
            ("testSubscriptGet_asksDriverForValue", testSubscriptGet_asksDriverForValue),
-           ("testSubscriptSet_asksDriverToSetValue", testSubscriptSet_asksDriverToSetValue)
+           ("testSubscriptSet_asksDriverToSetValue", testSubscriptSet_asksDriverToSetValue),
+           ("testIdentifierCreation", testIdentifierCreation)
         ]
     }
 
@@ -54,6 +55,42 @@ class SessionTests: XCTestCase {
         XCTAssertEqual(key.value, "bar")
         XCTAssertEqual(key.key, "foo")
     }
+
+    func testIdentifierCreation() {
+        let app = Application()
+
+        app.get("cookie") { request in
+            request.session?["hi"] = "test"
+            return "hi"
+        }
+
+        app.bootRoutes()
+
+        var request = Request(method: .get, path: "cookie")
+        request.headers["Cookie"] = "vapor-session=123"
+
+        guard let response = try? app.respond(to: request) else {
+            XCTFail("Could not get response")
+            return
+        }
+
+        var sessionMiddleware: SessionMiddleware?
+
+        for middleware in app.middleware {
+            if let middleware = middleware as? SessionMiddleware {
+                sessionMiddleware = middleware
+            }
+        }
+
+        XCTAssert(sessionMiddleware != nil, "Could not find session middleware")
+
+        XCTAssert(sessionMiddleware?.driver.contains(identifier: "123") == false, "Session should not contain 123")
+
+        XCTAssert(response.cookies["vapor-session"] != nil, "No cookie was added")
+
+        let id = response.cookies["vapor-session"] ?? ""
+        XCTAssert(sessionMiddleware?.driver.contains(identifier: id) == true, "Session did not contain cookie")
+    }
 }
 
 private class TestDriver: SessionDriver {
@@ -74,6 +111,10 @@ private class TestDriver: SessionDriver {
     func valueFor(key: String, identifier: String) -> String? {
         actions.append(.ValueFor(key: key, identifier: identifier))
         return nil
+    }
+
+    private func contains(identifier: String) -> Bool {
+        return false
     }
 
     func set(_ value: String?, forKey key: String, identifier: String) {

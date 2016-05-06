@@ -17,7 +17,10 @@ class SessionMiddleware: Middleware {
     func respond(to request: Request, chainingTo chain: Responder) throws -> Response {
         var request = request
 
-        if let sessionIdentifier = request.cookies["vapor-session"] {
+        if
+            let sessionIdentifier = request.cookies["vapor-session"]
+            where driver.contains(identifier: sessionIdentifier)
+        {
             request.session = Session(identifier: sessionIdentifier, driver: driver)
         } else {
             request.session = Session(driver: driver)
