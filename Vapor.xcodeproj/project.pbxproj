@@ -2404,7 +2404,7 @@
             name = VaporTestSuite;
             path = 'Tests/Vapor';
             sourceTree = '<group>';
-            children = ('__PBXFileRef_Tests/Vapor/ApplicationTests.swift', '__PBXFileRef_Tests/Vapor/ConfigTests.swift', '__PBXFileRef_Tests/Vapor/ControllerTests.swift', '__PBXFileRef_Tests/Vapor/EnvironmentTests.swift', '__PBXFileRef_Tests/Vapor/EventTests.swift', '__PBXFileRef_Tests/Vapor/HashTests.swift', '__PBXFileRef_Tests/Vapor/HTTPStreamTests.swift', '__PBXFileRef_Tests/Vapor/LogTests.swift', '__PBXFileRef_Tests/Vapor/MemorySessionDriverTests.swift', '__PBXFileRef_Tests/Vapor/PerformanceTests.swift', '__PBXFileRef_Tests/Vapor/ProcessTests.swift', '__PBXFileRef_Tests/Vapor/QueryParameterTests.swift', '__PBXFileRef_Tests/Vapor/ResponseTests.swift', '__PBXFileRef_Tests/Vapor/RouterTests.swift', '__PBXFileRef_Tests/Vapor/RouteTests.swift', '__PBXFileRef_Tests/Vapor/SessionTests.swift', '__PBXFileRef_Tests/Vapor/TestHTTPStream.swift', '__PBXFileRef_Tests/Vapor/TypedRouteTests.swift', '__PBXFileRef_Tests/Vapor/ValidationCountTests.swift', '__PBXFileRef_Tests/Vapor/ValidationTests.swift', '__PBXFileRef_Tests/Vapor/ValidationUniqueTests.swift');
+            children = ('__PBXFileRef_Tests/Vapor/ApplicationTests.swift', '__PBXFileRef_Tests/Vapor/ConfigTests.swift', '__PBXFileRef_Tests/Vapor/ControllerTests.swift', '__PBXFileRef_Tests/Vapor/EnvironmentTests.swift', '__PBXFileRef_Tests/Vapor/EventTests.swift', '__PBXFileRef_Tests/Vapor/HashTests.swift', '__PBXFileRef_Tests/Vapor/HTTPStreamTests.swift', '__PBXFileRef_Tests/Vapor/LogTests.swift', '__PBXFileRef_Tests/Vapor/MemorySessionDriverTests.swift', '__PBXFileRef_Tests/Vapor/PerformanceTests.swift', '__PBXFileRef_Tests/Vapor/ProcessTests.swift', '__PBXFileRef_Tests/Vapor/QueryParameterTests.swift', '__PBXFileRef_Tests/Vapor/ResponseTests.swift', '__PBXFileRef_Tests/Vapor/RouterTests.swift', '__PBXFileRef_Tests/Vapor/RouteTests.swift', '__PBXFileRef_Tests/Vapor/SessionTests.swift', '__PBXFileRef_Tests/Vapor/TestHTTPStream.swift', '__PBXFileRef_Tests/Vapor/TypedRouteTests.swift', '__PBXFileRef_Tests/Vapor/ValidationConvenienceTests.swift', '__PBXFileRef_Tests/Vapor/ValidationCountTests.swift', '__PBXFileRef_Tests/Vapor/ValidationTests.swift', '__PBXFileRef_Tests/Vapor/ValidationUniqueTests.swift');
         };
         '__PBXFileRef_Tests/Vapor/ApplicationTests.swift' = {
             isa = PBXFileReference;
@@ -2514,6 +2514,12 @@
             name = 'TypedRouteTests.swift';
             sourceTree = '<group>';
         };
+        '__PBXFileRef_Tests/Vapor/ValidationConvenienceTests.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'ValidationConvenienceTests.swift';
+            sourceTree = '<group>';
+        };
         '__PBXFileRef_Tests/Vapor/ValidationCountTests.swift' = {
             isa = PBXFileReference;
             lastKnownFileType = sourcecode.swift;
@@ -2551,7 +2557,7 @@
         };
         CompilePhase_VaporTestSuite = {
             isa = PBXSourcesBuildPhase;
-            files = ('__src_cc_ref_Tests/Vapor/ApplicationTests.swift', '__src_cc_ref_Tests/Vapor/ConfigTests.swift', '__src_cc_ref_Tests/Vapor/ControllerTests.swift', '__src_cc_ref_Tests/Vapor/EnvironmentTests.swift', '__src_cc_ref_Tests/Vapor/EventTests.swift', '__src_cc_ref_Tests/Vapor/HashTests.swift', '__src_cc_ref_Tests/Vapor/HTTPStreamTests.swift', '__src_cc_ref_Tests/Vapor/LogTests.swift', '__src_cc_ref_Tests/Vapor/MemorySessionDriverTests.swift', '__src_cc_ref_Tests/Vapor/PerformanceTests.swift', '__src_cc_ref_Tests/Vapor/ProcessTests.swift', '__src_cc_ref_Tests/Vapor/QueryParameterTests.swift', '__src_cc_ref_Tests/Vapor/ResponseTests.swift', '__src_cc_ref_Tests/Vapor/RouterTests.swift', '__src_cc_ref_Tests/Vapor/RouteTests.swift', '__src_cc_ref_Tests/Vapor/SessionTests.swift', '__src_cc_ref_Tests/Vapor/TestHTTPStream.swift', '__src_cc_ref_Tests/Vapor/TypedRouteTests.swift', '__src_cc_ref_Tests/Vapor/ValidationCountTests.swift', '__src_cc_ref_Tests/Vapor/ValidationTests.swift', '__src_cc_ref_Tests/Vapor/ValidationUniqueTests.swift');
+            files = ('__src_cc_ref_Tests/Vapor/ApplicationTests.swift', '__src_cc_ref_Tests/Vapor/ConfigTests.swift', '__src_cc_ref_Tests/Vapor/ControllerTests.swift', '__src_cc_ref_Tests/Vapor/EnvironmentTests.swift', '__src_cc_ref_Tests/Vapor/EventTests.swift', '__src_cc_ref_Tests/Vapor/HashTests.swift', '__src_cc_ref_Tests/Vapor/HTTPStreamTests.swift', '__src_cc_ref_Tests/Vapor/LogTests.swift', '__src_cc_ref_Tests/Vapor/MemorySessionDriverTests.swift', '__src_cc_ref_Tests/Vapor/PerformanceTests.swift', '__src_cc_ref_Tests/Vapor/ProcessTests.swift', '__src_cc_ref_Tests/Vapor/QueryParameterTests.swift', '__src_cc_ref_Tests/Vapor/ResponseTests.swift', '__src_cc_ref_Tests/Vapor/RouterTests.swift', '__src_cc_ref_Tests/Vapor/RouteTests.swift', '__src_cc_ref_Tests/Vapor/SessionTests.swift', '__src_cc_ref_Tests/Vapor/TestHTTPStream.swift', '__src_cc_ref_Tests/Vapor/TypedRouteTests.swift', '__src_cc_ref_Tests/Vapor/ValidationConvenienceTests.swift', '__src_cc_ref_Tests/Vapor/ValidationCountTests.swift', '__src_cc_ref_Tests/Vapor/ValidationTests.swift', '__src_cc_ref_Tests/Vapor/ValidationUniqueTests.swift');
             runOnlyForDeploymentPostprocessing = 0;
         };
         ___LinkPhase_VaporTestSuite = {
@@ -2630,6 +2636,10 @@
         '__src_cc_ref_Tests/Vapor/TypedRouteTests.swift' = {
             isa = PBXBuildFile;
             fileRef = '__PBXFileRef_Tests/Vapor/TypedRouteTests.swift';
+        };
+        '__src_cc_ref_Tests/Vapor/ValidationConvenienceTests.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Tests/Vapor/ValidationConvenienceTests.swift';
         };
         '__src_cc_ref_Tests/Vapor/ValidationCountTests.swift' = {
             isa = PBXBuildFile;

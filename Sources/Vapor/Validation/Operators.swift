@@ -93,7 +93,7 @@ public func || <V: ValidationSuite, U: ValidationSuite where V.InputType == U.In
 
     - returns: an And<V,U> object representing the concatination of the two validators
 */
-public func && <V: Validator, U: Validator where V.InputType == U.InputType> (lhs: V, rhs: U) -> And<V, U> {
+public func + <V: Validator, U: Validator where V.InputType == U.InputType> (lhs: V, rhs: U) -> And<V, U> {
     return And(lhs, rhs)
 }
 
@@ -106,7 +106,7 @@ public func && <V: Validator, U: Validator where V.InputType == U.InputType> (lh
 
     - returns: an And<V,U> object representing the concatination of the two validators
 */
-public func && <V: Validator, U: ValidationSuite where V.InputType == U.InputType> (lhs: V, rhs: U.Type) -> And<V, U> {
+public func + <V: Validator, U: ValidationSuite where V.InputType == U.InputType> (lhs: V, rhs: U.Type) -> And<V, U> {
     return And(lhs, rhs)
 }
 
@@ -119,7 +119,7 @@ public func && <V: Validator, U: ValidationSuite where V.InputType == U.InputTyp
 
     - returns: an And<V,U> object representing the concatination of the two validators
 */
-public func && <V: ValidationSuite, U: Validator where V.InputType == U.InputType> (lhs: V.Type, rhs: U) -> And<V, U> {
+public func + <V: ValidationSuite, U: Validator where V.InputType == U.InputType> (lhs: V.Type, rhs: U) -> And<V, U> {
     return And(lhs, rhs)
 }
 
@@ -132,6 +132,6 @@ public func && <V: ValidationSuite, U: Validator where V.InputType == U.InputTyp
 
     - returns: an And<V,U> object representing the concatination of the two validators
 */
-public func && <V: ValidationSuite, U: ValidationSuite where V.InputType == U.InputType> (lhs: V.Type, rhs: U.Type) -> And<V, U> {
+public func + <V: ValidationSuite, U: ValidationSuite where V.InputType == U.InputType> (lhs: V.Type, rhs: U.Type) -> And<V, U> {
     return And(lhs, rhs)
 }
