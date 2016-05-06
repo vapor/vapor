@@ -20,7 +20,7 @@ let package = Package(
         .Package(url: "https://github.com/CryptoKitten/SHA2.git", majorVersion: 0, minor: 6),
 
         //Determines Content-Type for file extensions
-        .Package(url: "https://github.com/Zewo/MediaType.git", majorVersion: 0, minor: 0)
+        .Package(url: "https://github.com/Zewo/MediaType.git", majorVersion: 0, minor: 6)
     ],
     exclude: [
         "XcodeProject"
