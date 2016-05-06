@@ -44,7 +44,8 @@
 
     And used like:
 
-     let validated = try "string".validated(by: StringLength.min(4))
+        let validated = try "string".validated(by: StringLength.min(4))
+
 */
 public protocol Validator {
     /**
