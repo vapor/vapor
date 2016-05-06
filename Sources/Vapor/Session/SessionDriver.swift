@@ -23,7 +23,7 @@ public protocol SessionDriver: class {
     /**
         Returns true if the session driver
         contains an entry for the given identifier.
-     
+
         - parameter identifier: the identifier of the session
     */
     func contains(identifier: String) -> Bool
