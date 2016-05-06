@@ -67,7 +67,7 @@
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "--workDir=$(SRCROOT)"
+            argument = "--workDir=$(SRCROOT)/Sources/Development"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>
