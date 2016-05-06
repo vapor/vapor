@@ -246,7 +246,7 @@ public class Application {
 
                     headers["Content-Type"] = Response.Headers.Values(type.description)
                 }
-                
+
                 return Response(status: .ok, headers: headers, body: Data(fileBody))
             }
         } else {
