@@ -17,7 +17,7 @@
             productRefGroup = ____Products_;
             projectDirPath = '';
             projectRoot = '';
-            targets = (______Target_C7, ______Target_S4, ______Target_String, ______Target_StructuredData, ______Target_JSON, ______Target_Strand, ______Target_Hummingbird, ______Target_CryptoEssentials, ______Target_HMAC, ______Target_SHA2, ______Target_Development, ______Target_Generator, ______Target_libc, ______Target_Performance, ______Target_Vapor, ______Target_VaporTestSuite);
+            targets = (______Target_C7, ______Target_S4, ______Target_String, ______Target_StructuredData, ______Target_JSON, ______Target_Strand, ______Target_Hummingbird, ______Target_CryptoEssentials, ______Target_HMAC, ______Target_SHA2, ______Target_MediaType, ______Target_Development, ______Target_Generator, ______Target_libc, ______Target_Performance, ______Target_Vapor, ______Target_VaporTestSuite);
         };
         '__PBXFileRef_Package.swift' = {
             isa = PBXFileReference;
@@ -1311,6 +1311,74 @@
             isa = PBXTargetDependency;
             target = ______Target_SHA2;
         };
+        _______Group_MediaType = {
+            isa = PBXGroup;
+            name = MediaType;
+            path = 'Packages/MediaType-0.6.0/Source';
+            sourceTree = '<group>';
+            children = ('__PBXFileRef_Packages/MediaType-0.6.0/Source/MediaType.swift');
+        };
+        '__PBXFileRef_Packages/MediaType-0.6.0/Source/MediaType.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'MediaType.swift';
+            sourceTree = '<group>';
+        };
+        ______Target_MediaType = {
+            isa = PBXNativeTarget;
+            buildConfigurationList = _______Confs_MediaType;
+            buildPhases = (CompilePhase_MediaType, ___LinkPhase_MediaType);
+            buildRules = ();
+            dependencies = (__Dependency_C7, __Dependency_StructuredData, __Dependency_String);
+            name = MediaType;
+            productName = MediaType;
+            productReference = _____Product_MediaType;
+            productType = 'com.apple.product-type.library.dynamic';
+        };
+        _____Product_MediaType = {
+            isa = PBXFileReference;
+            explicitFileType = 'compiled.mach-o.dylib';
+            path = 'MediaType.dylib';
+            sourceTree = BUILT_PRODUCTS_DIR;
+        };
+        CompilePhase_MediaType = {
+            isa = PBXSourcesBuildPhase;
+            files = ('__src_cc_ref_Packages/MediaType-0.6.0/Source/MediaType.swift');
+            runOnlyForDeploymentPostprocessing = 0;
+        };
+        ___LinkPhase_MediaType = {
+            isa = PBXFrameworksBuildPhase;
+            files = (_LinkFileRef_C7, _LinkFileRef_StructuredData, _LinkFileRef_String);
+            runOnlyForDeploymentPostprocessing = 0;
+        };
+        '__src_cc_ref_Packages/MediaType-0.6.0/Source/MediaType.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/MediaType-0.6.0/Source/MediaType.swift';
+        };
+        _LinkFileRef_MediaType = {
+            isa = PBXBuildFile;
+            fileRef = _____Product_MediaType;
+        };
+        _______Confs_MediaType = {
+            isa = XCConfigurationList;
+            buildConfigurations = (___DebugConf_MediaType, _ReleaseConf_MediaType);
+            defaultConfigurationIsVisible = 0;
+            defaultConfigurationName = Debug;
+        };
+        ___DebugConf_MediaType = {
+            isa = XCBuildConfiguration;
+            buildSettings = { ENABLE_TESTABILITY = YES; SWIFT_OPTIMIZATION_LEVEL = -Onone; LD_RUNPATH_SEARCH_PATHS = '$(TOOLCHAIN_DIR)/usr/lib/swift/macosx'; };
+            name = Debug;
+        };
+        _ReleaseConf_MediaType = {
+            isa = XCBuildConfiguration;
+            buildSettings = { ENABLE_TESTABILITY = YES; LD_RUNPATH_SEARCH_PATHS = '$(TOOLCHAIN_DIR)/usr/lib/swift/macosx'; };
+            name = Release;
+        };
+        __Dependency_MediaType = {
+            isa = PBXTargetDependency;
+            target = ______Target_MediaType;
+        };
         _______Group_Development = {
             isa = PBXGroup;
             name = Development;
@@ -1347,7 +1415,7 @@
             buildConfigurationList = _______Confs_Development;
             buildPhases = (CompilePhase_Development, ___LinkPhase_Development);
             buildRules = ();
-            dependencies = (__Dependency_CryptoEssentials, __Dependency_Strand, __Dependency_StructuredData, __Dependency_C7, __Dependency_SHA2, __Dependency_HMAC, __Dependency_Hummingbird, __Dependency_JSON, __Dependency_String, __Dependency_S4, __Dependency_Vapor);
+            dependencies = (__Dependency_CryptoEssentials, __Dependency_Strand, __Dependency_StructuredData, __Dependency_C7, __Dependency_MediaType, __Dependency_SHA2, __Dependency_HMAC, __Dependency_Hummingbird, __Dependency_JSON, __Dependency_String, __Dependency_S4, __Dependency_Vapor);
             name = Development;
             productName = Development;
             productReference = _____Product_Development;
@@ -1366,7 +1434,7 @@
         };
         ___LinkPhase_Development = {
             isa = PBXFrameworksBuildPhase;
-            files = (_LinkFileRef_CryptoEssentials, _LinkFileRef_Strand, _LinkFileRef_StructuredData, _LinkFileRef_C7, _LinkFileRef_SHA2, _LinkFileRef_HMAC, _LinkFileRef_Hummingbird, _LinkFileRef_JSON, _LinkFileRef_String, _LinkFileRef_S4, _LinkFileRef_Vapor, _LinkFileRef_libc);
+            files = (_LinkFileRef_CryptoEssentials, _LinkFileRef_Strand, _LinkFileRef_StructuredData, _LinkFileRef_C7, _LinkFileRef_MediaType, _LinkFileRef_SHA2, _LinkFileRef_HMAC, _LinkFileRef_Hummingbird, _LinkFileRef_JSON, _LinkFileRef_String, _LinkFileRef_S4, _LinkFileRef_Vapor, _LinkFileRef_libc);
             runOnlyForDeploymentPostprocessing = 0;
         };
         '__src_cc_ref_Sources/Development/main.swift' = {
@@ -1427,7 +1495,7 @@
             buildConfigurationList = _______Confs_Generator;
             buildPhases = (CompilePhase_Generator, ___LinkPhase_Generator);
             buildRules = ();
-            dependencies = (__Dependency_CryptoEssentials, __Dependency_Strand, __Dependency_StructuredData, __Dependency_C7, __Dependency_SHA2, __Dependency_HMAC, __Dependency_Hummingbird, __Dependency_JSON, __Dependency_String, __Dependency_S4);
+            dependencies = (__Dependency_CryptoEssentials, __Dependency_Strand, __Dependency_StructuredData, __Dependency_C7, __Dependency_MediaType, __Dependency_SHA2, __Dependency_HMAC, __Dependency_Hummingbird, __Dependency_JSON, __Dependency_String, __Dependency_S4);
             name = Generator;
             productName = Generator;
             productReference = _____Product_Generator;
@@ -1446,7 +1514,7 @@
         };
         ___LinkPhase_Generator = {
             isa = PBXFrameworksBuildPhase;
-            files = (_LinkFileRef_CryptoEssentials, _LinkFileRef_Strand, _LinkFileRef_StructuredData, _LinkFileRef_C7, _LinkFileRef_SHA2, _LinkFileRef_HMAC, _LinkFileRef_Hummingbird, _LinkFileRef_JSON, _LinkFileRef_String, _LinkFileRef_S4);
+            files = (_LinkFileRef_CryptoEssentials, _LinkFileRef_Strand, _LinkFileRef_StructuredData, _LinkFileRef_C7, _LinkFileRef_MediaType, _LinkFileRef_SHA2, _LinkFileRef_HMAC, _LinkFileRef_Hummingbird, _LinkFileRef_JSON, _LinkFileRef_String, _LinkFileRef_S4);
             runOnlyForDeploymentPostprocessing = 0;
         };
         '__src_cc_ref_Sources/Generator/main.swift' = {
@@ -1495,7 +1563,7 @@
             buildConfigurationList = _______Confs_libc;
             buildPhases = (CompilePhase_libc, ___LinkPhase_libc);
             buildRules = ();
-            dependencies = (__Dependency_CryptoEssentials, __Dependency_Strand, __Dependency_StructuredData, __Dependency_C7, __Dependency_SHA2, __Dependency_HMAC, __Dependency_Hummingbird, __Dependency_JSON, __Dependency_String, __Dependency_S4);
+            dependencies = (__Dependency_CryptoEssentials, __Dependency_Strand, __Dependency_StructuredData, __Dependency_C7, __Dependency_MediaType, __Dependency_SHA2, __Dependency_HMAC, __Dependency_Hummingbird, __Dependency_JSON, __Dependency_String, __Dependency_S4);
             name = libc;
             productName = libc;
             productReference = _____Product_libc;
@@ -1514,7 +1582,7 @@
         };
         ___LinkPhase_libc = {
             isa = PBXFrameworksBuildPhase;
-            files = (_LinkFileRef_CryptoEssentials, _LinkFileRef_Strand, _LinkFileRef_StructuredData, _LinkFileRef_C7, _LinkFileRef_SHA2, _LinkFileRef_HMAC, _LinkFileRef_Hummingbird, _LinkFileRef_JSON, _LinkFileRef_String, _LinkFileRef_S4);
+            files = (_LinkFileRef_CryptoEssentials, _LinkFileRef_Strand, _LinkFileRef_StructuredData, _LinkFileRef_C7, _LinkFileRef_MediaType, _LinkFileRef_SHA2, _LinkFileRef_HMAC, _LinkFileRef_Hummingbird, _LinkFileRef_JSON, _LinkFileRef_String, _LinkFileRef_S4);
             runOnlyForDeploymentPostprocessing = 0;
         };
         '__src_cc_ref_Sources/libc/libc.swift' = {
@@ -1563,7 +1631,7 @@
             buildConfigurationList = _______Confs_Performance;
             buildPhases = (CompilePhase_Performance, ___LinkPhase_Performance);
             buildRules = ();
-            dependencies = (__Dependency_CryptoEssentials, __Dependency_Strand, __Dependency_StructuredData, __Dependency_C7, __Dependency_SHA2, __Dependency_HMAC, __Dependency_Hummingbird, __Dependency_JSON, __Dependency_String, __Dependency_S4, __Dependency_Vapor);
+            dependencies = (__Dependency_CryptoEssentials, __Dependency_Strand, __Dependency_StructuredData, __Dependency_C7, __Dependency_MediaType, __Dependency_SHA2, __Dependency_HMAC, __Dependency_Hummingbird, __Dependency_JSON, __Dependency_String, __Dependency_S4, __Dependency_Vapor);
             name = Performance;
             productName = Performance;
             productReference = _____Product_Performance;
@@ -1582,7 +1650,7 @@
         };
         ___LinkPhase_Performance = {
             isa = PBXFrameworksBuildPhase;
-            files = (_LinkFileRef_CryptoEssentials, _LinkFileRef_Strand, _LinkFileRef_StructuredData, _LinkFileRef_C7, _LinkFileRef_SHA2, _LinkFileRef_HMAC, _LinkFileRef_Hummingbird, _LinkFileRef_JSON, _LinkFileRef_String, _LinkFileRef_S4, _LinkFileRef_Vapor, _LinkFileRef_libc);
+            files = (_LinkFileRef_CryptoEssentials, _LinkFileRef_Strand, _LinkFileRef_StructuredData, _LinkFileRef_C7, _LinkFileRef_MediaType, _LinkFileRef_SHA2, _LinkFileRef_HMAC, _LinkFileRef_Hummingbird, _LinkFileRef_JSON, _LinkFileRef_String, _LinkFileRef_S4, _LinkFileRef_Vapor, _LinkFileRef_libc);
             runOnlyForDeploymentPostprocessing = 0;
         };
         '__src_cc_ref_Sources/Performance/main.swift' = {
@@ -2021,7 +2089,7 @@
             buildConfigurationList = _______Confs_Vapor;
             buildPhases = (CompilePhase_Vapor, ___LinkPhase_Vapor);
             buildRules = ();
-            dependencies = (__Dependency_CryptoEssentials, __Dependency_Strand, __Dependency_StructuredData, __Dependency_C7, __Dependency_SHA2, __Dependency_HMAC, __Dependency_Hummingbird, __Dependency_JSON, __Dependency_String, __Dependency_S4, __Dependency_libc);
+            dependencies = (__Dependency_CryptoEssentials, __Dependency_Strand, __Dependency_StructuredData, __Dependency_C7, __Dependency_MediaType, __Dependency_SHA2, __Dependency_HMAC, __Dependency_Hummingbird, __Dependency_JSON, __Dependency_String, __Dependency_S4, __Dependency_libc);
             name = Vapor;
             productName = Vapor;
             productReference = _____Product_Vapor;
@@ -2040,7 +2108,7 @@
         };
         ___LinkPhase_Vapor = {
             isa = PBXFrameworksBuildPhase;
-            files = (_LinkFileRef_CryptoEssentials, _LinkFileRef_Strand, _LinkFileRef_StructuredData, _LinkFileRef_C7, _LinkFileRef_SHA2, _LinkFileRef_HMAC, _LinkFileRef_Hummingbird, _LinkFileRef_JSON, _LinkFileRef_String, _LinkFileRef_S4, _LinkFileRef_libc);
+            files = (_LinkFileRef_CryptoEssentials, _LinkFileRef_Strand, _LinkFileRef_StructuredData, _LinkFileRef_C7, _LinkFileRef_MediaType, _LinkFileRef_SHA2, _LinkFileRef_HMAC, _LinkFileRef_Hummingbird, _LinkFileRef_JSON, _LinkFileRef_String, _LinkFileRef_S4, _LinkFileRef_libc);
             runOnlyForDeploymentPostprocessing = 0;
         };
         '__src_cc_ref_Sources/Vapor/Config/Config.swift' = {
@@ -2336,7 +2404,13 @@
             name = VaporTestSuite;
             path = 'Tests/Vapor';
             sourceTree = '<group>';
-            children = ('__PBXFileRef_Tests/Vapor/ConfigTests.swift', '__PBXFileRef_Tests/Vapor/ControllerTests.swift', '__PBXFileRef_Tests/Vapor/EnvironmentTests.swift', '__PBXFileRef_Tests/Vapor/EventTests.swift', '__PBXFileRef_Tests/Vapor/HashTests.swift', '__PBXFileRef_Tests/Vapor/HTTPStreamTests.swift', '__PBXFileRef_Tests/Vapor/LogTests.swift', '__PBXFileRef_Tests/Vapor/MemorySessionDriverTests.swift', '__PBXFileRef_Tests/Vapor/PerformanceTests.swift', '__PBXFileRef_Tests/Vapor/ProcessTests.swift', '__PBXFileRef_Tests/Vapor/QueryParameterTests.swift', '__PBXFileRef_Tests/Vapor/ResponseTests.swift', '__PBXFileRef_Tests/Vapor/RouterTests.swift', '__PBXFileRef_Tests/Vapor/RouteTests.swift', '__PBXFileRef_Tests/Vapor/SessionTests.swift', '__PBXFileRef_Tests/Vapor/TestHTTPStream.swift', '__PBXFileRef_Tests/Vapor/TypedRouteTests.swift', '__PBXFileRef_Tests/Vapor/ValidationCountTests.swift', '__PBXFileRef_Tests/Vapor/ValidationTests.swift', '__PBXFileRef_Tests/Vapor/ValidationUniqueTests.swift');
+            children = ('__PBXFileRef_Tests/Vapor/ApplicationTests.swift', '__PBXFileRef_Tests/Vapor/ConfigTests.swift', '__PBXFileRef_Tests/Vapor/ControllerTests.swift', '__PBXFileRef_Tests/Vapor/EnvironmentTests.swift', '__PBXFileRef_Tests/Vapor/EventTests.swift', '__PBXFileRef_Tests/Vapor/HashTests.swift', '__PBXFileRef_Tests/Vapor/HTTPStreamTests.swift', '__PBXFileRef_Tests/Vapor/LogTests.swift', '__PBXFileRef_Tests/Vapor/MemorySessionDriverTests.swift', '__PBXFileRef_Tests/Vapor/PerformanceTests.swift', '__PBXFileRef_Tests/Vapor/ProcessTests.swift', '__PBXFileRef_Tests/Vapor/QueryParameterTests.swift', '__PBXFileRef_Tests/Vapor/ResponseTests.swift', '__PBXFileRef_Tests/Vapor/RouterTests.swift', '__PBXFileRef_Tests/Vapor/RouteTests.swift', '__PBXFileRef_Tests/Vapor/SessionTests.swift', '__PBXFileRef_Tests/Vapor/TestHTTPStream.swift', '__PBXFileRef_Tests/Vapor/TypedRouteTests.swift', '__PBXFileRef_Tests/Vapor/ValidationCountTests.swift', '__PBXFileRef_Tests/Vapor/ValidationTests.swift', '__PBXFileRef_Tests/Vapor/ValidationUniqueTests.swift');
+        };
+        '__PBXFileRef_Tests/Vapor/ApplicationTests.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'ApplicationTests.swift';
+            sourceTree = '<group>';
         };
         '__PBXFileRef_Tests/Vapor/ConfigTests.swift' = {
             isa = PBXFileReference;
@@ -2463,7 +2537,7 @@
             buildConfigurationList = _______Confs_VaporTestSuite;
             buildPhases = (CompilePhase_VaporTestSuite, ___LinkPhase_VaporTestSuite);
             buildRules = ();
-            dependencies = (__Dependency_CryptoEssentials, __Dependency_Strand, __Dependency_StructuredData, __Dependency_C7, __Dependency_SHA2, __Dependency_HMAC, __Dependency_Hummingbird, __Dependency_JSON, __Dependency_String, __Dependency_S4, __Dependency_Vapor);
+            dependencies = (__Dependency_CryptoEssentials, __Dependency_Strand, __Dependency_StructuredData, __Dependency_C7, __Dependency_MediaType, __Dependency_SHA2, __Dependency_HMAC, __Dependency_Hummingbird, __Dependency_JSON, __Dependency_String, __Dependency_S4, __Dependency_Vapor);
             name = VaporTestSuite;
             productName = VaporTestSuite;
             productReference = _____Product_VaporTestSuite;
@@ -2477,13 +2551,17 @@
         };
         CompilePhase_VaporTestSuite = {
             isa = PBXSourcesBuildPhase;
-            files = ('__src_cc_ref_Tests/Vapor/ConfigTests.swift', '__src_cc_ref_Tests/Vapor/ControllerTests.swift', '__src_cc_ref_Tests/Vapor/EnvironmentTests.swift', '__src_cc_ref_Tests/Vapor/EventTests.swift', '__src_cc_ref_Tests/Vapor/HashTests.swift', '__src_cc_ref_Tests/Vapor/HTTPStreamTests.swift', '__src_cc_ref_Tests/Vapor/LogTests.swift', '__src_cc_ref_Tests/Vapor/MemorySessionDriverTests.swift', '__src_cc_ref_Tests/Vapor/PerformanceTests.swift', '__src_cc_ref_Tests/Vapor/ProcessTests.swift', '__src_cc_ref_Tests/Vapor/QueryParameterTests.swift', '__src_cc_ref_Tests/Vapor/ResponseTests.swift', '__src_cc_ref_Tests/Vapor/RouterTests.swift', '__src_cc_ref_Tests/Vapor/RouteTests.swift', '__src_cc_ref_Tests/Vapor/SessionTests.swift', '__src_cc_ref_Tests/Vapor/TestHTTPStream.swift', '__src_cc_ref_Tests/Vapor/TypedRouteTests.swift', '__src_cc_ref_Tests/Vapor/ValidationCountTests.swift', '__src_cc_ref_Tests/Vapor/ValidationTests.swift', '__src_cc_ref_Tests/Vapor/ValidationUniqueTests.swift');
+            files = ('__src_cc_ref_Tests/Vapor/ApplicationTests.swift', '__src_cc_ref_Tests/Vapor/ConfigTests.swift', '__src_cc_ref_Tests/Vapor/ControllerTests.swift', '__src_cc_ref_Tests/Vapor/EnvironmentTests.swift', '__src_cc_ref_Tests/Vapor/EventTests.swift', '__src_cc_ref_Tests/Vapor/HashTests.swift', '__src_cc_ref_Tests/Vapor/HTTPStreamTests.swift', '__src_cc_ref_Tests/Vapor/LogTests.swift', '__src_cc_ref_Tests/Vapor/MemorySessionDriverTests.swift', '__src_cc_ref_Tests/Vapor/PerformanceTests.swift', '__src_cc_ref_Tests/Vapor/ProcessTests.swift', '__src_cc_ref_Tests/Vapor/QueryParameterTests.swift', '__src_cc_ref_Tests/Vapor/ResponseTests.swift', '__src_cc_ref_Tests/Vapor/RouterTests.swift', '__src_cc_ref_Tests/Vapor/RouteTests.swift', '__src_cc_ref_Tests/Vapor/SessionTests.swift', '__src_cc_ref_Tests/Vapor/TestHTTPStream.swift', '__src_cc_ref_Tests/Vapor/TypedRouteTests.swift', '__src_cc_ref_Tests/Vapor/ValidationCountTests.swift', '__src_cc_ref_Tests/Vapor/ValidationTests.swift', '__src_cc_ref_Tests/Vapor/ValidationUniqueTests.swift');
             runOnlyForDeploymentPostprocessing = 0;
         };
         ___LinkPhase_VaporTestSuite = {
             isa = PBXFrameworksBuildPhase;
-            files = (_LinkFileRef_CryptoEssentials, _LinkFileRef_Strand, _LinkFileRef_StructuredData, _LinkFileRef_C7, _LinkFileRef_SHA2, _LinkFileRef_HMAC, _LinkFileRef_Hummingbird, _LinkFileRef_JSON, _LinkFileRef_String, _LinkFileRef_S4, _LinkFileRef_Vapor, _LinkFileRef_libc);
+            files = (_LinkFileRef_CryptoEssentials, _LinkFileRef_Strand, _LinkFileRef_StructuredData, _LinkFileRef_C7, _LinkFileRef_MediaType, _LinkFileRef_SHA2, _LinkFileRef_HMAC, _LinkFileRef_Hummingbird, _LinkFileRef_JSON, _LinkFileRef_String, _LinkFileRef_S4, _LinkFileRef_Vapor, _LinkFileRef_libc);
             runOnlyForDeploymentPostprocessing = 0;
+        };
+        '__src_cc_ref_Tests/Vapor/ApplicationTests.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Tests/Vapor/ApplicationTests.swift';
         };
         '__src_cc_ref_Tests/Vapor/ConfigTests.swift' = {
             isa = PBXBuildFile;
@@ -2604,13 +2682,13 @@
         };
         _____Sources_ = {
             isa = PBXGroup;
-            children = (_______Group_C7, _______Group_S4, _______Group_String, _______Group_StructuredData, _______Group_JSON, _______Group_Strand, _______Group_Hummingbird, _______Group_CryptoEssentials, _______Group_HMAC, _______Group_SHA2, _______Group_Development, _______Group_Generator, _______Group_libc, _______Group_Performance, _______Group_Vapor);
+            children = (_______Group_C7, _______Group_S4, _______Group_String, _______Group_StructuredData, _______Group_JSON, _______Group_Strand, _______Group_Hummingbird, _______Group_CryptoEssentials, _______Group_HMAC, _______Group_SHA2, _______Group_MediaType, _______Group_Development, _______Group_Generator, _______Group_libc, _______Group_Performance, _______Group_Vapor);
             name = Sources;
             sourceTree = '<group>';
         };
         Dependencies_ = {
             isa = PBXGroup;
-            children = (_______Group_C7, _______Group_S4, _______Group_String, _______Group_StructuredData, _______Group_JSON, _______Group_Strand, _______Group_Hummingbird, _______Group_CryptoEssentials, _______Group_HMAC, _______Group_SHA2);
+            children = (_______Group_C7, _______Group_S4, _______Group_String, _______Group_StructuredData, _______Group_JSON, _______Group_Strand, _______Group_Hummingbird, _______Group_CryptoEssentials, _______Group_HMAC, _______Group_SHA2, _______Group_MediaType);
             name = Dependencies;
             sourceTree = '<group>';
         };
@@ -2628,7 +2706,7 @@
         };
         ____Products_ = {
             isa = PBXGroup;
-            children = (TestProducts_, _____Product_C7, _____Product_S4, _____Product_String, _____Product_StructuredData, _____Product_JSON, _____Product_Strand, _____Product_Hummingbird, _____Product_CryptoEssentials, _____Product_HMAC, _____Product_SHA2, _____Product_Development, _____Product_Generator, _____Product_libc, _____Product_Performance, _____Product_Vapor);
+            children = (TestProducts_, _____Product_C7, _____Product_S4, _____Product_String, _____Product_StructuredData, _____Product_JSON, _____Product_Strand, _____Product_Hummingbird, _____Product_CryptoEssentials, _____Product_HMAC, _____Product_SHA2, _____Product_MediaType, _____Product_Development, _____Product_Generator, _____Product_libc, _____Product_Performance, _____Product_Vapor);
             name = Products;
             sourceTree = '<group>';
         };
