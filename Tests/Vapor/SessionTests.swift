@@ -14,7 +14,8 @@ class SessionTests: XCTestCase {
         return [
            ("testDestroy_asksDriverToDestroy", testDestroy_asksDriverToDestroy),
            ("testSubscriptGet_asksDriverForValue", testSubscriptGet_asksDriverForValue),
-           ("testSubscriptSet_asksDriverToSetValue", testSubscriptSet_asksDriverToSetValue)
+           ("testSubscriptSet_asksDriverToSetValue", testSubscriptSet_asksDriverToSetValue),
+           ("testIdentifierCreation", testIdentifierCreation)
         ]
     }
 
