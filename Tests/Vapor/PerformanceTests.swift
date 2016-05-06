@@ -101,7 +101,7 @@ class PerformanceTests: XCTestCase {
         }
 
 
-        let server = HTTPStreamServer<TestHTTPStream>()
+        let server = try HTTPStreamServer<TestHTTPStream>(port: 8080, responder: app)
         app.server = server
 
         app.start()

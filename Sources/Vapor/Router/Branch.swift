@@ -99,7 +99,7 @@ internal final class Branch {
 
         if key.characters.first == ":" {
             let chars = key.characters
-            let indexOne = chars.startIndex.advanced(by: 1)
+            let indexOne = chars.index(after: chars.startIndex)
             let sub = key.characters.suffix(from: indexOne)
             let substring = String(sub)
 
