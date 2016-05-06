@@ -32,7 +32,7 @@ If you find a security vulnerability, please contact [tanner@qutheory.io](tanner
 
 ## 💙 Code of Conduct
 
-Our goal is to create a safe and empowering environment for anyone who decides to use or contribute to Vapor. Please help us make the community a better place by abiding to this [Code of Conduct]() during your interactions relating to this project. 
+Our goal is to create a safe and empowering environment for anyone who decides to use or contribute to Vapor. Please help us make the community a better place by abiding to this [Code of Conduct](https://github.com/qutheory/vapor/blob/master/CODE_OF_CONDUCT.md) during your interactions relating to this project. 
 
 ## ⚙ Compatibility
 
