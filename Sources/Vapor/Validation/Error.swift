@@ -74,7 +74,7 @@ public final class ValidationError<ValidatorType: Validator>: ValidationErrorPro
         self.validator = validator
 
         let inputDescription = input.flatMap { "\($0)" } ?? "nil"
-        self.message = message ?? "\(validator) failed with input: \(inputDescription)"
+        self.message = message ?? "Validating \(validator) failed for input '\(inputDescription)'"
     }
 
     /**
@@ -91,7 +91,7 @@ public final class ValidationError<ValidatorType: Validator>: ValidationErrorPro
         self.validator = nil
 
         let inputDescription = input.flatMap { "\($0)" } ?? "nil"
-        self.message = message ?? "\(type) failed with input: \(inputDescription)"
+        self.message = message ?? "Validating \(type) failed for input '\(inputDescription)'"
     }
 }
 
