@@ -242,8 +242,8 @@ public class Application {
 
                 if
                     let fileExtension = filePath.split(byString: ".").last,
-                    let type = mediaType(forFileExtension: fileExtension) {
-
+                    let type = mediaType(forFileExtension: fileExtension)
+                {
                     headers["Content-Type"] = Response.Headers.Values(type.description)
                 }
 
