@@ -32,7 +32,6 @@ class ApplicationTests: XCTestCase {
 
         var found = false
         for header in response.headers {
-            print(header)
             if header.key == "Content-Type" && header.value == "text/css" {
                 found = true
             }
