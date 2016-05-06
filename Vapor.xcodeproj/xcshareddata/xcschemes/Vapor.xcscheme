@@ -1,169 +1,291 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Scheme LastUpgradeVersion = "9999" version = "1.3">
-  <BuildAction parallelizeBuildables = "YES" buildImplicitDependencies = "YES">
-    <BuildActionEntries>
-      <BuildActionEntry buildForTesting = "YES" buildForRunning = "YES" buildForProfiling = "YES" buildForArchiving = "YES" buildForAnalyzing = "YES">
-        <BuildableReference
-          BuildableIdentifier = "primary"
-          BlueprintIdentifier = "______Target_C7"
-          BuildableName = "libC7.dylib"
-          BlueprintName = "C7"
-          ReferencedContainer = "container:Vapor.xcodeproj">
-        </BuildableReference>
-      </BuildActionEntry>
-      <BuildActionEntry buildForTesting = "YES" buildForRunning = "YES" buildForProfiling = "YES" buildForArchiving = "YES" buildForAnalyzing = "YES">
-        <BuildableReference
-          BuildableIdentifier = "primary"
-          BlueprintIdentifier = "______Target_S4"
-          BuildableName = "libS4.dylib"
-          BlueprintName = "S4"
-          ReferencedContainer = "container:Vapor.xcodeproj">
-        </BuildableReference>
-      </BuildActionEntry>
-      <BuildActionEntry buildForTesting = "YES" buildForRunning = "YES" buildForProfiling = "YES" buildForArchiving = "YES" buildForAnalyzing = "YES">
-        <BuildableReference
-          BuildableIdentifier = "primary"
-          BlueprintIdentifier = "______Target_String"
-          BuildableName = "libString.dylib"
-          BlueprintName = "String"
-          ReferencedContainer = "container:Vapor.xcodeproj">
-        </BuildableReference>
-      </BuildActionEntry>
-      <BuildActionEntry buildForTesting = "YES" buildForRunning = "YES" buildForProfiling = "YES" buildForArchiving = "YES" buildForAnalyzing = "YES">
-        <BuildableReference
-          BuildableIdentifier = "primary"
-          BlueprintIdentifier = "______Target_StructuredData"
-          BuildableName = "libStructuredData.dylib"
-          BlueprintName = "StructuredData"
-          ReferencedContainer = "container:Vapor.xcodeproj">
-        </BuildableReference>
-      </BuildActionEntry>
-      <BuildActionEntry buildForTesting = "YES" buildForRunning = "YES" buildForProfiling = "YES" buildForArchiving = "YES" buildForAnalyzing = "YES">
-        <BuildableReference
-          BuildableIdentifier = "primary"
-          BlueprintIdentifier = "______Target_JSON"
-          BuildableName = "libJSON.dylib"
-          BlueprintName = "JSON"
-          ReferencedContainer = "container:Vapor.xcodeproj">
-        </BuildableReference>
-      </BuildActionEntry>
-      <BuildActionEntry buildForTesting = "YES" buildForRunning = "YES" buildForProfiling = "YES" buildForArchiving = "YES" buildForAnalyzing = "YES">
-        <BuildableReference
-          BuildableIdentifier = "primary"
-          BlueprintIdentifier = "______Target_Strand"
-          BuildableName = "libStrand.dylib"
-          BlueprintName = "Strand"
-          ReferencedContainer = "container:Vapor.xcodeproj">
-        </BuildableReference>
-      </BuildActionEntry>
-      <BuildActionEntry buildForTesting = "YES" buildForRunning = "YES" buildForProfiling = "YES" buildForArchiving = "YES" buildForAnalyzing = "YES">
-        <BuildableReference
-          BuildableIdentifier = "primary"
-          BlueprintIdentifier = "______Target_Hummingbird"
-          BuildableName = "libHummingbird.dylib"
-          BlueprintName = "Hummingbird"
-          ReferencedContainer = "container:Vapor.xcodeproj">
-        </BuildableReference>
-      </BuildActionEntry>
-      <BuildActionEntry buildForTesting = "YES" buildForRunning = "YES" buildForProfiling = "YES" buildForArchiving = "YES" buildForAnalyzing = "YES">
-        <BuildableReference
-          BuildableIdentifier = "primary"
-          BlueprintIdentifier = "______Target_CryptoEssentials"
-          BuildableName = "libCryptoEssentials.dylib"
-          BlueprintName = "CryptoEssentials"
-          ReferencedContainer = "container:Vapor.xcodeproj">
-        </BuildableReference>
-      </BuildActionEntry>
-      <BuildActionEntry buildForTesting = "YES" buildForRunning = "YES" buildForProfiling = "YES" buildForArchiving = "YES" buildForAnalyzing = "YES">
-        <BuildableReference
-          BuildableIdentifier = "primary"
-          BlueprintIdentifier = "______Target_HMAC"
-          BuildableName = "libHMAC.dylib"
-          BlueprintName = "HMAC"
-          ReferencedContainer = "container:Vapor.xcodeproj">
-        </BuildableReference>
-      </BuildActionEntry>
-      <BuildActionEntry buildForTesting = "YES" buildForRunning = "YES" buildForProfiling = "YES" buildForArchiving = "YES" buildForAnalyzing = "YES">
-        <BuildableReference
-          BuildableIdentifier = "primary"
-          BlueprintIdentifier = "______Target_SHA2"
-          BuildableName = "libSHA2.dylib"
-          BlueprintName = "SHA2"
-          ReferencedContainer = "container:Vapor.xcodeproj">
-        </BuildableReference>
-      </BuildActionEntry>
-      <BuildActionEntry buildForTesting = "YES" buildForRunning = "YES" buildForProfiling = "YES" buildForArchiving = "YES" buildForAnalyzing = "YES">
-        <BuildableReference
-          BuildableIdentifier = "primary"
-          BlueprintIdentifier = "______Target_MediaType"
-          BuildableName = "libMediaType.dylib"
-          BlueprintName = "MediaType"
-          ReferencedContainer = "container:Vapor.xcodeproj">
-        </BuildableReference>
-      </BuildActionEntry>
-      <BuildActionEntry buildForTesting = "YES" buildForRunning = "YES" buildForProfiling = "YES" buildForArchiving = "YES" buildForAnalyzing = "YES">
-        <BuildableReference
-          BuildableIdentifier = "primary"
-          BlueprintIdentifier = "______Target_Development"
-          BuildableName = "Development"
-          BlueprintName = "Development"
-          ReferencedContainer = "container:Vapor.xcodeproj">
-        </BuildableReference>
-      </BuildActionEntry>
-      <BuildActionEntry buildForTesting = "YES" buildForRunning = "YES" buildForProfiling = "YES" buildForArchiving = "YES" buildForAnalyzing = "YES">
-        <BuildableReference
-          BuildableIdentifier = "primary"
-          BlueprintIdentifier = "______Target_Generator"
-          BuildableName = "Generator"
-          BlueprintName = "Generator"
-          ReferencedContainer = "container:Vapor.xcodeproj">
-        </BuildableReference>
-      </BuildActionEntry>
-      <BuildActionEntry buildForTesting = "YES" buildForRunning = "YES" buildForProfiling = "YES" buildForArchiving = "YES" buildForAnalyzing = "YES">
-        <BuildableReference
-          BuildableIdentifier = "primary"
-          BlueprintIdentifier = "______Target_libc"
-          BuildableName = "liblibc.dylib"
-          BlueprintName = "libc"
-          ReferencedContainer = "container:Vapor.xcodeproj">
-        </BuildableReference>
-      </BuildActionEntry>
-      <BuildActionEntry buildForTesting = "YES" buildForRunning = "YES" buildForProfiling = "YES" buildForArchiving = "YES" buildForAnalyzing = "YES">
-        <BuildableReference
-          BuildableIdentifier = "primary"
-          BlueprintIdentifier = "______Target_Performance"
-          BuildableName = "Performance"
-          BlueprintName = "Performance"
-          ReferencedContainer = "container:Vapor.xcodeproj">
-        </BuildableReference>
-      </BuildActionEntry>
-      <BuildActionEntry buildForTesting = "YES" buildForRunning = "YES" buildForProfiling = "YES" buildForArchiving = "YES" buildForAnalyzing = "YES">
-        <BuildableReference
-          BuildableIdentifier = "primary"
-          BlueprintIdentifier = "______Target_Vapor"
-          BuildableName = "libVapor.dylib"
-          BlueprintName = "Vapor"
-          ReferencedContainer = "container:Vapor.xcodeproj">
-        </BuildableReference>
-      </BuildActionEntry>
-    </BuildActionEntries>
-  </BuildAction>
-  <TestAction
-    buildConfiguration = "Debug"
-    selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
-    selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
-    shouldUseLaunchSchemeArgsEnv = "YES">
-    <Testables>
-    <TestableReference
-      skipped = "NO">
-      <BuildableReference
-        BuildableIdentifier = "primary"
-        BlueprintIdentifier = "______Target_VaporTestSuite"
-        BuildableName = "VaporTestSuite.xctest"
-        BlueprintName = "VaporTestSuite"
-        ReferencedContainer = "container:Vapor.xcodeproj">
-      </BuildableReference>
-    </TestableReference>
-    </Testables>
-  </TestAction>
+<Scheme
+   LastUpgradeVersion = "9999"
+   version = "1.3">
+   <BuildAction
+      parallelizeBuildables = "YES"
+      buildImplicitDependencies = "YES">
+      <BuildActionEntries>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "______Target_C7"
+               BuildableName = "C7.dylib"
+               BlueprintName = "C7"
+               ReferencedContainer = "container:Vapor.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "______Target_S4"
+               BuildableName = "S4.dylib"
+               BlueprintName = "S4"
+               ReferencedContainer = "container:Vapor.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "______Target_String"
+               BuildableName = "String.dylib"
+               BlueprintName = "String"
+               ReferencedContainer = "container:Vapor.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "______Target_StructuredData"
+               BuildableName = "StructuredData.dylib"
+               BlueprintName = "StructuredData"
+               ReferencedContainer = "container:Vapor.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "______Target_JSON"
+               BuildableName = "JSON.dylib"
+               BlueprintName = "JSON"
+               ReferencedContainer = "container:Vapor.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "______Target_Strand"
+               BuildableName = "Strand.dylib"
+               BlueprintName = "Strand"
+               ReferencedContainer = "container:Vapor.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "______Target_Hummingbird"
+               BuildableName = "Hummingbird.dylib"
+               BlueprintName = "Hummingbird"
+               ReferencedContainer = "container:Vapor.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "______Target_CryptoEssentials"
+               BuildableName = "CryptoEssentials.dylib"
+               BlueprintName = "CryptoEssentials"
+               ReferencedContainer = "container:Vapor.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "______Target_HMAC"
+               BuildableName = "HMAC.dylib"
+               BlueprintName = "HMAC"
+               ReferencedContainer = "container:Vapor.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "______Target_SHA2"
+               BuildableName = "SHA2.dylib"
+               BlueprintName = "SHA2"
+               ReferencedContainer = "container:Vapor.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "______Target_MediaType"
+               BuildableName = "MediaType.dylib"
+               BlueprintName = "MediaType"
+               ReferencedContainer = "container:Vapor.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "______Target_Development"
+               BuildableName = "Development"
+               BlueprintName = "Development"
+               ReferencedContainer = "container:Vapor.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "______Target_Generator"
+               BuildableName = "Generator"
+               BlueprintName = "Generator"
+               ReferencedContainer = "container:Vapor.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "______Target_libc"
+               BuildableName = "libc.dylib"
+               BlueprintName = "libc"
+               ReferencedContainer = "container:Vapor.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "______Target_Performance"
+               BuildableName = "Performance"
+               BlueprintName = "Performance"
+               ReferencedContainer = "container:Vapor.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "______Target_Vapor"
+               BuildableName = "Vapor.dylib"
+               BlueprintName = "Vapor"
+               ReferencedContainer = "container:Vapor.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+      </BuildActionEntries>
+   </BuildAction>
+   <TestAction
+      buildConfiguration = "Debug"
+      selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
+      selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
+      shouldUseLaunchSchemeArgsEnv = "YES">
+      <Testables>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "______Target_VaporTestSuite"
+               BuildableName = "VaporTestSuite.xctest"
+               BlueprintName = "VaporTestSuite"
+               ReferencedContainer = "container:Vapor.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+      </Testables>
+      <AdditionalOptions>
+      </AdditionalOptions>
+   </TestAction>
+   <LaunchAction
+      buildConfiguration = "Debug"
+      selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
+      selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
+      launchStyle = "0"
+      useCustomWorkingDirectory = "NO"
+      ignoresPersistentStateOnLaunch = "NO"
+      debugDocumentVersioning = "YES"
+      debugServiceExtension = "internal"
+      allowLocationSimulation = "YES">
+      <MacroExpansion>
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "______Target_C7"
+            BuildableName = "C7.dylib"
+            BlueprintName = "C7"
+            ReferencedContainer = "container:Vapor.xcodeproj">
+         </BuildableReference>
+      </MacroExpansion>
+      <AdditionalOptions>
+      </AdditionalOptions>
+   </LaunchAction>
+   <ProfileAction
+      buildConfiguration = "Release"
+      shouldUseLaunchSchemeArgsEnv = "YES"
+      savedToolIdentifier = ""
+      useCustomWorkingDirectory = "NO"
+      debugDocumentVersioning = "YES">
+   </ProfileAction>
+   <AnalyzeAction
+      buildConfiguration = "Debug">
+   </AnalyzeAction>
+   <ArchiveAction
+      buildConfiguration = "Release"
+      revealArchiveInOrganizer = "YES">
+   </ArchiveAction>
 </Scheme>
