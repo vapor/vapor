@@ -1,8 +1,9 @@
 disabled_rules:
+  - line_length
 opt_in_rules:
-  - missing_docs
 included:
 excluded:
   - Packages
   - Sources/Vapor/Core/Generated.swift
   - Sources/Generator
+
