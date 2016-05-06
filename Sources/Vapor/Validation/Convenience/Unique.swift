@@ -1,12 +1,18 @@
 // Might have to tweak for linux
 import Foundation
 
+/**
+    Validates a given sequence is unique
+*/
 public struct Unique<
     T where
     T: Sequence,
     T: Validatable,
     T.Iterator.Element: Equatable>: ValidationSuite {
 
+    /**
+        validate
+    */
     public static func validate(input sequence: T) throws {
         var uniqueValues: [T.Iterator.Element] = []
         for value in sequence {
@@ -19,6 +25,9 @@ public struct Unique<
     }
 }
 
+/**
+    Validate that is in given collection
+*/
 public struct In<
     T where
     T: Validatable,
@@ -26,6 +35,11 @@ public struct In<
 
     private let iteratorFactory: Void -> AnyIterator<T>
 
+    /**
+     Create in validation against passed iterator
+
+     - parameter sequence: the sequence to check if contains
+    */
     public init<S: Sequence where S.Iterator.Element == T>(_ sequence: S) {
         iteratorFactory = {
             var iterator = sequence.makeIterator()
@@ -33,6 +47,10 @@ public struct In<
         }
     }
 
+
+    /**
+        validate
+    */
     public func validate(input value: T) throws {
         let iterator = iteratorFactory()
         for next in iterator where next == value {
@@ -42,6 +60,9 @@ public struct In<
     }
 }
 
+/**
+    Validate that a sequence contains a given value
+*/
 public struct Contains<
     T where
     T: Sequence,
@@ -73,3 +94,5 @@ public struct Contains<
         throw error(with: sequence)
     }
 }
+
+
