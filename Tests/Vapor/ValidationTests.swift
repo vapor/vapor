@@ -12,8 +12,8 @@ import XCTest
 class Name: ValidationSuite {
     static func validate(input value: String) throws {
         let evaluation = OnlyAlphanumeric.self
-            + Count.min(5)
-            + Count.max(20)
+            && Count.min(5)
+            && Count.max(20)
 
         try evaluation.validate(input: value)
     }
@@ -40,10 +40,10 @@ class ValidationTests: XCTestCase {
     }
 
     func testPassword() throws {
-        let no = try? "no".validated(by: !OnlyAlphanumeric.self + Count.min(5))
+        let no = try? "no".validated(by: !OnlyAlphanumeric.self && Count.min(5))
         XCTAssert(no == nil)
 
-        let yes = try? "yes*/pass".validated(by: !OnlyAlphanumeric.self + Count.min(5))
+        let yes = try? "yes*/pass".validated(by: !OnlyAlphanumeric.self && Count.min(5))
         XCTAssert(yes != nil)
     }
 
@@ -55,8 +55,8 @@ class ValidationTests: XCTestCase {
     func testComposition() throws {
         let contrived = Count.max(9)
             || Count.min(11)
-            + Name.self
-            + OnlyAlphanumeric.self
+            && Name.self
+            && OnlyAlphanumeric.self
 
         let pass = try "contrive".validated(by: contrived)
         XCTAssert(pass.value == "contrive")
@@ -69,7 +69,7 @@ class ValidationTests: XCTestCase {
     func testDetailedFailure() throws {
         let fail = Count<Int>.min(10)
         let pass = Count<Int>.max(30)
-        let combo = pass + fail
+        let combo = pass && fail
         do {
             let _ = try 2.tested(by: combo)
             XCTFail("should throw error")

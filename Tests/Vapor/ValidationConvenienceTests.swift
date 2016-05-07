@@ -44,7 +44,7 @@ class CompareValidationTests: ConvenienceValidationTests {
         let _ = try comparable.tested(by: Compare.greaterThan(1.0))
 
         let a = "a"
-        let _ = try a.tested(by: Compare.lessThan("z") + Count.equals(1) + OnlyAlphanumeric.self)
+        let _ = try a.tested(by: Compare.lessThan("z") && Count.equals(1) && OnlyAlphanumeric.self)
     }
 
     override func testFalse() throws {
