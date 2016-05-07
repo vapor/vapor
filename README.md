@@ -16,11 +16,11 @@ A Web Framework for Swift that works on iOS, OS X, and Ubuntu.
 
 Vapor is the first true web framework for Swift. It provides a beautifully expressive and easy to use foundation for your next website or API.
 
-To start your own project with Vapor, fork the boilerplate code from [Vapor Example](https://github.com/qutheory/vapor-example).
+This repository is the framework's source code. To view a sample project, check out the [Vapor Example](https://github.com/qutheory/vapor-example).
 
 ## 📖 Documentation
 
-Visit the [Documentation](http://docs.qutheory.io) for extensive documentation on getting setup, using, and deploying Vapor.
+Visit the [Documentation](http://docs.qutheory.io) for extensive information on getting setup, using, and deploying Vapor.
 
 ## 🚀 Contributing
 
@@ -32,7 +32,7 @@ If you find a security vulnerability, please contact [tanner@qutheory.io](tanner
 
 ## 💙 Code of Conduct
 
-Our goal is to create a safe and empowering environment for anyone who decides to use or contribute to Vapor. Please help us make the community a better place by abiding to this [Code of Conduct](https://github.com/qutheory/vapor/blob/master/CODE_OF_CONDUCT.md) during your interactions relating to this project. 
+Our goal is to create a safe and empowering environment for anyone who decides to use or contribute to Vapor. Please help us make the community a better place by abiding to this [Code of Conduct](https://github.com/qutheory/vapor/blob/master/CODE_OF_CONDUCT.md) during your interactions surrounding this project. 
 
 ## ⚙ Compatibility
 
