@@ -7,78 +7,77 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		C3931C801CDC08FB0026D877 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
-		C3931C811CDC08FB0026D877 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
-		C3931C821CDC08FB0026D877 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
-		C3931C831CDC08FB0026D877 /* libCryptoEssentials.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentials" /* libCryptoEssentials.dylib */; };
-		C3931C841CDC08FB0026D877 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
-		C3931C851CDC08FB0026D877 /* libStructuredData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_StructuredData" /* libStructuredData.dylib */; };
-		C3931C861CDC08FB0026D877 /* libCryptoEssentials.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentials" /* libCryptoEssentials.dylib */; };
-		C3931C871CDC08FB0026D877 /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
-		C3931C881CDC08FB0026D877 /* libStructuredData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_StructuredData" /* libStructuredData.dylib */; };
-		C3931C891CDC08FB0026D877 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
-		C3931C8A1CDC08FB0026D877 /* libMediaType.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_MediaType" /* libMediaType.dylib */; };
-		C3931C8B1CDC08FB0026D877 /* libSHA2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_SHA2" /* libSHA2.dylib */; };
-		C3931C8C1CDC08FB0026D877 /* libHMAC.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_HMAC" /* libHMAC.dylib */; };
-		C3931C8D1CDC08FB0026D877 /* libHummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Hummingbird" /* libHummingbird.dylib */; };
-		C3931C8E1CDC08FB0026D877 /* libJSON.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_JSON" /* libJSON.dylib */; };
-		C3931C8F1CDC08FB0026D877 /* libString.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_String" /* libString.dylib */; };
-		C3931C901CDC08FB0026D877 /* libS4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_S4" /* libS4.dylib */; };
-		C3931C911CDC08FB0026D877 /* liblibc.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_libc" /* liblibc.dylib */; };
-		C3931C921CDC08FB0026D877 /* libCryptoEssentials.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentials" /* libCryptoEssentials.dylib */; };
-		C3931C931CDC08FB0026D877 /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
-		C3931C941CDC08FB0026D877 /* libStructuredData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_StructuredData" /* libStructuredData.dylib */; };
-		C3931C951CDC08FB0026D877 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
-		C3931C961CDC08FB0026D877 /* libMediaType.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_MediaType" /* libMediaType.dylib */; };
-		C3931C971CDC08FB0026D877 /* libSHA2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_SHA2" /* libSHA2.dylib */; };
-		C3931C981CDC08FB0026D877 /* libHMAC.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_HMAC" /* libHMAC.dylib */; };
-		C3931C991CDC08FB0026D877 /* libHummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Hummingbird" /* libHummingbird.dylib */; };
-		C3931C9A1CDC08FB0026D877 /* libJSON.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_JSON" /* libJSON.dylib */; };
-		C3931C9B1CDC08FB0026D877 /* libString.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_String" /* libString.dylib */; };
-		C3931C9C1CDC08FB0026D877 /* libS4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_S4" /* libS4.dylib */; };
-		C3931C9D1CDC08FB0026D877 /* libCryptoEssentials.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentials" /* libCryptoEssentials.dylib */; };
-		C3931C9E1CDC08FB0026D877 /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
-		C3931C9F1CDC08FB0026D877 /* libStructuredData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_StructuredData" /* libStructuredData.dylib */; };
-		C3931CA01CDC08FB0026D877 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
-		C3931CA11CDC08FB0026D877 /* libString.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_String" /* libString.dylib */; };
-		C3931CA21CDC08FB0026D877 /* libCryptoEssentials.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentials" /* libCryptoEssentials.dylib */; };
-		C3931CA31CDC08FB0026D877 /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
-		C3931CA41CDC08FB0026D877 /* libStructuredData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_StructuredData" /* libStructuredData.dylib */; };
-		C3931CA51CDC08FB0026D877 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
-		C3931CA61CDC08FB0026D877 /* libMediaType.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_MediaType" /* libMediaType.dylib */; };
-		C3931CA71CDC08FB0026D877 /* libSHA2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_SHA2" /* libSHA2.dylib */; };
-		C3931CA81CDC08FB0026D877 /* libHMAC.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_HMAC" /* libHMAC.dylib */; };
-		C3931CA91CDC08FB0026D877 /* libHummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Hummingbird" /* libHummingbird.dylib */; };
-		C3931CAA1CDC08FB0026D877 /* libJSON.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_JSON" /* libJSON.dylib */; };
-		C3931CAB1CDC08FB0026D877 /* libString.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_String" /* libString.dylib */; };
-		C3931CAC1CDC08FB0026D877 /* libS4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_S4" /* libS4.dylib */; };
-		C3931CAD1CDC08FB0026D877 /* libCryptoEssentials.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentials" /* libCryptoEssentials.dylib */; };
-		C3931CAE1CDC08FB0026D877 /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
-		C3931CAF1CDC08FB0026D877 /* libStructuredData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_StructuredData" /* libStructuredData.dylib */; };
-		C3931CB01CDC08FB0026D877 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
-		C3931CB11CDC08FB0026D877 /* libMediaType.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_MediaType" /* libMediaType.dylib */; };
-		C3931CB21CDC08FB0026D877 /* libSHA2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_SHA2" /* libSHA2.dylib */; };
-		C3931CB31CDC08FB0026D877 /* libHMAC.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_HMAC" /* libHMAC.dylib */; };
-		C3931CB41CDC08FB0026D877 /* libHummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Hummingbird" /* libHummingbird.dylib */; };
-		C3931CB51CDC08FB0026D877 /* libJSON.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_JSON" /* libJSON.dylib */; };
-		C3931CB61CDC08FB0026D877 /* libString.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_String" /* libString.dylib */; };
-		C3931CB71CDC08FB0026D877 /* libS4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_S4" /* libS4.dylib */; };
-		C3931CB81CDC08FB0026D877 /* libVapor.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Vapor" /* libVapor.dylib */; };
-		C3931CB91CDC08FB0026D877 /* liblibc.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_libc" /* liblibc.dylib */; };
-		C3931CBA1CDC08FB0026D877 /* libCryptoEssentials.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentials" /* libCryptoEssentials.dylib */; };
-		C3931CBB1CDC08FB0026D877 /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
-		C3931CBC1CDC08FB0026D877 /* libStructuredData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_StructuredData" /* libStructuredData.dylib */; };
-		C3931CBD1CDC08FB0026D877 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
-		C3931CBE1CDC08FB0026D877 /* libMediaType.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_MediaType" /* libMediaType.dylib */; };
-		C3931CBF1CDC08FB0026D877 /* libSHA2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_SHA2" /* libSHA2.dylib */; };
-		C3931CC01CDC08FB0026D877 /* libHMAC.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_HMAC" /* libHMAC.dylib */; };
-		C3931CC11CDC08FB0026D877 /* libHummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Hummingbird" /* libHummingbird.dylib */; };
-		C3931CC21CDC08FB0026D877 /* libJSON.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_JSON" /* libJSON.dylib */; };
-		C3931CC31CDC08FB0026D877 /* libString.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_String" /* libString.dylib */; };
-		C3931CC41CDC08FB0026D877 /* libS4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_S4" /* libS4.dylib */; };
-		C3931CC51CDC08FB0026D877 /* libVapor.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Vapor" /* libVapor.dylib */; };
-		C3931CC61CDC08FB0026D877 /* liblibc.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_libc" /* liblibc.dylib */; };
-		C3931CD51CDC0F700026D877 /* ApplicationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3931CD41CDC0F700026D877 /* ApplicationTests.swift */; };
+		C39906E11CDD8CBA000367D5 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
+		C39906E21CDD8CBA000367D5 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
+		C39906E31CDD8CBA000367D5 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
+		C39906E41CDD8CBA000367D5 /* libCryptoEssentials.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentials" /* libCryptoEssentials.dylib */; };
+		C39906E51CDD8CBA000367D5 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
+		C39906E61CDD8CBA000367D5 /* libStructuredData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_StructuredData" /* libStructuredData.dylib */; };
+		C39906E71CDD8CBA000367D5 /* libCryptoEssentials.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentials" /* libCryptoEssentials.dylib */; };
+		C39906E81CDD8CBA000367D5 /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
+		C39906E91CDD8CBA000367D5 /* libStructuredData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_StructuredData" /* libStructuredData.dylib */; };
+		C39906EA1CDD8CBA000367D5 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
+		C39906EB1CDD8CBA000367D5 /* libMediaType.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_MediaType" /* libMediaType.dylib */; };
+		C39906EC1CDD8CBA000367D5 /* libSHA2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_SHA2" /* libSHA2.dylib */; };
+		C39906ED1CDD8CBA000367D5 /* libHMAC.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_HMAC" /* libHMAC.dylib */; };
+		C39906EE1CDD8CBA000367D5 /* libHummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Hummingbird" /* libHummingbird.dylib */; };
+		C39906EF1CDD8CBA000367D5 /* libJSON.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_JSON" /* libJSON.dylib */; };
+		C39906F01CDD8CBA000367D5 /* libString.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_String" /* libString.dylib */; };
+		C39906F11CDD8CBA000367D5 /* libS4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_S4" /* libS4.dylib */; };
+		C39906F21CDD8CBA000367D5 /* liblibc.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_libc" /* liblibc.dylib */; };
+		C39906F31CDD8CBA000367D5 /* libCryptoEssentials.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentials" /* libCryptoEssentials.dylib */; };
+		C39906F41CDD8CBA000367D5 /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
+		C39906F51CDD8CBA000367D5 /* libStructuredData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_StructuredData" /* libStructuredData.dylib */; };
+		C39906F61CDD8CBA000367D5 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
+		C39906F71CDD8CBA000367D5 /* libMediaType.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_MediaType" /* libMediaType.dylib */; };
+		C39906F81CDD8CBA000367D5 /* libSHA2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_SHA2" /* libSHA2.dylib */; };
+		C39906F91CDD8CBA000367D5 /* libHMAC.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_HMAC" /* libHMAC.dylib */; };
+		C39906FA1CDD8CBA000367D5 /* libHummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Hummingbird" /* libHummingbird.dylib */; };
+		C39906FB1CDD8CBA000367D5 /* libJSON.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_JSON" /* libJSON.dylib */; };
+		C39906FC1CDD8CBA000367D5 /* libString.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_String" /* libString.dylib */; };
+		C39906FD1CDD8CBA000367D5 /* libS4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_S4" /* libS4.dylib */; };
+		C39906FE1CDD8CBA000367D5 /* libCryptoEssentials.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentials" /* libCryptoEssentials.dylib */; };
+		C39906FF1CDD8CBA000367D5 /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
+		C39907001CDD8CBA000367D5 /* libStructuredData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_StructuredData" /* libStructuredData.dylib */; };
+		C39907011CDD8CBA000367D5 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
+		C39907021CDD8CBA000367D5 /* libString.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_String" /* libString.dylib */; };
+		C39907031CDD8CBA000367D5 /* libCryptoEssentials.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentials" /* libCryptoEssentials.dylib */; };
+		C39907041CDD8CBA000367D5 /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
+		C39907051CDD8CBA000367D5 /* libStructuredData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_StructuredData" /* libStructuredData.dylib */; };
+		C39907061CDD8CBA000367D5 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
+		C39907071CDD8CBA000367D5 /* libMediaType.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_MediaType" /* libMediaType.dylib */; };
+		C39907081CDD8CBA000367D5 /* libSHA2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_SHA2" /* libSHA2.dylib */; };
+		C39907091CDD8CBA000367D5 /* libHMAC.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_HMAC" /* libHMAC.dylib */; };
+		C399070A1CDD8CBA000367D5 /* libHummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Hummingbird" /* libHummingbird.dylib */; };
+		C399070B1CDD8CBA000367D5 /* libJSON.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_JSON" /* libJSON.dylib */; };
+		C399070C1CDD8CBA000367D5 /* libString.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_String" /* libString.dylib */; };
+		C399070D1CDD8CBA000367D5 /* libS4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_S4" /* libS4.dylib */; };
+		C399070E1CDD8CBA000367D5 /* libCryptoEssentials.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentials" /* libCryptoEssentials.dylib */; };
+		C399070F1CDD8CBA000367D5 /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
+		C39907101CDD8CBA000367D5 /* libStructuredData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_StructuredData" /* libStructuredData.dylib */; };
+		C39907111CDD8CBA000367D5 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
+		C39907121CDD8CBA000367D5 /* libMediaType.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_MediaType" /* libMediaType.dylib */; };
+		C39907131CDD8CBA000367D5 /* libSHA2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_SHA2" /* libSHA2.dylib */; };
+		C39907141CDD8CBA000367D5 /* libHMAC.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_HMAC" /* libHMAC.dylib */; };
+		C39907151CDD8CBA000367D5 /* libHummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Hummingbird" /* libHummingbird.dylib */; };
+		C39907161CDD8CBA000367D5 /* libJSON.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_JSON" /* libJSON.dylib */; };
+		C39907171CDD8CBA000367D5 /* libString.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_String" /* libString.dylib */; };
+		C39907181CDD8CBA000367D5 /* libS4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_S4" /* libS4.dylib */; };
+		C39907191CDD8CBA000367D5 /* libVapor.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Vapor" /* libVapor.dylib */; };
+		C399071A1CDD8CBA000367D5 /* liblibc.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_libc" /* liblibc.dylib */; };
+		C399071B1CDD8CBA000367D5 /* libCryptoEssentials.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentials" /* libCryptoEssentials.dylib */; };
+		C399071C1CDD8CBA000367D5 /* libStrand.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Strand" /* libStrand.dylib */; };
+		C399071D1CDD8CBA000367D5 /* libStructuredData.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_StructuredData" /* libStructuredData.dylib */; };
+		C399071E1CDD8CBA000367D5 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
+		C399071F1CDD8CBA000367D5 /* libMediaType.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_MediaType" /* libMediaType.dylib */; };
+		C39907201CDD8CBA000367D5 /* libSHA2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_SHA2" /* libSHA2.dylib */; };
+		C39907211CDD8CBA000367D5 /* libHMAC.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_HMAC" /* libHMAC.dylib */; };
+		C39907221CDD8CBA000367D5 /* libHummingbird.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Hummingbird" /* libHummingbird.dylib */; };
+		C39907231CDD8CBA000367D5 /* libJSON.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_JSON" /* libJSON.dylib */; };
+		C39907241CDD8CBA000367D5 /* libString.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_String" /* libString.dylib */; };
+		C39907251CDD8CBA000367D5 /* libS4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_S4" /* libS4.dylib */; };
+		C39907261CDD8CBA000367D5 /* libVapor.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Vapor" /* libVapor.dylib */; };
+		C39907271CDD8CBA000367D5 /* liblibc.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_libc" /* liblibc.dylib */; };
 		_LinkFileRef_C7 /* libC7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_C7" /* libC7.dylib */; };
 		_LinkFileRef_CryptoEssentials /* libCryptoEssentials.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CryptoEssentials" /* libCryptoEssentials.dylib */; };
 		_LinkFileRef_HMAC /* libHMAC.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_HMAC" /* libHMAC.dylib */; };
@@ -135,7 +134,7 @@
 		"__src_cc_ref_Packages/JSON-0.7.0/Source/JSONInterchangeDataSerializer.swift" /* JSONInterchangeDataSerializer.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/JSON-0.7.0/Source/JSONInterchangeDataSerializer.swift" /* JSONInterchangeDataSerializer.swift */; };
 		"__src_cc_ref_Packages/JSON-0.7.0/Source/JSONParser.swift" /* JSONParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/JSON-0.7.0/Source/JSONParser.swift" /* JSONParser.swift */; };
 		"__src_cc_ref_Packages/JSON-0.7.0/Source/JSONSerializer.swift" /* JSONSerializer.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/JSON-0.7.0/Source/JSONSerializer.swift" /* JSONSerializer.swift */; };
-		"__src_cc_ref_Packages/MediaType-0.0.0/Source/MediaType.swift" /* MediaType.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/MediaType-0.0.0/Source/MediaType.swift" /* MediaType.swift */; };
+		"__src_cc_ref_Packages/MediaType-0.6.0/Source/MediaType.swift" /* MediaType.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/MediaType-0.6.0/Source/MediaType.swift" /* MediaType.swift */; };
 		"__src_cc_ref_Packages/S4-0.6.0/Sources/AsyncClient.swift" /* AsyncClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.6.0/Sources/AsyncClient.swift" /* AsyncClient.swift */; };
 		"__src_cc_ref_Packages/S4-0.6.0/Sources/AsyncMiddleware.swift" /* AsyncMiddleware.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.6.0/Sources/AsyncMiddleware.swift" /* AsyncMiddleware.swift */; };
 		"__src_cc_ref_Packages/S4-0.6.0/Sources/AsyncResponder.swift" /* AsyncResponder.swift in Sources */ = {isa = PBXBuildFile; fileRef = "__PBXFileRef_Packages/S4-0.6.0/Sources/AsyncResponder.swift" /* AsyncResponder.swift */; };
@@ -218,6 +217,7 @@
 		__src_cc_ref_Sources/Vapor/View/RenderDriver.swift /* View/RenderDriver.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/View/RenderDriver.swift /* View/RenderDriver.swift */; };
 		__src_cc_ref_Sources/Vapor/View/View.swift /* View/View.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/Vapor/View/View.swift /* View/View.swift */; };
 		__src_cc_ref_Sources/libc/libc.swift /* libc.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Sources/libc/libc.swift /* libc.swift */; };
+		__src_cc_ref_Tests/Vapor/ApplicationTests.swift /* ApplicationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Tests/Vapor/ApplicationTests.swift /* ApplicationTests.swift */; };
 		__src_cc_ref_Tests/Vapor/ConfigTests.swift /* ConfigTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Tests/Vapor/ConfigTests.swift /* ConfigTests.swift */; };
 		__src_cc_ref_Tests/Vapor/ControllerTests.swift /* ControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Tests/Vapor/ControllerTests.swift /* ControllerTests.swift */; };
 		__src_cc_ref_Tests/Vapor/EnvironmentTests.swift /* EnvironmentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = __PBXFileRef_Tests/Vapor/EnvironmentTests.swift /* EnvironmentTests.swift */; };
@@ -238,91 +238,91 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		C3931CC71CDC08FB0026D877 /* PBXContainerItemProxy */ = {
+		C39907281CDD8CBB000367D5 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = __RootObject_ /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = "______Target_C7";
 			remoteInfo = C7;
 		};
-		C3931CC81CDC08FB0026D877 /* PBXContainerItemProxy */ = {
+		C39907291CDD8CBB000367D5 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = __RootObject_ /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = "______Target_StructuredData";
 			remoteInfo = StructuredData;
 		};
-		C3931CC91CDC08FB0026D877 /* PBXContainerItemProxy */ = {
+		C399072A1CDD8CBB000367D5 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = __RootObject_ /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = "______Target_Strand";
 			remoteInfo = Strand;
 		};
-		C3931CCA1CDC08FB0026D877 /* PBXContainerItemProxy */ = {
+		C399072B1CDD8CBB000367D5 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = __RootObject_ /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = "______Target_CryptoEssentials";
 			remoteInfo = CryptoEssentials;
 		};
-		C3931CCB1CDC08FB0026D877 /* PBXContainerItemProxy */ = {
+		C399072C1CDD8CBB000367D5 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = __RootObject_ /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = "______Target_String";
 			remoteInfo = String;
 		};
-		C3931CCC1CDC08FB0026D877 /* PBXContainerItemProxy */ = {
+		C399072D1CDD8CBB000367D5 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = __RootObject_ /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = "______Target_MediaType";
 			remoteInfo = MediaType;
 		};
-		C3931CCD1CDC08FB0026D877 /* PBXContainerItemProxy */ = {
+		C399072E1CDD8CBB000367D5 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = __RootObject_ /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = "______Target_SHA2";
 			remoteInfo = SHA2;
 		};
-		C3931CCE1CDC08FB0026D877 /* PBXContainerItemProxy */ = {
+		C399072F1CDD8CBB000367D5 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = __RootObject_ /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = "______Target_HMAC";
 			remoteInfo = HMAC;
 		};
-		C3931CCF1CDC08FB0026D877 /* PBXContainerItemProxy */ = {
+		C39907301CDD8CBB000367D5 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = __RootObject_ /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = "______Target_Hummingbird";
 			remoteInfo = Hummingbird;
 		};
-		C3931CD01CDC08FB0026D877 /* PBXContainerItemProxy */ = {
+		C39907311CDD8CBB000367D5 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = __RootObject_ /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = "______Target_JSON";
 			remoteInfo = JSON;
 		};
-		C3931CD11CDC08FB0026D877 /* PBXContainerItemProxy */ = {
+		C39907321CDD8CBB000367D5 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = __RootObject_ /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = "______Target_S4";
 			remoteInfo = S4;
 		};
-		C3931CD21CDC08FB0026D877 /* PBXContainerItemProxy */ = {
+		C39907331CDD8CBB000367D5 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = __RootObject_ /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = "______Target_Vapor";
 			remoteInfo = Vapor;
 		};
-		C3931CD31CDC08FB0026D877 /* PBXContainerItemProxy */ = {
+		C39907341CDD8CBB000367D5 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = __RootObject_ /* Project object */;
 			proxyType = 1;
@@ -332,7 +332,6 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		C3931CD41CDC0F700026D877 /* ApplicationTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ApplicationTests.swift; sourceTree = "<group>"; };
 		__PBXFileRef_Package.swift /* Package.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Package.swift; path = /Users/tanner/Developer/vapor/vapor/Package.swift; sourceTree = "<group>"; };
 		"__PBXFileRef_Packages/C7-0.7.0/Sources/AsyncConnection.swift" /* AsyncConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncConnection.swift; sourceTree = "<group>"; };
 		"__PBXFileRef_Packages/C7-0.7.0/Sources/AsyncHost.swift" /* AsyncHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncHost.swift; sourceTree = "<group>"; };
@@ -377,7 +376,7 @@
 		"__PBXFileRef_Packages/JSON-0.7.0/Source/JSONInterchangeDataSerializer.swift" /* JSONInterchangeDataSerializer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONInterchangeDataSerializer.swift; sourceTree = "<group>"; };
 		"__PBXFileRef_Packages/JSON-0.7.0/Source/JSONParser.swift" /* JSONParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONParser.swift; sourceTree = "<group>"; };
 		"__PBXFileRef_Packages/JSON-0.7.0/Source/JSONSerializer.swift" /* JSONSerializer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONSerializer.swift; sourceTree = "<group>"; };
-		"__PBXFileRef_Packages/MediaType-0.0.0/Source/MediaType.swift" /* MediaType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaType.swift; sourceTree = "<group>"; };
+		"__PBXFileRef_Packages/MediaType-0.6.0/Source/MediaType.swift" /* MediaType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaType.swift; sourceTree = "<group>"; };
 		"__PBXFileRef_Packages/S4-0.6.0/Sources/AsyncClient.swift" /* AsyncClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncClient.swift; sourceTree = "<group>"; };
 		"__PBXFileRef_Packages/S4-0.6.0/Sources/AsyncMiddleware.swift" /* AsyncMiddleware.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncMiddleware.swift; sourceTree = "<group>"; };
 		"__PBXFileRef_Packages/S4-0.6.0/Sources/AsyncResponder.swift" /* AsyncResponder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncResponder.swift; sourceTree = "<group>"; };
@@ -460,6 +459,7 @@
 		__PBXFileRef_Sources/Vapor/View/RenderDriver.swift /* View/RenderDriver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = View/RenderDriver.swift; sourceTree = "<group>"; };
 		__PBXFileRef_Sources/Vapor/View/View.swift /* View/View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = View/View.swift; sourceTree = "<group>"; };
 		__PBXFileRef_Sources/libc/libc.swift /* libc.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = libc.swift; sourceTree = "<group>"; };
+		__PBXFileRef_Tests/Vapor/ApplicationTests.swift /* ApplicationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplicationTests.swift; sourceTree = "<group>"; };
 		__PBXFileRef_Tests/Vapor/ConfigTests.swift /* ConfigTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigTests.swift; sourceTree = "<group>"; };
 		__PBXFileRef_Tests/Vapor/ControllerTests.swift /* ControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ControllerTests.swift; sourceTree = "<group>"; };
 		__PBXFileRef_Tests/Vapor/EnvironmentTests.swift /* EnvironmentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnvironmentTests.swift; sourceTree = "<group>"; };
@@ -492,7 +492,7 @@
 		"_____Product_String" /* libString.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libString.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		"_____Product_StructuredData" /* libStructuredData.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libStructuredData.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		"_____Product_Vapor" /* libVapor.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = libVapor.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
-		"_____Product_VaporTestSuite" /* VaporTestSuite.xctest */ = {isa = PBXFileReference; lastKnownFileType = file; name = VaporTestSuite.xctest; path = Vapor.testsuite.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		"_____Product_VaporTestSuite" /* Vapor.testsuite.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = Vapor.testsuite.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		"_____Product_libc" /* liblibc.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; path = liblibc.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -515,19 +515,19 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
-				C3931C861CDC08FB0026D877 /* libCryptoEssentials.dylib in Frameworks */,
-				C3931C871CDC08FB0026D877 /* libStrand.dylib in Frameworks */,
-				C3931C881CDC08FB0026D877 /* libStructuredData.dylib in Frameworks */,
-				C3931C891CDC08FB0026D877 /* libC7.dylib in Frameworks */,
-				C3931C8A1CDC08FB0026D877 /* libMediaType.dylib in Frameworks */,
-				C3931C8B1CDC08FB0026D877 /* libSHA2.dylib in Frameworks */,
-				C3931C8C1CDC08FB0026D877 /* libHMAC.dylib in Frameworks */,
-				C3931C8D1CDC08FB0026D877 /* libHummingbird.dylib in Frameworks */,
-				C3931C8E1CDC08FB0026D877 /* libJSON.dylib in Frameworks */,
-				C3931C8F1CDC08FB0026D877 /* libString.dylib in Frameworks */,
-				C3931C901CDC08FB0026D877 /* libS4.dylib in Frameworks */,
+				C39906E71CDD8CBA000367D5 /* libCryptoEssentials.dylib in Frameworks */,
+				C39906E81CDD8CBA000367D5 /* libStrand.dylib in Frameworks */,
+				C39906E91CDD8CBA000367D5 /* libStructuredData.dylib in Frameworks */,
+				C39906EA1CDD8CBA000367D5 /* libC7.dylib in Frameworks */,
+				C39906EB1CDD8CBA000367D5 /* libMediaType.dylib in Frameworks */,
+				C39906EC1CDD8CBA000367D5 /* libSHA2.dylib in Frameworks */,
+				C39906ED1CDD8CBA000367D5 /* libHMAC.dylib in Frameworks */,
+				C39906EE1CDD8CBA000367D5 /* libHummingbird.dylib in Frameworks */,
+				C39906EF1CDD8CBA000367D5 /* libJSON.dylib in Frameworks */,
+				C39906F01CDD8CBA000367D5 /* libString.dylib in Frameworks */,
+				C39906F11CDD8CBA000367D5 /* libS4.dylib in Frameworks */,
 				_LinkFileRef_Vapor /* libVapor.dylib in Frameworks */,
-				C3931C911CDC08FB0026D877 /* liblibc.dylib in Frameworks */,
+				C39906F21CDD8CBA000367D5 /* liblibc.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -535,17 +535,17 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
-				C3931CA21CDC08FB0026D877 /* libCryptoEssentials.dylib in Frameworks */,
-				C3931CA31CDC08FB0026D877 /* libStrand.dylib in Frameworks */,
-				C3931CA41CDC08FB0026D877 /* libStructuredData.dylib in Frameworks */,
-				C3931CA51CDC08FB0026D877 /* libC7.dylib in Frameworks */,
-				C3931CA61CDC08FB0026D877 /* libMediaType.dylib in Frameworks */,
-				C3931CA71CDC08FB0026D877 /* libSHA2.dylib in Frameworks */,
-				C3931CA81CDC08FB0026D877 /* libHMAC.dylib in Frameworks */,
-				C3931CA91CDC08FB0026D877 /* libHummingbird.dylib in Frameworks */,
-				C3931CAA1CDC08FB0026D877 /* libJSON.dylib in Frameworks */,
-				C3931CAB1CDC08FB0026D877 /* libString.dylib in Frameworks */,
-				C3931CAC1CDC08FB0026D877 /* libS4.dylib in Frameworks */,
+				C39907031CDD8CBA000367D5 /* libCryptoEssentials.dylib in Frameworks */,
+				C39907041CDD8CBA000367D5 /* libStrand.dylib in Frameworks */,
+				C39907051CDD8CBA000367D5 /* libStructuredData.dylib in Frameworks */,
+				C39907061CDD8CBA000367D5 /* libC7.dylib in Frameworks */,
+				C39907071CDD8CBA000367D5 /* libMediaType.dylib in Frameworks */,
+				C39907081CDD8CBA000367D5 /* libSHA2.dylib in Frameworks */,
+				C39907091CDD8CBA000367D5 /* libHMAC.dylib in Frameworks */,
+				C399070A1CDD8CBA000367D5 /* libHummingbird.dylib in Frameworks */,
+				C399070B1CDD8CBA000367D5 /* libJSON.dylib in Frameworks */,
+				C399070C1CDD8CBA000367D5 /* libString.dylib in Frameworks */,
+				C399070D1CDD8CBA000367D5 /* libS4.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -561,7 +561,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
-				C3931C821CDC08FB0026D877 /* libC7.dylib in Frameworks */,
+				C39906E31CDD8CBA000367D5 /* libC7.dylib in Frameworks */,
 				_LinkFileRef_Strand /* libStrand.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -570,7 +570,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
-				C3931C811CDC08FB0026D877 /* libC7.dylib in Frameworks */,
+				C39906E21CDD8CBA000367D5 /* libC7.dylib in Frameworks */,
 				_LinkFileRef_StructuredData /* libStructuredData.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -579,8 +579,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
-				C3931C841CDC08FB0026D877 /* libC7.dylib in Frameworks */,
-				C3931C851CDC08FB0026D877 /* libStructuredData.dylib in Frameworks */,
+				C39906E51CDD8CBA000367D5 /* libC7.dylib in Frameworks */,
+				C39906E61CDD8CBA000367D5 /* libStructuredData.dylib in Frameworks */,
 				_LinkFileRef_String /* libString.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -589,19 +589,19 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
-				C3931CAD1CDC08FB0026D877 /* libCryptoEssentials.dylib in Frameworks */,
-				C3931CAE1CDC08FB0026D877 /* libStrand.dylib in Frameworks */,
-				C3931CAF1CDC08FB0026D877 /* libStructuredData.dylib in Frameworks */,
-				C3931CB01CDC08FB0026D877 /* libC7.dylib in Frameworks */,
-				C3931CB11CDC08FB0026D877 /* libMediaType.dylib in Frameworks */,
-				C3931CB21CDC08FB0026D877 /* libSHA2.dylib in Frameworks */,
-				C3931CB31CDC08FB0026D877 /* libHMAC.dylib in Frameworks */,
-				C3931CB41CDC08FB0026D877 /* libHummingbird.dylib in Frameworks */,
-				C3931CB51CDC08FB0026D877 /* libJSON.dylib in Frameworks */,
-				C3931CB61CDC08FB0026D877 /* libString.dylib in Frameworks */,
-				C3931CB71CDC08FB0026D877 /* libS4.dylib in Frameworks */,
-				C3931CB81CDC08FB0026D877 /* libVapor.dylib in Frameworks */,
-				C3931CB91CDC08FB0026D877 /* liblibc.dylib in Frameworks */,
+				C399070E1CDD8CBA000367D5 /* libCryptoEssentials.dylib in Frameworks */,
+				C399070F1CDD8CBA000367D5 /* libStrand.dylib in Frameworks */,
+				C39907101CDD8CBA000367D5 /* libStructuredData.dylib in Frameworks */,
+				C39907111CDD8CBA000367D5 /* libC7.dylib in Frameworks */,
+				C39907121CDD8CBA000367D5 /* libMediaType.dylib in Frameworks */,
+				C39907131CDD8CBA000367D5 /* libSHA2.dylib in Frameworks */,
+				C39907141CDD8CBA000367D5 /* libHMAC.dylib in Frameworks */,
+				C39907151CDD8CBA000367D5 /* libHummingbird.dylib in Frameworks */,
+				C39907161CDD8CBA000367D5 /* libJSON.dylib in Frameworks */,
+				C39907171CDD8CBA000367D5 /* libString.dylib in Frameworks */,
+				C39907181CDD8CBA000367D5 /* libS4.dylib in Frameworks */,
+				C39907191CDD8CBA000367D5 /* libVapor.dylib in Frameworks */,
+				C399071A1CDD8CBA000367D5 /* liblibc.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -617,7 +617,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
-				C3931C831CDC08FB0026D877 /* libCryptoEssentials.dylib in Frameworks */,
+				C39906E41CDD8CBA000367D5 /* libCryptoEssentials.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -639,7 +639,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
-				C3931C801CDC08FB0026D877 /* libC7.dylib in Frameworks */,
+				C39906E11CDD8CBA000367D5 /* libC7.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -647,17 +647,17 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
-				C3931C921CDC08FB0026D877 /* libCryptoEssentials.dylib in Frameworks */,
-				C3931C931CDC08FB0026D877 /* libStrand.dylib in Frameworks */,
-				C3931C941CDC08FB0026D877 /* libStructuredData.dylib in Frameworks */,
-				C3931C951CDC08FB0026D877 /* libC7.dylib in Frameworks */,
-				C3931C961CDC08FB0026D877 /* libMediaType.dylib in Frameworks */,
-				C3931C971CDC08FB0026D877 /* libSHA2.dylib in Frameworks */,
-				C3931C981CDC08FB0026D877 /* libHMAC.dylib in Frameworks */,
-				C3931C991CDC08FB0026D877 /* libHummingbird.dylib in Frameworks */,
-				C3931C9A1CDC08FB0026D877 /* libJSON.dylib in Frameworks */,
-				C3931C9B1CDC08FB0026D877 /* libString.dylib in Frameworks */,
-				C3931C9C1CDC08FB0026D877 /* libS4.dylib in Frameworks */,
+				C39906F31CDD8CBA000367D5 /* libCryptoEssentials.dylib in Frameworks */,
+				C39906F41CDD8CBA000367D5 /* libStrand.dylib in Frameworks */,
+				C39906F51CDD8CBA000367D5 /* libStructuredData.dylib in Frameworks */,
+				C39906F61CDD8CBA000367D5 /* libC7.dylib in Frameworks */,
+				C39906F71CDD8CBA000367D5 /* libMediaType.dylib in Frameworks */,
+				C39906F81CDD8CBA000367D5 /* libSHA2.dylib in Frameworks */,
+				C39906F91CDD8CBA000367D5 /* libHMAC.dylib in Frameworks */,
+				C39906FA1CDD8CBA000367D5 /* libHummingbird.dylib in Frameworks */,
+				C39906FB1CDD8CBA000367D5 /* libJSON.dylib in Frameworks */,
+				C39906FC1CDD8CBA000367D5 /* libString.dylib in Frameworks */,
+				C39906FD1CDD8CBA000367D5 /* libS4.dylib in Frameworks */,
 				_LinkFileRef_libc /* liblibc.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -666,19 +666,19 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
-				C3931CBA1CDC08FB0026D877 /* libCryptoEssentials.dylib in Frameworks */,
-				C3931CBB1CDC08FB0026D877 /* libStrand.dylib in Frameworks */,
-				C3931CBC1CDC08FB0026D877 /* libStructuredData.dylib in Frameworks */,
-				C3931CBD1CDC08FB0026D877 /* libC7.dylib in Frameworks */,
-				C3931CBE1CDC08FB0026D877 /* libMediaType.dylib in Frameworks */,
-				C3931CBF1CDC08FB0026D877 /* libSHA2.dylib in Frameworks */,
-				C3931CC01CDC08FB0026D877 /* libHMAC.dylib in Frameworks */,
-				C3931CC11CDC08FB0026D877 /* libHummingbird.dylib in Frameworks */,
-				C3931CC21CDC08FB0026D877 /* libJSON.dylib in Frameworks */,
-				C3931CC31CDC08FB0026D877 /* libString.dylib in Frameworks */,
-				C3931CC41CDC08FB0026D877 /* libS4.dylib in Frameworks */,
-				C3931CC51CDC08FB0026D877 /* libVapor.dylib in Frameworks */,
-				C3931CC61CDC08FB0026D877 /* liblibc.dylib in Frameworks */,
+				C399071B1CDD8CBA000367D5 /* libCryptoEssentials.dylib in Frameworks */,
+				C399071C1CDD8CBA000367D5 /* libStrand.dylib in Frameworks */,
+				C399071D1CDD8CBA000367D5 /* libStructuredData.dylib in Frameworks */,
+				C399071E1CDD8CBA000367D5 /* libC7.dylib in Frameworks */,
+				C399071F1CDD8CBA000367D5 /* libMediaType.dylib in Frameworks */,
+				C39907201CDD8CBA000367D5 /* libSHA2.dylib in Frameworks */,
+				C39907211CDD8CBA000367D5 /* libHMAC.dylib in Frameworks */,
+				C39907221CDD8CBA000367D5 /* libHummingbird.dylib in Frameworks */,
+				C39907231CDD8CBA000367D5 /* libJSON.dylib in Frameworks */,
+				C39907241CDD8CBA000367D5 /* libString.dylib in Frameworks */,
+				C39907251CDD8CBA000367D5 /* libS4.dylib in Frameworks */,
+				C39907261CDD8CBA000367D5 /* libVapor.dylib in Frameworks */,
+				C39907271CDD8CBA000367D5 /* liblibc.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -686,16 +686,16 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
 			files = (
-				C3931C9D1CDC08FB0026D877 /* libCryptoEssentials.dylib in Frameworks */,
-				C3931C9E1CDC08FB0026D877 /* libStrand.dylib in Frameworks */,
-				C3931C9F1CDC08FB0026D877 /* libStructuredData.dylib in Frameworks */,
-				C3931CA01CDC08FB0026D877 /* libC7.dylib in Frameworks */,
+				C39906FE1CDD8CBA000367D5 /* libCryptoEssentials.dylib in Frameworks */,
+				C39906FF1CDD8CBA000367D5 /* libStrand.dylib in Frameworks */,
+				C39907001CDD8CBA000367D5 /* libStructuredData.dylib in Frameworks */,
+				C39907011CDD8CBA000367D5 /* libC7.dylib in Frameworks */,
 				_LinkFileRef_MediaType /* libMediaType.dylib in Frameworks */,
 				_LinkFileRef_SHA2 /* libSHA2.dylib in Frameworks */,
 				_LinkFileRef_HMAC /* libHMAC.dylib in Frameworks */,
 				_LinkFileRef_Hummingbird /* libHummingbird.dylib in Frameworks */,
 				_LinkFileRef_JSON /* libJSON.dylib in Frameworks */,
-				C3931CA11CDC08FB0026D877 /* libString.dylib in Frameworks */,
+				C39907021CDD8CBA000367D5 /* libString.dylib in Frameworks */,
 				_LinkFileRef_S4 /* libS4.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -724,7 +724,7 @@
 		TestProducts_ /* Tests */ = {
 			isa = PBXGroup;
 			children = (
-				"_____Product_VaporTestSuite" /* VaporTestSuite.xctest */,
+				"_____Product_VaporTestSuite" /* Vapor.testsuite.xctest */,
 			);
 			name = Tests;
 			sourceTree = "<group>";
@@ -883,10 +883,10 @@
 		"_______Group_MediaType" /* MediaType */ = {
 			isa = PBXGroup;
 			children = (
-				"__PBXFileRef_Packages/MediaType-0.0.0/Source/MediaType.swift" /* MediaType.swift */,
+				"__PBXFileRef_Packages/MediaType-0.6.0/Source/MediaType.swift" /* MediaType.swift */,
 			);
 			name = MediaType;
-			path = "Packages/MediaType-0.0.0/Source";
+			path = "Packages/MediaType-0.6.0/Source";
 			sourceTree = "<group>";
 		};
 		"_______Group_Performance" /* Performance */ = {
@@ -1024,7 +1024,7 @@
 		"_______Group_VaporTestSuite" /* Vapor.testsuite */ = {
 			isa = PBXGroup;
 			children = (
-				C3931CD41CDC0F700026D877 /* ApplicationTests.swift */,
+				__PBXFileRef_Tests/Vapor/ApplicationTests.swift /* ApplicationTests.swift */,
 				__PBXFileRef_Tests/Vapor/ConfigTests.swift /* ConfigTests.swift */,
 				__PBXFileRef_Tests/Vapor/ControllerTests.swift /* ControllerTests.swift */,
 				__PBXFileRef_Tests/Vapor/EnvironmentTests.swift /* EnvironmentTests.swift */,
@@ -1390,7 +1390,7 @@
 			);
 			name = Vapor.testsuite;
 			productName = VaporTestSuite;
-			productReference = "_____Product_VaporTestSuite" /* VaporTestSuite.xctest */;
+			productReference = "_____Product_VaporTestSuite" /* Vapor.testsuite.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 		"______Target_libc" /* libc */ = {
@@ -1563,7 +1563,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 0;
 			files = (
-				"__src_cc_ref_Packages/MediaType-0.0.0/Source/MediaType.swift" /* MediaType.swift in Sources */,
+				"__src_cc_ref_Packages/MediaType-0.6.0/Source/MediaType.swift" /* MediaType.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1696,9 +1696,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 0;
 			files = (
+				__src_cc_ref_Tests/Vapor/ApplicationTests.swift /* ApplicationTests.swift in Sources */,
 				__src_cc_ref_Tests/Vapor/ConfigTests.swift /* ConfigTests.swift in Sources */,
 				__src_cc_ref_Tests/Vapor/ControllerTests.swift /* ControllerTests.swift in Sources */,
-				C3931CD51CDC0F700026D877 /* ApplicationTests.swift in Sources */,
 				__src_cc_ref_Tests/Vapor/EnvironmentTests.swift /* EnvironmentTests.swift in Sources */,
 				__src_cc_ref_Tests/Vapor/EventTests.swift /* EventTests.swift in Sources */,
 				__src_cc_ref_Tests/Vapor/HashTests.swift /* HashTests.swift in Sources */,
@@ -1731,67 +1731,67 @@
 		__Dependency_C7 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_C7" /* C7 */;
-			targetProxy = C3931CC71CDC08FB0026D877 /* PBXContainerItemProxy */;
+			targetProxy = C39907281CDD8CBB000367D5 /* PBXContainerItemProxy */;
 		};
 		__Dependency_CryptoEssentials /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_CryptoEssentials" /* CryptoEssentials */;
-			targetProxy = C3931CCA1CDC08FB0026D877 /* PBXContainerItemProxy */;
+			targetProxy = C399072B1CDD8CBB000367D5 /* PBXContainerItemProxy */;
 		};
 		__Dependency_HMAC /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_HMAC" /* HMAC */;
-			targetProxy = C3931CCE1CDC08FB0026D877 /* PBXContainerItemProxy */;
+			targetProxy = C399072F1CDD8CBB000367D5 /* PBXContainerItemProxy */;
 		};
 		__Dependency_Hummingbird /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_Hummingbird" /* Hummingbird */;
-			targetProxy = C3931CCF1CDC08FB0026D877 /* PBXContainerItemProxy */;
+			targetProxy = C39907301CDD8CBB000367D5 /* PBXContainerItemProxy */;
 		};
 		__Dependency_JSON /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_JSON" /* JSON */;
-			targetProxy = C3931CD01CDC08FB0026D877 /* PBXContainerItemProxy */;
+			targetProxy = C39907311CDD8CBB000367D5 /* PBXContainerItemProxy */;
 		};
 		__Dependency_MediaType /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_MediaType" /* MediaType */;
-			targetProxy = C3931CCC1CDC08FB0026D877 /* PBXContainerItemProxy */;
+			targetProxy = C399072D1CDD8CBB000367D5 /* PBXContainerItemProxy */;
 		};
 		__Dependency_S4 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_S4" /* S4 */;
-			targetProxy = C3931CD11CDC08FB0026D877 /* PBXContainerItemProxy */;
+			targetProxy = C39907321CDD8CBB000367D5 /* PBXContainerItemProxy */;
 		};
 		__Dependency_SHA2 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_SHA2" /* SHA2 */;
-			targetProxy = C3931CCD1CDC08FB0026D877 /* PBXContainerItemProxy */;
+			targetProxy = C399072E1CDD8CBB000367D5 /* PBXContainerItemProxy */;
 		};
 		__Dependency_Strand /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_Strand" /* Strand */;
-			targetProxy = C3931CC91CDC08FB0026D877 /* PBXContainerItemProxy */;
+			targetProxy = C399072A1CDD8CBB000367D5 /* PBXContainerItemProxy */;
 		};
 		__Dependency_String /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_String" /* String */;
-			targetProxy = C3931CCB1CDC08FB0026D877 /* PBXContainerItemProxy */;
+			targetProxy = C399072C1CDD8CBB000367D5 /* PBXContainerItemProxy */;
 		};
 		__Dependency_StructuredData /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_StructuredData" /* StructuredData */;
-			targetProxy = C3931CC81CDC08FB0026D877 /* PBXContainerItemProxy */;
+			targetProxy = C39907291CDD8CBB000367D5 /* PBXContainerItemProxy */;
 		};
 		__Dependency_Vapor /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_Vapor" /* Vapor */;
-			targetProxy = C3931CD21CDC08FB0026D877 /* PBXContainerItemProxy */;
+			targetProxy = C39907331CDD8CBB000367D5 /* PBXContainerItemProxy */;
 		};
 		__Dependency_libc /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "______Target_libc" /* libc */;
-			targetProxy = C3931CD31CDC08FB0026D877 /* PBXContainerItemProxy */;
+			targetProxy = C39907341CDD8CBB000367D5 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
