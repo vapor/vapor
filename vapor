@@ -11,6 +11,7 @@ class Vapor {
 
     var release = false
     var swift2 = false
+    var withoutGit = false
 
     var flags: [String]
 
@@ -24,6 +25,8 @@ class Vapor {
                     release = true
                 } else if argument == "--swift2.2" {
                     swift2 = true
+                } else if argument == "--without-git" {
+                    withoutGit = true
                 } else {
                     flags.append(argument)
                 }
@@ -232,6 +235,11 @@ class Vapor {
             try run("curl -L https://github.com/qutheory/vapor-example/archive/master.tar.gz > \(escapedName)/vapor-example.tar.gz")
             try run("tar -xzf \(escapedName)/vapor-example.tar.gz --strip-components=1 --directory \(escapedName)")
             let _ = try? run("rm \(escapedName)/vapor-example.tar.gz")
+
+            if withoutGit == false {
+                try run("git init \(escapedName)")
+            }
+
             print()
             print("Project \"\(name)\" has been created.")
             print("Enjoy!")
@@ -252,6 +260,9 @@ class Vapor {
         print("  --swift2.2")
         print("    Builds and runs using Swift 2.2")
         print()
+        print("  --without-git")
+        print("    Skips initialization of an empty Git repository")
+        print()
         print("Options:")
         print("  build [file1, file2, ...]")
         print("    Builds source files and links Vapor libs.")
@@ -264,7 +275,8 @@ class Vapor {
         print()
         print("  new <project-name>")
         print("    Clones the Vapor Example to a given ")
-        print("    folder name and removes .git.")
+        print("    folder name and initializes an empty")
+        print("    Git repository inside it.")
         print()
         print("  clean")
         print()
