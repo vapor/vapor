@@ -21,11 +21,19 @@ public protocol SessionDriver: class {
     func valueFor(key: String, identifier: String) -> String?
 
     /**
+        Returns true if the session driver
+        contains an entry for the given identifier.
+
+        - parameter identifier: the identifier of the session
+    */
+    func contains(identifier: String) -> Bool
+
+    /**
         Set a alue for the given key associated with a session of the given identifier
 
         - parameter value: value to set, nil if should remove
         - parameter key: key to set
-        - parameter identifier: identifier of session
+        - parameter identifier: identifier of the session
      */
     func set(_ value: String?, forKey key: String, identifier: String)
 

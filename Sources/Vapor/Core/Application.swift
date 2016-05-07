@@ -2,7 +2,7 @@ import libc
 import MediaType
 
 public class Application {
-    public static let VERSION = "0.5.3"
+    public static let VERSION = "0.8.0"
 
     /**
         The router driver is responsible
