@@ -233,19 +233,19 @@ class Vapor {
         do {
             try run("wget cli.qutheory.io -O vapor")
         } catch {
-            print("Could not download CLI.")
+            print("Could not download Vapor CLI.")
             print("Make sure you have 'wget' installed.")
         }
 
         do {
             try run("chmod +x vapor")
             try run("sudo mv vapor /usr/local/bin")
+
+            print("Vapor CLI updated.")
         } catch {
-            print("Could not move CLI to bin.")
+            print("Could not move Vapor CLI to bin.")
             print("Try using 'sudo'.")
         }
-
-        print("Vapor CLI updated.")
     }
 
     /**
