@@ -21,7 +21,7 @@ app.resource("users", controller: UserController.self)
 //MARK: Request data
 
 app.post("jsondata") { request in
-    print(request.data.json?["hi"]?.string)
+    print(request.data.json?["hi"].string)
     return "yup"
 }
 
@@ -46,14 +46,14 @@ app.get("json") { request in
 
 app.post("json") { request in
     //parse a key inside the received json
-    guard let count = request.data["unicorns"]?.int else {
+    guard let count = request.data["unicorns"].int else {
         return Response(error: "No unicorn count provided")
     }
     return "Received \(count) unicorns"
 }
 
 app.post("form") { request in
-    guard let name = request.data["name"]?.string else {
+    guard let name = request.data["name"].string else {
         return Response(error: "No name provided")
     }
 
@@ -66,7 +66,7 @@ app.get("redirect") { request in
 
 app.post("json2") { request in
     //parse a key inside the received json
-    guard let count = request.data["unicorns"]?.int else {
+    guard let count = request.data["unicorns"].int else {
         return Response(error: "No unicorn count provided")
     }
     return Response(status: .created, json: Json(["message":"Received \(count) unicorns"]))
