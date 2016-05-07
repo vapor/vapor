@@ -8,10 +8,10 @@
 
 class Vapor {
     var arguments: [String]
-    
+
     var release = false
     var swift2 = false
-    
+
     var flags: [String]
 
     init(arguments: [String]) {
@@ -19,7 +19,7 @@ class Vapor {
         var flags: [String] = []
 
         for argument in arguments {
-            if argument.characters.first == "-"  {
+            if argument.characters.first == "-" {
                 if argument == "--release" {
                     release = true
                 } else if argument == "--swift2.2" {
@@ -28,7 +28,7 @@ class Vapor {
                     flags.append(argument)
                 }
             } else {
-                commands.append(argument)        
+                commands.append(argument)
             }
         }
 
@@ -116,7 +116,7 @@ class Vapor {
         run("rm -rf Packages .build", orFail: "Could not clean")
         print("Cleaned.")
     }
-    
+
     func build() {
         if swift2 {
             buildSwift2()
@@ -124,7 +124,7 @@ class Vapor {
             buildSwift3()
         }
     }
-    
+
     func buildSwift3() {
         do {
             var buildFlags = ""
@@ -159,8 +159,8 @@ class Vapor {
             let lib = "/usr/local/opt/vapor/lib/"
             let rpath = ""
         #endif
-        
-        var cflags = ""        
+
+        var cflags = ""
         if release {
             cflags = "-O"
         }
@@ -191,23 +191,23 @@ class Vapor {
         print("Running...")
         do {
 
-            
+
             if swift2 {
                 try run(".build/VaporApp")
             } else {
                 var name = "App"
                 let folder = release ? "release" : "debug"
-                
+
                 #if swift(>=3.0)
                     let args = flags.joined(separator: " ")
                 #else
                     let args = flags.joinWithSeparator(" ")
                 #endif
-                
+
                 if arguments.count >= 3 {
                     name = arguments[2]
                 }
-                
+
                 try run(".build/\(folder)/\(name) \(args)")
             }
         } catch Error.System(let result) {
