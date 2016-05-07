@@ -21,7 +21,7 @@ app.resource("users", controller: UserController.self)
 //MARK: Request data
 
 app.post("jsondata") { request in
-    print(request.data.json?["hi"]?.string)
+    print(request.data.json?["hi"].string)
     return "yup"
 }
 
@@ -46,14 +46,14 @@ app.get("json") { request in
 
 app.post("json") { request in
     //parse a key inside the received json
-    guard let count = request.data["unicorns"]?.int else {
+    guard let count = request.data["unicorns"].int else {
         return Response(error: "No unicorn count provided")
     }
     return "Received \(count) unicorns"
 }
 
 app.post("form") { request in
-    guard let name = request.data["name"]?.string else {
+    guard let name = request.data["name"].string else {
         return Response(error: "No name provided")
     }
 
@@ -66,7 +66,7 @@ app.get("redirect") { request in
 
 app.post("json2") { request in
     //parse a key inside the received json
-    guard let count = request.data["unicorns"]?.int else {
+    guard let count = request.data["unicorns"].int else {
         return Response(error: "No unicorn count provided")
     }
     return Response(status: .created, json: Json(["message":"Received \(count) unicorns"]))
@@ -155,6 +155,37 @@ app.get("cookies") { request in
     response.cookies["hello"] = "world"
 
     return response
+}
+
+class Name: ValidationSuite {
+    static func validate(input value: String) throws {
+        let evaluation = OnlyAlphanumeric.self
+            && Count.min(5)
+            && Count.max(20)
+
+        try evaluation.validate(input: value)
+    }
+}
+
+class Employee {
+    var name: Valid<Name>
+
+    init(request: Request) throws {
+        name = try request.data["name"].validated()
+    }
+}
+
+extension Employee: JsonRepresentable {
+    func makeJson() -> Json {
+        return Json([
+            "name": name.value
+        ])
+    }
+}
+
+app.get("validation") { request in
+    let employee = try Employee(request: request)
+    return employee
 }
 
 //MARK: Middleware

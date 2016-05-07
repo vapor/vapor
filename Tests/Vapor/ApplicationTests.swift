@@ -32,9 +32,9 @@ class ApplicationTests: XCTestCase {
 
         var found = false
         for header in response.headers {
-            if header.key == "Content-Type" && header.value == "text/css" {
-                found = true
-            }
+            guard header.key == "Content-Type" else { continue }
+            guard header.value == "text/css" else { continue }
+            found = true
         }
 
         XCTAssert(found, "CSS Content Type not found")
