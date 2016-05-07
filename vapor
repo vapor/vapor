@@ -13,6 +13,9 @@ class Vapor {
     /// True if the --release flag was passed
     var release = false
 
+	/// True if the --without-git flag was passed
+	var withoutGit = false
+
     /// Any arguments starting with --
     var flags: [String]
 
@@ -27,14 +30,16 @@ class Vapor {
         var flags: [String] = []
 
         for argument in arguments {
-            if argument.characters.first == "-"  {
+            if argument.characters.first == "-" {
                 if argument == "--release" {
                     release = true
+                } else if argument == "--without-git" {
+                    withoutGit = true
                 } else {
                     flags.append(argument)
                 }
             } else {
-                commands.append(argument)        
+                commands.append(argument)
             }
         }
 
@@ -243,6 +248,11 @@ class Vapor {
             try run("curl -L https://github.com/qutheory/vapor-example/archive/master.tar.gz > \(escapedName)/vapor-example.tar.gz")
             try run("tar -xzf \(escapedName)/vapor-example.tar.gz --strip-components=1 --directory \(escapedName)")
             let _ = try? run("rm \(escapedName)/vapor-example.tar.gz")
+
+            if withoutGit == false {
+                try run("git init \(escapedName)")
+            }
+
             print()
             print("Project \"\(name)\" has been created.")
             print("Enjoy!")
@@ -315,6 +325,9 @@ class Vapor {
         print("  --release")
         print("    Builds and runs with optimizations")
         print()
+        print("  --without-git")
+        print("    Skips initialization of an empty Git repository")
+        print()
         print("Options:")
         print("  build [file1, file2, ...]")
         print("    Builds source files and links Vapor libs.")
@@ -327,7 +340,8 @@ class Vapor {
         print()
         print("  new <project-name>")
         print("    Clones the Vapor Example to a given ")
-        print("    folder name and removes .git.")
+        print("    folder name and initializes an empty")
+        print("    Git repository inside it.")
         print()
         print("  self-update")
         print("    Downloads the latest version of")
