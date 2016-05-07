@@ -1,9 +1,9 @@
 #!/usr/bin/env swift
 
-#if os(Linux)
-    import Glibc
-#else
+#if os(OSX)
     import Darwin
+#else
+    import Glibc
 #endif
 
 class Vapor {
@@ -52,6 +52,25 @@ class Vapor {
     */
     func start() {
         if let command = Command(rawValue: arguments[1]) {
+
+            #if os(OSX)
+            switch command {
+            case .Clean:
+                clean()
+            case .Build:
+                build()
+            case .Run:
+                run()
+            case .New:
+                newProject()
+            case .Help:
+                help()
+            case .SelfUpdate:
+                selfUpdate()
+            case .Xcode:
+                xcode()
+            }
+            #else
             switch command {
             case .Clean:
                 clean()
@@ -66,6 +85,7 @@ class Vapor {
             case .SelfUpdate:
                 selfUpdate()
             }
+            #endif
 
         } else {
             fail("Unknown command: \(Process.arguments[1])")
@@ -86,8 +106,15 @@ class Vapor {
         case New = "new"
         case Help = "help"
         case SelfUpdate = "self-update"
+        #if os(OSX)
+        case Xcode = "xcode"
+        #endif
 
+        #if os(OSX)
+        static var all: [Command] = [.Clean, .Build, .Run, .New, .Help, .SelfUpdate, .Xcode]  
+        #else  
         static var all: [Command] = [.Clean, .Build, .Run, .New, .Help, .SelfUpdate]
+        #endif
     }
 
     /**
@@ -235,18 +262,46 @@ class Vapor {
         } catch {
             print("Could not download Vapor CLI.")
             print("Make sure you have 'wget' installed.")
+            return
         }
 
         do {
             try run("chmod +x vapor")
             try run("sudo mv vapor /usr/local/bin")
-
-            print("Vapor CLI updated.")
         } catch {
             print("Could not move Vapor CLI to bin.")
             print("Try using 'sudo'.")
+            return
+        }
+
+        print("Vapor CLI updated.")
+    }
+
+    #if os(OSX)
+    /**
+        Generates and opens an Xcode
+        project for Vapor module in the current dir.
+    */
+    func xcode() {
+        print("Generating Xcode Project...")
+
+        do {
+            try run("swift build --generate-xcodeproj")
+        } catch {
+            print("Could not generate Xcode Project.")
+            return
+        }
+
+        print("Opening Xcode...")
+
+        do {
+            try run("open *.xcodeproj")
+        } catch {
+            print("Could not open Xcode Project.")
+            return
         }
     }
+    #endif
 
     /**
         Displays information about how to use 
@@ -259,9 +314,6 @@ class Vapor {
         print("Flags:")
         print("  --release")
         print("    Builds and runs with optimizations")
-        print()
-        print("  --swift2.2")
-        print("    Builds and runs using Swift 2.2")
         print()
         print("Options:")
         print("  build [file1, file2, ...]")
@@ -278,6 +330,15 @@ class Vapor {
         print("    folder name and removes .git.")
         print()
         print("  self-update")
+        print("    Downloads the latest version of")
+        print("    the Vapor command line interface.")
+
+        #if os(OSX)
+        print()
+        print("  xcode")
+        print("    Generates and opens an Xcode Project.")
+        #endif
+
         print()
         print("  clean")
         print()
