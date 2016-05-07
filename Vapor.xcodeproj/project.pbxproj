@@ -1,0 +1,2742 @@
+// !$*UTF8*$!
+{
+    archiveVersion = 1;
+    classes = {};
+    objectVersion = 46;
+    rootObject = __RootObject_;
+    objects = {
+        __RootObject_ = {
+            isa = PBXProject;
+            attributes = {LastUpgradeCheck = 9999;};
+            buildConfigurationList = ___RootConfs_;
+            compatibilityVersion = 'Xcode 3.2';
+            developmentRegion = English;
+            hasScannedForEncodings = 0;
+            knownRegions = (en);
+            mainGroup = ___RootGroup_;
+            productRefGroup = ____Products_;
+            projectDirPath = '';
+            projectRoot = '';
+            targets = (______Target_C7, ______Target_S4, ______Target_String, ______Target_StructuredData, ______Target_JSON, ______Target_Strand, ______Target_Hummingbird, ______Target_CryptoEssentials, ______Target_HMAC, ______Target_SHA2, ______Target_MediaType, ______Target_Development, ______Target_Generator, ______Target_libc, ______Target_Performance, ______Target_Vapor, ______Target_VaporTestSuite);
+        };
+        '__PBXFileRef_Package.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Package.swift';
+            path = 'Package.swift';
+            sourceTree = '<group>';
+        };
+        ___RootGroup_ = {
+            isa = PBXGroup;
+            children = ('__PBXFileRef_Package.swift', _____Configs_, _____Sources_, Dependencies_, _______Tests_, ____Products_);
+            sourceTree = '<group>';
+        };
+        _______Group_C7 = {
+            isa = PBXGroup;
+            name = C7;
+            path = 'Packages/C7-0.7.0/Sources';
+            sourceTree = '<group>';
+            children = ('__PBXFileRef_Packages/C7-0.7.0/Sources/AsyncConnection.swift', '__PBXFileRef_Packages/C7-0.7.0/Sources/AsyncHost.swift', '__PBXFileRef_Packages/C7-0.7.0/Sources/AsyncStream.swift', '__PBXFileRef_Packages/C7-0.7.0/Sources/AsyncURIConnection.swift', '__PBXFileRef_Packages/C7-0.7.0/Sources/Byte.swift', '__PBXFileRef_Packages/C7-0.7.0/Sources/C7.swift', '__PBXFileRef_Packages/C7-0.7.0/Sources/CaseInsensitiveString.swift', '__PBXFileRef_Packages/C7-0.7.0/Sources/Closable.swift', '__PBXFileRef_Packages/C7-0.7.0/Sources/Connection.swift', '__PBXFileRef_Packages/C7-0.7.0/Sources/CustomDataStore.swift', '__PBXFileRef_Packages/C7-0.7.0/Sources/Data.swift', '__PBXFileRef_Packages/C7-0.7.0/Sources/Drain.swift', '__PBXFileRef_Packages/C7-0.7.0/Sources/Host.swift', '__PBXFileRef_Packages/C7-0.7.0/Sources/Query.swift', '__PBXFileRef_Packages/C7-0.7.0/Sources/QueryField.swift', '__PBXFileRef_Packages/C7-0.7.0/Sources/Stream.swift', '__PBXFileRef_Packages/C7-0.7.0/Sources/StreamError.swift', '__PBXFileRef_Packages/C7-0.7.0/Sources/StreamSequence.swift', '__PBXFileRef_Packages/C7-0.7.0/Sources/Time.swift', '__PBXFileRef_Packages/C7-0.7.0/Sources/URI.swift', '__PBXFileRef_Packages/C7-0.7.0/Sources/URIConnection.swift');
+        };
+        '__PBXFileRef_Packages/C7-0.7.0/Sources/AsyncConnection.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'AsyncConnection.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Packages/C7-0.7.0/Sources/AsyncHost.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'AsyncHost.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Packages/C7-0.7.0/Sources/AsyncStream.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'AsyncStream.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Packages/C7-0.7.0/Sources/AsyncURIConnection.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'AsyncURIConnection.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Packages/C7-0.7.0/Sources/Byte.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Byte.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Packages/C7-0.7.0/Sources/C7.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'C7.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Packages/C7-0.7.0/Sources/CaseInsensitiveString.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'CaseInsensitiveString.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Packages/C7-0.7.0/Sources/Closable.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Closable.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Packages/C7-0.7.0/Sources/Connection.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Connection.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Packages/C7-0.7.0/Sources/CustomDataStore.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'CustomDataStore.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Packages/C7-0.7.0/Sources/Data.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Data.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Packages/C7-0.7.0/Sources/Drain.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Drain.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Packages/C7-0.7.0/Sources/Host.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Host.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Packages/C7-0.7.0/Sources/Query.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Query.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Packages/C7-0.7.0/Sources/QueryField.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'QueryField.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Packages/C7-0.7.0/Sources/Stream.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Stream.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Packages/C7-0.7.0/Sources/StreamError.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'StreamError.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Packages/C7-0.7.0/Sources/StreamSequence.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'StreamSequence.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Packages/C7-0.7.0/Sources/Time.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Time.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Packages/C7-0.7.0/Sources/URI.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'URI.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Packages/C7-0.7.0/Sources/URIConnection.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'URIConnection.swift';
+            sourceTree = '<group>';
+        };
+        ______Target_C7 = {
+            isa = PBXNativeTarget;
+            buildConfigurationList = _______Confs_C7;
+            buildPhases = (CompilePhase_C7, ___LinkPhase_C7);
+            buildRules = ();
+            dependencies = ();
+            name = C7;
+            productName = C7;
+            productReference = _____Product_C7;
+            productType = 'com.apple.product-type.library.dynamic';
+        };
+        _____Product_C7 = {
+            isa = PBXFileReference;
+            explicitFileType = 'compiled.mach-o.dylib';
+            path = 'C7.dylib';
+            sourceTree = BUILT_PRODUCTS_DIR;
+        };
+        CompilePhase_C7 = {
+            isa = PBXSourcesBuildPhase;
+            files = ('__src_cc_ref_Packages/C7-0.7.0/Sources/AsyncConnection.swift', '__src_cc_ref_Packages/C7-0.7.0/Sources/AsyncHost.swift', '__src_cc_ref_Packages/C7-0.7.0/Sources/AsyncStream.swift', '__src_cc_ref_Packages/C7-0.7.0/Sources/AsyncURIConnection.swift', '__src_cc_ref_Packages/C7-0.7.0/Sources/Byte.swift', '__src_cc_ref_Packages/C7-0.7.0/Sources/C7.swift', '__src_cc_ref_Packages/C7-0.7.0/Sources/CaseInsensitiveString.swift', '__src_cc_ref_Packages/C7-0.7.0/Sources/Closable.swift', '__src_cc_ref_Packages/C7-0.7.0/Sources/Connection.swift', '__src_cc_ref_Packages/C7-0.7.0/Sources/CustomDataStore.swift', '__src_cc_ref_Packages/C7-0.7.0/Sources/Data.swift', '__src_cc_ref_Packages/C7-0.7.0/Sources/Drain.swift', '__src_cc_ref_Packages/C7-0.7.0/Sources/Host.swift', '__src_cc_ref_Packages/C7-0.7.0/Sources/Query.swift', '__src_cc_ref_Packages/C7-0.7.0/Sources/QueryField.swift', '__src_cc_ref_Packages/C7-0.7.0/Sources/Stream.swift', '__src_cc_ref_Packages/C7-0.7.0/Sources/StreamError.swift', '__src_cc_ref_Packages/C7-0.7.0/Sources/StreamSequence.swift', '__src_cc_ref_Packages/C7-0.7.0/Sources/Time.swift', '__src_cc_ref_Packages/C7-0.7.0/Sources/URI.swift', '__src_cc_ref_Packages/C7-0.7.0/Sources/URIConnection.swift');
+            runOnlyForDeploymentPostprocessing = 0;
+        };
+        ___LinkPhase_C7 = {
+            isa = PBXFrameworksBuildPhase;
+            files = ();
+            runOnlyForDeploymentPostprocessing = 0;
+        };
+        '__src_cc_ref_Packages/C7-0.7.0/Sources/AsyncConnection.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/C7-0.7.0/Sources/AsyncConnection.swift';
+        };
+        '__src_cc_ref_Packages/C7-0.7.0/Sources/AsyncHost.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/C7-0.7.0/Sources/AsyncHost.swift';
+        };
+        '__src_cc_ref_Packages/C7-0.7.0/Sources/AsyncStream.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/C7-0.7.0/Sources/AsyncStream.swift';
+        };
+        '__src_cc_ref_Packages/C7-0.7.0/Sources/AsyncURIConnection.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/C7-0.7.0/Sources/AsyncURIConnection.swift';
+        };
+        '__src_cc_ref_Packages/C7-0.7.0/Sources/Byte.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/C7-0.7.0/Sources/Byte.swift';
+        };
+        '__src_cc_ref_Packages/C7-0.7.0/Sources/C7.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/C7-0.7.0/Sources/C7.swift';
+        };
+        '__src_cc_ref_Packages/C7-0.7.0/Sources/CaseInsensitiveString.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/C7-0.7.0/Sources/CaseInsensitiveString.swift';
+        };
+        '__src_cc_ref_Packages/C7-0.7.0/Sources/Closable.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/C7-0.7.0/Sources/Closable.swift';
+        };
+        '__src_cc_ref_Packages/C7-0.7.0/Sources/Connection.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/C7-0.7.0/Sources/Connection.swift';
+        };
+        '__src_cc_ref_Packages/C7-0.7.0/Sources/CustomDataStore.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/C7-0.7.0/Sources/CustomDataStore.swift';
+        };
+        '__src_cc_ref_Packages/C7-0.7.0/Sources/Data.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/C7-0.7.0/Sources/Data.swift';
+        };
+        '__src_cc_ref_Packages/C7-0.7.0/Sources/Drain.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/C7-0.7.0/Sources/Drain.swift';
+        };
+        '__src_cc_ref_Packages/C7-0.7.0/Sources/Host.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/C7-0.7.0/Sources/Host.swift';
+        };
+        '__src_cc_ref_Packages/C7-0.7.0/Sources/Query.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/C7-0.7.0/Sources/Query.swift';
+        };
+        '__src_cc_ref_Packages/C7-0.7.0/Sources/QueryField.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/C7-0.7.0/Sources/QueryField.swift';
+        };
+        '__src_cc_ref_Packages/C7-0.7.0/Sources/Stream.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/C7-0.7.0/Sources/Stream.swift';
+        };
+        '__src_cc_ref_Packages/C7-0.7.0/Sources/StreamError.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/C7-0.7.0/Sources/StreamError.swift';
+        };
+        '__src_cc_ref_Packages/C7-0.7.0/Sources/StreamSequence.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/C7-0.7.0/Sources/StreamSequence.swift';
+        };
+        '__src_cc_ref_Packages/C7-0.7.0/Sources/Time.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/C7-0.7.0/Sources/Time.swift';
+        };
+        '__src_cc_ref_Packages/C7-0.7.0/Sources/URI.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/C7-0.7.0/Sources/URI.swift';
+        };
+        '__src_cc_ref_Packages/C7-0.7.0/Sources/URIConnection.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/C7-0.7.0/Sources/URIConnection.swift';
+        };
+        _LinkFileRef_C7 = {
+            isa = PBXBuildFile;
+            fileRef = _____Product_C7;
+        };
+        _______Confs_C7 = {
+            isa = XCConfigurationList;
+            buildConfigurations = (___DebugConf_C7, _ReleaseConf_C7);
+            defaultConfigurationIsVisible = 0;
+            defaultConfigurationName = Debug;
+        };
+        ___DebugConf_C7 = {
+            isa = XCBuildConfiguration;
+            buildSettings = { ENABLE_TESTABILITY = YES; SWIFT_OPTIMIZATION_LEVEL = -Onone; LD_RUNPATH_SEARCH_PATHS = '$(TOOLCHAIN_DIR)/usr/lib/swift/macosx'; };
+            name = Debug;
+        };
+        _ReleaseConf_C7 = {
+            isa = XCBuildConfiguration;
+            buildSettings = { ENABLE_TESTABILITY = YES; LD_RUNPATH_SEARCH_PATHS = '$(TOOLCHAIN_DIR)/usr/lib/swift/macosx'; };
+            name = Release;
+        };
+        __Dependency_C7 = {
+            isa = PBXTargetDependency;
+            target = ______Target_C7;
+        };
+        _______Group_S4 = {
+            isa = PBXGroup;
+            name = S4;
+            path = 'Packages/S4-0.6.0/Sources';
+            sourceTree = '<group>';
+            children = ('__PBXFileRef_Packages/S4-0.6.0/Sources/AsyncClient.swift', '__PBXFileRef_Packages/S4-0.6.0/Sources/AsyncMiddleware.swift', '__PBXFileRef_Packages/S4-0.6.0/Sources/AsyncResponder.swift', '__PBXFileRef_Packages/S4-0.6.0/Sources/AsyncServer.swift', '__PBXFileRef_Packages/S4-0.6.0/Sources/Body.swift', '__PBXFileRef_Packages/S4-0.6.0/Sources/Client.swift', '__PBXFileRef_Packages/S4-0.6.0/Sources/Error.swift', '__PBXFileRef_Packages/S4-0.6.0/Sources/Header.swift', '__PBXFileRef_Packages/S4-0.6.0/Sources/Headers.swift', '__PBXFileRef_Packages/S4-0.6.0/Sources/Message.swift', '__PBXFileRef_Packages/S4-0.6.0/Sources/Method.swift', '__PBXFileRef_Packages/S4-0.6.0/Sources/Middleware.swift', '__PBXFileRef_Packages/S4-0.6.0/Sources/Request.swift', '__PBXFileRef_Packages/S4-0.6.0/Sources/RequestParser.swift', '__PBXFileRef_Packages/S4-0.6.0/Sources/RequestSerializer.swift', '__PBXFileRef_Packages/S4-0.6.0/Sources/Responder.swift', '__PBXFileRef_Packages/S4-0.6.0/Sources/Response.swift', '__PBXFileRef_Packages/S4-0.6.0/Sources/ResponseParser.swift', '__PBXFileRef_Packages/S4-0.6.0/Sources/ResponseSerializer.swift', '__PBXFileRef_Packages/S4-0.6.0/Sources/S4.swift', '__PBXFileRef_Packages/S4-0.6.0/Sources/Server.swift', '__PBXFileRef_Packages/S4-0.6.0/Sources/Status.swift', '__PBXFileRef_Packages/S4-0.6.0/Sources/Version.swift');
+        };
+        '__PBXFileRef_Packages/S4-0.6.0/Sources/AsyncClient.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'AsyncClient.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Packages/S4-0.6.0/Sources/AsyncMiddleware.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'AsyncMiddleware.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Packages/S4-0.6.0/Sources/AsyncResponder.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'AsyncResponder.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Packages/S4-0.6.0/Sources/AsyncServer.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'AsyncServer.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Packages/S4-0.6.0/Sources/Body.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Body.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Packages/S4-0.6.0/Sources/Client.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Client.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Packages/S4-0.6.0/Sources/Error.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Error.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Packages/S4-0.6.0/Sources/Header.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Header.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Packages/S4-0.6.0/Sources/Headers.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Headers.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Packages/S4-0.6.0/Sources/Message.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Message.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Packages/S4-0.6.0/Sources/Method.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Method.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Packages/S4-0.6.0/Sources/Middleware.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Middleware.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Packages/S4-0.6.0/Sources/Request.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Request.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Packages/S4-0.6.0/Sources/RequestParser.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'RequestParser.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Packages/S4-0.6.0/Sources/RequestSerializer.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'RequestSerializer.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Packages/S4-0.6.0/Sources/Responder.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Responder.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Packages/S4-0.6.0/Sources/Response.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Response.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Packages/S4-0.6.0/Sources/ResponseParser.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'ResponseParser.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Packages/S4-0.6.0/Sources/ResponseSerializer.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'ResponseSerializer.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Packages/S4-0.6.0/Sources/S4.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'S4.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Packages/S4-0.6.0/Sources/Server.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Server.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Packages/S4-0.6.0/Sources/Status.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Status.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Packages/S4-0.6.0/Sources/Version.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Version.swift';
+            sourceTree = '<group>';
+        };
+        ______Target_S4 = {
+            isa = PBXNativeTarget;
+            buildConfigurationList = _______Confs_S4;
+            buildPhases = (CompilePhase_S4, ___LinkPhase_S4);
+            buildRules = ();
+            dependencies = (__Dependency_C7);
+            name = S4;
+            productName = S4;
+            productReference = _____Product_S4;
+            productType = 'com.apple.product-type.library.dynamic';
+        };
+        _____Product_S4 = {
+            isa = PBXFileReference;
+            explicitFileType = 'compiled.mach-o.dylib';
+            path = 'S4.dylib';
+            sourceTree = BUILT_PRODUCTS_DIR;
+        };
+        CompilePhase_S4 = {
+            isa = PBXSourcesBuildPhase;
+            files = ('__src_cc_ref_Packages/S4-0.6.0/Sources/AsyncClient.swift', '__src_cc_ref_Packages/S4-0.6.0/Sources/AsyncMiddleware.swift', '__src_cc_ref_Packages/S4-0.6.0/Sources/AsyncResponder.swift', '__src_cc_ref_Packages/S4-0.6.0/Sources/AsyncServer.swift', '__src_cc_ref_Packages/S4-0.6.0/Sources/Body.swift', '__src_cc_ref_Packages/S4-0.6.0/Sources/Client.swift', '__src_cc_ref_Packages/S4-0.6.0/Sources/Error.swift', '__src_cc_ref_Packages/S4-0.6.0/Sources/Header.swift', '__src_cc_ref_Packages/S4-0.6.0/Sources/Headers.swift', '__src_cc_ref_Packages/S4-0.6.0/Sources/Message.swift', '__src_cc_ref_Packages/S4-0.6.0/Sources/Method.swift', '__src_cc_ref_Packages/S4-0.6.0/Sources/Middleware.swift', '__src_cc_ref_Packages/S4-0.6.0/Sources/Request.swift', '__src_cc_ref_Packages/S4-0.6.0/Sources/RequestParser.swift', '__src_cc_ref_Packages/S4-0.6.0/Sources/RequestSerializer.swift', '__src_cc_ref_Packages/S4-0.6.0/Sources/Responder.swift', '__src_cc_ref_Packages/S4-0.6.0/Sources/Response.swift', '__src_cc_ref_Packages/S4-0.6.0/Sources/ResponseParser.swift', '__src_cc_ref_Packages/S4-0.6.0/Sources/ResponseSerializer.swift', '__src_cc_ref_Packages/S4-0.6.0/Sources/S4.swift', '__src_cc_ref_Packages/S4-0.6.0/Sources/Server.swift', '__src_cc_ref_Packages/S4-0.6.0/Sources/Status.swift', '__src_cc_ref_Packages/S4-0.6.0/Sources/Version.swift');
+            runOnlyForDeploymentPostprocessing = 0;
+        };
+        ___LinkPhase_S4 = {
+            isa = PBXFrameworksBuildPhase;
+            files = (_LinkFileRef_C7);
+            runOnlyForDeploymentPostprocessing = 0;
+        };
+        '__src_cc_ref_Packages/S4-0.6.0/Sources/AsyncClient.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/S4-0.6.0/Sources/AsyncClient.swift';
+        };
+        '__src_cc_ref_Packages/S4-0.6.0/Sources/AsyncMiddleware.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/S4-0.6.0/Sources/AsyncMiddleware.swift';
+        };
+        '__src_cc_ref_Packages/S4-0.6.0/Sources/AsyncResponder.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/S4-0.6.0/Sources/AsyncResponder.swift';
+        };
+        '__src_cc_ref_Packages/S4-0.6.0/Sources/AsyncServer.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/S4-0.6.0/Sources/AsyncServer.swift';
+        };
+        '__src_cc_ref_Packages/S4-0.6.0/Sources/Body.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/S4-0.6.0/Sources/Body.swift';
+        };
+        '__src_cc_ref_Packages/S4-0.6.0/Sources/Client.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/S4-0.6.0/Sources/Client.swift';
+        };
+        '__src_cc_ref_Packages/S4-0.6.0/Sources/Error.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/S4-0.6.0/Sources/Error.swift';
+        };
+        '__src_cc_ref_Packages/S4-0.6.0/Sources/Header.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/S4-0.6.0/Sources/Header.swift';
+        };
+        '__src_cc_ref_Packages/S4-0.6.0/Sources/Headers.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/S4-0.6.0/Sources/Headers.swift';
+        };
+        '__src_cc_ref_Packages/S4-0.6.0/Sources/Message.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/S4-0.6.0/Sources/Message.swift';
+        };
+        '__src_cc_ref_Packages/S4-0.6.0/Sources/Method.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/S4-0.6.0/Sources/Method.swift';
+        };
+        '__src_cc_ref_Packages/S4-0.6.0/Sources/Middleware.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/S4-0.6.0/Sources/Middleware.swift';
+        };
+        '__src_cc_ref_Packages/S4-0.6.0/Sources/Request.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/S4-0.6.0/Sources/Request.swift';
+        };
+        '__src_cc_ref_Packages/S4-0.6.0/Sources/RequestParser.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/S4-0.6.0/Sources/RequestParser.swift';
+        };
+        '__src_cc_ref_Packages/S4-0.6.0/Sources/RequestSerializer.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/S4-0.6.0/Sources/RequestSerializer.swift';
+        };
+        '__src_cc_ref_Packages/S4-0.6.0/Sources/Responder.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/S4-0.6.0/Sources/Responder.swift';
+        };
+        '__src_cc_ref_Packages/S4-0.6.0/Sources/Response.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/S4-0.6.0/Sources/Response.swift';
+        };
+        '__src_cc_ref_Packages/S4-0.6.0/Sources/ResponseParser.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/S4-0.6.0/Sources/ResponseParser.swift';
+        };
+        '__src_cc_ref_Packages/S4-0.6.0/Sources/ResponseSerializer.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/S4-0.6.0/Sources/ResponseSerializer.swift';
+        };
+        '__src_cc_ref_Packages/S4-0.6.0/Sources/S4.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/S4-0.6.0/Sources/S4.swift';
+        };
+        '__src_cc_ref_Packages/S4-0.6.0/Sources/Server.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/S4-0.6.0/Sources/Server.swift';
+        };
+        '__src_cc_ref_Packages/S4-0.6.0/Sources/Status.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/S4-0.6.0/Sources/Status.swift';
+        };
+        '__src_cc_ref_Packages/S4-0.6.0/Sources/Version.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/S4-0.6.0/Sources/Version.swift';
+        };
+        _LinkFileRef_S4 = {
+            isa = PBXBuildFile;
+            fileRef = _____Product_S4;
+        };
+        _______Confs_S4 = {
+            isa = XCConfigurationList;
+            buildConfigurations = (___DebugConf_S4, _ReleaseConf_S4);
+            defaultConfigurationIsVisible = 0;
+            defaultConfigurationName = Debug;
+        };
+        ___DebugConf_S4 = {
+            isa = XCBuildConfiguration;
+            buildSettings = { ENABLE_TESTABILITY = YES; SWIFT_OPTIMIZATION_LEVEL = -Onone; LD_RUNPATH_SEARCH_PATHS = '$(TOOLCHAIN_DIR)/usr/lib/swift/macosx'; };
+            name = Debug;
+        };
+        _ReleaseConf_S4 = {
+            isa = XCBuildConfiguration;
+            buildSettings = { ENABLE_TESTABILITY = YES; LD_RUNPATH_SEARCH_PATHS = '$(TOOLCHAIN_DIR)/usr/lib/swift/macosx'; };
+            name = Release;
+        };
+        __Dependency_S4 = {
+            isa = PBXTargetDependency;
+            target = ______Target_S4;
+        };
+        _______Group_String = {
+            isa = PBXGroup;
+            name = String;
+            path = 'Packages/String-0.7.0/Source';
+            sourceTree = '<group>';
+            children = ('__PBXFileRef_Packages/String-0.7.0/Source/String.swift');
+        };
+        '__PBXFileRef_Packages/String-0.7.0/Source/String.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'String.swift';
+            sourceTree = '<group>';
+        };
+        ______Target_String = {
+            isa = PBXNativeTarget;
+            buildConfigurationList = _______Confs_String;
+            buildPhases = (CompilePhase_String, ___LinkPhase_String);
+            buildRules = ();
+            dependencies = ();
+            name = String;
+            productName = String;
+            productReference = _____Product_String;
+            productType = 'com.apple.product-type.library.dynamic';
+        };
+        _____Product_String = {
+            isa = PBXFileReference;
+            explicitFileType = 'compiled.mach-o.dylib';
+            path = 'String.dylib';
+            sourceTree = BUILT_PRODUCTS_DIR;
+        };
+        CompilePhase_String = {
+            isa = PBXSourcesBuildPhase;
+            files = ('__src_cc_ref_Packages/String-0.7.0/Source/String.swift');
+            runOnlyForDeploymentPostprocessing = 0;
+        };
+        ___LinkPhase_String = {
+            isa = PBXFrameworksBuildPhase;
+            files = ();
+            runOnlyForDeploymentPostprocessing = 0;
+        };
+        '__src_cc_ref_Packages/String-0.7.0/Source/String.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/String-0.7.0/Source/String.swift';
+        };
+        _LinkFileRef_String = {
+            isa = PBXBuildFile;
+            fileRef = _____Product_String;
+        };
+        _______Confs_String = {
+            isa = XCConfigurationList;
+            buildConfigurations = (___DebugConf_String, _ReleaseConf_String);
+            defaultConfigurationIsVisible = 0;
+            defaultConfigurationName = Debug;
+        };
+        ___DebugConf_String = {
+            isa = XCBuildConfiguration;
+            buildSettings = { ENABLE_TESTABILITY = YES; SWIFT_OPTIMIZATION_LEVEL = -Onone; LD_RUNPATH_SEARCH_PATHS = '$(TOOLCHAIN_DIR)/usr/lib/swift/macosx'; };
+            name = Debug;
+        };
+        _ReleaseConf_String = {
+            isa = XCBuildConfiguration;
+            buildSettings = { ENABLE_TESTABILITY = YES; LD_RUNPATH_SEARCH_PATHS = '$(TOOLCHAIN_DIR)/usr/lib/swift/macosx'; };
+            name = Release;
+        };
+        __Dependency_String = {
+            isa = PBXTargetDependency;
+            target = ______Target_String;
+        };
+        _______Group_StructuredData = {
+            isa = PBXGroup;
+            name = StructuredData;
+            path = 'Packages/StructuredData-0.7.0/Sources';
+            sourceTree = '<group>';
+            children = ('__PBXFileRef_Packages/StructuredData-0.7.0/Sources/StructuredData.swift');
+        };
+        '__PBXFileRef_Packages/StructuredData-0.7.0/Sources/StructuredData.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'StructuredData.swift';
+            sourceTree = '<group>';
+        };
+        ______Target_StructuredData = {
+            isa = PBXNativeTarget;
+            buildConfigurationList = _______Confs_StructuredData;
+            buildPhases = (CompilePhase_StructuredData, ___LinkPhase_StructuredData);
+            buildRules = ();
+            dependencies = (__Dependency_C7);
+            name = StructuredData;
+            productName = StructuredData;
+            productReference = _____Product_StructuredData;
+            productType = 'com.apple.product-type.library.dynamic';
+        };
+        _____Product_StructuredData = {
+            isa = PBXFileReference;
+            explicitFileType = 'compiled.mach-o.dylib';
+            path = 'StructuredData.dylib';
+            sourceTree = BUILT_PRODUCTS_DIR;
+        };
+        CompilePhase_StructuredData = {
+            isa = PBXSourcesBuildPhase;
+            files = ('__src_cc_ref_Packages/StructuredData-0.7.0/Sources/StructuredData.swift');
+            runOnlyForDeploymentPostprocessing = 0;
+        };
+        ___LinkPhase_StructuredData = {
+            isa = PBXFrameworksBuildPhase;
+            files = (_LinkFileRef_C7);
+            runOnlyForDeploymentPostprocessing = 0;
+        };
+        '__src_cc_ref_Packages/StructuredData-0.7.0/Sources/StructuredData.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/StructuredData-0.7.0/Sources/StructuredData.swift';
+        };
+        _LinkFileRef_StructuredData = {
+            isa = PBXBuildFile;
+            fileRef = _____Product_StructuredData;
+        };
+        _______Confs_StructuredData = {
+            isa = XCConfigurationList;
+            buildConfigurations = (___DebugConf_StructuredData, _ReleaseConf_StructuredData);
+            defaultConfigurationIsVisible = 0;
+            defaultConfigurationName = Debug;
+        };
+        ___DebugConf_StructuredData = {
+            isa = XCBuildConfiguration;
+            buildSettings = { ENABLE_TESTABILITY = YES; SWIFT_OPTIMIZATION_LEVEL = -Onone; LD_RUNPATH_SEARCH_PATHS = '$(TOOLCHAIN_DIR)/usr/lib/swift/macosx'; };
+            name = Debug;
+        };
+        _ReleaseConf_StructuredData = {
+            isa = XCBuildConfiguration;
+            buildSettings = { ENABLE_TESTABILITY = YES; LD_RUNPATH_SEARCH_PATHS = '$(TOOLCHAIN_DIR)/usr/lib/swift/macosx'; };
+            name = Release;
+        };
+        __Dependency_StructuredData = {
+            isa = PBXTargetDependency;
+            target = ______Target_StructuredData;
+        };
+        _______Group_JSON = {
+            isa = PBXGroup;
+            name = JSON;
+            path = 'Packages/JSON-0.7.0/Source';
+            sourceTree = '<group>';
+            children = ('__PBXFileRef_Packages/JSON-0.7.0/Source/JSON.swift', '__PBXFileRef_Packages/JSON-0.7.0/Source/JSONInterchangeDataParser.swift', '__PBXFileRef_Packages/JSON-0.7.0/Source/JSONInterchangeDataSerializer.swift', '__PBXFileRef_Packages/JSON-0.7.0/Source/JSONParser.swift', '__PBXFileRef_Packages/JSON-0.7.0/Source/JSONSerializer.swift');
+        };
+        '__PBXFileRef_Packages/JSON-0.7.0/Source/JSON.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'JSON.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Packages/JSON-0.7.0/Source/JSONInterchangeDataParser.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'JSONInterchangeDataParser.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Packages/JSON-0.7.0/Source/JSONInterchangeDataSerializer.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'JSONInterchangeDataSerializer.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Packages/JSON-0.7.0/Source/JSONParser.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'JSONParser.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Packages/JSON-0.7.0/Source/JSONSerializer.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'JSONSerializer.swift';
+            sourceTree = '<group>';
+        };
+        ______Target_JSON = {
+            isa = PBXNativeTarget;
+            buildConfigurationList = _______Confs_JSON;
+            buildPhases = (CompilePhase_JSON, ___LinkPhase_JSON);
+            buildRules = ();
+            dependencies = (__Dependency_C7, __Dependency_StructuredData);
+            name = JSON;
+            productName = JSON;
+            productReference = _____Product_JSON;
+            productType = 'com.apple.product-type.library.dynamic';
+        };
+        _____Product_JSON = {
+            isa = PBXFileReference;
+            explicitFileType = 'compiled.mach-o.dylib';
+            path = 'JSON.dylib';
+            sourceTree = BUILT_PRODUCTS_DIR;
+        };
+        CompilePhase_JSON = {
+            isa = PBXSourcesBuildPhase;
+            files = ('__src_cc_ref_Packages/JSON-0.7.0/Source/JSON.swift', '__src_cc_ref_Packages/JSON-0.7.0/Source/JSONInterchangeDataParser.swift', '__src_cc_ref_Packages/JSON-0.7.0/Source/JSONInterchangeDataSerializer.swift', '__src_cc_ref_Packages/JSON-0.7.0/Source/JSONParser.swift', '__src_cc_ref_Packages/JSON-0.7.0/Source/JSONSerializer.swift');
+            runOnlyForDeploymentPostprocessing = 0;
+        };
+        ___LinkPhase_JSON = {
+            isa = PBXFrameworksBuildPhase;
+            files = (_LinkFileRef_C7, _LinkFileRef_StructuredData);
+            runOnlyForDeploymentPostprocessing = 0;
+        };
+        '__src_cc_ref_Packages/JSON-0.7.0/Source/JSON.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/JSON-0.7.0/Source/JSON.swift';
+        };
+        '__src_cc_ref_Packages/JSON-0.7.0/Source/JSONInterchangeDataParser.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/JSON-0.7.0/Source/JSONInterchangeDataParser.swift';
+        };
+        '__src_cc_ref_Packages/JSON-0.7.0/Source/JSONInterchangeDataSerializer.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/JSON-0.7.0/Source/JSONInterchangeDataSerializer.swift';
+        };
+        '__src_cc_ref_Packages/JSON-0.7.0/Source/JSONParser.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/JSON-0.7.0/Source/JSONParser.swift';
+        };
+        '__src_cc_ref_Packages/JSON-0.7.0/Source/JSONSerializer.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/JSON-0.7.0/Source/JSONSerializer.swift';
+        };
+        _LinkFileRef_JSON = {
+            isa = PBXBuildFile;
+            fileRef = _____Product_JSON;
+        };
+        _______Confs_JSON = {
+            isa = XCConfigurationList;
+            buildConfigurations = (___DebugConf_JSON, _ReleaseConf_JSON);
+            defaultConfigurationIsVisible = 0;
+            defaultConfigurationName = Debug;
+        };
+        ___DebugConf_JSON = {
+            isa = XCBuildConfiguration;
+            buildSettings = { ENABLE_TESTABILITY = YES; SWIFT_OPTIMIZATION_LEVEL = -Onone; LD_RUNPATH_SEARCH_PATHS = '$(TOOLCHAIN_DIR)/usr/lib/swift/macosx'; };
+            name = Debug;
+        };
+        _ReleaseConf_JSON = {
+            isa = XCBuildConfiguration;
+            buildSettings = { ENABLE_TESTABILITY = YES; LD_RUNPATH_SEARCH_PATHS = '$(TOOLCHAIN_DIR)/usr/lib/swift/macosx'; };
+            name = Release;
+        };
+        __Dependency_JSON = {
+            isa = PBXTargetDependency;
+            target = ______Target_JSON;
+        };
+        _______Group_Strand = {
+            isa = PBXGroup;
+            name = Strand;
+            path = 'Packages/Strand-1.2.3/Sources';
+            sourceTree = '<group>';
+            children = ('__PBXFileRef_Packages/Strand-1.2.3/Sources/Strand.swift');
+        };
+        '__PBXFileRef_Packages/Strand-1.2.3/Sources/Strand.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Strand.swift';
+            sourceTree = '<group>';
+        };
+        ______Target_Strand = {
+            isa = PBXNativeTarget;
+            buildConfigurationList = _______Confs_Strand;
+            buildPhases = (CompilePhase_Strand, ___LinkPhase_Strand);
+            buildRules = ();
+            dependencies = ();
+            name = Strand;
+            productName = Strand;
+            productReference = _____Product_Strand;
+            productType = 'com.apple.product-type.library.dynamic';
+        };
+        _____Product_Strand = {
+            isa = PBXFileReference;
+            explicitFileType = 'compiled.mach-o.dylib';
+            path = 'Strand.dylib';
+            sourceTree = BUILT_PRODUCTS_DIR;
+        };
+        CompilePhase_Strand = {
+            isa = PBXSourcesBuildPhase;
+            files = ('__src_cc_ref_Packages/Strand-1.2.3/Sources/Strand.swift');
+            runOnlyForDeploymentPostprocessing = 0;
+        };
+        ___LinkPhase_Strand = {
+            isa = PBXFrameworksBuildPhase;
+            files = ();
+            runOnlyForDeploymentPostprocessing = 0;
+        };
+        '__src_cc_ref_Packages/Strand-1.2.3/Sources/Strand.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/Strand-1.2.3/Sources/Strand.swift';
+        };
+        _LinkFileRef_Strand = {
+            isa = PBXBuildFile;
+            fileRef = _____Product_Strand;
+        };
+        _______Confs_Strand = {
+            isa = XCConfigurationList;
+            buildConfigurations = (___DebugConf_Strand, _ReleaseConf_Strand);
+            defaultConfigurationIsVisible = 0;
+            defaultConfigurationName = Debug;
+        };
+        ___DebugConf_Strand = {
+            isa = XCBuildConfiguration;
+            buildSettings = { ENABLE_TESTABILITY = YES; SWIFT_OPTIMIZATION_LEVEL = -Onone; LD_RUNPATH_SEARCH_PATHS = '$(TOOLCHAIN_DIR)/usr/lib/swift/macosx'; };
+            name = Debug;
+        };
+        _ReleaseConf_Strand = {
+            isa = XCBuildConfiguration;
+            buildSettings = { ENABLE_TESTABILITY = YES; LD_RUNPATH_SEARCH_PATHS = '$(TOOLCHAIN_DIR)/usr/lib/swift/macosx'; };
+            name = Release;
+        };
+        __Dependency_Strand = {
+            isa = PBXTargetDependency;
+            target = ______Target_Strand;
+        };
+        _______Group_Hummingbird = {
+            isa = PBXGroup;
+            name = Hummingbird;
+            path = 'Packages/Hummingbird-1.7.0/Sources';
+            sourceTree = '<group>';
+            children = ('__PBXFileRef_Packages/Hummingbird-1.7.0/Sources/ClientSocket.swift', '__PBXFileRef_Packages/Hummingbird-1.7.0/Sources/Hummingbird.swift', '__PBXFileRef_Packages/Hummingbird-1.7.0/Sources/ServerSocket.swift', '__PBXFileRef_Packages/Hummingbird-1.7.0/Sources/Socket.swift', '__PBXFileRef_Packages/Hummingbird-1.7.0/Sources/SocketError.swift', '__PBXFileRef_Packages/Hummingbird-1.7.0/Sources/String+Transcoding.swift');
+        };
+        '__PBXFileRef_Packages/Hummingbird-1.7.0/Sources/ClientSocket.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'ClientSocket.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Packages/Hummingbird-1.7.0/Sources/Hummingbird.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Hummingbird.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Packages/Hummingbird-1.7.0/Sources/ServerSocket.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'ServerSocket.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Packages/Hummingbird-1.7.0/Sources/Socket.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Socket.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Packages/Hummingbird-1.7.0/Sources/SocketError.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'SocketError.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Packages/Hummingbird-1.7.0/Sources/String+Transcoding.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'String+Transcoding.swift';
+            sourceTree = '<group>';
+        };
+        ______Target_Hummingbird = {
+            isa = PBXNativeTarget;
+            buildConfigurationList = _______Confs_Hummingbird;
+            buildPhases = (CompilePhase_Hummingbird, ___LinkPhase_Hummingbird);
+            buildRules = ();
+            dependencies = (__Dependency_C7, __Dependency_Strand);
+            name = Hummingbird;
+            productName = Hummingbird;
+            productReference = _____Product_Hummingbird;
+            productType = 'com.apple.product-type.library.dynamic';
+        };
+        _____Product_Hummingbird = {
+            isa = PBXFileReference;
+            explicitFileType = 'compiled.mach-o.dylib';
+            path = 'Hummingbird.dylib';
+            sourceTree = BUILT_PRODUCTS_DIR;
+        };
+        CompilePhase_Hummingbird = {
+            isa = PBXSourcesBuildPhase;
+            files = ('__src_cc_ref_Packages/Hummingbird-1.7.0/Sources/ClientSocket.swift', '__src_cc_ref_Packages/Hummingbird-1.7.0/Sources/Hummingbird.swift', '__src_cc_ref_Packages/Hummingbird-1.7.0/Sources/ServerSocket.swift', '__src_cc_ref_Packages/Hummingbird-1.7.0/Sources/Socket.swift', '__src_cc_ref_Packages/Hummingbird-1.7.0/Sources/SocketError.swift', '__src_cc_ref_Packages/Hummingbird-1.7.0/Sources/String+Transcoding.swift');
+            runOnlyForDeploymentPostprocessing = 0;
+        };
+        ___LinkPhase_Hummingbird = {
+            isa = PBXFrameworksBuildPhase;
+            files = (_LinkFileRef_C7, _LinkFileRef_Strand);
+            runOnlyForDeploymentPostprocessing = 0;
+        };
+        '__src_cc_ref_Packages/Hummingbird-1.7.0/Sources/ClientSocket.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/Hummingbird-1.7.0/Sources/ClientSocket.swift';
+        };
+        '__src_cc_ref_Packages/Hummingbird-1.7.0/Sources/Hummingbird.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/Hummingbird-1.7.0/Sources/Hummingbird.swift';
+        };
+        '__src_cc_ref_Packages/Hummingbird-1.7.0/Sources/ServerSocket.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/Hummingbird-1.7.0/Sources/ServerSocket.swift';
+        };
+        '__src_cc_ref_Packages/Hummingbird-1.7.0/Sources/Socket.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/Hummingbird-1.7.0/Sources/Socket.swift';
+        };
+        '__src_cc_ref_Packages/Hummingbird-1.7.0/Sources/SocketError.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/Hummingbird-1.7.0/Sources/SocketError.swift';
+        };
+        '__src_cc_ref_Packages/Hummingbird-1.7.0/Sources/String+Transcoding.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/Hummingbird-1.7.0/Sources/String+Transcoding.swift';
+        };
+        _LinkFileRef_Hummingbird = {
+            isa = PBXBuildFile;
+            fileRef = _____Product_Hummingbird;
+        };
+        _______Confs_Hummingbird = {
+            isa = XCConfigurationList;
+            buildConfigurations = (___DebugConf_Hummingbird, _ReleaseConf_Hummingbird);
+            defaultConfigurationIsVisible = 0;
+            defaultConfigurationName = Debug;
+        };
+        ___DebugConf_Hummingbird = {
+            isa = XCBuildConfiguration;
+            buildSettings = { ENABLE_TESTABILITY = YES; SWIFT_OPTIMIZATION_LEVEL = -Onone; LD_RUNPATH_SEARCH_PATHS = '$(TOOLCHAIN_DIR)/usr/lib/swift/macosx'; };
+            name = Debug;
+        };
+        _ReleaseConf_Hummingbird = {
+            isa = XCBuildConfiguration;
+            buildSettings = { ENABLE_TESTABILITY = YES; LD_RUNPATH_SEARCH_PATHS = '$(TOOLCHAIN_DIR)/usr/lib/swift/macosx'; };
+            name = Release;
+        };
+        __Dependency_Hummingbird = {
+            isa = PBXTargetDependency;
+            target = ______Target_Hummingbird;
+        };
+        _______Group_CryptoEssentials = {
+            isa = PBXGroup;
+            name = CryptoEssentials;
+            path = 'Packages/CryptoEssentials-0.6.0/Sources';
+            sourceTree = '<group>';
+            children = ('__PBXFileRef_Packages/CryptoEssentials-0.6.0/Sources/Base64.swift', '__PBXFileRef_Packages/CryptoEssentials-0.6.0/Sources/BytesSequence.swift', '__PBXFileRef_Packages/CryptoEssentials-0.6.0/Sources/CSArrayType+Extension.swift', '__PBXFileRef_Packages/CryptoEssentials-0.6.0/Sources/Generics.swift', '__PBXFileRef_Packages/CryptoEssentials-0.6.0/Sources/HashProtocol.swift', '__PBXFileRef_Packages/CryptoEssentials-0.6.0/Sources/IntegerConvertible.swift', '__PBXFileRef_Packages/CryptoEssentials-0.6.0/Sources/IntExtension.swift', '__PBXFileRef_Packages/CryptoEssentials-0.6.0/Sources/NSData+Extensions.swift', '__PBXFileRef_Packages/CryptoEssentials-0.6.0/Sources/Operators.swift', '__PBXFileRef_Packages/CryptoEssentials-0.6.0/Sources/Utils.swift');
+        };
+        '__PBXFileRef_Packages/CryptoEssentials-0.6.0/Sources/Base64.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Base64.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Packages/CryptoEssentials-0.6.0/Sources/BytesSequence.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'BytesSequence.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Packages/CryptoEssentials-0.6.0/Sources/CSArrayType+Extension.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'CSArrayType+Extension.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Packages/CryptoEssentials-0.6.0/Sources/Generics.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Generics.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Packages/CryptoEssentials-0.6.0/Sources/HashProtocol.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'HashProtocol.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Packages/CryptoEssentials-0.6.0/Sources/IntegerConvertible.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'IntegerConvertible.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Packages/CryptoEssentials-0.6.0/Sources/IntExtension.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'IntExtension.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Packages/CryptoEssentials-0.6.0/Sources/NSData+Extensions.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'NSData+Extensions.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Packages/CryptoEssentials-0.6.0/Sources/Operators.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Operators.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Packages/CryptoEssentials-0.6.0/Sources/Utils.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Utils.swift';
+            sourceTree = '<group>';
+        };
+        ______Target_CryptoEssentials = {
+            isa = PBXNativeTarget;
+            buildConfigurationList = _______Confs_CryptoEssentials;
+            buildPhases = (CompilePhase_CryptoEssentials, ___LinkPhase_CryptoEssentials);
+            buildRules = ();
+            dependencies = ();
+            name = CryptoEssentials;
+            productName = CryptoEssentials;
+            productReference = _____Product_CryptoEssentials;
+            productType = 'com.apple.product-type.library.dynamic';
+        };
+        _____Product_CryptoEssentials = {
+            isa = PBXFileReference;
+            explicitFileType = 'compiled.mach-o.dylib';
+            path = 'CryptoEssentials.dylib';
+            sourceTree = BUILT_PRODUCTS_DIR;
+        };
+        CompilePhase_CryptoEssentials = {
+            isa = PBXSourcesBuildPhase;
+            files = ('__src_cc_ref_Packages/CryptoEssentials-0.6.0/Sources/Base64.swift', '__src_cc_ref_Packages/CryptoEssentials-0.6.0/Sources/BytesSequence.swift', '__src_cc_ref_Packages/CryptoEssentials-0.6.0/Sources/CSArrayType+Extension.swift', '__src_cc_ref_Packages/CryptoEssentials-0.6.0/Sources/Generics.swift', '__src_cc_ref_Packages/CryptoEssentials-0.6.0/Sources/HashProtocol.swift', '__src_cc_ref_Packages/CryptoEssentials-0.6.0/Sources/IntegerConvertible.swift', '__src_cc_ref_Packages/CryptoEssentials-0.6.0/Sources/IntExtension.swift', '__src_cc_ref_Packages/CryptoEssentials-0.6.0/Sources/NSData+Extensions.swift', '__src_cc_ref_Packages/CryptoEssentials-0.6.0/Sources/Operators.swift', '__src_cc_ref_Packages/CryptoEssentials-0.6.0/Sources/Utils.swift');
+            runOnlyForDeploymentPostprocessing = 0;
+        };
+        ___LinkPhase_CryptoEssentials = {
+            isa = PBXFrameworksBuildPhase;
+            files = ();
+            runOnlyForDeploymentPostprocessing = 0;
+        };
+        '__src_cc_ref_Packages/CryptoEssentials-0.6.0/Sources/Base64.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/CryptoEssentials-0.6.0/Sources/Base64.swift';
+        };
+        '__src_cc_ref_Packages/CryptoEssentials-0.6.0/Sources/BytesSequence.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/CryptoEssentials-0.6.0/Sources/BytesSequence.swift';
+        };
+        '__src_cc_ref_Packages/CryptoEssentials-0.6.0/Sources/CSArrayType+Extension.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/CryptoEssentials-0.6.0/Sources/CSArrayType+Extension.swift';
+        };
+        '__src_cc_ref_Packages/CryptoEssentials-0.6.0/Sources/Generics.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/CryptoEssentials-0.6.0/Sources/Generics.swift';
+        };
+        '__src_cc_ref_Packages/CryptoEssentials-0.6.0/Sources/HashProtocol.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/CryptoEssentials-0.6.0/Sources/HashProtocol.swift';
+        };
+        '__src_cc_ref_Packages/CryptoEssentials-0.6.0/Sources/IntegerConvertible.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/CryptoEssentials-0.6.0/Sources/IntegerConvertible.swift';
+        };
+        '__src_cc_ref_Packages/CryptoEssentials-0.6.0/Sources/IntExtension.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/CryptoEssentials-0.6.0/Sources/IntExtension.swift';
+        };
+        '__src_cc_ref_Packages/CryptoEssentials-0.6.0/Sources/NSData+Extensions.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/CryptoEssentials-0.6.0/Sources/NSData+Extensions.swift';
+        };
+        '__src_cc_ref_Packages/CryptoEssentials-0.6.0/Sources/Operators.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/CryptoEssentials-0.6.0/Sources/Operators.swift';
+        };
+        '__src_cc_ref_Packages/CryptoEssentials-0.6.0/Sources/Utils.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/CryptoEssentials-0.6.0/Sources/Utils.swift';
+        };
+        _LinkFileRef_CryptoEssentials = {
+            isa = PBXBuildFile;
+            fileRef = _____Product_CryptoEssentials;
+        };
+        _______Confs_CryptoEssentials = {
+            isa = XCConfigurationList;
+            buildConfigurations = (___DebugConf_CryptoEssentials, _ReleaseConf_CryptoEssentials);
+            defaultConfigurationIsVisible = 0;
+            defaultConfigurationName = Debug;
+        };
+        ___DebugConf_CryptoEssentials = {
+            isa = XCBuildConfiguration;
+            buildSettings = { ENABLE_TESTABILITY = YES; SWIFT_OPTIMIZATION_LEVEL = -Onone; LD_RUNPATH_SEARCH_PATHS = '$(TOOLCHAIN_DIR)/usr/lib/swift/macosx'; };
+            name = Debug;
+        };
+        _ReleaseConf_CryptoEssentials = {
+            isa = XCBuildConfiguration;
+            buildSettings = { ENABLE_TESTABILITY = YES; LD_RUNPATH_SEARCH_PATHS = '$(TOOLCHAIN_DIR)/usr/lib/swift/macosx'; };
+            name = Release;
+        };
+        __Dependency_CryptoEssentials = {
+            isa = PBXTargetDependency;
+            target = ______Target_CryptoEssentials;
+        };
+        _______Group_HMAC = {
+            isa = PBXGroup;
+            name = HMAC;
+            path = 'Packages/HMAC-0.6.0/Sources';
+            sourceTree = '<group>';
+            children = ('__PBXFileRef_Packages/HMAC-0.6.0/Sources/HMAC.swift');
+        };
+        '__PBXFileRef_Packages/HMAC-0.6.0/Sources/HMAC.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'HMAC.swift';
+            sourceTree = '<group>';
+        };
+        ______Target_HMAC = {
+            isa = PBXNativeTarget;
+            buildConfigurationList = _______Confs_HMAC;
+            buildPhases = (CompilePhase_HMAC, ___LinkPhase_HMAC);
+            buildRules = ();
+            dependencies = (__Dependency_CryptoEssentials);
+            name = HMAC;
+            productName = HMAC;
+            productReference = _____Product_HMAC;
+            productType = 'com.apple.product-type.library.dynamic';
+        };
+        _____Product_HMAC = {
+            isa = PBXFileReference;
+            explicitFileType = 'compiled.mach-o.dylib';
+            path = 'HMAC.dylib';
+            sourceTree = BUILT_PRODUCTS_DIR;
+        };
+        CompilePhase_HMAC = {
+            isa = PBXSourcesBuildPhase;
+            files = ('__src_cc_ref_Packages/HMAC-0.6.0/Sources/HMAC.swift');
+            runOnlyForDeploymentPostprocessing = 0;
+        };
+        ___LinkPhase_HMAC = {
+            isa = PBXFrameworksBuildPhase;
+            files = (_LinkFileRef_CryptoEssentials);
+            runOnlyForDeploymentPostprocessing = 0;
+        };
+        '__src_cc_ref_Packages/HMAC-0.6.0/Sources/HMAC.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/HMAC-0.6.0/Sources/HMAC.swift';
+        };
+        _LinkFileRef_HMAC = {
+            isa = PBXBuildFile;
+            fileRef = _____Product_HMAC;
+        };
+        _______Confs_HMAC = {
+            isa = XCConfigurationList;
+            buildConfigurations = (___DebugConf_HMAC, _ReleaseConf_HMAC);
+            defaultConfigurationIsVisible = 0;
+            defaultConfigurationName = Debug;
+        };
+        ___DebugConf_HMAC = {
+            isa = XCBuildConfiguration;
+            buildSettings = { ENABLE_TESTABILITY = YES; SWIFT_OPTIMIZATION_LEVEL = -Onone; LD_RUNPATH_SEARCH_PATHS = '$(TOOLCHAIN_DIR)/usr/lib/swift/macosx'; };
+            name = Debug;
+        };
+        _ReleaseConf_HMAC = {
+            isa = XCBuildConfiguration;
+            buildSettings = { ENABLE_TESTABILITY = YES; LD_RUNPATH_SEARCH_PATHS = '$(TOOLCHAIN_DIR)/usr/lib/swift/macosx'; };
+            name = Release;
+        };
+        __Dependency_HMAC = {
+            isa = PBXTargetDependency;
+            target = ______Target_HMAC;
+        };
+        _______Group_SHA2 = {
+            isa = PBXGroup;
+            name = SHA2;
+            path = 'Packages/SHA2-0.6.0/Sources';
+            sourceTree = '<group>';
+            children = ('__PBXFileRef_Packages/SHA2-0.6.0/Sources/SHA2.swift');
+        };
+        '__PBXFileRef_Packages/SHA2-0.6.0/Sources/SHA2.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'SHA2.swift';
+            sourceTree = '<group>';
+        };
+        ______Target_SHA2 = {
+            isa = PBXNativeTarget;
+            buildConfigurationList = _______Confs_SHA2;
+            buildPhases = (CompilePhase_SHA2, ___LinkPhase_SHA2);
+            buildRules = ();
+            dependencies = (__Dependency_CryptoEssentials);
+            name = SHA2;
+            productName = SHA2;
+            productReference = _____Product_SHA2;
+            productType = 'com.apple.product-type.library.dynamic';
+        };
+        _____Product_SHA2 = {
+            isa = PBXFileReference;
+            explicitFileType = 'compiled.mach-o.dylib';
+            path = 'SHA2.dylib';
+            sourceTree = BUILT_PRODUCTS_DIR;
+        };
+        CompilePhase_SHA2 = {
+            isa = PBXSourcesBuildPhase;
+            files = ('__src_cc_ref_Packages/SHA2-0.6.0/Sources/SHA2.swift');
+            runOnlyForDeploymentPostprocessing = 0;
+        };
+        ___LinkPhase_SHA2 = {
+            isa = PBXFrameworksBuildPhase;
+            files = (_LinkFileRef_CryptoEssentials);
+            runOnlyForDeploymentPostprocessing = 0;
+        };
+        '__src_cc_ref_Packages/SHA2-0.6.0/Sources/SHA2.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/SHA2-0.6.0/Sources/SHA2.swift';
+        };
+        _LinkFileRef_SHA2 = {
+            isa = PBXBuildFile;
+            fileRef = _____Product_SHA2;
+        };
+        _______Confs_SHA2 = {
+            isa = XCConfigurationList;
+            buildConfigurations = (___DebugConf_SHA2, _ReleaseConf_SHA2);
+            defaultConfigurationIsVisible = 0;
+            defaultConfigurationName = Debug;
+        };
+        ___DebugConf_SHA2 = {
+            isa = XCBuildConfiguration;
+            buildSettings = { ENABLE_TESTABILITY = YES; SWIFT_OPTIMIZATION_LEVEL = -Onone; LD_RUNPATH_SEARCH_PATHS = '$(TOOLCHAIN_DIR)/usr/lib/swift/macosx'; };
+            name = Debug;
+        };
+        _ReleaseConf_SHA2 = {
+            isa = XCBuildConfiguration;
+            buildSettings = { ENABLE_TESTABILITY = YES; LD_RUNPATH_SEARCH_PATHS = '$(TOOLCHAIN_DIR)/usr/lib/swift/macosx'; };
+            name = Release;
+        };
+        __Dependency_SHA2 = {
+            isa = PBXTargetDependency;
+            target = ______Target_SHA2;
+        };
+        _______Group_MediaType = {
+            isa = PBXGroup;
+            name = MediaType;
+            path = 'Packages/MediaType-0.6.0/Source';
+            sourceTree = '<group>';
+            children = ('__PBXFileRef_Packages/MediaType-0.6.0/Source/MediaType.swift');
+        };
+        '__PBXFileRef_Packages/MediaType-0.6.0/Source/MediaType.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'MediaType.swift';
+            sourceTree = '<group>';
+        };
+        ______Target_MediaType = {
+            isa = PBXNativeTarget;
+            buildConfigurationList = _______Confs_MediaType;
+            buildPhases = (CompilePhase_MediaType, ___LinkPhase_MediaType);
+            buildRules = ();
+            dependencies = (__Dependency_C7, __Dependency_StructuredData, __Dependency_String);
+            name = MediaType;
+            productName = MediaType;
+            productReference = _____Product_MediaType;
+            productType = 'com.apple.product-type.library.dynamic';
+        };
+        _____Product_MediaType = {
+            isa = PBXFileReference;
+            explicitFileType = 'compiled.mach-o.dylib';
+            path = 'MediaType.dylib';
+            sourceTree = BUILT_PRODUCTS_DIR;
+        };
+        CompilePhase_MediaType = {
+            isa = PBXSourcesBuildPhase;
+            files = ('__src_cc_ref_Packages/MediaType-0.6.0/Source/MediaType.swift');
+            runOnlyForDeploymentPostprocessing = 0;
+        };
+        ___LinkPhase_MediaType = {
+            isa = PBXFrameworksBuildPhase;
+            files = (_LinkFileRef_C7, _LinkFileRef_StructuredData, _LinkFileRef_String);
+            runOnlyForDeploymentPostprocessing = 0;
+        };
+        '__src_cc_ref_Packages/MediaType-0.6.0/Source/MediaType.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Packages/MediaType-0.6.0/Source/MediaType.swift';
+        };
+        _LinkFileRef_MediaType = {
+            isa = PBXBuildFile;
+            fileRef = _____Product_MediaType;
+        };
+        _______Confs_MediaType = {
+            isa = XCConfigurationList;
+            buildConfigurations = (___DebugConf_MediaType, _ReleaseConf_MediaType);
+            defaultConfigurationIsVisible = 0;
+            defaultConfigurationName = Debug;
+        };
+        ___DebugConf_MediaType = {
+            isa = XCBuildConfiguration;
+            buildSettings = { ENABLE_TESTABILITY = YES; SWIFT_OPTIMIZATION_LEVEL = -Onone; LD_RUNPATH_SEARCH_PATHS = '$(TOOLCHAIN_DIR)/usr/lib/swift/macosx'; };
+            name = Debug;
+        };
+        _ReleaseConf_MediaType = {
+            isa = XCBuildConfiguration;
+            buildSettings = { ENABLE_TESTABILITY = YES; LD_RUNPATH_SEARCH_PATHS = '$(TOOLCHAIN_DIR)/usr/lib/swift/macosx'; };
+            name = Release;
+        };
+        __Dependency_MediaType = {
+            isa = PBXTargetDependency;
+            target = ______Target_MediaType;
+        };
+        _______Group_Development = {
+            isa = PBXGroup;
+            name = Development;
+            path = 'Sources/Development';
+            sourceTree = '<group>';
+            children = ('__PBXFileRef_Sources/Development/main.swift', '__PBXFileRef_Sources/Development/Controllers/UserController.swift', '__PBXFileRef_Sources/Development/Middleware/AuthMiddleware.swift', '__PBXFileRef_Sources/Development/Models/User.swift');
+        };
+        '__PBXFileRef_Sources/Development/main.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'main.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Sources/Development/Controllers/UserController.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Controllers/UserController.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Sources/Development/Middleware/AuthMiddleware.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Middleware/AuthMiddleware.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Sources/Development/Models/User.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Models/User.swift';
+            sourceTree = '<group>';
+        };
+        ______Target_Development = {
+            isa = PBXNativeTarget;
+            buildConfigurationList = _______Confs_Development;
+            buildPhases = (CompilePhase_Development, ___LinkPhase_Development);
+            buildRules = ();
+            dependencies = (__Dependency_CryptoEssentials, __Dependency_Strand, __Dependency_StructuredData, __Dependency_C7, __Dependency_MediaType, __Dependency_SHA2, __Dependency_HMAC, __Dependency_Hummingbird, __Dependency_JSON, __Dependency_String, __Dependency_S4, __Dependency_Vapor);
+            name = Development;
+            productName = Development;
+            productReference = _____Product_Development;
+            productType = 'com.apple.product-type.tool';
+        };
+        _____Product_Development = {
+            isa = PBXFileReference;
+            explicitFileType = 'compiled.mach-o.executable';
+            path = 'Development';
+            sourceTree = BUILT_PRODUCTS_DIR;
+        };
+        CompilePhase_Development = {
+            isa = PBXSourcesBuildPhase;
+            files = ('__src_cc_ref_Sources/Development/main.swift', '__src_cc_ref_Sources/Development/Controllers/UserController.swift', '__src_cc_ref_Sources/Development/Middleware/AuthMiddleware.swift', '__src_cc_ref_Sources/Development/Models/User.swift');
+            runOnlyForDeploymentPostprocessing = 0;
+        };
+        ___LinkPhase_Development = {
+            isa = PBXFrameworksBuildPhase;
+            files = (_LinkFileRef_CryptoEssentials, _LinkFileRef_Strand, _LinkFileRef_StructuredData, _LinkFileRef_C7, _LinkFileRef_MediaType, _LinkFileRef_SHA2, _LinkFileRef_HMAC, _LinkFileRef_Hummingbird, _LinkFileRef_JSON, _LinkFileRef_String, _LinkFileRef_S4, _LinkFileRef_Vapor, _LinkFileRef_libc);
+            runOnlyForDeploymentPostprocessing = 0;
+        };
+        '__src_cc_ref_Sources/Development/main.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Development/main.swift';
+        };
+        '__src_cc_ref_Sources/Development/Controllers/UserController.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Development/Controllers/UserController.swift';
+        };
+        '__src_cc_ref_Sources/Development/Middleware/AuthMiddleware.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Development/Middleware/AuthMiddleware.swift';
+        };
+        '__src_cc_ref_Sources/Development/Models/User.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Development/Models/User.swift';
+        };
+        _LinkFileRef_Development = {
+            isa = PBXBuildFile;
+            fileRef = _____Product_Development;
+        };
+        _______Confs_Development = {
+            isa = XCConfigurationList;
+            buildConfigurations = (___DebugConf_Development, _ReleaseConf_Development);
+            defaultConfigurationIsVisible = 0;
+            defaultConfigurationName = Debug;
+        };
+        ___DebugConf_Development = {
+            isa = XCBuildConfiguration;
+            buildSettings = { LD_RUNPATH_SEARCH_PATHS = '$(TOOLCHAIN_DIR)/usr/lib/swift/macosx'; SWIFT_FORCE_STATIC_LINK_STDLIB = NO; SWIFT_FORCE_DYNAMIC_LINK_STDLIB = YES; SWIFT_OPTIMIZATION_LEVEL = -Onone; };
+            name = Debug;
+        };
+        _ReleaseConf_Development = {
+            isa = XCBuildConfiguration;
+            buildSettings = { SWIFT_FORCE_STATIC_LINK_STDLIB = NO; LD_RUNPATH_SEARCH_PATHS = '$(TOOLCHAIN_DIR)/usr/lib/swift/macosx'; SWIFT_FORCE_DYNAMIC_LINK_STDLIB = YES; };
+            name = Release;
+        };
+        __Dependency_Development = {
+            isa = PBXTargetDependency;
+            target = ______Target_Development;
+        };
+        _______Group_Generator = {
+            isa = PBXGroup;
+            name = Generator;
+            path = 'Sources/Generator';
+            sourceTree = '<group>';
+            children = ('__PBXFileRef_Sources/Generator/main.swift');
+        };
+        '__PBXFileRef_Sources/Generator/main.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'main.swift';
+            sourceTree = '<group>';
+        };
+        ______Target_Generator = {
+            isa = PBXNativeTarget;
+            buildConfigurationList = _______Confs_Generator;
+            buildPhases = (CompilePhase_Generator, ___LinkPhase_Generator);
+            buildRules = ();
+            dependencies = (__Dependency_CryptoEssentials, __Dependency_Strand, __Dependency_StructuredData, __Dependency_C7, __Dependency_MediaType, __Dependency_SHA2, __Dependency_HMAC, __Dependency_Hummingbird, __Dependency_JSON, __Dependency_String, __Dependency_S4);
+            name = Generator;
+            productName = Generator;
+            productReference = _____Product_Generator;
+            productType = 'com.apple.product-type.tool';
+        };
+        _____Product_Generator = {
+            isa = PBXFileReference;
+            explicitFileType = 'compiled.mach-o.executable';
+            path = 'Generator';
+            sourceTree = BUILT_PRODUCTS_DIR;
+        };
+        CompilePhase_Generator = {
+            isa = PBXSourcesBuildPhase;
+            files = ('__src_cc_ref_Sources/Generator/main.swift');
+            runOnlyForDeploymentPostprocessing = 0;
+        };
+        ___LinkPhase_Generator = {
+            isa = PBXFrameworksBuildPhase;
+            files = (_LinkFileRef_CryptoEssentials, _LinkFileRef_Strand, _LinkFileRef_StructuredData, _LinkFileRef_C7, _LinkFileRef_MediaType, _LinkFileRef_SHA2, _LinkFileRef_HMAC, _LinkFileRef_Hummingbird, _LinkFileRef_JSON, _LinkFileRef_String, _LinkFileRef_S4);
+            runOnlyForDeploymentPostprocessing = 0;
+        };
+        '__src_cc_ref_Sources/Generator/main.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Generator/main.swift';
+        };
+        _LinkFileRef_Generator = {
+            isa = PBXBuildFile;
+            fileRef = _____Product_Generator;
+        };
+        _______Confs_Generator = {
+            isa = XCConfigurationList;
+            buildConfigurations = (___DebugConf_Generator, _ReleaseConf_Generator);
+            defaultConfigurationIsVisible = 0;
+            defaultConfigurationName = Debug;
+        };
+        ___DebugConf_Generator = {
+            isa = XCBuildConfiguration;
+            buildSettings = { LD_RUNPATH_SEARCH_PATHS = '$(TOOLCHAIN_DIR)/usr/lib/swift/macosx'; SWIFT_FORCE_STATIC_LINK_STDLIB = NO; SWIFT_FORCE_DYNAMIC_LINK_STDLIB = YES; SWIFT_OPTIMIZATION_LEVEL = -Onone; };
+            name = Debug;
+        };
+        _ReleaseConf_Generator = {
+            isa = XCBuildConfiguration;
+            buildSettings = { SWIFT_FORCE_STATIC_LINK_STDLIB = NO; LD_RUNPATH_SEARCH_PATHS = '$(TOOLCHAIN_DIR)/usr/lib/swift/macosx'; SWIFT_FORCE_DYNAMIC_LINK_STDLIB = YES; };
+            name = Release;
+        };
+        __Dependency_Generator = {
+            isa = PBXTargetDependency;
+            target = ______Target_Generator;
+        };
+        _______Group_libc = {
+            isa = PBXGroup;
+            name = libc;
+            path = 'Sources/libc';
+            sourceTree = '<group>';
+            children = ('__PBXFileRef_Sources/libc/libc.swift');
+        };
+        '__PBXFileRef_Sources/libc/libc.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'libc.swift';
+            sourceTree = '<group>';
+        };
+        ______Target_libc = {
+            isa = PBXNativeTarget;
+            buildConfigurationList = _______Confs_libc;
+            buildPhases = (CompilePhase_libc, ___LinkPhase_libc);
+            buildRules = ();
+            dependencies = (__Dependency_CryptoEssentials, __Dependency_Strand, __Dependency_StructuredData, __Dependency_C7, __Dependency_MediaType, __Dependency_SHA2, __Dependency_HMAC, __Dependency_Hummingbird, __Dependency_JSON, __Dependency_String, __Dependency_S4);
+            name = libc;
+            productName = libc;
+            productReference = _____Product_libc;
+            productType = 'com.apple.product-type.library.dynamic';
+        };
+        _____Product_libc = {
+            isa = PBXFileReference;
+            explicitFileType = 'compiled.mach-o.dylib';
+            path = 'libc.dylib';
+            sourceTree = BUILT_PRODUCTS_DIR;
+        };
+        CompilePhase_libc = {
+            isa = PBXSourcesBuildPhase;
+            files = ('__src_cc_ref_Sources/libc/libc.swift');
+            runOnlyForDeploymentPostprocessing = 0;
+        };
+        ___LinkPhase_libc = {
+            isa = PBXFrameworksBuildPhase;
+            files = (_LinkFileRef_CryptoEssentials, _LinkFileRef_Strand, _LinkFileRef_StructuredData, _LinkFileRef_C7, _LinkFileRef_MediaType, _LinkFileRef_SHA2, _LinkFileRef_HMAC, _LinkFileRef_Hummingbird, _LinkFileRef_JSON, _LinkFileRef_String, _LinkFileRef_S4);
+            runOnlyForDeploymentPostprocessing = 0;
+        };
+        '__src_cc_ref_Sources/libc/libc.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/libc/libc.swift';
+        };
+        _LinkFileRef_libc = {
+            isa = PBXBuildFile;
+            fileRef = _____Product_libc;
+        };
+        _______Confs_libc = {
+            isa = XCConfigurationList;
+            buildConfigurations = (___DebugConf_libc, _ReleaseConf_libc);
+            defaultConfigurationIsVisible = 0;
+            defaultConfigurationName = Debug;
+        };
+        ___DebugConf_libc = {
+            isa = XCBuildConfiguration;
+            buildSettings = { ENABLE_TESTABILITY = YES; SWIFT_OPTIMIZATION_LEVEL = -Onone; LD_RUNPATH_SEARCH_PATHS = '$(TOOLCHAIN_DIR)/usr/lib/swift/macosx'; };
+            name = Debug;
+        };
+        _ReleaseConf_libc = {
+            isa = XCBuildConfiguration;
+            buildSettings = { ENABLE_TESTABILITY = YES; LD_RUNPATH_SEARCH_PATHS = '$(TOOLCHAIN_DIR)/usr/lib/swift/macosx'; };
+            name = Release;
+        };
+        __Dependency_libc = {
+            isa = PBXTargetDependency;
+            target = ______Target_libc;
+        };
+        _______Group_Performance = {
+            isa = PBXGroup;
+            name = Performance;
+            path = 'Sources/Performance';
+            sourceTree = '<group>';
+            children = ('__PBXFileRef_Sources/Performance/main.swift');
+        };
+        '__PBXFileRef_Sources/Performance/main.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'main.swift';
+            sourceTree = '<group>';
+        };
+        ______Target_Performance = {
+            isa = PBXNativeTarget;
+            buildConfigurationList = _______Confs_Performance;
+            buildPhases = (CompilePhase_Performance, ___LinkPhase_Performance);
+            buildRules = ();
+            dependencies = (__Dependency_CryptoEssentials, __Dependency_Strand, __Dependency_StructuredData, __Dependency_C7, __Dependency_MediaType, __Dependency_SHA2, __Dependency_HMAC, __Dependency_Hummingbird, __Dependency_JSON, __Dependency_String, __Dependency_S4, __Dependency_Vapor);
+            name = Performance;
+            productName = Performance;
+            productReference = _____Product_Performance;
+            productType = 'com.apple.product-type.tool';
+        };
+        _____Product_Performance = {
+            isa = PBXFileReference;
+            explicitFileType = 'compiled.mach-o.executable';
+            path = 'Performance';
+            sourceTree = BUILT_PRODUCTS_DIR;
+        };
+        CompilePhase_Performance = {
+            isa = PBXSourcesBuildPhase;
+            files = ('__src_cc_ref_Sources/Performance/main.swift');
+            runOnlyForDeploymentPostprocessing = 0;
+        };
+        ___LinkPhase_Performance = {
+            isa = PBXFrameworksBuildPhase;
+            files = (_LinkFileRef_CryptoEssentials, _LinkFileRef_Strand, _LinkFileRef_StructuredData, _LinkFileRef_C7, _LinkFileRef_MediaType, _LinkFileRef_SHA2, _LinkFileRef_HMAC, _LinkFileRef_Hummingbird, _LinkFileRef_JSON, _LinkFileRef_String, _LinkFileRef_S4, _LinkFileRef_Vapor, _LinkFileRef_libc);
+            runOnlyForDeploymentPostprocessing = 0;
+        };
+        '__src_cc_ref_Sources/Performance/main.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Performance/main.swift';
+        };
+        _LinkFileRef_Performance = {
+            isa = PBXBuildFile;
+            fileRef = _____Product_Performance;
+        };
+        _______Confs_Performance = {
+            isa = XCConfigurationList;
+            buildConfigurations = (___DebugConf_Performance, _ReleaseConf_Performance);
+            defaultConfigurationIsVisible = 0;
+            defaultConfigurationName = Debug;
+        };
+        ___DebugConf_Performance = {
+            isa = XCBuildConfiguration;
+            buildSettings = { LD_RUNPATH_SEARCH_PATHS = '$(TOOLCHAIN_DIR)/usr/lib/swift/macosx'; SWIFT_FORCE_STATIC_LINK_STDLIB = NO; SWIFT_FORCE_DYNAMIC_LINK_STDLIB = YES; SWIFT_OPTIMIZATION_LEVEL = -Onone; };
+            name = Debug;
+        };
+        _ReleaseConf_Performance = {
+            isa = XCBuildConfiguration;
+            buildSettings = { SWIFT_FORCE_STATIC_LINK_STDLIB = NO; LD_RUNPATH_SEARCH_PATHS = '$(TOOLCHAIN_DIR)/usr/lib/swift/macosx'; SWIFT_FORCE_DYNAMIC_LINK_STDLIB = YES; };
+            name = Release;
+        };
+        __Dependency_Performance = {
+            isa = PBXTargetDependency;
+            target = ______Target_Performance;
+        };
+        _______Group_Vapor = {
+            isa = PBXGroup;
+            name = Vapor;
+            path = 'Sources/Vapor';
+            sourceTree = '<group>';
+            children = ('__PBXFileRef_Sources/Vapor/Config/Config.swift', '__PBXFileRef_Sources/Vapor/Core/Abort.swift', '__PBXFileRef_Sources/Vapor/Core/Application.swift', '__PBXFileRef_Sources/Vapor/Core/Environment.swift', '__PBXFileRef_Sources/Vapor/Core/Generated.swift', '__PBXFileRef_Sources/Vapor/Core/Provider.swift', '__PBXFileRef_Sources/Vapor/Event/Event.swift', '__PBXFileRef_Sources/Vapor/Event/Subscription.swift', '__PBXFileRef_Sources/Vapor/Fixes/FileManager.swift', '__PBXFileRef_Sources/Vapor/Fixes/StringExtensions.swift', '__PBXFileRef_Sources/Vapor/Hash/Hash.swift', '__PBXFileRef_Sources/Vapor/Hash/HashDriver.swift', '__PBXFileRef_Sources/Vapor/Hash/Int+Random.swift', '__PBXFileRef_Sources/Vapor/Hash/SHAHasher.swift', '__PBXFileRef_Sources/Vapor/JSON/JSON.swift', '__PBXFileRef_Sources/Vapor/Log/Log.swift', '__PBXFileRef_Sources/Vapor/Log/LogDriver.swift', '__PBXFileRef_Sources/Vapor/Middleware/AbortMiddleware.swift', '__PBXFileRef_Sources/Vapor/Node/Node.swift', '__PBXFileRef_Sources/Vapor/Node/NodeInitializable.swift', '__PBXFileRef_Sources/Vapor/Process/Process.swift', '__PBXFileRef_Sources/Vapor/Request/Request.swift', '__PBXFileRef_Sources/Vapor/Request/RequestContent.swift', '__PBXFileRef_Sources/Vapor/Response/Response.swift', '__PBXFileRef_Sources/Vapor/Response/ResponseRepresentable.swift', '__PBXFileRef_Sources/Vapor/Router/Branch.swift', '__PBXFileRef_Sources/Vapor/Router/BranchRouter.swift', '__PBXFileRef_Sources/Vapor/Router/RouterDriver.swift', '__PBXFileRef_Sources/Vapor/Routing/Application+Route.swift', '__PBXFileRef_Sources/Vapor/Routing/ApplicationInitializable.swift', '__PBXFileRef_Sources/Vapor/Routing/Controller.swift', '__PBXFileRef_Sources/Vapor/Routing/DefaultInitializable.swift', '__PBXFileRef_Sources/Vapor/Routing/ResourceController.swift', '__PBXFileRef_Sources/Vapor/Routing/Route.swift', '__PBXFileRef_Sources/Vapor/Server/HTTPStream.swift', '__PBXFileRef_Sources/Vapor/Server/HTTPStreamHeader.swift', '__PBXFileRef_Sources/Vapor/Server/HTTPStreamServer.swift', '__PBXFileRef_Sources/Vapor/Server/Vapor+Hummingbird.swift', '__PBXFileRef_Sources/Vapor/Session/MemorySessionDriver.swift', '__PBXFileRef_Sources/Vapor/Session/Session.swift', '__PBXFileRef_Sources/Vapor/Session/SessionDriver.swift', '__PBXFileRef_Sources/Vapor/Session/SessionMiddleware.swift', '__PBXFileRef_Sources/Vapor/Utilities/Dispatch.swift', '__PBXFileRef_Sources/Vapor/Utilities/Lock.swift', '__PBXFileRef_Sources/Vapor/Utilities/ThreadSafeStore.swift', '__PBXFileRef_Sources/Vapor/Utilities/Vapor+S4.swift', '__PBXFileRef_Sources/Vapor/Validation/And.swift', '__PBXFileRef_Sources/Vapor/Validation/Error.swift', '__PBXFileRef_Sources/Vapor/Validation/Node+Validation.swift', '__PBXFileRef_Sources/Vapor/Validation/Not.swift', '__PBXFileRef_Sources/Vapor/Validation/Operators.swift', '__PBXFileRef_Sources/Vapor/Validation/Or.swift', '__PBXFileRef_Sources/Vapor/Validation/Valid.swift', '__PBXFileRef_Sources/Vapor/Validation/Validatable.swift', '__PBXFileRef_Sources/Vapor/Validation/ValidationMiddleware.swift', '__PBXFileRef_Sources/Vapor/Validation/Validators.swift', '__PBXFileRef_Sources/Vapor/View/RenderDriver.swift', '__PBXFileRef_Sources/Vapor/View/View.swift', '__PBXFileRef_Sources/Vapor/Validation/Convenience/Alphanumeric.swift', '__PBXFileRef_Sources/Vapor/Validation/Convenience/Compare.swift', '__PBXFileRef_Sources/Vapor/Validation/Convenience/Contains.swift', '__PBXFileRef_Sources/Vapor/Validation/Convenience/Count.swift', '__PBXFileRef_Sources/Vapor/Validation/Convenience/Email.swift', '__PBXFileRef_Sources/Vapor/Validation/Convenience/In.swift', '__PBXFileRef_Sources/Vapor/Validation/Convenience/Matches.swift', '__PBXFileRef_Sources/Vapor/Validation/Convenience/Unique.swift');
+        };
+        '__PBXFileRef_Sources/Vapor/Config/Config.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Config/Config.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Sources/Vapor/Core/Abort.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Core/Abort.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Sources/Vapor/Core/Application.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Core/Application.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Sources/Vapor/Core/Environment.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Core/Environment.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Sources/Vapor/Core/Generated.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Core/Generated.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Sources/Vapor/Core/Provider.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Core/Provider.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Sources/Vapor/Event/Event.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Event/Event.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Sources/Vapor/Event/Subscription.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Event/Subscription.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Sources/Vapor/Fixes/FileManager.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Fixes/FileManager.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Sources/Vapor/Fixes/StringExtensions.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Fixes/StringExtensions.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Sources/Vapor/Hash/Hash.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Hash/Hash.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Sources/Vapor/Hash/HashDriver.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Hash/HashDriver.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Sources/Vapor/Hash/Int+Random.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Hash/Int+Random.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Sources/Vapor/Hash/SHAHasher.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Hash/SHAHasher.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Sources/Vapor/JSON/JSON.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'JSON/JSON.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Sources/Vapor/Log/Log.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Log/Log.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Sources/Vapor/Log/LogDriver.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Log/LogDriver.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Sources/Vapor/Middleware/AbortMiddleware.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Middleware/AbortMiddleware.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Sources/Vapor/Node/Node.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Node/Node.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Sources/Vapor/Node/NodeInitializable.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Node/NodeInitializable.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Sources/Vapor/Process/Process.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Process/Process.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Sources/Vapor/Request/Request.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Request/Request.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Sources/Vapor/Request/RequestContent.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Request/RequestContent.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Sources/Vapor/Response/Response.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Response/Response.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Sources/Vapor/Response/ResponseRepresentable.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Response/ResponseRepresentable.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Sources/Vapor/Router/Branch.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Router/Branch.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Sources/Vapor/Router/BranchRouter.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Router/BranchRouter.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Sources/Vapor/Router/RouterDriver.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Router/RouterDriver.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Sources/Vapor/Routing/Application+Route.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Routing/Application+Route.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Sources/Vapor/Routing/ApplicationInitializable.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Routing/ApplicationInitializable.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Sources/Vapor/Routing/Controller.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Routing/Controller.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Sources/Vapor/Routing/DefaultInitializable.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Routing/DefaultInitializable.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Sources/Vapor/Routing/ResourceController.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Routing/ResourceController.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Sources/Vapor/Routing/Route.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Routing/Route.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Sources/Vapor/Server/HTTPStream.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Server/HTTPStream.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Sources/Vapor/Server/HTTPStreamHeader.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Server/HTTPStreamHeader.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Sources/Vapor/Server/HTTPStreamServer.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Server/HTTPStreamServer.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Sources/Vapor/Server/Vapor+Hummingbird.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Server/Vapor+Hummingbird.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Sources/Vapor/Session/MemorySessionDriver.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Session/MemorySessionDriver.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Sources/Vapor/Session/Session.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Session/Session.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Sources/Vapor/Session/SessionDriver.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Session/SessionDriver.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Sources/Vapor/Session/SessionMiddleware.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Session/SessionMiddleware.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Sources/Vapor/Utilities/Dispatch.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Utilities/Dispatch.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Sources/Vapor/Utilities/Lock.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Utilities/Lock.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Sources/Vapor/Utilities/ThreadSafeStore.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Utilities/ThreadSafeStore.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Sources/Vapor/Utilities/Vapor+S4.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Utilities/Vapor+S4.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Sources/Vapor/Validation/And.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Validation/And.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Sources/Vapor/Validation/Error.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Validation/Error.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Sources/Vapor/Validation/Node+Validation.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Validation/Node+Validation.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Sources/Vapor/Validation/Not.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Validation/Not.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Sources/Vapor/Validation/Operators.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Validation/Operators.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Sources/Vapor/Validation/Or.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Validation/Or.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Sources/Vapor/Validation/Valid.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Validation/Valid.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Sources/Vapor/Validation/Validatable.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Validation/Validatable.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Sources/Vapor/Validation/ValidationMiddleware.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Validation/ValidationMiddleware.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Sources/Vapor/Validation/Validators.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Validation/Validators.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Sources/Vapor/View/RenderDriver.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'View/RenderDriver.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Sources/Vapor/View/View.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'View/View.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Sources/Vapor/Validation/Convenience/Alphanumeric.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Validation/Convenience/Alphanumeric.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Sources/Vapor/Validation/Convenience/Compare.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Validation/Convenience/Compare.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Sources/Vapor/Validation/Convenience/Contains.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Validation/Convenience/Contains.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Sources/Vapor/Validation/Convenience/Count.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Validation/Convenience/Count.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Sources/Vapor/Validation/Convenience/Email.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Validation/Convenience/Email.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Sources/Vapor/Validation/Convenience/In.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Validation/Convenience/In.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Sources/Vapor/Validation/Convenience/Matches.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Validation/Convenience/Matches.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Sources/Vapor/Validation/Convenience/Unique.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'Validation/Convenience/Unique.swift';
+            sourceTree = '<group>';
+        };
+        ______Target_Vapor = {
+            isa = PBXNativeTarget;
+            buildConfigurationList = _______Confs_Vapor;
+            buildPhases = (CompilePhase_Vapor, ___LinkPhase_Vapor);
+            buildRules = ();
+            dependencies = (__Dependency_CryptoEssentials, __Dependency_Strand, __Dependency_StructuredData, __Dependency_C7, __Dependency_MediaType, __Dependency_SHA2, __Dependency_HMAC, __Dependency_Hummingbird, __Dependency_JSON, __Dependency_String, __Dependency_S4, __Dependency_libc);
+            name = Vapor;
+            productName = Vapor;
+            productReference = _____Product_Vapor;
+            productType = 'com.apple.product-type.library.dynamic';
+        };
+        _____Product_Vapor = {
+            isa = PBXFileReference;
+            explicitFileType = 'compiled.mach-o.dylib';
+            path = 'Vapor.dylib';
+            sourceTree = BUILT_PRODUCTS_DIR;
+        };
+        CompilePhase_Vapor = {
+            isa = PBXSourcesBuildPhase;
+            files = ('__src_cc_ref_Sources/Vapor/Config/Config.swift', '__src_cc_ref_Sources/Vapor/Core/Abort.swift', '__src_cc_ref_Sources/Vapor/Core/Application.swift', '__src_cc_ref_Sources/Vapor/Core/Environment.swift', '__src_cc_ref_Sources/Vapor/Core/Generated.swift', '__src_cc_ref_Sources/Vapor/Core/Provider.swift', '__src_cc_ref_Sources/Vapor/Event/Event.swift', '__src_cc_ref_Sources/Vapor/Event/Subscription.swift', '__src_cc_ref_Sources/Vapor/Fixes/FileManager.swift', '__src_cc_ref_Sources/Vapor/Fixes/StringExtensions.swift', '__src_cc_ref_Sources/Vapor/Hash/Hash.swift', '__src_cc_ref_Sources/Vapor/Hash/HashDriver.swift', '__src_cc_ref_Sources/Vapor/Hash/Int+Random.swift', '__src_cc_ref_Sources/Vapor/Hash/SHAHasher.swift', '__src_cc_ref_Sources/Vapor/JSON/JSON.swift', '__src_cc_ref_Sources/Vapor/Log/Log.swift', '__src_cc_ref_Sources/Vapor/Log/LogDriver.swift', '__src_cc_ref_Sources/Vapor/Middleware/AbortMiddleware.swift', '__src_cc_ref_Sources/Vapor/Node/Node.swift', '__src_cc_ref_Sources/Vapor/Node/NodeInitializable.swift', '__src_cc_ref_Sources/Vapor/Process/Process.swift', '__src_cc_ref_Sources/Vapor/Request/Request.swift', '__src_cc_ref_Sources/Vapor/Request/RequestContent.swift', '__src_cc_ref_Sources/Vapor/Response/Response.swift', '__src_cc_ref_Sources/Vapor/Response/ResponseRepresentable.swift', '__src_cc_ref_Sources/Vapor/Router/Branch.swift', '__src_cc_ref_Sources/Vapor/Router/BranchRouter.swift', '__src_cc_ref_Sources/Vapor/Router/RouterDriver.swift', '__src_cc_ref_Sources/Vapor/Routing/Application+Route.swift', '__src_cc_ref_Sources/Vapor/Routing/ApplicationInitializable.swift', '__src_cc_ref_Sources/Vapor/Routing/Controller.swift', '__src_cc_ref_Sources/Vapor/Routing/DefaultInitializable.swift', '__src_cc_ref_Sources/Vapor/Routing/ResourceController.swift', '__src_cc_ref_Sources/Vapor/Routing/Route.swift', '__src_cc_ref_Sources/Vapor/Server/HTTPStream.swift', '__src_cc_ref_Sources/Vapor/Server/HTTPStreamHeader.swift', '__src_cc_ref_Sources/Vapor/Server/HTTPStreamServer.swift', '__src_cc_ref_Sources/Vapor/Server/Vapor+Hummingbird.swift', '__src_cc_ref_Sources/Vapor/Session/MemorySessionDriver.swift', '__src_cc_ref_Sources/Vapor/Session/Session.swift', '__src_cc_ref_Sources/Vapor/Session/SessionDriver.swift', '__src_cc_ref_Sources/Vapor/Session/SessionMiddleware.swift', '__src_cc_ref_Sources/Vapor/Utilities/Dispatch.swift', '__src_cc_ref_Sources/Vapor/Utilities/Lock.swift', '__src_cc_ref_Sources/Vapor/Utilities/ThreadSafeStore.swift', '__src_cc_ref_Sources/Vapor/Utilities/Vapor+S4.swift', '__src_cc_ref_Sources/Vapor/Validation/And.swift', '__src_cc_ref_Sources/Vapor/Validation/Error.swift', '__src_cc_ref_Sources/Vapor/Validation/Node+Validation.swift', '__src_cc_ref_Sources/Vapor/Validation/Not.swift', '__src_cc_ref_Sources/Vapor/Validation/Operators.swift', '__src_cc_ref_Sources/Vapor/Validation/Or.swift', '__src_cc_ref_Sources/Vapor/Validation/Valid.swift', '__src_cc_ref_Sources/Vapor/Validation/Validatable.swift', '__src_cc_ref_Sources/Vapor/Validation/ValidationMiddleware.swift', '__src_cc_ref_Sources/Vapor/Validation/Validators.swift', '__src_cc_ref_Sources/Vapor/View/RenderDriver.swift', '__src_cc_ref_Sources/Vapor/View/View.swift', '__src_cc_ref_Sources/Vapor/Validation/Convenience/Alphanumeric.swift', '__src_cc_ref_Sources/Vapor/Validation/Convenience/Compare.swift', '__src_cc_ref_Sources/Vapor/Validation/Convenience/Contains.swift', '__src_cc_ref_Sources/Vapor/Validation/Convenience/Count.swift', '__src_cc_ref_Sources/Vapor/Validation/Convenience/Email.swift', '__src_cc_ref_Sources/Vapor/Validation/Convenience/In.swift', '__src_cc_ref_Sources/Vapor/Validation/Convenience/Matches.swift', '__src_cc_ref_Sources/Vapor/Validation/Convenience/Unique.swift');
+            runOnlyForDeploymentPostprocessing = 0;
+        };
+        ___LinkPhase_Vapor = {
+            isa = PBXFrameworksBuildPhase;
+            files = (_LinkFileRef_CryptoEssentials, _LinkFileRef_Strand, _LinkFileRef_StructuredData, _LinkFileRef_C7, _LinkFileRef_MediaType, _LinkFileRef_SHA2, _LinkFileRef_HMAC, _LinkFileRef_Hummingbird, _LinkFileRef_JSON, _LinkFileRef_String, _LinkFileRef_S4, _LinkFileRef_libc);
+            runOnlyForDeploymentPostprocessing = 0;
+        };
+        '__src_cc_ref_Sources/Vapor/Config/Config.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Vapor/Config/Config.swift';
+        };
+        '__src_cc_ref_Sources/Vapor/Core/Abort.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Vapor/Core/Abort.swift';
+        };
+        '__src_cc_ref_Sources/Vapor/Core/Application.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Vapor/Core/Application.swift';
+        };
+        '__src_cc_ref_Sources/Vapor/Core/Environment.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Vapor/Core/Environment.swift';
+        };
+        '__src_cc_ref_Sources/Vapor/Core/Generated.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Vapor/Core/Generated.swift';
+        };
+        '__src_cc_ref_Sources/Vapor/Core/Provider.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Vapor/Core/Provider.swift';
+        };
+        '__src_cc_ref_Sources/Vapor/Event/Event.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Vapor/Event/Event.swift';
+        };
+        '__src_cc_ref_Sources/Vapor/Event/Subscription.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Vapor/Event/Subscription.swift';
+        };
+        '__src_cc_ref_Sources/Vapor/Fixes/FileManager.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Vapor/Fixes/FileManager.swift';
+        };
+        '__src_cc_ref_Sources/Vapor/Fixes/StringExtensions.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Vapor/Fixes/StringExtensions.swift';
+        };
+        '__src_cc_ref_Sources/Vapor/Hash/Hash.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Vapor/Hash/Hash.swift';
+        };
+        '__src_cc_ref_Sources/Vapor/Hash/HashDriver.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Vapor/Hash/HashDriver.swift';
+        };
+        '__src_cc_ref_Sources/Vapor/Hash/Int+Random.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Vapor/Hash/Int+Random.swift';
+        };
+        '__src_cc_ref_Sources/Vapor/Hash/SHAHasher.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Vapor/Hash/SHAHasher.swift';
+        };
+        '__src_cc_ref_Sources/Vapor/JSON/JSON.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Vapor/JSON/JSON.swift';
+        };
+        '__src_cc_ref_Sources/Vapor/Log/Log.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Vapor/Log/Log.swift';
+        };
+        '__src_cc_ref_Sources/Vapor/Log/LogDriver.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Vapor/Log/LogDriver.swift';
+        };
+        '__src_cc_ref_Sources/Vapor/Middleware/AbortMiddleware.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Vapor/Middleware/AbortMiddleware.swift';
+        };
+        '__src_cc_ref_Sources/Vapor/Node/Node.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Vapor/Node/Node.swift';
+        };
+        '__src_cc_ref_Sources/Vapor/Node/NodeInitializable.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Vapor/Node/NodeInitializable.swift';
+        };
+        '__src_cc_ref_Sources/Vapor/Process/Process.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Vapor/Process/Process.swift';
+        };
+        '__src_cc_ref_Sources/Vapor/Request/Request.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Vapor/Request/Request.swift';
+        };
+        '__src_cc_ref_Sources/Vapor/Request/RequestContent.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Vapor/Request/RequestContent.swift';
+        };
+        '__src_cc_ref_Sources/Vapor/Response/Response.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Vapor/Response/Response.swift';
+        };
+        '__src_cc_ref_Sources/Vapor/Response/ResponseRepresentable.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Vapor/Response/ResponseRepresentable.swift';
+        };
+        '__src_cc_ref_Sources/Vapor/Router/Branch.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Vapor/Router/Branch.swift';
+        };
+        '__src_cc_ref_Sources/Vapor/Router/BranchRouter.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Vapor/Router/BranchRouter.swift';
+        };
+        '__src_cc_ref_Sources/Vapor/Router/RouterDriver.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Vapor/Router/RouterDriver.swift';
+        };
+        '__src_cc_ref_Sources/Vapor/Routing/Application+Route.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Vapor/Routing/Application+Route.swift';
+        };
+        '__src_cc_ref_Sources/Vapor/Routing/ApplicationInitializable.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Vapor/Routing/ApplicationInitializable.swift';
+        };
+        '__src_cc_ref_Sources/Vapor/Routing/Controller.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Vapor/Routing/Controller.swift';
+        };
+        '__src_cc_ref_Sources/Vapor/Routing/DefaultInitializable.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Vapor/Routing/DefaultInitializable.swift';
+        };
+        '__src_cc_ref_Sources/Vapor/Routing/ResourceController.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Vapor/Routing/ResourceController.swift';
+        };
+        '__src_cc_ref_Sources/Vapor/Routing/Route.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Vapor/Routing/Route.swift';
+        };
+        '__src_cc_ref_Sources/Vapor/Server/HTTPStream.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Vapor/Server/HTTPStream.swift';
+        };
+        '__src_cc_ref_Sources/Vapor/Server/HTTPStreamHeader.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Vapor/Server/HTTPStreamHeader.swift';
+        };
+        '__src_cc_ref_Sources/Vapor/Server/HTTPStreamServer.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Vapor/Server/HTTPStreamServer.swift';
+        };
+        '__src_cc_ref_Sources/Vapor/Server/Vapor+Hummingbird.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Vapor/Server/Vapor+Hummingbird.swift';
+        };
+        '__src_cc_ref_Sources/Vapor/Session/MemorySessionDriver.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Vapor/Session/MemorySessionDriver.swift';
+        };
+        '__src_cc_ref_Sources/Vapor/Session/Session.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Vapor/Session/Session.swift';
+        };
+        '__src_cc_ref_Sources/Vapor/Session/SessionDriver.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Vapor/Session/SessionDriver.swift';
+        };
+        '__src_cc_ref_Sources/Vapor/Session/SessionMiddleware.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Vapor/Session/SessionMiddleware.swift';
+        };
+        '__src_cc_ref_Sources/Vapor/Utilities/Dispatch.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Vapor/Utilities/Dispatch.swift';
+        };
+        '__src_cc_ref_Sources/Vapor/Utilities/Lock.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Vapor/Utilities/Lock.swift';
+        };
+        '__src_cc_ref_Sources/Vapor/Utilities/ThreadSafeStore.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Vapor/Utilities/ThreadSafeStore.swift';
+        };
+        '__src_cc_ref_Sources/Vapor/Utilities/Vapor+S4.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Vapor/Utilities/Vapor+S4.swift';
+        };
+        '__src_cc_ref_Sources/Vapor/Validation/And.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Vapor/Validation/And.swift';
+        };
+        '__src_cc_ref_Sources/Vapor/Validation/Error.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Vapor/Validation/Error.swift';
+        };
+        '__src_cc_ref_Sources/Vapor/Validation/Node+Validation.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Vapor/Validation/Node+Validation.swift';
+        };
+        '__src_cc_ref_Sources/Vapor/Validation/Not.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Vapor/Validation/Not.swift';
+        };
+        '__src_cc_ref_Sources/Vapor/Validation/Operators.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Vapor/Validation/Operators.swift';
+        };
+        '__src_cc_ref_Sources/Vapor/Validation/Or.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Vapor/Validation/Or.swift';
+        };
+        '__src_cc_ref_Sources/Vapor/Validation/Valid.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Vapor/Validation/Valid.swift';
+        };
+        '__src_cc_ref_Sources/Vapor/Validation/Validatable.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Vapor/Validation/Validatable.swift';
+        };
+        '__src_cc_ref_Sources/Vapor/Validation/ValidationMiddleware.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Vapor/Validation/ValidationMiddleware.swift';
+        };
+        '__src_cc_ref_Sources/Vapor/Validation/Validators.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Vapor/Validation/Validators.swift';
+        };
+        '__src_cc_ref_Sources/Vapor/View/RenderDriver.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Vapor/View/RenderDriver.swift';
+        };
+        '__src_cc_ref_Sources/Vapor/View/View.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Vapor/View/View.swift';
+        };
+        '__src_cc_ref_Sources/Vapor/Validation/Convenience/Alphanumeric.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Vapor/Validation/Convenience/Alphanumeric.swift';
+        };
+        '__src_cc_ref_Sources/Vapor/Validation/Convenience/Compare.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Vapor/Validation/Convenience/Compare.swift';
+        };
+        '__src_cc_ref_Sources/Vapor/Validation/Convenience/Contains.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Vapor/Validation/Convenience/Contains.swift';
+        };
+        '__src_cc_ref_Sources/Vapor/Validation/Convenience/Count.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Vapor/Validation/Convenience/Count.swift';
+        };
+        '__src_cc_ref_Sources/Vapor/Validation/Convenience/Email.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Vapor/Validation/Convenience/Email.swift';
+        };
+        '__src_cc_ref_Sources/Vapor/Validation/Convenience/In.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Vapor/Validation/Convenience/In.swift';
+        };
+        '__src_cc_ref_Sources/Vapor/Validation/Convenience/Matches.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Vapor/Validation/Convenience/Matches.swift';
+        };
+        '__src_cc_ref_Sources/Vapor/Validation/Convenience/Unique.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Sources/Vapor/Validation/Convenience/Unique.swift';
+        };
+        _LinkFileRef_Vapor = {
+            isa = PBXBuildFile;
+            fileRef = _____Product_Vapor;
+        };
+        _______Confs_Vapor = {
+            isa = XCConfigurationList;
+            buildConfigurations = (___DebugConf_Vapor, _ReleaseConf_Vapor);
+            defaultConfigurationIsVisible = 0;
+            defaultConfigurationName = Debug;
+        };
+        ___DebugConf_Vapor = {
+            isa = XCBuildConfiguration;
+            buildSettings = { ENABLE_TESTABILITY = YES; SWIFT_OPTIMIZATION_LEVEL = -Onone; LD_RUNPATH_SEARCH_PATHS = '$(TOOLCHAIN_DIR)/usr/lib/swift/macosx'; };
+            name = Debug;
+        };
+        _ReleaseConf_Vapor = {
+            isa = XCBuildConfiguration;
+            buildSettings = { ENABLE_TESTABILITY = YES; LD_RUNPATH_SEARCH_PATHS = '$(TOOLCHAIN_DIR)/usr/lib/swift/macosx'; };
+            name = Release;
+        };
+        __Dependency_Vapor = {
+            isa = PBXTargetDependency;
+            target = ______Target_Vapor;
+        };
+        _______Group_VaporTestSuite = {
+            isa = PBXGroup;
+            name = VaporTestSuite;
+            path = 'Tests/Vapor';
+            sourceTree = '<group>';
+            children = ('__PBXFileRef_Tests/Vapor/ApplicationTests.swift', '__PBXFileRef_Tests/Vapor/ConfigTests.swift', '__PBXFileRef_Tests/Vapor/ControllerTests.swift', '__PBXFileRef_Tests/Vapor/EnvironmentTests.swift', '__PBXFileRef_Tests/Vapor/EventTests.swift', '__PBXFileRef_Tests/Vapor/HashTests.swift', '__PBXFileRef_Tests/Vapor/HTTPStreamTests.swift', '__PBXFileRef_Tests/Vapor/LogTests.swift', '__PBXFileRef_Tests/Vapor/MemorySessionDriverTests.swift', '__PBXFileRef_Tests/Vapor/PerformanceTests.swift', '__PBXFileRef_Tests/Vapor/ProcessTests.swift', '__PBXFileRef_Tests/Vapor/QueryParameterTests.swift', '__PBXFileRef_Tests/Vapor/ResponseTests.swift', '__PBXFileRef_Tests/Vapor/RouterTests.swift', '__PBXFileRef_Tests/Vapor/RouteTests.swift', '__PBXFileRef_Tests/Vapor/SessionTests.swift', '__PBXFileRef_Tests/Vapor/TestHTTPStream.swift', '__PBXFileRef_Tests/Vapor/TypedRouteTests.swift', '__PBXFileRef_Tests/Vapor/ValidationConvenienceTests.swift', '__PBXFileRef_Tests/Vapor/ValidationCountTests.swift', '__PBXFileRef_Tests/Vapor/ValidationTests.swift', '__PBXFileRef_Tests/Vapor/ValidationUniqueTests.swift');
+        };
+        '__PBXFileRef_Tests/Vapor/ApplicationTests.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'ApplicationTests.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Tests/Vapor/ConfigTests.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'ConfigTests.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Tests/Vapor/ControllerTests.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'ControllerTests.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Tests/Vapor/EnvironmentTests.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'EnvironmentTests.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Tests/Vapor/EventTests.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'EventTests.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Tests/Vapor/HashTests.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'HashTests.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Tests/Vapor/HTTPStreamTests.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'HTTPStreamTests.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Tests/Vapor/LogTests.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'LogTests.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Tests/Vapor/MemorySessionDriverTests.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'MemorySessionDriverTests.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Tests/Vapor/PerformanceTests.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'PerformanceTests.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Tests/Vapor/ProcessTests.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'ProcessTests.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Tests/Vapor/QueryParameterTests.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'QueryParameterTests.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Tests/Vapor/ResponseTests.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'ResponseTests.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Tests/Vapor/RouterTests.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'RouterTests.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Tests/Vapor/RouteTests.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'RouteTests.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Tests/Vapor/SessionTests.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'SessionTests.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Tests/Vapor/TestHTTPStream.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'TestHTTPStream.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Tests/Vapor/TypedRouteTests.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'TypedRouteTests.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Tests/Vapor/ValidationConvenienceTests.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'ValidationConvenienceTests.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Tests/Vapor/ValidationCountTests.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'ValidationCountTests.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Tests/Vapor/ValidationTests.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'ValidationTests.swift';
+            sourceTree = '<group>';
+        };
+        '__PBXFileRef_Tests/Vapor/ValidationUniqueTests.swift' = {
+            isa = PBXFileReference;
+            lastKnownFileType = sourcecode.swift;
+            name = 'ValidationUniqueTests.swift';
+            sourceTree = '<group>';
+        };
+        ______Target_VaporTestSuite = {
+            isa = PBXNativeTarget;
+            buildConfigurationList = _______Confs_VaporTestSuite;
+            buildPhases = (CompilePhase_VaporTestSuite, ___LinkPhase_VaporTestSuite);
+            buildRules = ();
+            dependencies = (__Dependency_CryptoEssentials, __Dependency_Strand, __Dependency_StructuredData, __Dependency_C7, __Dependency_MediaType, __Dependency_SHA2, __Dependency_HMAC, __Dependency_Hummingbird, __Dependency_JSON, __Dependency_String, __Dependency_S4, __Dependency_Vapor);
+            name = VaporTestSuite;
+            productName = VaporTestSuite;
+            productReference = _____Product_VaporTestSuite;
+            productType = 'com.apple.product-type.bundle.unit-test';
+        };
+        _____Product_VaporTestSuite = {
+            isa = PBXFileReference;
+            explicitFileType = 'compiled.mach-o.wrapper.cfbundle';
+            path = 'VaporTestSuite.xctest';
+            sourceTree = BUILT_PRODUCTS_DIR;
+        };
+        CompilePhase_VaporTestSuite = {
+            isa = PBXSourcesBuildPhase;
+            files = ('__src_cc_ref_Tests/Vapor/ApplicationTests.swift', '__src_cc_ref_Tests/Vapor/ConfigTests.swift', '__src_cc_ref_Tests/Vapor/ControllerTests.swift', '__src_cc_ref_Tests/Vapor/EnvironmentTests.swift', '__src_cc_ref_Tests/Vapor/EventTests.swift', '__src_cc_ref_Tests/Vapor/HashTests.swift', '__src_cc_ref_Tests/Vapor/HTTPStreamTests.swift', '__src_cc_ref_Tests/Vapor/LogTests.swift', '__src_cc_ref_Tests/Vapor/MemorySessionDriverTests.swift', '__src_cc_ref_Tests/Vapor/PerformanceTests.swift', '__src_cc_ref_Tests/Vapor/ProcessTests.swift', '__src_cc_ref_Tests/Vapor/QueryParameterTests.swift', '__src_cc_ref_Tests/Vapor/ResponseTests.swift', '__src_cc_ref_Tests/Vapor/RouterTests.swift', '__src_cc_ref_Tests/Vapor/RouteTests.swift', '__src_cc_ref_Tests/Vapor/SessionTests.swift', '__src_cc_ref_Tests/Vapor/TestHTTPStream.swift', '__src_cc_ref_Tests/Vapor/TypedRouteTests.swift', '__src_cc_ref_Tests/Vapor/ValidationConvenienceTests.swift', '__src_cc_ref_Tests/Vapor/ValidationCountTests.swift', '__src_cc_ref_Tests/Vapor/ValidationTests.swift', '__src_cc_ref_Tests/Vapor/ValidationUniqueTests.swift');
+            runOnlyForDeploymentPostprocessing = 0;
+        };
+        ___LinkPhase_VaporTestSuite = {
+            isa = PBXFrameworksBuildPhase;
+            files = (_LinkFileRef_CryptoEssentials, _LinkFileRef_Strand, _LinkFileRef_StructuredData, _LinkFileRef_C7, _LinkFileRef_MediaType, _LinkFileRef_SHA2, _LinkFileRef_HMAC, _LinkFileRef_Hummingbird, _LinkFileRef_JSON, _LinkFileRef_String, _LinkFileRef_S4, _LinkFileRef_Vapor, _LinkFileRef_libc);
+            runOnlyForDeploymentPostprocessing = 0;
+        };
+        '__src_cc_ref_Tests/Vapor/ApplicationTests.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Tests/Vapor/ApplicationTests.swift';
+        };
+        '__src_cc_ref_Tests/Vapor/ConfigTests.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Tests/Vapor/ConfigTests.swift';
+        };
+        '__src_cc_ref_Tests/Vapor/ControllerTests.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Tests/Vapor/ControllerTests.swift';
+        };
+        '__src_cc_ref_Tests/Vapor/EnvironmentTests.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Tests/Vapor/EnvironmentTests.swift';
+        };
+        '__src_cc_ref_Tests/Vapor/EventTests.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Tests/Vapor/EventTests.swift';
+        };
+        '__src_cc_ref_Tests/Vapor/HashTests.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Tests/Vapor/HashTests.swift';
+        };
+        '__src_cc_ref_Tests/Vapor/HTTPStreamTests.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Tests/Vapor/HTTPStreamTests.swift';
+        };
+        '__src_cc_ref_Tests/Vapor/LogTests.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Tests/Vapor/LogTests.swift';
+        };
+        '__src_cc_ref_Tests/Vapor/MemorySessionDriverTests.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Tests/Vapor/MemorySessionDriverTests.swift';
+        };
+        '__src_cc_ref_Tests/Vapor/PerformanceTests.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Tests/Vapor/PerformanceTests.swift';
+        };
+        '__src_cc_ref_Tests/Vapor/ProcessTests.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Tests/Vapor/ProcessTests.swift';
+        };
+        '__src_cc_ref_Tests/Vapor/QueryParameterTests.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Tests/Vapor/QueryParameterTests.swift';
+        };
+        '__src_cc_ref_Tests/Vapor/ResponseTests.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Tests/Vapor/ResponseTests.swift';
+        };
+        '__src_cc_ref_Tests/Vapor/RouterTests.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Tests/Vapor/RouterTests.swift';
+        };
+        '__src_cc_ref_Tests/Vapor/RouteTests.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Tests/Vapor/RouteTests.swift';
+        };
+        '__src_cc_ref_Tests/Vapor/SessionTests.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Tests/Vapor/SessionTests.swift';
+        };
+        '__src_cc_ref_Tests/Vapor/TestHTTPStream.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Tests/Vapor/TestHTTPStream.swift';
+        };
+        '__src_cc_ref_Tests/Vapor/TypedRouteTests.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Tests/Vapor/TypedRouteTests.swift';
+        };
+        '__src_cc_ref_Tests/Vapor/ValidationConvenienceTests.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Tests/Vapor/ValidationConvenienceTests.swift';
+        };
+        '__src_cc_ref_Tests/Vapor/ValidationCountTests.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Tests/Vapor/ValidationCountTests.swift';
+        };
+        '__src_cc_ref_Tests/Vapor/ValidationTests.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Tests/Vapor/ValidationTests.swift';
+        };
+        '__src_cc_ref_Tests/Vapor/ValidationUniqueTests.swift' = {
+            isa = PBXBuildFile;
+            fileRef = '__PBXFileRef_Tests/Vapor/ValidationUniqueTests.swift';
+        };
+        _LinkFileRef_VaporTestSuite = {
+            isa = PBXBuildFile;
+            fileRef = _____Product_VaporTestSuite;
+        };
+        _______Confs_VaporTestSuite = {
+            isa = XCConfigurationList;
+            buildConfigurations = (___DebugConf_VaporTestSuite, _ReleaseConf_VaporTestSuite);
+            defaultConfigurationIsVisible = 0;
+            defaultConfigurationName = Debug;
+        };
+        ___DebugConf_VaporTestSuite = {
+            isa = XCBuildConfiguration;
+            buildSettings = { EMBEDDED_CONTENT_CONTAINS_SWIFT = YES; SWIFT_OPTIMIZATION_LEVEL = -Onone; LD_RUNPATH_SEARCH_PATHS = '@loader_path/../Frameworks'; };
+            name = Debug;
+        };
+        _ReleaseConf_VaporTestSuite = {
+            isa = XCBuildConfiguration;
+            buildSettings = { EMBEDDED_CONTENT_CONTAINS_SWIFT = YES; LD_RUNPATH_SEARCH_PATHS = '@loader_path/../Frameworks'; };
+            name = Release;
+        };
+        __Dependency_VaporTestSuite = {
+            isa = PBXTargetDependency;
+            target = ______Target_VaporTestSuite;
+        };
+        '__PBXFileRef_Vapor.xcodeproj/Configs/Project.xcconfig' = {
+            isa = PBXFileReference;
+            lastKnownFileType = text.xcconfig;
+            name = 'Project.xcconfig';
+            path = 'Vapor.xcodeproj/Configs/Project.xcconfig';
+            sourceTree = '<group>';
+        };
+        _____Configs_ = {
+            isa = PBXGroup;
+            children = ('__PBXFileRef_Vapor.xcodeproj/Configs/Project.xcconfig');
+            name = Configs;
+            sourceTree = '<group>';
+        };
+        _____Sources_ = {
+            isa = PBXGroup;
+            children = (_______Group_C7, _______Group_S4, _______Group_String, _______Group_StructuredData, _______Group_JSON, _______Group_Strand, _______Group_Hummingbird, _______Group_CryptoEssentials, _______Group_HMAC, _______Group_SHA2, _______Group_MediaType, _______Group_Development, _______Group_Generator, _______Group_libc, _______Group_Performance, _______Group_Vapor);
+            name = Sources;
+            sourceTree = '<group>';
+        };
+        Dependencies_ = {
+            isa = PBXGroup;
+            children = (_______Group_C7, _______Group_S4, _______Group_String, _______Group_StructuredData, _______Group_JSON, _______Group_Strand, _______Group_Hummingbird, _______Group_CryptoEssentials, _______Group_HMAC, _______Group_SHA2, _______Group_MediaType);
+            name = Dependencies;
+            sourceTree = '<group>';
+        };
+        _______Tests_ = {
+            isa = PBXGroup;
+            children = (_______Group_VaporTestSuite);
+            name = Tests;
+            sourceTree = '<group>';
+        };
+       TestProducts_ = {
+            isa = PBXGroup;
+            children = (_____Product_VaporTestSuite);
+            name = Tests;
+            sourceTree = '<group>';
+        };
+        ____Products_ = {
+            isa = PBXGroup;
+            children = (TestProducts_, _____Product_C7, _____Product_S4, _____Product_String, _____Product_StructuredData, _____Product_JSON, _____Product_Strand, _____Product_Hummingbird, _____Product_CryptoEssentials, _____Product_HMAC, _____Product_SHA2, _____Product_MediaType, _____Product_Development, _____Product_Generator, _____Product_libc, _____Product_Performance, _____Product_Vapor);
+            name = Products;
+            sourceTree = '<group>';
+        };
+        _______Debug_ = {
+            isa = XCBuildConfiguration;
+            baseConfigurationReference = '__PBXFileRef_Vapor.xcodeproj/Configs/Project.xcconfig';
+            buildSettings = {};
+            name = Debug;
+        };
+        _____Release_ = {
+            isa = XCBuildConfiguration;
+            baseConfigurationReference = '__PBXFileRef_Vapor.xcodeproj/Configs/Project.xcconfig';
+            buildSettings = {};
+            name = Release;
+        };
+        ___RootConfs_ = {
+            isa = XCConfigurationList;
+            buildConfigurations = (_______Debug_, _____Release_);
+            defaultConfigurationIsVisible = 0;
+            defaultConfigurationName = Debug;
+        };
+    };
+}

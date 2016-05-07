@@ -113,6 +113,7 @@ public class Application {
     public init(sessionDriver: SessionDriver? = nil) {
         self.middleware = [
             AbortMiddleware(),
+            ValidationMiddleware()
         ]
 
         self.providers = []

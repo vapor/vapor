@@ -1,5 +1,6 @@
 disabled_rules:
   - line_length
+  - valid_docs
 opt_in_rules:
 included:
 excluded:

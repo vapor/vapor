@@ -61,6 +61,7 @@
             ReferencedContainer = "container:Vapor.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
+<<<<<<< HEAD
       <CommandLineArguments>
          <CommandLineArgument
             argument = "--port=8080"
@@ -71,6 +72,8 @@
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>
+=======
+>>>>>>> 67ab30a6c9b5ef18367b0e5912812a152a8e81f4
       <AdditionalOptions>
       </AdditionalOptions>
    </LaunchAction>
