@@ -1,19 +1,27 @@
 #!/usr/bin/env swift
 
-#if os(Linux)
-    import Glibc
-#else
+#if os(OSX)
     import Darwin
+#else
+    import Glibc
 #endif
 
 class Vapor {
+    /// Space separated args from shell
     var arguments: [String]
-    
+
+    /// True if the --release flag was passed
     var release = false
-    var swift2 = false
-    
+
+    /// Any arguments starting with --
     var flags: [String]
 
+    /**
+        Intializes the CLI from an
+        array of arguments received from the shell.
+
+        - parameter arguments: Space separated args from shell
+    */
     init(arguments: [String]) {
         var commands: [String] = []
         var flags: [String] = []
@@ -22,8 +30,6 @@ class Vapor {
             if argument.characters.first == "-"  {
                 if argument == "--release" {
                     release = true
-                } else if argument == "--swift2.2" {
-                    swift2 = true
                 } else {
                     flags.append(argument)
                 }
@@ -40,9 +46,14 @@ class Vapor {
             fail("Invalid number of arguments.")
         }
     }
-
+    /**
+        Starts the CLI and determines
+        which command should run, if any.
+    */
     func start() {
         if let command = Command(rawValue: arguments[1]) {
+
+            #if os(OSX)
             switch command {
             case .Clean:
                 clean()
@@ -54,43 +65,76 @@ class Vapor {
                 newProject()
             case .Help:
                 help()
+            case .SelfUpdate:
+                selfUpdate()
+            case .Xcode:
+                xcode()
             }
+            #else
+            switch command {
+            case .Clean:
+                clean()
+            case .Build:
+                build()
+            case .Run:
+                run()
+            case .New:
+                newProject()
+            case .Help:
+                help()
+            case .SelfUpdate:
+                selfUpdate()
+            }
+            #endif
 
         } else {
             fail("Unknown command: \(Process.arguments[1])")
         }
     }
 
-    #if !swift(>=3.0)
-        typealias ErrorProtocol = ErrorType
-    #endif
-
     enum Error: ErrorProtocol {
         case System(Int32)
     }
 
+    /**
+        The available commands.
+    */
     enum Command: String {
         case Clean = "clean"
         case Build = "build"
         case Run = "run"
         case New = "new"
         case Help = "help"
+        case SelfUpdate = "self-update"
+        #if os(OSX)
+        case Xcode = "xcode"
+        #endif
 
-        static var all: [Command] = [.Clean, .Build, .Run, .New, .Help]
+        #if os(OSX)
+        static var all: [Command] = [.Clean, .Build, .Run, .New, .Help, .SelfUpdate, .Xcode]  
+        #else  
+        static var all: [Command] = [.Clean, .Build, .Run, .New, .Help, .SelfUpdate]
+        #endif
     }
 
+    /**
+        Prints out usage information
+        including available commands.
+    */
     func printUsage() {
         let names = Command.all.map { command in
             return command.rawValue
         }
 
-        #if swift(>=3.0)
-            print("Usage: \(arguments[0]) [\(names.joined(separator: "|"))]")
-        #else
-            print("Usage: \(arguments[0]) [\(names.joinWithSeparator("|"))]")
-        #endif
+        print("Usage: \(arguments[0]) [\(names.joined(separator: "|"))]")
     }
 
+    /**
+        Attempts to run the supplied
+        command or throws an error.
+
+        - parameter command: Command to run
+    */
     func run(_ command: String) throws {
         let result = system(command)
 
@@ -99,6 +143,14 @@ class Vapor {
         }
     }
 
+    /**
+        Runs the supplied command in
+        the shell or prints the supplied
+        error message if the command fails.
+
+        - parameter command: Command to run
+        - parameter errorMessage: Prints if command fails
+    */
     func run(_ command: String, orFail errorMessage: String) {
         do {
             try run(command)
@@ -107,25 +159,31 @@ class Vapor {
         }
     }
 
+    /**
+        Prints out an error message
+        and exits the script.
+
+        - parameter message: Error message to print
+    */
     func fail(_ message: String) {
         print("Error: \(message)")
         exit(1)
     }
 
+    /**
+        Removes the Packages and .build
+        folders from the current directory.
+    */
     func clean() {
         run("rm -rf Packages .build", orFail: "Could not clean")
         print("Cleaned.")
     }
     
+    /**
+        Attempts to compile the Vapor
+        project in the current directory.
+    */
     func build() {
-        if swift2 {
-            buildSwift2()
-        } else {
-            buildSwift3()
-        }
-    }
-    
-    func buildSwift3() {
         do {
             var buildFlags = ""
             if release {
@@ -137,79 +195,28 @@ class Vapor {
             print("Usage: vapor build")
             print("Make sure you are running Apple Swift version 3.0.")
             print("Vapor only supports the latest snapshot.")
-            print("Use --swift2.2 to build for Swift 2.2")
             print("Run swift --version to check your version.")
             print()
             fail("Could not build project.")
         }
     }
 
-    func buildSwift2() {
-        print("Building...")
-        run("mkdir -p .build", orFail: "Could not create .build directory")
-
-        #if os(Linux)
-            let cc = "swiftc"
-            let include = "/usr/local/include/vapor/"
-            let lib = "/usr/local/lib/"
-            let rpath = "-Xlinker -rpath -Xlinker /usr/local/lib/"
-        #else
-            let cc = "xcrun -sdk macosx swiftc"
-            let include = "/usr/local/opt/vapor/include/"
-            let lib = "/usr/local/opt/vapor/lib/"
-            let rpath = ""
-        #endif
-        
-        var cflags = ""        
-        if release {
-            cflags = "-O"
-        }
-
-        var files = "App/main.swift App/**/*.swift"
-
-        if arguments.count >= 3 {
-            files = ""
-            for i in 2..<arguments.count {
-                files += " " + arguments[i]
-            }
-        }
-
-        do {
-            try run("\(cc) \(cflags) \(files) -I \(include) -L \(lib) -lVapor -lJay -lHummingbird -llibc -lStrand \(rpath) -o .build/VaporApp")
-            print("Built: .build/VaporApp")
-        } catch {
-            print()
-            print("Usage: vapor build [file1, file2, ...]")
-            print("Make sure you are running Apple Swift version 2.2.")
-            print("Run \(cc) --version to check your version.")
-            print()
-            fail("Could not build project.")
-        }
-    }
-
+    /**
+        Attempts to run the Vapor
+        project in the current directory.
+    */
     func run() {
         print("Running...")
         do {
+            var name = "App"
+            let folder = release ? "release" : "debug"
 
-            
-            if swift2 {
-                try run(".build/VaporApp")
-            } else {
-                var name = "App"
-                let folder = release ? "release" : "debug"
-                
-                #if swift(>=3.0)
-                    let args = flags.joined(separator: " ")
-                #else
-                    let args = flags.joinWithSeparator(" ")
-                #endif
-                
-                if arguments.count >= 3 {
-                    name = arguments[2]
-                }
-                
-                try run(".build/\(folder)/\(name) \(args)")
+            if arguments.count >= 3 {
+                name = arguments[2]
             }
+            
+            let flagString = flags.joined(separator: " ")
+            try run(".build/\(folder)/\(name) \(flagString)")
         } catch Error.System(let result) {
             if result != 2 {
                 fail("Could not run project")
@@ -219,6 +226,10 @@ class Vapor {
         }
     }
 
+    /**
+        Clones the Vapor Example
+        project as a boilerplate.
+    */
     func newProject() {
         if arguments.count < 3 {
             print("Usage: \(arguments[0]) \(arguments[1]) <project-name>")
@@ -241,6 +252,61 @@ class Vapor {
         }
     }
 
+    /**
+        Updates this CLI script
+        in the bin from the latest version online.
+    */
+    func selfUpdate() {
+        do {
+            try run("wget cli.qutheory.io -O vapor")
+        } catch {
+            print("Could not download Vapor CLI.")
+            print("Make sure you have 'wget' installed.")
+            return
+        }
+
+        do {
+            try run("chmod +x vapor")
+            try run("sudo mv vapor /usr/local/bin")
+        } catch {
+            print("Could not move Vapor CLI to bin.")
+            print("Try using 'sudo'.")
+            return
+        }
+
+        print("Vapor CLI updated.")
+    }
+
+    #if os(OSX)
+    /**
+        Generates and opens an Xcode
+        project for Vapor module in the current dir.
+    */
+    func xcode() {
+        print("Generating Xcode Project...")
+
+        do {
+            try run("swift build --generate-xcodeproj")
+        } catch {
+            print("Could not generate Xcode Project.")
+            return
+        }
+
+        print("Opening Xcode...")
+
+        do {
+            try run("open *.xcodeproj")
+        } catch {
+            print("Could not open Xcode Project.")
+            return
+        }
+    }
+    #endif
+
+    /**
+        Displays information about how to use 
+        the CLI and what its various commands do.
+    */
     func help() {
         print()
         printUsage()
@@ -248,9 +314,6 @@ class Vapor {
         print("Flags:")
         print("  --release")
         print("    Builds and runs with optimizations")
-        print()
-        print("  --swift2.2")
-        print("    Builds and runs using Swift 2.2")
         print()
         print("Options:")
         print("  build [file1, file2, ...]")
@@ -265,6 +328,17 @@ class Vapor {
         print("  new <project-name>")
         print("    Clones the Vapor Example to a given ")
         print("    folder name and removes .git.")
+        print()
+        print("  self-update")
+        print("    Downloads the latest version of")
+        print("    the Vapor command line interface.")
+
+        #if os(OSX)
+        print()
+        print("  xcode")
+        print("    Generates and opens an Xcode Project.")
+        #endif
+
         print()
         print("  clean")
         print()
