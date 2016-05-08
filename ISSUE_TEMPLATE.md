@@ -1,4 +1,7 @@
-Please delete whichever sections of this template you do not need.
+🚀 Thanks for contributing!
+
+Below are templates for various types of Issues (Bugs, Security, and Features) separated by horizontal rules. 
+Please delete whichever sections of the template you do not need.
 
 # Bugs
 
@@ -43,8 +46,6 @@ Describe the impact that this change will have on existing code. Will some Vapor
 
 Describe alternative approaches to addressing the same problem, and why you chose this approach instead.
 
--------------------------------------------------------------------------------
-
-# Decision
+## Decision (For Moderator Use)
 
 On **[Date]**, the community decided to **(TBD)** this proposal. When the community makes a decision regarding this proposal, their rationale for the decision will be written here.

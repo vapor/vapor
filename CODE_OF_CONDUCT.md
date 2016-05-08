@@ -14,7 +14,7 @@ Our open source community strives to:
 **Harassment** includes, but is not limited to:
 
 - Offensive comments related to gender, gender identity and expression, sexual orientation, disability, mental illness, neuro(a)typicality, physical appearance, body size, race, age, regional discrimination, political or religious affiliation
-Unwelcome comments regarding a person’s lifestyle choices and practices, including those related to food, health, parenting, drugs, and employment
+- Unwelcome comments regarding a person’s lifestyle choices and practices, including those related to food, health, parenting, drugs, and employment
 - Deliberate misgendering. This includes deadnaming or persistently using a pronoun that does not correctly reflect a person’s gender identity. You must address people by the name they give you when not addressing them by their username or handle
 - Physical contact and simulated physical contact (eg, textual descriptions like “hug” or “backrub”) without consent or after a request to stop
 - Threats of violence, both physical and psychological
@@ -45,7 +45,7 @@ Although this list cannot be exhaustive, we explicitly honor diversity in age, g
 
 ## Reporting Issues
 
-If you experience or witness unacceptable behavior—or have any other concerns—please report it by contacting us via [tanner@qutheory.io](tanner@qutheory.io). All reports will be handled with discretion. In your report please include:
+If you experience or witness unacceptable behavior–or have any other concerns—please report it by contacting us via [tanner@qutheory.io](tanner@qutheory.io) or [logan@qutheory.io](logan@qutheory.io). All reports will be handled with discretion. In your report please include:
 
 - Your contact information.
 - Names (real, nicknames, or pseudonyms) of any individuals involved. If there are additional witnesses, please include them as well. Your account of what occurred, and if you believe the incident is ongoing. If there is a publicly available record (e.g. a mailing list archive or a public IRC logger), please include a link.
