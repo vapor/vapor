@@ -24,11 +24,11 @@ Visit the [Documentation](http://docs.qutheory.io) for extensive information on 
 
 ## 🚀 Contributing
 
-To contribute a feature or idea to Vapor, submit a pull request to the [Vapor Evolution](https://github.com/qutheory/vapor-evolution) repository. If the request is approved, you or one of the members of the community can start working on it.
+To contribute a **feature or idea** to Vapor, submit an issue and fill in the template. If the request is approved, you or one of the members of the community can start working on it.
 
-If you find a bug, please submit a pull request with a failing test case displaying the bug or contact [tanner@qutheory.io](tanner@qutheory.io).
+If you find a **bug**, please submit a pull request with a failing test case displaying the bug or create an issue.
 
-If you find a security vulnerability, please contact [tanner@qutheory.io](tanner@qutheory.io) as soon as possible. We take these matters seriously.
+If you find a **security vulnerability**, please contact [tanner@qutheory.io](tanner@qutheory.io) as soon as possible. We take these matters seriously.
 
 ## 💙 Code of Conduct
 
