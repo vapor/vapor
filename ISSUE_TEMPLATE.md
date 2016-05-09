@@ -1,6 +1,6 @@
 🚀 Thanks for contributing!
 
-Below are templates for various types of Issues (Bugs, Security, and Features) separated by horizontal rules. 
+Below are templates for various types of issues (Bugs, Security, and Features) separated by horizontal rules. 
 Please delete whichever sections of the template you do not need.
 
 # Bugs
