@@ -242,7 +242,7 @@ extension Json {
         if keys.count == 0 {
             updated[key] = value
         } else {
-            var child = updated[key] ?? Json([:])
+            var child = updated[key] ?? Json.object([:])
             child.set(value, keys: keys)
         }
     }

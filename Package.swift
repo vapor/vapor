@@ -10,7 +10,9 @@ let package = Package(
         .Package(url: "https://github.com/Zewo/String.git", majorVersion: 0, minor: 7),
 
         //Parses and serializes JSON
-        .Package(url: "https://github.com/Zewo/JSON.git", majorVersion: 0, minor: 7),
+        // Using LoganWright until update core library
+        .Package(url: "https://github.com/LoganWright/Swift-JsonSerializer", majorVersion: 2),
+        // .Package(url: "https://github.com/Zewo/JSON.git", majorVersion: 0, minor: 7),
 
         //Swift wrapper around Sockets, used for built-in HTTP server
         .Package(url: "https://github.com/ketzusaka/Hummingbird.git", majorVersion: 1, minor: 7),
