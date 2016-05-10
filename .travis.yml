@@ -8,17 +8,18 @@ osx_image: xcode7.3
 install:
   - eval "$(curl -sL https://gist.githubusercontent.com/kylef/5c0475ff02b7c7671d2a/raw/02090c7ede5a637b76e6df1710e83cd0bbe7dcdf/swiftenv-install.sh)"
 script:
-  - swift build --fetch # clones all dependencies
-  - rm -rf Packages/*/Tests
+  # Build Vapor
   - swift build
   - swift build --configuration release
+  # Test Vapor
   - swift test
-  - sudo ./vapor self-update
+  # Test CLI
+  - ./vapor self-update # self-update
   - sudo mv vapor /usr/local/bin/vapor
-  - vapor help
-  - vapor new test-project
+  - vapor help # help
+  - vapor new test-project # new
   - cd test-project
-  - vapor clean
-  - vapor build
-  - vapor run &
+  - vapor clean # clean
+  - vapor build # build
+  - vapor run & # run
   
