@@ -13,3 +13,12 @@ script:
   - swift build
   - swift build --configuration release
   - swift test
+  - sudo ./vapor self-update
+  - sudo mv vapor /usr/local/bin/vapor
+  - vapor help
+  - vapor new test-project
+  - cd test-project
+  - vapor clean
+  - vapor build
+  - vapor run &
+  
