@@ -26,8 +26,11 @@ extension String: StringInitializable {
 }
 
 extension Application {
-
-    public final func any(path: String, handler: Route.Handler) {
+    /**
+        Creates a route for all HTTP methods.
+        `get`, `post`, `put`, `patch`, and `delete`.
+    */
+    public final func any(_ path: String, handler: Route.Handler) {
         self.get(path, handler: handler)
         self.post(path, handler: handler)
         self.put(path, handler: handler)
