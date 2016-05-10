@@ -1,55 +1,5 @@
 @_exported import PureJson
 
-//public enum Json {
-//    case null
-//    case bool(Bool)
-//    case double(Double)
-//    case string(String)
-//    case array([Json])
-//    case object([String: Json])
-//
-//    public init(_ value: Json) {
-//        switch value {
-//        case .nullValue:
-//            self = .null
-//        case .booleanValue(let bool):
-//            self = .bool(bool)
-//        case .numberValue(let number):
-//            self = .double(number)
-//        case .stringValue(let string):
-//            self = .string(string)
-//        case .objectValue(let object):
-//            var mapped: [String: Json] = [:]
-//            object.forEach { (key, value) in
-//                mapped[key] = Json(value)
-//            }
-//            self = .object(mapped)
-//        case .arrayValue(let array):
-//            let mapped: [Json] = array.map { item in
-//                return Json(item)
-//            }
-//
-//            self = .array(mapped)
-//        }
-//    }
-//
-//    public init(_ value: Bool) {
-//        self = .bool(value)
-//    }
-//
-//    public init(_ value: Double) {
-//        self = .double(value)
-//    }
-//
-//    public init(_ value: Int) {
-//        self = .double(Double(value))
-//    }
-//
-//    public init(_ value: String) {
-//        self = .string(value)
-//    }
-//
-
 extension Json {
     public init(_ value: Int) {
         self = .number(Double(value))
@@ -81,33 +31,6 @@ extension Json {
         return Data(bytes)
     }
 }
-//
-//    private func makeZewoJson() -> JSON {
-//        switch self {
-//        case .null:
-//            return .nullValue
-//        case .bool(let bool):
-//            return .booleanValue(bool)
-//        case .double(let double):
-//            return .numberValue(double)
-//        case .string(let string):
-//            return .stringValue(string)
-//        case .object(let object):
-//            var mapped: [String: JSON] = [:]
-//            object.forEach { (key, value) in
-//                mapped[key] = value.makeZewoJson()
-//            }
-//
-//            return .objectValue(mapped)
-//        case .array(let array):
-//            let mapped: [JSON] = array.map { item in
-//                return item.makeZewoJson()
-//            }
-//
-//            return .arrayValue(mapped)
-//        }
-//    }
-//
 
 extension Json {
     public subscript(key: String) -> Node? {
@@ -206,18 +129,6 @@ extension Bool: JsonRepresentable {
     }
 }
 
-//extension Json: JsonRepresentable {
-//    public func makeJson() -> Json {
-//        return self
-//    }
-//}
-
-//extension Json: CustomStringConvertible {
-//    public var description: String {
-//        return makeZewoJson().description
-//    }
-//}
-
 extension Json: ResponseRepresentable {
     public func makeResponse() -> Response {
         return Response(status: .ok, json: self)
@@ -225,67 +136,6 @@ extension Json: ResponseRepresentable {
 }
 
 extension Json: Node {
-//    public var isNull: Bool {
-//        switch self {
-//        case .null:
-//            return true
-//        default:
-//            return false
-//        }
-//    }
-//
-//    public var bool: Bool? {
-//        switch self {
-//        case .bool(let bool):
-//            return bool
-//        default:
-//            return nil
-//        }
-//    }
-//
-//    public var int: Int? {
-//        switch self {
-//        case .double(let double) where double % 1 == 0:
-//            return Int(double)
-//        default:
-//            return nil
-//        }
-//    }
-//
-//    public var uint: UInt? {
-//        guard let int = self.int where int >= 0 else {
-//            return nil
-//        }
-//        return UInt(int)
-//    }
-//
-//    public var float: Float? {
-//        switch self {
-//        case .double(let double):
-//            return Float(double)
-//        default:
-//            return nil
-//        }
-//    }
-//
-//    public var double: Double? {
-//        switch self {
-//        case .double(let double):
-//            return Double(double)
-//        default:
-//            return nil
-//        }
-//    }
-//
-//    public var string: String? {
-//        switch self {
-//        case .string(let string):
-//            return string
-//        default:
-//            return nil
-//        }
-//    }
-//
     public var array: [Node]? {
         switch self {
         case .array(let array):
