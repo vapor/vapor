@@ -1,4 +1,7 @@
-@_exported import PureJson
+import PureJson
+
+// Exporting type w/o forcing import
+public typealias Json = PureJson.Json
 
 extension Json {
     public init(_ value: Int) {
