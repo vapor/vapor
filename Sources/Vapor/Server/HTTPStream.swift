@@ -113,8 +113,9 @@ extension HTTPStream {
         let header: HTTPStreamHeader = try receive()
         let requestLine = header.requestLine
 
+
         let data: Data
-        if let length = header.contentLength {
+        if let length = header.contentLength where length > 0 {
             data = try receive(upTo: length)
         } else {
             data = []
