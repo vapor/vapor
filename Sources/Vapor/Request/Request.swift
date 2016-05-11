@@ -72,7 +72,8 @@ extension Request {
             let token = pair.split(separator: "=", maxSplits: 1)
             if token.count == 2 {
                 let key = String(validatingUTF8: token[0]) ?? ""
-                let value = String(validatingUTF8: token[1]) ?? ""
+                var value = String(validatingUTF8: token[1]) ?? ""
+                value = (try? String(percentEncoded: value)) ?? ""
                 formEncoded[key] = value
             }
         }
