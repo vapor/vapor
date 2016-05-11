@@ -34,7 +34,7 @@ If you find a **security vulnerability**, please contact [tanner@qutheory.io](ta
 
 Our goal is to create a safe and empowering environment for anyone who decides to use or contribute to Vapor. Please help us make the community a better place by abiding to this [Code of Conduct](https://github.com/qutheory/vapor/blob/master/CODE_OF_CONDUCT.md) during your interactions surrounding this project. 
 
-## ⚙ Compatibility
+## 🔧 Compatibility
 
 Vapor has been tested on OS X 10.11, Ubuntu 14.04, and Ubuntu 15.10. 
 
@@ -46,6 +46,6 @@ Our homepage [http://qutheory.io](http://qutheory.io) is currently running using
 This is a work in progress, so *do not* rely on this for anything important. And pull requests are welcome!
 
 
-## 👥Authors
+## 👥 Authors
 
 Made by [Tanner Nelson](https://twitter.com/tanner0101), [Logan Wright](https://twitter.com/logmaestro), and the hundreds of members of the Qutheory community.
