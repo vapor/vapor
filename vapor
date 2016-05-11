@@ -13,8 +13,8 @@ class Vapor {
     /// True if the --release flag was passed
     var release = false
 
-	/// True if the --without-git flag was passed
-	var withoutGit = false
+    /// Enables more detailed logs
+    var verbose = false
 
     /// Any arguments starting with --
     var flags: [String]
@@ -33,8 +33,9 @@ class Vapor {
             if argument.characters.first == "-" {
                 if argument == "--release" {
                     release = true
-                } else if argument == "--without-git" {
-                    withoutGit = true
+                } else if argument == "--verbose" {
+                    verbose = true
+                    flags.append(argument)
                 } else {
                     flags.append(argument)
                 }
@@ -99,6 +100,7 @@ class Vapor {
 
     enum Error: ErrorProtocol {
         case System(Int32)
+        case Cancelled
     }
 
     /**
@@ -143,7 +145,9 @@ class Vapor {
     func run(_ command: String) throws {
         let result = system(command)
 
-        if result != 0 {
+        if result == 2 {
+            throw Error.Cancelled
+        } else if result != 0 {
             throw Error.System(result)
         }
     }
@@ -171,6 +175,7 @@ class Vapor {
         - parameter message: Error message to print
     */
     func fail(_ message: String) {
+        print()
         print("Error: \(message)")
         exit(1)
     }
@@ -190,18 +195,20 @@ class Vapor {
     */
     func build() {
         do {
-            var buildFlags = ""
+            var buildFlags = flags.joined(separator: " ")
             if release {
-                buildFlags = "-c release"
+                buildFlags += " -c release"
             }
             try run("swift build \(buildFlags)")
+        } catch Error.Cancelled {
+            fail("Build cancelled.")
         } catch {
             print()
             print("Usage: vapor build")
             print("Make sure you are running Apple Swift version 3.0.")
             print("Vapor only supports the latest snapshot.")
             print("Run swift --version to check your version.")
-            print()
+
             fail("Could not build project.")
         }
     }
@@ -222,12 +229,10 @@ class Vapor {
             
             let flagString = flags.joined(separator: " ")
             try run(".build/\(folder)/\(name) \(flagString)")
-        } catch Error.System(let result) {
-            if result != 2 {
-                fail("Could not run project")
-            }
+        } catch Error.Cancelled {
+            fail("Run cancelled.")
         } catch {
-            fail("Unknown error")
+            fail("Could not run project.")
         }
     }
 
@@ -242,16 +247,15 @@ class Vapor {
         }
         let name = arguments[2]
 
+        let wgetArgs = verbose ? "" : "-q"
+        let tarArgs = verbose ? "v" : ""
+
         do {
             let escapedName = "\"\(name)\"" // FIX: Doesn’t support names with quotes
             try run("mkdir \(escapedName)")
-            try run("curl -L https://github.com/qutheory/vapor-example/archive/master.tar.gz > \(escapedName)/vapor-example.tar.gz")
-            try run("tar -xzf \(escapedName)/vapor-example.tar.gz --strip-components=1 --directory \(escapedName)")
-            let _ = try? run("rm \(escapedName)/vapor-example.tar.gz")
-
-            if withoutGit == false {
-                try run("git init \(escapedName)")
-            }
+            try run("wget \(wgetArgs) https://github.com/qutheory/vapor-example/archive/master.tar.gz -O \(escapedName)/vapor-example.tar.gz")
+            try run("tar -\(tarArgs)xzf \(escapedName)/vapor-example.tar.gz --strip-components=1 --directory \(escapedName)")
+            try run("rm \(escapedName)/vapor-example.tar.gz")
 
             print()
             print("Project \"\(name)\" has been created.")
@@ -267,8 +271,12 @@ class Vapor {
         in the bin from the latest version online.
     */
     func selfUpdate() {
+        let name = "vapor-cli.tmp"
+        let flags = verbose ? "" : "-q"
+
         do {
-            try run("wget cli.qutheory.io -O vapor")
+            print("Downloading...")
+            try run("wget \(flags) cli.qutheory.io -O \(name)")
         } catch {
             print("Could not download Vapor CLI.")
             print("Make sure you have 'wget' installed.")
@@ -276,8 +284,8 @@ class Vapor {
         }
 
         do {
-            try run("chmod +x vapor")
-            try run("sudo mv vapor /usr/local/bin")
+            try run("chmod +x \(name)")
+            try run("sudo mv \(name) /usr/local/bin/vapor")
         } catch {
             print("Could not move Vapor CLI to bin.")
             print("Try using 'sudo'.")
@@ -325,8 +333,7 @@ class Vapor {
         print("  --release")
         print("    Builds and runs with optimizations")
         print()
-        print("  --without-git")
-        print("    Skips initialization of an empty Git repository")
+        print("  --verbose")
         print()
         print("Options:")
         print("  build [file1, file2, ...]")
