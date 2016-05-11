@@ -204,7 +204,6 @@ class Vapor {
             fail("Build cancelled.")
         } catch {
             print()
-            print("Usage: vapor build")
             print("Make sure you are running Apple Swift version 3.0.")
             print("Vapor only supports the latest snapshot.")
             print("Run swift --version to check your version.")
