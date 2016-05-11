@@ -9,8 +9,8 @@ let package = Package(
         //Provides critical String functions Foundation is missing on Linux
         .Package(url: "https://github.com/Zewo/String.git", majorVersion: 0, minor: 7),
 
-        //Parses and serializes JSON
-        .Package(url: "https://github.com/Zewo/JSON.git", majorVersion: 0, minor: 7),
+        //Parses and serializes JSON - using fork until update core library
+        .Package(url: "https://github.com/qutheory/pure-json", majorVersion: 2),
 
         //Swift wrapper around Sockets, used for built-in HTTP server
         .Package(url: "https://github.com/ketzusaka/Hummingbird.git", majorVersion: 1, minor: 7),
