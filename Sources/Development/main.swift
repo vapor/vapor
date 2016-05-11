@@ -169,21 +169,24 @@ class Name: ValidationSuite {
 
 class Employee {
     var name: Valid<Name>
+    var email: Valid<Email>
 
     init(request: Request) throws {
         name = try request.data["name"].validated()
+        email = try request.data["email"].validated()
     }
 }
 
 extension Employee: JsonRepresentable {
     func makeJson() -> Json {
         return Json([
-            "name": name.value
+            "name": name.value,
+            "email": email.value
         ])
     }
 }
 
-app.get("validation") { request in
+app.post("validation") { request in
     let employee = try Employee(request: request)
     return employee
 }
