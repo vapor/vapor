@@ -54,7 +54,7 @@ extension Application {
 
         //POST /entities
         self.post(path) { request in
-            return try controllerFactory().index(request)
+            return try controllerFactory().store(request)
         }
 
         //GET /entities/:id
