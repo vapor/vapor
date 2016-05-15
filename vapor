@@ -278,6 +278,7 @@ class Vapor {
             print("Project \"\(name)\" has been created.")
             print("Enjoy!")
             print()
+            system("open \(escapedName)/VaporApp.xcodeproj")
         } catch {
             fail("Could not clone repository")
         }
