@@ -259,14 +259,21 @@ class Vapor {
         do {
             let escapedName = "\"\(name)\"" // FIX: Doesn’t support names with quotes
             try run("mkdir \(escapedName)")
+
+            guard commandExists("wget") else {
+              fail("wget required to create new project. Recommended to install through Homebrew: http://brew.sh/")
+            }
             try run("wget \(wgetArgs) https://github.com/qutheory/vapor-example/archive/master.tar.gz -O \(escapedName)/vapor-example.tar.gz")
             try run("tar -\(tarArgs)xzf \(escapedName)/vapor-example.tar.gz --strip-components=1 --directory \(escapedName)")
             try run("rm \(escapedName)/vapor-example.tar.gz")
 
-            print("Initializing git repository if necessary")
-            system("git init \(escapedName)")
-            try run("cd \(escapedName) && git add . && git commit -m \"initial vapor project setup\"")
-            print()
+            if commandExists("git") {
+              print("Initializing git repository if necessary")
+              system("git init \(escapedName)")
+              system("cd \(escapedName) && git add . && git commit -m \"initial vapor project setup\"")
+              print()
+            }
+
             print()
             print("Project \"\(name)\" has been created.")
             print("Enjoy!")
@@ -439,6 +446,13 @@ extension Vapor {
   }
 
   func setupHeroku() {
+    guard commandExists("git") else {
+      fail("git is required to setup heroku, make sure it's installed")
+    }
+    guard commandExists("heroku") else {
+      fail("heroku cli and logged in user is required: https://toolbelt.heroku.com/")
+    }
+
     if !gitHistoryIsClean() {
       print("Found Uncommitted Changes")
       print("Setting up heroku requires adding a commit to the repository")
@@ -500,9 +514,13 @@ extension Vapor {
     print("Pushing to heroku ... this could take a while")
     print()
 
-    system("git add .")
-    system("git commit -m \"setting up heroku\"")
-    system("git push heroku master")
+    // do {
+      system("git add .")
+      system("git commit -m \"setting up heroku\"")
+      system("git push heroku master")
+    // } catch {
+    //   fail("unable to push to heroku: \(error)")
+    // }
 
     print("spinning up dynos ...")
     do {
@@ -510,6 +528,10 @@ extension Vapor {
     } catch {
       fail("unable to spin up dynos")
     }
+  }
+
+  func commandExists(_ command: String) -> Bool {
+    return system("hash \(command) 2>/dev/null") == 0
   }
 }
 
