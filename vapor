@@ -514,13 +514,9 @@ extension Vapor {
     print("Pushing to heroku ... this could take a while")
     print()
 
-    // do {
-      system("git add .")
-      system("git commit -m \"setting up heroku\"")
-      system("git push heroku master")
-    // } catch {
-    //   fail("unable to push to heroku: \(error)")
-    // }
+    system("git add .")
+    system("git commit -m \"setting up heroku\"")
+    system("git push heroku master")
 
     print("spinning up dynos ...")
     do {
