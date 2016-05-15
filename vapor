@@ -266,7 +266,8 @@ class Vapor {
             try run("wget \(wgetArgs) https://github.com/qutheory/vapor-example/archive/master.tar.gz -O \(escapedName)/vapor-example.tar.gz")
             try run("tar -\(tarArgs)xzf \(escapedName)/vapor-example.tar.gz --strip-components=1 --directory \(escapedName)")
             try run("rm \(escapedName)/vapor-example.tar.gz")
-
+            try run("cd \(escapedName) && swift build -X")
+            
             if commandExists("git") {
               print("Initializing git repository if necessary")
               system("git init \(escapedName)")
