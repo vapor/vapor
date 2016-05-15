@@ -12,10 +12,10 @@ import XCTest
 
 final class TestPerformanceStream: HTTPListenerStream {
     var buffer: Data
-    var handler: (Data -> Void)
+    var handler: ((Data) -> Void)
     var closed: Bool = false
 
-    init(request: Request, handler: (Data -> Void)) {
+    init(request: Request, handler: ((Data) -> Void)) {
         var data = "\(request.method) \(request.uri.path ?? "/") HTTP/1.1\r\n"
         data += "Accept: /*/\r\n"
         data += "\r\n"
@@ -33,7 +33,7 @@ final class TestPerformanceStream: HTTPListenerStream {
         fatalError("Unsupported")
     }
 
-    func accept(max connectionCount: Int, handler: (HTTPStream -> Void)) throws {
+    func accept(max connectionCount: Int, handler: ((HTTPStream) -> Void)) throws {
         throw Error.Unsupported
     }
 
@@ -83,7 +83,7 @@ final class TestPerformanceStream: HTTPListenerStream {
 
 class PerformanceTests: XCTestCase {
 
-    static var allTests: [(String, PerformanceTests -> () throws -> Void)] {
+    static var allTests: [(String, (PerformanceTests) -> () throws -> Void)] {
         return [
             ("testApplication", testApplication)
         ]

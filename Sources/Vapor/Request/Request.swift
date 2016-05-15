@@ -134,7 +134,7 @@ extension Request {
     }
 
     public struct Handler: Responder {
-        public typealias Closure = Request throws -> Response
+        public typealias Closure = (Request) throws -> Response
 
         let closure: Closure
 

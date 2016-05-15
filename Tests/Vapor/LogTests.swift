@@ -23,7 +23,7 @@ private class DummyLogger: LogDriver {
 
 class LogTests: XCTestCase {
 
-    static var allTests: [(String, LogTests -> () throws -> Void)] {
+    static var allTests: [(String, (LogTests) -> () throws -> Void)] {
         return [
             ("testCanOverrideDefaultLogger", testCanOverrideDefaultLogger),
             ("testAllLevelsEnabledByDefault", testAllLevelsEnabledByDefault),

@@ -12,7 +12,7 @@ import XCTest
 
 class RouterTests: XCTestCase {
 
-    static var allTests: [(String, RouterTests -> () throws -> Void)] {
+    static var allTests: [(String, (RouterTests) -> () throws -> Void)] {
         return [
            ("testSingleHostRouting", testSingleHostRouting),
            ("testMultipleHostsRouting", testMultipleHostsRouting),

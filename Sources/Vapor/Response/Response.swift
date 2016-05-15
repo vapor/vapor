@@ -77,7 +77,7 @@ extension Response {
         self.init(status: .movedPermanently, headers: headers, body: [])
     }
 
-    public init(async closure: Stream throws -> Void) {
+    public init(async closure: ((Stream) throws -> Void)) {
         self.init(status: .ok, headers: [:], body: closure)
     }
 
