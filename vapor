@@ -272,6 +272,7 @@ class Vapor {
     func selfUpdate() {
         let name = "vapor-cli.tmp"
         let flags = verbose ? "" : "-q"
+        let installLoc = arguments[0]
 
         do {
             print("Downloading...")
@@ -284,11 +285,16 @@ class Vapor {
 
         do {
             try run("chmod +x \(name)")
-            try run("sudo mv \(name) /usr/local/bin/vapor")
+            try run("mv \(name) \(installLoc)")
         } catch {
-            print("Could not move Vapor CLI to bin.")
-            print("Try using 'sudo'.")
-            return
+            print("Could not move Vapor CLI to install location.")
+            print("Trying with 'sudo'.")
+            do {
+                try run("sudo mv \(name) \(installLoc)")
+            } catch {
+                print("Still could not move Vapor CLI to install location, giving up.")
+                return
+            }
         }
 
         print("Vapor CLI updated.")
