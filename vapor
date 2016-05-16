@@ -310,9 +310,16 @@ class Vapor {
 
         do {
             try run("swift build --generate-xcodeproj")
+        } catch Error.System(let result) {
+            if result == 256 {
+                print()
+                print("Clean the project and try again.")
+                print("Run: vapor clean")
+            }
+            fail("Could not generate Xcode Project.")
         } catch {
-            print("Could not generate Xcode Project.")
-            return
+            print("other")
+            fail("Could not generate Xcode Project.")
         }
 
         print("Opening Xcode...")
@@ -320,8 +327,7 @@ class Vapor {
         do {
             try run("open *.xcodeproj")
         } catch {
-            print("Could not open Xcode Project.")
-            return
+            fail("Could not open Xcode Project.")
         }
     }
     #endif
