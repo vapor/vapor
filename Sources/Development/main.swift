@@ -191,6 +191,15 @@ app.post("validation") { request in
     return employee
 }
 
+//MARK: WebSocket
+let wss = WebSocketServer() { sock in
+    sock.onText { text in
+        try sock.send(text)
+    }
+}
+
+app.get("echo", handler: wss.respond)
+
 //MARK: Middleware
 
 app.middleware(AuthMiddleware()) {
