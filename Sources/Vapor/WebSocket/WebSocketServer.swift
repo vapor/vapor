@@ -101,3 +101,7 @@ public extension Message {
     }
     
 }
+
+func +=(lhs: inout Data, rhs: Data) {
+    lhs = Data(lhs.bytes + rhs.bytes)
+}
