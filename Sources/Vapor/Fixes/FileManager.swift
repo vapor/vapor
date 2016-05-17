@@ -48,13 +48,13 @@ class FileManager {
     static func expandPath(_ path: String) throws -> String {
         let result = realpath(path, nil)
 
-        guard result != nil else {
+        guard let r = result else {
             throw Error.Unreadable
         }
 
         defer { free(result) }
 
-        let cstring = String(validatingUTF8: result)
+        let cstring = String(validatingUTF8: r)
 
         if let expanded = cstring {
             return expanded
