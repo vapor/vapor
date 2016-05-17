@@ -1,3 +1,6 @@
+import S4
+import MediaType
+
 extension Request {
     ///URL parameters (ex: `:id`).
     public var parameters: [String: String] {
@@ -64,8 +67,73 @@ extension Request {
 
         return cookies
     }
+    
+    private func parseMultipartForm(_ body: Data, boundary: String) -> [String: MultiPart] {
+        let boundaryString = "--" + boundary
+        let boundary = Data(boundaryString.utf8)
 
-    private func parseFormEncoded(_ string: String) -> [String: String] {
+        let clrf = Data("\r\n".utf8)
+        var form = [String: MultiPart]()
+        
+        for part in body.split(separatedBy: boundary) {
+            let headBody = part.split(separatedBy: clrf)
+            var endOfHeaders = false
+            var storage = [String: String]()
+
+            for line in headBody where !endOfHeaders {
+                guard line.count > 0 else {
+                    endOfHeaders = true
+                    continue
+                }
+                
+                let header = String(Data(line))
+
+                var headerParts = header.split(separator: ";")
+                
+                guard let base = headerParts.first else {
+                    continue
+                }
+
+                let baseParts = base.split(separator: ":", maxSplits: 1)
+                
+                guard baseParts.count == 2 else {
+                    continue
+                }
+
+                headerParts.remove(at: 0)
+                storage[baseParts[0].trim()] = baseParts[1].trim()
+        
+                // remaining parts
+                for part in headerParts {
+                    let subParts = part.split(separator: "=", maxSplits: 1)
+                    
+                    guard subParts.count == 2 else {
+                        continue
+                    }
+                    
+                    storage[subParts[0].trim()] = subParts[1].trim([" ", "\t", "\r", "\n", "\"", "'"])
+                }
+            }
+
+            guard let value = headBody.last where headBody.count >= 3 && headBody[headBody.count - 2].count == 0 else {
+                continue
+            }
+            
+            guard let name = storage["name"] else {
+                continue
+            }
+
+            if let contentType = storage["Content-Type"], let mediaType = try? MediaType(string: contentType) {
+                form[name] = .file(mediaType, Data(value))
+            } else {
+                form[name] = .input(String(value))
+            }
+        }
+    
+        return form
+    }
+
+    private func parseUrlEncodedForm(_ string: String) -> [String: String] {
         var formEncoded: [String: String] = [:]
 
         for pair in string.split(byString: "&") {
@@ -105,11 +173,25 @@ extension Request {
             } catch {
                 Log.warning("Could not parse JSON: \(error)")
             }
+        } else if headers["Content-Type"].first?.index(of: "multipart/form-data") != nil {
+            guard let boundaryPieces = headers["Content-Type"].first?.split(byString: "boundary=") where boundaryPieces.count == 2 else {
+                Log.warning("Invalid boundary")
+                return Request.Content(query: queries, json: json, formEncoded: formEncoded)
+            }
+            
+            let boundary = boundaryPieces[1]
+            
+            do {
+                let data = try mutableBody.becomeBuffer()
+                self.parseMultipartForm(data, boundary: boundary)
+            } catch {
+                Log.warning("Could not parse JSON: \(error)")
+            }
         } else {
             do {
                 let data = try mutableBody.becomeBuffer()
                 let string = try String(data: data)
-                formEncoded = parseFormEncoded(string)
+                formEncoded = parseUrlEncodedForm(string)
             } catch {
                 Log.warning("Could not parse form encoded data: \(error)")
             }
@@ -151,4 +233,38 @@ extension Request {
             return try closure(request)
         }
     }
+}
+
+extension Data {
+    func split(separatedBy separator: Data) -> [Data] {
+        var ranges = [(from: Int, to: Int)]()
+        var parts = [Data]()
+        
+        // Find occurences of boundries
+        for (index, element) in self.enumerated() {
+            guard element == separator.first && self.count >= index + separator.count else {
+                continue
+            }
+            
+            guard self[index + separator.count - 1] == separator.bytes.last && Data(self[index..<(index+separator.count)]) == separator else {
+                continue
+            }
+            
+            ranges.append((index, index + separator.count))
+        }
+        
+        for (pos, range) in ranges.enumerated() where pos < ranges.count - 1 {
+            // Take the data inbetween this and the next boundry
+            let nextRange = ranges[pos + 1]
+            
+            parts.append(Data(self[range.to..<nextRange.from]))
+        }
+        
+        return parts
+    }
+}
+
+internal enum MultiPart {
+    case file(MediaType, Data)
+    case input(String)
 }
