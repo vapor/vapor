@@ -18,24 +18,25 @@
     sensitive information does not get added to version control.
 */
 public class Config {
+
+    public enum Error: ErrorProtocol {
+        case noFileFound
+        case noValueFound
+    }
+
     /**
         The internal store of configuration options
         backed by `Json`
      */
-    private var repository: [String: Json]
-
-    public enum Error: ErrorProtocol {
-        case NoFileFound
-        case NoValueFound
-    }
+    private var seed: [String: Json]
 
     /**
         Creates an instance of `Config` with an
         optional starting repository of information.
         The application is required to detect environment.
     */
-    public init(repository: [String: Json] = [:], application: Application? = nil) {
-        self.repository = repository
+    public init(seed: [String: Json] = [:], application: Application? = nil) {
+        self.seed = seed
 
         if let application = application {
             populate(application)
@@ -55,8 +56,8 @@ public class Config {
      */
     public func get(_ keyPath: String) throws -> Node {
         var keys = keyPath.keys
-        guard let json: Json = repository[keys.removeFirst()] else {
-            throw Error.NoFileFound
+        guard let json: Json = seed[keys.removeFirst()] else {
+            throw Error.noFileFound
         }
 
         var node: Node? = json
@@ -66,7 +67,7 @@ public class Config {
         }
 
         guard let result = node else {
-            throw Error.NoValueFound
+            throw Error.noValueFound
         }
 
         return result
@@ -98,9 +99,9 @@ public class Config {
         let group = keys.removeFirst()
 
         if keys.count == 0 {
-            repository[group] = value
+            seed[group] = value
         } else {
-            repository[group]?.set(value, keys: keyPath.keys)
+            seed[group]?.set(value, keys: keyPath.keys)
         }
     }
 
@@ -124,7 +125,6 @@ public class Config {
     }
 
 
-
     /**
         Attempts to populate the internal configuration store
      */
@@ -142,6 +142,7 @@ public class Config {
                 try populateConfigFiles(&files, in: path)
             }
         }
+
         // Loop through files and merge config upwards so the
         // environment always overrides the base config
         //
@@ -159,10 +160,10 @@ public class Config {
                 let bytes = try FileManager.readBytesFromFile(file)
                 let json = try Json(Data(bytes))
 
-                if repository[group] == nil {
-                    repository[group] = json
+                if seed[group] == nil {
+                    seed[group] = json
                 } else {
-                    repository[group]?.merge(with: json)
+                    seed[group]?.merge(with: json)
                 }
             }
         }
@@ -179,10 +180,10 @@ public class Config {
                 }
 
                 for (group, json) in object {
-                    if repository[group] == nil {
-                        repository[group] = json
+                    if seed[group] == nil {
+                        seed[group] = json
                     } else {
-                        repository[group]?.merge(with: json)
+                        seed[group]?.merge(with: json)
                     }
                 }
             }
