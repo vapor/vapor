@@ -1,4 +1,5 @@
 import Vapor
+import S4
 
 let app = Application()
 
@@ -189,6 +190,84 @@ extension Employee: JsonRepresentable {
 app.post("validation") { request in
     let employee = try Employee(request: request)
     return employee
+}
+
+//MARK: Forms
+
+app.get("multipart-image") { _ in
+    var response = "<form method='post' action='/multipart-image/' ENCTYPE='multipart/form-data'>"
+
+    response += "<input type='text' name='name' />"
+    response += "<input type='file' name='image' accept='image/*' />"
+    response += "<button>Submit</button>"
+    response += "</form>"
+
+    return Response(status: .ok, html: response)
+}
+
+app.post("multipart-image") { request in
+    guard let form = request.data.formEncoded else {
+        return "No form submited"
+    }
+
+    guard let namePart = form["name"]?.input else {
+        return "No name provided"
+    }
+
+    guard let image = form["image"]?.file else {
+        return "No image provided"
+    }
+
+    var headers: Headers = [:]
+    
+    if let mediaType = image.type {
+        let header = Header([mediaType.type + "/" + mediaType.subtype])
+        headers["Content-Type"] = header
+    }
+
+    return Response(status: .ok, headers: headers, body: image.data)
+}
+
+app.get("multifile") { _ in
+    var response = "<form method='post' action='/multifile/' ENCTYPE='multipart/form-data'>"
+    
+    response += "<input type='text' name='response' />"
+    response += "<input type='file' name='files' multiple='multiple' />"
+    response += "<button>Submit</button>"
+    response += "</form>"
+    
+    return Response(status: .ok, html: response)
+}
+
+app.post("multifile") { request in
+    guard let form = request.data.formEncoded else {
+        return "No form submited"
+    }
+    
+    print(form["response"]?.input)
+
+    guard let response = form["response"]?.input, let number = Int(response) else {
+        return "No response number provided"
+    }
+
+    guard let files = form["files"]?.files else {
+        return "No image provided"
+    }
+
+    guard files.count > number else {
+        return "Response number doesn't exist"
+    }
+
+    let file = files[number]
+
+    var headers: Headers = [:]
+    
+    if let mediaType = file.type {
+        let header = Header([mediaType.type + "/" + mediaType.subtype])
+        headers["Content-Type"] = header
+    }
+
+    return Response(status: .ok, headers: headers, body: file.data)
 }
 
 //MARK: Middleware
