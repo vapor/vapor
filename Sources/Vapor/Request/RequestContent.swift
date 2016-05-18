@@ -11,6 +11,7 @@ public extension Request {
         case files([(name: String?, type: MediaType?, data: Data)])
         case file(name: String?, type: MediaType?, data: Data)
         case input(String)
+        case inputArray([String])
         
         public var file: (name: String?, type: MediaType?, data: Data)? {
             if case .file(let name, let media, let data) = self {
@@ -33,6 +34,14 @@ public extension Request {
                 return string
             }
 
+            return nil
+        }
+
+        public var inputArray: [String]? {
+            if case .inputArray(let array) = self {
+                return array
+            }
+            
             return nil
         }
         

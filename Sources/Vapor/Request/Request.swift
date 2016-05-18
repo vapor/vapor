@@ -163,6 +163,18 @@ extension Request {
                     } else {
                         form[name] = .file(name: new.name, type: new.type, data: new.data)
                     }
+                } else {
+                    var new = String(body)
+                    new.replace(string: "\r\n", with: "")
+
+                    if let o = form[name], case .input(let old) = o {
+                        form[name] = .inputArray([old, new])
+                    } else if let o = form[name], case .inputArray(var old) = o {
+                        old.append(new)
+                        form[name] = .inputArray(old)
+                    } else {
+                        form[name] = .input(new)
+                    }
                 }
 
             // If it's a new key

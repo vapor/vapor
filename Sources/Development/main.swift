@@ -244,8 +244,6 @@ app.post("multifile") { request in
         return "No form submited"
     }
     
-    print(form["response"]?.input)
-
     guard let response = form["response"]?.input, let number = Int(response) else {
         return "No response number provided"
     }
@@ -268,6 +266,41 @@ app.post("multifile") { request in
     }
 
     return Response(status: .ok, headers: headers, body: file.data)
+}
+
+app.get("options") { _ in
+    var response = "<form method='post' action='/options/' ENCTYPE='multipart/form-data'>"
+    
+    response += "<select name='options' multiple='multiple'>"
+    response += "<option value='0'>0</option>"
+    response += "<option value='1'>1</option>"
+    response += "<option value='2'>2</option>"
+    response += "<option value='3'>3</option>"
+    response += "<option value='4'>4</option>"
+    response += "<option value='5'>5</option>"
+    response += "<option value='6'>6</option>"
+    response += "<option value='7'>7</option>"
+    response += "<option value='8'>8</option>"
+    response += "<option value='9'>9</option>"
+    response += "</select>"
+    response += "<button>Submit</button>"
+    response += "</form>"
+    
+    return Response(status: .ok, html: response)
+}
+
+app.post("options") { request in
+    guard let form = request.data.formEncoded else {
+        return "No form submited"
+    }
+    
+    var response = ""
+    
+    for string in form["options"]?.inputArray ?? [] {
+        response += "You have selected \"\(string)\"\n"
+    }
+    
+    return response
 }
 
 //MARK: Middleware
