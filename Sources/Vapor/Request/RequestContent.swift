@@ -1,9 +1,103 @@
+import MediaType
+
 public protocol RequestContentSubscript {}
 
 extension String: RequestContentSubscript { }
 extension Int: RequestContentSubscript {}
 
 public extension Request {
+
+    public enum MultiPart: Node {
+        case files([(name: String?, type: MediaType?, data: Data)])
+        case file(name: String?, type: MediaType?, data: Data)
+        case input(String)
+        
+        public var file: (name: String?, type: MediaType?, data: Data)? {
+            if case .file(let name, let media, let data) = self {
+                return (name, media, data)
+            }
+
+            return nil
+        }
+
+        public var files: [(name: String?, type: MediaType?, data: Data)]? {
+            if case .files(let files) = self {
+                return files
+            }
+
+            return nil
+        }
+
+        public var input: String? {
+            if case .input(let string) = self {
+                return string
+            }
+
+            return nil
+        }
+        
+        public var isNull: Bool {
+            return self.input == "null"
+        }
+        
+        public var bool: Bool? {
+            if case .input(let bool) = self {
+                return Bool(bool)
+            }
+            
+            return nil
+        }
+        
+        public var int: Int? {
+            guard let double = double else { return nil }
+            return Int(double)
+        }
+        
+        public var uint: UInt? {
+            guard let double = double else { return nil }
+            return UInt(double)
+        }
+        
+        public var float: Float? {
+            guard let double = double else { return nil }
+            return Float(double)
+        }
+        
+        public var double: Double? {
+            if case .input(let d) = self {
+                return Double(d)
+            }
+            
+            return nil
+        }
+        
+        public var string: String? {
+            return self.input
+        }
+        
+        public var array: [Node]? {
+            guard case .input(let a) = self else {
+                return nil
+            }
+            
+            return [a]
+//            return self
+//                .split(byString: ",")
+//                .map { $0 as Node }
+        }
+        
+        public var object: [String : Node]? {
+            return nil
+        }
+        
+        public var json: Json? {
+            if case .input(let j) = self {
+                return Json(j)
+            }
+            
+            return nil
+        }
+    }
 
     /**
         The data received from the request in json body or url query
@@ -12,9 +106,9 @@ public extension Request {
         // MARK: Initialization
         public let query: [String: String]
         public let json: Json?
-        public let formEncoded: [String: String]?
+        public let formEncoded: [String: MultiPart]?
 
-        internal init(query: [String: String], json: Json?, formEncoded: [String: String]?) {
+        internal init(query: [String: String], json: Json?, formEncoded: [String: MultiPart]?) {
             self.query = query
             self.json = json
             self.formEncoded = formEncoded

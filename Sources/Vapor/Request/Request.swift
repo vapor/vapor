@@ -75,66 +75,125 @@ extension Request {
         let clrf = Data("\r\n".utf8)
         var form = [String: MultiPart]()
         
-        for part in body.split(separatedBy: boundary) {
-            let headBody = part.split(separatedBy: clrf)
-            var endOfHeaders = false
+        // Separate by boundry and loop over the "multi"-parts
+        for part in body.split(separator: boundary, excludingFirst: true, excludingLast: true) {
+            let headBody = part.split(separator: clrf+clrf)
             var storage = [String: String]()
 
-            for line in headBody where !endOfHeaders {
-                guard line.count > 0 else {
-                    endOfHeaders = true
-                    continue
-                }
-                
-                let header = String(Data(line))
+            // Separate the head and body
+            guard headBody.count == 2, let head = headBody.first, let body = headBody.last else {
+                continue
+            }
 
+            // Separate the individual headers
+            let headers = head.split(separator: clrf)
+
+            for line in headers {
+                // Make the header a String
+                var header = String(line)
+                header.replace(string: "\r\n", with: "")
+                
+                // Split the header parts into an array
                 var headerParts = header.split(separator: ";")
                 
+                // The header has a base. Like "Content-Type: text/html; other=3" would have "Content-Type: text/html;
                 guard let base = headerParts.first else {
                     continue
                 }
-
+                
+                // The base always has two parts. Key + Value
                 let baseParts = base.split(separator: ":", maxSplits: 1)
                 
+                // Check that the count is right
                 guard baseParts.count == 2 else {
                     continue
                 }
 
-                headerParts.remove(at: 0)
-                storage[baseParts[0].trim()] = baseParts[1].trim()
+                // Add the header to the storage
+                storage[baseParts[0].trim().lowercased()] = baseParts[1].trim()
         
+                // Remove the header base so we can parse the rest
+                headerParts.remove(at: 0)
+                
                 // remaining parts
                 for part in headerParts {
+                    // Split key-value
                     let subParts = part.split(separator: "=", maxSplits: 1)
                     
+                    // There's a key AND a Value. No more, no less
                     guard subParts.count == 2 else {
                         continue
                     }
                     
+                    // Strip all unnecessary characters
                     storage[subParts[0].trim()] = subParts[1].trim([" ", "\t", "\r", "\n", "\"", "'"])
                 }
             }
-
-            guard let value = headBody.last where headBody.count >= 3 && headBody[headBody.count - 2].count == 0 else {
-                continue
-            }
             
+            // There's always a name for a field. Otherwise we can't store it under a key
             guard let name = storage["name"] else {
                 continue
             }
 
-            if let contentType = storage["Content-Type"], let mediaType = try? MediaType(string: contentType) {
-                form[name] = .file(mediaType, Data(value))
+            // If this key already exists it needs to be an array
+            if form.keys.contains(name) {
+                // If it's a file.. there are multiple files being uploaded under the same key
+                if storage.keys.contains("content-type") || storage.keys.contains("filename") {
+                    var mediaType: MediaType? = nil
+                    
+                    // Take the content-type if it's there
+                    if let contentType = storage["content-type"] {
+                        mediaType = try? MediaType(string: contentType)
+                    }
+                    
+                    // Create the suple to be added to the array
+                    let new = (name: storage["filename"], type: mediaType, data: body)
+                    
+                    // If there is only one file. Make it a file array
+                    if let o = form[name], case .file(let old) = o {
+                        form[name] = .files([old, new])
+                        
+                    // If there's a file array. Append it
+                    } else if let o = form[name], case .files(var old) = o {
+                        old.append(new)
+                        form[name] = .files(old)
+                        
+                    // If it's neither.. It's a duplicate key. This means we're going to be ditched or overriding the existing key
+                    // Since we're later, we're overriding
+                    } else {
+                        form[name] = .file(name: new.name, type: new.type, data: new.data)
+                    }
+                }
+
+            // If it's a new key
             } else {
-                form[name] = .input(String(value))
+                // Ensure it's a file. There's no proper way of detecting this if there's no filename and no content-type
+                if storage.keys.contains("content-type") || storage.keys.contains("filename") {
+                    var mediaType: MediaType? = nil
+                    
+                    // Take the optional content type and convert it to a MediaType
+                    if let contentType = storage["content-type"] {
+                        mediaType = try? MediaType(string: contentType)
+                    }
+
+                    // Store the file in the form
+                    form[name] = .file(name: storage["filename"], type: mediaType, data: body)
+                    
+                // If it's not a file (or not for sure) we're storing the information String
+                } else {
+                    var input = String(body)
+                    input.replace(string: "\r\n", with: "")
+                    
+                    form[name] = .input(input)
+                }
             }
         }
     
         return form
     }
 
-    private func parseUrlEncodedForm(_ string: String) -> [String: String] {
-        var formEncoded: [String: String] = [:]
+    private func parseURLEncodedForm(_ string: String) -> [String: MultiPart] {
+        var formEncoded: [String: MultiPart] = [:]
 
         for pair in string.split(byString: "&") {
             let token = pair.split(separator: "=", maxSplits: 1)
@@ -142,10 +201,10 @@ extension Request {
                 let key = String(validatingUTF8: token[0]) ?? ""
                 var value = String(validatingUTF8: token[1]) ?? ""
                 value = (try? String(percentEncoded: value)) ?? ""
-                formEncoded[key] = value
+                formEncoded[key] = .input(value)
             }
         }
-
+        
         return formEncoded
     }
 
@@ -163,7 +222,7 @@ extension Request {
         }
 
         var json: Json?
-        var formEncoded: [String: String]?
+        var formEncoded: [String: MultiPart]?
         var mutableBody = body
 
         if headers["Content-Type"].first == "application/json" {
@@ -173,7 +232,7 @@ extension Request {
             } catch {
                 Log.warning("Could not parse JSON: \(error)")
             }
-        } else if headers["Content-Type"].first?.index(of: "multipart/form-data") != nil {
+        } else if headers["Content-Type"].first?.range(of: "multipart/form-data") != nil {
             guard let boundaryPieces = headers["Content-Type"].first?.split(byString: "boundary=") where boundaryPieces.count == 2 else {
                 Log.warning("Invalid boundary")
                 return Request.Content(query: queries, json: json, formEncoded: formEncoded)
@@ -183,15 +242,15 @@ extension Request {
             
             do {
                 let data = try mutableBody.becomeBuffer()
-                self.parseMultipartForm(data, boundary: boundary)
+                formEncoded = self.parseMultipartForm(data, boundary: boundary)
             } catch {
-                Log.warning("Could not parse JSON: \(error)")
+                Log.warning("Could not parse multipart form: \(error)")
             }
         } else {
             do {
                 let data = try mutableBody.becomeBuffer()
                 let string = try String(data: data)
-                formEncoded = parseUrlEncodedForm(string)
+                formEncoded = parseURLEncodedForm(string)
             } catch {
                 Log.warning("Could not parse form encoded data: \(error)")
             }
@@ -236,35 +295,57 @@ extension Request {
 }
 
 extension Data {
-    func split(separatedBy separator: Data) -> [Data] {
+    func split(separator: Data, excludingFirst: Bool = false, excludingLast: Bool = false) -> [Data] {
         var ranges = [(from: Int, to: Int)]()
         var parts = [Data]()
+
+        // "\r\n\r\n\r\n".split(separator: "\r\n\r\n") would break without this because it occurs twice in the same place
+        var highestOccurence = -1
         
         // Find occurences of boundries
-        for (index, element) in self.enumerated() {
+        for (index, element) in self.enumerated() where index > highestOccurence {
+            // If this first element matches and there are enough bytes left
             guard element == separator.first && self.count >= index + separator.count else {
                 continue
             }
             
-            guard self[index + separator.count - 1] == separator.bytes.last && Data(self[index..<(index+separator.count)]) == separator else {
+            // Take the last byte of where the end of the separator would be and check it
+            guard self[index + separator.count - 1] == separator.bytes.last else {
+                continue
+            }
+
+            // Check if this range matches (put separately for efficiency)
+            guard Data(self[index..<(index+separator.count)]) == separator else {
                 continue
             }
             
+            // Append the range of the separator
             ranges.append((index, index + separator.count))
+
+            // Increase the highest occurrence to prevent a crash as described above
+            highestOccurence = index + separator.count
         }
         
-        for (pos, range) in ranges.enumerated() where pos < ranges.count - 1 {
-            // Take the data inbetween this and the next boundry
-            let nextRange = ranges[pos + 1]
-            
-            parts.append(Data(self[range.to..<nextRange.from]))
+        // The first data (before the first separator)
+        if let firstRange = ranges.first where !excludingFirst {
+            parts.append(Data(self[0..<firstRange.from]))
+        }
+        
+        // Loop over the ranges
+        for (pos, range) in ranges.enumerated() {
+            // If this is before the last separator
+            if pos < ranges.count - 1 {
+                // Take the data inbetween this and the next boundry
+                let nextRange = ranges[pos + 1]
+                
+                parts.append(Data(self[range.to..<nextRange.from]))
+
+            // If this is after the last separator and shouldn't be thrown away
+            } else if ranges[ranges.count - 1].to < self.count && !excludingLast {
+                parts.append(Data(self[range.to..<self.count]))
+            }
         }
         
         return parts
     }
-}
-
-internal enum MultiPart {
-    case file(MediaType, Data)
-    case input(String)
 }
