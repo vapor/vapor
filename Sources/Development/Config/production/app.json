@@ -1,5 +1,6 @@
 {
     "debug": false,
+    "port": 80,
 
     "nested": {
         "c": {
