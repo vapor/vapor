@@ -18,55 +18,28 @@ class ConfigTests: XCTestCase {
         return path
     }
 
-	func testSimple() {
-		let config = makeConfig(.Development, workDir: workDir)
+    func testSimple() {
+        let config = Config(workingDirectory: workDir, environment: .Development)
 		XCTAssert(config["app", "debug"].bool == true, "Config incorrectly loaded.")
 	}
 
 	func testNesting() {
-		let config = makeConfig(.Development, workDir: workDir)
+        let config = Config(workingDirectory: workDir, environment: .Development)
 		XCTAssert(config["app", "nested", "c", "true"].bool == true, "Nesting config incorrectly loaded.")
 	}
 
 	func testEnvironmentCascading() {
-		let config = makeConfig(.Production, workDir: workDir)
+        let config = Config(workingDirectory: workDir, environment: .Production)
 		XCTAssert(config["app", "debug"].bool == false, "Cascading config incorrectly loaded.")
 	}
 
 	func testEnvironmentCascadingNesting() {
-		let config = makeConfig(.Production, workDir: workDir)
+        let config = Config(workingDirectory: workDir, environment: .Production)
 		XCTAssert(config["app", "nested", "c", "true"].bool == false, "Nesting config incorrectly loaded.")
 	}
 
 	func testDotEnv() {
-		let config = makeConfig(.Development, workDir: workDir)
+        let config = Config(workingDirectory: workDir, environment: .Development)
 		XCTAssert(config["app", "port"].int == 9000, ".env config incorrectly loaded.")
 	}
 }
-
-/**
- Global functions because any function that takes an argument on an XCTest class fails on Linux.
- */
-
-private func makeConfig(_ environment: Environment, workDir: String) -> Config {
-    return Config.init(workingDirectory: workDir, environment: environment)
-//    let app = makeApp(environment)
-//
-//    do {
-//        try app.config.populate("\(workDir)Config", application: app)
-//    } catch {
-//        XCTAssert(false, "Failed to load config: \(error)")
-//    }
-//
-//    return app.config
-}
-
-//private func makeApp(_ environment: Environment) -> Application {
-//    let app = Application()
-//
-//    app.detectEnvironmentHandler = { _ in
-//        return environment
-//    }
-//
-//    return app
-//}
