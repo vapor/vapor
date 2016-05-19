@@ -1,9 +1,9 @@
 {
-	"debug": false,
+    "debug": false,
 
-	"nested": {
-		"c": {
-			"true": false
-		}
-	}
+    "nested": {
+        "c": {
+            "true": false
+        }
+    }
 }

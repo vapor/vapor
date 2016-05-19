@@ -9,7 +9,6 @@ private struct ConfigDirectory {
     let name: String
     let files: [JsonFile]
 
-
     subscript(_ name: String, _ paths: [PathIndex]) -> Json? {
         return files
             .lazy

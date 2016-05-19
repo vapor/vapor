@@ -101,6 +101,8 @@ public class Application {
         self.middleware.append(
             SessionMiddleware(session: session)
         )
+
+        bootArguments()
     }
 
     public func bootProviders() {

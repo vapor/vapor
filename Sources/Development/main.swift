@@ -3,6 +3,10 @@ import Vapor
 let app = Application()
 
 app.hash.key = app.config["app", "hash", "key"].string ?? "default-key"
+print("App hash key: \(app.hash.key)")
+
+let port = app.config["app", "port"]
+print(port)
 
 //MARK: Basic
 
