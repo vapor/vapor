@@ -20,27 +20,27 @@ class ConfigTests: XCTestCase {
 
 	func testSimple() {
 		let config = makeConfig(.Development, workDir: workDir)
-		XCTAssert(config.get("app.debug", false) == true, "Config incorrectly loaded.")
+		XCTAssert(config["app", "debug"].bool == true, "Config incorrectly loaded.")
 	}
 
 	func testNesting() {
 		let config = makeConfig(.Development, workDir: workDir)
-		XCTAssert(config.get("app.nested.c.true", false) == true, "Nesting config incorrectly loaded.")
+		XCTAssert(config["app", "nested", "c", "true"].bool == true, "Nesting config incorrectly loaded.")
 	}
 
 	func testEnvironmentCascading() {
 		let config = makeConfig(.Production, workDir: workDir)
-		XCTAssert(config.get("app.debug", true) == false, "Cascading config incorrectly loaded.")
+		XCTAssert(config["app", "debug"].bool == false, "Cascading config incorrectly loaded.")
 	}
 
 	func testEnvironmentCascadingNesting() {
 		let config = makeConfig(.Production, workDir: workDir)
-		XCTAssert(config.get("app.nested.c.true", true) == false, "Nesting config incorrectly loaded.")
+		XCTAssert(config["app", "nested", "c", "true"].bool == false, "Nesting config incorrectly loaded.")
 	}
 
 	func testDotEnv() {
 		let config = makeConfig(.Development, workDir: workDir)
-		XCTAssert(config.get("app.port", 0) == 9000, ".env config incorrectly loaded.")
+		XCTAssert(config["app", "port"].int == 9000, ".env config incorrectly loaded.")
 	}
 }
 
@@ -49,23 +49,24 @@ class ConfigTests: XCTestCase {
  */
 
 private func makeConfig(_ environment: Environment, workDir: String) -> Config {
-    let app = makeApp(environment)
-
-    do {
-        try app.config.populate("\(workDir)Config", application: app)
-    } catch {
-        XCTAssert(false, "Failed to load config: \(error)")
-    }
-
-    return app.config
+    return Config.init(workingDirectory: workDir, environment: environment)
+//    let app = makeApp(environment)
+//
+//    do {
+//        try app.config.populate("\(workDir)Config", application: app)
+//    } catch {
+//        XCTAssert(false, "Failed to load config: \(error)")
+//    }
+//
+//    return app.config
 }
 
-private func makeApp(_ environment: Environment) -> Application {
-    let app = Application()
-
-    app.detectEnvironmentHandler = { _ in
-        return environment
-    }
-
-    return app
-}
+//private func makeApp(_ environment: Environment) -> Application {
+//    let app = Application()
+//
+//    app.detectEnvironmentHandler = { _ in
+//        return environment
+//    }
+//
+//    return app
+//}

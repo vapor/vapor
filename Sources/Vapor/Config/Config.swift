@@ -1,3 +1,82 @@
+
+// (Possibly insert cli args first in there)
+// Priorities are secret/ current-environment/ top-levelConfig/
+import PathIndexable
+
+private struct JsonFile {
+    let name: String
+    let json: Json
+}
+
+private struct ConfigDirectory {
+    let name: String
+    let files: [JsonFile]
+
+
+    subscript(_ name: String, _ paths: [PathIndex]) -> Json? {
+        return files
+            .lazy
+            .filter { file in
+                return file.name == name + ".json"
+            }
+            .flatMap { file in file.json[paths] }
+            .first
+    }
+}
+
+private struct PrioritizedDirectoryQueue {
+    let directories: [ConfigDirectory]
+
+    subscript(_ fileName: String, indexes: [PathIndex]) -> Json? {
+        get {
+            return directories
+                .lazy
+                .flatMap { directory in return directory[fileName, indexes] }
+                .first
+        }
+        set {
+
+        }
+    }
+}
+
+extension FileManager {
+    private static func loadDirectory(_ path: String) -> ConfigDirectory? {
+        guard let directoryName = path.components(separatedBy: "/").last else {
+            return nil
+        }
+        guard let contents = try? FileManager.contentsOfDirectory(path) else {
+            return nil
+        }
+
+        var jsonFiles: [JsonFile] = []
+        for file in contents where file.hasSuffix(".json") {
+            guard let name = file.components(separatedBy: "/").last else {
+                continue
+            }
+            guard let json = try? loadJson(file) else {
+                continue
+            }
+
+            let jsonFile = JsonFile(name: name, json: json)
+            jsonFiles.append(jsonFile)
+        }
+
+        let directory = ConfigDirectory(name: directoryName, files: jsonFiles)
+        return directory
+    }
+
+    private static func loadJson(_ path: String) throws -> Json {
+        let bytes = try FileManager.readBytesFromFile(path)
+        return try Json.deserialize(bytes)
+    }
+}
+
+/**
+
+ app.config["passwords", "mongo-user"]
+ */
+
 /**
     Parses and interprets configuration files
     included under Config in the working directory.
@@ -19,241 +98,119 @@
 */
 public class Config {
 
-    public enum Error: ErrorProtocol {
-        case noFileFound
-        case noValueFound
-    }
+    /**
+        The environment loaded from `Environment.loader
+    */
+    public let environment: Environment
+
+    private let configDirectory: String
+    private let directoryQueue: PrioritizedDirectoryQueue
 
     /**
-        The internal store of configuration options
-        backed by `Json`
-     */
-    private var seed: [String: Json]
-
-    /**
-        Creates an instance of `Config` with an
-        optional starting repository of information.
+        Creates an instance of `Config` with
+        starting configurations.
         The application is required to detect environment.
     */
-    public init(seed: [String: Json] = [:], application: Application? = nil) {
-        self.seed = seed
-
-        if let application = application {
-            populate(application)
-        }
-    }
-
-    /**
-        Returns whether this instance of `Config` contains the key
-     */
-    public func has(_ keyPath: String) -> Bool {
-        let result: Node? = try? get(keyPath)
-        return result != nil
-    }
-
-    /**
-        Returns the generic Json representation for an item at a given path or throws
-     */
-    public func get(_ keyPath: String) throws -> Node {
-        var keys = keyPath.keys
-        guard let json: Json = seed[keys.removeFirst()] else {
-            throw Error.noFileFound
-        }
-
-        var node: Node? = json
-
-        for key in keys {
-            node = node?.object?[key]
-        }
-
-        guard let result = node else {
-            throw Error.noValueFound
-        }
-
-        return result
-    }
-
-    /**
-        Returns the value for a given type from the Config or throws
-     */
-    public func get<T: NodeInitializable>(_ keyPath: String) throws -> T {
-        let result: Node = try get(keyPath)
-        return try T.make(with: result)
-    }
+    public init(seed configurations: [String: Json] = [:], workingDirectory: String = "./", environment: Environment = .loader()) {
+        let configDirectory = workingDirectory.finish("/") + "Config/"
+        self.configDirectory = configDirectory
+        self.environment = environment
 
 
-    /**
-        Returns the result of `get(key: String)` but with a `String` fallback for `nil` cases
-     */
-    public func get<T: NodeInitializable>(_ keyPath: String, _ fallback: T) -> T {
-        let string: T? = try? get(keyPath)
-        return string ?? fallback
-    }
+        let files = configurations.map { name, json in return JsonFile(name: name, json: json) }
+        let seedDirectory = ConfigDirectory(name: "seed-data", files: files)
+        var prioritizedDirectories: [ConfigDirectory] = [seedDirectory]
 
-
-    /**
-        Temporarily sets a value for a given key path
-     */
-    public func set(_ value: Json, forKeyPath keyPath: String) {
-        var keys = keyPath.keys
-        let group = keys.removeFirst()
-
-        if keys.count == 0 {
-            seed[group] = value
-        } else {
-            seed[group]?.set(value, keys: keyPath.keys)
-        }
-    }
-
-    /**
-        Calls populate() in a convenient non-throwing manner
-     */
-    public func populate(_ application: Application) -> Bool {
-        let configDir = application.workDir + "Config"
-
-        if FileManager.fileAtPath(configDir).exists {
-            do {
-                try populate(configDir, application: application)
-                return true
-            } catch {
-                Log.error("Unable to populate config: \(error)")
-                return false
-            }
-        } else {
-            return false
-        }
-    }
-
-
-    /**
-        Attempts to populate the internal configuration store
-     */
-    public func populate(_ path: String, application: Application) throws {
-        var path = path.finish("/")
-        var files = [String: [String]]()
-
-        // Populate config files by environment
-        try populateConfigFiles(&files, in: path)
-
-        for env in application.environment.description.keys {
-            path += env + "/"
-
-            if FileManager.fileAtPath(path).exists {
-                try populateConfigFiles(&files, in: path)
-            }
-        }
-
-        // Loop through files and merge config upwards so the
-        // environment always overrides the base config
         //
-        //
-        // The isEmpty check is a workaround for the Linux system and is necessary until
-        // an alternative solution is fixed, or it's confirmed appropriate
-        // This is duplicated below in `populateConfigFiles`. just doubling down.
-        for (group, files) in files where !group.isEmpty {
-            if group == ".env" {
-                // .env is handled differently below
-                continue
-            }
+        // TODO: cli will possibly be first in priority queue in future
+        // potential syntax
+        // --config:app.port=9090
+        // --config:passwords.mongo-user=user
+        // --config:passwords.mongo-password=password
+        // --config:<name>.<path>.<to>.<value>=<actual-value>
 
-            for file in files {
-                let bytes = try FileManager.readBytesFromFile(file)
-                let json = try Json(Data(bytes))
-
-                if seed[group] == nil {
-                    seed[group] = json
-                } else {
-                    seed[group]?.merge(with: json)
-                }
-            }
+        // Json files are loaded in order of priority
+        // it will go like this
+        // paths will be searched for in top down order
+        if let directory = FileManager.loadDirectory(configDirectory + "secrets") {
+            print("Secrets: \(directory)")
+            prioritizedDirectories.append(directory)
+        }
+        print("Env: \(environment.description)")
+        if let directory = FileManager.loadDirectory(configDirectory + environment.description) {
+            print("Enf: \(directory)")
+            prioritizedDirectories.append(directory)
+        }
+        if let directory = FileManager.loadDirectory(configDirectory) {
+            print("Config directory: \(directory)")
+            prioritizedDirectories.append(directory)
         }
 
-        // Apply .env overrides, which is a single file
-        // containing multiple groups
-        if let env = files[".env"] {
-            for file in env {
-                let bytes = try FileManager.readBytesFromFile(file)
-                let json = try Json(Data(bytes))
-
-                guard case .object(let object) = json else {
-                    return
-                }
-
-                for (group, json) in object {
-                    if seed[group] == nil {
-                        seed[group] = json
-                    } else {
-                        seed[group]?.merge(with: json)
-                    }
-                }
-            }
-        }
+        directoryQueue = PrioritizedDirectoryQueue(directories: prioritizedDirectories)
     }
 
-    private func populateConfigFiles(_ files: inout [String: [String]], in path: String) throws {
-        let contents = try FileManager.contentsOfDirectory(path)
+    /**
+         Use this to access config keys for specified file.
+         For example, if I have a config file named 'metadata.json'
+         that looks like this:
 
-        for file in contents {
-            //
-            //
-            // The isEmpty check is a workaround for the Linux system and is necessary until
-            // an alternative solution is fixed, or it's confirmed appropriate
-            // This is duplicated above. just doubling down.
-            guard let fileName = file.split(byString: "/").last where !fileName.isEmpty else {
-                continue
-            }
+             {
+                 "info" : {
+                     "port" : 9090
+                 }
+             }
+     
+         You would access the port like this:
 
-            let name: String
+             let port = app.config["metadata", "info", "por"].int ?? 8080
 
-            if fileName == ".env.json" {
-                name = ".env"
-            } else if fileName.hasSuffix(".json"), let value = fileName.split(byString: ".").first {
-                name = value
-            } else {
-                continue
-            }
+         Follows format
+     
+             config[<json-file-name>, <path>, <to>, <value>
 
-            if files[name] == nil {
-                files[name] = []
-            }
+         - parameter file:  name of json file to look for
+         - parameter paths: path to key
 
-            files[name]?.append(file)
-        }
+         - returns: value if it exists.
+     */
+    public subscript(_ file: String, _ paths: PathIndex...) -> Node? {
+        return self[file, paths]
     }
 
+    /**
+         Splatting so that variadic can pass through here
+
+         - parameter file:  name of json file to look for
+         - parameter paths: path to key
+
+         - returns: value if it exists.
+     */
+    public subscript(_ file: String, _ paths: [PathIndex]) -> Node? {
+        return directoryQueue[file, paths]
+    }
+
+    /**
+         Returns whether this instance of `Config` contains the path
+     */
+    public func has(_ path: String, _ indexes: PathIndex...) -> Bool {
+        return self[path, indexes] != nil
+    }
 }
 
-extension Json {
-
-    private mutating func set(_ value: Json, keys: [Swift.String]) {
-        var keys = keys
-
-        guard keys.count > 0 else {
-            return
-        }
-
-        let key = keys.removeFirst()
-
-        guard case .object(let object) = self else {
-            return
-        }
-
-        var updated = object
-
-        if keys.count == 0 {
-            updated[key] = value
-        } else {
-            var child = updated[key] ?? Json.object([:])
-            child.set(value, keys: keys)
-        }
+extension Environment {
+    /**
+        Used to load Environment automatically. Defaults to looking for `env` command line argument
+     */
+    static var loader: Void -> Environment = {
+        return Process.valueFor(argument: "env")
+            .flatMap(Environment.init(id:))
+            ?? .Development
     }
-
 }
 
 
 extension String {
-
-    private var keys: [String] {
+    private var keyPathComponents: [String] {
         return split(byString: ".")
     }
 

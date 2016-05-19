@@ -29,7 +29,7 @@ public class Application {
     /**
         Provides access to config settings.
     */
-    public lazy var config: Config = Config(application: self)
+    public lazy var config: Config = Config(workingDirectory: self.workDir)
 
     /**
         Provides access to the underlying
@@ -51,31 +51,6 @@ public class Application {
         with this application
     */
     public var providers: [Provider]
-
-    /**
-        Internal value populated the first time
-        self.environment is computed
-    */
-    private var detectedEnvironment: Environment?
-
-    /**
-        Current environment of the application
-    */
-    public var environment: Environment {
-        if let environment = self.detectedEnvironment {
-            return environment
-        }
-
-        let environment = bootEnvironment()
-        self.detectedEnvironment = environment
-        return environment
-    }
-
-    /**
-        Optional handler to be called when detecting the
-        current environment.
-    */
-    public var detectEnvironmentHandler: ((String) -> Environment)?
 
     /**
         The work directory of your application is
@@ -134,24 +109,6 @@ public class Application {
         }
     }
 
-    func bootEnvironment() -> Environment {
-        var environment: String
-
-        if let value = Process.valueFor(argument: "env") {
-            Log.info("Environment override: \(value)")
-            environment = value
-        } else {
-            // TODO: This should default to "production" in release builds
-            environment = "development"
-        }
-
-        if let handler = self.detectEnvironmentHandler {
-            return handler(environment)
-        } else {
-            return Environment(id: environment)
-        }
-    }
-
     /**
         If multiple environments are passed, return
         value will be true if at least one of the passed
@@ -163,7 +120,7 @@ public class Application {
         matches the app environment.
     */
     public func inEnvironment(_ environments: Environment...) -> Bool {
-        return environments.contains(self.environment)
+        return environments.contains(self.config.environment)
     }
 
     func bootRoutes() {
@@ -202,8 +159,8 @@ public class Application {
 
         bootRoutes()
 
-        if environment == .Production {
-            Log.info("Production mode detected, disabling information logs.")
+        if config.environment == .Production {
+            Log.info("Production environment detected, disabling information logs.")
             Log.enabledLevels = [.Error, .Fatal]
         }
 
@@ -305,7 +262,7 @@ extension Application: Responder {
             }
         } catch {
             var error = "Server Error: \(error)"
-            if environment == .Production {
+            if config.environment == .Production {
                 error = "Something went wrong"
             }
 
@@ -318,4 +275,8 @@ extension Application: Responder {
         return response
     }
 
+    func test() {
+
+
+    }
 }
