@@ -1,6 +1,3 @@
-
-// (Possibly insert cli args first in there)
-// Priorities are secret/ current-environment/ top-levelConfig/
 import PathIndexable
 
 private struct JsonFile {
