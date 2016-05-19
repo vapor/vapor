@@ -68,27 +68,22 @@ extension FileManager {
 }
 
 /**
-
- app.config["passwords", "mongo-user"]
- */
-
-/**
     Parses and interprets configuration files
     included under Config in the working directory.
 
     Files stored in the Config directory can be accessed
-    via `app.config.get("filename.property")`.
+    via `app.config["filename", "property"]`.
 
     For example, a file named `Config/app.json` containing
-    `{"port": 80}` can be accessed with `app.config.get("app.port")`.
+    `{"port": 80}` can be accessed with `app.config["app" "port"].int`.
     To override certain configurations for a given environment,
     create a file with the same name in a subdirectory of the environment.
     For example, a file named `Config/production/app.json` would override
     any properties in `Config/app.json`.
 
     Finally, Vapor supports sensitive environment specific information, such
-    as API keys, to be stored in a special configuration file at `Config/.env.json`.
-    This file should be included in the `.gitignore` by default so that
+    as API keys, to be stored in a special configuration folder at `Config/secrets`.
+    This folder should be included in the `.gitignore` by default so that
     sensitive information does not get added to version control.
 */
 public class Config {
