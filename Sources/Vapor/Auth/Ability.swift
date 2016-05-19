@@ -3,15 +3,15 @@
  * and a `Model` to perform that on.
  * Like "update" a `Post`.
  */
-public struct Ability: Equatable {
-    public enum Action {
-        case list, inspect, create, update, delete, other(String)
-    }
-    
-    public let action: Action
-    public let model: Model.Type
+public enum Action: String {
+    case list, inspect, create, update, delete
 }
 
-public func ==(lhs: Ability, rhs: Ability) -> Bool {
+public struct Ability<T: Model>: Equatable {
+    public let action: Action
+    public let model: T.Type
+}
+
+public func ==<T: Model, U: Model>(lhs: Ability<T>, rhs: Ability<U>) -> Bool {
     return "\(lhs)" == "\(rhs)"
 }

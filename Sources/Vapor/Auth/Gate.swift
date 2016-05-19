@@ -3,21 +3,17 @@ public protocol Model {}
 
 public class Gate {
     static var defaultVote = false
-    static var abilities = [(Ability, Voter)]()
+    static var policies = [Policy]()
     
-    public typealias Voter = (Model, Authorizable?) -> Bool?
-    
-    public static func addAbility(to action: Ability.Action, a model: Model.Type, voter: Voter) {
+    public static func addAbility<T: Model>(to action: Action, a  model:  T.Type, voter:  (T, Authorizable?) -> Bool?) {
         let ability = Ability(action: action, model: model)
-        
-        abilities.append((ability, voter))
+        let policy = AnyPolicy(ability: ability, voter: voter)
+        policies.append(policy as Policy)
     }
     
-    public static func check(if user: Authorizable?, can action: Ability.Action, this model: Model) -> Bool {
-        let abilityToCheck = Ability(action: action, model: model.dynamicType)
-        
-        for (ability, voter) in abilities where ability == abilityToCheck {
-            if let vote = voter(model, user) {
+    public static func check<T: Model>(if user: Authorizable?, can action: Action, this model: T) -> Bool {
+        for policy in policies {
+            if let vote = policy.vote(whether: user, may: action, this: model) {
                 return vote
             }
         }
@@ -25,7 +21,7 @@ public class Gate {
         return defaultVote
     }
     
-    public static func check(if user: Authorizable?, can action: Ability.Action, this model: Model) throws {
+    public static func check<T: Model>(if user: Authorizable?, can action: Action, this model: T) throws {
         guard check(if: user, can: action, this: model) else {
             throw Abort.custom(status: .unauthorized, message: "User is not allowed to \(action) a \(model)")
         }
