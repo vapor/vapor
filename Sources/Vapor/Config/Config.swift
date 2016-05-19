@@ -28,15 +28,10 @@ private struct PrioritizedDirectoryQueue {
     let directories: [ConfigDirectory]
 
     subscript(_ fileName: String, indexes: [PathIndex]) -> Json? {
-        get {
-            return directories
-                .lazy
-                .flatMap { directory in return directory[fileName, indexes] }
-                .first
-        }
-        set {
-
-        }
+        return directories
+            .lazy
+            .flatMap { directory in return directory[fileName, indexes] }
+            .first
     }
 }
 
