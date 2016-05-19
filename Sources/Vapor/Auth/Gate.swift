@@ -5,7 +5,7 @@ public class Gate {
     static var defaultVote = false
     static var policies = [Policy]()
     
-    public static func addAbility<T: Model>(to action: Action, a  model:  T.Type, voter:  (T, Authorizable?) -> Bool?) {
+    public static func addPolicy<T: Model>(to action: Action, a  model:  T.Type, voter:  (T, Authorizable?) -> Bool?) {
         let ability = Ability(action: action, model: model)
         let policy = AnyPolicy(ability: ability, voter: voter)
         policies.append(policy as Policy)
