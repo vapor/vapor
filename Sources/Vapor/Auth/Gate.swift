@@ -2,7 +2,6 @@
 public protocol Model {}
 
 public class Gate<U: Authorizable> {
-    var defaultVote = false
     var policies = [Policy]()
 
     public init(_ userType: U.Type = U.self) {}
@@ -13,18 +12,21 @@ public class Gate<U: Authorizable> {
         policies.append(policy as Policy)
     }
 
-    public func check<T: Model>(if user: U?, can action: Action, this model: T) -> Bool {
+    public func check<T: Model>(if user: U?, can action: Action, this model: T) throws -> Bool {
         for policy in policies {
             if let vote = policy.vote(whether: user, may: action, this: model) {
                 return vote
             }
         }
 
-        return defaultVote
+        throw Abort.custom(
+            status: .internalServerError,
+            message: "Tried to check if user was allowed to \(action) a \(model), but no policy existed."
+        )
     }
 
     public func check<T: Model>(if user: U?, can action: Action, this model: T) throws {
-        guard check(if: user, can: action, this: model) else {
+        guard try check(if: user, can: action, this: model) else {
             throw Abort.custom(status: .unauthorized, message: "User is not allowed to \(action) a \(model)")
         }
     }
