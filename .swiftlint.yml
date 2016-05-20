@@ -2,6 +2,7 @@ disabled_rules:
   - line_length
   - valid_docs
   - trailing_whitespace
+  - type_name
 opt_in_rules:
 included:
 excluded:
