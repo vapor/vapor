@@ -144,7 +144,7 @@ extension Process {
 
         // first argument is file name, subsequent arguments are paths
         keyPaths.remove(at: 0)
-        
+
         return (fileName, keyPaths.map { $0 as PathIndex })
     }
 }
@@ -233,7 +233,7 @@ public class Config {
              let port = app.config["metadata", "info", "por"].int ?? 8080
 
          Follows format
-     
+
              config[<json-file-name>, <path>, <to>, <value>
 
          - parameter file:  name of json file to look for
