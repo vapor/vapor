@@ -8,7 +8,6 @@ class ConfigTests: XCTestCase {
            ("testNesting", testNesting),
            ("testEnvironmentCascading", testEnvironmentCascading),
            ("testEnvironmentCascadingNesting", testEnvironmentCascadingNesting),
-           ("testDotEnv", testDotEnv),
         ]
     }
 
@@ -19,27 +18,22 @@ class ConfigTests: XCTestCase {
     }
 
     func testSimple() {
-        let config = Config(workingDirectory: workDir, environment: .Development)
+        let config = Config(workingDirectory: workDir, environment: .development)
 		XCTAssert(config["app", "debug"].bool == true, "Config incorrectly loaded.")
 	}
 
 	func testNesting() {
-        let config = Config(workingDirectory: workDir, environment: .Development)
+        let config = Config(workingDirectory: workDir, environment: .development)
 		XCTAssert(config["app", "nested", "c", "true"].bool == true, "Nesting config incorrectly loaded.")
 	}
 
 	func testEnvironmentCascading() {
-        let config = Config(workingDirectory: workDir, environment: .Production)
+        let config = Config(workingDirectory: workDir, environment: .production)
 		XCTAssert(config["app", "debug"].bool == false, "Cascading config incorrectly loaded.")
 	}
 
 	func testEnvironmentCascadingNesting() {
-        let config = Config(workingDirectory: workDir, environment: .Production)
+        let config = Config(workingDirectory: workDir, environment: .production)
 		XCTAssert(config["app", "nested", "c", "true"].bool == false, "Nesting config incorrectly loaded.")
-	}
-
-	func testDotEnv() {
-        let config = Config(workingDirectory: workDir, environment: .Development)
-		XCTAssert(config["app", "port"].int == 9000, ".env config incorrectly loaded.")
 	}
 }

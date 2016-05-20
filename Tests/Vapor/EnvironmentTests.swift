@@ -20,19 +20,19 @@ class EnvironmentTests: XCTestCase {
 
     func testEnvironment() {
         let app = Application()
-        XCTAssert(app.config.environment == .Development, "Incorrect environment: \(app.config.environment)")
+        XCTAssert(app.config.environment == .development, "Incorrect environment: \(app.config.environment)")
     }
 
     func testDetectEnvironmentHandler() {
         let app = Application()
-        app.config = Config(environment: .Custom("xctest"))
-        XCTAssert(app.config.environment == .Custom("xctest"), "Incorrect environment: \(app.config.environment)")
+        app.config = Config(environment: .custom("xctest"))
+        XCTAssert(app.config.environment == .custom("xctest"), "Incorrect environment: \(app.config.environment)")
     }
 
     func testInEnvironment() {
         let app = Application()
-        app.config = Config(environment: .Custom("xctest"))
-        XCTAssert(app.inEnvironment(.Production, .Development, .Custom("xctest")), "Environment not correctly detected: \(app.config.environment)")
+        app.config = Config(environment: .custom("xctest"))
+        XCTAssert(app.inEnvironment(.production, .development, .custom("xctest")), "Environment not correctly detected: \(app.config.environment)")
     }
 
 }
