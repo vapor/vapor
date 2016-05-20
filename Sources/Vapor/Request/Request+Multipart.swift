@@ -40,68 +40,30 @@ extension Request {
         }
     }
 
+    var clrf: Data {
+        return Data("\r\n".utf8)
+    }
+
     func parseMultipartForm(_ body: Data, boundary: String) -> [String: MultiPart] {
         let boundaryString = "--" + boundary
         let boundary = Data(boundaryString.utf8)
 
-        let clrf = Data("\r\n".utf8)
         var form = [String: MultiPart]()
         
         // Separate by boundry and loop over the "multi"-parts
         for part in body.split(separator: boundary, excludingFirst: true, excludingLast: true) {
+
             let headBody = part.split(separator: clrf+clrf)
-            var storage = [String: String]()
 
             // Separate the head and body
             guard headBody.count == 2, let head = headBody.first, let body = headBody.last else {
                 continue
             }
 
-            // Separate the individual headers
-            let headers = head.split(separator: clrf)
-
-            for line in headers {
-                // Make the header a String
-                var header = String(line)
-                header.replace(string: "\r\n", with: "")
-
-                // Split the header parts into an array
-                var headerParts = header.split(separator: ";")
-
-                // The header has a base. Like "Content-Type: text/html; other=3" would have "Content-Type: text/html;
-                guard let base = headerParts.first else {
-                    continue
-                }
-
-                // The base always has two parts. Key + Value
-                let baseParts = base.split(separator: ":", maxSplits: 1)
-                
-                // Check that the count is right
-                guard baseParts.count == 2 else {
-                    continue
-                }
-
-                // Add the header to the storage
-                storage[baseParts[0].trim().lowercased()] = baseParts[1].trim()
-        
-                // Remove the header base so we can parse the rest
-                headerParts.remove(at: 0)
-                
-                // remaining parts
-                for part in headerParts {
-                    // Split key-value
-                    let subParts = part.split(separator: "=", maxSplits: 1)
-
-                    // There's a key AND a Value. No more, no less
-                    guard subParts.count == 2 else {
-                        continue
-                    }
-
-                    // Strip all unnecessary characters
-                    storage[subParts[0].trim()] = subParts[1].trim([" ", "\t", "\r", "\n", "\"", "'"])
-                }
+            guard let storage = parseMultipartStorage(head: head, body: body) else {
+                continue
             }
-            
+
             // There's always a name for a field. Otherwise we can't store it under a key
             guard let name = storage["name"] else {
                 continue
@@ -125,13 +87,13 @@ extension Request {
                     if let o = form[name], case .file(let old) = o {
                         form[name] = .files([old, new])
 
-                    // If there's a file array. Append it
+                        // If there's a file array. Append it
                     } else if let o = form[name], case .files(var old) = o {
                         old.append(new)
                         form[name] = .files(old)
 
-                    // If it's neither.. It's a duplicate key. This means we're going to be ditched or overriding the existing key
-                    // Since we're later, we're overriding
+                        // If it's neither.. It's a duplicate key. This means we're going to be ditched or overriding the existing key
+                        // Since we're later, we're overriding
                     } else {
                         form[name] = .file(name: new.name, type: new.type, data: new.data)
                     }
@@ -149,7 +111,7 @@ extension Request {
                     }
                 }
 
-            // If it's a new key
+                // If it's a new key
             } else {
                 // Ensure it's a file. There's no proper way of detecting this if there's no filename and no content-type
                 if storage.keys.contains("content-type") || storage.keys.contains("filename") {
@@ -163,17 +125,69 @@ extension Request {
                     // Store the file in the form
                     form[name] = .file(name: storage["filename"], type: mediaType, data: body)
 
-                // If it's not a file (or not for sure) we're storing the information String
+                    // If it's not a file (or not for sure) we're storing the information String
                 } else {
                     var input = String(body)
                     input.replace(string: "\r\n", with: "")
-                    
+
                     form[name] = .input(input)
                 }
             }
+
         }
     
         return form
+    }
+
+    func parseMultipartStorage(head: Data, body: Data) -> [String: String]? {
+        var storage = [String: String]()
+
+        // Separate the individual headers
+        let headers = head.split(separator: clrf)
+
+        for line in headers {
+            // Make the header a String
+            var header = String(line)
+            header.replace(string: "\r\n", with: "")
+
+            // Split the header parts into an array
+            var headerParts = header.split(separator: ";")
+
+            // The header has a base. Like "Content-Type: text/html; other=3" would have "Content-Type: text/html;
+            guard let base = headerParts.first else {
+                continue
+            }
+
+            // The base always has two parts. Key + Value
+            let baseParts = base.split(separator: ":", maxSplits: 1)
+
+            // Check that the count is right
+            guard baseParts.count == 2 else {
+                continue
+            }
+
+            // Add the header to the storage
+            storage[baseParts[0].trim().lowercased()] = baseParts[1].trim()
+
+            // Remove the header base so we can parse the rest
+            headerParts.remove(at: 0)
+
+            // remaining parts
+            for part in headerParts {
+                // Split key-value
+                let subParts = part.split(separator: "=", maxSplits: 1)
+
+                // There's a key AND a Value. No more, no less
+                guard subParts.count == 2 else {
+                    continue
+                }
+
+                // Strip all unnecessary characters
+                storage[subParts[0].trim()] = subParts[1].trim([" ", "\t", "\r", "\n", "\"", "'"])
+            }
+        }
+
+        return storage
     }
 }
 
