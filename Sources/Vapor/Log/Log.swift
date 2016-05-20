@@ -8,7 +8,7 @@ public class Log {
         LogLevel enumeration
     */
     public enum Level: Equatable, CustomStringConvertible {
-        case Verbose, Debug, Info, Warning, Error, Fatal, Custom(String)
+        case verbose, debug, info, warning, error, fatal, custom(String)
 
         /*
          Returns all standard log levels (i.e. except Custom)
@@ -16,18 +16,18 @@ public class Log {
          returns - array of Log.Level
          */
         public static var all: [Log.Level] {
-            return [.Verbose, .Debug, .Info, .Warning, .Error, .Fatal]
+            return [.verbose, .debug, .info, .warning, .error, .fatal]
         }
 
         public var description: String {
             switch self {
-            case Verbose: return "VERBOSE"
-            case Debug: return "DEBUG"
-            case Info: return "INFO"
-            case Warning: return "WARNING"
-            case Error: return "ERROR"
-            case Fatal: return "FATAL"
-            case Custom(let string): return "\(string.uppercased())"
+            case verbose: return "VERBOSE"
+            case debug: return "DEBUG"
+            case info: return "INFO"
+            case warning: return "WARNING"
+            case error: return "ERROR"
+            case fatal: return "FATAL"
+            case custom(let string): return "\(string.uppercased())"
             }
         }
     }
@@ -50,8 +50,8 @@ public class Log {
         - parameter message: String to log
      */
     public static func verbose(_ message: String) {
-        if Log.enabledLevels.contains(.Verbose) {
-            driver.log(.Verbose, message: message)
+        if Log.enabledLevels.contains(.verbose) {
+            driver.log(.verbose, message: message)
         }
     }
 
@@ -61,8 +61,8 @@ public class Log {
         - parameter message: String to log
      */
     public static func debug(_ message: String) {
-        if Log.enabledLevels.contains(.Debug) {
-            driver.log(.Debug, message: message)
+        if Log.enabledLevels.contains(.debug) {
+            driver.log(.debug, message: message)
         }
     }
 
@@ -72,8 +72,8 @@ public class Log {
         - parameter message: String to log
      */
     public static func info(_ message: String) {
-        if Log.enabledLevels.contains(.Info) {
-            driver.log(.Info, message: message)
+        if Log.enabledLevels.contains(.info) {
+            driver.log(.info, message: message)
         }
     }
 
@@ -83,8 +83,8 @@ public class Log {
         - parameter message: String to log
      */
     public static func warning(_ message: String) {
-        if Log.enabledLevels.contains(.Warning) {
-             driver.log(.Warning, message: message)
+        if Log.enabledLevels.contains(.warning) {
+             driver.log(.warning, message: message)
         }
     }
 
@@ -94,8 +94,8 @@ public class Log {
         - parameter message: String to log
      */
     public static func error(_ message: String) {
-        if Log.enabledLevels.contains(.Error) {
-            driver.log(.Error, message: message)
+        if Log.enabledLevels.contains(.error) {
+            driver.log(.error, message: message)
         }
     }
 
@@ -105,8 +105,8 @@ public class Log {
         - parameter message: String to log
      */
     public static func fatal(_ message: String) {
-        if Log.enabledLevels.contains(.Fatal) {
-            driver.log(.Fatal, message: message)
+        if Log.enabledLevels.contains(.fatal) {
+            driver.log(.fatal, message: message)
         }
     }
 
@@ -116,7 +116,7 @@ public class Log {
         - parameter message: String to log
      */
     public static func custom(_ message: String, label: String) {
-        driver.log(.Custom(label), message: message)
+        driver.log(.custom(label), message: message)
     }
 }
 
