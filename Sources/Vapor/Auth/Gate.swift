@@ -7,7 +7,7 @@ public class Gate<U: Authorizable> {
 
     public init(_ userType: U.Type = U.self) {}
 
-    public func addPolicy<T: Model>(to action: Action, a  model:  T.Type, voter:  (T, U?) -> Bool?) {
+    public func addPolicy<T: Model>(to action: Action, a model: T.Type, voter: (T, U?) -> Bool?) {
         let ability = Ability(action: action, model: model)
         let policy = AnyPolicy(ability: ability, voter: voter)
         policies.append(policy as Policy)
