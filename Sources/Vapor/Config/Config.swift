@@ -166,7 +166,7 @@ extension Process {
     Finally, Vapor supports sensitive environment specific information, such
     as API keys, to be stored in a special configuration folder at `Config/secrets`.
     This folder should be included in the `.gitignore` by default so that
-    sensitive information does not get added to version control. 
+    sensitive information does not get added to version control.
 */
 public class Config {
 
