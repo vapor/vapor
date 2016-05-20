@@ -5,13 +5,14 @@
  * So you can write `if user.can(.update, this: post) { ... }`
  */
 public protocol Authorizable: Model {
+    var gate: Gate<Self> { get }
     func can(_ action: Action, this model: Model) -> Bool
     func cannot(_ action: Action, this model: Model) -> Bool
 }
 
 public extension Authorizable {
     public func can<T: Model>(_ action: Action, this model: T) -> Bool {
-        return Gate.check(if: self, can: action, this: model)
+        return gate.check(if: self, can: action, this: model)
     }
 
     public func cannot<T: Model>(_ action: Action, this model: T) -> Bool {
