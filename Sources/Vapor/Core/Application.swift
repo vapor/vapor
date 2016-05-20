@@ -109,7 +109,7 @@ public class Application {
 
         config = Config(workingDirectory: workDir)
 
-        host = config["app", "host"].string ?? "0.0.0.0" 
+        host = config["app", "host"].string ?? "0.0.0.0"
         port = config["app", "port"].int ?? 80
     }
 
