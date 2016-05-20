@@ -111,7 +111,7 @@ class PerformanceTests: XCTestCase {
         let request = Request(method: .get, path: "plaintext")
 
 
-        Log.enabledLevels = [.Error, .Warning]
+        Log.enabledLevels = [.error, .warning]
 
         for _ in 0...100 {
             let p = TestPerformanceStream(request: request) { data in

@@ -66,14 +66,14 @@ class LogTests: XCTestCase {
 
     func testCanOverrideDefaultEnabledLevels() {
         prepare()
-        Log.enabledLevels = [Log.Level.Debug]
+        Log.enabledLevels = [Log.Level.debug]
         XCTAssertTrue(Log.enabledLevels.count == 1, "only one log level should be enabled")
-        XCTAssertTrue(Log.enabledLevels.first == Log.Level.Debug, "only Debug logs should be enabled")
+        XCTAssertTrue(Log.enabledLevels.first == Log.Level.debug, "only Debug logs should be enabled")
     }
 
     func testDisabledLogsDoNoOutput() {
         prepare()
-        Log.enabledLevels = [Log.Level.Debug]
+        Log.enabledLevels = [Log.Level.debug]
         Log.error("this should not output")
         XCTAssertNil(DummyLogger.output, "disabled level should not output")
     }
