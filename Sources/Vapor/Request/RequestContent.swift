@@ -1,5 +1,10 @@
 import MediaType
 
+// TODO: Tanner, seems export is necessary
+@_exported import PathIndexable
+extension Json: PathIndexable {}
+
+
 public protocol RequestContentSubscript {}
 
 extension String: RequestContentSubscript { }
@@ -146,6 +151,14 @@ public extension Request {
             } else {
                 return nil
             }
+        }
+
+        public subscript(indexes: PathIndex...) -> Node? {
+            return self[indexes]
+        }
+
+        public subscript(indexes: [PathIndex]) -> Node? {
+            return json?[indexes]
         }
     }
 

@@ -34,6 +34,21 @@ app.get("test", Int.self, String.self) { request, int, string in
     ])
 }
 
+/* Expected Users Format
+ [
+    [
+        "name" : "joe",
+        "friend" : [
+            "name" : "joe"
+        ]
+    ]
+ ]
+ */
+app.get("users") { req in
+    let friendName = req.data[0, "name", "friend", "name"].string
+    return "Hello \(friendName)"
+}
+
 //MARK: Json
 
 app.get("json") { request in
