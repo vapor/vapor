@@ -29,7 +29,7 @@ public class Application {
     /**
         Provides access to config settings.
     */
-    public lazy var config: Config = Config(application: self)
+    public var config: Config
 
     /**
         Provides access to the underlying
@@ -51,31 +51,6 @@ public class Application {
         with this application
     */
     public var providers: [Provider]
-
-    /**
-        Internal value populated the first time
-        self.environment is computed
-    */
-    private var detectedEnvironment: Environment?
-
-    /**
-        Current environment of the application
-    */
-    public var environment: Environment {
-        if let environment = self.detectedEnvironment {
-            return environment
-        }
-
-        let environment = bootEnvironment()
-        self.detectedEnvironment = environment
-        return environment
-    }
-
-    /**
-        Optional handler to be called when detecting the
-        current environment.
-    */
-    public var detectEnvironmentHandler: ((String) -> Environment)?
 
     /**
         The work directory of your application is
@@ -102,8 +77,8 @@ public class Application {
     var scopedMiddleware: [Middleware] = []
     var scopedPrefix: String?
 
-    var port: Int = 80
-    var ip: String = "0.0.0.0"
+    var port: Int
+    var host: String
 
     var routes: [Route] = []
 
@@ -126,29 +101,26 @@ public class Application {
         self.middleware.append(
             SessionMiddleware(session: session)
         )
+
+        if let workDir = Process.valueFor(argument: "workDir") {
+            Log.info("Work dir override: \(workDir)")
+            self.workDir = workDir
+        }
+
+        config = Config(workingDirectory: workDir)
+
+        host = config["app", "host"].string ?? "0.0.0.0"
+
+        // Tanner, would like input here.
+        // Alternative is
+        // the json is strictly typed, we need a way to make it fuzzy
+        // or all cli args will be strings.
+        port = config["app", "port"].string?.int ?? 80
     }
 
     public func bootProviders() {
         for provider in self.providers {
             provider.boot(with: self)
-        }
-    }
-
-    func bootEnvironment() -> Environment {
-        var environment: String
-
-        if let value = Process.valueFor(argument: "env") {
-            Log.info("Environment override: \(value)")
-            environment = value
-        } else {
-            // TODO: This should default to "production" in release builds
-            environment = "development"
-        }
-
-        if let handler = self.detectEnvironmentHandler {
-            return handler(environment)
-        } else {
-            return Environment(id: environment)
         }
     }
 
@@ -163,29 +135,11 @@ public class Application {
         matches the app environment.
     */
     public func inEnvironment(_ environments: Environment...) -> Bool {
-        return environments.contains(self.environment)
+        return environments.contains(self.config.environment)
     }
 
     func bootRoutes() {
         routes.forEach(router.register)
-    }
-
-    func bootArguments() {
-        //grab process args
-        if let workDir = Process.valueFor(argument: "workDir") {
-            Log.info("Work dir override: \(workDir)")
-            self.workDir = workDir
-        }
-
-        if let ip = Process.valueFor(argument: "ip") {
-            Log.info("IP override: \(ip)")
-            self.ip = ip
-        }
-
-        if let port = Process.valueFor(argument: "port")?.int {
-            Log.info("Port override: \(port)")
-            self.port = port
-        }
     }
 
     /**
@@ -193,30 +147,26 @@ public class Application {
         optionally runs on the supplied
         ip & port overrides
     */
-    public func start(ip: String? = nil, port: Int? = nil) {
-        self.ip = ip ?? self.ip
-        self.port = port ?? self.port
-
-        bootArguments()
+    public func start() {
         bootProviders()
 
         bootRoutes()
 
-        if environment == .Production {
-            Log.info("Production mode detected, disabling information logs.")
+        if config.environment == .production {
+            Log.info("Production environment detected, disabling information logs.")
             Log.enabledLevels = [.Error, .Fatal]
         }
 
         do {
-            Log.info("Server starting on \(self.ip):\(self.port)")
+            Log.info("Server starting on \(host):\(port)")
 
             let server: Server
             if let presetServer = self.server {
                 server = presetServer
             } else {
                 server = try HTTPStreamServer<ServerSocket>(
-                    host: self.ip,
-                    port: self.port,
+                    host: host,
+                    port: port,
                     responder: self
                 )
                 self.server = server
@@ -305,7 +255,7 @@ extension Application: Responder {
             }
         } catch {
             var error = "Server Error: \(error)"
-            if environment == .Production {
+            if config.environment == .production {
                 error = "Something went wrong"
             }
 
@@ -318,4 +268,8 @@ extension Application: Responder {
         return response
     }
 
+    func test() {
+
+
+    }
 }
