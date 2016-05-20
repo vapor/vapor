@@ -1,8 +1,23 @@
 import PathIndexable
+import Foundation
 
 private struct JsonFile {
     let name: String
     let json: Json
+
+    private static let suffix = ".json"
+
+    init(name: String, json: Json) {
+        if name.hasSuffix(JsonFile.suffix) {
+            let suffixCount = JsonFile.suffix.characters.count
+            let maxLength = name.count - suffixCount
+            let chars = name.characters.prefix(maxLength)
+            self.name = String(chars)
+        } else {
+            self.name = name
+        }
+        self.json = json
+    }
 }
 
 private struct ConfigDirectory {
@@ -13,7 +28,7 @@ private struct ConfigDirectory {
         return files
             .lazy
             .filter { file in
-                return file.name == name + ".json"
+                file.name == name
             }
             .flatMap { file in file.json[paths] }
             .first
@@ -63,6 +78,77 @@ extension FileManager {
     }
 }
 
+extension Process {
+    private static func makeCLIConfig() -> ConfigDirectory {
+        let configArgs = NSProcessInfo.processInfo().arguments.filter { $0.hasPrefix("--config:") }
+
+        // [FileName: Json]
+        var directory: [String: Json] = [:]
+
+        for arg in configArgs {
+            guard let (key, value) = parseArgument(arg) else {
+                continue
+            }
+
+            guard let (file, path) = parseConfigKey(key) else {
+                continue
+            }
+
+            var js = directory[file] ?? .object([:])
+            js[path] = .string(value)
+            directory[file] = js
+        }
+
+        let jsonFiles = directory.map { fileName, json in JsonFile(name: fileName, json: json) }
+        let config = ConfigDirectory(name: "cli", files: jsonFiles)
+        return config
+    }
+
+    private static func parseArgument(_ arg: String) -> (key: String, value: String)? {
+        let info = arg
+            .characters
+            .split(separator: "=",
+                   maxSplits: 1,
+                   omittingEmptySubsequences: true)
+            .map(String.init)
+
+        guard info.count == 2, let key = info.first, let value = info.last else {
+            Log.info("Unable to parse possible config argument: \(arg)")
+            return nil
+        }
+
+        return (key, value)
+    }
+
+    private static func parseConfigKey(_ key: String) -> (file: String, path: [PathIndex])? {
+        // --config:app.port
+        // expect [--config, app.port]
+        let paths = key
+            .characters
+            .split(separator: ":",
+                   maxSplits: 1,
+                   omittingEmptySubsequences: true)
+            .map(String.init)
+
+        guard
+            paths.count == 2,
+            var keyPaths = paths.last?.components(separatedBy: "."),
+            let fileName = keyPaths.first
+            // first argument is file name, subsequent args are actual path
+            //
+            where keyPaths.count > 1
+            else {
+                Log.info("Unable to parse possible config path: \(key)")
+                return nil
+            }
+
+        // first argument is file name, subsequent arguments are paths
+        keyPaths.remove(at: 0)
+        
+        return (fileName, keyPaths.map { $0 as PathIndex })
+    }
+}
+
 /**
     Parses and interprets configuration files
     included under Config in the working directory.
@@ -107,28 +193,24 @@ public class Config {
         let seedDirectory = ConfigDirectory(name: "seed-data", files: files)
         var prioritizedDirectories: [ConfigDirectory] = [seedDirectory]
 
-        //
-        // TODO: cli will possibly be first in priority queue in future
-        // potential syntax
+        // command line args passed w/ following syntax loaded first after seed
         // --config:app.port=9090
         // --config:passwords.mongo-user=user
         // --config:passwords.mongo-password=password
         // --config:<name>.<path>.<to>.<value>=<actual-value>
-
+        let cliDirectory = Process.makeCLIConfig()
+        prioritizedDirectories.append(cliDirectory)
+        
         // Json files are loaded in order of priority
         // it will go like this
         // paths will be searched for in top down order
         if let directory = FileManager.loadDirectory(configDirectory + "secrets") {
-            //print("Secrets: \(directory)")
             prioritizedDirectories.append(directory)
         }
-        //print("Env: \(environment.description)")
         if let directory = FileManager.loadDirectory(configDirectory + environment.description) {
-            //print("Enf: \(directory)")
             prioritizedDirectories.append(directory)
         }
         if let directory = FileManager.loadDirectory(configDirectory) {
-            //print("Config directory: \(directory)")
             prioritizedDirectories.append(directory)
         }
 
@@ -173,13 +255,6 @@ public class Config {
      */
     public subscript(_ file: String, _ paths: [PathIndex]) -> Node? {
         return directoryQueue[file, paths]
-    }
-
-    /**
-         Returns whether this instance of `Config` contains the path
-     */
-    public func has(_ path: String, _ indexes: PathIndex...) -> Bool {
-        return self[path, indexes] != nil
     }
 }
 

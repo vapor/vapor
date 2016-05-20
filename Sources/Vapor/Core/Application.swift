@@ -110,7 +110,12 @@ public class Application {
         config = Config(workingDirectory: workDir)
 
         host = config["app", "host"].string ?? "0.0.0.0"
-        port = config["app", "port"].int ?? 80
+
+        // Tanner, would like input here. 
+        // Alternative is
+        // the json is strictly typed, we need a way to make it fuzzy
+        // or all cli args will be strings.
+        port = config["app", "port"].string?.int ?? 80
     }
 
     public func bootProviders() {
