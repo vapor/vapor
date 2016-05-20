@@ -111,7 +111,7 @@ public class Application {
 
         host = config["app", "host"].string ?? "0.0.0.0"
 
-        // Tanner, would like input here. 
+        // Tanner, would like input here.
         // Alternative is
         // the json is strictly typed, we need a way to make it fuzzy
         // or all cli args will be strings.

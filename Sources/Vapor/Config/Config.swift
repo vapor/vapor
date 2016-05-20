@@ -200,7 +200,7 @@ public class Config {
         // --config:<name>.<path>.<to>.<value>=<actual-value>
         let cliDirectory = Process.makeCLIConfig()
         prioritizedDirectories.append(cliDirectory)
-        
+
         // Json files are loaded in order of priority
         // it will go like this
         // paths will be searched for in top down order
