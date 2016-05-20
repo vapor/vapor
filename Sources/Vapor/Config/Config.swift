@@ -227,7 +227,7 @@ public class Config {
                      "port" : 9090
                  }
              }
-     
+
          You would access the port like this:
 
              let port = app.config["metadata", "info", "por"].int ?? 8080
