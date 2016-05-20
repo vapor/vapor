@@ -228,4 +228,4 @@ app.get("async") { request in
     return response
 }
 
-app.start(port: 8080)
+app.start()

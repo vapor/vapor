@@ -29,7 +29,7 @@ public class Application {
     /**
         Provides access to config settings.
     */
-    public lazy var config: Config = Config(workingDirectory: self.workDir)
+    public var config: Config
 
     /**
         Provides access to the underlying
@@ -77,8 +77,8 @@ public class Application {
     var scopedMiddleware: [Middleware] = []
     var scopedPrefix: String?
 
-    var port: Int = 80
-    var ip: String = "0.0.0.0"
+    var port: Int
+    var host: String
 
     var routes: [Route] = []
 
@@ -101,6 +101,16 @@ public class Application {
         self.middleware.append(
             SessionMiddleware(session: session)
         )
+
+        if let workDir = Process.valueFor(argument: "workDir") {
+            Log.info("Work dir override: \(workDir)")
+            self.workDir = workDir
+        }
+
+        config = Config(workingDirectory: workDir)
+
+        host = config["app", "host"].string ?? "0.0.0.0"
+        port = config["app", "port"].int ?? 80
     }
 
     public func bootProviders() {
@@ -127,53 +137,31 @@ public class Application {
         routes.forEach(router.register)
     }
 
-    func bootArguments() {
-        //grab process args
-        if let workDir = Process.valueFor(argument: "workDir") {
-            Log.info("Work dir override: \(workDir)")
-            self.workDir = workDir
-        }
-
-        if let ip = Process.valueFor(argument: "ip") {
-            Log.info("IP override: \(ip)")
-            self.ip = ip
-        }
-
-        if let port = Process.valueFor(argument: "port")?.int {
-            Log.info("Port override: \(port)")
-            self.port = port
-        }
-    }
-
     /**
         Boots the chosen server driver and
         optionally runs on the supplied
         ip & port overrides
     */
-    public func start(ip: String? = nil, port: Int? = nil) {
-        self.ip = ip ?? self.ip
-        self.port = port ?? self.port
-
-        bootArguments()
+    public func start() {
         bootProviders()
 
         bootRoutes()
 
-        if config.environment == .Production {
+        if config.environment == .production {
             Log.info("Production environment detected, disabling information logs.")
             Log.enabledLevels = [.Error, .Fatal]
         }
 
         do {
-            Log.info("Server starting on \(self.ip):\(self.port)")
+            Log.info("Server starting on \(host):\(port)")
 
             let server: Server
             if let presetServer = self.server {
                 server = presetServer
             } else {
                 server = try HTTPStreamServer<ServerSocket>(
-                    host: self.ip,
-                    port: self.port,
+                    host: host,
+                    port: port,
                     responder: self
                 )
                 self.server = server
@@ -262,7 +250,7 @@ extension Application: Responder {
             }
         } catch {
             var error = "Server Error: \(error)"
-            if config.environment == .Production {
+            if config.environment == .production {
                 error = "Something went wrong"
             }
 

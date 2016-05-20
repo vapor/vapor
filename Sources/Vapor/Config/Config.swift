@@ -9,7 +9,6 @@ private struct ConfigDirectory {
     let name: String
     let files: [JsonFile]
 
-
     subscript(_ name: String, _ paths: [PathIndex]) -> Json? {
         return files
             .lazy
@@ -120,16 +119,16 @@ public class Config {
         // it will go like this
         // paths will be searched for in top down order
         if let directory = FileManager.loadDirectory(configDirectory + "secrets") {
-            print("Secrets: \(directory)")
+            //print("Secrets: \(directory)")
             prioritizedDirectories.append(directory)
         }
-        print("Env: \(environment.description)")
+        //print("Env: \(environment.description)")
         if let directory = FileManager.loadDirectory(configDirectory + environment.description) {
-            print("Enf: \(directory)")
+            //print("Enf: \(directory)")
             prioritizedDirectories.append(directory)
         }
         if let directory = FileManager.loadDirectory(configDirectory) {
-            print("Config directory: \(directory)")
+            //print("Config directory: \(directory)")
             prioritizedDirectories.append(directory)
         }
 
@@ -189,9 +188,12 @@ extension Environment {
         Used to load Environment automatically. Defaults to looking for `env` command line argument
      */
     static var loader: Void -> Environment = {
-        return Process.valueFor(argument: "env")
-            .flatMap(Environment.init(id:))
-            ?? .Development
+        if let env = Process.valueFor(argument: "env").flatMap(Environment.init(id:)) {
+            Log.info("Environment override: \(env)")
+            return env
+        } else {
+            return .development
+        }
     }
 }
 
