@@ -8,11 +8,11 @@ private struct JsonFile {
     private static let suffix = ".json"
 
     init(name: String, json: Json) {
-        if name.hasSuffix(JsonFile.suffix) {
-            let suffixCount = JsonFile.suffix.characters.count
-            let maxLength = name.count - suffixCount
-            let chars = name.characters.prefix(maxLength)
-            self.name = String(chars)
+        if
+            let nameSequence = name.characters.split(separator: ".").first
+            where name.hasSuffix(JsonFile.suffix)
+        {
+            self.name = String(nameSequence)
         } else {
             self.name = name
         }
