@@ -68,8 +68,8 @@ extension Request {
     }
     
 
-    private func parseURLEncodedForm(_ string: String) -> [String: MultiPart] {
-        var formEncoded: [String: MultiPart] = [:]
+    private func parseURLEncodedForm(_ string: String) -> [String: String] {
+        var formEncoded: [String: String] = [:]
 
         for pair in string.split(byString: "&") {
             let token = pair.split(separator: "=", maxSplits: 1)
@@ -77,7 +77,7 @@ extension Request {
                 let key = String(validatingUTF8: token[0]) ?? ""
                 var value = String(validatingUTF8: token[1]) ?? ""
                 value = (try? String(percentEncoded: value)) ?? ""
-                formEncoded[key] = .input(value)
+                formEncoded[key] = value
             }
         }
 
@@ -90,6 +90,7 @@ extension Request {
 
     private func parseContent() -> Request.Content {
         var queries: [String: String] = [:]
+
         uri.query.forEach { (key, queryField) in
             queries[key] = queryField
                 .values
@@ -98,7 +99,8 @@ extension Request {
         }
 
         var json: Json?
-        var formEncoded: [String: MultiPart]?
+        var formEncoded: [String: String]?
+        var multipart: [String: MultiPart]?
         var mutableBody = body
 
         if headers["Content-Type"].first == "application/json" {
@@ -111,14 +113,14 @@ extension Request {
         } else if headers["Content-Type"].first?.range(of: "multipart/form-data") != nil {
             guard let boundaryPieces = headers["Content-Type"].first?.split(byString: "boundary=") where boundaryPieces.count == 2 else {
                 Log.warning("Invalid boundary")
-                return Request.Content(query: queries, json: json, formEncoded: formEncoded)
+                return Request.Content(query: queries, json: json, formEncoded: formEncoded, multipart: multipart)
             }
 
             let boundary = boundaryPieces[1]
 
             do {
                 let data = try mutableBody.becomeBuffer()
-                formEncoded = self.parseMultipartForm(data, boundary: boundary)
+                multipart = parseMultipartForm(data, boundary: boundary)
             } catch {
                 Log.warning("Could not parse multipart form: \(error)")
             }
@@ -132,15 +134,15 @@ extension Request {
             }
         }
 
-        return Request.Content(query: queries, json: json, formEncoded: formEncoded)
+        return Request.Content(query: queries, json: json, formEncoded: formEncoded, multipart: multipart)
     }
 
     ///Query data from the path, or POST data from the body (depends on `Method`).
     public var data: Request.Content {
         get {
             guard let data = storage["data"] as? Request.Content else {
-                Log.warning("Data has not been parsed.")
-                return Request.Content(query: [:], json: nil, formEncoded: nil)
+                Log.warning("Data has not been cached.")
+                return parseContent()
             }
 
             return data

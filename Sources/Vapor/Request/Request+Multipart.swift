@@ -2,20 +2,20 @@ import MediaType
 
 extension Request {
     public enum MultiPart {
-        case files([(name: String?, type: MediaType?, data: Data)])
-        case file(name: String?, type: MediaType?, data: Data)
+        case files([File])
+        case file(File)
         case input(String)
         case inputArray([String])
 
-        public var file: (name: String?, type: MediaType?, data: Data)? {
-            if case .file(let name, let media, let data) = self {
-                return (name, media, data)
+        public var file: File? {
+            if case .file(let file) = self {
+                return file
             }
 
             return nil
         }
 
-        public var files: [(name: String?, type: MediaType?, data: Data)]? {
+        public var files: [File]? {
             if case .files(let files) = self {
                 return files
             }
@@ -81,7 +81,7 @@ extension Request {
                     }
 
                     // Create the suple to be added to the array
-                    let new = (name: storage["filename"], type: mediaType, data: body)
+                    let new = MultiPart.File(name: storage["filename"], type: mediaType, data: body)
 
                     // If there is only one file. Make it a file array
                     if let o = form[name], case .file(let old) = o {
@@ -95,7 +95,8 @@ extension Request {
                         // If it's neither.. It's a duplicate key. This means we're going to be ditched or overriding the existing key
                         // Since we're later, we're overriding
                     } else {
-                        form[name] = .file(name: new.name, type: new.type, data: new.data)
+                        let file = MultiPart.File(name: new.name, type: new.type, data: new.data)
+                        form[name] = .file(file)
                     }
                 } else {
                     var new = String(body)
@@ -123,7 +124,8 @@ extension Request {
                     }
 
                     // Store the file in the form
-                    form[name] = .file(name: storage["filename"], type: mediaType, data: body)
+                    let file = MultiPart.File(name: storage["filename"], type: mediaType, data: body)
+                    form[name] = .file(file)
 
                     // If it's not a file (or not for sure) we're storing the information String
                 } else {
@@ -188,6 +190,14 @@ extension Request {
         }
 
         return storage
+    }
+}
+
+extension Request.MultiPart {
+    public struct File {
+        public var name: String?
+        public var type: MediaType?
+        public var data: Data
     }
 }
 

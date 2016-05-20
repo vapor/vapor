@@ -221,16 +221,16 @@ app.get("multipart-image") { _ in
 }
 
 app.post("multipart-image") { request in
-    guard let form = request.data.formEncoded else {
-        return "No form submited"
+    guard let form = request.data.multipart else {
+        throw Abort.badRequest
     }
 
     guard let namePart = form["name"]?.input else {
-        return "No name provided"
+        throw Abort.badRequest
     }
 
     guard let image = form["image"]?.file else {
-        return "No image provided"
+        throw Abort.badRequest
     }
 
     var headers: Headers = [:]
@@ -255,20 +255,20 @@ app.get("multifile") { _ in
 }
 
 app.post("multifile") { request in
-    guard let form = request.data.formEncoded else {
-        return "No form submited"
+    guard let form = request.data.multipart else {
+        throw Abort.badRequest
     }
     
     guard let response = form["response"]?.input, let number = Int(response) else {
-        return "No response number provided"
+        throw Abort.badRequest
     }
 
     guard let files = form["files"]?.files else {
-        return "No image provided"
+        throw Abort.badRequest
     }
 
     guard files.count > number else {
-        return "Response number doesn't exist"
+        throw Abort.badRequest
     }
 
     let file = files[number]
@@ -305,7 +305,7 @@ app.get("options") { _ in
 }
 
 app.post("options") { request in
-    guard let form = request.data.formEncoded else {
+    guard let form = request.data.multipart else {
         return "No form submited"
     }
     
@@ -316,6 +316,21 @@ app.post("options") { request in
     }
     
     return response
+}
+
+app.post("multipart-print") { request in
+    print(request.data)
+    print(request.data.formEncoded)
+
+    print(request.data["test"])
+    print(request.data["test"].string)
+
+    print(request.data.multipart?["test"])
+    print(request.data.multipart?["test"]?.file)
+    
+    return Json([
+        "message": "Printed details to console"
+    ])
 }
 
 //MARK: Middleware

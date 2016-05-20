@@ -8,17 +8,24 @@ XCTMain([
     testCase(ConfigTests.allTests),
     testCase(ControllerTests.allTests),
     testCase(EnvironmentTests.allTests),
+	testCase(EventTests.swift),
     testCase(HashTests.allTests),
+	testCase(HTTPStreamTests.swift),
     testCase(LogTests.allTests),
     testCase(MemorySessionDriverTests.allTests),
-    testCase(ResponseTests.allTests),
+	testCase(PerformanceTests.swift),
     testCase(ProcessTests.allTests),
+    testCase(QueryParameterTests.allTests),
+    testCase(ResponseTests.allTests),
     testCase(RouterTests.allTests),
     testCase(RouteTests.allTests),
-    testCase(QueryParameterTests.allTests),
     testCase(SessionTests.allTests),
-    testCase(TypedRouteTests.allTests),
-    testCase(HTTPStreamTests.allTests)
+	testCase(TestHTTPStream.allTests),
+	testCase(TypedRouteTests.allTests),
+	testCase(ValidationConvenienceTests.allTests),
+	testCase(ValidationCountTests.allTests),
+	testCase(ValidationTests.allTests),
+	testCase(ValidationUniqueTests.allTests)
 ])
 
 #endif
