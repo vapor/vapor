@@ -1,3 +1,5 @@
+import S4
+
 /**
     Any type that conforms to this protocol
     can be passed as a requirement to Vapor's
@@ -77,6 +79,17 @@ extension Application {
             return try controllerFactory().destroy(request, item: item)
         }
 
+        self.options(path) { request in
+            let headers:Headers = ["Allow":"GET,POST,DELETE,OPTIONS"]
+            let response = Response(status: .ok, headers: headers, body: Data())
+            return response
+        }
+        
+        self.options(path, Resource.Item.self) { request, item in
+            let headers:Headers = ["Allow":"GET,POST,PUT,DELETE,OPTIONS"]
+            let response = Response(status: .ok, headers: headers, body: Data())
+            return response
+        }
     }
 
     /**
