@@ -61,7 +61,7 @@ private class TestController: Controller {
         TestController.lock.destroy += 1
         return "destroy"
     }
-    
+
     /**
         Deletes all instances
      */
