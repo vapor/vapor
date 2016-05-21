@@ -78,6 +78,11 @@ extension Application {
         self.delete(path, Resource.Item.self) { request, item in
             return try controllerFactory().destroy(request, item: item)
         }
+        
+        //PATH /entities/:id
+        self.patch(path, Resource.Item.self) { request, item in
+            return try controllerFactory().modify(request, item:item)
+        }
 
         self.options(path) { request in
             let headers:Headers = ["Allow":"GET,POST,DELETE,OPTIONS"]
@@ -86,7 +91,7 @@ extension Application {
         }
         
         self.options(path, Resource.Item.self) { request, item in
-            let headers:Headers = ["Allow":"GET,POST,PUT,DELETE,OPTIONS"]
+            let headers:Headers = ["Allow":"GET,POST,PUT,PATCH,DELETE,OPTIONS"]
             let response = Response(status: .ok, headers: headers, body: Data())
             return response
         }
