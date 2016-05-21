@@ -31,7 +31,7 @@ public protocol ResourceController {
         Delete an instance.
      */
     func destroy(_ request: Request, item: Item) throws -> ResponseRepresentable
-    
+
     /**
         Delete all instances.
      */
@@ -74,7 +74,7 @@ extension ResourceController {
     public func destroy(_ request: Request, item: Item) throws -> ResponseRepresentable {
         throw Abort.notFound
     }
-    
+
     /**
         Delete all instances.
      */
