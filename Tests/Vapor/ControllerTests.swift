@@ -19,8 +19,9 @@ private class TestController: Controller {
         show: Int,
         update: Int,
         destroy: Int,
+        destroyAll: Int,
         hello: Int
-        ) = (0, 0, 0, 0, 0, 0)
+        ) = (0, 0, 0, 0, 0, 0, 0)
 
     /**
         Display many instances
@@ -59,6 +60,14 @@ private class TestController: Controller {
     func destroy(_ request: Request, item: String) throws -> ResponseRepresentable {
         TestController.lock.destroy += 1
         return "destroy"
+    }
+    
+    /**
+        Deletes all instances
+     */
+    func destroyAll(_ request: Request) throws -> ResponseRepresentable {
+        TestController.lock.destroyAll += 1
+        return "destroyAll"
     }
 
     func hello(_ request: Request) throws -> ResponseRepresentable {
