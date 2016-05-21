@@ -67,7 +67,12 @@ extension Application {
             return try controllerFactory().update(request, item: item)
         }
 
-        //DELETE /intities/:id
+        //DELETE /entities
+        self.delete(path) { request in
+            return try controllerFactory().destroyAll(request)
+        }
+
+        //DELETE /entities/:id
         self.delete(path, Resource.Item.self) { request, item in
             return try controllerFactory().destroy(request, item: item)
         }
