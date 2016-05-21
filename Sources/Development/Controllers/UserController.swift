@@ -44,7 +44,14 @@ class UserController: Controller {
         return user.makeJson()
     }
 
-
+    /**
+     Modify an instance (only the fields that are present in the request)
+     */
+    func modify(_ request:Request, item user: User) throws -> ResponseRepresentable {
+        //Testing JsonRepresentable
+        return user.makeJson()
+    }
+    
     /**
         Delete an instance.
      */

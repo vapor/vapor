@@ -18,10 +18,11 @@ private class TestController: Controller {
         store: Int,
         show: Int,
         update: Int,
+        modify: Int,
         destroy: Int,
         destroyAll: Int,
         hello: Int
-        ) = (0, 0, 0, 0, 0, 0, 0)
+        ) = (0, 0, 0, 0, 0, 0, 0, 0)
 
     /**
         Display many instances
@@ -52,6 +53,14 @@ private class TestController: Controller {
     func update(_ request: Request, item: String) throws -> ResponseRepresentable {
         TestController.lock.update += 1
         return "update"
+    }
+
+    /**
+        Modify an instance (only the fields in the request).
+     */
+    func modify(_ request: Request, item: String) throws -> ResponseRepresentable {
+        TestController.lock.modify += 1
+        return "modify"
     }
 
     /**
