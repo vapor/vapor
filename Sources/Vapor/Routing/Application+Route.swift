@@ -85,13 +85,19 @@ extension Application {
         }
 
         self.options(path) { request in
-            let headers:Headers = ["Allow":"GET,POST,DELETE,OPTIONS"]
+            let headers:Headers = [
+                "Allow":"GET,POST,DELETE,OPTIONS",
+                "Content-Type":"text/plain"
+            ]
             let response = Response(status: .ok, headers: headers, body: Data())
             return response
         }
         
         self.options(path, Resource.Item.self) { request, item in
-            let headers:Headers = ["Allow":"GET,POST,PUT,PATCH,DELETE,OPTIONS"]
+            let headers:Headers = [
+                "Allow":"GET,POST,PUT,PATCH,DELETE,OPTIONS",
+                "Content-Type":"text/plain"
+            ]
             let response = Response(status: .ok, headers: headers, body: Data())
             return response
         }
