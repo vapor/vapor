@@ -4,7 +4,7 @@ SWIFTVERSION=`cat .swift-version`
 IMG=qutheory/swift:$(SWIFTVERSION)
 
 build:
-	docker build --rm -t $(IMG) .
+	docker build --rm -t $(IMG) --build-arg SWIFTVERSION=$(SWIFTVERSION) .
 
 enter:
 	docker run -it --rm --privileged=true --entrypoint bash $(IMG)
