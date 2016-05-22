@@ -1,10 +1,10 @@
 .PHONY: build enter
 
-SWIFTVERSION=`cat .swift-version`
-IMG=qutheory/swift:$(SWIFTVERSION)
+SWIFT_VERSION=`cat .swift-version`
+IMG=qutheory/swift:$(SWIFT_VERSION)
 
 build:
-	docker build --rm -t $(IMG) --build-arg SWIFTVERSION=$(SWIFTVERSION) .
+	docker build --rm -t $(IMG) --build-arg SWIFT_VERSION=$(SWIFT_VERSION) .
 
 enter:
 	docker run -it --rm --privileged=true --entrypoint bash $(IMG)

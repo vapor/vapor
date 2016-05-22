@@ -9,6 +9,7 @@ FROM ubuntu:14.04
 
 ENV SWIFT_BRANCH development
 ARG SWIFT_VERSION
+ENV SWIFT_VERSION ${SWIFT_VERSION}
 ENV SWIFT_PLATFORM ubuntu14.04
 
 # Install related packages
