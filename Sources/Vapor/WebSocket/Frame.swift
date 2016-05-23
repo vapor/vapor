@@ -141,5 +141,8 @@ struct Frame {
         }
         return data
     }
-    
+}
+
+func +=(lhs: inout Data, rhs: Data) {
+    lhs = Data(lhs.bytes + rhs.bytes)
 }
