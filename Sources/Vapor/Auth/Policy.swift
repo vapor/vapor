@@ -1,12 +1,12 @@
 protocol Policy {
-    func vote<U: Authorizable>(whether: U?, may: Action, this: Model) -> Bool?
+    func vote<U>(whether: U?, may: Action, this: Any) -> Bool?
 }
 
-struct AnyPolicy<T: Model, U: Authorizable>: Policy {
+struct AnyPolicy<T, U>: Policy {
     let ability: Ability<T>
     let voter: (T, U?) -> Bool?
 
-    func vote<V: Authorizable>(whether user: V?, may action: Action, this model: Model) -> Bool? {
+    func vote<V>(whether user: V?, may action: Action, this model: Any) -> Bool? {
         guard let user = user as? U?, let model = model as? T
               where action == ability.action else {
             return nil

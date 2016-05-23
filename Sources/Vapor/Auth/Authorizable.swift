@@ -4,18 +4,18 @@
  * And it comes with a handy method for checking a permission.
  * So you can write `if user.can(.update, this: post) { ... }`
  */
-public protocol Authorizable: Model {
+public protocol Authorizable {
     var gate: Gate<Self> { get }
-    func can(_ action: Action, this model: Model) -> Bool
-    func cannot(_ action: Action, this model: Model) -> Bool
+    func can<T>(_ action: Action, this model: T) -> Bool
+    func cannot<T>(_ action: Action, this model: T) -> Bool
 }
 
 public extension Authorizable {
-    public func can<T: Model>(_ action: Action, this model: T) throws -> Bool {
+    public func can<T>(_ action: Action, this model: T) throws -> Bool {
         return try gate.check(if: self, can: action, this: model)
     }
 
-    public func cannot<T: Model>(_ action: Action, this model: T) throws -> Bool {
+    public func cannot<T>(_ action: Action, this model: T) throws -> Bool {
         return try !self.can(action, this: model)
     }
 }
