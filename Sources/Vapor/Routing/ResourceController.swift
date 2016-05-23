@@ -26,11 +26,11 @@ public protocol ResourceController {
         Update an instance.
      */
     func update(_ request: Request, item: Item) throws -> ResponseRepresentable
-    
+
     /**
         Modify an instance (only the fields that are present in the request)
      */
-    func modify(_ request:Request, item: Item) throws -> ResponseRepresentable
+    func modify(_ request: Request, item: Item) throws -> ResponseRepresentable
 
     /** 
         Delete an instance.
