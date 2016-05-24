@@ -10,17 +10,28 @@ let package = Package(
         .Package(url: "https://github.com/Zewo/String.git", majorVersion: 0, minor: 7),
 
         //Parses and serializes JSON - using fork until update core library
-        .Package(url: "https://github.com/qutheory/pure-json.git", majorVersion: 2, minor: 0),
+        .Package(url: "https://github.com/qutheory/pure-json.git", majorVersion: 2, minor: 1),
 
         //Swift wrapper around Sockets, used for built-in HTTP server
+<<<<<<< HEAD
         .Package(url: "https://github.com/ketzusaka/Hummingbird.git", majorVersion: 1, minor: 9), 
+=======
+        .Package(url: "https://github.com/ketzusaka/Hummingbird.git", majorVersion: 1, minor: 8),
+>>>>>>> master
 
         //SHA2 + HMAC hashing. Used by the core to create session identifiers.
         .Package(url: "https://github.com/CryptoKitten/HMAC.git", majorVersion: 0, minor: 7),
         .Package(url: "https://github.com/CryptoKitten/SHA2.git", majorVersion: 0, minor: 7),
 
         //Determines Content-Type for file extensions
+<<<<<<< HEAD
         .Package(url: "https://github.com/Zewo/MediaType.git", majorVersion: 0, minor: 0), // will be 0.7
+=======
+        .Package(url: "https://github.com/Zewo/MediaType.git", majorVersion: 0, minor: 6),
+
+        //ORM for interacting with databases
+        .Package(url: "https://github.com/qutheory/fluent.git", majorVersion: 0, minor: 3),
+>>>>>>> master
         
         // Allows complex key path subscripts
         .Package(url: "https://github.com/qutheory/path-indexable.git", majorVersion: 0, minor: 1)

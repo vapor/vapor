@@ -10,7 +10,7 @@ import XCTest
 @testable import Vapor
 
 class ValidationUniqueTests: XCTestCase {
-    static var allTests: [(String, ValidationUniqueTests -> () throws -> Void)] {
+    static var allTests: [(String, (ValidationUniqueTests) -> () throws -> Void)] {
         return [
                    ("testIntsArray", testIntsArray),
                    ("testStringArray", testStringArray)
@@ -33,7 +33,7 @@ class ValidationUniqueTests: XCTestCase {
 }
 
 class ValidationInTests: XCTestCase {
-    static var allTests: [(String, ValidationInTests -> () throws -> Void)] {
+    static var allTests: [(String, (ValidationInTests) -> () throws -> Void)] {
         return [
                    ("testIntsArray", testIntsArray),
                    ("testStringArray", testStringArray)
