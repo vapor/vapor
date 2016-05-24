@@ -11,7 +11,7 @@ import XCTest
 
 class ProcessTests: XCTestCase {
 
-    static var allTests: [(String, ProcessTests -> () throws -> Void)] {
+    static var allTests: [(String, (ProcessTests) -> () throws -> Void)] {
         return [
             ("testArgumentExtraction", testArgumentExtraction),
             ("testFixes", testFixes)

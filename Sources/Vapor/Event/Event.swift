@@ -34,7 +34,7 @@ extension Subscription {
 public final class Event<T> {
 
     /// Closure called when event emits
-    public typealias Handler = T -> Void
+    public typealias Handler = (T) -> Void
 
     /// A subscriber tuple
     private typealias Subscriber = (token: Subscription.Holder, handler: Handler)

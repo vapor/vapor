@@ -10,7 +10,7 @@ install:
 script:
   # Build Vapor
   - swift build
-  - swift build --configuration release
+  # temporarily disable due to Swift bug (SR-1533)
+  # - swift build --configuration release
   # Test Vapor
   - swift test
-  

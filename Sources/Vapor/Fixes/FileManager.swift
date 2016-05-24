@@ -46,9 +46,9 @@ class FileManager {
     }
 
     static func expandPath(_ path: String) throws -> String {
-        let result = realpath(path, nil)
+        let maybeResult = realpath(path, nil)
 
-        guard result != nil else {
+        guard let result = maybeResult else {
             throw Error.Unreadable
         }
 

@@ -11,7 +11,7 @@ import XCTest
 
 class RouteTests: XCTestCase {
 
-    static var allTests: [(String, RouteTests -> () throws -> Void)] {
+    static var allTests: [(String, (RouteTests) -> () throws -> Void)] {
         return [
            ("testNestedRouteScopedPrefixPopsCorrectly", testNestedRouteScopedPrefixPopsCorrectly),
            ("testRoute", testRoute),
