@@ -8,7 +8,7 @@ XCTMain([
     testCase(ConfigTests.allTests),
     testCase(ControllerTests.allTests),
     testCase(EnvironmentTests.allTests),
-	testCase(EventTests.swift),
+	testCase(EventTests.allTests),
     testCase(HashTests.allTests),
 	testCase(HTTPStreamTests.swift),
     testCase(LogTests.allTests),
