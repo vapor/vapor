@@ -58,7 +58,7 @@ class RequestTests: XCTestCase {
         body += "Content-Disposition: form-data; name=\"value\"\r\n"
         body += "Content-Type: image/gif\r\n"
         body += "\r\n"
-        body += "123\r\n"
+        body += "123"
         body += "--" + boundary + "\r\n"
 
         var request = Request(method: .post, path: "/", host: nil, body: body.data)
