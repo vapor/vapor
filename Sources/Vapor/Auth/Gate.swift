@@ -8,7 +8,7 @@ public class Gate<User> {
         let policy = SpecificPolicy(ability: ability, voter: voter)
         policies.append(policy as Policy)
     }
-    
+
     public func addPolicy<Object>(to action: Action, a type: Object.Type, voter: (user: User?) -> Bool?) {
         let ability = Ability(action: action, type: type)
         let policy = GeneralPolicy(ability: ability, voter: voter)
