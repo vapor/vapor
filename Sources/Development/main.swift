@@ -1,4 +1,5 @@
 import Vapor
+import S4
 
 let app = Application()
 
@@ -204,6 +205,132 @@ extension Employee: JsonRepresentable {
 app.post("validation") { request in
     let employee = try Employee(request: request)
     return employee
+}
+
+//MARK: Forms
+
+app.get("multipart-image") { _ in
+    var response = "<form method='post' action='/multipart-image/' ENCTYPE='multipart/form-data'>"
+
+    response += "<input type='text' name='name' />"
+    response += "<input type='file' name='image' accept='image/*' />"
+    response += "<button>Submit</button>"
+    response += "</form>"
+
+    return Response(status: .ok, html: response)
+}
+
+app.post("multipart-image") { request in
+    guard let form = request.data.multipart else {
+        throw Abort.badRequest
+    }
+
+    guard let namePart = form["name"]?.input else {
+        throw Abort.badRequest
+    }
+
+    guard let image = form["image"]?.file else {
+        throw Abort.badRequest
+    }
+
+    var headers: Headers = [:]
+    
+    if let mediaType = image.type {
+        let header = Header([mediaType.type + "/" + mediaType.subtype])
+        headers["Content-Type"] = header
+    }
+
+    return Response(status: .ok, headers: headers, body: image.data)
+}
+
+app.get("multifile") { _ in
+    var response = "<form method='post' action='/multifile/' ENCTYPE='multipart/form-data'>"
+    
+    response += "<input type='text' name='response' />"
+    response += "<input type='file' name='files' multiple='multiple' />"
+    response += "<button>Submit</button>"
+    response += "</form>"
+    
+    return Response(status: .ok, html: response)
+}
+
+app.post("multifile") { request in
+    guard let form = request.data.multipart else {
+        throw Abort.badRequest
+    }
+    
+    guard let response = form["response"]?.input, let number = Int(response) else {
+        throw Abort.badRequest
+    }
+
+    guard let files = form["files"]?.files else {
+        throw Abort.badRequest
+    }
+
+    guard files.count > number else {
+        throw Abort.badRequest
+    }
+
+    let file = files[number]
+
+    var headers: Headers = [:]
+    
+    if let mediaType = file.type {
+        let header = Header([mediaType.type + "/" + mediaType.subtype])
+        headers["Content-Type"] = header
+    }
+
+    return Response(status: .ok, headers: headers, body: file.data)
+}
+
+app.get("options") { _ in
+    var response = "<form method='post' action='/options/' ENCTYPE='multipart/form-data'>"
+    
+    response += "<select name='options' multiple='multiple'>"
+    response += "<option value='0'>0</option>"
+    response += "<option value='1'>1</option>"
+    response += "<option value='2'>2</option>"
+    response += "<option value='3'>3</option>"
+    response += "<option value='4'>4</option>"
+    response += "<option value='5'>5</option>"
+    response += "<option value='6'>6</option>"
+    response += "<option value='7'>7</option>"
+    response += "<option value='8'>8</option>"
+    response += "<option value='9'>9</option>"
+    response += "</select>"
+    response += "<button>Submit</button>"
+    response += "</form>"
+    
+    return Response(status: .ok, html: response)
+}
+
+app.post("options") { request in
+    guard let form = request.data.multipart else {
+        return "No form submited"
+    }
+    
+    var response = ""
+    
+    for string in form["options"]?.inputArray ?? [] {
+        response += "You have selected \"\(string)\"\n"
+    }
+    
+    return response
+}
+
+app.post("multipart-print") { request in
+    print(request.data)
+    print(request.data.formEncoded)
+
+    print(request.data["test"])
+    print(request.data["test"].string)
+
+    print(request.data.multipart?["test"])
+    print(request.data.multipart?["test"]?.file)
+    
+    return Json([
+        "message": "Printed details to console"
+    ])
 }
 
 //MARK: Middleware

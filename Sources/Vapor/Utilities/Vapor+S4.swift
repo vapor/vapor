@@ -17,6 +17,7 @@ extension Request {
     public typealias Method = S4.Method
     public typealias Body = S4.Body
     public typealias Headers = S4.Headers
+    public typealias Header = S4.Header
 }
 
 
