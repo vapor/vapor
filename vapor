@@ -6,6 +6,8 @@
     import Glibc
 #endif
 
+import Foundation
+
 class Vapor {
     /// Space separated args from shell
     var arguments: [String]
@@ -73,6 +75,8 @@ class Vapor {
                 help()
             case .SelfUpdate:
                 selfUpdate()
+            case .SetupHeroku:
+                setupHeroku()
             case .Xcode:
                 xcode()
             }
@@ -90,6 +94,8 @@ class Vapor {
                 help()
             case .SelfUpdate:
                 selfUpdate()
+            case .SetupHeroku:
+                setupHeroku()
             }
             #endif
 
@@ -113,14 +119,15 @@ class Vapor {
         case New = "new"
         case Help = "help"
         case SelfUpdate = "self-update"
+        case SetupHeroku = "setup-heroku"
         #if os(OSX)
         case Xcode = "xcode"
         #endif
 
         #if os(OSX)
-        static var all: [Command] = [.Clean, .Build, .Run, .New, .Help, .SelfUpdate, .Xcode]  
-        #else  
-        static var all: [Command] = [.Clean, .Build, .Run, .New, .Help, .SelfUpdate]
+        static var all: [Command] = [.Clean, .Build, .Run, .New, .Help, .SelfUpdate, .SetupHeroku, .Xcode]
+        #else
+        static var all: [Command] = [.Clean, .Build, .Run, .New, .Help, .SelfUpdate, .SetupHeroku]
         #endif
     }
 
@@ -174,7 +181,7 @@ class Vapor {
 
         - parameter message: Error message to print
     */
-    func fail(_ message: String) {
+    @noreturn func fail(_ message: String) {
         print()
         print("Error: \(message)")
         exit(1)
@@ -188,7 +195,7 @@ class Vapor {
         run("rm -rf Packages .build", orFail: "Could not clean")
         print("Cleaned.")
     }
-    
+
     /**
         Attempts to compile the Vapor
         project in the current directory.
@@ -225,7 +232,7 @@ class Vapor {
             if arguments.count >= 3 {
                 name = arguments[2]
             }
-            
+
             let flagString = flags.joined(separator: " ")
             try run(".build/\(folder)/\(name) \(flagString)")
         } catch Error.Cancelled {
@@ -252,14 +259,29 @@ class Vapor {
         do {
             let escapedName = "\"\(name)\"" // FIX: Doesn’t support names with quotes
             try run("mkdir \(escapedName)")
+
+            guard commandExists("wget") else {
+              fail("wget required to create new project. Recommended to install through Homebrew: http://brew.sh/")
+            }
             try run("wget \(wgetArgs) https://github.com/qutheory/vapor-example/archive/master.tar.gz -O \(escapedName)/vapor-example.tar.gz")
             try run("tar -\(tarArgs)xzf \(escapedName)/vapor-example.tar.gz --strip-components=1 --directory \(escapedName)")
             try run("rm \(escapedName)/vapor-example.tar.gz")
+            #if os(OSX)
+              try run("cd \(escapedName) && swift build -X")
+            #endif
+
+            if commandExists("git") {
+              print("Initializing git repository if necessary")
+              system("git init \(escapedName)")
+              system("cd \(escapedName) && git add . && git commit -m \"initial vapor project setup\"")
+              print()
+            }
 
             print()
             print("Project \"\(name)\" has been created.")
             print("Enjoy!")
             print()
+            system("open \(escapedName)/VaporApp.xcodeproj")
         } catch {
             fail("Could not clone repository")
         }
@@ -333,7 +355,7 @@ class Vapor {
     #endif
 
     /**
-        Displays information about how to use 
+        Displays information about how to use
         the CLI and what its various commands do.
     */
     func help() {
@@ -371,6 +393,9 @@ class Vapor {
         print("    Generates and opens an Xcode Project.")
         #endif
 
+        print("  setup-heroku")
+        print("    creates and starts a basic heroku project")
+
         print()
         print("  clean")
         print()
@@ -382,6 +407,152 @@ class Vapor {
         print("  http://slack.qutheory.io")
         print()
     }
+}
+
+extension Vapor {
+  func gitHistoryIsClean() -> Bool {
+    return system("test -z \"$(git status --porcelain)\" || exit 1") == 0
+  }
+
+  func getInput() -> String {
+    return readLine(strippingNewline: true) ?? ""
+  }
+
+  func readPackageSwiftFile() -> String {
+    let file = "./Package.swift"
+    do {
+      return try String(contentsOfFile: file)
+    } catch {
+      print()
+      print("Unable to find Package.swift")
+      print("Make sure you've run `vapor new` or setup your Swift project manually")
+      fail("")
+    }
+  }
+
+  func extractPackageName(from packageFile: String) -> String {
+    let packageName = packageFile
+      .components(separatedBy: "\n")
+      .lazy
+      .map { $0.trimmedSpaces() }
+      .filter { $0.hasPrefix("name") }
+      .first?
+      .components(separatedBy: "\"")
+      .lazy
+      .filter { !$0.hasPrefix("name") }
+      .first
+
+    guard let name = packageName else {
+      fail("Unable to extract package name")
+    }
+
+    return name
+  }
+
+  func getPackageName() -> String {
+    let packageFile = readPackageSwiftFile()
+    let packageName = extractPackageName(from: packageFile)
+    return packageName
+  }
+
+  func setupHeroku() {
+    guard commandExists("git") else {
+      fail("git is required to setup heroku, make sure it's installed")
+    }
+    guard commandExists("heroku") else {
+      fail("heroku cli and logged in user is required: https://toolbelt.heroku.com/")
+    }
+
+    if !gitHistoryIsClean() {
+      print("Found Uncommitted Changes")
+      print("Setting up heroku requires adding a commit to the repository")
+      print("Please commit your current changes before setting up heroku")
+      fail("")
+    }
+
+    let packageName = getPackageName()
+    print("Setting up Heroku for \(packageName) ...")
+    print()
+    print("Custom Buildpack? (return to use default)")
+
+    var buildpack = ""
+    if let input = readLine(strippingNewline: true) where !buildpack.isEmpty {
+      buildpack = input
+    } else {
+      // TODO: Move default to KyleF when supported
+      buildpack = "https://github.com/qutheory/heroku-buildpack-swift"
+    }
+    print("Using buildpack: \(buildpack)")
+    print()
+
+    print("Custom Heroku App Name? (return to let Heroku create)")
+    let herokuAppName = getInput()
+    do {
+      try run("heroku create \(herokuAppName) --buildpack \(buildpack)")
+    } catch {
+      fail("")
+    }
+
+    print("Creating Procfile ...")
+    // TODO: Discuss
+    // Should it be
+    //    let procContents = "web: \(packageName) --port=\\$PORT"
+    // It causes errors like that and forces `App` as process.
+    // Forces us to use Vapor CLI
+    // Maybe that's something we want
+    let procContents = "web: App --port=\\$PORT"
+    do {
+      // Overwrites existing Procfile
+      try run("echo \"\(procContents)\" > ./Procfile")
+    } catch {
+      fail("Unable to make Procfile")
+    }
+
+    print()
+    print("Would you like to push to heroku now? (y/n)")
+    let input = getInput().lowercased()
+    if input.hasPrefix("n") {
+      print("\n\n")
+      print("Make sure to push your changes to heroku using:")
+      print("\t'git push heroku master'")
+      print("You may need to scale up dynos")
+      print("\t'heroku ps:scale web=1'")
+      exit(0)
+    }
+
+    print()
+    print("Pushing to heroku ... this could take a while")
+    print()
+
+    system("git add .")
+    system("git commit -m \"setting up heroku\"")
+    system("git push heroku master")
+
+    print("spinning up dynos ...")
+    do {
+      try run("heroku ps:scale web=1")
+    } catch {
+      fail("unable to spin up dynos")
+    }
+  }
+
+  func commandExists(_ command: String) -> Bool {
+    return system("hash \(command) 2>/dev/null") == 0
+  }
+}
+
+extension String {
+  func trimmedSpaces() -> String {
+    // while characters
+    var mutable = self
+    while let next = mutable.characters.first where next == " " {
+      mutable.remove(at: mutable.startIndex)
+    }
+    while let next = mutable.characters.last where next == " " {
+      mutable.remove(at: mutable.startIndex)
+    }
+    return mutable
+  }
 }
 
 let cli = Vapor(arguments: Process.arguments)
