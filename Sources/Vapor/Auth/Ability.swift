@@ -7,11 +7,11 @@ public enum Action: String {
     case list, inspect, create, update, delete
 }
 
-public struct Ability<T>: Equatable {
+public struct Ability<Object>: Equatable {
     public let action: Action
-    public let type: T.Type
+    public let type: Object.Type
 }
 
-public func ==<T, U>(lhs: Ability<T>, rhs: Ability<U>) -> Bool {
+public func ==<Object1, Object2>(lhs: Ability<Object1>, rhs: Ability<Object2>) -> Bool {
     return lhs.action == rhs.action && lhs.type == rhs.type
 }

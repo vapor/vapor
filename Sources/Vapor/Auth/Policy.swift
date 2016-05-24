@@ -1,14 +1,14 @@
 protocol Policy {
-    func vote<U>(whether: U?, may: Action, this: Any) -> Bool?
-    func vote<U>(whether: U?, may: Action, a: Any.Type) -> Bool?
+    func vote<User>(whether: User?, may: Action, this: Any) -> Bool?
+    func vote<User>(whether: User?, may: Action, a: Any.Type) -> Bool?
 }
 
-struct SpecificPolicy<T, U>: Policy {
-    let ability: Ability<T>
-    let voter: (object: T, user: U?) -> Bool?
+struct SpecificPolicy<Object, User>: Policy {
+    let ability: Ability<Object>
+    let voter: (object: Object, user: User?) -> Bool?
 
     func vote<V>(whether user: V?, may action: Action, this object: Any) -> Bool? {
-        guard let user = user as? U?, let object = object as? T
+        guard let user = user as? User?, let object = object as? Object
               where action == ability.action else {
             return nil
         }
@@ -21,17 +21,17 @@ struct SpecificPolicy<T, U>: Policy {
     }
 }
 
-struct GeneralPolicy<T, U>: Policy {
-    let ability: Ability<T>
-    let voter: (user: U?) -> Bool?
+struct GeneralPolicy<Object, User>: Policy {
+    let ability: Ability<Object>
+    let voter: (user: User?) -> Bool?
 
     func vote<V>(whether user: V?, may action: Action, this object: Any) -> Bool? {
         return nil
     }
 
     func vote<V>(whether user: V?, may action: Action, a type: Any.Type) -> Bool? {
-        guard let user = user as? U?
-            where type is T.Type && action == ability.action else {
+        guard let user = user as? User?
+            where type is Object.Type && action == ability.action else {
                 return nil
         }
 
