@@ -24,6 +24,10 @@ let package = Package(
 
         //ORM for interacting with databases
         .Package(url: "https://github.com/qutheory/fluent.git", majorVersion: 0, minor: 3)
+        .Package(url: "https://github.com/Zewo/MediaType.git", majorVersion: 0, minor: 6),
+        
+        // Allows complex key path subscripts
+        .Package(url: "https://github.com/qutheory/path-indexable.git", majorVersion: 0, minor: 1)
     ],
     exclude: [
         "XcodeProject"

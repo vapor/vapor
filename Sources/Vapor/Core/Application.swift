@@ -204,7 +204,7 @@ public class Application {
 
         if environment == .Production {
             Log.info("Production mode detected, disabling information logs.")
-            Log.enabledLevels = [.Error, .Fatal]
+            Log.enabledLevels = [.error, .fatal]
         }
 
         do {
