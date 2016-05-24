@@ -3,7 +3,7 @@ import S4
 
 let app = Application()
 
-app.hash.key = app.config.get("app.hash.key", "default-key")
+app.hash.key = app.config["app", "hash", "key"].string ?? "default-key"
 
 //MARK: Basic
 
@@ -355,4 +355,4 @@ app.get("async") { request in
     return response
 }
 
-app.start(port: 8080)
+app.start()

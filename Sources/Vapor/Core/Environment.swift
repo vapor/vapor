@@ -4,21 +4,21 @@
     can be used to conditionally show debug or testing information.
 */
 public enum Environment: Equatable {
-    case Production
-    case Test
-    case Development
-    case Custom(String)
+    case production
+    case test
+    case development
+    case custom(String)
 
     init(id string: String) {
         switch string.lowercased() {
         case "production", "prod":
-            self = .Production
+            self = .production
         case "test":
-            self = .Test
+            self = .test
         case "development", "dev":
-            self = .Development
+            self = .development
         default:
-            self = .Custom(string)
+            self = .custom(string)
         }
     }
 }
@@ -27,10 +27,10 @@ extension Environment: CustomStringConvertible {
 
     public var description: String {
         switch self {
-        case Production: return "production"
-        case Test: return "test"
-        case Development: return "development"
-        case Custom(let string): return string
+        case production: return "production"
+        case test: return "test"
+        case development: return "development"
+        case custom(let string): return string
         }
     }
 
