@@ -20,7 +20,6 @@ XCTMain([
     testCase(RouterTests.allTests),
     testCase(RouteTests.allTests),
     testCase(SessionTests.allTests),
-	testCase(TestHTTPStream.allTests),
 	testCase(TypedRouteTests.allTests),
 	testCase(ValidationConvenienceTests.allTests),
 	testCase(ValidationCountTests.allTests),
