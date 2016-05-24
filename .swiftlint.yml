@@ -2,6 +2,7 @@ disabled_rules:
   - line_length
   - valid_docs
   - type_name
+  - variable_name
 opt_in_rules:
 included:
 excluded:
