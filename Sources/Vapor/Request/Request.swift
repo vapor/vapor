@@ -1,3 +1,5 @@
+import S4
+
 extension Request {
     ///URL parameters (ex: `:id`).
     public var parameters: [String: String] {
@@ -64,8 +66,9 @@ extension Request {
 
         return cookies
     }
+    
 
-    private func parseFormEncoded(_ string: String) -> [String: String] {
+    private func parseURLEncodedForm(_ string: String) -> [String: String] {
         var formEncoded: [String: String] = [:]
 
         for pair in string.split(byString: "&") {
@@ -87,6 +90,7 @@ extension Request {
 
     private func parseContent() -> Request.Content {
         var queries: [String: String] = [:]
+
         uri.query.forEach { (key, queryField) in
             queries[key] = queryField
                 .values
@@ -96,6 +100,7 @@ extension Request {
 
         var json: Json?
         var formEncoded: [String: String]?
+        var multipart: [String: MultiPart]?
         var mutableBody = body
 
         if headers["Content-Type"].first == "application/json" {
@@ -105,25 +110,39 @@ extension Request {
             } catch {
                 Log.warning("Could not parse JSON: \(error)")
             }
+        } else if headers["Content-Type"].first?.range(of: "multipart/form-data") != nil {
+            guard let boundaryPieces = headers["Content-Type"].first?.split(byString: "boundary=") where boundaryPieces.count == 2 else {
+                Log.warning("Invalid boundary")
+                return Request.Content(query: queries, json: json, formEncoded: formEncoded, multipart: multipart)
+            }
+
+            let boundary = boundaryPieces[1]
+
+            do {
+                let data = try mutableBody.becomeBuffer()
+                multipart = parseMultipartForm(data, boundary: boundary)
+            } catch {
+                Log.warning("Could not parse multipart form: \(error)")
+            }
         } else {
             do {
                 let data = try mutableBody.becomeBuffer()
                 let string = try String(data: data)
-                formEncoded = parseFormEncoded(string)
+                formEncoded = parseURLEncodedForm(string)
             } catch {
                 Log.warning("Could not parse form encoded data: \(error)")
             }
         }
 
-        return Request.Content(query: queries, json: json, formEncoded: formEncoded)
+        return Request.Content(query: queries, json: json, formEncoded: formEncoded, multipart: multipart)
     }
 
     ///Query data from the path, or POST data from the body (depends on `Method`).
     public var data: Request.Content {
         get {
             guard let data = storage["data"] as? Request.Content else {
-                Log.warning("Data has not been parsed.")
-                return Request.Content(query: [:], json: nil, formEncoded: nil)
+                Log.warning("Data has not been cached.")
+                return parseContent()
             }
 
             return data
@@ -150,5 +169,61 @@ extension Request {
         public func respond(to request: Request) throws -> Response {
             return try closure(request)
         }
+    }
+}
+
+extension Data {
+    func split(separator: Data, excludingFirst: Bool = false, excludingLast: Bool = false) -> [Data] {
+        var ranges = [(from: Int, to: Int)]()
+        var parts = [Data]()
+
+        // "\r\n\r\n\r\n".split(separator: "\r\n\r\n") would break without this because it occurs twice in the same place
+        var highestOccurence = -1
+
+        // Find occurences of boundries
+        for (index, element) in self.enumerated() where index > highestOccurence {
+            // If this first element matches and there are enough bytes left
+            guard element == separator.first && self.count >= index + separator.count else {
+                continue
+            }
+
+            // Take the last byte of where the end of the separator would be and check it
+            guard self[index + separator.count - 1] == separator.bytes.last else {
+                continue
+            }
+
+            // Check if this range matches (put separately for efficiency)
+            guard Data(self[index..<(index+separator.count)]) == separator else {
+                continue
+            }
+            
+            // Append the range of the separator
+            ranges.append((index, index + separator.count))
+
+            // Increase the highest occurrence to prevent a crash as described above
+            highestOccurence = index + separator.count
+        }
+
+        // The first data (before the first separator)
+        if let firstRange = ranges.first where !excludingFirst {
+            parts.append(Data(self[0..<firstRange.from]))
+        }
+
+        // Loop over the ranges
+        for (pos, range) in ranges.enumerated() {
+            // If this is before the last separator
+            if pos < ranges.count - 1 {
+                // Take the data inbetween this and the next boundry
+                let nextRange = ranges[pos + 1]
+
+                parts.append(Data(self[range.to..<nextRange.from]))
+
+            // If this is after the last separator and shouldn't be thrown away
+            } else if ranges[ranges.count - 1].to < self.count && !excludingLast {
+                parts.append(Data(self[range.to..<self.count]))
+            }
+        }
+
+        return parts
     }
 }
