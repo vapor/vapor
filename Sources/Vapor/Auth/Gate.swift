@@ -42,19 +42,19 @@ public class Gate<U> {
         return try check(if: user, can: action, a: type)
     }
 
-    public func check<T>(if user: U?, can action: Action, this object: T) throws {
+    public func ensure<T>(if user: U?, can action: Action, this object: T) throws {
         guard try check(if: user, can: action, this: object) else {
             throw Abort.custom(status: .unauthorized, message: "User is not allowed to \(action) a \(object)")
         }
     }
 
-    public func check<T>(if user: U?, can action: Action, a type: T.Type) throws {
+    public func ensure<T>(if user: U?, can action: Action, a type: T.Type) throws {
         guard try check(if: user, can: action, a: type) else {
             throw Abort.custom(status: .unauthorized, message: "User is not allowed to \(action) a \(type)")
         }
     }
 
-    public func check<T>(if user: U?, can action: Action, an type: T.Type) throws {
-        try check(if: user, can: action, a: type) as Void
+    public func ensure<T>(if user: U?, can action: Action, an type: T.Type) throws {
+        try ensure(if: user, can: action, a: type) as Void
     }
 }
