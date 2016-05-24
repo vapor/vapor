@@ -21,23 +21,23 @@ public class Gate<U> {
                 return vote
             }
         }
-        
+
         return try check(if: user, can: action, a: object.dynamicType)
     }
-    
+
     public func check<T>(if user: U?, can action: Action, a type: T.Type) throws -> Bool {
         for policy in policies {
             if let vote = policy.vote(whether: user, may: action, a: type) {
                 return vote
             }
         }
-        
+
         throw Abort.custom(
             status: .internalServerError,
             message: "Tried to check if user was allowed to \(action) a \(type), but no policy existed."
         )
     }
-    
+
     public func check<T>(if user: U?, can action: Action, an type: T.Type) throws -> Bool {
         return try check(if: user, can: action, a: type)
     }
@@ -47,13 +47,13 @@ public class Gate<U> {
             throw Abort.custom(status: .unauthorized, message: "User is not allowed to \(action) a \(object)")
         }
     }
-    
+
     public func check<T>(if user: U?, can action: Action, a type: T.Type) throws {
         guard try check(if: user, can: action, a: type) else {
             throw Abort.custom(status: .unauthorized, message: "User is not allowed to \(action) a \(type)")
         }
     }
-    
+
     public func check<T>(if user: U?, can action: Action, an type: T.Type) throws {
         try check(if: user, can: action, a: type) as Void
     }
