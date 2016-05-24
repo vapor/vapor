@@ -21,6 +21,9 @@ let package = Package(
 
         //Determines Content-Type for file extensions
         .Package(url: "https://github.com/Zewo/MediaType.git", majorVersion: 0, minor: 6),
+
+        //ORM for interacting with databases
+        .Package(url: "https://github.com/qutheory/fluent.git", majorVersion: 0, minor: 3),
         
         // Allows complex key path subscripts
         .Package(url: "https://github.com/qutheory/path-indexable.git", majorVersion: 0, minor: 1)
