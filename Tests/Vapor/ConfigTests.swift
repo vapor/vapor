@@ -2,7 +2,7 @@ import XCTest
 @testable import Vapor
 
 class ConfigTests: XCTestCase {
-    static var allTests: [(String, ConfigTests -> () throws -> Void)] {
+    static var allTests: [(String, (ConfigTests) -> () throws -> Void)] {
         return [
            ("testSimple", testSimple),
            ("testNesting", testNesting),

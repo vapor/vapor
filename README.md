@@ -40,11 +40,9 @@ Vapor has been tested on OS X 10.11, Ubuntu 14.04, and Ubuntu 15.10.
 
 Our homepage [http://qutheory.io](http://qutheory.io) is currently running using Vapor on DigitalOcean.
 
-
 ## ⚠️ Work in Progress
 
 This is a work in progress, so *do not* rely on this for anything important. And pull requests are welcome!
-
 
 ## 👥 Authors
 

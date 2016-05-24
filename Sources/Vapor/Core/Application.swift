@@ -94,7 +94,7 @@ public class Application {
         self.providers = []
 
         let hash = Hash()
-        
+
         self.session = sessionDriver ?? MemorySessionDriver(hash: hash)
         self.hash = hash
 
@@ -154,7 +154,7 @@ public class Application {
 
         if config.environment == .production {
             Log.info("Production environment detected, disabling information logs.")
-            Log.enabledLevels = [.Error, .Fatal]
+            Log.enabledLevels = [.error, .fatal]
         }
 
         do {

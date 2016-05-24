@@ -6,7 +6,7 @@ public struct In<
     T: Validatable,
     T: Equatable>: Validator {
 
-    private let iteratorFactory: Void -> AnyIterator<T>
+    private let iteratorFactory: (Void) -> AnyIterator<T>
 
     /**
      Create in validation against passed iterator

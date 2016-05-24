@@ -2,7 +2,7 @@ import XCTest
 @testable import Vapor
 
 class ApplicationTests: XCTestCase {
-    static var allTests: [(String, ApplicationTests -> () throws -> Void)] {
+    static var allTests: [(String, (ApplicationTests) -> () throws -> Void)] {
         return [
             ("testMediaType", testMediaType),
         ]
