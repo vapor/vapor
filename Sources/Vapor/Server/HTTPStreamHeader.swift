@@ -114,7 +114,7 @@ extension HTTPStreamHeader {
             let queryString = pathParts.last ?? ""
             let queryParts = queryString.split(byString: "&")
 
-            var fields: [String : QueryField] = [:]
+            var fields: [String : [String?]] = [:]
             for part in queryParts {
                 let parts = part.split(byString: "=")
 
@@ -126,17 +126,27 @@ extension HTTPStreamHeader {
                     value = nil
                 }
 
-                let field = QueryField(value)
-                fields[parts.first ?? ""] = field
-            }
+                let key = parts.first ?? ""
 
+                var array: [String?]
+
+                if let existingArray = fields[key] {
+                    array = existingArray
+                } else {
+                    array = []
+                }
+
+                array.append(value)
+
+                fields[key] = array
+            }
 
             return URI(scheme: "http",
                        userInfo: nil,
                        host: nil,
                        port: nil,
                        path: path,
-                       query: Query(fields),
+                       query: fields,
                        fragment: nil)
         }
     }

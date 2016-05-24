@@ -91,9 +91,8 @@ extension Request {
     private func parseContent() -> Request.Content {
         var queries: [String: String] = [:]
 
-        uri.query.forEach { (key, queryField) in
-            queries[key] = queryField
-                .values
+        uri.query.forEach { (key, values) in
+            queries[key] = values
                 .flatMap { $0 }
                 .joined(separator: ",")
         }

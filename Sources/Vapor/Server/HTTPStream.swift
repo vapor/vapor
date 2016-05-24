@@ -26,6 +26,10 @@ protocol HTTPListenerStream: HTTPStream {
     func accept(max connectionCount: Int, handler: ((HTTPStream) -> Void)) throws
 }
 
+public enum HTTPStreamError: ErrorProtocol {
+    case unsupported
+}
+
 extension HTTPStream {
     func receiveByte() throws -> Byte? {
         return try receive(upTo: 1).first
@@ -105,8 +109,11 @@ extension HTTPStream {
             }
         case .sender(let closure):
             try closure(self)
+        case .asyncSender(_):
+            throw HTTPStreamError.unsupported
+        case .asyncReceiver(_):
+            throw HTTPStreamError.unsupported
         }
-
     }
 
     func receive() throws -> Request {
