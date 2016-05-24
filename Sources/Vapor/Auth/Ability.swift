@@ -9,9 +9,9 @@ public enum Action: String {
 
 public struct Ability<T>: Equatable {
     public let action: Action
-    public let model: T.Type
+    public let type: T.Type
 }
 
 public func ==<T, U>(lhs: Ability<T>, rhs: Ability<U>) -> Bool {
-    return "\(lhs)" == "\(rhs)"
+    return lhs.action == rhs.action && lhs.type == rhs.type
 }

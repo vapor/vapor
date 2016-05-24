@@ -11,11 +11,27 @@ public protocol Authorizable {
 }
 
 public extension Authorizable {
-    public func can<T>(_ action: Action, this model: T) throws -> Bool {
-        return try gate.check(if: self, can: action, this: model)
+    public func can<T>(_ action: Action, this object: T) throws -> Bool {
+        return try gate.check(if: self, can: action, this: object)
     }
 
-    public func cannot<T>(_ action: Action, this model: T) throws -> Bool {
-        return try !self.can(action, this: model)
+    public func cannot<T>(_ action: Action, this object: T) throws -> Bool {
+        return try !self.can(action, this: object)
+    }
+    
+    public func can<T>(_ action: Action, a type: T.Type) throws -> Bool {
+        return try gate.check(if: self, can: action, a: type)
+    }
+    
+    public func cannot<T>(_ action: Action, a type: T.Type) throws -> Bool {
+        return try !self.can(action, a: type)
+    }
+    
+    public func can<T>(_ action: Action, an type: T.Type) throws -> Bool {
+        return try self.can(action, a: type)
+    }
+    
+    public func cannot<T>(_ action: Action, an type: T.Type) throws -> Bool {
+        return try self.cannot(action, a: type)
     }
 }
