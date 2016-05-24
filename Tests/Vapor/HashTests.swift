@@ -11,7 +11,7 @@ import XCTest
 @testable import Vapor
 
 class HashTests: XCTestCase {
-    static var allTests: [(String, HashTests -> () throws -> Void)] {
+    static var allTests: [(String, (HashTests) -> () throws -> Void)] {
         return [
             ("testHash", testHash)
         ]

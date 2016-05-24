@@ -21,7 +21,7 @@ class Name: ValidationSuite {
 
 
 class ValidationTests: XCTestCase {
-    static var allTests: [(String, ValidationTests -> () throws -> Void)] {
+    static var allTests: [(String, (ValidationTests) -> () throws -> Void)] {
         return [
             ("testName", testName),
             ("testPassword", testPassword),

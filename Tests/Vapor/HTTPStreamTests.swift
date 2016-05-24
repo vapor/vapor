@@ -13,7 +13,7 @@ import XCTest
 
 class HTTPStreamTests: XCTestCase {
 
-    static var allTests: [(String, HTTPStreamTests -> () throws -> Void)] {
+    static var allTests: [(String, (HTTPStreamTests) -> () throws -> Void)] {
         return [
            ("testStream", testStream)
         ]

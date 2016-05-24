@@ -11,7 +11,7 @@ import XCTest
 @testable import Vapor
 
 class QueryParameterTests: XCTestCase {
-    static var allTests: [(String, QueryParameterTests -> () throws -> Void)] {
+    static var allTests: [(String, (QueryParameterTests) -> () throws -> Void)] {
         return [
            ("testArgumentExtraction", testArgumentExtraction)
         ]

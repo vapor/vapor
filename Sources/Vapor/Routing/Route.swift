@@ -7,7 +7,7 @@ public struct Route {
     /**
         The responder type that is used when a route is matched
      */
-    public typealias Handler = Request throws -> ResponseRepresentable
+    public typealias Handler = (Request) throws -> ResponseRepresentable
 
     // MARK: Attributes
 

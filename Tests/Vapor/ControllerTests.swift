@@ -89,7 +89,7 @@ private class TestActionController: DefaultInitializable {
 
 class ControllerTests: XCTestCase {
 
-    static var allTests: [(String, ControllerTests -> () throws -> Void)] {
+    static var allTests: [(String, (ControllerTests) -> () throws -> Void)] {
         return [
             ("testController", testController),
             ("testControllerActionRouting_withFactory", testControllerActionRouting_withFactory),
