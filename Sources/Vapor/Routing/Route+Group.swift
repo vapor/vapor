@@ -15,14 +15,18 @@ extension Route {
 }
 
 extension Route.Link: RouteBuilder {
-    public func add(middleware: [Middleware],
-                    method: Request.Method,
-                    path: String,
-                    handler: Route.Handler) {
-        parent.add(middleware: self.scopedMiddleware + middleware,
-                   method: method,
-                   path: leadingPath.finish("/") + path,
-                   handler: handler)
+    public func add(
+        middleware: [Middleware],
+        method: Request.Method,
+        path: String,
+        handler: Route.Handler
+    ) {
+        parent.add(
+            middleware: self.scopedMiddleware + middleware,
+            method: method,
+            path: leadingPath.finish("/") + path,
+            handler: handler
+        )
     }
 }
 
