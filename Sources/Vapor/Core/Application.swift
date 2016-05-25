@@ -92,12 +92,14 @@ public class Application {
     /**
         Initialize the Application.
     */
-    public init(workDir overrideWorkDir: String? = nil,
-                sessionDriver: SessionDriver? = nil,
-                config overrideConfig: Config? = nil,
-                hash: Hash = Hash(),
-                server: Server.Type = HTTPStreamServer<ServerSocket>.self,
-                router: RouterDriver = BranchRouter()) {
+    public init(
+        workDir overrideWorkDir: String? = nil,
+        sessionDriver: SessionDriver? = nil,
+        config overrideConfig: Config? = nil,
+        hash: Hash = Hash(),
+        server: Server.Type = HTTPStreamServer<ServerSocket>.self,
+        router: RouterDriver = BranchRouter()
+    ) {
         self.hash = hash
         self.session = sessionDriver ?? MemorySessionDriver(hash: hash)
         self.providers = []
