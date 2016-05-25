@@ -40,11 +40,11 @@ extension Request {
         }
     }
 
-    var clrf: Data {
+    static var clrf: Data {
         return Data("\r\n".utf8)
     }
 
-    func parseBoundary(contentType: String) throws -> String {
+    static func parseBoundary(contentType: String) throws -> String {
         let boundaryPieces = contentType.split(byString: "boundary=")
         guard boundaryPieces.count == 2 else {
             throw RequestMultiPartError.invalidBoundary
@@ -52,7 +52,7 @@ extension Request {
         return boundaryPieces[1]
     }
 
-    func parseMultipartForm(_ body: Data, boundary: String) -> [String: MultiPart] {
+    static func parseMultipartForm(_ body: Data, boundary: String) -> [String: MultiPart] {
         let boundaryString = "--" + boundary
         let boundary = Data(boundaryString.utf8)
 
@@ -149,7 +149,7 @@ extension Request {
         return form
     }
 
-    func parseMultipartStorage(head: Data, body: Data) -> [String: String]? {
+    static func parseMultipartStorage(head: Data, body: Data) -> [String: String]? {
         var storage = [String: String]()
 
         // Separate the individual headers

@@ -109,36 +109,28 @@ extension HTTPStreamHeader {
         }
 
         var uri: URI {
-            let pathParts = uriString.split(separator: "?", maxSplits: 1)
-            let path = pathParts.first ?? ""
-            let queryString = pathParts.last ?? ""
-            let queryParts = queryString.split(byString: "&")
-
             var fields: [String : [String?]] = [:]
-            for part in queryParts {
-                let parts = part.split(byString: "=")
 
-                let value: String?
+            let parts = uriString.split(separator: "?", maxSplits: 1)
+            let path = parts.first ?? ""
+            let queryString = parts.last ?? ""
 
-                if let v = parts.last {
-                    value = (try? String(percentEncoded: v)) ?? v
-                } else {
-                    value = nil
+            let data = Request.parseFormURLEncoded(queryString.data)
+
+            if case .dictionary(let dict) = data {
+                for (key, val) in dict {
+                    var array: [String?]
+
+                    if let existing = fields[key] {
+                        array = existing
+                    } else {
+                        array = []
+                    }
+
+                    array.append(val.string)
+
+                    fields[key] = array
                 }
-
-                let key = parts.first ?? ""
-
-                var array: [String?]
-
-                if let existingArray = fields[key] {
-                    array = existingArray
-                } else {
-                    array = []
-                }
-
-                array.append(value)
-
-                fields[key] = array
             }
 
             return URI(scheme: "http",

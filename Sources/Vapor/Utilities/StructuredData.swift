@@ -42,6 +42,16 @@ extension StructuredData {
     }
 }
 
+extension StructuredData: PathIndexable {
+    public init(_ array: [StructuredData]) {
+        self = .array(array)
+    }
+
+    public init(_ object: [String: StructuredData]) {
+        self = .dictionary(object)
+    }
+}
+
 extension StructuredData: Polymorphic {
     public var isNull: Bool {
         if case .null = self {
@@ -105,7 +115,7 @@ extension StructuredData: Polymorphic {
         }
     }
 
-    public var object: [String : Polymorphic]? {
+    public var object: [String: Polymorphic]? {
         if case .dictionary(let dict) = self {
             var object: [String: Polymorphic] = [:]
 

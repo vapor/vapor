@@ -30,7 +30,7 @@ extension Request {
         var cookies: [String: String] = [:]
 
         for cookieString in headers["Cookie"] {
-            for (key, val) in parseCookies(cookieString) {
+            for (key, val) in Request.parseCookies(cookieString) {
                 cookies[key] = val
             }
         }
@@ -49,7 +49,7 @@ extension Request {
 
         - returns: String dictionary of parsed cookies.
      */
-    private func parseCookies(_ string: String) -> [String: String] {
+    static private func parseCookies(_ string: String) -> [String: String] {
         var cookies: [String: String] = [:]
 
         let cookieTokens = string.split(byString: ";")
@@ -71,17 +71,21 @@ extension Request {
         data = parseContent()
     }
 
-    private func parseContent() -> Request.Content {
-        let query = parseQuery(uri: uri)
-
-        var maybeData: Data?
+    func parseContent() -> Request.Content {
+        var data: Data?
         var mutableBody = body
 
         do {
-            maybeData = try mutableBody.becomeBuffer()
+            data = try mutableBody.becomeBuffer()
         } catch {
             Log.error("Could not read body: \(error)")
         }
+
+        return Request.parseContent(data, uri: uri, headers: headers)
+    }
+
+    static private func parseContent(_ data: Data?, uri: URI, headers: Headers) -> Request.Content {
+        let query = parseQuery(uri: uri)
 
         var json: Json?
         var formEncoded: StructuredData?
@@ -89,7 +93,7 @@ extension Request {
 
         if
             let contentType = headers["Content-Type"].first,
-            let data = maybeData
+            let data = data
         {
             if contentType == "application/json" {
                 do {
@@ -99,20 +103,20 @@ extension Request {
                 }
             } else if contentType.range(of: "multipart/form-data") != nil {
                 do {
-                    let boundary = try parseBoundary(contentType: contentType)
-                    multipart = parseMultipartForm(data, boundary: boundary)
+                    let boundary = try Request.parseBoundary(contentType: contentType)
+                    multipart = Request.parseMultipartForm(data, boundary: boundary)
                 } catch {
                     Log.warning("Could not parse MultiPart: \(error)")
                 }
             } else if contentType == "application/x-www-form-urlencoded" {
-                formEncoded = parseFormURLEncoded(data)
+                formEncoded = Request.parseFormURLEncoded(data)
             }
         }
 
         return Request.Content(query: query, json: json, formEncoded: formEncoded, multipart: multipart)
     }
 
-    func parseQuery(uri: URI) -> StructuredData {
+    static func parseQuery(uri: URI) -> StructuredData {
         var query: [String: StructuredData] = [:]
 
         uri.query.forEach { (key, values) in
