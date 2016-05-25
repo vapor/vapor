@@ -87,7 +87,7 @@ extension Request {
     static private func parseContent(_ data: Data?, uri: URI, headers: Headers) -> Request.Content {
         let query = parseQuery(uri: uri)
 
-        var json: Json?
+        var json: JSON?
         var formEncoded: StructuredData?
         var multipart: [String: MultiPart]?
 
@@ -97,7 +97,7 @@ extension Request {
         {
             if contentType == "application/json" {
                 do {
-                    json = try Json(data)
+                    json = try JSON(data)
                 } catch {
                     Log.warning("Could not parse JSON: \(error)")
                 }

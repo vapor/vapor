@@ -1,22 +1,22 @@
 import PureJSON
 
 // Exporting type w/o forcing import
-public typealias Json = PureJSON.JSON
+public typealias JSON = PureJSON.JSON
 
-extension Json {
+extension JSON {
     public init(_ value: Int) {
-        self = .number(Double(value))
+        self = .number(JSON.Number.integer(value))
     }
 
-    public init(_ value: [JsonRepresentable]) {
-        let array: [Json] = value.map { item in
+    public init(_ value: [JSONRepresentable]) {
+        let array: [JSON] = value.map { item in
             return item.makeJson()
         }
         self = .array(array)
     }
 
-    public init(_ value: [String: JsonRepresentable]) {
-        var object: [String: Json] = [:]
+    public init(_ value: [String: JSONRepresentable]) {
+        var object: [String: JSON] = [:]
 
         value.forEach { (key, item) in
             object[key] = item.makeJson()
@@ -26,7 +26,7 @@ extension Json {
     }
 
     public init(_ value: Data) throws {
-        self = try Json.deserialize(value.bytes)
+        self = try JSON.deserialize(value.bytes)
     }
 
     public var data: Data {
@@ -35,7 +35,7 @@ extension Json {
     }
 }
 
-extension Json {
+extension JSON {
     public subscript(key: String) -> Polymorphic? {
         switch self {
         case .object(let object):
@@ -55,8 +55,8 @@ extension Json {
     }
 }
 
-extension Json {
-    mutating func merge(with otherJson: Json) {
+extension JSON {
+    mutating func merge(with otherJson: JSON) {
         switch self {
         case .object(let object):
             guard case let .object(otherObject) = otherJson else {
@@ -90,55 +90,55 @@ extension Json {
     }
 }
 
-public protocol JsonRepresentable: ResponseRepresentable {
-    func makeJson() -> Json
+public protocol JSONRepresentable: ResponseRepresentable {
+    func makeJson() -> JSON
 }
 
 
-extension JsonRepresentable {
+extension JSONRepresentable {
     ///Allows any JsonRepresentable to be returned through closures
     public func makeResponse() -> Response {
         return makeJson().makeResponse()
     }
 }
 
-extension Json: JsonRepresentable {
-    public func makeJson() -> Json {
+extension JSON: JSONRepresentable {
+    public func makeJson() -> JSON {
         return self
     }
 }
 
-extension String: JsonRepresentable {
-    public func makeJson() -> Json {
-        return Json(self)
+extension String: JSONRepresentable {
+    public func makeJson() -> JSON {
+        return JSON(self)
     }
 }
 
-extension Int: JsonRepresentable {
-    public func makeJson() -> Json {
-        return Json(self)
+extension Int: JSONRepresentable {
+    public func makeJson() -> JSON {
+        return JSON(self)
     }
 }
 
-extension Double: JsonRepresentable {
-    public func makeJson() -> Json {
-        return Json(self)
+extension Double: JSONRepresentable {
+    public func makeJson() -> JSON {
+        return JSON(self)
     }
 }
 
-extension Bool: JsonRepresentable {
-    public func makeJson() -> Json {
-        return Json(self)
+extension Bool: JSONRepresentable {
+    public func makeJson() -> JSON {
+        return JSON(self)
     }
 }
 
-extension Json: ResponseRepresentable {
+extension JSON: ResponseRepresentable {
     public func makeResponse() -> Response {
         return Response(status: .ok, json: self)
     }
 }
 
-extension Json: Polymorphic {
+extension JSON: Polymorphic {
     public var array: [Polymorphic]? {
         switch self {
         case .array(let array):
@@ -163,9 +163,5 @@ extension Json: Polymorphic {
         default:
             return nil
         }
-    }
-
-    public var json: Json? {
-        return self
     }
 }

@@ -82,8 +82,8 @@ class RequestTests: XCTestCase {
         request.cacheParsedContent()
 
         XCTAssert(request.data["first"].string == "value", "Request key first did not parse correctly")
-        XCTAssert(request.data["arr"].array?[0].string == "foo bar", "Request key arr did not parse correctly")
-        XCTAssert(request.data["arr"].array?[1].string == "baz", "Request key arr did not parse correctly")
+        XCTAssert(request.data["arr", 0].string == "foo bar", "Request key arr did not parse correctly")
+        XCTAssert(request.data["arr", 1].string == "baz", "Request key arr did not parse correctly")
     }
 
     func testFormURLEncodedEdge() {

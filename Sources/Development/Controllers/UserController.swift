@@ -9,7 +9,7 @@ class UserController: Controller {
         Display many instances
      */
     func index(_ request: Request) throws -> ResponseRepresentable {
-        return Json([
+        return JSON([
             "controller": "MyController.index"
         ])
     }
@@ -19,7 +19,7 @@ class UserController: Controller {
         Create a new instance.
      */
     func store(_ request: Request) throws -> ResponseRepresentable {
-        return Json([
+        return JSON([
             "controller": "MyController.store"
         ])
     }
@@ -30,7 +30,7 @@ class UserController: Controller {
      */
     func show(_ request: Request, item user: User) throws -> ResponseRepresentable {
         //User can be used like JSON with JsonRepresentable
-        return Json([
+        return JSON([
             "controller": "MyController.show",
             "user": user
         ])

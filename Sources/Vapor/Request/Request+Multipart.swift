@@ -265,9 +265,9 @@ extension Request.MultiPart: Polymorphic {
         return nil
     }
 
-    public var json: Json? {
+    public var json: JSON? {
         if case .input(let j) = self {
-            return Json(j)
+            return JSON(j)
         }
 
         return nil

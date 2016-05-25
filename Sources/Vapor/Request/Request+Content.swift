@@ -15,13 +15,13 @@ public extension Request {
     public struct Content {
         // MARK: Initialization
         public let query: StructuredData
-        public let json: Json?
+        public let json: JSON?
         public let formEncoded: StructuredData?
         public let multipart: [String: MultiPart]?
 
         internal init(
             query: StructuredData,
-            json: Json?,
+            json: JSON?,
             formEncoded: StructuredData?,
             multipart: [String: MultiPart]?
         ) {
@@ -65,7 +65,15 @@ public extension Request {
         }
 
         public subscript(indexes: [PathIndex]) -> Polymorphic? {
-            return query[indexes] ?? json?[indexes] ?? formEncoded?[indexes]
+            if let value = query[indexes] {
+                return value
+            } else if let value = json?[indexes] {
+                return value
+            } else if let value = formEncoded?[indexes] {
+                return value
+            } else {
+                return nil
+            }
         }
     }
 

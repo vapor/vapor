@@ -97,7 +97,7 @@ class PerformanceTests: XCTestCase {
         }
 
         app.get("json") { request in
-            return Json(["message": "Hello, world"])
+            return JSON(["message": "Hello, world"])
         }
 
 
