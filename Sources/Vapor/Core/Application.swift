@@ -1,6 +1,41 @@
 import libc
 import MediaType
 
+public struct Group {
+    public let parent: RouteGrouper
+    public let leadingPath: String
+    public let scopedMiddleware: [Middleware]
+}
+
+extension Group: RouteGrouper {
+    public func add(middleware: [Middleware],
+                    method: Request.Method,
+                    path: String,
+                    handler: Route.Handler) {
+        parent.add(middleware: self.scopedMiddleware + middleware,
+                   method: method,
+                   path: leadingPath.finish("/") + path,
+                   handler: handler)
+    }
+}
+
+extension Application: RouteGrouper {
+    public func add(middleware: [Middleware],
+                    method: Request.Method,
+                    path: String,
+                    handler: Route.Handler) {
+        // Convert Route.Handler to Request.Handler
+        let wrapped: Request.Handler = Request.Handler { request in
+            return try handler(request).makeResponse()
+        }
+        let responder: Responder = middleware.reduce(wrapped) { resp, nextMiddleware in
+            return nextMiddleware.chain(to: resp)
+        }
+        let route = Route(host: "*", method: method, path: path, responder: responder)
+        routes.append(route)
+    }
+}
+
 public class Application {
     public static let VERSION = "0.8.0"
 
@@ -38,19 +73,39 @@ public class Application {
     public let hash: Hash
 
     /**
+        The base host to serve for a given application. Set through Config
+     
+        Command Line Argument:
+            `--config:app.host=127.0.0.1`
+         
+        Config:
+            Set "host" key in app.json file
+    */
+    public let host: String
+
+    /**
+        The port the application should listen to. Set through Config
+    */
+    public let port: Int
+
+    /**
         `Middleware` will be applied in the order
         it is set in this array.
 
         Make sure to append your custom `Middleware`
         if you don't want to overwrite default behavior.
     */
+    // TODO: Consider rename to `globalMiddleware`
     public var middleware: [Middleware]
+    public var globalMiddleware: [Middleware] {
+        return middleware
+    }
 
     /**
         Provider classes that have been registered
         with this application
     */
-    public var providers: [Provider]
+    public var providers: [Provider] = []
 
     /**
         The work directory of your application is
@@ -73,12 +128,8 @@ public class Application {
         return workDir + "Resources/"
     }
 
-    var scopedHost: String?
-    var scopedMiddleware: [Middleware] = []
-    var scopedPrefix: String?
-
-    var port: Int
-    var host: String
+//    var scopedMiddleware: [Middleware] = []
+//    var scopedPrefix: String?
 
     var routes: [Route] = []
 
@@ -86,36 +137,30 @@ public class Application {
         Initialize the Application.
     */
     public init(sessionDriver: SessionDriver? = nil) {
-        self.middleware = [
-            AbortMiddleware(),
-            ValidationMiddleware()
-        ]
-
-        self.providers = []
 
         let hash = Hash()
-
-        self.session = sessionDriver ?? MemorySessionDriver(hash: hash)
         self.hash = hash
+        self.session = sessionDriver ?? MemorySessionDriver(hash: hash)
 
-        self.middleware.append(
-            SessionMiddleware(session: session)
-        )
+        let workDir = Process.valueFor(argument: "workDir") ?? "./"
+        self.workDir = workDir
 
-        if let workDir = Process.valueFor(argument: "workDir") {
-            Log.info("Work dir override: \(workDir)")
-            self.workDir = workDir
-        }
+        let config = Config(workingDirectory: workDir)
+        self.config = config
 
-        config = Config(workingDirectory: workDir)
-
-        host = config["app", "host"].string ?? "0.0.0.0"
+        self.host = config["app", "host"].string ?? "0.0.0.0"
 
         // Tanner, would like input here.
         // Alternative is
         // the json is strictly typed, we need a way to make it fuzzy
         // or all cli args will be strings.
-        port = config["app", "port"].string?.int ?? 80
+        self.port = config["app", "port"].string?.int ?? 80
+
+        self.middleware = [
+            AbortMiddleware(),
+            ValidationMiddleware(),
+            SessionMiddleware(session: session)
+        ]
     }
 
     public func bootProviders() {

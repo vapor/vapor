@@ -182,82 +182,70 @@ extension Application {
         - parameter path: The HTTP path that handler can run at.
         - parameter handler: The code to process the request with.
     */
-    public final func add(_ method: Request.Method, path: String, handler: Route.Handler) {
-        //Convert Route.Handler to Request.Handler
-        var responder: Responder = Request.Handler { request in
-            return try handler(request).makeResponse()
-        }
-
-        //Apply any scoped middlewares
-        for middleware in self.scopedMiddleware {
-            responder = middleware.chain(to: responder)
-        }
-
-        //Store the route for registering with Router later
-        let host = scopedHost ?? "*"
-
-        //Apply any scoped prefix
-        var path = path
-        if let prefix = scopedPrefix {
-            path = prefix + "/" + path
-        }
-
-        let route = Route(host: host, method: method, path: path, responder: responder)
-        self.routes.append(route)
-    }
+//    public final func add(_ method: Request.Method, path: String, handler: Route.Handler) {
+//        //Convert Route.Handler to Request.Handler
+//        var responder: Responder = Request.Handler { request in
+//            return try handler(request).makeResponse()
+//        }
+//
+//        //Apply any scoped middlewares
+//        for middleware in self.scopedMiddleware {
+//            responder = middleware.chain(to: responder)
+//        }
+//
+//        //Store the route for registering with Router later
+////        let host = scopedHost ?? "*"
+//
+//        //Apply any scoped prefix
+//        var path = path
+//        if let prefix = scopedPrefix {
+//            path = prefix + "/" + path
+//        }
+//
+//        let route = Route(host: host, method: method, path: path, responder: responder)
+//        self.routes.append(route)
+//    }
 
     /**
         Applies the middleware to the routes defined
         inside the closure. This method can be nested within
         itself safely.
     */
-    public final func middleware(_ middleware: Middleware, handler: () -> ()) {
-       self.middleware([middleware], handler: handler)
-    }
+//    public final func middleware(_ middleware: Middleware, handler: () -> ()) {
+//       self.middleware([middleware], handler: handler)
+//    }
 
     /**
         Applies the middleware to the routes defined
         inside the closure. This method can be nested within
         itself safely.
      */
-    public final func middleware(_ middleware: [Middleware], handler: () -> ()) {
-        let original = scopedMiddleware
-        scopedMiddleware += middleware
+//    public final func middleware(_ middleware: [Middleware], handler: () -> ()) {
+//        fatalError()
+//        let original = scopedMiddleware
+//        scopedMiddleware += middleware
 
-        handler()
+//        handler()
 
-        scopedMiddleware = original
-    }
-
-    /**
-        Create multiple routes with the same host
-        without repeating yourself.
-     */
-    public final func host(_ host: String, handler: () -> Void) {
-        let original = scopedHost
-        scopedHost = host
-
-        handler()
-
-        scopedHost = original
-    }
+//        scopedMiddleware = original
+//    }
 
     /**
         Create multiple routes with the same base URL
         without repeating yourself.
     */
-    public func group(_ prefix: String, handler: @noescape () -> Void) {
-        let original = scopedPrefix
-
-        //append original with a trailing slash
-        if let original = original {
-            scopedPrefix = original + "/" + prefix
-        } else {
-            scopedPrefix = prefix
-        }
-
-        handler()
-
-        scopedPrefix = original
-    }
+//    public func group(_ prefix: String, handler: @noescape () -> Void) {
+//        let original = scopedPrefix
+//
+//        //append original with a trailing slash
+//        if let original = original {
+//            scopedPrefix = original + "/" + prefix
+//        } else {
+//            scopedPrefix = prefix
+//        }
+//
+//        handler()
+//
+//        scopedPrefix = original
+//    }
 }
