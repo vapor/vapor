@@ -1,4 +1,4 @@
-public protocol RouteGrouper {
+public protocol RouteBuilder {
     var leadingPath: String { get }
     var scopedMiddleware: [Middleware] { get }
 
@@ -8,7 +8,7 @@ public protocol RouteGrouper {
              handler: Route.Handler)
 }
 
-extension RouteGrouper {
+extension RouteBuilder {
     func add(_ method: Request.Method,
              path: String,
              handler: Route.Handler) {
@@ -16,41 +16,41 @@ extension RouteGrouper {
     }
 }
 
-extension RouteGrouper {
+extension RouteBuilder {
     public var leadingPath: String { return "" }
     public var scopedMiddleware: [Middleware] { return [] }
 }
 
-extension RouteGrouper {
-    public func grouped(_ path: String) -> Route.Group {
-        return Route.Group(parent: self, leadingPath: path, scopedMiddleware: scopedMiddleware)
+extension RouteBuilder {
+    public func grouped(_ path: String) -> Route.Link {
+        return Route.Link(parent: self, leadingPath: path, scopedMiddleware: scopedMiddleware)
     }
 
-    public func grouped(_ path: String, _ body: @noescape (group: Route.Group) -> Void) {
+    public func grouped(_ path: String, _ body: @noescape (group: Route.Link) -> Void) {
         let group = grouped(path)
         body(group: group)
     }
 
-    public func grouped(_ middlewares: Middleware...) -> Route.Group {
-        return Route.Group(parent: self, leadingPath: leadingPath, scopedMiddleware: scopedMiddleware + middlewares)
+    public func grouped(_ middlewares: Middleware...) -> Route.Link {
+        return Route.Link(parent: self, leadingPath: leadingPath, scopedMiddleware: scopedMiddleware + middlewares)
     }
 
-    public func grouped(_ middlewares: [Middleware]) -> Route.Group {
-        return Route.Group(parent: self, leadingPath: leadingPath, scopedMiddleware: scopedMiddleware + middlewares)
+    public func grouped(_ middlewares: [Middleware]) -> Route.Link {
+        return Route.Link(parent: self, leadingPath: leadingPath, scopedMiddleware: scopedMiddleware + middlewares)
     }
 
-    public func grouped(_ middlewares: Middleware..., _ body: @noescape (group: Route.Group) -> Void) {
+    public func grouped(_ middlewares: Middleware..., _ body: @noescape (group: Route.Link) -> Void) {
         let groupObject = grouped(middlewares)
         body(group: groupObject)
     }
 
-    public func grouped(collection middlewares: [Middleware], _ body: @noescape (group: Route.Group) -> Void) {
+    public func grouped(middleware middlewares: [Middleware], _ body: @noescape (group: Route.Link) -> Void) {
         let groupObject = grouped(middlewares)
         body(group: groupObject)
     }
 }
 
-extension Application: RouteGrouper {
+extension Application: RouteBuilder {
     /**
         Adds a route handler for an HTTP request using a given HTTP verb at a given
         path. The provided handler will be ran whenever the path is requested with
