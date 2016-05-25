@@ -88,7 +88,7 @@ app.post("json2") { request in
     return Response(status: .created, json: Json(["message":"Received \(count) unicorns"]))
 }
 
-app.group("abort") { group in
+app.grouped("abort") { group in
     group.get("400") { request in
         throw Abort.badRequest
     }
@@ -335,7 +335,7 @@ app.post("multipart-print") { request in
 
 //MARK: Middleware
 
-app.middleware(AuthMiddleware()) { group in
+app.grouped(AuthMiddleware()) { group in
     app.get("protected") { request in
         return Json([
             "message": "Welcome authorized user"

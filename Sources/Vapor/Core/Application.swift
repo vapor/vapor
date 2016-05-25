@@ -1,41 +1,6 @@
 import libc
 import MediaType
 
-public struct Group {
-    public let parent: RouteGrouper
-    public let leadingPath: String
-    public let scopedMiddleware: [Middleware]
-}
-
-extension Group: RouteGrouper {
-    public func add(middleware: [Middleware],
-                    method: Request.Method,
-                    path: String,
-                    handler: Route.Handler) {
-        parent.add(middleware: self.scopedMiddleware + middleware,
-                   method: method,
-                   path: leadingPath.finish("/") + path,
-                   handler: handler)
-    }
-}
-
-extension Application: RouteGrouper {
-    public func add(middleware: [Middleware],
-                    method: Request.Method,
-                    path: String,
-                    handler: Route.Handler) {
-        // Convert Route.Handler to Request.Handler
-        let wrapped: Request.Handler = Request.Handler { request in
-            return try handler(request).makeResponse()
-        }
-        let responder: Responder = middleware.reduce(wrapped) { resp, nextMiddleware in
-            return nextMiddleware.chain(to: resp)
-        }
-        let route = Route(host: "*", method: method, path: path, responder: responder)
-        routes.append(route)
-    }
-}
-
 public class Application {
     public static let VERSION = "0.8.0"
 
@@ -44,7 +9,7 @@ public class Application {
         for returning registered `Route` handlers
         for a given request.
     */
-    public lazy var router: RouterDriver = BranchRouter()
+    public var router: RouterDriver = BranchRouter()
 
     /**
         The server driver is responsible
@@ -95,11 +60,7 @@ public class Application {
         Make sure to append your custom `Middleware`
         if you don't want to overwrite default behavior.
     */
-    // TODO: Consider rename to `globalMiddleware`
-    public var middleware: [Middleware]
-    public var globalMiddleware: [Middleware] {
-        return middleware
-    }
+    public var globalMiddleware: [Middleware]
 
     /**
         Provider classes that have been registered
@@ -128,9 +89,6 @@ public class Application {
         return workDir + "Resources/"
     }
 
-//    var scopedMiddleware: [Middleware] = []
-//    var scopedPrefix: String?
-
     var routes: [Route] = []
 
     /**
@@ -156,7 +114,7 @@ public class Application {
         // or all cli args will be strings.
         self.port = config["app", "port"].string?.int ?? 80
 
-        self.middleware = [
+        self.globalMiddleware = [
             AbortMiddleware(),
             ValidationMiddleware(),
             SessionMiddleware(session: session)
@@ -254,6 +212,15 @@ public class Application {
     }
 }
 
+extension Application {
+    public func add(_ middleware: Middleware...) {
+        middleware.forEach { globalMiddleware.append($0) }
+    }
+    public func add(_ middleware: [Middleware]) {
+        middleware.forEach { globalMiddleware.append($0) }
+    }
+}
+
 extension Application: Responder {
 
     /**
@@ -287,7 +254,7 @@ extension Application: Responder {
         }
 
         // Loop through middlewares in order
-        for middleware in self.middleware {
+        for middleware in self.globalMiddleware {
             responder = middleware.chain(to: responder)
         }
 
