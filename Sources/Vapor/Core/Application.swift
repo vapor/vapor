@@ -226,7 +226,7 @@ extension Application: Responder {
         var responder: Responder
         var request = request
 
-        request.parseData()
+        request.cacheParsedContent()
 
         // Check in routes
         if let (parameters, routerHandler) = router.route(request) {

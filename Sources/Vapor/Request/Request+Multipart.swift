@@ -40,11 +40,19 @@ extension Request {
         }
     }
 
-    var clrf: Data {
+    static var clrf: Data {
         return Data("\r\n".utf8)
     }
 
-    func parseMultipartForm(_ body: Data, boundary: String) -> [String: MultiPart] {
+    static func parseBoundary(contentType: String) throws -> String {
+        let boundaryPieces = contentType.split(byString: "boundary=")
+        guard boundaryPieces.count == 2 else {
+            throw RequestMultiPartError.invalidBoundary
+        }
+        return boundaryPieces[1]
+    }
+
+    static func parseMultipartForm(_ body: Data, boundary: String) -> [String: MultiPart] {
         let boundaryString = "--" + boundary
         let boundary = Data(boundaryString.utf8)
 
@@ -141,7 +149,7 @@ extension Request {
         return form
     }
 
-    func parseMultipartStorage(head: Data, body: Data) -> [String: String]? {
+    static func parseMultipartStorage(head: Data, body: Data) -> [String: String]? {
         var storage = [String: String]()
 
         // Separate the individual headers
@@ -193,6 +201,10 @@ extension Request {
     }
 }
 
+public enum RequestMultiPartError: ErrorProtocol {
+    case invalidBoundary
+}
+
 extension Request.MultiPart {
     public struct File {
         public var name: String?
@@ -201,7 +213,7 @@ extension Request.MultiPart {
     }
 }
 
-extension Request.MultiPart: Node {
+extension Request.MultiPart: Polymorphic {
     public var isNull: Bool {
         return self.input == "null"
     }
@@ -241,7 +253,7 @@ extension Request.MultiPart: Node {
         return self.input
     }
     
-    public var array: [Node]? {
+    public var array: [Polymorphic]? {
         guard case .input(let a) = self else {
             return nil
         }
@@ -249,13 +261,13 @@ extension Request.MultiPart: Node {
         return [a]
     } 
 
-    public var object: [String : Node]? {
+    public var object: [String : Polymorphic]? {
         return nil
     }
 
-    public var json: Json? {
+    public var json: JSON? {
         if case .input(let j) = self {
-            return Json(j)
+            return JSON(j)
         }
 
         return nil

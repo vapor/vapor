@@ -30,7 +30,7 @@ extension Request {
         var cookies: [String: String] = [:]
 
         for cookieString in headers["Cookie"] {
-            for (key, val) in parseCookies(cookieString) {
+            for (key, val) in Request.parseCookies(cookieString) {
                 cookies[key] = val
             }
         }
@@ -49,7 +49,7 @@ extension Request {
 
         - returns: String dictionary of parsed cookies.
      */
-    private func parseCookies(_ string: String) -> [String: String] {
+    static private func parseCookies(_ string: String) -> [String: String] {
         var cookies: [String: String] = [:]
 
         let cookieTokens = string.split(byString: ";")
@@ -66,75 +66,67 @@ extension Request {
 
         return cookies
     }
-    
 
-    private func parseURLEncodedForm(_ string: String) -> [String: String] {
-        var formEncoded: [String: String] = [:]
-
-        for pair in string.split(byString: "&") {
-            let token = pair.split(separator: "=", maxSplits: 1)
-            if token.count == 2 {
-                let key = String(validatingUTF8: token[0]) ?? ""
-                var value = String(validatingUTF8: token[1]) ?? ""
-                value = (try? String(percentEncoded: value)) ?? ""
-                formEncoded[key] = value
-            }
-        }
-
-        return formEncoded
-    }
-
-    mutating func parseData() {
+    mutating func cacheParsedContent() {
         data = parseContent()
     }
 
-    private func parseContent() -> Request.Content {
-        var queries: [String: String] = [:]
-
-        uri.query.forEach { (key, queryField) in
-            queries[key] = queryField
-                .values
-                .flatMap { $0 }
-                .joined(separator: ",")
-        }
-
-        var json: Json?
-        var formEncoded: [String: String]?
-        var multipart: [String: MultiPart]?
+    func parseContent() -> Request.Content {
+        var data: Data?
         var mutableBody = body
 
-        if headers["Content-Type"].first == "application/json" {
-            do {
-                let data = try mutableBody.becomeBuffer()
-                json = try Json(data)
-            } catch {
-                Log.warning("Could not parse JSON: \(error)")
-            }
-        } else if headers["Content-Type"].first?.range(of: "multipart/form-data") != nil {
-            guard let boundaryPieces = headers["Content-Type"].first?.split(byString: "boundary=") where boundaryPieces.count == 2 else {
-                Log.warning("Invalid boundary")
-                return Request.Content(query: queries, json: json, formEncoded: formEncoded, multipart: multipart)
-            }
+        do {
+            data = try mutableBody.becomeBuffer()
+        } catch {
+            Log.error("Could not read body: \(error)")
+        }
 
-            let boundary = boundaryPieces[1]
+        return Request.parseContent(data, uri: uri, headers: headers)
+    }
 
-            do {
-                let data = try mutableBody.becomeBuffer()
-                multipart = parseMultipartForm(data, boundary: boundary)
-            } catch {
-                Log.warning("Could not parse multipart form: \(error)")
-            }
-        } else {
-            do {
-                let data = try mutableBody.becomeBuffer()
-                let string = try String(data: data)
-                formEncoded = parseURLEncodedForm(string)
-            } catch {
-                Log.warning("Could not parse form encoded data: \(error)")
+    static private func parseContent(_ data: Data?, uri: URI, headers: Headers) -> Request.Content {
+        let query = parseQuery(uri: uri)
+
+        var json: JSON?
+        var formEncoded: StructuredData?
+        var multipart: [String: MultiPart]?
+
+        if
+            let contentType = headers["Content-Type"].first,
+            let data = data
+        {
+            if contentType == "application/json" {
+                do {
+                    json = try JSON(data)
+                } catch {
+                    Log.warning("Could not parse JSON: \(error)")
+                }
+            } else if contentType.range(of: "multipart/form-data") != nil {
+                do {
+                    let boundary = try Request.parseBoundary(contentType: contentType)
+                    multipart = Request.parseMultipartForm(data, boundary: boundary)
+                } catch {
+                    Log.warning("Could not parse MultiPart: \(error)")
+                }
+            } else if contentType == "application/x-www-form-urlencoded" {
+                formEncoded = Request.parseFormURLEncoded(data)
             }
         }
 
-        return Request.Content(query: queries, json: json, formEncoded: formEncoded, multipart: multipart)
+        return Request.Content(query: query, json: json, formEncoded: formEncoded, multipart: multipart)
+    }
+
+    static func parseQuery(uri: URI) -> StructuredData {
+        var query: [String: StructuredData] = [:]
+
+        uri.query.forEach { (key, values) in
+            let string = values
+                .flatMap { $0 }
+                .joined(separator: ",")
+            query[key] = .string(string)
+        }
+
+        return .dictionary(query)
     }
 
     ///Query data from the path, or POST data from the body (depends on `Method`).

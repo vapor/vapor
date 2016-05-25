@@ -3,7 +3,7 @@ private let newLine: Byte = 10
 private let carriageReturn: Byte = 13
 private let minimumValidAsciiCharacter = carriageReturn + 1
 
-protocol HTTPStream: Stream {
+protocol HTTPStream: Stream, AsyncStream {
     func receiveByte() throws -> Byte?
     func receiveLine() throws -> String
 
@@ -105,8 +105,19 @@ extension HTTPStream {
             }
         case .sender(let closure):
             try closure(self)
+        case .asyncSender(let sender):
+            sender(self) { closure in
+                let _ = try? closure()
+            }
+        case .asyncReceiver(let receiver):
+            while !receiver.closed {
+                receiver.receive(upTo: Int.max) { closure in
+                    if let data = try? closure() {
+                        let _ = try? self.send(data)
+                    }
+                }
+            }
         }
-
     }
 
     func receive() throws -> Request {
