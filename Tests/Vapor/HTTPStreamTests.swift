@@ -93,7 +93,7 @@ final class TestHTTPStream: HTTPListenerStream {
     }
 
     var buffer: Data
-    var handler: (HTTPStream -> Void)?
+    var handler: ((HTTPStream) -> Void)?
 
     init() {
         buffer = []
@@ -103,7 +103,7 @@ final class TestHTTPStream: HTTPListenerStream {
         self.init()
     }
 
-    func accept(max connectionCount: Int, handler: (HTTPStream -> Void)) throws {
+    func accept(max connectionCount: Int, handler: ((HTTPStream) -> Void)) throws {
         print("Accepting max: \(connectionCount)")
         self.handler = handler
     }

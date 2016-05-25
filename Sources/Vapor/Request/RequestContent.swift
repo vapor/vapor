@@ -1,14 +1,6 @@
 import MediaType
 
-// TODO: Tanner, seems export is necessary
 @_exported import PathIndexable
-extension Json: PathIndexable {}
-
-
-public protocol RequestContentSubscript {}
-
-extension String: RequestContentSubscript { }
-extension Int: RequestContentSubscript {}
 
 public extension Request {
     /**

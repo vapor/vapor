@@ -262,7 +262,7 @@ extension Environment {
     /**
         Used to load Environment automatically. Defaults to looking for `env` command line argument
      */
-    static var loader: Void -> Environment = {
+    static var loader: (Void) -> Environment = {
         if let env = Process.valueFor(argument: "env").flatMap(Environment.init(id:)) {
             Log.info("Environment override: \(env)")
             return env
