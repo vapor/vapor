@@ -20,8 +20,7 @@ class ApplicationTests: XCTestCase {
         headers returned.
     */
     func testMediaType() {
-        let app = Application()
-        app.workDir = workDir
+        let app = Application(workDir: workDir)
 
         let request = Request(method: .get, path: "/styles/app.css")
 

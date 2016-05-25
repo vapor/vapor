@@ -90,7 +90,8 @@ class PerformanceTests: XCTestCase {
     }
 
     func testApplication() throws {
-        let app = Application()
+        let config = Config(seed: ["app" : .object(["port" : Json.number(8080)])])
+        let app = Application(config: config)
 
         app.get("plaintext") { request in
             return "Hello, world"
@@ -102,9 +103,7 @@ class PerformanceTests: XCTestCase {
 
 
         let server = try HTTPStreamServer<TestHTTPStream>(port: 8080, responder: app)
-        app.server = server
-
-        app.start()
+        try server.start()
 
         let stream = server.stream
 

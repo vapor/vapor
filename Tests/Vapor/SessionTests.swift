@@ -76,7 +76,7 @@ class SessionTests: XCTestCase {
 
         var sessionMiddleware: SessionMiddleware?
 
-        for middleware in app.middleware {
+        for middleware in app.globalMiddleware {
             if let middleware = middleware as? SessionMiddleware {
                 sessionMiddleware = middleware
             }
