@@ -2,16 +2,20 @@ public protocol RouteBuilder {
     var leadingPath: String { get }
     var scopedMiddleware: [Middleware] { get }
 
-    func add(middleware: [Middleware],
-             method: Request.Method,
-             path: String,
-             handler: Route.Handler)
+    func add(
+        middleware: [Middleware],
+        method: Request.Method,
+        path: String,
+        handler: Route.Handler
+    )
 }
 
 extension RouteBuilder {
-    func add(_ method: Request.Method,
-             path: String,
-             handler: Route.Handler) {
+    func add(
+        _ method: Request.Method,
+        path: String,
+        handler: Route.Handler
+    ) {
         add(middleware: [], method: method, path: path, handler: handler)
     }
 }
@@ -23,7 +27,11 @@ extension RouteBuilder {
 
 extension RouteBuilder {
     public func grouped(_ path: String) -> Route.Link {
-        return Route.Link(parent: self, leadingPath: path, scopedMiddleware: scopedMiddleware)
+        return Route.Link(
+            parent: self, l
+            eadingPath: path,
+            scopedMiddleware: scopedMiddleware
+        )
     }
 
     public func grouped(_ path: String, _ body: @noescape (group: Route.Link) -> Void) {
@@ -32,11 +40,19 @@ extension RouteBuilder {
     }
 
     public func grouped(_ middlewares: Middleware...) -> Route.Link {
-        return Route.Link(parent: self, leadingPath: leadingPath, scopedMiddleware: scopedMiddleware + middlewares)
+        return Route.Link(
+            parent: self,
+            leadingPath: leadingPath,
+            scopedMiddleware: scopedMiddleware + middlewares
+        )
     }
 
     public func grouped(_ middlewares: [Middleware]) -> Route.Link {
-        return Route.Link(parent: self, leadingPath: leadingPath, scopedMiddleware: scopedMiddleware + middlewares)
+        return Route.Link(
+            parent: self,
+            leadingPath: leadingPath,
+            scopedMiddleware: scopedMiddleware + middlewares
+        )
     }
 
     public func grouped(_ middlewares: Middleware..., _ body: @noescape (group: Route.Link) -> Void) {
@@ -61,10 +77,12 @@ extension Application: RouteBuilder {
         - parameter path: The HTTP path that handler can run at.
         - parameter handler: The code to process the request with.
     */
-    public func add(middleware: [Middleware],
-                    method: Request.Method,
-                    path: String,
-                    handler: Route.Handler) {
+    public func add(
+        middleware: [Middleware],
+        method: Request.Method,
+        path: String,
+        handler: Route.Handler
+    ) {
         // Convert Route.Handler to Request.Handler
         let wrapped: Request.Handler = Request.Handler { request in
             return try handler(request).makeResponse()
