@@ -48,7 +48,7 @@ class HTTPStreamTests: XCTestCase {
             return
         }
 
-        request.parseData()
+        request.cacheParsedContent()
 
         //MARK: Verify Request
         XCTAssert(request.method == Request.Method.post, "Incorrect method \(request.method)")

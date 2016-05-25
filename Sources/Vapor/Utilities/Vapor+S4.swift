@@ -4,6 +4,9 @@ import C7
 public typealias Byte = C7.Byte
 public typealias Data = C7.Data
 public typealias Stream = C7.Stream
+public typealias AsyncStream = C7.AsyncStream
+
+public typealias StructuredData = C7.StructuredData
 
 public typealias URI = S4.URI
 

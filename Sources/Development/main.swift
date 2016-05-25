@@ -15,6 +15,9 @@ app.get("test") { request in
     return "123"
 }
 
+func thrower() throws {}
+try thrower()
+
 //MARK: Resource
 
 app.resource("users", controller: UserController.self)
@@ -29,7 +32,7 @@ app.post("jsondata") { request in
 //MARK: Type safe routing
 
 app.get("test", Int.self, String.self) { request, int, string in
-    return Json([
+    return JSON([
         "message": "Int \(int) String \(string)"
     ])
 }
@@ -52,11 +55,11 @@ app.get("users") { req in
 //MARK: Json
 
 app.get("json") { request in
-    return Json([
+    return JSON([
         "number": 123,
         "text": "unicorns",
         "bool": false,
-        "nested": Json(["one", 2, false])
+        "nested": JSON(["one", 2, false])
     ])
 }
 
@@ -85,7 +88,7 @@ app.post("json2") { request in
     guard let count = request.data["unicorns"].int else {
         return Response(error: "No unicorn count provided")
     }
-    return Response(status: .created, json: Json(["message":"Received \(count) unicorns"]))
+    return Response(status: .created, json: JSON(["message":"Received \(count) unicorns"]))
 }
 
 app.grouped("abort") { group in
@@ -126,7 +129,7 @@ app.get("login") { request in
         throw Abort.badRequest
     }
 
-    return Json([
+    return JSON([
         "id": id
     ])
 }
@@ -145,7 +148,7 @@ app.post("login") { request in
 
     request.session?["id"] = "123"
 
-    return Json([
+    return JSON([
         "message": "Logged in"
     ])
 }
@@ -163,7 +166,7 @@ app.get("cookie") { request in
 
 
 app.get("cookies") { request in
-    var response = Json([
+    var response = JSON([
         "cookies": "\(request.cookies)"
     ]).makeResponse()
 
@@ -193,9 +196,9 @@ class Employee {
     }
 }
 
-extension Employee: JsonRepresentable {
-    func makeJson() -> Json {
-        return Json([
+extension Employee: JSONRepresentable {
+    func makeJson() -> JSON {
+        return JSON([
             "name": name.value,
             "email": email.value
         ])
@@ -328,7 +331,7 @@ app.post("multipart-print") { request in
     print(request.data.multipart?["test"])
     print(request.data.multipart?["test"]?.file)
     
-    return Json([
+    return JSON([
         "message": "Printed details to console"
     ])
 }
@@ -337,7 +340,7 @@ app.post("multipart-print") { request in
 
 app.grouped(AuthMiddleware()) { group in
     app.get("protected") { request in
-        return Json([
+        return JSON([
             "message": "Welcome authorized user"
         ])
     }
