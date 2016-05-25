@@ -44,6 +44,14 @@ extension Request {
         return Data("\r\n".utf8)
     }
 
+    func parseBoundary(contentType: String) throws -> String {
+        let boundaryPieces = contentType.split(byString: "boundary=")
+        guard boundaryPieces.count == 2 else {
+            throw RequestMultiPartError.invalidBoundary
+        }
+        return boundaryPieces[1]
+    }
+
     func parseMultipartForm(_ body: Data, boundary: String) -> [String: MultiPart] {
         let boundaryString = "--" + boundary
         let boundary = Data(boundaryString.utf8)
@@ -191,6 +199,10 @@ extension Request {
 
         return storage
     }
+}
+
+public enum RequestMultiPartError: ErrorProtocol {
+    case invalidBoundary
 }
 
 extension Request.MultiPart {

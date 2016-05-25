@@ -76,17 +76,23 @@ extension StructuredData: Polymorphic {
     }
 
     public var int: Int? {
-        if case .int(let int) = self {
+        switch self {
+        case .int(let int):
             return int
-        } else {
+        case .string(let string):
+            return Int(string)
+        default:
             return nil
         }
     }
 
     public var string: String? {
-        if case .string(let string) = self {
+        switch self {
+        case .string(let string):
             return string
-        } else {
+        case .int(let int):
+            return String(int)
+        default:
             return nil
         }
     }

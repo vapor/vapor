@@ -241,7 +241,7 @@ public class Config {
 
          - returns: value if it exists.
      */
-    public subscript(_ file: String, _ paths: PathIndex...) -> Node? {
+    public subscript(_ file: String, _ paths: PathIndex...) -> Polymorphic? {
         return self[file, paths]
     }
 
@@ -253,7 +253,7 @@ public class Config {
 
          - returns: value if it exists.
      */
-    public subscript(_ file: String, _ paths: [PathIndex]) -> Node? {
+    public subscript(_ file: String, _ paths: [PathIndex]) -> Polymorphic? {
         return directoryQueue[file, paths]
     }
 }
@@ -262,7 +262,7 @@ extension Environment {
     /**
         Used to load Environment automatically. Defaults to looking for `env` command line argument
      */
-    static var loader: Void -> Environment = {
+    static var loader: (Void) -> Environment = {
         if let env = Process.valueFor(argument: "env").flatMap(Environment.init(id:)) {
             Log.info("Environment override: \(env)")
             return env
