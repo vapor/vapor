@@ -10,9 +10,8 @@ extension Polymorphic {
     */
     public func validated<
         T: ValidationSuite
-        where T.InputType: PolymorphicInitializable>(by suite: T.Type = T.self)
-        throws -> Valid<T>
-    {
+        where T.InputType: PolymorphicInitializable>(by suite: T.Type = T.self
+    ) throws -> Valid<T> {
         let value = try T.InputType.init(polymorphic: self)
         return try value.validated(by: suite)
     }
@@ -28,9 +27,8 @@ extension Polymorphic {
     */
     public func validated<
         T: Validator
-        where T.InputType: PolymorphicInitializable>(by validator: T)
-        throws -> Valid<T>
-    {
+        where T.InputType: PolymorphicInitializable>(by validator: T
+    ) throws -> Valid<T> {
         let value = try T.InputType.init(polymorphic: self)
         return try value.validated(by: validator)
     }
@@ -70,9 +68,8 @@ extension Extractable where Wrapped == Polymorphic {
      */
     public func validated<
         V: ValidationSuite
-        where V.InputType: PolymorphicInitializable>(by suite: V.Type = V.self)
-        throws -> Valid<V>
-    {
+        where V.InputType: PolymorphicInitializable>(by suite: V.Type = V.self
+    ) throws -> Valid<V> {
         guard let wrapped = extract() else {
             throw ValidationError(suite, input: nil)
         }
@@ -92,9 +89,8 @@ extension Extractable where Wrapped == Polymorphic {
      */
     public func validated<
         V: Validator
-        where V.InputType: PolymorphicInitializable>(by validator: V)
-        throws -> Valid<V>
-    {
+        where V.InputType: PolymorphicInitializable>(by validator: V
+    ) throws -> Valid<V> {
         guard let wrapped = extract() else {
             throw ValidationError(validator, input: nil)
         }
@@ -118,9 +114,8 @@ extension Extractable where Wrapped == [Polymorphic] {
     public func validated<
         V: ValidationSuite,
         I: PolymorphicInitializable
-        where V.InputType == [I]>(by suite: V.Type = V.self)
-        throws -> Valid<V>
-    {
+        where V.InputType == [I]>(by suite: V.Type = V.self
+    ) throws -> Valid<V> {
         guard let wrapped = extract() else {
             throw ValidationError(suite, input: nil)
         }
@@ -142,9 +137,8 @@ extension Extractable where Wrapped == [Polymorphic] {
     public func validated<
         V: Validator,
         I: PolymorphicInitializable
-        where V.InputType == [I]>(by validator: V)
-        throws -> Valid<V>
-    {
+        where V.InputType == [I]>(by validator: V
+    ) throws -> Valid<V> {
         guard let wrapped = extract() else {
             throw ValidationError(validator, input: nil)
         }
@@ -169,17 +163,16 @@ extension Extractable where Wrapped == [String : Polymorphic] {
     public func validated<
         V: ValidationSuite,
         I: PolymorphicInitializable
-        where V.InputType == [String : I]>(by suite: V.Type = V.self)
-        throws -> Valid<V>
-    {
+        where V.InputType == [String : I]>(by suite: V.Type = V.self
+    ) throws -> Valid<V> {
         guard let wrapped = extract() else {
             throw ValidationError(suite, input: nil)
         }
 
         var mapped: [String : I] = [:]
 
-        try wrapped.forEach { k, v in
-            mapped[k] = try I.init(polymorphic: v)
+        try wrapped.forEach { key, val in
+            mapped[key] = try I.init(polymorphic: val)
         }
 
         return try mapped.validated(by: suite)
@@ -197,17 +190,16 @@ extension Extractable where Wrapped == [String : Polymorphic] {
     public func validated<
         V: Validator,
         I: PolymorphicInitializable
-        where V.InputType == [String : I]>(by validator: V)
-        throws -> Valid<V>
-    {
+        where V.InputType == [String : I]>(by validator: V
+    ) throws -> Valid<V> {
         guard let wrapped = extract() else {
             throw ValidationError(validator, input: nil)
         }
 
         var mapped: [String : I] = [:]
 
-        try wrapped.forEach { k, v in
-            mapped[k] = try I.init(polymorphic: v)
+        try wrapped.forEach { key, val in
+            mapped[key] = try I.init(polymorphic: val)
         }
 
         return try mapped.validated(by: validator)
