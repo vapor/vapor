@@ -78,4 +78,18 @@ class ValidationTests: XCTestCase {
             XCTAssertNotNil(e.input == 2)
         }
     }
+
+    func testValidEmail() {
+        // Thanks again Ben Wu :)
+        XCTAssertFalse("".passes(Email.self))
+        XCTAssertFalse("@".passes(Email.self))
+        XCTAssertFalse("@.".passes(Email.self))
+        XCTAssertFalse("@.com".passes(Email.self))
+        XCTAssertFalse("foo@.com".passes(Email.self))
+        XCTAssertFalse("@foo.com".passes(Email.self))
+        XCTAssertTrue("f@b.c".passes(Email.self))
+        XCTAssertTrue("foo@bar.com".passes(Email.self))
+        XCTAssertFalse("f@b.".passes(Email.self))
+        XCTAssertFalse("æøå@gmail.com".passes(Email.self))
+    }
 }
