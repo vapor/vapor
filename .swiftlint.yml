@@ -9,4 +9,3 @@ excluded:
   - Packages
   - Sources/Vapor/Core/Generated.swift
   - Sources/Generator
-
