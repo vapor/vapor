@@ -10,7 +10,7 @@ import XCTest
 @testable import Vapor
 
 class RequestTests: XCTestCase {
-    static var allTests: [(String, RequestTests -> () throws -> Void)] {
+    static var allTests: [(String, (RequestTests) -> () throws -> Void)] {
         return [
             ("testParse", testParse),
             ("testCachedParse", testCachedParse),
