@@ -28,8 +28,8 @@ extension RouteBuilder {
 extension RouteBuilder {
     public func grouped(_ path: String) -> Route.Link {
         return Route.Link(
-            parent: self, l
-            eadingPath: path,
+            parent: self,
+            leadingPath: path,
             scopedMiddleware: scopedMiddleware
         )
     }
