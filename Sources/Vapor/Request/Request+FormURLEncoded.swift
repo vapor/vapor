@@ -1,11 +1,3 @@
-//
-//  Request+FormURLEncoded.swift
-//  Vapor
-//
-//  Created by Tanner Nelson on 5/25/16.
-//
-//
-
 import Foundation
 
 extension String {

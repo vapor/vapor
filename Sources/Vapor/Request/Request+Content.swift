@@ -117,51 +117,12 @@ extension String: Polymorphic {
     }
 }
 
-
-extension String {
-
-    /**
-        Query data is information appended to the URL path
-        as `key=value` pairs separated by `&` after
-        an initial `?`
-
-        - returns: String dictionary of parsed Query data
-     */
-    internal func queryData() -> [String: String] {
-        // First `?` indicates query, subsequent `?` should be included as part of the arguments
-        return split(separator: "?", maxSplits: 1)
-            .dropFirst()
-            .reduce("", combine: +)
-            .keyValuePairs()
-    }
-
-    /**
-        Parses `key=value` pair data separated by `&`.
-
-        - returns: String dictionary of parsed data
-     */
-    internal func keyValuePairs() -> [String: String] {
-        var data: [String: String] = [:]
-
-        for pair in self.split(byString: "&") {
-            let tokens = pair.split(separator: "=", maxSplits: 1)
-
-            if
-                let name = tokens.first,
-                let value = tokens.last,
-                let parsedName = try? String(percentEncoded: name) {
-                data[parsedName] = try? String(percentEncoded: value)
-            }
-        }
-
-        return data
-    }
-
-}
-
 extension Bool {
     /**
-        This function seeks to replicate the expected behavior of `var boolValue: Bool` on `NSString`.  Any variant of `yes`, `y`, `true`, `t`, or any numerical value greater than 0 will be considered `true`
+        This function seeks to replicate the expected 
+        behavior of `var boolValue: Bool` on `NSString`.  
+        Any variant of `yes`, `y`, `true`, `t`, or any 
+        numerical value greater than 0 will be considered `true`
     */
     public init(_ string: String) {
         let cleaned = string

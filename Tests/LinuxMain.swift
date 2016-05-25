@@ -15,7 +15,6 @@ XCTMain([
     testCase(MemorySessionDriverTests.allTests),
 	testCase(PerformanceTests.allTests),
     testCase(ProcessTests.allTests),
-    testCase(QueryParameterTests.allTests),
     testCase(ResponseTests.allTests),
     testCase(RouterTests.allTests),
     testCase(RouteTests.allTests),
