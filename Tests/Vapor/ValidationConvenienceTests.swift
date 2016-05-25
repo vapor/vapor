@@ -10,7 +10,7 @@ import XCTest
 @testable import Vapor
 
 class ValidationConvenienceTests: XCTestCase {
-    static var allTests: [(String, ValidationConvenienceTests -> () throws -> Void)] {
+    static var allTests: [(String, (ValidationConvenienceTests) -> () throws -> Void)] {
         return [
                    ("testTrue", testTrue),
                    ("testFalse", testFalse)

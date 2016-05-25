@@ -88,20 +88,20 @@ app.post("json2") { request in
     return Response(status: .created, json: Json(["message":"Received \(count) unicorns"]))
 }
 
-app.group("abort") {
-    app.get("400") { request in
+app.grouped("abort") { group in
+    group.get("400") { request in
         throw Abort.badRequest
     }
 
-    app.get("404") { request in
+    group.get("404") { request in
         throw Abort.notFound
     }
 
-    app.get("420") { request in
+    group.get("420") { request in
         throw Abort.custom(status: .enhanceYourCalm, message: "Enhance your calm")
     }
 
-    app.get("500") { request in
+    group.get("500") { request in
         throw Abort.internalServerError
     }
 }
@@ -335,7 +335,7 @@ app.post("multipart-print") { request in
 
 //MARK: Middleware
 
-app.middleware(AuthMiddleware()) {
+app.grouped(AuthMiddleware()) { group in
     app.get("protected") { request in
         return Json([
             "message": "Welcome authorized user"

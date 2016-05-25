@@ -31,27 +31,20 @@ class RouteTests: XCTestCase {
             return ""
         }
 
-        app.host("google.com") {
-            app.put("baz") { request in
-                return ""
-            }
-        }
-
         assertRouteExists(at: "foo", method: .get, host: "*", inRoutes: app.routes)
         assertRouteExists(at: "bar", method: .post, host: "*", inRoutes: app.routes)
-        assertRouteExists(at: "baz", method: .put, host: "google.com", inRoutes: app.routes)
     }
 
 
     func testRouteScopedPrefix() {
         let app = Application()
 
-        app.group("group/path") {
-            app.get("1") { request in
+        app.grouped("group/path") { group in
+            group.get("1") { request in
                 return ""
             }
 
-            app.options("2") { request in
+            group.options("2") { request in
                 return ""
             }
         }
@@ -63,14 +56,14 @@ class RouteTests: XCTestCase {
     func testNestedRouteScopedPrefixPopsCorrectly() {
         let app = Application()
 
-        app.group("group") {
-            app.group("subgroup") {
-                app.get("1") { request in
+        app.grouped("group") { group in
+            group.grouped("subgroup") { subgroup in
+                subgroup.get("1") { request in
                     return ""
                 }
             }
 
-            app.options("2") { request in
+            group.options("2") { request in
                 return ""
             }
         }
@@ -88,9 +81,6 @@ class RouteTests: XCTestCase {
         }
 
         app.bootRoutes()
-
-
-        print(app.routes)
 
         let request = Request(method: .get, uri: URI(path: "400"), headers: [:], body: [])
         guard var handler = app.router.route(request)?.handler else {
