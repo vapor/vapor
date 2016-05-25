@@ -78,7 +78,7 @@ public class Application {
         Provider classes that have been registered
         with this application
      */
-    public var providers: [Provider] = []
+    public var providers: [Provider]
 
     /**
         Resources directory relative to workDir
@@ -100,6 +100,7 @@ public class Application {
                 router: RouterDriver = BranchRouter()) {
         self.hash = hash
         self.session = sessionDriver ?? MemorySessionDriver(hash: hash)
+        self.providers = []
 
         let workDir = overrideWorkDir
             ?? Process.valueFor(argument: "workDir")
