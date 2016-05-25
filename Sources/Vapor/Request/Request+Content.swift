@@ -65,7 +65,7 @@ public extension Request {
         }
 
         public subscript(indexes: [PathIndex]) -> Polymorphic? {
-            return json?[indexes] ?? formEncoded?[indexes] ?? query[indexes]
+            return query[indexes] ?? json?[indexes] ?? formEncoded?[indexes]
         }
     }
 
