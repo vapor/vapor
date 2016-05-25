@@ -9,13 +9,13 @@ public class Application {
         for returning registered `Route` handlers
         for a given request.
     */
-    public let router: RouterDriver
+    public var router: RouterDriver
 
     /**
         When starting the application, the server will attempt to be initialized
         from the given type
     */
-    public let serverType: Server.Type
+    public var serverType: Server.Type
 
     /**
         The session driver is responsible for
@@ -108,14 +108,8 @@ public class Application {
 
         let config = overrideConfig ?? Config(workingDirectory: workDir)
         self.config = config
-
         self.host = config["app", "host"].string ?? "0.0.0.0"
-
-        // Tanner, would like input here.
-        // Alternative is
-        // the json is strictly typed, we need a way to make it fuzzy
-        // or all cli args will be strings.
-        self.port = config["app", "port"].string?.int ?? 80
+        self.port = config["app", "port"].int ?? 80
 
         self.globalMiddleware = [
             AbortMiddleware(),
@@ -123,12 +117,31 @@ public class Application {
             SessionMiddleware(session: session)
         ]
 
-        self.serverType = server
         self.router = router
+        self.serverType = server
+        restrictLogging(for: config.environment)
+    }
+
+    private func restrictLogging(for environment: Environment) {
+        guard config.environment == .production else { return }
+        Log.info("Production environment detected, disabling information logs.")
+        Log.enabledLevels = [.error, .fatal]
     }
 }
 
 extension Application {
+    /**
+        Boots the chosen server driver and
+        optionally runs on the supplied
+        ip & port overrides
+    */
+    public func start() {
+        bootProviders()
+        bootRoutes()
+
+        // no return - code beyond this call will only execute in event of failure
+        startServer()
+    }
 
     func bootProviders() {
         for provider in self.providers {
@@ -140,41 +153,19 @@ extension Application {
         routes.forEach(router.register)
     }
 
-    /**
-        Boots the chosen server driver and
-        optionally runs on the supplied
-        ip & port overrides
-    */
-    public func start() {
-        bootProviders()
-
-        bootRoutes()
-
-        // TODO: Should this be here?
-        if config.environment == .production {
-            Log.info("Production environment detected, disabling information logs.")
-            Log.enabledLevels = [.error, .fatal]
-        }
-
-        // no return - code beyond this call will only execute in event of failure
-        startServer()
-    }
-
     private func startServer() {
         do {
             Log.info("Server starting ...")
-            let server = try serverType.init(
-                host: host,
-                port: port,
-                responder: self
-            )
+            let server = try serverType.init(host: host, port: port, responder: self)
+            // noreturn
             try server.start()
-            Log.info("Server started on \(host):\(port)")
         } catch {
             Log.error("Server start error: \(error)")
         }
     }
+}
 
+extension Application {
     func checkFileSystem(for request: Request) -> Request.Handler? {
         // Check in file system
         let filePath = self.workDir + "Public" + (request.uri.path ?? "")
@@ -272,10 +263,5 @@ extension Application: Responder {
         response.headers["Server"] = Response.Headers.Values("Vapor \(Vapor.VERSION)")
 
         return response
-    }
-
-    func test() {
-
-
     }
 }

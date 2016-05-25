@@ -1,7 +1,7 @@
-import PureJson
+import PureJSON
 
 // Exporting type w/o forcing import
-public typealias Json = PureJson.Json
+public typealias Json = PureJSON.JSON
 
 extension Json {
     public init(_ value: Int) {
