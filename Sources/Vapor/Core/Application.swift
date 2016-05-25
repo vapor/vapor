@@ -29,7 +29,7 @@ public class Application {
     /**
         Provides access to config settings.
     */
-    public var config: Config
+    public let config: Config
 
     /**
         Provides access to the underlying
@@ -94,7 +94,7 @@ public class Application {
     /**
         Initialize the Application.
     */
-    public init(sessionDriver: SessionDriver? = nil) {
+    public init(sessionDriver: SessionDriver? = nil, config overrideConfig: Config? = nil) {
 
         let hash = Hash()
         self.hash = hash
@@ -103,7 +103,7 @@ public class Application {
         let workDir = Process.valueFor(argument: "workDir") ?? "./"
         self.workDir = workDir
 
-        let config = Config(workingDirectory: workDir)
+        let config = overrideConfig ?? Config(workingDirectory: workDir)
         self.config = config
 
         self.host = config["app", "host"].string ?? "0.0.0.0"
@@ -125,20 +125,6 @@ public class Application {
         for provider in self.providers {
             provider.boot(with: self)
         }
-    }
-
-    /**
-        If multiple environments are passed, return
-        value will be true if at least one of the passed
-        in environment values matches the app environment
-        and false if none of them match.
-
-        If a single environment is passed, the return
-        value will be true if the the passed in environment
-        matches the app environment.
-    */
-    public func inEnvironment(_ environments: Environment...) -> Bool {
-        return environments.contains(self.config.environment)
     }
 
     func bootRoutes() {
