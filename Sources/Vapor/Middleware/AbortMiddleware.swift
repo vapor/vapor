@@ -37,7 +37,7 @@ public class AbortMiddleware: Middleware {
     }
 
     func errorResponse(_ status: Response.Status, message: String) throws -> Response {
-        let json = Json([
+        let json = JSON([
             "error": true,
             "message": "\(message)"
         ])

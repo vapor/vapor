@@ -90,7 +90,7 @@ class PerformanceTests: XCTestCase {
     }
 
     func testApplication() throws {
-        let config = Config(seed: ["app" : .object(["port" : Json.number(8080)])])
+        let config = Config(seed: ["app" : .object(["port" : JSON(8080)])])
         let app = Application(config: config)
 
         app.get("plaintext") { request in
@@ -98,7 +98,7 @@ class PerformanceTests: XCTestCase {
         }
 
         app.get("json") { request in
-            return Json(["message": "Hello, world"])
+            return JSON(["message": "Hello, world"])
         }
 
 

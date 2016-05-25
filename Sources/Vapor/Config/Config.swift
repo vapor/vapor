@@ -3,11 +3,11 @@ import Foundation
 
 private struct JsonFile {
     let name: String
-    let json: Json
+    let json: JSON
 
     private static let suffix = ".json"
 
-    init(name: String, json: Json) {
+    init(name: String, json: JSON) {
         if
             let nameSequence = name.characters.split(separator: ".").first
             where name.hasSuffix(JsonFile.suffix)
@@ -24,7 +24,7 @@ private struct ConfigDirectory {
     let name: String
     let files: [JsonFile]
 
-    subscript(_ name: String, _ paths: [PathIndex]) -> Json? {
+    subscript(_ name: String, _ paths: [PathIndex]) -> JSON? {
         return files
             .lazy
             .filter { file in
@@ -38,7 +38,7 @@ private struct ConfigDirectory {
 private struct PrioritizedDirectoryQueue {
     let directories: [ConfigDirectory]
 
-    subscript(_ fileName: String, indexes: [PathIndex]) -> Json? {
+    subscript(_ fileName: String, indexes: [PathIndex]) -> JSON? {
         return directories
             .lazy
             .flatMap { directory in return directory[fileName, indexes] }
@@ -72,9 +72,9 @@ extension FileManager {
         return directory
     }
 
-    private static func loadJson(_ path: String) throws -> Json {
+    private static func loadJson(_ path: String) throws -> JSON {
         let bytes = try FileManager.readBytesFromFile(path)
-        return try Json.deserialize(bytes)
+        return try JSON.deserialize(bytes)
     }
 }
 
@@ -83,7 +83,7 @@ extension Process {
         let configArgs = NSProcessInfo.processInfo().arguments.filter { $0.hasPrefix("--config:") }
 
         // [FileName: Json]
-        var directory: [String: Json] = [:]
+        var directory: [String: JSON] = [:]
 
         for arg in configArgs {
             guard let (key, value) = parseArgument(arg) else {
@@ -183,7 +183,7 @@ public class Config {
         starting configurations.
         The application is required to detect environment.
     */
-    public init(seed configurations: [String: Json] = [:], workingDirectory: String = "./", environment: Environment = .loader()) {
+    public init(seed configurations: [String: JSON] = [:], workingDirectory: String = "./", environment: Environment = .loader()) {
         let configDirectory = workingDirectory.finish("/") + "Config/"
         self.configDirectory = configDirectory
         self.environment = environment
@@ -241,7 +241,7 @@ public class Config {
 
          - returns: value if it exists.
      */
-    public subscript(_ file: String, _ paths: PathIndex...) -> Node? {
+    public subscript(_ file: String, _ paths: PathIndex...) -> Polymorphic? {
         return self[file, paths]
     }
 
@@ -253,7 +253,7 @@ public class Config {
 
          - returns: value if it exists.
      */
-    public subscript(_ file: String, _ paths: [PathIndex]) -> Node? {
+    public subscript(_ file: String, _ paths: [PathIndex]) -> Polymorphic? {
         return directoryQueue[file, paths]
     }
 }
