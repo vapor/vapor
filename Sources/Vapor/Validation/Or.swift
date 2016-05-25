@@ -25,13 +25,13 @@
 
     It is possible to access this struct directly using
 
-     Or(validatorOne, validatorTwo)
+     Either(validatorOne, validatorTwo)
 
     But it is more common to create And objects using the `||` operator:
 
      validatorOne || validatorTwo
 */
-public struct Or<
+public struct Either<
     V: Validator,
     U: Validator where V.InputType == U.InputType> {
     private typealias Validator = (input: V.InputType) throws -> Void
@@ -53,9 +53,9 @@ public struct Or<
     }
 }
 
-extension Or: Validator {
+extension Either: Validator {
     /**
-        Validator conformance that allows the 'Or' struct
+        Validator conformance that allows the 'Either' struct
         to concatenate multiple Validator types.
 
         - parameter value: the value to validate
@@ -67,7 +67,7 @@ extension Or: Validator {
     }
 }
 
-extension Or {
+extension Either {
     /**
         Used to combine two Validator types
     */
@@ -76,7 +76,7 @@ extension Or {
     }
 }
 
-extension Or where V: ValidationSuite {
+extension Either where V: ValidationSuite {
     /**
         Used to combine two Validator types where one is a validation suite
     */
@@ -85,7 +85,7 @@ extension Or where V: ValidationSuite {
     }
 }
 
-extension Or where U: ValidationSuite {
+extension Either where U: ValidationSuite {
     /**
         Used to combine two Validator types where one is a validation suite
     */
@@ -94,7 +94,7 @@ extension Or where U: ValidationSuite {
     }
 }
 
-extension Or where V: ValidationSuite, U: ValidationSuite {
+extension Either where V: ValidationSuite, U: ValidationSuite {
     /**
         Used to combine two ValidationSuite types
     */
