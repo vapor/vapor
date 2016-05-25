@@ -23,7 +23,7 @@ protocol HTTPListenerStream: HTTPStream {
     init(address: String?, port: Int) throws
     func bind() throws
     func listen() throws
-    func accept(max connectionCount: Int, handler: (HTTPStream -> Void)) throws
+    func accept(max connectionCount: Int, handler: ((HTTPStream) -> Void)) throws
 }
 
 extension HTTPStream {

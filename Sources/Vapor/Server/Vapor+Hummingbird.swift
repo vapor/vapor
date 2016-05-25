@@ -15,7 +15,7 @@ extension Hummingbird.ServerSocket: HTTPListenerStream {
         try self.init(address: address, port: String(port))
     }
 
-    func accept(max connectionCount: Int = Int(SOMAXCONN), handler: (HTTPStream -> Void)) throws {
+    func accept(max connectionCount: Int = Int(SOMAXCONN), handler: ((HTTPStream) -> Void)) throws {
         try accept(maximumConsecutiveFailures: connectionCount, connectionHandler: handler)
     }
 

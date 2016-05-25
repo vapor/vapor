@@ -20,7 +20,7 @@ class Post: StringInitializable {
 
 class TypedRouteTests: XCTestCase {
 
-    static var allTests: [(String, TypedRouteTests -> () throws -> Void)] {
+    static var allTests: [(String, (TypedRouteTests) -> () throws -> Void)] {
         return [
            ("testRouting", testRouting),
         ]

@@ -1,23 +1,36 @@
+import MediaType
+
+// TODO: Tanner, seems export is necessary
+@_exported import PathIndexable
+extension Json: PathIndexable {}
+
+
 public protocol RequestContentSubscript {}
 
 extension String: RequestContentSubscript { }
 extension Int: RequestContentSubscript {}
 
 public extension Request {
-
     /**
         The data received from the request in json body or url query
     */
     public struct Content {
         // MARK: Initialization
-        public let query: [String: String]
+        public let query: [String: String] //move to StructuredData
         public let json: Json?
-        public let formEncoded: [String: String]?
+        public let formEncoded: [String: String]? //move to StructuredData
+        public let multipart: [String: MultiPart]?
 
-        internal init(query: [String: String], json: Json?, formEncoded: [String: String]?) {
+        internal init(
+            query: [String: String],
+            json: Json?,
+            formEncoded: [String: String]?,
+            multipart: [String: MultiPart]?
+        ) {
             self.query = query
             self.json = json
             self.formEncoded = formEncoded
+            self.multipart = multipart
         }
 
         // MARK: Subscripting
@@ -27,6 +40,8 @@ public extension Request {
             } else if let value = json?.array?[index] {
                 return value
             } else if let value = formEncoded?["\(index)"] {
+                return value
+            } else if let value = multipart?["\(index)"] {
                 return value
             } else {
                 return nil
@@ -40,9 +55,19 @@ public extension Request {
                 return value
             } else if let value = formEncoded?[key] {
                 return value
+            } else if let value = multipart?[key] {
+                return value
             } else {
                 return nil
             }
+        }
+
+        public subscript(indexes: PathIndex...) -> Node? {
+            return self[indexes]
+        }
+
+        public subscript(indexes: [PathIndex]) -> Node? {
+            return json?[indexes]
         }
     }
 
