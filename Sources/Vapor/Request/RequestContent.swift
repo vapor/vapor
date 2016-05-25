@@ -2,8 +2,6 @@ import MediaType
 
 // TODO: Tanner, seems export is necessary
 @_exported import PathIndexable
-extension Json: PathIndexable {}
-
 
 public protocol RequestContentSubscript {}
 
@@ -16,15 +14,15 @@ public extension Request {
     */
     public struct Content {
         // MARK: Initialization
-        public let query: [String: String] //move to StructuredData
+        public let query: StructuredData
         public let json: Json?
-        public let formEncoded: [String: String]? //move to StructuredData
+        public let formEncoded: StructuredData?
         public let multipart: [String: MultiPart]?
 
         internal init(
-            query: [String: String],
+            query: StructuredData,
             json: Json?,
-            formEncoded: [String: String]?,
+            formEncoded: StructuredData?,
             multipart: [String: MultiPart]?
         ) {
             self.query = query
@@ -34,7 +32,7 @@ public extension Request {
         }
 
         // MARK: Subscripting
-        public subscript(index: Int) -> Node? {
+        public subscript(index: Int) -> Polymorphic? {
             if let value = query["\(index)"] {
                 return value
             } else if let value = json?.array?[index] {
@@ -48,7 +46,7 @@ public extension Request {
             }
         }
 
-        public subscript(key: String) -> Node? {
+        public subscript(key: String) -> Polymorphic? {
             if let value = query[key] {
                 return value
             } else if let value = json?.object?[key] {
@@ -62,18 +60,18 @@ public extension Request {
             }
         }
 
-        public subscript(indexes: PathIndex...) -> Node? {
+        public subscript(indexes: PathIndex...) -> Polymorphic? {
             return self[indexes]
         }
 
-        public subscript(indexes: [PathIndex]) -> Node? {
+        public subscript(indexes: [PathIndex]) -> Polymorphic? {
             return json?[indexes]
         }
     }
 
 }
 
-extension String: Node {
+extension String: Polymorphic {
     public var isNull: Bool {
         return self == "null"
     }
@@ -85,11 +83,6 @@ extension String: Node {
     public var int: Int? {
         guard let double = double else { return nil }
         return Int(double)
-    }
-
-    public var uint: UInt? {
-        guard let double = double else { return nil }
-        return UInt(double)
     }
 
     public var float: Float? {
@@ -105,18 +98,14 @@ extension String: Node {
         return self
     }
 
-    public var array: [Node]? {
+    public var array: [Polymorphic]? {
         return self
             .split(byString: ",")
-            .map { $0 as Node }
+            .map { $0 as Polymorphic }
     }
 
-    public var object: [String : Node]? {
+    public var object: [String : Polymorphic]? {
         return nil
-    }
-
-    public var json: Json? {
-        return Json(self)
     }
 }
 

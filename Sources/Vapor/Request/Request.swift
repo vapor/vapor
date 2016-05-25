@@ -68,20 +68,66 @@ extension Request {
     }
     
 
-    private func parseURLEncodedForm(_ string: String) -> [String: String] {
-        var formEncoded: [String: String] = [:]
+    private func parseFormURLEncoded(_ string: String) -> StructuredData {
+        var urlEncoded: [String: StructuredData] = [:]
 
         for pair in string.split(byString: "&") {
             let token = pair.split(separator: "=", maxSplits: 1)
             if token.count == 2 {
-                let key = String(validatingUTF8: token[0]) ?? ""
-                var value = String(validatingUTF8: token[1]) ?? ""
-                value = (try? String(percentEncoded: value)) ?? ""
-                formEncoded[key] = value
+                //parse and decode key from tokens
+                let rawKey = String(validatingUTF8: token[0]) ?? ""
+                let key: String
+                if let decodedKey = try? String(percentEncoded: rawKey) {
+                    key = decodedKey
+                } else {
+                    key = ""
+                }
+
+                //parse, decode, and convert value into StructuredData
+                let rawValue = String(validatingUTF8: token[1]) ?? ""
+                let value: String
+                if let decodedValue = try? String(percentEncoded: rawValue) {
+                    value = decodedValue
+                } else {
+                    value = ""
+                }
+
+                var newValue: StructuredData = .string(value)
+
+                //add to structured data
+                if key.hasSuffix("[]") {
+                    let item: StructuredData
+
+                    if let existing = urlEncoded[key] {
+                        item = existing
+                    } else {
+                        item = .array([])
+                    }
+
+                    if case .array(var array) = item {
+                        array.append(newValue)
+                        newValue = .array(array)
+                    }
+                } else if key.hasSuffix("]") && key.characters.contains("[") {
+                    let subkey: String
+                    if let subkeySequence = key
+                        .characters
+                        .split(separator: "[", maxSplits: 1)
+                        .first {
+                        let trimmed = subkeySequence.dropLast()
+                        subkey = String(trimmed)
+                    } else {
+                        subkey = ""
+                    }
+
+                    let item: StructuredData
+                }
+
+                urlEncoded[key] = newValue
             }
         }
 
-        return formEncoded
+        return .dictionary(urlEncoded)
     }
 
     mutating func parseData() {
@@ -89,16 +135,18 @@ extension Request {
     }
 
     private func parseContent() -> Request.Content {
-        var queries: [String: String] = [:]
+        var queriesRaw: [String: StructuredData] = [:]
 
         uri.query.forEach { (key, values) in
-            queries[key] = values
+            let string = values
                 .flatMap { $0 }
                 .joined(separator: ",")
+            queriesRaw[key] = .string(string)
         }
+        let queries: StructuredData = .dictionary(queriesRaw)
 
         var json: Json?
-        var formEncoded: [String: String]?
+        var formEncoded: StructuredData?
         var multipart: [String: MultiPart]?
         var mutableBody = body
 
@@ -127,7 +175,7 @@ extension Request {
             do {
                 let data = try mutableBody.becomeBuffer()
                 let string = try String(data: data)
-                formEncoded = parseURLEncodedForm(string)
+                formEncoded = parseFormURLEncoded(string)
             } catch {
                 Log.warning("Could not parse form encoded data: \(error)")
             }

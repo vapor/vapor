@@ -1,7 +1,7 @@
-import PureJson
+import PureJSON
 
 // Exporting type w/o forcing import
-public typealias Json = PureJson.Json
+public typealias Json = PureJSON.JSON
 
 extension Json {
     public init(_ value: Int) {
@@ -36,7 +36,7 @@ extension Json {
 }
 
 extension Json {
-    public subscript(key: String) -> Node? {
+    public subscript(key: String) -> Polymorphic? {
         switch self {
         case .object(let object):
             return object[key]
@@ -45,7 +45,7 @@ extension Json {
         }
     }
 
-    public subscript(index: Int) -> Node? {
+    public subscript(index: Int) -> Polymorphic? {
         switch self {
         case .array(let array):
             return array[index]
@@ -138,8 +138,8 @@ extension Json: ResponseRepresentable {
     }
 }
 
-extension Json: Node {
-    public var array: [Node]? {
+extension Json: Polymorphic {
+    public var array: [Polymorphic]? {
         switch self {
         case .array(let array):
             return array.map { item in
@@ -150,10 +150,10 @@ extension Json: Node {
         }
     }
 
-    public var object: [String : Node]? {
+    public var object: [String : Polymorphic]? {
         switch self {
         case .object(let object):
-            var dict: [String : Node] = [:]
+            var dict: [String : Polymorphic] = [:]
 
             object.forEach { (key, val) in
                 dict[key] = val

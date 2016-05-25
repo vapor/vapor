@@ -1,4 +1,4 @@
-extension Node {
+extension Polymorphic {
     /**
         Transform and validate a node
 
@@ -10,10 +10,15 @@ extension Node {
     */
     public func validated<
         T: ValidationSuite
-        where T.InputType: NodeInitializable>(by suite: T.Type = T.self)
-        throws -> Valid<T> {
-            let value = try T.InputType.make(with: self)
+        where T.InputType: PolymorphicInitializable>(by suite: T.Type = T.self)
+        throws -> Valid<T>
+    {
+        do {
+            let value = try T.InputType.init(polymorphic: self)
             return try value.validated(by: suite)
+        } catch PolymorphicInitializableError.couldNotInitialize {
+            throw ValidationError(suite, input: nil, message: "Validating \(suite) failed for input '\(self)'")
+        }
     }
 
     /**
@@ -27,10 +32,15 @@ extension Node {
     */
     public func validated<
         T: Validator
-        where T.InputType: NodeInitializable>(by validator: T)
-        throws -> Valid<T> {
-            let value = try T.InputType.make(with: self)
+        where T.InputType: PolymorphicInitializable>(by validator: T)
+        throws -> Valid<T>
+    {
+        do {
+            let value = try T.InputType.init(polymorphic: self)
             return try value.validated(by: validator)
+        } catch PolymorphicInitializableError.couldNotInitialize {
+            throw ValidationError(validator, input: nil, message: "Validating \(validator) failed for input '\(self)'")
+        }
     }
 }
 
@@ -55,7 +65,7 @@ public protocol Extractable {
     func extract() -> Wrapped?
 }
 
-extension Extractable where Wrapped == Node {
+extension Extractable where Wrapped == Polymorphic {
 
     /**
         transform and validate an extractable encapsulating a node.
@@ -68,13 +78,19 @@ extension Extractable where Wrapped == Node {
      */
     public func validated<
         V: ValidationSuite
-        where V.InputType: NodeInitializable>(by suite: V.Type = V.self)
-        throws -> Valid<V> {
-            guard let wrapped = extract() else {
-                throw ValidationError(suite, input: nil)
-            }
-            let value = try V.InputType.make(with: wrapped)
+        where V.InputType: PolymorphicInitializable>(by suite: V.Type = V.self)
+        throws -> Valid<V>
+    {
+        guard let wrapped = extract() else {
+            throw ValidationError(suite, input: nil)
+        }
+
+        do {
+            let value = try V.InputType.init(polymorphic: wrapped)
             return try value.validated(by: suite)
+        } catch PolymorphicInitializableError.couldNotInitialize {
+            throw ValidationError(suite, input: nil, message: "Validating \(suite) failed for input '\(wrapped)'")
+        }
     }
 
     /**
@@ -88,17 +104,23 @@ extension Extractable where Wrapped == Node {
      */
     public func validated<
         V: Validator
-        where V.InputType: NodeInitializable>(by validator: V)
-        throws -> Valid<V> {
-            guard let wrapped = extract() else {
-                throw ValidationError(validator, input: nil)
-            }
-            let value = try V.InputType.make(with: wrapped)
+        where V.InputType: PolymorphicInitializable>(by validator: V)
+        throws -> Valid<V>
+    {
+        guard let wrapped = extract() else {
+            throw ValidationError(validator, input: nil)
+        }
+
+        do {
+            let value = try V.InputType.init(polymorphic: wrapped)
             return try value.validated(by: validator)
+        } catch PolymorphicInitializableError.couldNotInitialize {
+            throw ValidationError(validator, input: nil, message: "Validating \(validator) failed for input '\(wrapped)'")
+        }
     }
 }
 
-extension Extractable where Wrapped == [Node] {
+extension Extractable where Wrapped == [Polymorphic] {
 
     /**
         transforms and validates an array of nodes
@@ -111,16 +133,21 @@ extension Extractable where Wrapped == [Node] {
      */
     public func validated<
         V: ValidationSuite,
-        I: NodeInitializable
+        I: PolymorphicInitializable
         where V.InputType == [I]>(by suite: V.Type = V.self)
-        throws -> Valid<V> {
-            guard let wrapped = extract() else {
-                throw ValidationError(suite, input: nil)
-            }
+        throws -> Valid<V>
+    {
+        guard let wrapped = extract() else {
+            throw ValidationError(suite, input: nil)
+        }
 
+        do {
             return try wrapped
-                .map(I.make)
+                .map(I.init)
                 .validated(by: suite)
+        } catch PolymorphicInitializableError.couldNotInitialize {
+            throw ValidationError(suite, input: nil, message: "Validating \(suite) failed for input '\(wrapped)'")
+        }
     }
 
     /**
@@ -134,20 +161,25 @@ extension Extractable where Wrapped == [Node] {
      */
     public func validated<
         V: Validator,
-        I: NodeInitializable
+        I: PolymorphicInitializable
         where V.InputType == [I]>(by validator: V)
-        throws -> Valid<V> {
-            guard let wrapped = extract() else {
-                throw ValidationError(validator, input: nil)
-            }
+        throws -> Valid<V>
+    {
+        guard let wrapped = extract() else {
+            throw ValidationError(validator, input: nil)
+        }
 
+        do {
             return try wrapped
-                .map(I.make)
+                .map(I.init)
                 .validated(by: validator)
+        } catch PolymorphicInitializableError.couldNotInitialize {
+            throw ValidationError(validator, input: nil, message: "Validating \(validator) failed for input '\(wrapped)'")
+        }
     }
 }
 
-extension Extractable where Wrapped == [String : Node] {
+extension Extractable where Wrapped == [String : Polymorphic] {
 
     /**
         transforms and validates a dictionary w type [String : Node]
@@ -160,19 +192,25 @@ extension Extractable where Wrapped == [String : Node] {
      */
     public func validated<
         V: ValidationSuite,
-        I: NodeInitializable
+        I: PolymorphicInitializable
         where V.InputType == [String : I]>(by suite: V.Type = V.self)
-        throws -> Valid<V> {
-            guard let wrapped = extract() else {
-                throw ValidationError(suite, input: nil)
-            }
+        throws -> Valid<V>
+    {
+        guard let wrapped = extract() else {
+            throw ValidationError(suite, input: nil)
+        }
 
-            var mapped: [String : I] = [:]
+        var mapped: [String : I] = [:]
+
+        do {
             try wrapped.forEach { k, v in
-                mapped[k] = try I.make(with: v)
+                mapped[k] = try I.init(polymorphic: v)
             }
 
             return try mapped.validated(by: suite)
+        } catch PolymorphicInitializableError.couldNotInitialize {
+            throw ValidationError(suite, input: nil, message: "Validating \(suite) failed for input '\(wrapped)'")
+        }
     }
 
     /**
@@ -186,19 +224,25 @@ extension Extractable where Wrapped == [String : Node] {
      */
     public func validated<
         V: Validator,
-        I: NodeInitializable
+        I: PolymorphicInitializable
         where V.InputType == [String : I]>(by validator: V)
-        throws -> Valid<V> {
-            guard let wrapped = extract() else {
-                throw ValidationError(validator, input: nil)
-            }
+        throws -> Valid<V>
+    {
+        guard let wrapped = extract() else {
+            throw ValidationError(validator, input: nil)
+        }
 
-            var mapped: [String : I] = [:]
+        var mapped: [String : I] = [:]
+
+        do {
             try wrapped.forEach { k, v in
-                mapped[k] = try I.make(with: v)
+                mapped[k] = try I.init(polymorphic: v)
             }
 
             return try mapped.validated(by: validator)
+        } catch PolymorphicInitializableError.couldNotInitialize {
+            throw ValidationError(validator, input: nil, message: "Validating \(validator) failed for input '\(wrapped)'")
+        }
     }
 }
 

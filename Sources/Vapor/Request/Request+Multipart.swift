@@ -201,7 +201,7 @@ extension Request.MultiPart {
     }
 }
 
-extension Request.MultiPart: Node {
+extension Request.MultiPart: Polymorphic {
     public var isNull: Bool {
         return self.input == "null"
     }
@@ -241,7 +241,7 @@ extension Request.MultiPart: Node {
         return self.input
     }
     
-    public var array: [Node]? {
+    public var array: [Polymorphic]? {
         guard case .input(let a) = self else {
             return nil
         }
@@ -249,7 +249,7 @@ extension Request.MultiPart: Node {
         return [a]
     } 
 
-    public var object: [String : Node]? {
+    public var object: [String : Polymorphic]? {
         return nil
     }
 

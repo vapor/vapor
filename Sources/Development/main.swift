@@ -15,6 +15,9 @@ app.get("test") { request in
     return "123"
 }
 
+func thrower() throws {}
+try thrower()
+
 //MARK: Resource
 
 app.resource("users", controller: UserController.self)
