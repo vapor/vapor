@@ -93,8 +93,8 @@ class RequestTests: XCTestCase {
 
         request.cacheParsedContent()
 
-        XCTAssert(request.data["singleKeyArray"].array?.first.string == "value", "singleKeyArray did not parse correctly")
-        XCTAssert(request.data["implicitArray"].array?.first.string == "1", "implicitArray did not parse correctly")
-        XCTAssert(request.data["implicitArray"].array?.last.string == "2", "implicitArray did not parse correctly")
+        XCTAssert(request.data["singleKeyArray", 0].string == "value", "singleKeyArray did not parse correctly")
+        XCTAssert(request.data["implicitArray", 0].string == "1", "implicitArray did not parse correctly")
+        XCTAssert(request.data["implicitArray", 1].string == "2", "implicitArray did not parse correctly")
     }
 }
