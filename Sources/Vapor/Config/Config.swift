@@ -275,7 +275,7 @@ extension Environment {
 
 extension String {
     private var keyPathComponents: [String] {
-        return split(byString: ".")
+        return components(separatedBy: ".")
     }
 
 }

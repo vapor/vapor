@@ -71,7 +71,7 @@ extension HTTPStreamHeader {
         let version: String
 
         init(_ string: String) throws {
-            let comps = string.split(byString: " ")
+            let comps = string.components(separatedBy: " ")
             guard comps.count == 3 else {
                 throw Error.InvalidRequestLine
             }
