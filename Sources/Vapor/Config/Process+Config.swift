@@ -2,7 +2,7 @@ import Foundation
 
 extension Process {
     static func makeCLIConfig() -> JSONDirectory {
-        let configArgs = NSProcessInfo.processInfo().arguments.filter { $0.hasPrefix("--config:") }
+        let configArgs = NSProcessInfo.processInfo().arguments.filter { $0.hasPrefix("--") }
 
         // [FileName: Json]
         var directory: [String: JSON] = [:]
@@ -43,9 +43,16 @@ extension Process {
     }
 
     static func parseConfigKey(_ key: String) -> (file: String, path: [PathIndex])? {
+        let configKey: String
+        if key.hasPrefix("--config:") {
+            configKey = key
+        } else {
+            configKey = "--config:app.\(key)"
+        }
+
         // --config:app.port
         // expect [--config, app.port]
-        let paths = key
+        let paths = configKey
             .characters
             .split(separator: ":",
                    maxSplits: 1,
