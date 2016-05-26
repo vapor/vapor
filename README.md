@@ -1,4 +1,4 @@
-![Vapor](https://cloud.githubusercontent.com/assets/1342803/14401223/7af2ade6-fdd7-11e5-9d6c-0ca302b274ef.png)
+[![Vapor](https://cloud.githubusercontent.com/assets/1342803/15592871/46decfda-2375-11e6-9494-a9bf4e6aaebf.png)](http://slack.qutheory.io)
 
 # Vapor
 
