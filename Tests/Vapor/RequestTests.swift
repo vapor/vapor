@@ -18,6 +18,7 @@ class RequestTests: XCTestCase {
             ("testMultipartFile", testMultipartFile),
             ("testFormURLEncoded", testFormURLEncoded),
             ("testFormURLEncodedEdge", testFormURLEncodedEdge),
+            ("testSplitString", testSplitString)
         ]
     }
 
@@ -96,5 +97,11 @@ class RequestTests: XCTestCase {
         XCTAssert(request.data["singleKeyArray", 0].string == "value", "singleKeyArray did not parse correctly")
         XCTAssert(request.data["implicitArray", 0].string == "1", "implicitArray did not parse correctly")
         XCTAssert(request.data["implicitArray", 1].string == "2", "implicitArray did not parse correctly")
+    }
+
+    func testSplitString() {
+        let input = "multipart/form-data; boundary=----WebKitFormBoundaryAzXMX6nUkSI9kQbq"
+        let val = input.components(separatedBy: "boundary=")
+        print("succeeded w/ \(val) because didn't crash")
     }
 }

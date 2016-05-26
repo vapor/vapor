@@ -1,7 +1,18 @@
 import Vapor
 import S4
 
-let app = Application()
+let seed: [String : JSON] = [
+    "app": ["port": 8080]
+]
+let config = Config(seed: seed)
+
+var workDir: String {
+    let parent = #file.characters.split(separator: "/").map(String.init).dropLast().joined(separator: "/")
+    let path = "/\(parent)/"
+    return path
+}
+
+let app = Application(config: config, workDir: workDir)
 
 app.hash.key = app.config["app", "hash", "key"].string ?? "default-key"
 
@@ -14,9 +25,6 @@ app.get("/") { request in
 app.get("test") { request in
     return "123"
 }
-
-func thrower() throws {}
-try thrower()
 
 //MARK: Resource
 
@@ -308,17 +316,12 @@ app.get("options") { _ in
 }
 
 app.post("options") { request in
-    guard let form = request.data.multipart else {
+    guard let form = request.data.multipart, let multipart = form["options"] else {
         return "No form submited"
     }
-    
-    var response = ""
-    
-    for string in form["options"]?.inputArray ?? [] {
-        response += "You have selected \"\(string)\"\n"
-    }
-    
-    return response
+
+    let selected = multipart.input ?? multipart.inputArray?.joined(separator: ", ")
+    return "You have selected \"\(selected ?? "whoops!")\"\n"
 }
 
 app.post("multipart-print") { request in

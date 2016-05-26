@@ -20,7 +20,6 @@ If you find a security vulnerability, please contact [tanner@qutheory.io](tanner
 # Name of Feature
 
 * Author(s): [Developer](https://github.com/<your-username>)
-* Status: **[Awaiting review](#rationale)**
 
 ## Introduction
 
@@ -45,7 +44,3 @@ Describe the impact that this change will have on existing code. Will some Vapor
 ## Alternatives considered
 
 Describe alternative approaches to addressing the same problem, and why you chose this approach instead.
-
-## Decision (For Moderator Use)
-
-On **[Date]**, the community decided to **(TBD)** this proposal. When the community makes a decision regarding this proposal, their rationale for the decision will be written here.
