@@ -1,7 +1,7 @@
 import PathIndexable
 import Foundation
 
-private struct JsonFile {
+internal struct JsonFile {
     let name: String
     let json: JSON
 
@@ -20,15 +20,15 @@ private struct JsonFile {
     }
 }
 
-private struct ConfigDirectory {
+internal struct JsonDirectory {
     let name: String
     let files: [JsonFile]
 
-    subscript(_ name: String, _ paths: [PathIndex]) -> JSON? {
+    subscript(_ fileName: String, _ paths: [PathIndex]) -> JSON? {
         return files
             .lazy
             .filter { file in
-                file.name == name
+                file.name == fileName
             }
             .flatMap { file in file.json[paths] }
             .first
@@ -36,7 +36,7 @@ private struct ConfigDirectory {
 }
 
 private struct PrioritizedDirectoryQueue {
-    let directories: [ConfigDirectory]
+    let directories: [JsonDirectory]
 
     subscript(_ fileName: String, indexes: [PathIndex]) -> JSON? {
         return directories
@@ -47,7 +47,7 @@ private struct PrioritizedDirectoryQueue {
 }
 
 extension FileManager {
-    private static func loadDirectory(_ path: String) -> ConfigDirectory? {
+    internal static func loadDirectory(_ path: String) -> JsonDirectory? {
         guard let directoryName = path.components(separatedBy: "/").last else {
             return nil
         }
@@ -68,7 +68,7 @@ extension FileManager {
             jsonFiles.append(jsonFile)
         }
 
-        let directory = ConfigDirectory(name: directoryName, files: jsonFiles)
+        let directory = JsonDirectory(name: directoryName, files: jsonFiles)
         return directory
     }
 
@@ -79,7 +79,7 @@ extension FileManager {
 }
 
 extension Process {
-    private static func makeCLIConfig() -> ConfigDirectory {
+    private static func makeCLIConfig() -> JsonDirectory {
         let configArgs = NSProcessInfo.processInfo().arguments.filter { $0.hasPrefix("--config:") }
 
         // [FileName: Json]
@@ -100,7 +100,7 @@ extension Process {
         }
 
         let jsonFiles = directory.map { fileName, json in JsonFile(name: fileName, json: json) }
-        let config = ConfigDirectory(name: "cli", files: jsonFiles)
+        let config = JsonDirectory(name: "cli", files: jsonFiles)
         return config
     }
 
@@ -190,8 +190,8 @@ public class Config {
 
 
         let files = configurations.map { name, json in return JsonFile(name: name, json: json) }
-        let seedDirectory = ConfigDirectory(name: "seed-data", files: files)
-        var prioritizedDirectories: [ConfigDirectory] = [seedDirectory]
+        let seedDirectory = JsonDirectory(name: "seed-data", files: files)
+        var prioritizedDirectories: [JsonDirectory] = [seedDirectory]
 
         // command line args passed w/ following syntax loaded first after seed
         // --config:app.port=9090

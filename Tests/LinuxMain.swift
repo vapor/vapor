@@ -23,7 +23,8 @@ XCTMain([
 	testCase(ValidationConvenienceTests.allTests),
 	testCase(ValidationCountTests.allTests),
 	testCase(ValidationTests.allTests),
-	testCase(ValidationUniqueTests.allTests)
+	testCase(ValidationUniqueTests.allTests),
+    testCase(LocalizationTests.allTests)
 ])
 
 #endif
