@@ -16,6 +16,7 @@ XCTMain([
 	testCase(PerformanceTests.allTests),
     testCase(ProcessTests.allTests),
     testCase(ResponseTests.allTests),
+    testCase(RequestTests.allTests),
     testCase(RouterTests.allTests),
     testCase(RouteTests.allTests),
     testCase(SessionTests.allTests),
