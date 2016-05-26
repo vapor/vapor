@@ -52,12 +52,12 @@ extension Request {
     static private func parseCookies(_ string: String) -> [String: String] {
         var cookies: [String: String] = [:]
 
-        let cookieTokens = string.split(byString: ";")
+        let cookieTokens = string.components(separatedBy: ";")
         for cookie in cookieTokens {
-            let cookieArray = cookie.split(byString: "=")
+            let cookieArray = cookie.components(separatedBy: "=")
 
             if cookieArray.count == 2 {
-                let split = cookieArray[0].split(byString: " ")
+                let split = cookieArray[0].components(separatedBy: " ")
                 let key = split.joined(separator: "")
                 let validKey = String(validatingUTF8: key) ?? ""
                 cookies[validKey] = String(validatingUTF8: cookieArray[1])
