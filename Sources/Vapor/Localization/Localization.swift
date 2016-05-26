@@ -3,13 +3,13 @@ import Foundation
 
 public class Localization {
     private let localizationDirectoryPath: String
-    private let localization: JsonDirectory
+    private let localization: JSONDirectory
 
     public init(workingDirectory: String = "./") {
         let configDirectory = workingDirectory.finish("/") + "Localization/"
         self.localizationDirectoryPath = configDirectory
         self.localization = FileManager.loadDirectory(configDirectory)
-            ?? JsonDirectory(name: "empty", files: [])
+            ?? JSONDirectory(name: "empty", files: [])
     }
 
     public subscript(_ languageCode: String, _ paths: PathIndex...) -> String {
