@@ -32,5 +32,8 @@ class LocalizationTests: XCTestCase {
             .filter { $0 != "Welcome to Defaults" }
 
         XCTAssert(transformations.count == 0, "localization defaults not working properly")
+
+        let notExist = localization["en", "unknown key"]
+        XCTAssert(notExist == "unknown key")
 	}
 }

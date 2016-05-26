@@ -25,9 +25,14 @@ public class Application {
     public let session: SessionDriver
 
     /**
-        Provides access to config settings.
-    */
+     Provides access to config settings.
+     */
     public let config: Config
+
+    /**
+     Provides access to config settings.
+     */
+    public let localization: Localization
 
     /**
         Provides access to the underlying
@@ -96,6 +101,7 @@ public class Application {
         workDir overrideWorkDir: String? = nil,
         sessionDriver: SessionDriver? = nil,
         config overrideConfig: Config? = nil,
+        localization overrideLocalization: Localization? = nil,
         hash: Hash = Hash(),
         server: Server.Type = HTTPStreamServer<ServerSocket>.self,
         router: RouterDriver = BranchRouter()
@@ -108,6 +114,9 @@ public class Application {
             ?? Process.valueFor(argument: "workDir")
             ?? "./"
         self.workDir = workDir.finish("/")
+
+        let localization = overrideLocalization ?? Localization(workingDirectory: workDir)
+        self.localization = localization
 
         let config = overrideConfig ?? Config(workingDirectory: workDir)
         self.config = config

@@ -19,6 +19,6 @@ public class Localization {
     public subscript(_ languageCode: String, _ paths: [PathIndex]) -> String {
         return localization[languageCode, paths]?.string
             ?? localization["default", paths]?.string
-            ?? "not found" // TODO: Discuss message or ""
+            ?? paths.map { "\($0)" }.joined(separator: ".")
     }
 }
