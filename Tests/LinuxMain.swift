@@ -11,7 +11,7 @@ XCTMain([
     testCase(EventTests.allTests),
     testCase(HashTests.allTests),
     testCase(HTTPStreamTests.allTests),
-    testCase(LocalizationTests.allTests)
+    testCase(LocalizationTests.allTests),
     testCase(LogTests.allTests),
     testCase(MemorySessionDriverTests.allTests),
     testCase(PerformanceTests.allTests),
