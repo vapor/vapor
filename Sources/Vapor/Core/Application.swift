@@ -192,7 +192,7 @@ extension Application {
                 var headers: Response.Headers = [:]
 
                 if
-                    let fileExtension = filePath.split(byString: ".").last,
+                    let fileExtension = filePath.components(separatedBy: ".").last,
                     let type = mediaType(forFileExtension: fileExtension)
                 {
                     headers["Content-Type"] = Response.Headers.Values(type.description)

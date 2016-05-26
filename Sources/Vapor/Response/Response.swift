@@ -109,8 +109,8 @@ extension Response {
             var cookies: [String: String] = [:]
 
             for value in headers["Set-Cookie"] {
-                for cookie in value.split(byString: ";") {
-                    var parts = cookie.split(byString: "=")
+                for cookie in value.components(separatedBy: ";") {
+                    var parts = cookie.components(separatedBy: "=")
                     if parts.count >= 2 {
                         cookies[parts[0]] = parts[1]
                     }

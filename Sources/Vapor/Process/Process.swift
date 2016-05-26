@@ -16,7 +16,7 @@ extension Process {
                                 inArguments arguments: [String]
                                 = NSProcessInfo.processInfo().arguments) -> String? {
         for argument in arguments where argument.hasPrefix("--\(name)=") {
-            return argument.split(byString: "=").last
+            return argument.components(separatedBy: "=").last
         }
         return nil
     }
