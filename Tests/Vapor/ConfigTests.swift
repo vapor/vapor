@@ -36,4 +36,20 @@ class ConfigTests: XCTestCase {
         let config = Config(workingDirectory: workDir, environment: .production)
 		XCTAssert(config["app", "nested", "c", "true"].bool == false, "Nesting config incorrectly loaded.")
 	}
+
+    func testConfigKeys() {
+        guard let (complexFile, complexPath) = Process.parseConfigKey("--config:file.path.to.value") else {
+            XCTFail("Couldn't extract complex cli config")
+            return
+        }
+        XCTAssert(complexFile == "file")
+        XCTAssert(complexPath.map { "\($0)" } == ["path", "to", "value"])
+
+        guard let (simpleFile, simplePath) = Process.parseConfigKey("--some-key") else {
+            XCTFail("Couldn't extract simple cli config")
+            return
+        }
+        XCTAssert(simpleFile == "app")
+        XCTAssert(simplePath.map { "\($0)" } == ["some-key"])
+    }
 }
