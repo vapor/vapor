@@ -1,4 +1,4 @@
-![Vapor](https://cloud.githubusercontent.com/assets/1342803/14401223/7af2ade6-fdd7-11e5-9d6c-0ca302b274ef.png)
+[![Vapor](https://cloud.githubusercontent.com/assets/1342803/15592871/46decfda-2375-11e6-9494-a9bf4e6aaebf.png)](http://slack.qutheory.io)
 
 # Vapor
 
@@ -11,6 +11,7 @@ A Web Framework for Swift that works on iOS, OS X, and Ubuntu.
 ![Swift](https://camo.githubusercontent.com/0727f3687a1e263cac101c5387df41048641339c/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f53776966742d332e302d6f72616e67652e7376673f7374796c653d666c6174)
 [![Build Status](https://api.travis-ci.org/qutheory/vapor.svg?branch=master)](https://travis-ci.org/qutheory/vapor)
 [![Slack Status](http://qutheory.io:8001/badge.svg)](http://slack.qutheory.io)
+[![Twitter Follow](https://img.shields.io/twitter/follow/shields_io.svg?style=social&label=Follow&maxAge=2592000)](https://twitter.com/qutheory)
 [![codebeat badge](https://codebeat.co/badges/3334c72c-c6e6-4061-a86b-f077b5250252)](https://codebeat.co/projects/github-com-qutheory-vapor)
 [![PRs Welcome](https://img.shields.io/badge/prs-welcome-brightgreen.svg)](http://makeapullrequest.com)
 
