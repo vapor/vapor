@@ -35,9 +35,17 @@ struct Func: CustomStringConvertible {
             f += "<\(genericsString)>"
         }
         
-        let paramsString = params
-            .map { param in "_ \(param)" }
-            .joined(separator: ", ")
+        let paramsString: String
+        
+        if let param = params.first where params.count == 1 && param.type == .Path {
+            paramsString = "_ \(param) = \"/\""
+        }
+        
+        else {
+            paramsString = params
+                .map { param in "_ \(param)" }
+                .joined(separator: ", ")
+        }
 
         f += "(\(paramsString), handler: (Request"
         
