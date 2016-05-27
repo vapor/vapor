@@ -95,7 +95,7 @@ extension Request {
             let contentType = headers["Content-Type"].first,
             let data = data
         {
-            if contentType == "application/json" {
+            if contentType.range(of: "application/json") != nil {
                 do {
                     json = try JSON(data)
                 } catch {
@@ -108,7 +108,7 @@ extension Request {
                 } catch {
                     Log.warning("Could not parse MultiPart: \(error)")
                 }
-            } else if contentType == "application/x-www-form-urlencoded" {
+            } else if contentType.range(of: "application/x-www-form-urlencoded") != nil {
                 formEncoded = Request.parseFormURLEncoded(data)
             }
         }
