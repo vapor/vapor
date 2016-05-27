@@ -45,7 +45,7 @@ extension Request {
     }
 
     static func parseBoundary(contentType: String) throws -> String {
-        let boundaryPieces = contentType.split(byString: "boundary=")
+        let boundaryPieces = contentType.components(separatedBy: "boundary=")
         guard boundaryPieces.count == 2 else {
             throw RequestMultiPartError.invalidBoundary
         }

@@ -108,7 +108,7 @@ extension String: Polymorphic {
 
     public var array: [Polymorphic]? {
         return self
-            .split(byString: ",")
+            .components(separatedBy: ",")
             .map { $0 as Polymorphic }
     }
 

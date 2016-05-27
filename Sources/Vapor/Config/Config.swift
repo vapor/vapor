@@ -1,151 +1,13 @@
 import PathIndexable
-import Foundation
-
-private struct JsonFile {
-    let name: String
-    let json: JSON
-
-    private static let suffix = ".json"
-
-    init(name: String, json: JSON) {
-        if
-            let nameSequence = name.characters.split(separator: ".").first
-            where name.hasSuffix(JsonFile.suffix)
-        {
-            self.name = String(nameSequence)
-        } else {
-            self.name = name
-        }
-        self.json = json
-    }
-}
-
-private struct ConfigDirectory {
-    let name: String
-    let files: [JsonFile]
-
-    subscript(_ name: String, _ paths: [PathIndex]) -> JSON? {
-        return files
-            .lazy
-            .filter { file in
-                file.name == name
-            }
-            .flatMap { file in file.json[paths] }
-            .first
-    }
-}
 
 private struct PrioritizedDirectoryQueue {
-    let directories: [ConfigDirectory]
+    let directories: [JSONDirectory]
 
     subscript(_ fileName: String, indexes: [PathIndex]) -> JSON? {
         return directories
             .lazy
             .flatMap { directory in return directory[fileName, indexes] }
             .first
-    }
-}
-
-extension FileManager {
-    private static func loadDirectory(_ path: String) -> ConfigDirectory? {
-        guard let directoryName = path.components(separatedBy: "/").last else {
-            return nil
-        }
-        guard let contents = try? FileManager.contentsOfDirectory(path) else {
-            return nil
-        }
-
-        var jsonFiles: [JsonFile] = []
-        for file in contents where file.hasSuffix(".json") {
-            guard let name = file.components(separatedBy: "/").last else {
-                continue
-            }
-            guard let json = try? loadJson(file) else {
-                continue
-            }
-
-            let jsonFile = JsonFile(name: name, json: json)
-            jsonFiles.append(jsonFile)
-        }
-
-        let directory = ConfigDirectory(name: directoryName, files: jsonFiles)
-        return directory
-    }
-
-    private static func loadJson(_ path: String) throws -> JSON {
-        let bytes = try FileManager.readBytesFromFile(path)
-        return try JSON.deserialize(bytes)
-    }
-}
-
-extension Process {
-    private static func makeCLIConfig() -> ConfigDirectory {
-        let configArgs = NSProcessInfo.processInfo().arguments.filter { $0.hasPrefix("--config:") }
-
-        // [FileName: Json]
-        var directory: [String: JSON] = [:]
-
-        for arg in configArgs {
-            guard let (key, value) = parseArgument(arg) else {
-                continue
-            }
-
-            guard let (file, path) = parseConfigKey(key) else {
-                continue
-            }
-
-            var js = directory[file] ?? .object([:])
-            js[path] = .string(value)
-            directory[file] = js
-        }
-
-        let jsonFiles = directory.map { fileName, json in JsonFile(name: fileName, json: json) }
-        let config = ConfigDirectory(name: "cli", files: jsonFiles)
-        return config
-    }
-
-    private static func parseArgument(_ arg: String) -> (key: String, value: String)? {
-        let info = arg
-            .characters
-            .split(separator: "=",
-                   maxSplits: 1,
-                   omittingEmptySubsequences: true)
-            .map(String.init)
-
-        guard info.count == 2, let key = info.first, let value = info.last else {
-            Log.info("Unable to parse possible config argument: \(arg)")
-            return nil
-        }
-
-        return (key, value)
-    }
-
-    private static func parseConfigKey(_ key: String) -> (file: String, path: [PathIndex])? {
-        // --config:app.port
-        // expect [--config, app.port]
-        let paths = key
-            .characters
-            .split(separator: ":",
-                   maxSplits: 1,
-                   omittingEmptySubsequences: true)
-            .map(String.init)
-
-        guard
-            paths.count == 2,
-            var keyPaths = paths.last?.components(separatedBy: "."),
-            let fileName = keyPaths.first
-            // first argument is file name, subsequent args are actual path
-            //
-            where keyPaths.count > 1
-            else {
-                Log.info("Unable to parse possible config path: \(key)")
-                return nil
-            }
-
-        // first argument is file name, subsequent arguments are paths
-        keyPaths.remove(at: 0)
-
-        return (fileName, keyPaths.map { $0 as PathIndex })
     }
 }
 
@@ -189,9 +51,9 @@ public class Config {
         self.environment = environment
 
 
-        let files = configurations.map { name, json in return JsonFile(name: name, json: json) }
-        let seedDirectory = ConfigDirectory(name: "seed-data", files: files)
-        var prioritizedDirectories: [ConfigDirectory] = [seedDirectory]
+        let files = configurations.map { name, json in return JSONFile(name: name, json: json) }
+        let seedDirectory = JSONDirectory(name: "seed-data", files: files)
+        var prioritizedDirectories: [JSONDirectory] = [seedDirectory]
 
         // command line args passed w/ following syntax loaded first after seed
         // --config:app.port=9090
@@ -275,7 +137,7 @@ extension Environment {
 
 extension String {
     private var keyPathComponents: [String] {
-        return split(byString: ".")
+        return components(separatedBy: ".")
     }
 
 }
