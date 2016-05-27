@@ -39,9 +39,7 @@ struct Func: CustomStringConvertible {
         
         if let param = params.first where params.count == 1 && param.type == .Path {
             paramsString = "_ \(param) = \"/\""
-        }
-        
-        else {
+        } else {
             paramsString = params
                 .map { param in "_ \(param)" }
                 .joined(separator: ", ")
