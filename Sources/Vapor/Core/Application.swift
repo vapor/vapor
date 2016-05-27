@@ -167,7 +167,8 @@ extension Application {
 
     private func startServer() {
         do {
-            Log.info("Server starting ...")
+            Log.info("Server starting...")
+            Log.info("Visit http://\(host):\(port)")
             let server = try serverType.init(host: host, port: port, responder: self)
             // noreturn
             try server.start()
