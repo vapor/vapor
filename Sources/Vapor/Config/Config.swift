@@ -45,14 +45,13 @@ public class Config {
         starting configurations.
         The application is required to detect environment.
     */
-    public init(seed configurations: [String: JSON] = [:], workingDirectory: String = "./", environment: Environment = .loader()) {
+    public init(seed: JSON = [:], workingDirectory: String = "./", environment: Environment = .loader()) {
         let configDirectory = workingDirectory.finish("/") + "Config/"
         self.configDirectory = configDirectory
         self.environment = environment
 
-
-        let files = configurations.map { name, json in return JSONFile(name: name, json: json) }
-        let seedDirectory = JSONDirectory(name: "seed-data", files: files)
+        let seedFile = JSONFile(name: "app", json: seed)
+        let seedDirectory = JSONDirectory(name: "seed-data", files: [seedFile])
         var prioritizedDirectories: [JSONDirectory] = [seedDirectory]
 
         // command line args passed w/ following syntax loaded first after seed

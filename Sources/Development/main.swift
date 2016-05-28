@@ -1,8 +1,8 @@
 import Vapor
 import S4
 
-let seed: [String : JSON] = [
-    "app": ["port": 8080]
+let seed: JSON = [
+    "port" : 8080
 ]
 let config = Config(seed: seed)
 
