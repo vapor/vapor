@@ -24,6 +24,13 @@ public class Hash {
     public var driver: HashDriver = SHA2Hasher(variant: .sha256)
 
     /**
+        Initialize the Hash.
+    */
+    public init() {
+
+    }
+
+    /**
         Hashes a string using the `Hash` class's
         current `HashDriver` and `applicationString` salt.
 
