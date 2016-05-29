@@ -13,7 +13,7 @@ public class Hash {
         the same during the lifetime of your application, since
         changing it will result in mismatching hashes.
     */
-    public var key: String = ""
+    private let key: String
 
     /**
         Any class that conforms to the `HashDriver`
@@ -21,7 +21,21 @@ public class Hash {
         It will be used to create the hashes
         request by functions like `make()`
     */
-    public var driver: HashDriver = SHA2Hasher(variant: .sha256)
+    private let driver: HashDriver
+
+    /**
+        Initialize the Hash.
+
+        - parameter key: seed the hash with a secret key to add an additional layer of security to all hashes
+
+        - parameter driver: an instance of any class that conforms to the `HashDriver` protocol, defaults to SHA2Hasher
+
+        - warning: Ensure the `key` stays the same during the lifecycle of your application.
+    */
+    public init(key: String, driver: HashDriver = nil) {
+        self.key = key
+        self.driver = driver ?? SHA2Hasher(variant: .sha256)
+    }
 
     /**
         Hashes a string using the `Hash` class's
