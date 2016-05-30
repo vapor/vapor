@@ -12,9 +12,9 @@ var workDir: String {
     return path
 }
 
-let app = Application(config: config, workDir: workDir)
+let hashKey = config["app", "hash", "key"].string ?? "default-key"
 
-app.hash.key = app.config["app", "hash", "key"].string ?? "default-key"
+let app = Application(config: config, workDir: workDir, hash: Hash(withKey: hashKey))
 
 //MARK: Basic
 
