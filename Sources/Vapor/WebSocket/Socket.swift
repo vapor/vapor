@@ -470,9 +470,10 @@ public class WebSocket {
     
     private func send(_ opCode: Frame.OpCode, data: Data) throws {
         let maskKey: Data = []
+        let packetSize = 64_000
         
-        let remainingData = data.count % 64_000
-        var frameCount = (data.count - remainingData) / 64_000
+        let remainingData = data.count % packetSize
+        var frameCount = (data.count - remainingData) / packetSize
         
         if remainingData > 0 {
             frameCount += 1
@@ -481,8 +482,8 @@ public class WebSocket {
         for i in 0..<frameCount {
             let code: Frame.OpCode
             
-            let start = i*64_000
-            let end = Swift.min((i+1)*64_000, start+remainingData)
+            let start = i*packetSize
+            let end = i == frameCount-1 ? start+remainingData : (i+1)*packetSize
             let frameData = Data(data[start..<end])
             
             if opCode == .Text && i != 0 {
@@ -500,9 +501,8 @@ public class WebSocket {
             let frame = Frame(fin: fin, opCode: code, data: frameData, maskKey: maskKey)
             let data = frame.getData()
             try stream.send(data)
+            try stream.flush()
         }
-        
-        try stream.flush()
     }
     
     static func accept(_ key: String) -> String {
