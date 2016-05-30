@@ -79,7 +79,7 @@ extension Application {
             return try controllerFactory().destroy(request, item: item)
         }
 
-        //PATH /entities/:id
+        //PATCH /entities/:id
         self.patch(path, Resource.Item.self) { request, item in
             return try controllerFactory().modify(request, item:item)
         }
