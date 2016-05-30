@@ -74,6 +74,13 @@ extension ResourceController {
     }
 
     /**
+     Modify an instance (only the fields that are present in the request)
+     */
+    public func modify(_ request: Request, item: Item) throws -> ResponseRepresentable {
+        throw Abort.notFound
+    }
+
+    /**
         Delete an instance.
      */
     public func destroy(_ request: Request, item: Item) throws -> ResponseRepresentable {
