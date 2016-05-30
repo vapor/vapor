@@ -43,9 +43,7 @@ public struct WebSocketServer: Responder, Middleware {
             return try chain.respond(to: request)
         }
         
-        guard let accept = WebSocket.accept(key) else {
-            return Response(status: .internalServerError)
-        }
+        let accept = WebSocket.accept(key)
         
         let headers: Headers = [
                                    "Connection": "Upgrade",
@@ -97,7 +95,7 @@ public extension Message {
     }
     
     public var isWebSocket: Bool {
-        return connection.first?.lowercased() == "upgrade" && upgrade.first?.lowercased() == "websocket"
+        return connection.first?.lowercased().range(of: "upgrade") != nil && upgrade.first?.lowercased() == "websocket"
     }
     
 }

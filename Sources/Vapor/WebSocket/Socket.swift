@@ -469,31 +469,44 @@ public class WebSocket {
     }
     
     private func send(_ opCode: Frame.OpCode, data: Data) throws {
-        let maskKey: Data
-        if mode == .Client {
-            var bytes = [UInt8]()
+        let maskKey: Data = []
+        
+        let remainingData = data.count % 64_000
+        var frameCount = (data.count - remainingData) / 64_000
+        
+        if remainingData > 0 {
+            frameCount += 1
+        }
+        
+        for i in 0..<frameCount {
+            let code: Frame.OpCode
             
-            for _ in 0..<4 {
-                #if os(Linux)
-                    let random: UInt8 = Int32(rand()).bsonData[0]
-                #else
-                    let random: UInt8 = UInt8(arc4random_uniform(255))
-                #endif
-                bytes.append(random)
+            let start = i*64_000
+            let end = Swift.min((i+1)*64_000, start+remainingData)
+            let frameData = Data(data[start..<end])
+            
+            if opCode == .Text && i != 0 {
+                code = .Continuation
+            } else if opCode == .Binary {
+                code = .Binary
+            } else if opCode == .Text && i == 0 {
+                code = .Text
+            } else {
+                code = opCode
             }
             
-            maskKey = Data(bytes)
-        } else {
-            maskKey = []
+            let fin = i == frameCount - 1
+            
+            let frame = Frame(fin: fin, opCode: code, data: frameData, maskKey: maskKey)
+            let data = frame.getData()
+            try stream.send(data)
         }
-        let frame = Frame(opCode: opCode, data: data, maskKey: maskKey)
-        let data = frame.getData()
-        try stream.send(data)
+        
         try stream.flush()
     }
     
-    static func accept(_ key: String) -> String? {
+    static func accept(_ key: String) -> String {
         let hash = SHA1.calculate([UInt8](key.utf8) + [UInt8](GUID.utf8))
-        return try? Base64.encode(hash)
+        return Base64.encode(hash)
     }
 }
