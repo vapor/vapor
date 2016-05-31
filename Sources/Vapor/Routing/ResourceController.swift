@@ -27,10 +27,20 @@ public protocol ResourceController {
      */
     func update(_ request: Request, item: Item) throws -> ResponseRepresentable
 
+    /**
+        Modify an instance (only the fields that are present in the request)
+     */
+    func modify(_ request: Request, item: Item) throws -> ResponseRepresentable
+
     /** 
         Delete an instance.
      */
     func destroy(_ request: Request, item: Item) throws -> ResponseRepresentable
+
+    /**
+        Delete all instances.
+     */
+    func destroyAll(_ request: Request) throws -> ResponseRepresentable
 }
 
 extension ResourceController {
@@ -64,9 +74,23 @@ extension ResourceController {
     }
 
     /**
+     Modify an instance (only the fields that are present in the request)
+     */
+    public func modify(_ request: Request, item: Item) throws -> ResponseRepresentable {
+        throw Abort.notFound
+    }
+
+    /**
         Delete an instance.
      */
     public func destroy(_ request: Request, item: Item) throws -> ResponseRepresentable {
+        throw Abort.notFound
+    }
+
+    /**
+        Delete all instances.
+     */
+    public func destroyAll(_ request: Request) throws -> ResponseRepresentable {
         throw Abort.notFound
     }
 }

@@ -1,3 +1,5 @@
+import S4
+
 /**
     Any type that conforms to this protocol
     can be passed as a requirement to Vapor's
@@ -67,11 +69,38 @@ extension Application {
             return try controllerFactory().update(request, item: item)
         }
 
-        //DELETE /intities/:id
+        //DELETE /entities
+        self.delete(path) { request in
+            return try controllerFactory().destroyAll(request)
+        }
+
+        //DELETE /entities/:id
         self.delete(path, Resource.Item.self) { request, item in
             return try controllerFactory().destroy(request, item: item)
         }
 
+        //PATCH /entities/:id
+        self.patch(path, Resource.Item.self) { request, item in
+            return try controllerFactory().modify(request, item:item)
+        }
+
+        self.options(path) { request in
+            let headers: Headers = [
+                "Allow":"GET,POST,DELETE,OPTIONS",
+                "Content-Type":"text/plain"
+            ]
+            let response = Response(status: .ok, headers: headers, body: Data())
+            return response
+        }
+
+        self.options(path, Resource.Item.self) { request, item in
+            let headers: Headers = [
+                "Allow":"GET,POST,PUT,PATCH,DELETE,OPTIONS",
+                "Content-Type":"text/plain"
+            ]
+            let response = Response(status: .ok, headers: headers, body: Data())
+            return response
+        }
     }
 
     /**
