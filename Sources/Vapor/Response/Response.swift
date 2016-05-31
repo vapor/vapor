@@ -55,7 +55,7 @@ extension Response {
         - parameter status: the http status
         - parameter json: any value that will be attempted to be serialized as json.  Use 'Json' for more complex objects
      */
-    public init(status: Status, json: Json) {
+    public init(status: Status, json: JSON) {
         let headers: Headers = [
             "Content-Type": "application/json"
         ]
@@ -77,7 +77,7 @@ extension Response {
         self.init(status: .movedPermanently, headers: headers, body: [])
     }
 
-    public init(async closure: Stream throws -> Void) {
+    public init(async closure: ((Stream) throws -> Void)) {
         self.init(status: .ok, headers: [:], body: closure)
     }
 
@@ -90,6 +90,7 @@ extension Response {
         var tm: libc.tm = libc.tm()
 
         let buf = UnsafeMutablePointer<Int8>.init(allocatingCapacity: RFC1123_TIME_LEN + 1)
+        defer { buf.deallocateCapacity(RFC1123_TIME_LEN + 1) }
 
         time(&t)
         gmtime_r(&t, &tm)
@@ -108,8 +109,8 @@ extension Response {
             var cookies: [String: String] = [:]
 
             for value in headers["Set-Cookie"] {
-                for cookie in value.split(";") {
-                    var parts = cookie.split("=")
+                for cookie in value.components(separatedBy: ";") {
+                    var parts = cookie.components(separatedBy: "=")
                     if parts.count >= 2 {
                         cookies[parts[0]] = parts[1]
                     }

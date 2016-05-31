@@ -9,33 +9,35 @@
 import XCTest
 @testable import Vapor
 
+/**
+ File level to prevent issues w/ linux testing on 04-12 snapshot
+ */
+private class DummyLogger: LogDriver {
+
+    static var output: String?
+
+    func log(_ level: Log.Level, message: String) {
+        DummyLogger.output = "\(level.description) \(message)"
+    }
+}
+
 class LogTests: XCTestCase {
 
-    static var allTests: [(String, LogTests -> () throws -> Void)] {
+    static var allTests: [(String, (LogTests) -> () throws -> Void)] {
         return [
-           ("testCanOverrideDefaultLogger", testCanOverrideDefaultLogger),
-           ("testAllLevelsEnabledByDefault", testAllLevelsEnabledByDefault),
-           ("testCanOverrideDefaultEnabledLevels", testCanOverrideDefaultEnabledLevels),
-           ("testDisabledLogsDoNoOutput", testDisabledLogsDoNoOutput),
-           ("testVerboseDidLog", testVerboseDidLog),
-           ("testDebugDidLog", testDebugDidLog),
-           ("testInfoDidLog", testInfoDidLog),
-           ("testWarningDidLog", testWarningDidLog),
-           ("testErrorDidLog", testErrorDidLog),
-           ("testFatalDidLog", testFatalDidLog),
-           ("testCustomDidLog", testCustomDidLog),
-           ("testConsoleLoggerDidPrintToConsole", testConsoleLoggerDidPrintToConsole)
+            ("testCanOverrideDefaultLogger", testCanOverrideDefaultLogger),
+            ("testAllLevelsEnabledByDefault", testAllLevelsEnabledByDefault),
+            ("testCanOverrideDefaultEnabledLevels", testCanOverrideDefaultEnabledLevels),
+            ("testDisabledLogsDoNoOutput", testDisabledLogsDoNoOutput),
+            ("testVerboseDidLog", testVerboseDidLog),
+            ("testDebugDidLog", testDebugDidLog),
+            ("testInfoDidLog", testInfoDidLog),
+            ("testWarningDidLog", testWarningDidLog),
+            ("testErrorDidLog", testErrorDidLog),
+            ("testFatalDidLog", testFatalDidLog),
+            ("testCustomDidLog", testCustomDidLog),
+            ("testConsoleLoggerDidPrintToConsole", testConsoleLoggerDidPrintToConsole)
         ]
-    }
-
-
-    class DummyLogger: LogDriver {
-
-        static var output: String?
-
-        func log(level: Log.Level, message: String) {
-            DummyLogger.output = "\(level.description) \(message)"
-        }
     }
 
     /* Resets the logger for each test
@@ -64,14 +66,14 @@ class LogTests: XCTestCase {
 
     func testCanOverrideDefaultEnabledLevels() {
         prepare()
-        Log.enabledLevels = [Log.Level.Debug]
+        Log.enabledLevels = [Log.Level.debug]
         XCTAssertTrue(Log.enabledLevels.count == 1, "only one log level should be enabled")
-        XCTAssertTrue(Log.enabledLevels.first == Log.Level.Debug, "only Debug logs should be enabled")
+        XCTAssertTrue(Log.enabledLevels.first == Log.Level.debug, "only Debug logs should be enabled")
     }
 
     func testDisabledLogsDoNoOutput() {
         prepare()
-        Log.enabledLevels = [Log.Level.Debug]
+        Log.enabledLevels = [Log.Level.debug]
         Log.error("this should not output")
         XCTAssertNil(DummyLogger.output, "disabled level should not output")
     }

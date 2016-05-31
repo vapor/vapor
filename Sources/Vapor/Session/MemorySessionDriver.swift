@@ -14,7 +14,10 @@ public class MemorySessionDriver: SessionDriver {
         self.hash = hash
     }
 
-    public func valueFor(key key: String, identifier: String) -> String? {
+    /**
+        Loads value for session id at given key
+    */
+    public func valueFor(key: String, identifier: String) -> String? {
         var value: String?
         sessionsLock.locked {
             value = sessions[identifier]?[key]
@@ -23,7 +26,10 @@ public class MemorySessionDriver: SessionDriver {
         return value
     }
 
-    public func set(value: String?, forKey key: String, identifier: String) {
+    /**
+        Sets value for session id at given key
+    */
+    public func set(_ value: String?, forKey key: String, identifier: String) {
         sessionsLock.locked {
             if sessions[identifier] == nil {
                 sessions[identifier] = [String: String]()
@@ -33,6 +39,16 @@ public class MemorySessionDriver: SessionDriver {
         }
     }
 
+    /**
+        Returns true if the identifier is in use.
+    */
+    public func contains(identifier: String) -> Bool {
+        return sessions[identifier] != nil
+    }
+
+    /**
+        Create new unique session id
+    */
     public func makeSessionIdentifier() -> String {
         var identifier = String(time(nil))
         identifier += "v@p0r"
@@ -44,7 +60,10 @@ public class MemorySessionDriver: SessionDriver {
         return hash.make(identifier)
     }
 
-    public func destroy(identifier: String) {
+    /**
+        Destroys session with associated identifier
+    */
+    public func destroy(_ identifier: String) {
         sessionsLock.locked {
             sessions[identifier] = nil
         }

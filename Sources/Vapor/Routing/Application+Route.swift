@@ -26,8 +26,11 @@ extension String: StringInitializable {
 }
 
 extension Application {
-
-    public final func any(path: String, handler: Route.Handler) {
+    /**
+        Creates a route for all HTTP methods.
+        `get`, `post`, `put`, `patch`, and `delete`.
+    */
+    public final func any(_ path: String, handler: Route.Handler) {
         self.get(path, handler: handler)
         self.post(path, handler: handler)
         self.put(path, handler: handler)
@@ -41,7 +44,9 @@ extension Application {
 
         Note: You are responsible for pluralizing your endpoints.
     */
-    public final func resource<Resource: ResourceController>(path: String, makeControllerWith controllerFactory: () -> Resource) {
+    public final func resource<Resource: ResourceController>(
+                                _ path: String,
+                               makeControllerWith controllerFactory: () -> Resource) {
         //GET /entities
         self.get(path) { request in
             return try controllerFactory().index(request)
@@ -49,7 +54,7 @@ extension Application {
 
         //POST /entities
         self.post(path) { request in
-            return try controllerFactory().index(request)
+            return try controllerFactory().store(request)
         }
 
         //GET /entities/:id
@@ -69,85 +74,102 @@ extension Application {
 
     }
 
-    public final func resource<Resource: ResourceController where Resource: ApplicationInitializable>(path: String, controller: Resource.Type) {
+    /**
+        Add resource controller for specified path
+
+        - parameter path: path associated w/ resource controller
+        - parameter controller: controller type to use
+     */
+    public final func resource<Resource: ResourceController
+                               where Resource: ApplicationInitializable>(
+                                    _ path: String,
+                                    controller: Resource.Type) {
         resource(path) {
             return controller.init(application: self)
         }
     }
 
-    public final func resource<Resource: ResourceController where Resource: DefaultInitializable>(path: String, controller: Resource.Type) {
+    /**
+     Add resource controller for specified path
+
+     - parameter path: path associated w/ resource controller
+     - parameter controller: controller type to use
+     */
+    public final func resource<Resource: ResourceController
+                               where Resource: DefaultInitializable>(
+                                    _ path: String,
+                                    controller: Resource.Type) {
         resource(path) {
             return controller.init()
         }
     }
 
-    final func add(method: Request.Method, path: String, handler: Route.Handler) {
-        //Convert Route.Handler to Request.Handler
-        var responder: Responder = Request.Handler { request in
-            return try handler(request).makeResponse()
+    /**
+        Adds a route handled by a type that can be initialized with an `Application`.
+        This method is useful if you have a controller and would like to add an action
+        that is not a common REST action.
+
+        Here's an example of how you would add a route with this method:
+
+        ```app.add(.get, path: "/foo", action: TestController.foo)```
+
+        - parameter method: The `Request.Method` that the action should be executed for.
+        - parameter path: The HTTP path that the action can run at.
+        - parameter action: The curried action to run on the provided type.
+     */
+    public final func add<ActionController: ApplicationInitializable>(
+        _ method: Request.Method,
+        path: String,
+        action: (ActionController) -> (Request) throws -> ResponseRepresentable) {
+        add(method, path: path, action: action) {
+            ActionController(application: self)
         }
-
-        //Apply any scoped middlewares
-        for middleware in self.scopedMiddleware {
-            responder = middleware.intercept(responder)
-        }
-
-        //Store the route for registering with Router later
-        let host = scopedHost ?? "*"
-
-        //Apply any scoped prefix
-        var path = path
-        if let prefix = scopedPrefix {
-            path = prefix + "/" + path
-        }
-
-        let route = Route(host: host, method: method, path: path, responder: responder)
-        self.routes.append(route)
     }
 
     /**
-        Applies the middleware to the routes defined
-        inside the closure. This method can be nested within
-        itself safely.
-    */
-    public final func middleware(middleware: Middleware, handler: () -> ()) {
-       self.middleware([middleware], handler: handler)
-    }
+         Adds a route handled by a type that can be defaultly initialized.
+         This method is useful if you have a controller and would like to add an action
+         that is not a common REST action.
 
-    public final func middleware(middleware: [Middleware], handler: () -> ()) {
-        let original = scopedMiddleware
-        scopedMiddleware += middleware
+         Here's an example of how you would add a route with this method:
 
-        handler()
+         ```app.add(.get, path: "/bar", action: TestController.bar)```
 
-        scopedMiddleware = original
-    }
-
-    public final func host(host: String, handler: () -> Void) {
-        let original = scopedHost
-        scopedHost = host
-
-        handler()
-
-        scopedHost = original
+         - parameter method: The `Request.Method` that the action should be executed for.
+         - parameter path: The HTTP path that the action can run at.
+         - parameter action: The curried action to run on the provided type.
+     */
+    public final func add<ActionController: DefaultInitializable>(
+        _ method: Request.Method,
+        path: String,
+        action: (ActionController) -> (Request) throws -> ResponseRepresentable) {
+        add(method, path: path, action: action) {
+            ActionController()
+        }
     }
 
     /**
-        Create multiple routes with the same base URL
-        without repeating yourself.
-    */
-    public func group(prefix: String, @noescape handler: () -> Void) {
-        let original = scopedPrefix
+        Adds a route handled by a type that can be initialized via the provided factory.
+        This method is useful if you have a controller and would like to add an action
+        that is not a common REST action, and you need to handle initialization yourself.
 
-        //append original with a trailing slash
-        if let original = original {
-            scopedPrefix = original + "/" + prefix
-        } else {
-            scopedPrefix = prefix
+        Here's an example of how you would add a route with this method:
+
+        ```app.add(.get, path: "/baz", action: TestController.baz) { TestController() }```
+
+        - parameter method: The `Request.Method` that the action should be executed for.
+        - parameter path: The HTTP path that the action can run at.
+        - parameter action: The curried action to run on the provided type.
+        - parameter factory: The closure to instantiate the controller type.
+     */
+    public final func add<ActionController>(
+        _ method: Request.Method,
+        path: String,
+        action: (ActionController) -> (Request) throws -> ResponseRepresentable,
+        makeControllerWith factory: () throws -> ActionController) {
+        add(method, path: path) { request in
+            let controller = try factory()
+            return try action(controller)(request).makeResponse()
         }
-
-        handler()
-
-        scopedPrefix = original
     }
 }

@@ -7,9 +7,19 @@
 */
 public class AbortMiddleware: Middleware {
 
-    public func respond(request: Request, chain: Responder) throws -> Response {
+    /**
+     Respond to a given request chaining to the next
+
+     - parameter request: request to process
+     - parameter chain: next responder to pass request to
+
+     - throws: an error on failure
+
+     - returns: a valid response
+     */
+    public func respond(to request: Request, chainingTo chain: Responder) throws -> Response {
         do {
-            return try chain.respond(request)
+            return try chain.respond(to: request)
         } catch Abort.badRequest {
             return try self.errorResponse(.badRequest, message: "Invalid request")
         } catch Abort.notFound {
@@ -26,9 +36,9 @@ public class AbortMiddleware: Middleware {
         }
     }
 
-    func errorResponse(status: Response.Status, message: String) throws -> Response {
-        let json = Json([
-            "error": "true",
+    func errorResponse(_ status: Response.Status, message: String) throws -> Response {
+        let json = JSON([
+            "error": true,
             "message": "\(message)"
         ])
         return Response(status: status, json: json)

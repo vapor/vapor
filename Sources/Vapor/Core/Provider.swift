@@ -9,14 +9,12 @@
     necessary configurations on itself and the Application.
 */
 public protocol Provider {
-
     /**
-        Called when application is booting up.
+     Providers should use this function to do any setup or configuration necessary to provide
 
-        - parameter application: Application instance that’s booting
-    */
-    func boot(application: Application)
-
+     - parameter application: the application to which the provider will be providing
+     */
+    func boot(with application: Application)
 }
 
 /**
@@ -34,5 +32,4 @@ public protocol ConsoleProvider: Provider {
         - parameter console: Console instance that’s booting
     */
     func boot(console: Console)
-
 }

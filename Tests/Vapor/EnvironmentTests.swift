@@ -10,7 +10,7 @@ import XCTest
 @testable import Vapor
 
 class EnvironmentTests: XCTestCase {
-    static var allTests: [(String, EnvironmentTests -> () throws -> Void)] {
+    static var allTests: [(String, (EnvironmentTests) -> () throws -> Void)] {
         return [
            ("testEnvironment", testEnvironment),
            ("testDetectEnvironmentHandler", testDetectEnvironmentHandler),
@@ -20,25 +20,18 @@ class EnvironmentTests: XCTestCase {
 
     func testEnvironment() {
         let app = Application()
-        XCTAssert(app.environment == .Development, "Incorrect environment: \(app.environment)")
+        XCTAssert(app.config.environment == .development, "Incorrect environment: \(app.config.environment)")
     }
 
     func testDetectEnvironmentHandler() {
-        let app = Application()
-        app.detectEnvironmentHandler = { _ in
-            return .Custom("xctest")
-        }
-
-        XCTAssert(app.environment == .Custom("xctest"), "Incorrect environment: \(app.environment)")
+        let config = Config(environment: .custom("xctest"))
+        XCTAssert(config.environment == .custom("xctest"), "Incorrect environment: \(config.environment)")
     }
 
     func testInEnvironment() {
-        let app = Application()
-        app.detectEnvironmentHandler = { _ in
-            return .Custom("xctest")
-        }
-
-        XCTAssert(app.inEnvironment(.Production, .Development, .Custom("xctest")), "Environment not correctly detected: \(app.environment)")
+        let config = Config(environment: .custom("xctest"))
+        let app = Application(config: config)
+        XCTAssert([.custom("xctest")].contains(app.config.environment), "Environment not correctly detected: \(app.config.environment)")
     }
 
 }

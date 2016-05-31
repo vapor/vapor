@@ -11,7 +11,7 @@ import XCTest
 
 class RouteTests: XCTestCase {
 
-    static var allTests: [(String, RouteTests -> () throws -> Void)] {
+    static var allTests: [(String, (RouteTests) -> () throws -> Void)] {
         return [
            ("testNestedRouteScopedPrefixPopsCorrectly", testNestedRouteScopedPrefixPopsCorrectly),
            ("testRoute", testRoute),
@@ -31,52 +31,45 @@ class RouteTests: XCTestCase {
             return ""
         }
 
-        app.host("google.com") {
-            app.put("baz") { request in
-                return ""
-            }
-        }
-
-        self.assertRouteExists("foo", method: .get, host: "*", inRoutes: app.routes)
-        self.assertRouteExists("bar", method: .post, host: "*", inRoutes: app.routes)
-        self.assertRouteExists("baz", method: .put, host: "google.com", inRoutes: app.routes)
+        assertRouteExists(at: "foo", method: .get, host: "*", inRoutes: app.routes)
+        assertRouteExists(at: "bar", method: .post, host: "*", inRoutes: app.routes)
     }
 
 
     func testRouteScopedPrefix() {
         let app = Application()
 
-        app.group("group/path") {
-            app.get("1") { request in
+        app.grouped("group/path") { group in
+            group.get("1") { request in
                 return ""
             }
 
-            app.options("2") { request in
+            group.options("2") { request in
                 return ""
             }
         }
 
-        self.assertRouteExists("group/path/1", method: .get, host: "*", inRoutes: app.routes)
-        self.assertRouteExists("group/path/2", method: .options, host: "*", inRoutes: app.routes)
+        assertRouteExists(at: "group/path/1", method: .get, host: "*", inRoutes: app.routes)
+        assertRouteExists(at: "group/path/2", method: .options, host: "*", inRoutes: app.routes)
     }
 
     func testNestedRouteScopedPrefixPopsCorrectly() {
         let app = Application()
 
-        app.group("group") {
-            app.group("subgroup") {
-                app.get("1") { request in
+        app.grouped("group") { group in
+            group.grouped("subgroup") { subgroup in
+                subgroup.get("1") { request in
                     return ""
                 }
             }
 
-            app.options("2") { request in
+            group.options("2") { request in
                 return ""
             }
         }
 
-        self.assertRouteExists("group/subgroup/1", method: .get, host: "*", inRoutes: app.routes)
-        self.assertRouteExists("group/2", method: .options, host: "*", inRoutes: app.routes)
+        assertRouteExists(at: "group/subgroup/1", method: .get, host: "*", inRoutes: app.routes)
+        assertRouteExists(at: "group/2", method: .options, host: "*", inRoutes: app.routes)
     }
 
     func testRouteAbort() {
@@ -89,9 +82,6 @@ class RouteTests: XCTestCase {
 
         app.bootRoutes()
 
-
-        print(app.routes)
-
         let request = Request(method: .get, uri: URI(path: "400"), headers: [:], body: [])
         guard var handler = app.router.route(request)?.handler else {
             XCTFail("No handler found")
@@ -99,7 +89,7 @@ class RouteTests: XCTestCase {
         }
 
         do {
-            let response = try handler.respond(request)
+            let response = try handler.respond(to: request)
             print(response)
             var body = response.body
             let data = try body.becomeBuffer()
@@ -113,29 +103,36 @@ class RouteTests: XCTestCase {
             XCTFail("Handler threw incorrect error")
         }
 
-        handler = AbortMiddleware().intercept(handler)
+        handler = AbortMiddleware().chain(to: handler)
 
         do {
-            let request = try handler.respond(request)
+            let request = try handler.respond(to: request)
             XCTAssert(request.status.statusCode == 400, "Incorrect response status")
         } catch {
             XCTFail("Middleware did not handle abort")
         }
     }
 
+}
 
-    func assertRouteExists(path: String, method: Request.Method, host: String, inRoutes routes: [Route]) {
-        var found = false
+/**
+ Global functions because any function that takes an argument on an XCTest class fails on Linux.
+ */
 
-        for route in routes {
-            if route.path == path && route.method == method && route.hostname == host {
-                found = true
-            }
+internal func assertRouteExists(at path: String,
+                                method: Request.Method,
+                                host: String,
+                                inRoutes routes: [Route]) {
+    var found = false
 
+    for route in routes {
+        if route.path == path && route.method == method && route.hostname == host {
+            found = true
         }
 
-        if !found {
-            XCTFail("\(method) \(path) was not found")
-        }
+    }
+
+    if !found {
+        XCTFail("\(method) \(path) was not found")
     }
 }

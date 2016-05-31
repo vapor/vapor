@@ -1,4 +1,4 @@
-
+import C7
 
 struct HTTPStreamHeader {
     enum Error: ErrorProtocol {
@@ -27,12 +27,12 @@ struct HTTPStreamHeader {
         let requestLineRaw = try stream.receiveLine()
         requestLine = try RequestLine(requestLineRaw)
 
-        try collectHeaderFields(stream)
+        try collectHeaderFields(for: stream)
     }
 
-    private mutating func collectHeaderFields(socket: HTTPStream) throws {
-        while let line = try nextHeaderLine(socket) where !socket.closed {
-            let pair = try extractKeyPair(line)
+    private mutating func collectHeaderFields(for socket: HTTPStream) throws {
+        while let line = try nextHeaderLine(with: socket) where !socket.closed {
+            let pair = try extractKeyPair(in: line)
 
             let key = Request.Headers.Key(pair.key)
 
@@ -42,7 +42,7 @@ struct HTTPStreamHeader {
         }
     }
 
-    private func nextHeaderLine(socket: HTTPStream) throws -> String? {
+    private func nextHeaderLine(with socket: HTTPStream) throws -> String? {
         let next = try socket.receiveLine()
         if !next.isEmpty {
             return next
@@ -51,9 +51,14 @@ struct HTTPStreamHeader {
         }
     }
 
-    private func extractKeyPair(line: String) throws -> (key: String, value: String) {
-        let components = line.split(":", maxSplits: 1)
-        guard let key = components.first, let val = components.last?.characters.dropFirst() else { throw Error.InvalidHeaderKeyPair }
+    private func extractKeyPair(in line: String) throws -> (key: String, value: String) {
+        let components = line.split(separator: ":", maxSplits: 1)
+        guard
+            let key = components.first,
+            let val = components.last?
+                .characters
+                .dropFirst()
+            else { throw Error.InvalidHeaderKeyPair }
 
         return (key, String(val))
     }
@@ -66,7 +71,7 @@ extension HTTPStreamHeader {
         let version: String
 
         init(_ string: String) throws {
-            let comps = string.split(" ")
+            let comps = string.components(separatedBy: " ")
             guard comps.count == 3 else {
                 throw Error.InvalidRequestLine
             }
@@ -104,29 +109,37 @@ extension HTTPStreamHeader {
         }
 
         var uri: URI {
-            let pathParts = uriString.split("?", maxSplits: 1)
-            let path = pathParts.first ?? ""
-            let queryString = pathParts.last ?? ""
-            let queryParts = queryString.split("&")
+            var fields: [String : [String?]] = [:]
 
-            var queries: [URI.Query] = []
-            for part in queryParts {
-                let parts = part.split("=")
+            let parts = uriString.split(separator: "?", maxSplits: 1)
+            let path = parts.first ?? ""
+            let queryString = parts.last ?? ""
 
-                let value: String?
+            let data = Request.parseFormURLEncoded(queryString.data)
 
-                if let v = parts.last {
-                    value = (try? String(percentEncoded: v)) ?? v
-                } else {
-                    value = nil
+            if case .dictionary(let dict) = data {
+                for (key, val) in dict {
+                    var array: [String?]
+
+                    if let existing = fields[key] {
+                        array = existing
+                    } else {
+                        array = []
+                    }
+
+                    array.append(val.string)
+
+                    fields[key] = array
                 }
-
-                let query = URI.Query(key: parts.first ?? "", value: value)
-                queries.append(query)
             }
 
-            
-            return URI(scheme: "http", userInfo: nil, host: nil, port: nil, path: path, query: queries, fragment: nil)
+            return URI(scheme: "http",
+                       userInfo: nil,
+                       host: nil,
+                       port: nil,
+                       path: path,
+                       query: fields,
+                       fragment: nil)
         }
     }
 

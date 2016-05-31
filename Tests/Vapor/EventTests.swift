@@ -10,7 +10,7 @@ import XCTest
 @testable import Vapor
 
 class EventTests: XCTestCase {
-    static var allTests: [(String, EventTests -> () throws -> Void)] {
+    static var allTests: [(String, (EventTests) -> () throws -> Void)] {
         return [
             ("testEventRemovedOnSubscriptionDeallocation",
              testEventRemovedOnSubscriptionDeallocation),

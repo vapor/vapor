@@ -10,11 +10,12 @@ import XCTest
 
 @testable import Vapor
 
-final class TestPerformanceStream: HTTPStream {
+final class TestPerformanceStream: HTTPListenerStream {
     var buffer: Data
-    var handler: (Data -> Void)
+    var handler: ((Data) -> Void)
+    var closed: Bool = false
 
-    init(request: Request, handler: (Data -> Void)) {
+    init(request: Request, handler: ((Data) -> Void)) {
         var data = "\(request.method) \(request.uri.path ?? "/") HTTP/1.1\r\n"
         data += "Accept: /*/\r\n"
         data += "\r\n"
@@ -28,15 +29,15 @@ final class TestPerformanceStream: HTTPStream {
     }
 
 
-    static func makeStream() -> TestPerformanceStream {
+    init(address: String?, port: Int) throws {
         fatalError("Unsupported")
     }
 
-    func accept(max connectionCount: Int, handler: (HTTPStream -> Void)) throws {
+    func accept(max connectionCount: Int, handler: ((HTTPStream) -> Void)) throws {
         throw Error.Unsupported
     }
 
-    func bind(to ip: String?, on port: Int) throws {
+    func bind() throws {
         throw Error.Unsupported
     }
 
@@ -44,17 +45,11 @@ final class TestPerformanceStream: HTTPStream {
         throw Error.Unsupported
     }
 
-    var closed: Bool = false
-
-    func close() -> Bool {
-        if !closed {
-            closed = true
-            return true
-        }
-        return false
+    func close() {
+        closed = true
     }
 
-    func receive(max byteCount: Int) throws -> Data {
+    func receive(upTo byteCount: Int, timingOut deadline: Double = 0) throws -> Data {
         if buffer.count == 0 {
             close()
             return []
@@ -74,13 +69,13 @@ final class TestPerformanceStream: HTTPStream {
         return result
     }
 
-    func send(data: Data) throws {
+    func send(_ data: Data, timingOut deadline: Double = 0) throws {
         closed = false
         buffer.append(contentsOf: data)
         handler(buffer)
     }
-    
-    func flush() throws {
+
+    func flush(timingOut deadline: Double = 0) throws {
         throw Error.Unsupported
     }
 
@@ -88,35 +83,34 @@ final class TestPerformanceStream: HTTPStream {
 
 class PerformanceTests: XCTestCase {
 
-    static var allTests: [(String, PerformanceTests -> () throws -> Void)] {
+    static var allTests: [(String, (PerformanceTests) -> () throws -> Void)] {
         return [
             ("testApplication", testApplication)
         ]
     }
 
     func testApplication() throws {
-        let app = Application()
+        let config = Config(seed: ["app" : .object(["port" : JSON(8080)])])
+        let app = Application(config: config)
 
         app.get("plaintext") { request in
             return "Hello, world"
         }
 
         app.get("json") { request in
-            return Json(["message": "Hello, world"])
+            return JSON(["message": "Hello, world"])
         }
 
 
-        let server = HTTPStreamServer<TestHTTPStream>()
-        app.server = server
-
-        app.start()
+        let server = try HTTPStreamServer<TestHTTPStream>(port: 8080, responder: app)
+        try server.start()
 
         let stream = server.stream
 
         let request = Request(method: .get, path: "plaintext")
 
 
-        Log.enabledLevels = [.Error, .Warning]
+        Log.enabledLevels = [.error, .warning]
 
         for _ in 0...100 {
             let p = TestPerformanceStream(request: request) { data in

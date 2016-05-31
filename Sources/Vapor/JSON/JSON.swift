@@ -1,68 +1,22 @@
-import JSON
+import PureJSON
 
-public enum Json {
-    case null
-    case bool(Bool)
-    case double(Double)
-    case int(Int)
-    case string(String)
-    case array([Json])
-    case object([String: Json])
+// Exporting type w/o forcing import
+public typealias JSON = PureJSON.JSON
 
-    public init(_ value: JSON) {
-        switch value {
-        case .nullValue:
-            self = .null
-        case .booleanValue(let bool):
-            self = .bool(bool)
-        case .numberValue(let number):
-            if floor(number) == number {
-                self = .int(Int(number))
-            } else {
-                self = .double(number)
-            }
-        case .stringValue(let string):
-            self = .string(string)
-        case .objectValue(let object):
-            var mapped: [String: Json] = [:]
-            object.forEach { (key, value) in
-                mapped[key] = Json(value)
-            }
-            self = .object(mapped)
-        case .arrayValue(let array):
-            let mapped: [Json] = array.map { item in
-                return Json(item)
-            }
-
-            self = .array(mapped)
-        }
-    }
-
-    public init(_ value: Bool) {
-        self = .bool(value)
-    }
-
-    public init(_ value: Double) {
-        self = .double(value)
-    }
-
+extension JSON {
     public init(_ value: Int) {
-        self = .int(value)
+        self = .number(JSON.Number.integer(value))
     }
 
-    public init(_ value: String) {
-        self = .string(value)
-    }
-
-    public init(_ value: [JsonRepresentable]) {
-        let array: [Json] = value.map { item in
+    public init(_ value: [JSONRepresentable]) {
+        let array: [JSON] = value.map { item in
             return item.makeJson()
         }
         self = .array(array)
     }
 
-    public init(_ value: [String: JsonRepresentable]) {
-        var object: [String: Json] = [:]
+    public init(_ value: [String: JSONRepresentable]) {
+        var object: [String: JSON] = [:]
 
         value.forEach { (key, item) in
             object[key] = item.makeJson()
@@ -72,43 +26,17 @@ public enum Json {
     }
 
     public init(_ value: Data) throws {
-        let json = try JSONParser().parse(value)
-        self.init(json)
+        self = try JSON.deserialize(value.bytes)
     }
 
     public var data: Data {
-        return JSONSerializer().serialize(makeZewoJson())
+        let bytes = serialize().utf8
+        return Data(bytes)
     }
+}
 
-    private func makeZewoJson() -> JSON {
-        switch self {
-        case .null:
-            return .nullValue
-        case .bool(let bool):
-            return .booleanValue(bool)
-        case .int(let int):
-            return .numberValue(Double(int))
-        case .double(let double):
-            return .numberValue(double)
-        case .string(let string):
-            return .stringValue(string)
-        case .object(let object):
-            var mapped: [String: JSON] = [:]
-            object.forEach { (key, value) in
-                mapped[key] = value.makeZewoJson()
-            }
-
-            return .objectValue(mapped)
-        case .array(let array):
-            let mapped: [JSON] = array.map { item in
-                return item.makeZewoJson()
-            }
-
-            return .arrayValue(mapped)
-        }
-    }
-
-    public subscript(key: String) -> Node? {
+extension JSON {
+    public subscript(key: String) -> Polymorphic? {
         switch self {
         case .object(let object):
             return object[key]
@@ -117,7 +45,7 @@ public enum Json {
         }
     }
 
-    public subscript(index: Int) -> Node? {
+    public subscript(index: Int) -> Polymorphic? {
         switch self {
         case .array(let array):
             return array[index]
@@ -125,8 +53,10 @@ public enum Json {
             return nil
         }
     }
+}
 
-    mutating func merge(with otherJson: Json) {
+extension JSON {
+    mutating func merge(with otherJson: JSON) {
         switch self {
         case .object(let object):
             guard case let .object(otherObject) = otherJson else {
@@ -160,126 +90,56 @@ public enum Json {
     }
 }
 
-
-public protocol JsonRepresentable: ResponseRepresentable {
-    func makeJson() -> Json
+public protocol JSONRepresentable: ResponseRepresentable {
+    func makeJson() -> JSON
 }
 
 
-extension JsonRepresentable {
+extension JSONRepresentable {
     ///Allows any JsonRepresentable to be returned through closures
     public func makeResponse() -> Response {
         return makeJson().makeResponse()
     }
 }
 
-extension JSON: JsonRepresentable {
-    public func makeJson() -> Json {
-        return Json(self)
+extension JSON: JSONRepresentable {
+    public func makeJson() -> JSON {
+        return self
     }
 }
 
-extension String: JsonRepresentable {
-    public func makeJson() -> Json {
-        return Json(self)
+extension String: JSONRepresentable {
+    public func makeJson() -> JSON {
+        return JSON(self)
     }
 }
 
-extension Int: JsonRepresentable {
-    public func makeJson() -> Json {
-        return Json(self)
+extension Int: JSONRepresentable {
+    public func makeJson() -> JSON {
+        return JSON(self)
     }
 }
 
-extension Double: JsonRepresentable {
-    public func makeJson() -> Json {
-        return Json(self)
+extension Double: JSONRepresentable {
+    public func makeJson() -> JSON {
+        return JSON(self)
     }
 }
 
-extension Bool: JsonRepresentable {
-    public func makeJson() -> Json {
-        return Json(self)
+extension Bool: JSONRepresentable {
+    public func makeJson() -> JSON {
+        return JSON(self)
     }
 }
 
-extension Json: CustomStringConvertible {
-    public var description: String {
-        return makeZewoJson().description
-    }
-}
-
-extension Json: ResponseRepresentable {
+extension JSON: ResponseRepresentable {
     public func makeResponse() -> Response {
         return Response(status: .ok, json: self)
     }
 }
 
-extension Json: Node {
-    public var isNull: Bool {
-        switch self {
-        case .null:
-            return true
-        default:
-            return false
-        }
-    }
-
-    public var bool: Bool? {
-        switch self {
-        case .bool(let bool):
-            return bool
-        default:
-            return nil
-        }
-    }
-
-    public var int: Int? {
-        switch self {
-        case .int(let int):
-            return Int(int)
-        default:
-            return nil
-        }
-    }
-
-    public var uint: UInt? {
-        switch self {
-        case .int(let int):
-            return UInt(int)
-        default:
-            return nil
-        }
-    }
-
-    public var float: Float? {
-        switch self {
-        case .double(let double):
-            return Float(double)
-        default:
-            return nil
-        }
-    }
-
-    public var double: Double? {
-        switch self {
-        case .double(let double):
-            return Double(double)
-        default:
-            return nil
-        }
-    }
-
-    public var string: String? {
-        switch self {
-        case .string(let string):
-            return string
-        default:
-            return nil
-        }
-    }
-
-    public var array: [Node]? {
+extension JSON: Polymorphic {
+    public var array: [Polymorphic]? {
         switch self {
         case .array(let array):
             return array.map { item in
@@ -290,10 +150,10 @@ extension Json: Node {
         }
     }
 
-    public var object: [String : Node]? {
+    public var object: [String : Polymorphic]? {
         switch self {
         case .object(let object):
-            var dict: [String : Node] = [:]
+            var dict: [String : Polymorphic] = [:]
 
             object.forEach { (key, val) in
                 dict[key] = val
@@ -303,9 +163,5 @@ extension Json: Node {
         default:
             return nil
         }
-    }
-
-    public var json: Json? {
-        return self
     }
 }

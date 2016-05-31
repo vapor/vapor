@@ -9,57 +9,93 @@
 import XCTest
 @testable import Vapor
 
-class ControllerTests: XCTestCase {
+private class TestController: Controller {
 
-    static var allTests: [(String, ControllerTests -> () throws -> Void)] {
-        return [
-            ("testController", testController)
-        ]
+    required init(application: Application) { }
+
+    static var lock: (
+        index: Int,
+        store: Int,
+        show: Int,
+        update: Int,
+        destroy: Int,
+        hello: Int
+        ) = (0, 0, 0, 0, 0, 0)
+
+    /**
+        Display many instances
+     */
+    func index(_ request: Request) throws -> ResponseRepresentable {
+        TestController.lock.index += 1
+        return "index"
     }
 
-    class TestController: Controller {
-        required init(application: Application) {
-            print("TestController online")
-        }
+    /**
+        Create a new instance.
+     */
+    func store(_ request: Request) throws -> ResponseRepresentable {
+        TestController.lock.store += 1
+        return "store"
+    }
+    /**
+        Show an instance.
+     */
+    func show(_ request: Request, item: String) throws -> ResponseRepresentable {
+        TestController.lock.show += 1
+        return "show"
+    }
 
-        static var lock: (
-            index: Int,
-            store: Int,
-            show: Int,
-            update: Int,
-            destroy: Int
-        ) = (0, 0, 0, 0, 0)
+    /**
+        Update an instance.
+     */
+    func update(_ request: Request, item: String) throws -> ResponseRepresentable {
+        TestController.lock.update += 1
+        return "update"
+    }
 
-        /// Display many instances
-        func index(request: Request) throws -> ResponseRepresentable {
-            TestController.lock.index += 1
-            return "index"
-        }
+    /**
+        Delete an instance
+     */
+    func destroy(_ request: Request, item: String) throws -> ResponseRepresentable {
+        TestController.lock.destroy += 1
+        return "destroy"
+    }
 
-        /// Create a new instance.
-        func store(request: Request) throws -> ResponseRepresentable {
-            TestController.lock.store += 1
-            return "store"
-        }
+    func hello(_ request: Request) throws -> ResponseRepresentable {
+        TestController.lock.hello += 1
+        return "Hello, World!"
+    }
 
-        /// Show an instance.
-        func show(request: Request, item: String) throws -> ResponseRepresentable {
-            TestController.lock.show += 1
-            return "show"
-        }
+}
 
-        /// Update an instance.
-        func update(request: Request, item: String) throws -> ResponseRepresentable {
-            TestController.lock.update += 1
-            return "update"
-        }
+private class TestActionController: DefaultInitializable {
+    static var hello = 0
+    let person: String
 
-        /// Delete an instance.
-        func destroy(request: Request, item: String) throws -> ResponseRepresentable {
-            TestController.lock.destroy += 1
-            return "destroy"
-        }
+    init(person: String) {
+        self.person = person
+    }
 
+    required init() {
+        self.person = "World"
+    }
+
+    func hello(_ request: Request) throws -> ResponseRepresentable {
+        TestActionController.hello += 1
+        return "Hello, \(person)!"
+    }
+}
+
+
+class ControllerTests: XCTestCase {
+
+    static var allTests: [(String, (ControllerTests) -> () throws -> Void)] {
+        return [
+            ("testController", testController),
+            ("testControllerActionRouting_withFactory", testControllerActionRouting_withFactory),
+            ("testControllerActionRouting_withDefaultInitializable", testControllerActionRouting_withDefaultInitializable),
+            ("testControllerActionRouting_withApplicationInitializable", testControllerActionRouting_withApplicationInitializable)
+        ]
     }
 
     func testController() {
@@ -73,7 +109,7 @@ class ControllerTests: XCTestCase {
         let fooIndex = Request(method: .get, uri: URI(path: "foo"), headers: [:], body: [])
         if let (_, handler) = app.router.route(fooIndex) {
             do {
-                try handler.respond(fooIndex)
+                try handler.respond(to: fooIndex)
                 XCTAssert(TestController.lock.index == 1, "foo.index Lock not correct")
             } catch {
                 XCTFail("foo.index handler failed")
@@ -83,5 +119,72 @@ class ControllerTests: XCTestCase {
         }
 
     }
+
+    func testControllerActionRouting_withFactory() {
+        defer { TestActionController.hello = 0 }
+        let app = Application()
+
+        app.add(.get, path: "/hello", action: TestActionController.hello) { TestActionController(person: "Tanner") }
+
+        app.bootRoutes()
+
+        let request = Request(method: .get, uri: URI(path: "hello"), headers: [:], body: [])
+        guard let (_, handler) = app.router.route(request) else {
+            XCTFail("No handler found for TestActionController.hello")
+            return
+        }
+
+        do {
+            try handler.respond(to: request)
+            XCTAssertEqual(TestActionController.hello, 1)
+        } catch {
+            XCTFail("TestActionController.hello handler failed with error '\(error)'")
+        }
+    }
+
+    func testControllerActionRouting_withDefaultInitializable() {
+        defer { TestActionController.hello = 0 }
+        let app = Application()
+
+        app.add(.get, path: "/hello", action: TestActionController.hello)
+
+        app.bootRoutes()
+
+        let request = Request(method: .get, uri: URI(path: "hello"), headers: [:], body: [])
+        guard let (_, handler) = app.router.route(request) else {
+            XCTFail("No handler found for TestActionController.hello")
+            return
+        }
+
+        do {
+            try handler.respond(to: request)
+            XCTAssertEqual(TestActionController.hello, 1)
+        } catch {
+            XCTFail("TestActionController.hello handler failed with error '\(error)'")
+        }
+    }
+
+    func testControllerActionRouting_withApplicationInitializable() {
+        let app = Application()
+
+        app.add(.get, path: "/hello", action: TestController.hello)
+
+        app.bootRoutes()
+
+        let request = Request(method: .get, uri: URI(path: "hello"), headers: [:], body: [])
+        guard let (_, handler) = app.router.route(request) else {
+            XCTFail("No handler found for TestController.hello")
+            return
+        }
+
+        do {
+            try handler.respond(to: request)
+            XCTAssertEqual(TestController.lock.hello, 1)
+        } catch {
+            XCTFail("TestController.hello handler failed with error '\(error)'")
+        }
+    }
+
+
 
 }

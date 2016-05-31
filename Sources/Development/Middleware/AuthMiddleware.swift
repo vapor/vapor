@@ -5,7 +5,7 @@ class AuthMiddleware: Middleware {
         case Unauthorized
     }
 
-    func respond(request: Request, chain: Responder) throws -> Response {
+    func respond(to request: Request, chainingTo chain: Responder) throws -> Response {
         guard let session = request.session else {
             throw Error.Unauthorized
         }
@@ -14,7 +14,7 @@ class AuthMiddleware: Middleware {
             throw Error.Unauthorized
         }
 
-        return try chain.respond(request)
+        return try chain.respond(to: request)
     }
 
 }
