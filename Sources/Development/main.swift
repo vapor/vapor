@@ -4,7 +4,7 @@ import S4
 let seed: JSON = [
     "port": 8080
 ]
-let config = Config(seed: seed)
+let config = Config(seed: ["app": seed])
 
 var workDir: String {
     let parent = #file.characters.split(separator: "/").map(String.init).dropLast().joined(separator: "/")

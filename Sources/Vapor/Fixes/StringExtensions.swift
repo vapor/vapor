@@ -40,33 +40,33 @@ extension String {
         return string
     }
 
-    // swiftlint:disable line_length
-    func rangeOfString(str: String) -> Range<Index>? {
-        return rangeOfString(str, range: self.startIndex..<self.endIndex)
-    }
-
-    func rangeOfString(str: String, range: Range<Index>) -> Range<Index>? {
-        let target = self[range]
-        var index: Index? = nil
-
-        target.withCString { (targetBytes) in
-            str.withCString { (strBytes) in
-                let p = strstr(targetBytes, strBytes)
-
-                if p != nil {
-                    index = target.startIndex.advanced(by: p - UnsafeMutablePointer<Int8>(targetBytes))
-                    index = self.startIndex.advanced(by: self.startIndex.distance(to: range.startIndex)).advanced(by: target.startIndex.distance(to: index!))
-                }
-            }
-        }
-
-        guard let startIndex = index else {
-            return nil
-        }
-
-        return startIndex..<startIndex.advanced(by: str.characters.count)
-    }
-    // swiftlint:enable line_length
+//    // swiftlint:disable line_length
+//    func rangeOfString(str: String) -> Range<Index>? {
+//        return rangeOfString(str, range: self.startIndex..<self.endIndex)
+//    }
+//
+//    func rangeOfString(str: String, range: Range<Index>) -> Range<Index>? {
+//        let target = self[range]
+//        var index: Index? = nil
+//
+//        target.withCString { (targetBytes) in
+//            str.withCString { (strBytes) in
+//                let p = strstr(targetBytes, strBytes)
+//
+//                if p != nil {
+//                    index = target.startIndex.advanced(by: p - UnsafeMutablePointer<Int8>(targetBytes))
+//                    index = self.startIndex.advanced(by: self.startIndex.distance(to: range.startIndex)).advanced(by: target.startIndex.distance(to: index!))
+//                }
+//            }
+//        }
+//
+//        guard let startIndex = index else {
+//            return nil
+//        }
+//
+//        return startIndex..<startIndex.advanced(by: str.characters.count)
+//    }
+//    // swiftlint:enable line_length
 
 #if os(Linux)
     func hasPrefix(_ str: String) -> Bool {

@@ -16,20 +16,3 @@ public protocol Provider {
      */
     func boot(with application: Application)
 }
-
-/**
-    ConsoleProvider extends Provider and adds an
-    extra method for booting with console.
-*/
-public protocol ConsoleProvider: Provider {
-
-    /**
-        Called when console is booting up.
-
-        This is a useful place to register console commands
-        if your provider provides them.
-
-        - parameter console: Console instance that’s booting
-    */
-    func boot(console: Console)
-}

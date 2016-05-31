@@ -35,11 +35,6 @@ public class Application {
     public let localization: Localization
 
     /**
-        Provides access to console.
-    */
-    public private(set) lazy var console: Console = Console(application: self)
-
-    /**
         Provides access to the underlying
         `HashDriver`.
     */
