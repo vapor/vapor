@@ -18,9 +18,11 @@ private class TestController: Controller {
         store: Int,
         show: Int,
         update: Int,
+        modify: Int,
         destroy: Int,
+        destroyAll: Int,
         hello: Int
-        ) = (0, 0, 0, 0, 0, 0)
+        ) = (0, 0, 0, 0, 0, 0, 0, 0)
 
     /**
         Display many instances
@@ -54,11 +56,27 @@ private class TestController: Controller {
     }
 
     /**
+        Modify an instance (only the fields in the request).
+     */
+    func modify(_ request: Request, item: String) throws -> ResponseRepresentable {
+        TestController.lock.modify += 1
+        return "modify"
+    }
+
+    /**
         Delete an instance
      */
     func destroy(_ request: Request, item: String) throws -> ResponseRepresentable {
         TestController.lock.destroy += 1
         return "destroy"
+    }
+
+    /**
+        Deletes all instances
+     */
+    func destroyAll(_ request: Request) throws -> ResponseRepresentable {
+        TestController.lock.destroyAll += 1
+        return "destroyAll"
     }
 
     func hello(_ request: Request) throws -> ResponseRepresentable {
