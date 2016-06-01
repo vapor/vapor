@@ -179,8 +179,8 @@ extension Application {
         var iterator = consoleCommands.makeIterator()
         let _ = iterator.next() // dump directory command
         let command = iterator.next() ?? "serve"
-        let subcommands = Array(iterator)
-        commands[command]?.run(on: self, with: subcommands)
+        let arguments = Array(iterator)
+        commands[command]?.run(on: self, with: arguments)
     }
 }
 

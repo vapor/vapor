@@ -1,6 +1,6 @@
 public struct Help: Command {
     public static let id = "help"
-    public static func run(on app: Application, with subcommands: [String]) {
+    public static func run(on app: Application, with arguments: [String]) {
         var output = "Available Commands: \n"
         output += app.commands
             .values
