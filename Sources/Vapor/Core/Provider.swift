@@ -10,9 +10,9 @@
 */
 public protocol Provider {
     /**
-     Providers should use this function to do any setup or configuration necessary to provide
+        Providers should use this function to do any setup or configuration necessary to provide
 
-     - parameter application: the application to which the provider will be providing
-     */
+        - parameter application: the application to which the provider will be providing
+    */
     func boot(with application: Application)
 }
