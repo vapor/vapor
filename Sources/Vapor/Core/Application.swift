@@ -1,7 +1,7 @@
 import libc
 import MediaType
 
-public let VERSION = "0.9.1"
+public let VERSION = "0.9.2"
 
 public class Application {
     /**
