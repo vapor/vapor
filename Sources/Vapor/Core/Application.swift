@@ -1,5 +1,6 @@
 import libc
 import MediaType
+import Foundation
 
 public let VERSION = "0.9.2"
 
@@ -85,6 +86,15 @@ public class Application {
      */
     public var providers: [Provider]
 
+
+    /**
+        the commands available to execute on the application
+    */
+    public private(set) var commands: [String : Command.Type] = [
+        Help.id: Help.self,
+        Serve.id: Serve.self
+    ]
+
     /**
         Resources directory relative to workDir
     */
@@ -121,7 +131,7 @@ public class Application {
         let config = overrideConfig ?? Config(workingDirectory: workDir)
         self.config = config
         self.host = config["app", "host"].string ?? "0.0.0.0"
-        self.port = config["app", "port"].int ?? 80
+        self.port = config["app", "port"].int ?? 8080
 
         self.globalMiddleware = [
             AbortMiddleware(),
@@ -143,31 +153,41 @@ public class Application {
 
 extension Application {
     /**
-        Boots the chosen server driver and
-        optionally runs on the supplied
-        ip & port overrides
+        Starts console
     */
     public func start() {
         bootProviders()
         bootRoutes()
 
-        // no return - code beyond this call will only execute in event of failure
-        startServer()
+        // defaults to serve which will result in a no return - code beyond this call will only execute in event of failure
+        executeCommand()
     }
 
-    func bootProviders() {
+    internal func bootProviders() {
         for provider in self.providers {
             provider.boot(with: self)
         }
     }
 
-    func bootRoutes() {
+    internal func bootRoutes() {
         routes.forEach(router.register)
     }
 
-    private func startServer() {
+    private func executeCommand() {
+        // arguments prefixed w/ `--` are accessible through `app.config["app", "argument"]`
+        let consoleCommands = NSProcessInfo.processInfo().arguments.filter { !$0.hasSuffix("--") }
+        var iterator = consoleCommands.makeIterator()
+        let _ = iterator.next() // dump directory command
+        let command = iterator.next() ?? "serve"
+        let arguments = Array(iterator)
+        commands[command]?.run(on: self, with: arguments)
+    }
+}
+
+extension Application {
+    internal func serve() {
         do {
-            Log.info("Server starting ...")
+            Log.info("Server starting at \(host):\(port)")
             let server = try serverType.init(host: host, port: port, responder: self)
             // noreturn
             try server.start()
@@ -275,5 +295,25 @@ extension Application: Responder {
         response.headers["Server"] = Response.Headers.Values("Vapor \(Vapor.VERSION)")
 
         return response
+    }
+}
+
+// MARK: Commands
+
+extension Application {
+    public func add(_ cmd: Command.Type) {
+        if let existing = commands[cmd.id] {
+            Log.warning("Overwriting command: \(existing) with \(cmd)")
+        }
+        commands[cmd.id] = cmd
+    }
+
+    public func remove(_ cmd: Command.Type) {
+        guard commands[cmd.id] != nil else { return }
+        guard let existing = commands[cmd.id] where existing != cmd else {
+            Log.info("Command with id \(cmd.id) exists as a different type: \(commands[cmd.id]). Not removing")
+            return
+        }
+        commands[cmd.id] = nil
     }
 }

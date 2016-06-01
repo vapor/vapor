@@ -30,6 +30,16 @@ extension String {
         self = string
     }
 
+    func pad(with character: String, to length: Int) -> String {
+        var string = self
+
+        while string.characters.count < length {
+            string += character
+        }
+
+        return string
+    }
+
 #if os(Linux)
     func hasPrefix(_ str: String) -> Bool {
         let strGen = str.characters.makeIterator()

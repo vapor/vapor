@@ -52,4 +52,15 @@ class ConfigTests: XCTestCase {
         XCTAssert(simpleFile == "app")
         XCTAssert(simplePath.map { "\($0)" } == ["some-key"])
     }
+
+    func testConfigParsing() {
+        // If a flag has leading `--` and no `=`, it's implicitly `true`
+        guard let (key, value) = Process.parseArgument("--release") else {
+            XCTFail("Couldn't parse boolean key")
+            return
+        }
+
+        XCTAssert(key == "--release")
+        XCTAssert(value == "true")
+    }
 }
