@@ -1,18 +1,13 @@
 import Vapor
 import S4
 
-let seed: JSON = [
-    "port": 8080
-]
-let config = Config(seed: seed)
-
 var workDir: String {
     let parent = #file.characters.split(separator: "/").map(String.init).dropLast().joined(separator: "/")
     let path = "/\(parent)/"
     return path
 }
 
-let app = Application(config: config, workDir: workDir)
+let app = Application(workDir: workDir)
 
 app.hash.key = app.config["app", "hash", "key"].string ?? "default-key"
 
