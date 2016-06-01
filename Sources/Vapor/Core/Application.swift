@@ -163,13 +163,13 @@ extension Application {
         executeCommand()
     }
 
-    private func bootProviders() {
+    internal func bootProviders() {
         for provider in self.providers {
             provider.boot(with: self)
         }
     }
 
-    private func bootRoutes() {
+    internal func bootRoutes() {
         routes.forEach(router.register)
     }
 
