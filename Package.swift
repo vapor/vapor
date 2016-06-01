@@ -23,8 +23,7 @@ let package = Package(
         .Package(url: "https://github.com/Zewo/MediaType.git", majorVersion: 0, minor: 7),
 
         //ORM for interacting with databases
-        // .Package(url: "https://github.com/qutheory/fluent.git", majorVersion: 0, minor: 3),
-        .Package(url: "../fluent", majorVersion: 0, minor: 4),
+        .Package(url: "https://github.com/qutheory/fluent.git", majorVersion: 0, minor: 4),
 
         // Allows complex key path subscripts
         .Package(url: "https://github.com/qutheory/path-indexable.git", majorVersion: 0, minor: 2)
