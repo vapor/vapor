@@ -21,62 +21,54 @@ private class TestController: Controller {
         update: Int,
         modify: Int,
         destroy: Int,
-        destroyAll: Int
-        ) = (0, 0, 0, 0, 0, 0, 0)
+        destroyAll: Int,
+        options: Int,
+        optionsAll: Int
+        ) = (0, 0, 0, 0, 0, 0, 0, 0, 0)
 
-    /**
-        Display many instances
-     */
-    func index(_ request: Request) throws -> Vapor.ResponseRepresentable {
+    func index(request: Request) throws -> Vapor.ResponseRepresentable {
         lock.index += 1
         return "index"
     }
 
-    /**
-        Create a new instance.
-     */
-    func store(_ request: Request) throws -> Vapor.ResponseRepresentable {
+    func store(request: Request) throws -> Vapor.ResponseRepresentable {
         lock.store += 1
         return "store"
     }
-    /**
-        Show an instance.
-     */
-    func show(_ request: Request, item: String) throws -> Vapor.ResponseRepresentable {
+
+    func show(request: Request, item: String) throws -> Vapor.ResponseRepresentable {
         lock.show += 1
         return "show"
     }
 
-    /**
-        Update an instance.
-     */
-    func update(_ request: Request, item: String) throws -> Vapor.ResponseRepresentable {
+    func update(request: Request, item: String) throws -> Vapor.ResponseRepresentable {
         lock.update += 1
         return "update"
     }
 
-    /**
-        Modify an instance (only the fields in the request).
-     */
-    func modify(_ request: Request, item: String) throws -> Vapor.ResponseRepresentable {
+    func modify(request: Request, item: String) throws -> Vapor.ResponseRepresentable {
         lock.modify += 1
         return "modify"
     }
 
-    /**
-        Delete an instance
-     */
-    func destroy(_ request: Request, item: String) throws -> Vapor.ResponseRepresentable {
+    func destroy(request: Request, item: String) throws -> Vapor.ResponseRepresentable {
         lock.destroy += 1
         return "destroy"
     }
 
-    /**
-        Deletes all instances
-     */
-    func destroyAll(_ request: Request) throws -> Vapor.ResponseRepresentable {
+    func destroy(request: Request) throws -> Vapor.ResponseRepresentable {
         lock.destroyAll += 1
-        return "destroyAll"
+        return "destroy all"
+    }
+
+    func options(request: Request) throws -> Vapor.ResponseRepresentable {
+        lock.optionsAll += 1
+        return "options all"
+    }
+
+    func options(request: Request, item: String) throws -> Vapor.ResponseRepresentable {
+        lock.options += 1
+        return "options all"
     }
 }
 

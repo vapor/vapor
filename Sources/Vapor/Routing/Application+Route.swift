@@ -47,58 +47,61 @@ extension Application {
         Note: You are responsible for pluralizing your endpoints.
     */
     public final func resource<Resource: ResourceController>(
-                                _ path: String,
-                               makeControllerWith controllerFactory: () -> Resource) {
-        //GET /entities
+        _ path: String,
+        makeControllerWith controllerFactory: () -> Resource
+    ) {
+        // GET /entities
         self.get(path) { request in
-            return try controllerFactory().index(request)
+            return try controllerFactory().index(request: request)
         }
 
-        //POST /entities
+        // POST /entities
         self.post(path) { request in
-            return try controllerFactory().store(request)
+            return try controllerFactory().store(request: request)
         }
 
-        //GET /entities/:id
+        // GET /entities/:id
         self.get(path, Resource.Item.self) { request, item in
-            return try controllerFactory().show(request, item: item)
+            return try controllerFactory().show(request: request, item: item)
         }
 
-        //PUT /entities/:id
+        // PUT /entities/:id
         self.put(path, Resource.Item.self) { request, item in
-            return try controllerFactory().update(request, item: item)
+            return try controllerFactory().update(request: request, item: item)
         }
 
-        //DELETE /entities
+        // DELETE /entities
         self.delete(path) { request in
-            return try controllerFactory().destroyAll(request)
+            return try controllerFactory().destroy(request: request)
         }
 
-        //DELETE /entities/:id
+        // DELETE /entities/:id
         self.delete(path, Resource.Item.self) { request, item in
-            return try controllerFactory().destroy(request, item: item)
+            return try controllerFactory().destroy(request: request, item: item)
         }
 
-        //PATCH /entities/:id
+        // PATCH /entities/:id
         self.patch(path, Resource.Item.self) { request, item in
-            return try controllerFactory().modify(request, item:item)
+            return try controllerFactory().modify(request: request, item:item)
         }
 
+        // OPTIONS /entities
         self.options(path) { request in
-            let headers: Headers = [
-                "Allow":"GET,POST,DELETE,OPTIONS",
-                "Content-Type":"text/plain"
-            ]
-            let response = Response(status: .ok, headers: headers, body: Data())
+            var response = try controllerFactory().options(request: request).makeResponse()
+
+            response.headers["Allow"] = "GET,POST,DELETE,OPTIONS"
+            response.headers["Content-Type"] = "text/plain"
+
             return response
         }
 
+        // OPTIONS /entities/:id
         self.options(path, Resource.Item.self) { request, item in
-            let headers: Headers = [
-                "Allow":"GET,POST,PUT,PATCH,DELETE,OPTIONS",
-                "Content-Type":"text/plain"
-            ]
-            let response = Response(status: .ok, headers: headers, body: Data())
+            var response = try controllerFactory().options(request: request, item: item).makeResponse()
+
+            response.headers["Allow"] = "GET,POST,PUT,PATCH,DELETE,OPTIONS"
+            response.headers["Content-Type"] = "text/plain"
+
             return response
         }
     }

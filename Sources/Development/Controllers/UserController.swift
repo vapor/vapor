@@ -8,7 +8,7 @@ class UserController: Controller {
     /**
         Display many instances
      */
-    func index(_ request: Request) throws -> ResponseRepresentable {
+    func index(request: Request) throws -> ResponseRepresentable {
         return JSON([
             "controller": "MyController.index"
         ])
@@ -18,7 +18,7 @@ class UserController: Controller {
     /**
         Create a new instance.
      */
-    func store(_ request: Request) throws -> ResponseRepresentable {
+    func store(request: Request) throws -> ResponseRepresentable {
         return JSON([
             "controller": "MyController.store"
         ])
@@ -28,7 +28,7 @@ class UserController: Controller {
     /**
         Show an instance.
      */
-    func show(_ request: Request, item user: User) throws -> ResponseRepresentable {
+    func show(request: Request, item user: User) throws -> ResponseRepresentable {
         //User can be used like JSON with JsonRepresentable
         return JSON([
             "controller": "MyController.show",
@@ -39,15 +39,15 @@ class UserController: Controller {
     /** 
         Update an instance.
      */
-    func update(_ request: Request, item user: User) throws -> ResponseRepresentable {
+    func update(request: Request, item user: User) throws -> ResponseRepresentable {
         //Testing JsonRepresentable
         return user.makeJson()
     }
 
     /**
-     Modify an instance (only the fields that are present in the request)
+        Modify an instance (only the fields that are present in the request)
      */
-    func modify(_ request: Request, item user: User) throws -> ResponseRepresentable {
+    func modify(request: Request, item user: User) throws -> ResponseRepresentable {
         //Testing JsonRepresentable
         return user.makeJson()
     }
@@ -55,7 +55,7 @@ class UserController: Controller {
     /**
         Delete an instance.
      */
-    func destroy(_ request: Request, item user: User) throws -> ResponseRepresentable {
+    func destroy(request: Request, item user: User) throws -> ResponseRepresentable {
         //User is ResponseRepresentable by proxy of JsonRepresentable
         return user
     }
@@ -63,7 +63,7 @@ class UserController: Controller {
     /**
         Delete all instances.
      */
-    func destroyAll(_ request: Request) throws -> ResponseRepresentable {
+    func destroy(request: Request) throws -> ResponseRepresentable {
         return JSON([
             "controller": "MyController.destroyAll"
         ])
