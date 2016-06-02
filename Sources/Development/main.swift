@@ -51,8 +51,6 @@ let app = Application(
     ]
 )
 
-app.hash.key = app.config["app", "hash", "key"].string ?? "default-key"
-
 //MARK: Basic
 
 app.get("/") { request in
