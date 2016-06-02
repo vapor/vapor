@@ -40,6 +40,14 @@ public protocol Provider {
         implementation of `nil`.
     */
     var session: SessionDriver? { get }
+
+
+    /**
+        An optional `HashDriver` to provide
+        to the application. Has a default
+        implementation of `nil`.
+     */
+    var hash: HashDriver? { get }
 }
 
 extension Provider {
@@ -52,6 +60,10 @@ extension Provider {
     }
 
     public var session: SessionDriver? {
+        return nil
+    }
+
+    public var hash: HashDriver? {
         return nil
     }
 }

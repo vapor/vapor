@@ -105,7 +105,8 @@ public class Application {
         workDir: String? = nil,
         config: Config? = nil,
         localization: Localization? = nil,
-        hash: Hash? = nil,
+        hash: HashDriver? = nil,
+        key: String? = nil,
         server: ServerDriver.Type? = nil,
         router: RouterDriver? = nil,
         session: SessionDriver? = nil,
@@ -114,14 +115,23 @@ public class Application {
         var serverProvided: ServerDriver.Type? = server
         var routerProvided: RouterDriver? = router
         var sessionProvided: SessionDriver? = session
+        var hashProvided: HashDriver? = hash
 
         for provider in providers {
             serverProvided = provider.server ?? serverProvided
             routerProvided = provider.router ?? routerProvided
             sessionProvided = provider.session ?? sessionProvided
+            hashProvided = provider.hash ?? hashProvided
         }
 
-        let hash = hash ?? Hash()
+        let hash: Hash
+        let key = key ?? ""
+
+        if let hashDriver = hashProvided {
+            hash = Hash(key: key, driver: hashDriver)
+        } else {
+            hash = Hash(key: key)
+        }
         self.hash = hash
 
         let session = sessionProvided ?? MemorySessionDriver(hash: hash)
