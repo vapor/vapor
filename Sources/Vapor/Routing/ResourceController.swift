@@ -25,7 +25,7 @@ public protocol ResourceController {
     /**
         Update an instance.
      */
-    func update(_ request: Request, item: Item) throws -> ResponseRepresentable
+    func replace(_ request: Request, item: Item) throws -> ResponseRepresentable
 
     /**
         Modify an instance (only the fields that are present in the request)
@@ -69,7 +69,7 @@ extension ResourceController {
     /**
         Update an instance.
      */
-    public func update(_ request: Request, item: Item) throws -> ResponseRepresentable {
+    public func replace(_ request: Request, item: Item) throws -> ResponseRepresentable {
         throw Abort.notFound
     }
 

@@ -66,7 +66,7 @@ extension Application {
 
         //PUT /entities/:id
         self.put(path, Resource.Item.self) { request, item in
-            return try controllerFactory().update(request, item: item)
+            return try controllerFactory().replace(request, item: item)
         }
 
         //DELETE /entities

@@ -37,9 +37,9 @@ class UserController: Controller {
     }
 
     /** 
-        Update an instance.
-     */
-    func update(_ request: Request, item user: User) throws -> ResponseRepresentable {
+        Replace an existing an instance.
+    */
+    func replace(_ request: Request, item user: User) throws -> ResponseRepresentable {
         //Testing JsonRepresentable
         return user.makeJson()
     }
