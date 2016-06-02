@@ -10,13 +10,14 @@ public class Application {
         for returning registered `Route` handlers
         for a given request.
     */
-    public var router: RouterDriver
+    public let router: RouterDriver
 
     /**
-        When starting the application, the server will attempt to be initialized
-        from the given type
+        The server that will accept requesting
+        connections and return the desired
+        response.
     */
-    public var serverType: Server.Type
+    public let server: ServerDriver.Type
 
     /**
         The session driver is responsible for
@@ -81,13 +82,6 @@ public class Application {
     public var globalMiddleware: [Middleware]
 
     /**
-        Provider classes that have been registered
-        with this application
-     */
-    public var providers: [Provider]
-
-
-    /**
         the commands available to execute on the application
     */
     public private(set) var commands: [String : Command.Type] = [
@@ -108,30 +102,46 @@ public class Application {
         Initialize the Application.
     */
     public init(
-        workDir overrideWorkDir: String? = nil,
-        sessionDriver: SessionDriver? = nil,
-        config overrideConfig: Config? = nil,
-        localization overrideLocalization: Localization? = nil,
-        hash: Hash = Hash(),
-        server: Server.Type = HTTPStreamServer<ServerSocket>.self,
-        router: RouterDriver = BranchRouter()
+        workDir: String? = nil,
+        config: Config? = nil,
+        localization: Localization? = nil,
+        hash: Hash? = nil,
+        server: ServerDriver.Type? = nil,
+        router: RouterDriver? = nil,
+        session: SessionDriver? = nil,
+        providers: [Provider] = []
     ) {
-        self.hash = hash
-        self.session = sessionDriver ?? MemorySessionDriver(hash: hash)
-        self.providers = []
+        var serverProvided: ServerDriver.Type? = server
+        var routerProvided: RouterDriver? = router
+        var sessionProvided: SessionDriver? = session
 
-        let workDir = overrideWorkDir
+        for provider in providers {
+            serverProvided = provider.server ?? serverProvided
+            routerProvided = provider.router ?? routerProvided
+            sessionProvided = provider.session ?? sessionProvided
+        }
+
+        let hash = hash ?? Hash()
+        self.hash = hash
+
+        let session = sessionProvided ?? MemorySessionDriver(hash: hash)
+        self.session = session
+
+        let workDir = workDir
             ?? Process.valueFor(argument: "workDir")
             ?? "./"
         self.workDir = workDir.finish("/")
 
-        let localization = overrideLocalization ?? Localization(workingDirectory: workDir)
+        let localization = localization ?? Localization(workingDirectory: workDir)
         self.localization = localization
 
-        let config = overrideConfig ?? Config(workingDirectory: workDir)
+        let config = config ?? Config(workingDirectory: workDir)
         self.config = config
-        self.host = config["app", "host"].string ?? "0.0.0.0"
-        self.port = config["app", "port"].int ?? 8080
+
+        let host = config["app", "host"].string ?? "0.0.0.0"
+        let port = config["app", "port"].int ?? 8080
+        self.host = host
+        self.port = port
 
         self.globalMiddleware = [
             AbortMiddleware(),
@@ -139,9 +149,14 @@ public class Application {
             SessionMiddleware(session: session)
         ]
 
-        self.router = router
-        self.serverType = server
+        self.router = routerProvided ?? BranchRouter()
+        self.server = serverProvided ?? HTTPStreamServer<ServerSocket>.self
+
         restrictLogging(for: config.environment)
+
+        for provider in providers {
+            provider.boot(with: self)
+        }
     }
 
     private func restrictLogging(for environment: Environment) {
@@ -156,17 +171,10 @@ extension Application {
         Starts console
     */
     public func start() {
-        bootProviders()
         bootRoutes()
 
         // defaults to serve which will result in a no return - code beyond this call will only execute in event of failure
         executeCommand()
-    }
-
-    internal func bootProviders() {
-        for provider in self.providers {
-            provider.boot(with: self)
-        }
     }
 
     internal func bootRoutes() {
@@ -188,8 +196,8 @@ extension Application {
     internal func serve() {
         do {
             Log.info("Server starting at \(host):\(port)")
-            let server = try serverType.init(host: host, port: port, responder: self)
             // noreturn
+            let server = try self.server.init(host: host, port: port, responder: self)
             try server.start()
         } catch {
             Log.error("Server start error: \(error)")
