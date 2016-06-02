@@ -24,11 +24,9 @@ class HashTests: XCTestCase {
         let defaultKey = "123"
 
         //test app facade
-        let config = Config(seed: [
-            "app": JSON([
-                "key": defaultKey
-            ])
-        ])
+        let config = Config(seed: JSON([
+            "key": defaultKey
+        ]))
         let app = Application(config: config)
         let result = app.hash.make(string)
         XCTAssert(defaultExpected == result, "Hash did not match")
