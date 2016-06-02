@@ -1,6 +1,36 @@
 import Vapor
 import S4
 
+final class TestServer: ServerDriver {
+    init(host: String, port: Int, responder: Responder) throws {
+        print("Test server init on \(host):\(port)")
+    }
+    func start() throws {
+        print("Test server starting")
+    }
+}
+
+final class TestServerTwo: ServerDriver {
+    init(host: String, port: Int, responder: Responder) throws {
+        print("Test server 2 init on \(host):\(port)")
+    }
+    func start() throws {
+        print("Test server starting")
+    }
+}
+
+class TestProvider: Provider {
+    var server: ServerDriver.Type?
+
+    init() {
+        server = TestServer.self
+    }
+    
+    func boot(with application: Application) {
+
+    }
+}
+
 let seed: JSON = [
     "port": 8080
 ]
@@ -12,7 +42,14 @@ var workDir: String {
     return path
 }
 
-let app = Application(config: config, workDir: workDir)
+let app = Application(
+    config: config,
+    workDir: workDir,
+    server: TestServerTwo.self,
+    providers: [
+        TestProvider()
+    ]
+)
 
 app.hash.key = app.config["app", "hash", "key"].string ?? "default-key"
 
