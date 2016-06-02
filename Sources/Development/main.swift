@@ -7,8 +7,8 @@ var workDir: String {
     return path
 }
 
+let config = Config(workingDirectory: workDir)
 let hashKey = config["app", "hash", "key"].string ?? "default-key"
-
 let app = Application(config: config, workDir: workDir, hash: Hash(withKey: hashKey))
 
 //MARK: Basic
