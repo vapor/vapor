@@ -37,7 +37,7 @@ class FileManager {
                     return (true, isDirectory)
                 }
                 // chase the link; too bad if it is a slink to /Net/foo
-                stat(path, &s) >= 0
+                let _ = stat(path, &s) >= 0
             }
         } else {
             return (false, isDirectory)
