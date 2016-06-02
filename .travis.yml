@@ -10,6 +10,6 @@ install:
 script:
   # Build Vapor
   - swift build --configuration debug
-  # - swift build --configuration release
+  - swift build --configuration release
   # Test Vapor
   - swift test
