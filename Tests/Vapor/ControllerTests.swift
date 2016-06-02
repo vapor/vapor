@@ -109,7 +109,7 @@ class ControllerTests: XCTestCase {
         let fooIndex = Request(method: .get, uri: URI(path: "foo"), headers: [:], body: [])
         if let (_, handler) = app.router.route(fooIndex) {
             do {
-                try handler.respond(to: fooIndex)
+                let _ = try handler.respond(to: fooIndex)
                 XCTAssert(TestController.lock.index == 1, "foo.index Lock not correct")
             } catch {
                 XCTFail("foo.index handler failed")
@@ -135,7 +135,7 @@ class ControllerTests: XCTestCase {
         }
 
         do {
-            try handler.respond(to: request)
+            let _ = try handler.respond(to: request)
             XCTAssertEqual(TestActionController.hello, 1)
         } catch {
             XCTFail("TestActionController.hello handler failed with error '\(error)'")
@@ -157,7 +157,7 @@ class ControllerTests: XCTestCase {
         }
 
         do {
-            try handler.respond(to: request)
+            let _ = try handler.respond(to: request)
             XCTAssertEqual(TestActionController.hello, 1)
         } catch {
             XCTFail("TestActionController.hello handler failed with error '\(error)'")
@@ -178,7 +178,7 @@ class ControllerTests: XCTestCase {
         }
 
         do {
-            try handler.respond(to: request)
+            let _ = try handler.respond(to: request)
             XCTAssertEqual(TestController.lock.hello, 1)
         } catch {
             XCTFail("TestController.hello handler failed with error '\(error)'")
