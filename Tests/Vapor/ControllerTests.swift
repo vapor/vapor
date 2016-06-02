@@ -50,7 +50,7 @@ private class TestController: Controller {
     /**
         Update an instance.
      */
-    func update(_ request: Request, item: String) throws -> Vapor.ResponseRepresentable {
+    func replace(_ request: Request, item: String) throws -> Vapor.ResponseRepresentable {
         lock.update += 1
         return "update"
     }
