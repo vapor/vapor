@@ -96,7 +96,7 @@ public class Application {
         return workDir + "Resources/"
     }
 
-    var routes: [Route] = []
+    var routes: [Route]
 
     /**
         Initialize the Application.
@@ -106,7 +106,6 @@ public class Application {
         config: Config? = nil,
         localization: Localization? = nil,
         hash: HashDriver? = nil,
-        key: String? = nil,
         server: ServerDriver.Type? = nil,
         router: RouterDriver? = nil,
         session: SessionDriver? = nil,
@@ -124,19 +123,6 @@ public class Application {
             hashProvided = provider.hash ?? hashProvided
         }
 
-        let hash: Hash
-        let key = key ?? ""
-
-        if let hashDriver = hashProvided {
-            hash = Hash(key: key, driver: hashDriver)
-        } else {
-            hash = Hash(key: key)
-        }
-        self.hash = hash
-
-        let session = sessionProvided ?? MemorySessionDriver(hash: hash)
-        self.session = session
-
         let workDir = workDir
             ?? Process.valueFor(argument: "workDir")
             ?? "./"
@@ -153,6 +139,13 @@ public class Application {
         self.host = host
         self.port = port
 
+        let key = config["app", "key"].string
+        let hash = Hash(key: key, driver: hashProvided)
+        self.hash = hash
+
+        let session = sessionProvided ?? MemorySessionDriver(hash: hash)
+        self.session = session
+
         self.globalMiddleware = [
             AbortMiddleware(),
             ValidationMiddleware(),
@@ -161,6 +154,8 @@ public class Application {
 
         self.router = routerProvided ?? BranchRouter()
         self.server = serverProvided ?? HTTPStreamServer<ServerSocket>.self
+
+        routes = []
 
         restrictLogging(for: config.environment)
 
@@ -181,14 +176,9 @@ extension Application {
         Starts console
     */
     public func start() {
-        bootRoutes()
-
-        // defaults to serve which will result in a no return - code beyond this call will only execute in event of failure
+        // defaults to serve which will result in a no return
+        //code beyond this call will only execute in event of failure
         executeCommand()
-    }
-
-    internal func bootRoutes() {
-        routes.forEach(router.register)
     }
 
     private func executeCommand() {

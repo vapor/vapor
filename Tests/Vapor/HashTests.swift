@@ -24,12 +24,17 @@ class HashTests: XCTestCase {
         let defaultKey = "123"
 
         //test app facade
-        let app = Application(hash: Hash(withKey: defaultKey))
+        let config = Config(seed: [
+            "app": JSON([
+                "key": defaultKey
+            ])
+        ])
+        let app = Application(config: config)
         let result = app.hash.make(string)
         XCTAssert(defaultExpected == result, "Hash did not match")
 
         //test Hash by itself
-        let hash = Hash(withKey: defaultKey, driver: SHA2Hasher(variant: .sha256))
+        let hash = Hash(key: defaultKey, driver: SHA2Hasher(variant: .sha256))
         XCTAssert(defaultExpected == hash.make(string), "Hash did not match")
 
         //test all variants of manually
