@@ -15,4 +15,43 @@ public protocol Provider {
         - parameter application: the application to which the provider will be providing
     */
     func boot(with application: Application)
+
+    /**
+        An optional `ServerDriver` Type to provide
+        to the application. Has a default 
+        implementation of `nil`.
+     
+        `ServerDriver`s are passed as types since
+        they are not initialized until the 
+        application starts.
+    */
+    var server: ServerDriver.Type? { get }
+
+    /**
+        An optional `RouterDriver` to provide 
+        to the application. Has a default
+        implementation of `nil`.
+    */
+    var router: RouterDriver? { get }
+
+    /**
+        An optional `SessionDriver` to provide
+        to the application. Has a default
+        implementation of `nil`.
+    */
+    var session: SessionDriver? { get }
+}
+
+extension Provider {
+    public var server: ServerDriver.Type? {
+        return nil
+    }
+
+    public var router: RouterDriver? {
+        return nil
+    }
+
+    public var session: SessionDriver? {
+        return nil
+    }
 }
