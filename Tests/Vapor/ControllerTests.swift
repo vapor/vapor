@@ -81,7 +81,7 @@ private class TestController: Controller {
 }
 
 private class TestActionController: DefaultInitializable {
-    static var hello = 0
+    static var helloRunCount = 0
     let person: String
 
     init(person: String) {
@@ -93,7 +93,7 @@ private class TestActionController: DefaultInitializable {
     }
 
     func hello(_ request: Request) throws -> Vapor.ResponseRepresentable {
-        TestActionController.hello += 1
+        TestActionController.helloRunCount += 1
         return "Hello, \(person)!"
     }
 }
@@ -135,7 +135,7 @@ class ControllerTests: XCTestCase {
     }
 
     func testControllerActionRouting_withFactory() throws {
-        TestActionController.hello = 0
+        TestActionController.helloRunCount = 0
         let app = Application()
 
         app.add(.get, path: "/hello", action: TestActionController.hello) { TestActionController(person: "Tanner") }
@@ -149,11 +149,11 @@ class ControllerTests: XCTestCase {
         }
 
         let _ = try handler.respond(to: request)
-        XCTAssertEqual(TestActionController.hello, 1)
+        XCTAssertEqual(TestActionController.helloRunCount, 1)
     }
 
     func testControllerActionRouting_withDefaultInitializable() throws {
-        TestActionController.hello = 0
+        TestActionController.helloRunCount = 0
         let app = Application()
 
         app.add(.get, path: "/hello", action: TestActionController.hello)
@@ -167,10 +167,12 @@ class ControllerTests: XCTestCase {
         }
 
         let _ = try handler.respond(to: request)
-        XCTAssertEqual(TestActionController.hello, 1)
+        XCTAssertEqual(TestActionController.helloRunCount, 1)
     }
 
     func testControllerActionRouting_withApplicationInitializable() throws {
+        TestActionController.helloRunCount = 0
+
         let app = Application()
 
         app.add(.get, path: "/hello", action: TestActionController.hello)
@@ -184,7 +186,7 @@ class ControllerTests: XCTestCase {
         }
 
         let _ = try handler.respond(to: request)
-        XCTAssertEqual(TestActionController.hello, 1)
+        XCTAssertEqual(TestActionController.helloRunCount, 1)
     }
 
 
