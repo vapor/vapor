@@ -4,7 +4,7 @@ let package = Package(
     name: "Vapor",
     dependencies: [
         //Standards package. Contains protocols for cross-project compatability.
-        .Package(url: "https://github.com/open-swift/S4.git", majorVersion: 0, minor: 8),
+        .Package(url: "https://github.com/open-swift/S4.git", majorVersion: 0, minor: 9),
 
         //Provides critical String functions Foundation is missing on Linux
         .Package(url: "https://github.com/Zewo/String.git", majorVersion: 0, minor: 7),
@@ -29,7 +29,9 @@ let package = Package(
         .Package(url: "https://github.com/czechboy0/Socks.git", majorVersion: 0, minor: 4)
     ],
     exclude: [
-        "XcodeProject"
+        "XcodeProject",
+        "Generator",
+        "Development"
     ],
     targets: [
         Target(
