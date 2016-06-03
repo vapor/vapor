@@ -110,8 +110,6 @@ class ControllerTests: XCTestCase {
         let instance = TestController(application: app)
         app.resource("foo", makeControllerWith: { return instance })
 
-        app.bootRoutes()
-
         let fooIndex = Request(method: .get, uri: URI(path: "foo"), headers: [:], body: [])
         if let (_, handler) = app.router.route(fooIndex) {
             do {
@@ -132,8 +130,6 @@ class ControllerTests: XCTestCase {
 
         app.add(.get, path: "/hello", action: TestActionController.hello) { TestActionController(person: "Tanner") }
 
-        app.bootRoutes()
-
         let request = Request(method: .get, uri: URI(path: "hello"), headers: [:], body: [])
         guard let (_, handler) = app.router.route(request) else {
             XCTFail("No handler found for TestActionController.hello")
@@ -149,8 +145,6 @@ class ControllerTests: XCTestCase {
         let app = Application()
 
         app.add(.get, path: "/hello", action: TestActionController.hello)
-
-        app.bootRoutes()
 
         let request = Request(method: .get, uri: URI(path: "hello"), headers: [:], body: [])
         guard let (_, handler) = app.router.route(request) else {
@@ -169,8 +163,6 @@ class ControllerTests: XCTestCase {
 
         app.add(.get, path: "/hello", action: TestActionController.hello)
 
-        app.bootRoutes()
-
         let request = Request(method: .get, uri: URI(path: "hello"), headers: [:], body: [])
         guard let (_, handler) = app.router.route(request) else {
             XCTFail("No handler found for TestController.hello")
@@ -188,7 +180,6 @@ class ControllerTests: XCTestCase {
         let testInstance = TestController(application: app)
         let factory: (Void) -> TestController = { print("blahblah : \(testInstance)"); return testInstance }
         app.resource("/test", makeControllerWith: factory)
-        app.bootRoutes()
 
         func handleRequest(req: Request) throws {
             guard let (parameters, handler) = app.router.route(req) else { return }

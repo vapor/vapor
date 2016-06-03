@@ -19,8 +19,8 @@ public class Hash {
         - warning: Ensure the key stays the same during the lifetime of your application,
                    since changing it will result in mismatching hashes.
     */
-    public init(withKey key: String = "", driver: HashDriver? = nil) {
-        self.key = key
+    public init(key: String? = nil, driver: HashDriver? = nil) {
+        self.key = key ?? ""
         self.driver = driver ?? SHA2Hasher(variant: .sha256)
     }
 

@@ -13,7 +13,7 @@ extension Character {
     }
 }
 
-final class HTTPStreamServer<StreamType: HTTPListenerStream>: Server {
+final class HTTPStreamServer<StreamType: HTTPListenerStream>: ServerDriver {
     var stream: StreamType!
     var delegate: Responder!
 
