@@ -153,7 +153,7 @@ public class Application {
         ]
 
         self.router = routerProvided ?? BranchRouter()
-        self.server = serverProvided ?? HTTPStreamServer<ServerSocket>.self
+        self.server = serverProvided ?? HTTPServer.self
 
         routes = []
 

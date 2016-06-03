@@ -22,8 +22,11 @@ let package = Package(
         //ORM for interacting with databases
         .Package(url: "https://github.com/qutheory/fluent.git", majorVersion: 0, minor: 3),
 
-        // Allows complex key path subscripts
+        //Allows complex key path subscripts
         .Package(url: "https://github.com/qutheory/path-indexable.git", majorVersion: 0, minor: 2),
+
+        //Wrapper around pthreads
+        .Package(url: "https://github.com/ketzusaka/Strand.git", majorVersion: 1, minor: 4),
 
         //Sockets, used by the built in HTTP server
         .Package(url: "https://github.com/czechboy0/Socks.git", majorVersion: 0, minor: 4)
