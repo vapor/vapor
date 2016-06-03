@@ -5,6 +5,8 @@ class ApplicationTests: XCTestCase {
     static var allTests: [(String, (ApplicationTests) -> () throws -> Void)] {
         return [
             ("testMediaType", testMediaType),
+            ("testProviders", testProviders),
+            ("testProvidersOverride", testProvidersOverride),
         ]
     }
 
@@ -37,6 +39,73 @@ class ApplicationTests: XCTestCase {
         }
 
         XCTAssert(found, "CSS Content Type not found")
+    }
+
+    /**
+        Tests to make sure Providers
+        are properly overriding properties
+        on the Application and that the boot
+        method is being called.
+    */
+    func testProviders() {
+        final class TestServer: ServerDriver {
+            init(host: String, port: Int, responder: Responder) throws {}
+            func start() throws {}
+        }
+
+        class TestProvider: Provider {
+            var bootRan = false
+
+            func boot(with application: Application) {
+                bootRan = true
+            }
+
+            var server: ServerDriver.Type?
+
+            init() {
+                server = TestServer.self
+            }
+        }
+
+        let provider = TestProvider()
+        let app = Application(providers: [
+            provider
+        ])
+
+        XCTAssert(app.server == TestServer.self, "Provider did not provide TestServer")
+        XCTAssert(provider.bootRan == true, "Application did not boot provider")
+    }
+
+    /**
+        Tests that Providers override other
+        init arguments to the application.
+    */
+    func testProvidersOverride() {
+        final class TestServerAlpha: ServerDriver {
+            init(host: String, port: Int, responder: Responder) throws {}
+            func start() throws {}
+        }
+
+        final class TestServerBeta: ServerDriver {
+            init(host: String, port: Int, responder: Responder) throws {}
+            func start() throws {}
+        }
+
+        class TestProvider: Provider {
+            func boot(with application: Application) {}
+
+            var server: ServerDriver.Type?
+
+            init() {
+                server = TestServerAlpha.self
+            }
+        }
+
+        let app = Application(server: TestServerBeta.self, providers: [
+            TestProvider()
+        ])
+
+        XCTAssert(app.server == TestServerAlpha.self, "Provider did not override with TestServerAlpha")
     }
 
  }

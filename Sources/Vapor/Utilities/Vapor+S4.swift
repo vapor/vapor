@@ -29,7 +29,7 @@ extension Response {
     public typealias Headers = S4.Headers
 }
 
-public typealias Server = S4.Server
+public typealias ServerDriver = S4.Server
 public typealias Responder = S4.Responder
 
 public typealias Middleware = S4.Middleware

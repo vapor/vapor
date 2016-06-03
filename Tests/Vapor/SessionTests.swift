@@ -64,8 +64,6 @@ class SessionTests: XCTestCase {
             return "hi"
         }
 
-        app.bootRoutes()
-
         var request = Request(method: .get, path: "cookie")
         request.headers["Cookie"] = "vapor-session=123"
 
