@@ -224,7 +224,7 @@ extension Application {
                     let fileExtension = filePath.components(separatedBy: ".").last,
                     let type = mediaType(forFileExtension: fileExtension)
                 {
-                    headers["Content-Type"] = Response.Headers.Values(type.description)
+                    headers["Content-Type"] = type.description
                 }
 
                 return Response(status: .ok, headers: headers, body: Data(fileBody))
@@ -288,7 +288,7 @@ extension Application: Responder {
         do {
             response = try responder.respond(to: request)
 
-            if response.headers["Content-Type"].first == nil {
+            if response.headers["Content-Type"] == nil {
                 Log.warning("Response had no 'Content-Type' header.")
             }
         } catch {
@@ -300,8 +300,8 @@ extension Application: Responder {
             response = Response(error: error)
         }
 
-        response.headers["Date"] = Response.Headers.Values(Response.date)
-        response.headers["Server"] = Response.Headers.Values("Vapor \(Vapor.VERSION)")
+        response.headers["Date"] = Response.date
+        response.headers["Server"] = "Vapor \(Vapor.VERSION)"
 
         return response
     }

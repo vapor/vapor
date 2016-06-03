@@ -45,10 +45,8 @@ extension HTTPStream {
             return a.key.string < b.key.string
         }
 
-        try headers.forEach { (key, values) in
-            for value in values {
-                try send(headerKey: key.string, headerValue: value)
-            }
+        try headers.forEach { (key, value) in
+            try send(headerKey: key.string, headerValue: value)
         }
         try sendHeaderEndOfLine()
 
@@ -194,36 +192,26 @@ public final class StreamProxy {
     }
 
     private var data: IndexingIterator<[Byte]>
-    
-    private var nextStream: (upTo: Int) throws -> Data
+    private var stream: HTTPStream
 
     init(_ stream: HTTPStream) throws {
-        self.nextStream =  { length in
-            guard stream.open else { return Data() }
-            return try stream.receive(upTo: length)
-        }
-        self.data = try nextStream(upTo: 2048).makeIterator()
+        self.stream = stream
+        self.data = try stream.receive(upTo: 2048).makeIterator()
     }
 
     internal func receive(upTo: Int) throws -> [Byte] {
-        var received = Array(data)
-        let left = upTo - received.count
-        if left > 0 {
-            received += try nextStream(upTo: left).bytes
+        var count = 0
+        var bytes = [Byte]()
+        while count < upTo, let next = try nextByte() {
+            bytes.append(next)
+            count += 1
         }
-        return received
-//        var count = 0
-//        var bytes = [Byte]()
-//        while count < upTo, let next = try nextByte() {
-//            bytes.append(next)
-//            count += 1
-//        }
-//        return bytes
+        return bytes
     }
 
     internal func nextByte() throws -> Byte? {
         guard let next = data.next() else {
-            data = try nextStream(upTo: 2048).makeIterator()
+            data = try stream.receive(upTo: 2048).makeIterator()
             return data.next()
         }
         return next
@@ -253,36 +241,29 @@ public final class StreamProxy {
     }
 
     internal func extractHeaderFields() throws -> Request.Headers {
-        var fields = Request.Headers()
-
         func headerLine() throws -> String? {
             let line = try nextLine()
             return line.isEmpty ? nil : line
         }
 
+        var fields: [CaseInsensitiveString: String] = [:]
         while let line = try headerLine() {
             let pair = try extractKeyPair(in: line)
-
-            let key = Request.Headers.Key(pair.key)
-
-            var values = fields[key]
-            values.append(pair.value)
-            fields[key] = values
+            fields[CaseInsensitiveString(pair.key)] = pair.value
         }
 
-        return fields
+        return Request.Headers(fields)
     }
 
+    // Key: Value
     private func extractKeyPair(in line: String) throws -> (key: String, value: String) {
-        let components = line.split(separator: ":", maxSplits: 1)
+        let components = line.characters.split(separator: ":", maxSplits: 1)
         guard
             let key = components.first,
-            let val = components.last?
-                .characters
-                .dropFirst()
+            let val = components.last?.dropFirst() // drop leading space
             else { throw Error.InvalidHeaderKeyPair }
 
-        return (key, String(val))
+        return (String(key), String(val))
     }
 
     func accept() throws -> Request {
@@ -297,7 +278,7 @@ public final class StreamProxy {
         }
 
         var uri = requestLine.uri
-        if let host = fields["host"].first {
+        if let host = fields["host"] {
             uri.host = host
         }
 
@@ -309,7 +290,7 @@ import S4
 
 extension S4.Headers {
     var contentLength: Int? {
-        guard let lengthString = self["Content-Length"].first else {
+        guard let lengthString = self["Content-Length"] else {
             return nil
         }
 

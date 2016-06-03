@@ -25,20 +25,6 @@ extension Request {
         }
     }
 
-    ///Browser stored data sent with every server request
-    public var cookies: [String: String] {
-        var cookies: [String: String] = [:]
-
-        for cookieString in headers["Cookie"] {
-            for (key, val) in Request.parseCookies(cookieString) {
-                cookies[key] = val
-            }
-        }
-
-        return cookies
-
-    }
-
     public init(method: Method = .get, path: String, host: String? = nil, body: Data = []) {
         self.init(method: method, uri: URI(path: path, host: host), headers: [:], body: body)
     }
@@ -49,7 +35,7 @@ extension Request {
 
         - returns: String dictionary of parsed cookies.
      */
-    static private func parseCookies(_ string: String) -> [String: String] {
+    static internal func parseCookies(_ string: String) -> [String: String] {
         var cookies: [String: String] = [:]
 
         let cookieTokens = string.components(separatedBy: ";")
@@ -92,7 +78,7 @@ extension Request {
         var multipart: [String: MultiPart]?
 
         if
-            let contentType = headers["Content-Type"].first,
+            let contentType = headers["Content-Type"],
             let data = data
         {
             if contentType.range(of: "application/json") != nil {

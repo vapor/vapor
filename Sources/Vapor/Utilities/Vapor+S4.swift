@@ -11,7 +11,6 @@ public typealias StructuredData = C7.StructuredData
 public typealias URI = S4.URI
 
 extension S4.Headers {
-    public typealias Values = S4.Header
     public typealias Key = C7.CaseInsensitiveString
 }
 
@@ -20,7 +19,6 @@ extension Request {
     public typealias Method = S4.Method
     public typealias Body = S4.Body
     public typealias Headers = S4.Headers
-    public typealias Header = S4.Header
 }
 
 

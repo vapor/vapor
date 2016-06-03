@@ -242,8 +242,7 @@ app.post("multipart-image") { request in
     var headers: Headers = [:]
 
     if let mediaType = image.type {
-        let header = Header([mediaType.type + "/" + mediaType.subtype])
-        headers["Content-Type"] = header
+        headers["Content-Type"] = mediaType.type + "/" + mediaType.subtype
     }
 
     return Response(status: .ok, headers: headers, body: image.data)
@@ -282,8 +281,7 @@ app.post("multifile") { request in
     var headers: Headers = [:]
 
     if let mediaType = file.type {
-        let header = Header([mediaType.type + "/" + mediaType.subtype])
-        headers["Content-Type"] = header
+        headers["Content-Type"] = mediaType.type + "/" + mediaType.subtype
     }
 
     return Response(status: .ok, headers: headers, body: file.data)
@@ -352,7 +350,7 @@ app.get("async") { request in
     })
     response.headers["Content-Type"] = "text/plain"
     response.headers["Transfer-Encoding"] = ""
-    response.headers["Content-Length"] = 5
+    response.headers["Content-Length"] = 5.description
     return response
 }
 
