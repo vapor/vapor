@@ -18,23 +18,21 @@ class HashTests: XCTestCase {
     }
 
     func testHash() {
-        let app = Application()
 
         let string = "vapor"
         let defaultExpected = "97ce9a45eaf0b1ceafc3bba00dfec047526386bbd69241e4a4f0c9fde7c638ea"
         let defaultKey = "123"
 
         //test app facade
-        app.hash.key = defaultKey
+        let app = Application(hash: Hash(withKey: defaultKey))
         let result = app.hash.make(string)
         XCTAssert(defaultExpected == result, "Hash did not match")
 
-        //change key
-        app.hash.key = "1234"
-        let badResult = app.hash.make(string)
-        XCTAssert(defaultExpected != badResult, "Hash matched bad result")
+        //test Hash by itself
+        let hash = Hash(withKey: defaultKey, driver: SHA2Hasher(variant: .sha256))
+        XCTAssert(defaultExpected == hash.make(string), "Hash did not match")
 
-        //test all variants manually
+        //test all variants of manually
         var expected: [SHA2Hasher.Variant: String] = [:]
         expected[.sha256] = "97ce9a45eaf0b1ceafc3bba00dfec047526386bbd69241e4a4f0c9fde7c638ea"
         expected[.sha384] = "3977579292ed6c50588c5e2e345e84470a8e7f2635ecd89cacedb9d747d05bddb767c2c6943f7ed8ae3abf8c8000bd89"

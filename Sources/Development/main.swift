@@ -1,20 +1,15 @@
 import Vapor
 import S4
 
-let seed: JSON = [
-    "port": 8080
-]
-let config = Config(seed: ["app": seed])
-
 var workDir: String {
     let parent = #file.characters.split(separator: "/").map(String.init).dropLast().joined(separator: "/")
     let path = "/\(parent)/"
     return path
 }
 
-let app = Application(config: config, workDir: workDir)
-
-app.hash.key = app.config["app", "hash", "key"].string ?? "default-key"
+let config = Config(workingDirectory: workDir)
+let hashKey = config["app", "hash", "key"].string ?? "default-key"
+let app = Application(config: config, workDir: workDir, hash: Hash(withKey: hashKey))
 
 //MARK: Basic
 
@@ -245,7 +240,7 @@ app.post("multipart-image") { request in
     }
 
     var headers: Headers = [:]
-    
+
     if let mediaType = image.type {
         let header = Header([mediaType.type + "/" + mediaType.subtype])
         headers["Content-Type"] = header
@@ -256,12 +251,12 @@ app.post("multipart-image") { request in
 
 app.get("multifile") { _ in
     var response = "<form method='post' action='/multifile/' ENCTYPE='multipart/form-data'>"
-    
+
     response += "<input type='text' name='response' />"
     response += "<input type='file' name='files' multiple='multiple' />"
     response += "<button>Submit</button>"
     response += "</form>"
-    
+
     return Response(status: .ok, html: response)
 }
 
@@ -269,7 +264,7 @@ app.post("multifile") { request in
     guard let form = request.data.multipart else {
         throw Abort.badRequest
     }
-    
+
     guard let response = form["response"]?.input, let number = Int(response) else {
         throw Abort.badRequest
     }
@@ -285,7 +280,7 @@ app.post("multifile") { request in
     let file = files[number]
 
     var headers: Headers = [:]
-    
+
     if let mediaType = file.type {
         let header = Header([mediaType.type + "/" + mediaType.subtype])
         headers["Content-Type"] = header
@@ -296,7 +291,7 @@ app.post("multifile") { request in
 
 app.get("options") { _ in
     var response = "<form method='post' action='/options/' ENCTYPE='multipart/form-data'>"
-    
+
     response += "<select name='options' multiple='multiple'>"
     response += "<option value='0'>0</option>"
     response += "<option value='1'>1</option>"
@@ -311,7 +306,7 @@ app.get("options") { _ in
     response += "</select>"
     response += "<button>Submit</button>"
     response += "</form>"
-    
+
     return Response(status: .ok, html: response)
 }
 
@@ -333,7 +328,7 @@ app.post("multipart-print") { request in
 
     print(request.data.multipart?["test"])
     print(request.data.multipart?["test"]?.file)
-    
+
     return JSON([
         "message": "Printed details to console"
     ])

@@ -2,7 +2,7 @@ import libc
 import MediaType
 import Foundation
 
-public let VERSION = "0.9.2"
+public let VERSION = "0.10"
 
 public class Application {
     /**
@@ -174,13 +174,21 @@ extension Application {
     }
 
     private func executeCommand() {
-        // arguments prefixed w/ `--` are accessible through `app.config["app", "argument"]`
-        let consoleCommands = NSProcessInfo.processInfo().arguments.filter { !$0.hasSuffix("--") }
+        let input = NSProcessInfo.processInfo().arguments
+        let (command, arguments) = extract(fromInput: input)
+        command.run(on: self, with: arguments)
+    }
+
+    internal func extract(fromInput input: [String]) -> (command: Command.Type, arguments: [String]) {
+        // options prefixed w/ `--` are accessible through `app.config["app", "argument"]`
+        let consoleCommands = NSProcessInfo.processInfo().arguments.filter { !$0.hasPrefix("--") }
         var iterator = consoleCommands.makeIterator()
         let _ = iterator.next() // dump directory command
-        let command = iterator.next() ?? "serve"
+        let commandKey = iterator.next() ?? "serve"
         let arguments = Array(iterator)
-        commands[command]?.run(on: self, with: arguments)
+
+        let command = commands[commandKey] ?? Serve.self
+        return (command, arguments)
     }
 }
 
