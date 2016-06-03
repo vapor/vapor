@@ -91,6 +91,8 @@ extension Application: RouteBuilder {
             return nextMiddleware.chain(to: resp)
         }
         let route = Route(host: "*", method: method, path: path, responder: responder)
+
         routes.append(route)
+        router.register(route)
     }
 }
