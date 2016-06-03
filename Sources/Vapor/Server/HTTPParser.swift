@@ -38,8 +38,15 @@ final class HTTPParser {
     }
 
     func parse() throws -> Request {
-        let requestLineString = try nextLine()
+
+        var requestLineString = ""
+        while requestLineString.isEmpty {
+            requestLineString = try nextLine()
+        }
+        
         let requestLine = try RequestLine(requestLineString)
+
+
 
         var headers: [CaseInsensitiveString: String] = [:]
 

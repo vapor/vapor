@@ -11,6 +11,7 @@ extension HTTPParser {
         init(_ string: String) throws {
             let comps = string.components(separatedBy: " ")
             guard comps.count == 3 else {
+                print(string)
                 throw Error.invalidRequestLine
             }
 
