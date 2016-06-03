@@ -26,8 +26,16 @@ extension Hummingbird.ServerSocket: HTTPListenerStream {
 }
 
 extension SocketError: HTTPStreamError {
-    /// `true` if the case is `.connectionClosedByPeer`
+    /// `true` if the case is `.connectionClosedByPeer` or failed w/ code 54
     public var isClosedByPeer: Bool {
-        return self == .connectionClosedByPeer
+        switch self {
+        // Code 54 is closed by peer
+        case .receiveFailed(code: let code, message: _) where code == 54:
+            return true
+        case .connectionClosedByPeer:
+            return true
+        default:
+            return false
+        }
     }
 }

@@ -25,7 +25,7 @@ class RequestTests: XCTestCase {
     func testParse() {
         let string = "value=123"
         var request = Request(method: .post, path: "/", host: nil, body: string.data)
-        request.headers.headers["content-type"] = Request.Header("application/x-www-form-urlencoded")
+        request.headers.headers["content-type"] = "application/x-www-form-urlencoded"
 
         XCTAssert(request.data["value"].int == 123, "Request did not parse correctly")
     }
@@ -33,7 +33,7 @@ class RequestTests: XCTestCase {
     func testCachedParse() {
         let string = "value=123"
         var request = Request(method: .post, path: "/", host: nil, body: string.data)
-        request.headers.headers["content-type"] = Request.Header("application/x-www-form-urlencoded")
+        request.headers.headers["content-type"] = "application/x-www-form-urlencoded"
 
         request.cacheParsedContent()
 
@@ -50,7 +50,7 @@ class RequestTests: XCTestCase {
         body += "--" + boundary + "\r\n"
 
         var request = Request(method: .post, path: "/", host: nil, body: body.data)
-        request.headers.headers["content-type"] = Request.Header("multipart/form-data; charset=utf-8; boundary=\(boundary)")
+        request.headers.headers["content-type"] = "multipart/form-data; charset=utf-8; boundary=\(boundary)"
 
         request.cacheParsedContent()
 
@@ -68,7 +68,7 @@ class RequestTests: XCTestCase {
         body += "--" + boundary + "\r\n"
 
         var request = Request(method: .post, path: "/", host: nil, body: body.data)
-        request.headers.headers["content-type"] = Request.Header("multipart/form-data; charset=utf-8; boundary=\(boundary)")
+        request.headers.headers["content-type"] = "multipart/form-data; charset=utf-8; boundary=\(boundary)"
 
         request.cacheParsedContent()
 
@@ -78,7 +78,7 @@ class RequestTests: XCTestCase {
     func testFormURLEncoded() {
         let body = "first=value&arr[]=foo+bar&arr[]=baz"
         var request = Request(method: .post, path: "/", host: nil, body: body.data)
-        request.headers.headers["content-type"] = Request.Header("application/x-www-form-urlencoded")
+        request.headers.headers["content-type"] = "application/x-www-form-urlencoded"
 
         request.cacheParsedContent()
 
@@ -90,7 +90,7 @@ class RequestTests: XCTestCase {
     func testFormURLEncodedEdge() {
         let body = "singleKeyArray[]=value&implicitArray=1&implicitArray=2"
         var request = Request(method: .post, path: "/", host: nil, body: body.data)
-        request.headers.headers["content-type"] = Request.Header("application/x-www-form-urlencoded")
+        request.headers.headers["content-type"] = "application/x-www-form-urlencoded"
 
         request.cacheParsedContent()
 
