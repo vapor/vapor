@@ -47,7 +47,9 @@ final class HTTPStreamServer<StreamType: HTTPListenerStream>: Server {
         repeat {
             let request: Request
             do {
-                request = try socket.receive()
+                let proxy = try StreamProxy(socket)
+                request = try proxy.accept()
+//                request = try socket.receive()
             } catch let error as HTTPStreamError where error.isClosedByPeer {
                 return
             } catch {

@@ -181,8 +181,9 @@ extension Application {
 
     internal func extract(fromInput input: [String]) -> (command: Command.Type, arguments: [String]) {
         // options prefixed w/ `--` are accessible through `app.config["app", "argument"]`
-        let consoleCommands = NSProcessInfo.processInfo().arguments.filter { !$0.hasPrefix("--") }
-        var iterator = consoleCommands.makeIterator()
+        var iterator = input
+            .filter { !$0.hasPrefix("--") }
+            .makeIterator()
         let _ = iterator.next() // dump directory command
         let commandKey = iterator.next() ?? "serve"
         let arguments = Array(iterator)
