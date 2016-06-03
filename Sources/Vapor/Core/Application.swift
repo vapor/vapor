@@ -189,8 +189,9 @@ extension Application {
 
     internal func extract(fromInput input: [String]) -> (command: Command.Type, arguments: [String]) {
         // options prefixed w/ `--` are accessible through `app.config["app", "argument"]`
-        let consoleCommands = NSProcessInfo.processInfo().arguments.filter { !$0.hasPrefix("--") }
-        var iterator = consoleCommands.makeIterator()
+        var iterator = input
+            .filter { !$0.hasPrefix("--") }
+            .makeIterator()
         let _ = iterator.next() // dump directory command
         let commandKey = iterator.next() ?? "serve"
         let arguments = Array(iterator)
@@ -231,7 +232,7 @@ extension Application {
                     let fileExtension = filePath.components(separatedBy: ".").last,
                     let type = mediaType(forFileExtension: fileExtension)
                 {
-                    headers["Content-Type"] = Response.Headers.Values(type.description)
+                    headers["Content-Type"] = type.description
                 }
 
                 return Response(status: .ok, headers: headers, body: Data(fileBody))
@@ -295,7 +296,7 @@ extension Application: Responder {
         do {
             response = try responder.respond(to: request)
 
-            if response.headers["Content-Type"].first == nil {
+            if response.headers["Content-Type"] == nil {
                 Log.warning("Response had no 'Content-Type' header.")
             }
         } catch {
@@ -307,8 +308,8 @@ extension Application: Responder {
             response = Response(error: error)
         }
 
-        response.headers["Date"] = Response.Headers.Values(Response.date)
-        response.headers["Server"] = Response.Headers.Values("Vapor \(Vapor.VERSION)")
+        response.headers["Date"] = Response.date
+        response.headers["Server"] = "Vapor \(Vapor.VERSION)"
 
         return response
     }

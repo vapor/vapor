@@ -47,7 +47,9 @@ final class HTTPStreamServer<StreamType: HTTPListenerStream>: ServerDriver {
         repeat {
             let request: Request
             do {
-                request = try socket.receive()
+                let proxy = try StreamProxy(socket)
+                request = try proxy.accept()
+//                request = try socket.receive()
             } catch let error as HTTPStreamError where error.isClosedByPeer {
                 return
             } catch {
@@ -83,11 +85,8 @@ final class HTTPStreamServer<StreamType: HTTPListenerStream>: ServerDriver {
 
 extension Request {
     var supportsKeepAlive: Bool {
-        for value in headers["Connection"] ?? [] {
-            if value.trim() == "keep-alive" {
-                return true
-            }
-        }
-        return false
+        guard let value = headers["Connection"] else { return false }
+        // TODO: Decide on if 'contains' is better, test linux version
+        return value.trim() == "keep-alive"
     }
 }
