@@ -20,7 +20,7 @@ class ResponseTests: XCTestCase {
         let url = "http://tanner.xyz"
 
         let redirect = Response(redirect: url)
-        XCTAssert(redirect.headers["location"].first == url, "Location header should be in headers")
+        XCTAssert(redirect.headers["location"] == url, "Location header should be in headers")
     }
 
 }
