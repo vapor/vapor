@@ -60,8 +60,6 @@ final class HTTPParser {
 
         let requestLine = try RequestLine(requestLineString)
 
-
-
         var headers: [CaseInsensitiveString: String] = [:]
 
         while true {

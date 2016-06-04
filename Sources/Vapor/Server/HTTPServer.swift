@@ -8,7 +8,6 @@ import Socks
 import SocksCore
 import Strand
 
-
 // MARK: Byte => Character
 extension Character {
     init(_ byte: Byte) {
@@ -53,9 +52,9 @@ final class HTTPServer: ServerDriver {
 
     private func parse(_ stream: Stream) {
         var keepAlive = false
+        let parser = HTTPParser(stream: stream)
         repeat {
             do {
-                let parser = HTTPParser(stream: stream)
                 let request = try parser.parse()
                 keepAlive = request.supportsKeepAlive
                 let response = try responder.respond(to: request)
