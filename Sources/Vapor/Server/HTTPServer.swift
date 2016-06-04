@@ -36,7 +36,7 @@ final class HTTPServer: ServerDriver {
         do {
             try stream.startWithHandler(handler: handle)
         } catch {
-            Log.error("Failed to accept: \(socket) error: \(error)")
+            Log.error("Failed to accept: \(stream) error: \(error)")
         }
     }
 
@@ -59,9 +59,13 @@ final class HTTPServer: ServerDriver {
                 keepAlive = request.supportsKeepAlive
                 let response = try responder.respond(to: request)
                 let data = serializer.serialize(response, keepAlive: keepAlive)
+                print("Sending: \(data)")
                 try stream.send(data)
+            } catch let e as SocksCore.Error where e.isClosedByPeer {
+                break // jumpto close
             } catch {
                 Log.error("HTTP error: \(error)")
+                break
             }
         } while keepAlive && !stream.closed
 
@@ -79,5 +83,13 @@ extension Request {
         guard let value = headers["Connection"] else { return false }
         // TODO: Decide on if 'contains' is better, test linux version
         return value.trim() == "keep-alive"
+    }
+}
+
+extension SocksCore.Error {
+    var isClosedByPeer: Bool {
+        guard case .ReadFailed = type else { return false }
+        let message = String(validatingUTF8: strerror(errno))
+        return message == "Connection reset by peer"
     }
 }

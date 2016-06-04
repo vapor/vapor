@@ -6,7 +6,7 @@ extension Socks.TCPClient: Stream {
     }
 
     public var closed: Bool {
-        return false
+        return socket.isClosed
     }
 
     public func send(_ data: Data, timingOut deadline: Double) throws {
