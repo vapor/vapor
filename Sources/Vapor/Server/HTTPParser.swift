@@ -1,7 +1,4 @@
 final class HTTPParser {
-    init(stream: Stream) {
-        self.stream = stream
-    }
 
     static let headerEndOfLine = "\r\n"
     static let newLine: Byte = 10
@@ -9,12 +6,17 @@ final class HTTPParser {
     static let minimumValidAsciiCharacter: Byte = 13 + 1
 
     var stream: Stream
-    var iterator: IndexingIterator<[Byte]>?
+    var iterator: IndexingIterator<[Byte]>
+
+    init(stream: Stream) {
+        self.stream = stream
+        self.iterator = Data().makeIterator()
+    }
 
     func next() throws -> Byte? {
-        guard let next = iterator?.next() else {
+        guard let next = iterator.next() else {
             iterator = try stream.receive(upTo: 2048).makeIterator()
-            return iterator?.next()
+            return iterator.next()
         }
         return next
     }
@@ -37,13 +39,25 @@ final class HTTPParser {
         return line
     }
 
-    func parse() throws -> Request {
+    func chunk(size: Int) throws -> [Byte] {
+        var bytes = [Byte].init(repeating: 0, count: size)
+        bytes += Array(iterator)
+        iterator = Data().makeIterator()
 
+        while bytes.count < size {
+            let next = try stream.receive(upTo: 2048)
+            bytes.append(contentsOf: next)
+        }
+
+        return bytes
+    }
+
+    func parse() throws -> Request {
         var requestLineString = ""
         while requestLineString.isEmpty {
             requestLineString = try nextLine()
         }
-        
+
         let requestLine = try RequestLine(requestLineString)
 
 
@@ -65,14 +79,11 @@ final class HTTPParser {
             headers[CaseInsensitiveString(comps[0])] = comps[1]
         }
 
-        var buffer: Data = []
-
+        let buffer: Data
         if let contentLength = headers["content-length"]?.int {
-            for _ in 0..<contentLength {
-                if let byte = try next() {
-                    buffer.append(byte)
-                }
-            }
+            buffer = Data(try chunk(size: contentLength))
+        } else {
+            buffer = []
         }
 
         return Request(
