@@ -1,3 +1,9 @@
+extension HTTPParser {
+    enum Error: ErrorProtocol {
+        case bufferEmpty
+    }
+}
+
 final class HTTPParser {
 
     static let headerEndOfLine = "\r\n"
@@ -14,11 +20,14 @@ final class HTTPParser {
     }
 
     func next() throws -> Byte? {
-        guard let next = iterator.next() else {
-            iterator = try stream.receive(upTo: 2048).makeIterator()
+        if let next = iterator.next() {
+            return next
+        } else {
+            let data = try stream.receive(upTo: 2048)
+            guard !data.isEmpty else { throw Error.bufferEmpty }
+            iterator = data.makeIterator()
             return iterator.next()
         }
-        return next
     }
 
     func nextLine() throws -> String {
@@ -53,10 +62,11 @@ final class HTTPParser {
     }
 
     func parse() throws -> Request {
-        var requestLineString = ""
-        while requestLineString.isEmpty {
-            requestLineString = try nextLine()
-        }
+        let requestLineString = try nextLine()
+        // Tanner: This was the original, I moved it to `next() throws -> Byte?` and got faster
+//        guard !requestLineString.isEmpty else {
+//            throw Error.bufferEmpty
+//        }
 
         let requestLine = try RequestLine(requestLineString)
 

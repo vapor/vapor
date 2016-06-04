@@ -52,16 +52,17 @@ final class HTTPServer: ServerDriver {
 
     private func parse(_ stream: Stream) {
         var keepAlive = false
-        let parser = HTTPParser(stream: stream)
         repeat {
+            let parser = HTTPParser(stream: stream)
             do {
                 let request = try parser.parse()
-                keepAlive = request.supportsKeepAlive
+                keepAlive = request.keepAlive
                 let response = try responder.respond(to: request)
                 let data = serializer.serialize(response, keepAlive: keepAlive)
-                print("Sending: \(data)")
                 try stream.send(data)
             } catch let e as SocksCore.Error where e.isClosedByPeer {
+                break // jumpto close
+            } catch let e as HTTPParser.Error where e == .bufferEmpty {
                 break // jumpto close
             } catch {
                 Log.error("HTTP error: \(error)")
@@ -79,10 +80,11 @@ final class HTTPServer: ServerDriver {
 }
 
 extension Request {
-    var supportsKeepAlive: Bool {
-        guard let value = headers["Connection"] else { return false }
+    var keepAlive: Bool {
+        // HTTP 1.1 defaults to true unless explicitly passed `Connection: close`
+        guard let value = headers["Connection"] else { return true }
         // TODO: Decide on if 'contains' is better, test linux version
-        return value.trim() == "keep-alive"
+        return !(value.trim() == "close")
     }
 }
 
