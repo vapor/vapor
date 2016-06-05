@@ -55,18 +55,16 @@ final class HTTPServer: ServerDriver {
         repeat {
             let parser = HTTPParser(stream: stream)
             do {
+                //let _ = try stream.receive(upTo: 2048)
                 let request = try parser.parse()
                 keepAlive = request.keepAlive
                 let response = try responder.respond(to: request)
                 let data = serializer.serialize(response, keepAlive: keepAlive)
                 try stream.send(data)
-            } catch let e as SocksCore.Error where e.isClosedByPeer {
-                break // jumpto close
-            } catch let e as HTTPParser.Error where e == .bufferEmpty {
-                break // jumpto close
+                //try stream.send("HTTP/1.1 200 OK\r\nContent-Length: 5\r\n\r\nHello".data)
             } catch {
                 Log.error("HTTP error: \(error)")
-                break
+                break //break to close stream on all errors
             }
         } while keepAlive && !stream.closed
 
@@ -85,13 +83,5 @@ extension Request {
         guard let value = headers["Connection"] else { return true }
         // TODO: Decide on if 'contains' is better, test linux version
         return !(value.trim() == "close")
-    }
-}
-
-extension SocksCore.Error {
-    var isClosedByPeer: Bool {
-        guard case .ReadFailed = type else { return false }
-        let message = String(validatingUTF8: strerror(errno))
-        return message == "Connection reset by peer"
     }
 }
