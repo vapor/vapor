@@ -8,20 +8,10 @@ final class HTTPParser: StreamParser {
     static let carriageReturn: Byte = 13
     static let minimumValidAsciiCharacter: Byte = 13 + 1
 
-    let stream: Stream
-    var iterator: IndexingIterator<[Byte]>
+    let buffer: StreamBuffer
 
     init(stream: Stream) {
-        self.stream = stream
-        self.iterator = Data().makeIterator()
-    }
-
-    func next() throws -> Byte? {
-        guard let next = iterator.next() else {
-            iterator = try stream.receive(upTo: 2048).makeIterator()
-            return iterator.next()
-        }
-        return next
+        self.buffer = StreamBuffer(stream)
     }
 
     func nextLine() throws -> String {
@@ -35,24 +25,11 @@ final class HTTPParser: StreamParser {
             line.append(Character(byte))
         }
 
-        while let byte = try next() where byte != HTTPParser.newLine {
+        while let byte = try buffer.next() where byte != HTTPParser.newLine {
             append(byte: byte)
         }
         
         return line
-    }
-
-    func chunk(size: Int) throws -> [Byte] {
-        var bytes = [Byte].init(repeating: 0, count: size)
-        bytes += Array(iterator)
-        iterator = Data().makeIterator()
-
-        while bytes.count < size {
-            let next = try stream.receive(upTo: 2048)
-            bytes.append(contentsOf: next)
-        }
-
-        return bytes
     }
 
     func parse() throws -> Request {
@@ -80,11 +57,11 @@ final class HTTPParser: StreamParser {
             headers[CaseInsensitiveString(comps[0])] = comps[1]
         }
 
-        var buffer: Data = []
+        var body: Data = []
         if let contentLength = headers["content-length"]?.int {
             for _ in 0..<contentLength {
-                if let byte = try next() {
-                    buffer.append(byte)
+                if let byte = try buffer.next() {
+                    body.append(byte)
                 }
             }
         }
@@ -94,7 +71,7 @@ final class HTTPParser: StreamParser {
             uri: requestLine.uri,
             version: requestLine.version,
             headers: Request.Headers(headers),
-            body: .buffer(buffer)
+            body: .buffer(body)
         )
     }
 }
