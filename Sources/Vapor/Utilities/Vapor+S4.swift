@@ -9,6 +9,7 @@ public typealias AsyncStream = C7.AsyncStream
 public typealias StructuredData = C7.StructuredData
 
 public typealias URI = S4.URI
+public typealias CaseInsensitiveString = S4.CaseInsensitiveString
 
 extension S4.Headers {
     public typealias Key = C7.CaseInsensitiveString
@@ -19,6 +20,7 @@ extension Request {
     public typealias Method = S4.Method
     public typealias Body = S4.Body
     public typealias Headers = S4.Headers
+    public typealias Version = S4.Version
 }
 
 
