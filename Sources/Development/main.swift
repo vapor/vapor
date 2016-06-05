@@ -82,23 +82,46 @@ app.get("socket") { request in
         print("About to send\n\n")
         try socket.send(Data([0x81, 0x05, 0x48, 0x65, 0x6c, 0x6c, 0x6f]))
         print("Sent ---\n\n Receiving --- \n\n")
-        let received = try socket.receive(upTo: 1024)
-        let msg = try MessageParser.parseInput(Data(received))
-        print("Received message: \(msg)")
-        print("\n\nPayload: \(try msg.payload.toString())\n\n")
-        print("")
+//        let received = try socket.receive(upTo: 1024)
+//        let msg = try MessageParser.parseInput(Data(received))
+//        print("Received message: \(msg)")
+//        print("\n\nPayload: \(try msg.payload.toString())\n\n")
+//        print("")
 
 //        try socket.send(Data([0x81, 0x05, 0x48, 0x65, 0x6c, 0x6c, 0x6f]))
 //        try socket.send(Data([0x81, 0x05, 0x48, 0x65, 0x6c, 0x6c, 0x6f]))
-
+        var c = 1
+        var fragmentedMessage: [String] = []
         while true {
+            c += 1
             // need to iterate through message
 //            let next = try socket.receive(upTo: 1024)
 //            guard !next.isEmpty else { continue }
             let newMsg = try StreamMessageParser.parseInput(socket)
             let str = try newMsg.payload.toString()
+
+            var respondMsg: String = ""
+            if newMsg.isFragmentHeader {
+                fragmentedMessage.append(str)
+                continue
+            } else if newMsg.isFragmentBody {
+                fragmentedMessage.append(str)
+                continue
+            } else if newMsg.isFragmentFooter {
+                fragmentedMessage.append(str)
+                respondMsg = fragmentedMessage.joined(separator: "")
+                fragmentedMessage = []
+            } else {
+                respondMsg = "Hello there again, this has been \(c) times, and now it's \(NSDate())"
+            }
+
             print("\n\n[MSG]:\n\n\t\(str)\n\n")
-            try socket.send(Data([0x81, 0x05, 0x48, 0x65, 0x6c, 0x6c, 0x6f]))
+//            let message = "Hello there again, this has been \(c) times, and now it's \(NSDate())"
+//            let message = "ECHO: \(str)"
+//            let msgBytes = Data(message)
+            let msg = WebSocketMessage.respondToClient(respondMsg)
+            let bytes = MessageSerializer.serialize(msg)
+            try socket.send(Data(bytes))
         }
 //        let msg = Message
 //        print("Received raw: \(received)")

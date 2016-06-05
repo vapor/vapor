@@ -263,90 +263,108 @@ extension MaskingKey {
 }
 
 public struct WebSocketHeader {
-    let fin: Bool
+    public let fin: Bool
 
     /**
      Definable flags.
      
      If any flag is 'true' that is not explicitly defined, the socket MUST close: RFC
     */
-    let rsv1: Bool
-    let rsv2: Bool
-    let rsv3: Bool
+    public let rsv1: Bool
+    public let rsv2: Bool
+    public let rsv3: Bool
 
-    let isMasked: Bool
-    let opCode: OpCode
+    public let isMasked: Bool
+    public let opCode: OpCode
 
-    let maskingKey: MaskingKey
-    let payloadLength: UInt64
+    public let maskingKey: MaskingKey
+    public let payloadLength: UInt64
 }
 
-extension WebSocketHeader {
-    func serialize() -> [Byte] {
-        let zero = serializeByteZero()
-        let one = serializeByteZero()
-        return []
-    }
+extension WebSocketMessage {
+    public static func respondToClient(_ msg: String) -> WebSocketMessage {
+        let payload = Data(msg)
+        let header = WebSocketHeader(
+            fin: true,
+            rsv1: false,
+            rsv2: false,
+            rsv3: false,
+            isMasked: false,
+            opCode: .text,
+            maskingKey: .none,
+            payloadLength: UInt64(payload.count)
+        )
 
-    func serializeByteZero() -> Byte {
-        /*
-         0 1 2 3 4 5 6 7
-         f r r r o
-         i s s s p
-         n v v v
-           1 2 3 c
-                 o
-                 d
-                 e
-         */
-        var byte: Byte = 0
-        if fin {
-            byte |= .fin
-        }
-        if rsv1 {
-            byte |= .rsv1
-        }
-        if rsv2 {
-            byte |= .rsv2
-        }
-        if rsv3 {
-            byte |= .rsv3
-        }
-
-        let op = opCode.serialize() & .opCode
-        byte |= op
-
-        return byte
-    }
-
-    /*
-     0 1 2 3 4 5 6 7 0
-     +-+-------------+
-     |M| Payload len |
-     |A|     (7)     |
-     |S|             |
-     |K|             |
-     +-+-------------+
-     */
-    private func serializeMaskAndLength() -> (byte: Byte, extended: ExtendedPayloadByteLength?) {
-        var byte: Byte = 0
-        if isMasked {
-            byte |= Byte.maskKeyIncluded
-        }
-
-        // 126 / 127 (max, max-1) indicate 2 & 8 byte extensions respectively
-        if payloadLength < 126 {
-            byte |= UInt8(payloadLength)
-            return (byte, nil)
-        } else if payloadLength < UInt16.max.toUIntMax() {
-            byte |= 126 // 126 flags that 2 bytes are required
-            return (byte, .two)
-        } else {
-            byte |= 127 // 127 flags that 8 bytes are requred
-            return (byte, .eight)
-        }
+        return WebSocketMessage(header: header, payload: payload)
     }
 }
+//
+//extension WebSocketHeader {
+//    func serialize() -> [Byte] {
+//        let zero = serializeByteZero()
+//        let one = serializeByteZero()
+//        return []
+//    }
+//
+//    func serializeByteZero() -> Byte {
+//        /*
+//         0 1 2 3 4 5 6 7
+//         f r r r o
+//         i s s s p
+//         n v v v
+//           1 2 3 c
+//                 o
+//                 d
+//                 e
+//         */
+//        var byte: Byte = 0
+//        if fin {
+//            byte |= .fin
+//        }
+//        if rsv1 {
+//            byte |= .rsv1
+//        }
+//        if rsv2 {
+//            byte |= .rsv2
+//        }
+//        if rsv3 {
+//            byte |= .rsv3
+//        }
+//
+//        let op = opCode.serialize() & .opCode
+//        byte |= op
+//
+//        return byte
+//    }
+//
+//    /*
+//     0 1 2 3 4 5 6 7 0
+//     +-+-------------+
+//     |M| Payload len |
+//     |A|     (7)     |
+//     |S|             |
+//     |K|             |
+//     +-+-------------+
+//     */
+//    private func serializeMaskAndLength() -> (byte: Byte, extended: ExtendedPayloadByteLength?) {
+//        var byte: Byte = 0
+//        if isMasked {
+//            byte |= Byte.maskKeyIncluded
+//        }
+//
+//        // 126 / 127 (max, max-1) indicate 2 & 8 byte extensions respectively
+//        if payloadLength < 126 {
+//            byte |= UInt8(payloadLength)
+//            return (byte, nil)
+//        } else if payloadLength < UInt16.max.toUIntMax() {
+//            byte |= 126 // 126 flags that 2 bytes are required
+//            return (byte, .two)
+//        } else {
+//            byte |= 127 // 127 flags that 8 bytes are requred
+//            return (byte, .eight)
+//        }
+//    }
+//}
 
 extension UnsignedInteger {
     func bytes() -> [Byte] {
@@ -393,6 +411,7 @@ extension WebSocketMessage {
 //    }
 //}
 
+// Not used, consider in future
 enum Payload {
 //    case continuation
 //    case text
@@ -410,10 +429,15 @@ enum Payload {
 
 // https://tools.ietf.org/html/rfc6455#section-5.2
 public struct WebSocketMessage {
-    let header: WebSocketHeader
+    public let header: WebSocketHeader
     // TODO: OpCode defines how to parse, I think this should be an enum ie: Payload above
     // for now while testing ... Data
     public let payload: Data
+
+    public init(header: WebSocketHeader, payload: Data) {
+        self.header = header
+        self.payload = payload
+    }
 }
 
 extension WebSocketMessage {
@@ -516,7 +540,7 @@ extension WebSocketMessage {
  */
 
 extension WebSocketMessage {
-    var isFragment: Bool {
+    public var isFragment: Bool {
         /*
          An unfragmented message consists of a single frame with the FIN
          bit set (Section 5.2) and an opcode other than 0.
@@ -534,15 +558,17 @@ extension WebSocketMessage {
      with the FIN bit clear and the opcode set to 0, and terminated by
      a single frame with the FIN bit set and an opcode of 0.
      */
-    var isFragmentHeader: Bool {
+    // TODO: Rename Leading -- first ... header is used elsewhere to mean other things
+    public var isFragmentHeader: Bool {
         return !header.fin && header.opCode != .continuation
     }
 
-    var isFragmentBody: Bool {
+    public var isFragmentBody: Bool {
         return !header.fin && header.opCode == .continuation
     }
 
-    var isFragmentFooter: Bool {
+    // TODO: Rename to match rename of header, possibly trailing or last
+    public var isFragmentFooter: Bool {
         return header.fin && header.opCode == .continuation
     }
 }
@@ -625,13 +651,27 @@ extension String: ErrorProtocol {}
  |                     Payload Data continued ...                |
  +---------------------------------------------------------------+
  */
+// TODO: NOT UNIT TESTED
 public final class MessageSerializer {
     private let message: WebSocketMessage
 
-    private var bytes: [Byte] = []
-
     private init(_ message: WebSocketMessage) {
         self.message = message
+    }
+
+    private func serialize() -> [Byte] {
+        let header = serializeHeader()
+        let payload = serializePayload()
+        return header + payload
+    }
+
+    // MARK: Header
+
+    private func serializeHeader() -> [Byte] {
+        let zero = serializeByteZero()
+        let maskAndLength = serializeMaskAndLength()
+        let maskingKey = serializeMaskingKey()
+        return zero + maskAndLength + maskingKey
     }
 
     func serializeByteZero() -> [Byte] {
@@ -694,26 +734,17 @@ public final class MessageSerializer {
         return message.header.maskingKey.serialize()
     }
 
-    private func serializeHeader() -> [Byte] {
-        let zero = serializeByteZero()
-        let maskAndLength = serializeMaskAndLength()
-        let maskingKey = serializeMaskingKey()
-        fatalError()
-    }
+    // MARK: Payload
 
     private func serializePayload() -> [Byte] {
-        fatalError()
-//        switch message.header.maskingKey {
-//        case .none:
-//            return message.payload
-//        case let .key(zero: zero, one: one, two: two, three: three):
-//
-//        }
+        return message.header.maskingKey.cypher(message.payload)
     }
+}
 
-    private func serialize() -> [Byte] {
-        let header = serializeHeader()
-        fatalError()
+extension MessageSerializer {
+    public static func serialize(_ message: WebSocketMessage) -> [Byte] {
+        let serializer = MessageSerializer(message)
+        return serializer.serialize()
     }
 }
 
