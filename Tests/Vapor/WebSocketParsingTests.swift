@@ -268,6 +268,35 @@ class WebSocketParsingTests: XCTestCase {
     }
 }
 
+class UnsignedIntegerTests: XCTestCase {
+    func testUIntChunking8() throws {
+        let value: UInt8 = 0x1A
+        let bytes = value.bytes()
+        XCTAssert(bytes == [0x1A])
+        XCTAssert(try UInt8(bytes) == value)
+    }
+
+    func testUIntChunking16() throws {
+        let value: UInt16 = 0x1A_2B
+        let bytes = value.bytes()
+        XCTAssert(bytes == [0x1A, 0x2B])
+        XCTAssert(try UInt16(bytes) == value)
+    }
+    func testUIntChunking32() throws {
+        let value: UInt32 = 0x1A_2B_3C_4E
+        let bytes = value.bytes()
+        XCTAssert(bytes == [0x1A, 0x2B, 0x3C, 0x4E])
+        XCTAssert(try UInt32(bytes) == value)
+    }
+
+    func testUIntChunking64() throws {
+        let value: UInt64 = 0x1A_2B_3C_4E_5F_6A_7B_8C
+        let bytes = value.bytes()
+        XCTAssert(bytes == [0x1A, 0x2B, 0x3C, 0x4E, 0x5F, 0x6A, 0x7B, 0x8C])
+        XCTAssert(try UInt64(bytes) == value)
+    }
+}
+
 extension UInt8 {
     static func random() -> UInt8 {
         let max = UInt32(UInt8.max)

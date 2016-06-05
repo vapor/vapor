@@ -85,18 +85,18 @@ public enum OpCode {
     // 4 bytes
     init(_ i: Byte) throws {
         switch i {
-        case 0:
+        case 0x00:
             self = .continuation
-        case 1:
+        case 0x01:
             self = .text
-        case 2:
+        case 0x02:
             self = .binary
-        case 3...7: // reserved non-control frame
+        case 0x03...0x07: // reserved non-control frame
             let ncf = try NonControlFrameExtension(i)
             self = .nonControlExtension(ncf)
-        case 8:
+        case 0x08:
             self = .connectionClose
-        case 9:
+        case 0x09:
             self = .ping
         case 0xA:
             self = .pong
@@ -105,6 +105,32 @@ public enum OpCode {
             self = .controlExtension(cf)
         default:
             throw Error.invalid
+        }
+    }
+}
+
+extension OpCode {
+    // 4 bits
+    // TODO: Is it worth building UInt4?
+    //
+    func serialize() -> Byte {
+        switch self {
+        case .continuation:
+            return 0x00
+        case .text:
+            return 0x01
+        case .binary:
+            return 0x02
+        case let .nonControlExtension(nce): // 3...7
+            return nce.rawValue
+        case .connectionClose:
+            return 0x08
+        case .ping:
+            return 0x09
+        case .pong:
+            return 0x0A
+        case let .controlExtension(ce):
+            return ce.rawValue
         }
     }
 }
@@ -164,7 +190,7 @@ extension WebSocketMessage {
 
 extension OpCode {
     public enum NonControlFrameExtension: UInt8 {
-        case three, four, five, six, seven
+        case three = 3, four, five, six, seven
         init<I: UnsignedInteger>(_ i: I) throws {
             switch i {
             case 3:
@@ -182,8 +208,8 @@ extension OpCode {
             }
         }
     }
-    public enum ControlFrameExtension {
-        case b, c, d, e, f
+    public enum ControlFrameExtension: UInt8 {
+        case b = 0x0B, c, d, e, f
         init<I: UnsignedInteger>(_ i: I) throws {
             switch i {
             case 0xB:
@@ -244,6 +270,94 @@ public struct WebSocketHeader {
     let payloadLength: UInt64
 }
 
+extension WebSocketHeader {
+    func serialize() -> [Byte] {
+        return []
+    }
+
+    func serializeByteZero() -> Byte {
+        /*
+         0 1 2 3 4 5 6 7
+         f r r r o
+         i s s s p
+         n v v v
+           1 2 3 c
+                 o
+                 d
+                 e
+         */
+        var byte: Byte = 0
+        if fin {
+            byte |= .fin
+        }
+        if rsv1 {
+            byte |= .rsv1
+        }
+        if rsv2 {
+            byte |= .rsv2
+        }
+        if rsv3 {
+            byte |= .rsv3
+        }
+
+        let op = opCode.serialize() & .opCode
+        byte |= op
+
+        return byte
+    }
+
+    /*
+     0 1 2 3 4 5 6 7 0
+     +-+-------------+
+     |M| Payload len |
+     |A|     (7)     |
+     |S|             |
+     |K|             |
+     +-+-------------+
+     */
+    func serializeMaskAndLength() -> [Byte] {
+        var bytes: [Byte] = []
+
+        var leadingByte: Byte = 0
+        if isMasked {
+            leadingByte |= Byte.maskKeyIncluded
+        }
+
+        // 126 / 127 (max, max-1) indicate 2 & 8 byte extensions respectively
+        if payloadLength < 126 {
+            leadingByte |= UInt8(payloadLength)
+            return [leadingByte]
+        } else if payloadLength < UInt16.max.toUIntMax() {
+            leadingByte |= 126 // 126 flags that 2 bytes are required
+        } else {
+            leadingByte |= 127 // 127 flags that 8 bytes are requred
+        }
+
+        return bytes
+    }
+}
+
+extension UnsignedInteger {
+    func bytes() -> [Byte] {
+        let byteMask: Self = 0b1111_1111
+        let size = sizeof(Self)
+        var copy = self
+        var bytes: [Byte] = []
+        (1...size).forEach { _ in
+            let next = copy & byteMask
+            let byte = Byte(next.toUIntMax())
+            bytes.insert(byte, at: 0)
+            copy.shiftRight(8)
+        }
+        return bytes
+    }
+
+    mutating func shiftRight(_ places: Int) {
+        (1...places).forEach { _ in
+            self /= 2
+        }
+    }
+}
 
 extension WebSocketMessage {
     public enum Error: ErrorProtocol {
@@ -464,6 +578,13 @@ extension String: ErrorProtocol {}
 //    return str
 //}
 
+public final class MessageSerializer {
+    private let message: WebSocketMessage
+    private init(_ message: WebSocketMessage) {
+        self.message = message
+    }
+}
+
 public final class MessageParser {
     private var iterator: AnyIterator<Byte>
 
@@ -661,6 +782,7 @@ public final class StreamMessageParser {
     private enum ExtendedPayloadByteLength: UInt8 {
         case two = 2
         case eight = 8
+
         init?(_ byte: Byte) {
             // Payload extends if first length is 126 or 127. (max and max-1 @ 7 bits)
             switch byte {
@@ -670,6 +792,16 @@ public final class StreamMessageParser {
                 self = .eight
             default:
                 return nil
+            }
+        }
+
+        init?(length: UInt64) {
+            if length < 126 {
+                return nil
+            } else if length < UInt16.max.toUIntMax() {
+                self = .two
+            } else {
+                self = .eight
             }
         }
     }
