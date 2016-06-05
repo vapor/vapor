@@ -84,9 +84,13 @@ app.get("socket") { request in
         try socket.send(Data([0x81, 0x05, 0x48, 0x65, 0x6c, 0x6c, 0x6f]))
         print("Sent ---\n\n Receiving --- \n\n")
         let received = try socket.receive(upTo: 1024)
+        let msg = try MessageParser.parseInput(Data(received))
+        print("Received message: \(msg)")
+        print("\n\nPayload: \(try msg.payload.toString())\n\n")
+        print("")
 //        let msg = Message
-        print("Received raw: \(received)")
-        print("received: \(try received.toString())")
+//        print("Received raw: \(received)")
+//        print("received: \(try received.toString())")
         return
     }
 

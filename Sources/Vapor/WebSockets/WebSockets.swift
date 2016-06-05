@@ -456,7 +456,7 @@ extension UInt8 {
 
 extension String: ErrorProtocol {}
 
-internal final class MessageParser {
+public final class MessageParser {
     private var iterator: AnyIterator<Byte>
 
     private init<S: Sequence where S.Iterator.Element == Byte>(_ data: S) {
@@ -566,7 +566,7 @@ internal final class MessageParser {
 }
 
 extension MessageParser {
-    internal static func parseInput<S: Sequence where S.Iterator.Element == Byte>(_ data: S) throws -> WebSocketMessage {
+    public static func parseInput<S: Sequence where S.Iterator.Element == Byte>(_ data: S) throws -> WebSocketMessage {
         let parser = MessageParser(data)
         let (fin, rsv1, rsv2, rsv3, opCode) = try parser.extractByteZero()
         let (isMasked, payloadLengthInfo) = try parser.extractByteOne()
