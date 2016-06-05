@@ -614,6 +614,170 @@ extension MessageParser {
     }
 }
 
+
+public final class StreamMessageParser {
+//    private var iterator: AnyIterator<Byte>
+    private let stream: Stream
+    private init(_ stream: Stream) {
+        self.stream = stream
+//        print("next: \(next)")
+//        var sequenceIterator = data.makeIterator()
+//        iterator = AnyIterator { sequenceIterator.next() }
+    }
+
+    // TODO: Parsing single bytes here
+    // Use chunking the way we did on other
+    // part
+    //
+    // This section is not call / response, so chunking needs to be more accurate
+    private func next() throws -> Byte? {
+        return try stream.receive(upTo: 1).bytes.first
+    }
+
+    // MARK: Extractors
+
+    private func extractByteZero() throws -> (fin: Bool, rsv1: Bool, rsv2: Bool, rsv3: Bool, opCode: OpCode) {
+        guard let byteZero = try next() else {
+            throw "479: WebSockets.Swift: MessageParser"
+        }
+        let fin = byteZero.containsMask(.fin)
+        let rsv1 = byteZero.containsMask(.rsv1)
+        let rsv2 = byteZero.containsMask(.rsv2)
+        let rsv3 = byteZero.containsMask(.rsv3)
+
+        let opCode = try OpCode(byteZero & .opCode)
+        return (fin, rsv1, rsv2, rsv3, opCode)
+    }
+
+    private func extractByteOne() throws -> (maskKeyIncluded: Bool, payloadLength: Byte) {
+        guard let byteOne = try next() else {
+            throw "493: WebSockets.Swift: MessageParser"
+        }
+        let maskKeyIncluded = byteOne.containsMask(.maskKeyIncluded)
+        let payloadLength = byteOne & .payloadLength
+        return (maskKeyIncluded, payloadLength)
+    }
+
+    private enum ExtendedPayloadByteLength: UInt8 {
+        case two = 2
+        case eight = 8
+        init?(_ byte: Byte) {
+            // Payload extends if first length is 126 or 127. (max and max-1 @ 7 bits)
+            switch byte {
+            case 126:
+                self = .two
+            case 127:
+                self = .eight
+            default:
+                return nil
+            }
+        }
+    }
+
+    /**
+     Returns UInt64 to encompass highest possible length. Length may be UInt16
+     */
+    private func extractExtendedPayloadLength(_ length: ExtendedPayloadByteLength) throws -> UInt64 {
+        var bytes: [Byte] = []
+        for _ in 1...length.rawValue {
+            guard let next = try next() else {
+                throw "522: WebSockets.Swift: MessageParser"
+            }
+            bytes.append(next)
+        }
+        return try UInt64.init(bytes)
+    }
+
+    private func extractMaskingKey() throws -> MaskingKey {
+        guard
+            let zero = try next(),
+            let one = try next(),
+            let two = try next(),
+            let three = try next()
+            else {
+                throw "536: WebSockets.Swift: MessageParser"
+        }
+
+        return .key(zero: zero, one: one, two: two, three: three)
+    }
+
+    private func extractPayload(key: MaskingKey, length: UInt64) throws -> [Byte] {
+        var count: UInt64 = 0
+        var bytes: [UInt8] = []
+
+        switch key {
+        case .none:
+            while count < length, let next = try next() {
+                bytes.append(next)
+                count += 1
+            }
+        case let .key(zero: zero, one: one, two: two, three: three):
+            /*
+             Octet i of the transformed data ("transformed-octet-i") is the XOR of
+             octet i of the original data ("original-octet-i") with octet at index
+             i modulo 4 of the masking key ("masking-key-octet-j"):
+
+             j                   = i MOD 4
+             transformed-octet-i = original-octet-i XOR masking-key-octet-j
+             */
+
+            // needs to be UInt64 because that's max payload length and we need the space
+//            var count = UInt64(0)
+            let keys = [zero, one, two, three]
+            while count < length, let original = try next() {
+                let key = keys[Int(count % 4)]
+                let transformed = original ^ key
+                bytes.append(transformed)
+                count += 1
+            }
+
+        }
+
+        return bytes
+    }
+}
+
+extension StreamMessageParser {
+    public static func parseInput(_ stream: Stream) throws -> WebSocketMessage {
+        let parser = StreamMessageParser(stream)
+        let (fin, rsv1, rsv2, rsv3, opCode) = try parser.extractByteZero()
+        let (isMasked, payloadLengthInfo) = try parser.extractByteOne()
+
+        let payloadLength: UInt64
+        if let extended = ExtendedPayloadByteLength(payloadLengthInfo) {
+            payloadLength = try parser.extractExtendedPayloadLength(extended)
+        } else {
+            payloadLength = payloadLengthInfo.toUIntMax()
+        }
+
+        let maskingKey: MaskingKey
+        if isMasked {
+            maskingKey = try parser.extractMaskingKey()
+        } else {
+            maskingKey = .none
+        }
+
+        let payload = try parser.extractPayload(key: maskingKey, length: payloadLength)
+        guard payload.count == Int(payloadLength) else {
+            throw "762: WebSockets.Swift: MessageParser"
+        }
+
+        let header = WebSocketHeader(
+            fin: fin,
+            rsv1: rsv1,
+            rsv2: rsv2,
+            rsv3: rsv3,
+            isMasked: isMasked,
+            opCode: opCode,
+            maskingKey: maskingKey,
+            payloadLength: payloadLength
+        )
+        
+        
+        return WebSocketMessage(header: header, payload: Data(payload))
+    }
+}
+
 extension UnsignedInteger {
     /*
      [0b1111_1011, 0b0000_1111]
