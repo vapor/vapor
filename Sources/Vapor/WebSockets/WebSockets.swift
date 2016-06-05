@@ -841,6 +841,17 @@ extension MaskingKey {
             }
         }
     }
+
+    func cypher(_ input: Byte, idx: Int) -> Byte {
+        switch self {
+        case .none:
+            return input
+        case let .key(zero: zero, one: one, two: two, three: three):
+            let keys = [zero, one, two, three]
+            let key = keys[Int(idx % 4)]
+            return input ^ key
+        }
+    }
 }
 
 extension MessageParser {
@@ -886,28 +897,15 @@ extension MessageParser {
 
 
 public final class StreamMessageParser {
-//    private var iterator: AnyIterator<Byte>
-    private let stream: Stream
+    private let buffer: StreamBuffer
     private init(_ stream: Stream) {
-        self.stream = stream
-//        print("next: \(next)")
-//        var sequenceIterator = data.makeIterator()
-//        iterator = AnyIterator { sequenceIterator.next() }
-    }
-
-    // TODO: Parsing single bytes here
-    // Use chunking the way we did on other
-    // part
-    //
-    // This section is not call / response, so chunking needs to be more accurate
-    private func next() throws -> Byte? {
-        return try stream.receive(upTo: 1).bytes.first
+        self.buffer = StreamBuffer(stream, buffer: 1024)
     }
 
     // MARK: Extractors
 
     private func extractByteZero() throws -> (fin: Bool, rsv1: Bool, rsv2: Bool, rsv3: Bool, opCode: OpCode) {
-        guard let byteZero = try next() else {
+        guard let byteZero = try buffer.next() else {
             throw "479: WebSockets.Swift: MessageParser"
         }
         let fin = byteZero.containsMask(.fin)
@@ -920,7 +918,7 @@ public final class StreamMessageParser {
     }
 
     private func extractByteOne() throws -> (maskKeyIncluded: Bool, payloadLength: Byte) {
-        guard let byteOne = try next() else {
+        guard let byteOne = try buffer.next() else {
             throw "493: WebSockets.Swift: MessageParser"
         }
         let maskKeyIncluded = byteOne.containsMask(.maskKeyIncluded)
@@ -961,7 +959,7 @@ public final class StreamMessageParser {
     private func extractExtendedPayloadLength(_ length: ExtendedPayloadByteLength) throws -> UInt64 {
         var bytes: [Byte] = []
         for _ in 1...length.rawValue {
-            guard let next = try next() else {
+            guard let next = try buffer.next() else {
                 throw "522: WebSockets.Swift: MessageParser"
             }
             bytes.append(next)
@@ -971,10 +969,10 @@ public final class StreamMessageParser {
 
     private func extractMaskingKey() throws -> MaskingKey {
         guard
-            let zero = try next(),
-            let one = try next(),
-            let two = try next(),
-            let three = try next()
+            let zero = try buffer.next(),
+            let one = try buffer.next(),
+            let two = try buffer.next(),
+            let three = try buffer.next()
             else {
                 throw "536: WebSockets.Swift: MessageParser"
         }
@@ -986,35 +984,12 @@ public final class StreamMessageParser {
         var count: UInt64 = 0
         var bytes: [UInt8] = []
 
-        switch key {
-        case .none:
-            while count < length, let next = try next() {
-                bytes.append(next)
-                count += 1
-            }
-        case let .key(zero: zero, one: one, two: two, three: three):
-            /*
-             Octet i of the transformed data ("transformed-octet-i") is the XOR of
-             octet i of the original data ("original-octet-i") with octet at index
-             i modulo 4 of the masking key ("masking-key-octet-j"):
-
-             j                   = i MOD 4
-             transformed-octet-i = original-octet-i XOR masking-key-octet-j
-             */
-
-            // needs to be UInt64 because that's max payload length and we need the space
-//            var count = UInt64(0)
-            let keys = [zero, one, two, three]
-            while count < length, let original = try next() {
-                let key = keys[Int(count % 4)]
-                let transformed = original ^ key
-                bytes.append(transformed)
-                count += 1
-            }
-
+        while count < length, let next = try buffer.next() {
+            bytes.append(next)
+            count += 1
         }
-
-        return bytes
+        
+        return key.cypher(bytes)
     }
 }
 
