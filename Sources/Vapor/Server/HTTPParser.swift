@@ -1,3 +1,9 @@
+extension HTTPParser {
+    enum Error: ErrorProtocol {
+        case bufferEmpty
+    }
+}
+
 final class HTTPParser {
 
     static let headerEndOfLine = "\r\n"
@@ -53,9 +59,9 @@ final class HTTPParser {
     }
 
     func parse() throws -> Request {
-        var requestLineString = ""
-        while requestLineString.isEmpty {
-            requestLineString = try nextLine()
+        let requestLineString = try nextLine()
+        guard !requestLineString.isEmpty else {
+            throw Error.bufferEmpty
         }
 
         let requestLine = try RequestLine(requestLineString)
