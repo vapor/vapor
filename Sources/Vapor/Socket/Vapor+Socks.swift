@@ -24,7 +24,7 @@ extension Socks.TCPClient: Stream {
     }
 }
 
-extension SynchronousTCPServer: StreamServer {
+extension SynchronousTCPServer: StreamDriver {
     public static func make(host: String, port: Int) throws -> Self {
         let port = Port.portNumber(UInt16(port))
         let address = InternetAddress(hostname: host, port: port)

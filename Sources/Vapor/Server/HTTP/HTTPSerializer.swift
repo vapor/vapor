@@ -5,6 +5,16 @@ final class HTTPSerializer: StreamSerializer {
     }
 
     func serialize(_ response: Response) throws {
+        var response = response
+
+        var cookies: [String] = []
+        for cookie in response.cookies {
+            cookies.append("\(cookie.name)=\(cookie.value)")
+        }
+        if cookies.count >= 1 {
+            response.headers["Set-Cookie"] = cookies.joined(separator: ";")
+        }
+
         var serialized: Data = []
 
         let version = response.version
@@ -16,16 +26,17 @@ final class HTTPSerializer: StreamSerializer {
             return a.key.string < b.key.string
         }
 
+
+
         headers.forEach { (key, value) in
             serialized.bytes += "\(key.string): \(value)\r\n".data.bytes
         }
 
         serialized.bytes += "\r\n".data.bytes
 
-        //TODO: Support other body types
-        if case .buffer(let data) = response.body {
-            serialized.bytes += data
-        }
+        var body = response.body
+        let data = try body.becomeBuffer()
+        serialized.bytes += data
 
         try stream.send(serialized)
     }

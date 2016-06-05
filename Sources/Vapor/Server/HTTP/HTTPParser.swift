@@ -80,11 +80,13 @@ final class HTTPParser: StreamParser {
             headers[CaseInsensitiveString(comps[0])] = comps[1]
         }
 
-        let buffer: Data
+        var buffer: Data = []
         if let contentLength = headers["content-length"]?.int {
-            buffer = Data(try chunk(size: contentLength))
-        } else {
-            buffer = []
+            for _ in 0..<contentLength {
+                if let byte = try next() {
+                    buffer.append(byte)
+                }
+            }
         }
 
         return Request(

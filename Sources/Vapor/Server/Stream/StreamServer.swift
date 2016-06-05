@@ -14,8 +14,8 @@ extension Character {
     }
 }
 
-final class HTTPServer<
-    Server: StreamServer,
+final class StreamServer<
+    Server: StreamDriver,
     Parser: StreamParser,
     Serializer: StreamSerializer
 >: ServerDriver {
