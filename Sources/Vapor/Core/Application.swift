@@ -1,6 +1,7 @@
 import libc
 import MediaType
 import Foundation
+import Socks
 
 public let VERSION = "0.10"
 
@@ -153,7 +154,11 @@ public class Application {
         ]
 
         self.router = routerProvided ?? BranchRouter()
-        self.server = serverProvided ?? HTTPServer.self
+        self.server = serverProvided ?? HTTPServer<
+            SynchronousTCPServer,
+            HTTPParser,
+            HTTPSerializer
+        >.self
 
         routes = []
 

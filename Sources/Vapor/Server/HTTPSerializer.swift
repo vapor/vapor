@@ -1,19 +1,16 @@
-final class HTTPSerializer {
-    init() {
-
+final class HTTPSerializer: StreamSerializer {
+    let stream: Stream
+    init(stream: Stream) {
+        self.stream = stream
     }
 
-    func serialize(_ response: Response, keepAlive: Bool) -> Data {
+    func serialize(_ response: Response) throws {
         var serialized: Data = []
 
         let version = response.version
         let status = response.status
 
         serialized.bytes += "HTTP/\(version.major).\(version.minor) \(status.statusCode) \(status.reasonPhrase)\r\n".data.bytes
-
-        if keepAlive {
-            serialized.bytes += "Connection: keep-alive\r\n".data.bytes
-        }
 
         let headers = response.headers.sorted { a, b in
             return a.key.string < b.key.string
@@ -29,7 +26,7 @@ final class HTTPSerializer {
         if case .buffer(let data) = response.body {
             serialized.bytes += data
         }
-        
-        return serialized
+
+        try stream.send(serialized)
     }
 }

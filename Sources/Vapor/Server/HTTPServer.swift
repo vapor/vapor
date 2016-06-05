@@ -4,8 +4,6 @@
     import Darwin
 #endif
 
-import Socks
-import SocksCore
 import Strand
 
 // MARK: Byte => Character
@@ -16,27 +14,24 @@ extension Character {
     }
 }
 
-final class HTTPServer: ServerDriver {
-    var stream: SynchronousTCPServer
+final class HTTPServer<
+    Server: StreamServer,
+    Parser: StreamParser,
+    Serializer: StreamSerializer
+>: ServerDriver {
+    var server: Server
     var responder: Responder
-    var parser: HTTPParser.Type
-    var serializer: HTTPSerializer
 
     required init(host: String, port: Int, responder: Responder) throws {
-        let port = Port.portNumber(UInt16(port))
-        let address = InternetAddress(hostname: host, port: port)
-
-        stream = try SynchronousTCPServer(address: address)
-        parser = HTTPParser.self
-        serializer = HTTPSerializer()
+        server = try Server.make(host: host, port: port)
         self.responder = responder
     }
 
     func start() throws {
         do {
-            try stream.startWithHandler(handler: handle)
+            try server.start(handler: handle)
         } catch {
-            Log.error("Failed to accept: \(stream) error: \(error)")
+            Log.error("Failed to start: \(error)")
         }
     }
 
@@ -53,14 +48,14 @@ final class HTTPServer: ServerDriver {
     private func parse(_ stream: Stream) {
         var keepAlive = false
         repeat {
-            let parser = HTTPParser(stream: stream)
+            let parser = Parser(stream: stream)
+            let serializer = Serializer(stream: stream)
             do {
                 //let _ = try stream.receive(upTo: 2048)
                 let request = try parser.parse()
                 keepAlive = request.keepAlive
                 let response = try responder.respond(to: request)
-                let data = serializer.serialize(response, keepAlive: keepAlive)
-                try stream.send(data)
+                try serializer.serialize(response)
                 //try stream.send("HTTP/1.1 200 OK\r\nContent-Length: 5\r\n\r\nHello".data)
             } catch {
                 Log.error("HTTP error: \(error)")

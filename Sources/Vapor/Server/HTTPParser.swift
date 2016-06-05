@@ -1,17 +1,14 @@
-extension HTTPParser {
+final class HTTPParser: StreamParser {
     enum Error: ErrorProtocol {
-        case bufferEmpty
+        case streamEmpty
     }
-}
-
-final class HTTPParser {
 
     static let headerEndOfLine = "\r\n"
     static let newLine: Byte = 10
     static let carriageReturn: Byte = 13
     static let minimumValidAsciiCharacter: Byte = 13 + 1
 
-    var stream: Stream
+    let stream: Stream
     var iterator: IndexingIterator<[Byte]>
 
     init(stream: Stream) {
@@ -61,7 +58,7 @@ final class HTTPParser {
     func parse() throws -> Request {
         let requestLineString = try nextLine()
         guard !requestLineString.isEmpty else {
-            throw Error.bufferEmpty
+            throw Error.streamEmpty
         }
 
         let requestLine = try RequestLine(requestLineString)

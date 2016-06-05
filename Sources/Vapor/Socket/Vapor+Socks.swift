@@ -1,4 +1,5 @@
 import Socks
+import SocksCore
 
 extension Socks.TCPClient: Stream {
     public enum Error: ErrorProtocol {
@@ -20,5 +21,18 @@ extension Socks.TCPClient: Stream {
     public func receive(upTo byteCount: Int, timingOut deadline: Double) throws -> Data {
         let bytes = try receive(maxBytes: byteCount)
         return Data(bytes)
+    }
+}
+
+extension SynchronousTCPServer: StreamServer {
+    public static func make(host: String, port: Int) throws -> Self {
+        let port = Port.portNumber(UInt16(port))
+        let address = InternetAddress(hostname: host, port: port)
+
+        return try .init(address: address)
+    }
+
+    public func start(handler: (Stream) throws -> ()) throws {
+        try self.startWithHandler(handler: handler)
     }
 }
