@@ -814,6 +814,15 @@ public final class MessageParser {
     }
 }
 
+protocol OutputStream {
+    associatedtype Element
+    mutating func next() throws -> Element?
+}
+
+extension IndexingIterator: OutputStream {}
+extension AnyIterator: OutputStream {}
+extension StreamBuffer: OutputStream {}
+
 extension MaskingKey {
     /*
      Octet i of the transformed data ("transformed-octet-i") is the XOR of
@@ -826,6 +835,34 @@ extension MaskingKey {
      
      Cypher is same for masking and unmasking
      */
+    func cypher<O: OutputStream where O.Element == Byte>(_ input: inout O, limit: UInt64?) throws -> [Byte] {
+        var count = UInt64(0)
+        var bytes: [Byte] = []
+        let max = limit ?? UInt64.max
+        while count < max, let next = try input.next() {
+            bytes.append(next)
+        }
+
+        count = 0
+        switch self {
+        case .none:
+            return bytes
+        case let .key(zero: zero, one: one, two: two, three: three):
+            let keys = [zero, one, two, three]
+            return bytes.map { original in
+                let key = keys[Int(count % 4)]
+                count += 1
+                return original ^ key
+            }
+        }
+
+//        let max = limit ?? UInt64.max
+//        while count < max, let original = try input.next() {
+//            let cyphered = cypher(original)
+//            bytes.append
+//        }
+    }
+
     func cypher<S: Sequence where S.Iterator.Element == Byte>(_ input: S) -> [Byte] {
         switch self {
         case .none:
@@ -988,7 +1025,7 @@ public final class StreamMessageParser {
             bytes.append(next)
             count += 1
         }
-        
+
         return key.cypher(bytes)
     }
 }
