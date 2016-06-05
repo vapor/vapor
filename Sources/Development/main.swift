@@ -76,7 +76,6 @@ extension String {
 //print("HASHED: \(hashed)")
 //print("")
 
-
 app.get("socket") { request in
     print("Get socket: \(request)")
     func socketHandler(_ socket: Stream) throws {
@@ -89,15 +88,17 @@ app.get("socket") { request in
         print("\n\nPayload: \(try msg.payload.toString())\n\n")
         print("")
 
-        try socket.send(Data([0x81, 0x05, 0x48, 0x65, 0x6c, 0x6c, 0x6f]))
-        try socket.send(Data([0x81, 0x05, 0x48, 0x65, 0x6c, 0x6c, 0x6f]))
+//        try socket.send(Data([0x81, 0x05, 0x48, 0x65, 0x6c, 0x6c, 0x6f]))
+//        try socket.send(Data([0x81, 0x05, 0x48, 0x65, 0x6c, 0x6c, 0x6f]))
 
         while true {
+            // need to iterate through message
             let next = try socket.receive(upTo: 1024)
             guard !next.isEmpty else { continue }
             let newMsg = try MessageParser.parseInput(Data(next))
             let str = try newMsg.payload.toString()
             print("\n\n[MSG]:\n\n\t\(str)\n\n")
+            try socket.send(Data([0x81, 0x05, 0x48, 0x65, 0x6c, 0x6c, 0x6f]))
         }
 //        let msg = Message
 //        print("Received raw: \(received)")
