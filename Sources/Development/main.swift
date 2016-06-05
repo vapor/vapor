@@ -7,7 +7,8 @@ var workDir: String {
     return path
 }
 
-let app = Application(workDir: workDir)
+let config = Config(seed: JSON.object(["port": "8000"]), workingDirectory: workDir)
+let app = Application(workDir: workDir, config: config)
 
 //MARK: Basic
 
@@ -16,7 +17,97 @@ app.get("/") { request in
 }
 
 app.get("test") { request in
+    print("Request: \(request)")
     return "123"
+}
+
+// Create NSData object
+//NSData *nsdata = [@"iOS Developer Tips encoded in Base64"
+//    dataUsingEncoding:NSUTF8StringEncoding];
+//
+//// Get NSString from NSData object in Base64
+//NSString *base64Encoded = [nsdata base64EncodedStringWithOptions:0];
+//
+//// Print the Base64 encoded string
+//NSLog(@"Encoded: %@", base64Encoded);
+//
+//// Let's go the other way...
+//
+//// NSData from the Base64 encoded str
+//NSData *nsdataFromBase64String = [[NSData alloc]
+//    initWithBase64EncodedString:base64Encoded options:0];
+//
+//// Decoded NSString from the NSData
+//NSString *base64Decoded = [[NSString alloc]
+//    initWithData:nsdataFromBase64String encoding:NSUTF8StringEncoding];
+//NSLog(@"Decoded: %@", base64Decoded);
+import Foundation
+import SHA1
+
+extension String {
+    // TODO: Fewer foundation deps
+    func makeWebSocketSecKeyExchange() -> String {
+        // UUID defined here: https://tools.ietf.org/html/rfc6455#section-1.3
+        let HashKey = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
+        let combined = self.trim() + HashKey
+        let shaBytes = SHA1.calculate(combined)
+        let endMarker = NSData(bytes: shaBytes, length: shaBytes.count)
+        let hashed = endMarker.base64EncodedString(.encoding64CharacterLineLength)
+        return hashed
+    }
+    func toBase64() -> String {
+        let d = data(using: NSUTF8StringEncoding)
+        return d!.base64EncodedString(.encoding64CharacterLineLength)
+//        return d!.base64EncodedData(NSDataBase64EncodingOptions.encoding64CharacterLineLength)
+    }
+
+    static func fromBase64(_ string: String) -> String {
+        let d = NSData.init(base64Encoded: string, options: .ignoreUnknownCharacters)
+        return String.init(data: d!, encoding: NSUTF8StringEncoding)!
+    }
+}
+
+// TODO: Do test from RFC
+//let HashKey = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
+//let combined = "dGhlIHNhbXBsZSBub25jZQ==" + HashKey
+//let shaBytes = SHA1.calculate(combined)
+//var endMarker = NSData(bytes: shaBytes, length: shaBytes.count)
+//let hashed = endMarker.base64EncodedString(.encoding64CharacterLineLength)
+//print("HASHED: \(hashed)")
+//print("")
+
+
+app.get("socket") { request in
+    print("Get socket: \(request)")
+    func socketHandler(_ socket: Stream) throws {
+        print("About to send\n\n")
+        try socket.send(Data("hello"))
+        print("Sent ---\n\n Receiving --- \n\n")
+        let received = try socket.receive(upTo: 1024)
+        print("received: \(try received.toString())")
+        return
+    }
+
+    let secReturn = request.headers["Sec-WebSocket-Key"]!.makeWebSocketSecKeyExchange()
+//    let combined = inputKey + HashKey
+//    let hashed = combined.toBase64()
+//    HTTP/1.1 101 Switching Protocols
+//    Upgrade: websocket
+//    Connection: Upgrade
+//    Sec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=
+//    Sec-WebSocket-Protocol: chat
+    var headers: Headers = [:]
+    headers["Connection"] = "Upgrade"
+    headers["Upgrade"] = "websocket"
+    // NOTE: Note that request has -Key, return has -Accept
+    headers["Sec-WebSocket-Accept"] = secReturn
+//    headers["Sec-WebSocket-Version"] = "13"
+    // TODO: Read up and clarify this
+//    headers["Sec-WebSocket-Protocol"] = request.headers["Sec-WebSocket-Protocol"]
+    var response = Response.init(status: .switchingProtocols, headers: headers)//, headers: Headers, cookies: Cookies, body: Stream)
+    response.webSocketConnection = socketHandler
+    print("\n\nReturning: \(response)\n\n")
+    return response
 }
 
 //MARK: Resource

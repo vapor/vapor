@@ -52,6 +52,9 @@ final class StreamServer<
                 keepAlive = request.keepAlive
                 let response = try responder.respond(to: request)
                 try serializer.serialize(response)
+
+                // Optional chaining only runs on connection requests
+                try response.webSocketConnection?(stream)
             } catch let e as SocksCore.Error where e.isClosedByPeer {
                 break // jumpto close
             } catch let e as HTTPParser.Error where e == .streamEmpty {
@@ -76,6 +79,19 @@ extension SocksCore.Error {
         guard case .ReadFailed = type else { return false }
         let message = String(validatingUTF8: strerror(errno))
         return message == "Connection reset by peer"
+    }
+}
+
+extension Response {
+    public typealias WebSocketConnection = ((Stream) throws -> Void)
+
+    public var webSocketConnection: WebSocketConnection? {
+        get {
+            return storage["vapor:webSocketConnection"] as? WebSocketConnection
+        }
+        set {
+            storage["vapor:webSocketConnection"] = newValue
+        }
     }
 }
 
