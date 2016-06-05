@@ -21,14 +21,22 @@ extension HTTPParser {
         }
 
         var version: Request.Version {
-            let comps = versionString.components(separatedBy: ".")
+            // ["HTTP", "1.1"]
+            let parts = versionString.components(separatedBy: "/")
 
-            let major = Int(comps[0]) ?? 0
+            var major = 0
             var minor = 0
 
-            if comps.count == 2{
-                if let m = Int(comps[1]) {
-                    minor = m
+            if parts.count == 2 {
+                // ["1", "1"]
+                let comps = parts[1].components(separatedBy: ".")
+
+                major = Int(comps[0]) ?? 0
+
+                if comps.count == 2{
+                    if let m = Int(comps[1]) {
+                        minor = m
+                    }
                 }
             }
 
