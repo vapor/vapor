@@ -251,6 +251,17 @@ public enum MaskingKey {
     case key(zero: UInt8, one: UInt8, two: UInt8, three: UInt8)
 }
 
+extension MaskingKey {
+    func serialize() -> [Byte] {
+        switch self {
+        case .none:
+            return []
+        case let .key(zero: zero, one: one, two: two, three: three):
+            return [zero, one, two, three]
+        }
+    }
+}
+
 public struct WebSocketHeader {
     let fin: Bool
 
@@ -272,6 +283,8 @@ public struct WebSocketHeader {
 
 extension WebSocketHeader {
     func serialize() -> [Byte] {
+        let zero = serializeByteZero()
+        let one = serializeByteZero()
         return []
     }
 
@@ -315,25 +328,23 @@ extension WebSocketHeader {
      |K|             |
      +-+-------------+
      */
-    func serializeMaskAndLength() -> [Byte] {
-        var bytes: [Byte] = []
-
-        var leadingByte: Byte = 0
+    private func serializeMaskAndLength() -> (byte: Byte, extended: ExtendedPayloadByteLength?) {
+        var byte: Byte = 0
         if isMasked {
-            leadingByte |= Byte.maskKeyIncluded
+            byte |= Byte.maskKeyIncluded
         }
 
         // 126 / 127 (max, max-1) indicate 2 & 8 byte extensions respectively
         if payloadLength < 126 {
-            leadingByte |= UInt8(payloadLength)
-            return [leadingByte]
+            byte |= UInt8(payloadLength)
+            return (byte, nil)
         } else if payloadLength < UInt16.max.toUIntMax() {
-            leadingByte |= 126 // 126 flags that 2 bytes are required
+            byte |= 126 // 126 flags that 2 bytes are required
+            return (byte, .two)
         } else {
-            leadingByte |= 127 // 127 flags that 8 bytes are requred
+            byte |= 127 // 127 flags that 8 bytes are requred
+            return (byte, .eight)
         }
-
-        return bytes
     }
 }
 
@@ -568,6 +579,22 @@ extension UInt8 {
     static let payloadLength: Byte = 0b0111_1111
 }
 
+private enum ExtendedPayloadByteLength: UInt8 {
+    case two = 2
+    case eight = 8
+    init?(_ byte: Byte) {
+        // Payload extends if first length is 126 or 127. (max and max-1 @ 7 bits)
+        switch byte {
+        case 126:
+            self = .two
+        case 127:
+            self = .eight
+        default:
+            return nil
+        }
+    }
+}
+
 extension String: ErrorProtocol {}
 
 //func metadata(_ file: String = #file, _ function: String = #function, _ line: String = #line) -> String {
@@ -578,10 +605,115 @@ extension String: ErrorProtocol {}
 //    return str
 //}
 
+/*
+ 0               1               2               3
+ 0 1 2 3 4 5 6 7 0 1 2 3 4 5 6 7 0 1 2 3 4 5 6 7 0 1 2 3 4 5 6 7
+ +-+-+-+-+-------+-+-------------+-------------------------------+
+ |F|R|R|R| opcode|M| Payload len |    Extended payload length    |
+ |I|S|S|S|  (4)  |A|     (7)     |             (16/64)           |
+ |N|V|V|V|       |S|             |   (if payload len==126/127)   |
+ | |1|2|3|       |K|             |                               |
+ +-+-+-+-+-------+-+-------------+ - - - - - - - - - - - - - - - +
+ |     Extended payload length continued, if payload len == 127  |
+ + - - - - - - - - - - - - - - - +-------------------------------+
+ |                               |Masking-key, if MASK set to 1  |
+ +-------------------------------+-------------------------------+
+ | Masking-key (continued)       |          Payload Data         |
+ +-------------------------------- - - - - - - - - - - - - - - - +
+ :                     Payload Data continued ...                :
+ + - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - +
+ |                     Payload Data continued ...                |
+ +---------------------------------------------------------------+
+ */
 public final class MessageSerializer {
     private let message: WebSocketMessage
+
+    private var bytes: [Byte] = []
+
     private init(_ message: WebSocketMessage) {
         self.message = message
+    }
+
+    func serializeByteZero() -> [Byte] {
+        let header = message.header
+
+        /*
+         0 1 2 3 4 5 6 7
+         f r r r o
+         i s s s p
+         n v v v
+         1 2 3 c
+         o
+         d
+         e
+         */
+        var byte: Byte = 0
+        if header.fin {
+            byte |= .fin
+        }
+        if header.rsv1 {
+            byte |= .rsv1
+        }
+        if header.rsv2 {
+            byte |= .rsv2
+        }
+        if header.rsv3 {
+            byte |= .rsv3
+        }
+
+        let op = header.opCode.serialize() & .opCode
+        byte |= op
+
+        return [byte]
+    }
+
+    func serializeMaskAndLength() -> [Byte] {
+        let header = message.header
+
+        // first length byte is bit 0: mask, bit 1...7: length or indicator of additional bytes
+        var primaryByte: Byte = 0
+        if header.isMasked {
+            primaryByte |= Byte.maskKeyIncluded
+        }
+
+        // 126 / 127 (max, max-1) indicate 2 & 8 byte extensions respectively
+        if header.payloadLength < 126 {
+            primaryByte |= UInt8(header.payloadLength)
+            return [primaryByte] // lengths < 126 don't need additional bytes
+        } else if header.payloadLength < UInt16.max.toUIntMax() {
+            primaryByte |= 126 // 126 flags that 2 bytes are required
+            let lengthBytes = UInt16(header.payloadLength).bytes()
+            return [primaryByte] + lengthBytes
+        } else {
+            primaryByte |= 127 // 127 flags that 8 bytes are requred
+            return [primaryByte] + header.payloadLength.bytes() // UInt64 == 8 bytes natively
+        }
+    }
+
+    private func serializeMaskingKey() -> [Byte] {
+        return message.header.maskingKey.serialize()
+    }
+
+    private func serializeHeader() -> [Byte] {
+        let zero = serializeByteZero()
+        let maskAndLength = serializeMaskAndLength()
+        let maskingKey = serializeMaskingKey()
+        fatalError()
+    }
+
+    private func serializePayload() -> [Byte] {
+        fatalError()
+//        switch message.header.maskingKey {
+//        case .none:
+//            return message.payload
+//        case let .key(zero: zero, one: one, two: two, three: three):
+//
+//        }
+    }
+
+    private func serialize() -> [Byte] {
+        let header = serializeHeader()
+        fatalError()
     }
 }
 
@@ -617,22 +749,6 @@ public final class MessageParser {
         return (maskKeyIncluded, payloadLength)
     }
 
-    private enum ExtendedPayloadByteLength: UInt8 {
-        case two = 2
-        case eight = 8
-        init?(_ byte: Byte) {
-            // Payload extends if first length is 126 or 127. (max and max-1 @ 7 bits)
-            switch byte {
-            case 126:
-                self = .two
-            case 127:
-                self = .eight
-            default:
-                return nil
-            }
-        }
-    }
-
     /**
      Returns UInt64 to encompass highest possible length. Length may be UInt16
      */
@@ -661,36 +777,38 @@ public final class MessageParser {
     }
 
     private func extractPayload(key: MaskingKey) throws -> [Byte] {
-        var bytes: [UInt8] = []
+        let cyphered = key.cypher(iterator)
+        iterator = AnyIterator { return nil } // clear
+        return cyphered
+    }
+}
 
-        switch key {
+extension MaskingKey {
+    /*
+     Octet i of the transformed data ("transformed-octet-i") is the XOR of
+     octet i of the original data ("original-octet-i") with octet at index
+     i modulo 4 of the masking key ("masking-key-octet-j"):
+
+     j                   = i MOD 4
+     transformed-octet-i = original-octet-i XOR masking-key-octet-j
+     
+     
+     Cypher is same for masking and unmasking
+     */
+    func cypher<S: Sequence where S.Iterator.Element == Byte>(_ input: S) -> [Byte] {
+        switch self {
         case .none:
-            while let next = iterator.next() {
-                bytes.append(next)
-            }
+            return Array(input)
         case let .key(zero: zero, one: one, two: two, three: three):
-            /*
-             Octet i of the transformed data ("transformed-octet-i") is the XOR of
-             octet i of the original data ("original-octet-i") with octet at index
-             i modulo 4 of the masking key ("masking-key-octet-j"):
-
-             j                   = i MOD 4
-             transformed-octet-i = original-octet-i XOR masking-key-octet-j
-             */
-
-            // needs to be UInt64 because that's max payload length and we need the space
             var count = UInt64(0)
             let keys = [zero, one, two, three]
-            while let original = iterator.next() {
+            // don't use enumerated(). it returns `Int` which may lose precision
+            return input.map { original in
                 let key = keys[Int(count % 4)]
-                let transformed = original ^ key
-                bytes.append(transformed)
                 count += 1
+                return original ^ key
             }
-
         }
-
-        return bytes
     }
 }
 
