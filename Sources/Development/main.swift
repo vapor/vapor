@@ -126,7 +126,6 @@ app.get("socket") { request in
 //        let msg = Message
 //        print("Received raw: \(received)")
 //        print("received: \(try received.toString())")
-        return
     }
 
     let secReturn = request.headers["Sec-WebSocket-Key"]!.makeWebSocketSecKeyExchange()
