@@ -76,11 +76,11 @@ enum OpCode {
     case continuation
     case text
     case binary
-//    case nonControl(NonControlFrame)
+    case nonControlExtension(NonControlFrameExtension)
     case connectionClose
     case ping
     case pong
-//    case control(ControlFrame)
+    case controlExtension(ControlFrameExtension)
 
     // 4 bytes
     init(_ i: Byte) throws {
@@ -92,9 +92,8 @@ enum OpCode {
         case 2:
             self = .binary
         case 3...7: // reserved non-control frame
-//            let ncf = try NonControlFrame(i)
-//            self = .nonControl(ncf)
-            throw Error.reserved
+            let ncf = try NonControlFrameExtension(i)
+            self = .nonControlExtension(ncf)
         case 8:
             self = .connectionClose
         case 9:
@@ -102,12 +101,27 @@ enum OpCode {
         case 0xA:
             self = .pong
         case 0xb...0xf: // reserved control frame
-//            let cf = try ControlFrame(i)
-//            self = .control(cf)
-            throw Error.invalid
+            let cf = try ControlFrameExtension(i)
+            self = .controlExtension(cf)
         default:
             throw Error.invalid
         }
+    }
+}
+
+extension OpCode: Equatable {}
+
+func == (lhs: OpCode, rhs: OpCode) -> Bool {
+    switch (lhs, rhs) {
+    case (.continuation, .continuation): return true
+    case (.text, .text): return true
+    case (.binary, .binary): return true
+    case let (.nonControlExtension(l), .nonControlExtension(r)): return l == r
+    case (.connectionClose, .connectionClose): return true
+    case (.ping, .ping): return true
+    case (.pong, .pong): return true
+    case let (.controlExtension(l), .controlExtension(r)): return l == r
+    default: return false
     }
 }
 
@@ -123,7 +137,7 @@ extension OpCode {
      */
     var isControlFrame: Bool {
         switch self {
-        case .ping, .pong:
+        case .ping, .pong, .controlExtension(_):
             return true
         default:
             return false
@@ -149,7 +163,7 @@ extension WebSocketMessage {
 }
 
 extension OpCode {
-    enum NonControlFrame {
+    enum NonControlFrameExtension: UInt8 {
         case three, four, five, six, seven
         init<I: UnsignedInteger>(_ i: I) throws {
             switch i {
@@ -168,7 +182,7 @@ extension OpCode {
             }
         }
     }
-    enum ControlFrame {
+    enum ControlFrameExtension {
         case b, c, d, e, f
         init<I: UnsignedInteger>(_ i: I) throws {
             switch i {
@@ -310,13 +324,57 @@ struct WebSocketMessage {
 
  o  Message fragments MUST be delivered to the recipient in the order
  sent by the sender.
+
+
+
+
+
+
+ Fette & Melnikov             Standards Track                   [Page 34]
+
+ RFC 6455                 The WebSocket Protocol            December 2011
+
+
+ o  The fragments of one message MUST NOT be interleaved between the
+ fragments of another message unless an extension has been
+ negotiated that can interpret the interleaving.
+
+ o  An endpoint MUST be capable of handling control frames in the
+ middle of a fragmented message.
+
+ o  A sender MAY create fragments of any size for non-control
+ messages.
+
+ o  Clients and servers MUST support receiving both fragmented and
+ unfragmented messages.
+
+ o  As control frames cannot be fragmented, an intermediary MUST NOT
+ attempt to change the fragmentation of a control frame.
+
+ o  An intermediary MUST NOT change the fragmentation of a message if
+ any reserved bit values are used and the meaning of these values
+ is not known to the intermediary.
+
+ o  An intermediary MUST NOT change the fragmentation of any message
+ in the context of a connection where extensions have been
+ negotiated and the intermediary is not aware of the semantics of
+ the negotiated extensions.  Similarly, an intermediary that didn't
+ see the WebSocket handshake (and wasn't notified about its
+ content) that resulted in a WebSocket connection MUST NOT change
+ the fragmentation of any message of such connection.
+
+ o  As a consequence of these rules, all fragments of a message are of
+ the same type, as set by the first fragment's opcode.  Since
+ control frames cannot be fragmented, the type for all fragments in
+ a message MUST be either text, binary, or one of the reserved
+ opcodes.
  */
 
 extension WebSocketMessage {
     var isFragment: Bool {
         /*
          An unfragmented message consists of a single frame with the FIN
-         bit set (Section 5.2) and an opcode other than 0. 
+         bit set (Section 5.2) and an opcode other than 0.
          */
         if !header.fin || header.opCode == .continuation {
             return true
@@ -579,3 +637,32 @@ extension UnsignedInteger {
         return (self & mask) == mask
     }
 }
+
+/*
+ Reserved bits:
+ 
+ 
+ The protocol is designed to allow for extensions, which will add
+ capabilities to the base protocol.  The endpoints of a connection
+ MUST negotiate the use of any extensions during the opening
+ handshake.  This specification provides opcodes 0x3 through 0x7 and
+ 0xB through 0xF, the "Extension data" field, and the frame-rsv1,
+ frame-rsv2, and frame-rsv3 bits of the frame header for use by
+ extensions.  The negotiation of extensions is discussed in further
+ detail in Section 9.1.  Below are some anticipated uses of
+ extensions.  This list is neither complete nor prescriptive.
+
+ o  "Extension data" may be placed in the "Payload data" before the
+ "Application data".
+
+ o  Reserved bits can be allocated for per-frame needs.
+
+ o  Reserved opcode values can be defined.
+
+ o  Reserved bits can be allocated to the opcode field if more opcode
+ values are needed.
+
+ o  A reserved bit or an "extension" opcode can be defined that
+ allocates additional bits out of the "Payload data" to define
+ larger opcodes or more per-frame bits.
+ */
