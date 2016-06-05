@@ -456,6 +456,14 @@ extension UInt8 {
 
 extension String: ErrorProtocol {}
 
+//func metadata(_ file: String = #file, _ function: String = #function, _ line: String = #line) -> String {
+//    var str = "[Metadata]\n"
+//    str += "\tFile: \(file.components(separatedBy: "/").last ?? "")\n"
+//    str += "\tFunction: \(function)\n"
+//    str += "\tLine: \(line)\n\n"
+//    return str
+//}
+
 public final class MessageParser {
     private var iterator: AnyIterator<Byte>
 
@@ -468,7 +476,7 @@ public final class MessageParser {
 
     private func extractByteZero() throws -> (fin: Bool, rsv1: Bool, rsv2: Bool, rsv3: Bool, opCode: OpCode) {
         guard let byteZero = iterator.next() else {
-            throw "up"
+            throw "479: WebSockets.Swift: MessageParser"
         }
         let fin = byteZero.containsMask(.fin)
         let rsv1 = byteZero.containsMask(.rsv1)
@@ -481,7 +489,7 @@ public final class MessageParser {
 
     private func extractByteOne() throws -> (maskKeyIncluded: Bool, payloadLength: Byte) {
         guard let byteOne = iterator.next() else {
-            throw "up"
+            throw "493: WebSockets.Swift: MessageParser"
         }
         let maskKeyIncluded = byteOne.containsMask(.maskKeyIncluded)
         let payloadLength = byteOne & .payloadLength
@@ -511,7 +519,7 @@ public final class MessageParser {
         var bytes: [Byte] = []
         for _ in 1...length.rawValue {
             guard let next = iterator.next() else {
-                throw "up"
+                throw "522: WebSockets.Swift: MessageParser"
             }
             bytes.append(next)
         }
@@ -525,7 +533,7 @@ public final class MessageParser {
             let two = iterator.next(),
             let three = iterator.next()
             else {
-                throw "up"
+                throw "536: WebSockets.Swift: MessageParser"
             }
 
         return .key(zero: zero, one: one, two: two, three: three)
@@ -587,7 +595,7 @@ extension MessageParser {
 
         let payload = try parser.extractPayload(key: maskingKey)
         guard payload.count == Int(payloadLength) else {
-            throw "up"
+            throw "598: WebSockets.Swift: MessageParser"
         }
 
         let header = WebSocketHeader(
@@ -615,7 +623,7 @@ extension UnsignedInteger {
     init(_ bytes: [Byte]) throws {
         // 8 bytes in UInt64
         guard bytes.count <= sizeof(Self) else {
-            throw "up"
+            throw "626: WebSockets.Swift: UnsignedInteger"
         }
         var value: UIntMax = 0
         bytes.forEach { byte in
