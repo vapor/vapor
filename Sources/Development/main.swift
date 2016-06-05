@@ -81,9 +81,11 @@ app.get("socket") { request in
     print("Get socket: \(request)")
     func socketHandler(_ socket: Stream) throws {
         print("About to send\n\n")
-        try socket.send(Data("hello"))
+        try socket.send(Data([0x81, 0x05, 0x48, 0x65, 0x6c, 0x6c, 0x6f]))
         print("Sent ---\n\n Receiving --- \n\n")
         let received = try socket.receive(upTo: 1024)
+//        let msg = Message
+        print("Received raw: \(received)")
         print("received: \(try received.toString())")
         return
     }

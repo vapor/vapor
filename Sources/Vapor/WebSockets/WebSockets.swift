@@ -20,21 +20,21 @@
 */
 
 // TODO: Bit or Bool?
-enum Bit {
+public enum Bit {
     case one, zero
 }
 
 extension Bit: Boolean {
-    var boolValue: Bool { return self == .one }
+    public var boolValue: Bool { return self == .one }
 }
 
 extension Bit: BooleanLiteralConvertible {
-    init(booleanLiteral value: Bool) {
+    public init(booleanLiteral value: Bool) {
         self = value ? .one : .zero
     }
 }
 
-struct Reserved {
+public struct Reserved {
     /*
      MUST be 0 unless an extension is negotiated that defines meanings
      for non-zero values.  If a nonzero value is received and none of
@@ -42,16 +42,16 @@ struct Reserved {
      value, the receiving endpoint MUST _Fail the WebSocket
      Connection_.
      */
-    let one: Bool
-    let two: Bool
-    let three: Bool
+    public let one: Bool
+    public let two: Bool
+    public let three: Bool
 }
 
 extension OpCode {
-    enum Error: ErrorProtocol { case invalid, reserved }
+    public enum Error: ErrorProtocol { case invalid, reserved }
 }
 
-enum OpCode {
+public enum OpCode {
     /*
      Defines the interpretation of the "Payload data".  If an unknown
      opcode is received, the receiving endpoint MUST _Fail the
@@ -111,7 +111,7 @@ enum OpCode {
 
 extension OpCode: Equatable {}
 
-func == (lhs: OpCode, rhs: OpCode) -> Bool {
+public func == (lhs: OpCode, rhs: OpCode) -> Bool {
     switch (lhs, rhs) {
     case (.continuation, .continuation): return true
     case (.text, .text): return true
@@ -135,7 +135,7 @@ extension OpCode {
      9...15
 
      */
-    var isControlFrame: Bool {
+    public var isControlFrame: Bool {
         switch self {
         case .ping, .pong, .controlExtension(_):
             return true
@@ -149,7 +149,7 @@ extension WebSocketHeader {
     /*
      Control frame CAN NOT be fragmented, but can be injected in between a fragmented message
      */
-    var isControlFrame: Bool {
+    public var isControlFrame: Bool {
         return opCode.isControlFrame
     }
 }
@@ -157,13 +157,13 @@ extension WebSocketHeader {
 // TODO: Rename => Frame? matches RFC better
 // Frame usually refers to Header, maybe Header == Frame
 extension WebSocketMessage {
-    var isControlFrame: Bool {
+    public var isControlFrame: Bool {
         return header.isControlFrame
     }
 }
 
 extension OpCode {
-    enum NonControlFrameExtension: UInt8 {
+    public enum NonControlFrameExtension: UInt8 {
         case three, four, five, six, seven
         init<I: UnsignedInteger>(_ i: I) throws {
             switch i {
@@ -182,7 +182,7 @@ extension OpCode {
             }
         }
     }
-    enum ControlFrameExtension {
+    public enum ControlFrameExtension {
         case b, c, d, e, f
         init<I: UnsignedInteger>(_ i: I) throws {
             switch i {
@@ -220,12 +220,12 @@ extension OpCode {
  
  Cyphered one byte at a time MOD 4
  */
-enum MaskingKey {
+public enum MaskingKey {
     case none
     case key(zero: UInt8, one: UInt8, two: UInt8, three: UInt8)
 }
 
-struct WebSocketHeader {
+public struct WebSocketHeader {
     let fin: Bool
 
     /**
@@ -246,7 +246,7 @@ struct WebSocketHeader {
 
 
 extension WebSocketMessage {
-    enum Error: ErrorProtocol {
+    public enum Error: ErrorProtocol {
         case failed
     }
 }
@@ -284,11 +284,31 @@ enum Payload {
 }
 
 // https://tools.ietf.org/html/rfc6455#section-5.2
-struct WebSocketMessage {
+public struct WebSocketMessage {
     let header: WebSocketHeader
     // TODO: OpCode defines how to parse, I think this should be an enum ie: Payload above
     // for now while testing ... Data
-    let payload: Data
+    public let payload: Data
+}
+
+extension WebSocketMessage {
+//    func makeForClient(_ text: String) -> Data {
+//        let bytes = text.toBytes()
+//        let header = WebSocketHeader(
+//            fin: true,
+//            rsv1: false,
+//            rsv2: false,
+//            rsv3: false,
+//            isMasked: false,
+//            opCode: .text,
+//            maskingKey: .none,
+//            payloadLength: UInt64(bytes.count)
+//        )
+//        let mockHeader
+//
+//        let message = WebSocketMessage(header: header, payload: Data(bytes))
+//        return Data()
+//    }
 }
 
 /*
