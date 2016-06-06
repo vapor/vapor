@@ -1,6 +1,6 @@
 // MARK:
 
-extension WebSock {
+extension WebSocket {
     /* https://tools.ietf.org/html/rfc6455#section-5.2
      0               1               2               3
      0 1 2 3 4 5 6 7 0 1 2 3 4 5 6 7 0 1 2 3 4 5 6 7 0 1 2 3 4 5 6 7
@@ -33,7 +33,7 @@ extension WebSock {
     }
 }
 
-extension WebSock.Frame {
+extension WebSocket.Frame {
     /* https://tools.ietf.org/html/rfc6455#section-5.2
      0               1               2               3
      0 1 2 3 4 5 6 7 0 1 2 3 4 5 6 7 0 1 2 3 4 5 6 7 0 1 2 3 4 5 6 7
@@ -75,7 +75,7 @@ extension WebSock.Frame {
     }
 }
 
-extension WebSock.Frame {
+extension WebSocket.Frame {
     /*
      Defines the interpretation of the "Payload data".  If an unknown
      opcode is received, the receiving endpoint MUST _Fail the
@@ -149,11 +149,11 @@ extension WebSock.Frame {
     }
 }
 
-extension WebSock.Frame.OpCode {
+extension WebSocket.Frame.OpCode {
     public enum Error: ErrorProtocol { case invalid }
 }
 
-extension WebSock.Frame.OpCode {
+extension WebSocket.Frame.OpCode {
     public enum NonControlFrameExtension: UInt8 {
         case three = 3, four, five, six, seven
         init<I: UnsignedInteger>(_ i: I) throws {
@@ -225,7 +225,7 @@ extension WebSock.Frame.OpCode {
 
 
  */
-extension WebSock.Frame.OpCode {
+extension WebSocket.Frame.OpCode {
     // 4 bits
     // TODO: Is it worth building UInt4?
     //
@@ -251,9 +251,9 @@ extension WebSock.Frame.OpCode {
     }
 }
 
-extension WebSock.Frame.OpCode: Equatable {}
+extension WebSocket.Frame.OpCode: Equatable {}
 
-public func == (lhs: WebSock.Frame.OpCode, rhs: WebSock.Frame.OpCode) -> Bool {
+public func == (lhs: WebSocket.Frame.OpCode, rhs: WebSocket.Frame.OpCode) -> Bool {
     switch (lhs, rhs) {
     case (.continuation, .continuation): return true
     case (.text, .text): return true
@@ -267,7 +267,7 @@ public func == (lhs: WebSock.Frame.OpCode, rhs: WebSock.Frame.OpCode) -> Bool {
     }
 }
 
-extension WebSock.Frame.OpCode {
+extension WebSocket.Frame.OpCode {
     /*
      Control frames are identified by opcodes where the most significant
      bit of the opcode is 1.
@@ -287,7 +287,7 @@ extension WebSock.Frame.OpCode {
     }
 }
 
-extension WebSock.Frame.Header {
+extension WebSocket.Frame.Header {
     /*
      Control frame CAN NOT be fragmented, but can be injected in between a fragmented message
      */
@@ -298,13 +298,13 @@ extension WebSock.Frame.Header {
 
 // TODO: Rename => Frame? matches RFC better
 // Frame usually refers to Header, maybe Header == Frame
-extension WebSock.Frame {
+extension WebSocket.Frame {
     public var isControlFrame: Bool {
         return header.isControlFrame
     }
 }
 
-extension WebSock.Frame {
+extension WebSocket.Frame {
     /*
      Client to Server MUST be masked
 
@@ -357,13 +357,13 @@ extension WebSock.Frame {
     }
 }
 
-extension WebSock.Frame {
+extension WebSocket.Frame {
     public enum Error: ErrorProtocol {
         case failed
     }
 }
 
-extension WebSock.Frame {
+extension WebSocket.Frame {
     public var isFragment: Bool {
         /*
          An unfragmented message consists of a single frame with the FIN

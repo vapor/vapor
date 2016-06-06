@@ -1,6 +1,6 @@
 import C7
 
-public final class WebSock {
+public final class WebSocket {
 
     public typealias EventHandler<T> = (T) throws -> Void
 
@@ -12,15 +12,15 @@ public final class WebSock {
 
     // MARK: EventHandlers
 
-    public var onFrame: EventHandler<(ws: WebSock, frame: Frame)>? = nil
+    public var onFrame: EventHandler<(ws: WebSocket, frame: Frame)>? = nil
 
-    public var onText: EventHandler<(ws: WebSock, text: String)>? = nil
-    public var onBinary: EventHandler<(ws: WebSock, binary: Data)>? = nil
+    public var onText: EventHandler<(ws: WebSocket, text: String)>? = nil
+    public var onBinary: EventHandler<(ws: WebSocket, binary: Data)>? = nil
 
-    public var onPing: EventHandler<(ws: WebSock, frame: Frame)>? = nil
-    public var onPong: EventHandler<(ws: WebSock, frame: Frame)>? = nil
+    public var onPing: EventHandler<(ws: WebSocket, frame: Frame)>? = nil
+    public var onPong: EventHandler<(ws: WebSocket, frame: Frame)>? = nil
 
-    public var onClose: EventHandler<(ws: WebSock, code: UInt16, reason: String, clean: Bool)>? = nil
+    public var onClose: EventHandler<(ws: WebSocket, code: UInt16, reason: String, clean: Bool)>? = nil
 
     // MARK: Attributes
 
@@ -40,7 +40,7 @@ public final class WebSock {
 
 // MARK: Listen
 
-extension WebSock {
+extension WebSocket {
     /**
      Tells the WebSocket to begin accepting frames
      */
@@ -133,7 +133,7 @@ extension WebSock {
 
 // MARK: Close Handshake
 
-extension WebSock {
+extension WebSocket {
     public func close(statusCode: UInt16? = nil, reason: String? = nil) throws {
         // TODO: Use status code and reason data
         guard state == .open else { return }

@@ -94,7 +94,7 @@ app.get("test") { request in
 ////            let message = "Hello there again, this has been \(c) times, and now it's \(NSDate())"
 ////            let message = "ECHO: \(str)"
 ////            let msgBytes = Data(message)
-//            let msg = WebSock.Message.respondToClient(respondMsg)
+//            let msg = WebSocket.Message.respondToClient(respondMsg)
 //            let bytes = FrameSerializer.serialize(msg)
 //            try socket.send(Data(bytes))
 //        }
@@ -153,7 +153,7 @@ extension String {
 
 app.get("socket") { request in
     return try request.upgradeToWebSocket { ws in
-        print("WebSock upgraded")
+        print("WebSocket upgraded")
         ws.onText = { ws, text in
             print("Got \(text)")
             try ws.send("thank you for text \(text)\n\n\t:)\n")
@@ -177,8 +177,8 @@ app.get("socket") { request in
 }
 
 //app.get("manual-socket") { request in
-//    func socketHandler(_ socket: WebSock) throws {
-//        let ws = socket//WebSock.init(socket)
+//    func socketHandler(_ socket: WebSocket) throws {
+//        let ws = socket//WebSocket.init(socket)
 //        ws.textEvent.subscribe { data, text in
 //            print("Got \(data.text)")
 //            // TODO: rm !
@@ -209,7 +209,7 @@ app.get("socket") { request in
 //    //    headers["Sec-WebSocket-Protocol"] = request.headers["Sec-WebSocket-Protocol"]
 //    var response = Response.init(status: .switchingProtocols, headers: headers)//, headers: Headers, cookies: Cookies, body: Stream)
 //    response.afterResponseSerialization = { stream in
-//        let ws = WebSock(stream)
+//        let ws = WebSocket(stream)
 //        try socketHandler(ws)
 //    }
 //    print("\n\nReturning: \(response)\n\n")

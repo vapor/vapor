@@ -2,7 +2,7 @@
  'close' included in Model file to ensure safety while interacting with sensitive variables
  */
 
-extension WebSock {
+extension WebSocket {
     public func ping(statusCode: UInt16? = nil, reason: String? = nil) throws {
         // TODO:
         // Reason can _only_ exist if statusCode also exists

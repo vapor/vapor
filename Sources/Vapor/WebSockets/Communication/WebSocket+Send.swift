@@ -1,4 +1,4 @@
-extension WebSock {
+extension WebSocket {
     public func send(_ msg: Frame) throws {
         // TODO: Throw if control frame greater than 125 byte PAYLOAD.
         try stream.send(msg)

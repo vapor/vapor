@@ -5,7 +5,7 @@ public final class FrameDeserializer<Buffer: InputBuffer where Buffer.Element ==
         self.buffer = buffer
     }
 
-    public func acceptFrame() throws -> WebSock.Frame {
+    public func acceptFrame() throws -> WebSocket.Frame {
         let (fin, rsv1, rsv2, rsv3, opCode) = try extractByteZero()
         let (isMasked, payloadLengthInfo) = try extractByteOne()
 
@@ -22,7 +22,7 @@ public final class FrameDeserializer<Buffer: InputBuffer where Buffer.Element ==
             payloadLength = payloadLengthInfo.toUIntMax()
         }
 
-        let maskingKey: WebSock.Frame.MaskingKey
+        let maskingKey: WebSocket.Frame.MaskingKey
         if isMasked {
             maskingKey = try extractMaskingKey()
         } else {
@@ -34,7 +34,7 @@ public final class FrameDeserializer<Buffer: InputBuffer where Buffer.Element ==
             throw "598: WebSockets.Swift: FrameDeserializer"
         }
 
-        let header = WebSock.Frame.Header(
+        let header = WebSocket.Frame.Header(
             fin: fin,
             rsv1: rsv1,
             rsv2: rsv2,
@@ -44,12 +44,12 @@ public final class FrameDeserializer<Buffer: InputBuffer where Buffer.Element ==
             payloadLength: payloadLength,
             maskingKey: maskingKey
         )
-        return WebSock.Frame(header: header, payload: Data(payload))
+        return WebSocket.Frame(header: header, payload: Data(payload))
     }
 
     // MARK: Private
     
-    private func extractByteZero() throws -> (fin: Bool, rsv1: Bool, rsv2: Bool, rsv3: Bool, opCode: WebSock.Frame.OpCode) {
+    private func extractByteZero() throws -> (fin: Bool, rsv1: Bool, rsv2: Bool, rsv3: Bool, opCode: WebSocket.Frame.OpCode) {
         guard let byteZero = try buffer.next() else {
             throw "No next byte"
         }
@@ -58,7 +58,7 @@ public final class FrameDeserializer<Buffer: InputBuffer where Buffer.Element ==
         let rsv2 = byteZero.containsMask(.rsv2Flag)
         let rsv3 = byteZero.containsMask(.rsv3Flag)
 
-        let opCode = try WebSock.Frame.OpCode(byteZero & .opCodeFlag)
+        let opCode = try WebSocket.Frame.OpCode(byteZero & .opCodeFlag)
         return (fin, rsv1, rsv2, rsv3, opCode)
     }
 
@@ -85,7 +85,7 @@ public final class FrameDeserializer<Buffer: InputBuffer where Buffer.Element ==
         return try UInt64.init(eight)
     }
 
-    private func extractMaskingKey() throws -> WebSock.Frame.MaskingKey {
+    private func extractMaskingKey() throws -> WebSocket.Frame.MaskingKey {
         guard
             let zero = try buffer.next(),
             let one = try buffer.next(),
@@ -98,7 +98,7 @@ public final class FrameDeserializer<Buffer: InputBuffer where Buffer.Element ==
         return .key(zero: zero, one: one, two: two, three: three)
     }
 
-    private func extractPayload(key: WebSock.Frame.MaskingKey, length: UInt64) throws -> [Byte] {
+    private func extractPayload(key: WebSocket.Frame.MaskingKey, length: UInt64) throws -> [Byte] {
         var count: UInt64 = 0
         var bytes: [UInt8] = []
 

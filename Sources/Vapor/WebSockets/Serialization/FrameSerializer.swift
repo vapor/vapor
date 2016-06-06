@@ -20,9 +20,9 @@
  */
 // TODO: NOT UNIT TESTED
 public final class FrameSerializer {
-    private let frame: WebSock.Frame
+    private let frame: WebSocket.Frame
 
-    public init(_ frame: WebSock.Frame) {
+    public init(_ frame: WebSocket.Frame) {
         self.frame = frame
     }
 
