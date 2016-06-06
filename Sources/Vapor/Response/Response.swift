@@ -104,3 +104,16 @@ extension Response {
         return String(pointer: buf, length: RFC1123_TIME_LEN + 1) ?? ""
     }
 }
+
+extension Response {
+    public typealias AfterResponseSerialization = ((Stream) throws -> Void)
+
+    public var afterResponseSerialization: AfterResponseSerialization? {
+        get {
+            return storage["vapor:afterResponseSerialization"] as? AfterResponseSerialization
+        }
+        set {
+            storage["vapor:afterResponseSerialization"] = newValue
+        }
+    }
+}

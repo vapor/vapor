@@ -80,19 +80,6 @@ extension SocksCore.Error {
     }
 }
 
-extension Response {
-    public typealias AfterResponseSerialization = ((Stream) throws -> Void)
-
-    public var afterResponseSerialization: AfterResponseSerialization? {
-        get {
-            return storage["vapor:afterResponseSerialization"] as? AfterResponseSerialization
-        }
-        set {
-            storage["vapor:afterResponseSerialization"] = newValue
-        }
-    }
-}
-
 extension Request {
     var keepAlive: Bool {
         // HTTP 1.1 defaults to true unless explicitly passed `Connection: close`

@@ -112,6 +112,7 @@ public final class WebSock {
     public typealias EventHandler<T> = (T) throws -> Void
 
     // MARK: EventHandlers
+
     public var onFrame: EventHandler<(ws: WebSock, frame: Frame)>? = nil
 
     public var onText: EventHandler<(ws: WebSock, text: String)>? = nil
@@ -122,27 +123,12 @@ public final class WebSock {
 
     public var onClose: EventHandler<(ws: WebSock, code: UInt16, reason: String, clean: Bool)>? = nil
 
-
-    private var lock: Lock = Lock()
-    private var _state: State = .open
-    public private(set) var state: State {
-        get {
-            var _closed = State.open
-            lock.locked {
-                _closed = self._state
-            }
-            return _closed
-        }
-        set {
-            lock.locked {
-                _state = newValue
-            }
-        }
-    }
-
-    // MARK: Initialization
+    // MARK: Attributes
 
     private let stream: Stream
+    public private(set) var state: State = .open
+
+    // MARK: Initialization
 
     public init(_ stream: Stream) {
         self.stream = stream
@@ -154,16 +140,7 @@ public final class WebSock {
 }
 
 extension WebSock {
-    // TODO: Currently waiting for response -- this is correct, but a timeout would be better
-    // for sockets that may not be good players and keep the connection open by not responding
-    //
-    //
-    // Don't need timeout? <<<<
-    // If underlying tcp is open, according to protocol, client MUST respond w/ close
-    // If underlying tcp is closed, then protocol won't respond, but we will fail out on close
-    //
-    //
-    public func close(statusCode: UInt16? = nil, reason: String? = nil, forceImmediate: Bool = false) throws {
+    public func close(statusCode: UInt16? = nil, reason: String? = nil) throws {
         // TODO: Use status code and reason data
         guard state == .open else { return }
         state = .closing
