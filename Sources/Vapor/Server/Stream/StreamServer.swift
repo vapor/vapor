@@ -29,11 +29,7 @@ final class StreamServer<
     }
 
     func start() throws {
-        do {
-            try server.start(handler: handle)
-        } catch {
-            Log.error("Failed to start: \(error)")
-        }
+        try server.start(handler: handle)
     }
 
     private func handle(_ stream: Stream) {

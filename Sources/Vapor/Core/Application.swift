@@ -83,12 +83,16 @@ public class Application {
     public var globalMiddleware: [Middleware]
 
     /**
-        the commands available to execute on the application
+        Available Commands to use when starting
+        the application.
     */
-    public private(set) var commands: [String : Command.Type] = [
-        Help.id: Help.self,
-        Serve.id: Serve.self
-    ]
+    public var commands: [Command]
+
+    /**
+        Send output and receive input from the console
+        using the underlying `ConsoleDriver`.
+    */
+    public let console: Console
 
     /**
         Resources directory relative to workDir
@@ -96,6 +100,11 @@ public class Application {
     public var resourcesDir: String {
         return workDir + "Resources/"
     }
+
+    /**
+        The arguments passed to the application.
+    */
+    public let arguments: [String]
 
     var routes: [Route]
 
@@ -107,32 +116,39 @@ public class Application {
         config: Config? = nil,
         localization: Localization? = nil,
         hash: HashDriver? = nil,
+        console: ConsoleDriver? = nil,
         server: ServerDriver.Type? = nil,
         router: RouterDriver? = nil,
         session: SessionDriver? = nil,
-        providers: [Provider] = []
+        providers: [Provider] = [],
+        arguments: [String] = []
     ) {
         var serverProvided: ServerDriver.Type? = server
         var routerProvided: RouterDriver? = router
         var sessionProvided: SessionDriver? = session
         var hashProvided: HashDriver? = hash
+        var consoleProvided: ConsoleDriver? = console
 
         for provider in providers {
             serverProvided = provider.server ?? serverProvided
             routerProvided = provider.router ?? routerProvided
             sessionProvided = provider.session ?? sessionProvided
             hashProvided = provider.hash ?? hashProvided
+            consoleProvided = provider.console ?? consoleProvided
         }
 
+        self.arguments = arguments ?? NSProcessInfo.processInfo().arguments
+
         let workDir = workDir
-            ?? Process.valueFor(argument: "workDir")
+            ?? arguments.value(for: "workdir")
+            ?? arguments.value(for: "workDir")
             ?? "./"
         self.workDir = workDir.finish("/")
 
         let localization = localization ?? Localization(workingDirectory: workDir)
         self.localization = localization
 
-        let config = config ?? Config(workingDirectory: workDir)
+        let config = config ?? Config(workingDirectory: workDir, arguments: arguments)
         self.config = config
 
         let host = config["app", "host"].string ?? "0.0.0.0"
@@ -162,6 +178,16 @@ public class Application {
 
         routes = []
 
+        commands = []
+
+        let console = Console(driver: consoleProvided ?? Terminal())
+        self.console = console
+
+        Log.driver = ConsoleLogger(console: console)
+
+        commands.append(Help(app: self))
+        commands.append(Serve(app: self))
+
         restrictLogging(for: config.environment)
 
         for provider in providers {
@@ -177,32 +203,89 @@ public class Application {
 }
 
 extension Application {
+    enum ExecutionError: ErrorProtocol {
+        case insufficientArguments, noCommandFound
+    }
+
     /**
         Starts console
     */
+    @noreturn
     public func start() {
-        // defaults to serve which will result in a no return
-        //code beyond this call will only execute in event of failure
-        executeCommand()
+        do {
+            try execute()
+            exit(0)
+        } catch {
+            if let error = error as? ExecutionError {
+                switch error {
+                case .insufficientArguments:
+                    console.output("Insufficient arguments.", style: .error)
+                case .noCommandFound:
+                    console.output("Command not recognized. Run 'help' for a list of available commands.", style: .error)
+                }
+            }
+
+            if let error = error as? CommandError {
+                switch error {
+                case .insufficientArguments:
+                    console.output("Insufficient arguments.", style: .error)
+                case .invalidArgument(let name):
+                    console.output("Invalid argument name '\(name)'.")
+                case .custom(let error):
+                    console.output(error)
+                }
+            }
+
+            exit(1)
+        }
     }
 
-    private func executeCommand() {
-        let input = NSProcessInfo.processInfo().arguments
-        let (command, arguments) = extract(fromInput: input)
-        command.run(on: self, with: arguments)
-    }
-
-    internal func extract(fromInput input: [String]) -> (command: Command.Type, arguments: [String]) {
+    func execute() throws {
         // options prefixed w/ `--` are accessible through `app.config["app", "argument"]`
-        var iterator = input
-            .filter { !$0.hasPrefix("--") }
-            .makeIterator()
-        let _ = iterator.next() // dump directory command
-        let commandKey = iterator.next() ?? "serve"
+        var iterator = self.arguments.filter { item in
+            return !item.hasPrefix("--")
+        }.makeIterator()
+
+        _ = iterator.next() // pop location arg
+
+        let commandId: String
+        if let next = iterator.next() {
+            commandId = next
+        } else {
+            commandId = "serve"
+            Log.info("No command supplied, defaulting to 'serve'.")
+        }
+
         let arguments = Array(iterator)
 
-        let command = commands[commandKey] ?? Serve.self
-        return (command, arguments)
+        for command in commands {
+            if command.id == commandId {
+                if arguments.count < command.arguments.count {
+                    command.printSignature()
+                    throw ExecutionError.insufficientArguments
+                }
+
+                try command.run()
+                return
+            }
+        }
+
+        throw ExecutionError.noCommandFound
+    }
+}
+
+extension Sequence where Iterator.Element == String {
+    func value(for string: String) -> String? {
+        for item in self {
+            let search = "--\(string)="
+            if item.hasPrefix(search) {
+                var item = item
+                item.replace(string: search, with: "")
+                return item
+            }
+        }
+
+        return nil
     }
 }
 
@@ -317,25 +400,5 @@ extension Application: Responder {
         response.headers["Server"] = "Vapor \(Vapor.VERSION)"
 
         return response
-    }
-}
-
-// MARK: Commands
-
-extension Application {
-    public func add(_ cmd: Command.Type) {
-        if let existing = commands[cmd.id] {
-            Log.warning("Overwriting command: \(existing) with \(cmd)")
-        }
-        commands[cmd.id] = cmd
-    }
-
-    public func remove(_ cmd: Command.Type) {
-        guard commands[cmd.id] != nil else { return }
-        guard let existing = commands[cmd.id] where existing != cmd else {
-            Log.info("Command with id \(cmd.id) exists as a different type: \(commands[cmd.id]). Not removing")
-            return
-        }
-        commands[cmd.id] = nil
     }
 }

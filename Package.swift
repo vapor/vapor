@@ -29,7 +29,7 @@ let package = Package(
         .Package(url: "https://github.com/ketzusaka/Strand.git", majorVersion: 1, minor: 4),
 
         //Sockets, used by the built in HTTP server
-        .Package(url: "https://github.com/LoganWright/Socks.git", majorVersion: 0, minor: 5)
+        .Package(url: "https://github.com/czechboy0/Socks.git", majorVersion: 0, minor: 4)
     ],
     exclude: [
         "XcodeProject",

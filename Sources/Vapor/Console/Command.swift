@@ -1,11 +1,77 @@
+import libc
+import Foundation
+
+/**
+    Commands are ran when the application
+    is started based on which identifier
+    is passed as an argument to the executable.
+*/
 public protocol Command {
-    static var id: String { get }
-    static var help: [String] { get }
-    static func run(on app: Application, with arguments: [String])
+    /**
+        The main identifier for the command.
+        If this identifier matches the string 
+        passed to the application executable during
+        boot, the command will run.
+    */
+    var id: String { get }
+
+    /**
+        The command needs a reference to the
+        application to perform various tasks.
+        This is usually passed in as an init parameter.
+    */
+    var app: Application { get }
+
+    /**
+        An array of help messages that are
+        printed by the help command.
+        Each item in the array is printed on
+        one line of the command.
+    */
+    var help: [String] { get }
+
+    /**
+        An array of Arguments that this
+        command accepts. This will be used
+        to ensure the command does not run
+        unless enough arguments are passed.
+
+        Arguments are required items.
+    */
+    var arguments: [Argument] { get }
+
+    /**
+        An array of Options that this command
+        accepts. This will be used to format
+        the command's signature.
+    */
+    var options: [Option] { get }
+
+    /**
+        Runs the command.
+    */
+    func run() throws
 }
 
+public enum CommandError: ErrorProtocol {
+    case invalidArgument(String)
+    case insufficientArguments
+    case custom(String)
+}
+
+/**
+    Defaults for basic commands.
+*/
 extension Command {
-    public static var help: [String] {
+    public var help: [String] {
+        return []
+    }
+
+    public var arguments: [Argument] {
+        return []
+    }
+
+    public var options: [Option] {
         return []
     }
 }
