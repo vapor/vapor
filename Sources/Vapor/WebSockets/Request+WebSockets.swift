@@ -129,6 +129,8 @@ extension Request {
         responseHeaders.secWebSocketVersion = version
 
         var response = S4.Response.init(status: .switchingProtocols, headers: responseHeaders)
+        // TODO: Make Stream throws -> Void again on response
+        // take stream, make websock, pass websock, listen
         response.webSocketConnection = body
         return response
 //

@@ -84,6 +84,17 @@ extension SocksCore.Error {
 }
 
 extension Response {
+    public typealias PostResponseConnection = ((Stream) throws -> Void)
+
+    public var postResponseConnection: PostResponseConnection? {
+        get {
+            return storage["vapor:postResponseConnection"] as? PostResponseConnection
+        }
+        set {
+            storage["vapor:postResponseConnection"] = newValue
+        }
+    }
+
     public typealias WebSocketConnection = ((ws: WebSock) throws -> Void)
 
     public var webSocketConnection: WebSocketConnection? {
