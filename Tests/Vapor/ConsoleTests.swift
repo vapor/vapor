@@ -128,7 +128,7 @@ class TestOneCommand: Command {
         self.app = app
     }
 
-    func run() {
+    func run() throws {
         print("Test 1 Ran")
     }
 }

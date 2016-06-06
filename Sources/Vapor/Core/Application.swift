@@ -121,7 +121,7 @@ public class Application {
         router: RouterDriver? = nil,
         session: SessionDriver? = nil,
         providers: [Provider] = [],
-        arguments: [String] = []
+        arguments: [String]? = nil
     ) {
         var serverProvided: ServerDriver.Type? = server
         var routerProvided: RouterDriver? = router
@@ -137,7 +137,8 @@ public class Application {
             consoleProvided = provider.console ?? consoleProvided
         }
 
-        self.arguments = arguments ?? NSProcessInfo.processInfo().arguments
+        let arguments = arguments ?? NSProcessInfo.processInfo().arguments
+        self.arguments = arguments
 
         let workDir = workDir
             ?? arguments.value(for: "workdir")
@@ -187,6 +188,7 @@ public class Application {
 
         commands.append(Help(app: self))
         commands.append(Serve(app: self))
+        commands.append(Greeting(app: self))
 
         restrictLogging(for: config.environment)
 
@@ -400,5 +402,41 @@ extension Application: Responder {
         response.headers["Server"] = "Vapor \(Vapor.VERSION)"
 
         return response
+    }
+}
+
+class Greeting: Command {
+    let id: String
+    let app: Application
+
+    let arguments = [
+        Argument("name")
+    ]
+
+    let options = [
+        Option("emphatic")
+    ]
+
+    init(app: Application) {
+        id = "hello"
+        self.app = app
+    }
+
+    func run() throws {
+        guard let name = try argument("name").string else {
+            throw CommandError.custom("Name was not a string")
+        }
+
+        var message = "Hello, \(name)"
+
+        if option("emphatic").bool == true {
+            message += "!"
+        }
+
+        info(message)
+
+        while confirm("Shall I say it again?") {
+            info(message)
+        }
     }
 }
