@@ -7,9 +7,6 @@ public class Terminal: ConsoleDriver {
     }
 
     public func output(_ string: String, style: Console.Style, newLine: Bool) {
-        let startOfCode = "\u{001B}["
-        let endOfCode = "m"
-
         let terminator = newLine ? "\n" : ""
 
         let color: Console.Color?

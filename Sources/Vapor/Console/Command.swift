@@ -31,10 +31,10 @@ public protocol Command {
     var help: [String] { get }
 
     /**
-        An array of Arguments that this
-        command accepts. This will be used
-        to ensure the command does not run
-        unless enough arguments are passed.
+        An array of Arguments that this command accepts. 
+        This will be used to ensure the command does 
+        not run unless enough arguments are passed.
+        It is also used to create the command's signature
 
         Arguments are required items.
     */
@@ -48,7 +48,11 @@ public protocol Command {
     var options: [Option] { get }
 
     /**
-        Runs the command.
+        Runs the command. 
+
+        `CommandError.custom` can be thrown
+        to echo an error to the console while
+        halting the command.
     */
     func run() throws
 }

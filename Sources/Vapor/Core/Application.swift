@@ -188,7 +188,6 @@ public class Application {
 
         commands.append(Help(app: self))
         commands.append(Serve(app: self))
-        commands.append(Greeting(app: self))
 
         restrictLogging(for: config.environment)
 
@@ -255,7 +254,7 @@ extension Application {
             commandId = next
         } else {
             commandId = "serve"
-            Log.info("No command supplied, defaulting to 'serve'.")
+            console.output("No command supplied, defaulting to 'serve'.", style: .warning)
         }
 
         let arguments = Array(iterator)
@@ -402,41 +401,5 @@ extension Application: Responder {
         response.headers["Server"] = "Vapor \(Vapor.VERSION)"
 
         return response
-    }
-}
-
-class Greeting: Command {
-    let id: String
-    let app: Application
-
-    let arguments = [
-        Argument("name")
-    ]
-
-    let options = [
-        Option("emphatic")
-    ]
-
-    init(app: Application) {
-        id = "hello"
-        self.app = app
-    }
-
-    func run() throws {
-        guard let name = try argument("name").string else {
-            throw CommandError.custom("Name was not a string")
-        }
-
-        var message = "Hello, \(name)"
-
-        if option("emphatic").bool == true {
-            message += "!"
-        }
-
-        info(message)
-
-        while confirm("Shall I say it again?") {
-            info(message)
-        }
     }
 }

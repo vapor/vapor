@@ -25,9 +25,6 @@ extension Command {
 
     /**
         Prints an error message.
-     
-        Use the overloaded `error(_:String, code: Int)`
-        method if you would also like the command to exit.
     */
     public func error(_ string: String) {
         print(string, style: .error)
