@@ -166,7 +166,6 @@ app.get("socket") { request in
             }
         }
         try ws.send("Hi there")
-        try ws.listen()
     }
 }
 
@@ -183,7 +182,6 @@ app.get("manual-socket") { request in
                 try data.ws.initiateClose()
             }
         }
-        try ws.listen()
     }
 
     let secReturn = request.headers["Sec-WebSocket-Key"]!.makeWebSocketSecKeyExchange()
@@ -203,7 +201,10 @@ app.get("manual-socket") { request in
     // TODO: Read up and clarify this
     //    headers["Sec-WebSocket-Protocol"] = request.headers["Sec-WebSocket-Protocol"]
     var response = Response.init(status: .switchingProtocols, headers: headers)//, headers: Headers, cookies: Cookies, body: Stream)
-    response.webSocketConnection = socketHandler
+    response.afterResponseSerialization = { stream in
+        let ws = WebSock(stream)
+        try socketHandler(ws)
+    }
     print("\n\nReturning: \(response)\n\n")
     return response
 }

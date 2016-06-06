@@ -131,7 +131,12 @@ extension Request {
         var response = S4.Response.init(status: .switchingProtocols, headers: responseHeaders)
         // TODO: Make Stream throws -> Void again on response
         // take stream, make websock, pass websock, listen
-        response.webSocketConnection = body
+//        response.webSocketConnection = body
+        response.afterResponseSerialization = { stream in
+            let ws = WebSock(stream)
+            try body(ws: ws)
+            try ws.listen()
+        }
         return response
 //
 //        // TODO: Read up and clarify this

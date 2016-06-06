@@ -52,10 +52,7 @@ final class StreamServer<
                 keepAlive = request.keepAlive
                 let response = try responder.respond(to: request)
                 try serializer.serialize(response)
-                if let webSocketConnection = response.webSocketConnection {
-                    let ws = WebSock(stream)
-                    try webSocketConnection(ws: ws)
-                }
+                try response.afterResponseSerialization?(stream)
             } catch let e as SocksCore.Error where e.isClosedByPeer {
                 break // jumpto close
             } catch let e as HTTPParser.Error where e == .streamEmpty {
@@ -84,25 +81,14 @@ extension SocksCore.Error {
 }
 
 extension Response {
-    public typealias PostResponseConnection = ((Stream) throws -> Void)
+    public typealias AfterResponseSerialization = ((Stream) throws -> Void)
 
-    public var postResponseConnection: PostResponseConnection? {
+    public var afterResponseSerialization: AfterResponseSerialization? {
         get {
-            return storage["vapor:postResponseConnection"] as? PostResponseConnection
+            return storage["vapor:afterResponseSerialization"] as? AfterResponseSerialization
         }
         set {
-            storage["vapor:postResponseConnection"] = newValue
-        }
-    }
-
-    public typealias WebSocketConnection = ((ws: WebSock) throws -> Void)
-
-    public var webSocketConnection: WebSocketConnection? {
-        get {
-            return storage["vapor:webSocketConnection"] as? WebSocketConnection
-        }
-        set {
-            storage["vapor:webSocketConnection"] = newValue
+            storage["vapor:afterResponseSerialization"] = newValue
         }
     }
 }
