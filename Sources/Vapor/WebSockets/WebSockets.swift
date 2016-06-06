@@ -1,21 +1,96 @@
+import Strand
+
 public final class WebSock {
     private var lock: Lock = Lock()
 
+    private var _closed: Bool = false
+
+    public private(set) var closed: Bool {
+        get {
+            var _closed = false
+            lock.locked {
+                _closed = self._closed
+            }
+            return _closed
+        }
+        set {
+            lock.locked {
+                _closed = newValue
+            }
+        }
+    }
+
+    private var readStrand: Strand? = nil
+
     public let stream: Stream
+
     public init(_ stream: Stream) {
         self.stream = stream
+    }
+
+    deinit {
+        print("\n\n\t***** WE GONE :D *****\n\n\n")
+    }
+
+    // MARK: Send actual close message
+    public func close() throws {
+        try readStrand?.cancel()
+        closed = true
     }
 }
 
 extension WebSock {
     public func listen(_ handler: (socket: WebSock, message: WebSock.Message) throws -> Void) throws {
-        while true {
-            let parser = MessageParser(stream: stream)
-            let nextMessage = try parser.acceptMessage()
-            print("[Incoming Message]: \(nextMessage)")
-            try handler(socket: self, message: nextMessage)
+        guard readStrand == nil else {
+            throw "already open"
         }
+//        readStrand = try Strand {
+            // Must be initialized outside of while context to avoid reinitialization and
+            // potential loss of bytes in buffer
+            while !closed {
+                do {
+                    let parser = MessageParser(stream: stream)
+                    let nextMessage = try parser.acceptMessage()
+                    try handler(socket: self, message: nextMessage)
+                    if nextMessage.header.opCode == .connectionClose {
+                        // TODO: Parse Reason / status code
+                        // This information is NOT required
+                        /*
+                         First 2 bytes are status code
+                         Remaining bytes are non-human readable string messgae
+                         */
+                        Log.info("Socket closed w/ reason")
+                        try close()
+                    }
+                } catch {
+                    Log.info("WebSocket Failed w/ error: \(error)")
+                    break
+                }
+            }
+//        }
+
+
+//        readStrand = try Strand { //[weak self] in
+////            while let welf = self where !welf.closed {
+//
+//            let welf = self
+////            while !self.closed {
+//            while true {
+//                do {
+//                    let parser = MessageParser(stream: welf.stream)
+//                    let nextMessage = try parser.acceptMessage()
+//                    try handler(socket: welf, message: nextMessage)
+//                } catch {
+//                    Log.info("WebSocket Failed w/ error: \(error)")
+//                    break
+//                }
+//            }
+        
     }
+}
+
+extension Request {
+    
 }
 
 extension WebSock {

@@ -1,16 +1,3 @@
-extension OutputStream {
-    mutating func chunk(length: Int) throws -> [Element] {
-        var elements: [Element] = []
-        for _ in 1...length {
-            guard let next = try next() else {
-                throw "6"
-            }
-            elements.append(next)
-        }
-        return elements
-    }
-}
-
 public final class MessageParser<O: OutputStream where O.Element == Byte> {
     private var buffer: O
 
@@ -22,7 +9,7 @@ public final class MessageParser<O: OutputStream where O.Element == Byte> {
 
     private func extractByteZero() throws -> (fin: Bool, rsv1: Bool, rsv2: Bool, rsv3: Bool, opCode: WebSock.Message.OpCode) {
         guard let byteZero = try buffer.next() else {
-            throw "479: WebSockets.Swift: MessageParser"
+            throw "No next byte"
         }
         let fin = byteZero.containsMask(.finFlag)
         let rsv1 = byteZero.containsMask(.rsv1Flag)
@@ -139,5 +126,18 @@ extension MessageParser where O: StreamBuffer {
     public convenience init(stream: Stream) {
         let buffer = O.init(stream)
         self.init(data: buffer)
+    }
+}
+
+extension OutputStream {
+    mutating func chunk(length: Int) throws -> [Element] {
+        var elements: [Element] = []
+        for _ in 1...length {
+            guard let next = try next() else {
+                throw "6"
+            }
+            elements.append(next)
+        }
+        return elements
     }
 }

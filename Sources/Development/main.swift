@@ -151,15 +151,28 @@ extension String {
 //}
 
 app.get("socket") { request in
+
     print("Get socket: \(request)")
     func socketHandler(_ socket: Stream) throws {
         let ws = WebSock.init(socket)
+
+
+        let msg = WebSock.Message.respondToClient("[PREFIX] LEADING \(NSDate())")
+        let bytes = MessageSerializer.serialize(msg)
+        try ws.stream.send(Data(bytes))
+        print("*****PRE LISTEN")
+        var c = 0
         try ws.listen { sock, message in
+            c += 1
             print("Got message: \(message)")
-            let msg = WebSock.Message.respondToClient("Got it \(NSDate())")
+            let msg = WebSock.Message.respondToClient("[\(c)] Got it \(NSDate())")
             let bytes = MessageSerializer.serialize(msg)
             try sock.stream.send(Data(bytes))
+            if c == 10 {
+                try sock.close()
+            }
         }
+        print("*****POST LISTEN")
     }
 
     let secReturn = request.headers["Sec-WebSocket-Key"]!.makeWebSocketSecKeyExchange()
