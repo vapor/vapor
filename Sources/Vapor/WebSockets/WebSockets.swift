@@ -183,28 +183,6 @@ extension WebSock {
         try send(msg)
     }
 
-    // TODO: Currently waiting for response -- this is correct, but a timeout would be better
-    // for sockets that may not be good players and keep the connection open by not responding
-    //
-    public func initiateClose(statusCode: UInt16? = nil, reason: String? = nil) throws {
-        // TODO: Use status code and reason data
-        guard state == .open else { return }
-        state = .closing
-
-        let header = Message.Header(
-            fin: true,
-            rsv1: false,
-            rsv2: false,
-            rsv3: false,
-            opCode: .connectionClose,
-            isMasked: false,
-            payloadLength: 0,
-            maskingKey: .none
-        )
-        let msg = Message(header: header, payload: Data())
-        try send(msg)
-    }
-
     // https://tools.ietf.org/html/rfc6455#section-5.5.1
     private func respondToClose(echo payload: Data) throws {
         // ensure haven't already sent
@@ -232,38 +210,47 @@ extension WebSock {
         )
         let msg = Message(header: header, payload: payload)
         try send(msg)
-        try closeUnderlyingTCP()
     }
 
-    private func closeUnderlyingTCP() throws {
-        try stream.close()
+    private func completeCloseHandshake(statusCode: UInt16 = 0, reason: String = "Not yet implemented", cleanly: Bool) throws {
         state = .closed
+        try onClose?((self, statusCode, reason, cleanly))
     }
 }
 
 extension WebSock {
     public func listen() throws {
         while state != .closed {
+            // not a part of while logic, we need to separately acknowledge
+            // that TCP closed w/o handshake
+            if stream.closed {
+                try completeCloseHandshake(cleanly: false)
+                break
+            }
+
             do {
                 let parser = MessageParser(stream: stream)
                 let frame = try parser.acceptMessage()
                 try received(frame)
             } catch {
-                Log.info("WebSocket Failed w/ error: \(error)")
-                break
-            }
-
-            if stream.closed {
-                try onClose?((self, 0, "not yet implemented", false))
+                // TODO: If connection is closed by peer here w/ error, we have an issue
+                // where `onClose` won't be called,
+                // I'm unable to create this scenario, so it might be a non-issue
+                //
+                Log.error("WebSocket Failed w/ error: \(error)")
                 break
             }
         }
     }
 
+    // TODO: Sort Fragments
     private func received(_ frame: Frame) throws {
         try onFrame?((self, frame))
 
         switch frame.header.opCode {
+        case .continuation:
+            print("NOT YET HANDLING FRAGMENTS MANUALLY")
+            break
         case .binary:
             let payload = frame.payload
             try onBinary?((self, payload))
@@ -303,14 +290,14 @@ extension WebSock {
         case .open:
         // opponent requested close, we're responding
             try respondToClose(echo: frame.payload)
+            try completeCloseHandshake(cleanly: true)
         case .closing:
         // we requested close, opponent responded
-            try closeUnderlyingTCP()
+            try completeCloseHandshake(cleanly: true)
         case .closed:
             // TODO: break or throw, this shouldn't ever happen
             break
         }
-
     }
 }
 

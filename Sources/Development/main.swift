@@ -164,8 +164,12 @@ app.get("socket") { request in
 
             if text == "close" {
                 try ws.send("\n\tCLOSING\n")
-                try ws.initiateClose()
+                try ws.close()
             }
+        }
+
+        ws.onClose = { data in
+            print("Did close w/ packet \(data)")
         }
 
         try ws.send("Hi there")
