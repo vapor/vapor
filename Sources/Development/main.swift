@@ -21,142 +21,13 @@ app.get("test") { request in
     return "123"
 }
 
-// Create NSData object
-//NSData *nsdata = [@"iOS Developer Tips encoded in Base64"
-//    dataUsingEncoding:NSUTF8StringEncoding];
-//
-//// Get NSString from NSData object in Base64
-//NSString *base64Encoded = [nsdata base64EncodedStringWithOptions:0];
-//
-//// Print the Base64 encoded string
-//NSLog(@"Encoded: %@", base64Encoded);
-//
-//// Let's go the other way...
-//
-//// NSData from the Base64 encoded str
-//NSData *nsdataFromBase64String = [[NSData alloc]
-//    initWithBase64EncodedString:base64Encoded options:0];
-//
-//// Decoded NSString from the NSData
-//NSString *base64Decoded = [[NSString alloc]
-//    initWithData:nsdataFromBase64String encoding:NSUTF8StringEncoding];
-//NSLog(@"Decoded: %@", base64Decoded);
-
-// TODO: Do test from RFC
-//let HashKey = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
-//let combined = "dGhlIHNhbXBsZSBub25jZQ==" + HashKey
-//let shaBytes = SHA1.calculate(combined)
-//var endMarker = NSData(bytes: shaBytes, length: shaBytes.count)
-//let hashed = endMarker.base64EncodedString(.encoding64CharacterLineLength)
-//print("HASHED: \(hashed)")
-//print("")
-
-//app.get("socket") { request in
-//    print("Get socket: \(request)")
-//    func socketHandler(_ socket: Stream) throws {
-//        print("About to send\n\n")
-//        try socket.send(Data([0x81, 0x05, 0x48, 0x65, 0x6c, 0x6c, 0x6f]))
-//        print("Sent ---\n\n Receiving --- \n\n")
-////        let received = try socket.receive(upTo: 1024)
-////        let msg = try FrameDeserializer.parseInput(Data(received))
-////        print("Received message: \(msg)")
-////        print("\n\nPayload: \(try msg.payload.toString())\n\n")
-////        print("")
-//
-////        try socket.send(Data([0x81, 0x05, 0x48, 0x65, 0x6c, 0x6c, 0x6f]))
-////        try socket.send(Data([0x81, 0x05, 0x48, 0x65, 0x6c, 0x6c, 0x6f]))
-//        var c = 1
-//        var fragmentedMessage: [String] = []
-//        while true {
-//            c += 1
-//            // need to iterate through message
-////            let next = try socket.receive(upTo: 1024)
-////            guard !next.isEmpty else { continue }
-//            let newMsg = try FrameDeserializer.parse(stream: socket)
-//            let str = try newMsg.payload.toString()
-//
-//            var respondMsg: String = ""
-//            if newMsg.isFragmentHeader {
-//                fragmentedMessage.append(str)
-//                continue
-//            } else if newMsg.isFragmentBody {
-//                fragmentedMessage.append(str)
-//                continue
-//            } else if newMsg.isFragmentFooter {
-//                fragmentedMessage.append(str)
-//                respondMsg = fragmentedMessage.joined(separator: "")
-//                fragmentedMessage = []
-//            } else {
-//                respondMsg = "Hello there again, this has been \(c) times, and now it's \(NSDate())"
-//            }
-//
-//            print("\n\n[MSG]:\n\n\t\(str)\n\n")
-////            let message = "Hello there again, this has been \(c) times, and now it's \(NSDate())"
-////            let message = "ECHO: \(str)"
-////            let msgBytes = Data(message)
-//            let msg = WebSocket.Message.respondToClient(respondMsg)
-//            let bytes = FrameSerializer.serialize(msg)
-//            try socket.send(Data(bytes))
-//        }
-////        let msg = Message
-////        print("Received raw: \(received)")
-////        print("received: \(try received.toString())")
-//    }
-//
-//    let secReturn = request.headers["Sec-WebSocket-Key"]!.makeWebSocketSecKeyExchange()
-////    let combined = inputKey + HashKey
-////    let hashed = combined.toBase64()
-////    HTTP/1.1 101 Switching Protocols
-////    Upgrade: websocket
-////    Connection: Upgrade
-////    Sec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=
-////    Sec-WebSocket-Protocol: chat
-//    var headers: Headers = [:]
-//    headers["Connection"] = "Upgrade"
-//    headers["Upgrade"] = "websocket"
-//    // NOTE: Note that request has -Key, return has -Accept
-//    headers["Sec-WebSocket-Accept"] = secReturn
-////    headers["Sec-WebSocket-Version"] = "13"
-//    // TODO: Read up and clarify this
-////    headers["Sec-WebSocket-Protocol"] = request.headers["Sec-WebSocket-Protocol"]
-//    var response = Response.init(status: .switchingProtocols, headers: headers)//, headers: Headers, cookies: Cookies, body: Stream)
-//    response.webSocketConnection = socketHandler
-//    print("\n\nReturning: \(response)\n\n")
-//    return response
-//}
-
-import Foundation
-import SHA1
-
-extension String {
-    // TODO: Fewer foundation deps
-    func makeWebSocketSecKeyExchange() -> String {
-        // UUID defined here: https://tools.ietf.org/html/rfc6455#section-1.3
-        let HashKey = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
-        let combined = self.trim() + HashKey
-        let shaBytes = SHA1.calculate(combined)
-        let endMarker = NSData(bytes: shaBytes, length: shaBytes.count)
-        let hashed = endMarker.base64EncodedString(.encoding64CharacterLineLength)
-        return hashed
-    }
-    func toBase64() -> String {
-        let d = data(using: NSUTF8StringEncoding)
-        return d!.base64EncodedString(.encoding64CharacterLineLength)
-        //        return d!.base64EncodedData(NSDataBase64EncodingOptions.encoding64CharacterLineLength)
-    }
-
-    static func fromBase64(_ string: String) -> String {
-        let d = NSData.init(base64Encoded: string, options: .ignoreUnknownCharacters)
-        return String.init(data: d!, encoding: NSUTF8StringEncoding)!
-    }
-}
+// MARK: WebSockets
 
 app.get("socket") { request in
     return try request.upgradeToWebSocket { ws in
-        print("WebSocket upgraded")
         ws.onText = { ws, text in
-            print("Got \(text)")
-            try ws.send("thank you for text \(text)\n\n\t:)\n")
+            print("Received \(text)")
+            try ws.send("You said \(text)!")
 
             if text == "stop" {
                 ws.onText = nil
@@ -175,46 +46,6 @@ app.get("socket") { request in
         try ws.send("Hi there")
     }
 }
-
-//app.get("manual-socket") { request in
-//    func socketHandler(_ socket: WebSocket) throws {
-//        let ws = socket//WebSocket.init(socket)
-//        ws.textEvent.subscribe { data, text in
-//            print("Got \(data.text)")
-//            // TODO: rm !
-//            try data.ws.send("thank you for text \(data.text)\n\n\t:)\n")
-//
-//            if data.text == "close" {
-//                try data.ws.send("\n\tCLOSING\n")
-//                try data.ws.initiateClose()
-//            }
-//        }
-//    }
-//
-//    let secReturn = request.headers["Sec-WebSocket-Key"]!.makeWebSocketSecKeyExchange()
-//    //    let combined = inputKey + HashKey
-//    //    let hashed = combined.toBase64()
-//    //    HTTP/1.1 101 Switching Protocols
-//    //    Upgrade: websocket
-//    //    Connection: Upgrade
-//    //    Sec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=
-//    //    Sec-WebSocket-Protocol: chat
-//    var headers: Headers = [:]
-//    headers["Connection"] = "Upgrade"
-//    headers["Upgrade"] = "websocket"
-//    // NOTE: Note that request has -Key, return has -Accept
-//    headers["Sec-WebSocket-Accept"] = secReturn
-//    //    headers["Sec-WebSocket-Version"] = "13"
-//    // TODO: Read up and clarify this
-//    //    headers["Sec-WebSocket-Protocol"] = request.headers["Sec-WebSocket-Protocol"]
-//    var response = Response.init(status: .switchingProtocols, headers: headers)//, headers: Headers, cookies: Cookies, body: Stream)
-//    response.afterResponseSerialization = { stream in
-//        let ws = WebSocket(stream)
-//        try socketHandler(ws)
-//    }
-//    print("\n\nReturning: \(response)\n\n")
-//    return response
-//}
 
 //MARK: Resource
 
