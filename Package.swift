@@ -29,9 +29,9 @@ let package = Package(
         .Package(url: "https://github.com/ketzusaka/Strand.git", majorVersion: 1, minor: 4),
 
         //Sockets, used by the built in HTTP server
-        .Package(url: "https://github.com/LoganWright/Socks.git", majorVersion: 0, minor: 5)
+        .Package(url: "https://github.com/LoganWright/Socks.git", majorVersion: 0, minor: 5),
 
-		//For WebSockets
+        //For WebSockets
         .Package(url: "https://github.com/CryptoKitten/SHA1.git", majorVersion: 0, minor: 7),
         .Package(url: "https://github.com/Zewo/Event.git", majorVersion: 0, minor: 5),
     ],
