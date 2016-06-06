@@ -5,8 +5,6 @@
  Right now it's dependent on response, it should timeout and close _not cleanly_
  */
 
-import Strand
-
 extension WebSock {
     public func send(_ msg: Message) throws {
         // TODO: Throw if control frame greater than 125 byte PAYLOAD.
@@ -26,6 +24,7 @@ extension WebSock {
             payloadLength: UInt64(payload.count),
             maskingKey: .none
         )
+
         let msg = Message(header: header, payload: payload)
         try send(msg)
     }
@@ -233,12 +232,8 @@ extension WebSock {
                 let frame = try parser.acceptMessage()
                 try received(frame)
             } catch {
-                // TODO: If connection is closed by peer here w/ error, we have an issue
-                // where `onClose` won't be called,
-                // I'm unable to create this scenario, so it might be a non-issue
-                //
                 Log.error("WebSocket Failed w/ error: \(error)")
-                break
+                try completeCloseHandshake(cleanly: false)
             }
         }
     }
@@ -341,7 +336,8 @@ extension Stream {
         try send(Data(data))
     }
 }
-extension WebSock.Message {
+
+extension WebSock.Frame {
     /* https://tools.ietf.org/html/rfc6455#section-5.2
      0               1               2               3
      0 1 2 3 4 5 6 7 0 1 2 3 4 5 6 7 0 1 2 3 4 5 6 7 0 1 2 3 4 5 6 7
