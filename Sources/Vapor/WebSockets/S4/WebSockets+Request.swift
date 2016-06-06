@@ -19,17 +19,17 @@ extension Request {
             throw "invalid header: Sec-WebSocket-Version"
         }
 
-        // TODO: Protocols are application specific, should be exposed via API
-        let protocols = headers.secWebProtocol ?? []
-
         var responseHeaders: Headers = [:]
         responseHeaders.connection = "Upgrade"
         responseHeaders.upgrade = "websocket"
         responseHeaders.secWebSocketAccept = WebSock.exchange(requestKey: requestKey)
         responseHeaders.secWebSocketVersion = version
-        responseHeaders.secWebProtocol = supportedProtocols(protocols)
 
-        var response = S4.Response.init(status: .switchingProtocols, headers: responseHeaders)
+        if let passedProtocols = headers.secWebProtocol {
+            responseHeaders.secWebProtocol = supportedProtocols(passedProtocols)
+        }
+
+        var response = S4.Response(status: .switchingProtocols, headers: responseHeaders)
         response.afterResponseSerialization = { stream in
             let ws = WebSock(stream)
             try body(ws: ws)

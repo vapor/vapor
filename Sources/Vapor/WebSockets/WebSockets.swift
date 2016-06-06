@@ -6,7 +6,7 @@
  */
 
 extension WebSock {
-    public func send(_ msg: Message) throws {
+    public func send(_ msg: Frame) throws {
         // TODO: Throw if control frame greater than 125 byte PAYLOAD.
         try stream.send(msg)
     }
@@ -14,7 +14,7 @@ extension WebSock {
     // TODO: Not Masking etc. assumes Server to Client, consider strategy to support both
     public func send(_ text: String) throws {
         let payload = Data(text)
-        let header = Message.Header(
+        let header = Frame.Header(
             fin: true,
             rsv1: false,
             rsv2: false,
@@ -25,13 +25,13 @@ extension WebSock {
             maskingKey: .none
         )
 
-        let msg = Message(header: header, payload: payload)
+        let msg = Frame(header: header, payload: payload)
         try send(msg)
     }
 
     public func send(_ binary: Data) throws {
         let payload = binary
-        let header = Message.Header(
+        let header = Frame.Header(
             fin: true,
             rsv1: false,
             rsv2: false,
@@ -41,7 +41,7 @@ extension WebSock {
             payloadLength: UInt64(payload.count),
             maskingKey: .none
         )
-        let msg = Message(header: header, payload: payload)
+        let msg = Frame(header: header, payload: payload)
         try send(msg)
     }
 }
@@ -58,7 +58,7 @@ extension WebSock {
         let payload: Data = []
 
 
-        let header = Message.Header(
+        let header = Frame.Header(
             fin: true,
             rsv1: false,
             rsv2: false,
@@ -68,7 +68,7 @@ extension WebSock {
             payloadLength: UInt64(payload.count),
             maskingKey: .none
         )
-        let msg = Message(header: header, payload: payload)
+        let msg = Frame(header: header, payload: payload)
         try stream.send(msg)
     }
 
@@ -78,7 +78,7 @@ extension WebSock {
      Applications may opt to send unsolicited .pong messages as a sort of keep awake heart beat
      */
     public func pong(_ payload: Data) throws {
-        let header = Message.Header(
+        let header = Frame.Header(
             fin: true,
             rsv1: false,
             rsv2: false,
@@ -88,7 +88,7 @@ extension WebSock {
             payloadLength: UInt64(payload.count),
             maskingKey: .none
         )
-        let msg = Message(header: header, payload: payload)
+        let msg = Frame(header: header, payload: payload)
         try stream.send(msg)
     }
 }
@@ -102,10 +102,6 @@ extension WebSock {
         case closing
         case closed
     }
-}
-
-extension WebSock {
-    public typealias Frame = Message
 }
 
 public final class WebSock {
@@ -145,7 +141,7 @@ extension WebSock {
         guard state == .open else { return }
         state = .closing
 
-        let header = Message.Header(
+        let header = Frame.Header(
             fin: true,
             rsv1: false,
             rsv2: false,
@@ -155,7 +151,7 @@ extension WebSock {
             payloadLength: 0,
             maskingKey: .none
         )
-        let msg = Message(header: header, payload: Data())
+        let msg = Frame(header: header, payload: Data())
         try send(msg)
     }
 
@@ -174,7 +170,7 @@ extension WebSock {
          status code it received.)
          */
 
-        let header = Message.Header(
+        let header = Frame.Header(
             fin: true,
             rsv1: false,
             rsv2: false,
@@ -184,7 +180,7 @@ extension WebSock {
             payloadLength: UInt64(payload.count),
             maskingKey: .none
         )
-        let msg = Message(header: header, payload: payload)
+        let msg = Frame(header: header, payload: payload)
         try send(msg)
     }
 
@@ -267,9 +263,16 @@ extension WebSock {
         // we requested close, opponent responded
             try completeCloseHandshake(cleanly: true)
         case .closed:
-            // TODO: break or throw, this shouldn't ever happen
-            break
+            Log.info("Received close frame: \(frame) already closed.")
         }
+    }
+}
+
+extension Stream {
+    public func send(_ message: WebSock.Frame) throws {
+        let serializer = MessageSerializer(message)
+        let data = serializer.serialize()
+        try send(Data(data))
     }
 }
 
@@ -294,7 +297,7 @@ extension WebSock {
      |                     Payload Data continued ...                |
      +---------------------------------------------------------------+
      */
-    public final class Message {
+    public final class Frame {
         public let header: Header
         public let payload: Data
 
@@ -303,14 +306,6 @@ extension WebSock {
             self.header = header
             self.payload = payload
         }
-    }
-}
-
-extension Stream {
-    public func send(_ message: WebSock.Message) throws {
-        let serializer = MessageSerializer(message)
-        let data = serializer.serialize()
-        try send(Data(data))
     }
 }
 
@@ -356,7 +351,7 @@ extension WebSock.Frame {
     }
 }
 
-extension WebSock.Message {
+extension WebSock.Frame {
     /*
      Defines the interpretation of the "Payload data".  If an unknown
      opcode is received, the receiving endpoint MUST _Fail the
@@ -430,11 +425,11 @@ extension WebSock.Message {
     }
 }
 
-extension WebSock.Message.OpCode {
+extension WebSock.Frame.OpCode {
     public enum Error: ErrorProtocol { case invalid }
 }
 
-extension WebSock.Message.OpCode {
+extension WebSock.Frame.OpCode {
     public enum NonControlFrameExtension: UInt8 {
         case three = 3, four, five, six, seven
         init<I: UnsignedInteger>(_ i: I) throws {
@@ -506,7 +501,7 @@ extension WebSock.Message.OpCode {
  
  
  */
-extension WebSock.Message.OpCode {
+extension WebSock.Frame.OpCode {
     // 4 bits
     // TODO: Is it worth building UInt4?
     //
@@ -532,9 +527,9 @@ extension WebSock.Message.OpCode {
     }
 }
 
-extension WebSock.Message.OpCode: Equatable {}
+extension WebSock.Frame.OpCode: Equatable {}
 
-public func == (lhs: WebSock.Message.OpCode, rhs: WebSock.Message.OpCode) -> Bool {
+public func == (lhs: WebSock.Frame.OpCode, rhs: WebSock.Frame.OpCode) -> Bool {
     switch (lhs, rhs) {
     case (.continuation, .continuation): return true
     case (.text, .text): return true
@@ -548,7 +543,7 @@ public func == (lhs: WebSock.Message.OpCode, rhs: WebSock.Message.OpCode) -> Boo
     }
 }
 
-extension WebSock.Message.OpCode {
+extension WebSock.Frame.OpCode {
     /*
      Control frames are identified by opcodes where the most significant
      bit of the opcode is 1.
@@ -568,7 +563,7 @@ extension WebSock.Message.OpCode {
     }
 }
 
-extension WebSock.Message.Header {
+extension WebSock.Frame.Header {
     /*
      Control frame CAN NOT be fragmented, but can be injected in between a fragmented message
      */
@@ -579,7 +574,7 @@ extension WebSock.Message.Header {
 
 // TODO: Rename => Frame? matches RFC better
 // Frame usually refers to Header, maybe Header == Frame
-extension WebSock.Message {
+extension WebSock.Frame {
     public var isControlFrame: Bool {
         return header.isControlFrame
     }
@@ -620,10 +615,10 @@ extension MaskingKey {
     }
 }
 
-extension WebSock.Message {
-    public static func respondToClient(_ msg: String) -> WebSock.Message {
+extension WebSock.Frame {
+    public static func respondToClient(_ msg: String) -> WebSock.Frame {
         let payload = Data(msg)
-        let header = WebSock.Message.Header(
+        let header = WebSock.Frame.Header(
             fin: true,
             rsv1: false,
             rsv2: false,
@@ -634,7 +629,7 @@ extension WebSock.Message {
             maskingKey: .none
         )
 
-        return WebSock.Message(header: header, payload: payload)
+        return WebSock.Frame(header: header, payload: payload)
     }
 }
 
@@ -660,7 +655,7 @@ extension UnsignedInteger {
     }
 }
 
-extension WebSock.Message {
+extension WebSock.Frame {
     public enum Error: ErrorProtocol {
         case failed
     }
@@ -739,7 +734,7 @@ extension WebSock.Message {
  opcodes.
  */
 
-extension WebSock.Message {
+extension WebSock.Frame {
     public var isFragment: Bool {
         /*
          An unfragmented message consists of a single frame with the FIN
@@ -871,9 +866,9 @@ extension String: ErrorProtocol {}
  */
 // TODO: NOT UNIT TESTED
 public final class MessageSerializer {
-    private let message: WebSock.Message
+    private let message: WebSock.Frame
 
-    private init(_ message: WebSock.Message) {
+    private init(_ message: WebSock.Frame) {
         self.message = message
     }
 
@@ -960,7 +955,7 @@ public final class MessageSerializer {
 }
 
 extension MessageSerializer {
-    public static func serialize(_ message: WebSock.Message) -> [Byte] {
+    public static func serialize(_ message: WebSock.Frame) -> [Byte] {
         let serializer = MessageSerializer(message)
         return serializer.serialize()
     }

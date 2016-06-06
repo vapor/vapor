@@ -7,7 +7,7 @@ public final class MessageParser<O: OutputStream where O.Element == Byte> {
 
     // MARK: Extractors
 
-    private func extractByteZero() throws -> (fin: Bool, rsv1: Bool, rsv2: Bool, rsv3: Bool, opCode: WebSock.Message.OpCode) {
+    private func extractByteZero() throws -> (fin: Bool, rsv1: Bool, rsv2: Bool, rsv3: Bool, opCode: WebSock.Frame.OpCode) {
         guard let byteZero = try buffer.next() else {
             throw "No next byte"
         }
@@ -16,7 +16,7 @@ public final class MessageParser<O: OutputStream where O.Element == Byte> {
         let rsv2 = byteZero.containsMask(.rsv2Flag)
         let rsv3 = byteZero.containsMask(.rsv3Flag)
 
-        let opCode = try WebSock.Message.OpCode(byteZero & .opCodeFlag)
+        let opCode = try WebSock.Frame.OpCode(byteZero & .opCodeFlag)
         return (fin, rsv1, rsv2, rsv3, opCode)
     }
 
@@ -79,7 +79,7 @@ public final class MessageParser<O: OutputStream where O.Element == Byte> {
         return key.cypher(bytes)
     }
 
-    public func acceptMessage() throws -> WebSock.Message {
+    public func acceptMessage() throws -> WebSock.Frame {
         let (fin, rsv1, rsv2, rsv3, opCode) = try extractByteZero()
         let (isMasked, payloadLengthInfo) = try extractByteOne()
 
@@ -108,7 +108,7 @@ public final class MessageParser<O: OutputStream where O.Element == Byte> {
             throw "598: WebSockets.Swift: MessageParser"
         }
 
-        let header = WebSock.Message.Header(
+        let header = WebSock.Frame.Header(
             fin: fin,
             rsv1: rsv1,
             rsv2: rsv2,
@@ -118,7 +118,7 @@ public final class MessageParser<O: OutputStream where O.Element == Byte> {
             payloadLength: payloadLength,
             maskingKey: maskingKey
         )
-        return WebSock.Message(header: header, payload: Data(payload))
+        return WebSock.Frame(header: header, payload: Data(payload))
     }
 }
 
