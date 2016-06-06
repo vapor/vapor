@@ -24,7 +24,7 @@ public class Console {
         case white
     }
 
-    public func output(_ string: String, style: Console.Style = .info, newLine: Bool = true) {
+    public func output(_ string: String, style: Console.Style = .plain, newLine: Bool = true) {
         driver.output(string, style: style, newLine: newLine)
     }
 

@@ -57,7 +57,7 @@ extension Console.Color {
         case .magenta:
             return 35
         case .cyan:
-            return 35
+            return 36
         case .white:
             return 37
         }
