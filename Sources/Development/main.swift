@@ -152,10 +152,27 @@ extension String {
 }
 
 app.get("socket") { request in
+    return try request.upgradeToWebSocket { ws in
+        print("WebSock upgraded")
+//        let ws = WebSock.init(socket)
+        ws.textEvent.subscribe { data, text in
+            print("Got \(data.text)")
+            // TODO: rm !
+            try data.ws.send("thank you for text \(data.text)\n\n\t:)\n")
 
-    print("Get socket: \(request)")
-    func socketHandler(_ socket: Stream) throws {
-        let ws = WebSock.init(socket)
+            if data.text == "close" {
+                try data.ws.send("\n\tCLOSING\n")
+                try data.ws.initiateClose()
+            }
+        }
+        try ws.send("Hi there")
+        try ws.listen()
+    }
+}
+
+app.get("manual-socket") { request in
+    func socketHandler(_ socket: WebSock) throws {
+        let ws = socket//WebSock.init(socket)
         ws.textEvent.subscribe { data, text in
             print("Got \(data.text)")
             // TODO: rm !
@@ -190,7 +207,6 @@ app.get("socket") { request in
     print("\n\nReturning: \(response)\n\n")
     return response
 }
-
 
 //MARK: Resource
 

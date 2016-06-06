@@ -100,8 +100,10 @@ extension WebSock {
  return response
  }
  */
+import S4
+
 extension Request {
-    public func upgradeToWebSocket(_ body: (ws: WebSock) throws -> Void) throws -> Response {
+    public func upgradeToWebSocket(_ body: (ws: WebSock) throws -> Void) throws -> S4.Response {
         guard let requestKey = headers.secWebSocketKey else {
             throw "missing header: Sec-WebSocket-Key"
         }
@@ -118,23 +120,17 @@ extension Request {
         }
 
         // TODO: Protocols are application specific, should be exposed via API
-        let accept = WebSock.exchange(requestKey: requestKey)
         let protocols = headers.secWebProtocol ?? []
 
         var responseHeaders: Headers = [:]
+        responseHeaders.connection = "Upgrade"
+        responseHeaders.upgrade = "websocket"
+        responseHeaders.secWebSocketAccept = WebSock.exchange(requestKey: requestKey)
+        responseHeaders.secWebSocketVersion = version
 
-//        var headers: Headers = [:]
-//        headers["Connection"] = "Upgrade"
-//        headers["Upgrade"] = "websocket"
-//        headers["Sec-WebSocket-Accept"] = accept
-//        headers["Sec-WebSocket-Version"] = version
-
-
-        fatalError()
-//        headers.Connection = "Upgrade"
-//        headers.upgrade = "websocket"
-//        headers.secWebSocketAccept = accept
-//        headers.secWebSocketVersion = version
+        var response = S4.Response.init(status: .switchingProtocols, headers: responseHeaders)
+        response.webSocketConnection = body
+        return response
 //
 //        // TODO: Read up and clarify this
 //        //    headers["Sec-WebSocket-Protocol"] = request.headers["Sec-WebSocket-Protocol"]

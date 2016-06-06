@@ -98,7 +98,7 @@ public final class WebSock {
         }
     }
 
-    public let stream: Stream
+    private let stream: Stream
 
     public init(_ stream: Stream) {
         self.stream = stream

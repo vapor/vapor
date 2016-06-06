@@ -52,9 +52,10 @@ final class StreamServer<
                 keepAlive = request.keepAlive
                 let response = try responder.respond(to: request)
                 try serializer.serialize(response)
-
-                // Optional chaining only runs on connection requests
-                try response.webSocketConnection?(stream)
+                if let webSocketConnection = response.webSocketConnection {
+                    let ws = WebSock(stream)
+                    try webSocketConnection(ws: ws)
+                }
             } catch let e as SocksCore.Error where e.isClosedByPeer {
                 break // jumpto close
             } catch let e as HTTPParser.Error where e == .streamEmpty {
@@ -83,7 +84,7 @@ extension SocksCore.Error {
 }
 
 extension Response {
-    public typealias WebSocketConnection = ((Stream) throws -> Void)
+    public typealias WebSocketConnection = ((ws: WebSock) throws -> Void)
 
     public var webSocketConnection: WebSocketConnection? {
         get {
