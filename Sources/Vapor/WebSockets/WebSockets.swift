@@ -1,98 +1,4 @@
-extension WebSock {
-    public func send(_ msg: Frame) throws {
-        // TODO: Throw if control frame greater than 125 byte PAYLOAD.
-        try stream.send(msg)
-    }
-
-    // TODO: Not Masking etc. assumes Server to Client, consider strategy to support both
-    public func send(_ text: String) throws {
-        let payload = Data(text)
-        let header = Frame.Header(
-            fin: true,
-            rsv1: false,
-            rsv2: false,
-            rsv3: false,
-            opCode: .text,
-            isMasked: false,
-            payloadLength: UInt64(payload.count),
-            maskingKey: .none
-        )
-
-        let msg = Frame(header: header, payload: payload)
-        try send(msg)
-    }
-
-    public func send(_ binary: Data) throws {
-        let payload = binary
-        let header = Frame.Header(
-            fin: true,
-            rsv1: false,
-            rsv2: false,
-            rsv3: false,
-            opCode: .binary,
-            isMasked: false,
-            payloadLength: UInt64(payload.count),
-            maskingKey: .none
-        )
-        let msg = Frame(header: header, payload: payload)
-        try send(msg)
-    }
-}
-
 // MARK:
-
-extension WebSock {
-    public func ping(statusCode: UInt16? = nil, reason: String? = nil) throws {
-        // Reason can _only_ exist if statusCode also exists
-        // statusCode may exist _without_ a reason
-        if statusCode != nil {
-
-        }
-        let payload: Data = []
-
-
-        let header = Frame.Header(
-            fin: true,
-            rsv1: false,
-            rsv2: false,
-            rsv3: false,
-            opCode: .ping,
-            isMasked: false,
-            payloadLength: UInt64(payload.count),
-            maskingKey: .none
-        )
-        let msg = Frame(header: header, payload: payload)
-        try stream.send(msg)
-    }
-
-    /**
-     If we receive a .ping, we must .pong identical data
-
-     Applications may opt to send unsolicited .pong messages as a sort of keep awake heart beat
-     */
-    public func pong(_ payload: Data) throws {
-        let header = Frame.Header(
-            fin: true,
-            rsv1: false,
-            rsv2: false,
-            rsv3: false,
-            opCode: .pong,
-            isMasked: false,
-            payloadLength: UInt64(payload.count),
-            maskingKey: .none
-        )
-        let msg = Frame(header: header, payload: payload)
-        try stream.send(msg)
-    }
-}
-
-extension Stream {
-    public func send(_ message: WebSock.Frame) throws {
-        let serializer = MessageSerializer(message)
-        let data = serializer.serialize()
-        try send(Data(data))
-    }
-}
 
 //extension WebSock.Test {}
 extension WebSock {
@@ -687,11 +593,11 @@ extension String: ErrorProtocol {}
 public final class MessageSerializer {
     private let message: WebSock.Frame
 
-    private init(_ message: WebSock.Frame) {
+    public init(_ message: WebSock.Frame) {
         self.message = message
     }
 
-    private func serialize() -> [Byte] {
+    public func serialize() -> [Byte] {
         let header = serializeHeader()
         let payload = serializePayload()
         return header + payload
@@ -770,13 +676,6 @@ public final class MessageSerializer {
 
     private func serializePayload() -> [Byte] {
         return message.header.maskingKey.cypher(message.payload)
-    }
-}
-
-extension MessageSerializer {
-    public static func serialize(_ message: WebSock.Frame) -> [Byte] {
-        let serializer = MessageSerializer(message)
-        return serializer.serialize()
     }
 }
 
