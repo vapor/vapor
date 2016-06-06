@@ -41,31 +41,6 @@ app.get("test") { request in
 //NSString *base64Decoded = [[NSString alloc]
 //    initWithData:nsdataFromBase64String encoding:NSUTF8StringEncoding];
 //NSLog(@"Decoded: %@", base64Decoded);
-import Foundation
-import SHA1
-
-extension String {
-    // TODO: Fewer foundation deps
-    func makeWebSocketSecKeyExchange() -> String {
-        // UUID defined here: https://tools.ietf.org/html/rfc6455#section-1.3
-        let HashKey = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
-        let combined = self.trim() + HashKey
-        let shaBytes = SHA1.calculate(combined)
-        let endMarker = NSData(bytes: shaBytes, length: shaBytes.count)
-        let hashed = endMarker.base64EncodedString(.encoding64CharacterLineLength)
-        return hashed
-    }
-    func toBase64() -> String {
-        let d = data(using: NSUTF8StringEncoding)
-        return d!.base64EncodedString(.encoding64CharacterLineLength)
-//        return d!.base64EncodedData(NSDataBase64EncodingOptions.encoding64CharacterLineLength)
-    }
-
-    static func fromBase64(_ string: String) -> String {
-        let d = NSData.init(base64Encoded: string, options: .ignoreUnknownCharacters)
-        return String.init(data: d!, encoding: NSUTF8StringEncoding)!
-    }
-}
 
 // TODO: Do test from RFC
 //let HashKey = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
@@ -150,29 +125,48 @@ extension String {
 //    return response
 //}
 
+import Foundation
+import SHA1
+
+extension String {
+    // TODO: Fewer foundation deps
+    func makeWebSocketSecKeyExchange() -> String {
+        // UUID defined here: https://tools.ietf.org/html/rfc6455#section-1.3
+        let HashKey = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
+        let combined = self.trim() + HashKey
+        let shaBytes = SHA1.calculate(combined)
+        let endMarker = NSData(bytes: shaBytes, length: shaBytes.count)
+        let hashed = endMarker.base64EncodedString(.encoding64CharacterLineLength)
+        return hashed
+    }
+    func toBase64() -> String {
+        let d = data(using: NSUTF8StringEncoding)
+        return d!.base64EncodedString(.encoding64CharacterLineLength)
+        //        return d!.base64EncodedData(NSDataBase64EncodingOptions.encoding64CharacterLineLength)
+    }
+
+    static func fromBase64(_ string: String) -> String {
+        let d = NSData.init(base64Encoded: string, options: .ignoreUnknownCharacters)
+        return String.init(data: d!, encoding: NSUTF8StringEncoding)!
+    }
+}
+
 app.get("socket") { request in
 
     print("Get socket: \(request)")
     func socketHandler(_ socket: Stream) throws {
         let ws = WebSock.init(socket)
+        ws.textEvent.subscribe { data, text in
+            print("Got \(data.text)")
+            // TODO: rm !
+            try data.ws.send("thank you for text \(data.text)\n\n\t:)\n")
 
-
-        let msg = WebSock.Message.respondToClient("[PREFIX] LEADING \(NSDate())")
-        let bytes = MessageSerializer.serialize(msg)
-        try ws.stream.send(Data(bytes))
-        print("*****PRE LISTEN")
-        var c = 0
-        try ws.listen { sock, message in
-            c += 1
-            print("Got message: \(message)")
-            let msg = WebSock.Message.respondToClient("[\(c)] Got it \(NSDate())")
-            let bytes = MessageSerializer.serialize(msg)
-            try sock.stream.send(Data(bytes))
-            if c == 10 {
-                try sock.close()
+            if data.text == "close" {
+                try data.ws.send("\n\tCLOSING\n")
+                try data.ws.initiateClose()
             }
         }
-        print("*****POST LISTEN")
+        try ws.listen()
     }
 
     let secReturn = request.headers["Sec-WebSocket-Key"]!.makeWebSocketSecKeyExchange()

@@ -75,4 +75,15 @@ public final class Event<T> {
     public func post(_ data: T) {
         subscribers.forEach { _, handler in handler(data) }
     }
+
+    // TODO: Reevaluate
+    public func on(_ handler: Handler) {
+        let newSubscription = Subscription()
+        let holder = Subscription.Holder(subscription: newSubscription)
+        let wrapped: Handler = {
+            _ = newSubscription // capture
+            handler($0)
+        }
+        subscribers.append((holder, wrapped))
+    }
 }

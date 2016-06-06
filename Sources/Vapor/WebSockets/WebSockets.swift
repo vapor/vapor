@@ -1,26 +1,102 @@
+// TODO:
+/*
+ - Double check close: https://tools.ietf.org/html/rfc6455#section-7.1.1
+
+ Right now it's dependent on response, it should timeout and close _not cleanly_
+ */
+
 import Strand
 
+extension WebSock {
+    // TODO: Not Masking etc. assumes Server to Client, consider strategy to support both
+    public func send(_ text: String) throws {
+        let payload = Data(text)
+        let header = Message.Header(
+            fin: true,
+            rsv1: false,
+            rsv2: false,
+            rsv3: false,
+            opCode: .text,
+            isMasked: false,
+            payloadLength: UInt64(payload.count),
+            maskingKey: .none
+        )
+        let msg = Message(header: header, payload: payload)
+        try send(msg)
+    }
+
+    public func send(_ binary: Data) throws {
+        let payload = binary
+        let header = Message.Header(
+            fin: true,
+            rsv1: false,
+            rsv2: false,
+            rsv3: false,
+            opCode: .binary,
+            isMasked: false,
+            payloadLength: UInt64(payload.count),
+            maskingKey: .none
+        )
+        let msg = Message(header: header, payload: payload)
+        try send(msg)
+    }
+
+    public func send(_ msg: Message) throws {
+        try stream.send(msg)
+    }
+}
+
+public final class UnidirectionalEvent<T> {
+    public typealias Handler = (data: T, stop: inout Bool) throws -> Void
+    private var handlers: [Handler] = []
+
+    public func subscribe(_ handler: Handler) {
+        handlers.append(handler)
+    }
+
+    private func post(_ data: T) throws {
+        handlers = try handlers.filter { handler in
+            var stop = false
+            try handler(data: data, stop: &stop)
+            return !stop
+        }
+    }
+}
+
+let asd = UnidirectionalEvent<(data: Data, string: String)>()
+
+extension WebSock {
+    public enum State {
+        case open
+        case closing
+        case closed
+    }
+}
+
 public final class WebSock {
+    public var messageEvent = UnidirectionalEvent<(ws: WebSock, message: Message)>()
+    public var textEvent = UnidirectionalEvent<(ws: WebSock, text: String)>()
+    public var binaryEvent = UnidirectionalEvent<(ws: WebSock, binary: Data)>()
+    public var closeEvent = UnidirectionalEvent<(ws: WebSock, code: UInt16, reason: String)>()
+
     private var lock: Lock = Lock()
 
-    private var _closed: Bool = false
+    private var _state: State = .open
 
-    public private(set) var closed: Bool {
+    public private(set) var state: State {
         get {
-            var _closed = false
+            var _closed = State.open
             lock.locked {
-                _closed = self._closed
+                _closed = self._state
             }
             return _closed
         }
         set {
             lock.locked {
-                _closed = newValue
+                _state = newValue
             }
         }
     }
-
-    private var readStrand: Strand? = nil
 
     public let stream: Stream
 
@@ -32,65 +108,118 @@ public final class WebSock {
         print("\n\n\t***** WE GONE :D *****\n\n\n")
     }
 
-    // MARK: Send actual close message
-    public func close() throws {
-        try readStrand?.cancel()
-        closed = true
+    // https://tools.ietf.org/html/rfc6455#section-5.5.1
+    private func respondToClose(echo payload: Data) throws {
+        // ensure haven't already sent
+        guard state != .closed else { return }
+
+        let header = Message.Header(
+            fin: true,
+            rsv1: false,
+            rsv2: false,
+            rsv3: false,
+            opCode: .connectionClose,
+            isMasked: false,
+            payloadLength: UInt64(payload.count),
+            maskingKey: .none
+        )
+        let msg = Message(header: header, payload: payload)
+        try send(msg)
+        state = .closed
+    }
+
+    public func initiateClose() throws {
+        guard state == .open else { return }
+        state = .closing
+
+        let header = Message.Header(
+            fin: true,
+            rsv1: false,
+            rsv2: false,
+            rsv3: false,
+            opCode: .connectionClose,
+            isMasked: false,
+            payloadLength: 0,
+            maskingKey: .none
+        )
+        let msg = Message(header: header, payload: Data())
+        try send(msg)
+    }
+
+    /**
+     If we receive a .ping, we must .pong identical data
+
+     Applications may opt to send unsolicited .pong messages as a sort of keep awake heart beat
+     */
+    public func pong(_ payload: Data) throws {
+        let header = Message.Header(
+            fin: true,
+            rsv1: false,
+            rsv2: false,
+            rsv3: false,
+            opCode: .pong,
+            isMasked: false,
+            payloadLength: UInt64(payload.count),
+            maskingKey: .none
+        )
+        let msg = Message(header: header, payload: payload)
+        try stream.send(msg)
     }
 }
 
 extension WebSock {
-    public func listen(_ handler: (socket: WebSock, message: WebSock.Message) throws -> Void) throws {
-        guard readStrand == nil else {
-            throw "already open"
-        }
-//        readStrand = try Strand {
-            // Must be initialized outside of while context to avoid reinitialization and
-            // potential loss of bytes in buffer
-            while !closed {
-                do {
-                    let parser = MessageParser(stream: stream)
-                    let nextMessage = try parser.acceptMessage()
-                    try handler(socket: self, message: nextMessage)
-                    if nextMessage.header.opCode == .connectionClose {
-                        // TODO: Parse Reason / status code
-                        // This information is NOT required
-                        /*
-                         First 2 bytes are status code
-                         Remaining bytes are non-human readable string messgae
-                         */
-                        Log.info("Socket closed w/ reason")
-                        try close()
-                    }
-                } catch {
-                    Log.info("WebSocket Failed w/ error: \(error)")
+    public func listen() throws {
+        while state != .closed {
+            do {
+                let parser = MessageParser(stream: stream)
+                let message = try parser.acceptMessage()
+                try messageEvent.post((self, message))
+                switch message.header.opCode {
+                case .binary:
+                    let payload = message.payload
+                    try binaryEvent.post((self, payload))
+                case .text:
+                    let text = try message.payload.toString()
+                    try textEvent.post((self, text))
+                    // TODO: We may have been the one who closed
+                    // in which case we shouldn't respond further
+                //
+                case .connectionClose where state == .open:
+                    // Opponent has requested close
+                    // we should respond close event
+
+                    // TODO: Parse Reason / status code
+                    // This information is NOT required
+                    /*
+                     First 2 bytes are status code
+                     Remaining bytes are non-human readable string messgae
+                     */
+                    Log.info("Socket closed w/ reason")
+
+                    // SHOULD ECHO STATUS CODE
+                    state = .closing
+                    try respondToClose(echo: message.payload)
+                    state = .closed
+                    try closeEvent.post((self, 0, "not yet implemented"))
+                case .connectionClose:
+                    // all done here
+                    state = .closed
+                    // We prompted a close and
+                    // received close response
+                    try closeEvent.post((self, 0, "not yet implemented"))
+                case .ping:
+                    try pong(message.payload)
+                default:
                     break
                 }
+                if message.header.opCode == .connectionClose {
+                }
+            } catch {
+                Log.info("WebSocket Failed w/ error: \(error)")
+                break
             }
-//        }
-
-
-//        readStrand = try Strand { //[weak self] in
-////            while let welf = self where !welf.closed {
-//
-//            let welf = self
-////            while !self.closed {
-//            while true {
-//                do {
-//                    let parser = MessageParser(stream: welf.stream)
-//                    let nextMessage = try parser.acceptMessage()
-//                    try handler(socket: welf, message: nextMessage)
-//                } catch {
-//                    Log.info("WebSocket Failed w/ error: \(error)")
-//                    break
-//                }
-//            }
-        
+        }
     }
-}
-
-extension Request {
-    
 }
 
 extension WebSock {
@@ -125,6 +254,13 @@ extension WebSock {
     }
 }
 
+extension Stream {
+    public func send(_ message: WebSock.Message) throws {
+        let serializer = MessageSerializer(message)
+        let data = serializer.serialize()
+        try send(Data(data))
+    }
+}
 extension WebSock.Message {
     /* https://tools.ietf.org/html/rfc6455#section-5.2
      0               1               2               3
