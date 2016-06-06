@@ -97,7 +97,7 @@ app.get("socket") { request in
             // need to iterate through message
 //            let next = try socket.receive(upTo: 1024)
 //            guard !next.isEmpty else { continue }
-            let newMsg = try _MessageParser.parse(stream: socket)
+            let newMsg = try MessageParser.parse(stream: socket)
             let str = try newMsg.payload.toString()
 
             var respondMsg: String = ""
@@ -119,7 +119,7 @@ app.get("socket") { request in
 //            let message = "Hello there again, this has been \(c) times, and now it's \(NSDate())"
 //            let message = "ECHO: \(str)"
 //            let msgBytes = Data(message)
-            let msg = WebSocketMessage.respondToClient(respondMsg)
+            let msg = WebSock.Message.respondToClient(respondMsg)
             let bytes = MessageSerializer.serialize(msg)
             try socket.send(Data(bytes))
         }

@@ -1,57 +1,96 @@
-/*
- 0               1               2               3
- 0 1 2 3 4 5 6 7 0 1 2 3 4 5 6 7 0 1 2 3 4 5 6 7 0 1 2 3 4 5 6 7
- +-+-+-+-+-------+-+-------------+-------------------------------+
- |F|R|R|R| opcode|M| Payload len |    Extended payload length    |
- |I|S|S|S|  (4)  |A|     (7)     |             (16/64)           |
- |N|V|V|V|       |S|             |   (if payload len==126/127)   |
- | |1|2|3|       |K|             |                               |
- +-+-+-+-+-------+-+-------------+ - - - - - - - - - - - - - - - +
- |     Extended payload length continued, if payload len == 127  |
- + - - - - - - - - - - - - - - - +-------------------------------+
- |                               |Masking-key, if MASK set to 1  |
- +-------------------------------+-------------------------------+
- | Masking-key (continued)       |          Payload Data         |
- +-------------------------------- - - - - - - - - - - - - - - - +
- :                     Payload Data continued ...                :
- + - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - +
- |                     Payload Data continued ...                |
- +---------------------------------------------------------------+
-*/
-
-// TODO: Bit or Bool?
-public enum Bit {
-    case one, zero
-}
-
-extension Bit: Boolean {
-    public var boolValue: Bool { return self == .one }
-}
-
-extension Bit: BooleanLiteralConvertible {
-    public init(booleanLiteral value: Bool) {
-        self = value ? .one : .zero
+public final class WebSock {
+    public let stream: Stream
+    public init(_ stream: Stream) {
+        self.stream = stream
     }
 }
 
-public struct Reserved {
-    /*
-     MUST be 0 unless an extension is negotiated that defines meanings
-     for non-zero values.  If a nonzero value is received and none of
-     the negotiated extensions defines the meaning of such a nonzero
-     value, the receiving endpoint MUST _Fail the WebSocket
-     Connection_.
+extension WebSock {
+    func listen(_ handler: (socket: WebSock, message: WebSock.Message) throws -> Void) throws {
+//        let parser = MessageParser
+        while true {
+            let nextMessage = try MessageParser.parse(stream: stream)
+            print("Got message: \(nextMessage)")
+            try handler(socket: self, message: nextMessage)
+        }
+    }
+}
+
+extension WebSock {
+    /* https://tools.ietf.org/html/rfc6455#section-5.2
+     0               1               2               3
+     0 1 2 3 4 5 6 7 0 1 2 3 4 5 6 7 0 1 2 3 4 5 6 7 0 1 2 3 4 5 6 7
+     +-+-+-+-+-------+-+-------------+-------------------------------+
+     |F|R|R|R| opcode|M| Payload len |    Extended payload length    |
+     |I|S|S|S|  (4)  |A|     (7)     |             (16/64)           |
+     |N|V|V|V|       |S|             |   (if payload len==126/127)   |
+     | |1|2|3|       |K|             |                               |
+     +-+-+-+-+-------+-+-------------+ - - - - - - - - - - - - - - - +
+     |     Extended payload length continued, if payload len == 127  |
+     + - - - - - - - - - - - - - - - +-------------------------------+
+     |                               |Masking-key, if MASK set to 1  |
+     +-------------------------------+-------------------------------+
+     | Masking-key (continued)       |          Payload Data         |
+     +-------------------------------- - - - - - - - - - - - - - - - +
+     :                     Payload Data continued ...                :
+     + - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - +
+     |                     Payload Data continued ...                |
+     +---------------------------------------------------------------+
      */
-    public let one: Bool
-    public let two: Bool
-    public let three: Bool
+    public final class Message {
+        public let header: Header
+        public let payload: Data
+
+        public init(header: Header, payload: Data) {
+            self.header = header
+            self.payload = payload
+        }
+    }
 }
 
-extension OpCode {
-    public enum Error: ErrorProtocol { case invalid, reserved }
+extension WebSock.Message {
+    /* https://tools.ietf.org/html/rfc6455#section-5.2
+     0               1               2               3
+     0 1 2 3 4 5 6 7 0 1 2 3 4 5 6 7 0 1 2 3 4 5 6 7 0 1 2 3 4 5 6 7
+     +-+-+-+-+-------+-+-------------+-------------------------------+
+     |F|R|R|R| opcode|M| Payload len |    Extended payload length    |
+     |I|S|S|S|  (4)  |A|     (7)     |             (16/64)           |
+     |N|V|V|V|       |S|             |   (if payload len==126/127)   |
+     | |1|2|3|       |K|             |                               |
+     +-+-+-+-+-------+-+-------------+ - - - - - - - - - - - - - - - +
+     |     Extended payload length continued, if payload len == 127  |
+     + - - - - - - - - - - - - - - - +-------------------------------+
+     |                               |Masking-key, if MASK set to 1  |
+     +-------------------------------+-------------------------------+
+     | Masking-key (continued)       |          Payload Data         |
+     +-------------------------------- - - - - - - - - - - - - - - - +
+     :                     Payload Data continued ...                :
+     + - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - +
+     |                     Payload Data continued ...                |
+     +---------------------------------------------------------------+
+     */
+    public struct Header {
+        public let fin: Bool
+
+        /**
+         Definable flags.
+
+         If any flag is 'true' that is not explicitly defined, the socket MUST close: RFC
+         */
+        public let rsv1: Bool
+        public let rsv2: Bool
+        public let rsv3: Bool
+
+        public let opCode: OpCode
+
+        public let isMasked: Bool
+        public let payloadLength: UInt64
+
+        public let maskingKey: MaskingKey
+    }
 }
 
-public enum OpCode {
+extension WebSock.Message {
     /*
      Defines the interpretation of the "Payload data".  If an unknown
      opcode is received, the receiving endpoint MUST _Fail the
@@ -73,122 +112,49 @@ public enum OpCode {
 
      *  %xB-F are reserved for further control frames
      */
-    case continuation
-    case text
-    case binary
-    case nonControlExtension(NonControlFrameExtension)
-    case connectionClose
-    case ping
-    case pong
-    case controlExtension(ControlFrameExtension)
+    public enum OpCode {
+        case continuation
+        case text
+        case binary
+        case nonControlExtension(NonControlFrameExtension)
+        case connectionClose
+        case ping
+        case pong
+        case controlExtension(ControlFrameExtension)
 
-    // 4 bytes
-    init(_ i: Byte) throws {
-        switch i {
-        case 0x00:
-            self = .continuation
-        case 0x01:
-            self = .text
-        case 0x02:
-            self = .binary
-        case 0x03...0x07: // reserved non-control frame
-            let ncf = try NonControlFrameExtension(i)
-            self = .nonControlExtension(ncf)
-        case 0x08:
-            self = .connectionClose
-        case 0x09:
-            self = .ping
-        case 0xA:
-            self = .pong
-        case 0xb...0xf: // reserved control frame
-            let cf = try ControlFrameExtension(i)
-            self = .controlExtension(cf)
-        default:
-            throw Error.invalid
+        // 4 bytes
+        init(_ i: Byte) throws {
+            switch i {
+            case 0x00:
+                self = .continuation
+            case 0x01:
+                self = .text
+            case 0x02:
+                self = .binary
+            case 0x03...0x07: // reserved non-control frame
+                let ncf = try NonControlFrameExtension(i)
+                self = .nonControlExtension(ncf)
+            case 0x08:
+                self = .connectionClose
+            case 0x09:
+                self = .ping
+            case 0xA:
+                self = .pong
+            case 0xb...0xf: // reserved control frame
+                let cf = try ControlFrameExtension(i)
+                self = .controlExtension(cf)
+            default:
+                throw Error.invalid
+            }
         }
     }
 }
 
-extension OpCode {
-    // 4 bits
-    // TODO: Is it worth building UInt4?
-    //
-    func serialize() -> Byte {
-        switch self {
-        case .continuation:
-            return 0x00
-        case .text:
-            return 0x01
-        case .binary:
-            return 0x02
-        case let .nonControlExtension(nce): // 3...7
-            return nce.rawValue
-        case .connectionClose:
-            return 0x08
-        case .ping:
-            return 0x09
-        case .pong:
-            return 0x0A
-        case let .controlExtension(ce):
-            return ce.rawValue
-        }
-    }
+extension WebSock.Message.OpCode {
+    public enum Error: ErrorProtocol { case invalid }
 }
 
-extension OpCode: Equatable {}
-
-public func == (lhs: OpCode, rhs: OpCode) -> Bool {
-    switch (lhs, rhs) {
-    case (.continuation, .continuation): return true
-    case (.text, .text): return true
-    case (.binary, .binary): return true
-    case let (.nonControlExtension(l), .nonControlExtension(r)): return l == r
-    case (.connectionClose, .connectionClose): return true
-    case (.ping, .ping): return true
-    case (.pong, .pong): return true
-    case let (.controlExtension(l), .controlExtension(r)): return l == r
-    default: return false
-    }
-}
-
-extension OpCode {
-    /*
-     Control frames are identified by opcodes where the most significant
-     bit of the opcode is 1.
-     
-     4 bytes (4...7)
-     
-     9...15
-
-     */
-    public var isControlFrame: Bool {
-        switch self {
-        case .ping, .pong, .controlExtension(_):
-            return true
-        default:
-            return false
-        }
-    }
-}
-
-extension WebSocketHeader {
-    /*
-     Control frame CAN NOT be fragmented, but can be injected in between a fragmented message
-     */
-    public var isControlFrame: Bool {
-        return opCode.isControlFrame
-    }
-}
-
-// TODO: Rename => Frame? matches RFC better
-// Frame usually refers to Header, maybe Header == Frame
-extension WebSocketMessage {
-    public var isControlFrame: Bool {
-        return header.isControlFrame
-    }
-}
-
-extension OpCode {
+extension WebSock.Message.OpCode {
     public enum NonControlFrameExtension: UInt8 {
         case three = 3, four, five, six, seven
         init<I: UnsignedInteger>(_ i: I) throws {
@@ -228,6 +194,118 @@ extension OpCode {
 }
 
 /*
+
+ // MARK: - A Note on Extensions
+
+ Reserved bits:
+
+
+ The protocol is designed to allow for extensions, which will add
+ capabilities to the base protocol.  The endpoints of a connection
+ MUST negotiate the use of any extensions during the opening
+ handshake.  This specification provides opcodes 0x3 through 0x7 and
+ 0xB through 0xF, the "Extension data" field, and the frame-rsv1,
+ frame-rsv2, and frame-rsv3 bits of the frame header for use by
+ extensions.  The negotiation of extensions is discussed in further
+ detail in Section 9.1.  Below are some anticipated uses of
+ extensions.  This list is neither complete nor prescriptive.
+
+ o  "Extension data" may be placed in the "Payload data" before the
+ "Application data".
+
+ o  Reserved bits can be allocated for per-frame needs.
+
+ o  Reserved opcode values can be defined.
+
+ o  Reserved bits can be allocated to the opcode field if more opcode
+ values are needed.
+
+ o  A reserved bit or an "extension" opcode can be defined that
+ allocates additional bits out of the "Payload data" to define
+ larger opcodes or more per-frame bits.
+ 
+ 
+ */
+extension WebSock.Message.OpCode {
+    // 4 bits
+    // TODO: Is it worth building UInt4?
+    //
+    func serialize() -> Byte {
+        switch self {
+        case .continuation:
+            return 0x00
+        case .text:
+            return 0x01
+        case .binary:
+            return 0x02
+        case let .nonControlExtension(nce): // 3...7
+            return nce.rawValue
+        case .connectionClose:
+            return 0x08
+        case .ping:
+            return 0x09
+        case .pong:
+            return 0x0A
+        case let .controlExtension(ce):
+            return ce.rawValue
+        }
+    }
+}
+
+extension WebSock.Message.OpCode: Equatable {}
+
+public func == (lhs: WebSock.Message.OpCode, rhs: WebSock.Message.OpCode) -> Bool {
+    switch (lhs, rhs) {
+    case (.continuation, .continuation): return true
+    case (.text, .text): return true
+    case (.binary, .binary): return true
+    case let (.nonControlExtension(l), .nonControlExtension(r)): return l == r
+    case (.connectionClose, .connectionClose): return true
+    case (.ping, .ping): return true
+    case (.pong, .pong): return true
+    case let (.controlExtension(l), .controlExtension(r)): return l == r
+    default: return false
+    }
+}
+
+extension WebSock.Message.OpCode {
+    /*
+     Control frames are identified by opcodes where the most significant
+     bit of the opcode is 1.
+     
+     4 bytes (4...7)
+     
+     9...15
+
+     */
+    public var isControlFrame: Bool {
+        switch self {
+        case .ping, .pong, .controlExtension(_):
+            return true
+        default:
+            return false
+        }
+    }
+}
+
+extension WebSock.Message.Header {
+    /*
+     Control frame CAN NOT be fragmented, but can be injected in between a fragmented message
+     */
+    public var isControlFrame: Bool {
+        return opCode.isControlFrame
+    }
+}
+
+// TODO: Rename => Frame? matches RFC better
+// Frame usually refers to Header, maybe Header == Frame
+extension WebSock.Message {
+    public var isControlFrame: Bool {
+        return header.isControlFrame
+    }
+}
+
+/*
  Client to Server MUST be masked
 
  Only set if mask bit is '1'
@@ -262,40 +340,40 @@ extension MaskingKey {
     }
 }
 
-public struct WebSocketHeader {
-    public let fin: Bool
+//public struct WebSocketHeader {
+//    public let fin: Bool
+//
+//    /**
+//     Definable flags.
+//     
+//     If any flag is 'true' that is not explicitly defined, the socket MUST close: RFC
+//    */
+//    public let rsv1: Bool
+//    public let rsv2: Bool
+//    public let rsv3: Bool
+//
+//    public let isMasked: Bool
+//    public let opCode: WebSock.Message.OpCode
+//
+//    public let maskingKey: MaskingKey
+//    public let payloadLength: UInt64
+//}
 
-    /**
-     Definable flags.
-     
-     If any flag is 'true' that is not explicitly defined, the socket MUST close: RFC
-    */
-    public let rsv1: Bool
-    public let rsv2: Bool
-    public let rsv3: Bool
-
-    public let isMasked: Bool
-    public let opCode: OpCode
-
-    public let maskingKey: MaskingKey
-    public let payloadLength: UInt64
-}
-
-extension WebSocketMessage {
-    public static func respondToClient(_ msg: String) -> WebSocketMessage {
+extension WebSock.Message {
+    public static func respondToClient(_ msg: String) -> WebSock.Message {
         let payload = Data(msg)
-        let header = WebSocketHeader(
+        let header = WebSock.Message.Header(
             fin: true,
             rsv1: false,
             rsv2: false,
             rsv3: false,
-            isMasked: false,
             opCode: .text,
-            maskingKey: .none,
-            payloadLength: UInt64(payload.count)
+            isMasked: false,
+            payloadLength: UInt64(payload.count),
+            maskingKey: .none
         )
 
-        return WebSocketMessage(header: header, payload: payload)
+        return WebSock.Message(header: header, payload: payload)
     }
 }
 //
@@ -388,7 +466,7 @@ extension UnsignedInteger {
     }
 }
 
-extension WebSocketMessage {
+extension WebSock.Message {
     public enum Error: ErrorProtocol {
         case failed
     }
@@ -428,19 +506,19 @@ enum Payload {
 }
 
 // https://tools.ietf.org/html/rfc6455#section-5.2
-public struct WebSocketMessage {
-    public let header: WebSocketHeader
-    // TODO: OpCode defines how to parse, I think this should be an enum ie: Payload above
-    // for now while testing ... Data
-    public let payload: Data
+//public struct WebSocketMessage {
+//    public let header: WebSock.Header
+//    // TODO: OpCode defines how to parse, I think this should be an enum ie: Payload above
+//    // for now while testing ... Data
+//    public let payload: Data
+//
+//    public init(header: WebSock.Header, payload: Data) {
+//        self.header = header
+//        self.payload = payload
+//    }
+//}
 
-    public init(header: WebSocketHeader, payload: Data) {
-        self.header = header
-        self.payload = payload
-    }
-}
-
-extension WebSocketMessage {
+extension WebSock.Message {
 //    func makeForClient(_ text: String) -> Data {
 //        let bytes = text.toBytes()
 //        let header = WebSocketHeader(
@@ -539,7 +617,7 @@ extension WebSocketMessage {
  opcodes.
  */
 
-extension WebSocketMessage {
+extension WebSock.Message {
     public var isFragment: Bool {
         /*
          An unfragmented message consists of a single frame with the FIN
@@ -605,7 +683,7 @@ extension UInt8 {
     static let payloadLength: Byte = 0b0111_1111
 }
 
-private enum ExtendedPayloadByteLength: UInt8 {
+internal enum ExtendedPayloadByteLength: UInt8 {
     case two = 2
     case eight = 8
     init?(_ byte: Byte) {
@@ -653,9 +731,9 @@ extension String: ErrorProtocol {}
  */
 // TODO: NOT UNIT TESTED
 public final class MessageSerializer {
-    private let message: WebSocketMessage
+    private let message: WebSock.Message
 
-    private init(_ message: WebSocketMessage) {
+    private init(_ message: WebSock.Message) {
         self.message = message
     }
 
@@ -742,7 +820,7 @@ public final class MessageSerializer {
 }
 
 extension MessageSerializer {
-    public static func serialize(_ message: WebSocketMessage) -> [Byte] {
+    public static func serialize(_ message: WebSock.Message) -> [Byte] {
         let serializer = MessageSerializer(message)
         return serializer.serialize()
     }
@@ -792,122 +870,122 @@ extension MaskingKey {
     }
 }
 
-public final class _MessageParser<O: OutputStream where O.Element == Byte> {
-    private var buffer: O
-
-    private init(_ inputStream: O) {
-        self.buffer = inputStream
-    }
-
-    // MARK: Extractors
-
-    private func extractByteZero() throws -> (fin: Bool, rsv1: Bool, rsv2: Bool, rsv3: Bool, opCode: OpCode) {
-        guard let byteZero = try buffer.next() else {
-            throw "479: WebSockets.Swift: MessageParser"
-        }
-        let fin = byteZero.containsMask(.fin)
-        let rsv1 = byteZero.containsMask(.rsv1)
-        let rsv2 = byteZero.containsMask(.rsv2)
-        let rsv3 = byteZero.containsMask(.rsv3)
-
-        let opCode = try OpCode(byteZero & .opCode)
-        return (fin, rsv1, rsv2, rsv3, opCode)
-    }
-
-    private func extractByteOne() throws -> (maskKeyIncluded: Bool, payloadLength: Byte) {
-        guard let byteOne = try buffer.next() else {
-            throw "493: WebSockets.Swift: MessageParser"
-        }
-        let maskKeyIncluded = byteOne.containsMask(.maskKeyIncluded)
-        let payloadLength = byteOne & .payloadLength
-        return (maskKeyIncluded, payloadLength)
-    }
-
-    /**
-     Returns UInt64 to encompass highest possible length. Length may be UInt16
-     */
-    private func extractExtendedPayloadLength(_ length: ExtendedPayloadByteLength) throws -> UInt64 {
-        var bytes: [Byte] = []
-        for _ in 1...length.rawValue {
-            guard let next = try buffer.next() else {
-                throw "522: WebSockets.Swift: MessageParser"
-            }
-            bytes.append(next)
-        }
-        return try UInt64.init(bytes)
-    }
-
-    private func extractMaskingKey() throws -> MaskingKey {
-        guard
-            let zero = try buffer.next(),
-            let one = try buffer.next(),
-            let two = try buffer.next(),
-            let three = try buffer.next()
-            else {
-                throw "536: WebSockets.Swift: MessageParser"
-        }
-
-        return .key(zero: zero, one: one, two: two, three: three)
-    }
-
-    private func extractPayload(key: MaskingKey, length: UInt64) throws -> [Byte] {
-        var count: UInt64 = 0
-        var bytes: [UInt8] = []
-
-        while count < length, let next = try buffer.next() {
-            bytes.append(next)
-            count += 1
-        }
-        
-        return key.cypher(bytes)
-    }
-}
-
-extension _MessageParser where O: StreamBuffer {
-    public static func parse(stream: Stream) throws -> WebSocketMessage {
-        let buffer = O.init(stream)
-        return try parse(data: buffer)
-    }
-}
-
-extension _MessageParser {
-    public static func parse(data: O) throws -> WebSocketMessage {
-        let parser = _MessageParser(data)
-        let (fin, rsv1, rsv2, rsv3, opCode) = try parser.extractByteZero()
-        let (isMasked, payloadLengthInfo) = try parser.extractByteOne()
-
-        let payloadLength: UInt64
-        if let extended = ExtendedPayloadByteLength(payloadLengthInfo) {
-            payloadLength = try parser.extractExtendedPayloadLength(extended)
-        } else {
-            payloadLength = payloadLengthInfo.toUIntMax()
-        }
-
-        let maskingKey: MaskingKey
-        if isMasked {
-            maskingKey = try parser.extractMaskingKey()
-        } else {
-            maskingKey = .none
-        }
-
-        let payload = try parser.extractPayload(key: maskingKey, length: payloadLength)
-        guard payload.count == Int(payloadLength) else {
-            throw "598: WebSockets.Swift: MessageParser"
-        }
-
-        let header = WebSocketHeader(
-            fin: fin,
-            rsv1: rsv1,
-            rsv2: rsv2,
-            rsv3: rsv3,
-            isMasked: isMasked,
-            opCode: opCode,
-            maskingKey: maskingKey,
-            payloadLength: payloadLength
-        )
-        return WebSocketMessage(header: header, payload: Data(payload))
-    }
-}
+//public final class _MessageParser<O: OutputStream where O.Element == Byte> {
+//    private var buffer: O
+//
+//    private init(_ inputStream: O) {
+//        self.buffer = inputStream
+//    }
+//
+//    // MARK: Extractors
+//
+//    private func extractByteZero() throws -> (fin: Bool, rsv1: Bool, rsv2: Bool, rsv3: Bool, opCode: OpCode) {
+//        guard let byteZero = try buffer.next() else {
+//            throw "479: WebSockets.Swift: MessageParser"
+//        }
+//        let fin = byteZero.containsMask(.fin)
+//        let rsv1 = byteZero.containsMask(.rsv1)
+//        let rsv2 = byteZero.containsMask(.rsv2)
+//        let rsv3 = byteZero.containsMask(.rsv3)
+//
+//        let opCode = try OpCode(byteZero & .opCode)
+//        return (fin, rsv1, rsv2, rsv3, opCode)
+//    }
+//
+//    private func extractByteOne() throws -> (maskKeyIncluded: Bool, payloadLength: Byte) {
+//        guard let byteOne = try buffer.next() else {
+//            throw "493: WebSockets.Swift: MessageParser"
+//        }
+//        let maskKeyIncluded = byteOne.containsMask(.maskKeyIncluded)
+//        let payloadLength = byteOne & .payloadLength
+//        return (maskKeyIncluded, payloadLength)
+//    }
+//
+//    /**
+//     Returns UInt64 to encompass highest possible length. Length may be UInt16
+//     */
+//    private func extractExtendedPayloadLength(_ length: ExtendedPayloadByteLength) throws -> UInt64 {
+//        var bytes: [Byte] = []
+//        for _ in 1...length.rawValue {
+//            guard let next = try buffer.next() else {
+//                throw "522: WebSockets.Swift: MessageParser"
+//            }
+//            bytes.append(next)
+//        }
+//        return try UInt64.init(bytes)
+//    }
+//
+//    private func extractMaskingKey() throws -> MaskingKey {
+//        guard
+//            let zero = try buffer.next(),
+//            let one = try buffer.next(),
+//            let two = try buffer.next(),
+//            let three = try buffer.next()
+//            else {
+//                throw "536: WebSockets.Swift: MessageParser"
+//        }
+//
+//        return .key(zero: zero, one: one, two: two, three: three)
+//    }
+//
+//    private func extractPayload(key: MaskingKey, length: UInt64) throws -> [Byte] {
+//        var count: UInt64 = 0
+//        var bytes: [UInt8] = []
+//
+//        while count < length, let next = try buffer.next() {
+//            bytes.append(next)
+//            count += 1
+//        }
+//        
+//        return key.cypher(bytes)
+//    }
+//}
+//
+//extension _MessageParser where O: StreamBuffer {
+//    public static func parse(stream: Stream) throws -> WebSocketMessage {
+//        let buffer = O.init(stream)
+//        return try parse(data: buffer)
+//    }
+//}
+//
+//extension _MessageParser {
+//    public static func parse(data: O) throws -> WebSocketMessage {
+//        let parser = _MessageParser(data)
+//        let (fin, rsv1, rsv2, rsv3, opCode) = try parser.extractByteZero()
+//        let (isMasked, payloadLengthInfo) = try parser.extractByteOne()
+//
+//        let payloadLength: UInt64
+//        if let extended = ExtendedPayloadByteLength(payloadLengthInfo) {
+//            payloadLength = try parser.extractExtendedPayloadLength(extended)
+//        } else {
+//            payloadLength = payloadLengthInfo.toUIntMax()
+//        }
+//
+//        let maskingKey: MaskingKey
+//        if isMasked {
+//            maskingKey = try parser.extractMaskingKey()
+//        } else {
+//            maskingKey = .none
+//        }
+//
+//        let payload = try parser.extractPayload(key: maskingKey, length: payloadLength)
+//        guard payload.count == Int(payloadLength) else {
+//            throw "598: WebSockets.Swift: MessageParser"
+//        }
+//
+//        let header = WebSocketHeader(
+//            fin: fin,
+//            rsv1: rsv1,
+//            rsv2: rsv2,
+//            rsv3: rsv3,
+//            isMasked: isMasked,
+//            opCode: opCode,
+//            maskingKey: maskingKey,
+//            payloadLength: payloadLength
+//        )
+//        return WebSocketMessage(header: header, payload: Data(payload))
+//    }
+//}
 
 extension UnsignedInteger {
     /*
@@ -930,62 +1008,9 @@ extension UnsignedInteger {
     }
 }
 
-//internal struct LeftRightBitIterator {
-//    private var iterator: AnyIterator<Bit>
-//    init(_ byte: Byte) {
-//        var mask: Byte = 0b1000_0000
-//        iterator = AnyIterator {
-//            guard mask > 0 else { return nil }
-//            let next = byte.containsMask(mask)
-//            mask >>= 1
-//            return next ? .one : .zero
-//        }
-//    }
-//
-//    mutating func next(_ count: )
-//}
-
-private extension Byte {
-    subscript(idx: Int) -> Bit {
-        var zero: Byte = 0b1
-        for _ in 0..<idx {
-            zero <<= 1
-        }
-        return self.containsMask(zero) ? .one : .zero
-    }
-}
-
 extension UnsignedInteger {
+    // UNTESTED:
     public func containsMask(_ mask: Self) -> Bool {
         return (self & mask) == mask
     }
 }
-
-/*
- Reserved bits:
- 
- 
- The protocol is designed to allow for extensions, which will add
- capabilities to the base protocol.  The endpoints of a connection
- MUST negotiate the use of any extensions during the opening
- handshake.  This specification provides opcodes 0x3 through 0x7 and
- 0xB through 0xF, the "Extension data" field, and the frame-rsv1,
- frame-rsv2, and frame-rsv3 bits of the frame header for use by
- extensions.  The negotiation of extensions is discussed in further
- detail in Section 9.1.  Below are some anticipated uses of
- extensions.  This list is neither complete nor prescriptive.
-
- o  "Extension data" may be placed in the "Payload data" before the
- "Application data".
-
- o  Reserved bits can be allocated for per-frame needs.
-
- o  Reserved opcode values can be defined.
-
- o  Reserved bits can be allocated to the opcode field if more opcode
- values are needed.
-
- o  A reserved bit or an "extension" opcode can be defined that
- allocates additional bits out of the "Payload data" to define
- larger opcodes or more per-frame bits.
- */
