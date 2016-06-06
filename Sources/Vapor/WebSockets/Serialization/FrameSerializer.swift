@@ -88,12 +88,17 @@ public final class FrameSerializer {
     }
 
     private func serializeMaskingKey() -> [Byte] {
-        return frame.header.maskingKey.serialize()
+        switch frame.header.maskingKey {
+        case .none:
+            return []
+        case let .key(zero: zero, one: one, two: two, three: three):
+            return [zero, one, two, three]
+        }
     }
 
     // MARK: Payload
 
     private func serializePayload() -> [Byte] {
-        return frame.header.maskingKey.cypher(frame.payload)
+        return frame.header.maskingKey.hash(frame.payload)
     }
 }

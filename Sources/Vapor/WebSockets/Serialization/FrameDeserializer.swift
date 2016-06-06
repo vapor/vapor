@@ -22,7 +22,7 @@ public final class FrameDeserializer<Buffer: InputBuffer where Buffer.Element ==
             payloadLength = payloadLengthInfo.toUIntMax()
         }
 
-        let maskingKey: MaskingKey
+        let maskingKey: WebSock.Frame.MaskingKey
         if isMasked {
             maskingKey = try extractMaskingKey()
         } else {
@@ -85,7 +85,7 @@ public final class FrameDeserializer<Buffer: InputBuffer where Buffer.Element ==
         return try UInt64.init(eight)
     }
 
-    private func extractMaskingKey() throws -> MaskingKey {
+    private func extractMaskingKey() throws -> WebSock.Frame.MaskingKey {
         guard
             let zero = try buffer.next(),
             let one = try buffer.next(),
@@ -98,7 +98,7 @@ public final class FrameDeserializer<Buffer: InputBuffer where Buffer.Element ==
         return .key(zero: zero, one: one, two: two, three: three)
     }
 
-    private func extractPayload(key: MaskingKey, length: UInt64) throws -> [Byte] {
+    private func extractPayload(key: WebSock.Frame.MaskingKey, length: UInt64) throws -> [Byte] {
         var count: UInt64 = 0
         var bytes: [UInt8] = []
 
@@ -107,7 +107,7 @@ public final class FrameDeserializer<Buffer: InputBuffer where Buffer.Element ==
             count += 1
         }
 
-        return key.cypher(bytes)
+        return key.hash(bytes)
     }
 }
 

@@ -1,5 +1,3 @@
-
-
 /*
  0               1               2               3
  0 1 2 3 4 5 6 7 0 1 2 3 4 5 6 7 0 1 2 3 4 5 6 7 0 1 2 3 4 5 6 7
@@ -46,42 +44,5 @@ extension Byte {
     static let eightBytePayloadLength: Byte = 0b0111_1111
 }
 
+// TODO: Replace w/ real errors
 extension String: ErrorProtocol {}
-
-//func metadata(_ file: String = #file, _ function: String = #function, _ line: String = #line) -> String {
-//    var str = "[Metadata]\n"
-//    str += "\tFile: \(file.components(separatedBy: "/").last ?? "")\n"
-//    str += "\tFunction: \(function)\n"
-//    str += "\tLine: \(line)\n\n"
-//    return str
-//}
-
-extension MaskingKey {
-    /*
-     Octet i of the transformed data ("transformed-octet-i") is the XOR of
-     octet i of the original data ("original-octet-i") with octet at index
-     i modulo 4 of the masking key ("masking-key-octet-j"):
-
-     j                   = i MOD 4
-     transformed-octet-i = original-octet-i XOR masking-key-octet-j
-     
-     
-     Cypher is same for masking and unmasking
-     */
-    func cypher<S: Sequence where S.Iterator.Element == Byte>(_ input: S) -> [Byte] {
-        switch self {
-        case .none:
-            return Array(input)
-        case let .key(zero: zero, one: one, two: two, three: three):
-            var count = UInt64(0)
-            let keys = [zero, one, two, three]
-            // don't use enumerated(). it returns `Int` which may lose precision
-            return input.map { original in
-                let key = keys[Int(count % 4)]
-                count += 1
-                return original ^ key
-            }
-        }
-    }
-}
-
