@@ -5,6 +5,7 @@
 #endif
 
 import Strand
+import SocksCore
 
 // MARK: Byte => Character
 extension Character {
@@ -51,12 +52,14 @@ final class StreamServer<
             let parser = Parser(stream: stream)
             let serializer = Serializer(stream: stream)
             do {
-                //let _ = try stream.receive(upTo: 2048)
                 let request = try parser.parse()
                 keepAlive = request.keepAlive
                 let response = try responder.respond(to: request)
                 try serializer.serialize(response)
-                //try stream.send("HTTP/1.1 200 OK\r\nContent-Length: 5\r\n\r\nHello".data)
+            } catch let e as SocksCore.Error where e.isClosedByPeer {
+                break // jumpto close
+            } catch let e as HTTPParser.Error where e == .streamEmpty {
+                break // jumpto close
             } catch {
                 Log.error("HTTP error: \(error)")
                 break //break to close stream on all errors
@@ -70,6 +73,14 @@ final class StreamServer<
         }
     }
 
+}
+
+extension SocksCore.Error {
+    var isClosedByPeer: Bool {
+        guard case .ReadFailed = type else { return false }
+        let message = String(validatingUTF8: strerror(errno))
+        return message == "Connection reset by peer"
+    }
 }
 
 extension Request {
