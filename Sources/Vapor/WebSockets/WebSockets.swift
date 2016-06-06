@@ -8,6 +8,11 @@
 import Strand
 
 extension WebSock {
+    public func send(_ msg: Message) throws {
+        // TODO: Throw if control frame greater than 125 byte PAYLOAD.
+        try stream.send(msg)
+    }
+
     // TODO: Not Masking etc. assumes Server to Client, consider strategy to support both
     public func send(_ text: String) throws {
         let payload = Data(text)
@@ -40,148 +45,32 @@ extension WebSock {
         let msg = Message(header: header, payload: payload)
         try send(msg)
     }
-
-    public func send(_ msg: Message) throws {
-        try stream.send(msg)
-    }
 }
 
-//public final class UnidirectionalEvent<T> {
-//    public typealias Handler = (T) throws -> Void
-//    private var handlers: [Handler] = []
-//
-//    public func subscribe(_ handler: Handler) -> String {
-//        handlers.append(handler)
-//    }
-//
-//    private func post(_ data: T) throws {
-//        handlers = try handlers.filter { handler in
-//            var stop = false
-//            try handler(data: data, stop: &stop)
-//            return !stop
-//        }
-//    }
-//}
-
-
-public final class FailableEvent<T> {
-    public typealias Handler = (data: T, stop: inout Bool) throws -> Void
-    private var handlers: [Handler] = []
-
-    public func subscribe(_ handler: Handler) {
-        handlers.append(handler)
-    }
-
-    private func post(_ data: T) throws {
-        handlers = try handlers.filter { handler in
-            var stop = false
-            try handler(data: data, stop: &stop)
-            return !stop
-        }
-    }
-}
-
-//let asd = UnidirectionalEvent<(data: Data, string: String)>()
+// MARK:
 
 extension WebSock {
-    public enum State {
-        case open
-        case closing
-        case closed
-    }
-}
+    public func ping(statusCode: UInt16? = nil, reason: String? = nil) throws {
+        // Reason can _only_ exist if statusCode also exists
+        // statusCode may exist _without_ a reason
+        if statusCode != nil {
 
-extension WebSock {
-    public typealias Frame = Message
-}
-public final class WebSock {
-    public typealias EventHandler<T> = (T) throws -> Void
-
-    // MARK: EventHandlers
-    public var onFrame: EventHandler<(ws: WebSock, frame: Frame)>? = nil
-
-    public var onText: EventHandler<(ws: WebSock, text: String)>? = nil
-    public var onBinary: EventHandler<(ws: WebSock, binary: Data)>? = nil
-
-    public var onPing: EventHandler<(ws: WebSock, frame: Frame)>? = nil
-    public var onPong: EventHandler<(ws: WebSock, frame: Frame)>? = nil
-
-    public var onClose: EventHandler<(ws: WebSock, code: UInt16, reason: String, clean: Bool)>? = nil
-    /**
-     - parameter: clean represents if close call and response was successful
-     */
-    //    public var closeEvent = UnidirectionalEvent<(ws: WebSock, code: UInt16, reason: String, clean: Bool)>()
-//    public var closeEvent = Event<(ws: WebSock, code: UInt16, reason: String)>()
-
-    // Some users won't want to manage events manually. 
-    // this retains the convenience calls
-    private var subscriptions: [Subscription] = []
-
-    private var lock: Lock = Lock()
-
-    private var _state: State = .open
-
-    public private(set) var state: State {
-        get {
-            var _closed = State.open
-            lock.locked {
-                _closed = self._state
-            }
-            return _closed
         }
-        set {
-            lock.locked {
-                _state = newValue
-            }
-        }
-    }
+        let payload: Data = []
 
-    private let stream: Stream
-
-    public init(_ stream: Stream) {
-        self.stream = stream
-    }
-
-    deinit {
-        print("\n\n\t***** WE GONE :D *****\n\n\n")
-    }
-
-    // https://tools.ietf.org/html/rfc6455#section-5.5.1
-    private func respondToClose(echo payload: Data) throws {
-        // ensure haven't already sent
-        guard state != .closed else { return }
 
         let header = Message.Header(
             fin: true,
             rsv1: false,
             rsv2: false,
             rsv3: false,
-            opCode: .connectionClose,
+            opCode: .ping,
             isMasked: false,
             payloadLength: UInt64(payload.count),
             maskingKey: .none
         )
         let msg = Message(header: header, payload: payload)
-        try send(msg)
-        state = .closed
-    }
-
-    public func initiateClose() throws {
-        guard state == .open else { return }
-        state = .closing
-
-        let header = Message.Header(
-            fin: true,
-            rsv1: false,
-            rsv2: false,
-            rsv3: false,
-            opCode: .connectionClose,
-            isMasked: false,
-            payloadLength: 0,
-            maskingKey: .none
-        )
-        let msg = Message(header: header, payload: Data())
-        try send(msg)
+        try stream.send(msg)
     }
 
     /**
@@ -206,59 +95,222 @@ public final class WebSock {
 }
 
 extension WebSock {
+}
+
+extension WebSock {
+    public enum State {
+        case open
+        case closing
+        case closed
+    }
+}
+
+extension WebSock {
+    public typealias Frame = Message
+}
+
+public final class WebSock {
+    public typealias EventHandler<T> = (T) throws -> Void
+
+    // MARK: EventHandlers
+    public var onFrame: EventHandler<(ws: WebSock, frame: Frame)>? = nil
+
+    public var onText: EventHandler<(ws: WebSock, text: String)>? = nil
+    public var onBinary: EventHandler<(ws: WebSock, binary: Data)>? = nil
+
+    public var onPing: EventHandler<(ws: WebSock, frame: Frame)>? = nil
+    public var onPong: EventHandler<(ws: WebSock, frame: Frame)>? = nil
+
+    public var onClose: EventHandler<(ws: WebSock, code: UInt16, reason: String, clean: Bool)>? = nil
+
+
+    private var lock: Lock = Lock()
+    private var _state: State = .open
+    public private(set) var state: State {
+        get {
+            var _closed = State.open
+            lock.locked {
+                _closed = self._state
+            }
+            return _closed
+        }
+        set {
+            lock.locked {
+                _state = newValue
+            }
+        }
+    }
+
+    // MARK: Initialization
+
+    private let stream: Stream
+
+    public init(_ stream: Stream) {
+        self.stream = stream
+    }
+
+    deinit {
+        print("\n\n\t***** WE GONE :D *****\n\n\n")
+    }
+}
+
+extension WebSock {
+    // TODO: Currently waiting for response -- this is correct, but a timeout would be better
+    // for sockets that may not be good players and keep the connection open by not responding
+    //
+    //
+    // Don't need timeout? <<<<
+    // If underlying tcp is open, according to protocol, client MUST respond w/ close
+    // If underlying tcp is closed, then protocol won't respond, but we will fail out on close
+    //
+    //
+    public func close(statusCode: UInt16? = nil, reason: String? = nil, forceImmediate: Bool = false) throws {
+        // TODO: Use status code and reason data
+        guard state == .open else { return }
+        state = .closing
+
+        let header = Message.Header(
+            fin: true,
+            rsv1: false,
+            rsv2: false,
+            rsv3: false,
+            opCode: .connectionClose,
+            isMasked: false,
+            payloadLength: 0,
+            maskingKey: .none
+        )
+        let msg = Message(header: header, payload: Data())
+        try send(msg)
+    }
+
+    // TODO: Currently waiting for response -- this is correct, but a timeout would be better
+    // for sockets that may not be good players and keep the connection open by not responding
+    //
+    public func initiateClose(statusCode: UInt16? = nil, reason: String? = nil) throws {
+        // TODO: Use status code and reason data
+        guard state == .open else { return }
+        state = .closing
+
+        let header = Message.Header(
+            fin: true,
+            rsv1: false,
+            rsv2: false,
+            rsv3: false,
+            opCode: .connectionClose,
+            isMasked: false,
+            payloadLength: 0,
+            maskingKey: .none
+        )
+        let msg = Message(header: header, payload: Data())
+        try send(msg)
+    }
+
+    // https://tools.ietf.org/html/rfc6455#section-5.5.1
+    private func respondToClose(echo payload: Data) throws {
+        // ensure haven't already sent
+        guard state != .closed else { return }
+        state = .closing
+
+        /*
+         // TODO: Echo status code
+
+         If an endpoint receives a Close frame and did not previously send a
+         Close frame, the endpoint MUST send a Close frame in response.  (When
+         sending a Close frame in response, the endpoint typically echos the
+         status code it received.)
+         */
+
+        let header = Message.Header(
+            fin: true,
+            rsv1: false,
+            rsv2: false,
+            rsv3: false,
+            opCode: .connectionClose,
+            isMasked: false,
+            payloadLength: UInt64(payload.count),
+            maskingKey: .none
+        )
+        let msg = Message(header: header, payload: payload)
+        try send(msg)
+        try closeUnderlyingTCP()
+    }
+
+    private func closeUnderlyingTCP() throws {
+        try stream.close()
+        state = .closed
+    }
+}
+
+extension WebSock {
     public func listen() throws {
         while state != .closed {
             do {
                 let parser = MessageParser(stream: stream)
                 let frame = try parser.acceptMessage()
-                try onFrame?((self, frame))
-
-                switch frame.header.opCode {
-                case .binary:
-                    let payload = frame.payload
-                    try onBinary?((self, payload))
-                case .text:
-                    let text = try frame.payload.toString()
-                    try onText?((self, text))
-                case .connectionClose where state == .open:
-                    // TODO: We may have been the one who closed
-                    // in which case we shouldn't respond further
-                    //
-                    // Opponent has requested close
-                    // we should respond close event
-
-                    // TODO: Parse Reason / status code
-                    // This information is NOT required
-                    /*
-                     First 2 bytes are status code
-                     Remaining bytes are non-human readable string messgae
-                     */
-                    Log.info("Socket closed w/ reason")
-
-                    // SHOULD ECHO STATUS CODE
-                    state = .closing
-                    try respondToClose(echo: frame.payload)
-                    state = .closed
-//                    try closeEvent.post((self, 0, "not yet implemented"))
-                case .connectionClose:
-                    // all done here
-                    state = .closed
-                    // We prompted a close and
-                    // received close response
-//                    try closeEvent.post((self, 0, "not yet implemented"))
-                case .ping:
-                    try onPing?((self, frame))
-                    try pong(frame.payload)
-                case .pong:
-                    try onPong?((self, frame))
-                default:
-                    break
-                }
+                try received(frame)
             } catch {
                 Log.info("WebSocket Failed w/ error: \(error)")
                 break
             }
+
+            if stream.closed {
+                try onClose?((self, 0, "not yet implemented", false))
+                break
+            }
         }
+    }
+
+    private func received(_ frame: Frame) throws {
+        try onFrame?((self, frame))
+
+        switch frame.header.opCode {
+        case .binary:
+            let payload = frame.payload
+            try onBinary?((self, payload))
+        case .text:
+            let text = try frame.payload.toString()
+            try onText?((self, text))
+        case .connectionClose:
+            try receivedClose(frame)
+        case .ping:
+            try onPing?((self, frame))
+            try pong(frame.payload)
+        case .pong:
+            try onPong?((self, frame))
+        default:
+            break
+        }
+    }
+
+    private func receivedClose(_ frame: Frame) throws {
+        /*
+         
+         // TODO:
+
+         If there is a body, the first two bytes of
+         the body MUST be a 2-byte unsigned integer (in network byte order)
+         representing a status code with value /code/ defined in Section 7.4.
+         Following the 2-byte integer, the body MAY contain UTF-8-encoded data
+         with value /reason/, the interpretation of which is not defined by
+         this specification.  This data is not necessarily human readable but
+         may be useful for debugging or passing information relevant to the
+         script that opened the connection.  As the data is not guaranteed to
+         be human readable, clients MUST NOT show it to end users.
+         */
+        guard frame.header.opCode == .connectionClose else { throw "unexpected op code" }
+
+        switch  state {
+        case .open:
+        // opponent requested close, we're responding
+            try respondToClose(echo: frame.payload)
+        case .closing:
+        // we requested close, opponent responded
+            try closeUnderlyingTCP()
+        case .closed:
+            // TODO: break or throw, this shouldn't ever happen
+            break
+        }
+
     }
 }
 
@@ -287,6 +339,7 @@ extension WebSock {
         public let header: Header
         public let payload: Data
 
+        // TODO: Should we cypher here?
         public init(header: Header, payload: Data) {
             self.header = header
             self.payload = payload
@@ -366,10 +419,24 @@ extension WebSock.Message {
      *  %xB-F are reserved for further control frames
      */
     public enum OpCode {
+        /*
+         // MARK: NON CONTROL FRAMES
+         
+         May be fragmented
+         */
         case continuation
         case text
         case binary
         case nonControlExtension(NonControlFrameExtension)
+
+        /* 
+         // MARK: CONTROL FRAMES
+
+         All control frames MUST have a payload length of 125 bytes or less
+         and MUST NOT be fragmented.
+         
+         // TODO: Implement these checks
+         */
         case connectionClose
         case ping
         case pong

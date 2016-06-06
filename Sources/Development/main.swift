@@ -154,10 +154,8 @@ extension String {
 app.get("socket") { request in
     return try request.upgradeToWebSocket { ws in
         print("WebSock upgraded")
-//        let ws = WebSock.init(socket)
         ws.onText = { ws, text in
             print("Got \(text)")
-            // TODO: rm !
             try ws.send("thank you for text \(text)\n\n\t:)\n")
 
             if text == "stop" {
