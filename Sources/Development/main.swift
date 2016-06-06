@@ -155,59 +155,64 @@ app.get("socket") { request in
     return try request.upgradeToWebSocket { ws in
         print("WebSock upgraded")
 //        let ws = WebSock.init(socket)
-        ws.textEvent.subscribe { data, text in
-            print("Got \(data.text)")
+        ws.onText = { ws, text in
+            print("Got \(text)")
             // TODO: rm !
-            try data.ws.send("thank you for text \(data.text)\n\n\t:)\n")
+            try ws.send("thank you for text \(text)\n\n\t:)\n")
 
-            if data.text == "close" {
-                try data.ws.send("\n\tCLOSING\n")
-                try data.ws.initiateClose()
+            if text == "stop" {
+                ws.onText = nil
+            }
+
+            if text == "close" {
+                try ws.send("\n\tCLOSING\n")
+                try ws.initiateClose()
             }
         }
+
         try ws.send("Hi there")
     }
 }
 
-app.get("manual-socket") { request in
-    func socketHandler(_ socket: WebSock) throws {
-        let ws = socket//WebSock.init(socket)
-        ws.textEvent.subscribe { data, text in
-            print("Got \(data.text)")
-            // TODO: rm !
-            try data.ws.send("thank you for text \(data.text)\n\n\t:)\n")
-
-            if data.text == "close" {
-                try data.ws.send("\n\tCLOSING\n")
-                try data.ws.initiateClose()
-            }
-        }
-    }
-
-    let secReturn = request.headers["Sec-WebSocket-Key"]!.makeWebSocketSecKeyExchange()
-    //    let combined = inputKey + HashKey
-    //    let hashed = combined.toBase64()
-    //    HTTP/1.1 101 Switching Protocols
-    //    Upgrade: websocket
-    //    Connection: Upgrade
-    //    Sec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=
-    //    Sec-WebSocket-Protocol: chat
-    var headers: Headers = [:]
-    headers["Connection"] = "Upgrade"
-    headers["Upgrade"] = "websocket"
-    // NOTE: Note that request has -Key, return has -Accept
-    headers["Sec-WebSocket-Accept"] = secReturn
-    //    headers["Sec-WebSocket-Version"] = "13"
-    // TODO: Read up and clarify this
-    //    headers["Sec-WebSocket-Protocol"] = request.headers["Sec-WebSocket-Protocol"]
-    var response = Response.init(status: .switchingProtocols, headers: headers)//, headers: Headers, cookies: Cookies, body: Stream)
-    response.afterResponseSerialization = { stream in
-        let ws = WebSock(stream)
-        try socketHandler(ws)
-    }
-    print("\n\nReturning: \(response)\n\n")
-    return response
-}
+//app.get("manual-socket") { request in
+//    func socketHandler(_ socket: WebSock) throws {
+//        let ws = socket//WebSock.init(socket)
+//        ws.textEvent.subscribe { data, text in
+//            print("Got \(data.text)")
+//            // TODO: rm !
+//            try data.ws.send("thank you for text \(data.text)\n\n\t:)\n")
+//
+//            if data.text == "close" {
+//                try data.ws.send("\n\tCLOSING\n")
+//                try data.ws.initiateClose()
+//            }
+//        }
+//    }
+//
+//    let secReturn = request.headers["Sec-WebSocket-Key"]!.makeWebSocketSecKeyExchange()
+//    //    let combined = inputKey + HashKey
+//    //    let hashed = combined.toBase64()
+//    //    HTTP/1.1 101 Switching Protocols
+//    //    Upgrade: websocket
+//    //    Connection: Upgrade
+//    //    Sec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=
+//    //    Sec-WebSocket-Protocol: chat
+//    var headers: Headers = [:]
+//    headers["Connection"] = "Upgrade"
+//    headers["Upgrade"] = "websocket"
+//    // NOTE: Note that request has -Key, return has -Accept
+//    headers["Sec-WebSocket-Accept"] = secReturn
+//    //    headers["Sec-WebSocket-Version"] = "13"
+//    // TODO: Read up and clarify this
+//    //    headers["Sec-WebSocket-Protocol"] = request.headers["Sec-WebSocket-Protocol"]
+//    var response = Response.init(status: .switchingProtocols, headers: headers)//, headers: Headers, cookies: Cookies, body: Stream)
+//    response.afterResponseSerialization = { stream in
+//        let ws = WebSock(stream)
+//        try socketHandler(ws)
+//    }
+//    print("\n\nReturning: \(response)\n\n")
+//    return response
+//}
 
 //MARK: Resource
 

@@ -46,7 +46,25 @@ extension WebSock {
     }
 }
 
-public final class UnidirectionalEvent<T> {
+//public final class UnidirectionalEvent<T> {
+//    public typealias Handler = (T) throws -> Void
+//    private var handlers: [Handler] = []
+//
+//    public func subscribe(_ handler: Handler) -> String {
+//        handlers.append(handler)
+//    }
+//
+//    private func post(_ data: T) throws {
+//        handlers = try handlers.filter { handler in
+//            var stop = false
+//            try handler(data: data, stop: &stop)
+//            return !stop
+//        }
+//    }
+//}
+
+
+public final class FailableEvent<T> {
     public typealias Handler = (data: T, stop: inout Bool) throws -> Void
     private var handlers: [Handler] = []
 
@@ -63,7 +81,7 @@ public final class UnidirectionalEvent<T> {
     }
 }
 
-let asd = UnidirectionalEvent<(data: Data, string: String)>()
+//let asd = UnidirectionalEvent<(data: Data, string: String)>()
 
 extension WebSock {
     public enum State {
@@ -73,11 +91,31 @@ extension WebSock {
     }
 }
 
+extension WebSock {
+    public typealias Frame = Message
+}
 public final class WebSock {
-    public var messageEvent = UnidirectionalEvent<(ws: WebSock, message: Message)>()
-    public var textEvent = UnidirectionalEvent<(ws: WebSock, text: String)>()
-    public var binaryEvent = UnidirectionalEvent<(ws: WebSock, binary: Data)>()
-    public var closeEvent = UnidirectionalEvent<(ws: WebSock, code: UInt16, reason: String)>()
+    public typealias EventHandler<T> = (T) throws -> Void
+
+    // MARK: EventHandlers
+    public var onFrame: EventHandler<(ws: WebSock, frame: Frame)>? = nil
+
+    public var onText: EventHandler<(ws: WebSock, text: String)>? = nil
+    public var onBinary: EventHandler<(ws: WebSock, binary: Data)>? = nil
+
+    public var onPing: EventHandler<(ws: WebSock, frame: Frame)>? = nil
+    public var onPong: EventHandler<(ws: WebSock, frame: Frame)>? = nil
+
+    public var onClose: EventHandler<(ws: WebSock, code: UInt16, reason: String, clean: Bool)>? = nil
+    /**
+     - parameter: clean represents if close call and response was successful
+     */
+    //    public var closeEvent = UnidirectionalEvent<(ws: WebSock, code: UInt16, reason: String, clean: Bool)>()
+//    public var closeEvent = Event<(ws: WebSock, code: UInt16, reason: String)>()
+
+    // Some users won't want to manage events manually. 
+    // this retains the convenience calls
+    private var subscriptions: [Subscription] = []
 
     private var lock: Lock = Lock()
 
@@ -172,19 +210,20 @@ extension WebSock {
         while state != .closed {
             do {
                 let parser = MessageParser(stream: stream)
-                let message = try parser.acceptMessage()
-                try messageEvent.post((self, message))
-                switch message.header.opCode {
+                let frame = try parser.acceptMessage()
+                try onFrame?((self, frame))
+
+                switch frame.header.opCode {
                 case .binary:
-                    let payload = message.payload
-                    try binaryEvent.post((self, payload))
+                    let payload = frame.payload
+                    try onBinary?((self, payload))
                 case .text:
-                    let text = try message.payload.toString()
-                    try textEvent.post((self, text))
+                    let text = try frame.payload.toString()
+                    try onText?((self, text))
+                case .connectionClose where state == .open:
                     // TODO: We may have been the one who closed
                     // in which case we shouldn't respond further
-                //
-                case .connectionClose where state == .open:
+                    //
                     // Opponent has requested close
                     // we should respond close event
 
@@ -198,21 +237,22 @@ extension WebSock {
 
                     // SHOULD ECHO STATUS CODE
                     state = .closing
-                    try respondToClose(echo: message.payload)
+                    try respondToClose(echo: frame.payload)
                     state = .closed
-                    try closeEvent.post((self, 0, "not yet implemented"))
+//                    try closeEvent.post((self, 0, "not yet implemented"))
                 case .connectionClose:
                     // all done here
                     state = .closed
                     // We prompted a close and
                     // received close response
-                    try closeEvent.post((self, 0, "not yet implemented"))
+//                    try closeEvent.post((self, 0, "not yet implemented"))
                 case .ping:
-                    try pong(message.payload)
+                    try onPing?((self, frame))
+                    try pong(frame.payload)
+                case .pong:
+                    try onPong?((self, frame))
                 default:
                     break
-                }
-                if message.header.opCode == .connectionClose {
                 }
             } catch {
                 Log.info("WebSocket Failed w/ error: \(error)")
