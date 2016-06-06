@@ -151,8 +151,8 @@ class TestTwoCommand: Command {
         self.app = app
     }
 
-    func run() {
-        let arg1 = argument("arg-1").string ?? ""
+    func run() throws {
+        let arg1 = try argument("arg-1").string ?? ""
         print(arg1)
 
         let opt1 = option("opt-1").string ?? ""
