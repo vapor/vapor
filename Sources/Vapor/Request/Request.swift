@@ -1,32 +1,47 @@
-import S4
+public struct Request {
+    public var method: Method
+    public var uri: URI
+    public var version: Version
+    public var headers: Headers
+    public var body: Body
+
+    /// URL parameters (ex: `:id`).
+    public var parameters: [String: String]
+
+    /// Server stored information related from session cookie.
+    public var session: Session?
+
+    /// Query data from the path, or POST data from the body (depends on `Method`).
+    public var data: Request.Content
+
+    public var cookies: [String: String]
+
+    public init(method: Method, uri: URI, version: Version, headers: Headers, body: Body) {
+        self.method = method
+        self.uri = uri
+        self.version = version
+        self.headers = headers
+        self.body = body
+        parameters = [:]
+
+        var body = body
+        var data: Data = []
+
+        do {
+            data = try body.becomeBuffer()
+        } catch {
+            Log.error("Could not receive body data: \(error).")
+        }
+
+        self.data = Request.parseContent(data, uri: uri, headers: headers)
+
+        self.cookies = Request.parseCookies(headers: headers)
+    }
+}
 
 extension Request {
-    ///URL parameters (ex: `:id`).
-    public var parameters: [String: String] {
-        get {
-            guard let parameters = storage["parameters"] as? [String: String] else {
-                return [:]
-            }
-
-            return parameters
-        }
-        set(parameters) {
-            storage["parameters"] = parameters
-        }
-    }
-
-    ///Server stored information related from session cookie.
-    public var session: Session? {
-        get {
-            return storage["session"] as? Session
-        }
-        set(session) {
-            storage["session"] = session
-        }
-    }
-
-    public init(method: Method = .get, path: String, host: String? = nil, body: Data = []) {
-        self.init(method: method, uri: URI(path: path, host: host), headers: [:], body: body)
+    public init(method: Method = .get, path: String, host: String? = nil, headers: Headers = [:], body: Data = []) {
+        self.init(method: method, uri: URI(path: path, host: host), version: Version(major: 1, minor: 1), headers: headers, body: .buffer(body))
     }
 
     /**
@@ -51,23 +66,6 @@ extension Request {
         }
 
         return cookies
-    }
-
-    mutating func cacheParsedContent() {
-        data = parseContent()
-    }
-
-    func parseContent() -> Request.Content {
-        var data: Data?
-        var mutableBody = body
-
-        do {
-            data = try mutableBody.becomeBuffer()
-        } catch {
-            Log.error("Could not read body: \(error)")
-        }
-
-        return Request.parseContent(data, uri: uri, headers: headers)
     }
 
     static private func parseContent(_ data: Data?, uri: URI, headers: Headers) -> Request.Content {
@@ -115,38 +113,29 @@ extension Request {
         return .dictionary(query)
     }
 
-    ///Query data from the path, or POST data from the body (depends on `Method`).
-    public var data: Request.Content {
-        get {
-            guard let data = storage["data"] as? Request.Content else {
-                Log.warning("Data has not been cached.")
-                return parseContent()
+    static func parseCookies(headers: Headers) -> [String: String] {
+        guard let string = headers["cookie"] else {
+            return [:]
+        }
+
+        var cookies: [String : String] = [:]
+
+        let tokens = string.characters.split(separator: ";")
+
+        for token in tokens {
+            let cookieTokens = token.split(separator: "=", maxSplits: 1)
+
+            guard cookieTokens.count == 2 else {
+                continue
             }
 
-            return data
+            let name = String(cookieTokens[0])
+            let value = String(cookieTokens[1])
+
+            cookies[name] = value
         }
-        set(data) {
-            storage["data"] = data
-        }
-    }
-
-    public struct Handler: Responder {
-        public typealias Closure = (Request) throws -> Response
-
-        let closure: Closure
-
-        /**
-         Respond to a given request or throw if fails
-
-         - parameter request: request to respond to
-
-         - throws: an error if response fails
-
-         - returns: a response if possible
-         */
-        public func respond(to request: Request) throws -> Response {
-            return try closure(request)
-        }
+        
+        return cookies
     }
 }
 

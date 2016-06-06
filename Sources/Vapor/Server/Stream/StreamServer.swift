@@ -21,11 +21,11 @@ final class StreamServer<
     Serializer: StreamSerializer
 >: ServerDriver {
     var server: Server
-    var responder: Responder
+    var application: Application
 
-    required init(host: String, port: Int, responder: Responder) throws {
+    required init(host: String, port: Int, application: Application) throws {
         server = try Server.make(host: host, port: port)
-        self.responder = responder
+        self.application = application
     }
 
     func start() throws {
@@ -54,7 +54,7 @@ final class StreamServer<
             do {
                 let request = try parser.parse()
                 keepAlive = request.keepAlive
-                let response = try responder.respond(to: request)
+                let response = try application.respond(to: request)
                 try serializer.serialize(response)
             } catch let e as SocksCore.Error where e.isClosedByPeer {
                 break // jumpto close

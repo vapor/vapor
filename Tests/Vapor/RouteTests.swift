@@ -80,14 +80,14 @@ class RouteTests: XCTestCase {
             throw Abort.badRequest
         }
 
-        let request = Request(method: .get, uri: URI(path: "400"), headers: [:], body: [])
+        let request = Request(method: .get, path: "400")
         guard var handler = app.router.route(request)?.handler else {
             XCTFail("No handler found")
             return
         }
 
         do {
-            let response = try handler.respond(to: request)
+            let response = try handler(request)
             print(response)
             var body = response.body
             let data = try body.becomeBuffer()
@@ -101,10 +101,12 @@ class RouteTests: XCTestCase {
             XCTFail("Handler threw incorrect error")
         }
 
-        handler = AbortMiddleware().chain(to: handler)
+        handler = { request in
+            return try AbortMiddleware().respond(to: request, closure: handler)
+        }
 
         do {
-            let request = try handler.respond(to: request)
+            let request = try handler(request)
             XCTAssert(request.status.statusCode == 400, "Incorrect response status")
         } catch {
             XCTFail("Middleware did not handle abort")

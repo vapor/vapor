@@ -27,7 +27,7 @@ internal final class Branch {
 
         *indicates a supported branch.
      */
-    private var handler: Responder?
+    private var handler: ((Request) throws -> Response)?
 
     /**
         key or *
@@ -47,7 +47,7 @@ internal final class Branch {
 
         - returns: an initialized request Branch
      */
-    init(name: String, handler: Request.Handler? = nil) {
+    init(name: String, handler: ((Request) throws -> Response)? = nil) {
         self.name = name
         self.handler = handler
     }
@@ -61,7 +61,7 @@ internal final class Branch {
 
         - returns: a request handler or nil if not supported
      */
-    func handle(parameters: [String: String], request: Request, comps: CompatibilityGenerator<String>) -> ([String: String], Responder)? {
+    func handle(parameters: [String: String], request: Request, comps: CompatibilityGenerator<String>) -> ([String: String], ((Request) throws -> Response))? {
         guard let key = comps.next() else {
             if let handler = handler {
                 return (parameters, handler)
@@ -91,7 +91,7 @@ internal final class Branch {
         - parameter generator: the generator that will be used to match the path components.  /users/messages/:id will return a generator that is 'users' <- 'messages' <- '*id'
         - parameter handler:   the handler to assign to the end path component
      */
-    func extendBranch(_ generator: CompatibilityGenerator<String>, handler: Responder) {
+    func extendBranch(_ generator: CompatibilityGenerator<String>, handler: (Request) throws -> Response) {
         guard let key = generator.next() else {
             self.handler = handler
             return

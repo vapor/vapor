@@ -15,7 +15,6 @@ extension S4.Headers {
     public typealias Key = C7.CaseInsensitiveString
 }
 
-public typealias Request = S4.Request
 extension Request {
     public typealias Method = S4.Method
     public typealias Body = S4.Body
@@ -31,7 +30,15 @@ extension Response {
     public typealias Headers = S4.Headers
 }
 
-public typealias ServerDriver = S4.Server
+//public typealias ServerDriver = S4.Server
+public protocol ServerDriver {
+    init(host: String, port: Int, application: Application) throws
+    func start() throws
+}
+
 public typealias Responder = S4.Responder
 
-public typealias Middleware = S4.Middleware
+//public typealias Middleware = S4.Middleware
+public protocol Middleware {
+    func respond(to request: Request, closure: (Request) throws -> Response) throws -> Response
+}

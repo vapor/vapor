@@ -40,9 +40,7 @@ class HTTPStreamTests: XCTestCase {
         let parser = HTTPParser(stream: stream)
 
         do {
-            var request = try parser.parse()
-
-            request.cacheParsedContent()
+            let request = try parser.parse()
 
             //MARK: Verify Request
             XCTAssert(request.method == Request.Method.post, "Incorrect method \(request.method)")

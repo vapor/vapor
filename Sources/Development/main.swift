@@ -1,5 +1,4 @@
 import Vapor
-import S4
 
 var workDir: String {
     let parent = #file.characters.split(separator: "/").map(String.init).dropLast().joined(separator: "/")
@@ -237,7 +236,7 @@ app.post("multipart-image") { request in
         throw Abort.badRequest
     }
 
-    var headers: Headers = [:]
+    var headers: Request.Headers = [:]
 
     if let mediaType = image.type {
         headers["Content-Type"] = mediaType.type + "/" + mediaType.subtype
@@ -276,7 +275,7 @@ app.post("multifile") { request in
 
     let file = files[number]
 
-    var headers: Headers = [:]
+    var headers: Request.Headers = [:]
 
     if let mediaType = file.type {
         headers["Content-Type"] = mediaType.type + "/" + mediaType.subtype

@@ -17,9 +17,9 @@ public class AbortMiddleware: Middleware {
 
      - returns: a valid response
      */
-    public func respond(to request: Request, chainingTo chain: Responder) throws -> Response {
+    public func respond(to request: Request, closure: (Request) throws -> Response) throws -> Response {
         do {
-            return try chain.respond(to: request)
+            return try closure(request)
         } catch Abort.badRequest {
             return try self.errorResponse(.badRequest, message: "Invalid request")
         } catch Abort.notFound {
