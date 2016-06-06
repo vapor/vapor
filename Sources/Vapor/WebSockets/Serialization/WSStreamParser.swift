@@ -1,8 +1,21 @@
+extension OutputStream {
+    mutating func chunk(length: Int) throws -> [Element] {
+        var elements: [Element] = []
+        for _ in 1...length {
+            guard let next = try next() else {
+                throw "6"
+            }
+            elements.append(next)
+        }
+        return elements
+    }
+}
+
 public final class MessageParser<O: OutputStream where O.Element == Byte> {
     private var buffer: O
 
-    private init(_ inputStream: O) {
-        self.buffer = inputStream
+    public init(data: O) {
+        self.buffer = data
     }
 
     // MARK: Extractors
@@ -11,12 +24,12 @@ public final class MessageParser<O: OutputStream where O.Element == Byte> {
         guard let byteZero = try buffer.next() else {
             throw "479: WebSockets.Swift: MessageParser"
         }
-        let fin = byteZero.containsMask(.fin)
-        let rsv1 = byteZero.containsMask(.rsv1)
-        let rsv2 = byteZero.containsMask(.rsv2)
-        let rsv3 = byteZero.containsMask(.rsv3)
+        let fin = byteZero.containsMask(.finFlag)
+        let rsv1 = byteZero.containsMask(.rsv1Flag)
+        let rsv2 = byteZero.containsMask(.rsv2Flag)
+        let rsv3 = byteZero.containsMask(.rsv3Flag)
 
-        let opCode = try WebSock.Message.OpCode(byteZero & .opCode)
+        let opCode = try WebSock.Message.OpCode(byteZero & .opCodeFlag)
         return (fin, rsv1, rsv2, rsv3, opCode)
     }
 
@@ -24,15 +37,12 @@ public final class MessageParser<O: OutputStream where O.Element == Byte> {
         guard let byteOne = try buffer.next() else {
             throw "493: WebSockets.Swift: MessageParser"
         }
-        let maskKeyIncluded = byteOne.containsMask(.maskKeyIncluded)
-        let payloadLength = byteOne & .payloadLength
+        let maskKeyIncluded = byteOne.containsMask(.maskKeyIncludedFlag)
+        let payloadLength = byteOne & .payloadLengthFlag
         return (maskKeyIncluded, payloadLength)
     }
 
-    /**
-     Returns UInt64 to encompass highest possible length. Length may be UInt16
-     */
-    private func extractExtendedPayloadLength(_ length: ExtendedPayloadByteLength) throws -> UInt64 {
+    private func extractExtendedPayloadLength(_ length: PayloadLengthExtension) throws -> UInt16 {
         var bytes: [Byte] = []
         for _ in 1...length.rawValue {
             guard let next = try buffer.next() else {
@@ -40,7 +50,21 @@ public final class MessageParser<O: OutputStream where O.Element == Byte> {
             }
             bytes.append(next)
         }
-        return try UInt64.init(bytes)
+        return try UInt16.init(bytes)
+    }
+
+    /**
+     Returns UInt64 to encompass highest possible length. Length will be UInt16
+     */
+    private func extractTwoBytePayloadLengthExtension() throws -> UInt64 {
+        let two = try buffer.chunk(length: 2)
+        return try UInt64.init(two)
+    }
+
+
+    private func extractEightBytePayloadLengthExtension() throws -> UInt64 {
+        let eight = try buffer.chunk(length: 8)
+        return try UInt64.init(eight)
     }
 
     private func extractMaskingKey() throws -> MaskingKey {
@@ -67,60 +91,35 @@ public final class MessageParser<O: OutputStream where O.Element == Byte> {
 
         return key.cypher(bytes)
     }
-}
 
-extension MessageParser where O: StreamBuffer {
-    public static func parse(stream: Stream) throws -> WebSock.Message {
-        let buffer = O.init(stream)
-        return try parse(data: buffer)
-    }
-}
+    public func acceptMessage() throws -> WebSock.Message {
+        let (fin, rsv1, rsv2, rsv3, opCode) = try extractByteZero()
+        let (isMasked, payloadLengthInfo) = try extractByteOne()
 
-extension MessageParser {
-    public static func parse(data: O) throws -> WebSock.Message {
-        let parser = MessageParser(data)
-        let (fin, rsv1, rsv2, rsv3, opCode) = try parser.extractByteZero()
-        let (isMasked, payloadLengthInfo) = try parser.extractByteOne()
-
+        /**
+         Returns UInt64 to encompass highest possible length. Length may be UInt16
+         */
         let payloadLength: UInt64
-        if let extended = ExtendedPayloadByteLength(payloadLengthInfo) {
-            payloadLength = try parser.extractExtendedPayloadLength(extended)
-        } else {
+        switch payloadLengthInfo {
+        case Byte.twoBytePayloadLength:
+            payloadLength = try extractTwoBytePayloadLengthExtension().toUIntMax()
+        case Byte.eightBytePayloadLength:
+            payloadLength = try extractEightBytePayloadLengthExtension()
+        default:
             payloadLength = payloadLengthInfo.toUIntMax()
         }
 
         let maskingKey: MaskingKey
         if isMasked {
-            maskingKey = try parser.extractMaskingKey()
+            maskingKey = try extractMaskingKey()
         } else {
             maskingKey = .none
         }
 
-        let payload = try parser.extractPayload(key: maskingKey, length: payloadLength)
+        let payload = try extractPayload(key: maskingKey, length: payloadLength)
         guard payload.count == Int(payloadLength) else {
             throw "598: WebSockets.Swift: MessageParser"
         }
-
-//        public struct Header {
-//            public let fin: Bool
-//
-//            /**
-//             Definable flags.
-//
-//             If any flag is 'true' that is not explicitly defined, the socket MUST close: RFC
-//             */
-//            public let rsv1: Bool
-//            public let rsv2: Bool
-//            public let rsv3: Bool
-//
-//            public let opCode: OpCode
-//
-//            public let isMasked: Bool
-//            public let payloadLength: UInt64
-//            
-//            public let maskingKey: MaskingKey
-//        }
-//        WebSock.Message.Header
 
         let header = WebSock.Message.Header(
             fin: fin,
@@ -133,5 +132,12 @@ extension MessageParser {
             maskingKey: maskingKey
         )
         return WebSock.Message(header: header, payload: Data(payload))
+    }
+}
+
+extension MessageParser where O: StreamBuffer {
+    public convenience init(stream: Stream) {
+        let buffer = O.init(stream)
+        self.init(data: buffer)
     }
 }

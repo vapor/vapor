@@ -1,4 +1,6 @@
 public final class WebSock {
+    private var lock: Lock = Lock()
+
     public let stream: Stream
     public init(_ stream: Stream) {
         self.stream = stream
@@ -7,10 +9,10 @@ public final class WebSock {
 
 extension WebSock {
     func listen(_ handler: (socket: WebSock, message: WebSock.Message) throws -> Void) throws {
-//        let parser = MessageParser
         while true {
-            let nextMessage = try MessageParser.parse(stream: stream)
-            print("Got message: \(nextMessage)")
+            let parser = MessageParser(stream: stream)
+            let nextMessage = try parser.acceptMessage()
+            print("[Incoming Message]: \(nextMessage)")
             try handler(socket: self, message: nextMessage)
         }
     }
@@ -340,25 +342,6 @@ extension MaskingKey {
     }
 }
 
-//public struct WebSocketHeader {
-//    public let fin: Bool
-//
-//    /**
-//     Definable flags.
-//     
-//     If any flag is 'true' that is not explicitly defined, the socket MUST close: RFC
-//    */
-//    public let rsv1: Bool
-//    public let rsv2: Bool
-//    public let rsv3: Bool
-//
-//    public let isMasked: Bool
-//    public let opCode: WebSock.Message.OpCode
-//
-//    public let maskingKey: MaskingKey
-//    public let payloadLength: UInt64
-//}
-
 extension WebSock.Message {
     public static func respondToClient(_ msg: String) -> WebSock.Message {
         let payload = Data(msg)
@@ -376,73 +359,6 @@ extension WebSock.Message {
         return WebSock.Message(header: header, payload: payload)
     }
 }
-//
-//extension WebSocketHeader {
-//    func serialize() -> [Byte] {
-//        let zero = serializeByteZero()
-//        let one = serializeByteZero()
-//        return []
-//    }
-//
-//    func serializeByteZero() -> Byte {
-//        /*
-//         0 1 2 3 4 5 6 7
-//         f r r r o
-//         i s s s p
-//         n v v v
-//           1 2 3 c
-//                 o
-//                 d
-//                 e
-//         */
-//        var byte: Byte = 0
-//        if fin {
-//            byte |= .fin
-//        }
-//        if rsv1 {
-//            byte |= .rsv1
-//        }
-//        if rsv2 {
-//            byte |= .rsv2
-//        }
-//        if rsv3 {
-//            byte |= .rsv3
-//        }
-//
-//        let op = opCode.serialize() & .opCode
-//        byte |= op
-//
-//        return byte
-//    }
-//
-//    /*
-//     0 1 2 3 4 5 6 7 0
-//     +-+-------------+
-//     |M| Payload len |
-//     |A|     (7)     |
-//     |S|             |
-//     |K|             |
-//     +-+-------------+
-//     */
-//    private func serializeMaskAndLength() -> (byte: Byte, extended: ExtendedPayloadByteLength?) {
-//        var byte: Byte = 0
-//        if isMasked {
-//            byte |= Byte.maskKeyIncluded
-//        }
-//
-//        // 126 / 127 (max, max-1) indicate 2 & 8 byte extensions respectively
-//        if payloadLength < 126 {
-//            byte |= UInt8(payloadLength)
-//            return (byte, nil)
-//        } else if payloadLength < UInt16.max.toUIntMax() {
-//            byte |= 126 // 126 flags that 2 bytes are required
-//            return (byte, .two)
-//        } else {
-//            byte |= 127 // 127 flags that 8 bytes are requred
-//            return (byte, .eight)
-//        }
-//    }
-//}
 
 extension UnsignedInteger {
     func bytes() -> [Byte] {
@@ -472,73 +388,11 @@ extension WebSock.Message {
     }
 }
 
-//extension IteratorProtocol where Element == Byte {
-//    mutating func extractHeader() throws -> WebSocketHeader {
-//        /*
-//         0
-//         0 1 2 3 4 5 6 7
-//         +-+-+-+-+-------+
-//         |F|R|R|R| opcode|
-//         |I|S|S|S|  (4)  |
-//         |N|V|V|V|       |
-//         | |1|2|3|       |
-//         +-+-+-+-+-------+
-//
-//         */
-//        guard let zero = next() else { throw WebSocketMessage.Error.failed }
-//    }
-//}
-
-// Not used, consider in future
-enum Payload {
-//    case continuation
-//    case text
-//    case binary
-//    //    case nonControl(NonControlFrame)
-//    case connectionClose
-//    case ping
-//    case pong
-    //    case con
-
-    case text(String)
-    case binary([Byte])
-
-}
-
-// https://tools.ietf.org/html/rfc6455#section-5.2
-//public struct WebSocketMessage {
-//    public let header: WebSock.Header
-//    // TODO: OpCode defines how to parse, I think this should be an enum ie: Payload above
-//    // for now while testing ... Data
-//    public let payload: Data
-//
-//    public init(header: WebSock.Header, payload: Data) {
-//        self.header = header
-//        self.payload = payload
-//    }
-//}
-
-extension WebSock.Message {
-//    func makeForClient(_ text: String) -> Data {
-//        let bytes = text.toBytes()
-//        let header = WebSocketHeader(
-//            fin: true,
-//            rsv1: false,
-//            rsv2: false,
-//            rsv3: false,
-//            isMasked: false,
-//            opCode: .text,
-//            maskingKey: .none,
-//            payloadLength: UInt64(bytes.count)
-//        )
-//        let mockHeader
-//
-//        let message = WebSocketMessage(header: header, payload: Data(bytes))
-//        return Data()
-//    }
-}
 
 /*
+ 
+ // MARK: Fragmentation 
+
  The following rules apply to fragmentation:
 
  o  An unfragmented message consists of a single frame with the FIN
@@ -571,16 +425,6 @@ extension WebSock.Message {
 
  o  Message fragments MUST be delivered to the recipient in the order
  sent by the sender.
-
-
-
-
-
-
- Fette & Melnikov             Standards Track                   [Page 34]
-
- RFC 6455                 The WebSocket Protocol            December 2011
-
 
  o  The fragments of one message MUST NOT be interleaved between the
  fragments of another message unless an extension has been
@@ -671,21 +515,39 @@ extension WebSock.Message {
  |                     Payload Data continued ...                |
  +---------------------------------------------------------------+
  */
-extension UInt8 {
-    static let fin: Byte = 0b1000_0000
-    static let rsv1: Byte = 0b0100_0000
-    static let rsv2: Byte = 0b0010_0000
-    static let rsv3: Byte = 0b0001_0000
+extension Byte {
+    static let finFlag: Byte = 0b1000_0000
+    static let rsv1Flag: Byte = 0b0100_0000
+    static let rsv2Flag: Byte = 0b0010_0000
+    static let rsv3Flag: Byte = 0b0001_0000
 
-    static let opCode: Byte = 0b0000_1111
+    static let opCodeFlag: Byte = 0b0000_1111
 
-    static let maskKeyIncluded: Byte = 0b1000_0000
-    static let payloadLength: Byte = 0b0111_1111
+    static let maskKeyIncludedFlag: Byte = 0b1000_0000
+    static let payloadLengthFlag: Byte = 0b0111_1111
+
+    /*
+     Initial payload length comes as last 7 bits of byte at index 1
+
+     If payload length is >= 126, additional bytes are allocated to express the length
+
+     Value: 126
+     UInt16 payload length, next two bytes
+
+     Value: 127
+     UInt64 payload length, next eight bytes
+     */
+    static let twoBytePayloadLength: Byte = 0b0111_1110
+    static let eightBytePayloadLength: Byte = 0b0111_1111
 }
 
-internal enum ExtendedPayloadByteLength: UInt8 {
+internal enum PayloadLengthExtension: UInt8 {
+    // If value is 126...UInt16.max -- next two bytes
     case two = 2
+
+    // If value is UInt16.max...UInt64.max -- next eight bytes
     case eight = 8
+
     init?(_ byte: Byte) {
         // Payload extends if first length is 126 or 127. (max and max-1 @ 7 bits)
         switch byte {
@@ -767,19 +629,19 @@ public final class MessageSerializer {
          */
         var byte: Byte = 0
         if header.fin {
-            byte |= .fin
+            byte |= .finFlag
         }
         if header.rsv1 {
-            byte |= .rsv1
+            byte |= .rsv1Flag
         }
         if header.rsv2 {
-            byte |= .rsv2
+            byte |= .rsv2Flag
         }
         if header.rsv3 {
-            byte |= .rsv3
+            byte |= .rsv3Flag
         }
 
-        let op = header.opCode.serialize() & .opCode
+        let op = header.opCode.serialize() & .opCodeFlag
         byte |= op
 
         return [byte]
@@ -791,7 +653,7 @@ public final class MessageSerializer {
         // first length byte is bit 0: mask, bit 1...7: length or indicator of additional bytes
         var primaryByte: Byte = 0
         if header.isMasked {
-            primaryByte |= Byte.maskKeyIncluded
+            primaryByte |= Byte.maskKeyIncludedFlag
         }
 
         // 126 / 127 (max, max-1) indicate 2 & 8 byte extensions respectively
