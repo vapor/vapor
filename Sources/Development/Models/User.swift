@@ -8,9 +8,9 @@ final class User {
     }
 }
 
-extension User: JsonRepresentable {
-    func makeJson() -> Json {
-        return Json([
+extension User: JSONRepresentable {
+    func makeJson() -> JSON {
+        return JSON([
             "name": "\(name)"
         ])
     }

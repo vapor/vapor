@@ -1,4 +1,5 @@
 import libc
+import S4
 
 extension Response {
     /**
@@ -55,7 +56,7 @@ extension Response {
         - parameter status: the http status
         - parameter json: any value that will be attempted to be serialized as json.  Use 'Json' for more complex objects
      */
-    public init(status: Status, json: Json) {
+    public init(status: Status, json: JSON) {
         let headers: Headers = [
             "Content-Type": "application/json"
         ]
@@ -72,13 +73,13 @@ extension Response {
 
     public init(redirect location: String) {
         let headers: Headers = [
-            "Location": Headers.Values(location)
+            "Location": location
         ]
         self.init(status: .movedPermanently, headers: headers, body: [])
     }
 
-    public init(async closure: Stream throws -> Void) {
-        self.init(status: .ok, headers: [:], body: closure)
+    public init(async closure: ((SendingStream) throws -> Void)) {
+        self.init(body: closure)
     }
 
     public static var date: String {
@@ -101,33 +102,5 @@ extension Response {
 
 
         return String(pointer: buf, length: RFC1123_TIME_LEN + 1) ?? ""
-    }
-
-    public var cookies: [String: String] {
-
-        get {
-            var cookies: [String: String] = [:]
-
-            for value in headers["Set-Cookie"] {
-                for cookie in value.split(byString: ";") {
-                    var parts = cookie.split(byString: "=")
-                    if parts.count >= 2 {
-                        cookies[parts[0]] = parts[1]
-                    }
-                }
-            }
-
-            return cookies
-        }
-        set(newCookies) {
-            var cookies: [String] = []
-
-            for (key, value) in newCookies {
-                cookies.append("\(key)=\(value)")
-
-            }
-
-            headers["Set-Cookie"] = Headers.Value(cookies.joined(separator: ";"))
-        }
     }
 }

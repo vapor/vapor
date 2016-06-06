@@ -20,7 +20,7 @@ class Post: StringInitializable {
 
 class TypedRouteTests: XCTestCase {
 
-    static var allTests: [(String, TypedRouteTests -> () throws -> Void)] {
+    static var allTests: [(String, (TypedRouteTests) -> () throws -> Void)] {
         return [
            ("testRouting", testRouting),
         ]
@@ -43,14 +43,8 @@ class TypedRouteTests: XCTestCase {
             return ""
         }
 
-        app.host("host.com") {
-            app.post("posts", Post.self) { request, post in
-                return ""
-            }
-        }
-
-        app.group("v1") {
-            app.patch("posts", Post.self) { request, post in
+        app.grouped("v1") { group in
+            group.patch("posts", Post.self) { request, post in
                 return ""
             }
         }
@@ -66,10 +60,6 @@ class TypedRouteTests: XCTestCase {
         assertRouteExists(at: "one/:w0/two/:w1/three/four",
                           method: .delete,
                           host: "*",
-                          inRoutes: app.routes)
-        assertRouteExists(at: "posts/:w0",
-                          method: .post,
-                          host: "host.com",
                           inRoutes: app.routes)
         assertRouteExists(at: "v1/posts/:w0",
                           method: .patch,

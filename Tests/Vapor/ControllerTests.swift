@@ -89,7 +89,7 @@ private class TestActionController: DefaultInitializable {
 
 class ControllerTests: XCTestCase {
 
-    static var allTests: [(String, ControllerTests -> () throws -> Void)] {
+    static var allTests: [(String, (ControllerTests) -> () throws -> Void)] {
         return [
             ("testController", testController),
             ("testControllerActionRouting_withFactory", testControllerActionRouting_withFactory),
@@ -104,12 +104,10 @@ class ControllerTests: XCTestCase {
 
         app.resource("foo", controller: TestController.self)
 
-        app.bootRoutes()
-
         let fooIndex = Request(method: .get, uri: URI(path: "foo"), headers: [:], body: [])
         if let (_, handler) = app.router.route(fooIndex) {
             do {
-                try handler.respond(to: fooIndex)
+                let _ = try handler.respond(to: fooIndex)
                 XCTAssert(TestController.lock.index == 1, "foo.index Lock not correct")
             } catch {
                 XCTFail("foo.index handler failed")
@@ -126,8 +124,6 @@ class ControllerTests: XCTestCase {
 
         app.add(.get, path: "/hello", action: TestActionController.hello) { TestActionController(person: "Tanner") }
 
-        app.bootRoutes()
-
         let request = Request(method: .get, uri: URI(path: "hello"), headers: [:], body: [])
         guard let (_, handler) = app.router.route(request) else {
             XCTFail("No handler found for TestActionController.hello")
@@ -135,7 +131,7 @@ class ControllerTests: XCTestCase {
         }
 
         do {
-            try handler.respond(to: request)
+            let _ = try handler.respond(to: request)
             XCTAssertEqual(TestActionController.hello, 1)
         } catch {
             XCTFail("TestActionController.hello handler failed with error '\(error)'")
@@ -148,8 +144,6 @@ class ControllerTests: XCTestCase {
 
         app.add(.get, path: "/hello", action: TestActionController.hello)
 
-        app.bootRoutes()
-
         let request = Request(method: .get, uri: URI(path: "hello"), headers: [:], body: [])
         guard let (_, handler) = app.router.route(request) else {
             XCTFail("No handler found for TestActionController.hello")
@@ -157,7 +151,7 @@ class ControllerTests: XCTestCase {
         }
 
         do {
-            try handler.respond(to: request)
+            let _ = try handler.respond(to: request)
             XCTAssertEqual(TestActionController.hello, 1)
         } catch {
             XCTFail("TestActionController.hello handler failed with error '\(error)'")
@@ -169,8 +163,6 @@ class ControllerTests: XCTestCase {
 
         app.add(.get, path: "/hello", action: TestController.hello)
 
-        app.bootRoutes()
-
         let request = Request(method: .get, uri: URI(path: "hello"), headers: [:], body: [])
         guard let (_, handler) = app.router.route(request) else {
             XCTFail("No handler found for TestController.hello")
@@ -178,7 +170,7 @@ class ControllerTests: XCTestCase {
         }
 
         do {
-            try handler.respond(to: request)
+            let _ = try handler.respond(to: request)
             XCTAssertEqual(TestController.lock.hello, 1)
         } catch {
             XCTFail("TestController.hello handler failed with error '\(error)'")

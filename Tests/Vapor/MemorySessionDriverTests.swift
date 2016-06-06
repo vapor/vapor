@@ -17,7 +17,7 @@ private class MSDTHelper {
 }
 
 class MemorySessionDriverTests: XCTestCase {
-    static var allTests: [(String, MemorySessionDriverTests -> () throws -> Void)] {
+    static var allTests: [(String, (MemorySessionDriverTests) -> () throws -> Void)] {
         return [
             ("testValueForKey_onNonExistantSession_isNil",
                 testValueForKey_onNonExistantSession_isNil),

@@ -9,7 +9,7 @@ public final class Subscription {
 
         - Warning: This should only be used by an event to clear subscription on deinitialization
      */
-    internal var completion: Void -> Void = {}
+    internal var completion: (Void) -> Void = {}
     deinit {
         completion()
     }

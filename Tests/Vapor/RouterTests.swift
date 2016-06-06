@@ -12,7 +12,7 @@ import XCTest
 
 class RouterTests: XCTestCase {
 
-    static var allTests: [(String, RouterTests -> () throws -> Void)] {
+    static var allTests: [(String, (RouterTests) -> () throws -> Void)] {
         return [
            ("testSingleHostRouting", testSingleHostRouting),
            ("testMultipleHostsRouting", testMultipleHostsRouting),
@@ -118,7 +118,7 @@ class RouterTests: XCTestCase {
 
         do {
             request.parameters = handler.parameters
-            try handler.handler.respond(to: request)
+            let _ = try handler.handler.respond(to: request)
         } catch {
             XCTFail("Handler threw error \(error)")
         }

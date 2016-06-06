@@ -22,13 +22,13 @@
 
     It is possible to access this struct directly using 
      
-     And(validatorOne, validatorTwo)
+     Both(validatorOne, validatorTwo)
 
     But it is more common to create And objects using the `+` operator:
      
      validatorOne + validatorTwo
 */
-public struct And<
+public struct Both<
     V: Validator,
     U: Validator where V.InputType == U.InputType> {
     private typealias Validator = (input: V.InputType) throws -> Void
@@ -47,7 +47,7 @@ public struct And<
     }
 }
 
-extension And: Validator {
+extension Both: Validator {
     /**
         Validator conformance that allows the 'And' struct
         to concatenate multiple Validator types.
@@ -61,7 +61,7 @@ extension And: Validator {
     }
 }
 
-extension And {
+extension Both {
     /**
         Used to combine two Validator types
     */
@@ -70,7 +70,7 @@ extension And {
     }
 }
 
-extension And where V: ValidationSuite {
+extension Both where V: ValidationSuite {
     /**
         Used to combine two Validator types where one is a ValidationSuite
     */
@@ -79,7 +79,7 @@ extension And where V: ValidationSuite {
     }
 }
 
-extension And where U: ValidationSuite {
+extension Both where U: ValidationSuite {
     /**
         Used to combine two Validators where one is a ValidationSuite
     */
@@ -88,7 +88,7 @@ extension And where U: ValidationSuite {
     }
 }
 
-extension And where V: ValidationSuite, U: ValidationSuite {
+extension Both where V: ValidationSuite, U: ValidationSuite {
     /**
         Used to combine two ValidationSuite types
     */

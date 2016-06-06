@@ -8,7 +8,7 @@ class ValidationMiddleware: Middleware {
         do {
             return try chain.respond(to: request)
         } catch let error as ValidationErrorProtocol {
-            let json = Json([
+            let json = JSON([
                 "error": true,
                 "message": error.message
             ])

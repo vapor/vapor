@@ -1,4 +1,4 @@
-extension Node {
+extension Polymorphic {
     /**
         Transform and validate a node
 
@@ -10,10 +10,10 @@ extension Node {
     */
     public func validated<
         T: ValidationSuite
-        where T.InputType: NodeInitializable>(by suite: T.Type = T.self)
-        throws -> Valid<T> {
-            let value = try T.InputType.make(with: self)
-            return try value.validated(by: suite)
+        where T.InputType: PolymorphicInitializable>(by suite: T.Type = T.self
+    ) throws -> Valid<T> {
+        let value = try T.InputType.init(polymorphic: self)
+        return try value.validated(by: suite)
     }
 
     /**
@@ -27,10 +27,10 @@ extension Node {
     */
     public func validated<
         T: Validator
-        where T.InputType: NodeInitializable>(by validator: T)
-        throws -> Valid<T> {
-            let value = try T.InputType.make(with: self)
-            return try value.validated(by: validator)
+        where T.InputType: PolymorphicInitializable>(by validator: T
+    ) throws -> Valid<T> {
+        let value = try T.InputType.init(polymorphic: self)
+        return try value.validated(by: validator)
     }
 }
 
@@ -55,7 +55,7 @@ public protocol Extractable {
     func extract() -> Wrapped?
 }
 
-extension Extractable where Wrapped == Node {
+extension Extractable where Wrapped == Polymorphic {
 
     /**
         transform and validate an extractable encapsulating a node.
@@ -68,13 +68,14 @@ extension Extractable where Wrapped == Node {
      */
     public func validated<
         V: ValidationSuite
-        where V.InputType: NodeInitializable>(by suite: V.Type = V.self)
-        throws -> Valid<V> {
-            guard let wrapped = extract() else {
-                throw ValidationError(suite, input: nil)
-            }
-            let value = try V.InputType.make(with: wrapped)
-            return try value.validated(by: suite)
+        where V.InputType: PolymorphicInitializable>(by suite: V.Type = V.self
+    ) throws -> Valid<V> {
+        guard let wrapped = extract() else {
+            throw ValidationError(suite, input: nil)
+        }
+
+        let value = try V.InputType.init(polymorphic: wrapped)
+        return try value.validated(by: suite)
     }
 
     /**
@@ -88,17 +89,18 @@ extension Extractable where Wrapped == Node {
      */
     public func validated<
         V: Validator
-        where V.InputType: NodeInitializable>(by validator: V)
-        throws -> Valid<V> {
-            guard let wrapped = extract() else {
-                throw ValidationError(validator, input: nil)
-            }
-            let value = try V.InputType.make(with: wrapped)
-            return try value.validated(by: validator)
+        where V.InputType: PolymorphicInitializable>(by validator: V
+    ) throws -> Valid<V> {
+        guard let wrapped = extract() else {
+            throw ValidationError(validator, input: nil)
+        }
+
+        let value = try V.InputType.init(polymorphic: wrapped)
+        return try value.validated(by: validator)
     }
 }
 
-extension Extractable where Wrapped == [Node] {
+extension Extractable where Wrapped == [Polymorphic] {
 
     /**
         transforms and validates an array of nodes
@@ -111,16 +113,16 @@ extension Extractable where Wrapped == [Node] {
      */
     public func validated<
         V: ValidationSuite,
-        I: NodeInitializable
-        where V.InputType == [I]>(by suite: V.Type = V.self)
-        throws -> Valid<V> {
-            guard let wrapped = extract() else {
-                throw ValidationError(suite, input: nil)
-            }
+        I: PolymorphicInitializable
+        where V.InputType == [I]>(by suite: V.Type = V.self
+    ) throws -> Valid<V> {
+        guard let wrapped = extract() else {
+            throw ValidationError(suite, input: nil)
+        }
 
-            return try wrapped
-                .map(I.make)
-                .validated(by: suite)
+        return try wrapped
+            .map(I.init)
+            .validated(by: suite)
     }
 
     /**
@@ -134,20 +136,20 @@ extension Extractable where Wrapped == [Node] {
      */
     public func validated<
         V: Validator,
-        I: NodeInitializable
-        where V.InputType == [I]>(by validator: V)
-        throws -> Valid<V> {
-            guard let wrapped = extract() else {
-                throw ValidationError(validator, input: nil)
-            }
+        I: PolymorphicInitializable
+        where V.InputType == [I]>(by validator: V
+    ) throws -> Valid<V> {
+        guard let wrapped = extract() else {
+            throw ValidationError(validator, input: nil)
+        }
 
-            return try wrapped
-                .map(I.make)
-                .validated(by: validator)
+        return try wrapped
+            .map(I.init)
+            .validated(by: validator)
     }
 }
 
-extension Extractable where Wrapped == [String : Node] {
+extension Extractable where Wrapped == [String : Polymorphic] {
 
     /**
         transforms and validates a dictionary w type [String : Node]
@@ -160,19 +162,20 @@ extension Extractable where Wrapped == [String : Node] {
      */
     public func validated<
         V: ValidationSuite,
-        I: NodeInitializable
-        where V.InputType == [String : I]>(by suite: V.Type = V.self)
-        throws -> Valid<V> {
-            guard let wrapped = extract() else {
-                throw ValidationError(suite, input: nil)
-            }
+        I: PolymorphicInitializable
+        where V.InputType == [String : I]>(by suite: V.Type = V.self
+    ) throws -> Valid<V> {
+        guard let wrapped = extract() else {
+            throw ValidationError(suite, input: nil)
+        }
 
-            var mapped: [String : I] = [:]
-            try wrapped.forEach { k, v in
-                mapped[k] = try I.make(with: v)
-            }
+        var mapped: [String : I] = [:]
 
-            return try mapped.validated(by: suite)
+        try wrapped.forEach { key, val in
+            mapped[key] = try I.init(polymorphic: val)
+        }
+
+        return try mapped.validated(by: suite)
     }
 
     /**
@@ -186,19 +189,20 @@ extension Extractable where Wrapped == [String : Node] {
      */
     public func validated<
         V: Validator,
-        I: NodeInitializable
-        where V.InputType == [String : I]>(by validator: V)
-        throws -> Valid<V> {
-            guard let wrapped = extract() else {
-                throw ValidationError(validator, input: nil)
-            }
+        I: PolymorphicInitializable
+        where V.InputType == [String : I]>(by validator: V
+    ) throws -> Valid<V> {
+        guard let wrapped = extract() else {
+            throw ValidationError(validator, input: nil)
+        }
 
-            var mapped: [String : I] = [:]
-            try wrapped.forEach { k, v in
-                mapped[k] = try I.make(with: v)
-            }
+        var mapped: [String : I] = [:]
 
-            return try mapped.validated(by: validator)
+        try wrapped.forEach { key, val in
+            mapped[key] = try I.init(polymorphic: val)
+        }
+
+        return try mapped.validated(by: validator)
     }
 }
 

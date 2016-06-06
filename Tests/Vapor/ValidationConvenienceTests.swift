@@ -9,8 +9,8 @@
 import XCTest
 @testable import Vapor
 
-class ConvenienceValidationTests: XCTestCase {
-    static var allTests: [(String, ConvenienceValidationTests -> () throws -> Void)] {
+class ValidationConvenienceTests: XCTestCase {
+    static var allTests: [(String, (ValidationConvenienceTests) -> () throws -> Void)] {
         return [
                    ("testTrue", testTrue),
                    ("testFalse", testFalse)
@@ -24,7 +24,7 @@ class ConvenienceValidationTests: XCTestCase {
     }
 }
 
-class AlphanumericValidationTests: ConvenienceValidationTests {
+class AlphanumericValidationTests: ValidationConvenienceTests {
     override func testTrue() throws {
         let alphanumeric = "Analphanumericstring"
         let _ = try alphanumeric.tested(by: OnlyAlphanumeric.self)
@@ -36,7 +36,7 @@ class AlphanumericValidationTests: ConvenienceValidationTests {
     }
 }
 
-class CompareValidationTests: ConvenienceValidationTests {
+class CompareValidationTests: ValidationConvenienceTests {
     override func testTrue() throws {
         let comparable = 2.3
         let _ = try comparable.tested(by: Compare.lessThan(5.0))
@@ -61,7 +61,7 @@ class CompareValidationTests: ConvenienceValidationTests {
     }
 }
 
-class ContainsValidationTests: ConvenienceValidationTests {
+class ContainsValidationTests: ValidationConvenienceTests {
     override func testTrue() throws {
         let collection = [1, 2, 3, 4, 5]
         let _ = try collection.tested(by: Contains(1))

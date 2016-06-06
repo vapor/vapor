@@ -37,7 +37,7 @@ class FileManager {
                     return (true, isDirectory)
                 }
                 // chase the link; too bad if it is a slink to /Net/foo
-                stat(path, &s) >= 0
+                let _ = stat(path, &s) >= 0
             }
         } else {
             return (false, isDirectory)
@@ -46,15 +46,15 @@ class FileManager {
     }
 
     static func expandPath(_ path: String) throws -> String {
-        let result = realpath(path, nil)
+        let maybeResult = realpath(path, nil)
 
-        guard let r = result else {
+        guard let result = maybeResult else {
             throw Error.Unreadable
         }
 
         defer { free(result) }
 
-        let cstring = String(validatingUTF8: r)
+        let cstring = String(validatingUTF8: result)
 
         if let expanded = cstring {
             return expanded

@@ -37,10 +37,10 @@ public prefix func ! <V: ValidationSuite> (rhs: V.Type) -> Not<V> {
     - parameter lhs: left validator will be run first
     - parameter rhs: right validator, will be used if left fails
 
-    - returns: Or<V,U> representing the || combination of the two validators
+    - returns: Either<V,U> representing the || combination of the two validators
 */
-public func || <V: Validator, U: Validator where V.InputType == U.InputType> (lhs: V, rhs: U) -> Or<V, U> {
-    return Or(lhs, rhs)
+public func || <V: Validator, U: Validator where V.InputType == U.InputType> (lhs: V, rhs: U) -> Either<V, U> {
+    return  Either(lhs, rhs)
 }
 
 /**
@@ -50,10 +50,10 @@ public func || <V: Validator, U: Validator where V.InputType == U.InputType> (lh
     - parameter lhs: left validator. will be run first
     - parameter rhs: right validation suite. will be used if lhs fails
 
-    - returns: Or<V,U> representing the || combination of the two validators
+    - returns: Either<V,U> representing the || combination of the two validators
 */
-public func || <V: Validator, U: ValidationSuite where V.InputType == U.InputType> (lhs: V, rhs: U.Type) -> Or<V, U> {
-    return Or(lhs, rhs)
+public func || <V: Validator, U: ValidationSuite where V.InputType == U.InputType> (lhs: V, rhs: U.Type) -> Either<V, U> {
+    return  Either(lhs, rhs)
 }
 
 /**
@@ -63,10 +63,10 @@ public func || <V: Validator, U: ValidationSuite where V.InputType == U.InputTyp
     - parameter lhs: left validation suite. will be run first
     - parameter rhs: right validator. will be used if lhs fails
 
-    - returns: Or<V,U> representing the || combination of the two validators
+    - returns: Either<V,U> representing the || combination of the two validators
 */
-public func || <V: ValidationSuite, U: Validator where V.InputType == U.InputType> (lhs: V.Type, rhs: U) -> Or<V, U> {
-    return Or(lhs, rhs)
+public func || <V: ValidationSuite, U: Validator where V.InputType == U.InputType> (lhs: V.Type, rhs: U) -> Either<V, U> {
+    return  Either(lhs, rhs)
 }
 
 /**
@@ -76,10 +76,10 @@ public func || <V: ValidationSuite, U: Validator where V.InputType == U.InputTyp
     - parameter lhs: left validation suite. will be run first
     - parameter rhs: right validation suite. will be used if lhs fails
 
-    - returns: Or<V,U> representing the || combination of the two validators
+    - returns: Either<V,U> representing the || combination of the two validators
 */
-public func || <V: ValidationSuite, U: ValidationSuite where V.InputType == U.InputType> (lhs: V.Type, rhs: U.Type) -> Or<V, U> {
-    return Or(lhs, rhs)
+public func || <V: ValidationSuite, U: ValidationSuite where V.InputType == U.InputType> (lhs: V.Type, rhs: U.Type) -> Either<V, U> {
+    return  Either(lhs, rhs)
 }
 
 // MARK: And
@@ -91,10 +91,10 @@ public func || <V: ValidationSuite, U: ValidationSuite where V.InputType == U.In
     - parameter lhs: left validator. will run first
     - parameter rhs: right validator. will run if lhs succeeds
 
-    - returns: an And<V,U> object representing the concatination of the two validators
+    - returns: an Both<V,U> object representing the concatination of the two validators
 */
-public func && <V: Validator, U: Validator where V.InputType == U.InputType> (lhs: V, rhs: U) -> And<V, U> {
-    return And(lhs, rhs)
+public func && <V: Validator, U: Validator where V.InputType == U.InputType> (lhs: V, rhs: U) -> Both<V, U> {
+    return Both(lhs, rhs)
 }
 
 /**
@@ -104,10 +104,10 @@ public func && <V: Validator, U: Validator where V.InputType == U.InputType> (lh
     - parameter lhs: left validator. will run first
     - parameter rhs: right validation suite. will run if lhs succeeds
 
-    - returns: an And<V,U> object representing the concatination of the two validators
+    - returns: an Both<V,U> object representing the concatination of the two validators
 */
-public func && <V: Validator, U: ValidationSuite where V.InputType == U.InputType> (lhs: V, rhs: U.Type) -> And<V, U> {
-    return And(lhs, rhs)
+public func && <V: Validator, U: ValidationSuite where V.InputType == U.InputType> (lhs: V, rhs: U.Type) -> Both<V, U> {
+    return Both(lhs, rhs)
 }
 
 /**
@@ -117,10 +117,10 @@ public func && <V: Validator, U: ValidationSuite where V.InputType == U.InputTyp
     - parameter lhs: left validation suite. will run first
     - parameter rhs: right validator. will run if lhs succeeds
 
-    - returns: an And<V,U> object representing the concatination of the two validators
+    - returns: an Both<V,U> object representing the concatination of the two validators
 */
-public func && <V: ValidationSuite, U: Validator where V.InputType == U.InputType> (lhs: V.Type, rhs: U) -> And<V, U> {
-    return And(lhs, rhs)
+public func && <V: ValidationSuite, U: Validator where V.InputType == U.InputType> (lhs: V.Type, rhs: U) -> Both<V, U> {
+    return Both(lhs, rhs)
 }
 
 /**
@@ -130,8 +130,8 @@ public func && <V: ValidationSuite, U: Validator where V.InputType == U.InputTyp
     - parameter lhs: left validation suite. will run first
     - parameter rhs: right validation suite. will run if lhs succeeds
 
-    - returns: an And<V,U> object representing the concatination of the two validators
+    - returns: an Both<V,U> object representing the concatination of the two validators
 */
-public func && <V: ValidationSuite, U: ValidationSuite where V.InputType == U.InputType> (lhs: V.Type, rhs: U.Type) -> And<V, U> {
-    return And(lhs, rhs)
+public func && <V: ValidationSuite, U: ValidationSuite where V.InputType == U.InputType> (lhs: V.Type, rhs: U.Type) -> Both<V, U> {
+    return Both(lhs, rhs)
 }

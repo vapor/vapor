@@ -1,8 +1,13 @@
 import Vapor
+import S4
 
-let app = Application()
+var workDir: String {
+    let parent = #file.characters.split(separator: "/").map(String.init).dropLast().joined(separator: "/")
+    let path = "/\(parent)/"
+    return path
+}
 
-app.hash.key = app.config.get("app.hash.key", "default-key")
+let app = Application(workDir: workDir)
 
 //MARK: Basic
 
@@ -28,19 +33,34 @@ app.post("jsondata") { request in
 //MARK: Type safe routing
 
 app.get("test", Int.self, String.self) { request, int, string in
-    return Json([
+    return JSON([
         "message": "Int \(int) String \(string)"
     ])
+}
+
+/* Expected Users Format
+ [
+    [
+        "name" : "joe",
+        "friend" : [
+            "name" : "joe"
+        ]
+    ]
+ ]
+ */
+app.get("users") { req in
+    let friendName = req.data[0, "name", "friend", "name"].string
+    return "Hello \(friendName)"
 }
 
 //MARK: Json
 
 app.get("json") { request in
-    return Json([
+    return JSON([
         "number": 123,
         "text": "unicorns",
         "bool": false,
-        "nested": Json(["one", 2, false])
+        "nested": JSON(["one", 2, false])
     ])
 }
 
@@ -69,23 +89,23 @@ app.post("json2") { request in
     guard let count = request.data["unicorns"].int else {
         return Response(error: "No unicorn count provided")
     }
-    return Response(status: .created, json: Json(["message":"Received \(count) unicorns"]))
+    return Response(status: .created, json: JSON(["message":"Received \(count) unicorns"]))
 }
 
-app.group("abort") {
-    app.get("400") { request in
+app.grouped("abort") { group in
+    group.get("400") { request in
         throw Abort.badRequest
     }
 
-    app.get("404") { request in
+    group.get("404") { request in
         throw Abort.notFound
     }
 
-    app.get("420") { request in
+    group.get("420") { request in
         throw Abort.custom(status: .enhanceYourCalm, message: "Enhance your calm")
     }
 
-    app.get("500") { request in
+    group.get("500") { request in
         throw Abort.internalServerError
     }
 }
@@ -110,7 +130,7 @@ app.get("login") { request in
         throw Abort.badRequest
     }
 
-    return Json([
+    return JSON([
         "id": id
     ])
 }
@@ -129,7 +149,7 @@ app.post("login") { request in
 
     request.session?["id"] = "123"
 
-    return Json([
+    return JSON([
         "message": "Logged in"
     ])
 }
@@ -147,7 +167,7 @@ app.get("cookie") { request in
 
 
 app.get("cookies") { request in
-    var response = Json([
+    var response = JSON([
         "cookies": "\(request.cookies)"
     ]).makeResponse()
 
@@ -177,9 +197,9 @@ class Employee {
     }
 }
 
-extension Employee: JsonRepresentable {
-    func makeJson() -> Json {
-        return Json([
+extension Employee: JSONRepresentable {
+    func makeJson() -> JSON {
+        return JSON([
             "name": name.value,
             "email": email.value
         ])
@@ -189,6 +209,125 @@ extension Employee: JsonRepresentable {
 app.post("validation") { request in
     let employee = try Employee(request: request)
     return employee
+}
+
+//MARK: Forms
+
+app.get("multipart-image") { _ in
+    var response = "<form method='post' action='/multipart-image/' ENCTYPE='multipart/form-data'>"
+
+    response += "<input type='text' name='name' />"
+    response += "<input type='file' name='image' accept='image/*' />"
+    response += "<button>Submit</button>"
+    response += "</form>"
+
+    return Response(status: .ok, html: response)
+}
+
+app.post("multipart-image") { request in
+    guard let form = request.data.multipart else {
+        throw Abort.badRequest
+    }
+
+    guard let namePart = form["name"]?.input else {
+        throw Abort.badRequest
+    }
+
+    guard let image = form["image"]?.file else {
+        throw Abort.badRequest
+    }
+
+    var headers: Headers = [:]
+
+    if let mediaType = image.type {
+        headers["Content-Type"] = mediaType.type + "/" + mediaType.subtype
+    }
+
+    return Response(status: .ok, headers: headers, body: image.data)
+}
+
+app.get("multifile") { _ in
+    var response = "<form method='post' action='/multifile/' ENCTYPE='multipart/form-data'>"
+
+    response += "<input type='text' name='response' />"
+    response += "<input type='file' name='files' multiple='multiple' />"
+    response += "<button>Submit</button>"
+    response += "</form>"
+
+    return Response(status: .ok, html: response)
+}
+
+app.post("multifile") { request in
+    guard let form = request.data.multipart else {
+        throw Abort.badRequest
+    }
+
+    guard let response = form["response"]?.input, let number = Int(response) else {
+        throw Abort.badRequest
+    }
+
+    guard let files = form["files"]?.files else {
+        throw Abort.badRequest
+    }
+
+    guard files.count > number else {
+        throw Abort.badRequest
+    }
+
+    let file = files[number]
+
+    var headers: Headers = [:]
+
+    if let mediaType = file.type {
+        headers["Content-Type"] = mediaType.type + "/" + mediaType.subtype
+    }
+
+    return Response(status: .ok, headers: headers, body: file.data)
+}
+
+app.get("options") { _ in
+    var response = "<form method='post' action='/options/' ENCTYPE='multipart/form-data'>"
+
+    response += "<select name='options' multiple='multiple'>"
+    response += "<option value='0'>0</option>"
+    response += "<option value='1'>1</option>"
+    response += "<option value='2'>2</option>"
+    response += "<option value='3'>3</option>"
+    response += "<option value='4'>4</option>"
+    response += "<option value='5'>5</option>"
+    response += "<option value='6'>6</option>"
+    response += "<option value='7'>7</option>"
+    response += "<option value='8'>8</option>"
+    response += "<option value='9'>9</option>"
+    response += "</select>"
+    response += "<button>Submit</button>"
+    response += "</form>"
+
+    return Response(status: .ok, html: response)
+}
+
+app.post("options") { request in
+    guard let form = request.data.multipart, let multipart = form["options"] else {
+        return "No form submited"
+    }
+
+    let selected = multipart.input ?? multipart.inputArray?.joined(separator: ", ")
+    return "You have selected \"\(selected ?? "whoops!")\"\n"
+}
+
+app.post("multipart-print") { request in
+    print(request.data)
+    print(request.data.formEncoded)
+
+    print(request.data["test"])
+    print(request.data["test"].string)
+
+    print(request.data.multipart?["test"])
+    print(request.data.multipart?["test"]?.file)
+
+    return JSON([
+        "message": "Printed details to console"
+    ])
 }
 
 //MARK: WebSocket
@@ -202,9 +341,9 @@ app.get("echo", handler: wss.respond)
 
 //MARK: Middleware
 
-app.middleware(AuthMiddleware()) {
+app.grouped(AuthMiddleware()) { group in
     app.get("protected") { request in
-        return Json([
+        return JSON([
             "message": "Welcome authorized user"
         ])
     }
@@ -218,8 +357,8 @@ app.get("async") { request in
     })
     response.headers["Content-Type"] = "text/plain"
     response.headers["Transfer-Encoding"] = ""
-    response.headers["Content-Length"] = 5
+    response.headers["Content-Length"] = 5.description
     return response
 }
 
-app.start(port: 8080)
+app.start()
