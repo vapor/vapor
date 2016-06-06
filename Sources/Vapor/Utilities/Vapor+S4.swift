@@ -40,5 +40,5 @@ public typealias Responder = S4.Responder
 
 //public typealias Middleware = S4.Middleware
 public protocol Middleware {
-    func respond(to request: Request, closure: (Request) throws -> Response) throws -> Response
+    func handle(_ handler: Request.Handler) -> Request.Handler
 }

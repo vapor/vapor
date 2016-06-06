@@ -13,7 +13,6 @@ class RequestTests: XCTestCase {
     static var allTests: [(String, (RequestTests) -> () throws -> Void)] {
         return [
             ("testParse", testParse),
-            ("testCachedParse", testCachedParse),
             ("testMultipart", testMultipart),
             ("testMultipartFile", testMultipartFile),
             ("testFormURLEncoded", testFormURLEncoded),
@@ -23,17 +22,14 @@ class RequestTests: XCTestCase {
     }
 
     func testParse() {
-        let string = "value=123"
-        var request = Request(method: .post, path: "/", host: nil, body: string.data)
-        request.headers.headers["content-type"] = "application/x-www-form-urlencoded"
-
-        XCTAssert(request.data["value"].int == 123, "Request did not parse correctly")
-    }
-
-    func testCachedParse() {
-        let string = "value=123"
-        var request = Request(method: .post, path: "/", host: nil, body: string.data)
-        request.headers.headers["content-type"] = "application/x-www-form-urlencoded"
+        let request = Request(
+            method: .post,
+            path: "/",
+            headers: [
+                "content-type": "application/x-www-form-urlencoded"
+            ],
+            data: "value=123".data
+        )
 
         XCTAssert(request.data["value"].int == 123, "Request did not parse correctly")
     }
@@ -47,8 +43,14 @@ class RequestTests: XCTestCase {
         body += "123\r\n"
         body += "--" + boundary + "\r\n"
 
-        var request = Request(method: .post, path: "/", host: nil, body: body.data)
-        request.headers.headers["content-type"] = "multipart/form-data; charset=utf-8; boundary=\(boundary)"
+        let request = Request(
+            method: .post,
+            path: "/",
+            headers: [
+                "content-type": "multipart/form-data; charset=utf-8; boundary=\(boundary)"
+            ],
+            data: body.data
+        )
 
         XCTAssert(request.data["value"].int == 123, "Request did not parse correctly")
     }
@@ -63,16 +65,28 @@ class RequestTests: XCTestCase {
         body += "123"
         body += "--" + boundary + "\r\n"
 
-        var request = Request(method: .post, path: "/", host: nil, body: body.data)
-        request.headers.headers["content-type"] = "multipart/form-data; charset=utf-8; boundary=\(boundary)"
+        let request = Request(
+            method: .post,
+            path: "/",
+            headers: [
+                "content-type": "multipart/form-data; charset=utf-8; boundary=\(boundary)"
+            ],
+            data: body.data
+        )
 
         XCTAssert(request.data.multipart?["value"]?.file?.data == "123".data, "Request did not parse correctly")
     }
 
     func testFormURLEncoded() {
         let body = "first=value&arr[]=foo+bar&arr[]=baz"
-        var request = Request(method: .post, path: "/", host: nil, body: body.data)
-        request.headers.headers["content-type"] = "application/x-www-form-urlencoded"
+        let request = Request(
+            method: .post,
+            path: "/",
+            headers: [
+                "content-type": "application/x-www-form-urlencoded"
+            ],
+            data: body.data
+        )
 
         XCTAssert(request.data["first"].string == "value", "Request key first did not parse correctly")
         XCTAssert(request.data["arr", 0].string == "foo bar", "Request key arr did not parse correctly")
@@ -81,8 +95,14 @@ class RequestTests: XCTestCase {
 
     func testFormURLEncodedEdge() {
         let body = "singleKeyArray[]=value&implicitArray=1&implicitArray=2"
-        var request = Request(method: .post, path: "/", host: nil, body: body.data)
-        request.headers.headers["content-type"] = "application/x-www-form-urlencoded"
+        let request = Request(
+            method: .post,
+            path: "/",
+            headers: [
+                "content-type": "application/x-www-form-urlencoded"
+            ],
+            data: body.data
+        )
 
         XCTAssert(request.data["singleKeyArray", 0].string == "value", "singleKeyArray did not parse correctly")
         XCTAssert(request.data["implicitArray", 0].string == "1", "implicitArray did not parse correctly")

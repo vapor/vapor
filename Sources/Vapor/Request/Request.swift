@@ -1,9 +1,12 @@
-public struct Request {
-    public var method: Method
-    public var uri: URI
-    public var version: Version
-    public var headers: Headers
-    public var body: Body
+public class Request {
+    public let method: Method
+    public let uri: URI
+    public let version: Version
+    public let headers: Headers
+    public let body: Body
+
+    /// Query data from the path, or POST data from the body (depends on `Method`).
+    public let data: Content
 
     /// URL parameters (ex: `:id`).
     public var parameters: [String: String]
@@ -11,10 +14,7 @@ public struct Request {
     /// Server stored information related from session cookie.
     public var session: Session?
 
-    /// Query data from the path, or POST data from the body (depends on `Method`).
-    public var data: Request.Content
-
-    public var cookies: [String: String]
+    public let cookies: [String: String]
 
     public init(method: Method, uri: URI, version: Version, headers: Headers, body: Body) {
         self.method = method
@@ -29,6 +29,7 @@ public struct Request {
 
         do {
             data = try body.becomeBuffer()
+            Log.info("converted body \(data)")
         } catch {
             Log.error("Could not receive body data: \(error).")
         }
@@ -37,11 +38,13 @@ public struct Request {
 
         self.cookies = Request.parseCookies(headers: headers)
     }
+
+    public typealias Handler = (Request) throws -> ResponseRepresentable
 }
 
 extension Request {
-    public init(method: Method = .get, path: String, host: String? = nil, headers: Headers = [:], body: Data = []) {
-        self.init(method: method, uri: URI(path: path, host: host), version: Version(major: 1, minor: 1), headers: headers, body: .buffer(body))
+    public convenience init(method: Method = .get, path: String, host: String? = nil, headers: Headers = [:], data: Data = []) {
+        self.init(method: method, uri: URI(path: path, host: host), version: Version(major: 1, minor: 1), headers: headers, body: .buffer(data))
     }
 
     /**

@@ -274,32 +274,28 @@ extension Application {
     public func respond(to request: Request) throws -> Response {
         Log.info("\(request.method) \(request.uri.path ?? "/")")
 
-        var closure: (Request) throws -> Response
-        var request = request
+        var handler: Request.Handler
 
         // Check in routes
-        if let (parameters, routerHandler) = router.route(request) {
-            request.parameters = parameters
-            closure = routerHandler
+        if let routerHandler = router.route(request) {
+            handler = routerHandler
         } else if let fileHander = self.checkFileSystem(for: request) {
-            closure = fileHander
+            handler = fileHander
         } else {
             // Default not found handler
-            closure = { _ in
+            handler = { _ in
                 return Response(status: .notFound, text: "Page not found")
             }
         }
 
         // Loop through middlewares in order
         for middleware in self.globalMiddleware {
-            closure = { request in
-                return try middleware.respond(to: request, closure: closure)
-            }
+            handler = middleware.handle(handler)
         }
 
         var response: Response
         do {
-            response = try closure(request)
+            response = try handler(request).makeResponse()
 
             if response.headers["Content-Type"] == nil {
                 Log.warning("Response had no 'Content-Type' header.")

@@ -4,11 +4,10 @@ public typealias Host = String
 public final class BranchRouter: RouterDriver {
 
     // MARK: Private Tree Representation
-    private final var tree: [Host : [Request.Method : Branch]] = [:]
+    private final var tree: [Host: [Request.Method: Branch]] = [:]
 
     // MARK: Routing
-    public final func route(_ request: Request)
-        -> (parameters: [String: String], handler: (Request) throws -> Response)? {
+    public final func route(_ request: Request) -> Request.Handler? {
         let path = request.uri.path ?? ""
         let host = request.uri.host ?? ""
 
@@ -22,7 +21,7 @@ public final class BranchRouter: RouterDriver {
 
         //search branch with query path generator
         let generator = path.pathComponentGenerator()
-        return branch.handle(parameters: [:], request: request, comps: generator)
+        return branch.handle(request: request, comps: generator)
     }
 
     // MARK: Registration
@@ -39,7 +38,7 @@ public final class BranchRouter: RouterDriver {
         let branch = base[method] ?? Branch(name: "")
 
         //extend the branch
-        branch.extendBranch(generator, handler: route.closure)
+        branch.extendBranch(generator, handler: route.handler)
 
         //assign the branch and root to the tree
         base[method] = branch

@@ -27,7 +27,7 @@ internal final class Branch {
 
         *indicates a supported branch.
      */
-    private var handler: ((Request) throws -> Response)?
+    private var handler: Request.Handler?
 
     /**
         key or *
@@ -61,21 +61,20 @@ internal final class Branch {
 
         - returns: a request handler or nil if not supported
      */
-    func handle(parameters: [String: String], request: Request, comps: CompatibilityGenerator<String>) -> ([String: String], ((Request) throws -> Response))? {
+    func handle(request: Request, comps: CompatibilityGenerator<String>) -> Request.Handler? {
         guard let key = comps.next() else {
             if let handler = handler {
-                return (parameters, handler)
+                return handler
             } else {
                 return nil
             }
         }
 
         if let next = subBranches[key] {
-            return next.handle(parameters: parameters, request: request, comps: comps)
+            return next.handle(request: request, comps: comps)
         } else if let wildcard = subBranches["*"] {
-            var parameters = parameters
-            parameters[wildcard.name] = try? String(percentEncoded: key)
-            return wildcard.handle(parameters: parameters, request: request, comps: comps)
+            request.parameters[wildcard.name] = try? String(percentEncoded: key)
+            return wildcard.handle(request: request, comps: comps)
         } else {
             return nil
         }
@@ -91,7 +90,7 @@ internal final class Branch {
         - parameter generator: the generator that will be used to match the path components.  /users/messages/:id will return a generator that is 'users' <- 'messages' <- '*id'
         - parameter handler:   the handler to assign to the end path component
      */
-    func extendBranch(_ generator: CompatibilityGenerator<String>, handler: (Request) throws -> Response) {
+    func extendBranch(_ generator: CompatibilityGenerator<String>, handler: Request.Handler) {
         guard let key = generator.next() else {
             self.handler = handler
             return

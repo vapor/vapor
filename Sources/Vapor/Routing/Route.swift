@@ -13,7 +13,7 @@ public struct Route {
 
     let method: Request.Method
     let path: String
-    let closure: (Request) throws -> Response
+    let handler: Request.Handler
     let hostname: String
 
     /**
@@ -23,11 +23,11 @@ public struct Route {
         - parameter path: the path to use when deciding the route
         - parameter handler: the handler to route when the path is called
      */
-    init(host: String = "*", method: Request.Method, path: String, closure: (Request) throws -> Response) {
+    init(host: String = "*", method: Request.Method, path: String, handler: Request.Handler) {
         self.hostname = host
         self.method = method
         self.path = path
-        self.closure = closure
+        self.handler = handler
     }
 }
 

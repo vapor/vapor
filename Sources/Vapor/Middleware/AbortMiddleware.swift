@@ -17,22 +17,24 @@ public class AbortMiddleware: Middleware {
 
      - returns: a valid response
      */
-    public func respond(to request: Request, closure: (Request) throws -> Response) throws -> Response {
-        do {
-            return try closure(request)
-        } catch Abort.badRequest {
-            return try self.errorResponse(.badRequest, message: "Invalid request")
-        } catch Abort.notFound {
-            return try self.errorResponse(.notFound, message: "Page not found")
-        } catch Abort.internalServerError {
-            return try self.errorResponse(.internalServerError, message: "Something went wrong")
-        } catch Abort.invalidParameter(let name, let type) {
-            return try self.errorResponse(
-                .badRequest,
-                message: "Invalid request. Expected parameter \(name) to be type \(type)"
-            )
-        } catch Abort.custom(let status, let message) {
-            return try self.errorResponse(status, message: message)
+    public func handle(_ handler: Request.Handler) -> Request.Handler {
+        return { request in
+            do {
+                return try handler(request)
+            } catch Abort.badRequest {
+                return try self.errorResponse(.badRequest, message: "Invalid request")
+            } catch Abort.notFound {
+                return try self.errorResponse(.notFound, message: "Page not found")
+            } catch Abort.internalServerError {
+                return try self.errorResponse(.internalServerError, message: "Something went wrong")
+            } catch Abort.invalidParameter(let name, let type) {
+                return try self.errorResponse(
+                    .badRequest,
+                    message: "Invalid request. Expected parameter \(name) to be type \(type)"
+                )
+            } catch Abort.custom(let status, let message) {
+                return try self.errorResponse(status, message: message)
+            }
         }
     }
 

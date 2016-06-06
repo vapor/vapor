@@ -33,12 +33,12 @@ class RouterTests: XCTestCase {
         let request = Request(method: .get, path: "test", host: "other.test")
 
         do {
-            guard let (_, result) = router.route(request) else {
+            guard let result = router.route(request) else {
                 XCTFail("no route found")
                 return
             }
 
-            var body = try result(request).body
+            var body = try result(request).makeResponse().body
 
             let data = try body.becomeBuffer()
             let string = try String(data: data)
@@ -71,16 +71,16 @@ class RouterTests: XCTestCase {
         let handler_1 = router.route(request_1)
         let handler_2 = router.route(request_2)
 
-        if let response_1 = try? handler_1?.handler(request_1) {
-            var body = response_1!.body
+        if let response_1 = try? handler_1?(request_1) {
+            var body = response_1!.makeResponse().body
             let buffer = try? body.becomeBuffer()
             XCTAssert(buffer == data_1, "Incorrect response returned by Handler 1")
         } else {
             XCTFail("Handler 1 did not return a response")
         }
 
-        if let response_2 = try? handler_2?.handler(request_2) {
-            var body = response_2!.body
+        if let response_2 = try? handler_2?(request_2) {
+            var body = response_2!.makeResponse().body
             let buffer = try? body.becomeBuffer()
             XCTAssert(buffer == data_2, "Incorrect response returned by Handler 2")
         } else {
@@ -110,15 +110,14 @@ class RouterTests: XCTestCase {
         }
         router.register(route)
 
-        var request = Request(method: .get, path: "test/\(percentEncodedString)")
+        let request = Request(method: .get, path: "test/\(percentEncodedString)")
         guard let handler = router.route(request) else {
             XCTFail("Route not found")
             return
         }
 
         do {
-            request.parameters = handler.parameters
-            let _ = try handler.handler(request)
+            let _ = try handler(request)
         } catch {
             XCTFail("Handler threw error \(error)")
         }

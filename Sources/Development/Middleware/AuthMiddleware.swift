@@ -5,16 +5,18 @@ class AuthMiddleware: Middleware {
         case Unauthorized
     }
 
-    func respond(to request: Request, closure: (Request) throws -> Response) throws -> Response {
-        guard let session = request.session else {
-            throw Error.Unauthorized
-        }
+    func handle(_ handler: Request.Handler) -> Request.Handler {
+        return { request in
+            guard let session = request.session else {
+                throw Error.Unauthorized
+            }
 
-        guard session["id"] != nil else {
-            throw Error.Unauthorized
-        }
+            guard session["id"] != nil else {
+                throw Error.Unauthorized
+            }
 
-        return try closure(request)
+            return try handler(request)
+        }
     }
 
 }

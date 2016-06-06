@@ -64,8 +64,9 @@ class SessionTests: XCTestCase {
             return "hi"
         }
 
-        var request = Request(method: .get, path: "cookie")
-        request.headers["Cookie"] = "vapor-session=123"
+        let request = Request(method: .get, path: "cookie", headers: [
+            "cookie": "vapor-session=123"
+        ])
 
         guard let response = try? app.respond(to: request) else {
             XCTFail("Could not get response")

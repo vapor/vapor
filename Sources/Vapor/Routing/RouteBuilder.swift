@@ -84,17 +84,15 @@ extension Application: RouteBuilder {
         handler: Route.Handler
     ) {
         // Convert Route.Handler to Request.Handler
-        var closure: (Request) throws -> Response = { request in
+        var handler: Request.Handler = { request in
             return try handler(request).makeResponse()
         }
 
         for middleware in middleware {
-            closure = { request in
-                return try middleware.respond(to: request, closure: closure)
-            }
+            handler = middleware.handle(handler)
         }
 
-        let route = Route(host: "*", method: method, path: path, closure: closure)
+        let route = Route(host: "*", method: method, path: path, handler: handler)
 
         routes.append(route)
         router.register(route)
