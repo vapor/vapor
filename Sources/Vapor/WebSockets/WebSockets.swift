@@ -8,7 +8,7 @@ public final class WebSock {
 }
 
 extension WebSock {
-    func listen(_ handler: (socket: WebSock, message: WebSock.Message) throws -> Void) throws {
+    public func listen(_ handler: (socket: WebSock, message: WebSock.Message) throws -> Void) throws {
         while true {
             let parser = MessageParser(stream: stream)
             let nextMessage = try parser.acceptMessage()
