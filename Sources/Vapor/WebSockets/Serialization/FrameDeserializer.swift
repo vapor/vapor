@@ -1,12 +1,69 @@
-public final class FrameDeserializer<O: OutputStream where O.Element == Byte> {
-    private var buffer: O
+public protocol InputBuffer {
+    associatedtype Element
+    mutating func next() throws -> Element?
+}
 
-    public init(buffer: O) {
+extension IndexingIterator: InputBuffer {}
+extension AnyIterator: InputBuffer {}
+extension StreamBuffer: InputBuffer {}
+extension Array: InputBuffer {
+    public mutating func next() -> Element? {
+        guard !isEmpty else { return nil }
+        return removeFirst()
+    }
+}
+
+public final class FrameDeserializer<Buffer: InputBuffer where Buffer.Element == Byte> {
+    private var buffer: Buffer
+
+    public init(buffer: Buffer) {
         self.buffer = buffer
     }
 
-    // MARK: Extractors
+    public func acceptFrame() throws -> WebSock.Frame {
+        let (fin, rsv1, rsv2, rsv3, opCode) = try extractByteZero()
+        let (isMasked, payloadLengthInfo) = try extractByteOne()
 
+        /**
+         Returns UInt64 to encompass highest possible length. Length may be UInt16
+         */
+        let payloadLength: UInt64
+        switch payloadLengthInfo {
+        case Byte.twoBytePayloadLength:
+            payloadLength = try extractTwoBytePayloadLengthExtension().toUIntMax()
+        case Byte.eightBytePayloadLength:
+            payloadLength = try extractEightBytePayloadLengthExtension()
+        default:
+            payloadLength = payloadLengthInfo.toUIntMax()
+        }
+
+        let maskingKey: MaskingKey
+        if isMasked {
+            maskingKey = try extractMaskingKey()
+        } else {
+            maskingKey = .none
+        }
+
+        let payload = try extractPayload(key: maskingKey, length: payloadLength)
+        guard payload.count == Int(payloadLength) else {
+            throw "598: WebSockets.Swift: FrameDeserializer"
+        }
+
+        let header = WebSock.Frame.Header(
+            fin: fin,
+            rsv1: rsv1,
+            rsv2: rsv2,
+            rsv3: rsv3,
+            opCode: opCode,
+            isMasked: isMasked,
+            payloadLength: payloadLength,
+            maskingKey: maskingKey
+        )
+        return WebSock.Frame(header: header, payload: Data(payload))
+    }
+
+    // MARK: Private
+    
     private func extractByteZero() throws -> (fin: Bool, rsv1: Bool, rsv2: Bool, rsv3: Bool, opCode: WebSock.Frame.OpCode) {
         guard let byteZero = try buffer.next() else {
             throw "No next byte"
@@ -78,58 +135,16 @@ public final class FrameDeserializer<O: OutputStream where O.Element == Byte> {
 
         return key.cypher(bytes)
     }
-
-    public func acceptFrame() throws -> WebSock.Frame {
-        let (fin, rsv1, rsv2, rsv3, opCode) = try extractByteZero()
-        let (isMasked, payloadLengthInfo) = try extractByteOne()
-
-        /**
-         Returns UInt64 to encompass highest possible length. Length may be UInt16
-         */
-        let payloadLength: UInt64
-        switch payloadLengthInfo {
-        case Byte.twoBytePayloadLength:
-            payloadLength = try extractTwoBytePayloadLengthExtension().toUIntMax()
-        case Byte.eightBytePayloadLength:
-            payloadLength = try extractEightBytePayloadLengthExtension()
-        default:
-            payloadLength = payloadLengthInfo.toUIntMax()
-        }
-
-        let maskingKey: MaskingKey
-        if isMasked {
-            maskingKey = try extractMaskingKey()
-        } else {
-            maskingKey = .none
-        }
-
-        let payload = try extractPayload(key: maskingKey, length: payloadLength)
-        guard payload.count == Int(payloadLength) else {
-            throw "598: WebSockets.Swift: FrameDeserializer"
-        }
-
-        let header = WebSock.Frame.Header(
-            fin: fin,
-            rsv1: rsv1,
-            rsv2: rsv2,
-            rsv3: rsv3,
-            opCode: opCode,
-            isMasked: isMasked,
-            payloadLength: payloadLength,
-            maskingKey: maskingKey
-        )
-        return WebSock.Frame(header: header, payload: Data(payload))
-    }
 }
 
-extension FrameDeserializer where O: StreamBuffer {
+extension FrameDeserializer where Buffer: StreamBuffer {
     public convenience init(stream: Stream) {
-        let buffer = O.init(stream)
+        let buffer = Buffer.init(stream)
         self.init(buffer: buffer)
     }
 }
 
-extension OutputStream {
+extension InputBuffer {
    private mutating func chunk(length: Int) throws -> [Element] {
         var elements: [Element] = []
         for _ in 1...length {

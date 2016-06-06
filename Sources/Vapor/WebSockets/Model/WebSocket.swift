@@ -55,7 +55,7 @@ extension WebSock {
      to prevent losing bytes trapped in the buffer. ALWAYS pass deserializer
      as argument
      */
-    private func loop<O: OutputStream>(with deserializer: FrameDeserializer<O>) throws {
+    private func loop<Buffer: InputBuffer>(with deserializer: FrameDeserializer<Buffer>) throws {
         while state != .closed {
             // not a part of while logic, we need to separately acknowledge
             // that TCP closed w/o handshake

@@ -569,21 +569,6 @@ extension String: ErrorProtocol {}
 //    return str
 //}
 
-public protocol OutputStream {
-    associatedtype Element
-    mutating func next() throws -> Element?
-}
-
-extension IndexingIterator: OutputStream {}
-extension AnyIterator: OutputStream {}
-extension StreamBuffer: OutputStream {}
-extension Array: OutputStream {
-    public mutating func next() -> Element? {
-        guard !isEmpty else { return nil }
-        return removeFirst()
-    }
-}
-
 extension MaskingKey {
     /*
      Octet i of the transformed data ("transformed-octet-i") is the XOR of

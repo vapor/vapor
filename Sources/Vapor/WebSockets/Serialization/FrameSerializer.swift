@@ -19,11 +19,11 @@
  +---------------------------------------------------------------+
  */
 // TODO: NOT UNIT TESTED
-public final class MessageSerializer {
-    private let message: WebSock.Frame
+public final class FrameSerializer {
+    private let frame: WebSock.Frame
 
-    public init(_ message: WebSock.Frame) {
-        self.message = message
+    public init(_ frame: WebSock.Frame) {
+        self.frame = frame
     }
 
     public func serialize() -> [Byte] {
@@ -32,7 +32,7 @@ public final class MessageSerializer {
         return header + payload
     }
 
-    // MARK: Header
+    // MARK: Private
 
     private func serializeHeader() -> [Byte] {
         let zero = serializeByteZero()
@@ -41,19 +41,9 @@ public final class MessageSerializer {
         return zero + maskAndLength + maskingKey
     }
 
-    func serializeByteZero() -> [Byte] {
-        let header = message.header
+    private func serializeByteZero() -> [Byte] {
+        let header = frame.header
 
-        /*
-         0 1 2 3 4 5 6 7
-         f r r r o
-         i s s s p
-         n v v v
-         1 2 3 c
-         o
-         d
-         e
-         */
         var byte: Byte = 0
         if header.fin {
             byte |= .finFlag
@@ -75,7 +65,7 @@ public final class MessageSerializer {
     }
 
     func serializeMaskAndLength() -> [Byte] {
-        let header = message.header
+        let header = frame.header
 
         // first length byte is bit 0: mask, bit 1...7: length or indicator of additional bytes
         var primaryByte: Byte = 0
@@ -98,12 +88,12 @@ public final class MessageSerializer {
     }
 
     private func serializeMaskingKey() -> [Byte] {
-        return message.header.maskingKey.serialize()
+        return frame.header.maskingKey.serialize()
     }
 
     // MARK: Payload
 
     private func serializePayload() -> [Byte] {
-        return message.header.maskingKey.cypher(message.payload)
+        return frame.header.maskingKey.cypher(frame.payload)
     }
 }
