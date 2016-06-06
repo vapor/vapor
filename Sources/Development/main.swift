@@ -58,7 +58,7 @@ app.get("test") { request in
 //        try socket.send(Data([0x81, 0x05, 0x48, 0x65, 0x6c, 0x6c, 0x6f]))
 //        print("Sent ---\n\n Receiving --- \n\n")
 ////        let received = try socket.receive(upTo: 1024)
-////        let msg = try MessageParser.parseInput(Data(received))
+////        let msg = try FrameDeserializer.parseInput(Data(received))
 ////        print("Received message: \(msg)")
 ////        print("\n\nPayload: \(try msg.payload.toString())\n\n")
 ////        print("")
@@ -72,7 +72,7 @@ app.get("test") { request in
 //            // need to iterate through message
 ////            let next = try socket.receive(upTo: 1024)
 ////            guard !next.isEmpty else { continue }
-//            let newMsg = try MessageParser.parse(stream: socket)
+//            let newMsg = try FrameDeserializer.parse(stream: socket)
 //            let str = try newMsg.payload.toString()
 //
 //            var respondMsg: String = ""

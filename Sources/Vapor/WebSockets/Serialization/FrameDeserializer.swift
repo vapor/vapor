@@ -1,8 +1,8 @@
-public final class MessageParser<O: OutputStream where O.Element == Byte> {
+public final class FrameDeserializer<O: OutputStream where O.Element == Byte> {
     private var buffer: O
 
-    public init(data: O) {
-        self.buffer = data
+    public init(buffer: O) {
+        self.buffer = buffer
     }
 
     // MARK: Extractors
@@ -22,7 +22,7 @@ public final class MessageParser<O: OutputStream where O.Element == Byte> {
 
     private func extractByteOne() throws -> (maskKeyIncluded: Bool, payloadLength: Byte) {
         guard let byteOne = try buffer.next() else {
-            throw "493: WebSockets.Swift: MessageParser"
+            throw "493: WebSockets.Swift: FrameDeserializer"
         }
         let maskKeyIncluded = byteOne.containsMask(.maskKeyIncludedFlag)
         let payloadLength = byteOne & .payloadLengthFlag
@@ -33,7 +33,7 @@ public final class MessageParser<O: OutputStream where O.Element == Byte> {
         var bytes: [Byte] = []
         for _ in 1...length.rawValue {
             guard let next = try buffer.next() else {
-                throw "522: WebSockets.Swift: MessageParser"
+                throw "522: WebSockets.Swift: FrameDeserializer"
             }
             bytes.append(next)
         }
@@ -61,7 +61,7 @@ public final class MessageParser<O: OutputStream where O.Element == Byte> {
             let two = try buffer.next(),
             let three = try buffer.next()
             else {
-                throw "536: WebSockets.Swift: MessageParser"
+                throw "536: WebSockets.Swift: FrameDeserializer"
         }
 
         return .key(zero: zero, one: one, two: two, three: three)
@@ -79,7 +79,7 @@ public final class MessageParser<O: OutputStream where O.Element == Byte> {
         return key.cypher(bytes)
     }
 
-    public func acceptMessage() throws -> WebSock.Frame {
+    public func acceptFrame() throws -> WebSock.Frame {
         let (fin, rsv1, rsv2, rsv3, opCode) = try extractByteZero()
         let (isMasked, payloadLengthInfo) = try extractByteOne()
 
@@ -105,7 +105,7 @@ public final class MessageParser<O: OutputStream where O.Element == Byte> {
 
         let payload = try extractPayload(key: maskingKey, length: payloadLength)
         guard payload.count == Int(payloadLength) else {
-            throw "598: WebSockets.Swift: MessageParser"
+            throw "598: WebSockets.Swift: FrameDeserializer"
         }
 
         let header = WebSock.Frame.Header(
@@ -122,15 +122,15 @@ public final class MessageParser<O: OutputStream where O.Element == Byte> {
     }
 }
 
-extension MessageParser where O: StreamBuffer {
+extension FrameDeserializer where O: StreamBuffer {
     public convenience init(stream: Stream) {
         let buffer = O.init(stream)
-        self.init(data: buffer)
+        self.init(buffer: buffer)
     }
 }
 
 extension OutputStream {
-    mutating func chunk(length: Int) throws -> [Element] {
+   private mutating func chunk(length: Int) throws -> [Element] {
         var elements: [Element] = []
         for _ in 1...length {
             guard let next = try next() else {

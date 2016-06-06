@@ -41,7 +41,21 @@ public final class WebSock {
 // MARK: Listen
 
 extension WebSock {
+    /**
+     Tells the WebSocket to begin accepting frames
+     */
     public func listen() throws {
+        let buffer = StreamBuffer(stream)
+        let deserializer = FrameDeserializer(buffer: buffer)
+        try loop(with: deserializer)
+    }
+
+    /**
+     [WARNING] - deserializer MUST be declared OUTSIDE of while-loop
+     to prevent losing bytes trapped in the buffer. ALWAYS pass deserializer
+     as argument
+     */
+    private func loop<O: OutputStream>(with deserializer: FrameDeserializer<O>) throws {
         while state != .closed {
             // not a part of while logic, we need to separately acknowledge
             // that TCP closed w/o handshake
@@ -51,8 +65,7 @@ extension WebSock {
             }
 
             do {
-                let parser = MessageParser(stream: stream)
-                let frame = try parser.acceptMessage()
+                let frame = try deserializer.acceptFrame()
                 try received(frame)
             } catch {
                 Log.error("WebSocket Failed w/ error: \(error)")
