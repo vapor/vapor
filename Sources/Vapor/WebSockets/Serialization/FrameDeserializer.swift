@@ -1,18 +1,3 @@
-public protocol InputBuffer {
-    associatedtype Element
-    mutating func next() throws -> Element?
-}
-
-extension IndexingIterator: InputBuffer {}
-extension AnyIterator: InputBuffer {}
-extension StreamBuffer: InputBuffer {}
-extension Array: InputBuffer {
-    public mutating func next() -> Element? {
-        guard !isEmpty else { return nil }
-        return removeFirst()
-    }
-}
-
 public final class FrameDeserializer<Buffer: InputBuffer where Buffer.Element == Byte> {
     private var buffer: Buffer
 
@@ -86,17 +71,6 @@ public final class FrameDeserializer<Buffer: InputBuffer where Buffer.Element ==
         return (maskKeyIncluded, payloadLength)
     }
 
-    private func extractExtendedPayloadLength(_ length: PayloadLengthExtension) throws -> UInt16 {
-        var bytes: [Byte] = []
-        for _ in 1...length.rawValue {
-            guard let next = try buffer.next() else {
-                throw "522: WebSockets.Swift: FrameDeserializer"
-            }
-            bytes.append(next)
-        }
-        return try UInt16.init(bytes)
-    }
-
     /**
      Returns UInt64 to encompass highest possible length. Length will be UInt16
      */
@@ -141,18 +115,5 @@ extension FrameDeserializer where Buffer: StreamBuffer {
     public convenience init(stream: Stream) {
         let buffer = Buffer.init(stream)
         self.init(buffer: buffer)
-    }
-}
-
-extension InputBuffer {
-   private mutating func chunk(length: Int) throws -> [Element] {
-        var elements: [Element] = []
-        for _ in 1...length {
-            guard let next = try next() else {
-                throw "6"
-            }
-            elements.append(next)
-        }
-        return elements
     }
 }
