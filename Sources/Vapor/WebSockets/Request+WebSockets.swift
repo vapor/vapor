@@ -102,7 +102,47 @@ extension WebSock {
  */
 extension Request {
     public func upgradeToWebSocket(_ body: (ws: WebSock) throws -> Void) throws -> Response {
+        guard let requestKey = headers.secWebSocketKey else {
+            throw "missing header: Sec-WebSocket-Key"
+        }
+        guard headers.upgrade == "websocket" else {
+            throw "invalid header: Upgrade"
+        }
+        guard headers.connection == "Upgrade" else {
+            throw "invalid header: Connection"
+        }
+
+        // TODO: Find other versions and see if we can support
+        guard let version = headers.secWebSocketVersion where version == "13" else {
+            throw "invalid header: Sec-WebSocket-Version"
+        }
+
+        // TODO: Protocols are application specific, should be exposed via API
+        let accept = WebSock.exchange(requestKey: requestKey)
+        let protocols = headers.secWebProtocol ?? []
+
+        var responseHeaders: Headers = [:]
+
+//        var headers: Headers = [:]
+//        headers["Connection"] = "Upgrade"
+//        headers["Upgrade"] = "websocket"
+//        headers["Sec-WebSocket-Accept"] = accept
+//        headers["Sec-WebSocket-Version"] = version
+
+
         fatalError()
+//        headers.Connection = "Upgrade"
+//        headers.upgrade = "websocket"
+//        headers.secWebSocketAccept = accept
+//        headers.secWebSocketVersion = version
+//
+//        // TODO: Read up and clarify this
+//        //    headers["Sec-WebSocket-Protocol"] = request.headers["Sec-WebSocket-Protocol"]
+//        var response = Response.init(status: .switchingProtocols, headers: headers)//, headers: Headers, cookies: Cookies, body: Stream)
+//        response.webSocketConnection = socketHandler
+//        print("\n\nReturning: \(response)\n\n")
+//        return response
+
     }
 }
 
