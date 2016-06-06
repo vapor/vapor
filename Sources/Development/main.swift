@@ -97,7 +97,7 @@ app.get("socket") { request in
             // need to iterate through message
 //            let next = try socket.receive(upTo: 1024)
 //            guard !next.isEmpty else { continue }
-            let newMsg = try StreamMessageParser.parseInput(socket)
+            let newMsg = try _MessageParser.parse(StreamBuffer(socket))
             let str = try newMsg.payload.toString()
 
             var respondMsg: String = ""

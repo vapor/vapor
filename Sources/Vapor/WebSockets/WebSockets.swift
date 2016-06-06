@@ -814,7 +814,7 @@ public final class MessageParser {
     }
 }
 
-protocol OutputStream {
+public protocol OutputStream {
     associatedtype Element
     mutating func next() throws -> Element?
 }
@@ -823,7 +823,7 @@ extension IndexingIterator: OutputStream {}
 extension AnyIterator: OutputStream {}
 extension StreamBuffer: OutputStream {}
 extension Array: OutputStream {
-    mutating func next() -> Element? {
+    public mutating func next() -> Element? {
         guard !isEmpty else { return nil }
         return removeFirst()
     }
@@ -933,12 +933,7 @@ extension MessageParser {
 //}
 
 
-final class _StreamMessageParser<S where S: StreamBuffer, S: OutputStream, S.Element == Byte>: _MessageParser<S> {
-
-}
-
-
-class _MessageParser<O: OutputStream where O.Element == Byte> {
+public final class _MessageParser<O: OutputStream where O.Element == Byte> {
     private var buffer: O
 
     private init(_ inputStream: O) {
@@ -1009,8 +1004,15 @@ class _MessageParser<O: OutputStream where O.Element == Byte> {
     }
 }
 
+extension _MessageParser where O: StreamBuffer {
+    public static func parse(stream: Stream) throws -> WebSocketMessage {
+        let buffer = O.init(stream)
+        return try parse(data: buffer)
+    }
+}
+
 extension _MessageParser {
-    static func parse(_ data: O) throws -> WebSocketMessage {
+    public static func parse(data: O) throws -> WebSocketMessage {
         let parser = _MessageParser(data)
         let (fin, rsv1, rsv2, rsv3, opCode) = try parser.extractByteZero()
         let (isMasked, payloadLengthInfo) = try parser.extractByteOne()
@@ -1048,144 +1050,144 @@ extension _MessageParser {
     }
 }
 
-public final class StreamMessageParser {
-    private let buffer: StreamBuffer
-
-    private init(_ stream: Stream) {
-        self.buffer = StreamBuffer(stream, buffer: 1024)
-    }
-
-    // MARK: Extractors
-
-    private func extractByteZero() throws -> (fin: Bool, rsv1: Bool, rsv2: Bool, rsv3: Bool, opCode: OpCode) {
-        guard let byteZero = try buffer.next() else {
-            throw "479: WebSockets.Swift: MessageParser"
-        }
-        let fin = byteZero.containsMask(.fin)
-        let rsv1 = byteZero.containsMask(.rsv1)
-        let rsv2 = byteZero.containsMask(.rsv2)
-        let rsv3 = byteZero.containsMask(.rsv3)
-
-        let opCode = try OpCode(byteZero & .opCode)
-        return (fin, rsv1, rsv2, rsv3, opCode)
-    }
-
-    private func extractByteOne() throws -> (maskKeyIncluded: Bool, payloadLength: Byte) {
-        guard let byteOne = try buffer.next() else {
-            throw "493: WebSockets.Swift: MessageParser"
-        }
-        let maskKeyIncluded = byteOne.containsMask(.maskKeyIncluded)
-        let payloadLength = byteOne & .payloadLength
-        return (maskKeyIncluded, payloadLength)
-    }
-
-    private enum ExtendedPayloadByteLength: UInt8 {
-        case two = 2
-        case eight = 8
-
-        init?(_ byte: Byte) {
-            // Payload extends if first length is 126 or 127. (max and max-1 @ 7 bits)
-            switch byte {
-            case 126:
-                self = .two
-            case 127:
-                self = .eight
-            default:
-                return nil
-            }
-        }
-
-        init?(length: UInt64) {
-            if length < 126 {
-                return nil
-            } else if length < UInt16.max.toUIntMax() {
-                self = .two
-            } else {
-                self = .eight
-            }
-        }
-    }
-
-    /**
-     Returns UInt64 to encompass highest possible length. Length may be UInt16
-     */
-    private func extractExtendedPayloadLength(_ length: ExtendedPayloadByteLength) throws -> UInt64 {
-        var bytes: [Byte] = []
-        for _ in 1...length.rawValue {
-            guard let next = try buffer.next() else {
-                throw "522: WebSockets.Swift: MessageParser"
-            }
-            bytes.append(next)
-        }
-        return try UInt64.init(bytes)
-    }
-
-    private func extractMaskingKey() throws -> MaskingKey {
-        guard
-            let zero = try buffer.next(),
-            let one = try buffer.next(),
-            let two = try buffer.next(),
-            let three = try buffer.next()
-            else {
-                throw "536: WebSockets.Swift: MessageParser"
-        }
-
-        return .key(zero: zero, one: one, two: two, three: three)
-    }
-
-    private func extractPayload(key: MaskingKey, length: UInt64) throws -> [Byte] {
-        var count: UInt64 = 0
-        var bytes: [UInt8] = []
-
-        while count < length, let next = try buffer.next() {
-            bytes.append(next)
-            count += 1
-        }
-
-        return key.cypher(bytes)
-    }
-}
-
-extension StreamMessageParser {
-    public static func parseInput(_ stream: Stream) throws -> WebSocketMessage {
-        let parser = StreamMessageParser(stream)
-        let (fin, rsv1, rsv2, rsv3, opCode) = try parser.extractByteZero()
-        let (isMasked, payloadLengthInfo) = try parser.extractByteOne()
-
-        let payloadLength: UInt64
-        if let extended = ExtendedPayloadByteLength(payloadLengthInfo) {
-            payloadLength = try parser.extractExtendedPayloadLength(extended)
-        } else {
-            payloadLength = payloadLengthInfo.toUIntMax()
-        }
-
-        let maskingKey: MaskingKey
-        if isMasked {
-            maskingKey = try parser.extractMaskingKey()
-        } else {
-            maskingKey = .none
-        }
-
-        let payload = try parser.extractPayload(key: maskingKey, length: payloadLength)
-        guard payload.count == Int(payloadLength) else {
-            throw "762: WebSockets.Swift: MessageParser"
-        }
-
-        let header = WebSocketHeader(
-            fin: fin,
-            rsv1: rsv1,
-            rsv2: rsv2,
-            rsv3: rsv3,
-            isMasked: isMasked,
-            opCode: opCode,
-            maskingKey: maskingKey,
-            payloadLength: payloadLength
-        )
-        
-        
-        return WebSocketMessage(header: header, payload: Data(payload))
-    }
-}
+//public final class StreamMessageParser {
+//    private let buffer: StreamBuffer
+//
+//    private init(_ stream: Stream) {
+//        self.buffer = StreamBuffer(stream, buffer: 1024)
+//    }
+//
+//    // MARK: Extractors
+//
+//    private func extractByteZero() throws -> (fin: Bool, rsv1: Bool, rsv2: Bool, rsv3: Bool, opCode: OpCode) {
+//        guard let byteZero = try buffer.next() else {
+//            throw "479: WebSockets.Swift: MessageParser"
+//        }
+//        let fin = byteZero.containsMask(.fin)
+//        let rsv1 = byteZero.containsMask(.rsv1)
+//        let rsv2 = byteZero.containsMask(.rsv2)
+//        let rsv3 = byteZero.containsMask(.rsv3)
+//
+//        let opCode = try OpCode(byteZero & .opCode)
+//        return (fin, rsv1, rsv2, rsv3, opCode)
+//    }
+//
+//    private func extractByteOne() throws -> (maskKeyIncluded: Bool, payloadLength: Byte) {
+//        guard let byteOne = try buffer.next() else {
+//            throw "493: WebSockets.Swift: MessageParser"
+//        }
+//        let maskKeyIncluded = byteOne.containsMask(.maskKeyIncluded)
+//        let payloadLength = byteOne & .payloadLength
+//        return (maskKeyIncluded, payloadLength)
+//    }
+//
+//    private enum ExtendedPayloadByteLength: UInt8 {
+//        case two = 2
+//        case eight = 8
+//
+//        init?(_ byte: Byte) {
+//            // Payload extends if first length is 126 or 127. (max and max-1 @ 7 bits)
+//            switch byte {
+//            case 126:
+//                self = .two
+//            case 127:
+//                self = .eight
+//            default:
+//                return nil
+//            }
+//        }
+//
+//        init?(length: UInt64) {
+//            if length < 126 {
+//                return nil
+//            } else if length < UInt16.max.toUIntMax() {
+//                self = .two
+//            } else {
+//                self = .eight
+//            }
+//        }
+//    }
+//
+//    /**
+//     Returns UInt64 to encompass highest possible length. Length may be UInt16
+//     */
+//    private func extractExtendedPayloadLength(_ length: ExtendedPayloadByteLength) throws -> UInt64 {
+//        var bytes: [Byte] = []
+//        for _ in 1...length.rawValue {
+//            guard let next = try buffer.next() else {
+//                throw "522: WebSockets.Swift: MessageParser"
+//            }
+//            bytes.append(next)
+//        }
+//        return try UInt64.init(bytes)
+//    }
+//
+//    private func extractMaskingKey() throws -> MaskingKey {
+//        guard
+//            let zero = try buffer.next(),
+//            let one = try buffer.next(),
+//            let two = try buffer.next(),
+//            let three = try buffer.next()
+//            else {
+//                throw "536: WebSockets.Swift: MessageParser"
+//        }
+//
+//        return .key(zero: zero, one: one, two: two, three: three)
+//    }
+//
+//    private func extractPayload(key: MaskingKey, length: UInt64) throws -> [Byte] {
+//        var count: UInt64 = 0
+//        var bytes: [UInt8] = []
+//
+//        while count < length, let next = try buffer.next() {
+//            bytes.append(next)
+//            count += 1
+//        }
+//
+//        return key.cypher(bytes)
+//    }
+//}
+//
+//extension StreamMessageParser {
+//    public static func parseInput(_ stream: Stream) throws -> WebSocketMessage {
+//        let parser = StreamMessageParser(stream)
+//        let (fin, rsv1, rsv2, rsv3, opCode) = try parser.extractByteZero()
+//        let (isMasked, payloadLengthInfo) = try parser.extractByteOne()
+//
+//        let payloadLength: UInt64
+//        if let extended = ExtendedPayloadByteLength(payloadLengthInfo) {
+//            payloadLength = try parser.extractExtendedPayloadLength(extended)
+//        } else {
+//            payloadLength = payloadLengthInfo.toUIntMax()
+//        }
+//
+//        let maskingKey: MaskingKey
+//        if isMasked {
+//            maskingKey = try parser.extractMaskingKey()
+//        } else {
+//            maskingKey = .none
+//        }
+//
+//        let payload = try parser.extractPayload(key: maskingKey, length: payloadLength)
+//        guard payload.count == Int(payloadLength) else {
+//            throw "762: WebSockets.Swift: MessageParser"
+//        }
+//
+//        let header = WebSocketHeader(
+//            fin: fin,
+//            rsv1: rsv1,
+//            rsv2: rsv2,
+//            rsv3: rsv3,
+//            isMasked: isMasked,
+//            opCode: opCode,
+//            maskingKey: maskingKey,
+//            payloadLength: payloadLength
+//        )
+//        
+//        
+//        return WebSocketMessage(header: header, payload: Data(payload))
+//    }
+//}
 
 extension UnsignedInteger {
     /*
