@@ -1,4 +1,8 @@
-public final class FrameDeserializer<Buffer: InputBuffer where Buffer.Element == Byte> {
+public enum FrameParserError: ErrorProtocol {
+    case missingByte
+}
+
+public final class FrameParser<Buffer: InputBuffer where Buffer.Element == Byte> {
     private var buffer: Buffer
 
     public init(buffer: Buffer) {
@@ -30,9 +34,6 @@ public final class FrameDeserializer<Buffer: InputBuffer where Buffer.Element ==
         }
 
         let payload = try extractPayload(key: maskingKey, length: payloadLength)
-        guard payload.count == Int(payloadLength) else {
-            throw "598: WebSockets.Swift: FrameDeserializer"
-        }
 
         let header = WebSocket.Frame.Header(
             fin: fin,
@@ -51,7 +52,7 @@ public final class FrameDeserializer<Buffer: InputBuffer where Buffer.Element ==
     
     private func extractByteZero() throws -> (fin: Bool, rsv1: Bool, rsv2: Bool, rsv3: Bool, opCode: WebSocket.Frame.OpCode) {
         guard let byteZero = try buffer.next() else {
-            throw "No next byte"
+            throw FrameParserError.missingByte
         }
         let fin = byteZero.containsMask(.finFlag)
         let rsv1 = byteZero.containsMask(.rsv1Flag)
@@ -64,7 +65,7 @@ public final class FrameDeserializer<Buffer: InputBuffer where Buffer.Element ==
 
     private func extractByteOne() throws -> (maskKeyIncluded: Bool, payloadLength: Byte) {
         guard let byteOne = try buffer.next() else {
-            throw "493: WebSockets.Swift: FrameDeserializer"
+            throw FrameParserError.missingByte
         }
         let maskKeyIncluded = byteOne.containsMask(.maskKeyIncludedFlag)
         let payloadLength = byteOne & .payloadLengthFlag
@@ -91,9 +92,7 @@ public final class FrameDeserializer<Buffer: InputBuffer where Buffer.Element ==
             let one = try buffer.next(),
             let two = try buffer.next(),
             let three = try buffer.next()
-            else {
-                throw "536: WebSockets.Swift: FrameDeserializer"
-        }
+            else { throw FrameParserError.missingByte }
 
         return .key(zero: zero, one: one, two: two, three: three)
     }
@@ -111,7 +110,7 @@ public final class FrameDeserializer<Buffer: InputBuffer where Buffer.Element ==
     }
 }
 
-extension FrameDeserializer where Buffer: StreamBuffer {
+extension FrameParser where Buffer: StreamBuffer {
     public convenience init(stream: Stream) {
         let buffer = Buffer.init(stream)
         self.init(buffer: buffer)

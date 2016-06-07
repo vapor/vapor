@@ -106,7 +106,7 @@ extension WebSocket {
      */
     public func listen() throws {
         let buffer = StreamBuffer(stream)
-        let deserializer = FrameDeserializer(buffer: buffer)
+        let deserializer = FrameParser(buffer: buffer)
         try loop(with: deserializer)
     }
 
@@ -115,7 +115,7 @@ extension WebSocket {
      to prevent losing bytes trapped in the buffer. ALWAYS pass deserializer
      as argument
      */
-    private func loop<Buffer: InputBuffer>(with deserializer: FrameDeserializer<Buffer>) throws {
+    private func loop<Buffer: InputBuffer>(with deserializer: FrameParser<Buffer>) throws {
         while state != .closed {
             // not a part of while logic, we need to separately acknowledge
             // that TCP closed w/o handshake
