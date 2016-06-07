@@ -1,4 +1,5 @@
 import Vapor
+import libc
 
 var workDir: String {
     let parent = #file.characters.split(separator: "/").map(String.init).dropLast().joined(separator: "/")
@@ -343,11 +344,15 @@ app.grouped(AuthMiddleware()) { group in
 
 app.get("async") { request in
     var response = Response(async: { stream in
-        try stream.send("hello".data)
+        try stream.send("Counting: ".data)
+        var i = 0
+        while true {
+            sleep(1)
+            try stream.send("\(i)".data)
+            i += 1
+        }
     })
     response.headers["Content-Type"] = "text/plain"
-    response.headers["Transfer-Encoding"] = ""
-    response.headers["Content-Length"] = 5.description
     return response
 }
 
