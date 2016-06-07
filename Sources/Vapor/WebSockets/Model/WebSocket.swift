@@ -66,10 +66,10 @@ public final class WebSocket {
     }
 
     /**
-     Internal until we can properly test implications and explain to user
-     
-     Aggregator should only be disabled in situations where the aggregator is customized. 
-     Fragmented messages will only be delivered through `onFrame`
+         Internal until we can properly test implications and explain to user
+         
+         Aggregator should only be disabled in situations where the aggregator is customized. 
+         Fragmented messages will only be delivered through `onFrame`
      */
     internal init(_ stream: Stream, mode: Mode = .server, disableFragmentAggregation: Bool = false) {
         self.mode = mode
@@ -88,9 +88,9 @@ public final class WebSocket {
 
 /**
 
- [WARNING] **********
- Sensitive code below, ensure you are fully familiar w/ various control flows and protocols
- before changing or moving things including access control
+     [WARNING] **********
+     Sensitive code below, ensure you are fully familiar w/ various control flows and protocols
+     before changing or moving things including access control
 
  */
 extension WebSocket {
@@ -104,9 +104,9 @@ extension WebSocket {
     }
 
     /**
-     [WARNING] - deserializer MUST be declared OUTSIDE of while-loop
-     to prevent losing bytes trapped in the buffer. ALWAYS pass deserializer
-     as argument
+         [WARNING] - deserializer MUST be declared OUTSIDE of while-loop
+         to prevent losing bytes trapped in the buffer. ALWAYS pass deserializer
+         as argument
      */
     private func loop<Buffer: InputBuffer>(with deserializer: FrameParser<Buffer>) throws {
         while state != .closed {
@@ -171,15 +171,15 @@ extension WebSocket {
 
     private func handleClose(payload: Data) throws {
         /*
-         If there is a body, the first two bytes of
-         the body MUST be a 2-byte unsigned integer (in network byte order)
-         representing a status code with value /code/ defined in Section 7.4.
-         Following the 2-byte integer, the body MAY contain UTF-8-encoded data
-         with value /reason/, the interpretation of which is not defined by
-         this specification.  This data is not necessarily human readable but
-         may be useful for debugging or passing information relevant to the
-         script that opened the connection.  As the data is not guaranteed to
-         be human readable, clients MUST NOT show it to end users.
+             If there is a body, the first two bytes of
+             the body MUST be a 2-byte unsigned integer (in network byte order)
+             representing a status code with value /code/ defined in Section 7.4.
+             Following the 2-byte integer, the body MAY contain UTF-8-encoded data
+             with value /reason/, the interpretation of which is not defined by
+             this specification.  This data is not necessarily human readable but
+             may be useful for debugging or passing information relevant to the
+             script that opened the connection.  As the data is not guaranteed to
+             be human readable, clients MUST NOT show it to end users.
          */
         var statusCode: UInt16?
         var statusCodeData: Data? = nil
@@ -198,12 +198,12 @@ extension WebSocket {
             // opponent requested close, we're responding
 
             /*
-             If an endpoint receives a Close frame and did not previously send a
-             Close frame, the endpoint MUST send a Close frame in response.  (When
-             sending a Close frame in response, the endpoint typically echos the
-             status code it received.
-             
-             First two bytes MUST be status code if they exist
+                 If an endpoint receives a Close frame and did not previously send a
+                 Close frame, the endpoint MUST send a Close frame in response.  (When
+                 sending a Close frame in response, the endpoint typically echos the
+                 status code it received.
+                 
+                 First two bytes MUST be status code if they exist
              */
             try respondToClose(echo: statusCodeData ?? [])
             try completeCloseHandshake(statusCode: statusCode, reason: reason, cleanly: true)

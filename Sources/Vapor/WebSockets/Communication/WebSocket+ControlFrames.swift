@@ -1,5 +1,5 @@
 /*
- 'close' included in Model file to ensure safety while interacting with sensitive variables
+     'close' included in Model file to ensure safety while interacting with sensitive variables
  */
 extension WebSocket {
     public func ping(statusCode: UInt16? = nil, reason: String? = nil) throws {
@@ -33,9 +33,9 @@ extension WebSocket {
     }
 
     /**
-     If we receive a .ping, we must .pong identical data
+         If we receive a .ping, we must .pong identical data
 
-     Applications may opt to send unsolicited .pong messages as a sort of keep awake heart beat
+         Applications may opt to send unsolicited .pong messages as a sort of keep awake heart beat
      */
     public func pong(_ payload: Data) throws {
         let header = Frame.Header(

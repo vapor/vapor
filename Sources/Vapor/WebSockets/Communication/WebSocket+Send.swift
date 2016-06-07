@@ -1,22 +1,22 @@
 /**
- Technically WebSockets supports up to UInt64.max packet sizes, however
- frameworks have the discretion to break up large packets into fragments
- to make usage easier.
- 
- Many implementations tested against crash on values > 64_000. Test extensively before changing
- this value
- 
- The following functions DO NOT parse additional data into chunks. 
- Use these for customized behavior.
- 
- Please familiarize yourself w/ WebSocket protocols before attempting to override built in behavior
- 
- send(_ frame: Frame)
- 
- Note that this function will still enforce protocol requirements that are enforced by RFC
- 
- It is necessary to expose this functions because extensions may negotiate various usages of extensions
- etc. that is required to not be overridden
+     Technically WebSockets supports up to UInt64.max packet sizes, however
+     frameworks have the discretion to break up large packets into fragments
+     to make usage easier.
+     
+     Many implementations tested against crash on values > 64_000. Test extensively before changing
+     this value
+     
+     The following functions DO NOT parse additional data into chunks. 
+     Use these for customized behavior.
+     
+     Please familiarize yourself w/ WebSocket protocols before attempting to override built in behavior
+     
+     send(_ frame: Frame)
+     
+     Note that this function will still enforce protocol requirements that are enforced by RFC
+     
+     It is necessary to expose this functions because extensions may negotiate various usages of extensions
+     etc. that is required to not be overridden
 
  */
 private let PayloadSplitSize = Int(64_000)
