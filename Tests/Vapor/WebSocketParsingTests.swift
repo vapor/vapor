@@ -8,7 +8,10 @@
 
 import Foundation
 import XCTest
+import libc
+
 @testable import Vapor
+
 
 /*
  Examples from: https://tools.ietf.org/html/rfc6455#section-5.7
@@ -382,7 +385,11 @@ class UnsignedIntegerChunkingTests: XCTestCase {
 extension UInt8 {
     static func random() -> UInt8 {
         let max = UInt32(UInt8.max)
-        let val = arc4random_uniform(max)
+        #if os(Linux)
+            let val = UInt8(libc.random() % Int(max))
+        #else
+            let val = UInt8(arc4random_uniform(max))
+        #endif
         return UInt8(val)
     }
 }
