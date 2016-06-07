@@ -1,5 +1,60 @@
 import S4
 
+class JSONMiddleware: S4.Middleware {
+    func respond(to request: Request, chainingTo next: Responder) throws -> Response {
+        var request = request
+        if request.headers["content-type"]?.range(of: "application/json") != nil {
+            do {
+                let data = try request.body.becomeBuffer()
+                request.json = try JSON(data)
+            } catch {
+                Log.warning("Could not parse JSON: \(error)")
+            }
+        }
+
+        return try next.respond(to: request)
+    }
+}
+
+extension Request {
+    /// JSON encoded request data
+    public var json: JSON? {
+        get {
+            return storage["json"] as? JSON
+        }
+        set(data) {
+            storage["json"] = data
+        }
+    }
+}
+
+class RequestContentMiddleware: S4.Middleware {
+
+    func respond(to request: Request, chainingTo next: Responder) throws -> Response {
+        var request = request
+        request.data = request.parseContent()
+        return try next.respond(to: request)
+    }
+
+}
+
+extension Request {
+    ///Query data from the path, or POST data from the body (depends on `Method`).
+    public var data: Request.Content {
+        get {
+            guard let data = storage["data"] as? Request.Content else {
+                Log.warning("Data has not been cached.")
+                return parseContent()
+            }
+
+            return data
+        }
+        set(data) {
+            storage["data"] = data
+        }
+    }
+}
+
 extension Request {
     ///URL parameters (ex: `:id`).
     public var parameters: [String: String] {
@@ -113,21 +168,6 @@ extension Request {
         }
 
         return .dictionary(query)
-    }
-
-    ///Query data from the path, or POST data from the body (depends on `Method`).
-    public var data: Request.Content {
-        get {
-            guard let data = storage["data"] as? Request.Content else {
-                Log.warning("Data has not been cached.")
-                return parseContent()
-            }
-
-            return data
-        }
-        set(data) {
-            storage["data"] = data
-        }
     }
 
     public struct Handler: Responder {
