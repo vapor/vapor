@@ -68,6 +68,7 @@ public final class WebSocket {
     }
 
     deinit {
+        // TODO: Rm on ship
         print("\n\n\t***** WE GONE :D *****\n\n\n")
     }
 }
@@ -169,19 +170,31 @@ extension WebSocket {
          script that opened the connection.  As the data is not guaranteed to
          be human readable, clients MUST NOT show it to end users.
          */
-        var statusCode: UInt16? = nil
+        var statusCode: UInt16?
+        var statusCodeData: Data? = nil
         var reason: String? = nil
         if !payload.isEmpty {
             var iterator = payload.makeIterator()
             let statusCodeBytes = try iterator.chunk(length: 2)
             statusCode = try UInt16(statusCodeBytes)
+            statusCodeData = Data(statusCodeBytes)
+            // TODO: Test this only grabs bytes left
             reason = try Data(iterator).toString()
         }
 
         switch  state {
         case .open:
             // opponent requested close, we're responding
-            try respondToClose(echo: payload)
+
+            /*
+             If an endpoint receives a Close frame and did not previously send a
+             Close frame, the endpoint MUST send a Close frame in response.  (When
+             sending a Close frame in response, the endpoint typically echos the
+             status code it received.
+             
+             First two bytes MUST be status code if they exist
+             */
+            try respondToClose(echo: statusCodeData ?? [])
             try completeCloseHandshake(statusCode: statusCode, reason: reason, cleanly: true)
         case .closing:
             // we requested close, opponent responded
@@ -220,14 +233,6 @@ extension WebSocket {
         guard state != .closed else { return }
         state = .closing
 
-        /*
-         // TODO: Echo status code
-
-         If an endpoint receives a Close frame and did not previously send a
-         Close frame, the endpoint MUST send a Close frame in response.  (When
-         sending a Close frame in response, the endpoint typically echos the
-         status code it received.)
-         */
         let header = Frame.Header(
             fin: true,
             rsv1: false,
