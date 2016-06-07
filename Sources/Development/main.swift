@@ -221,7 +221,7 @@ app.get("multipart-image") { _ in
     response += "<button>Submit</button>"
     response += "</form>"
 
-    return Response(status: .ok, html: response)
+    return Response(status: .ok, data: response.data)
 }
 
 app.post("multipart-image") { request in
@@ -254,7 +254,7 @@ app.get("multifile") { _ in
     response += "<button>Submit</button>"
     response += "</form>"
 
-    return Response(status: .ok, html: response)
+    return Response(status: .ok, data: response.data)
 }
 
 app.post("multifile") { request in
@@ -303,7 +303,7 @@ app.get("options") { _ in
     response += "<button>Submit</button>"
     response += "</form>"
 
-    return Response(status: .ok, html: response)
+    return Response(status: .ok, data: response.data)
 }
 
 app.post("options") { request in

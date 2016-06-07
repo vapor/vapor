@@ -30,29 +30,6 @@ extension Response {
     }
 
     /**
-        Returns HTML.
-     */
-    public init(
-        status: Status,
-        headers: Headers = [:],
-        cookies: Cookies = [],
-        html body: String
-    ) {
-        var headers = headers
-
-        headers["Content-Type"] = "text/html"
-        let html = "<html><meta charset=\"UTF-8\"><body>\(body)</body></html>"
-
-        self.init(
-            status: status,
-            headers: headers,
-            cookies: cookies,
-            data: html.data
-        )
-    }
-
-
-    /**
         Returns plain text.
      */
     public init(
