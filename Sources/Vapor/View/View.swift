@@ -45,7 +45,7 @@ extension View: ResponseRepresentable {
     public func makeResponse() -> Response {
         return Response(status: .ok, headers: [
             "Content-Type": "text/html"
-        ], body: data)
+        ], data: data)
     }
 }
 

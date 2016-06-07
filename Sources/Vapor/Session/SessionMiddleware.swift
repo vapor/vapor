@@ -25,7 +25,7 @@ class SessionMiddleware: Middleware {
                 request.session = Session(driver: self.driver)
             }
 
-            var response = try handler(request).makeResponse()
+            let response = try handler(request).makeResponse()
 
             if let identifier = request.session?.identifier {
                 response.cookies["vapor-session"] = identifier

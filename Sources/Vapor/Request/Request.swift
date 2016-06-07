@@ -1,4 +1,4 @@
-public class Request {
+public final class Request {
     public let method: Method
     public let uri: URI
     public let version: Version

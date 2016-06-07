@@ -55,10 +55,10 @@ class HTTPStreamTests: XCTestCase {
 
     func testSerializer() {
         //MARK: Create Response
-        var response = Response(status: .enhanceYourCalm, headers: [
+        let response = Response(status: .enhanceYourCalm, headers: [
             "Test": "123",
             "Content-Type": "text/plain"
-        ], body: { stream in
+        ], async: { stream in
             try stream.send("Hello, world")
         })
         response.cookies["key"] = "val"
