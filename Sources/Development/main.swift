@@ -25,8 +25,9 @@ app.get("test") { request in
 
 app.get("socket") { request in
     return try request.upgradeToWebSocket { ws in
+        try ws.send("WebSocket Connected :)")
+
         ws.onText = { ws, text in
-            print("Received \(text)")
             try ws.send("You said \(text)!")
 
             if text == "stop" {
@@ -34,7 +35,7 @@ app.get("socket") { request in
             }
 
             if text == "close" {
-                try ws.send("\n\tCLOSING\n")
+                try ws.send("... closing 👋")
                 try ws.close()
             }
         }
@@ -42,8 +43,6 @@ app.get("socket") { request in
         ws.onClose = { data in
             print("Did close w/ packet \(data)")
         }
-
-        try ws.send("Hi there")
     }
 }
 
