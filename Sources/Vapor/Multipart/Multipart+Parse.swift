@@ -17,7 +17,7 @@ extension Multipart {
         return boundaryPieces[1]
     }
 
-    static func parseMultipartForm(_ body: Data, boundary: String) -> [String: Multipart] {
+    static func parse(_ body: Data, boundary: String) -> [String: Multipart] {
         let boundaryString = "--" + boundary
         let boundary = Data(boundaryString.utf8)
 

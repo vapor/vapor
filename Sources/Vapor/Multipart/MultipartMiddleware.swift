@@ -6,7 +6,7 @@ class MultipartMiddleware: Middleware {
             do {
                 let data = try request.body.becomeBuffer()
                 let boundary = try Multipart.parseBoundary(contentType: contentType)
-                request.multipart = Multipart.parseMultipartForm(data, boundary: boundary)
+                request.multipart = Multipart.parse(data, boundary: boundary)
             } catch {
                 Log.warning("Could not parse MultiPart: \(error)")
             }
