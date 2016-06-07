@@ -13,8 +13,10 @@ class JSONMiddleware: Middleware {
         var response = try next.respond(to: request)
 
         if let json = response.json {
-            response.headers["content-type"] = "application/json"
-            response.body = .buffer(json.data)
+            response.headers["Content-Type"] = "application/json"
+            let data = json.data
+            response.headers["Content-Length"] = "\(data.bytes.count)"
+            response.body = .buffer(data)
         }
 
         return response

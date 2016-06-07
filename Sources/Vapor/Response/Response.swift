@@ -1,110 +1,93 @@
-import libc
-
 extension Response {
     /**
-        Convenience Initializer Error
-
-        Will return 500
-
-        - parameter error: a description of the server error
-     */
-    public init(error: String) {
-        self.init(status: .internalServerError, headers: [:], body: error.data)
-    }
-
-    /**
-        Convenience Initializer - Html
-
-        - parameter status: http status of response
-        - parameter html: the html string to be rendered as a response
-     */
-    public init(status: Status, html body: String) {
-        let html = "<html><meta charset=\"UTF-8\"><body>\(body)</body></html>"
-        let headers: Headers = [
-            "Content-Type": "text/html"
-        ]
-        self.init(status: status, headers: headers, body: html.data)
-    }
-
-    /**
-        Convenience Initializer - Data
-
-        - parameter status: http status
-        - parameter data: response bytes
-     */
-    public init(status: Status, data: Data) {
-        self.init(status: status, headers: [:], body: data)
-    }
-
-    /**
-        Convenience Initializer - Text
-
-        - parameter status: http status
-        - parameter text: basic text response
-     */
-    public init(status: Status, text: String) {
-        let headers: Headers = [
-            "Content-Type": "text/plain"
-        ]
-        self.init(status: status, headers: headers, body: text.data)
-    }
-
-    /**
-        Creates an empty response with the
-        supplied status code.
-    */
-    public init(status: Status) {
-        self.init(status: status, text: "")
-    }
-
-    public init(redirect location: String) {
-        let headers: Headers = [
-            "Location": location
-        ]
-        self.init(status: .movedPermanently, headers: headers, body: [])
-    }
-
-    /**
-        Send chunked data with the 
-        `Transfer-Encoding: Chunked` header.
+        Create a response with `Data`.
     */
     public init(
-        status: Status = .ok,
+        status: Status,
         headers: Headers = [:],
         cookies: Cookies = [],
-        chunked closure: ((ChunkStream) throws -> Void)
+        data: Data = []
     ) {
-        self.init(version:
-            Version(major: 1, minor: 1),
-            status: status,
+        var headers = headers
+        headers["Content-Length"] = "\(data.bytes.count)"
+        self.init(status: status, headers: headers, body: data)
+    }
+
+    /**
+        Returns a 500 error.
+     */
+    public init(
+        headers: Headers = [:],
+        cookies: Cookies = [],
+        error: String
+    ) {
+        self.init(
+            status: .internalServerError,
             headers: headers,
             cookies: cookies,
-            body: .sender({ stream in
-                let chunkStream = ChunkStream(stream: stream)
-                try closure(chunkStream)
-            })
+            data: error.data
         )
     }
 
-    public static var date: String {
-        let DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
-        let MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    /**
+        Returns HTML.
+     */
+    public init(
+        status: Status,
+        headers: Headers = [:],
+        cookies: Cookies = [],
+        html body: String
+    ) {
+        var headers = headers
 
-        let RFC1123_TIME_LEN = 29
-        var t: time_t = 0
-        var tm: libc.tm = libc.tm()
+        headers["Content-Type"] = "text/html"
+        let html = "<html><meta charset=\"UTF-8\"><body>\(body)</body></html>"
 
-        let buf = UnsafeMutablePointer<Int8>.init(allocatingCapacity: RFC1123_TIME_LEN + 1)
-        defer { buf.deallocateCapacity(RFC1123_TIME_LEN + 1) }
-
-        time(&t)
-        gmtime_r(&t, &tm)
-
-        strftime(buf, RFC1123_TIME_LEN+1, "---, %d --- %Y %H:%M:%S GMT", &tm)
-        memcpy(buf, DAY_NAMES[Int(tm.tm_wday)], 3)
-        memcpy(buf+8, MONTH_NAMES[Int(tm.tm_mon)], 3)
+        self.init(
+            status: status,
+            headers: headers,
+            cookies: cookies,
+            data: html.data
+        )
+    }
 
 
-        return String(pointer: buf, length: RFC1123_TIME_LEN + 1) ?? ""
+    /**
+        Returns plain text.
+     */
+    public init(
+        status: Status,
+        headers: Headers = [:],
+        cookies: Cookies = [],
+        text: String
+    ) {
+        var headers = headers
+        headers["Content-Type"] = "text/plain"
+        self.init(
+            status: status,
+            headers: headers,
+            cookies: cookies,
+            data: text.data
+        )
+    }
+
+    /**
+        Creates a redirect response with
+        the 301 Status an `Location` header.
+    */
+    public init(
+        headers: Headers = [:],
+        cookies: Cookies = [],
+        redirect location: String
+    ) {
+        let headers: Headers = [
+            "Location": location
+        ]
+        self.init(
+            status: .movedPermanently,
+            headers: headers,
+            cookies: cookies,
+            data: []
+        )
     }
 }

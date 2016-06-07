@@ -9,20 +9,6 @@ final class HTTPSerializer: StreamSerializer {
     }
 
     func serialize(_ response: Response) throws {
-        var response = response
-
-        // TODO: Move headers to serializers to allow override
-
-        // Body
-        switch response.body {
-        case .buffer(let buffer):
-            response.headers["Content-Length"] = "\(buffer.bytes.count)"
-        case .sender(_):
-            response.headers["Transfer-Encoding"] = "chunked"
-        default:
-            break
-        }
-
         // Start Serialization
         var serialized: Data = []
 
