@@ -1,10 +1,10 @@
 import MediaType
 
-public enum MultipartError: ErrorProtocol {
-    case invalidBoundary
-}
-
 extension Multipart {
+    public enum Error: ErrorProtocol {
+        case invalidBoundary
+    }
+
 	static var clrf: Data {
         return Data("\r\n".utf8)
     }
@@ -12,7 +12,7 @@ extension Multipart {
     static func parseBoundary(contentType: String) throws -> String {
         let boundaryPieces = contentType.components(separatedBy: "boundary=")
         guard boundaryPieces.count == 2 else {
-            throw MultipartError.invalidBoundary
+            throw Error.invalidBoundary
         }
         return boundaryPieces[1]
     }
