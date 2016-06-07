@@ -54,8 +54,8 @@ class RequestTests: XCTestCase {
         body += "123\r\n"
         body += "--" + boundary + "\r\n"
 
-        let parsedBoundary = try! Request.parseBoundary(contentType: "multipart/form-data; charset=utf-8; boundary=\(boundary)")
-        let data = Request.parseMultipartForm(body.data, boundary: parsedBoundary)
+        let parsedBoundary = try! Multipart.parseBoundary(contentType: "multipart/form-data; charset=utf-8; boundary=\(boundary)")
+        let data = Multipart.parseMultipartForm(body.data, boundary: parsedBoundary)
 
         XCTAssert(data["value"]?.int == 123, "Request did not parse correctly")
     }
@@ -70,8 +70,8 @@ class RequestTests: XCTestCase {
         body += "123"
         body += "--" + boundary + "\r\n"
 
-        let parsedBoundary = try! Request.parseBoundary(contentType: "multipart/form-data; charset=utf-8; boundary=\(boundary)")
-        let data = Request.parseMultipartForm(body.data, boundary: parsedBoundary)
+        let parsedBoundary = try! Multipart.parseBoundary(contentType: "multipart/form-data; charset=utf-8; boundary=\(boundary)")
+        let data = Multipart.parseMultipartForm(body.data, boundary: parsedBoundary)
 
         XCTAssert(data["value"]?.file?.data == "123".data, "Request did not parse correctly")
     }

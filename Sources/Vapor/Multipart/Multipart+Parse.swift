@@ -1,62 +1,27 @@
 import MediaType
 
-extension Request {
-    public enum MultiPart {
-        case files([File])
-        case file(File)
-        case input(String)
-        case inputArray([String])
+public enum MultipartError: ErrorProtocol {
+    case invalidBoundary
+}
 
-        public var file: File? {
-            if case .file(let file) = self {
-                return file
-            }
-
-            return nil
-        }
-
-        public var files: [File]? {
-            if case .files(let files) = self {
-                return files
-            }
-
-            return nil
-        }
-
-        public var input: String? {
-            if case .input(let string) = self {
-                return string
-            }
-
-            return nil
-        }
-
-        public var inputArray: [String]? {
-            if case .inputArray(let array) = self {
-                return array
-            }
-            
-            return nil
-        }
-    }
-
-    static var clrf: Data {
+extension Multipart {
+	static var clrf: Data {
         return Data("\r\n".utf8)
     }
 
     static func parseBoundary(contentType: String) throws -> String {
         let boundaryPieces = contentType.components(separatedBy: "boundary=")
         guard boundaryPieces.count == 2 else {
-            throw RequestMultiPartError.invalidBoundary
+            throw MultipartError.invalidBoundary
         }
         return boundaryPieces[1]
     }
 
-    static func parseMultipartForm(_ body: Data, boundary: String) -> [String: MultiPart] {
+    static func parseMultipartForm(_ body: Data, boundary: String) -> [String: Multipart] {
         let boundaryString = "--" + boundary
         let boundary = Data(boundaryString.utf8)
 
-        var form = [String: MultiPart]()
+        var form = [String: Multipart]()
         
         // Separate by boundry and loop over the "multi"-parts
         for part in body.split(separator: boundary, excludingFirst: true, excludingLast: true) {
@@ -89,7 +54,7 @@ extension Request {
                     }
 
                     // Create the suple to be added to the array
-                    let new = MultiPart.File(name: storage["filename"], type: mediaType, data: body)
+                    let new = Multipart.File(name: storage["filename"], type: mediaType, data: body)
 
                     // If there is only one file. Make it a file array
                     if let o = form[name], case .file(let old) = o {
@@ -103,7 +68,7 @@ extension Request {
                         // If it's neither.. It's a duplicate key. This means we're going to be ditched or overriding the existing key
                         // Since we're later, we're overriding
                     } else {
-                        let file = MultiPart.File(name: new.name, type: new.type, data: new.data)
+                        let file = Multipart.File(name: new.name, type: new.type, data: new.data)
                         form[name] = .file(file)
                     }
                 } else {
@@ -132,7 +97,7 @@ extension Request {
                     }
 
                     // Store the file in the form
-                    let file = MultiPart.File(name: storage["filename"], type: mediaType, data: body)
+                    let file = Multipart.File(name: storage["filename"], type: mediaType, data: body)
                     form[name] = .file(file)
 
                     // If it's not a file (or not for sure) we're storing the information String
@@ -198,78 +163,5 @@ extension Request {
         }
 
         return storage
-    }
-}
-
-public enum RequestMultiPartError: ErrorProtocol {
-    case invalidBoundary
-}
-
-extension Request.MultiPart {
-    public struct File {
-        public var name: String?
-        public var type: MediaType?
-        public var data: Data
-    }
-}
-
-extension Request.MultiPart: Polymorphic {
-    public var isNull: Bool {
-        return self.input == "null"
-    }
-
-    public var bool: Bool? {
-        if case .input(let bool) = self {
-            return Bool(bool)
-        }
-
-        return nil
-    }
-
-   public var int: Int? {
-        guard let double = double else { return nil }
-        return Int(double)
-    }
-
-    public var uint: UInt? {
-        guard let double = double else { return nil }
-        return UInt(double)
-    }
-
-    public var float: Float? {
-        guard let double = double else { return nil }
-        return Float(double)
-    }
-
-    public var double: Double? {
-        if case .input(let d) = self {
-            return Double(d)
-        }
-
-        return nil
-    }
-
-    public var string: String? {
-        return self.input
-    }
-    
-    public var array: [Polymorphic]? {
-        guard case .input(let a) = self else {
-            return nil
-        }
-
-        return [a]
-    } 
-
-    public var object: [String : Polymorphic]? {
-        return nil
-    }
-
-    public var json: JSON? {
-        if case .input(let j) = self {
-            return JSON(j)
-        }
-
-        return nil
     }
 }

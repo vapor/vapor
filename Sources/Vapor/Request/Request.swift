@@ -105,46 +105,6 @@ extension Request {
     }
 }
 
-
-
-
-
-
-class MultipartMiddleware: S4.Middleware {
-    func respond(to request: Request, chainingTo next: Responder) throws -> Response {
-        var request = request
-
-        if let contentType = request.headers["content-type"] where contentType.range(of: "multipart/form-data") != nil {
-            do {
-                let data = try request.body.becomeBuffer()
-                let boundary = try Request.parseBoundary(contentType: contentType)
-                request.multipart = Request.parseMultipartForm(data, boundary: boundary)
-            } catch {
-                Log.warning("Could not parse MultiPart: \(error)")
-            }
-        }
-
-        return try next.respond(to: request)
-    }
-}
-
-extension Request {
-    /// JSON encoded request data
-    public var multipart: [String: MultiPart]? {
-        get {
-            return storage["multipart"] as? [String: MultiPart]
-        }
-        set(data) {
-            storage["multipart"] = data
-        }
-    }
-}
-
-
-
-
-
-
 class ContentMiddleware: S4.Middleware {
 
     func respond(to request: Request, chainingTo next: Responder) throws -> Response {
