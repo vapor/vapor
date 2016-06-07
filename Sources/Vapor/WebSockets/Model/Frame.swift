@@ -24,7 +24,7 @@ extension WebSocket {
          + - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - +
          |                     Payload Data continued ...                |
          +---------------------------------------------------------------+
-     */
+    */
     public final class Frame {
         public let header: Header
         public let payload: Data
@@ -58,7 +58,7 @@ extension WebSocket.Frame {
          + - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - +
          |                     Payload Data continued ...                |
          +---------------------------------------------------------------+
-     */
+    */
     public struct Header {
         public let fin: Bool
 
@@ -66,7 +66,7 @@ extension WebSocket.Frame {
              Definable flags.
 
              If any flag is 'true' that is not explicitly defined, the socket MUST close: RFC
-         */
+        */
         public let rsv1: Bool
         public let rsv2: Bool
         public let rsv3: Bool
@@ -101,13 +101,13 @@ extension WebSocket.Frame {
          *  %xA denotes a pong
 
          *  %xB-F are reserved for further control frames
-     */
+    */
     public enum OpCode {
         /*
              // MARK: NON CONTROL FRAMES
 
              May be fragmented
-         */
+        */
         case continuation
         case text
         case binary
@@ -118,7 +118,7 @@ extension WebSocket.Frame {
 
              All control frames MUST have a payload length of 125 bytes or less
              and MUST NOT be fragmented.
-         */
+        */
         case connectionClose
         case ping
         case pong
@@ -196,38 +196,35 @@ extension WebSocket.Frame.OpCode {
 }
 
 /*
+    // MARK: - A Note on Extensions
 
-     // MARK: - A Note on Extensions
-
-     Reserved bits:
-
-
-     The protocol is designed to allow for extensions, which will add
-     capabilities to the base protocol.  The endpoints of a connection
-     MUST negotiate the use of any extensions during the opening
-     handshake.  This specification provides opcodes 0x3 through 0x7 and
-     0xB through 0xF, the "Extension data" field, and the frame-rsv1,
-     frame-rsv2, and frame-rsv3 bits of the frame header for use by
-     extensions.  The negotiation of extensions is discussed in further
-     detail in Section 9.1.  Below are some anticipated uses of
-     extensions.  This list is neither complete nor prescriptive.
-
-     o  "Extension data" may be placed in the "Payload data" before the
-     "Application data".
-
-     o  Reserved bits can be allocated for per-frame needs.
-
-     o  Reserved opcode values can be defined.
-
-     o  Reserved bits can be allocated to the opcode field if more opcode
-     values are needed.
-
-     o  A reserved bit or an "extension" opcode can be defined that
-     allocates additional bits out of the "Payload data" to define
-     larger opcodes or more per-frame bits.
+    Reserved bits:
 
 
- */
+    The protocol is designed to allow for extensions, which will add
+    capabilities to the base protocol.  The endpoints of a connection
+    MUST negotiate the use of any extensions during the opening
+    handshake.  This specification provides opcodes 0x3 through 0x7 and
+    0xB through 0xF, the "Extension data" field, and the frame-rsv1,
+    frame-rsv2, and frame-rsv3 bits of the frame header for use by
+    extensions.  The negotiation of extensions is discussed in further
+    detail in Section 9.1.  Below are some anticipated uses of
+    extensions.  This list is neither complete nor prescriptive.
+
+    o  "Extension data" may be placed in the "Payload data" before the
+    "Application data".
+
+    o  Reserved bits can be allocated for per-frame needs.
+
+    o  Reserved opcode values can be defined.
+
+    o  Reserved bits can be allocated to the opcode field if more opcode
+    values are needed.
+
+    o  A reserved bit or an "extension" opcode can be defined that
+    allocates additional bits out of the "Payload data" to define
+    larger opcodes or more per-frame bits.
+*/
 extension WebSocket.Frame.OpCode {
     // 4 bits
     func serialize() -> Byte {
@@ -270,14 +267,13 @@ public func == (lhs: WebSocket.Frame.OpCode, rhs: WebSocket.Frame.OpCode) -> Boo
 
 extension WebSocket.Frame.OpCode {
     /*
-     Control frames are identified by opcodes where the most significant
-     bit of the opcode is 1.
+        Control frames are identified by opcodes where the most significant
+        bit of the opcode is 1.
 
-     4 bytes (4...7)
+        4 bytes (4...7)
 
-     9...15
-
-     */
+        9...15
+    */
     public var isControlFrame: Bool {
         switch self {
         case .ping, .pong, .controlExtension(_):
@@ -290,8 +286,8 @@ extension WebSocket.Frame.OpCode {
 
 extension WebSocket.Frame.Header {
     /*
-     Control frame CAN NOT be fragmented, but can be injected in between a fragmented message
-     */
+        Control frame CAN NOT be fragmented, but can be injected in between a fragmented message
+    */
     public var isControlFrame: Bool {
         return opCode.isControlFrame
     }
@@ -305,39 +301,39 @@ extension WebSocket.Frame {
 
 extension WebSocket.Frame {
     /*
-         Client to Server MUST be masked
+        Client to Server MUST be masked
 
-         Only set if mask bit is '1'
+        Only set if mask bit is '1'
 
-         The masking key is a 32-bit value chosen at random by the client.
-         When preparing a masked frame, the client MUST pick a fresh masking
-         key from the set of allowed 32-bit values.  The masking key needs to
-         be unpredictable; thus, the masking key MUST be derived from a strong
-         source of entropy, and the masking key for a given frame MUST NOT
-         make it simple for a server/proxy to predict the masking key for a
-         subsequent frame.  The unpredictability of the masking key is
-         essential to prevent authors of malicious applications from selecting
-         the bytes that appear on the wire.  RFC 4086 [RFC4086] discusses what
-         entails a suitable source of entropy for security-sensitive
-         applications.
+        The masking key is a 32-bit value chosen at random by the client.
+        When preparing a masked frame, the client MUST pick a fresh masking
+        key from the set of allowed 32-bit values.  The masking key needs to
+        be unpredictable; thus, the masking key MUST be derived from a strong
+        source of entropy, and the masking key for a given frame MUST NOT
+        make it simple for a server/proxy to predict the masking key for a
+        subsequent frame.  The unpredictability of the masking key is
+        essential to prevent authors of malicious applications from selecting
+        the bytes that appear on the wire.  RFC 4086 [RFC4086] discusses what
+        entails a suitable source of entropy for security-sensitive
+        applications.
 
-         Cyphered one byte at a time MOD 4
-     */
+        Cyphered one byte at a time MOD 4
+    */
     public enum MaskingKey {
         case none
         case key(zero: UInt8, one: UInt8, two: UInt8, three: UInt8)
 
         /*
-             Octet i of the transformed data ("transformed-octet-i") is the XOR of
-             octet i of the original data ("original-octet-i") with octet at index
-             i modulo 4 of the masking key ("masking-key-octet-j"):
+            Octet i of the transformed data ("transformed-octet-i") is the XOR of
+            octet i of the original data ("original-octet-i") with octet at index
+            i modulo 4 of the masking key ("masking-key-octet-j"):
 
-             j                   = i MOD 4
-             transformed-octet-i = original-octet-i XOR masking-key-octet-j
+            j                   = i MOD 4
+            transformed-octet-i = original-octet-i XOR masking-key-octet-j
 
 
-             Cypher is same for masking and unmasking
-         */
+            Cypher is same for masking and unmasking
+        */
         func hash<S: Sequence where S.Iterator.Element == Byte>(_ input: S) -> [Byte] {
             switch self {
             case .none:
@@ -382,9 +378,9 @@ extension WebSocket.Frame {
         guard !header.opCode.isControlFrame else { return false }
 
         /*
-             An unfragmented message consists of a single frame with the FIN
-             bit set (Section 5.2) and an opcode other than 0.
-         */
+            An unfragmented message consists of a single frame with the FIN
+            bit set (Section 5.2) and an opcode other than 0.
+        */
         if !header.fin || header.opCode == .continuation {
             return true
         } else {
@@ -393,11 +389,11 @@ extension WebSocket.Frame {
     }
 
     /*
-         A fragmented message consists of a single frame with the FIN bit
-         clear and an opcode other than 0, followed by zero or more frames
-         with the FIN bit clear and the opcode set to 0, and terminated by
-         a single frame with the FIN bit set and an opcode of 0.
-     */
+        A fragmented message consists of a single frame with the FIN bit
+        clear and an opcode other than 0, followed by zero or more frames
+        with the FIN bit clear and the opcode set to 0, and terminated by
+        a single frame with the FIN bit set and an opcode of 0.
+    */
     public var isFragmentHeader: Bool {
         // Control frames can NOT be fragments
         guard !header.opCode.isControlFrame else { return false }

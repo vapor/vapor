@@ -1,10 +1,10 @@
 
 extension UnsignedInteger {
     /*
-     [0b1111_1011, 0b0000_1111]
-     =>
-     0b1111_1011_0000_1111
-     */
+        [0b1111_1011, 0b0000_1111]
+        =>
+        0b1111_1011_0000_1111
+    */
     init(_ bytes: [Byte]) {
         // 8 bytes in UInt64, etc. clips overflow
         let prefix = bytes.prefix(sizeof(Self))

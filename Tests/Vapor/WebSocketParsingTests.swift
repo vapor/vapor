@@ -1,11 +1,3 @@
-//
-//  WebSocketParsingTests.swift
-//  Vapor
-//
-//  Created by Logan Wright on 6/4/16.
-//
-//
-
 import Foundation
 import XCTest
 import libc
@@ -14,45 +6,45 @@ import libc
 
 
 /*
- Examples from: https://tools.ietf.org/html/rfc6455#section-5.7
+    Examples from: https://tools.ietf.org/html/rfc6455#section-5.7
 
- o  A single-frame unmasked text message
+    o  A single-frame unmasked text message
 
- *  0x81 0x05 0x48 0x65 0x6c 0x6c 0x6f (contains "Hello")
+    *  0x81 0x05 0x48 0x65 0x6c 0x6c 0x6f (contains "Hello")
 
- o  A single-frame masked text message
+    o  A single-frame masked text message
 
- *  0x81 0x85 0x37 0xfa 0x21 0x3d 0x7f 0x9f 0x4d 0x51 0x58
- (contains "Hello")
+    *  0x81 0x85 0x37 0xfa 0x21 0x3d 0x7f 0x9f 0x4d 0x51 0x58
+    (contains "Hello")
 
- o  A fragmented unmasked text message
+    o  A fragmented unmasked text message
 
- *  0x01 0x03 0x48 0x65 0x6c (contains "Hel")
+    *  0x01 0x03 0x48 0x65 0x6c (contains "Hel")
 
- *  0x80 0x02 0x6c 0x6f (contains "lo")
-
-
- Fette & Melnikov             Standards Track                   [Page 38]
-
- RFC 6455                 The WebSocket Protocol            December 2011
+    *  0x80 0x02 0x6c 0x6f (contains "lo")
 
 
- o  Unmasked Ping request and masked Ping response
+    Fette & Melnikov             Standards Track                   [Page 38]
 
- *  0x89 0x05 0x48 0x65 0x6c 0x6c 0x6f (contains a body of "Hello",
- but the contents of the body are arbitrary)
+    RFC 6455                 The WebSocket Protocol            December 2011
 
- *  0x8a 0x85 0x37 0xfa 0x21 0x3d 0x7f 0x9f 0x4d 0x51 0x58
- (contains a body of "Hello", matching the body of the ping)
 
- o  256 bytes binary message in a single unmasked frame
+    o  Unmasked Ping request and masked Ping response
 
- *  0x82 0x7E 0x0100 [256 bytes of binary data]
+    *  0x89 0x05 0x48 0x65 0x6c 0x6c 0x6f (contains a body of "Hello",
+    but the contents of the body are arbitrary)
 
- o  64KiB binary message in a single unmasked frame
+    *  0x8a 0x85 0x37 0xfa 0x21 0x3d 0x7f 0x9f 0x4d 0x51 0x58
+    (contains a body of "Hello", matching the body of the ping)
 
- *  0x82 0x7F 0x0000000000010000 [65536 bytes of binary data]
- */
+    o  256 bytes binary message in a single unmasked frame
+
+    *  0x82 0x7E 0x0100 [256 bytes of binary data]
+
+    o  64KiB binary message in a single unmasked frame
+
+    *  0x82 0x7F 0x0000000000010000 [65536 bytes of binary data]
+*/
 class WebSocketSerializationTests: XCTestCase {
     static var allTests: [(String, (WebSocketSerializationTests) -> () throws -> Void)] {
         return [
@@ -107,12 +99,12 @@ class WebSocketSerializationTests: XCTestCase {
     }
 
     /*
-     o  A fragmented unmasked text message
+        o  A fragmented unmasked text message
 
-     *  0x01 0x03 0x48 0x65 0x6c (contains "Hel")
+        *  0x01 0x03 0x48 0x65 0x6c (contains "Hel")
 
-     *  0x80 0x02 0x6c 0x6f (contains "lo")
-     */
+        *  0x80 0x02 0x6c 0x6f (contains "lo")
+    */
     func testFragmentedUnmaskedTextMessageOne() throws {
         let input: [Byte] = [0x01, 0x03, 0x48, 0x65, 0x6c]
         let msg = try FrameParser(buffer: input).acceptFrame()
@@ -306,19 +298,19 @@ class WebSocketKeyTests: XCTestCase {
     }
 
     /*
-     https://tools.ietf.org/html/rfc6455#section-1.3
+        https://tools.ietf.org/html/rfc6455#section-1.3
 
-     Concretely, if as in the example above, the |Sec-WebSocket-Key|
-     header field had the value "dGhlIHNhbXBsZSBub25jZQ==", the server
-     would concatenate the string "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
-     to form the string "dGhlIHNhbXBsZSBub25jZQ==258EAFA5-E914-47DA-95CA-
-     C5AB0DC85B11".  The server would then take the SHA-1 hash of this,
-     giving the value 0xb3 0x7a 0x4f 0x2c 0xc0 0x62 0x4f 0x16 0x90 0xf6
-     0x46 0x06 0xcf 0x38 0x59 0x45 0xb2 0xbe 0xc4 0xea.  This value is
-     then base64-encoded (see Section 4 of [RFC4648]), to give the value
-     "s3pPLMBiTxaQ9kYGzzhZRbK+xOo=".  This value would then be echoed in
-     the |Sec-WebSocket-Accept| header field.
-     */
+        Concretely, if as in the example above, the |Sec-WebSocket-Key|
+        header field had the value "dGhlIHNhbXBsZSBub25jZQ==", the server
+        would concatenate the string "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
+        to form the string "dGhlIHNhbXBsZSBub25jZQ==258EAFA5-E914-47DA-95CA-
+        C5AB0DC85B11".  The server would then take the SHA-1 hash of this,
+        giving the value 0xb3 0x7a 0x4f 0x2c 0xc0 0x62 0x4f 0x16 0x90 0xf6
+        0x46 0x06 0xcf 0x38 0x59 0x45 0xb2 0xbe 0xc4 0xea.  This value is
+        then base64-encoded (see Section 4 of [RFC4648]), to give the value
+        "s3pPLMBiTxaQ9kYGzzhZRbK+xOo=".  This value would then be echoed in
+        the |Sec-WebSocket-Accept| header field.
+    */
     func testExchangeKey() throws {
         let requestKey = "dGhlIHNhbXBsZSBub25jZQ=="
         let acceptKey = WebSocket.exchange(requestKey: requestKey)

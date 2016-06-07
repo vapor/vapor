@@ -70,7 +70,7 @@ public final class WebSocket {
          
          Aggregator should only be disabled in situations where the aggregator is customized. 
          Fragmented messages will only be delivered through `onFrame`
-     */
+    */
     internal init(_ stream: Stream, mode: Mode = .server, disableFragmentAggregation: Bool = false) {
         self.mode = mode
         self.state = .open
@@ -87,12 +87,10 @@ public final class WebSocket {
 // MARK: Listen
 
 /**
-
-     [WARNING] **********
-     Sensitive code below, ensure you are fully familiar w/ various control flows and protocols
-     before changing or moving things including access control
-
- */
+    [WARNING] **********
+    Sensitive code below, ensure you are fully familiar w/ various control flows and protocols
+    before changing or moving things including access control
+*/
 extension WebSocket {
     /**
      Tells the WebSocket to begin accepting frames
@@ -107,7 +105,7 @@ extension WebSocket {
          [WARNING] - deserializer MUST be declared OUTSIDE of while-loop
          to prevent losing bytes trapped in the buffer. ALWAYS pass deserializer
          as argument
-     */
+    */
     private func loop<Buffer: InputBuffer>(with deserializer: FrameParser<Buffer>) throws {
         while state != .closed {
             // not a part of while logic, we need to separately acknowledge

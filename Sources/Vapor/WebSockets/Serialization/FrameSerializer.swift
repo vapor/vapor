@@ -17,7 +17,7 @@
      + - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - +
      |                     Payload Data continued ...                |
      +---------------------------------------------------------------+
- */
+*/
 public final class FrameSerializer {
     private let frame: WebSocket.Frame
 
