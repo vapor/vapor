@@ -1,5 +1,3 @@
-import S4
-
 extension Request {
     ///URL parameters (ex: `:id`).
     public var parameters: [String: String] {
