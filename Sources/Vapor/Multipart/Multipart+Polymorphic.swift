@@ -39,11 +39,14 @@ extension Multipart: Polymorphic {
     }
     
     public var array: [Polymorphic]? {
-        guard case .input(let a) = self else {
-            return nil
+        if case .inputArray(let array) = self {
+            let poly: [Polymorphic] = array.map { item in
+                return item
+            }
+            return poly
         }
-
-        return [a]
+        
+        return nil
     } 
 
     public var object: [String : Polymorphic]? {
