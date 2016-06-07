@@ -176,8 +176,4 @@ class TestConsoleDriver: ConsoleDriver {
         buffer = []
         return string
     }
-
-    func exit(code: Int) {
-        print("Exiting with code \(code)")
-    }
 }
