@@ -1,5 +1,4 @@
 import libc
-import S4
 
 extension Response {
     /**
@@ -65,8 +64,26 @@ extension Response {
         self.init(status: .movedPermanently, headers: headers, body: [])
     }
 
-    public init(async closure: ((SendingStream) throws -> Void)) {
-        self.init(body: closure)
+    /**
+        Send chunked data with the 
+        `Transfer-Encoding: Chunked` header.
+    */
+    public init(
+        status: Status = .ok,
+        headers: Headers = [:],
+        cookies: Cookies = [],
+        chunked closure: ((ChunkStream) throws -> Void)
+    ) {
+        self.init(version:
+            Version(major: 1, minor: 1),
+            status: status,
+            headers: headers,
+            cookies: cookies,
+            body: .sender({ stream in
+                let chunkStream = ChunkStream(stream: stream)
+                try closure(chunkStream)
+            })
+        )
     }
 
     public static var date: String {

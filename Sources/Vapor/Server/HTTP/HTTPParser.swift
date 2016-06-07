@@ -40,7 +40,7 @@ final class HTTPParser: StreamParser {
 
         let requestLine = try RequestLine(requestLineString)
 
-        var headers: [CaseInsensitiveString: String] = [:]
+        var headers: [Request.Headers.Key: String] = [:]
 
         while true {
             let headerLine = try nextLine()
@@ -54,10 +54,13 @@ final class HTTPParser: StreamParser {
                 continue
             }
 
-            headers[CaseInsensitiveString(comps[0])] = comps[1]
+            headers[Request.Headers.Key(comps[0])] = comps[1]
         }
 
         var body: Data = []
+
+        // TODO: Support transfer-encoding: chunked
+
         if let contentLength = headers["content-length"]?.int {
             for _ in 0..<contentLength {
                 if let byte = try buffer.next() {

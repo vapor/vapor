@@ -1,5 +1,6 @@
 import Vapor
 import S4
+import libc
 
 var workDir: String {
     let parent = #file.characters.split(separator: "/").map(String.init).dropLast().joined(separator: "/")
@@ -340,16 +341,19 @@ app.grouped(AuthMiddleware()) { group in
     }
 }
 
-//MARK: Async
+//MARK: Chunked
 
-app.get("async") { request in
-    var response = Response(async: { stream in
-        try stream.send("hello".data)
+app.get("chunked") { request in
+    return Response(headers: [
+        "Content-Type": "text/plain"
+    ], chunked: { stream in
+        try stream.send("Counting:")
+        for i in 1 ..< 10{
+            sleep(1)
+            try stream.send(i)
+        }
+        try stream.close()
     })
-    response.headers["Content-Type"] = "text/plain"
-    response.headers["Transfer-Encoding"] = ""
-    response.headers["Content-Length"] = 5.description
-    return response
 }
 
 app.start()
