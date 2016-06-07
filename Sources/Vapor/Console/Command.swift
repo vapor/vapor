@@ -84,7 +84,7 @@ extension Command {
         Returns the command's signature.
      */
     public static func signature(leading: String = "") -> String {
-        var signature = "\(Self.id) "
+        var signature = "\(Self.id)"
 
         let arguments = Self.signature.filter { signature in
             return signature is Argument

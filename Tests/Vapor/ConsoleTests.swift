@@ -15,10 +15,8 @@ class ConsoleTests: XCTestCase {
         let console = TestConsoleDriver()
         let app = Application(console: console, arguments: ["/path/to/exe", "test-1"])
 
-        let commandOne = TestOneCommand(app: app)
-
         app.commands = [
-            commandOne,
+            TestOneCommand.self
         ]
 
         do {
@@ -33,14 +31,11 @@ class ConsoleTests: XCTestCase {
         let console = TestConsoleDriver()
         let app = Application(console: console, arguments: ["/path/to/exe", "test-2"])
 
-        let commandTwo = TestTwoCommand(app: app)
-
         app.commands = [
-            commandTwo
+            TestTwoCommand.self
         ]
 
-        commandTwo.printSignature()
-        let commandTwoSignature = console.input()
+        let commandTwoSignature = TestTwoCommand.signature()
 
         XCTAssert(commandTwoSignature == "test-2 <arg-1> {--opt-1} {--opt-2}", "Signature did not match")
 
@@ -57,10 +52,8 @@ class ConsoleTests: XCTestCase {
         let console = TestConsoleDriver()
         let app = Application(console: console, arguments: ["/path/to/ext", "test-2", "123"])
 
-        let commandTwo = TestTwoCommand(app: app)
-
         app.commands = [
-            commandTwo
+            TestTwoCommand.self
         ]
 
         do {
@@ -76,10 +69,8 @@ class ConsoleTests: XCTestCase {
         let console = TestConsoleDriver()
         let app = Application(console: console, arguments: ["/path/to/ext", "test-2", "123", "--opt-1=abc"])
 
-        let commandTwo = TestTwoCommand(app: app)
-
         app.commands = [
-            commandTwo
+            TestTwoCommand.self
         ]
 
         do {
@@ -91,40 +82,38 @@ class ConsoleTests: XCTestCase {
     }
 
     func testDefaultServe() {
-        class TestServe: Command {
-            let id: String = "serve"
+        final class TestServe: Command {
+            static let id: String = "serve"
             let app: Application
-            var ran = false
+            static var ran = false
 
             init(app: Application) {
                 self.app = app
             }
 
             func run() {
-                ran = true
+                TestServe.ran = true
             }
         }
 
         let app = Application(arguments: ["/path/to/exec"])
-        let serve = TestServe(app: app)
-        app.commands = [serve]
+        app.commands = [TestServe.self]
 
         do {
             try app.execute()
-            XCTAssert(serve.ran, "Serve did not default")
+            XCTAssert(TestServe.ran, "Serve did not default")
         } catch {
             XCTFail("Serve did not default: \(error)")
         }
     }
 }
 
-class TestOneCommand: Command {
-    let id: String
+final class TestOneCommand: Command {
+    static let id: String = "test-1"
     let app: Application
     var counter = 0
 
     init(app: Application) {
-        id = "test-1"
         self.app = app
     }
 
@@ -133,18 +122,17 @@ class TestOneCommand: Command {
     }
 }
 
-class TestTwoCommand: Command {
-    let id: String
+final class TestTwoCommand: Command {
+    static let id: String = "test-2"
     let app: Application
 
-    let signature: [Signature] = [
+    static let signature: [Signature] = [
         Argument("arg-1"),
         Option("opt-1"),
         Option("opt-2")
     ]
 
     init(app: Application) {
-        id = "test-2"
         self.app = app
     }
 
