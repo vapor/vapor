@@ -18,6 +18,15 @@ public final class WebSocket {
         case closed
     }
 
+    internal enum Mode {
+        case client, server
+
+        var maskOutgoingMessages: Bool {
+            // RFC: Client must mask messages
+            return self == .client
+        }
+    }
+
     // MARK: All Frames
 
     public var onFrame: EventHandler<(ws: WebSocket, frame: Frame)>? = nil
@@ -49,8 +58,8 @@ public final class WebSocket {
     // MARK: Attributes
 
     internal let stream: Stream
+    internal let mode: Mode
     public private(set) var state: State = .open
-
     // TODO: Should aggregator be disablable?
     private var aggregator = FragmentAggregator()
 
@@ -58,6 +67,7 @@ public final class WebSocket {
 
     public init(_ stream: Stream) {
         self.stream = stream
+        self.mode = .server // TODO: Expose in api when ready
     }
 
     deinit {

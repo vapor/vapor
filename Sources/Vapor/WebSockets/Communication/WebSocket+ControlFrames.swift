@@ -1,7 +1,6 @@
 /*
  'close' included in Model file to ensure safety while interacting with sensitive variables
  */
-
 extension WebSocket {
     public func ping(statusCode: UInt16? = nil, reason: String? = nil) throws {
         // TODO:
@@ -19,12 +18,12 @@ extension WebSocket {
             rsv2: false,
             rsv3: false,
             opCode: .ping,
-            isMasked: false,
+            isMasked: mode.maskOutgoingMessages,
             payloadLength: UInt64(payload.count),
             maskingKey: .none
         )
         let msg = Frame(header: header, payload: payload)
-        try stream.send(msg)
+        try send(msg)
     }
 
     /**
@@ -44,6 +43,6 @@ extension WebSocket {
             maskingKey: .none
         )
         let msg = Frame(header: header, payload: payload)
-        try stream.send(msg)
+        try send(msg)
     }
 }
