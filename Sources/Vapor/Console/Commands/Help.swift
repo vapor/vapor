@@ -1,32 +1,31 @@
+/**
+    Prints out information about the
+    available commands including their
+    identifiers and help messages.
+*/
 public struct Help: Command {
     public static let id = "help"
-    public static func run(on app: Application, with arguments: [String]) {
-        var output = "Available Commands: \n"
-        output += app.commands
-            .values
-            .filter { $0.id != "\(id)" }
-            .helpOutput()
-        output += "\n"
-        print(output)
-    }
-}
+    public let app: Application
 
-extension Command {
-    private static func helpOutput() -> String {
-        var output = "\t\(id)\n"
-        help.forEach { line in
-            output += "\t\t\(line)\n"
-        }
-        return output
+    public init(app: Application) {
+        self.app = app
     }
-}
 
-extension Sequence where Iterator.Element == Command.Type {
-    private func helpOutput() -> String {
-        var output = ""
-        forEach { cmd in
-            output += cmd.helpOutput()
+    public func run() {
+        print("Available Commands: ")
+
+        let commands = app.commands.filter { command in
+            return command.id != Help.id
         }
-        return output
+        
+        commands.forEach { command in
+            let signature = command.signature(leading: "  ")
+            print(signature)
+
+            command.help.forEach { line in
+                print("    " + line)
+
+            }
+        }
     }
 }

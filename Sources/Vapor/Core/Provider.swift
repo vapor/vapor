@@ -48,6 +48,13 @@ public protocol Provider {
         implementation of `nil`.
      */
     var hash: HashDriver? { get }
+
+    /**
+        An optional `ConsoleDriver` to provide
+        to the application. Has a default
+        implementation of `nil`.
+    */
+    var console: ConsoleDriver? { get }
 }
 
 extension Provider {
@@ -64,6 +71,10 @@ extension Provider {
     }
 
     public var hash: HashDriver? {
+        return nil
+    }
+
+    public var console: ConsoleDriver? {
         return nil
     }
 }
