@@ -137,13 +137,10 @@ class TestTwoCommand: Command {
     let id: String
     let app: Application
 
-    let options = [
+    let signature: [Signature] = [
+        Argument("arg-1"),
         Option("opt-1"),
         Option("opt-2")
-    ]
-
-    let arguments = [
-        Argument("arg-1")
     ]
 
     init(app: Application) {

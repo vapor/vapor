@@ -1,8 +1,11 @@
+public protocol Signature: CustomStringConvertible {
+    var name: String { get }
+}
 /**
     A required argument that must be
     passed to the command.
  */
-public struct Argument: CustomStringConvertible {
+public struct Argument: Signature {
     /**
         The readable name of the argument
         that is used to fetch it with
@@ -23,7 +26,7 @@ public struct Argument: CustomStringConvertible {
     An optional item that can be
     passed to the command.
  */
-public struct Option: CustomStringConvertible {
+public struct Option: Signature {
     /**
         The readable name of the option
         that is used to fetch it with
@@ -50,6 +53,10 @@ extension Command {
 
     public func argument(_ name: String) throws -> Polymorphic {
         var index: Int? = nil
+
+        let arguments = signature.filter { signature in
+            return signature is Argument
+        }
 
         for (i, argument) in arguments.enumerated() {
             if argument.name == name {

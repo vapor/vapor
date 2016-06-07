@@ -31,21 +31,14 @@ public protocol Command {
     var help: [String] { get }
 
     /**
-        An array of Arguments that this command accepts. 
-        This will be used to ensure the command does 
-        not run unless enough arguments are passed.
-        It is also used to create the command's signature
+        An array of Arguments and Options that this 
+        command accepts. This will be used to ensure 
+        the command does not run unless enough arguments 
+        are passed. It is also used to create the signature
 
-        Arguments are required items.
+        Arguments are required items. Options are optional.
     */
-    var arguments: [Argument] { get }
-
-    /**
-        An array of Options that this command
-        accepts. This will be used to format
-        the command's signature.
-    */
-    var options: [Option] { get }
+    var signature: [Signature] { get }
 
     /**
         Runs the command. 
@@ -71,11 +64,7 @@ extension Command {
         return []
     }
 
-    public var arguments: [Argument] {
-        return []
-    }
-
-    public var options: [Option] {
+    public var signature: [Signature] {
         return []
     }
 }

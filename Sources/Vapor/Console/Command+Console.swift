@@ -37,6 +37,14 @@ extension Command {
     public func printSignature(leading: String = "", accent: Console.Style = .custom(.magenta), newLine: Bool = true) {
         print(leading + id, style: accent, newLine: false)
 
+        let arguments = signature.filter { signature in
+            return signature is Argument
+        }
+
+        let options = signature.filter { signature in
+            return signature is Option
+        }
+
         for argument in arguments {
             print(" <\(argument)>", newLine: false)
         }

@@ -261,7 +261,11 @@ extension Application {
 
         for command in commands {
             if command.id == commandId {
-                if arguments.count < command.arguments.count {
+                let requiredArguments = command.signature.filter { signature in
+                    return signature is Argument
+                }
+
+                if arguments.count < requiredArguments.count {
                     command.printSignature()
                     throw ExecutionError.insufficientArguments
                 }

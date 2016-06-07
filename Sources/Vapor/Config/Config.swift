@@ -48,7 +48,7 @@ public class Config {
     public init(seed: JSON = [:], workingDirectory: String = "./", environment: Environment? = nil, arguments: [String] = []) {
         let configDirectory = workingDirectory.finish("/") + "Config/"
         self.configDirectory = configDirectory
-        self.environment = environment ?? Environment.loader(arguments)
+        self.environment = environment ?? Environment.loader(arguments: arguments)
 
         let seedFile = JSONFile(name: "app", json: seed)
         let seedDirectory = JSONDirectory(name: "seed-data", files: [seedFile])
@@ -123,7 +123,7 @@ extension Environment {
     /**
         Used to load Environment automatically. Defaults to looking for `env` command line argument
      */
-    static var loader: ([String]) -> Environment = { arguments in
+    static var loader: (arguments: [String]) -> Environment = { arguments in
         if let env = arguments.value(for: "env").flatMap(Environment.init(id:)) {
             Log.info("Environment override: \(env)")
             return env
