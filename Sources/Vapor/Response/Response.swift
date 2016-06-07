@@ -106,14 +106,14 @@ extension Response {
 }
 
 extension Response {
-    public typealias AfterResponseSerialization = ((Stream) throws -> Void)
+    public typealias OnUpgrade = ((Stream) throws -> Void)
 
-    public var afterResponseSerialization: AfterResponseSerialization? {
+    public var onUpgrade: OnUpgrade? {
         get {
-            return storage["vapor:afterResponseSerialization"] as? AfterResponseSerialization
+            return storage["vapor:onUpgrade"] as? OnUpgrade
         }
         set {
-            storage["vapor:afterResponseSerialization"] = newValue
+            storage["vapor:onUpgrade"] = newValue
         }
     }
 }

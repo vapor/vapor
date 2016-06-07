@@ -52,7 +52,9 @@ final class StreamServer<
                 keepAlive = request.keepAlive
                 let response = try responder.respond(to: request)
                 try serializer.serialize(response)
-                try response.afterResponseSerialization?(stream)
+
+                guard response.isUpgradeResponse else { continue }
+                try response.onUpgrade?(stream)
             } catch let e as SocksCore.Error where e.isClosedByPeer {
                 break // jumpto close
             } catch let e as HTTPParser.Error where e == .streamEmpty {
@@ -86,5 +88,19 @@ extension Request {
         guard let value = headers["Connection"] else { return true }
         // TODO: Decide on if 'contains' is better, test linux version
         return !(value.trim() == "close")
+    }
+}
+
+extension Response {
+    var isUpgradeResponse: Bool {
+        return headers.connection == "Upgrade"
+    }
+    var connection: String? {
+        get {
+            return headers["Connection"]
+        }
+        set {
+            headers["Connection"] = newValue
+        }
     }
 }

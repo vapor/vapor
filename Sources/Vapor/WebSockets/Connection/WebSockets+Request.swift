@@ -30,7 +30,7 @@ extension Request {
         }
 
         var response = S4.Response(status: .switchingProtocols, headers: responseHeaders)
-        response.afterResponseSerialization = { stream in
+        response.onUpgrade = { stream in
             let ws = WebSocket(stream)
             try body(ws: ws)
             try ws.listen()
