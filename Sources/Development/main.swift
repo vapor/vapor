@@ -330,15 +330,6 @@ app.post("multipart-print") { request in
     ])
 }
 
-//MARK: WebSocket
-let wss = WebSocketServer() { sock in
-    sock.onText { text in
-        try sock.send(text)
-    }
-}
-
-app.get("echo", handler: wss.respond)
-
 //MARK: Middleware
 
 app.grouped(AuthMiddleware()) { group in
