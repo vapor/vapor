@@ -20,7 +20,7 @@ extension Request {
         get {
             guard let content = storage["content"] as? Content else {
                 Log.warning("Request Content not parsed, make sure the middleware is installed.")
-                return Request.Content(query: .null, request: self)
+                return Content(query: .null, request: self)
             }
 
             return content

@@ -3,7 +3,7 @@ class ContentMiddleware: Middleware {
     func respond(to request: Request, chainingTo next: Responder) throws -> Response {
         var request = request
 
-        let query = Request.parseQuery(uri: request.uri)
+        let query = Content.parseQuery(uri: request.uri)
         request.data = Content(query: query, request: request)
         request.query = query
 
