@@ -77,13 +77,13 @@ public final class FrameParser<Buffer: InputBuffer where Buffer.Element == Byte>
      */
     private func extractTwoBytePayloadLengthExtension() throws -> UInt64 {
         let two = try buffer.chunk(length: 2)
-        return try UInt64.init(two)
+        return UInt64(two)
     }
 
 
     private func extractEightBytePayloadLengthExtension() throws -> UInt64 {
         let eight = try buffer.chunk(length: 8)
-        return try UInt64.init(eight)
+        return UInt64(eight)
     }
 
     private func extractMaskingKey() throws -> WebSocket.Frame.MaskingKey {

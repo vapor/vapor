@@ -1,22 +1,27 @@
-import S4
+public enum WebSocketRequestFormat: ErrorProtocol {
+    case missingSecKeyHeader
+    case missingUpgradeHeader
+    case missingConnectionHeader
+    case invalidOrUnsupportedVersion
+}
 
 extension Request {
     public func upgradeToWebSocket(
         supportedProtocols: ([String]) -> [String] = { $0 },
-        body: (ws: WebSocket) throws -> Void) throws -> S4.Response {
+        body: (ws: WebSocket) throws -> Void) throws -> Response {
         guard let requestKey = headers.secWebSocketKey else {
-            throw "missing header: Sec-WebSocket-Key"
+            throw WebSocketRequestFormat.missingSecKeyHeader
         }
         guard headers.upgrade == "websocket" else {
-            throw "invalid header: Upgrade"
+            throw WebSocketRequestFormat.missingUpgradeHeader
         }
         guard headers.connection == "Upgrade" else {
-            throw "invalid header: Connection"
+            throw WebSocketRequestFormat.missingConnectionHeader
         }
 
-        // TODO: Find other versions and see if we can support
+        // TODO: Find other versions and see if we can support -- this is version mentioned in RFC
         guard let version = headers.secWebSocketVersion where version == "13" else {
-            throw "invalid header: Sec-WebSocket-Version"
+            throw WebSocketRequestFormat.invalidOrUnsupportedVersion
         }
 
         var responseHeaders: Headers = [:]
@@ -29,7 +34,7 @@ extension Request {
             responseHeaders.secWebProtocol = supportedProtocols(passedProtocols)
         }
 
-        var response = S4.Response(status: .switchingProtocols, headers: responseHeaders)
+        var response = Response(status: .switchingProtocols, headers: responseHeaders)
         response.onUpgrade = { stream in
             let ws = WebSocket(stream)
             try body(ws: ws)

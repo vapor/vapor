@@ -43,6 +43,3 @@ extension Byte {
     static let twoBytePayloadLength: Byte = 0b0111_1110
     static let eightBytePayloadLength: Byte = 0b0111_1111
 }
-
-// TODO: Replace w/ real errors
-extension String: ErrorProtocol {}

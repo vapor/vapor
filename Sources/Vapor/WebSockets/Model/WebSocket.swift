@@ -3,8 +3,6 @@
 // Client/Server Dual Support
 //
 
-import C7
-
 public final class WebSocket {
 
     public typealias EventHandler<T> = (T) throws -> Void
@@ -148,7 +146,7 @@ extension WebSocket {
         switch opCode {
         case .continuation:
             // fragment handled above
-            throw "received unexpected fragment frame"
+            throw Error.unexpectedFragmentFrame
         case .binary:
             try onBinary?((self, payload))
         case .text:
@@ -194,7 +192,7 @@ extension WebSocket {
         if !payload.isEmpty {
             var iterator = payload.makeIterator()
             let statusCodeBytes = try iterator.chunk(length: 2)
-            statusCode = try UInt16(statusCodeBytes)
+            statusCode = UInt16(statusCodeBytes)
             statusCodeData = Data(statusCodeBytes)
             // TODO: Test this only grabs bytes left
             reason = try Data(iterator).toString()

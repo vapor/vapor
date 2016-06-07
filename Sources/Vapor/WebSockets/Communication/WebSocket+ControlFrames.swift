@@ -6,7 +6,7 @@ extension WebSocket {
         // Reason can _only_ exist if statusCode also exists
         // statusCode may exist _without_ a reason
         if statusCode == nil && reason != nil {
-            throw "invalid ping format"
+            throw Error.invalidPingFormat
         }
 
         var payload: [Byte] = []
