@@ -54,17 +54,35 @@ public final class WebSocket {
 
     // MARK: Attributes
 
-    internal let stream: Stream
+    public private(set) var state: State
+
     internal let mode: Mode
-    public private(set) var state: State = .open
-    // TODO: Should aggregator be disablable?
-    private var aggregator = FragmentAggregator()
+    internal let stream: Stream
+
+    private let aggregator: FragmentAggregator?
 
     // MARK: Initialization
 
-    public init(_ stream: Stream) {
+    public convenience init(_ stream: Stream) {
+        self.init(stream, mode: .server, disableFragmentAggregation: false)
+    }
+
+    /**
+     Internal until we can properly test implications and explain to user
+     
+     Aggregator should only be disabled in situations where the aggregator is customized. 
+     Fragmented messages will only be delivered through `onFrame`
+     */
+    internal init(_ stream: Stream, mode: Mode = .server, disableFragmentAggregation: Bool = false) {
+        self.mode = mode
+        self.state = .open
         self.stream = stream
-        self.mode = .server // TODO: Expose in api when ready
+
+        if disableFragmentAggregation {
+            self.aggregator = nil
+        } else {
+            self.aggregator = FragmentAggregator()
+        }
     }
 
     deinit {
@@ -152,9 +170,9 @@ extension WebSocket {
 
     private func receivedFragment(_ frame: Frame) throws {
         let fragment = try FragmentedFrame(frame)
-        try aggregator.append(fragment: fragment)
+        try aggregator?.append(fragment: fragment)
 
-        guard let (opCode, payload) = aggregator.receiveCompleteMessage() else { return }
+        guard let (opCode, payload) = aggregator?.receiveCompleteMessage() else { return }
         try routeMessage(for: opCode, payload: payload)
     }
 
