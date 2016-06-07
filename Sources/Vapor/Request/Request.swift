@@ -1,5 +1,10 @@
 import S4
 
+
+
+
+
+
 class JSONMiddleware: S4.Middleware {
     func respond(to request: Request, chainingTo next: Responder) throws -> Response {
         var request = request
@@ -12,9 +17,42 @@ class JSONMiddleware: S4.Middleware {
             }
         }
 
-        return try next.respond(to: request)
+        var response = try next.respond(to: request)
+
+        if let json = response.json {
+            response.headers["content-type"] = "application/json"
+            response.body = .buffer(json.data)
+        }
+
+        return response
     }
 }
+
+extension Response {
+    public var json: JSON? {
+        get {
+            return storage["json"] as? JSON
+        }
+        set(data) {
+            storage["json"] = data
+        }
+    }
+
+    /**
+        Convenience Initializer
+
+        - parameter status: the http status
+        - parameter json: any value that will be attempted to be serialized as json.  Use 'Json' for more complex objects
+     */
+    public init(status: Status, json: JSON) {
+        let headers: Headers = [
+            "Content-Type": "application/json"
+        ]
+        self.init(status: status, headers: headers, body: json.data)
+    }
+}
+
+
 
 extension Request {
     /// JSON encoded request data
@@ -28,32 +66,133 @@ extension Request {
     }
 }
 
-class RequestContentMiddleware: S4.Middleware {
+
+
+
+
+
+
+
+
+
+class FormURLEncodedMiddleware: S4.Middleware {
+    func respond(to request: Request, chainingTo next: Responder) throws -> Response {
+        var request = request
+
+        if request.headers["content-type"]?.range(of: "application/x-www-form-urlencoded") != nil {
+            do {
+                let data = try request.body.becomeBuffer()
+                request.formURLEncoded = Request.parseFormURLEncoded(data)
+            } catch {
+                Log.warning("Could not parse Form-URLEncoded: \(error)")
+            }
+
+        }
+
+        return try next.respond(to: request)
+    }
+}
+
+extension Request {
+    /// JSON encoded request data
+    public var formURLEncoded: StructuredData? {
+        get {
+            return storage["form-urlencoded"] as? StructuredData
+        }
+        set(data) {
+            storage["form-urlencoded"] = data
+        }
+    }
+}
+
+
+
+
+
+
+class MultipartMiddleware: S4.Middleware {
+    func respond(to request: Request, chainingTo next: Responder) throws -> Response {
+        var request = request
+
+        if let contentType = request.headers["content-type"] where contentType.range(of: "multipart/form-data") != nil {
+            do {
+                let data = try request.body.becomeBuffer()
+                let boundary = try Request.parseBoundary(contentType: contentType)
+                request.multipart = Request.parseMultipartForm(data, boundary: boundary)
+            } catch {
+                Log.warning("Could not parse MultiPart: \(error)")
+            }
+        }
+
+        return try next.respond(to: request)
+    }
+}
+
+extension Request {
+    /// JSON encoded request data
+    public var multipart: [String: MultiPart]? {
+        get {
+            return storage["multipart"] as? [String: MultiPart]
+        }
+        set(data) {
+            storage["multipart"] = data
+        }
+    }
+}
+
+
+
+
+
+
+class ContentMiddleware: S4.Middleware {
 
     func respond(to request: Request, chainingTo next: Responder) throws -> Response {
         var request = request
-        request.data = request.parseContent()
+
+        let query = Request.parseQuery(uri: request.uri)
+        request.data = Request.Content(query: query, request: request)
+        request.query = query
+
         return try next.respond(to: request)
     }
 
 }
 
 extension Request {
+    public var query: StructuredData? {
+        get {
+            return storage["query"] as? StructuredData
+        }
+        set(data) {
+            storage["query"] = data
+        }
+    }
     ///Query data from the path, or POST data from the body (depends on `Method`).
     public var data: Request.Content {
         get {
-            guard let data = storage["data"] as? Request.Content else {
-                Log.warning("Data has not been cached.")
-                return parseContent()
+            guard let content = storage["content"] as? Request.Content else {
+                Log.warning("Request Content not parsed, make sure the middleware is installed.")
+                return Request.Content(query: .null, request: self)
             }
 
-            return data
+            return content
         }
         set(data) {
-            storage["data"] = data
+            storage["content"] = data
         }
     }
 }
+
+
+
+
+
+
+
+
+
+
 
 extension Request {
     ///URL parameters (ex: `:id`).
@@ -106,55 +245,6 @@ extension Request {
         }
 
         return cookies
-    }
-
-    mutating func cacheParsedContent() {
-        data = parseContent()
-    }
-
-    func parseContent() -> Request.Content {
-        var data: Data?
-        var mutableBody = body
-
-        do {
-            data = try mutableBody.becomeBuffer()
-        } catch {
-            Log.error("Could not read body: \(error)")
-        }
-
-        return Request.parseContent(data, uri: uri, headers: headers)
-    }
-
-    static private func parseContent(_ data: Data?, uri: URI, headers: Headers) -> Request.Content {
-        let query = parseQuery(uri: uri)
-
-        var json: JSON?
-        var formEncoded: StructuredData?
-        var multipart: [String: MultiPart]?
-
-        if
-            let contentType = headers["Content-Type"],
-            let data = data
-        {
-            if contentType.range(of: "application/json") != nil {
-                do {
-                    json = try JSON(data)
-                } catch {
-                    Log.warning("Could not parse JSON: \(error)")
-                }
-            } else if contentType.range(of: "multipart/form-data") != nil {
-                do {
-                    let boundary = try Request.parseBoundary(contentType: contentType)
-                    multipart = Request.parseMultipartForm(data, boundary: boundary)
-                } catch {
-                    Log.warning("Could not parse MultiPart: \(error)")
-                }
-            } else if contentType.range(of: "application/x-www-form-urlencoded") != nil {
-                formEncoded = Request.parseFormURLEncoded(data)
-            }
-        }
-
-        return Request.Content(query: query, json: json, formEncoded: formEncoded, multipart: multipart)
     }
 
     static func parseQuery(uri: URI) -> StructuredData {

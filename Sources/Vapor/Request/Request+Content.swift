@@ -14,32 +14,23 @@ public extension Request {
     */
     public struct Content {
         // MARK: Initialization
-        public let query: StructuredData
-        public let json: JSON?
-        public let formEncoded: StructuredData?
-        public let multipart: [String: MultiPart]?
+        let query: StructuredData
+        let request: Request
 
-        internal init(
-            query: StructuredData,
-            json: JSON?,
-            formEncoded: StructuredData?,
-            multipart: [String: MultiPart]?
-        ) {
+        internal init(query: StructuredData, request: Request) {
             self.query = query
-            self.json = json
-            self.formEncoded = formEncoded
-            self.multipart = multipart
+            self.request = request
         }
 
         // MARK: Subscripting
         public subscript(index: Int) -> Polymorphic? {
             if let value = query["\(index)"] {
                 return value
-            } else if let value = json?.array?[index] {
+            } else if let value = request.json?.array?[index] {
                 return value
-            } else if let value = formEncoded?["\(index)"] {
+            } else if let value = request.formURLEncoded?["\(index)"] {
                 return value
-            } else if let value = multipart?["\(index)"] {
+            } else if let value = request.multipart?["\(index)"] {
                 return value
             } else {
                 return nil
@@ -49,11 +40,11 @@ public extension Request {
         public subscript(key: String) -> Polymorphic? {
             if let value = query[key] {
                 return value
-            } else if let value = json?.object?[key] {
+            } else if let value = request.json?.object?[key] {
                 return value
-            } else if let value = formEncoded?[key] {
+            } else if let value = request.formURLEncoded?[key] {
                 return value
-            } else if let value = multipart?[key] {
+            } else if let value = request.multipart?[key] {
                 return value
             } else {
                 return nil
@@ -67,9 +58,9 @@ public extension Request {
         public subscript(indexes: [PathIndex]) -> Polymorphic? {
             if let value = query[indexes] {
                 return value
-            } else if let value = json?[indexes] {
+            } else if let value = request.json?[indexes] {
                 return value
-            } else if let value = formEncoded?[indexes] {
+            } else if let value = request.formURLEncoded?[indexes] {
                 return value
             } else {
                 return nil

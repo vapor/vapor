@@ -40,16 +40,13 @@ class HTTPStreamTests: XCTestCase {
         let parser = HTTPParser(stream: stream)
 
         do {
-            var request = try parser.parse()
-
-            request.cacheParsedContent()
+            let request = try parser.parse()
 
             //MARK: Verify Request
             XCTAssert(request.method == Request.Method.post, "Incorrect method \(request.method)")
             XCTAssert(request.uri.path == "/json", "Incorrect path \(request.uri.path)")
             XCTAssert(request.version.major == 1 && request.version.minor == 1, "Incorrect version")
             XCTAssert(request.cookies["1"] == "1" && request.cookies["2"] == "2", "Cookies not parsed")
-            XCTAssert(request.data["hello"]?.string == "world")
         } catch {
             XCTFail("Parsing failed: \(error)")
         }
