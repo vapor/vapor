@@ -16,13 +16,20 @@ public final class Response {
     }
 
 
-    public init(status: Status = .ok, headers: Headers = [:], cookies: Cookies = [], async closure: ((SendingStream) throws -> Void)) {
+    public init(status: Status = .ok, headers: Headers = [:], cookies: Cookies = [], async closure: ((Stream) throws -> Void)) {
         self.version = Version(major: 1, minor: 1)
         self.status = status
         self.headers = headers
         self.headers["Transfer-Encoding"] = "chunked"
         self.cookies = cookies
-        self.body = .sender(closure)
+        self.body = .async(closure)
+    }
+}
+
+extension Response {
+    public enum Body {
+        case buffer(Data)
+        case async((Stream) throws -> ())
     }
 }
 

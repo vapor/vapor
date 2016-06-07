@@ -87,13 +87,7 @@ class RouteTests: XCTestCase {
         }
 
         do {
-            let response = try handler(request).makeResponse()
-            print(response)
-            var body = response.body
-            let data = try body.becomeBuffer()
-            let string = try String(data: data)
-            print(string)
-
+            _ = try handler(request).makeResponse()
             XCTFail("Handler did not throw error")
         } catch Abort.badRequest {
             //pass

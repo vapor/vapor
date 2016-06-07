@@ -38,11 +38,13 @@ class RouterTests: XCTestCase {
                 return
             }
 
-            var body = try result(request).makeResponse().body
+            let body = try result(request).makeResponse().body
 
-            let data = try body.becomeBuffer()
-            let string = try String(data: data)
-            XCTAssert(string == compare)
+            if case .buffer(let data) = body {
+                XCTAssert(compare.data == data)
+            } else {
+                XCTFail("Body was not buffer")
+            }
         } catch {
             XCTFail()
         }
@@ -72,17 +74,23 @@ class RouterTests: XCTestCase {
         let handler_2 = router.route(request_2)
 
         if let response_1 = try? handler_1?(request_1) {
-            var body = response_1!.makeResponse().body
-            let buffer = try? body.becomeBuffer()
-            XCTAssert(buffer == data_1, "Incorrect response returned by Handler 1")
+            let body = response_1!.makeResponse().body
+            if case .buffer(let data) = body {
+                XCTAssert(data == data_1, "Incorrect response returned by Handler 1")
+            } else {
+                XCTFail("Body was not buffer")
+            }
         } else {
             XCTFail("Handler 1 did not return a response")
         }
 
         if let response_2 = try? handler_2?(request_2) {
-            var body = response_2!.makeResponse().body
-            let buffer = try? body.becomeBuffer()
-            XCTAssert(buffer == data_2, "Incorrect response returned by Handler 2")
+            let body = response_2!.makeResponse().body
+            if case .buffer(let data) = body {
+                XCTAssert(data == data_2, "Incorrect response returned by Handler 2")
+            } else {
+                XCTFail("Body was not buffer")
+            }
         } else {
             XCTFail("Handler 2 did not return a response")
         }

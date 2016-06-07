@@ -36,11 +36,9 @@ final class HTTPSerializer: StreamSerializer {
         case .buffer(let data):
             serialized.bytes += data
             try stream.send(serialized)
-        case .sender(let sender):
+        case .async(let closure):
             try stream.send(serialized)
-            try sender(stream)
-        default:
-            Log.error("Unsupported body type")
+            try closure(stream)
         }
     }
 }
