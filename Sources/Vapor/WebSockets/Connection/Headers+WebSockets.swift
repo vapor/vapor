@@ -1,7 +1,7 @@
 import S4
 
 // https://tools.ietf.org/html/rfc6455#section-1.2
-extension Request.Headers {
+extension Headers {
     public var isWebSocketRequest: Bool {
         guard upgrade == "websocket" else { return false }
         guard connection == "Upgrade" else { return false }

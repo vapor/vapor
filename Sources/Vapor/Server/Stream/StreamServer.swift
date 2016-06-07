@@ -95,12 +95,4 @@ extension Response {
     var isUpgradeResponse: Bool {
         return headers.connection == "Upgrade"
     }
-    var connection: String? {
-        get {
-            return headers["Connection"]
-        }
-        set {
-            headers["Connection"] = newValue
-        }
-    }
 }

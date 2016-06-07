@@ -57,11 +57,13 @@ final class HTTPParser: StreamParser {
             headers[CaseInsensitiveString(comps[0])] = comps[1]
         }
 
-        let bytes: Data
+        var body: Data = []
         if let contentLength = headers["content-length"]?.int {
-            bytes = Data(try buffer.chunk(size: contentLength))
-        } else {
-            bytes = []
+            for _ in 0..<contentLength {
+                if let byte = try buffer.next() {
+                    body.append(byte)
+                }
+            }
         }
 
         return Request(
@@ -69,7 +71,7 @@ final class HTTPParser: StreamParser {
             uri: requestLine.uri,
             version: requestLine.version,
             headers: Request.Headers(headers),
-            body: .buffer(bytes)
+            body: .buffer(body)
         )
     }
 }

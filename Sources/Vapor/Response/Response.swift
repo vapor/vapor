@@ -110,10 +110,10 @@ extension Response {
 
     public var onUpgrade: OnUpgrade? {
         get {
-            return storage["vapor:onUpgrade"] as? OnUpgrade
+            return storage["on-upgrade"] as? OnUpgrade
         }
         set {
-            storage["vapor:onUpgrade"] = newValue
+            storage["on-upgrade"] = newValue
         }
     }
 }

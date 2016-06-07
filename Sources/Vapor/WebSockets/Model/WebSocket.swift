@@ -82,11 +82,6 @@ public final class WebSocket {
             self.aggregator = FragmentAggregator()
         }
     }
-
-    deinit {
-        // TODO: Rm on ship
-        print("\n\n\t***** WE GONE :D *****\n\n\n")
-    }
 }
 
 // MARK: Listen
@@ -225,7 +220,6 @@ extension WebSocket {
 
 extension WebSocket {
     public func close(statusCode: UInt16? = nil, reason: String? = nil) throws {
-        // TODO: Use status code and reason data
         guard state == .open else { return }
         state = .closing
 
@@ -239,7 +233,13 @@ extension WebSocket {
             payloadLength: 0,
             maskingKey: .none
         )
-        let msg = Frame(header: header, payload: Data())
+
+        var payload: [Byte]  = []
+        payload += statusCode?.bytes() ?? []
+        if let reason = reason {
+            payload += Data(reason).bytes
+        }
+        let msg = Frame(header: header, payload: Data(payload))
         try send(msg)
     }
 
