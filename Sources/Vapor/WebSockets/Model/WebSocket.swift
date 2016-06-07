@@ -219,6 +219,19 @@ extension WebSocket {
 // MARK: Close Handshake
 
 extension WebSocket {
+    /**
+        Use this function to initiate a close with the client, a status code and reason may 
+        optionally be included
+     
+        The following formats are acceptable
+        - statusCode only
+        - statusCode and Reason
+     
+        The following formats are NOT acceptable
+        - reason only
+     
+        The reason received on a status code must NOT be displayed to end user
+     */
     public func close(statusCode: UInt16? = nil, reason: String? = nil) throws {
         guard state == .open else { return }
         state = .closing
@@ -234,11 +247,20 @@ extension WebSocket {
             maskingKey: .none
         )
 
-        var payload: [Byte]  = []
-        payload += statusCode?.bytes() ?? []
-        if let reason = reason {
-            payload += Data(reason).bytes
+        // Reason can _only_ exist if statusCode also exists
+        // statusCode may exist _without_ a reason
+        if statusCode == nil && reason != nil {
+            throw Error.invalidPingFormat
         }
+        
+        var payload: [Byte] = []
+        if let status = statusCode {
+            payload += status.bytes()
+        }
+        if let reason = reason {
+            payload += reason.toBytes()
+        }
+
         let msg = Frame(header: header, payload: Data(payload))
         try send(msg)
     }
