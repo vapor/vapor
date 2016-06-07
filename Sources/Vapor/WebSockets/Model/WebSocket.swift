@@ -10,15 +10,31 @@ public final class WebSocket {
         case closed
     }
 
-    // MARK: EventHandlers
+    // MARK: All Frames
 
     public var onFrame: EventHandler<(ws: WebSocket, frame: Frame)>? = nil
+
+    // MARK: Non Control Frames
 
     public var onText: EventHandler<(ws: WebSocket, text: String)>? = nil
     public var onBinary: EventHandler<(ws: WebSocket, binary: Data)>? = nil
 
-    public var onPing: EventHandler<(ws: WebSocket, frame: Frame)>? = nil
-    public var onPong: EventHandler<(ws: WebSocket, frame: Frame)>? = nil
+    // MARK: Non Control Extensions
+
+    public var onNonControlExtension:
+        EventHandler<(ws: WebSocket, code: Frame.OpCode.NonControlFrameExtension, data: Data)>? = nil
+
+    // MARK: Control Frames
+
+    public var onPing: EventHandler<(ws: WebSocket, frame: Data)>? = nil
+    public var onPong: EventHandler<(ws: WebSocket, frame: Data)>? = nil
+
+    // MARK: Control Frame Extensions
+
+    public var onControlExtension:
+        EventHandler<(ws: WebSocket, code: Frame.OpCode.ControlFrameExtension, data: Data)>? = nil
+
+    // MARK: Close: (Control Frame)
 
     public var onClose: EventHandler<(ws: WebSocket, code: UInt16, reason: String, clean: Bool)>? = nil
 
@@ -26,6 +42,9 @@ public final class WebSocket {
 
     internal let stream: Stream
     public private(set) var state: State = .open
+
+    // TODO: Should aggregator be disablable?
+    private var aggregator = FragmentAggregator()
 
     // MARK: Initialization
 
@@ -40,6 +59,13 @@ public final class WebSocket {
 
 // MARK: Listen
 
+/**
+
+ [WARNING] **********
+ Sensitive code below, ensure you are fully familiar w/ various control flows and protocols
+ before changing or moving things including access control
+
+ */
 extension WebSocket {
     /**
      Tells the WebSocket to begin accepting frames
@@ -74,33 +100,49 @@ extension WebSocket {
         }
     }
 
-    // TODO: Sort Fragments
     private func received(_ frame: Frame) throws {
         try onFrame?((self, frame))
 
-        switch frame.header.opCode {
-        case .continuation:
-            print("NOT YET HANDLING FRAGMENTS MANUALLY")
-            break
-        case .binary:
-            let payload = frame.payload
-            try onBinary?((self, payload))
-        case .text:
-            let text = try frame.payload.toString()
-            try onText?((self, text))
-        case .connectionClose:
-            try receivedClose(frame)
-        case .ping:
-            try onPing?((self, frame))
-            try pong(frame.payload)
-        case .pong:
-            try onPong?((self, frame))
-        default:
-            break
+        if frame.isFragment {
+            try receivedFragment(frame)
+        } else {
+            try routeMessage(for: frame.header.opCode, payload: frame.payload)
         }
     }
 
-    private func receivedClose(_ frame: Frame) throws {
+    private func routeMessage(for opCode: Frame.OpCode, payload: Data) throws {
+        switch opCode {
+        case .continuation:
+            // fragment handled above
+            throw "received unexpected fragment frame"
+        case .binary:
+            try onBinary?((self, payload))
+        case .text:
+            let text = try payload.toString()
+            try onText?((self, text))
+        case let .nonControlExtension(nc):
+            try onNonControlExtension?((self, nc, payload))
+        case .connectionClose:
+            try handleClose(payload: payload)
+        case .ping:
+            try onPing?((self, payload))
+            try pong(payload)
+        case .pong:
+            try onPong?((self, payload))
+        case let .controlExtension(ce):
+            try onControlExtension?((self, ce, payload))
+        }
+    }
+
+    private func receivedFragment(_ frame: Frame) throws {
+        let fragment = try FragmentedFrame(frame)
+        try aggregator.append(fragment: fragment)
+
+        guard let (opCode, payload) = aggregator.receiveCompleteMessage() else { return }
+        try routeMessage(for: opCode, payload: payload)
+    }
+
+    private func handleClose(payload: Data) throws {
         /*
 
          // TODO:
@@ -115,18 +157,17 @@ extension WebSocket {
          script that opened the connection.  As the data is not guaranteed to
          be human readable, clients MUST NOT show it to end users.
          */
-        guard frame.header.opCode == .connectionClose else { throw "unexpected op code" }
 
         switch  state {
         case .open:
             // opponent requested close, we're responding
-            try respondToClose(echo: frame.payload)
+            try respondToClose(echo: payload)
             try completeCloseHandshake(cleanly: true)
         case .closing:
             // we requested close, opponent responded
             try completeCloseHandshake(cleanly: true)
         case .closed:
-            Log.info("Received close frame: \(frame) already closed.")
+            Log.info("Received close frame, already closed.")
         }
     }
 }

@@ -365,6 +365,9 @@ extension WebSocket.Frame {
 
 extension WebSocket.Frame {
     public var isFragment: Bool {
+        // Control frames can NOT be fragments
+        guard !header.opCode.isControlFrame else { return false }
+
         /*
          An unfragmented message consists of a single frame with the FIN
          bit set (Section 5.2) and an opcode other than 0.
@@ -384,15 +387,26 @@ extension WebSocket.Frame {
      */
     // TODO: Rename Leading -- first ... header is used elsewhere to mean other things
     public var isFragmentHeader: Bool {
+        // Control frames can NOT be fragments
+        guard !header.opCode.isControlFrame else { return false }
+
         return !header.fin && header.opCode != .continuation
     }
 
     public var isFragmentBody: Bool {
+        // Control frames can NOT be fragments
+        guard !header.opCode.isControlFrame else { return false }
+
         return !header.fin && header.opCode == .continuation
     }
 
-    // TODO: Rename to match rename of header, possibly trailing or last
     public var isFragmentFooter: Bool {
+        // Control frames can NOT be fragments
+        guard !header.opCode.isControlFrame else { return false }
+        
         return header.fin && header.opCode == .continuation
     }
 }
+
+// TODO: Move to Separate file when possible -- Vapor Dependency
+extension WebSocket.Frame: Validatable {}
