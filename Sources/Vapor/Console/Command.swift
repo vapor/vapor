@@ -13,14 +13,7 @@ public protocol Command {
         passed to the application executable during
         boot, the command will run.
     */
-    var id: String { get }
-
-    /**
-        The command needs a reference to the
-        application to perform various tasks.
-        This is usually passed in as an init parameter.
-    */
-    var app: Application { get }
+    static var id: String { get }
 
     /**
         An array of help messages that are
@@ -28,7 +21,7 @@ public protocol Command {
         Each item in the array is printed on
         one line of the command.
     */
-    var help: [String] { get }
+    static var help: [String] { get }
 
     /**
         An array of Arguments and Options that this 
@@ -38,10 +31,28 @@ public protocol Command {
 
         Arguments are required items. Options are optional.
     */
-    var signature: [Signature] { get }
+    static var signature: [Signature] { get }
 
     /**
-        Runs the command. 
+        The command needs a reference to the
+        application to perform various tasks.
+        This is usually passed in as an init parameter.
+     */
+    var app: Application { get }
+
+    /**
+        Creates an instance of the command.
+
+        This inhibits the command from having its
+        own init method and non-optional properties,
+        but it ensures that the application does not
+        boot unnecessary resources for each command
+        by only booting commands when they run.
+     */
+    init(app: Application)
+
+    /**
+        Runs the command.
 
         `CommandError.custom` can be thrown
         to echo an error to the console while
@@ -60,11 +71,37 @@ public enum CommandError: ErrorProtocol {
     Defaults for basic commands.
 */
 extension Command {
-    public var help: [String] {
+    public static var help: [String] {
         return []
     }
 
-    public var signature: [Signature] {
+    public static var signature: [Signature] {
         return []
+    }
+
+
+    /**
+        Returns the command's signature.
+     */
+    public static func signature(leading: String = "") -> String {
+        var signature = "\(Self.id) "
+
+        let arguments = Self.signature.filter { signature in
+            return signature is Argument
+        }
+
+        let options = Self.signature.filter { signature in
+            return signature is Option
+        }
+
+        for argument in arguments {
+            signature += " <\(argument)>"
+        }
+
+        for option in options {
+            signature += " {--\(option)}"
+        }
+
+        return signature
     }
 }

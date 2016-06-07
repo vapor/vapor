@@ -54,7 +54,7 @@ extension Command {
     public func argument(_ name: String) throws -> Polymorphic {
         var index: Int? = nil
 
-        let arguments = signature.filter { signature in
+        let arguments = Self.signature.filter { signature in
             return signature is Argument
         }
 

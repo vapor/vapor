@@ -4,11 +4,10 @@
     identifiers and help messages.
 */
 public struct Help: Command {
-    public let id: String
+    public static let id = "help"
     public let app: Application
 
     public init(app: Application) {
-        id = "help"
         self.app = app
     }
 
@@ -16,11 +15,12 @@ public struct Help: Command {
         print("Available Commands: ")
 
         let commands = app.commands.filter { command in
-            return command.id != self.id
+            return command.id != Help.id
         }
         
         commands.forEach { command in
-            command.printSignature(leading: "  ")
+            let signature = command.signature(leading: "  ")
+            print(signature)
 
             command.help.forEach { line in
                 print("    " + line)

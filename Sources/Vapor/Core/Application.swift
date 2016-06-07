@@ -86,7 +86,7 @@ public class Application {
         Available Commands to use when starting
         the application.
     */
-    public var commands: [Command]
+    public var commands: [Command.Type]
 
     /**
         Send output and receive input from the console
@@ -186,8 +186,8 @@ public class Application {
 
         Log.driver = ConsoleLogger(console: console)
 
-        commands.append(Help(app: self))
-        commands.append(Serve(app: self))
+        commands.append(Help.self)
+        commands.append(Serve.self)
 
         restrictLogging(for: config.environment)
 
@@ -259,14 +259,17 @@ extension Application {
 
         let arguments = Array(iterator)
 
-        for command in commands {
-            if command.id == commandId {
-                let requiredArguments = command.signature.filter { signature in
+        for commandType in commands {
+            if commandType.id == commandId {
+                let command = commandType.init(app: self)
+                
+                let requiredArguments = command.dynamicType.signature.filter { signature in
                     return signature is Argument
                 }
 
                 if arguments.count < requiredArguments.count {
-                    command.printSignature()
+                    let signature = command.dynamicType.signature()
+                    console.output(signature)
                     throw ExecutionError.insufficientArguments
                 }
 

@@ -32,33 +32,6 @@ extension Command {
     }
 
     /**
-        Prints the command's signature.
-    */
-    public func printSignature(leading: String = "", accent: Console.Style = .custom(.magenta), newLine: Bool = true) {
-        print(leading + id, style: accent, newLine: false)
-
-        let arguments = signature.filter { signature in
-            return signature is Argument
-        }
-
-        let options = signature.filter { signature in
-            return signature is Option
-        }
-
-        for argument in arguments {
-            print(" <\(argument)>", newLine: false)
-        }
-
-        for option in options {
-            print(" {--\(option)}", newLine: false)
-        }
-
-        if newLine {
-            print("")
-        }
-    }
-
-    /**
         Requests input from the console
         after displaying the desired prompt.
     */
