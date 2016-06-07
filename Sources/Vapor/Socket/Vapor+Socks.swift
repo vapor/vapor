@@ -2,10 +2,6 @@ import Socks
 import SocksCore
 
 extension Socks.TCPClient: Stream {
-    public enum Error: ErrorProtocol {
-        case unsupported
-    }
-
     public var closed: Bool {
         return socket.isClosed
     }
@@ -15,7 +11,7 @@ extension Socks.TCPClient: Stream {
     }
 
     public func flush(timingOut deadline: Double) throws {
-        throw Error.unsupported
+        // already flushed
     }
 
     public func receive(upTo byteCount: Int, timingOut deadline: Double) throws -> Data {

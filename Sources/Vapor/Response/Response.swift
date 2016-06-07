@@ -1,5 +1,37 @@
 import libc
-import S4
+
+public final class Response {
+    public var version: Version
+    public var status: Status
+    public var headers: Headers
+    public var cookies: Cookies
+    public var body: Body
+
+    public init(status: Status = .ok, headers: Headers = [:], cookies: Cookies = [], data: Data = []) {
+        self.version = Version(major: 1, minor: 1)
+        self.status = status
+        self.headers = headers
+        self.cookies = cookies
+        self.body = .buffer(data)
+    }
+
+
+    public init(status: Status = .ok, headers: Headers = [:], cookies: Cookies = [], async closure: ((Stream) throws -> Void)) {
+        self.version = Version(major: 1, minor: 1)
+        self.status = status
+        self.headers = headers
+        self.headers["Transfer-Encoding"] = "chunked"
+        self.cookies = cookies
+        self.body = .async(closure)
+    }
+}
+
+extension Response {
+    public enum Body {
+        case buffer(Data)
+        case async((Stream) throws -> ())
+    }
+}
 
 extension Response {
     /**
@@ -9,8 +41,8 @@ extension Response {
 
         - parameter error: a description of the server error
      */
-    public init(error: String) {
-        self.init(status: .internalServerError, headers: [:], body: error.data)
+    public convenience init(error: String) {
+        self.init(status: .internalServerError, headers: [:], data: error.data)
     }
 
     /**
@@ -19,22 +51,11 @@ extension Response {
         - parameter status: http status of response
         - parameter html: the html string to be rendered as a response
      */
-    public init(status: Status, html body: String) {
+    public convenience init(status: Status, html body: String) {
         let html = "<html><meta charset=\"UTF-8\"><body>\(body)</body></html>"
-        let headers: Headers = [
+        self.init(status: status, headers: [
             "Content-Type": "text/html"
-        ]
-        self.init(status: status, headers: headers, body: html.data)
-    }
-
-    /**
-        Convenience Initializer - Data
-
-        - parameter status: http status
-        - parameter data: response bytes
-     */
-    public init(status: Status, data: Data) {
-        self.init(status: status, headers: [:], body: data)
+        ], data: html.data)
     }
 
     /**
@@ -43,11 +64,10 @@ extension Response {
         - parameter status: http status
         - parameter text: basic text response
      */
-    public init(status: Status, text: String) {
-        let headers: Headers = [
+    public convenience init(status: Status, text: String) {
+        self.init(status: status, headers: [
             "Content-Type": "text/plain"
-        ]
-        self.init(status: status, headers: headers, body: text.data)
+        ], data: text.data)
     }
 
     /**
@@ -56,30 +76,24 @@ extension Response {
         - parameter status: the http status
         - parameter json: any value that will be attempted to be serialized as json.  Use 'Json' for more complex objects
      */
-    public init(status: Status, json: JSON) {
-        let headers: Headers = [
+    public convenience init(status: Status, json: JSON) {
+        self.init(status: status, headers: [
             "Content-Type": "application/json"
-        ]
-        self.init(status: status, headers: headers, body: json.data)
+        ], data: json.data)
     }
 
     /**
         Creates an empty response with the
         supplied status code.
     */
-    public init(status: Status) {
+    public convenience init(status: Status) {
         self.init(status: status, text: "")
     }
 
-    public init(redirect location: String) {
-        let headers: Headers = [
+    public convenience init(redirect location: String) {
+        self.init(status: .movedPermanently, headers: [
             "Location": location
-        ]
-        self.init(status: .movedPermanently, headers: headers, body: [])
-    }
-
-    public init(async closure: ((SendingStream) throws -> Void)) {
-        self.init(body: closure)
+        ])
     }
 
     public static var date: String {

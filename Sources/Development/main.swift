@@ -1,5 +1,5 @@
 import Vapor
-import S4
+import libc
 
 var workDir: String {
     let parent = #file.characters.split(separator: "/").map(String.init).dropLast().joined(separator: "/")
@@ -237,13 +237,13 @@ app.post("multipart-image") { request in
         throw Abort.badRequest
     }
 
-    var headers: Headers = [:]
+    var headers: Request.Headers = [:]
 
     if let mediaType = image.type {
         headers["Content-Type"] = mediaType.type + "/" + mediaType.subtype
     }
 
-    return Response(status: .ok, headers: headers, body: image.data)
+    return Response(status: .ok, headers: headers, data: image.data)
 }
 
 app.get("multifile") { _ in
@@ -276,13 +276,13 @@ app.post("multifile") { request in
 
     let file = files[number]
 
-    var headers: Headers = [:]
+    var headers: Request.Headers = [:]
 
     if let mediaType = file.type {
         headers["Content-Type"] = mediaType.type + "/" + mediaType.subtype
     }
 
-    return Response(status: .ok, headers: headers, body: file.data)
+    return Response(status: .ok, headers: headers, data: file.data)
 }
 
 app.get("options") { _ in
@@ -344,11 +344,15 @@ app.grouped(AuthMiddleware()) { group in
 
 app.get("async") { request in
     var response = Response(async: { stream in
-        try stream.send("hello".data)
+        try stream.send("Counting: ".data)
+        var i = 0
+        while true {
+            sleep(1)
+            try stream.send("\(i)".data)
+            i += 1
+        }
     })
     response.headers["Content-Type"] = "text/plain"
-    response.headers["Transfer-Encoding"] = ""
-    response.headers["Content-Length"] = 5.description
     return response
 }
 

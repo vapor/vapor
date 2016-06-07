@@ -3,7 +3,7 @@ import MediaType
 import Foundation
 import Socks
 
-public let VERSION = "0.10"
+public let VERSION = "0.11"
 
 public class Application {
     /**
@@ -211,7 +211,7 @@ extension Application {
         do {
             Log.info("Server starting at \(host):\(port)")
             // noreturn
-            let server = try self.server.init(host: host, port: port, responder: self)
+            let server = try self.server.init(host: host, port: port, application: self)
             try server.start()
         } catch {
             Log.error("Server start error: \(error)")
@@ -220,7 +220,7 @@ extension Application {
 }
 
 extension Application {
-    func checkFileSystem(for request: Request) -> Request.Handler? {
+    func checkFileSystem(for request: Request) -> ((Request) throws -> Response)? {
         // Check in file system
         let filePath = self.workDir + "Public" + (request.uri.path ?? "")
 
@@ -230,7 +230,7 @@ extension Application {
 
         // File exists
         if let fileBody = try? FileManager.readBytesFromFile(filePath) {
-            return Request.Handler { _ in
+            return { _ in
                 var headers: Response.Headers = [:]
 
                 if
@@ -240,10 +240,10 @@ extension Application {
                     headers["Content-Type"] = type.description
                 }
 
-                return Response(status: .ok, headers: headers, body: Data(fileBody))
+                return Response(status: .ok, headers: headers, data: Data(fileBody))
             }
         } else {
-            return Request.Handler { _ in
+            return { _ in
                 Log.warning("Could not open file, returning 404")
                 return Response(status: .notFound, text: "Page not found")
             }
@@ -260,7 +260,7 @@ extension Application {
     }
 }
 
-extension Application: Responder {
+extension Application {
 
     /**
         Returns a response to the given request
@@ -274,32 +274,28 @@ extension Application: Responder {
     public func respond(to request: Request) throws -> Response {
         Log.info("\(request.method) \(request.uri.path ?? "/")")
 
-        var responder: Responder
-        var request = request
-
-        request.cacheParsedContent()
+        var handler: Request.Handler
 
         // Check in routes
-        if let (parameters, routerHandler) = router.route(request) {
-            request.parameters = parameters
-            responder = routerHandler
+        if let routerHandler = router.route(request) {
+            handler = routerHandler
         } else if let fileHander = self.checkFileSystem(for: request) {
-            responder = fileHander
+            handler = fileHander
         } else {
             // Default not found handler
-            responder = Request.Handler { _ in
+            handler = { _ in
                 return Response(status: .notFound, text: "Page not found")
             }
         }
 
         // Loop through middlewares in order
         for middleware in self.globalMiddleware {
-            responder = middleware.chain(to: responder)
+            handler = middleware.handle(handler)
         }
 
         var response: Response
         do {
-            response = try responder.respond(to: request)
+            response = try handler(request).makeResponse()
 
             if response.headers["Content-Type"] == nil {
                 Log.warning("Response had no 'Content-Type' header.")

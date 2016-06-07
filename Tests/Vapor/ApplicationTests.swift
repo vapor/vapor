@@ -49,7 +49,7 @@ class ApplicationTests: XCTestCase {
     */
     func testProviders() {
         final class TestServer: ServerDriver {
-            init(host: String, port: Int, responder: Responder) throws {}
+            init(host: String, port: Int, application: Application) throws {}
             func start() throws {}
         }
 
@@ -82,12 +82,12 @@ class ApplicationTests: XCTestCase {
     */
     func testProvidersOverride() {
         final class TestServerAlpha: ServerDriver {
-            init(host: String, port: Int, responder: Responder) throws {}
+            init(host: String, port: Int, application: Application) throws {}
             func start() throws {}
         }
 
         final class TestServerBeta: ServerDriver {
-            init(host: String, port: Int, responder: Responder) throws {}
+            init(host: String, port: Int, application: Application) throws {}
             func start() throws {}
         }
 

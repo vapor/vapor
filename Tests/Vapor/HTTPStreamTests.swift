@@ -40,9 +40,7 @@ class HTTPStreamTests: XCTestCase {
         let parser = HTTPParser(stream: stream)
 
         do {
-            var request = try parser.parse()
-
-            request.cacheParsedContent()
+            let request = try parser.parse()
 
             //MARK: Verify Request
             XCTAssert(request.method == Request.Method.post, "Incorrect method \(request.method)")
@@ -57,10 +55,10 @@ class HTTPStreamTests: XCTestCase {
 
     func testSerializer() {
         //MARK: Create Response
-        var response = Response(status: .enhanceYourCalm, headers: [
+        let response = Response(status: .enhanceYourCalm, headers: [
             "Test": "123",
             "Content-Type": "text/plain"
-        ], body: { stream in
+        ], async: { stream in
             try stream.send("Hello, world")
         })
         response.cookies["key"] = "val"

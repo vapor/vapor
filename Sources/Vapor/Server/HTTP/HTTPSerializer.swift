@@ -5,7 +5,7 @@ final class HTTPSerializer: StreamSerializer {
     }
 
     func serialize(_ response: Response) throws {
-        var response = response
+        let response = response
 
         var cookies: [String] = []
         for cookie in response.cookies {
@@ -26,18 +26,19 @@ final class HTTPSerializer: StreamSerializer {
             return a.key.string < b.key.string
         }
 
-
-
         headers.forEach { (key, value) in
             serialized.bytes += "\(key.string): \(value)\r\n".data.bytes
         }
 
         serialized.bytes += "\r\n".data.bytes
 
-        var body = response.body
-        let data = try body.becomeBuffer()
-        serialized.bytes += data
-
-        try stream.send(serialized)
+        switch response.body {
+        case .buffer(let data):
+            serialized.bytes += data
+            try stream.send(serialized)
+        case .async(let closure):
+            try stream.send(serialized)
+            try closure(stream)
+        }
     }
 }
