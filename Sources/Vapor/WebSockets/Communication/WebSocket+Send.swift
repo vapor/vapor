@@ -8,55 +8,31 @@
  
  Please familiarize yourself w/ WebSocket protocols before attempting to override built in behavior
  
- send(_ frame: Frame) 
- &&
- public func send(
-    fin: Bool,
-    rsv1: Bool = false,
-    rsv2: Bool = false,
-    rsv3: Bool = false,
-    opCode: Frame.OpCode,
-    isMasked: Bool,
-    payload: Data)
+ send(_ frame: Frame)
  
+ Note that this function will still enforce protocol requirements that are enforced by RFC
  
-
+ It is necessary to expose this functions because extensions may negotiate various usages of extensions
+ etc. that is required to not be overridden
  */
-private let PayloadSplitSize = Int(UInt16.max)
-
-// TODO: Move somewhere
-extension Array {
-    func split(by subSize: Int) -> [[Element]] {
-        return stride(from: 0, to: count, by: subSize).map { startIndex in
-            let next = startIndex.advanced(by: subSize)
-            let end = next <= endIndex ? next : endIndex
-            return Array(self[startIndex ..< end])
-        }
-    }
-}
+private let PayloadSplitSize = Int(64_000)
 
 extension WebSocket {
-    public func send(fin: Bool,
-                     rsv1: Bool = false,
-                     rsv2: Bool = false,
-                     rsv3: Bool = false,
-                     opCode: Frame.OpCode,
-                     isMasked: Bool,
-                     payload: Data) throws {
-        let header = Frame.Header(
-            fin: fin,
-            rsv1: rsv1,
-            rsv2: rsv2,
-            rsv3: rsv3,
-            opCode: opCode,
-            isMasked: isMasked,
-            payloadLength: UInt64(payload.count),
-            maskingKey: .make(isMasked: isMasked)
-        )
-        let frame = Frame(header: header, payload: payload)
-        try send(frame)
+    public func send(_ text: String) throws {
+        let payload = Data(text)
+        try send(opCode: .text, with: payload)
+    }
+
+    public func send(_ binary: Data) throws {
+        let payload = binary
+        try send(opCode: .binary, with: payload)
+    }
+
+    public func send(_ ncf: Frame.OpCode.NonControlFrameExtension, payload: Data) throws {
+        try send(opCode: .nonControlExtension(ncf), with: payload)
     }
 }
+
 
 extension WebSocket {
     public func send(_ frame: Frame) throws {
@@ -65,58 +41,77 @@ extension WebSocket {
         let data = serializer.serialize()
         try stream.send(Data(data))
     }
+}
 
-    // TODO: Not Masking etc. assumes Server to Client, consider strategy to support both
-    public func send(_ text: String) throws {
-        let payload = Data(text)
-        try send(.text, with: payload)
-    }
+extension WebSocket {
+    public func send(rsv1: Bool = false,
+                     rsv2: Bool = false,
+                     rsv3: Bool = false,
+                     opCode: Frame.OpCode,
+                     with payload: Data) throws {
+        let isMasked = mode.maskOutgoingMessages
 
-    public func send(_ binary: Data) throws {
-        let payload = binary
-        try send(.binary, with: payload)
-    }
-
-    public func send(_ ncf: Frame.OpCode.NonControlFrameExtension, payload: Data) throws {
-        try send(.nonControlExtension(ncf), with: payload)
-    }
-
-    // MARK: Private
-
-    private func send(_ opCode: Frame.OpCode, with payload: Data) throws {
         if payload.count < PayloadSplitSize {
-            try send(fin: true,
-                     rsv1: false,
-                     rsv2: false,
-                     rsv3: false,
-                     opCode: opCode,
-                     isMasked: mode.maskOutgoingMessages,
-                     payload: payload)
+            let header = Frame.Header(
+                fin: true,
+                rsv1: rsv1,
+                rsv2: rsv2,
+                rsv3: rsv3,
+                opCode: opCode,
+                isMasked: isMasked,
+                payloadLength: UInt64(payload.count),
+                maskingKey: .make(isMasked: isMasked)
+            )
+            let frame = Frame(header: header, payload: payload)
+            try send(frame)
         } else {
             let chunks = payload.bytes.split(by: PayloadSplitSize)
             let first = 0
             let last = chunks.count - 1
-            let isMasked = mode.maskOutgoingMessages
             try chunks.enumerated().forEach { idx, bytes in
+                print("Split message \(idx) : \(bytes.count)")
                 let payload = Data(bytes)
 
+                let fin: Bool
+                let op: Frame.OpCode
                 if idx == first {
-                    try send(fin: false,
-                             opCode: opCode,
-                             isMasked: isMasked,
-                             payload: payload)
+                    // head
+                    fin = false
+                    op = opCode
                 } else if idx == last {
-                    try send(fin: true,
-                             opCode: .continuation,
-                             isMasked: isMasked,
-                             payload: payload)
+                    // tail
+                    fin = true
+                    op = .continuation
                 } else {
-                    try send(fin: false,
-                             opCode: .continuation,
-                             isMasked: isMasked,
-                             payload: payload)
+                    // body
+                    fin = false
+                    op = .continuation
                 }
+
+                let header = Frame.Header(
+                    fin: fin,
+                    rsv1: rsv1,
+                    rsv2: rsv2,
+                    rsv3: rsv3,
+                    opCode: op,
+                    isMasked: isMasked,
+                    payloadLength: UInt64(payload.count),
+                    maskingKey: .make(isMasked: isMasked)
+                )
+                let frame = Frame(header: header, payload: payload)
+                try send(frame)
             }
+        }
+    }
+}
+
+// TODO: Move somewhere
+extension Array {
+    func split(by subSize: Int) -> [[Element]] {
+        return stride(from: 0, to: count, by: subSize).map { startIndex in
+            let next = startIndex.advanced(by: subSize)
+            let end = next <= endIndex ? next : endIndex
+            return Array(self[startIndex ..< end])
         }
     }
 }
