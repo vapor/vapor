@@ -1,6 +1,5 @@
 import MediaType
 
-// TODO: Tanner, seems export is necessary
 @_exported import PathIndexable
 
 public protocol RequestContentSubscript {}
