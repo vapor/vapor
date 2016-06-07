@@ -1,15 +1,21 @@
 class JSONMiddleware: Middleware {
     func respond(to request: Request, chainingTo next: Responder) throws -> Response {
-        var request = request
-        if request.headers["content-type"]?.range(of: "application/json") != nil {
+        
+        // Parse Request JSON
+        if 
+            case .buffer(let data) = request.body,
+            let contentType = request.contentType
+            where contentType.contains("application/json") 
+        {
+            var request = request
             do {
-                let data = try request.body.becomeBuffer()
                 request.json = try JSON(data)
             } catch {
                 Log.warning("Could not parse JSON: \(error)")
             }
         }
 
+        // Serialize Response JSON
         var response = try next.respond(to: request)
 
         if let json = response.json {

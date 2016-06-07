@@ -1,15 +1,13 @@
 class FormURLEncodedMiddleware: Middleware {
     func respond(to request: Request, chainingTo next: Responder) throws -> Response {
-        var request = request
-
-        if request.headers["content-type"]?.range(of: "application/x-www-form-urlencoded") != nil {
-            do {
-                let data = try request.body.becomeBuffer()
-                request.formURLEncoded = FormURLEncoded.parse(data)
-            } catch {
-                Log.warning("Could not parse Form-URLEncoded: \(error)")
-            }
-
+        
+        if 
+            case .buffer(let data) = request.body,
+            let contentType = request.contentType
+            where contentType.contains("application/x-www-form-urlencoded") 
+        {
+            var request = request
+            request.formURLEncoded = FormURLEncoded.parse(data)
         }
 
         return try next.respond(to: request)

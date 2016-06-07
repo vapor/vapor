@@ -2,6 +2,11 @@ extension Response {
     /**
         Send chunked data with the 
         `Transfer-Encoding: Chunked` header.
+     
+        Chunked uses the Transfer-Encoding HTTP header in
+        place of the Content-Length header.
+     
+        https://en.wikipedia.org/wiki/Chunked_transfer_encoding
     */
     public init(
         status: Status = .ok,

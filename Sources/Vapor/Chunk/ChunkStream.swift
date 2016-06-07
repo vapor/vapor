@@ -1,3 +1,15 @@
+/**
+    Chunked transfer encoding is a data transfer mechanism in 
+    version 1.1 of the Hypertext Transfer Protocol (HTTP) in which 
+    data is sent in a series of "chunks". 
+ 
+    the sender does not need to know
+    the length of the content before it starts transmitting a response 
+    to the receiver. Senders can begin transmitting dynamically-generated 
+    content before knowing the total size of that content.
+ 
+    https://en.wikipedia.org/wiki/Chunked_transfer_encoding
+*/
 public class ChunkStream: SendingStream {
     public let raw: SendingStream
     public var closed: Bool

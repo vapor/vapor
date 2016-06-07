@@ -1,10 +1,13 @@
 class MultipartMiddleware: Middleware {
     func respond(to request: Request, chainingTo next: Responder) throws -> Response {
-        var request = request
-
-        if let contentType = request.headers["content-type"] where contentType.range(of: "multipart/form-data") != nil {
+        
+        if 
+            case .buffer(let data) = request.body,
+            let contentType = request.contentType
+            where contentType.contains("multipart/form-data") 
+        {
+            var request = request
             do {
-                let data = try request.body.becomeBuffer()
                 let boundary = try Multipart.parseBoundary(contentType: contentType)
                 request.multipart = Multipart.parse(data, boundary: boundary)
             } catch {

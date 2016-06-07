@@ -17,6 +17,10 @@ extension Request {
         self.init(method: method, uri: URI(path: path, host: host), headers: [:], body: body)
     }
 
+    public var contentType: String? {
+        return headers["Content-Type"]
+    }
+
     public struct Handler: Responder {
         public typealias Closure = (Request) throws -> Response
 

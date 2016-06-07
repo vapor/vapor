@@ -1,6 +1,6 @@
 extension Cookies {
-	func serialize() -> Data? {
-		let cookies = self.map { cookie in
+    func serialize() -> Data? {
+        let cookies = self.map { cookie in
             return "\(cookie.name)=\(cookie.value)"
         }
 
@@ -9,5 +9,5 @@ extension Cookies {
         }
 
         return nil
-	}
+    }
 }
