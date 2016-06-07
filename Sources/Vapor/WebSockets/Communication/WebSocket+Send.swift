@@ -3,6 +3,9 @@
  frameworks have the discretion to break up large packets into fragments
  to make usage easier.
  
+ Many implementations tested against crash on values > 64_000. Test extensively before changing
+ this value
+ 
  The following functions DO NOT parse additional data into chunks. 
  Use these for customized behavior.
  
@@ -14,6 +17,7 @@
  
  It is necessary to expose this functions because extensions may negotiate various usages of extensions
  etc. that is required to not be overridden
+
  */
 private let PayloadSplitSize = Int(64_000)
 
@@ -101,17 +105,6 @@ extension WebSocket {
                 let frame = Frame(header: header, payload: payload)
                 try send(frame)
             }
-        }
-    }
-}
-
-// TODO: Move somewhere
-extension Array {
-    func split(by subSize: Int) -> [[Element]] {
-        return stride(from: 0, to: count, by: subSize).map { startIndex in
-            let next = startIndex.advanced(by: subSize)
-            let end = next <= endIndex ? next : endIndex
-            return Array(self[startIndex ..< end])
         }
     }
 }

@@ -3,13 +3,19 @@
  */
 extension WebSocket {
     public func ping(statusCode: UInt16? = nil, reason: String? = nil) throws {
-        // TODO:
         // Reason can _only_ exist if statusCode also exists
         // statusCode may exist _without_ a reason
-        if statusCode != nil {
-
+        if statusCode == nil && reason != nil {
+            throw "invalid ping format"
         }
-        let payload: Data = []
+
+        var payload: [Byte] = []
+        if let status = statusCode {
+            payload += status.bytes()
+        }
+        if let reason = reason {
+            payload += reason.toBytes()
+        }
 
 
         let header = Frame.Header(
@@ -22,7 +28,7 @@ extension WebSocket {
             payloadLength: UInt64(payload.count),
             maskingKey: .none
         )
-        let msg = Frame(header: header, payload: payload)
+        let msg = Frame(header: header, payload: Data(payload))
         try send(msg)
     }
 

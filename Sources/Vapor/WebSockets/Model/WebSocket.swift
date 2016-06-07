@@ -1,9 +1,6 @@
 // TODO:
-// Fragment Outgoing Messages
-// Close status codes and reason parsing
 // More thorough testing
 // Client/Server Dual Support
-// Masking support [blocks Client/Server support]
 //
 
 import C7

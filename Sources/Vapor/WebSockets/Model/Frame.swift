@@ -27,7 +27,6 @@ extension WebSocket {
         public let header: Header
         public let payload: Data
 
-        // TODO: Should we cypher here?
         public init(header: Header, payload: Data) {
             self.header = header
             self.payload = payload
@@ -229,8 +228,6 @@ extension WebSocket.Frame.OpCode {
  */
 extension WebSocket.Frame.OpCode {
     // 4 bits
-    // TODO: Is it worth building UInt4?
-    //
     func serialize() -> Byte {
         switch self {
         case .continuation:
@@ -298,8 +295,6 @@ extension WebSocket.Frame.Header {
     }
 }
 
-// TODO: Rename => Frame? matches RFC better
-// Frame usually refers to Header, maybe Header == Frame
 extension WebSocket.Frame {
     public var isControlFrame: Bool {
         return header.isControlFrame
