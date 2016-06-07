@@ -1,8 +1,8 @@
 import Foundation
 
-extension Process {
-    static func makeCLIConfig() -> JSONDirectory {
-        let configArgs = NSProcessInfo.processInfo().arguments.filter { $0.hasPrefix("--") }
+extension Config {
+    static func makeCLIConfig(arguments: [String]) -> JSONDirectory {
+        let configArgs = arguments.filter { $0.hasPrefix("--") }
 
         // [FileName: Json]
         var directory: [String: JSON] = [:]
