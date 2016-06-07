@@ -105,7 +105,7 @@ class ConsoleTests: XCTestCase {
             }
         }
 
-        let app = Application()
+        let app = Application(arguments: ["/path/to/exec"])
         let serve = TestServe(app: app)
         app.commands = [serve]
 
