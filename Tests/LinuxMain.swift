@@ -27,7 +27,7 @@ XCTMain([
     testCase(ValidationCountTests.allTests),
     testCase(ValidationTests.allTests),
     testCase(ValidationUniqueTests.allTests),
-    testCase(WebSocketDeserializingTests.allTests),
+    testCase(WebSocketSerializationTests.allTests),
     testCase(WebSocketKeyTests.allTests),
 ])
 

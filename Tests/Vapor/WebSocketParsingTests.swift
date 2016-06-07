@@ -50,8 +50,8 @@ import XCTest
 
  *  0x82 0x7F 0x0000000000010000 [65536 bytes of binary data]
  */
-class WebSocketDeserializingTests: XCTestCase {
-    static var allTests: [(String, (WebSocketDeserializingTests) -> () throws -> Void)] {
+class WebSocketSerializationTests: XCTestCase {
+    static var allTests: [(String, (WebSocketSerializationTests) -> () throws -> Void)] {
         return [
             ("testSingleFrameUnmaskedTextMessage", testSingleFrameUnmaskedTextMessage),
             ("testSingleFrameMaskedTextMessage", testSingleFrameMaskedTextMessage),
