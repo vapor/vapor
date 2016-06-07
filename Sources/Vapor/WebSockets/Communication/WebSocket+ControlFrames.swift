@@ -2,7 +2,7 @@
      'close' included in Model file to ensure safety while interacting with sensitive variables
  */
 extension WebSocket {
-    public func ping(data: Data = Data()) throws {
+    public func ping(_ payload: Data = Data()) throws {
         let header = Frame.Header(
             fin: true,
             rsv1: false,
