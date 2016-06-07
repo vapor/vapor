@@ -79,6 +79,9 @@ class WebSocketDeserializingTests: XCTestCase {
         XCTAssert(header.isMasked == false)
         XCTAssert(header.opCode == .text)
         XCTAssert(header.payloadLength == 5)
+
+        // Test return to bytes
+        assertSerialized(msg, equals: input)
     }
 
     func testSingleFrameMaskedTextMessage() throws {
@@ -95,6 +98,9 @@ class WebSocketDeserializingTests: XCTestCase {
         XCTAssert(header.isMasked == true)
         XCTAssert(header.opCode == .text)
         XCTAssert(header.payloadLength == 5)
+
+        // Test return to bytes
+        assertSerialized(msg, equals: input)
     }
 
     /*
@@ -122,6 +128,9 @@ class WebSocketDeserializingTests: XCTestCase {
         XCTAssert(header.isMasked == false)
         XCTAssert(header.opCode == .text)
         XCTAssert(header.payloadLength == 3)
+
+        // Test return to bytes
+        assertSerialized(msg, equals: input)
     }
 
     func testFragmentedUnmaskedTextMessageTwo() throws {
@@ -142,6 +151,9 @@ class WebSocketDeserializingTests: XCTestCase {
         XCTAssert(header.isMasked == false)
         XCTAssert(header.opCode == .continuation)
         XCTAssert(header.payloadLength == 2)
+
+        // Test return to bytes
+        assertSerialized(msg, equals: input)
     }
 
     /*
@@ -170,6 +182,9 @@ class WebSocketDeserializingTests: XCTestCase {
         XCTAssert(header.isMasked == false)
         XCTAssert(header.opCode == .ping)
         XCTAssert(header.payloadLength == 5)
+
+        // Test return to bytes
+        assertSerialized(msg, equals: input)
     }
 
     func testMaskedPongResponse() throws {
@@ -192,6 +207,9 @@ class WebSocketDeserializingTests: XCTestCase {
         XCTAssert(header.isMasked == true)
         XCTAssert(header.opCode == .pong)
         XCTAssert(header.payloadLength == 5)
+
+        // Test return to bytes
+        assertSerialized(msg, equals: input)
     }
 
     /*
@@ -226,6 +244,9 @@ class WebSocketDeserializingTests: XCTestCase {
         XCTAssert(header.isMasked == false)
         XCTAssert(header.opCode == .binary)
         XCTAssert(header.payloadLength == 256)
+
+        // Test return to bytes
+        assertSerialized(msg, equals: input)
     }
 
     /*
@@ -262,6 +283,15 @@ class WebSocketDeserializingTests: XCTestCase {
         XCTAssert(header.isMasked == false)
         XCTAssert(header.opCode == .binary)
         XCTAssert(header.payloadLength == 65536)
+
+        // Test return to bytes
+        assertSerialized(msg, equals: input)
+    }
+
+    private func assertSerialized(_ frame: WebSocket.Frame, equals bytes: [Byte]) {
+        let serializer = FrameSerializer(frame)
+        let serialized = serializer.serialize()
+        XCTAssert(serialized == bytes)
     }
 }
 
