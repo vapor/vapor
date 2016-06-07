@@ -7,15 +7,15 @@ import libc
     - parameter message: String to log
 */
 public class ConsoleLogger: LogDriver {
-	let console: Console
+    let console: Console
 
-	/**
-		Creates an instance of `ConsoleLogger`
-		with the desired `Console`.
-	*/
-	public init(console: Console) {
-		self.console = console
-	}
+    /**
+        Creates an instance of `ConsoleLogger`
+        with the desired `Console`.
+    */
+    public init(console: Console) {
+        self.console = console
+    }
 
     /**
         The basic log function of the console.

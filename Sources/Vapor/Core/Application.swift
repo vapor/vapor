@@ -216,29 +216,26 @@ extension Application {
         do {
             try execute()
             exit(0)
-        } catch {
-            if let error = error as? ExecutionError {
-                switch error {
-                case .insufficientArguments:
-                    console.output("Insufficient arguments.", style: .error)
-                case .noCommandFound:
-                    console.output("Command not recognized. Run 'help' for a list of available commands.", style: .error)
-                }
+        } catch let error as ExecutionError {
+            switch error {
+            case .insufficientArguments:
+                console.output("Insufficient arguments.", style: .error)
+            case .noCommandFound:
+                console.output("Command not recognized. Run 'help' for a list of available commands.", style: .error)
             }
-
-            if let error = error as? CommandError {
-                switch error {
-                case .insufficientArguments:
-                    console.output("Insufficient arguments.", style: .error)
-                case .invalidArgument(let name):
-                    console.output("Invalid argument name '\(name)'.")
-                case .custom(let error):
-                    console.output(error)
-                }
+        } catch let error as CommandError {
+            switch error {
+            case .insufficientArguments:
+                console.output("Insufficient arguments.", style: .error)
+            case .invalidArgument(let name):
+                console.output("Invalid argument name '\(name)'.", style: .error)
+            case .custom(let error):
+                console.output(error)
             }
-
-            exit(1)
+        } catch  {
+            console.output("Error: \(error)", style: .error)
         }
+        exit(1)
     }
 
     func execute() throws {
