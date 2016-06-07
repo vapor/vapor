@@ -13,6 +13,7 @@ class ConsoleTests: XCTestCase {
         let app = Application()
         let (command, arguments) = app.extract(fromInput: args)
         XCTAssert(command == Serve.self)
+        print(arguments)
         XCTAssert(arguments.isEmpty)
     }
 }
