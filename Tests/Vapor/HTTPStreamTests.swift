@@ -46,7 +46,8 @@ class HTTPStreamTests: XCTestCase {
             XCTAssert(request.method == Request.Method.post, "Incorrect method \(request.method)")
             XCTAssert(request.uri.path == "/json", "Incorrect path \(request.uri.path)")
             XCTAssert(request.version.major == 1 && request.version.minor == 1, "Incorrect version")
-            XCTAssert(request.cookies["1"] == "1" && request.cookies["2"] == "2", "Cookies not parsed")
+            XCTAssert(request.cookies["1"] == "1", "Cookie 1 not parsed")
+            XCTAssert(request.cookies["2"] == "2", "Cookie 2 not parsed")
         } catch {
             XCTFail("Parsing failed: \(error)")
         }
@@ -72,7 +73,7 @@ class HTTPStreamTests: XCTestCase {
 
         let data = try! stream.receive(upTo: 2048, timingOut: 0)
 
-        let expected = "HTTP/1.1 420 Enhance Your Calm\r\nContent-Type: text/plain\r\nSet-Cookie: key=val\r\nTest: 123\r\nTransfer-Encoding: chunked\r\n\r\nHello, world"
+        let expected = "HTTP/1.1 420 Enhance Your Calm\r\nContent-Type: text/plain\r\nTest: 123\r\nTransfer-Encoding: chunked\r\n\r\nHello, world"
         XCTAssert(data == expected.data, "Serialization did not match")
     }
 }

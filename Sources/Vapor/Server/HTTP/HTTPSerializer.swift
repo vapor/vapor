@@ -11,17 +11,6 @@ final class HTTPSerializer: StreamSerializer {
     func serialize(_ response: Response) throws {
         var response = response
 
-        // TODO: Better cookie parsing
-
-        // Cookies
-        var cookies: [String] = []
-        for cookie in response.cookies {
-            cookies.append("\(cookie.name)=\(cookie.value)")
-        }
-        if cookies.count >= 1 {
-            response.headers["Set-Cookie"] = cookies.joined(separator: ";")
-        }
-
         // TODO: Move headers to serializers to allow override
 
         // Body
