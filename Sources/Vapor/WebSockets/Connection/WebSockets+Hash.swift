@@ -26,7 +26,7 @@ extension WebSocket {
          then base64-encoded (see Section 4 of [RFC4648]), to give the value
          "s3pPLMBiTxaQ9kYGzzhZRbK+xOo=".  This value would then be echoed in
          the |Sec-WebSocket-Accept| header field.
-     */
+    */
     public static func exchange(requestKey: String) -> String {
         let combination = requestKey.trim() + hashKey
         let shaBytes = SHA1.calculate(combination)
