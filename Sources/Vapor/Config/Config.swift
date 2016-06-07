@@ -1,3 +1,4 @@
+import Foundation
 import PathIndexable
 
 private struct PrioritizedDirectoryQueue {
@@ -45,7 +46,12 @@ public class Config {
         starting configurations.
         The application is required to detect environment.
     */
-    public init(seed: JSON = [:], workingDirectory: String = "./", environment: Environment? = nil, arguments: [String] = []) {
+    public init(
+        seed: JSON = [:],
+        workingDirectory: String = "./",
+        environment: Environment? = nil,
+        arguments: [String] = NSProcessInfo.processInfo().arguments
+    ) {
         let configDirectory = workingDirectory.finish("/") + "Config/"
         self.configDirectory = configDirectory
         self.environment = environment ?? Environment.loader(arguments: arguments)
