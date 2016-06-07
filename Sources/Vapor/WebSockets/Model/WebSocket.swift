@@ -1,3 +1,11 @@
+// TODO:
+// Fragment Outgoing Messages
+// Close status codes and reason parsing
+// More thorough testing
+// Client/Server Dual Support
+// Masking support [blocks Client/Server support]
+//
+
 import C7
 
 public final class WebSocket {
@@ -36,7 +44,7 @@ public final class WebSocket {
 
     // MARK: Close: (Control Frame)
 
-    public var onClose: EventHandler<(ws: WebSocket, code: UInt16, reason: String, clean: Bool)>? = nil
+    public var onClose: EventHandler<(ws: WebSocket, code: UInt16?, reason: String?, clean: Bool)>? = nil
 
     // MARK: Attributes
 
@@ -86,7 +94,7 @@ extension WebSocket {
             // not a part of while logic, we need to separately acknowledge
             // that TCP closed w/o handshake
             if stream.closed {
-                try completeCloseHandshake(cleanly: false)
+                try completeCloseHandshake(statusCode: nil, reason: nil, cleanly: false)
                 break
             }
 
@@ -95,7 +103,7 @@ extension WebSocket {
                 try received(frame)
             } catch {
                 Log.error("WebSocket Failed w/ error: \(error)")
-                try completeCloseHandshake(cleanly: false)
+                try completeCloseHandshake(statusCode: nil, reason: nil, cleanly: false)
             }
         }
     }
@@ -144,9 +152,6 @@ extension WebSocket {
 
     private func handleClose(payload: Data) throws {
         /*
-
-         // TODO:
-
          If there is a body, the first two bytes of
          the body MUST be a 2-byte unsigned integer (in network byte order)
          representing a status code with value /code/ defined in Section 7.4.
@@ -157,15 +162,23 @@ extension WebSocket {
          script that opened the connection.  As the data is not guaranteed to
          be human readable, clients MUST NOT show it to end users.
          */
+        var statusCode: UInt16? = nil
+        var reason: String? = nil
+        if !payload.isEmpty {
+            var iterator = payload.makeIterator()
+            let statusCodeBytes = try iterator.chunk(length: 2)
+            statusCode = try UInt16(statusCodeBytes)
+            reason = try Data(iterator).toString()
+        }
 
         switch  state {
         case .open:
             // opponent requested close, we're responding
             try respondToClose(echo: payload)
-            try completeCloseHandshake(cleanly: true)
+            try completeCloseHandshake(statusCode: statusCode, reason: reason, cleanly: true)
         case .closing:
             // we requested close, opponent responded
-            try completeCloseHandshake(cleanly: true)
+            try completeCloseHandshake(statusCode: statusCode, reason: reason, cleanly: true)
         case .closed:
             Log.info("Received close frame, already closed.")
         }
@@ -222,7 +235,7 @@ extension WebSocket {
         try send(msg)
     }
 
-    private func completeCloseHandshake(statusCode: UInt16 = 0, reason: String = "Not yet implemented", cleanly: Bool) throws {
+    private func completeCloseHandshake(statusCode: UInt16?, reason: String?, cleanly: Bool) throws {
         state = .closed
         try onClose?((self, statusCode, reason, cleanly))
     }

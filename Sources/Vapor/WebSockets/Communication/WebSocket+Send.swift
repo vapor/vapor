@@ -1,7 +1,20 @@
+private let PayloadMaxSize = UInt32.max
+
 extension WebSocket {
     public func send(_ msg: Frame) throws {
         // TODO: Throw if control frame greater than 125 byte PAYLOAD.
         try stream.send(msg)
+    }
+
+    public func send(rsv1: Bool = false,
+                     rsv2: Bool = false,
+                     rsv3: Bool = false,
+                     opCode: Frame.OpCode,
+                     isMasked: Bool,
+                     payload: Data) throws {
+
+
+        let maskingKey: Frame.MaskingKey = .make(isMasked: isMasked)
     }
 
     // TODO: Not Masking etc. assumes Server to Client, consider strategy to support both

@@ -1,3 +1,5 @@
+import libc
+
 // MARK:
 
 extension WebSocket {
@@ -353,6 +355,20 @@ extension WebSocket.Frame {
                     return original ^ key
                 }
             }
+        }
+
+        static func make(isMasked: Bool) -> MaskingKey {
+            guard isMasked else { return .none }
+
+            #if os(Linux)
+                let key = UInt32(libc.random() % Int(UInt32.max))
+            #else
+                let key = UInt32(arc4random_uniform(UInt32.max))
+            #endif
+            assert(key.dynamicType == UInt32.self)
+
+            let bytes = key.bytes()
+            return .key(zero: bytes[0], one: bytes[1], two: bytes[2], three: bytes[3])
         }
     }
 }
