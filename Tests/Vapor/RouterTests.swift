@@ -99,8 +99,6 @@ class RouterTests: XCTestCase {
         let route = Route(method: .get, path: "test/:string") { request in
 
             let testParameter = request.parameters["string"]
-            print(request.parameters)
-            print("hi")
 
             XCTAssert(testParameter == decodedString, "URL parameter was not decoded properly")
 
