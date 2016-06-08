@@ -77,7 +77,7 @@ extension HTTPParser {
             let path = parts.first ?? ""
             let queryString = parts.last ?? ""
 
-            let data = Request.parseFormURLEncoded(queryString.data)
+            let data = FormURLEncoded.parse(queryString.data)
 
             if case .dictionary(let dict) = data {
                 for (key, val) in dict {

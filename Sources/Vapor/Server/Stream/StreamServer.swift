@@ -56,12 +56,18 @@ final class StreamServer<
                 guard response.isUpgradeResponse else { continue }
                 try response.onUpgrade?(stream)
             } catch let e as SocksCore.Error where e.isClosedByPeer {
-                break // jumpto close
+                // stream was closed by peer, abort
+                break
+            } catch let e as SocksCore.Error where e.isBrokenPipe {
+                // broken pipe, abort
+                break
             } catch let e as HTTPParser.Error where e == .streamEmpty {
-                break // jumpto close
+                // the stream we got was empty, abort
+                break
             } catch {
+                // unknown error, abort
                 Log.error("HTTP error: \(error)")
-                break //break to close stream on all errors
+                break
             }
         } while keepAlive && !stream.closed
 
@@ -76,9 +82,12 @@ final class StreamServer<
 
 extension SocksCore.Error {
     var isClosedByPeer: Bool {
-        guard case .ReadFailed = type else { return false }
+        guard case .readFailed = type else { return false }
         let message = String(validatingUTF8: strerror(errno))
         return message == "Connection reset by peer"
+    }
+    var isBrokenPipe: Bool {
+        return self.number == 32
     }
 }
 
