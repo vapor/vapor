@@ -1,18 +1,4 @@
-/**
-     This protocol defines a type of data received.
-     these variables are used to access underlying
-     values
-*/
-public protocol Polymorphic {
-    var isNull: Bool { get }
-    var bool: Bool? { get }
-    var float: Float? { get }
-    var double: Double? { get }
-    var int: Int? { get }
-    var string: String? { get }
-    var array: [Polymorphic]? { get }
-    var object: [String : Polymorphic]? { get }
-}
+@_exported import Polymorphic
 
 extension Extractable where Wrapped == Polymorphic {
     public var isNull: Bool {
