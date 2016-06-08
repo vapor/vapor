@@ -73,7 +73,6 @@ extension WebSocket {
             let first = 0
             let last = chunks.count - 1
             try chunks.enumerated().forEach { idx, bytes in
-                print("Split message \(idx) : \(bytes.count)")
                 let payload = Data(bytes)
 
                 let fin: Bool

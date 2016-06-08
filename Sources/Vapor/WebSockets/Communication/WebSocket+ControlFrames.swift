@@ -22,7 +22,7 @@ extension WebSocket {
 
          Applications may opt to send unsolicited .pong messages as a sort of keep awake heart beat
      */
-    public func pong(_ payload: Data) throws {
+    public func pong(_ payload: Data = Data()) throws {
         let header = Frame.Header(
             fin: true,
             rsv1: false,

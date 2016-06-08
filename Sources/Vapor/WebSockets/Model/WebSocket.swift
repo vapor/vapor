@@ -93,7 +93,9 @@ public final class WebSocket {
 */
 extension WebSocket {
     /**
-     Tells the WebSocket to begin accepting frames
+        Tells the WebSocket to begin accepting frames
+     
+        If you're using built in Vapor syntax you should NOT call this manually.
      */
     public func listen() throws {
         let buffer = StreamBuffer(stream)
