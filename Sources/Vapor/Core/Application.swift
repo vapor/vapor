@@ -3,7 +3,7 @@ import MediaType
 import Foundation
 import Socks
 
-public let VERSION = "0.10"
+public let VERSION = "0.11"
 
 public class Application {
     /**
@@ -165,6 +165,11 @@ public class Application {
         self.session = session
 
         self.globalMiddleware = [
+            CookiesMiddleware(),
+            JSONMiddleware(),
+            FormURLEncodedMiddleware(),
+            MultipartMiddleware(),
+            ContentMiddleware(),
             AbortMiddleware(),
             ValidationMiddleware(),
             SessionMiddleware(session: session)
@@ -365,8 +370,6 @@ extension Application: Responder {
         var responder: Responder
         var request = request
 
-        request.cacheParsedContent()
-
         // Check in routes
         if let (parameters, routerHandler) = router.route(request) {
             request.parameters = parameters
@@ -381,7 +384,7 @@ extension Application: Responder {
         }
 
         // Loop through middlewares in order
-        for middleware in self.globalMiddleware {
+        for middleware in self.globalMiddleware.reversed() {
             responder = middleware.chain(to: responder)
         }
 

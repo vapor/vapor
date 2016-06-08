@@ -8,7 +8,6 @@
 
 import XCTest
 @testable import Vapor
-import S4
 
 private class TestController: Controller {
 
@@ -188,7 +187,7 @@ class ControllerTests: XCTestCase {
             let _ = try handler.respond(to: mutable)
         }
 
-        let arrayRequests = [Method.get, Method.post, Method.delete].map {
+        let arrayRequests: [Request] = [.get, .post, .delete].map {
             return Request(method: $0, path: "/test", host: "0.0.0.0", body: Data())
         }
 
@@ -201,7 +200,7 @@ class ControllerTests: XCTestCase {
         XCTAssert(testInstance.lock.modify == 0)
         XCTAssert(testInstance.lock.destroy == 0)
 
-        let individualRequests = [Method.get, Method.post, Method.put, Method.patch, Method.delete].map {
+        let individualRequests: [Request] = [.get, .post, .put, .patch, .delete].map {
             return Request(method: $0, path: "test/123", host: "0.0.0.0", body: Data())
         }
         try individualRequests.forEach(handleRequest)
