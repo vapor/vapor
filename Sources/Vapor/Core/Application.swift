@@ -3,7 +3,7 @@ import MediaType
 import Foundation
 import Socks
 
-public let VERSION = "0.10"
+public let VERSION = "0.11"
 
 public class Application {
     /**
