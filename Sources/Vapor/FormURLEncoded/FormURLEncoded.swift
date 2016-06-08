@@ -17,8 +17,8 @@ extension String {
     }
 }
 
-extension Request {
-    static func parseFormURLEncoded(_ data: Data) -> StructuredData {
+class FormURLEncoded {
+    static func parse(_ data: Data) -> StructuredData {
         var urlEncoded: [String: StructuredData] = [:]
 
         let ampersand = "&".data.bytes[0]
