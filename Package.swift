@@ -15,6 +15,8 @@ let package = Package(
         //SHA2 + HMAC hashing. Used by the core to create session identifiers.
         .Package(url: "https://github.com/CryptoKitten/HMAC.git", majorVersion: 0, minor: 7),
         .Package(url: "https://github.com/CryptoKitten/SHA2.git", majorVersion: 0, minor: 7),
+        //Websockets
+        .Package(url: "https://github.com/CryptoKitten/SHA1.git", majorVersion: 0, minor: 7),
 
         //Determines Content-Type for file extensions
         .Package(url: "https://github.com/Zewo/MediaType.git", majorVersion: 0, minor: 7),
@@ -29,7 +31,7 @@ let package = Package(
         .Package(url: "https://github.com/ketzusaka/Strand.git", majorVersion: 1, minor: 4),
 
         //Sockets, used by the built in HTTP server
-        .Package(url: "https://github.com/czechboy0/Socks.git", majorVersion: 0, minor: 4)
+        .Package(url: "https://github.com/czechboy0/Socks.git", majorVersion: 0, minor: 5)
     ],
     exclude: [
         "XcodeProject",

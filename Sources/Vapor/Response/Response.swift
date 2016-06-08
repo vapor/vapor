@@ -68,3 +68,16 @@ extension Response {
         )
     }
 }
+
+extension Response {
+    public typealias OnUpgrade = ((Stream) throws -> Void)
+
+    public var onUpgrade: OnUpgrade? {
+        get {
+            return storage["on-upgrade"] as? OnUpgrade
+        }
+        set {
+            storage["on-upgrade"] = newValue
+        }
+    }
+}

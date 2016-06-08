@@ -11,7 +11,7 @@ final class HTTPParser: StreamParser {
     let buffer: StreamBuffer
 
     init(stream: Stream) {
-        self.buffer = StreamBuffer(stream)
+        self.buffer = StreamBuffer(stream, buffer: 1024)
     }
 
     func nextLine() throws -> String {
@@ -28,7 +28,7 @@ final class HTTPParser: StreamParser {
         while let byte = try buffer.next() where byte != HTTPParser.newLine {
             append(byte: byte)
         }
-        
+
         return line
     }
 
@@ -76,19 +76,5 @@ final class HTTPParser: StreamParser {
             headers: Request.Headers(headers),
             body: .buffer(body)
         )
-    }
-}
-
-
-extension Data {
-    var nextLine: String? {
-        var bytes: [Byte] = []
-
-        var it = makeIterator()
-        while let byte = it.next() where byte != HTTPParser.newLine {
-            bytes.append(byte)
-        }
-
-        return String(bytes)
     }
 }
