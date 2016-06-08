@@ -163,95 +163,66 @@ public struct ALT_URI {
     public let query: String?
     public let fragment: String?
 }
+//public enum Delimitter: Character {
+//    case colon = ":"
+//    case forwardSlash = "/"
+//    case questionMark = "?"
+//    case hashtag = "#"
+//    case leftSquareBracket = "["
+//    case rightSquareBracket = "]"
+//    case atSign = "@"
+//}
+//
+//public enum SubDelimitter: Character {
+//    case exclamationPoint = "!"
+//    case moneySign = "$"
+//    //        case
+//}
 public final class ALT_URIParser {
-    // TODO: Take Stream instead of streambuffer so can be used externally?
-    private var lastByte: Byte = Byte.max // Optional? or 0, or as is
-
     private var localBuffer: [Byte] = []
-    private var data: IndexingIterator<[Byte]>
+    private var buffer: IndexingIterator<[Byte]>
 
-    private struct StateManagement {
-        private enum CurrentSegment {
-            case schema
 
-        }
+    public convenience init(data: Data) {
+        self.init(bytes: data.bytes)
     }
 
-    public enum Delimitter: Character {
-        case colon = ":"
-        case forwardSlash = "/"
-        case questionMark = "?"
-        case hashtag = "#"
-        case leftSquareBracket = "["
-        case rightSquareBracket = "]"
-        case atSign = "@"
+    public init(bytes: [Byte]) {
+        self.buffer = bytes.makeIterator()
     }
 
-    public enum SubDelimitter: Character {
-        case exclamationPoint = "!"
-        case moneySign = "$"
-//        case
+    public func parse() throws {
+        let (scheme, authority, path, query, fragment) = try parse()
+
     }
 
-    public init(relativeScheme: String? = nil, _ data: Data) {
-        if relativeScheme != nil {
-            fatalError("not yet supported")
-        }
-        self.data = data.makeIterator()
-
-        /* 
-         Don't KEEP
-         enum state
-         { s_dead = 1 /* important that this is > 0 */
-         , s_req_spaces_before_url
-         , s_req_schema
-         , s_req_schema_slash
-         , s_req_schema_slash_slash
-         , s_req_server_start
-         , s_req_server
-         , s_req_server_with_at
-         , s_req_path
-         , s_req_query_string_start
-         , s_req_query_string
-         , s_req_fragment_start
-         , s_req_fragment
-         };
-         */
-//        self.buffer = StreamBuffer(stream, buffer: 1024)
-    }
-
-//    private func parseToFirstDelimitter() -> (segment: [Byte], delimitter: Byte) {
-//        while let
-//    }
-
-    public func parse() throws -> URI {
+    // TODO: Validate that scheme is _not_ empty?
+    private func parse() throws -> (scheme: [Byte], authority: [Byte]?, path: [Byte], query: [Byte]?, fragment: [Byte]?) {
         /*
          The scheme and path components are required, though the path may be
          empty (no characters).  When authority is present, the path must
          either be empty or begin with a slash ("/")
          */
         let scheme = try parseScheme() // if we have relative scheme, we don't need to
+        // hier part: start
         let authority = try parseAuthority()
-        let path = try parsePath()
+        let path = try parsePath(uriContainsAuthority: authority != nil)
+        // hier part: end
+        let query = try parseQuery()
+        let fragment = try parseFragment()
 
         /*
-         hier-part   = "//" authority path-abempty
-         / path-absolute
-         / path-rootless
-         / path-empty
+         The following are two example URIs and their component parts:
+
+         foo://example.com:8042/over/there?name=ferret#nose
+         \_/   \______________/\_________/ \_________/ \__/
+         |           |            |            |        |
+         scheme     authority       path        query   fragment
+         |   _____________________|__
+         / \ /                        \
+         urn:example:animal:ferret:nose
          */
-        // hier part at minimum path components is MANDATORY
-        // The scheme and path components are required, though the path may be empty (no characters).
-        // maybe return `path = ""` here
-        guard let hierPartToken = next() else { throw "expected hier-part" }
-        if hierPartToken.isForwardSlash {
-            let additional = next()
-        }
-        switch hierPartToken {
-        default:
-            throw "unexpected token following scheme"
-        }
-        fatalError()
+        return (scheme, authority, path, query, fragment)
     }
 
     /*
@@ -279,6 +250,15 @@ public final class ALT_URIParser {
         return scheme
     }
 
+    /**
+     https://tools.ietf.org/html/rfc3986#section-3.2
+
+     The authority component is preceded by a double slash ("//") and is
+     terminated by the next slash ("/"), question mark ("?"), or number
+     sign ("#") character, or by the end of the URI.
+     
+     authority   = [ userinfo "@" ] host [ ":" port ]
+    */
     private func parseAuthority() throws -> [Byte]? {
         /*
          The authority component is preceded by a double slash ("//") and is
@@ -312,14 +292,23 @@ public final class ALT_URIParser {
                 localBuffer.append(next)
                 break
             } else if next.isValidUriCharacter {
+                // this allows general delimitters to be included aside from '/', '?', and '#' mentioned explicitly above
                 authority.append(next)
             } else {
-                throw "found invalid character"
+                throw "found invalid authority character: \(Character(next))"
             }
         }
         return authority
     }
 
+    /*
+     // TODO: Reference RFC
+     
+     -- ends w/ '#' || '?' || end of line
+     -- if authority, first line MUST be '/'
+
+     RFC: path MUST exist, but CAN be empty
+     */
     private func parsePath(uriContainsAuthority: Bool) throws -> [Byte] {
         guard let first = next() else { return [] } // ok for path to be empty
         if first.equals(any: .numberSign, .questionMark) {
@@ -333,17 +322,17 @@ public final class ALT_URIParser {
          must either be empty or begin with a slash ("/") character.
          */
         if uriContainsAuthority && first != .forwardSlash {
-            throw "unexpected character"
+            throw "path following authority MUST begin with forwardSlash"
         }
 
         var path: [Byte]
 
         if first == .forwardSlash {
             path = []
-        } else if first.isValidUriCharacter {
+        } else if first.isUnreservedUriCharacter {
             path = [first]
         } else {
-            throw "invalid uri character"
+            throw "path"
         }
 
         while let next = next() {
@@ -351,18 +340,70 @@ public final class ALT_URIParser {
                 // return identification token to buffer
                 localBuffer.append(next)
                 break
-            } else if next.isValidUriCharacter {
+            } else if next.isValidUriCharacter { // anything but '#', and '?'
                 path.append(next)
             } else {
-                throw "found invalid uri character"
+                throw "found invalid path character: \(next)"
             }
         }
 
         return path
     }
+
+    /**
+     // TODO: Reference RFC
+     
+     -- starts at '?' -- runs to '#' || end of bytes
+     */
+    private func parseQuery() throws -> [Byte]? { // query can be `nil`
+        guard let first = next() else { return nil }
+        guard first == .questionMark else {
+            // This byte isn't for us, return it to buffer
+            localBuffer.append(first)
+            return nil
+        }
+
+        var query: [Byte] = []
+        while let next = next() {
+            if next.equals(any: .numberSign) {
+                // return identification token to buffer
+                localBuffer.append(next)
+                break
+            } else if next.isValidUriCharacter {
+                query.append(next)
+            } else {
+                throw "found invalid query character: \(next)"
+            }
+        }
+        return query
+    }
+
+    /*
+     // TODO: Reference RFC -- starts at `#` goes to end of bytes
+     */
+    private func parseFragment() throws -> [Byte]? {
+        guard let first = next() else {
+            return nil
+        }
+        guard first == .numberSign else {
+            localBuffer.append(first)
+            return nil
+        }
+
+        var fragment: [Byte] = [first]
+        while let next = next() {
+            if next.isValidUriCharacter {
+                fragment.append(next)
+            } else {
+                throw "found invlid fragment character: \(next)"
+            }
+        }
+        return fragment
+    }
+
     // MARK: Next
 
-    // wrapping next to omit white space characters
+    // wrapping next to omit white space characters -- allowed to inject whitespace in url
 
     private func next() -> Byte? {
         /*
@@ -372,7 +413,7 @@ public final class ALT_URIParser {
             return localBuffer.removeFirst()
         }
 
-        while let next = data.next() {
+        while let next = buffer.next() {
             guard !next.isWhitespace else { continue }
             return next
         }
@@ -774,8 +815,56 @@ extension Byte {
  unreserved  = ALPHA / DIGIT / "-" / "." / "_" / "~"
  */
 extension Byte {
-    // TODO: This will break on Percent Encoding
+    var isValidFragmentCharacter: Bool {
+        // TODO: Fragment runs to end, should General delimitter throw error after that?
+        return isValidPathCharacter
+    }
+
+    var isValidPathCharacter: Bool {
+        /*
+         // TODO: Be more accurate to RFC:
+         
+         https://tools.ietf.org/html/rfc3986#section-3.3
+         
+         path          = path-abempty    ; begins with "/" or is empty
+         / path-absolute   ; begins with "/" but not "//"
+         / path-noscheme   ; begins with a non-colon segment
+         / path-rootless   ; begins with a segment
+         / path-empty      ; zero characters
+
+         path-abempty  = *( "/" segment )
+         path-absolute = "/" [ segment-nz *( "/" segment ) ]
+         path-noscheme = segment-nz-nc *( "/" segment )
+         path-rootless = segment-nz *( "/" segment )
+         path-empty    = 0<pchar>
+
+
+
+
+         Berners-Lee, et al.         Standards Track                    [Page 22]
+
+         RFC 3986                   URI Generic Syntax               January 2005
+
+
+         segment       = *pchar
+         segment-nz    = 1*pchar
+         segment-nz-nc = 1*( unreserved / pct-encoded / sub-delims / "@" )
+         ; non-zero-length segment without any colon ":"
+
+         pchar         = unreserved / pct-encoded / sub-delims / ":" / "@"
+         */
+        return isUnreservedUriCharacter || isSubDelimitter || self.equals(any: .colon, .atSign) // TODO: ? can this be in path?
+    }
+    var isValidQueryCharacter: Bool {
+        return isUnreservedUriCharacter || isSubDelimitter
+    }
+
     var isValidUriCharacter: Bool {
+        return isUnreservedUriCharacter || isGeneralDelimitter || isSubDelimitter
+    }
+
+    // TODO: This will break on Percent Encoding
+    var isUnreservedUriCharacter: Bool {
         let char = Character(self)
         switch char {
         case "a"..."z":
