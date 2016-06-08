@@ -104,3 +104,16 @@ extension Response {
         return String(pointer: buf, length: RFC1123_TIME_LEN + 1) ?? ""
     }
 }
+
+extension Response {
+    public typealias OnUpgrade = ((Stream) throws -> Void)
+
+    public var onUpgrade: OnUpgrade? {
+        get {
+            return storage["on-upgrade"] as? OnUpgrade
+        }
+        set {
+            storage["on-upgrade"] = newValue
+        }
+    }
+}

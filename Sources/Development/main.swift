@@ -7,7 +7,8 @@ var workDir: String {
     return path
 }
 
-let app = Application(workDir: workDir)
+let config = Config(seed: JSON.object(["port": "8000"]), workingDirectory: workDir)
+let app = Application(workDir: workDir, config: config)
 
 //MARK: Basic
 
@@ -16,7 +17,34 @@ app.get("/") { request in
 }
 
 app.get("test") { request in
+    print("Request: \(request)")
     return "123"
+}
+
+// MARK: WebSockets
+
+app.get("socket") { request in
+    return try request.upgradeToWebSocket { ws in
+        try ws.send("WebSocket Connected :)")
+
+        ws.onText = { ws, text in
+            try ws.send("You said \(text)!")
+
+            if text == "stop" {
+                ws.onText = nil
+                try ws.send("🚫 stopping connection listener -- socket remains open")
+            }
+
+            if text == "close" {
+                try ws.send("... closing 👋")
+                try ws.close()
+            }
+        }
+
+        ws.onClose = { data in
+            print("Did close w/ packet \(data)")
+        }
+    }
 }
 
 //MARK: Resource

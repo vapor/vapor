@@ -22,10 +22,13 @@ XCTMain([
     testCase(RouteTests.allTests),
     testCase(SessionTests.allTests),
     testCase(TypedRouteTests.allTests),
+    testCase(UnsignedIntegerChunkingTests.allTests),
     testCase(ValidationConvenienceTests.allTests),
     testCase(ValidationCountTests.allTests),
     testCase(ValidationTests.allTests),
     testCase(ValidationUniqueTests.allTests),
+    testCase(WebSocketSerializationTests.allTests),
+    testCase(WebSocketKeyTests.allTests),
 ])
 
 #endif
