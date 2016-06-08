@@ -76,7 +76,7 @@ final class StreamServer<
 
 extension SocksCore.Error {
     var isClosedByPeer: Bool {
-        guard case .ReadFailed = type else { return false }
+        guard case .readFailed = type else { return false }
         let message = String(validatingUTF8: strerror(errno))
         return message == "Connection reset by peer"
     }
