@@ -32,6 +32,7 @@ app.get("socket") { request in
 
             if text == "stop" {
                 ws.onText = nil
+                try ws.send("🚫 stopping connection listener -- socket remains open")
             }
 
             if text == "close" {
