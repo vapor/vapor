@@ -56,7 +56,10 @@ extension Data {
 
 extension Byte {
     static let space: Byte = 0x20
+    static let period: Byte = 0x2e
+    static let slash: Byte = 0x2f
     static let colon: Byte = 0x3A
+    static let questionMark: Byte = 0x3F
 
     static let alphabetLength: Byte = 26
     static let uppercaseStart: Byte = 65
@@ -68,7 +71,21 @@ extension Byte {
 }
 
 extension Data {
-    func lowercased() -> Data {
+    var int: Int? {
+        var int: Int = 0
+
+        for byte in bytes {
+            int += Int(byte)
+        }
+
+        return int
+    }
+
+    var string: String {
+        return String(self)
+    }
+    
+    var lowercased: Data {
         var data = Data()
         
         for byte in self {
@@ -82,7 +99,7 @@ extension Data {
         return data
     }
     
-    func uppercased() -> Data {
+    var uppercased: Data {
         var data = Data()
         
         for byte in self {

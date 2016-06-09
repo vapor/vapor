@@ -2,68 +2,56 @@ import Foundation
 
 extension HTTPParser {
     struct RequestLine {
-        static private let questionMark = Data([0x3f])
-        static private let whitespace = Data([0x20])
-        static private let slash = Data([0x2f])
-        static private let dot = Data([0x2e])
-        
-        static private let get = "get".data
-        static private let delete = "delete".data
-        static private let head = "head".data
-        static private let post = "post".data
-        static private let put = "put".data
-        static private let connect = "connect".data
-        static private let options = "options".data
-        static private let trace = "trace".data
-        static private let patch = "patch".data
+        static let get = "get".data
+        static let delete = "delete".data
+        static let head = "head".data
+        static let post = "post".data
+        static let put = "put".data
+        static let connect = "connect".data
+        static let options = "options".data
+        static let trace = "trace".data
+        static let patch = "patch".data
         
         enum Error: ErrorProtocol {
             case invalidRequestLine
         }
 
-        let methodBytes: Data
-        var methodString: String {
-            return String(methodBytes)
-        }
-        
-        let uriBytes: Data
-        var uriString: String {
-            return String(uriBytes)
-        }
-        
-        let versionBytes: Data
-        var versionString: String {
-            return String(versionBytes)
-        }
+        let methodSlice: ArraySlice<Byte>
+        let uriSlice: ArraySlice<Byte>
+        let versionSlice: ArraySlice<Byte>
+
 
         init(_ data: Data) throws {
-            let comps = data.split(separator: Byte.space, maxSplits: 3, omittingEmptySubsequences: true)
+            let comps = data.split(
+                separator: Byte.space,
+                maxSplits: 3,
+                omittingEmptySubsequences: true
+            )
+
             guard comps.count == 3 else {
                 throw Error.invalidRequestLine
             }
 
-            methodBytes = Data(comps[0])
-            uriBytes = Data(comps[1])
-            versionBytes = Data(comps[2])
+            methodSlice = comps[0]
+            uriSlice = comps[1]
+            versionSlice = comps[2]
         }
 
         var version: Request.Version {
             // ["HTTP", "1.1"]
-            let parts = versionBytes.split(separator: HTTPParser.RequestLine.slash, excludingFirst: false, excludingLast: false, maxSplits: 1)
+            let comps = versionSlice.split(separator: Byte.slash, maxSplits: 1)
 
             var major = 0
             var minor = 0
 
-            if parts.count == 2 {
+            if comps.count == 2 {
                 // ["1", "1"]
-                let comps = parts[1].split(separator: HTTPParser.RequestLine.dot, excludingFirst: false, excludingLast: false, maxSplits: 1)
+                let version = comps[1].split(separator: Byte.period, maxSplits: 1)
 
-                major = Int(String(comps[0])) ?? 0
+                major = Data(comps[0]).int ?? 1
 
-                if comps.count == 2 {
-                    if let m = Int(String(comps[1])) {
-                        minor = m
-                    }
+                if version.count == 2 {
+                    minor = Data(comps[1]).int ?? 1
                 }
             }
 
@@ -71,58 +59,49 @@ extension HTTPParser {
         }
 
         var method: Request.Method {
+            let data = Data(methodSlice)
+
             let method: Request.Method
-            switch methodBytes.lowercased() {
-            case HTTPParser.RequestLine.get:
+            switch data.lowercased {
+            case RequestLine.get:
                 method = .get
-            case HTTPParser.RequestLine.delete:
+            case RequestLine.delete:
                 method = .delete
-            case HTTPParser.RequestLine.head:
+            case RequestLine.head:
                 method = .head
-            case HTTPParser.RequestLine.post:
+            case RequestLine.post:
                 method = .post
-            case HTTPParser.RequestLine.put:
+            case RequestLine.put:
                 method = .put
-            case HTTPParser.RequestLine.connect:
+            case RequestLine.connect:
                 method = .connect
-            case HTTPParser.RequestLine.options:
+            case RequestLine.options:
                 method = .options
-            case HTTPParser.RequestLine.trace:
+            case RequestLine.trace:
                 method = .trace
-            case HTTPParser.RequestLine.patch:
+            case RequestLine.patch:
                 method = .patch
             default:
-                Log.warning("Did not recognize method, using .other(\(methodString))")
-                method = .other(method: methodString)
+                let string = String(data)
+                Log.warning("Did not recognize method, using .other(\(string))")
+                method = .other(method: string)
             }
             return method
         }
 
         var uri: URI {
-            var fields: [String : [String?]] = [:]
-            
-            let parts = uriString.split(separator: "?", maxSplits: 1)
-            let path = parts.first ?? ""
-            let queryString = parts.last ?? ""
-            
-            
-            let data = FormURLEncoded.parse(queryString.data)
+            let data = Data(uriSlice)
 
-            if case .dictionary(let dict) = data {
-                for (key, val) in dict {
-                    var array: [String?]
+            let comps = data.split(separator: Byte.questionMark, maxSplits: 1)
 
-                    if let existing = fields[key] {
-                        array = existing
-                    } else {
-                        array = []
-                    }
-
-                    array.append(val.string)
-
-                    fields[key] = array
-                }
+            let path: String
+            if let pathData = comps.first {
+                path = Data(pathData).string
+            } else {
+                path = "/"
             }
+
+            //TODO: Add Query parsing as middleware
 
             return URI(
                 scheme: "http",
@@ -130,7 +109,7 @@ extension HTTPParser {
                 host: nil,
                 port: nil,
                 path: path,
-                query: fields,
+                query: [:],
                 fragment: nil
             )
         }
