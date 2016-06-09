@@ -68,4 +68,11 @@ class UserController: Controller {
             "controller": "MyController.destroyAll"
         ])
     }
+
+
+    func options(request: Request) throws -> ResponseRepresentable {
+        return JSON([
+            "info": "This is the Users resource"
+        ])
+    }
 }
