@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 #if !os(Linux)
 
 import Foundation
@@ -227,3 +228,7 @@ do{
 }
 
 #endif
+=======
+let generator = Generator(max: 2)
+generator.generate()
+>>>>>>> Stashed changes
