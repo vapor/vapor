@@ -1,6 +1,6 @@
 import Vapor
 import libc
-
+TEST_PERCENT_DECODING()
 
 let test: [String] = [
     "//google.c@@om:80",
