@@ -1,5 +1,5 @@
 import Vapor
-import S4
+import libc
 
 
 let test: [String] = [
@@ -82,7 +82,7 @@ app.resource("users", controller: UserController.self)
 //MARK: Request data
 
 app.post("jsondata") { request in
-    print(request.data.json?["hi"].string)
+    print(request.json?["hi"].string)
     return "yup"
 }
 
@@ -277,11 +277,11 @@ app.get("multipart-image") { _ in
     response += "<button>Submit</button>"
     response += "</form>"
 
-    return Response(status: .ok, html: response)
+    return Response(status: .ok, data: response.data)
 }
 
 app.post("multipart-image") { request in
-    guard let form = request.data.multipart else {
+    guard let form = request.multipart else {
         throw Abort.badRequest
     }
 
@@ -293,7 +293,7 @@ app.post("multipart-image") { request in
         throw Abort.badRequest
     }
 
-    var headers: Headers = [:]
+    var headers: Response.Headers = [:]
 
     if let mediaType = image.type {
         headers["Content-Type"] = mediaType.type + "/" + mediaType.subtype
@@ -310,11 +310,11 @@ app.get("multifile") { _ in
     response += "<button>Submit</button>"
     response += "</form>"
 
-    return Response(status: .ok, html: response)
+    return Response(status: .ok, data: response.data)
 }
 
 app.post("multifile") { request in
-    guard let form = request.data.multipart else {
+    guard let form = request.multipart else {
         throw Abort.badRequest
     }
 
@@ -332,7 +332,7 @@ app.post("multifile") { request in
 
     let file = files[number]
 
-    var headers: Headers = [:]
+    var headers: Response.Headers = [:]
 
     if let mediaType = file.type {
         headers["Content-Type"] = mediaType.type + "/" + mediaType.subtype
@@ -359,11 +359,11 @@ app.get("options") { _ in
     response += "<button>Submit</button>"
     response += "</form>"
 
-    return Response(status: .ok, html: response)
+    return Response(status: .ok, data: response.data)
 }
 
 app.post("options") { request in
-    guard let form = request.data.multipart, let multipart = form["options"] else {
+    guard let form = request.multipart, let multipart = form["options"] else {
         return "No form submited"
     }
 
@@ -373,13 +373,13 @@ app.post("options") { request in
 
 app.post("multipart-print") { request in
     print(request.data)
-    print(request.data.formEncoded)
+    print(request.formURLEncoded)
 
     print(request.data["test"])
     print(request.data["test"].string)
 
-    print(request.data.multipart?["test"])
-    print(request.data.multipart?["test"]?.file)
+    print(request.multipart?["test"])
+    print(request.multipart?["test"]?.file)
 
     return JSON([
         "message": "Printed details to console"
@@ -396,16 +396,19 @@ app.grouped(AuthMiddleware()) { group in
     }
 }
 
-//MARK: Async
+//MARK: Chunked
 
-app.get("async") { request in
-    var response = Response(async: { stream in
-        try stream.send("hello".data)
+app.get("chunked") { request in
+    return Response(headers: [
+        "Content-Type": "text/plain"
+    ], chunked: { stream in
+        try stream.send("Counting:")
+        for i in 1 ..< 10{
+            sleep(1)
+            try stream.send(i)
+        }
+        try stream.close()
     })
-    response.headers["Content-Type"] = "text/plain"
-    response.headers["Transfer-Encoding"] = ""
-    response.headers["Content-Length"] = 5.description
-    return response
 }
 
 app.start()

@@ -34,7 +34,7 @@ extension Request {
             responseHeaders.secWebProtocol = supportedProtocols(passedProtocols)
         }
 
-        var response = Response(status: .switchingProtocols, headers: responseHeaders)
+        var response = Response(status: .switchingProtocols, headers: responseHeaders, cookies: [], data: [])
         response.onUpgrade = { stream in
             let ws = WebSocket(stream)
             try body(ws: ws)
