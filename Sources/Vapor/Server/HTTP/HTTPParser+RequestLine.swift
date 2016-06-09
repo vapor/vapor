@@ -90,9 +90,7 @@ extension HTTPParser {
         }
 
         var uri: URI {
-            let data = Data(uriSlice)
-
-            let comps = data.split(separator: Byte.questionMark, maxSplits: 1)
+            let comps = uriSlice.split(separator: Byte.questionMark, maxSplits: 1)
 
             let path: String
             if let pathData = comps.first {
