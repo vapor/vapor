@@ -55,8 +55,12 @@ extension Data {
 }
 
 extension Data {
-    static let uppercaseRange = 65...90
-    static let lowercaseRange = 97...122
+    static let alphabetLength = 26
+    static let uppercaseStart = 65
+    static let lowercaseStart = 97
+    
+    static let uppercaseRange = uppercaseStart ..< (uppercaseStart + alphabetLength)
+    static let lowercaseRange = lowercaseStart ..< (lowercaseStart + alphabetLength)
     
     func lowercased() -> Data {
         var data = Data()
