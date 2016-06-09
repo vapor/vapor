@@ -10,10 +10,10 @@ struct Function {
 
 extension Function: CustomStringConvertible {
     var description: String {
-        var f = ""
-        f << "\(signature.description) {"
-        f << body.description.indented
-        f << "}"
-        return f
+        return [
+            "\(signature.description) {",
+            body.description.indented,
+            "}"
+        ].joined(separator: "\n")
     }
 }

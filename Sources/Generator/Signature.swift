@@ -54,10 +54,10 @@ extension Signature {
 */
 extension Signature: CustomStringConvertible {
     var description: String {
-        var d = ""
-        d << documentation
-        d <<< "public func \(name)<\(genericMap)>(\(input))"
-        return d
+        return [
+            documentation,
+            "public func \(name)\(generics)(\(input))"
+        ].joined(separator: "\n")
     }
 }
 
@@ -85,7 +85,7 @@ extension Signature {
                 case .path(_):
                     string <<< "String"
                 case .wildcard(let wildcard):
-                    string <<< wildcard.generic
+                    string <<< "\(wildcard.generic).Type"
                 }
 
                 return string
@@ -94,7 +94,7 @@ extension Signature {
     }
 
     var handler: String {
-        return "handler: (\(handlerInput)) -> \(handlerOutput)"
+        return "handler: (\(handlerInput)) throws -> \(handlerOutput)"
     }
 
     var handlerInput: String {
@@ -116,6 +116,13 @@ extension Signature {
         case .base:
             return "ResponseRepresentable"
         }
+    }
+
+    var generics: String {
+        if genericMap.characters.count == 0 {
+            return ""
+        }
+        return "<\(genericMap)>"
     }
 
     var genericMap: String {

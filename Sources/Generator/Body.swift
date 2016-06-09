@@ -29,11 +29,8 @@ extension Body: CustomStringConvertible {
     var innerBody: String {
         return [
             badRequestGuards,
-            " ",
             stringInitializeTrys,
-            " ",
             invalidParameterGuards,
-            " ",
             returns
         ].joined(separator: "\n")
     }
@@ -76,7 +73,7 @@ extension Body: CustomStringConvertible {
 
         switch signature.variant {
         case .socket:
-            return "return try request.upgradeToWebSocket { try handler(request, $0\(additions))"
+            return "return try request.upgradeToWebSocket { try handler(request, $0\(additions)) }"
         case .base:
             return "return try handler(request\(additions))"
         }
