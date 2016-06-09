@@ -63,7 +63,7 @@ extension Data {
         
         for byte in self {
             if Data.uppercaseRange.contains(Int(byte)) {
-                data.append(byte - 32)
+                data.append(byte + 32)
             } else {
                 data.append(byte)
             }
@@ -77,7 +77,7 @@ extension Data {
         
         for byte in self {
             if Data.lowercaseRange.contains(Int(byte)) {
-                data.append(byte + 32)
+                data.append(byte - 32)
             } else {
                 data.append(byte)
             }
