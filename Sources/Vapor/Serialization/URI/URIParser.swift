@@ -414,10 +414,12 @@ public final class __URIParser: BaseURIParser {
         let uri = try C7.URI.init(scheme: scheme.toString(),
                                   userInfo: userInfo,
                                   host: host.toString(),
-                                  port: port.flatMap { UInt($0) } .map { Int($0) },
+                                  port: portInt,
                                   path: path.toString(),
                                   query: [:], // TODO:
                                   fragment: fragment?.toString())
+
+        return uri
     }
 //
 //    func parse(authority: [Byte]) throws -> (userinfo: [Byte]?, hostAndPort: [Byte]) {

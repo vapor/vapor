@@ -3,6 +3,7 @@ import S4
 
 
 let test: [String] = [
+    "//google.c@@om:80",
     "foo://example.com:8042/over/there?name=ferret#nose",
     "urn:example:animal:ferret:nose",
     "ftp://ftp.is.co.za/rfc/rfc1808.txt",
@@ -20,11 +21,11 @@ try test.forEach { uri in
     print("\nInput:\n\(uri)\n\n")
     print("Output:")
     let uriData = Data(uri)
-    let parser = URIParser(data: uriData)
-    try parser.parse()
+//    let parser = URIParser(data: uriData)
+//    try parser.parse()
 
     let alt = __URIParser(data: uriData)
-    try alt.asdfasdfsadf()
+    _ = try alt.asdfasdfsadf()
     print("")
 //let test =  ALT_URIParser
 }
