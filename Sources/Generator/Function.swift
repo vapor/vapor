@@ -12,7 +12,7 @@ extension Function: CustomStringConvertible {
     var description: String {
         var f = ""
         f << "\(signature.description) {"
-        f << body.description
+        f << body.description.indented
         f << "}"
         return f
     }
