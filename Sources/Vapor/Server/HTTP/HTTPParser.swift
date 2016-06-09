@@ -11,7 +11,7 @@ final class HTTPParser: StreamParser {
     let buffer: StreamBuffer
 
     init(stream: Stream) {
-        self.buffer = StreamBuffer(stream, buffer: 1024)
+        self.buffer = StreamBuffer(stream, size: 1024)
     }
 
     func nextLine() throws -> ArraySlice<Byte> {
