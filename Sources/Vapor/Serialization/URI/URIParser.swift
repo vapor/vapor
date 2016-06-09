@@ -385,7 +385,43 @@ extension URIParser {
 import C7
 
 public final class __URIParser: BaseURIParser {
-    public func asdfasdfsadf() throws -> C7.URI {
+    public struct URI {
+        public struct UserInfo {
+            public var username: String
+            public var password: String
+
+            public init(username: String, password: String) {
+                self.username = username
+                self.password = password
+            }
+        }
+
+        public var scheme: String?
+        public var userInfo: UserInfo?
+        public var host: String?
+        public var port: Int?
+        public var path: String?
+        public var query:  String?
+        public var fragment: String?
+
+        public init(scheme: String? = nil,
+                    userInfo: UserInfo? = nil,
+                    host: String? = nil,
+                    port: Int? = nil,
+                    path: String? = nil,
+                    query: String? = nil,
+                    fragment: String? = nil) {
+            self.scheme = scheme
+            self.userInfo = userInfo
+            self.host = host
+            self.port = port
+            self.path = path
+            self.query = query
+            self.fragment = fragment
+        }
+    }
+
+    public func asdfasdfsadf() throws -> URI {
         // ordered calls
         let scheme = try _parseScheme()
 
@@ -397,28 +433,28 @@ public final class __URIParser: BaseURIParser {
         let query = try _parseQuery()
         let fragment = try _parseFragment()
 
-        print("Scheme \(try scheme.toString())")
-        print("Authority:")
-        print("\tusername: \(try username?.toString())")
-        print("\tauth: \(try auth?.toString())")
-        print("\thost: \(try host.toString())")
-        print("\tport: \(try port?.toString())")
-        print("Path \(try path.toString())")
-        print("Query \(try query?.toString())")
-        print("Fragment \(try fragment?.toString())")
+//        print("Scheme \(try scheme.toString())")
+//        print("Authority:")
+//        print("\tusername: \(try username?.toString())")
+//        print("\tauth: \(try auth?.toString())")
+//        print("\thost: \(try host.toString())")
+//        print("\tport: \(try port?.toString())")
+//        print("Path \(try path.toString())")
+//        print("Query \(try query?.toString())")
+//        print("Fragment \(try fragment?.toString())")
 
-        let userInfo = try C7.URI.UserInfo.init(username: username?.toString() ?? "",
-                                                password: auth?.toString() ?? "")
+        let userInfo = try URI.UserInfo.init(username: username?.toString() ?? "",
+                                             password: auth?.toString() ?? "")
 
         let portInt = port.flatMap { UInt($0) } .map { Int($0) }
-        let uri = try C7.URI.init(scheme: scheme.toString(),
-                                  userInfo: userInfo,
-                                  host: host.toString(),
-                                  port: portInt,
-                                  path: path.toString(),
-                                  query: [:], // TODO:
-                                  fragment: fragment?.toString())
-
+        let uri = try URI.init(scheme: scheme.toString(),
+                               userInfo: userInfo,
+                               host: host.toString(),
+                               port: portInt,
+                               path: path.toString(),
+                               query: query?.toString(),
+                               fragment: fragment?.toString())
+        print("URI: \(uri)")
         return uri
     }
 
@@ -863,52 +899,6 @@ extension _URI {
 
  reg-name      = *( unreserved / pct-encoded / sub-delims )
  */
-private final class AuthorityParser {
-    let bytes: [UInt8]
-    init(_ bytes: [UInt8]) {
-        self.bytes = bytes
-    }
-
-    func parse() throws -> Authority {
-        let (userinfoBytes, hostAndPortBytes) = try parse()
-
-        let userInfo = try userinfoBytes
-            .flatMap { UserInfoParser($0.array) }?
-            .parse()
-
-        fatalError()
-//        let hostAndPortParser = try HostAndPortParser(hostAndPortBytes)
-//        let (host, port) = try hostAndPortParser.parse()
-
-
-//        return _URI.Authority(userInfo: userInfo, host: host, port: port)
-//        fatalError()
-    }
-
-    func parse() throws -> (userInfo: [Byte]?, hostAndPort: [Byte]) {
-        let components = bytes.split(separator: .atSign,
-                                        maxSplits: 1,
-                                        omittingEmptySubsequences: false) // MUST keep empty
-
-        let userInfo: [Byte]?
-        let hostAndPort: [Byte]
-        switch components.count {
-        // TODO: Test empty array post split is 0
-        case 0:
-            // ok to have empty host
-            return (nil, [])
-        case 1:
-            userInfo = nil
-            hostAndPort = components[0].array
-        case 2:
-            userInfo = components[0].array
-            hostAndPort = components[1].array
-        default:
-            throw "too many '@' symbols in authority"
-        }
-        return (userInfo, hostAndPort)
-    }
-}
 
 /**
  https://tools.ietf.org/html/rfc3986#section-3.2.1

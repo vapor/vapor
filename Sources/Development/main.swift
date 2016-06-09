@@ -15,8 +15,8 @@ let test: [String] = [
     "telnet://192.0.2.16:80/",
     "urn:oasis:names:specification:docbook:dtd:xml:4.1.2",
     "foo://info.example.com?fred"
-
 ]
+
 try test.forEach { uri in
     print("\nInput:\n\(uri)\n\n")
     print("Output:")
