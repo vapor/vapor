@@ -20,7 +20,7 @@ extension Request {
         guard headers.upgrade == "websocket" else {
             throw WebSocketRequestFormat.missingUpgradeHeader
         }
-        guard headers.connection == "Upgrade" else {
+        guard headers.connection?.index(of: "Upgrade") != nil else {
             throw WebSocketRequestFormat.missingConnectionHeader
         }
 
