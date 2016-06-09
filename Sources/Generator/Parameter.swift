@@ -28,4 +28,39 @@ enum Parameter {
             return false
         }
     }
+
+    var isWildcard: Bool {
+        switch self {
+        case.wildcard(_):
+            return true
+        default:
+            return false
+        }
+    }
+
+    static func pathFor(_ array: [Parameter]) -> Parameter {
+        var i = 0
+
+        for item in array {
+            if item.isPath {
+                i += 1
+            }
+        }
+
+        let path = Path(name: "p\(i)")
+        return .path(path)
+    }
+
+    static func wildcardFor(_ array: [Parameter]) -> Parameter {
+        var i = 0
+
+        for item in array {
+            if item.isWildcard {
+                i += 1
+            }
+        }
+
+        let path = Wildcard(name: "w\(i)", generic: "W\(i)")
+        return .wildcard(path)
+    }
 }

@@ -143,7 +143,7 @@ let MAX_PARAMS = GENERIC_MAP.count
                 }
 
                 return "\\(\(param.name))"
-                }.joined(separator: "/")
+            }.joined(separator: "/")
 
             let actualMethod: String
             if method == .socket {

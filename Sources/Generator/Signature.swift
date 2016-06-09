@@ -52,45 +52,22 @@ extension Signature {
     
     <-------------------------------------------- description ---------------------------------------------------->
 */
+extension Signature: CustomStringConvertible {
+    var description: String {
+        var d = ""
+        d << documentation
+        d <<< "public func \(name)<\(genericMap)>(\(input))"
+        return d
+    }
+}
+
 extension Signature {
-    var genericMap: String {
-        return wildcards.map { wildcard in
-            return "\(wildcard.generic): StringInitializable"
-            }.joined(separator: ", ")
-    }
-
-    var name: String {
-        switch variant {
-        case .socket:
-            return "socket"
-        case .base:
-            return method.lowercase
+    var input: String {
+        if parameters.count > 0 {
+            return "\(list), \(handler)"
+        } else {
+            return handler
         }
-    }
-
-    var handlerInput: String {
-        var items = ["Request"]
-
-        if variant == .socket {
-            items.append("WebSocket")
-        }
-
-        items += wildcards.map { $0.generic }
-
-        return items.joined(separator: ", ")
-    }
-
-    var handlerOutput: String {
-        switch variant {
-        case .socket:
-            return "()"
-        case .base:
-            return "ResponseRepresentable"
-        }
-    }
-
-    var handler: String {
-        return "handler: (\(handlerInput)) -> \(handlerOutput)"
     }
 
     var list: String {
@@ -116,20 +93,43 @@ extension Signature {
         }
     }
 
-    var input: String {
-        if parameters.count > 0 {
-            return "\(list), \(handler)"
-        } else {
-            return handler
+    var handler: String {
+        return "handler: (\(handlerInput)) -> \(handlerOutput)"
+    }
+
+    var handlerInput: String {
+        var items = ["Request"]
+
+        if variant == .socket {
+            items.append("WebSocket")
+        }
+
+        items += wildcards.map { $0.generic }
+
+        return items.joined(separator: ", ")
+    }
+
+    var handlerOutput: String {
+        switch variant {
+        case .socket:
+            return "()"
+        case .base:
+            return "ResponseRepresentable"
         }
     }
-}
 
-extension Signature: CustomStringConvertible {
-    var description: String {
-        var d = ""
-        d << documentation
-        d << "public func \(name)<\(genericMap)>(\(input))"
-        return d
+    var genericMap: String {
+        return wildcards.map { wildcard in
+            return "\(wildcard.generic): StringInitializable"
+        }.joined(separator: ", ")
+    }
+
+    var name: String {
+        switch variant {
+        case .socket:
+            return "socket"
+        case .base:
+            return method.lowercase
+        }
     }
 }

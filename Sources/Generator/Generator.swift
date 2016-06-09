@@ -53,10 +53,10 @@ class Generator {
             var pathArray = subarray
             var wildcardArray = subarray
 
-            let path = Parameter.path(Parameter.Path(name: "test"))
+            let path = Parameter.pathFor(pathArray)
             pathArray.append(path)
 
-            let wildcard = Parameter.wildcard(Parameter.Wildcard(name: "test", generic: "T"))
+            let wildcard = Parameter.wildcardFor(wildcardArray)
             wildcardArray.append(wildcard)
 
             result.append(pathArray)
