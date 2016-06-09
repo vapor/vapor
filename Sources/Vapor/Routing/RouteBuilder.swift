@@ -11,7 +11,7 @@ public protocol RouteBuilder {
 }
 
 extension RouteBuilder {
-    func add(
+    public func add(
         _ method: Request.Method,
         path: String,
         handler: Route.Handler
