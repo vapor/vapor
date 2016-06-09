@@ -114,6 +114,9 @@ extension Byte {
     static let questionMark: Byte = 0x3F // '?'
     static let numberSign: Byte = 0x23 // '#'
     static let percentSign: Byte = 0x25 // '%'
+    static let plusSign: Byte = 0x2B // '+'
+    static let minusSign: Byte = 0x2D // '-' -- Hyphen Minus
+
 }
 
 // http://www.w3schools.com/charsets/ref_utf_basic_latin.asp
@@ -584,11 +587,6 @@ extension Byte {
  unreserved  = ALPHA / DIGIT / "-" / "." / "_" / "~"
  */
 extension Byte {
-    var isValidFragmentCharacter: Bool {
-        // TODO: Fragment runs to end, should General delimitter throw error after that?
-        return isValidPathCharacter
-    }
-
     var isValidUriCharacter: Bool {
         return isUnreservedUriCharacter
             || isGeneralDelimitter
@@ -677,70 +675,19 @@ extension Byte {
      scheme      = ALPHA *( ALPHA / DIGIT / "+" / "-" / "." )
      */
     var isValidSchemeCharacter: Bool {
-        let char = Character(self)
-        switch char {
-        case "a"..."z":
-            return true
         // case insensitive, should be lowercased. RFC specifies should handle capital for robustness
-        case "A"..."Z":
-            return true
-        case "+", ".", "-":
-            return true
-        default:
-            return false
-        }
+        return isLetter
+            || isDigit
+            || equals(any: .plusSign, .minusSign, .period)
     }
-
-    /*
-     https://tools.ietf.org/html/rfc3986#section-3.2
-
-     The authority component is preceded by a double slash ("//") and is
-     terminated by the next slash ("/"), question mark ("?"), or number
-     sign ("#") character, or by the end of the URI.
-     
-     authority     = [ userinfo "@" ] host [ ":" port ]
-         userinfo      = *( unreserved / pct-encoded / sub-delims / ":" )
-         host          = IP-literal / IPv4address / reg-name
-             IP-literal    = "[" ( IPv6address / IPvFuture  ) "]"
-
-             IPvFuture     = "v" 1*HEXDIG "." 1*( unreserved / sub-delims / ":" )
-
-             IPv6address   =                            6( h16 ":" ) ls32
-             /                       "::" 5( h16 ":" ) ls32
-             / [               h16 ] "::" 4( h16 ":" ) ls32
-             / [ *1( h16 ":" ) h16 ] "::" 3( h16 ":" ) ls32
-             / [ *2( h16 ":" ) h16 ] "::" 2( h16 ":" ) ls32
-             / [ *3( h16 ":" ) h16 ] "::"    h16 ":"   ls32
-             / [ *4( h16 ":" ) h16 ] "::"              ls32
-             / [ *5( h16 ":" ) h16 ] "::"              h16
-             / [ *6( h16 ":" ) h16 ] "::"
-         port          = *DIGIT
-     */
-//    var isValidAuthorityCharacter: Bool {
-//        let char = Character(self)
-//        switch char {
-//        case "/", "?", "#": // terminators
-//            return false
-//        default:
-//            return isValidUriCharacter
-//        }
-//    }
 
     /*
      userinfo      = *( unreserved / pct-encoded / sub-delims / ":" )
      */
     var isValidUserInfoCharacter: Bool {
-        if isUnreservedUriCharacter {
-            return true
-        }
-        if isSubDelimitter {
-            return true
-        }
-        if self.equals(any: .percentSign, .colon) {
-            return true
-        }
-
-        return false
+        return isUnreservedUriCharacter
+            || isSubDelimitter
+            || equals(any: .colon, .percentSign)
     }
 
     /*
@@ -751,13 +698,7 @@ extension Byte {
      by the end of the URI.
      */
     var isValidPathCharacter: Bool {
-        let char = Character(self)
-        switch char {
-        case "?", "#":
-            return false
-        default:
-            return isValidUriCharacter
-        }
+        return isPchar || equals(any: .forwardSlash)
     }
 
     /*
@@ -770,14 +711,25 @@ extension Byte {
      query       = *( pchar / "/" / "?" )
      */
     var isValidQueryCharacter: Bool {
-        if isPchar {
-            return true
-        }
-        if equals(any: .forwardSlash, .questionMark) {
-            return true
-        }
+        return isPchar || equals(any: .forwardSlash, .questionMark)
+    }
 
-        return false
+    /**
+     https://tools.ietf.org/html/rfc3986#section-3.5
+     
+     The fragment identifier component of a URI allows indirect
+     identification of a secondary resource by reference to a primary
+     resource and additional identifying information.  The identified
+     secondary resource may be some portion or subset of the primary
+     resource, some view on representations of the primary resource, or
+     some other resource defined or described by those representations.  A
+     fragment identifier component is indicated by the presence of a
+     number sign ("#") character and terminated by the end of the URI.
+
+     fragment    = *( pchar / "/" / "?" )
+     */
+    var isValidFragmentCharacter: Bool {
+        return isPchar || equals(any: .forwardSlash, .questionMark)
     }
 
     /**
@@ -786,17 +738,9 @@ extension Byte {
      pchar         = unreserved / pct-encoded / sub-delims / ":" / "@"
      */
     var isPchar: Bool {
-        if isUnreservedUriCharacter {
-            return true
-        }
-        if isSubDelimitter {
-            return true
-        }
-        if equals(any: .colon, .atSign, .percentSign) {
-            return true
-        }
-
-        return false
+        return isUnreservedUriCharacter
+            || isSubDelimitter
+            || equals(any: .colon, .atSign, .percentSign)
     }
 }
 

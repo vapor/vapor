@@ -46,7 +46,6 @@ public final class URIParser {
     private var localBuffer: [Byte] = []
     private var buffer: IndexingIterator<[Byte]>
 
-
     public convenience init(data: Data) {
         self.init(bytes: data.bytes)
     }
@@ -57,6 +56,12 @@ public final class URIParser {
 
     public func parse() throws {
         let (scheme, authority, path, query, fragment) = try parse()
+        // scheme -- ok
+        // authority -- needs parsing
+        // path -- ok
+        // query -- ok
+        // fragment --ok
+        
         print("Scheme \(try scheme.toString())")
         print("Authority \(try authority?.toString())")
         print("Path \(try path.toString())")
@@ -64,23 +69,24 @@ public final class URIParser {
         print("Fragment \(try fragment?.toString())")
     }
 
-
     /*
      The scheme and path components are required, though the path may be
      empty (no characters).  When authority is present, the path must
      either be empty or begin with a slash ("/")
      */
     private func parse() throws -> (scheme: [Byte], authority: [Byte]?, path: [Byte], query: [Byte]?, fragment: [Byte]?) {
-        let scheme = try parseScheme() // if we have relative scheme, we don't need to
+        let scheme = try parseScheme()
+
         // hier part: start
         let authority = try parseAuthority()
         let path = try parsePath(uriContainsAuthority: authority != nil)
         // hier part: end
+
         let query = try parseQuery()
         let fragment = try parseFragment()
 
         let trailing = try next()
-        guard trailing == nil else { throw "unexpectedly terminated early" }
+        guard trailing == nil else { throw "found unexpected trailing byte" }
 
         /*
          The following are two example URIs and their component parts:
@@ -96,6 +102,32 @@ public final class URIParser {
         return (scheme, authority, path, query, fragment)
     }
 
+    // MARK: Next
+
+    private func next() throws -> Byte? {
+        /*
+         local buffer is used to maintain last bytes while still interacting w/ byte buffer
+         */
+        guard localBuffer.isEmpty else {
+            return localBuffer.removeFirst()
+        }
+        
+        while let next = buffer.next() {
+            // whitespace is ok at any point according to RFC
+            guard !next.isWhitespace else { continue }
+            guard next.isValidUriCharacter else {
+                throw "found invalid uri character: \(Character(next))"
+            }
+            return next
+        }
+        
+        return nil
+    }
+}
+
+// MARK: Scheme
+
+extension URIParser {
     /*
      https://tools.ietf.org/html/rfc3986#section-3.1
 
@@ -108,14 +140,14 @@ public final class URIParser {
      names (e.g., allow "HTTP" as well as "http") for the sake of
      robustness but should only produce lowercase scheme names for
      consistency.
-     
+
      scheme      = ALPHA *( ALPHA / DIGIT / "+" / "-" / "." )
      */
     private func parseScheme() throws -> [Byte] {
         guard let first = try next() else { throw "missing byte" }
         guard first.isLetter else { throw "first character in scheme must be letter" }
-        var scheme: [Byte] = [first]
 
+        var scheme: [Byte] = [first]
         while let byte = try next() where byte != .colon { // discard colon as delimitter
             guard byte.isValidSchemeCharacter else {
                 throw "invalid scheme character"
@@ -124,7 +156,11 @@ public final class URIParser {
         }
         return scheme
     }
+}
 
+// MARK: Authority
+
+extension URIParser {
     /**
      https://tools.ietf.org/html/rfc3986#section-3.2
 
@@ -169,15 +205,53 @@ public final class URIParser {
 
         return authority
     }
+}
+
+// MARK: Path
+
+extension URIParser {
 
     /*
-     // TODO: Reference RFC
+     https://tools.ietf.org/html/rfc3986#section-3.3
 
      -- ends w/ '#' || '?' || end of data
-     -- if authority, first line MUST be '/'
-     -- if NO authority, first 2 must NOT be '//'
+     -- if uri contains authority, first line MUST be '/'
+        • we won't leave authority scope w/o this delimitter, so don't need to account here. breaking bug
+          that will manifest in weird ways. Future investigate better way to direct user where to look
+          for this, but we don't need to account for it here
 
-     RFC: path MUST exist, but CAN be empty
+     -- if NO authority, first 2 must NOT be '//'
+        • if first two ARE `//` then we'll parse as authority so no need to account for this here.
+
+     -- path MUST exist, but CAN be empty
+     
+         // TODO: Further Future Validation
+         path          = path-abempty    ; begins with "/" or is empty
+         / path-absolute   ; begins with "/" but not "//"
+         / path-noscheme   ; begins with a non-colon segment
+         / path-rootless   ; begins with a segment
+         / path-empty      ; zero characters
+
+         path-abempty  = *( "/" segment )
+         path-absolute = "/" [ segment-nz *( "/" segment ) ]
+         path-noscheme = segment-nz-nc *( "/" segment )
+         path-rootless = segment-nz *( "/" segment )
+         path-empty    = 0<pchar>
+
+
+
+
+         Berners-Lee, et al.         Standards Track                    [Page 22]
+
+         RFC 3986                   URI Generic Syntax               January 2005
+
+
+         segment       = *pchar
+         segment-nz    = 1*pchar
+         segment-nz-nc = 1*( unreserved / pct-encoded / sub-delims / "@" )
+         ; non-zero-length segment without any colon ":"
+
+         pchar         = unreserved / pct-encoded / sub-delims / ":" / "@"
      */
     private func parsePath(uriContainsAuthority: Bool) throws -> [Byte] {
         guard let first = try next() else { return [] } // ok for path to be empty
@@ -185,14 +259,6 @@ public final class URIParser {
             // path is empty, we should parse query or fragment -- return token to buffer
             localBuffer.append(first)
             return []
-        }
-
-        /*
-         If a URI contains an authority component, then the path component
-         must either be empty or begin with a slash ("/") character.
-         */
-        if uriContainsAuthority && first != .forwardSlash {
-            throw "path following authority MUST begin with forwardSlash"
         }
 
         var path: [Byte]
@@ -212,10 +278,14 @@ public final class URIParser {
                 path.append(next)
             }
         }
-
+        
         return path
     }
+}
 
+// MARK: Query
+
+extension URIParser {
     /**
      // TODO: Reference RFC
 
@@ -235,59 +305,56 @@ public final class URIParser {
                 // return identification token to buffer
                 localBuffer.append(next)
                 break
-            } else {
+            } else if next.isValidQueryCharacter {
                 query.append(next)
+            } else {
+                throw "invalid query character: \(next)"
             }
         }
         return query
     }
+}
 
+// MARK: Fragment
+
+extension URIParser {
     /*
-     // TODO: Reference RFC -- starts at `#` goes to end of bytes
+     https://tools.ietf.org/html/rfc3986#section-3.3
+
+     The fragment identifier component of a URI allows indirect
+     identification of a secondary resource by reference to a primary
+     resource and additional identifying information.  The identified
+     secondary resource may be some portion or subset of the primary
+     resource, some view on representations of the primary resource, or
+     some other resource defined or described by those representations.  A
+     fragment identifier component is indicated by the presence of a
+     number sign ("#") character and terminated by the end of the URI.
+
+     fragment    = *( pchar / "/" / "?" )
      */
     private func parseFragment() throws -> [Byte]? {
-        guard let first = try next() else {
-            return nil
-        }
+        guard let first = try next() else { return nil }
         guard first == .numberSign else {
+            // expected to parse fragment, but unable to. return token for next section
             localBuffer.append(first)
             return nil
         }
 
         var fragment: [Byte] = [first]
         while let next = try next() {
-            if next.isValidUriCharacter {
+            if next.isValidFragmentCharacter {
                 fragment.append(next)
             } else {
-                throw "found invlid fragment character: \(next)"
+                throw "invalid fragment character: \(next)"
             }
         }
         return fragment
     }
-
-    // MARK: Next
-
-    // wrapping next to omit white space characters and throw on invalid
-
-    private func next() throws -> Byte? {
-        /*
-         local buffer is used to maintain last bytes while still interacting w/ byte buffer
-         */
-        guard localBuffer.isEmpty else {
-            return localBuffer.removeFirst()
-        }
-        
-        while let next = buffer.next() {
-            guard !next.isWhitespace else { continue }
-            guard next.isValidUriCharacter else {
-                throw "found invalid uri character: \(Character(next))"
-            }
-            return next
-        }
-        
-        return nil
-    }
 }
+
+
+
+// MARK: 💩
 
 extension _URI {
     struct Authority {
@@ -339,11 +406,13 @@ private final class AuthorityParser {
             .flatMap { UserInfoParser($0.array) }?
             .parse()
 
-        let hostAndPortParser = try HostAndPortParser(hostAndPortBytes)
-        let (host, port) = try hostAndPortParser.parse()
+        fatalError()
+//        let hostAndPortParser = try HostAndPortParser(hostAndPortBytes)
+//        let (host, port) = try hostAndPortParser.parse()
 
 
-        return _URI.Authority(userInfo: userInfo, host: host, port: port)
+//        return _URI.Authority(userInfo: userInfo, host: host, port: port)
+//        fatalError()
     }
 
     func parse() throws -> (userInfo: [Byte]?, hostAndPort: [Byte]) {
@@ -482,6 +551,8 @@ final class HostAndPortParser {
                 let host = components[0].array
                 let port = try parse(port: components[1].array)
                 return (host, port)
+            default:
+                throw "fuckin uri"
             }
         }
     }
