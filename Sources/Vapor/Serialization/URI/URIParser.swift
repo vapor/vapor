@@ -204,7 +204,6 @@ public final class URIParser: StaticDataBuffer {
     public func parse() throws -> URI {
         let (scheme, authority, path, query, fragment) = try parse()
         let (username, auth, host, port) = try parse(authority: authority)
-        print(port)
 
         let userInfo = try URI.UserInfo(username: username?.toString() ?? "",
                                         password: auth?.toString() ?? "")
@@ -383,7 +382,7 @@ extension URIParser {
             chunk.append(byte)
         }
 
-        host = chunk
+        host = chunk.reversed()
         return (host, port)
     }
 

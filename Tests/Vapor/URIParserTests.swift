@@ -7,46 +7,160 @@ import libc
 class URIParserTests: XCTestCase {
     static var allTests: [(String, (URIParserTests) -> () throws -> Void)] {
         return [
-
+            ("testParsing", testParsing)
         ]
     }
 
-    func test() throws {
-        let test: [String] = ["foo://example.com:8042/over/there?name=ferret#nose", "urn:example:animal:ferret:nose"]
-        try test.forEach { uri in
-            let uriData = Data(uri)
-            let parser = URIParser.init(data: uriData)
+    func testParsing() throws {
+        /*
+         ******** [WARNING] *********
 
-            print("\(try parser.parse())")
-        }
+         A lot of these are probably bad URIs, but the test expectations ARE correct.
+         Please do not alter tests that look strange without carefully 
+         consulting RFC in great detail.
+         */
+        try makeSure(input: "//google.c@@om:80",
+                     equalsScheme: "",
+                     host: "@om",
+                     username: "google.c",
+                     pass: "",
+                     port: 80,
+                     path: "",
+                     query: nil,
+                     fragment: nil)
+
+        try makeSure(input: "foo://example.com:8042/over/there?name=ferret#nose",
+                     equalsScheme: "foo",
+                     host: "example.com",
+                     username: "",
+                     pass: "",
+                     port: 8042,
+                     path: "/over/there",
+                     query: "name=ferret",
+                     fragment: "nose")
+
+        try makeSure(input: "urn:example:animal:ferret:nose",
+                     equalsScheme: "urn",
+                     host: "",
+                     username: "",
+                     pass: "",
+                     port: nil,
+                     path: "example:animal:ferret:nose",
+                     query: nil,
+                     fragment: nil)
+
+        try makeSure(input: "ftp://ftp.is.co.za/rfc/rfc1808.txt",
+                     equalsScheme: "ftp",
+                     host: "ftp.is.co.za",
+                     username: "",
+                     pass: "",
+                     port: nil,
+                     path: "/rfc/rfc1808.txt",
+                     query: nil,
+                     fragment: nil)
+
+        try makeSure(input: "http://www.ietf.org/rfc/rfc2396.txt",
+                     equalsScheme: "http",
+                     host: "www.ietf.org",
+                     username: "",
+                     pass: "",
+                     port: nil,
+                     path: "/rfc/rfc2396.txt",
+                     query: nil,
+                     fragment: nil)
+
+        try makeSure(input: "ldap://[2001:db8::7]/c=GB?objectClass?one",
+                     equalsScheme: "ldap",
+                     host: "[2001:db8::7]",
+                     username: "",
+                     pass: "",
+                     port: nil,
+                     path: "/c=GB",
+                     query: "objectClass?one",
+                     fragment: nil)
+
+        try makeSure(input: "mailto:John.Doe@example.com",
+                     equalsScheme: "mailto",
+                     host: "",
+                     username: "",
+                     pass: "",
+                     port: nil,
+                     path: "John.Doe@example.com",
+                     query: nil,
+                     fragment: nil)
+
+        try makeSure(input: "news:comp.infosystems.www.servers.unix",
+                     equalsScheme: "news",
+                     host: "",
+                     username: "",
+                     pass: "",
+                     port: nil,
+                     path: "comp.infosystems.www.servers.unix",
+                     query: nil,
+                     fragment: nil)
+
+        try makeSure(input: "tel:+1-816-555-1212",
+                     equalsScheme: "tel",
+                     host: "",
+                     username: "",
+                     pass: "",
+                     port: nil,
+                     path: "+1-816-555-1212",
+                     query: nil,
+                     fragment: nil)
+
+        try makeSure(input: "telnet://192.0.2.16:80/",
+                     equalsScheme: "telnet",
+                     host: "192.0.2.16",
+                     username: "",
+                     pass: "",
+                     port: 80,
+                     path: "/",
+                     query: nil,
+                     fragment: nil)
+
+        try makeSure(input: "urn:oasis:names:specification:docbook:dtd:xml:4.1.2",
+                     equalsScheme: "urn",
+                     host: "",
+                     username: "",
+                     pass: "",
+                     port: nil,
+                     path: "oasis:names:specification:docbook:dtd:xml:4.1.2",
+                     query: nil,
+                     fragment: nil)
+
+        try makeSure(input: "foo://info.example.com?fred",
+                     equalsScheme: "foo",
+                     host: "info.example.com",
+                     username: "",
+                     pass: "",
+                     port: nil,
+                     path: "",
+                     query: "fred",
+                     fragment: nil)
     }
 
-    let testCases: [String: URIParser.URI] = [:]
-    let tasdfest: [String] = [
-        "//google.c@@om:80",
-        "foo://example.com:8042/over/there?name=ferret#nose",
-        "urn:example:animal:ferret:nose",
-        "ftp://ftp.is.co.za/rfc/rfc1808.txt",
-        "http://www.ietf.org/rfc/rfc2396.txt",
-        "ldap://[2001:db8::7]/c=GB?objectClass?one",
-        "mailto:John.Doe@example.com",
-        "news:comp.infosystems.www.servers.unix",
-        "tel:+1-816-555-1212",
-        "telnet://192.0.2.16:80/",
-        "urn:oasis:names:specification:docbook:dtd:xml:4.1.2",
-        "foo://info.example.com?fred"
-    ]
 
-    func testInput() throws {
-        let uri = try URIParser.parse(uri: "//google.c@@om:80".utf8.array)
-        XCTAssert(uri.userInfo?.username == "google.c")
-        XCTAssert(uri.host == "@om")
-        XCTAssert(uri.port == 80)
-        print(uri)
-        print("")
-    }
-    private func makeSure(input: String, equalsScheme: String, authority: String?, path: String, query: String?, fragment: String?) {
-
+    private func makeSure(input: String,
+                          equalsScheme scheme: String,
+                          host: String,
+                          username: String,
+                          pass: String,
+                          port: Int?,
+                          path: String,
+                          query: String?,
+                          fragment: String?) throws {
+        let uri = try URIParser.parse(uri: input.utf8.array)
+        XCTAssert(uri.scheme == scheme, "\(input) -- expected scheme: \(scheme) got: \(uri.scheme)")
+        XCTAssert(uri.host == host, "\(input) -- expected host: \(host) got: \(uri.host)")
+        let testUsername = uri.userInfo?.username ?? ""
+        let testPass = uri.userInfo?.password ?? ""
+        XCTAssert(testUsername == username, "\(input) -- expected username: \(username) got: \(testUsername)")
+        XCTAssert(testPass == pass, "\(input) -- expected password: \(pass), got: \(testPass)")
+        XCTAssert(uri.port == port, "\(input) -- expected port: \(port) got: \(uri.port)")
+        XCTAssert(uri.path == path, "\(input) -- expected path: \(path) got: \(uri.path)")
+        XCTAssert(uri.query == query, "\(input) -- expected query: \(query) got: \(uri.query)")
+        XCTAssert(uri.fragment == fragment, "\(input) -- expected fragment: \(fragment) got: \(fragment)")
     }
 }
 
