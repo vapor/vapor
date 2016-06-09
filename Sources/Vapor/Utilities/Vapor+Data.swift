@@ -62,6 +62,7 @@ extension Byte {
         static let space: Byte = 0x20
         static let period: Byte = 0x2e
         static let slash: Byte = 0x2f
+        static let zero: Byte = 0x30
         static let colon: Byte = 0x3A
         static let questionMark: Byte = 0x3F
 
@@ -76,6 +77,11 @@ extension Byte {
 }
 
 extension Data {
+    static let crlf: Data = [
+        Byte.ASCII.carriageReturn,
+        Byte.ASCII.newLine
+    ]
+
     var int: Int? {
         var int: Int = 0
 

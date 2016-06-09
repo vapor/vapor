@@ -5,10 +5,19 @@ final class HTTPParser: StreamParser {
 
     let buffer: StreamBuffer
 
+    /**
+        Creates a new HTTP Parser that will
+        receive serialized request data from 
+        the supplied stream.
+    */
     init(stream: Stream) {
         self.buffer = StreamBuffer(stream)
     }
 
+    /**
+        Reads and filters non-valid ASCII characters
+        from the stream until a new line character is returned.
+    */
     func nextLine() throws -> Data {
         var line: Data = []
 
@@ -22,6 +31,11 @@ final class HTTPParser: StreamParser {
         return line
     }
 
+    /**
+        Parses serialized request data from
+        the stream following HTTP/1.0 or HTTP/1.1
+        protocol.
+    */
     func parse() throws -> Request {
         let requestLineString = try nextLine()
 
@@ -57,7 +71,7 @@ final class HTTPParser: StreamParser {
 
             let val = Data(comps[1]).string
 
-            headers[key] = val
+            headers[key] = val.trim()
         }
 
         let body: Data
@@ -66,6 +80,30 @@ final class HTTPParser: StreamParser {
 
         if let contentLength = headers["content-length"]?.int {
             body = try buffer.next(chunk: contentLength)
+        } else if
+            let transferEncoding = headers["transfer-encoding"]?.string
+            where transferEncoding.lowercased() == "chunked"
+        {
+            var buffer: Data = []
+
+            while true {
+                let length = try nextLine()
+                let content = try nextLine()
+
+                // size must be sent
+                guard length.count > 0 else {
+                    break
+                }
+
+                // end of chunked encoding
+                if length.bytes[0] == Byte.ASCII.zero {
+                    break
+                }
+
+                buffer.bytes += content.bytes
+            }
+
+            body = buffer
         } else {
             body = []
         }
