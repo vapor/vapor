@@ -62,7 +62,7 @@ extension Data {
         var data = Data()
         
         for byte in self {
-            if Data.lowercaseRange.contains(Int(byte)) {
+            if Data.uppercaseRange.contains(Int(byte)) {
                 data.append(byte - 32)
             } else {
                 data.append(byte)
