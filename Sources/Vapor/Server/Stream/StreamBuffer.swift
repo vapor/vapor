@@ -9,7 +9,7 @@ import C7
 public final class StreamBuffer {
     private let stream: Stream
     private let size: Int
-    private let buffer: ArraySlice<Byte>
+    private var buffer: ArraySlice<Byte>
 
     //private var iterator: IndexingIterator<[Byte]>
 
@@ -26,7 +26,9 @@ public final class StreamBuffer {
         for i in 0 ..< max {
             let byte = buffer[i]
             if byte == end {
-                return buffer[0 ..< i]
+                let slice = buffer[0 ..< i]
+                buffer = buffer[i ..< max]
+                return slice
             }
         }
 
