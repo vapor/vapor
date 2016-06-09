@@ -27,27 +27,25 @@ app.add(.trace, path: "trace") { request in
 
 // MARK: WebSockets
 
-app.get("socket") { request in
-    return try request.upgradeToWebSocket { ws in
-        try ws.send("WebSocket Connected :)")
+app.socket("socket") { request, ws in
+    try ws.send("WebSocket Connected :)")
 
-        ws.onText = { ws, text in
-            try ws.send("You said \(text)!")
+    ws.onText = { ws, text in
+        try ws.send("You said \(text)!")
 
-            if text == "stop" {
-                ws.onText = nil
-                try ws.send("🚫 stopping connection listener -- socket remains open")
-            }
-
-            if text == "close" {
-                try ws.send("... closing 👋")
-                try ws.close()
-            }
+        if text == "stop" {
+            ws.onText = nil
+            try ws.send("🚫 stopping connection listener -- socket remains open")
         }
 
-        ws.onClose = { data in
-            print("Did close w/ packet \(data)")
+        if text == "close" {
+            try ws.send("... closing 👋")
+            try ws.close()
         }
+    }
+
+    ws.onClose = { data in
+        print("Did close w/ packet \(data)")
     }
 }
 
