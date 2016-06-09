@@ -67,6 +67,7 @@ public final class URIParser {
         print("Path \(try path.toString())")
         print("Query \(try query?.toString())")
         print("Fragment \(try fragment?.toString())")
+        print("\n------------------------------------------------------\n")
     }
 
     /*
@@ -157,6 +158,183 @@ extension URIParser {
         return scheme
     }
 }
+
+/*
+
+ The generic URI syntax consists of a hierarchical sequence of
+ components referred to as the scheme, authority, path, query, and
+ fragment.
+
+ URI         = scheme ":" hier-part [ "?" query ] [ "#" fragment ]
+
+ hier-part   = "//" authority path-abempty
+ / path-absolute
+ / path-rootless
+ / path-empty
+
+ The scheme and path components are required, though the path may be
+ empty (no characters).  When authority is present, the path must
+ either be empty or begin with a slash ("/") character.  When
+ authority is not present, the path cannot begin with two slash
+ characters ("//").  These restrictions result in five different ABNF
+ rules for a path (Section 3.3), only one of which will match any
+ given URI reference.
+
+ The following are two example URIs and their component parts:
+
+ foo://example.com:8042/over/there?name=ferret#nose
+ \_/   \______________/\_________/ \_________/ \__/
+ |           |            |            |        |
+ scheme     authority       path        query   fragment
+ |   _____________________|__
+ / \ /                        \
+ urn:example:animal:ferret:nose
+ */
+extension URIParser {
+    func discardNext(_ count: Int) throws {
+        _ = try collect(next: count)
+    }
+
+    func checkLeadingBuffer(matches: Byte...) throws -> Bool {
+        return try checkLeadingBuffer(matches: matches)
+    }
+    func checkLeadingBuffer(matches: [Byte]) throws -> Bool {
+        let leading = try collect(next: matches.count)
+        if leading == matches {
+            // discards results
+            return true
+        } else {
+            // return to buffer
+            localBuffer.append(contentsOf: leading)
+            return false
+        }
+    }
+
+    func collect(next count: Int) throws -> [Byte] {
+        guard count > 0 else { return [] }
+
+        var body: [Byte] = []
+        try (1...count).forEach { _ in
+            guard let next = try next() else { return }
+            body.append(next)
+        }
+        return body
+    }
+
+    func collect(until delimitters: Byte...) throws -> [Byte] {
+        var collected: [Byte] = []
+        while let next = try next() {
+            if delimitters.contains(next) {
+                // If the delimitter is also a token that identifies
+                // a particular section of the URI
+                // then we may want to return that byte to the buffer
+                localBuffer.append(next)
+                break
+            }
+
+            collected.append(next)
+        }
+        return collected
+    }
+
+    func finish() throws -> [Byte] {
+        var complete: [Byte] = []
+        while let next = try next() {
+            complete.append(next)
+        }
+        return complete
+    }
+
+    public func asdfasdfsadf() throws {
+        // ordered calls
+        let scheme = try _parseScheme()
+        let authority = try _parseAuthority()
+        let path = try _parsePath()
+        let query = try _parseQuery()
+        let fragment = try _parseFragment()
+
+        print("Scheme \(try scheme.toString())")
+        print("Authority \(try authority?.toString())")
+        print("Path \(try path.toString())")
+        print("Query \(try query?.toString())")
+        print("Fragment \(try fragment?.toString())")
+    }
+
+    /*
+     https://tools.ietf.org/html/rfc3986#section-3.1
+
+     Scheme names consist of a sequence of characters beginning with a
+     letter and followed by any combination of letters, digits, plus
+     ("+"), period ("."), or hyphen ("-").  Although schemes are case-
+     insensitive, the canonical form is lowercase and documents that
+     specify schemes must do so with lowercase letters.  An implementation
+     should accept uppercase letters as equivalent to lowercase in scheme
+     names (e.g., allow "HTTP" as well as "http") for the sake of
+     robustness but should only produce lowercase scheme names for
+     consistency.
+
+     scheme      = ALPHA *( ALPHA / DIGIT / "+" / "-" / "." )
+     */
+    func _parseScheme() throws -> [Byte] {
+        let scheme = try collect(until: .colon)
+        try discardNext(1) // clear ':' delimitter. We don't use this for further parsing
+        return scheme
+    }
+
+    /*
+     https://tools.ietf.org/html/rfc3986#section-3.2
+
+     The authority component is preceded by a double slash ("//") and is
+     terminated by the next slash ("/"), question mark ("?"), or number
+     sign ("#") character, or by the end of the URI.
+     
+     authority   = [ userinfo "@" ] host [ ":" port ]
+     */
+    func _parseAuthority() throws -> [Byte]? {
+        guard try checkLeadingBuffer(matches: .forwardSlash, .forwardSlash) else { return nil }
+        return try collect(until: .forwardSlash, .questionMark, .numberSign)
+    }
+
+    /*
+     https://tools.ietf.org/html/rfc3986#section-3.3
+     
+     The path is terminated
+     by the first question mark ("?") or number sign ("#") character, or
+     by the end of the URI.
+     
+     If a URI contains an authority component, then the path component
+     must either be empty or begin with a slash ("/") character.
+     */
+    func _parsePath() throws -> [Byte] {
+        return try collect(until: .questionMark, .numberSign)
+    }
+
+    /*
+     https://tools.ietf.org/html/rfc3986#section-3.4
+
+     The query component is indicated by the first question
+     mark ("?") character and terminated by a number sign ("#") character
+     or by the end of the URI.
+     */
+    func _parseQuery() throws -> [Byte]? {
+        guard try checkLeadingBuffer(matches: .questionMark) else { return nil }
+        return try collect(until: .numberSign)
+    }
+
+
+    /*
+     https://tools.ietf.org/html/rfc3986#section-3.5
+
+     A
+     fragment identifier component is indicated by the presence of a
+     number sign ("#") character and terminated by the end of the URI.
+     */
+    func _parseFragment() throws -> [Byte]? {
+        guard try checkLeadingBuffer(matches: .numberSign) else { return nil }
+        return try finish()
+    }
+}
+
 
 // MARK: Authority
 
@@ -281,6 +459,8 @@ extension URIParser {
         
         return path
     }
+
+//    enum Component
 }
 
 // MARK: Query
@@ -340,7 +520,7 @@ extension URIParser {
             return nil
         }
 
-        var fragment: [Byte] = [first]
+        var fragment: [Byte] = []
         while let next = try next() {
             if next.isValidFragmentCharacter {
                 fragment.append(next)
