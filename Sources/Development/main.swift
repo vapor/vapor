@@ -21,6 +21,10 @@ app.get("test") { request in
     return "123"
 }
 
+app.add(.trace, path: "trace") { request in
+    return "trace request"
+}
+
 // MARK: WebSockets
 
 app.socket("socket") { request, ws in
@@ -74,7 +78,7 @@ app.get("test", Int.self, String.self) { request, int, string in
     ]
  ]
  */
-app.get("users") { req in
+app.get("users-test") { req in
     let friendName = req.data[0, "name", "friend", "name"].string
     return "Hello \(friendName)"
 }
