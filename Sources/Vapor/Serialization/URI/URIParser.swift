@@ -174,15 +174,6 @@ public func percentEncoded(_ input: [Byte], shouldEncode: (Byte) throws -> Bool)
                 group.append(.zeroCharacter)
             }
             group.append(contentsOf: hex)
-//            let char = Character(byte)
-//            "\(char)".utf8.forEach { utf8Byte in
-//                let hex = String(utf8Byte, radix: 16).utf8
-//                group.append(.percentSign)
-//                if utf8Byte > 16 {
-//                    group.append(0)
-//                }
-//                group.append(contentsOf: hex)
-//            }
         } else {
             group.append(byte)
         }
@@ -190,30 +181,29 @@ public func percentEncoded(_ input: [Byte], shouldEncode: (Byte) throws -> Bool)
     return group
 }
 
-public func TEST_PERCENT_DECODING() {
-    let string = "%7E".utf8.array
-    print("Bytes: \(string)")
-    let decoded = try! percentDecoded(string)
-    print("Decoded: \(decoded)")
-    let back = try! decoded.toString()
-    print("Back: \(back)")
-}
-
 public final class URIParser: StaticDataBuffer {
-    // TODO: Move to internal to force static func
-    public func parse() throws -> URI {
+
+    internal func parse() throws -> URI {
         let (scheme, authority, path, query, fragment) = try parse()
         let (username, auth, host, port) = try parse(authority: authority)
 
-        let userInfo = try URI.UserInfo(username: username?.toString() ?? "",
-                                        password: auth?.toString() ?? "")
-        let uri = try URI(scheme: scheme.toString(),
-                          userInfo: userInfo,
-                          host: host.toString(),
-                          port: port.flatMap { try $0.toString() } .flatMap { Int($0) },
-                          path: path.toString(),
-                          query: query?.toString(),
-                          fragment: fragment?.toString())
+        // TODO: Should auth and username be non-optional? There's a difference between "" and nil
+        let userInfo = try URI.UserInfo(
+            username: username?.toString() ?? "",
+            password: auth?.toString() ?? ""
+        )
+
+        let uri = try URI(
+            scheme: scheme.toString(),
+            userInfo: userInfo,
+            host: host.toString(),
+            // port MUST convert to string THEN to Int
+            port: port.flatMap { try $0.toString() } .flatMap { Int($0) },
+            path: path.toString(),
+            query: query?.toString(),
+            fragment: fragment?.toString()
+        )
+
         return uri
     }
 
@@ -224,7 +214,13 @@ public final class URIParser: StaticDataBuffer {
         let path = try parsePath()
         let query = try parseQuery()
         let fragment = try parseFragment()
-        return (scheme, authority, path, query, fragment)
+        return try (
+            percentDecoded(scheme),
+            percentDecoded(authority),
+            percentDecoded(path),
+            query.flatMap(percentDecoded),
+            fragment.flatMap(percentDecoded)
+        )
     }
 
     /**
