@@ -119,7 +119,7 @@ extension Byte {
     static let percentSign: Byte = 0x25 // '%'
     static let plusSign: Byte = 0x2B // '+'
     static let minusSign: Byte = 0x2D // '-' -- Hyphen Minus
-
+    static let zeroCharacter: Byte = 0x30
 }
 
 extension Equatable {

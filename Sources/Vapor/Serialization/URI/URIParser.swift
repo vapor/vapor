@@ -139,7 +139,7 @@ extension URIParser {
     }
 }
 
-private func percentDecoded(input: [Byte]) throws -> [Byte] {
+public func percentDecoded(_ input: [Byte]) throws -> [Byte] {
     var idx = 0
     var group: [Byte] = []
     while idx < input.count {
@@ -164,13 +164,25 @@ private func percentDecoded(input: [Byte]) throws -> [Byte] {
     return group
 }
 
-private func percentEncoded(input: [Byte], shouldEncode: (Byte) throws -> Bool) throws -> [Byte] {
+public func percentEncoded(_ input: [Byte], shouldEncode: (Byte) throws -> Bool) throws -> [Byte] {
     var group: [Byte] = []
     try input.forEach { byte in
         if try shouldEncode(byte) {
-            let encodedBytes = String(byte, radix: 16).utf8
+            let hex = String(byte, radix: 16).utf8
             group.append(.percentSign)
-            group.append(contentsOf: encodedBytes)
+            if hex.count == 1 {
+                group.append(.zeroCharacter)
+            }
+            group.append(contentsOf: hex)
+//            let char = Character(byte)
+//            "\(char)".utf8.forEach { utf8Byte in
+//                let hex = String(utf8Byte, radix: 16).utf8
+//                group.append(.percentSign)
+//                if utf8Byte > 16 {
+//                    group.append(0)
+//                }
+//                group.append(contentsOf: hex)
+//            }
         } else {
             group.append(byte)
         }
@@ -181,7 +193,7 @@ private func percentEncoded(input: [Byte], shouldEncode: (Byte) throws -> Bool) 
 public func TEST_PERCENT_DECODING() {
     let string = "%7E".utf8.array
     print("Bytes: \(string)")
-    let decoded = try! percentDecoded(input: string)
+    let decoded = try! percentDecoded(string)
     print("Decoded: \(decoded)")
     let back = try! decoded.toString()
     print("Back: \(back)")
@@ -192,14 +204,14 @@ public final class URIParser: StaticDataBuffer {
     public func parse() throws -> URI {
         let (scheme, authority, path, query, fragment) = try parse()
         let (username, auth, host, port) = try parse(authority: authority)
-
+        print(port)
 
         let userInfo = try URI.UserInfo(username: username?.toString() ?? "",
                                         password: auth?.toString() ?? "")
         let uri = try URI(scheme: scheme.toString(),
                           userInfo: userInfo,
                           host: host.toString(),
-                          port: port.flatMap { UInt($0) } .map { Int($0) },
+                          port: port.flatMap { try $0.toString() } .flatMap { Int($0) },
                           path: path.toString(),
                           query: query?.toString(),
                           fragment: fragment?.toString())
