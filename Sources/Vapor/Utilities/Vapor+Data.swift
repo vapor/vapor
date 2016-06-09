@@ -57,6 +57,7 @@ extension Data {
 extension Byte {
     struct ASCII {
         static let newLine: Byte = 0xA
+        static let carriageReturn: Byte = 0xD
         
         static let space: Byte = 0x20
         static let period: Byte = 0x2e

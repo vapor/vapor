@@ -21,7 +21,7 @@ extension HTTPParser {
         let versionSlice: ArraySlice<Byte>
 
 
-        init(_ data: ArraySlice<Byte>) throws {
+        init(_ data: Data) throws {
             let comps = data.split(
                 separator: Byte.ASCII.space,
                 maxSplits: 3,

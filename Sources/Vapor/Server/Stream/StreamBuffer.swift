@@ -9,49 +9,32 @@ import C7
 public final class StreamBuffer {
     private let stream: Stream
     private let size: Int
-    private var buffer: ArraySlice<Byte>
-
-    //private var iterator: IndexingIterator<[Byte]>
+    private var iterator: IndexingIterator<[Byte]>
 
     public init(_ stream: Stream, size: Int = 1024) {
         self.size = size
         self.stream = stream
-        self.buffer = []
-        //self.iterator = Data().makeIterator()
-    }
-
-    public func slice(until end: Byte) -> ArraySlice<Byte> {
-        let max = buffer.count
-
-        for i in 0 ..< max {
-            let byte = buffer[i]
-            if byte == end {
-                let slice = buffer[0 ..< i]
-                buffer = buffer[i ..< max]
-                return slice
-            }
-        }
-
-        return []
+        self.iterator = Data().makeIterator()
     }
 
     public func next() throws -> Byte? {
-        /*guard let next = iterator.next() else {
-            iterator = try stream.receive(upTo: buffer).makeIterator()
+        guard let next = iterator.next() else {
+            iterator = try stream.receive(upTo: size).makeIterator()
             return iterator.next()
         }
-        return next*/
-        return nil
+        return next
     }
 
-    public func chunk(size: Int) throws -> [Byte] {
-        var count = 0
-        var bytes = [Byte].init(repeating: 0, count: size)
-        while count < size, let byte = try next() {
-            bytes[count] = byte
-            count += 1
+    public func next(chunk size: Int) throws -> Data {
+        var data: Data = []
+
+        for _ in 0 ..< size {
+            if let byte = try next() {
+                data.append(byte)
+            }
         }
-        return bytes
+
+        return data
     }
 }
 
@@ -78,6 +61,6 @@ extension StreamBuffer: Sending {
 
 extension StreamBuffer: Receiving {
     public func receive(upTo byteCount: Int, timingOut deadline: Double) throws -> Data {
-        return try Data(chunk(size: byteCount))
+        return try next(chunk: byteCount)
     }
 }
