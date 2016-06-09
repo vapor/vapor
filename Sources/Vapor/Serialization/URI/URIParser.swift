@@ -421,22 +421,7 @@ public final class __URIParser: BaseURIParser {
 
         return uri
     }
-//
-//    func parse(authority: [Byte]) throws -> (userinfo: [Byte]?, hostAndPort: [Byte]) {
-//        let comps = authority.split(separator: .atSign,
-//                                    maxSplits: 1,
-//                                    omittingEmptySubsequences: false)
-//        switch comps.count {
-//        case 0:
-//            return (nil, [])
-//        }
-//    }
 
-
-    struct __UserInfo {
-        let username: String
-        let auth: String?
-    }
 
     func parse(authority: [Byte]) throws -> (username: [Byte]?, auth: [Byte]?, host: [Byte], port: [Byte]?) {
         let comps = authority.split(separator: .atSign,
