@@ -25,8 +25,8 @@ try test.forEach { uri in
 //    try parser.parse()
 
     let alt = __URIParser(data: uriData)
-    _ = try alt.asdfasdfsadf()
-    print("")
+    let uri = try alt.parse()
+    print("URI: \(uri)")
 //let test =  ALT_URIParser
 }
 var workDir: String {

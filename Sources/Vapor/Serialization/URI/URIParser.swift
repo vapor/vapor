@@ -82,14 +82,6 @@ public class BaseURIParser {
     }
 }
 
-public struct _URI {
-    let scheme: String
-    let authority: Authority?
-    let path: String
-    let query: String?
-    let fragment: String?
-}
-
 public final class URIParser {
     private var localBuffer: [Byte] = []
     private var buffer: IndexingIterator<[Byte]>
@@ -421,40 +413,26 @@ public final class __URIParser: BaseURIParser {
         }
     }
 
-    public func asdfasdfsadf() throws -> URI {
+    public func parse() throws -> URI {
         // ordered calls
-        let scheme = try _parseScheme()
+        let scheme = try parseScheme()
 
-        let authority = try _parseAuthority() ?? []
-//        print("AUTHORITY: \(authority)")
+        let authority = try parseAuthority() ?? []
         let (username, auth, host, port) = try parse(authority: authority)
 
-        let path = try _parsePath()
-        let query = try _parseQuery()
-        let fragment = try _parseFragment()
+        let path = try parsePath()
+        let query = try parseQuery()
+        let fragment = try parseFragment()
 
-//        print("Scheme \(try scheme.toString())")
-//        print("Authority:")
-//        print("\tusername: \(try username?.toString())")
-//        print("\tauth: \(try auth?.toString())")
-//        print("\thost: \(try host.toString())")
-//        print("\tport: \(try port?.toString())")
-//        print("Path \(try path.toString())")
-//        print("Query \(try query?.toString())")
-//        print("Fragment \(try fragment?.toString())")
-
-        let userInfo = try URI.UserInfo.init(username: username?.toString() ?? "",
-                                             password: auth?.toString() ?? "")
-
-        let portInt = port.flatMap { UInt($0) } .map { Int($0) }
-        let uri = try URI.init(scheme: scheme.toString(),
-                               userInfo: userInfo,
-                               host: host.toString(),
-                               port: portInt,
-                               path: path.toString(),
-                               query: query?.toString(),
-                               fragment: fragment?.toString())
-        print("URI: \(uri)")
+        let userInfo = try URI.UserInfo(username: username?.toString() ?? "",
+                                        password: auth?.toString() ?? "")
+        let uri = try URI(scheme: scheme.toString(),
+                          userInfo: userInfo,
+                          host: host.toString(),
+                          port: port.flatMap { UInt($0) } .map { Int($0) },
+                          path: path.toString(),
+                          query: query?.toString(),
+                          fragment: fragment?.toString())
         return uri
     }
 
@@ -570,7 +548,7 @@ public final class __URIParser: BaseURIParser {
 
      scheme      = ALPHA *( ALPHA / DIGIT / "+" / "-" / "." )
      */
-    func _parseScheme() throws -> [Byte] {
+    func parseScheme() throws -> [Byte] {
         let scheme = try collect(until: .colon, .forwardSlash)
         let colon = try checkLeadingBuffer(matches: .colon)
         guard colon else { return scheme }
@@ -589,7 +567,7 @@ public final class __URIParser: BaseURIParser {
 
      authority   = [ userinfo "@" ] host [ ":" port ]
      */
-    func _parseAuthority() throws -> [Byte]? {
+    func parseAuthority() throws -> [Byte]? {
         guard try checkLeadingBuffer(matches: .forwardSlash, .forwardSlash) else { return nil }
         try discardNext(2) // discard '//'
         return try collect(until: .forwardSlash, .questionMark, .numberSign)
@@ -605,7 +583,7 @@ public final class __URIParser: BaseURIParser {
      If a URI contains an authority component, then the path component
      must either be empty or begin with a slash ("/") character.
      */
-    func _parsePath() throws -> [Byte] {
+    func parsePath() throws -> [Byte] {
         return try collect(until: .questionMark, .numberSign)
     }
 
@@ -616,7 +594,7 @@ public final class __URIParser: BaseURIParser {
      mark ("?") character and terminated by a number sign ("#") character
      or by the end of the URI.
      */
-    func _parseQuery() throws -> [Byte]? {
+    func parseQuery() throws -> [Byte]? {
         guard try checkLeadingBuffer(matches: .questionMark) else { return nil }
         try discardNext(1) // discard '?'
         return try collect(until: .numberSign)
@@ -630,7 +608,7 @@ public final class __URIParser: BaseURIParser {
      fragment identifier component is indicated by the presence of a
      number sign ("#") character and terminated by the end of the URI.
      */
-    func _parseFragment() throws -> [Byte]? {
+    func parseFragment() throws -> [Byte]? {
         guard try checkLeadingBuffer(matches: .numberSign) else { return nil }
         try discardNext(1) // discard '#'
         return try finish()
@@ -643,24 +621,6 @@ extension Array where Element: Equatable {
         return self[0...index].array
     }
 }
-
-//extension Array {
-//    private func suffix(until matches: (Element) throws -> Bool) rethrows -> Array {
-//        var collect = Array()
-//        for value in reversed() where !matches(value) else {
-//
-//        }
-//    }
-//}
-
-//public final class AuthorityParser: BaseURIParser {
-//    func parse() throws {
-//
-//    }
-//
-//    func parse
-//}
-
 
 // MARK: Authority
 
@@ -855,176 +815,5 @@ extension URIParser {
             }
         }
         return fragment
-    }
-}
-
-
-
-// MARK: 💩
-
-extension _URI {
-    struct Authority {
-        struct UserInfo {
-            let username: String
-            let auth: String?
-        }
-
-        let userInfo: UserInfo?
-        let host: String
-        let port: String
-    }
-}
-
-/*
- https://tools.ietf.org/html/rfc3986#appendix-A
-
- authority     = [ userinfo "@" ] host [ ":" port ]
- userinfo      = *( unreserved / pct-encoded / sub-delims / ":" )
- host          = IP-literal / IPv4address / reg-name
- port          = *DIGIT
-
- IP-literal    = "[" ( IPv6address / IPvFuture  ) "]"
-
- IPvFuture     = "v" 1*HEXDIG "." 1*( unreserved / sub-delims / ":" )
-
- IPv6address   =                            6( h16 ":" ) ls32
- /                       "::" 5( h16 ":" ) ls32
- / [               h16 ] "::" 4( h16 ":" ) ls32
- / [ *1( h16 ":" ) h16 ] "::" 3( h16 ":" ) ls32
- / [ *2( h16 ":" ) h16 ] "::" 2( h16 ":" ) ls32
- / [ *3( h16 ":" ) h16 ] "::"    h16 ":"   ls32
- / [ *4( h16 ":" ) h16 ] "::"              ls32
- / [ *5( h16 ":" ) h16 ] "::"              h16
- / [ *6( h16 ":" ) h16 ] "::"
-
- reg-name      = *( unreserved / pct-encoded / sub-delims )
- */
-
-/**
- https://tools.ietf.org/html/rfc3986#section-3.2.1
- 
- The userinfo subcomponent may consist of a user name and, optionally,
- scheme-specific information about how to gain authorization to access
- the resource.  The user information, if present, is followed by a
- commercial at-sign ("@") that delimits it from the host.
-
- userinfo    = *( unreserved / pct-encoded / sub-delims / ":" )
-
- Use of the format "user:password" in the userinfo field is
- deprecated.  Applications should not render as clear text any data
- after the first colon (":") character found within a userinfo
- subcomponent unless the data after the colon is the empty string
- (indicating no password).  Applications may choose to ignore or
- reject such data when it is received as part of a reference and
- should reject the storage of such data in unencrypted form.  The
- passing of authentication information in clear text has proven to be
- a security risk in almost every case where it has been used.
-
- Applications that render a URI for the sake of user feedback, such as
- in graphical hypertext browsing, should render userinfo in a way that
- is distinguished from the rest of a URI, when feasible.  Such
- rendering will assist the user in cases where the userinfo has been
- misleadingly crafted to look like a trusted domain name
- (Section 7.6).
- */
-final class UserInfoParser {
-    let bytes: [Byte]
-    init(_ bytes: [Byte]) {
-        self.bytes = bytes
-    }
-
-    func parse() throws -> _URI.Authority.UserInfo {
-        let (nameBytes, authBytes) = try parseRaw()
-        // TODO: Percent Decode Here
-        let name = try nameBytes.toString()
-        let auth = try authBytes?.toString()
-        return _URI.Authority.UserInfo(username: name, auth: auth)
-    }
-
-    private func parseRaw() throws -> (username: [Byte], auth: [Byte]?) {
-        let components = bytes.split(separator: .colon,
-                                     maxSplits: 1,
-                                     omittingEmptySubsequences: false)
-
-        switch components.count {
-        case 0:
-            return ([], nil)
-        case 1:
-            return (components[0].array, nil)
-        case 2:
-            return (components[0].array, components[1].array)
-        default:
-            throw "unespected user info components"
-        }
-    }
-}
-
-final class HostAndPortParser {
-    private let bytes: [Byte]
-
-    init(_ bytes: [Byte]) {
-        self.bytes = bytes
-    }
-
-    func parse() throws -> (host: String, port: String?) {
-        let (hostBytes, portBytes) = try parseRaw()
-        return try (hostBytes.toString(), portBytes?.toString())
-    }
-
-    func parseRaw() throws -> (host: [Byte], port: [Byte]?) {
-        guard bytes.isEmpty else {
-            return ([], nil)
-        }
-
-        /*
-         A host identified by an Internet Protocol literal address, version 6
-         [RFC3513] or later, is distinguished by enclosing the IP literal
-         within square brackets ("[" and "]").  This is the only place where
-         square bracket characters are allowed in the URI syntax.
-         */
-        let first = bytes[0]
-        if first == .leftSquareBracket {
-            guard let close = bytes.index(of: .rightSquareBracket) else {
-                throw "invalid IP Literal address"
-            }
-            let ipLiteral = bytes[0...close].array
-            let remaining = bytes.suffix(from: close)
-            guard !remaining.isEmpty else {
-                return (ipLiteral, nil)
-            }
-
-            let port = try parse(port: remaining.suffix(from: 1).array)
-            return (ipLiteral, port)
-        } else if first == .colon {
-            // no host, go to port
-            let port = try parse(port: bytes.suffix(from: 1).array)
-            return ([], port)
-        } else {
-            // host is reg-name or ip4
-            let components = bytes.split(separator: .colon, maxSplits: 1, omittingEmptySubsequences: true)
-            switch components.count {
-            case 0:
-                return ([], nil)
-            case 1:
-                return (components[0].array, nil)
-            case 2:
-                let host = components[0].array
-                let port = try parse(port: components[1].array)
-                return (host, port)
-            default:
-                throw "fuckin uri"
-            }
-        }
-    }
-
-    /**
-     port        = *DIGIT
-     */
-    private func parse(port: [Byte]) throws -> [Byte]? {
-        guard !port.isEmpty else { return nil }
-        for byte in port where !byte.isDigit {
-            throw "port numbers should only be digits"
-        }
-        return port
     }
 }
