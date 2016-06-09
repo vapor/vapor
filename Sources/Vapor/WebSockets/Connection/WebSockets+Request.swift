@@ -6,6 +6,11 @@ public enum WebSocketRequestFormat: ErrorProtocol {
 }
 
 extension Request {
+    /**
+        Upgrades the request to a WebSocket connection
+        WebSocket connection to provide two way information
+        transfer between the client and the server.
+    */
     public func upgradeToWebSocket(
         supportedProtocols: ([String]) -> [String] = { $0 },
         body: (ws: WebSocket) throws -> Void) throws -> Response {
