@@ -55,6 +55,9 @@ extension Data {
 }
 
 extension Byte {
+    static let space: Byte = 0x20
+    static let colon: Byte = 0x3A
+
     static let alphabetLength: Byte = 26
     static let uppercaseStart: Byte = 65
     static let lowercaseStart: Byte = 97

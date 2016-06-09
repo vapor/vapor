@@ -14,15 +14,15 @@ final class HTTPParser: StreamParser {
         self.buffer = StreamBuffer(stream, buffer: 1024)
     }
 
-    func nextLine() throws -> String {
-        var line: String = ""
+    func nextLine() throws -> Data {
+        var line: Data = []
 
         func append(byte: Byte) {
             guard byte >= HTTPParser.minimumValidAsciiCharacter else {
                 return
             }
 
-            line.append(Character(byte))
+            line.append(byte)
         }
 
         while let byte = try buffer.next() where byte != HTTPParser.newLine {
@@ -48,13 +48,13 @@ final class HTTPParser: StreamParser {
                 break
             }
 
-            let comps = headerLine.components(separatedBy: ": ")
+            let comps = headerLine.split(separator: Byte.colon)
 
             guard comps.count == 2 else {
                 continue
             }
 
-            headers[Request.Headers.Key(comps[0])] = comps[1]
+            headers[Request.Headers.Key(String(comps[0]))] = String(comps[1])
         }
 
         var body: Data = []

@@ -36,16 +36,15 @@ extension HTTPParser {
             return String(versionBytes)
         }
 
-        init(_ string: String) throws {
-            let comps = Data(string).split(separator: HTTPParser.RequestLine.whitespace, excludingFirst: false, excludingLast: false, maxSplits: 3)
+        init(_ data: Data) throws {
+            let comps = data.split(separator: Byte.space, maxSplits: 3, omittingEmptySubsequences: true)
             guard comps.count == 3 else {
-                print(string)
                 throw Error.invalidRequestLine
             }
 
-            methodBytes = comps[0]
-            uriBytes = comps[1]
-            versionBytes = comps[2]
+            methodBytes = Data(comps[0])
+            uriBytes = Data(comps[1])
+            versionBytes = Data(comps[2])
         }
 
         var version: Request.Version {
