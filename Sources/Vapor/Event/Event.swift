@@ -42,6 +42,9 @@ public final class Event<T> {
     /// The current subscribers for this event
     private var subscribers: [Subscriber] = []
 
+    /// Initialize
+    public init() {}
+
     @warn_unused_result(message: "subscription must be retained to receive events")
     /**
         Adds a subscriber for this event with a handler to fire on post.

@@ -36,7 +36,7 @@ public class Log {
         LogDriver. Default is the console logger.
         This can be overriden with a custom logger.
      */
-    public static var driver: LogDriver = ConsoleLogger()
+    public static var driver: LogDriver?
 
     /**
         Enabled log levels. Default is to log all levels. This
@@ -51,7 +51,7 @@ public class Log {
      */
     public static func verbose(_ message: String) {
         if Log.enabledLevels.contains(.verbose) {
-            driver.log(.verbose, message: message)
+            driver?.log(.verbose, message: message)
         }
     }
 
@@ -62,7 +62,7 @@ public class Log {
      */
     public static func debug(_ message: String) {
         if Log.enabledLevels.contains(.debug) {
-            driver.log(.debug, message: message)
+            driver?.log(.debug, message: message)
         }
     }
 
@@ -73,7 +73,7 @@ public class Log {
      */
     public static func info(_ message: String) {
         if Log.enabledLevels.contains(.info) {
-            driver.log(.info, message: message)
+            driver?.log(.info, message: message)
         }
     }
 
@@ -84,7 +84,7 @@ public class Log {
      */
     public static func warning(_ message: String) {
         if Log.enabledLevels.contains(.warning) {
-             driver.log(.warning, message: message)
+             driver?.log(.warning, message: message)
         }
     }
 
@@ -95,7 +95,7 @@ public class Log {
      */
     public static func error(_ message: String) {
         if Log.enabledLevels.contains(.error) {
-            driver.log(.error, message: message)
+            driver?.log(.error, message: message)
         }
     }
 
@@ -106,7 +106,7 @@ public class Log {
      */
     public static func fatal(_ message: String) {
         if Log.enabledLevels.contains(.fatal) {
-            driver.log(.fatal, message: message)
+            driver?.log(.fatal, message: message)
         }
     }
 
@@ -116,7 +116,7 @@ public class Log {
         - parameter message: String to log
      */
     public static func custom(_ message: String, label: String) {
-        driver.log(.custom(label), message: message)
+        driver?.log(.custom(label), message: message)
     }
 }
 
