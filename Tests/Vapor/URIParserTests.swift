@@ -15,7 +15,7 @@ class URIParserTests: XCTestCase {
         let test: [String] = ["foo://example.com:8042/over/there?name=ferret#nose", "urn:example:animal:ferret:nose"]
         try test.forEach { uri in
             let uriData = Data(uri)
-            let parser = ALT_URIParser.init(data: uriData)
+            let parser = URIParser.init(data: uriData)
             try parser.parse()
             print("\n\n")
         }

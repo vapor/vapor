@@ -187,274 +187,6 @@ public struct ALT_URI {
 //    //        case
 //}
 
-public final class ALT_URIParser {
-    private var localBuffer: [Byte] = []
-    private var buffer: IndexingIterator<[Byte]>
-
-
-    public convenience init(data: Data) {
-        self.init(bytes: data.bytes)
-    }
-
-    public init(bytes: [Byte]) {
-        self.buffer = bytes.makeIterator()
-    }
-
-    public func parse() throws {
-        let (scheme, authority, path, query, fragment) = try parse()
-        print("Scheme \(try scheme.toString())")
-        print("Authority \(try authority?.toString())")
-        print("Path \(try path.toString())")
-        print("Query \(try query?.toString())")
-        print("Fragment \(try fragment?.toString())")
-    }
-
-    // TODO: Validate that scheme is _not_ empty?
-    private func parse() throws -> (scheme: [Byte], authority: [Byte]?, path: [Byte], query: [Byte]?, fragment: [Byte]?) {
-        /*
-         The scheme and path components are required, though the path may be
-         empty (no characters).  When authority is present, the path must
-         either be empty or begin with a slash ("/")
-         */
-        let scheme = try parseScheme() // if we have relative scheme, we don't need to
-        // hier part: start
-        let authority = try parseAuthority()
-        let path = try parsePath(uriContainsAuthority: authority != nil)
-        // hier part: end
-        let query = try parseQuery()
-        let fragment = try parseFragment()
-
-        /*
-         The following are two example URIs and their component parts:
-
-         foo://example.com:8042/over/there?name=ferret#nose
-         \_/   \______________/\_________/ \_________/ \__/
-         |           |            |            |        |
-         scheme     authority       path        query   fragment
-         |   _____________________|__
-         / \ /                        \
-         urn:example:animal:ferret:nose
-         */
-        return (scheme, authority, path, query, fragment)
-    }
-
-    /*
-     Scheme names consist of a sequence of characters beginning with a
-     letter and followed by any combination of letters, digits, plus
-     ("+"), period ("."), or hyphen ("-").  Although schemes are case-
-     insensitive, the canonical form is lowercase and documents that
-     specify schemes must do so with lowercase letters.  An implementation
-     should accept uppercase letters as equivalent to lowercase in scheme
-     names (e.g., allow "HTTP" as well as "http") for the sake of
-     robustness but should only produce lowercase scheme names for
-     consistency.
-     */
-    private func parseScheme() throws -> [Byte] {
-        guard let first = next() else { throw "missing byte" }
-        guard first.isLetter else { throw "first character in scheme must be letter" }
-        var scheme: [Byte] = [first]
-
-        while let byte = next() where byte != .colon {
-            guard byte.isValidSchemeCharacter else {
-                throw "invalid scheme character" // rfc says throw errors for everything malformed to prevent malicious attacks
-            }
-            scheme.append(byte)
-        }
-        return scheme
-    }
-
-    /**
-     https://tools.ietf.org/html/rfc3986#section-3.2
-
-     The authority component is preceded by a double slash ("//") and is
-     terminated by the next slash ("/"), question mark ("?"), or number
-     sign ("#") character, or by the end of the URI.
-     
-     authority   = [ userinfo "@" ] host [ ":" port ]
-    */
-    private func parseAuthority() throws -> [Byte]? {
-        /*
-         The authority component is preceded by a double slash ("//") and is
-         terminated by the next slash ("/"), question mark ("?"), or number
-         sign ("#") character, or by the end of the URI.
-         
-         If first two characters are NOT `//` then we return them back to buffer
-         and continue next parsing since they don't apply to an authority
-         */
-        guard let first = next() else {
-            return nil
-        }
-        guard first == .forwardSlash else {
-            localBuffer.append(first)
-            return nil
-        }
-        guard let second = next() else {
-            localBuffer.append(first)
-            return nil
-        }
-        guard second == .forwardSlash else {
-            localBuffer.append(first)
-            localBuffer.append(second)
-            return nil
-        }
-
-        var authority: [Byte] = []
-        while let next = next() {
-            if next.equals(any: .forwardSlash, .questionMark, .numberSign) {
-                // return token to buffer so we know how to parse next section
-                localBuffer.append(next)
-                break
-            } else if next.isValidUriCharacter {
-                // this allows general delimitters to be included aside from '/', '?', and '#' mentioned explicitly above
-                authority.append(next)
-            } else {
-                throw "found invalid authority character: \(Character(next))"
-            }
-        }
-        return authority
-    }
-
-    /*
-     // TODO: Reference RFC
-     
-     -- ends w/ '#' || '?' || end of data
-     -- if authority, first line MUST be '/'
-     -- if NO authority, first 2 must NOT be '//'
-
-     RFC: path MUST exist, but CAN be empty
-     */
-    private func parsePath(uriContainsAuthority: Bool) throws -> [Byte] {
-        guard let first = next() else { return [] } // ok for path to be empty
-        if first.equals(any: .numberSign, .questionMark) {
-            // path is empty, we should parse query or fragment -- return token to buffer
-            localBuffer.append(first)
-            return []
-        }
-
-        /*
-         If a URI contains an authority component, then the path component
-         must either be empty or begin with a slash ("/") character.
-         */
-        if uriContainsAuthority && first != .forwardSlash {
-            throw "path following authority MUST begin with forwardSlash"
-        }
-
-        var path: [Byte]
-
-        if first == .forwardSlash {
-            path = []
-        } else if first.isUnreservedUriCharacter {
-            path = [first]
-        } else {
-            throw "path"
-        }
-
-        /*
-         // TODO: This code is shit, clean it up
-
-         https://tools.ietf.org/html/rfc3986#section-3.3
-
-         If a URI
-         does not contain an authority component, then the path cannot begin
-         with two slash characters ("//").
-         */
-        if !uriContainsAuthority, let second = next() {
-            // TODO: This should be disablable for convenience
-            if first == .forwardSlash && second == .forwardSlash {
-                throw "a uri with an authority component may not begin a path with two slash characters"
-            } else if second.isValidPathCharacter {
-                path.append(second)
-            } else {
-                throw "found invalid character: \(second)"
-            }
-        }
-
-        while let next = next() {
-            if next.equals(any: .numberSign, .questionMark) {
-                // return identification token to buffer
-                localBuffer.append(next)
-                break
-            } else if next.isValidUriCharacter { // anything but '#', and '?'
-                path.append(next)
-            } else {
-                throw "found invalid path character: \(next)"
-            }
-        }
-
-        return path
-    }
-
-    /**
-     // TODO: Reference RFC
-     
-     -- starts at '?' -- runs to '#' || end of bytes
-     */
-    private func parseQuery() throws -> [Byte]? { // query can be `nil`
-        guard let first = next() else { return nil }
-        guard first == .questionMark else {
-            // This byte isn't for us, return it to buffer
-            localBuffer.append(first)
-            return nil
-        }
-
-        var query: [Byte] = []
-        while let next = next() {
-            if next.equals(any: .numberSign) {
-                // return identification token to buffer
-                localBuffer.append(next)
-                break
-            } else if next.isValidUriCharacter {
-                query.append(next)
-            } else {
-                throw "found invalid query character: \(next)"
-            }
-        }
-        return query
-    }
-
-    /*
-     // TODO: Reference RFC -- starts at `#` goes to end of bytes
-     */
-    private func parseFragment() throws -> [Byte]? {
-        guard let first = next() else {
-            return nil
-        }
-        guard first == .numberSign else {
-            localBuffer.append(first)
-            return nil
-        }
-
-        var fragment: [Byte] = [first]
-        while let next = next() {
-            if next.isValidUriCharacter {
-                fragment.append(next)
-            } else {
-                throw "found invlid fragment character: \(next)"
-            }
-        }
-        return fragment
-    }
-
-    // MARK: Next
-
-    // wrapping next to omit white space characters -- allowed to inject whitespace in url
-
-    private func next() -> Byte? {
-        /*
-         local buffer is used to maintain last bytes while still interacting w/ byte buffer
-         */
-        guard localBuffer.isEmpty else {
-            return localBuffer.removeFirst()
-        }
-
-        while let next = buffer.next() {
-            guard !next.isWhitespace else { continue }
-            return next
-        }
-
-        return nil
-    }
-}
 
 extension Equatable {
     func equals(any: Self...) -> Bool {
@@ -468,220 +200,220 @@ extension Equatable {
 // When authority is NOT present, the path cannot begin with two slash characters ("//")
 // *************
 
-public final class URIParser {
-    // TODO: Take Stream instead of streambuffer so can be used externally?
-    private let buffer: StreamBuffer
-    public init(_ stream: Stream) {
-        self.buffer = StreamBuffer(stream, buffer: 1024)
-    }
-
-    // MARK: Parse
-
-    public func parse() throws -> URI {
-        _ = try parseScheme()
-        _ = try parseAuthority()
-        throw ""
-    }
-
-    // MARK: Private
-
-    /*
-     https://tools.ietf.org/html/rfc3986#section-3.1
-
-     Scheme names consist of a sequence of characters beginning with a
-     letter and followed by any combination of letters, digits, plus
-     ("+"), period ("."), or hyphen ("-").  Although schemes are case-
-     insensitive, the canonical form is lowercase and documents that
-     specify schemes must do so with lowercase letters.  An implementation
-     should accept uppercase letters as equivalent to lowercase in scheme
-     names (e.g., allow "HTTP" as well as "http") for the sake of
-     robustness but should only produce lowercase scheme names for
-     consistency.
-
-     - begin with letter
-     - followed by any combination of letter, digit, '+', '.', '-'
-     - parse case insensitive (for robustness), schemes are case insensitive
-     - serialize lowercase ALWAYS
-
-     */
-    private func parseScheme() throws -> String {
-        /*
-         scheme      = ALPHA *( ALPHA / DIGIT / "+" / "-" / "." )
-         */
-        var scheme: [Byte] = []
-
-        // TODO: Skip whitespace?
-
-        /*
-         All failures to adhere to protocol MUST throw errors for security concerns
-        
-         When presented with a URI that violates one or more scheme-specific
-         restrictions, the scheme-specific resolution process should flag the
-         reference as an error rather than ignore the unused parts; doing so
-         reduces the number of equivalent URIs and helps detect abuses of the
-         generic syntax, which might indicate that the URI has been
-         constructed to mislead the user
-         */
-        guard let first = try buffer.next() where first.isLetter else {
-            throw "first byte must be letter"
-        }
-        scheme.append(first)
-        // TODO:
-        // last letter is delimitter and can be discarded?
-        // Scheme does NOT support percent encoding
-        while let nextLetter = try buffer.next() where nextLetter.isValidSchemeCharacter {
-            scheme.append(nextLetter)
-        }
-
-        // Scheme does NOT support percent encoding, nothing to do here
-        return try scheme.toString()
-    }
-
-    private func _parseAuthoritySegment() throws -> (authoritySegment: [Byte], terminator: Byte) {
-        /*
-         The authority component is preceded by a double slash ("//") and is
-         terminated by the next slash ("/"), question mark ("?"), or number
-         sign ("#") character, or by the end of the URI.
-
-         authority   = [ userinfo "@" ] host [ ":" port ]
-         */
-        let slashes = try buffer.chunk(size: 2)
-        guard slashes.count == 2 && slashes.first == .forwardSlash && slashes.last == .forwardSlash else {
-            throw "must lead with two forward slashes"
-        }
-
-        var terminator: Byte = .forwardSlash
-        var authorityBytes: [Byte] = []
-        while let next = try buffer.next() {
-            if next.isAuthorityTerminator {
-                terminator = next
-                break
-            } else {
-                authorityBytes.append(next)
-            }
-        }
-
-        return (authorityBytes, terminator)
-    }
-
-    // https://tools.ietf.org/html/rfc3986#section-3.2
-    private func parseAuthority() throws -> [Byte] {
-        // TODO: Skip whitespace?
-
-        /*
-         The authority component is preceded by a double slash ("//") and is
-         terminated by the next slash ("/"), question mark ("?"), or number
-         sign ("#") character, or by the end of the URI.
-         
-         authority   = [ userinfo "@" ] host [ ":" port ]
-         */
-        let slashes = try buffer.chunk(size: 2)
-        guard slashes.count == 2 && slashes.first == .forwardSlash && slashes.last == .forwardSlash else {
-            throw "must lead with two forward slashes"
-        }
-
-        var authorityBytes: [Byte] = []
-        while let next = try buffer.next() where !next.isAuthorityTerminator {
-            authorityBytes.append(next)
-        }
-
-        let authorityComponents = authorityBytes.split(separator: .atSign)
-        guard 1...2 ~= authorityComponents.count else {
-            throw "unexpected number of authority components"
-        }
-
-        var userInfo: Authority.UserInfo? = nil
-        if authorityComponents.count == 2, let rawInfo = authorityComponents.first {
-            userInfo = try parseUserInfo(from: Array(rawInfo))
-        }
-
-//        var host
-
-
-        // hostAndPort is always last component regardless of whether user info exists
-        guard let hostAndPort = authorityComponents.last else {
-            throw "must be at least one component for host in authority"
-        }
-
-        let (host, port) = try parseHostAndPort(from: Array(hostAndPort))
-
-        /*
-         The userinfo subcomponent may consist of a user name and, optionally,
-         scheme-specific information about how to gain authorization to access
-         the resource
-         */
-//        var userInfo: [Byte]? = nil
-//        if authorityComponents.count == 2 {
-//            let rawInfo = try authorityComponents[0]
-//            let info = parseUserInfo(from: Array(rawInfo))
+//public final class URIParser {
+//    // TODO: Take Stream instead of streambuffer so can be used externally?
+//    private let buffer: StreamBuffer
+//    public init(_ stream: Stream) {
+//        self.buffer = StreamBuffer(stream, buffer: 1024)
+//    }
+//
+//    // MARK: Parse
+//
+//    public func parse() throws -> URI {
+//        _ = try parseScheme()
+//        _ = try parseAuthority()
+//        throw ""
+//    }
+//
+//    // MARK: Private
+//
+//    /*
+//     https://tools.ietf.org/html/rfc3986#section-3.1
+//
+//     Scheme names consist of a sequence of characters beginning with a
+//     letter and followed by any combination of letters, digits, plus
+//     ("+"), period ("."), or hyphen ("-").  Although schemes are case-
+//     insensitive, the canonical form is lowercase and documents that
+//     specify schemes must do so with lowercase letters.  An implementation
+//     should accept uppercase letters as equivalent to lowercase in scheme
+//     names (e.g., allow "HTTP" as well as "http") for the sake of
+//     robustness but should only produce lowercase scheme names for
+//     consistency.
+//
+//     - begin with letter
+//     - followed by any combination of letter, digit, '+', '.', '-'
+//     - parse case insensitive (for robustness), schemes are case insensitive
+//     - serialize lowercase ALWAYS
+//
+//     */
+//    private func parseScheme() throws -> String {
+//        /*
+//         scheme      = ALPHA *( ALPHA / DIGIT / "+" / "-" / "." )
+//         */
+//        var scheme: [Byte] = []
+//
+//        // TODO: Skip whitespace?
+//
+//        /*
+//         All failures to adhere to protocol MUST throw errors for security concerns
+//        
+//         When presented with a URI that violates one or more scheme-specific
+//         restrictions, the scheme-specific resolution process should flag the
+//         reference as an error rather than ignore the unused parts; doing so
+//         reduces the number of equivalent URIs and helps detect abuses of the
+//         generic syntax, which might indicate that the URI has been
+//         constructed to mislead the user
+//         */
+//        guard let first = try buffer.next() where first.isLetter else {
+//            throw "first byte must be letter"
 //        }
-//        if authorityComponents.count == 2,
-//            let userInfo = authorityComponents.first,
-//            let hostAndPort = authorityComponents.last {
+//        scheme.append(first)
+//        // TODO:
+//        // last letter is delimitter and can be discarded?
+//        // Scheme does NOT support percent encoding
+//        while let nextLetter = try buffer.next() where nextLetter.isValidSchemeCharacter {
+//            scheme.append(nextLetter)
+//        }
+//
+//        // Scheme does NOT support percent encoding, nothing to do here
+//        return try scheme.toString()
+//    }
+//
+//    private func _parseAuthoritySegment() throws -> (authoritySegment: [Byte], terminator: Byte) {
+//        /*
+//         The authority component is preceded by a double slash ("//") and is
+//         terminated by the next slash ("/"), question mark ("?"), or number
+//         sign ("#") character, or by the end of the URI.
+//
+//         authority   = [ userinfo "@" ] host [ ":" port ]
+//         */
+//        let slashes = try buffer.chunk(size: 2)
+//        guard slashes.count == 2 && slashes.first == .forwardSlash && slashes.last == .forwardSlash else {
+//            throw "must lead with two forward slashes"
+//        }
+//
+//        var terminator: Byte = .forwardSlash
+//        var authorityBytes: [Byte] = []
+//        while let next = try buffer.next() {
+//            if next.isAuthorityTerminator {
+//                terminator = next
+//                break
+//            } else {
+//                authorityBytes.append(next)
+//            }
+//        }
+//
+//        return (authorityBytes, terminator)
+//    }
+//
+//    // https://tools.ietf.org/html/rfc3986#section-3.2
+//    private func parseAuthority() throws -> [Byte] {
+//        // TODO: Skip whitespace?
+//
+//        /*
+//         The authority component is preceded by a double slash ("//") and is
+//         terminated by the next slash ("/"), question mark ("?"), or number
+//         sign ("#") character, or by the end of the URI.
+//         
+//         authority   = [ userinfo "@" ] host [ ":" port ]
+//         */
+//        let slashes = try buffer.chunk(size: 2)
+//        guard slashes.count == 2 && slashes.first == .forwardSlash && slashes.last == .forwardSlash else {
+//            throw "must lead with two forward slashes"
+//        }
+//
+//        var authorityBytes: [Byte] = []
+//        while let next = try buffer.next() where !next.isAuthorityTerminator {
+//            authorityBytes.append(next)
+//        }
+//
+//        let authorityComponents = authorityBytes.split(separator: .atSign)
+//        guard 1...2 ~= authorityComponents.count else {
+//            throw "unexpected number of authority components"
+//        }
+//
+//        var userInfo: Authority.UserInfo? = nil
+//        if authorityComponents.count == 2, let rawInfo = authorityComponents.first {
+//            userInfo = try parseUserInfo(from: Array(rawInfo))
+//        }
+//
+////        var host
+//
+//
+//        // hostAndPort is always last component regardless of whether user info exists
+//        guard let hostAndPort = authorityComponents.last else {
+//            throw "must be at least one component for host in authority"
+//        }
+//
+//        let (host, port) = try parseHostAndPort(from: Array(hostAndPort))
+//
+//        /*
+//         The userinfo subcomponent may consist of a user name and, optionally,
+//         scheme-specific information about how to gain authorization to access
+//         the resource
+//         */
+////        var userInfo: [Byte]? = nil
+////        if authorityComponents.count == 2 {
+////            let rawInfo = try authorityComponents[0]
+////            let info = parseUserInfo(from: Array(rawInfo))
+////        }
+////        if authorityComponents.count == 2,
+////            let userInfo = authorityComponents.first,
+////            let hostAndPort = authorityComponents.last {
+////
+////        }
+//
+//        return authorityBytes
+//        // TODO: this can be end of URI, needs to be supported if so
+//    }
+//
+//    private func parseUserInfo(from bytes: [Byte]) throws -> Authority.UserInfo {
+//        /*
+//         Applications should not render as clear text any data
+//         after the FIRST colon (":")
+//         */
+//        let split = bytes.split(separator: .colon, maxSplits: 1, omittingEmptySubsequences: true)
+//        guard split.count <= 2 else {
+//            throw "w/ max splits at 1, don't see how possible to be > 2, perhaps remove"
+//        }
+//
+//        guard let name = try split.first?.toString() else {
+//            throw "unable to gather username"
+//        }
+//
+//        var auth: String? = nil
+//        if split.count == 2 {
+//            auth = try split.last?.toString()
+//        }
+//
+//        // *******
+//        // TODO: Does Not account for PCT encoding!!!
+//        // *******
+//        return Authority.UserInfo(userName: name, auth: auth)
+//    }
+//
+//    private func parseHostAndPort(from bytes: [Byte]) throws -> (host: Host, port: Int) {
+//        guard let firstCharacter = try buffer.next() else { throw "missing byte" }
+//
+//
+//        // Square brackets are ONLY applicable to host
+//        if firstCharacter == .leftSquareBracket {
+//            // is IPv6 or IPvFuture
+//            var ipv6orFuture: [Byte] = []
+//            while let next = try buffer.next() where next != .rightSquareBracket {
+//                ipv6orFuture.append(next)
+//            }
+//        } else {
+//            /*
+//             // is IPv4 or regular name
+//             
+//             RFC:
+//             In order to
+//             disambiguate the syntax, we apply the "first-match-wins" algorithm:
+//             If host matches the rule for IPv4address, then it should be
+//             considered an IPv4 address literal and not a reg-name.
+//             */
+//            var hostBytes: [Byte] = []
+//            while let next = try buffer.next() where next != .colon {
+//
+//            }
 //
 //        }
-
-        return authorityBytes
-        // TODO: this can be end of URI, needs to be supported if so
-    }
-
-    private func parseUserInfo(from bytes: [Byte]) throws -> Authority.UserInfo {
-        /*
-         Applications should not render as clear text any data
-         after the FIRST colon (":")
-         */
-        let split = bytes.split(separator: .colon, maxSplits: 1, omittingEmptySubsequences: true)
-        guard split.count <= 2 else {
-            throw "w/ max splits at 1, don't see how possible to be > 2, perhaps remove"
-        }
-
-        guard let name = try split.first?.toString() else {
-            throw "unable to gather username"
-        }
-
-        var auth: String? = nil
-        if split.count == 2 {
-            auth = try split.last?.toString()
-        }
-
-        // *******
-        // TODO: Does Not account for PCT encoding!!!
-        // *******
-        return Authority.UserInfo(userName: name, auth: auth)
-    }
-
-    private func parseHostAndPort(from bytes: [Byte]) throws -> (host: Host, port: Int) {
-        guard let firstCharacter = try buffer.next() else { throw "missing byte" }
-
-
-        // Square brackets are ONLY applicable to host
-        if firstCharacter == .leftSquareBracket {
-            // is IPv6 or IPvFuture
-            var ipv6orFuture: [Byte] = []
-            while let next = try buffer.next() where next != .rightSquareBracket {
-                ipv6orFuture.append(next)
-            }
-        } else {
-            /*
-             // is IPv4 or regular name
-             
-             RFC:
-             In order to
-             disambiguate the syntax, we apply the "first-match-wins" algorithm:
-             If host matches the rule for IPv4address, then it should be
-             considered an IPv4 address literal and not a reg-name.
-             */
-            var hostBytes: [Byte] = []
-            while let next = try buffer.next() where next != .colon {
-
-            }
-
-        }
-
-
-        fatalError()
-    }
-}
+//
+//
+//        fatalError()
+//    }
+//}
 
 /*
 // TODO: A scheme may define a default port.  For example, the "http" scheme
@@ -1068,135 +800,6 @@ extension Byte {
     }
 }
 
-
-/*
- https://tools.ietf.org/html/rfc3986#appendix-A
-
- authority     = [ userinfo "@" ] host [ ":" port ]
- userinfo      = *( unreserved / pct-encoded / sub-delims / ":" )
- host          = IP-literal / IPv4address / reg-name
- port          = *DIGIT
-
- IP-literal    = "[" ( IPv6address / IPvFuture  ) "]"
-
- IPvFuture     = "v" 1*HEXDIG "." 1*( unreserved / sub-delims / ":" )
-
- IPv6address   =                            6( h16 ":" ) ls32
- /                       "::" 5( h16 ":" ) ls32
- / [               h16 ] "::" 4( h16 ":" ) ls32
- / [ *1( h16 ":" ) h16 ] "::" 3( h16 ":" ) ls32
- / [ *2( h16 ":" ) h16 ] "::" 2( h16 ":" ) ls32
- / [ *3( h16 ":" ) h16 ] "::"    h16 ":"   ls32
- / [ *4( h16 ":" ) h16 ] "::"              ls32
- / [ *5( h16 ":" ) h16 ] "::"              h16
- / [ *6( h16 ":" ) h16 ] "::"
-
- reg-name      = *( unreserved / pct-encoded / sub-delims )
- */
-private func parse(authority: [Byte]) throws -> (userinfo: [Byte]?, host: [Byte], port: [Byte]?) {
-    let userInfoOther = authority.split(separator: .atSign,
-                                        maxSplits: 1,
-                                        omittingEmptySubsequences: false) // MUST keep empty
-    guard 1...2 ~= userInfoOther.count else {
-        throw "too many at signs in authority"
-    }
-
-    let userInfo: [Byte]?
-    let hostAndPort: [Byte]
-    switch userInfoOther.count {
-    // TODO: Test empty array post split is 0
-    case 0:
-        return (nil, [], nil)
-    case 1:
-        userInfo = nil
-        hostAndPort = userInfoOther[0].array
-    case 2:
-        userInfo = userInfoOther[0].array
-        hostAndPort = userInfoOther[1].array
-    default:
-        throw "too many '@' symbols in authority"
-    }
-
-    let (host, port) = try parse(hostAndPort: hostAndPort)
-
-    // TODO: UserInfo not validated
-    return (userInfo, host, port)
-}
-
-private func parse(hostAndPort: [Byte]) throws -> (host: [Byte], port: [Byte]?) {
-    var hostAndPortIterator = hostAndPort.makeIterator()
-    guard let first = hostAndPortIterator.next() else { return ([], nil) }
-
-    let char = Character(first)
-    switch char {
-    case ":":
-        // host is empty, go to port
-        let port = try parse(port: hostAndPortIterator.array)
-        return ([], port)
-    case "[":
-        // host is IPv6 or IPvFuture
-        // still MIGHT include port
-        var host: [Byte] = []
-        while let next = hostAndPortIterator.next() {
-            if next == .rightSquareBracket {
-
-            }
-        }
-        break
-    default:
-        /*
-         https://tools.ietf.org/html/rfc3986#section-3.2.2
-
-         - Still MIGHT have port
-         - COULD be IPv4 or reg-name
-         
-         In order to
-         disambiguate the syntax, we apply the "first-match-wins" algorithm:
-         If host matches the rule for IPv4address, then it should be
-         considered an IPv4 address literal and not a reg-name.
-         */
-        break
-    }
-    fatalError()
-}
-
-/**
- port        = *DIGIT
- */
-private func parse(port: [Byte]) throws -> [Byte]? {
-    guard !port.isEmpty else { return nil }
-    for byte in port where !byte.isDigit {
-        throw "port numbers should only be digits"
-    }
-    return port
-}
-
-private func parse(ipLiteralAndPort: [Byte]) throws -> (ipLiteral: [Byte], port: [Byte]?) {
-    var iterator = ipLiteralAndPort.makeIterator()
-//    while le
-    fatalError()
-}
-
-//private final class AuthorityParser {
-//    var buffer: IndexingIterator<[Byte]>
-//}
-
-/*
- A scheme may define a default port.  For example, the "http" scheme
- defines a default port of "80", corresponding to its reserved TCP
- port number.  The type of port designated by the port number (e.g.,
- TCP, UDP, SCTP) is defined by the URI scheme.  URI producers and
- normalizers should omit the port component and its ":" delimiter if
- port is empty or if its value would be the same as that of the
- scheme's default.
- */
-struct IsPort: ValidationSuite {
-    static func validate(input value: [Byte]) throws {
-        for byte in value where !byte.isDigit {
-            throw error(with: value)
-        }
-    }
-}
 
 extension Sequence {
     var array: [Iterator.Element] {
