@@ -382,9 +382,10 @@ extension URIParser {
     }
 }
 
+import C7
 
 public final class __URIParser: BaseURIParser {
-    public func asdfasdfsadf() throws {
+    public func asdfasdfsadf() throws -> C7.URI {
         // ordered calls
         let scheme = try _parseScheme()
 
@@ -405,6 +406,18 @@ public final class __URIParser: BaseURIParser {
         print("Path \(try path.toString())")
         print("Query \(try query?.toString())")
         print("Fragment \(try fragment?.toString())")
+
+        let userInfo = try C7.URI.UserInfo.init(username: username?.toString() ?? "",
+                                                password: auth?.toString() ?? "")
+
+        let portInt = port.flatMap { UInt($0) } .map { Int($0) }
+        let uri = try C7.URI.init(scheme: scheme.toString(),
+                                  userInfo: userInfo,
+                                  host: host.toString(),
+                                  port: port.flatMap { UInt($0) } .map { Int($0) },
+                                  path: path.toString(),
+                                  query: [:], // TODO:
+                                  fragment: fragment?.toString())
     }
 //
 //    func parse(authority: [Byte]) throws -> (userinfo: [Byte]?, hostAndPort: [Byte]) {
