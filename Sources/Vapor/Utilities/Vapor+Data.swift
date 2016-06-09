@@ -54,20 +54,23 @@ extension Data {
     }
 }
 
-extension Data {
-    static let alphabetLength = 26
-    static let uppercaseStart = 65
-    static let lowercaseStart = 97
-    
+extension Byte {
+    static let alphabetLength: Byte = 26
+    static let uppercaseStart: Byte = 65
+    static let lowercaseStart: Byte = 97
+    static let betweenCaseGap: Byte = lowercaseStart - uppercaseStart
+
     static let uppercaseRange = uppercaseStart ..< (uppercaseStart + alphabetLength)
     static let lowercaseRange = lowercaseStart ..< (lowercaseStart + alphabetLength)
-    
+}
+
+extension Data {
     func lowercased() -> Data {
         var data = Data()
         
         for byte in self {
-            if Data.uppercaseRange.contains(Int(byte)) {
-                data.append(byte - 32)
+            if Byte.uppercaseRange.contains(byte) {
+                data.append(byte + Byte.betweenCaseGap)
             } else {
                 data.append(byte)
             }
@@ -80,8 +83,8 @@ extension Data {
         var data = Data()
         
         for byte in self {
-            if Data.lowercaseRange.contains(Int(byte)) {
-                data.append(byte + 32)
+            if Byte.lowercaseRange.contains(byte) {
+                data.append(byte - Byte.betweenCaseGap)
             } else {
                 data.append(byte)
             }
