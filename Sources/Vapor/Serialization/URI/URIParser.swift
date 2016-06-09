@@ -1,3 +1,19 @@
+extension Byte {
+    static let forwardSlash: Byte = 0x2F // '/'
+    static let atSign: Byte = 0x40 // '@'
+    static let colon: Byte = 0x3A // ':'
+    static let leftSquareBracket: Byte = 0x5B // '['
+    static let rightSquareBracket: Byte = 0x5D // ']'
+    static let period: Byte = 0x2E // '.' -- Full Stop
+    static let questionMark: Byte = 0x3F // '?'
+    static let numberSign: Byte = 0x23 // '#'
+    static let percentSign: Byte = 0x25 // '%'
+    static let plusSign: Byte = 0x2B // '+'
+    static let minusSign: Byte = 0x2D // '-' -- Hyphen Minus
+    static let zeroCharacter: Byte = 0x30
+    static let space: Byte = 0x20
+}
+
 public class StaticDataBuffer {
     private var localBuffer: [Byte] = []
     private var buffer: IndexingIterator<[Byte]>
@@ -53,7 +69,10 @@ public class StaticDataBuffer {
         return body
     }
 
-    public func collect(until delimitters: Byte...) throws -> [Byte] {
+    /*
+     When in Query segment, `+` should be interpreted as ` ` (space), not sure useful outside of that point
+     */
+    public func collect(until delimitters: Byte..., convertIfNecessary: (Byte) -> Byte = { $0 }) throws -> [Byte] {
         var collected: [Byte] = []
         while let next = try next() {
             if delimitters.contains(next) {
@@ -64,7 +83,8 @@ public class StaticDataBuffer {
                 break
             }
 
-            collected.append(next)
+            let converted = convertIfNecessary(next)
+            collected.append(converted)
         }
         return collected
     }
@@ -97,6 +117,7 @@ extension URIParser {
     // Temporary until C7 is updated
     public struct URI {
         public struct UserInfo {
+            // TODO: Should auth and username be non-optional? There's a difference between "" and nil
             public var username: String
             public var password: String
 
@@ -183,29 +204,42 @@ public func percentEncoded(_ input: [Byte], shouldEncode: (Byte) throws -> Bool)
 
 public final class URIParser: StaticDataBuffer {
 
+    // MARK: Paser URI
+
     internal func parse() throws -> URI {
-        let (scheme, authority, path, query, fragment) = try parse()
-        let (username, auth, host, port) = try parse(authority: authority)
+        let (schemeBytes, authorityBytes, pathBytes, queryBytes, fragmentBytes) = try parse()
+        let (usernameBytes, authBytes, hostBytes, portBytes) = try parse(authority: authorityBytes)
 
-        // TODO: Should auth and username be non-optional? There's a difference between "" and nil
-        let userInfo = try URI.UserInfo(
-            username: username?.toString() ?? "",
-            password: auth?.toString() ?? ""
-        )
+        /*
+         ***** [WARNING] *****
 
-        let uri = try URI(
-            scheme: scheme.toString(),
-            userInfo: userInfo,
-            host: host.toString(),
-            // port MUST convert to string THEN to Int
-            port: port.flatMap { try $0.toString() } .flatMap { Int($0) },
-            path: path.toString(),
-            query: query?.toString(),
-            fragment: fragment?.toString()
-        )
+         do NOT attempt to percent decode before THIS point
+         */
+        let scheme = try percentDecodedString(schemeBytes)
+        let username = try percentDecodedString(usernameBytes)
+        let auth = try percentDecodedString(authBytes)
+        let userInfo = URI.UserInfo(username: username ?? "",
+                                    password: auth ?? "")
+
+
+        // port MUST convert to string, THEN to Int
+        let host = try percentDecodedString(hostBytes)
+        let port = try percentDecodedString(portBytes).flatMap { Int($0) }
+        let path = try percentDecodedString(pathBytes)
+        let query = try percentDecodedString(queryBytes)
+        let fragment = try percentDecodedString(fragmentBytes)
+        let uri = URI(scheme: scheme,
+                      userInfo: userInfo,
+                      host: host,
+                      port: port,
+                      path: path,
+                      query: query,
+                      fragment: fragment)
 
         return uri
     }
+
+    // MARK: Component Parse
 
     private func parse() throws -> (scheme: [Byte], authority: [Byte], path: [Byte], query: [Byte]?, fragment: [Byte]?) {
         // ordered calls
@@ -214,14 +248,28 @@ public final class URIParser: StaticDataBuffer {
         let path = try parsePath()
         let query = try parseQuery()
         let fragment = try parseFragment()
-        return try (
-            percentDecoded(scheme),
-            percentDecoded(authority),
-            percentDecoded(path),
-            query.flatMap(percentDecoded),
-            fragment.flatMap(percentDecoded)
+        return (
+            scheme,
+            authority,
+            path,
+            query,
+            fragment
         )
     }
+
+    // MARK: Percent Decoding
+
+    private func percentDecodedString(_ input: [Byte]) throws -> String {
+        let decoded = try percentDecoded(input)
+        return try decoded.toString()
+    }
+
+    private func percentDecodedString(_ input: [Byte]?) throws -> String? {
+        guard let i = input else { return nil }
+        return try percentDecodedString(i)
+    }
+
+    // MARK: Next
 
     /**
      Filter out white space and throw on invalid characters
@@ -232,8 +280,70 @@ public final class URIParser: StaticDataBuffer {
         guard next.isValidUriCharacter else {
             throw "found invalid uri character: \(Character(next))"
         }
-        return next
+
+        // MUST run through percent filter
+        // SOME characters are encoded during parsing
+        // ALL OTHERS MUST wait until AFTER component
+        // parsing
+        return try percentFiltered(next: next)
     }
+
+    /*
+     ************** [WARNING DO NOT DELET] *****************
+
+     SOME percent encodings are parsed during component parsing
+     ALL OTHER percent encoding MUST wait until AFTER
+     components have been parsed
+
+     **************
+     IMPORTANT NOTE REGARDING PERCENT ENCODING
+     **************
+
+     https://tools.ietf.org/html/rfc3986#section-2.3
+
+     Some characters that ARE allowed are still percent encoded, these should
+     be unencoded BEFORE parsing out URI.
+
+     URIs that differ in the replacement of an unreserved character with
+     its corresponding percent-encoded US-ASCII octet are equivalent: they
+     identify the same resource.  However, URI comparison implementations
+     do not always perform normalization prior to comparison (see Section
+     6).  For consistency, percent-encoded octets in the ranges of ALPHA
+     (%41-%5A and %61-%7A), DIGIT (%30-%39), hyphen (%2D), period (%2E),
+     underscore (%5F), or tilde (%7E) should not be created by URI
+     producers and, when found in a URI, should be decoded to their
+     corresponding unreserved characters by URI normalizers.
+     */
+    private func percentFiltered(next: Byte) throws -> Byte? {
+        guard next == .percentSign else { return next }
+        let bytes = try collect(next: 2)
+        let encoding = try percentDecoded([.percentSign] + bytes)
+        guard encoding.count == 1 else { throw "unexpected error that should never happen" }
+        let encodedByte = encoding[0]
+        let char = Character(encodedByte)
+        switch char {
+        case "a"..."z":
+            fallthrough
+        case "A"..."Z":
+            fallthrough
+        case "0"..."9":
+            fallthrough
+        case "-", ".", "_", "~":
+            /*
+             Generally with percent encoding, we WAIT until AFTER
+             the components have been broken out.
+
+             However, with the above character set, encoding MUST happen BEFORE uri parsing
+             */
+            return encodedByte
+        default:
+            // return encoded bytes to buffer
+            localBuffer.append(contentsOf: bytes)
+            return next
+        }
+    }
+
+    // MARK: Scheme
 
     /*
      https://tools.ietf.org/html/rfc3986#section-3.1
@@ -250,7 +360,7 @@ public final class URIParser: StaticDataBuffer {
 
      scheme      = ALPHA *( ALPHA / DIGIT / "+" / "-" / "." )
      */
-    func parseScheme() throws -> [Byte] {
+    private func parseScheme() throws -> [Byte] {
         let scheme = try collect(until: .colon, .forwardSlash)
         let colon = try checkLeadingBuffer(matches: .colon)
         guard colon else { return scheme }
@@ -259,6 +369,8 @@ public final class URIParser: StaticDataBuffer {
         try discardNext(1)
         return scheme
     }
+
+    // MARK: Authority
 
     /*
      https://tools.ietf.org/html/rfc3986#section-3.2
@@ -269,11 +381,13 @@ public final class URIParser: StaticDataBuffer {
 
      authority   = [ userinfo "@" ] host [ ":" port ]
      */
-    func parseAuthority() throws -> [Byte]? {
+    private func parseAuthority() throws -> [Byte]? {
         guard try checkLeadingBuffer(matches: .forwardSlash, .forwardSlash) else { return nil }
         try discardNext(2) // discard '//'
         return try collect(until: .forwardSlash, .questionMark, .numberSign)
     }
+
+    // MARK: Path
 
     /*
      https://tools.ietf.org/html/rfc3986#section-3.3
@@ -289,6 +403,8 @@ public final class URIParser: StaticDataBuffer {
         return try collect(until: .questionMark, .numberSign)
     }
 
+    // MARK: Query
+
     /*
      https://tools.ietf.org/html/rfc3986#section-3.4
 
@@ -299,9 +415,17 @@ public final class URIParser: StaticDataBuffer {
     private func parseQuery() throws -> [Byte]? {
         guard try checkLeadingBuffer(matches: .questionMark) else { return nil }
         try discardNext(1) // discard '?'
-        return try collect(until: .numberSign)
+        
+        /*
+         Query strings, by convention parse '+' as ' ' spaces
+         */
+        return try collect(until: .numberSign) { input in
+            guard input == .plusSign else { return input }
+            return .space
+        }
     }
 
+    // MARK: Fragment
 
     /*
      https://tools.ietf.org/html/rfc3986#section-3.5
@@ -318,7 +442,12 @@ public final class URIParser: StaticDataBuffer {
 
 }
 
+// MARK: Sub Parsing
+
 extension URIParser {
+
+    // MARK: Authority Parse
+
     /**
      https://tools.ietf.org/html/rfc3986#section-3.2
 
@@ -337,6 +466,8 @@ extension URIParser {
         let (username, auth) = try parse(userInfo: userinfo.array)
         return (username, auth, host, port)
     }
+
+    // MARK: HostAndPort Parse
 
     /*
      Host:
@@ -381,6 +512,8 @@ extension URIParser {
         host = chunk.reversed()
         return (host, port)
     }
+
+    // MARK: UserInfo Parse
 
     /*
      https://tools.ietf.org/html/rfc3986#section-3.2.1
@@ -450,21 +583,6 @@ extension URIParser {
 
  */
 extension String: ErrorProtocol {}
-
-extension Byte {
-    static let forwardSlash: Byte = 0x2F // '/'
-    static let atSign: Byte = 0x40 // '@'
-    static let colon: Byte = 0x3A // ':'
-    static let leftSquareBracket: Byte = 0x5B // '['
-    static let rightSquareBracket: Byte = 0x5D // ']'
-    static let period: Byte = 0x2E // '.' -- Full Stop
-    static let questionMark: Byte = 0x3F // '?'
-    static let numberSign: Byte = 0x23 // '#'
-    static let percentSign: Byte = 0x25 // '%'
-    static let plusSign: Byte = 0x2B // '+'
-    static let minusSign: Byte = 0x2D // '-' -- Hyphen Minus
-    static let zeroCharacter: Byte = 0x30
-}
 
 extension Equatable {
     func equals(any: Self...) -> Bool {
