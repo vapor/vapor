@@ -1,6 +1,6 @@
 final class HTTPSerializer: StreamSerializer {
     private static let clrf = Data("\r\n")
-    private static let headerSeparator = Data(":")
+    private static let headerSeparator = Data(": ")
     
     enum Error: ErrorProtocol {
         case unsupportedBody
