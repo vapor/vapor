@@ -93,6 +93,7 @@ extension HTTPParser {
             case HTTPParser.RequestLine.patch:
                 method = .patch
             default:
+                Log.warning("Did not recognize method, using .other(\(methodString))")
                 method = .other(method: methodString)
             }
             return method
