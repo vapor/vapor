@@ -24,7 +24,7 @@ try test.forEach { uri in
 //    let parser = URIParser(data: uriData)
 //    try parser.parse()
 
-    let alt = __URIParser(data: uriData)
+    let alt = URIParser(data: uriData)
     let uri = try alt.parse()
     print("URI: \(uri)")
 //let test =  ALT_URIParser
