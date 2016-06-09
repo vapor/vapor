@@ -398,42 +398,24 @@ extension URIParser {
     }
 }
 
-///////\
-
-// MARK: URI WORK, WILL MOVE
-
-/*
- ************** [WARNING DO NOT DELET] *****************
- Important shit that _needs_ to happen:
-
- ///////////////
-
- https://tools.ietf.org/html/rfc3986#section-2.3
-
- Some characters that ARE allowed are still percent encoded, these should
- be unencoded BEFORE parsing out URI.
-
- URIs that differ in the replacement of an unreserved character with
- its corresponding percent-encoded US-ASCII octet are equivalent: they
- identify the same resource.  However, URI comparison implementations
- do not always perform normalization prior to comparison (see Section
- 6).  For consistency, percent-encoded octets in the ranges of ALPHA
- (%41-%5A and %61-%7A), DIGIT (%30-%39), hyphen (%2D), period (%2E),
- underscore (%5F), or tilde (%7E) should not be created by URI
- producers and, when found in a URI, should be decoded to their
- corresponding unreserved characters by URI normalizers.
-
- ////////////
-
- */
+// TODO: Remove
 extension String: ErrorProtocol {}
 
+// TODO: => new file
 extension Equatable {
     func equals(any: Self...) -> Bool {
         return any.contains(self)
     }
 }
 
+// TODO: => new file
+extension Sequence {
+    var array: [Iterator.Element] {
+        return Array(self)
+    }
+}
+
+// TODO: Some no longer necessary
 
 /*
  RESERVED CHARACTERS
@@ -636,13 +618,6 @@ extension Byte {
         return isUnreservedUriCharacter
             || isSubDelimitter
             || equals(any: .colon, .atSign, .percentSign)
-    }
-}
-
-
-extension Sequence {
-    var array: [Iterator.Element] {
-        return Array(self)
     }
 }
 
