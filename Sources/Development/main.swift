@@ -23,7 +23,7 @@ try test.forEach { uri in
     let parser = URIParser(data: uriData)
     try parser.parse()
 
-    let alt = URIParser(data: uriData)
+    let alt = __URIParser(data: uriData)
     try alt.asdfasdfsadf()
     print("")
 //let test =  ALT_URIParser
