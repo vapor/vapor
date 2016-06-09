@@ -164,6 +164,20 @@ private func percentDecoded(input: [Byte]) throws -> [Byte] {
     return group
 }
 
+private func percentEncoded(input: [Byte], shouldEncode: (Byte) throws -> Bool) throws -> [Byte] {
+    var group: [Byte] = []
+    try input.forEach { byte in
+        if try shouldEncode(byte) {
+            let encodedBytes = String(byte, radix: 16).utf8
+            group.append(.percentSign)
+            group.append(contentsOf: encodedBytes)
+        } else {
+            group.append(byte)
+        }
+    }
+    return group
+}
+
 public func TEST_PERCENT_DECODING() {
     let string = "%7E".utf8.array
     print("Bytes: \(string)")
