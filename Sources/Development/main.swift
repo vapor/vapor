@@ -1,6 +1,15 @@
 import Vapor
 import S4
 
+let test: [String] = ["foo://example.com:8042/over/there?name=ferret#nose", "urn:example:animal:ferret:nose"]
+try test.forEach { uri in
+    let uriData = Data(uri)
+    let parser = ALT_URIParser.init(data: uriData)
+    try parser.parse()
+    print("\n")
+}
+//let test =  ALT_URIParser
+
 var workDir: String {
     let parent = #file.characters.split(separator: "/").map(String.init).dropLast().joined(separator: "/")
     let path = "/\(parent)/"

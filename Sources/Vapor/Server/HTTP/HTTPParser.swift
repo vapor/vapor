@@ -113,6 +113,7 @@ extension Byte {
     static let period: Byte = 0x2E // '.' -- Full Stop
     static let questionMark: Byte = 0x3F // '?'
     static let numberSign: Byte = 0x23 // '#'
+    static let percentSign: Byte = 0x25 // '%'
 }
 
 // http://www.w3schools.com/charsets/ref_utf_basic_latin.asp
@@ -156,10 +157,17 @@ extension Byte {
  urn:example:animal:ferret:nose
  */
 
+/*
+ Defs:
+ 
+ 1* == at least one
+ */
+
 //URI         = scheme ":" hier-part [ "?" query ] [ "#" fragment ]
 public struct ALT_URI {
-    public let scheme: String?
-    public let hierPart: String
+    public let scheme: String
+    public let authority: String?
+    public let path: String
     public let query: String?
     public let fragment: String?
 }
@@ -178,6 +186,7 @@ public struct ALT_URI {
 //    case moneySign = "$"
 //    //        case
 //}
+
 public final class ALT_URIParser {
     private var localBuffer: [Byte] = []
     private var buffer: IndexingIterator<[Byte]>
@@ -193,7 +202,11 @@ public final class ALT_URIParser {
 
     public func parse() throws {
         let (scheme, authority, path, query, fragment) = try parse()
-
+        print("Scheme \(try scheme.toString())")
+        print("Authority \(try authority?.toString())")
+        print("Path \(try path.toString())")
+        print("Query \(try query?.toString())")
+        print("Fragment \(try fragment?.toString())")
     }
 
     // TODO: Validate that scheme is _not_ empty?
@@ -304,8 +317,9 @@ public final class ALT_URIParser {
     /*
      // TODO: Reference RFC
      
-     -- ends w/ '#' || '?' || end of line
+     -- ends w/ '#' || '?' || end of data
      -- if authority, first line MUST be '/'
+     -- if NO authority, first 2 must NOT be '//'
 
      RFC: path MUST exist, but CAN be empty
      */
@@ -333,6 +347,26 @@ public final class ALT_URIParser {
             path = [first]
         } else {
             throw "path"
+        }
+
+        /*
+         // TODO: This code is shit, clean it up
+
+         https://tools.ietf.org/html/rfc3986#section-3.3
+
+         If a URI
+         does not contain an authority component, then the path cannot begin
+         with two slash characters ("//").
+         */
+        if !uriContainsAuthority, let second = next() {
+            // TODO: This should be disablable for convenience
+            if first == .forwardSlash && second == .forwardSlash {
+                throw "a uri with an authority component may not begin a path with two slash characters"
+            } else if second.isValidPathCharacter {
+                path.append(second)
+            } else {
+                throw "found invalid character: \(second)"
+            }
         }
 
         while let next = next() {
@@ -764,9 +798,12 @@ extension Authority {
         // literal encompasses v6 and vFuture -- not handling right now
         case ipLiteral(String)
         case ipV4(String)
-        case name(String)
+        case regularName(String)
     }
 }
+
+//typealias Host = Authority.Host
+
 
 /*
  RESERVED CHARACTERS
@@ -820,50 +857,16 @@ extension Byte {
         return isValidPathCharacter
     }
 
-    var isValidPathCharacter: Bool {
-        /*
-         // TODO: Be more accurate to RFC:
-         
-         https://tools.ietf.org/html/rfc3986#section-3.3
-         
-         path          = path-abempty    ; begins with "/" or is empty
-         / path-absolute   ; begins with "/" but not "//"
-         / path-noscheme   ; begins with a non-colon segment
-         / path-rootless   ; begins with a segment
-         / path-empty      ; zero characters
-
-         path-abempty  = *( "/" segment )
-         path-absolute = "/" [ segment-nz *( "/" segment ) ]
-         path-noscheme = segment-nz-nc *( "/" segment )
-         path-rootless = segment-nz *( "/" segment )
-         path-empty    = 0<pchar>
-
-
-
-
-         Berners-Lee, et al.         Standards Track                    [Page 22]
-
-         RFC 3986                   URI Generic Syntax               January 2005
-
-
-         segment       = *pchar
-         segment-nz    = 1*pchar
-         segment-nz-nc = 1*( unreserved / pct-encoded / sub-delims / "@" )
-         ; non-zero-length segment without any colon ":"
-
-         pchar         = unreserved / pct-encoded / sub-delims / ":" / "@"
-         */
-        return isUnreservedUriCharacter || isSubDelimitter || self.equals(any: .colon, .atSign) // TODO: ? can this be in path?
-    }
-    var isValidQueryCharacter: Bool {
-        return isUnreservedUriCharacter || isSubDelimitter
-    }
-
     var isValidUriCharacter: Bool {
-        return isUnreservedUriCharacter || isGeneralDelimitter || isSubDelimitter
+        return isUnreservedUriCharacter
+            || isGeneralDelimitter
+            || isSubDelimitter
+            || self == .percentSign
     }
 
-    // TODO: This will break on Percent Encoding
+    /*
+     unreserved  = ALPHA / DIGIT / "-" / "." / "_" / "~"
+     */
     var isUnreservedUriCharacter: Bool {
         let char = Character(self)
         switch char {
@@ -874,10 +877,6 @@ extension Byte {
         case "0"..."9":
             return true
         case "-", ".", "_", "~":
-            return true
-        // TODO: Look into this
-        // removing it WILL break the parser as currently implemented
-        case "%": // Allows percent encoding to not fail our test???
             return true
         default:
             return false
@@ -933,12 +932,18 @@ extension Byte {
             return false
         }
     }
+}
 
+extension Byte {
     /*
+     https://tools.ietf.org/html/rfc3986#section-3.1
+
      Scheme names consist of a sequence of characters beginning with a
      letter and followed by any combination of letters, digits, plus
      ("+"), period ("."), or hyphen ("-").
-    */
+
+     scheme      = ALPHA *( ALPHA / DIGIT / "+" / "-" / "." )
+     */
     var isValidSchemeCharacter: Bool {
         let char = Character(self)
         switch char {
@@ -953,4 +958,274 @@ extension Byte {
             return false
         }
     }
+
+    /*
+     https://tools.ietf.org/html/rfc3986#section-3.2
+
+     The authority component is preceded by a double slash ("//") and is
+     terminated by the next slash ("/"), question mark ("?"), or number
+     sign ("#") character, or by the end of the URI.
+     
+     authority     = [ userinfo "@" ] host [ ":" port ]
+         userinfo      = *( unreserved / pct-encoded / sub-delims / ":" )
+         host          = IP-literal / IPv4address / reg-name
+             IP-literal    = "[" ( IPv6address / IPvFuture  ) "]"
+
+             IPvFuture     = "v" 1*HEXDIG "." 1*( unreserved / sub-delims / ":" )
+
+             IPv6address   =                            6( h16 ":" ) ls32
+             /                       "::" 5( h16 ":" ) ls32
+             / [               h16 ] "::" 4( h16 ":" ) ls32
+             / [ *1( h16 ":" ) h16 ] "::" 3( h16 ":" ) ls32
+             / [ *2( h16 ":" ) h16 ] "::" 2( h16 ":" ) ls32
+             / [ *3( h16 ":" ) h16 ] "::"    h16 ":"   ls32
+             / [ *4( h16 ":" ) h16 ] "::"              ls32
+             / [ *5( h16 ":" ) h16 ] "::"              h16
+             / [ *6( h16 ":" ) h16 ] "::"
+         port          = *DIGIT
+     */
+//    var isValidAuthorityCharacter: Bool {
+//        let char = Character(self)
+//        switch char {
+//        case "/", "?", "#": // terminators
+//            return false
+//        default:
+//            return isValidUriCharacter
+//        }
+//    }
+
+    /*
+     userinfo      = *( unreserved / pct-encoded / sub-delims / ":" )
+     */
+    var isValidUserInfoCharacter: Bool {
+        if isUnreservedUriCharacter {
+            return true
+        }
+        if isSubDelimitter {
+            return true
+        }
+        if self.equals(any: .percentSign, .colon) {
+            return true
+        }
+
+        return false
+    }
+
+    /*
+     https://tools.ietf.org/html/rfc3986#section-3.3
+
+     The path is terminated
+     by the first question mark ("?") or number sign ("#") character, or
+     by the end of the URI.
+     */
+    var isValidPathCharacter: Bool {
+        let char = Character(self)
+        switch char {
+        case "?", "#":
+            return false
+        default:
+            return isValidUriCharacter
+        }
+    }
+
+    /*
+     https://tools.ietf.org/html/rfc3986#section-3.4
+
+     The query component is indicated by the first question
+     mark ("?") character and terminated by a number sign ("#") character
+     or by the end of the URI.
+     
+     query       = *( pchar / "/" / "?" )
+     */
+    var isValidQueryCharacter: Bool {
+        if isPchar {
+            return true
+        }
+        if equals(any: .forwardSlash, .questionMark) {
+            return true
+        }
+
+        return false
+    }
+
+    /**
+     https://tools.ietf.org/html/rfc3986#section-3.3
+
+     pchar         = unreserved / pct-encoded / sub-delims / ":" / "@"
+     */
+    var isPchar: Bool {
+        if isUnreservedUriCharacter {
+            return true
+        }
+        if isSubDelimitter {
+            return true
+        }
+        if equals(any: .colon, .atSign, .percentSign) {
+            return true
+        }
+
+        return false
+    }
 }
+
+
+/*
+ https://tools.ietf.org/html/rfc3986#appendix-A
+
+ authority     = [ userinfo "@" ] host [ ":" port ]
+ userinfo      = *( unreserved / pct-encoded / sub-delims / ":" )
+ host          = IP-literal / IPv4address / reg-name
+ port          = *DIGIT
+
+ IP-literal    = "[" ( IPv6address / IPvFuture  ) "]"
+
+ IPvFuture     = "v" 1*HEXDIG "." 1*( unreserved / sub-delims / ":" )
+
+ IPv6address   =                            6( h16 ":" ) ls32
+ /                       "::" 5( h16 ":" ) ls32
+ / [               h16 ] "::" 4( h16 ":" ) ls32
+ / [ *1( h16 ":" ) h16 ] "::" 3( h16 ":" ) ls32
+ / [ *2( h16 ":" ) h16 ] "::" 2( h16 ":" ) ls32
+ / [ *3( h16 ":" ) h16 ] "::"    h16 ":"   ls32
+ / [ *4( h16 ":" ) h16 ] "::"              ls32
+ / [ *5( h16 ":" ) h16 ] "::"              h16
+ / [ *6( h16 ":" ) h16 ] "::"
+
+ reg-name      = *( unreserved / pct-encoded / sub-delims )
+ */
+private func parse(authority: [Byte]) throws -> (userinfo: [Byte]?, host: [Byte], port: [Byte]?) {
+    let userInfoOther = authority.split(separator: .atSign,
+                                        maxSplits: 1,
+                                        omittingEmptySubsequences: false) // MUST keep empty
+    guard 1...2 ~= userInfoOther.count else {
+        throw "too many at signs in authority"
+    }
+
+    let userInfo: [Byte]?
+    let hostAndPort: [Byte]
+    switch userInfoOther.count {
+    // TODO: Test empty array post split is 0
+    case 0:
+        return (nil, [], nil)
+    case 1:
+        userInfo = nil
+        hostAndPort = userInfoOther[0].array
+    case 2:
+        userInfo = userInfoOther[0].array
+        hostAndPort = userInfoOther[1].array
+    default:
+        throw "too many '@' symbols in authority"
+    }
+
+    let (host, port) = try parse(hostAndPort: hostAndPort)
+
+    // TODO: UserInfo not validated
+    return (userInfo, host, port)
+}
+
+private func parse(hostAndPort: [Byte]) throws -> (host: [Byte], port: [Byte]?) {
+    var hostAndPortIterator = hostAndPort.makeIterator()
+    guard let first = hostAndPortIterator.next() else { return ([], nil) }
+
+    let char = Character(first)
+    switch char {
+    case ":":
+        // host is empty, go to port
+        let port = try parse(port: hostAndPortIterator.array)
+        return ([], port)
+    case "[":
+        // host is IPv6 or IPvFuture
+        // still MIGHT include port
+        var host: [Byte] = []
+        while let next = hostAndPortIterator.next() {
+            if next == .rightSquareBracket {
+
+            }
+        }
+        break
+    default:
+        /*
+         https://tools.ietf.org/html/rfc3986#section-3.2.2
+
+         - Still MIGHT have port
+         - COULD be IPv4 or reg-name
+         
+         In order to
+         disambiguate the syntax, we apply the "first-match-wins" algorithm:
+         If host matches the rule for IPv4address, then it should be
+         considered an IPv4 address literal and not a reg-name.
+         */
+        break
+    }
+    fatalError()
+}
+
+/**
+ port        = *DIGIT
+ */
+private func parse(port: [Byte]) throws -> [Byte]? {
+    guard !port.isEmpty else { return nil }
+    for byte in port where !byte.isDigit {
+        throw "port numbers should only be digits"
+    }
+    return port
+}
+
+private func parse(ipLiteralAndPort: [Byte]) throws -> (ipLiteral: [Byte], port: [Byte]?) {
+    var iterator = ipLiteralAndPort.makeIterator()
+//    while le
+    fatalError()
+}
+
+//private final class AuthorityParser {
+//    var buffer: IndexingIterator<[Byte]>
+//}
+
+/*
+ A scheme may define a default port.  For example, the "http" scheme
+ defines a default port of "80", corresponding to its reserved TCP
+ port number.  The type of port designated by the port number (e.g.,
+ TCP, UDP, SCTP) is defined by the URI scheme.  URI producers and
+ normalizers should omit the port component and its ":" delimiter if
+ port is empty or if its value would be the same as that of the
+ scheme's default.
+ */
+struct IsPort: ValidationSuite {
+    static func validate(input value: [Byte]) throws {
+        for byte in value where !byte.isDigit {
+            throw error(with: value)
+        }
+    }
+}
+
+extension Sequence {
+    var array: [Iterator.Element] {
+        return Array(self)
+    }
+}
+
+extension Byte {
+    // port          = *DIGIT
+    var isValidPortCharacter: Bool {
+        return isDigit
+    }
+
+    var isDigit: Bool {
+        let char = Character(self)
+        switch char {
+        case "0"..."9":
+            return true
+        default:
+            return false
+        }
+    }
+}
+
+private func parse(userInfo: [Byte]) throws -> (user: [Byte], auth: [Byte]?) {
+    fatalError()
+}
+
+extension Byte {
+
+}
+
