@@ -14,7 +14,10 @@ final class HTTPParser: StreamParser {
         self.buffer = StreamBuffer(stream, buffer: 1024)
     }
 
-    func nextLine() throws -> Data {
+    func nextLine() throws -> ArraySlice<Byte> {
+        return buffer.slice(until: Byte.ASCII.newLine)
+
+        /*
         var line: Data = []
 
         func append(byte: Byte) {
@@ -29,7 +32,7 @@ final class HTTPParser: StreamParser {
             append(byte: byte)
         }
 
-        return line
+        return line*/
     }
 
     func parse() throws -> Request {
@@ -48,7 +51,7 @@ final class HTTPParser: StreamParser {
                 break
             }
 
-            let comps = headerLine.split(separator: Byte.colon)
+            let comps = headerLine.split(separator: Byte.ASCII.colon)
 
             guard comps.count == 2 else {
                 continue

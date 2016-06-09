@@ -55,19 +55,23 @@ extension Data {
 }
 
 extension Byte {
-    static let space: Byte = 0x20
-    static let period: Byte = 0x2e
-    static let slash: Byte = 0x2f
-    static let colon: Byte = 0x3A
-    static let questionMark: Byte = 0x3F
+    struct ASCII {
+        static let newLine: Byte = 0xA
+        
+        static let space: Byte = 0x20
+        static let period: Byte = 0x2e
+        static let slash: Byte = 0x2f
+        static let colon: Byte = 0x3A
+        static let questionMark: Byte = 0x3F
 
-    static let alphabetLength: Byte = 26
-    static let uppercaseStart: Byte = 65
-    static let lowercaseStart: Byte = 97
-    static let betweenCaseGap: Byte = lowercaseStart - uppercaseStart
+        static let alphabetLength: Byte = 26
+        static let uppercaseStart: Byte = 65
+        static let lowercaseStart: Byte = 97
+        static let betweenCaseGap: Byte = lowercaseStart - uppercaseStart
 
-    static let uppercaseRange = uppercaseStart ..< (uppercaseStart + alphabetLength)
-    static let lowercaseRange = lowercaseStart ..< (lowercaseStart + alphabetLength)
+        static let uppercaseRange = uppercaseStart ..< (uppercaseStart + alphabetLength)
+        static let lowercaseRange = lowercaseStart ..< (lowercaseStart + alphabetLength)
+    }
 }
 
 extension Data {
@@ -89,8 +93,8 @@ extension Data {
         var data = Data()
         
         for byte in self {
-            if Byte.uppercaseRange.contains(byte) {
-                data.append(byte + Byte.betweenCaseGap)
+            if Byte.ASCII.uppercaseRange.contains(byte) {
+                data.append(byte + Byte.ASCII.betweenCaseGap)
             } else {
                 data.append(byte)
             }
@@ -103,8 +107,8 @@ extension Data {
         var data = Data()
         
         for byte in self {
-            if Byte.lowercaseRange.contains(byte) {
-                data.append(byte - Byte.betweenCaseGap)
+            if Byte.ASCII.lowercaseRange.contains(byte) {
+                data.append(byte - Byte.ASCII.betweenCaseGap)
             } else {
                 data.append(byte)
             }

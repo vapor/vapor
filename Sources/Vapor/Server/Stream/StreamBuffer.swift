@@ -18,6 +18,10 @@ public final class StreamBuffer {
         self.iterator = Data().makeIterator()
     }
 
+    public func slice(until end: Byte) -> ArraySlice<Byte> {
+        return []
+    }
+
     public func next() throws -> Byte? {
         guard let next = iterator.next() else {
             iterator = try backingStream.receive(upTo: buffer).makeIterator()

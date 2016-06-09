@@ -21,9 +21,9 @@ extension HTTPParser {
         let versionSlice: ArraySlice<Byte>
 
 
-        init(_ data: Data) throws {
+        init(_ data: ArraySlice<Byte>) throws {
             let comps = data.split(
-                separator: Byte.space,
+                separator: Byte.ASCII.space,
                 maxSplits: 3,
                 omittingEmptySubsequences: true
             )
@@ -39,14 +39,14 @@ extension HTTPParser {
 
         var version: Request.Version {
             // ["HTTP", "1.1"]
-            let comps = versionSlice.split(separator: Byte.slash, maxSplits: 1)
+            let comps = versionSlice.split(separator: Byte.ASCII.slash, maxSplits: 1)
 
             var major = 0
             var minor = 0
 
             if comps.count == 2 {
                 // ["1", "1"]
-                let version = comps[1].split(separator: Byte.period, maxSplits: 1)
+                let version = comps[1].split(separator: Byte.ASCII.period, maxSplits: 1)
 
                 major = Data(comps[0]).int ?? 1
 
@@ -90,7 +90,7 @@ extension HTTPParser {
         }
 
         var uri: URI {
-            let comps = uriSlice.split(separator: Byte.questionMark, maxSplits: 1)
+            let comps = uriSlice.split(separator: Byte.ASCII.questionMark, maxSplits: 1)
 
             let path: String
             if let pathData = comps.first {
