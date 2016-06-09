@@ -28,6 +28,16 @@ public class StaticDataBuffer {
         return buffer.next()
     }
 
+    // MARK:
+
+    public func returnToBuffer(_ byte: Byte) {
+        returnToBuffer([byte])
+    }
+
+    public func returnToBuffer(_ bytes: [Byte]) {
+        localBuffer.append(contentsOf: bytes)
+    }
+    
     // MARK: Discard Extranneous Tokens
 
     public func discardNext(_ count: Int) throws {
@@ -42,7 +52,7 @@ public class StaticDataBuffer {
 
     public func checkLeadingBuffer(matches: [Byte]) throws -> Bool {
         let leading = try collect(next: matches.count)
-        localBuffer.append(contentsOf: leading)
+        returnToBuffer(leading)
         return leading == matches
     }
 
@@ -69,7 +79,7 @@ public class StaticDataBuffer {
                 // If the delimitter is also a token that identifies
                 // a particular section of the URI
                 // then we may want to return that byte to the buffer
-                localBuffer.append(next)
+                returnToBuffer(next)
                 break
             }
 
