@@ -9,16 +9,27 @@ import C7
 public final class StreamBuffer {
     private let stream: Stream
     private let size: Int
+    private let buffer: ArraySlice<Byte>
 
-    private var iterator: IndexingIterator<[Byte]>
+    //private var iterator: IndexingIterator<[Byte]>
 
     public init(_ stream: Stream, size: Int = 1024) {
         self.size = size
         self.stream = stream
-        self.iterator = Data().makeIterator()
+        self.buffer = []
+        //self.iterator = Data().makeIterator()
     }
 
     public func slice(until end: Byte) -> ArraySlice<Byte> {
+        let max = buffer.count
+
+        for i in 0 ..< max {
+            let byte = buffer[i]
+            if byte == end {
+                return buffer[0 ..< i]
+            }
+        }
+
         return []
     }
 
