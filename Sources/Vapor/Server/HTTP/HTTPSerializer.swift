@@ -1,4 +1,7 @@
 final class HTTPSerializer: StreamSerializer {
+    private static let clrf = Data("\r\n")
+    private static let headerSeparator = Data(":")
+    
     enum Error: ErrorProtocol {
         case unsupportedBody
     }
@@ -22,7 +25,8 @@ final class HTTPSerializer: StreamSerializer {
             return a.key.string < b.key.string
         }
         headers.forEach { (key, value) in
-            serialized.bytes += "\(key.string): \(value)\r\n".data.bytes
+            serialized.bytes += key.string.data.bytes + HTTPSerializer.headerSeparator + value.data.bytes + HTTPSerializer.clrf
+//            serialized.bytes += "\(key.string): \(value)\r\n".data.bytes
         }
         serialized.bytes += "\r\n".data.bytes
 

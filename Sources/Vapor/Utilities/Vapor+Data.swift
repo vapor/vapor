@@ -1,5 +1,5 @@
 extension Data {
-    func split(separator: Data, excludingFirst: Bool = false, excludingLast: Bool = false) -> [Data] {
+    func split(separator: Data, excludingFirst: Bool = false, excludingLast: Bool = false, maxSplits: Int? = nil) -> [Data] {
         var ranges = [(from: Int, to: Int)]()
         var parts = [Data]()
 
@@ -7,7 +7,7 @@ extension Data {
         var highestOccurence = -1
 
         // Find occurences of boundries
-        for (index, element) in self.enumerated() where index > highestOccurence {
+        for (index, element) in self.enumerated() where index > highestOccurence && !(maxSplits != nil && ranges.count >= maxSplits) {
             // If this first element matches and there are enough bytes left
             guard element == separator.first && self.count >= index + separator.count else {
                 continue
@@ -51,5 +51,38 @@ extension Data {
         }
 
         return parts
+    }
+}
+
+extension Data {
+    static let uppercaseRange = 65...90
+    static let lowercaseRange = 97...122
+    
+    func lowercased() -> Data {
+        var data = Data()
+        
+        for byte in self {
+            if Data.lowercaseRange.contains(Int(byte)) {
+                data.append(byte - 32)
+            } else {
+                data.append(byte)
+            }
+        }
+        
+        return data
+    }
+    
+    func uppercased() -> Data {
+        var data = Data()
+        
+        for byte in self {
+            if Data.lowercaseRange.contains(Int(byte)) {
+                data.append(byte + 32)
+            } else {
+                data.append(byte)
+            }
+        }
+        
+        return data
     }
 }
