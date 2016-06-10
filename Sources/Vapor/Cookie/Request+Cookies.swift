@@ -8,7 +8,7 @@ extension Request {
             return cookies
         }
         set(data) {
-            storage["cookies"] = cookies
+            storage["cookies"] = data
         }
     }
 }
