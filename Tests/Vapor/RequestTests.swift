@@ -36,7 +36,7 @@ class RequestTests: XCTestCase {
         let string = "value=123"
 
         let data = FormURLEncoded.parse(string.data)
-        XCTAssert(data["value"]?.int == 123, "Request did not parse correctly")
+        XCTAssertEqual(data["value"]?.int, 123, "Request did not parse correctly")
     }
 
     func testMultipart() {
@@ -94,5 +94,13 @@ class RequestTests: XCTestCase {
         let input = "multipart/form-data; boundary=----WebKitFormBoundaryAzXMX6nUkSI9kQbq"
         let val = input.components(separatedBy: "boundary=")
         print("succeeded w/ \(val) because didn't crash")
+    }
+
+    func testCookies() {
+        let cookieString = "1=1;2=2;"
+
+        let cookies = Cookies.parse(header: cookieString)
+        XCTAssertEqual(cookies["1"]?.int, 1)
+        XCTAssertEqual(cookies["2"]?.int, 2)
     }
 }

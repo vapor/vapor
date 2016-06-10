@@ -71,29 +71,9 @@ extension HTTPParser {
         }
 
         var uri: URI {
-            var fields: [String : [String?]] = [:]
-
             let parts = uriString.split(separator: "?", maxSplits: 1)
             let path = parts.first ?? ""
             let queryString = parts.last ?? ""
-
-            let data = FormURLEncoded.parse(queryString.data)
-
-            if case .dictionary(let dict) = data {
-                for (key, val) in dict {
-                    var array: [String?]
-
-                    if let existing = fields[key] {
-                        array = existing
-                    } else {
-                        array = []
-                    }
-
-                    array.append(val.string)
-
-                    fields[key] = array
-                }
-            }
 
             return URI(
                 scheme: "http",
@@ -101,7 +81,7 @@ extension HTTPParser {
                 host: nil,
                 port: nil,
                 path: path,
-                query: fields,
+                query: queryString,
                 fragment: nil
             )
         }
