@@ -2,24 +2,27 @@
 extension Byte {
     internal var isValidUriCharacter: Bool {
         return isUnreservedUriCharacter
-            || isGeneralDelimitter
-            || isSubDelimitter
+            || isGeneralDelimiter
+            || isSubDelimiter
             || self == .percentSign
     }
 }
 
 /*
- RESERVED CHARACTERS
+    RESERVED CHARACTERS
 
- https://tools.ietf.org/html/rfc3986#section-2.2
+    https://tools.ietf.org/html/rfc3986#section-2.2
 
- //    gen-delims  = ":" / "/" / "?" / "#" / "[" / "]" / "@"
- //
- //    sub-delims  = "!" / "$" / "&" / "'" / "(" / ")"
- //    / "*" / "+" / "," / ";" / "="
- */
+        gen-delims  = ":" / "/" / "?" / "#" / "[" / "]" / "@"
+
+        sub-delims  = "!" / "$" / "&" / "'" / "(" / ")"
+                      "*" / "+" / "," / ";" / "="
+*/
 extension Byte {
-    internal var isGeneralDelimitter: Bool {
+    /**
+        gen-delims  = ":" / "/" / "?" / "#" / "[" / "]" / "@"
+    */
+    internal var isGeneralDelimiter: Bool {
         let char = Character(self)
         switch char {
         case ":", "/", "?", "#", "[", "]", "@":
@@ -29,7 +32,11 @@ extension Byte {
         }
     }
 
-    internal var isSubDelimitter: Bool {
+    /**
+        sub-delims  = "!" / "$" / "&" / "'" / "(" / ")"
+        "*" / "+" / "," / ";" / "="
+    */
+    internal var isSubDelimiter: Bool {
         let char = Character(self)
         switch char {
         case "!", "$", "&", "'", "(", ")", "*", "+", ",", ";", "=":
@@ -43,21 +50,21 @@ extension Byte {
 // TODO: Test all of these character booleans
 
 /*
- UNRESERVED CHARACTERS
+    UNRESERVED CHARACTERS
 
- https://tools.ietf.org/html/rfc3986#section-2.2
+    https://tools.ietf.org/html/rfc3986#section-2.2
 
 
- Characters that are allowed in a URI but do not have a reserved
- purpose are called unreserved.  These include uppercase and lowercase
- letters, decimal digits, hyphen, period, underscore, and tilde.
+    Characters that are allowed in a URI but do not have a reserved
+    purpose are called unreserved.  These include uppercase and lowercase
+    letters, decimal digits, hyphen, period, underscore, and tilde.
 
- unreserved  = ALPHA / DIGIT / "-" / "." / "_" / "~"
- */
+    unreserved  = ALPHA / DIGIT / "-" / "." / "_" / "~"
+*/
 extension Byte {
-    /*
-     unreserved  = ALPHA / DIGIT / "-" / "." / "_" / "~"
-     */
+    /**
+        unreserved  = ALPHA / DIGIT / "-" / "." / "_" / "~"
+    */
     internal var isUnreservedUriCharacter: Bool {
         let char = Character(self)
         switch char {
