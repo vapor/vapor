@@ -7,7 +7,7 @@ extension Route {
         public let parent: RouteBuilder
 
         /// The leading path to prefix ahead of additional routing
-        public let leadingPath: String
+        public let leadingPath: String?
 
         /// The middleware to prefix to all requested routing
         public let scopedMiddleware: [Middleware]
@@ -21,10 +21,16 @@ extension Route.Link: RouteBuilder {
         path: String,
         handler: Route.Handler
     ) {
+		// if leading path is nil, a middleware was added with no path change
+		var currentPath = ""
+		if let path = leadingPath {
+			currentPath = path.finish("/")
+		}
+
         parent.add(
             middleware: self.scopedMiddleware + middleware,
             method: method,
-            path: leadingPath.finish("/") + path,
+            path: currentPath + path,
             handler: handler
         )
     }
