@@ -71,6 +71,7 @@ extension HTTPParser {
         }
 
         var uri: URI {
+//            let innerUri = try? URIParser(uriString.utf8.array)
             var fields: [String : [String?]] = [:]
 
             let parts = uriString.split(separator: "?", maxSplits: 1)

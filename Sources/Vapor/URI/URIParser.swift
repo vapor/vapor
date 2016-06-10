@@ -83,67 +83,7 @@ public final class URIParser: StaticDataBuffer {
         guard next.isValidUriCharacter else {
             throw "found invalid uri character: \(Character(next))"
         }
-
-        // MUST run through percent filter
-        // SOME characters are encoded during parsing
-        // ALL OTHERS MUST wait until AFTER component
-        // parsing
-        return try percentFiltered(next: next)
-    }
-
-    /*
-     ************** [WARNING DO NOT DELET] *****************
-
-     SOME percent encodings are parsed during component parsing
-     ALL OTHER percent encoding MUST wait until AFTER
-     components have been parsed
-
-     **************
-     IMPORTANT NOTE REGARDING PERCENT ENCODING
-     **************
-
-     https://tools.ietf.org/html/rfc3986#section-2.3
-
-     Some characters that ARE allowed are still percent encoded, these should
-     be unencoded BEFORE parsing out URI.
-
-     URIs that differ in the replacement of an unreserved character with
-     its corresponding percent-encoded US-ASCII octet are equivalent: they
-     identify the same resource.  However, URI comparison implementations
-     do not always perform normalization prior to comparison (see Section
-     6).  For consistency, percent-encoded octets in the ranges of ALPHA
-     (%41-%5A and %61-%7A), DIGIT (%30-%39), hyphen (%2D), period (%2E),
-     underscore (%5F), or tilde (%7E) should not be created by URI
-     producers and, when found in a URI, should be decoded to their
-     corresponding unreserved characters by URI normalizers.
-     */
-    private func percentFiltered(next: Byte) throws -> Byte? {
-        guard next == .percentSign else { return next }
-        let bytes = try collect(next: 2)
-        let encoding = try percentDecoded([.percentSign] + bytes)
-        guard encoding.count == 1 else { throw "unexpected error that should never happen" }
-        let encodedByte = encoding[0]
-        let char = Character(encodedByte)
-        switch char {
-        case "a"..."z":
-            fallthrough
-        case "A"..."Z":
-            fallthrough
-        case "0"..."9":
-            fallthrough
-        case "-", ".", "_", "~":
-            /*
-             Generally with percent encoding, we WAIT until AFTER
-             the components have been broken out.
-
-             However, with the above character set, encoding MUST happen BEFORE uri parsing
-             */
-            return encodedByte
-        default:
-            // return encoded bytes to buffer
-            returnToBuffer(bytes)
-            return next
-        }
+        return next
     }
 
     // MARK: Scheme
