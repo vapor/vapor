@@ -1,9 +1,10 @@
 /**
- This class is intended to make interacting with and iterating through
- a static data buffer a simpler process.
- 
- It's intent is to be subclassed so the next function can be overridden with further rules
- */
+    This class is intended to make interacting with and 
+    iterating through a static data buffer a simpler process.
+
+    It's intent is to be subclassed so the next 
+    function can be overridden with further rules.
+*/
 public class StaticDataBuffer {
     private var localBuffer: [Byte] = []
     private var buffer: IndexingIterator<[Byte]>
@@ -20,8 +21,9 @@ public class StaticDataBuffer {
 
     public func next() throws -> Byte? {
         /*
-         local buffer is used to maintain last bytes while still interacting w/ byte buffer
-         */
+            Local buffer is used to maintain last bytes 
+            while still interacting w/ byte buffer.
+        */
         guard localBuffer.isEmpty else {
             return localBuffer.removeFirst()
         }
@@ -70,8 +72,9 @@ public class StaticDataBuffer {
     }
 
     /*
-     When in Query segment, `+` should be interpreted as ` ` (space), not sure useful outside of that point
-     */
+        When in Query segment, `+` should be interpreted as ` ` (space), 
+        not sure useful outside of that point.
+    */
     public func collect(until delimitters: Byte..., convertIfNecessary: (Byte) -> Byte = { $0 }) throws -> [Byte] {
         var collected: [Byte] = []
         while let next = try next() {
