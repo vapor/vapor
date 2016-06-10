@@ -185,7 +185,7 @@ final class RequestParser {
         let (method, uri, httpVersion) = try parseRequestLine()
         // Call here because after first line, subsequent whitespace indicates it's part of the preceding value
         try renameAndClarifyButThisIsNecessaryToSkipLeadingWhitespaceLinesFollowingRequestLine()
-
+        let headers = try parseHeaders()
 
 
     }
@@ -219,11 +219,23 @@ final class RequestParser {
         return (method, uri, httpVersion)
     }
 
+    /*
+     HTTP-message   = start-line
+     *( header-field CRLF )
+     CRLF
+     [ message-body ]
+     */
     func parseHeaders() throws -> [(field: [Byte], value: [Byte])] {
-        throw ""
-//        repeat {
-//
-//        } while next(equalsAny: <#T##Byte...##Byte#>)
+        var headers: [(field: [Byte], value: [Byte])] = []
+        // Header fields are terminated by CRLF line
+        while try !next(matches: [.carriageReturn, .lineFeed]) {
+            let header = try parseHeaderField()
+            // TODO: trim trailing whitespace here? leading is already done
+            let value = try parseHeaderValue()
+            headers.append((header, value))
+        }
+        try discardNext(2) // discard CRLF
+        return headers
     }
 
     /**
