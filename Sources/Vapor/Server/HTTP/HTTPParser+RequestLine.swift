@@ -74,25 +74,7 @@ extension HTTPParser {
             // Temporary introduction to use new URI parser w/ old struct and model
             let innerUri = try? URIParser.parse(uri: uriString.utf8.array)
 
-            var fields: [String : [String?]] = [:]
             let queryString = innerUri?.query ?? ""
-            let data = FormURLEncoded.parse(queryString.data)
-
-            if case .dictionary(let dict) = data {
-                for (key, val) in dict {
-                    var array: [String?]
-
-                    if let existing = fields[key] {
-                        array = existing
-                    } else {
-                        array = []
-                    }
-
-                    array.append(val.string)
-
-                    fields[key] = array
-                }
-            }
 
             let info = URI.UserInfo(username: innerUri?.userInfo?.username ?? "", password: innerUri?.userInfo?.password ?? "")
             return URI(
@@ -101,7 +83,7 @@ extension HTTPParser {
                 host: innerUri?.host,
                 port: innerUri?.port,
                 path: innerUri?.path,
-                query: fields,
+                query: queryString,
                 fragment: innerUri?.fragment
             )
         }
