@@ -219,6 +219,12 @@ final class RequestParser {
         return (method, uri, httpVersion)
     }
 
+    func parseHeaders() throws -> [(field: [Byte], value: [Byte])] {
+        repeat {
+
+        } while next(equalsAny: <#T##Byte...##Byte#>)
+    }
+
     /**
      https://tools.ietf.org/html/rfc7230#section-3
 
@@ -276,26 +282,13 @@ final class RequestParser {
      */
     func parseNextHeaderField() throws -> (field: [Byte], value: [Byte]) {
         let field = try parseHeaderField()
-
-        while true {
-            let value = try collect(untilMatches: [.carriageReturn, .lineFeed])
-            try discardNext(2)// discard 'CRLF'
-
-            // Check if next line is a value continuation
-            guard let next = try next() else { return (field, value) }
-            if next.isWhitespace
-        }
-        // var valuesvapo
-        let value = try collect(untilMatches: [.carriageReturn, .lineFeed])
-        // cr from buffer and expectant lf
-        let crlf = try collect(next: 2)
-        throw "blurp"
+        let value = try parseHeaderValue()
+        return (field, value)
     }
 
     func parseHeaderField() throws -> [Byte] {
         let field = try collect(until: .colon)
         try discardNext(1) // discard ':'
-        guard
         /*
          No whitespace is allowed between the header field-name and colon.  In
          the past, differences in the handling of such whitespace have led to
@@ -305,16 +298,35 @@ final class RequestParser {
          of 400 (Bad Request).
          */
         guard field.last?.isWhitespace == false else { throw "must not be space between header field and ':' " }
-        try skipWhiteSpace()
         return field
     }
 
     func parseHeaderValue() throws -> [Byte] {
-        // TODO: Handle trailing whitespace
-        throw ""
+        try skipWhiteSpace()
+        let value = try collect(untilMatches: [.carriageReturn, .lineFeed])
+        try discardNext(2)// discard 'CRLF'
+
+        /*
+         Historically, HTTP header field values could be extended over
+         multiple lines by preceding each extra line with at least one space
+         or horizontal tab (obs-fold).  This specification deprecates such
+         line folding except within the message/http media type
+         (Section 8.3.1).  A sender MUST NOT generate a message that includes
+         line folding (i.e., that has any field-value that contains a match to
+         the obs-fold rule) unless the message is intended for packaging
+         within the message/http media type.
+         
+         Although deprecated and we MUST NOT generate, it is POSSIBLE for older 
+         systems to use this style of communication and we need to support it
+         */
+        guard try next(equalsAny: .space, .horizontalTab) else { return value }
+        /**
+         Suggestion to clients when generating is to convert obs-fold to space, we'll do same in parsing.
+         */
+        return try value + [.space] + parseHeaderValue()
     }
 
-    // TODO: This assumes line termination is ok -- others do as well. I _believe_ this is the appropriate handling
+    // TODO: This assumes line termination is ok -- other functions do as well. I _believe_ this is the appropriate handling, but double check
     func collect(untilMatches expectation: [Byte]) throws -> [Byte] {
         guard !expectation.isEmpty else { return [] }
 
@@ -340,6 +352,11 @@ final class RequestParser {
         return collection
     }
 
+    private func next(equalsAny expectations: Byte...) throws -> Bool {
+        guard let next = try next() else { return false }
+        returnToBuffer(next)
+        return next.equals(any: expectations)
+    }
 
     private func skipWhiteSpace() throws {
         while let next = try next() {
