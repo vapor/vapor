@@ -13,8 +13,18 @@ extension Request {
         }
     }
 
-    public init(method: Method = .get, path: String, host: String? = nil, body: Data = []) {
-        self.init(method: method, uri: URI(path: path, host: host), headers: [:], body: body)
+    /**
+        Create a new request with `Data`
+    */
+    public init(
+        version: Version = Version(major: 1, minor: 1),
+        method: Method = .get,
+        path: String = "/",
+        host: String? = nil,
+        headers: Headers = [:],
+        data: Data = []
+    ) {
+        self.init(method: method, uri: URI(path: path, host: host), version: version, headers: headers, body: .buffer(data))
     }
 
     public var contentType: String? {
