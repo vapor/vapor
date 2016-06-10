@@ -12,6 +12,8 @@ extension Byte {
     static let minusSign: Byte = 0x2D // '-' -- Hyphen Minus
     static let zeroCharacter: Byte = 0x30
     static let space: Byte = 0x20
+    static let carriageReturn: Byte = 0x0D
+    static let lineFeed: Byte = 0x0A
 }
 
 extension Byte {
