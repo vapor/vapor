@@ -10,6 +10,13 @@ var workDir: String {
 let config = Config(seed: JSON.object(["port": "8000"]), workingDirectory: workDir)
 let app = Application(workDir: workDir, config: config)
 
+
+let 😀: Response = Response(status: .ok)
+
+app.get("ping") { _ in
+    return 😀
+}
+
 //MARK: Basic
 
 app.get("/") { request in

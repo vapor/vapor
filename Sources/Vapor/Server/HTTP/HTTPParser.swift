@@ -124,6 +124,92 @@ final class HTTPParser: StreamParser {
     }
 }
 
+
+
+extension Array where Element: Hashable {
+    /**
+     This function is intended to be as performant as possible, which is part of the reason 
+     why some of the underlying logic may seem a bit more tedious than is necessary
+     */
+    func trim(_ elements: [Element], leading: Bool = true, trailing: Bool = true) -> SubSequence {
+        guard !isEmpty else { return [] }
+
+        let lastIdx = self.count - 1
+        var leadingIterator = self.indices.makeIterator()
+        var trailingIterator = leadingIterator
+
+        var leading = 0
+        var trailing = lastIdx
+        while let next = leadingIterator.next() where elements.contains(self[next]) {
+            leading += 1
+        }
+        while let next = trailingIterator.next() where elements.contains(self[lastIdx - next]) {
+            trailing -= 1
+        }
+
+        return self[leading...trailing]
+    }
+}
+
+
+// MARK: RObustness 
+
+/*
+ 
+ ******* ##################### **********
+ *                                      *
+ *                                      *
+ *                                      *
+ *            robustness                *
+ *                                      *
+ *                                      *
+ *                                      *
+ ******* ##################### **********
+
+ 3.5.  Message Parsing Robustness
+
+ Older HTTP/1.0 user agent implementations might send an extra CRLF
+ after a POST request as a workaround for some early server
+ applications that failed to read message body content that was not
+ terminated by a line-ending.  An HTTP/1.1 user agent MUST NOT preface
+ or follow a request with an extra CRLF.  If terminating the request
+ message body with a line-ending is desired, then the user agent MUST
+ count the terminating CRLF octets as part of the message body length.
+
+ In the interest of robustness, a server that is expecting to receive
+ and parse a request-line SHOULD ignore at least one empty line (CRLF)
+ received prior to the request-line.
+
+
+
+
+ Fielding & Reschke           Standards Track                   [Page 34]
+
+ RFC 7230           HTTP/1.1 Message Syntax and Routing         June 2014
+
+
+ Although the line terminator for the start-line and header fields is
+ the sequence CRLF, a recipient MAY recognize a single LF as a line
+ terminator and ignore any preceding CR.
+
+ Although the request-line and status-line grammar rules require that
+ each of the component elements be separated by a single SP octet,
+ recipients MAY instead parse on whitespace-delimited word boundaries
+ and, aside from the CRLF terminator, treat any form of whitespace as
+ the SP separator while ignoring preceding or trailing whitespace;
+ such whitespace includes one or more of the following octets: SP,
+ HTAB, VT (%x0B), FF (%x0C), or bare CR.  However, lenient parsing can
+ result in security vulnerabilities if there are multiple recipients
+ of the message and each has its own unique interpretation of
+ robustness (see Section 9.5).
+
+ When a server listening only for HTTP request messages, or processing
+ what appears from the start-line to be an HTTP request message,
+ receives a sequence of octets that does not match the HTTP-message
+ grammar aside from the robustness exceptions listed above, the server
+ SHOULD respond with a 400 (Bad Request) response.
+ */
+
 extension String: ErrorProtocol {}
 /**
  
@@ -147,6 +233,42 @@ extension String: ErrorProtocol {}
  received, or replace each received obs-fold with one or more SP
  octets prior to interpreting the field value or forwarding the
  message downstream.
+ 
+ ******************************
+
+ The presence of a message body in a response depends on both the
+ request method to which it is responding and the response status code
+ (Section 3.1.2).  Responses to the HEAD request method (Section 4.3.2
+ of [RFC7231]) never include a message body because the associated
+ response header fields (e.g., Transfer-Encoding, Content-Length,
+ etc.), if present, indicate only what their values would have been if
+ the request method had been GET (Section 4.3.1 of [RFC7231]). 2xx
+ (Successful) responses to a CONNECT request method (Section 4.3.6 of
+ [RFC7231]) switch to tunnel mode instead of having a message body.
+ All 1xx (Informational), 204 (No Content), and 304 (Not Modified)
+ responses do not include a message body.  All other responses do
+ include a message body, although the body might be of zero length.
+
+ ******************************
+ 
+ A server MAY send a Content-Length header field in a response to a
+ HEAD request (Section 4.3.2 of [RFC7231]); a server MUST NOT send
+ Content-Length in such a response unless its field-value equals the
+ decimal number of octets that would have been sent in the payload
+ body of a response if the same request had used the GET method.
+ 
+ *****************************
+ 
+ If a message is received that has multiple Content-Length header
+ fields with field-values consisting of the same decimal value, or a
+ single Content-Length header field with a field value containing a
+ list of identical decimal values (e.g., "Content-Length: 42, 42"),
+ indicating that duplicate Content-Length header fields have been
+ generated or combined by an upstream message processor, then the
+ recipient MUST either reject the message as invalid or replace the
+ duplicated field-values with a single valid Content-Length field
+ containing that decimal value prior to determining the message body
+ length or forwarding the message.
  
  ******************************
 
@@ -186,7 +308,6 @@ final class RequestParser {
         // Call here because after first line, subsequent whitespace indicates it's part of the preceding value
         try renameAndClarifyButThisIsNecessaryToSkipLeadingWhitespaceLinesFollowingRequestLine()
         let headers = try parseHeaders()
-
 
     }
 
@@ -476,3 +597,113 @@ final class RequestParser {
     //        return complete
     //    }
 }
+
+//extension RequestParser {
+//    func parseBody() throws -> [Byte] {
+//
+//    }
+//}
+
+/*
+ https://tools.ietf.org/html/rfc7230#section-3.3.3
+ 
+ The length of a message body is determined by one of the following
+ (in order of precedence):
+
+ 1.  Any response to a HEAD request and any response with a 1xx
+ (Informational), 204 (No Content), or 304 (Not Modified) status
+ code is always terminated by the first empty line after the
+ header fields, regardless of the header fields present in the
+ message, and thus cannot contain a message body.
+
+ 2.  Any 2xx (Successful) response to a CONNECT request implies that
+ the connection will become a tunnel immediately after the empty
+ line that concludes the header fields.  A client MUST ignore any
+ Content-Length or Transfer-Encoding header fields received in
+ such a message.
+
+ 3.  If a Transfer-Encoding header field is present and the chunked
+ transfer coding (Section 4.1) is the final encoding, the message
+ body length is determined by reading and decoding the chunked
+ data until the transfer coding indicates the data is complete.
+
+ If a Transfer-Encoding header field is present in a response and
+ the chunked transfer coding is not the final encoding, the
+ message body length is determined by reading the connection until
+ it is closed by the server.  If a Transfer-Encoding header field
+ is present in a request and the chunked transfer coding is not
+ the final encoding, the message body length cannot be determined
+ reliably; the server MUST respond with the 400 (Bad Request)
+ status code and then close the connection.
+
+ If a message is received with both a Transfer-Encoding and a
+ Content-Length header field, the Transfer-Encoding overrides the
+ Content-Length.  Such a message might indicate an attempt to
+ perform request smuggling (Section 9.5) or response splitting
+ (Section 9.4) and ought to be handled as an error.  A sender MUST
+ remove the received Content-Length field prior to forwarding such
+ a message downstream.
+
+ 4.  If a message is received without Transfer-Encoding and with
+ either multiple Content-Length header fields having differing
+ field-values or a single Content-Length header field having an
+ invalid value, then the message framing is invalid and the
+ recipient MUST treat it as an unrecoverable error.  If this is a
+ request message, the server MUST respond with a 400 (Bad Request)
+ status code and then close the connection.  If this is a response
+ message received by a proxy, the proxy MUST close the connection
+ to the server, discard the received response, and send a 502 (Bad
+ Gateway) response to the client.  If this is a response message
+ received by a user agent, the user agent MUST close the
+ connection to the server and discard the received response.
+
+ 5.  If a valid Content-Length header field is present without
+ Transfer-Encoding, its decimal value defines the expected message
+ body length in octets.  If the sender closes the connection or
+ the recipient times out before the indicated number of octets are
+ received, the recipient MUST consider the message to be
+ incomplete and close the connection.
+
+ 6.  If this is a request message and none of the above are true, then
+ the message body length is zero (no message body is present).
+
+ 7.  Otherwise, this is a response message without a declared message
+ body length, so the message body length is determined by the
+ number of octets received prior to the server closing the
+ connection.
+
+ Since there is no way to distinguish a successfully completed,
+ close-delimited message from a partially received message interrupted
+ by network failure, a server SHOULD generate encoding or
+ length-delimited messages whenever possible.  The close-delimiting
+ feature exists primarily for backwards compatibility with HTTP/1.0.
+
+ A server MAY reject a request that contains a message body but not a
+ Content-Length by responding with 411 (Length Required).
+
+ Unless a transfer coding other than chunked has been applied, a
+ client that sends a request containing a message body SHOULD use a
+ valid Content-Length header field if the message body length is known
+ in advance, rather than the chunked transfer coding, since some
+ existing services respond to chunked with a 411 (Length Required)
+ status code even though they understand the chunked transfer coding.
+ This is typically because such services are implemented via a gateway
+ that requires a content-length in advance of being called and the
+ server is unable or unwilling to buffer the entire request before
+ processing.
+
+ A user agent that sends a request containing a message body MUST send
+ a valid Content-Length header field if it does not know the server
+ will handle HTTP/1.1 (or later) requests; such knowledge can be in
+ the form of specific user configuration or by remembering the version
+ of a prior received response.
+
+ If the final response to the last request on a connection has been
+ completely received and there remains additional data to read, a user
+ agent MAY discard the remaining data or attempt to determine if that
+ data belongs as part of the prior response body, which might be the
+ case if the prior message's Content-Length value is incorrect.  A
+ client MUST NOT process, cache, or forward such extra data as a
+ separate response, since such behavior would be vulnerable to cache
+ poisoning.
+ */
