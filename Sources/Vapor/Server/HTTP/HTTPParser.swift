@@ -220,9 +220,10 @@ final class RequestParser {
     }
 
     func parseHeaders() throws -> [(field: [Byte], value: [Byte])] {
-        repeat {
-
-        } while next(equalsAny: <#T##Byte...##Byte#>)
+        throw ""
+//        repeat {
+//
+//        } while next(equalsAny: <#T##Byte...##Byte#>)
     }
 
     /**
