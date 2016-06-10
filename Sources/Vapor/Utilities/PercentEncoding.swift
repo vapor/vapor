@@ -7,8 +7,7 @@
  Wrappers around String can be built
  */
 
-
-public func percentDecoded(_ input: [Byte]) throws -> [Byte] {
+public func percentDecoded(_ input: [Byte]) -> [Byte]? {
     var idx = 0
     var group: [Byte] = []
     while idx < input.count {
@@ -20,10 +19,10 @@ public func percentDecoded(_ input: [Byte]) throws -> [Byte] {
             let secondHex = idx + 2
             idx = secondHex + 1
 
-            guard secondHex < input.count else { throw "invalid percent encoding" }
+            guard secondHex < input.count else { return nil }
             let bytes = input[firstHex...secondHex].array
-            let str = try bytes.toString()
-            guard let encodedByte = Byte(str, radix: 16) else { throw "invalid percent encoding" }
+            guard let str = try? bytes.toString() else { return nil }
+            guard let encodedByte = Byte(str, radix: 16) else { return nil }
             group.append(encodedByte)
         } else {
             group.append(next)

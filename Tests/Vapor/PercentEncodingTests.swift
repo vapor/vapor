@@ -25,7 +25,10 @@ class PercentEncodingTests: XCTestCase {
     func testDecoding() throws {
         try utf8TestCases.forEach { character, encoding in
             let encoded = encoding.utf8.array
-            let decoded = try percentDecoded(encoded)
+            guard let decoded = percentDecoded(encoded) else {
+                XCTFail("Unable to percent decode string: \(encoded)")
+                return
+            }
             let decodedString = try decoded.toString()
             XCTAssert(decodedString == character, "\(character) -- \(decodedString) didn't equal expected decoding: \(character)")
         }

@@ -7,6 +7,11 @@ extension URIParser {
 
 public final class URIParser: StaticDataBuffer {
 
+    public enum Error: ErrorProtocol {
+        case invalidPercentEncoding
+        case unsupportedURICharacter(Character)
+    }
+
     // MARK: Paser URI
 
     internal func parse() throws -> URI {
@@ -63,7 +68,7 @@ public final class URIParser: StaticDataBuffer {
     // MARK: Percent Decoding
 
     private func percentDecodedString(_ input: [Byte]) throws -> String {
-        let decoded = try percentDecoded(input)
+        guard let decoded = percentDecoded(input) else { throw Error.invalidPercentEncoding }
         return try decoded.toString()
     }
 
@@ -80,9 +85,7 @@ public final class URIParser: StaticDataBuffer {
     public override func next() throws -> Byte? {
         guard let next = try super.next() else { return nil }
         guard !next.isWhitespace else { return try self.next() }
-        guard next.isValidUriCharacter else {
-            throw "found invalid uri character: \(Character(next))"
-        }
+        guard next.isValidUriCharacter else { throw Error.unsupportedURICharacter(Character(next)) }
         return next
     }
 
@@ -296,6 +299,3 @@ extension URIParser {
         return (username, auth)
     }
 }
-
-// TODO: Remove
-extension String: ErrorProtocol {}
