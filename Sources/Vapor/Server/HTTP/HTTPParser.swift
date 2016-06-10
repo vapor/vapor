@@ -44,6 +44,7 @@ final class HTTPParser: StreamParser {
             throw Error.streamEmpty
         }
 
+        // TODO: Actually parse
         let requestLine = try RequestLine(requestLineString)
 
         var headers: [Request.Headers.Key: String] = [:]
