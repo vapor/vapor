@@ -3,38 +3,44 @@ final class HTTPParser: StreamParser {
         case streamEmpty
     }
 
-    static let headerEndOfLine = "\r\n"
-    static let newLine: Byte = 10
-    static let carriageReturn: Byte = 13
-    static let minimumValidAsciiCharacter: Byte = 13 + 1
-
     let buffer: StreamBuffer
 
+    /**
+        Creates a new HTTP Parser that will
+        receive serialized request data from 
+        the supplied stream.
+    */
     init(stream: Stream) {
-        self.buffer = StreamBuffer(stream, buffer: 1024)
+        self.buffer = StreamBuffer(stream)
     }
 
-    func nextLine() throws -> String {
-        var line: String = ""
+    /**
+        Reads and filters non-valid ASCII characters
+        from the stream until a new line character is returned.
+    */
+    func nextLine() throws -> Data {
+        var line: Data = []
 
-        func append(byte: Byte) {
-            guard byte >= HTTPParser.minimumValidAsciiCharacter else {
-                return
+        while let byte = try buffer.next() where byte != Byte.ASCII.newLine {
+            // Skip over any non-valid ASCII characters
+            if byte > Byte.ASCII.carriageReturn {
+                line.append(byte)
             }
-
-            line.append(Character(byte))
-        }
-
-        while let byte = try buffer.next() where byte != HTTPParser.newLine {
-            append(byte: byte)
         }
 
         return line
     }
 
+    /**
+        Parses serialized request data from
+        the stream following HTTP/1.0 or HTTP/1.1
+        protocol.
+    */
     func parse() throws -> Request {
         let requestLineString = try nextLine()
+
         guard !requestLineString.isEmpty else {
+            // If the stream is empty, close connection immediately
             throw Error.streamEmpty
         }
 
@@ -46,28 +52,66 @@ final class HTTPParser: StreamParser {
         while true {
             let headerLine = try nextLine()
             if headerLine.isEmpty {
+                // We've reached the end of the headers
                 break
             }
 
-            let comps = headerLine.components(separatedBy: ": ")
+            // TODO: Check is line has leading white space
+            // This should be converted to values for the
+            // previous header
+
+            let comps = headerLine.split(separator: Byte.ASCII.colon)
 
             guard comps.count == 2 else {
                 continue
             }
 
-            headers[Request.Headers.Key(comps[0])] = comps[1]
+            let key = Request.Headers.Key(Data(comps[0]).string)
+
+            // TODO: Trim header value from excess whitespace
+
+            let val = Data(comps[1]).string
+
+            headers[key] = val.trim()
         }
 
-        var body: Data = []
+        let body: Data
 
         // TODO: Support transfer-encoding: chunked
 
         if let contentLength = headers["content-length"]?.int {
-            for _ in 0..<contentLength {
-                if let byte = try buffer.next() {
-                    body.append(byte)
+            body = try buffer.next(chunk: contentLength)
+        } else if
+            let transferEncoding = headers["transfer-encoding"]?.string
+            where transferEncoding.lowercased() == "chunked"
+        {
+            var buffer: Data = []
+
+            while true {
+                let lengthData = try nextLine()
+
+                // size must be sent
+                guard lengthData.count > 0 else {
+                    break
                 }
+
+                // convert hex length data to int
+                guard let length = lengthData.asciiInt else {
+                    break
+                }
+
+                // end of chunked encoding
+                if length == 0 {
+                    break
+                }
+
+                let content = try self.buffer.next(chunk: length + 2)
+                buffer.bytes += content.bytes
             }
+
+            body = buffer
+        } else {
+            body = []
         }
 
         return Request(

@@ -2,12 +2,27 @@ final class HTTPSerializer: StreamSerializer {
     enum Error: ErrorProtocol {
         case unsupportedBody
     }
-    
+
+    /**
+        The sending stream.
+    */
     let stream: Stream
+
+    /**
+        Creates a new HTTP Serializer that will
+        send serialized data to the supplied stream.
+    */
     init(stream: Stream) {
         self.stream = stream
     }
 
+    /**
+        Serializes the supplied Response
+        to the stream following HTTP/1.1 protocol.
+     
+        Throws `Error.unsupportedBody` if the
+        body is not a buffer or a sending stream.
+    */
     func serialize(_ response: Response) throws {
         // Start Serialization
         var serialized: Data = []
@@ -15,16 +30,18 @@ final class HTTPSerializer: StreamSerializer {
         // Status line
         let version = response.version
         let status = response.status
-        serialized.bytes += "HTTP/\(version.major).\(version.minor) \(status.statusCode) \(status.reasonPhrase)\r\n".data.bytes
+        serialized.bytes += "HTTP/\(version.major).\(version.minor) \(status.statusCode) \(status.reasonPhrase)".data.bytes
+        serialized.bytes += Data.crlf.bytes
 
         // Headers
-        let headers = response.headers.sorted { a, b in
-            return a.key.string < b.key.string
+        response.headers.forEach { key, value in
+            serialized.bytes += key.string.data.bytes
+            serialized.bytes.append(Byte.ASCII.colon)
+            serialized.bytes.append(Byte.ASCII.space)
+            serialized.bytes += value.data.bytes
+            serialized.bytes += Data.crlf.bytes
         }
-        headers.forEach { (key, value) in
-            serialized.bytes += "\(key.string): \(value)\r\n".data.bytes
-        }
-        serialized.bytes += "\r\n".data.bytes
+        serialized.bytes += Data.crlf.bytes
 
         // Body
         switch response.body {

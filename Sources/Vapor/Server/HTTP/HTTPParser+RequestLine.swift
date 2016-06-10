@@ -1,42 +1,57 @@
+import Foundation
+
 extension HTTPParser {
     struct RequestLine {
+        static let get = "get".data
+        static let delete = "delete".data
+        static let head = "head".data
+        static let post = "post".data
+        static let put = "put".data
+        static let connect = "connect".data
+        static let options = "options".data
+        static let trace = "trace".data
+        static let patch = "patch".data
+
         enum Error: ErrorProtocol {
             case invalidRequestLine
         }
 
-        let methodString: String
-        let uriString: String
-        let versionString: String
+        let methodSlice: ArraySlice<Byte>
+        let uriSlice: ArraySlice<Byte>
+        let versionSlice: ArraySlice<Byte>
 
-        init(_ string: String) throws {
-            let comps = string.components(separatedBy: " ")
+
+        init(_ data: Data) throws {
+            let comps = data.split(
+                separator: Byte.ASCII.space,
+                maxSplits: 3,
+                omittingEmptySubsequences: true
+            )
+
             guard comps.count == 3 else {
-                print(string)
                 throw Error.invalidRequestLine
             }
 
-            methodString = comps[0]
-            uriString = comps[1]
-            versionString = comps[2]
+            methodSlice = comps[0]
+            uriSlice = comps[1]
+            versionSlice = comps[2]
         }
 
         var version: Request.Version {
             // ["HTTP", "1.1"]
-            let parts = versionString.components(separatedBy: "/")
+            let comps = versionSlice.split(separator: Byte.ASCII.slash, maxSplits: 1)
 
             var major = 0
             var minor = 0
 
-            if parts.count == 2 {
+            if comps.count == 2 {
                 // ["1", "1"]
-                let comps = parts[1].components(separatedBy: ".")
+                let version = comps[1].split(separator: Byte.ASCII.period, maxSplits: 1)
 
-                major = Int(comps[0]) ?? 0
+                major = Data(version[0]).asciiInt ?? 1
 
-                if comps.count == 2{
-                    if let m = Int(comps[1]) {
-                        minor = m
-                    }
+                if version.count == 2 {
+                    minor = Data(version[1]).asciiInt ?? 1
                 }
             }
 
@@ -44,28 +59,32 @@ extension HTTPParser {
         }
 
         var method: Request.Method {
+            let data = Data(methodSlice)
+
             let method: Request.Method
-            switch methodString.lowercased() {
-            case "get":
+            switch data.lowercased {
+            case RequestLine.get:
                 method = .get
-            case "delete":
+            case RequestLine.delete:
                 method = .delete
-            case "head":
+            case RequestLine.head:
                 method = .head
-            case "post":
+            case RequestLine.post:
                 method = .post
-            case "put":
+            case RequestLine.put:
                 method = .put
-            case "connect":
+            case RequestLine.connect:
                 method = .connect
-            case "options":
+            case RequestLine.options:
                 method = .options
-            case "trace":
+            case RequestLine.trace:
                 method = .trace
-            case "patch":
+            case RequestLine.patch:
                 method = .patch
             default:
-                method = .other(method: methodString)
+                let string = String(data)
+                Log.warning("Did not recognize method, using .other(\(string))")
+                method = .other(method: string)
             }
             return method
         }
@@ -73,7 +92,7 @@ extension HTTPParser {
         var uri: URI {
             // Temporary introduction to use new URI parser w/ old struct and model
             let innerUri = try? URIParser.parse(uri: uriString.utf8.array)
-            
+
             var fields: [String : [String?]] = [:]
             let queryString = innerUri?.query ?? ""
             let data = FormURLEncoded.parse(queryString.data)

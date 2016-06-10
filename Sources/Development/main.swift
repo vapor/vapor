@@ -376,7 +376,7 @@ app.get("chunked") { request in
     return Response(headers: [
         "Content-Type": "text/plain"
     ], chunked: { stream in
-        try stream.send("Counting:")
+        try stream.send("Counting:123")
         for i in 1 ..< 10{
             sleep(1)
             try stream.send(i)
