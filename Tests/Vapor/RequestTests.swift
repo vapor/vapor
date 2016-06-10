@@ -36,7 +36,7 @@ class RequestTests: XCTestCase {
         let string = "value=123"
 
         let data = FormURLEncoded.parse(string.data)
-        XCTAssert(data["value"]?.int == 123, "Request did not parse correctly")
+        XCTAssertEqual(data["value"]?.int, 123, "Request did not parse correctly")
     }
 
     func testMultipart() {

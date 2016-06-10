@@ -1,21 +1,4 @@
 extension Response {
-    public init(
-        status: Status = .ok,
-        headers: Headers = [:],
-        cookies: Cookies = [],
-        data: Data = []
-    ) {
-        var headers = headers
-        headers["Content-Length"] = data.count.description
-
-        self.dynamicType.init(
-            version: Version(major: 1, minor: 1),
-            status: status,
-            headers: headers,
-            cookieHeaders: [],
-            body: .buffer(data)
-        )
-    }
     /**
         Send chunked data with the
         `Transfer-Encoding: Chunked` header.
@@ -34,7 +17,7 @@ extension Response {
         var headers = headers
         headers["Transfer-Encoding"] = "chunked"
 
-        self.dynamicType.init(
+        self.init(
             version: Version(major: 1, minor: 1),
             status: status,
             headers: headers,

@@ -78,4 +78,25 @@ extension Cookies {
 
         return nil
     }
+
+    static func parse(header: String) -> [String: String] {
+        var cookies: [String : String] = [:]
+
+        let tokens = header.characters.split(separator: ";")
+
+        for token in tokens {
+            let cookieTokens = token.split(separator: "=", maxSplits: 1)
+
+            guard cookieTokens.count == 2 else {
+                continue
+            }
+
+            let name = String(cookieTokens[0])
+            let value = String(cookieTokens[1])
+
+            cookies[name] = value
+        }
+        
+        return cookies
+    }
 }

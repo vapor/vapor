@@ -26,7 +26,7 @@ class RouterTests: XCTestCase {
         let data = Data(compare.utf8)
 
         let route = Route.init(host: "other.test", method: .get, path: "test") { request in
-            return Response(status: .ok, headers: [:], body: data)
+            return Response(status: .ok, data: data)
         }
         router.register(route)
 

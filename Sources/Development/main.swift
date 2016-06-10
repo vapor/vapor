@@ -273,7 +273,7 @@ app.post("multipart-image") { request in
         headers["Content-Type"] = mediaType.type + "/" + mediaType.subtype
     }
 
-    return Response(status: .ok, headers: headers, body: image.data)
+    return Response(status: .ok, headers: headers, data: image.data)
 }
 
 app.get("multifile") { _ in
@@ -312,7 +312,7 @@ app.post("multifile") { request in
         headers["Content-Type"] = mediaType.type + "/" + mediaType.subtype
     }
 
-    return Response(status: .ok, headers: headers, body: file.data)
+    return Response(status: .ok, headers: headers, data: file.data)
 }
 
 app.get("options") { _ in
