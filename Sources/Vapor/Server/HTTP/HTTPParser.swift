@@ -358,6 +358,13 @@ final class RequestParser {
         return next.equals(any: expectations)
     }
 
+    private func next(matches expectations: [Byte]) throws -> Bool {
+//        let next = try collect(next)
+        let next = try collect(next: expectations.count)
+        returnToBuffer(next)
+        return next == expectations
+    }
+
     private func skipWhiteSpace() throws {
         while let next = try next() {
             if next.isWhitespace { continue }
