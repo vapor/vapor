@@ -4,8 +4,8 @@ import libc
 
 @testable import Vapor
 
-class URIParserTests: XCTestCase {
-    static var allTests: [(String, (URIParserTests) -> () throws -> Void)] {
+class URISerializationTests: XCTestCase {
+    static var allTests: [(String, (URISerializationTests) -> () throws -> Void)] {
         return [
             ("testParsing", testParsing)
         ]
