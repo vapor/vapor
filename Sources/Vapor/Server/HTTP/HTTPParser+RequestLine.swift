@@ -71,18 +71,20 @@ extension HTTPParser {
         }
 
         var uri: URI {
-            let parts = uriString.split(separator: "?", maxSplits: 1)
-            let path = parts.first ?? ""
-            let queryString = parts.last ?? ""
+            // Temporary introduction to use new URI parser w/ old struct and model
+            let innerUri = try? URIParser.parse(uri: uriString.utf8.array)
 
+            let queryString = innerUri?.query ?? ""
+
+            let info = URI.UserInfo(username: innerUri?.userInfo?.username ?? "", password: innerUri?.userInfo?.password ?? "")
             return URI(
-                scheme: "http",
-                userInfo: nil,
-                host: nil,
-                port: nil,
-                path: path,
+                scheme: innerUri?.scheme,
+                userInfo: info,
+                host: innerUri?.host,
+                port: innerUri?.port,
+                path: innerUri?.path,
                 query: queryString,
-                fragment: nil
+                fragment: innerUri?.fragment
             )
         }
     }
