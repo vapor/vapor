@@ -1,6 +1,5 @@
-
+// TODO: Temporary until C7 is updated
 extension URIParser {
-    // Temporary until C7 is updated
     public struct URI {
         public struct UserInfo {
             // TODO: Should auth and username be non-optional? There's a difference between "" and nil
