@@ -126,6 +126,28 @@ final class HTTPParser: StreamParser {
 
 extension String: ErrorProtocol {}
 
+/**
+ https://tools.ietf.org/html/rfc7230#section-3
+ 
+ ******* [WARNING] ********
+
+ A sender MUST NOT send whitespace between the start-line and the
+ first header field.  A recipient that receives whitespace between the
+ start-line and the first header field MUST either reject the message
+ as invalid or consume each whitespace-preceded line without further
+ processing of it (i.e., ignore the entire line, along with any
+ subsequent lines preceded by whitespace, until a properly formed
+ header field is received or the header section is terminated).
+
+ The presence of such whitespace in a request might be an attempt to
+ trick a server into ignoring that field or processing the line after
+ it as a new request, either of which might result in a security
+ vulnerability if other implementations within the request chain
+ interpret the same message differently.  Likewise, the presence of
+ such whitespace in a response might be ignored by some clients or
+ cause others to cease parsing.
+ */
+
 final class RequestParser {
     enum Error: ErrorProtocol {
         case streamEmpty
@@ -156,6 +178,14 @@ final class RequestParser {
      except in the final CRLF sequence.
 
      Request-Line   = Method SP Request-URI SP HTTP-Version CRLF
+     
+     *** [WARNING] ***
+     Recipients of an invalid request-line SHOULD respond with either a
+     400 (Bad Request) error or a 301 (Moved Permanently) redirect with
+     the request-target properly encoded.  A recipient SHOULD NOT attempt
+     to autocorrect and then process the request without a redirect, since
+     the invalid request-line might be deliberately crafted to bypass
+     security filters along the request chain.
      */
     func parseRequestLine() throws -> (method: [Byte], uri: [Byte], httpVersion: [Byte]) {
         try skipWhiteSpace()
@@ -169,6 +199,9 @@ final class RequestParser {
         let trailing = try collect(next: 2)
         guard trailing == [.carriageReturn, .lineFeed] else { throw "expected request line terminator" }
         return (method, uri, httpVersion)
+    }
+    func parseHeader() {
+
     }
 
     private func skipWhiteSpace() throws {
