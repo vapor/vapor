@@ -71,13 +71,11 @@ extension HTTPParser {
         }
 
         var uri: URI {
-//            let innerUri = try? URIParser(uriString.utf8.array)
+            // Temporary introduction to use new URI parser w/ old struct and model
+            let innerUri = try? URIParser.parse(uri: uriString.utf8.array)
+            
             var fields: [String : [String?]] = [:]
-
-            let parts = uriString.split(separator: "?", maxSplits: 1)
-            let path = parts.first ?? ""
-            let queryString = parts.last ?? ""
-
+            let queryString = innerUri?.query ?? ""
             let data = FormURLEncoded.parse(queryString.data)
 
             if case .dictionary(let dict) = data {
@@ -96,14 +94,15 @@ extension HTTPParser {
                 }
             }
 
+            let info = URI.UserInfo(username: innerUri?.userInfo?.username ?? "", password: innerUri?.userInfo?.password ?? "")
             return URI(
-                scheme: "http",
-                userInfo: nil,
-                host: nil,
-                port: nil,
-                path: path,
+                scheme: innerUri?.scheme,
+                userInfo: info,
+                host: innerUri?.host,
+                port: innerUri?.port,
+                path: innerUri?.path,
                 query: fields,
-                fragment: nil
+                fragment: innerUri?.fragment
             )
         }
     }
