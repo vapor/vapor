@@ -45,8 +45,6 @@ class HTTPStreamTests: XCTestCase {
             XCTAssert(request.method == Request.Method.post, "Incorrect method \(request.method)")
             XCTAssert(request.uri.path == "/json", "Incorrect path \(request.uri.path)")
             XCTAssert(request.version.major == 1 && request.version.minor == 1, "Incorrect version")
-            XCTAssert(request.cookies["1"] == "1", "Cookie 1 not parsed")
-            XCTAssert(request.cookies["2"] == "2", "Cookie 2 not parsed")
         } catch {
             XCTFail("Parsing failed: \(error)")
         }
@@ -57,8 +55,9 @@ class HTTPStreamTests: XCTestCase {
         var response = Response(status: .enhanceYourCalm, headers: [
             "Test": "123",
             "Content-Type": "text/plain"
-        ], body: { stream in
+        ], chunked: { stream in
             try stream.send("Hello, world")
+            try stream.close()
         })
         response.cookies["key"] = "val"
 
