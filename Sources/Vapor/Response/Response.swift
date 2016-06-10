@@ -46,7 +46,7 @@ extension Response {
         text: String
     ) {
         var headers = headers
-        headers["Content-Type"] = "text/plain"
+        headers["Content-Type"] = "text/plain; charset=utf-8"
         self.init(
             status: status,
             headers: headers,
