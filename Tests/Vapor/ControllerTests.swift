@@ -13,63 +13,66 @@ private class TestController: Controller {
 
     required init(application: Application) { }
 
-    static var lock: (
+    var lock: (
         index: Int,
         store: Int,
         show: Int,
-        update: Int,
+        replace: Int,
+        modify: Int,
         destroy: Int,
-        hello: Int
-        ) = (0, 0, 0, 0, 0, 0)
+        destroyAll: Int,
+        options: Int,
+        optionsAll: Int
+        ) = (0, 0, 0, 0, 0, 0, 0, 0, 0)
 
-    /**
-        Display many instances
-     */
-    func index(_ request: Request) throws -> ResponseRepresentable {
-        TestController.lock.index += 1
+    func index(request: Request) throws -> Vapor.ResponseRepresentable {
+        lock.index += 1
         return "index"
     }
 
-    /**
-        Create a new instance.
-     */
-    func store(_ request: Request) throws -> ResponseRepresentable {
-        TestController.lock.store += 1
+    func store(request: Request) throws -> Vapor.ResponseRepresentable {
+        lock.store += 1
         return "store"
     }
-    /**
-        Show an instance.
-     */
-    func show(_ request: Request, item: String) throws -> ResponseRepresentable {
-        TestController.lock.show += 1
+
+    func show(request: Request, item: String) throws -> Vapor.ResponseRepresentable {
+        lock.show += 1
         return "show"
     }
 
-    /**
-        Update an instance.
-     */
-    func update(_ request: Request, item: String) throws -> ResponseRepresentable {
-        TestController.lock.update += 1
+    func replace(request: Request, item: String) throws -> Vapor.ResponseRepresentable {
+        lock.replace += 1
         return "update"
     }
 
-    /**
-        Delete an instance
-     */
-    func destroy(_ request: Request, item: String) throws -> ResponseRepresentable {
-        TestController.lock.destroy += 1
+    func modify(request: Request, item: String) throws -> Vapor.ResponseRepresentable {
+        lock.modify += 1
+        return "modify"
+    }
+
+    func destroy(request: Request, item: String) throws -> Vapor.ResponseRepresentable {
+        lock.destroy += 1
         return "destroy"
     }
 
-    func hello(_ request: Request) throws -> ResponseRepresentable {
-        TestController.lock.hello += 1
-        return "Hello, World!"
+    func destroy(request: Request) throws -> Vapor.ResponseRepresentable {
+        lock.destroyAll += 1
+        return "destroy all"
     }
 
+    func options(request: Request) throws -> Vapor.ResponseRepresentable {
+        lock.optionsAll += 1
+        return "options all"
+    }
+
+    func options(request: Request, item: String) throws -> Vapor.ResponseRepresentable {
+        lock.options += 1
+        return "options all"
+    }
 }
 
 private class TestActionController: DefaultInitializable {
-    static var hello = 0
+    static var helloRunCount = 0
     let person: String
 
     init(person: String) {
@@ -80,8 +83,8 @@ private class TestActionController: DefaultInitializable {
         self.person = "World"
     }
 
-    func hello(_ request: Request) throws -> ResponseRepresentable {
-        TestActionController.hello += 1
+    func hello(_ request: Request) throws -> Vapor.ResponseRepresentable {
+        TestActionController.helloRunCount += 1
         return "Hello, \(person)!"
     }
 }
@@ -94,7 +97,8 @@ class ControllerTests: XCTestCase {
             ("testController", testController),
             ("testControllerActionRouting_withFactory", testControllerActionRouting_withFactory),
             ("testControllerActionRouting_withDefaultInitializable", testControllerActionRouting_withDefaultInitializable),
-            ("testControllerActionRouting_withApplicationInitializable", testControllerActionRouting_withApplicationInitializable)
+            ("testControllerActionRouting_withApplicationInitializable", testControllerActionRouting_withApplicationInitializable),
+            ("testControllerMethodsHit", testControllerMethodsHit)
         ]
     }
 
@@ -102,13 +106,14 @@ class ControllerTests: XCTestCase {
 
         let app = Application()
 
-        app.resource("foo", controller: TestController.self)
+        let instance = TestController(application: app)
+        app.resource("foo", makeControllerWith: { return instance })
 
         let fooIndex = Request(method: .get, uri: URI(path: "foo"), headers: [:], body: [])
         if let (_, handler) = app.router.route(fooIndex) {
             do {
                 let _ = try handler.respond(to: fooIndex)
-                XCTAssert(TestController.lock.index == 1, "foo.index Lock not correct")
+                XCTAssert(instance.lock.index == 1, "foo.index Lock not correct")
             } catch {
                 XCTFail("foo.index handler failed")
             }
@@ -118,8 +123,8 @@ class ControllerTests: XCTestCase {
 
     }
 
-    func testControllerActionRouting_withFactory() {
-        defer { TestActionController.hello = 0 }
+    func testControllerActionRouting_withFactory() throws {
+        TestActionController.helloRunCount = 0
         let app = Application()
 
         app.add(.get, path: "/hello", action: TestActionController.hello) { TestActionController(person: "Tanner") }
@@ -130,16 +135,12 @@ class ControllerTests: XCTestCase {
             return
         }
 
-        do {
-            let _ = try handler.respond(to: request)
-            XCTAssertEqual(TestActionController.hello, 1)
-        } catch {
-            XCTFail("TestActionController.hello handler failed with error '\(error)'")
-        }
+        let _ = try handler.respond(to: request)
+        XCTAssertEqual(TestActionController.helloRunCount, 1)
     }
 
-    func testControllerActionRouting_withDefaultInitializable() {
-        defer { TestActionController.hello = 0 }
+    func testControllerActionRouting_withDefaultInitializable() throws {
+        TestActionController.helloRunCount = 0
         let app = Application()
 
         app.add(.get, path: "/hello", action: TestActionController.hello)
@@ -150,18 +151,16 @@ class ControllerTests: XCTestCase {
             return
         }
 
-        do {
-            let _ = try handler.respond(to: request)
-            XCTAssertEqual(TestActionController.hello, 1)
-        } catch {
-            XCTFail("TestActionController.hello handler failed with error '\(error)'")
-        }
+        let _ = try handler.respond(to: request)
+        XCTAssertEqual(TestActionController.helloRunCount, 1)
     }
 
-    func testControllerActionRouting_withApplicationInitializable() {
+    func testControllerActionRouting_withApplicationInitializable() throws {
+        TestActionController.helloRunCount = 0
+
         let app = Application()
 
-        app.add(.get, path: "/hello", action: TestController.hello)
+        app.add(.get, path: "/hello", action: TestActionController.hello)
 
         let request = Request(method: .get, uri: URI(path: "hello"), headers: [:], body: [])
         guard let (_, handler) = app.router.route(request) else {
@@ -169,14 +168,47 @@ class ControllerTests: XCTestCase {
             return
         }
 
-        do {
-            let _ = try handler.respond(to: request)
-            XCTAssertEqual(TestController.lock.hello, 1)
-        } catch {
-            XCTFail("TestController.hello handler failed with error '\(error)'")
-        }
+        let _ = try handler.respond(to: request)
+        XCTAssertEqual(TestActionController.helloRunCount, 1)
     }
 
 
+    func testControllerMethodsHit() throws {
+        let app = Application()
+        // Need single instance to test
+        let testInstance = TestController(application: app)
+        let factory: (Void) -> TestController = { print("blahblah : \(testInstance)"); return testInstance }
+        app.resource("/test", makeControllerWith: factory)
+
+        func handleRequest(req: Request) throws {
+            guard let (parameters, handler) = app.router.route(req) else { return }
+            var mutable = req
+            mutable.parameters = parameters
+            let _ = try handler.respond(to: mutable)
+        }
+
+        let arrayRequests: [Request] = [.get, .post, .delete].map {
+            return Request(method: $0, path: "/test", host: "0.0.0.0", body: Data())
+        }
+
+        try arrayRequests.forEach(handleRequest)
+        XCTAssert(testInstance.lock.index == 1)
+        XCTAssert(testInstance.lock.store == 1)
+        XCTAssert(testInstance.lock.destroyAll == 1)
+        XCTAssert(testInstance.lock.show == 0)
+        XCTAssert(testInstance.lock.replace == 0)
+        XCTAssert(testInstance.lock.modify == 0)
+        XCTAssert(testInstance.lock.destroy == 0)
+
+        let individualRequests: [Request] = [.get, .post, .put, .patch, .delete].map {
+            return Request(method: $0, path: "test/123", host: "0.0.0.0", body: Data())
+        }
+        try individualRequests.forEach(handleRequest)
+
+        XCTAssert(testInstance.lock.show == 1)
+        XCTAssert(testInstance.lock.replace == 1)
+        XCTAssert(testInstance.lock.modify == 1)
+        XCTAssert(testInstance.lock.destroy == 1)
+    }
 
 }

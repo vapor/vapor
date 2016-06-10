@@ -4,6 +4,11 @@ import PureJSON
 public typealias JSON = PureJSON.JSON
 
 extension JSON {
+    static var deserializer: (data: [UInt8]) throws -> JSON = JSON.deserialize
+    static var serializer: (json: JSON) throws -> String = { return $0.serialize() }
+}
+
+extension JSON {
     public init(_ value: Int) {
         self = .number(JSON.Number.integer(value))
     }
@@ -26,12 +31,16 @@ extension JSON {
     }
 
     public init(_ value: Data) throws {
-        self = try JSON.deserialize(value.bytes)
+        self = try JSON.deserializer(data: value.bytes)
     }
 
     public var data: Data {
-        let bytes = serialize().utf8
-        return Data(bytes)
+        do {
+            let bytes = try JSON.serializer(json: self).utf8
+            return Data(bytes)
+        } catch {
+            return Data()
+        }
     }
 }
 

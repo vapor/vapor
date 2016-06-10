@@ -10,63 +10,83 @@ public protocol ResourceController {
     /**
         Display many instances
      */
-    func index(_ request: Request) throws -> ResponseRepresentable
+    func index(request: Request) throws -> ResponseRepresentable
 
     /**
         Create a new instance.
      */
-    func store(_ request: Request) throws -> ResponseRepresentable
+    func store(request: Request) throws -> ResponseRepresentable
 
     /**
         Show an instance.
      */
-    func show(_ request: Request, item: Item) throws -> ResponseRepresentable
+    func show(request: Request, item: Item) throws -> ResponseRepresentable
 
     /**
-        Update an instance.
-     */
-    func update(_ request: Request, item: Item) throws -> ResponseRepresentable
+        Replaces an instance, deleting fields no longer presen in the request.
+    */
+    func replace(request: Request, item: Item) throws -> ResponseRepresentable
+
+    /**
+        Modify an instance, updating only the fields that are present in the request.
+    */
+    func modify(request: Request, item: Item) throws -> ResponseRepresentable
 
     /** 
         Delete an instance.
      */
-    func destroy(_ request: Request, item: Item) throws -> ResponseRepresentable
+    func destroy(request: Request, item: Item) throws -> ResponseRepresentable
+
+    /**
+        Delete all instances.
+     */
+    func destroy(request: Request) throws -> ResponseRepresentable
+
+    /**
+        Options for all instances.
+    */
+    func options(request: Request) throws -> ResponseRepresentable
+
+    /**
+        Options for a single instance.
+    */
+    func options(request: Request, item: Item) throws -> ResponseRepresentable
 }
 
 extension ResourceController {
-
-    /**
-        Display many instances
-     */
-    public func index(_ request: Request) throws -> ResponseRepresentable {
+    public func index(request: Request) throws -> ResponseRepresentable {
         throw Abort.notFound
     }
 
-    /**
-        Create a new instance.
-     */
-    public func store(_ request: Request) throws -> ResponseRepresentable {
+    public func store(request: Request) throws -> ResponseRepresentable {
         throw Abort.notFound
     }
 
-    /**
-        Show an instance.
-     */
-    public func show(_ request: Request, item: Item) throws -> ResponseRepresentable {
+    public func show(request: Request, item: Item) throws -> ResponseRepresentable {
         throw Abort.notFound
     }
 
-    /**
-        Update an instance.
-     */
-    public func update(_ request: Request, item: Item) throws -> ResponseRepresentable {
+    public func replace(request: Request, item: Item) throws -> ResponseRepresentable {
         throw Abort.notFound
     }
 
-    /**
-        Delete an instance.
-     */
-    public func destroy(_ request: Request, item: Item) throws -> ResponseRepresentable {
+    public func modify(request: Request, item: Item) throws -> ResponseRepresentable {
         throw Abort.notFound
+    }
+
+    public func destroy(request: Request, item: Item) throws -> ResponseRepresentable {
+        throw Abort.notFound
+    }
+
+    public func destroy(request: Request) throws -> ResponseRepresentable {
+        throw Abort.notFound
+    }
+
+    public func options(request: Request) throws -> ResponseRepresentable {
+        return Response(body: [])
+    }
+
+    public func options(request: Request, item: Item) throws -> ResponseRepresentable {
+        return Response(body: [])
     }
 }

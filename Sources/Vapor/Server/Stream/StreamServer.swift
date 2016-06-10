@@ -29,11 +29,7 @@ final class StreamServer<
     }
 
     func start() throws {
-        do {
-            try server.start(handler: handle)
-        } catch {
-            Log.error("Failed to start: \(error)")
-        }
+        try server.start(handler: handle)
     }
 
     private func handle(_ stream: Stream) {
@@ -56,13 +52,22 @@ final class StreamServer<
                 keepAlive = request.keepAlive
                 let response = try responder.respond(to: request)
                 try serializer.serialize(response)
+
+                guard response.isUpgradeResponse else { continue }
+                try response.onUpgrade?(stream)
             } catch let e as SocksCore.Error where e.isClosedByPeer {
-                break // jumpto close
+                // stream was closed by peer, abort
+                break
+            } catch let e as SocksCore.Error where e.isBrokenPipe {
+                // broken pipe, abort
+                break
             } catch let e as HTTPParser.Error where e == .streamEmpty {
-                break // jumpto close
+                // the stream we got was empty, abort
+                break
             } catch {
+                // unknown error, abort
                 Log.error("HTTP error: \(error)")
-                break //break to close stream on all errors
+                break
             }
         } while keepAlive && !stream.closed
 
@@ -77,9 +82,12 @@ final class StreamServer<
 
 extension SocksCore.Error {
     var isClosedByPeer: Bool {
-        guard case .ReadFailed = type else { return false }
+        guard case .readFailed = type else { return false }
         let message = String(validatingUTF8: strerror(errno))
         return message == "Connection reset by peer"
+    }
+    var isBrokenPipe: Bool {
+        return self.number == 32
     }
 }
 
@@ -89,5 +97,11 @@ extension Request {
         guard let value = headers["Connection"] else { return true }
         // TODO: Decide on if 'contains' is better, test linux version
         return !(value.trim() == "close")
+    }
+}
+
+extension Response {
+    var isUpgradeResponse: Bool {
+        return headers.connection == "Upgrade"
     }
 }

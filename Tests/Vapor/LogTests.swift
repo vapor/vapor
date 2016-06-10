@@ -35,8 +35,7 @@ class LogTests: XCTestCase {
             ("testWarningDidLog", testWarningDidLog),
             ("testErrorDidLog", testErrorDidLog),
             ("testFatalDidLog", testFatalDidLog),
-            ("testCustomDidLog", testCustomDidLog),
-            ("testConsoleLoggerDidPrintToConsole", testConsoleLoggerDidPrintToConsole)
+            ("testCustomDidLog", testCustomDidLog)
         ]
     }
 
@@ -118,11 +117,5 @@ class LogTests: XCTestCase {
         prepare()
         Log.custom("foo", label: "customlog")
         XCTAssertTrue(DummyLogger.output == "CUSTOMLOG foo", "logger should output CUSTOMLOG foo")
-    }
-
-    func testConsoleLoggerDidPrintToConsole() {
-        prepare()
-        Log.driver = ConsoleLogger()
-        XCTAssertNotNil(Log.info("foo"))
     }
 }
