@@ -8,22 +8,6 @@
 
 import Foundation
 
-extension StructuredData {
-    public subscript(index: Int) -> StructuredData? {
-        switch self {
-        case .array(let array):
-            if array.count <= index {
-                return nil
-            }
-            return array[index]
-        case .dictionary(let dictionary):
-            return dictionary["\(index)"]
-        default:
-            return nil
-        }
-    }
-}
-
 extension StructuredData: PathIndexable {
     public var pathIndexableArray: [StructuredData]? {
         if case .array(let array) = self {

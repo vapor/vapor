@@ -66,8 +66,35 @@ extension Cookies: Sequence {
     }
 }
 
+// MARK: Parsing
+
 extension Cookies {
-    func serialize() -> Data? {
+    init(_ data: Data) {
+        var cookies: Cookies = []
+
+        let tokens = data.split(separator: .semicolon)
+
+        for token in tokens {
+            let cookieTokens = token.split(separator: .equals, maxSplits: 1)
+
+            guard cookieTokens.count == 2 else {
+                continue
+            }
+
+            let name = cookieTokens[0].string ?? ""
+            let value = cookieTokens[1].string ?? ""
+
+            cookies[name] = value
+        }
+
+        self = cookies
+    }
+}
+
+// MARK: Serialization
+
+extension Cookies {
+    func serialize() -> Data {
         let cookies = self.map { cookie in
             return "\(cookie.name)=\(cookie.value)"
         }
@@ -76,27 +103,6 @@ extension Cookies {
             return cookies.joined(separator: ";").data
         }
 
-        return nil
-    }
-
-    static func parse(header: String) -> [String: String] {
-        var cookies: [String : String] = [:]
-
-        let tokens = header.characters.split(separator: ";")
-
-        for token in tokens {
-            let cookieTokens = token.split(separator: "=", maxSplits: 1)
-
-            guard cookieTokens.count == 2 else {
-                continue
-            }
-
-            let name = String(cookieTokens[0])
-            let value = String(cookieTokens[1])
-
-            cookies[name] = value
-        }
-        
-        return cookies
+        return []
     }
 }

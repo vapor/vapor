@@ -32,8 +32,7 @@ public class ChunkStream: SendingStream {
     }
 
     public func send(_ data: Data, timingOut deadline: Double) throws {
-        let hex = String(data.bytes.count, radix: 16).uppercased()
-        var buffer = "\(hex)\r\n".data
+        var buffer = "\(data.bytes.count.hex)\r\n".data
         buffer.bytes += data.bytes
         buffer.bytes += "\r\n".data.bytes
 

@@ -21,9 +21,9 @@ final class HTTPParser: StreamParser {
     func nextLine() throws -> Data {
         var line: Data = []
 
-        while let byte = try buffer.next() where byte != Byte.ASCII.newLine {
+        while let byte = try buffer.next() where byte != .newLine {
             // Skip over any non-valid ASCII characters
-            if byte > Byte.ASCII.carriageReturn {
+            if byte > .carriageReturn {
                 line.append(byte)
             }
         }
@@ -59,7 +59,7 @@ final class HTTPParser: StreamParser {
             // This should be converted to values for the
             // previous header
 
-            let comps = headerLine.split(separator: Byte.ASCII.colon)
+            let comps = headerLine.split(separator: .colon)
 
             guard comps.count == 2 else {
                 continue
@@ -95,7 +95,7 @@ final class HTTPParser: StreamParser {
                 }
 
                 // convert hex length data to int
-                guard let length = lengthData.asciiInt else {
+                guard let length = lengthData.int else {
                     break
                 }
 

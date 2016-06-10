@@ -99,7 +99,7 @@ class RequestTests: XCTestCase {
     func testCookies() {
         let cookieString = "1=1;2=2;"
 
-        let cookies = Cookies.parse(header: cookieString)
+        let cookies = Cookies(cookieString.data)
         XCTAssertEqual(cookies["1"]?.int, 1)
         XCTAssertEqual(cookies["2"]?.int, 2)
     }
