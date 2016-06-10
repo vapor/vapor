@@ -1,7 +1,9 @@
 import Foundation
 
+// TODO: Use URI percent decoding
+
 extension String {
-    init?(percentDecoding byteSlice: ArraySlice<UInt8>) {
+    init?(percentDecoding byteSlice: ArraySlice<Byte>) {
         let data = Data(byteSlice)
         let string = String(data)
 
@@ -17,15 +19,12 @@ extension String {
     }
 }
 
-class FormURLEncoded {
-    static func parse(_ data: Data) -> StructuredData {
+extension StructuredData {
+    init(formURLEncoded data: Data) {
         var urlEncoded: [String: StructuredData] = [:]
 
-        let ampersand = "&".data.bytes[0]
-        let equals = "=".data.bytes[0]
-
-        for pair in data.split(separator: ampersand) {
-            let token = pair.split(separator: equals)
+        for pair in data.split(separator: .ampersand) {
+            let token = pair.split(separator: .equals)
             if token.count == 2 {
                 var key = String(percentDecoding: token[0]) ?? ""
 
@@ -69,6 +68,6 @@ class FormURLEncoded {
             }
         }
         
-        return .dictionary(urlEncoded)
+        self = .dictionary(urlEncoded)
     }
 }

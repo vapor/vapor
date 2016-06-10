@@ -59,8 +59,10 @@ extension Byte {
     static let carriageReturn: Byte = 0xD
     
     static let space: Byte = 0x20
-    static let period: Byte = 0x2e
-    static let slash: Byte = 0x2f
+    static let ampersand: Byte = 0x26
+    static let hyphen: Byte = 0x2D
+    static let period: Byte = 0x2E
+    static let slash: Byte = 0x2F
 
     static let zero: Byte = 0x30
     static let nine: Byte = zero + 9

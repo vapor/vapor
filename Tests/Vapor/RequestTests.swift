@@ -35,7 +35,7 @@ class RequestTests: XCTestCase {
     func testParse() {
         let string = "value=123"
 
-        let data = FormURLEncoded.parse(string.data)
+        let data = StructuredData(formURLEncoded: string.data)
         XCTAssertEqual(data["value"]?.int, 123, "Request did not parse correctly")
     }
 
@@ -73,7 +73,7 @@ class RequestTests: XCTestCase {
     func testFormURLEncoded() {
         let body = "first=value&arr[]=foo+bar&arr[]=baz"
 
-        let data = FormURLEncoded.parse(body.data)
+        let data = StructuredData(formURLEncoded: body.data)
 
         XCTAssert(data["first"]?.string == "value", "Request key first did not parse correctly")
         XCTAssert(data["arr", 0]?.string == "foo bar", "Request key arr did not parse correctly")
@@ -83,7 +83,7 @@ class RequestTests: XCTestCase {
     func testFormURLEncodedEdge() {
         let body = "singleKeyArray[]=value&implicitArray=1&implicitArray=2"
 
-        let data = FormURLEncoded.parse(body.data)
+        let data = StructuredData(formURLEncoded: body.data)
 
         XCTAssert(data["singleKeyArray", 0]?.string == "value", "singleKeyArray did not parse correctly")
         XCTAssert(data["implicitArray", 0]?.string == "1", "implicitArray did not parse correctly")

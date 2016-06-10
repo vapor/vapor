@@ -4,7 +4,7 @@ class QueryMiddleware: Middleware {
         var request = request
 
         if let queryString = request.uri.query {
-        	request.query = Query.parse(queryString)
+            request.query = StructuredData(formURLEncoded: queryString.data)
         }
 
         return try next.respond(to: request)

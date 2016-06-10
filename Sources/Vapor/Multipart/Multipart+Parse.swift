@@ -5,10 +5,6 @@ extension Multipart {
         case invalidBoundary
     }
 
-	static var clrf: Data {
-        return Data("\r\n".utf8)
-    }
-
     static func parseBoundary(contentType: String) throws -> String {
         let boundaryPieces = contentType.components(separatedBy: "boundary=")
         guard boundaryPieces.count == 2 else {
@@ -18,15 +14,14 @@ extension Multipart {
     }
 
     static func parse(_ body: Data, boundary: String) -> [String: Multipart] {
-        let boundaryString = "--" + boundary
-        let boundary = Data(boundaryString.utf8)
+        let boundary = [.hyphen, .hyphen] + boundary.data
 
         var form = [String: Multipart]()
         
         // Separate by boundry and loop over the "multi"-parts
         for part in body.split(separator: boundary, excludingFirst: true, excludingLast: true) {
 
-            let headBody = part.split(separator: clrf+clrf)
+            let headBody = part.split(separator: .crlf + .crlf)
 
             // Separate the head and body
             guard headBody.count == 2, let head = headBody.first, let body = headBody.last else {
@@ -118,7 +113,7 @@ extension Multipart {
         var storage = [String: String]()
 
         // Separate the individual headers
-        let headers = head.split(separator: clrf)
+        let headers = head.split(separator: .crlf)
 
         for line in headers {
             // Make the header a String
