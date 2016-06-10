@@ -1,3 +1,4 @@
+import Foundation
 import PathIndexable
 
 private struct PrioritizedDirectoryQueue {
@@ -45,10 +46,15 @@ public class Config {
         starting configurations.
         The application is required to detect environment.
     */
-    public init(seed: JSON = [:], workingDirectory: String = "./", environment: Environment = .loader()) {
+    public init(
+        seed: JSON = [:],
+        workingDirectory: String = "./",
+        environment: Environment? = nil,
+        arguments: [String] = NSProcessInfo.processInfo().arguments
+    ) {
         let configDirectory = workingDirectory.finish("/") + "Config/"
         self.configDirectory = configDirectory
-        self.environment = environment
+        self.environment = environment ?? Environment.loader(arguments: arguments)
 
         let seedFile = JSONFile(name: "app", json: seed)
         let seedDirectory = JSONDirectory(name: "seed-data", files: [seedFile])
@@ -59,7 +65,7 @@ public class Config {
         // --config:passwords.mongo-user=user
         // --config:passwords.mongo-password=password
         // --config:<name>.<path>.<to>.<value>=<actual-value>
-        let cliDirectory = Process.makeCLIConfig()
+        let cliDirectory = Config.makeCLIConfig(arguments: arguments)
         prioritizedDirectories.append(cliDirectory)
 
         // Json files are loaded in order of priority
@@ -68,7 +74,7 @@ public class Config {
         if let directory = FileManager.loadDirectory(configDirectory + "secrets") {
             prioritizedDirectories.append(directory)
         }
-        if let directory = FileManager.loadDirectory(configDirectory + environment.description) {
+        if let directory = FileManager.loadDirectory(configDirectory + self.environment.description) {
             prioritizedDirectories.append(directory)
         }
         if let directory = FileManager.loadDirectory(configDirectory) {
@@ -123,8 +129,8 @@ extension Environment {
     /**
         Used to load Environment automatically. Defaults to looking for `env` command line argument
      */
-    static var loader: (Void) -> Environment = {
-        if let env = Process.valueFor(argument: "env").flatMap(Environment.init(id:)) {
+    static var loader: (arguments: [String]) -> Environment = { arguments in
+        if let env = arguments.value(for: "env").flatMap(Environment.init(id:)) {
             Log.info("Environment override: \(env)")
             return env
         } else {

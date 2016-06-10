@@ -11,7 +11,7 @@ final class HTTPParser: StreamParser {
     let buffer: StreamBuffer
 
     init(stream: Stream) {
-        self.buffer = StreamBuffer(stream)
+        self.buffer = StreamBuffer(stream, buffer: 1024)
     }
 
     func nextLine() throws -> String {
@@ -28,7 +28,7 @@ final class HTTPParser: StreamParser {
         while let byte = try buffer.next() where byte != HTTPParser.newLine {
             append(byte: byte)
         }
-        
+
         return line
     }
 
@@ -40,7 +40,7 @@ final class HTTPParser: StreamParser {
 
         let requestLine = try RequestLine(requestLineString)
 
-        var headers: [CaseInsensitiveString: String] = [:]
+        var headers: [Request.Headers.Key: String] = [:]
 
         while true {
             let headerLine = try nextLine()
@@ -54,10 +54,13 @@ final class HTTPParser: StreamParser {
                 continue
             }
 
-            headers[CaseInsensitiveString(comps[0])] = comps[1]
+            headers[Request.Headers.Key(comps[0])] = comps[1]
         }
 
         var body: Data = []
+
+        // TODO: Support transfer-encoding: chunked
+
         if let contentLength = headers["content-length"]?.int {
             for _ in 0..<contentLength {
                 if let byte = try buffer.next() {
@@ -73,19 +76,5 @@ final class HTTPParser: StreamParser {
             headers: Request.Headers(headers),
             body: .buffer(body)
         )
-    }
-}
-
-
-extension Data {
-    var nextLine: String? {
-        var bytes: [Byte] = []
-
-        var it = makeIterator()
-        while let byte = it.next() where byte != HTTPParser.newLine {
-            bytes.append(byte)
-        }
-
-        return String(bytes)
     }
 }

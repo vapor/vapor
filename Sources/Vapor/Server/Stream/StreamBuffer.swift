@@ -37,7 +37,6 @@ public final class StreamBuffer {
     }
 }
 
-
 extension StreamBuffer: Stream {}
 
 extension StreamBuffer: Closable {

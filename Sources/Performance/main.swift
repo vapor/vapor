@@ -6,8 +6,6 @@ app.get("plaintext") { request in
     return Response(body: Data("Hello, world!".utf8))
 }
 
-app.post("data") { request in
-    return "data"
-}
+app.globalMiddleware = []
 
 app.start()
