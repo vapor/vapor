@@ -19,10 +19,10 @@ let package = Package(
         .Package(url: "https://github.com/CryptoKitten/SHA1.git", majorVersion: 0, minor: 7),
 
         //Determines Content-Type for file extensions
-        .Package(url: "https://github.com/Zewo/MediaType.git", majorVersion: 0, minor: 7),
+        .Package(url: "https://github.com/Zewo/MediaType.git", majorVersion: 0, minor: 9),
 
         //ORM for interacting with databases
-        .Package(url: "https://github.com/qutheory/fluent.git", majorVersion: 0, minor: 5),
+        .Package(url: "https://github.com/qutheory/fluent.git", majorVersion: 0, minor: 6),
 
         //Allows complex key path subscripts
         .Package(url: "https://github.com/qutheory/path-indexable.git", majorVersion: 0, minor: 2),
