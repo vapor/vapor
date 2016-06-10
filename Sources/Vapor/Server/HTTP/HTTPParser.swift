@@ -7,7 +7,7 @@ final class HTTPParser: StreamParser {
 
     /**
         Creates a new HTTP Parser that will
-        receive serialized request data from 
+        receive serialized request data from
         the supplied stream.
     */
     init(stream: Stream) {
@@ -126,28 +126,18 @@ final class HTTPParser: StreamParser {
 
 extension String: ErrorProtocol {}
 
-/**
- https://tools.ietf.org/html/rfc7230#section-3
- 
- ******* [WARNING] ********
+/*
+All HTTP/1.1 messages consist of a start-line followed by a sequence
+of octets in a format similar to the Internet Message Format
+[RFC5322]: zero or more header fields (collectively referred to as
+the "headers" or the "header section"), an empty line indicating the
+end of the header section, and an optional message body.
 
- A sender MUST NOT send whitespace between the start-line and the
- first header field.  A recipient that receives whitespace between the
- start-line and the first header field MUST either reject the message
- as invalid or consume each whitespace-preceded line without further
- processing of it (i.e., ignore the entire line, along with any
- subsequent lines preceded by whitespace, until a properly formed
- header field is received or the header section is terminated).
-
- The presence of such whitespace in a request might be an attempt to
- trick a server into ignoring that field or processing the line after
- it as a new request, either of which might result in a security
- vulnerability if other implementations within the request chain
- interpret the same message differently.  Likewise, the presence of
- such whitespace in a response might be ignored by some clients or
- cause others to cease parsing.
- */
-
+HTTP-message   = start-line
+*( header-field CRLF )
+CRLF
+[ message-body ]
+*/
 final class RequestParser {
     enum Error: ErrorProtocol {
         case streamEmpty
@@ -166,6 +156,10 @@ final class RequestParser {
     }
 
     func parse() throws {
+        let (method, uri, httpVersion) = try parseRequestLine()
+        try renameAndClarifyButThisIsNecessaryToSkipLeadingWhitespaceLinesFollowingRequestLine()
+
+
 
     }
 
@@ -178,7 +172,7 @@ final class RequestParser {
      except in the final CRLF sequence.
 
      Request-Line   = Method SP Request-URI SP HTTP-Version CRLF
-     
+
      *** [WARNING] ***
      Recipients of an invalid request-line SHOULD respond with either a
      400 (Bad Request) error or a 301 (Moved Permanently) redirect with
@@ -193,16 +187,98 @@ final class RequestParser {
         try discardNext(1) // discard space
         let uri = try collect(until: .space)
         try discardNext(1) // discard space
-        let httpVersion = try collect(until: .carriageReturn)
-        // should pick up carriage return in buffer, and expect subsequent line feed
-        // CRLF
-        let trailing = try collect(next: 2)
-        guard trailing == [.carriageReturn, .lineFeed] else { throw "expected request line terminator" }
+        let httpVersion = try collect(untilMatches: [.carriageReturn, .lineFeed])
+        try discardNext(2) // discard CRLF
         return (method, uri, httpVersion)
     }
-    func parseHeader() {
 
+    /**
+     https://tools.ietf.org/html/rfc7230#section-3
+
+     ******* [WARNING] ********
+
+     A sender MUST NOT send whitespace between the start-line and the
+     first header field.  A recipient that receives whitespace between the
+     start-line and the first header field MUST either reject the message
+     as invalid or consume each whitespace-preceded line without further
+     processing of it (i.e., ignore the entire line, along with any
+     subsequent lines preceded by whitespace, until a properly formed
+     header field is received or the header section is terminated).
+
+     The presence of such whitespace in a request might be an attempt to
+     trick a server into ignoring that field or processing the line after
+     it as a new request, either of which might result in a security
+     vulnerability if other implementations within the request chain
+     interpret the same message differently.  Likewise, the presence of
+     such whitespace in a response might be ignored by some clients or
+     cause others to cease parsing.
+     */
+    func renameAndClarifyButThisIsNecessaryToSkipLeadingWhitespaceLinesFollowingRequestLine() throws {
+        guard let next = try next() else { return }
+        if next.isWhitespace { throw "can throw or skip lines w/ leading spaces" }
+        else { returnToBuffer(next) }
     }
+
+    /*
+     https://tools.ietf.org/html/rfc7230#section-3.2
+
+     Each header field consists of a case-insensitive field name followed
+     by a colon (":"), optional leading whitespace, the field value, and
+     optional trailing whitespace.
+
+     header-field   = field-name ":" OWS field-value OWS
+
+     field-name     = token
+     field-value    = *( field-content / obs-fold )
+     field-content  = field-vchar [ 1*( SP / HTAB ) field-vchar ]
+     field-vchar    = VCHAR / obs-text
+
+     obs-fold       = CRLF 1*( SP / HTAB )
+     ; obsolete line folding
+     ; see Section 3.2.4
+
+     The field-name token labels the corresponding field-value as having
+     the semantics defined by that header field.  For example, the Date
+     header field is defined in Section 7.1.1.2 of [RFC7231] as containing
+     the origination timestamp for the message in which it appears.
+     */
+    func parseNextHeaderField() throws -> (field: [Byte], value: [Byte]) {
+        let field = try collect(until: .colon)
+        try discardNext(1) // discard ':'
+
+        // var valuesvapo
+        let value = try collect(untilMatches: [.carriageReturn, .lineFeed])
+        // cr from buffer and expectant lf
+        let crlf = try collect(next: 2)
+        throw "blurp"
+    }
+
+    // TODO: This assumes line termination is ok -- others do as well. I _believe_ this is the appropriate handling
+    func collect(untilMatches expectation: [Byte]) throws -> [Byte] {
+        guard !expectation.isEmpty else { return [] }
+
+        var innerBuffer: [Byte] = try collect(next: expectation.count)
+        func innerNext() throws -> Byte? {
+            if let nextBuffer = try next() {
+                innerBuffer.append(nextBuffer)
+            }
+
+            guard !innerBuffer.isEmpty else { return nil }
+            return innerBuffer.removeFirst()
+        }
+
+        var collection: [Byte] = []
+        while let next = try innerNext() {
+            if innerBuffer == expectation {
+                returnToBuffer(innerBuffer)
+                break
+            } else {
+                collection.append(next)
+            }
+        }
+        return collection
+    }
+
 
     private func skipWhiteSpace() throws {
         while let next = try next() {

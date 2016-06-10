@@ -91,7 +91,7 @@ extension HTTPParser {
 
         var uri: URI {
             // Temporary introduction to use new URI parser w/ old struct and model
-            let innerUri = try? URIParser.parse(uri: uriString.utf8.array)
+            let innerUri = try? URIParser.parse(uri: uriSlice.array)
 
             var fields: [String : [String?]] = [:]
             let queryString = innerUri?.query ?? ""
