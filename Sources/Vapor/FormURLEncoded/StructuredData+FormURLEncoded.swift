@@ -7,15 +7,17 @@ extension StructuredData {
         for pair in data.split(separator: .ampersand) {
             let token = pair.split(separator: .equals)
             if token.count == 2 {
-                var keyData = percentDecoded(token[0]) ?? []
 
-                let valueData = percentDecoded(token[1], transform: { byte in
+                let replacePlus: (Byte) -> (Byte) = { byte in
                     if byte == .plus {
                         return .space
                     } else {
                         return byte
                     }
-                }) ?? []
+                }
+
+                var keyData = percentDecoded(token[0], transform: replacePlus) ?? []
+                let valueData = percentDecoded(token[1], transform: replacePlus) ?? []
 
                 var value: StructuredData = .string(valueData.string)
 
