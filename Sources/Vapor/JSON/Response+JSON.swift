@@ -22,6 +22,6 @@ extension Response {
         let headers: Headers = [
             "Content-Type": "application/json"
         ]
-        self.init(status: status, headers: headers, body: json.data)
+        self.init(status: status, headers: headers, data: json.data)
     }
 }

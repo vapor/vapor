@@ -83,10 +83,10 @@ extension ResourceController {
     }
 
     public func options(request: Request) throws -> ResponseRepresentable {
-        return Response(body: [])
+        return Response()
     }
 
     public func options(request: Request, item: Item) throws -> ResponseRepresentable {
-        return Response(body: [])
+        return Response()
     }
 }
