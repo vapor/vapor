@@ -22,24 +22,6 @@ extension StructuredData {
             return nil
         }
     }
-
-    public subscript(key: String) -> StructuredData? {
-        switch self {
-        case .array(let array):
-            guard let index = Int(key) else {
-                return nil
-            }
-
-            if array.count <= index {
-                return nil
-            }
-            return array[index]
-        case .dictionary(let dictionary):
-            return dictionary[key]
-        default:
-            return nil
-        }
-    }
 }
 
 extension StructuredData: PathIndexable {

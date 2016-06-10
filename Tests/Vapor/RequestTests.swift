@@ -95,4 +95,12 @@ class RequestTests: XCTestCase {
         let val = input.components(separatedBy: "boundary=")
         print("succeeded w/ \(val) because didn't crash")
     }
+
+    func testCookies() {
+        let cookieString = "1=1;2=2;"
+
+        let cookies = Cookies.parse(header: cookieString)
+        XCTAssertEqual(cookies["1"]?.int, 1)
+        XCTAssertEqual(cookies["2"]?.int, 2)
+    }
 }
