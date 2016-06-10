@@ -75,7 +75,7 @@ class HTTPStreamTests: XCTestCase {
         XCTAssert(data.string.range(of: "Content-Type: text/plain") != nil)
         XCTAssert(data.string.range(of: "Test: 123") != nil)
         XCTAssert(data.string.range(of: "Transfer-Encoding: chunked") != nil)
-        XCTAssert(data.string.range(of: "\r\n\r\nHello, world") != nil)
+        XCTAssert(data.string.range(of: "\r\n\r\nC\r\nHello, world\r\n0\r\n\r\n") != nil)
     }
 }
 

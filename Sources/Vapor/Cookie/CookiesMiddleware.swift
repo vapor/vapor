@@ -1,7 +1,8 @@
 class CookiesMiddleware: Middleware {
     func respond(to request: Request, chainingTo next: Responder) throws -> Response {
+        var request = request
+
         if let cookie = request.headers["Cookie"] {
-            var request = request
             request.cookies = Cookies.parse(header: cookie)
         }
 

@@ -99,7 +99,12 @@ extension HTTPParser {
                 path = "/"
             }
 
-            //TODO: Add Query parsing as middleware
+            let query: String?
+            if let queryData = comps.last {
+                query = Data(queryData).string
+            } else {
+                query = nil
+            }
 
             return URI(
                 scheme: "http",
@@ -107,7 +112,7 @@ extension HTTPParser {
                 host: nil,
                 port: nil,
                 path: path,
-                query: [:],
+                query: query,
                 fragment: nil
             )
         }
