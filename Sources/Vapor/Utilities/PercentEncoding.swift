@@ -7,24 +7,33 @@
     Wrappers around String can be built
 */
 
-public func percentDecoded(_ input: ArraySlice<Byte>) -> Data? {
-    return percentDecoded(Data(input))
+public func percentDecoded(
+    _ input: ArraySlice<Byte>,
+    transform: (Byte) -> (Byte) = { $0 }
+) -> Data? {
+    return percentDecoded(Data(input), transform: transform)
 }
 
-public func percentDecoded(_ input: Data) -> Data? {
-    guard let bytes = percentDecoded(input.bytes) else {
+public func percentDecoded(
+    _ input: Data,
+    transform: (Byte) -> (Byte) = { $0 }
+) -> Data? {
+    guard let bytes = percentDecoded(input.bytes, transform: transform) else {
         return nil
     }
 
     return Data(bytes)
 }
 
-public func percentDecoded(_ input: [Byte]) -> [Byte]? {
+public func percentDecoded(
+    _ input: [Byte],
+    transform: (Byte) -> (Byte) = { $0 }
+) -> [Byte]? {
     var idx = 0
     var group: [Byte] = []
     while idx < input.count {
         let next = input[idx]
-        if next.equals(any: .percent) {
+        if next == .percent {
             // %  2  A
             // i +1 +2
             let firstHex = idx + 1
@@ -37,14 +46,18 @@ public func percentDecoded(_ input: [Byte]) -> [Byte]? {
             guard let encodedByte = Byte(str, radix: 16) else { return nil }
             group.append(encodedByte)
         } else {
-            group.append(next)
-            idx += 1
+            let transformed = transform(next)
+            group.append(transformed)
+            idx += 1 // don't put outside of else
         }
     }
     return group
 }
 
-public func percentEncoded(_ input: [Byte], shouldEncode: (Byte) throws -> Bool = { _ in true }) throws -> [Byte] {
+public func percentEncoded(
+    _ input: [Byte],
+    shouldEncode: (Byte) throws -> Bool = { _ in true }
+) throws -> [Byte] {
     var group: [Byte] = []
     try input.forEach { byte in
         if try shouldEncode(byte) {

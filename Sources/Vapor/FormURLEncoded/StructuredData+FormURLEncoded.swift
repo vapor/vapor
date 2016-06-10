@@ -9,7 +9,14 @@ extension StructuredData {
             if token.count == 2 {
                 var keyData = percentDecoded(token[0]) ?? []
 
-                let valueData = percentDecoded(token[1]) ?? []
+                let valueData = percentDecoded(token[1], transform: { byte in
+                    if byte == .plus {
+                        return .space
+                    } else {
+                        return byte
+                    }
+                }) ?? []
+
                 var value: StructuredData = .string(valueData.string)
 
                 var keyIndicatedArray = false
