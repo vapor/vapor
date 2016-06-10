@@ -20,7 +20,6 @@ class TestResponder: Responder {
     }
 }
 
-
 class RequestTests: XCTestCase {
     static var allTests: [(String, (RequestTests) -> () throws -> Void)] {
         return [
@@ -32,11 +31,6 @@ class RequestTests: XCTestCase {
             ("testSplitString", testSplitString)
         ]
     }
-
-    let contentMiddleware = ContentMiddleware()
-    let jsonMiddleware = JSONMiddleware()
-    let formURLEncodedMiddleware = FormURLEncodedMiddleware()
-    let multipartMiddleware = MultipartMiddleware()
 
     func testParse() {
         let string = "value=123"

@@ -17,7 +17,7 @@ private class TestController: Controller {
         index: Int,
         store: Int,
         show: Int,
-        update: Int,
+        replace: Int,
         modify: Int,
         destroy: Int,
         destroyAll: Int,
@@ -40,8 +40,8 @@ private class TestController: Controller {
         return "show"
     }
 
-    func update(request: Request, item: String) throws -> Vapor.ResponseRepresentable {
-        lock.update += 1
+    func replace(request: Request, item: String) throws -> Vapor.ResponseRepresentable {
+        lock.replace += 1
         return "update"
     }
 
@@ -196,7 +196,7 @@ class ControllerTests: XCTestCase {
         XCTAssert(testInstance.lock.store == 1)
         XCTAssert(testInstance.lock.destroyAll == 1)
         XCTAssert(testInstance.lock.show == 0)
-        XCTAssert(testInstance.lock.update == 0)
+        XCTAssert(testInstance.lock.replace == 0)
         XCTAssert(testInstance.lock.modify == 0)
         XCTAssert(testInstance.lock.destroy == 0)
 
@@ -206,7 +206,7 @@ class ControllerTests: XCTestCase {
         try individualRequests.forEach(handleRequest)
 
         XCTAssert(testInstance.lock.show == 1)
-        XCTAssert(testInstance.lock.update == 1)
+        XCTAssert(testInstance.lock.replace == 1)
         XCTAssert(testInstance.lock.modify == 1)
         XCTAssert(testInstance.lock.destroy == 1)
     }

@@ -370,6 +370,17 @@ extension Application: Responder {
         var responder: Responder
         var request = request
 
+        /*
+            The HEAD method is identical to GET.
+            
+            https://tools.ietf.org/html/rfc2616#section-9.4
+        */
+        let originalMethod = request.method
+        if case .head = request.method {
+            request.method = .get
+        }
+
+
         // Check in routes
         if let (parameters, routerHandler) = router.route(request) {
             request.parameters = parameters
@@ -379,7 +390,17 @@ extension Application: Responder {
         } else {
             // Default not found handler
             responder = Request.Handler { _ in
-                return Response(status: .notFound, text: "Page not found")
+                let normal: [Request.Method] = [.get, .post, .put, .patch, .delete]
+
+                if normal.contains(request.method) {
+                    return Response(status: .notFound, text: "Page not found")
+                } else if case .options = request.method {
+                    return Response(status: .ok, headers: [
+                        "Allow": "OPTIONS"
+                        ], data: [])
+                } else {
+                    return Response(status: .notImplemented, data: [])
+                }
             }
         }
 
@@ -406,6 +427,15 @@ extension Application: Responder {
 
         response.headers["Date"] = Response.date
         response.headers["Server"] = "Vapor \(Vapor.VERSION)"
+
+        /**
+            The server MUST NOT return a message-body in the response for HEAD.
+
+            https://tools.ietf.org/html/rfc2616#section-9.4
+        */
+        if case .head = originalMethod {
+            response.body = .buffer([])
+        }
 
         return response
     }

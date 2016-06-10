@@ -6,6 +6,11 @@ public enum WebSocketRequestFormat: ErrorProtocol {
 }
 
 extension Request {
+    /**
+        Upgrades the request to a WebSocket connection
+        WebSocket connection to provide two way information
+        transfer between the client and the server.
+    */
     public func upgradeToWebSocket(
         supportedProtocols: ([String]) -> [String] = { $0 },
         body: (ws: WebSocket) throws -> Void) throws -> Response {
@@ -15,7 +20,7 @@ extension Request {
         guard headers.upgrade == "websocket" else {
             throw WebSocketRequestFormat.missingUpgradeHeader
         }
-        guard headers.connection == "Upgrade" else {
+        guard headers.connection?.index(of: "Upgrade") != nil else {
             throw WebSocketRequestFormat.missingConnectionHeader
         }
 
