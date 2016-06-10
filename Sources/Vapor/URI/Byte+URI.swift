@@ -4,7 +4,7 @@ extension Byte {
         return isUnreservedUriCharacter
             || isGeneralDelimiter
             || isSubDelimiter
-            || self == .percentSign
+            || self == .percent
     }
 }
 

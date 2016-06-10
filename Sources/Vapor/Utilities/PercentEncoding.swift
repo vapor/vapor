@@ -1,18 +1,18 @@
 /**
- These are global functions because I can't extend array, and 
- it's considerably easier than dealing with sequence or collection
+    These are global functions because I can't extend array, and
+    it's considerably easier than dealing with sequence or collection
 
- It is also helpful when parsing to percent encode without converting to string
- 
- Wrappers around String can be built
- */
+    It is also helpful when parsing to percent encode without converting to string
+
+    Wrappers around String can be built
+*/
 
 public func percentDecoded(_ input: [Byte]) -> [Byte]? {
     var idx = 0
     var group: [Byte] = []
     while idx < input.count {
         let next = input[idx]
-        if next.equals(any: .percentSign) {
+        if next.equals(any: .percent) {
             // %  2  A
             // i +1 +2
             let firstHex = idx + 1
@@ -37,9 +37,9 @@ public func percentEncoded(_ input: [Byte], shouldEncode: (Byte) throws -> Bool 
     try input.forEach { byte in
         if try shouldEncode(byte) {
             let hex = String(byte, radix: 16).utf8
-            group.append(.percentSign)
+            group.append(.percent)
             if hex.count == 1 {
-                group.append(.zeroCharacter)
+                group.append(.zero)
             }
             group.append(contentsOf: hex)
         } else {

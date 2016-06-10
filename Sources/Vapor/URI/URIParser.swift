@@ -177,7 +177,7 @@ public final class URIParser: StaticDataBuffer {
          Query strings, by convention parse '+' as ' ' spaces
          */
         return try collect(until: .numberSign) { input in
-            guard input == .plusSign else { return input }
+            guard input == .plus else { return input }
             return .space
         }
     }
@@ -210,10 +210,17 @@ extension URIParser {
 
         authority   = [ userinfo "@" ] host [ ":" port ]
     */
-    private func parse(authority: [Byte]) throws -> (username: [Byte]?, auth: [Byte]?, host: [Byte], port: [Byte]?) {
-        let comps = authority.split(separator: .atSign,
-                                    maxSplits: 1,
-                                    omittingEmptySubsequences: false)
+    private func parse(authority: [Byte]) throws -> (
+        username: [Byte]?,
+        auth: [Byte]?,
+        host: [Byte],
+        port: [Byte]?
+    ) {
+        let comps = authority.split(
+            separator: .at,
+            maxSplits: 1,
+            omittingEmptySubsequences: false
+        )
 
         // 1 or 2, Host and Port is ALWAYS last component, otherwise empty which is ok
         guard let hostAndPort = comps.last else { return (nil, nil, [], nil) }

@@ -4,18 +4,13 @@ import Foundation
 
 extension String {
     init?(percentDecoding byteSlice: ArraySlice<Byte>) {
+
         let data = Data(byteSlice)
-        let string = String(data)
-
-        guard let validated = String(validatingUTF8: string) else {
+        guard let decoded = percentDecoded(data.bytes) else {
             return nil
         }
 
-        guard let decoded = try? String(percentEncoded: validated) else {
-            return nil
-        }
-
-        self = decoded
+        self = decoded.string
     }
 }
 

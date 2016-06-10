@@ -39,7 +39,7 @@ extension HTTPParser {
 
         var version: Request.Version {
             // ["HTTP", "1.1"]
-            let comps = versionSlice.split(separator: .slash, maxSplits: 1)
+            let comps = versionSlice.split(separator: .forwardSlash, maxSplits: 1)
 
             var major = 0
             var minor = 0
@@ -90,30 +90,19 @@ extension HTTPParser {
         }
 
         var uri: URI {
-            let comps = uriSlice.split(separator: .questionMark, maxSplits: 1)
+            let innerUri = try? URIParser.parse(uri: Data(uriSlice).bytes)
 
-            let path: String
-            if let pathData = comps.first {
-                path = Data(pathData).string
-            } else {
-                path = "/"
-            }
+            let queryString = innerUri?.query ?? ""
 
-            let query: String?
-            if let queryData = comps.last {
-                query = Data(queryData).string
-            } else {
-                query = nil
-            }
-
+            let info = URI.UserInfo(username: innerUri?.userInfo?.username ?? "", password: innerUri?.userInfo?.password ?? "")
             return URI(
-                scheme: "http",
-                userInfo: nil,
-                host: nil,
-                port: nil,
-                path: path,
-                query: query,
-                fragment: nil
+                scheme: innerUri?.scheme,
+                userInfo: info,
+                host: innerUri?.host,
+                port: innerUri?.port,
+                path: innerUri?.path,
+                query: queryString,
+                fragment: innerUri?.fragment
             )
         }
     }

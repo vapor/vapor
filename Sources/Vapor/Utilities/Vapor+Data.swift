@@ -54,42 +54,6 @@ extension Data {
     }
 }
 
-extension Byte {
-    static let newLine: Byte = 0xA
-    static let carriageReturn: Byte = 0xD
-    
-    static let space: Byte = 0x20
-    static let ampersand: Byte = 0x26
-    static let hyphen: Byte = 0x2D
-    static let period: Byte = 0x2E
-    static let slash: Byte = 0x2F
-
-    static let zero: Byte = 0x30
-    static let nine: Byte = zero + 9
-
-    static let colon: Byte = 0x3A
-    static let semicolon: Byte = 0x3B
-    static let equals: Byte = 0x3D
-    static let questionMark: Byte = 0x3F
-
-    static let A: Byte = 0x41
-    static let B: Byte = 0x42
-    static let C: Byte = 0x43
-    static let D: Byte = 0x44
-    static let E: Byte = 0x45
-    static let F: Byte = 0x46
-    static let Z: Byte = 0x5A
-
-    static let a: Byte = 0x61
-    static let b: Byte = 0x62
-    static let c: Byte = 0x63
-    static let d: Byte = 0x64
-    static let e: Byte = 0x65
-    static let f: Byte = 0x66
-    static let z: Byte = 0x7A
-
-}
-
 func +=(lhs: inout Data, rhs: Data) {
     lhs.bytes += rhs.bytes
 }
