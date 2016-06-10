@@ -125,6 +125,32 @@ final class HTTPParser: StreamParser {
 }
 
 extension String: ErrorProtocol {}
+/**
+ 
+ ****************************** WARNING ******************************
+ 
+ (reminders)
+ 
+ ******************************
+ 
+ A
+ server MUST reject any received request message that contains
+ whitespace between a header field-name and colon with a response code
+ of 400 (Bad Request).
+ 
+ ******************************
+ 
+ A proxy or gateway that receives an obs-fold in a response message
+ that is not within a message/http container MUST either discard the
+ message and replace it with a 502 (Bad Gateway) response, preferably
+ with a representation explaining that unacceptable line folding was
+ received, or replace each received obs-fold with one or more SP
+ octets prior to interpreting the field value or forwarding the
+ message downstream.
+ 
+ ******************************
+
+ */
 
 /*
 All HTTP/1.1 messages consist of a start-line followed by a sequence
@@ -157,6 +183,7 @@ final class RequestParser {
 
     func parse() throws {
         let (method, uri, httpVersion) = try parseRequestLine()
+        // Call here because after first line, subsequent whitespace indicates it's part of the preceding value
         try renameAndClarifyButThisIsNecessaryToSkipLeadingWhitespaceLinesFollowingRequestLine()
 
 
@@ -241,16 +268,50 @@ final class RequestParser {
      the semantics defined by that header field.  For example, the Date
      header field is defined in Section 7.1.1.2 of [RFC7231] as containing
      the origination timestamp for the message in which it appears.
+     
+     HTTP-message   = start-line
+     *( header-field CRLF )
+     CRLF
+     [ message-body ]
      */
     func parseNextHeaderField() throws -> (field: [Byte], value: [Byte]) {
-        let field = try collect(until: .colon)
-        try discardNext(1) // discard ':'
+        let field = try parseHeaderField()
 
+        while true {
+            let value = try collect(untilMatches: [.carriageReturn, .lineFeed])
+            try discardNext(2)// discard 'CRLF'
+
+            // Check if next line is a value continuation
+            guard let next = try next() else { return (field, value) }
+            if next.isWhitespace
+        }
         // var valuesvapo
         let value = try collect(untilMatches: [.carriageReturn, .lineFeed])
         // cr from buffer and expectant lf
         let crlf = try collect(next: 2)
         throw "blurp"
+    }
+
+    func parseHeaderField() throws -> [Byte] {
+        let field = try collect(until: .colon)
+        try discardNext(1) // discard ':'
+        guard
+        /*
+         No whitespace is allowed between the header field-name and colon.  In
+         the past, differences in the handling of such whitespace have led to
+         security vulnerabilities in request routing and response handling.  A
+         server MUST reject any received request message that contains
+         whitespace between a header field-name and colon with a response code
+         of 400 (Bad Request).
+         */
+        guard field.last?.isWhitespace == false else { throw "must not be space between header field and ':' " }
+        try skipWhiteSpace()
+        return field
+    }
+
+    func parseHeaderValue() throws -> [Byte] {
+        // TODO: Handle trailing whitespace
+        throw ""
     }
 
     // TODO: This assumes line termination is ok -- others do as well. I _believe_ this is the appropriate handling

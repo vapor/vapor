@@ -14,6 +14,7 @@ extension Byte {
     static let space: Byte = 0x20
     static let carriageReturn: Byte = 0x0D
     static let lineFeed: Byte = 0x0A
+    static let horizontalTab: Byte = 0x09
 }
 
 extension Byte {
