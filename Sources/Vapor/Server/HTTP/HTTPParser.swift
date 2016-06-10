@@ -87,19 +87,24 @@ final class HTTPParser: StreamParser {
             var buffer: Data = []
 
             while true {
-                let length = try nextLine()
-                let content = try nextLine()
+                let lengthData = try nextLine()
 
                 // size must be sent
-                guard length.count > 0 else {
+                guard lengthData.count > 0 else {
+                    break
+                }
+
+                // convert hex length data to int
+                guard let length = lengthData.asciiInt else {
                     break
                 }
 
                 // end of chunked encoding
-                if length.bytes[0] == Byte.ASCII.zero {
+                if length == 0 {
                     break
                 }
 
+                let content = try self.buffer.next(chunk: length + 2)
                 buffer.bytes += content.bytes
             }
 
