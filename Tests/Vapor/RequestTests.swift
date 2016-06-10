@@ -75,8 +75,6 @@ class RequestTests: XCTestCase {
 
         let data = StructuredData(formURLEncoded: body.data)
 
-        print(data["arr"])
-
         XCTAssert(data["first"]?.string == "value", "Request key first did not parse correctly")
         XCTAssert(data["arr", 0]?.string == "foo bar", "Request key arr did not parse correctly")
         XCTAssert(data["arr", 1]?.string == "b=az", "Request key arr did not parse correctly")
