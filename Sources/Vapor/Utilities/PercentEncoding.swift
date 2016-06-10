@@ -7,6 +7,18 @@
     Wrappers around String can be built
 */
 
+public func percentDecoded(_ input: ArraySlice<Byte>) -> Data? {
+    return percentDecoded(Data(input))
+}
+
+public func percentDecoded(_ input: Data) -> Data? {
+    guard let bytes = percentDecoded(input.bytes) else {
+        return nil
+    }
+
+    return Data(bytes)
+}
+
 public func percentDecoded(_ input: [Byte]) -> [Byte]? {
     var idx = 0
     var group: [Byte] = []
