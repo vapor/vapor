@@ -155,6 +155,34 @@ extension Array where Element: Hashable {
 }
 
 
+extension ArraySlice where Element: Hashable {
+    /**
+     This function is intended to be as performant as possible, which is part of the reason
+     why some of the underlying logic may seem a bit more tedious than is necessary
+     */
+    func trimmed(_ elements: [Element]) -> SubSequence {
+        guard !isEmpty else { return [] }
+
+        let firstIdx = startIndex
+        let lastIdx = endIndex - 1// self.count - 1
+
+        var leadingIterator = self.indices.makeIterator()
+        var trailingIterator = leadingIterator
+
+        var leading = firstIdx
+        var trailing = lastIdx
+        while let next = leadingIterator.next() where elements.contains(self[next]) {
+            leading += 1
+        }
+        while let next = trailingIterator.next() where elements.contains(self[lastIdx - next]) {
+            trailing -= 1
+        }
+
+        return self[leading...trailing]
+    }
+}
+
+
 // MARK: RObustness 
 
 /*
@@ -311,33 +339,24 @@ final class RequestParser {
 
     func parse() throws -> Request {
         let (method, uri, httpVersion) = try parseRequestLine()
-        // next line after request line MUST NOT lead space
-        try renameAndClarifyButThisIsNecessaryToSkipLeadingWhitespaceLinesFollowingRequestLine()
-//        let headers = try parseHeaders()
-        let headers = try __parseHeaders()
-//        let bodyStyle = try parseBodyStyle(headers: headers)
-        let body = try parseBody(with: .empty) // TODO:
-        
-//        // TODO: Handle Transfer Encoding?
-        var h: Headers = [:]
-        headers.forEach { k, v in
-            h[k] = v
-//            let kt = try k.trimmed([.space, .carriageReturn, .horizontalTab, .lineFeed]).toString()
-//            let vt = try v.trimmed([.space, .carriageReturn, .horizontalTab, .lineFeed]).toString()
-////            print("H -- \"\(kt)\": \"\(vt)\"")
-//            h[kt] = vt
+//        print("Got request line:\n\t\(method.string) \(uri.string) \(httpVersion.string)")
+        guard try !next(equalsAny: .space, .carriageReturn, .lineFeed, .horizontalTab) else {
+            throw "line after request line must not begin with whitespace"
         }
+        let headers = try parseHeaders()
+        let style = BodyStyle(headers)
+        let body = try parseBody(with: style) // TODO:
 
-        let m = try method.toString()
+        let m = method.string
         let u = try URIParser.parse(uri: uri)
         return Request(
             method: S4.Method(m),
             uri: u,
             version: Version(major: 1, minor: 1), // TODO:
-            headers: h,
+            headers: headers,
             body: .buffer(Data(body))
         )
-        return Request(method: .get, path: "/", host: "*", headers: h, data: Data(body))
+//        return Request(method: .get, path: "/", host: "*", headers: h, data: Data([]))
     }
 
     private func parseBody(with style: BodyStyle) throws -> [Byte] {
@@ -371,14 +390,45 @@ final class RequestParser {
      the invalid request-line might be deliberately crafted to bypass
      security filters along the request chain.
      */
-    func parseRequestLine() throws -> (method: [Byte], uri: [Byte], httpVersion: [Byte]) {
+    func parseRequestLine() throws -> (method: ArraySlice<Byte>, uri: ArraySlice<Byte>, httpVersion: ArraySlice<Byte>) {
         try skipWhiteSpace()
-        let method = try collect(until: .space, discardDelimitterIfFound: true)
-        let uri = try collect(until: .space, discardDelimitterIfFound: true)
-        let httpVersion = try collect(untilMatches: [.carriageReturn, .lineFeed])
+        let line = try collect(untilMatches: [.carriageReturn, .lineFeed])
+        guard !line.isEmpty else { return ([], [], []) }
         try discardNext(2) // discard CRLF
-        return (method, uri, httpVersion)
+        let comps = line.split(separator: .space)
+        guard comps.count == 3 else {
+            throw "invalid request line"
+        }
+        return (comps[0], comps[1], comps[2])
     }
+
+//    /*
+//     HTTP-message   = start-line
+//     *( header-field CRLF )
+//     CRLF
+//     [ message-body ]
+//     */
+//    func parseHeaders() throws -> [String: String] {
+//        let headerSection = try collect(untilMatches: [.carriageReturn, .lineFeed, .carriageReturn, .lineFeed])
+//        try discardNext(4)
+//
+//        var headers: [String: String] = [:]
+//        let lines = headerSection.split(separator: .lineFeed, omittingEmptySubsequences: true)
+//        try lines.forEach { line in
+//            let comps = line.split(separator: .colon, maxSplits: 1, omittingEmptySubsequences: false)
+//            /*
+//             // TODO: assert header has no trailing or leading space!
+//             RFC:
+//             No whitespace is allowed between the header field-name and colon.
+//             Might just be fIrst header line can't have leading, but I think it's all
+//             */
+//            guard comps.count == 2 else { throw "invalid header field" }
+//            let field = comps[0].string
+//            let value = comps[1].trimmed([.space, .carriageReturn, .lineFeed, .horizontalTab]).string
+//            headers[field] = value
+//        }
+//        return headers
+//    }
 
     /*
      HTTP-message   = start-line
@@ -386,16 +436,44 @@ final class RequestParser {
      CRLF
      [ message-body ]
      */
-    func parseHeaders() throws -> [(field: [Byte], value: [Byte])] {
-        var headers: [(field: [Byte], value: [Byte])] = []
-        // Header fields section is terminated by a leading CRLF
-        while try !next(matches: [.carriageReturn, .lineFeed]) {
-            guard let (header, value) = try parseNextHeader() else { return headers }
-            headers.append((header, value))
+    func parseHeaders() throws -> Headers {
+        let headerSection = try collect(untilMatches: [.carriageReturn, .lineFeed, .carriageReturn, .lineFeed])
+        try discardNext(4)
+
+        var headers: Headers = [:]
+        let lines = headerSection.split(separator: .lineFeed, omittingEmptySubsequences: true)
+        try lines.forEach { line in
+            let comps = line.split(separator: .colon, maxSplits: 1, omittingEmptySubsequences: false)
+            /*
+             // TODO: assert header has no trailing or leading space!
+             RFC:
+             No whitespace is allowed between the header field-name and colon.
+             Might just be fIrst header line can't have leading, but I think it's all
+             */
+            guard comps.count == 2 else { throw "invalid header field" }
+            let field = comps[0].string
+            let value = comps[1].trimmed([.space, .carriageReturn, .lineFeed, .horizontalTab]).string
+            headers[field] = value
         }
-        try discardNext(2) // discard CRLF
         return headers
     }
+
+//    /*
+//     HTTP-message   = start-line
+//     *( header-field CRLF )
+//     CRLF
+//     [ message-body ]
+//     */
+//    func parseHeaders() throws -> [(field: [Byte], value: [Byte])] {
+//        var headers: [(field: [Byte], value: [Byte])] = []
+//        // Header fields section is terminated by a leading CRLF
+//        while try !next(matches: [.carriageReturn, .lineFeed]) {
+//            guard let (header, value) = try parseNextHeader() else { return headers }
+//            headers.append((header, value))
+//        }
+//        try discardNext(2) // discard CRLF
+//        return headers
+//    }
 
     /*
      HTTP-message   = start-line
@@ -695,6 +773,16 @@ extension RequestParser {
         case chunked
         case length(Int)
         case empty
+
+        init(_ headers: Headers) {
+            if let encoding = headers["Transfer-Encoding"] where encoding.hasSuffix("chunked") {
+                self = .chunked
+            } else if let length = headers["Content-Length"]?.int {
+                self = .length(length)
+            } else {
+                self = .empty
+            }
+        }
     }
 
     func parseBodyStyle(headers: [(field: [Byte], value: [Byte])]) throws -> BodyStyle {
