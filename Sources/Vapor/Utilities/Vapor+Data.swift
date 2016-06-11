@@ -54,73 +54,75 @@ extension Data {
     }
 }
 
-extension Byte {
-    struct ASCII {
-        static let newLine: Byte = 0xA
-        static let carriageReturn: Byte = 0xD
-        
-        static let space: Byte = 0x20
-        static let period: Byte = 0x2e
-        static let slash: Byte = 0x2f
+func +=(lhs: inout Data, rhs: Data) {
+    lhs.bytes += rhs.bytes
+}
 
-        static let zero: Byte = 0x30
-        static let nine: Byte = zero + 9
 
-        static let A: Byte = 0x41
-        static let B: Byte = 0x42
-        static let C: Byte = 0x43
-        static let D: Byte = 0x44
-        static let E: Byte = 0x45
-        static let F: Byte = 0x46
+func +=(lhs: inout Data, rhs: Byte) {
+    lhs.bytes.append(rhs)
+}
 
-        static let a: Byte = 0x61
-        static let b: Byte = 0x62
-        static let c: Byte = 0x63
-        static let d: Byte = 0x64
-        static let e: Byte = 0x65
-        static let f: Byte = 0x66
-
-        static let colon: Byte = 0x3A
-        static let questionMark: Byte = 0x3F
-
-        static let alphabetLength: Byte = 26
-        static let uppercaseStart: Byte = 65
-        static let lowercaseStart: Byte = 97
-        static let betweenCaseGap: Byte = lowercaseStart - uppercaseStart
-
-        static let uppercaseRange = uppercaseStart ..< (uppercaseStart + alphabetLength)
-        static let lowercaseRange = lowercaseStart ..< (lowercaseStart + alphabetLength)
+extension Int {
+    var hex: String {
+        return String(self, radix: 16).uppercased()
     }
 }
 
-extension Data {
-    static let crlf: Data = [
-        Byte.ASCII.carriageReturn,
-        Byte.ASCII.newLine
-    ]
+extension Sequence where Iterator.Element == Byte {
+    /**
+        Converts a slice of bytes to
+        string. Courtesy of Socks by @Czechboy0
+    */
+    public var string: String {
+        var utf = UTF8()
+        var gen = makeIterator()
+        var str = String()
+        while true {
+            switch utf.decode(&gen) {
+            case .emptyInput:
+                return str
+            case .error:
+                break
+            case .scalarValue(let unicodeScalar):
+                str.append(unicodeScalar)
+            }
+        }
+    }
 
     /**
-        Converts an ASCII representation
+        Converts a byte representation
         of a hex value into an `Int`.
-    */
-    var asciiInt: Int? {
+     */
+    var int: Int? {
         var int: Int = 0
 
-        for byte in bytes {
-            if byte >= Byte.ASCII.zero && byte <= Byte.ASCII.nine {
-                int = int * 10
-                int += Int(byte - Byte.ASCII.zero)
-            } else if byte >= Byte.ASCII.A && byte <= Byte.ASCII.F {
-                int = int * 10
-                int += Int(byte - Byte.ASCII.A) + 10
-            } else if byte >= Byte.ASCII.a && byte <= Byte.ASCII.f {
-                int = int / 10
-                int += Int(byte - Byte.ASCII.a) + 10
+        for byte in self {
+            int = int * 10
+
+            if byte >= .zero && byte <= .nine {
+                int += Int(byte - .zero)
+            } else if byte >= .A && byte <= .F {
+                int += Int(byte - .A) + 10
+            } else if byte >= .a && byte <= .f {
+                int += Int(byte - .a) + 10
             }
         }
 
         return int
     }
+
+}
+
+extension Data {
+    /**
+        Defines the `crlf` used to denote
+        line breaks in HTTP.
+    */
+    static let crlf: Data = [
+        .carriageReturn,
+        .newLine
+    ]
 
     /**
         Converts to a String using the
@@ -129,13 +131,17 @@ extension Data {
     var string: String {
         return String(self)
     }
-    
+
+    /**
+        Transforms anything between Byte.A ... Byte.Z
+        into the range Byte.a ... Byte.z
+    */
     var lowercased: Data {
         var data = Data()
         
         for byte in self {
-            if Byte.ASCII.uppercaseRange.contains(byte) {
-                data.append(byte + Byte.ASCII.betweenCaseGap)
+            if (.A ... .Z).contains(byte) {
+                data.append(byte + (.a - .A))
             } else {
                 data.append(byte)
             }
@@ -143,13 +149,17 @@ extension Data {
         
         return data
     }
-    
+
+    /**
+        Transforms anything between Byte.a ... Byte.z
+        into the range Byte.A ... Byte.Z
+    */
     var uppercased: Data {
         var data = Data()
         
         for byte in self {
-            if Byte.ASCII.lowercaseRange.contains(byte) {
-                data.append(byte - Byte.ASCII.betweenCaseGap)
+            if (.a ... .z).contains(byte) {
+                data.append(byte - (.a - .A))
             } else {
                 data.append(byte)
             }

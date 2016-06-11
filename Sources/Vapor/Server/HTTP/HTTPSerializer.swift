@@ -31,22 +31,23 @@ final class HTTPSerializer: StreamSerializer {
         let version = response.version
         let status = response.status
         serialized.bytes += "HTTP/\(version.major).\(version.minor) \(status.statusCode) \(status.reasonPhrase)".data.bytes
-        serialized.bytes += Data.crlf.bytes
+
+        serialized += .crlf
 
         // Headers
         response.headers.forEach { key, value in
-            serialized.bytes += key.string.data.bytes
-            serialized.bytes.append(Byte.ASCII.colon)
-            serialized.bytes.append(Byte.ASCII.space)
-            serialized.bytes += value.data.bytes
-            serialized.bytes += Data.crlf.bytes
+            serialized += key.string.data
+            serialized += .colon
+            serialized += .space
+            serialized += value.data
+            serialized += .crlf
         }
-        serialized.bytes += Data.crlf.bytes
+        serialized += .crlf
 
         // Body
         switch response.body {
         case .buffer(let buffer):
-            serialized.bytes += buffer.bytes
+            serialized += buffer
             try stream.send(serialized)
         case .sender(let closure):
             try stream.send(serialized)

@@ -7,7 +7,7 @@ class FormURLEncodedMiddleware: Middleware {
             where contentType.contains("application/x-www-form-urlencoded") 
         {
             var request = request
-            request.formURLEncoded = FormURLEncoded.parse(data)
+            request.formURLEncoded = StructuredData(formURLEncoded: data)
         }
 
         return try next.respond(to: request)

@@ -1,8 +1,8 @@
 extension Request {
-    public var cookies: [String: String] {
+    public var cookies: Cookies {
         get {
-            guard let cookies = storage["cookies"] as? [String: String] else {
-                return [:]
+            guard let cookies = storage["cookies"] as? Cookies else {
+                return []
             }
 
             return cookies

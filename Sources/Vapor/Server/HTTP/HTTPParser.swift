@@ -23,9 +23,9 @@ final class HTTPParser: StreamParser {
     func nextLine() throws -> Data {
         var line: Data = []
 
-        while let byte = try buffer.next() where byte != Byte.ASCII.newLine {
+        while let byte = try buffer.next() where byte != .newLine {
             // Skip over any non-valid ASCII characters
-            if byte > Byte.ASCII.carriageReturn {
+            if byte > .carriageReturn {
                 line.append(byte)
             }
         }
@@ -63,7 +63,7 @@ final class HTTPParser: StreamParser {
             // This should be converted to values for the
             // previous header
 
-            let comps = headerLine.split(separator: Byte.ASCII.colon)
+            let comps = headerLine.split(separator: .colon)
 
             guard comps.count == 2 else {
                 continue
@@ -99,7 +99,7 @@ final class HTTPParser: StreamParser {
                 }
 
                 // convert hex length data to int
-                guard let length = lengthData.asciiInt else {
+                guard let length = lengthData.int else {
                     break
                 }
 
@@ -313,17 +313,19 @@ final class RequestParser {
         let (method, uri, httpVersion) = try parseRequestLine()
         // next line after request line MUST NOT lead space
         try renameAndClarifyButThisIsNecessaryToSkipLeadingWhitespaceLinesFollowingRequestLine()
-        let headers = try parseHeaders()
-        let bodyStyle = try parseBodyStyle(headers: headers)
-        let body = try parseBody(with: bodyStyle)
+//        let headers = try parseHeaders()
+        let headers = try __parseHeaders()
+//        let bodyStyle = try parseBodyStyle(headers: headers)
+        let body = try parseBody(with: .empty) // TODO:
         
-        // TODO: Handle Transfer Encoding?
+//        // TODO: Handle Transfer Encoding?
         var h: Headers = [:]
-        try headers.forEach { k, v in
-            let kt = try k.trimmed([.space, .carriageReturn, .horizontalTab, .lineFeed]).toString()
-            let vt = try v.trimmed([.space, .carriageReturn, .horizontalTab, .lineFeed]).toString()
-//            print("H -- \"\(kt)\": \"\(vt)\"")
-            h[kt] = vt
+        headers.forEach { k, v in
+            h[k] = v
+//            let kt = try k.trimmed([.space, .carriageReturn, .horizontalTab, .lineFeed]).toString()
+//            let vt = try v.trimmed([.space, .carriageReturn, .horizontalTab, .lineFeed]).toString()
+////            print("H -- \"\(kt)\": \"\(vt)\"")
+//            h[kt] = vt
         }
 
         let m = try method.toString()
@@ -393,6 +395,67 @@ final class RequestParser {
         }
         try discardNext(2) // discard CRLF
         return headers
+    }
+
+    /*
+     HTTP-message   = start-line
+     *( header-field CRLF )
+     CRLF
+     [ message-body ]
+     */
+    func __parseHeaders() throws -> [String: String] {
+        var headers: [String: String] = [:]
+        // Header fields section is terminated by a leading CRLF
+        while try !next(matches: [.carriageReturn, .lineFeed]) {
+            guard let fieldBytes = try __parseHeaderField() else { return headers }
+            let valueBytes = try __parseHeaderValue()
+            let field = try fieldBytes.toString()
+            let value = try valueBytes.trimmed([.space, .carriageReturn, .horizontalTab, .lineFeed]).toString()
+            headers[field] = value
+        }
+        try discardNext(2) // discard CRLF
+        return headers
+    }
+
+
+    func __parseHeaderField() throws -> [Byte]? {
+        let field = try collect(until: .colon, discardDelimitterIfFound: true)
+        /*
+         No whitespace is allowed between the header field-name and colon.  In
+         the past, differences in the handling of such whitespace have led to
+         security vulnerabilities in request routing and response handling.  A
+         server MUST reject any received request message that contains
+         whitespace between a header field-name and colon with a response code
+         of 400 (Bad Request).
+         */
+        guard !field.isEmpty else { return nil } // empty is ok
+        guard field.last?.isWhitespace == false else { throw "must not be space between header field and ':' \(field)" }
+        return field
+    }
+
+    func __parseHeaderValue() throws -> [Byte] {
+        try skipWhiteSpace()
+        let value = try collect(untilMatches: [.carriageReturn, .lineFeed])
+        try discardNext(2)// discard 'CRLF'
+
+        /*
+         Historically, HTTP header field values could be extended over
+         multiple lines by preceding each extra line with at least one space
+         or horizontal tab (obs-fold).  This specification deprecates such
+         line folding except within the message/http media type
+         (Section 8.3.1).  A sender MUST NOT generate a message that includes
+         line folding (i.e., that has any field-value that contains a match to
+         the obs-fold rule) unless the message is intended for packaging
+         within the message/http media type.
+
+         Although deprecated and we MUST NOT generate, it is POSSIBLE for older
+         systems to use this style of communication and we need to support it
+         */
+        guard try next(equalsAny: .space, .horizontalTab) else { return value }
+        /**
+         Suggestion to clients when generating is to convert obs-fold to space, we'll do same in parsing.
+         */
+        return try value + [.space] + parseHeaderValue()
     }
 
     /**
