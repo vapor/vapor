@@ -1,6 +1,6 @@
 extension URIParser {
     public static func parse<S: Sequence where S.Iterator.Element == Byte>(uri: S) throws -> URI {
-        let parser = URIParser(bytes: uri.array) // TODO: Retain splice format
+        let parser = URIParser(bytes: uri) // TODO: Retain splice format
         return try parser.parse()
     }
 }
@@ -10,6 +10,10 @@ public final class URIParser: StaticDataBuffer {
     public enum Error: ErrorProtocol {
         case invalidPercentEncoding
         case unsupportedURICharacter(Character)
+    }
+
+    public override init<S: Sequence where S.Iterator.Element == Byte>(bytes: S) {
+        super.init(bytes: bytes)
     }
 
     // MARK: Paser URI
@@ -80,10 +84,20 @@ public final class URIParser: StaticDataBuffer {
 
     private func percentDecodedString(_ input: [Byte]) throws -> String {
         guard let decoded = percentDecoded(input) else { throw Error.invalidPercentEncoding }
-        return try decoded.toString()
+        return decoded.string
     }
 
     private func percentDecodedString(_ input: [Byte]?) throws -> String? {
+        guard let i = input else { return nil }
+        return try percentDecodedString(i)
+    }
+
+    private func percentDecodedString(_ input: ArraySlice<Byte>) throws -> String {
+        guard let decoded = percentDecoded(input) else { throw Error.invalidPercentEncoding }
+        return decoded.string
+    }
+
+    private func percentDecodedString(_ input: ArraySlice<Byte>?) throws -> String? {
         guard let i = input else { return nil }
         return try percentDecodedString(i)
     }
@@ -211,10 +225,10 @@ extension URIParser {
         authority   = [ userinfo "@" ] host [ ":" port ]
     */
     private func parse(authority: [Byte]) throws -> (
-        username: [Byte]?,
-        auth: [Byte]?,
-        host: [Byte],
-        port: [Byte]?
+        username: ArraySlice<Byte>?,
+        auth: ArraySlice<Byte>?,
+        host: ArraySlice<Byte>,
+        port: ArraySlice<Byte>?
     ) {
         let comps = authority.split(
             separator: .at,
@@ -239,7 +253,7 @@ extension URIParser {
         Port:
         https://tools.ietf.org/html/rfc3986#section-3.2.3
     */
-    private func parse(hostAndPort: [Byte]) throws -> (host: [Byte], port: [Byte]?) {
+    private func parse(hostAndPort: [Byte]) throws -> (host: ArraySlice<Byte>, port: ArraySlice<Byte>?) {
         /**
             move in reverse looking for ':' or ']' or end of line
 
@@ -247,34 +261,64 @@ extension URIParser {
             if ']' then we have IP Literal -- scan to end of string // TODO: Validate `[` closing?
             if end of line, then we have no port, just host. assign chunk of bytes to host
         */
-        var host: [Byte] = []
-        var port: [Byte]? = nil
 
-        var chunk: [Byte] = []
-        // Parsing backwards because it makes logic surrounding ':' and IP Literal considerably easier
-        var reverseIterator = hostAndPort.reversed().makeIterator()
-        while let byte = reverseIterator.next() {
-            if byte.equals(any: .colon) {
+        let hostStart = hostAndPort.startIndex
+        let hostEnd = hostAndPort.endIndex - 1
+        guard hostStart < hostEnd else { return ([], nil) }
+        for i in (hostStart...hostEnd).lazy.reversed() {
+            let byte = hostAndPort[i]
+            if byte == .colon {
                 // going reverse, if we found a colon BEFORE we found a ']' then it's a port
-                port = chunk.reversed()
-                host = reverseIterator.reversed()
+                let host = hostAndPort[hostStart..<i]
+                // TODO: Check what happens w/ `example.com:` ... it MUST not crash
+                let port = hostAndPort[(i + 1)...hostEnd]
                 return (host, port)
-            } else if byte.equals(any: .rightSquareBracket) {
+            } else if byte == .rightSquareBracket {
                 // square brackets ONLY for IP Literal
                 // if we found right square bracket first, just complete to end
                 // return remaining bytes to standard orientation
                 // if we found a colon before this
                 // the port would have been collected
-                port = port?.reversed()
-                host = reverseIterator.reversed() + [.rightSquareBracket] // replace trailing AFTER reversing
-                return (host, port)
+                return (hostAndPort[hostStart...i], nil)
             }
-
-            chunk.append(byte)
         }
 
-        host = chunk.reversed()
-        return (host, port)
+        return (hostAndPort[hostStart...hostEnd], nil)
+//        
+//        let host = hostAndPort[hostStart...hostEnd]
+//
+//        var host: [Byte] = []
+//        var port: [Byte]? = nil
+//
+////        var chunk: [Byte] = []
+//        // Parsing backwards because it makes logic surrounding ':' and IP Literal considerably easier
+//        var reverseIterator = hostAndPort.indices.reversed().makeIterator()
+//        while let indice = reverseIterator.next() {
+//            let byte = hostAndPort[hostStart + indice]
+//            if byte == .colon {
+//                // going reverse, if we found a colon BEFORE we found a ']' then it's a port
+//                hostEnd = indice
+//            }
+////            if byte.equals(any: .colon) {
+////                port = chunk.reversed()
+////                host = reverseIterator.reversed()
+////                return (host, port)
+////            } else if byte.equals(any: .rightSquareBracket) {
+////                // square brackets ONLY for IP Literal
+////                // if we found right square bracket first, just complete to end
+////                // return remaining bytes to standard orientation
+////                // if we found a colon before this
+////                // the port would have been collected
+////                port = port?.reversed()
+////                host = reverseIterator.reversed() + [.rightSquareBracket] // replace trailing AFTER reversing
+////                return (host, port)
+////            }
+////
+////            chunk.append(byte)
+//        }
+//
+//        host = chunk.reversed()
+//        return (host, port)
     }
 
     // MARK: UserInfo Parse
@@ -299,21 +343,14 @@ extension URIParser {
         passing of authentication information in clear text has proven to be
         a security risk in almost every case where it has been used.
     */
-    private func parse(userInfo: [Byte]) throws -> (username: [Byte], auth: [Byte]?) {
+    private func parse(userInfo: [Byte]) throws -> (username: ArraySlice<Byte>, auth: ArraySlice<Byte>?) {
         /**
             Iterate as 'username' until we find `:`, then give `auth` remaining bytes
         */
-        var username: [Byte] = []
-        var auth: [Byte]? = nil
-        var iterator = userInfo.makeIterator()
-        while let next = iterator.next() {
-            if next.equals(any: .colon) {
-                auth = iterator.array // collect remaining post colon
-                break
-            }
-            username.append(next)
-        }
-        
-        return (username, auth)
+        let split = userInfo.split(separator: .colon, maxSplits: 1)
+        guard !split.isEmpty else { return ([], nil) }
+        let username = split[0]
+        guard split.count == 2 else { return (username, nil) }
+        return (username, split[1])
     }
 }
