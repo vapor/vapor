@@ -277,82 +277,82 @@ extension Request.Method {
 
 extension String: ErrorProtocol {}
 /**
- 
- ****************************** WARNING ******************************
- 
- (reminders)
- 
- ******************************
- 
- A
- server MUST reject any received request message that contains
- whitespace between a header field-name and colon with a response code
- of 400 (Bad Request).
- 
- ******************************
- 
- A proxy or gateway that receives an obs-fold in a response message
- that is not within a message/http container MUST either discard the
- message and replace it with a 502 (Bad Gateway) response, preferably
- with a representation explaining that unacceptable line folding was
- received, or replace each received obs-fold with one or more SP
- octets prior to interpreting the field value or forwarding the
- message downstream.
- 
- ******************************
 
- The presence of a message body in a response depends on both the
- request method to which it is responding and the response status code
- (Section 3.1.2).  Responses to the HEAD request method (Section 4.3.2
- of [RFC7231]) never include a message body because the associated
- response header fields (e.g., Transfer-Encoding, Content-Length,
- etc.), if present, indicate only what their values would have been if
- the request method had been GET (Section 4.3.1 of [RFC7231]). 2xx
- (Successful) responses to a CONNECT request method (Section 4.3.6 of
- [RFC7231]) switch to tunnel mode instead of having a message body.
- All 1xx (Informational), 204 (No Content), and 304 (Not Modified)
- responses do not include a message body.  All other responses do
- include a message body, although the body might be of zero length.
+    ****************************** WARNING ******************************
 
- ******************************
- 
- A server MAY send a Content-Length header field in a response to a
- HEAD request (Section 4.3.2 of [RFC7231]); a server MUST NOT send
- Content-Length in such a response unless its field-value equals the
- decimal number of octets that would have been sent in the payload
- body of a response if the same request had used the GET method.
- 
- *****************************
- 
- If a message is received that has multiple Content-Length header
- fields with field-values consisting of the same decimal value, or a
- single Content-Length header field with a field value containing a
- list of identical decimal values (e.g., "Content-Length: 42, 42"),
- indicating that duplicate Content-Length header fields have been
- generated or combined by an upstream message processor, then the
- recipient MUST either reject the message as invalid or replace the
- duplicated field-values with a single valid Content-Length field
- containing that decimal value prior to determining the message body
- length or forwarding the message.
- 
- ******************************
+    (reminders)
 
- A recipient MUST ignore unrecognized chunk extensions.
+    ******************************
 
- ******************************
- */
+    A
+    server MUST reject any received request message that contains
+    whitespace between a header field-name and colon with a response code
+    of 400 (Bad Request).
 
-/*
-All HTTP/1.1 messages consist of a start-line followed by a sequence
-of octets in a format similar to the Internet Message Format
-[RFC5322]: zero or more header fields (collectively referred to as
-the "headers" or the "header section"), an empty line indicating the
-end of the header section, and an optional message body.
+    ******************************
 
-HTTP-message   = start-line
-*( header-field CRLF )
-CRLF
-[ message-body ]
+    A proxy or gateway that receives an obs-fold in a response message
+    that is not within a message/http container MUST either discard the
+    message and replace it with a 502 (Bad Gateway) response, preferably
+    with a representation explaining that unacceptable line folding was
+    received, or replace each received obs-fold with one or more SP
+    octets prior to interpreting the field value or forwarding the
+    message downstream.
+
+    ******************************
+
+    The presence of a message body in a response depends on both the
+    request method to which it is responding and the response status code
+    (Section 3.1.2).  Responses to the HEAD request method (Section 4.3.2
+    of [RFC7231]) never include a message body because the associated
+    response header fields (e.g., Transfer-Encoding, Content-Length,
+    etc.), if present, indicate only what their values would have been if
+    the request method had been GET (Section 4.3.1 of [RFC7231]). 2xx
+    (Successful) responses to a CONNECT request method (Section 4.3.6 of
+    [RFC7231]) switch to tunnel mode instead of having a message body.
+    All 1xx (Informational), 204 (No Content), and 304 (Not Modified)
+    responses do not include a message body.  All other responses do
+    include a message body, although the body might be of zero length.
+
+    ******************************
+
+    A server MAY send a Content-Length header field in a response to a
+    HEAD request (Section 4.3.2 of [RFC7231]); a server MUST NOT send
+    Content-Length in such a response unless its field-value equals the
+    decimal number of octets that would have been sent in the payload
+    body of a response if the same request had used the GET method.
+
+    *****************************
+
+    If a message is received that has multiple Content-Length header
+    fields with field-values consisting of the same decimal value, or a
+    single Content-Length header field with a field value containing a
+    list of identical decimal values (e.g., "Content-Length: 42, 42"),
+    indicating that duplicate Content-Length header fields have been
+    generated or combined by an upstream message processor, then the
+    recipient MUST either reject the message as invalid or replace the
+    duplicated field-values with a single valid Content-Length field
+    containing that decimal value prior to determining the message body
+    length or forwarding the message.
+
+    ******************************
+
+    A recipient MUST ignore unrecognized chunk extensions.
+
+    ******************************
+    */
+
+    /*
+    All HTTP/1.1 messages consist of a start-line followed by a sequence
+    of octets in a format similar to the Internet Message Format
+    [RFC5322]: zero or more header fields (collectively referred to as
+    the "headers" or the "header section"), an empty line indicating the
+    end of the header section, and an optional message body.
+
+    HTTP-message   = start-line
+    *( header-field CRLF )
+    CRLF
+    [ message-body ]
 */
 final class RequestParser {
     enum Error: ErrorProtocol {
@@ -373,11 +373,8 @@ final class RequestParser {
 
     func parse() throws -> Request {
         let (methodSlice, uriSlice, httpVersionSlice) = try parseRequestLine()
-//        print("Got request line:\n\t\(method.string) \(uri.string) \(httpVersion.string)")
-//        guard try !next(equalsAny: .space, .carriageReturn, .lineFeed, .horizontalTab) else {
-//            throw "line after request line must not begin with whitespace"
-//        }
 
+        // Header parsing will ensure no whitespace
         let headers = try parseHeaders()
 
         // Request-URI    = "*" | absoluteURI | abs_path | authority
@@ -447,18 +444,157 @@ final class RequestParser {
             uri = try URIParser.parse(uri: uriSlice)
         }
 
+        let body = try parseBody(headers: headers)
 
-        let body = try parseBody(headers: headers) // TODO:
+        // HTTP-Version   = "HTTP" "/" 1*DIGIT "." 1*DIGIT
+        let version = parseVersion(httpVersionSlice)
 
         return Request(
             method: Request.Method(uppercase: methodSlice),
             uri: uri,
-            version: Request.Version(major: 1, minor: 1), // TODO:
+            version: version,
             headers: headers,
             body: .buffer(Data(body))
         )
     }
 
+    /**
+        HTTP uses a "<major>.<minor>" numbering scheme to indicate versions
+        of the protocol. The protocol versioning policy is intended to allow
+        the sender to indicate the format of a message and its capacity for
+        understanding further HTTP communication, rather than the features
+        obtained via that communication. No change is made to the version
+        number for the addition of message components which do not affect
+        communication behavior or which only add to extensible field values.
+        The <minor> number is incremented when the changes made to the
+        protocol add features which do not change the general message parsing
+        algorithm, but which may add to the message semantics and imply
+        additional capabilities of the sender. The <major> number is
+        incremented when the format of a message within the protocol is
+        changed. See RFC 2145 [36] for a fuller explanation.
+     
+        The version of an HTTP message is indicated by an HTTP-Version field
+        in the first line of the message.
+
+            HTTP-Version   = "HTTP" "/" 1*DIGIT "." 1*DIGIT
+    */
+    func parseVersion(_ bytes: BytesSlice) -> Request.Version {
+        // ["HTTP", "1.1"]
+        let comps = bytes.split(separator: .forwardSlash, maxSplits: 1)
+
+        var major = 0
+        var minor = 0
+
+        if comps.count == 2 {
+            // ["1", "1"]
+            let version = comps[1].split(separator: .period, maxSplits: 1)
+
+            major = version[0].int
+
+            if version.count == 2 {
+                minor = version[1].int
+            }
+        }
+
+        return Request.Version(major: major, minor: minor)
+    }
+
+    /*
+        https://tools.ietf.org/html/rfc7230#section-3.3.3
+
+        The length of a message body is determined by one of the following
+        (in order of precedence):
+
+        Response
+        1.  Any response to a HEAD request and any response with a 1xx
+        (Informational), 204 (No Content), or 304 (Not Modified) status
+        code is always terminated by the first empty line after the
+        header fields, regardless of the header fields present in the
+        message, and thus cannot contain a message body.
+
+        Response
+        2.  Any 2xx (Successful) response to a CONNECT request implies that
+        the connection will become a tunnel immediately after the empty
+        line that concludes the header fields.  A client MUST ignore any
+        Content-Length or Transfer-Encoding header fields received in
+        such a message.
+
+        3.  If a Transfer-Encoding header field is present and the chunked
+        transfer coding (Section 4.1) is the final encoding, the message
+        body length is determined by reading and decoding the chunked
+        data until the transfer coding indicates the data is complete.
+
+        If a Transfer-Encoding header field is present in a response and
+        the chunked transfer coding is not the final encoding, the
+        message body length is determined by reading the connection until
+        it is closed by the server.  If a Transfer-Encoding header field
+        is present in a request and the chunked transfer coding is not
+        the final encoding, the message body length cannot be determined
+        reliably; the server MUST respond with the 400 (Bad Request)
+        status code and then close the connection.
+
+        If a message is received with both a Transfer-Encoding and a
+        Content-Length header field, the Transfer-Encoding overrides the
+        Content-Length.  Such a message might indicate an attempt to
+        perform request smuggling (Section 9.5) or response splitting
+        (Section 9.4) and ought to be handled as an error.  A sender MUST
+        remove the received Content-Length field prior to forwarding such
+        a message downstream.
+
+        4.  If a message is received without Transfer-Encoding and with
+        either multiple Content-Length header fields having differing
+        field-values or a single Content-Length header field having an
+        invalid value, then the message framing is invalid and the
+        recipient MUST treat it as an unrecoverable error.  If this is a
+        request message, the server MUST respond with a 400 (Bad Request)
+        status code and then close the connection.  If this is a response
+        message received by a proxy, the proxy MUST close the connection
+        to the server, discard the received response, and send a 502 (Bad
+        Gateway) response to the client.  If this is a response message
+        received by a user agent, the user agent MUST close the
+        connection to the server and discard the received response.
+
+        5.  If a valid Content-Length header field is present without
+        Transfer-Encoding, its decimal value defines the expected message
+        body length in octets.  If the sender closes the connection or
+        the recipient times out before the indicated number of octets are
+        received, the recipient MUST consider the message to be
+        incomplete and close the connection.
+
+        6.  If this is a request message and none of the above are true, then
+        the message body length is zero (no message body is present).
+
+        7.  Otherwise, this is a response message without a declared message
+        body length, so the message body length is determined by the
+        number of octets received prior to the server closing the
+        connection.
+
+        Since there is no way to distinguish a successfully completed,
+        close-delimited message from a partially received message interrupted
+        by network failure, a server SHOULD generate encoding or
+        length-delimited messages whenever possible.  The close-delimiting
+        feature exists primarily for backwards compatibility with HTTP/1.0.
+
+        A server MAY reject a request that contains a message body but not a
+        Content-Length by responding with 411 (Length Required).
+
+        Unless a transfer coding other than chunked has been applied, a
+        client that sends a request containing a message body SHOULD use a
+        valid Content-Length header field if the message body length is known
+        in advance, rather than the chunked transfer coding, since some
+        existing services respond to chunked with a 411 (Length Required)
+        status code even though they understand the chunked transfer coding.
+        This is typically because such services are implemented via a gateway
+        that requires a content-length in advance of being called and the
+        server is unable or unwilling to buffer the entire request before
+        processing.
+
+        A user agent that sends a request containing a message body MUST send
+        a valid Content-Length header field if it does not know the server
+        will handle HTTP/1.1 (or later) requests; such knowledge can be in
+        the form of specific user configuration or by remembering the version
+        of a prior received response.
+    */
     private func parseBody(headers: Request.Headers) throws -> Bytes {
         let body: Bytes
 
@@ -532,34 +668,6 @@ final class RequestParser {
         return (comps[0], comps[1], comps[2])
     }
 
-//    /*
-//     HTTP-message   = start-line
-//     *( header-field CRLF )
-//     CRLF
-//     [ message-body ]
-//     */
-//    func parseHeaders() throws -> [String: String] {
-//        let headerSection = try collect(untilMatches: [.carriageReturn, .lineFeed, .carriageReturn, .lineFeed])
-//        try discardNext(4)
-//
-//        var headers: [String: String] = [:]
-//        let lines = headerSection.split(separator: .lineFeed, omittingEmptySubsequences: true)
-//        try lines.forEach { line in
-//            let comps = line.split(separator: .colon, maxSplits: 1, omittingEmptySubsequences: false)
-//            /*
-//             // TODO: assert header has no trailing or leading space!
-//             RFC:
-//             No whitespace is allowed between the header field-name and colon.
-//             Might just be fIrst header line can't have leading, but I think it's all
-//             */
-//            guard comps.count == 2 else { throw "invalid header field" }
-//            let field = comps[0].string
-//            let value = comps[1].trimmed([.space, .carriageReturn, .lineFeed, .horizontalTab]).string
-//            headers[field] = value
-//        }
-//        return headers
-//    }
-
     /*
         HTTP-message   = start-line
         *( header-field CRLF )
@@ -580,25 +688,85 @@ final class RequestParser {
 
             if line[0].isWhitespace {
                 guard let lastField = lastField else {
+                    /*
+                        https://tools.ietf.org/html/rfc7230#section-3
+
+                        ******* [WARNING] ********
+
+                        A sender MUST NOT send whitespace between the start-line and the
+                        first header field.  A recipient that receives whitespace between the
+                        start-line and the first header field MUST either reject the message
+                        as invalid or consume each whitespace-preceded line without further
+                        processing of it (i.e., ignore the entire line, along with any
+                        subsequent lines preceded by whitespace, until a properly formed
+                        header field is received or the header section is terminated).
+
+                        The presence of such whitespace in a request might be an attempt to
+                        trick a server into ignoring that field or processing the line after
+                        it as a new request, either of which might result in a security
+                        vulnerability if other implementations within the request chain
+                        interpret the same message differently.  Likewise, the presence of
+                        such whitespace in a response might be ignored by some clients or
+                        cause others to cease parsing.
+                    */
                     throw "Cannot have leading white space on the first line"
                 }
 
+                /*
+                    Historically, HTTP header field values could be extended over
+                    multiple lines by preceding each extra line with at least one space
+                    or horizontal tab (obs-fold).  This specification deprecates such
+                    line folding except within the message/http media type
+                    (Section 8.3.1).  A sender MUST NOT generate a message that includes
+                    line folding (i.e., that has any field-value that contains a match to
+                    the obs-fold rule) unless the message is intended for packaging
+                    within the message/http media type.
+
+                    Although deprecated and we MUST NOT generate, it is POSSIBLE for older
+                    systems to use this style of communication and we need to support it
+                */
                 let value = parseHeaderValue(line)
                 headers[lastField]?.append(value)
             } else {
+                /*
+                    Each header field consists of a case-insensitive field name followed
+                    by a colon (":"), optional leading whitespace, the field value, and
+                    optional trailing whitespace.
+
+                    header-field   = field-name ":" OWS field-value OWS
+
+                    field-name     = token
+                    field-value    = *( field-content / obs-fold )
+                    field-content  = field-vchar [ 1*( SP / HTAB ) field-vchar ]
+                    field-vchar    = VCHAR / obs-text
+
+                    obs-fold       = CRLF 1*( SP / HTAB )
+                    ; obsolete line folding
+                    ; see Section 3.2.4
+
+                    The field-name token labels the corresponding field-value as having
+                    the semantics defined by that header field.  For example, the Date
+                    header field is defined in Section 7.1.1.2 of [RFC7231] as containing
+                    the origination timestamp for the message in which it appears.
+                */
+
                 let comps = line.split(separator: .colon, maxSplits: 1)
                 guard comps.count == 2 else {
-                    print(line.string)
                     continue
                 }
 
                 /*
-                    // TODO: assert header has no trailing or leading space!
-                    RFC:
-
-                    No whitespace is allowed between the header field-name and colon.
-                    Might just be fIrst header line can't have leading, but I think it's all
+                    No whitespace is allowed between the header field-name and colon.  In
+                    the past, differences in the handling of such whitespace have led to
+                    security vulnerabilities in request routing and response handling.  A
+                    server MUST reject any received request message that contains
+                    whitespace between a header field-name and colon with a response code
+                    of 400 (Bad Request).
                 */
+                if comps[0].last?.isWhitespace == true {
+                    throw "No white space between header and colon allowed, throw 400"
+                }
+
                 let field = Request.Headers.Key(comps[0].string)
                 let value = parseHeaderValue(comps[1])
                 
@@ -617,213 +785,6 @@ final class RequestParser {
 
     func parseHeaderValue(_ bytes: BytesSlice) -> String {
         return bytes.trimmed([.space, .horizontalTab]).string
-    }
-
-//    /*
-//     HTTP-message   = start-line
-//     *( header-field CRLF )
-//     CRLF
-//     [ message-body ]
-//     */
-//    func parseHeaders() throws -> [(field: [Byte], value: [Byte])] {
-//        var headers: [(field: [Byte], value: [Byte])] = []
-//        // Header fields section is terminated by a leading CRLF
-//        while try !next(matches: [.carriageReturn, .lineFeed]) {
-//            guard let (header, value) = try parseNextHeader() else { return headers }
-//            headers.append((header, value))
-//        }
-//        try discardNext(2) // discard CRLF
-//        return headers
-//    }
-
-    /*
-     HTTP-message   = start-line
-     *( header-field CRLF )
-     CRLF
-     [ message-body ]
-     */
-    func __parseHeaders() throws -> [String: String] {
-        var headers: [String: String] = [:]
-        // Header fields section is terminated by a leading CRLF
-        while try !next(matches: [.carriageReturn, .newLine]) {
-            guard let fieldBytes = try __parseHeaderField() else { return headers }
-            let valueBytes = try __parseHeaderValue()
-            let field = try fieldBytes.toString()
-            let value = try valueBytes.trimmed([.space, .carriageReturn, .horizontalTab, .newLine]).toString()
-            headers[field] = value
-        }
-        try discardNext(2) // discard CRLF
-        return headers
-    }
-
-
-    func __parseHeaderField() throws -> [Byte]? {
-        let field = try collect(until: .colon, discardDelimitterIfFound: true)
-        /*
-         No whitespace is allowed between the header field-name and colon.  In
-         the past, differences in the handling of such whitespace have led to
-         security vulnerabilities in request routing and response handling.  A
-         server MUST reject any received request message that contains
-         whitespace between a header field-name and colon with a response code
-         of 400 (Bad Request).
-         */
-        guard !field.isEmpty else { return nil } // empty is ok
-        guard field.last?.isWhitespace == false else { throw "must not be space between header field and ':' \(field)" }
-        return field
-    }
-
-    func __parseHeaderValue() throws -> [Byte] {
-        try skipWhiteSpace()
-        let value = try collect(untilMatches: [.carriageReturn, .newLine])
-        try discardNext(2)// discard 'CRLF'
-
-        /*
-         Historically, HTTP header field values could be extended over
-         multiple lines by preceding each extra line with at least one space
-         or horizontal tab (obs-fold).  This specification deprecates such
-         line folding except within the message/http media type
-         (Section 8.3.1).  A sender MUST NOT generate a message that includes
-         line folding (i.e., that has any field-value that contains a match to
-         the obs-fold rule) unless the message is intended for packaging
-         within the message/http media type.
-
-         Although deprecated and we MUST NOT generate, it is POSSIBLE for older
-         systems to use this style of communication and we need to support it
-         */
-        guard try next(equalsAny: .space, .horizontalTab) else { return value }
-        /**
-         Suggestion to clients when generating is to convert obs-fold to space, we'll do same in parsing.
-         */
-        return try value + [.space] + parseHeaderValue()
-    }
-
-    /**
-     https://tools.ietf.org/html/rfc7230#section-3
-
-     ******* [WARNING] ********
-
-     A sender MUST NOT send whitespace between the start-line and the
-     first header field.  A recipient that receives whitespace between the
-     start-line and the first header field MUST either reject the message
-     as invalid or consume each whitespace-preceded line without further
-     processing of it (i.e., ignore the entire line, along with any
-     subsequent lines preceded by whitespace, until a properly formed
-     header field is received or the header section is terminated).
-
-     The presence of such whitespace in a request might be an attempt to
-     trick a server into ignoring that field or processing the line after
-     it as a new request, either of which might result in a security
-     vulnerability if other implementations within the request chain
-     interpret the same message differently.  Likewise, the presence of
-     such whitespace in a response might be ignored by some clients or
-     cause others to cease parsing.
-     */
-    func renameAndClarifyButThisIsNecessaryToSkipLeadingWhitespaceLinesFollowingRequestLine() throws {
-        guard let next = try next() else { return }
-        if next.isWhitespace { throw "can throw or skip lines w/ leading spaces: \(Character(next))" }
-        else { returnToBuffer(next) }
-    }
-
-    /*
-     https://tools.ietf.org/html/rfc7230#section-3.2
-
-     Each header field consists of a case-insensitive field name followed
-     by a colon (":"), optional leading whitespace, the field value, and
-     optional trailing whitespace.
-
-     header-field   = field-name ":" OWS field-value OWS
-
-     field-name     = token
-     field-value    = *( field-content / obs-fold )
-     field-content  = field-vchar [ 1*( SP / HTAB ) field-vchar ]
-     field-vchar    = VCHAR / obs-text
-
-     obs-fold       = CRLF 1*( SP / HTAB )
-     ; obsolete line folding
-     ; see Section 3.2.4
-
-     The field-name token labels the corresponding field-value as having
-     the semantics defined by that header field.  For example, the Date
-     header field is defined in Section 7.1.1.2 of [RFC7231] as containing
-     the origination timestamp for the message in which it appears.
-     
-     HTTP-message   = start-line
-     *( header-field CRLF )
-     CRLF
-     [ message-body ]
-     */
-    func parseNextHeader() throws -> (field: [Byte], value: [Byte])? {
-        guard let field = try parseHeaderField() else { return nil }
-        let value = try parseHeaderValue()
-        return (field, value)
-    }
-
-    func parseHeaderField() throws -> [Byte]? {
-        let field = try collect(until: .colon, discardDelimitterIfFound: true)
-        /*
-         No whitespace is allowed between the header field-name and colon.  In
-         the past, differences in the handling of such whitespace have led to
-         security vulnerabilities in request routing and response handling.  A
-         server MUST reject any received request message that contains
-         whitespace between a header field-name and colon with a response code
-         of 400 (Bad Request).
-         */
-        guard !field.isEmpty else { return nil } // empty is ok
-        guard field.last?.isWhitespace == false else { throw "must not be space between header field and ':' \(field)" }
-        return field
-    }
-
-    func parseHeaderValue() throws -> [Byte] {
-        try skipWhiteSpace()
-        let value = try collect(untilMatches: [.carriageReturn, .newLine])
-        try discardNext(2)// discard 'CRLF'
-
-        /*
-         Historically, HTTP header field values could be extended over
-         multiple lines by preceding each extra line with at least one space
-         or horizontal tab (obs-fold).  This specification deprecates such
-         line folding except within the message/http media type
-         (Section 8.3.1).  A sender MUST NOT generate a message that includes
-         line folding (i.e., that has any field-value that contains a match to
-         the obs-fold rule) unless the message is intended for packaging
-         within the message/http media type.
-         
-         Although deprecated and we MUST NOT generate, it is POSSIBLE for older 
-         systems to use this style of communication and we need to support it
-         */
-        guard try next(equalsAny: .space, .horizontalTab) else { return value }
-        /**
-         Suggestion to clients when generating is to convert obs-fold to space, we'll do same in parsing.
-         */
-        return try value + [.space] + parseHeaderValue()
-    }
-
-    // TODO: This assumes line termination is ok -- other functions do as well. I _believe_ this is the appropriate handling, but double check
-    func collect(untilMatches expectation: [Byte]) throws -> [Byte] {
-        guard !expectation.isEmpty else { return [] }
-        var collection: [Byte] = []
-        while try !next(matches: expectation), let byte = try next() {
-            collection.append(byte)
-        }
-        return collection
-    }
-
-    private func next(equals expectation: Byte) throws -> Bool {
-        guard let next = try next() else { return false }
-        returnToBuffer(next)
-        return next == expectation
-    }
-
-    private func next(equalsAny expectations: Byte...) throws -> Bool {
-        guard let next = try next() else { return false }
-        returnToBuffer(next)
-        return next.equals(any: expectations)
-    }
-
-    private func next(matches expectations: [Byte]) throws -> Bool {
-        let next = try collect(next: expectations.count)
-        returnToBuffer(next)
-        return next == expectations
     }
 
     /**
@@ -864,18 +825,6 @@ final class RequestParser {
         return bytes
     }
 
-    private func skipWhiteSpace() throws {
-        while let next = try next() {
-            if next.isWhitespace { continue }
-
-            /*
-             Found first non whitespace, return to buffer
-             */
-            returnToBuffer(next)
-            break
-        }
-    }
-
     /**
      // TODO: Merge Overlapping Behavior w/ Static Buffer
      */
@@ -892,204 +841,4 @@ final class RequestParser {
         }
         return try buffer.next()
     }
-
-    // MARK:
-
-    func returnToBuffer(_ byte: Byte) {
-        returnToBuffer([byte])
-    }
-
-    func returnToBuffer(_ bytes: [Byte]) {
-        localBuffer.append(contentsOf: bytes)
-    }
-
-    // MARK: Discard Extranneous Tokens
-
-    func discardNext(_ count: Int) throws {
-        try (0 ..< count).forEach { _ in
-            _ = try next()
-        }
-    }
-
-    // MARK: Check Tokens
-
-    func checkLeadingBuffer(matches: Byte...) throws -> Bool {
-        return try checkLeadingBuffer(matches: matches)
-    }
-
-    func checkLeadingBuffer(matches: [Byte]) throws -> Bool {
-        let leading = try collect(next: matches.count)
-        returnToBuffer(leading)
-        return leading == matches
-    }
-
-    // MARK: Collection
-
-    func collect(next count: Int) throws -> [Byte] {
-        guard count > 0 else { return [] }
-
-        var body: [Byte] = []
-        try (1...count).forEach { _ in
-            guard let next = try next() else { return }
-            body.append(next)
-        }
-        return body
-    }
-
-    /*
-     When in Query segment, `+` should be interpreted as ` ` (space), not sure useful outside of that point
-     */
-    func collect(until delimitters: Byte..., discardDelimitterIfFound: Bool = false, convertIfNecessary: (Byte) -> Byte = { $0 }) throws -> [Byte] {
-        var collected: [Byte] = []
-        while let next = try next() {
-            if delimitters.contains(next) {
-                if !discardDelimitterIfFound {
-                    // If the delimitter is also a token that identifies
-                    // a particular section of the URI
-                    // then we may want to return that byte to the buffer
-                    returnToBuffer(next)
-                }
-                // break regardless
-                break
-            }
-
-            let converted = convertIfNecessary(next)
-            collected.append(converted)
-        }
-        return collected
-    }
-
-        func collectRemaining() throws -> [Byte] {
-            var complete: [Byte] = []
-            while let next = try next() {
-                print("NEXT: \(Character(next))")
-                complete.append(next)
-            }
-            return complete
-        }
 }
-
-extension RequestParser {
-    enum BodyStyle {
-        case chunked
-        case length(Int)
-        case empty
-
-        init(_ headers: Request.Headers) {
-            // chunked MUST be LAST component if multiple transfer encodings
-            if let encoding = headers["Transfer-Encoding"] where encoding.hasSuffix("chunked") {
-                self = .chunked
-            } else if let length = headers["Content-Length"]?.int {
-                self = .length(length)
-            } else {
-                self = .empty
-            }
-        }
-    }
-}
-
-/*
- https://tools.ietf.org/html/rfc7230#section-3.3.3
- 
- The length of a message body is determined by one of the following
- (in order of precedence):
-
- Response
- 1.  Any response to a HEAD request and any response with a 1xx
- (Informational), 204 (No Content), or 304 (Not Modified) status
- code is always terminated by the first empty line after the
- header fields, regardless of the header fields present in the
- message, and thus cannot contain a message body.
-
- Response
- 2.  Any 2xx (Successful) response to a CONNECT request implies that
- the connection will become a tunnel immediately after the empty
- line that concludes the header fields.  A client MUST ignore any
- Content-Length or Transfer-Encoding header fields received in
- such a message.
-
- 3.  If a Transfer-Encoding header field is present and the chunked
- transfer coding (Section 4.1) is the final encoding, the message
- body length is determined by reading and decoding the chunked
- data until the transfer coding indicates the data is complete.
-
- If a Transfer-Encoding header field is present in a response and
- the chunked transfer coding is not the final encoding, the
- message body length is determined by reading the connection until
- it is closed by the server.  If a Transfer-Encoding header field
- is present in a request and the chunked transfer coding is not
- the final encoding, the message body length cannot be determined
- reliably; the server MUST respond with the 400 (Bad Request)
- status code and then close the connection.
-
- If a message is received with both a Transfer-Encoding and a
- Content-Length header field, the Transfer-Encoding overrides the
- Content-Length.  Such a message might indicate an attempt to
- perform request smuggling (Section 9.5) or response splitting
- (Section 9.4) and ought to be handled as an error.  A sender MUST
- remove the received Content-Length field prior to forwarding such
- a message downstream.
-
- 4.  If a message is received without Transfer-Encoding and with
- either multiple Content-Length header fields having differing
- field-values or a single Content-Length header field having an
- invalid value, then the message framing is invalid and the
- recipient MUST treat it as an unrecoverable error.  If this is a
- request message, the server MUST respond with a 400 (Bad Request)
- status code and then close the connection.  If this is a response
- message received by a proxy, the proxy MUST close the connection
- to the server, discard the received response, and send a 502 (Bad
- Gateway) response to the client.  If this is a response message
- received by a user agent, the user agent MUST close the
- connection to the server and discard the received response.
-
- 5.  If a valid Content-Length header field is present without
- Transfer-Encoding, its decimal value defines the expected message
- body length in octets.  If the sender closes the connection or
- the recipient times out before the indicated number of octets are
- received, the recipient MUST consider the message to be
- incomplete and close the connection.
-
- 6.  If this is a request message and none of the above are true, then
- the message body length is zero (no message body is present).
-
- 7.  Otherwise, this is a response message without a declared message
- body length, so the message body length is determined by the
- number of octets received prior to the server closing the
- connection.
-
- Since there is no way to distinguish a successfully completed,
- close-delimited message from a partially received message interrupted
- by network failure, a server SHOULD generate encoding or
- length-delimited messages whenever possible.  The close-delimiting
- feature exists primarily for backwards compatibility with HTTP/1.0.
-
- A server MAY reject a request that contains a message body but not a
- Content-Length by responding with 411 (Length Required).
-
- Unless a transfer coding other than chunked has been applied, a
- client that sends a request containing a message body SHOULD use a
- valid Content-Length header field if the message body length is known
- in advance, rather than the chunked transfer coding, since some
- existing services respond to chunked with a 411 (Length Required)
- status code even though they understand the chunked transfer coding.
- This is typically because such services are implemented via a gateway
- that requires a content-length in advance of being called and the
- server is unable or unwilling to buffer the entire request before
- processing.
-
- A user agent that sends a request containing a message body MUST send
- a valid Content-Length header field if it does not know the server
- will handle HTTP/1.1 (or later) requests; such knowledge can be in
- the form of specific user configuration or by remembering the version
- of a prior received response.
-
- If the final response to the last request on a connection has been
- completely received and there remains additional data to read, a user
- agent MAY discard the remaining data or attempt to determine if that
- data belongs as part of the prior response body, which might be the
- case if the prior message's Content-Length value is incorrect.  A
- client MUST NOT process, cache, or forward such extra data as a
- separate response, since such behavior would be vulnerable to cache
- poisoning.
- */
