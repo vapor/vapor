@@ -430,7 +430,7 @@ final class RequestParser {
     func parseRequestLine() throws -> (method: ArraySlice<Byte>, uri: ArraySlice<Byte>, httpVersion: ArraySlice<Byte>) {
         let line = try nextLine()
 
-        let comps = line.split(separator: .space)
+        let comps = line.split(separator: .space, omittingEmptySubsequences: true)
 
         guard comps.count == 3 else {
             throw "invalid request line"
