@@ -1,6 +1,6 @@
 extension Response {
     /**
-        Send chunked data with the 
+        Send chunked data with the
         `Transfer-Encoding: Chunked` header.
      
         Chunked uses the Transfer-Encoding HTTP header in
@@ -17,11 +17,11 @@ extension Response {
         var headers = headers
         headers["Transfer-Encoding"] = "chunked"
 
-        self.init(version:
-            Version(major: 1, minor: 1),
+        self.init(
+            version: Version(major: 1, minor: 1),
             status: status,
             headers: headers,
-            cookies: cookies,
+            cookieHeaders: [],
             body: .sender({ stream in
                 let chunkStream = ChunkStream(stream: stream)
                 try closure(chunkStream)

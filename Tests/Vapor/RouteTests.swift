@@ -80,20 +80,14 @@ class RouteTests: XCTestCase {
             throw Abort.badRequest
         }
 
-        let request = Request(method: .get, uri: URI(path: "400"), headers: [:], body: [])
+        let request = Request(method: .get, path: "400")
         guard var handler = app.router.route(request)?.handler else {
             XCTFail("No handler found")
             return
         }
 
         do {
-            let response = try handler.respond(to: request)
-            print(response)
-            var body = response.body
-            let data = try body.becomeBuffer()
-            let string = try String(data: data)
-            print(string)
-
+            _ = try handler.respond(to: request)
             XCTFail("Handler did not throw error")
         } catch Abort.badRequest {
             //pass

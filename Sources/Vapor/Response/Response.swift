@@ -3,14 +3,21 @@ extension Response {
         Create a response with `Data`.
     */
     public init(
-        status: Status,
+        status: Status = .ok,
         headers: Headers = [:],
         cookies: Cookies = [],
         data: Data = []
-    ) {
+        ) {
         var headers = headers
-        headers["Content-Length"] = "\(data.bytes.count)"
-        self.init(status: status, headers: headers, body: data)
+        headers["Content-Length"] = data.count.description
+
+        self.init(
+            version: Version(major: 1, minor: 1),
+            status: status,
+            headers: headers,
+            cookieHeaders: [],
+            body: .buffer(data)
+        )
     }
 
     /**
@@ -39,7 +46,7 @@ extension Response {
         text: String
     ) {
         var headers = headers
-        headers["Content-Type"] = "text/plain"
+        headers["Content-Type"] = "text/plain; charset=utf-8"
         self.init(
             status: status,
             headers: headers,

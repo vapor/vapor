@@ -12,17 +12,15 @@ extension Int: RequestContentSubscript {}
 */
 public struct Content {
     // MARK: Initialization
-    let query: StructuredData
     let request: Request
 
-    internal init(query: StructuredData, request: Request) {
-        self.query = query
+    internal init(request: Request) {
         self.request = request
     }
 
     // MARK: Subscripting
     public subscript(index: Int) -> Polymorphic? {
-        if let value = query["\(index)"] {
+        if let value = request.query["\(index)"] {
             return value
         } else if let value = request.json?.array?[index] {
             return value
@@ -36,7 +34,7 @@ public struct Content {
     }
 
     public subscript(key: String) -> Polymorphic? {
-        if let value = query[key] {
+        if let value = request.query[key] {
             return value
         } else if let value = request.json?.object?[key] {
             return value
@@ -54,7 +52,7 @@ public struct Content {
     }
 
     public subscript(indexes: [PathIndex]) -> Polymorphic? {
-        if let value = query[indexes] {
+        if let value = request.query[indexes] {
             return value
         } else if let value = request.json?[indexes] {
             return value

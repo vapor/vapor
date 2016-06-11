@@ -45,8 +45,6 @@ class HTTPStreamTests: XCTestCase {
             XCTAssert(request.method == Request.Method.post, "Incorrect method \(request.method)")
             XCTAssert(request.uri.path == "/json", "Incorrect path \(request.uri.path)")
             XCTAssert(request.version.major == 1 && request.version.minor == 1, "Incorrect version")
-            XCTAssert(request.cookies["1"] == "1", "Cookie 1 not parsed")
-            XCTAssert(request.cookies["2"] == "2", "Cookie 2 not parsed")
         } catch {
             XCTFail("Parsing failed: \(error)")
         }
@@ -57,8 +55,9 @@ class HTTPStreamTests: XCTestCase {
         var response = Response(status: .enhanceYourCalm, headers: [
             "Test": "123",
             "Content-Type": "text/plain"
-        ], body: { stream in
+        ], chunked: { stream in
             try stream.send("Hello, world")
+            try stream.close()
         })
         response.cookies["key"] = "val"
 
@@ -72,8 +71,11 @@ class HTTPStreamTests: XCTestCase {
 
         let data = try! stream.receive(upTo: 2048, timingOut: 0)
 
-        let expected = "HTTP/1.1 420 Enhance Your Calm\r\nContent-Type: text/plain\r\nTest: 123\r\nTransfer-Encoding: chunked\r\n\r\nHello, world"
-        XCTAssert(data == expected.data, "Serialization did not match")
+        XCTAssert(data.string.range(of: "HTTP/1.1 420 Enhance Your Calm") != nil)
+        XCTAssert(data.string.range(of: "Content-Type: text/plain") != nil)
+        XCTAssert(data.string.range(of: "Test: 123") != nil)
+        XCTAssert(data.string.range(of: "Transfer-Encoding: chunked") != nil)
+        XCTAssert(data.string.range(of: "\r\n\r\nC\r\nHello, world\r\n0\r\n\r\n") != nil)
     }
 }
 

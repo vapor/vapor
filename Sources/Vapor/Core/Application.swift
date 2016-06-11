@@ -165,6 +165,7 @@ public class Application {
         self.session = session
 
         self.globalMiddleware = [
+            QueryMiddleware(),
             CookiesMiddleware(),
             JSONMiddleware(),
             FormURLEncodedMiddleware(),
@@ -333,7 +334,7 @@ extension Application {
                     headers["Content-Type"] = type.description
                 }
 
-                return Response(status: .ok, headers: headers, body: Data(fileBody))
+                return Response(status: .ok, headers: headers, data: Data(fileBody))
             }
         } else {
             return Request.Handler { _ in

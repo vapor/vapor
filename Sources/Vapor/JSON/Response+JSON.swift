@@ -20,8 +20,8 @@ extension Response {
      */
     public init(status: Status, json: JSON) {
         let headers: Headers = [
-            "Content-Type": "application/json"
+            "Content-Type": "application/json; charset=utf-8"
         ]
-        self.init(status: status, headers: headers, body: json.data)
+        self.init(status: status, headers: headers, data: json.data)
     }
 }
