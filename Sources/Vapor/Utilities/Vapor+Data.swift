@@ -63,57 +63,6 @@ func +=(lhs: inout Data, rhs: Byte) {
     lhs.bytes.append(rhs)
 }
 
-extension Int {
-    var hex: String {
-        return String(self, radix: 16).uppercased()
-    }
-}
-
-extension Sequence where Iterator.Element == Byte {
-    /**
-        Converts a slice of bytes to
-        string. Courtesy of Socks by @Czechboy0
-    */
-    public var string: String {
-        var utf = UTF8()
-        var gen = makeIterator()
-        var str = String()
-        while true {
-            switch utf.decode(&gen) {
-            case .emptyInput:
-                return str
-            case .error:
-                break
-            case .scalarValue(let unicodeScalar):
-                str.append(unicodeScalar)
-            }
-        }
-    }
-
-    /**
-        Converts a byte representation
-        of a hex value into an `Int`.
-     */
-    var int: Int? {
-        var int: Int = 0
-
-        for byte in self {
-            int = int * 10
-
-            if byte >= .zero && byte <= .nine {
-                int += Int(byte - .zero)
-            } else if byte >= .A && byte <= .F {
-                int += Int(byte - .A) + 10
-            } else if byte >= .a && byte <= .f {
-                int += Int(byte - .a) + 10
-            }
-        }
-
-        return int
-    }
-
-}
-
 extension Data {
     /**
         Defines the `crlf` used to denote

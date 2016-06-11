@@ -1,5 +1,3 @@
-import S4
-
 final class HTTPParser: StreamParser {
     enum Error: ErrorProtocol {
         case streamEmpty
@@ -182,6 +180,44 @@ extension ArraySlice where Element: Hashable {
     }
 }
 
+private let GET = "GET".bytesSlice
+private let POST = "POST".bytesSlice
+private let PUT = "PUT".bytesSlice
+private let PATCH = "PATCH".bytesSlice
+private let DELETE = "DELETE".bytesSlice
+private let OPTIONS = "OPTIONS".bytesSlice
+private let HEAD = "HEAD".bytesSlice
+private let CONNECT = "CONNECT".bytesSlice
+private let TRACE = "TRACE".bytesSlice
+
+
+extension Request.Method {
+    init(uppercase method: BytesSlice) {
+        switch method {
+        case GET:
+            self = .get
+        case POST:
+            self = .post
+        case PUT:
+            self = .put
+        case PATCH:
+            self = .patch
+        case DELETE:
+            self = .delete
+        case OPTIONS:
+            self = .options
+        case HEAD:
+            self = .head
+        case CONNECT:
+            self = .connect
+        case TRACE:
+            self = .trace
+        default:
+            self = .other(method: method.string)
+        }
+    }
+}
+
 
 // MARK: RObustness 
 
@@ -347,12 +383,11 @@ final class RequestParser {
 //        let style = BodyStyle(headers)
         let body = try parseBody(with: .empty) // TODO:
 
-        let m = method.string
         let u = try URIParser.parse(uri: uri)
         return Request(
-            method: S4.Method(m),
+            method: Request.Method(uppercase: method),
             uri: u,
-            version: Version(major: 1, minor: 1), // TODO:
+            version: Request.Version(major: 1, minor: 1), // TODO:
             headers: headers,
             body: .buffer(Data(body))
         )
@@ -434,11 +469,11 @@ final class RequestParser {
      CRLF
      [ message-body ]
      */
-    func parseHeaders() throws -> Headers {
+    func parseHeaders() throws -> Request.Headers {
         let headerSection = try collect(untilMatches: [.carriageReturn, .lineFeed, .carriageReturn, .lineFeed])
         try discardNext(4)
 
-        var headers: Headers = [:]
+        var headers: Request.Headers = [:]
         let lines = headerSection.split(separator: .lineFeed, omittingEmptySubsequences: true)
         try lines.forEach { line in
             let comps = line.split(separator: .colon, maxSplits: 1, omittingEmptySubsequences: false)
@@ -772,7 +807,7 @@ extension RequestParser {
         case length(Int)
         case empty
 
-        init(_ headers: Headers) {
+        init(_ headers: Request.Headers) {
             if let encoding = headers["Transfer-Encoding"] where encoding.hasSuffix("chunked") {
                 self = .chunked
             } else if let length = headers["Content-Length"]?.int {
