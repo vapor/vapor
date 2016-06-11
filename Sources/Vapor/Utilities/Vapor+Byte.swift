@@ -1,4 +1,7 @@
 extension Byte {
+    /// '\t'
+    static let horizontalTab: Byte = 0x9
+
     /// '\n'
     static let newLine: Byte = 0xA
 
@@ -7,12 +10,6 @@ extension Byte {
 
     /// ' '
     static let space: Byte = 0x20
-
-    ///  '\n'
-    static let lineFeed: Byte = 0x0A
-
-    /// '\t'
-    static let horizontalTab: Byte = 0x09
 
     /// #
     static let numberSign: Byte = 0x23
@@ -97,45 +94,23 @@ extension Byte {
 
 extension Byte {
     var isWhitespace: Bool {
-        let char = Character(self)
-        switch char {
-        case " ", "\n", "\r", "\t":
-            return true
-        default:
-            return false
-        }
+        return self == .space || self == .newLine || self == .carriageReturn || self == .horizontalTab
     }
+
     var isLetter: Bool {
-        let char = Character(self)
-        switch char {
-        case "a"..."z":
-            return true
-        case "A"..."Z":
-            return true
-        default:
-            return false
-        }
+        return (.a ... .z).contains(self) || (.A ... .Z).contains(self)
     }
+
     var isDigit: Bool {
-        let char = Character(self)
-        switch char {
-        case "0"..."9":
-            return true
-        default:
-            return false
-        }
+        return (.zero ... .nine).contains(self)
     }
+
     var isAlphanumeric: Bool {
         return isLetter || isDigit
     }
+
     var isHexDigit: Bool {
-        let char = Character(self)
-        switch char {
-        case "a"..."f", "A"..."F", "0"..."9":
-            return true
-        default:
-            return false
-        }
+        return (.zero ... .nine).contains(self) || (.A ... .F).contains(self) || (.a ... .f).contains(self)
     }
 }
 

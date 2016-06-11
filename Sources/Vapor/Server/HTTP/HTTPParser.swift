@@ -383,7 +383,7 @@ final class RequestParser {
 
         let headers = try parseHeaders()
 //        let style = BodyStyle(headers)
-        let body = try parseBody(with: .empty) // TODO:
+        let body = try parseBody(headers: headers) // TODO:
 
         let u = try URIParser.parse(uri: uri)
         //let u = URI(scheme: nil, userInfo: nil, host: nil, port: nil, path: "plaintext", query: nil, fragment: nil)
@@ -397,18 +397,49 @@ final class RequestParser {
 //        return Request(method: .get, path: "/", host: "*", headers: h, data: Data([]))
     }
 
-    private func parseBody(with style: BodyStyle) throws -> [Byte] {
-        switch style {
-        case .length(let length):
-            // TODO: Check if more remaining and return 411?
-            return try collect(next: length)
-        case .empty:
-            return []
-        default:
-            print("Error")
-            fatalError()
+    private func parseBody(headers: Request.Headers) throws -> Bytes {
+        let body: Bytes
+
+        // TODO: Support transfer-encoding: chunked
+
+        if let contentLength = headers["content-length"]?.int {
+            body = try next(chunk: contentLength)
+        } else if
+            let transferEncoding = headers["transfer-encoding"]?.string
+            where transferEncoding.lowercased() == "chunked"
+        {
+            var buffer: Bytes = []
+
+            while true {
+                let lengthData = try nextLine()
+
+                // size must be sent
+                guard lengthData.count > 0 else {
+                    break
+                }
+
+                // convert hex length data to int
+                guard let length = lengthData.int else {
+                    break
+                }
+
+                // end of chunked encoding
+                if length == 0 {
+                    break
+                }
+
+                let content = try next(chunk: length + 2)
+                buffer += content
+            }
+            
+            body = buffer
+        } else {
+            body = []
         }
+
+        return body
     }
+
 
     /*
      https://tools.ietf.org/html/rfc2616#section-5.1
@@ -469,15 +500,16 @@ final class RequestParser {
 //    }
 
     /*
-     HTTP-message   = start-line
-     *( header-field CRLF )
-     CRLF
-     [ message-body ]
-     */
+        HTTP-message   = start-line
+        *( header-field CRLF )
+        CRLF
+        [ message-body ]
+    */
     func parseHeaders() throws -> Request.Headers {
         var headers: Request.Headers = [:]
 
-        var first = true
+        var lastField: Request.Headers.Key? = nil
+
         while true {
             let line = try nextLine()
 
@@ -485,34 +517,45 @@ final class RequestParser {
                 break
             }
 
-            if first {
-                first = false
-
-                if line[0] == .carriageReturn || line[0] == .newLine || line[0] == .space || line[0] == .horizontalTab {
-                    throw "cannot have leading white space on this line"
+            if line[0].isWhitespace {
+                guard let lastField = lastField else {
+                    throw "Cannot have leading white space on the first line"
                 }
+
+                let value = parseHeaderValue(line)
+                headers[lastField]?.append(value)
+            } else {
+                let comps = line.split(separator: .colon, maxSplits: 1)
+                guard comps.count == 2 else {
+                    print(line.string)
+                    continue
+                }
+
+                /*
+                    // TODO: assert header has no trailing or leading space!
+                    RFC:
+
+                    No whitespace is allowed between the header field-name and colon.
+                    Might just be fIrst header line can't have leading, but I think it's all
+                */
+                let field = Request.Headers.Key(comps[0].string)
+                let value = parseHeaderValue(comps[1])
+                
+                headers[field] = value
+                
+                lastField = field
             }
-
-            let comps = line.split(separator: .colon, maxSplits: 1)
-            guard comps.count == 2 else {
-                print(line.string)
-                continue
-            }
-
-            /*
-                // TODO: assert header has no trailing or leading space!
-                RFC:
-
-                No whitespace is allowed between the header field-name and colon.
-                Might just be fIrst header line can't have leading, but I think it's all
-            */
-
-            let field = comps[0].string
-            let value = comps[1].trimmed([.space, .horizontalTab]).string
-            headers[field] = value
         }
 
         return headers
+    }
+
+    func parseHeaderValue(_ bytes: Bytes) -> String {
+        return bytes.trimmed([.space, .horizontalTab]).string
+    }
+
+    func parseHeaderValue(_ bytes: BytesSlice) -> String {
+        return bytes.trimmed([.space, .horizontalTab]).string
     }
 
 //    /*
@@ -541,11 +584,11 @@ final class RequestParser {
     func __parseHeaders() throws -> [String: String] {
         var headers: [String: String] = [:]
         // Header fields section is terminated by a leading CRLF
-        while try !next(matches: [.carriageReturn, .lineFeed]) {
+        while try !next(matches: [.carriageReturn, .newLine]) {
             guard let fieldBytes = try __parseHeaderField() else { return headers }
             let valueBytes = try __parseHeaderValue()
             let field = try fieldBytes.toString()
-            let value = try valueBytes.trimmed([.space, .carriageReturn, .horizontalTab, .lineFeed]).toString()
+            let value = try valueBytes.trimmed([.space, .carriageReturn, .horizontalTab, .newLine]).toString()
             headers[field] = value
         }
         try discardNext(2) // discard CRLF
@@ -570,7 +613,7 @@ final class RequestParser {
 
     func __parseHeaderValue() throws -> [Byte] {
         try skipWhiteSpace()
-        let value = try collect(untilMatches: [.carriageReturn, .lineFeed])
+        let value = try collect(untilMatches: [.carriageReturn, .newLine])
         try discardNext(2)// discard 'CRLF'
 
         /*
@@ -671,7 +714,7 @@ final class RequestParser {
 
     func parseHeaderValue() throws -> [Byte] {
         try skipWhiteSpace()
-        let value = try collect(untilMatches: [.carriageReturn, .lineFeed])
+        let value = try collect(untilMatches: [.carriageReturn, .newLine])
         try discardNext(2)// discard 'CRLF'
 
         /*
@@ -740,6 +783,18 @@ final class RequestParser {
         }
 
         return line
+    }
+
+    func next(chunk size: Int) throws -> Bytes {
+        var bytes: Bytes = []
+
+        for _ in 0 ..< size {
+            if let byte = try next() {
+                bytes += byte
+            }
+        }
+
+        return bytes
     }
 
     private func skipWhiteSpace() throws {
