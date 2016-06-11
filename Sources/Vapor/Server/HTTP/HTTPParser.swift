@@ -1,3 +1,5 @@
+import S4
+
 final class HTTPParser: StreamParser {
     enum Error: ErrorProtocol {
         case streamEmpty
@@ -38,7 +40,7 @@ final class HTTPParser: StreamParser {
     */
     func parse() throws -> Request {
         let requestLineString = try nextLine()
-
+        Log.info("Requestline:\n\t\(requestLineString)")
         guard !requestLineString.isEmpty else {
             // If the stream is empty, close connection immediately
             throw Error.streamEmpty
@@ -51,6 +53,7 @@ final class HTTPParser: StreamParser {
 
         while true {
             let headerLine = try nextLine()
+            Log.info("Header:\n\t\(headerLine)")
             if headerLine.isEmpty {
                 // We've reached the end of the headers
                 break
@@ -272,6 +275,9 @@ extension String: ErrorProtocol {}
  
  ******************************
 
+ A recipient MUST ignore unrecognized chunk extensions.
+
+ ******************************
  */
 
 /*
@@ -303,12 +309,41 @@ final class RequestParser {
         self.buffer = StreamBuffer(stream)
     }
 
-    func parse() throws {
+    func parse() throws -> Request {
         let (method, uri, httpVersion) = try parseRequestLine()
         // Call here because after first line, subsequent whitespace indicates it's part of the preceding value
         try renameAndClarifyButThisIsNecessaryToSkipLeadingWhitespaceLinesFollowingRequestLine()
         let headers = try parseHeaders()
+        let bodyStyle = try parseBodyStyle(headers: headers)
+        let body = try parseBody(with: bodyStyle)
 
+
+        try print("METHOD: \(method.toString())")
+        try print("URI: \(uri.toString())")
+        try print("VERSION: \(httpVersion.toString())")
+        try headers.forEach { header in
+            let field = try header.field.toString()
+            let value = try header.value.toString()
+            print("HEADER: \(field): \(value)")
+        }
+        try print("BODY: \(body.toString())")
+        // TODO: Handle Transfer Encoding?
+        var h: Headers = [:]
+        return Request(method: .get, path: "/", host: "*", headers: h, data: [])
+//        return Request(method: .get, uri: "/")
+    }
+
+    private func parseBody(with style: BodyStyle) throws -> [Byte] {
+        switch style {
+        case .length(let length):
+            // TODO: Check if more remaining and return 411?
+            return try collect(next: length)
+        case .empty:
+            return []
+        default:
+            print("Error")
+            fatalError()
+        }
     }
 
     /*
@@ -332,10 +367,13 @@ final class RequestParser {
     func parseRequestLine() throws -> (method: [Byte], uri: [Byte], httpVersion: [Byte]) {
         try skipWhiteSpace()
         let method = try collect(until: .space)
+        try print("Got method: \(method.toString())")
         try discardNext(1) // discard space
         let uri = try collect(until: .space)
+        try print("Got uri: \(uri.toString())")
         try discardNext(1) // discard space
         let httpVersion = try collect(untilMatches: [.carriageReturn, .lineFeed])
+        try print("Got version: \(httpVersion.toString())")
         try discardNext(2) // discard CRLF
         return (method, uri, httpVersion)
     }
@@ -348,11 +386,9 @@ final class RequestParser {
      */
     func parseHeaders() throws -> [(field: [Byte], value: [Byte])] {
         var headers: [(field: [Byte], value: [Byte])] = []
-        // Header fields are terminated by CRLF line
+        // Header fields section is terminated by a leading CRLF
         while try !next(matches: [.carriageReturn, .lineFeed]) {
-            let header = try parseHeaderField()
-            // TODO: trim trailing whitespace here? leading is already done
-            let value = try parseHeaderValue()
+            let (header, value) = try parseNextHeaderField()
             headers.append((header, value))
         }
         try discardNext(2) // discard CRLF
@@ -382,7 +418,7 @@ final class RequestParser {
      */
     func renameAndClarifyButThisIsNecessaryToSkipLeadingWhitespaceLinesFollowingRequestLine() throws {
         guard let next = try next() else { return }
-        if next.isWhitespace { throw "can throw or skip lines w/ leading spaces" }
+        if next.isWhitespace { throw "can throw or skip lines w/ leading spaces: \(Character(next))" }
         else { returnToBuffer(next) }
     }
 
@@ -431,7 +467,7 @@ final class RequestParser {
          whitespace between a header field-name and colon with a response code
          of 400 (Bad Request).
          */
-        guard field.last?.isWhitespace == false else { throw "must not be space between header field and ':' " }
+        guard field.last?.isWhitespace == false else { throw "must not be space between header field and ':' \(try field.toString())" }
         return field
     }
 
@@ -476,11 +512,10 @@ final class RequestParser {
 
         var collection: [Byte] = []
         while let next = try innerNext() {
+            collection.append(next)
             if innerBuffer == expectation {
                 returnToBuffer(innerBuffer)
                 break
-            } else {
-                collection.append(next)
             }
         }
         return collection
@@ -493,7 +528,6 @@ final class RequestParser {
     }
 
     private func next(matches expectations: [Byte]) throws -> Bool {
-//        let next = try collect(next)
         let next = try collect(next: expectations.count)
         returnToBuffer(next)
         return next == expectations
@@ -589,20 +623,62 @@ final class RequestParser {
         return collected
     }
 
-    //    func collectRemaining() throws -> [Byte] {
-    //        var complete: [Byte] = []
-    //        while let next = try next() {
-    //            complete.append(next)
-    //        }
-    //        return complete
-    //    }
+        func collectRemaining() throws -> [Byte] {
+            var complete: [Byte] = []
+            while let next = try next() {
+                print("NEXT: \(Character(next))")
+                complete.append(next)
+            }
+            return complete
+        }
 }
 
-//extension RequestParser {
-//    func parseBody() throws -> [Byte] {
-//
-//    }
-//}
+private let transferEncoding = "Transfer-Encoding".utf8.array
+private let contentLength = "Content-Length".utf8.array
+private let chunkedCoding = "chunked".utf8.array
+
+extension RequestParser {
+    enum BodyStyle {
+        case chunked
+        case length(Int)
+        case empty
+    }
+
+    func parseBodyStyle(headers: [(field: [Byte], value: [Byte])]) throws -> BodyStyle {
+        /*
+         If a Transfer-Encoding header field is present and the chunked
+         transfer coding (Section 4.1) is the final encoding
+         
+         chunk must be present AND last
+         
+         // TODO: Is this enforced by everyone? It's in RFC
+        */
+        if let encoding = headers[transferEncoding] where encoding.suffix(chunkedCoding.count).array == chunkedCoding {
+            print("Chunk encoding")
+            return .chunked
+        } else if let length = headers[contentLength] {
+            // MARK: Convert to string BEFORE converting to Int
+            let lengthString = try length.toString()
+            // throw or 0 on wrong value
+            let length = Int(lengthString) ?? 0
+            print("Length: \(length)")
+            return .length(length)
+        } else {
+            print("Unknown")
+            return .empty
+        }
+
+    }
+}
+
+extension Sequence where Iterator.Element == (field: [Byte], value: [Byte]) {
+    subscript(field: [Byte]) -> [Byte]? {
+        for header in self where header.field == field {
+            return header.value
+        }
+        return nil
+    }
+}
 
 /*
  https://tools.ietf.org/html/rfc7230#section-3.3.3
@@ -610,12 +686,14 @@ final class RequestParser {
  The length of a message body is determined by one of the following
  (in order of precedence):
 
+ Response
  1.  Any response to a HEAD request and any response with a 1xx
  (Informational), 204 (No Content), or 304 (Not Modified) status
  code is always terminated by the first empty line after the
  header fields, regardless of the header fields present in the
  message, and thus cannot contain a message body.
 
+ Response
  2.  Any 2xx (Successful) response to a CONNECT request implies that
  the connection will become a tunnel immediately after the empty
  line that concludes the header fields.  A client MUST ignore any
