@@ -274,7 +274,7 @@ app.post("multipart-image") { request in
         throw Abort.badRequest
     }
 
-    var headers: Response.Headers = [:]
+    var headers: Headers = [:]
 
     if let mediaType = image.type {
         headers["Content-Type"] = mediaType.type + "/" + mediaType.subtype
@@ -313,7 +313,7 @@ app.post("multifile") { request in
 
     let file = files[number]
 
-    var headers: Response.Headers = [:]
+    var headers: Headers = [:]
 
     if let mediaType = file.type {
         headers["Content-Type"] = mediaType.type + "/" + mediaType.subtype
