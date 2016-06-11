@@ -384,6 +384,7 @@ final class RequestParser {
         let body = try parseBody(with: .empty) // TODO:
 
         let u = try URIParser.parse(uri: uri)
+        //let u = URI(scheme: nil, userInfo: nil, host: nil, port: nil, path: "plaintext", query: nil, fragment: nil)
         return Request(
             method: Request.Method(uppercase: method),
             uri: u,
