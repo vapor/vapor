@@ -329,8 +329,20 @@ final class RequestParser {
         try print("BODY: \(body.toString())")
         // TODO: Handle Transfer Encoding?
         var h: Headers = [:]
-        return Request(method: .get, path: "/", host: "*", headers: h, data: [])
-//        return Request(method: .get, uri: "/")
+        try headers.forEach { k, v in
+            try h[k.toString()] = v.toString()
+        }
+
+        let m = try method.toString()
+        let u = try URIParser.parse(uri: uri)
+        return Request(
+            method: S4.Method(m),
+            uri: u,
+            version: Version(major: 1, minor: 1), // TODO:
+            headers: h,
+            body: .buffer(Data(body))
+        )
+        return Request(method: .get, path: "/", host: "*", headers: h, data: Data(body))
     }
 
     private func parseBody(with style: BodyStyle) throws -> [Byte] {
