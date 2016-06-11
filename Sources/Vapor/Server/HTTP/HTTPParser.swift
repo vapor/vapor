@@ -134,7 +134,7 @@ extension Array where Element: Hashable {
      This function is intended to be as performant as possible, which is part of the reason 
      why some of the underlying logic may seem a bit more tedious than is necessary
      */
-    func trim(_ elements: [Element], leading: Bool = true, trailing: Bool = true) -> SubSequence {
+    func trimmed(_ elements: [Element]) -> SubSequence {
         guard !isEmpty else { return [] }
 
         let lastIdx = self.count - 1
@@ -311,26 +311,19 @@ final class RequestParser {
 
     func parse() throws -> Request {
         let (method, uri, httpVersion) = try parseRequestLine()
-        // Call here because after first line, subsequent whitespace indicates it's part of the preceding value
+        // next line after request line MUST NOT lead space
         try renameAndClarifyButThisIsNecessaryToSkipLeadingWhitespaceLinesFollowingRequestLine()
         let headers = try parseHeaders()
         let bodyStyle = try parseBodyStyle(headers: headers)
         let body = try parseBody(with: bodyStyle)
-
-
-        try print("METHOD: \(method.toString())")
-        try print("URI: \(uri.toString())")
-        try print("VERSION: \(httpVersion.toString())")
-        try headers.forEach { header in
-            let field = try header.field.toString()
-            let value = try header.value.toString()
-            print("HEADER: \(field): \(value)")
-        }
-        try print("BODY: \(body.toString())")
+        
         // TODO: Handle Transfer Encoding?
         var h: Headers = [:]
         try headers.forEach { k, v in
-            try h[k.toString()] = v.toString()
+            let kt = try k.trimmed([.space, .carriageReturn, .horizontalTab, .lineFeed]).toString()
+            let vt = try v.trimmed([.space, .carriageReturn, .horizontalTab, .lineFeed]).toString()
+//            print("H -- \"\(kt)\": \"\(vt)\"")
+            h[kt] = vt
         }
 
         let m = try method.toString()
@@ -378,14 +371,9 @@ final class RequestParser {
      */
     func parseRequestLine() throws -> (method: [Byte], uri: [Byte], httpVersion: [Byte]) {
         try skipWhiteSpace()
-        let method = try collect(until: .space)
-        try print("Got method: \(method.toString())")
-        try discardNext(1) // discard space
-        let uri = try collect(until: .space)
-        try print("Got uri: \(uri.toString())")
-        try discardNext(1) // discard space
+        let method = try collect(until: .space, discardDelimitterIfFound: true)
+        let uri = try collect(until: .space, discardDelimitterIfFound: true)
         let httpVersion = try collect(untilMatches: [.carriageReturn, .lineFeed])
-        try print("Got version: \(httpVersion.toString())")
         try discardNext(2) // discard CRLF
         return (method, uri, httpVersion)
     }
@@ -400,7 +388,7 @@ final class RequestParser {
         var headers: [(field: [Byte], value: [Byte])] = []
         // Header fields section is terminated by a leading CRLF
         while try !next(matches: [.carriageReturn, .lineFeed]) {
-            let (header, value) = try parseNextHeaderField()
+            guard let (header, value) = try parseNextHeader() else { return headers }
             headers.append((header, value))
         }
         try discardNext(2) // discard CRLF
@@ -462,15 +450,14 @@ final class RequestParser {
      CRLF
      [ message-body ]
      */
-    func parseNextHeaderField() throws -> (field: [Byte], value: [Byte]) {
-        let field = try parseHeaderField()
+    func parseNextHeader() throws -> (field: [Byte], value: [Byte])? {
+        guard let field = try parseHeaderField() else { return nil }
         let value = try parseHeaderValue()
         return (field, value)
     }
 
-    func parseHeaderField() throws -> [Byte] {
-        let field = try collect(until: .colon)
-        try discardNext(1) // discard ':'
+    func parseHeaderField() throws -> [Byte]? {
+        let field = try collect(until: .colon, discardDelimitterIfFound: true)
         /*
          No whitespace is allowed between the header field-name and colon.  In
          the past, differences in the handling of such whitespace have led to
@@ -479,7 +466,8 @@ final class RequestParser {
          whitespace between a header field-name and colon with a response code
          of 400 (Bad Request).
          */
-        guard field.last?.isWhitespace == false else { throw "must not be space between header field and ':' \(try field.toString())" }
+        guard !field.isEmpty else { return nil } // empty is ok
+        guard field.last?.isWhitespace == false else { throw "must not be space between header field and ':' \(field)" }
         return field
     }
 
@@ -511,24 +499,9 @@ final class RequestParser {
     // TODO: This assumes line termination is ok -- other functions do as well. I _believe_ this is the appropriate handling, but double check
     func collect(untilMatches expectation: [Byte]) throws -> [Byte] {
         guard !expectation.isEmpty else { return [] }
-
-        var innerBuffer: [Byte] = try collect(next: expectation.count)
-        func innerNext() throws -> Byte? {
-            if let nextBuffer = try next() {
-                innerBuffer.append(nextBuffer)
-            }
-
-            guard !innerBuffer.isEmpty else { return nil }
-            return innerBuffer.removeFirst()
-        }
-
         var collection: [Byte] = []
-        while let next = try innerNext() {
-            collection.append(next)
-            if innerBuffer == expectation {
-                returnToBuffer(innerBuffer)
-                break
-            }
+        while try !next(matches: expectation), let byte = try next() {
+            collection.append(byte)
         }
         return collection
     }
@@ -587,7 +560,9 @@ final class RequestParser {
     // MARK: Discard Extranneous Tokens
 
     func discardNext(_ count: Int) throws {
-        _ = try collect(next: count)
+        try (0 ..< count).forEach { _ in
+            _ = try next()
+        }
     }
 
     // MARK: Check Tokens
@@ -618,14 +593,17 @@ final class RequestParser {
     /*
      When in Query segment, `+` should be interpreted as ` ` (space), not sure useful outside of that point
      */
-    func collect(until delimitters: Byte..., convertIfNecessary: (Byte) -> Byte = { $0 }) throws -> [Byte] {
+    func collect(until delimitters: Byte..., discardDelimitterIfFound: Bool = false, convertIfNecessary: (Byte) -> Byte = { $0 }) throws -> [Byte] {
         var collected: [Byte] = []
         while let next = try next() {
             if delimitters.contains(next) {
-                // If the delimitter is also a token that identifies
-                // a particular section of the URI
-                // then we may want to return that byte to the buffer
-                returnToBuffer(next)
+                if !discardDelimitterIfFound {
+                    // If the delimitter is also a token that identifies
+                    // a particular section of the URI
+                    // then we may want to return that byte to the buffer
+                    returnToBuffer(next)
+                }
+                // break regardless
                 break
             }
 
@@ -666,17 +644,17 @@ extension RequestParser {
          // TODO: Is this enforced by everyone? It's in RFC
         */
         if let encoding = headers[transferEncoding] where encoding.suffix(chunkedCoding.count).array == chunkedCoding {
-            print("Chunk encoding")
+//            print("Chunk encoding")
             return .chunked
         } else if let length = headers[contentLength] {
             // MARK: Convert to string BEFORE converting to Int
             let lengthString = try length.toString()
             // throw or 0 on wrong value
             let length = Int(lengthString) ?? 0
-            print("Length: \(length)")
+//            print("Length: \(length)")
             return .length(length)
         } else {
-            print("Unknown")
+//            print("Unknown")
             return .empty
         }
 

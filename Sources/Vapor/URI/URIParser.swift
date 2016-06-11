@@ -1,6 +1,6 @@
 extension URIParser {
-    public static func parse(uri: [Byte]) throws -> URI {
-        let parser = URIParser(bytes: uri)
+    public static func parse<S: Sequence where S.Iterator.Element == Byte>(uri: S) throws -> URI {
+        let parser = URIParser(bytes: uri.array) // TODO: Retain splice format
         return try parser.parse()
     }
 }

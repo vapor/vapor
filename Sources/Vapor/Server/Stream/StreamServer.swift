@@ -44,9 +44,9 @@ final class StreamServer<
 
     private func parse(_ stream: Stream) {
         var keepAlive = false
+        let parser = RequestParser(stream: stream)
+        let serializer = Serializer(stream: stream)
         repeat {
-            let parser = RequestParser(stream: stream)
-            let serializer = Serializer(stream: stream)
             do {
                 let request = try parser.parse()
                 keepAlive = request.keepAlive
