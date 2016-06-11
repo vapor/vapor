@@ -344,8 +344,8 @@ final class RequestParser {
             throw "line after request line must not begin with whitespace"
         }
         let headers = try parseHeaders()
-        let style = BodyStyle(headers)
-        let body = try parseBody(with: style) // TODO:
+//        let style = BodyStyle(headers)
+        let body = try parseBody(with: .empty) // TODO:
 
         let m = method.string
         let u = try URIParser.parse(uri: uri)
@@ -391,14 +391,12 @@ final class RequestParser {
      security filters along the request chain.
      */
     func parseRequestLine() throws -> (method: ArraySlice<Byte>, uri: ArraySlice<Byte>, httpVersion: ArraySlice<Byte>) {
-        try skipWhiteSpace()
         let line = try collect(untilMatches: [.carriageReturn, .lineFeed])
-        guard !line.isEmpty else { return ([], [], []) }
         try discardNext(2) // discard CRLF
+
+        guard !line.isEmpty else { return ([], [], []) }
         let comps = line.split(separator: .space)
-        guard comps.count == 3 else {
-            throw "invalid request line"
-        }
+        guard comps.count == 3 else { throw "invalid request line" }
         return (comps[0], comps[1], comps[2])
     }
 
