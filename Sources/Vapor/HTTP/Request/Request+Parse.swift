@@ -78,6 +78,7 @@
 extension Request {
     enum ParseError: ErrorProtocol {
         case streamEmpty
+        case invalidRequestLine
     }
 
     init(stream: Stream) throws {
@@ -190,8 +191,7 @@ extension Request {
 
         let comps = line.split(separator: .space, omittingEmptySubsequences: true)
         guard comps.count == 3 else {
-            print("line: \(line.string)")
-            throw "invalid request line"
+            throw ParseError.invalidRequestLine
         }
 
         return (comps[0], comps[1], comps[2])

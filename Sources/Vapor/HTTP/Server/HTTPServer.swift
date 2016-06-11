@@ -42,13 +42,12 @@ final class StreamServer<Server: StreamDriver>: ServerDriver {
         let stream = StreamBuffer(stream)
 
         var keepAlive = false
-        let serializer = HTTPSerializer(stream: stream)
         repeat {
             do {
                 let request = try Request(stream: stream)
                 keepAlive = request.keepAlive
                 let response = try responder.respond(to: request)
-                try serializer.serialize(response)
+                try response.serialize(to: stream)
 
                 guard response.isUpgradeResponse else { continue }
                 try response.onUpgrade?(stream)

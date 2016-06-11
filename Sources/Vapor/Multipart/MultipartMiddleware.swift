@@ -4,7 +4,7 @@ class MultipartMiddleware: Middleware {
         if 
             case .buffer(let data) = request.body,
             let contentType = request.contentType
-            where contentType.contains("multipart/form-data") 
+            where contentType.range(of: "multipart/form-data") != nil
         {
             var request = request
             do {
