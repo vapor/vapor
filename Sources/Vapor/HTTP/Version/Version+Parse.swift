@@ -1,4 +1,4 @@
-extension Request.Version {
+extension Version {
     /**
         HTTP uses a "<major>.<minor>" numbering scheme to indicate versions
         of the protocol. The protocol versioning policy is intended to allow

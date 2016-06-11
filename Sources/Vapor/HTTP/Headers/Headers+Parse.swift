@@ -1,4 +1,4 @@
-extension Request.Headers {
+extension Headers {
     /*
         HTTP-message   = start-line
         *( header-field CRLF )
@@ -6,9 +6,9 @@ extension Request.Headers {
         [ message-body ]
     */
     init(stream: Stream) throws {
-        var headers: Request.Headers = [:]
+        var headers: Headers = [:]
 
-        var lastField: Request.Headers.Key? = nil
+        var lastField: Headers.Key? = nil
 
         while true {
             let line = try stream.nextLine()
@@ -56,7 +56,7 @@ extension Request.Headers {
                  Although deprecated and we MUST NOT generate, it is POSSIBLE for older
                  systems to use this style of communication and we need to support it
                  */
-                let value = Request.Headers.parseHeaderValue(line)
+                let value = String(headerValue: line)
                 headers[lastField]?.append(value)
             } else {
                 /*
@@ -98,8 +98,8 @@ extension Request.Headers {
                     throw "No white space between header and colon allowed, throw 400"
                 }
 
-                let field = Request.Headers.Key(comps[0].string)
-                let value = Request.Headers.parseHeaderValue(comps[1])
+                let field = Headers.Key(comps[0])
+                let value = String(headerValue: comps[1])
 
                 headers[field] = value
 
@@ -109,12 +109,20 @@ extension Request.Headers {
 
         self = headers
     }
+}
 
-    static func parseHeaderValue(_ bytes: Bytes) -> String {
-        return bytes.trimmed([.space, .horizontalTab]).string
+extension Headers.Key {
+    init(_ bytes: BytesSlice) {
+        self = Headers.Key(bytes.string)
+    }
+}
+
+extension String {
+    init(headerValue bytes: BytesSlice) {
+        self = bytes.trimmed([.space, .horizontalTab]).string
     }
 
-    static func parseHeaderValue(_ bytes: BytesSlice) -> String {
-        return bytes.trimmed([.space, .horizontalTab]).string
+    init(headerValue bytes: Bytes) {
+        self.init(headerValue: BytesSlice(bytes))
     }
 }

@@ -1,4 +1,4 @@
-extension Request.Body {
+extension Body {
     /*
         4.3 Message Body
 
@@ -8,7 +8,7 @@ extension Request.Body {
         applied, as indicated by the Transfer-Encoding header field (section
         14.41).
     */
-    init(headers: Request.Headers, stream: Stream) throws {
+    init(headers: Headers, stream: Stream) throws {
         let body: Bytes
 
         if let contentLength = headers["content-length"]?.int {

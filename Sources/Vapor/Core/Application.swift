@@ -321,7 +321,7 @@ extension Application {
         // File exists
         if let fileBody = try? FileManager.readBytesFromFile(filePath) {
             return Request.Handler { _ in
-                var headers: Response.Headers = [:]
+                var headers: Headers = [:]
 
                 if
                     let fileExtension = filePath.components(separatedBy: ".").last,

@@ -1,4 +1,4 @@
-final class HTTPSerializer: StreamSerializer {
+final class HTTPSerializer {
     enum Error: ErrorProtocol {
         case unsupportedBody
     }
