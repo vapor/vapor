@@ -376,9 +376,11 @@ final class RequestParser {
     func parse() throws -> Request {
         let (method, uri, httpVersion) = try parseRequestLine()
 //        print("Got request line:\n\t\(method.string) \(uri.string) \(httpVersion.string)")
-        guard try !next(equalsAny: .space, .carriageReturn, .lineFeed, .horizontalTab) else {
-            throw "line after request line must not begin with whitespace"
-        }
+//        guard try !next(equalsAny: .space, .carriageReturn, .lineFeed, .horizontalTab) else {
+//            throw "line after request line must not begin with whitespace"
+//        }
+
+
         let headers = try parseHeaders()
 //        let style = BodyStyle(headers)
         let body = try parseBody(with: .empty) // TODO:
@@ -434,7 +436,7 @@ final class RequestParser {
         guard comps.count == 3 else {
             throw "invalid request line"
         }
-        
+
         return (comps[0], comps[1], comps[2])
     }
 
@@ -473,24 +475,43 @@ final class RequestParser {
      [ message-body ]
      */
     func parseHeaders() throws -> Request.Headers {
-        let headerSection = try collect(untilMatches: [.carriageReturn, .lineFeed, .carriageReturn, .lineFeed])
-        try discardNext(4)
-
         var headers: Request.Headers = [:]
-        let lines = headerSection.split(separator: .lineFeed, omittingEmptySubsequences: true)
-        try lines.forEach { line in
-            let comps = line.split(separator: .colon, maxSplits: 1, omittingEmptySubsequences: false)
+
+        var first = true
+        while true {
+            let line = try nextLine()
+
+            if line.isEmpty {
+                break
+            }
+
+            if first {
+                first = false
+
+                if line[0] == .carriageReturn || line[0] == .newLine || line[0] == .space || line[0] == .horizontalTab {
+                    throw "cannot have leading white space on this line"
+                }
+            }
+
+            let comps = line.split(separator: .colon, maxSplits: 1)
+            guard comps.count == 2 else {
+                print(line.string)
+                continue
+            }
+
             /*
-             // TODO: assert header has no trailing or leading space!
-             RFC:
-             No whitespace is allowed between the header field-name and colon.
-             Might just be fIrst header line can't have leading, but I think it's all
-             */
-            guard comps.count == 2 else { throw "invalid header field" }
+                // TODO: assert header has no trailing or leading space!
+                RFC:
+
+                No whitespace is allowed between the header field-name and colon.
+                Might just be fIrst header line can't have leading, but I think it's all
+            */
+
             let field = comps[0].string
-            let value = comps[1].trimmed([.space, .carriageReturn, .lineFeed, .horizontalTab]).string
+            let value = comps[1].trimmed([.space, .horizontalTab]).string
             headers[field] = value
         }
+
         return headers
     }
 
