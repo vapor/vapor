@@ -40,11 +40,10 @@ final class StreamServer<Server: StreamDriver>: ServerDriver {
 
     private func parse(_ stream: Stream) {
         var keepAlive = false
-        let parser = RequestParser(stream: stream)
         let serializer = HTTPSerializer(stream: stream)
         repeat {
             do {
-                let request = try parser.parse()
+                let request = try Request(stream: stream)
                 keepAlive = request.keepAlive
                 let response = try responder.respond(to: request)
                 try serializer.serialize(response)
@@ -57,7 +56,7 @@ final class StreamServer<Server: StreamDriver>: ServerDriver {
             } catch let e as SocksCore.Error where e.isBrokenPipe {
                 // broken pipe, abort
                 break
-            } catch let e as RequestParser.Error where e == .streamEmpty {
+            } catch let e as Request.ParseError where e == .streamEmpty {
                 // the stream we got was empty, abort
                 break
             } catch {

@@ -37,6 +37,6 @@ extension Version {
             }
         }
 
-        self = Request.Version(major: major, minor: minor)
+        self = Version(major: major, minor: minor)
     }
 }
