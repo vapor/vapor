@@ -48,10 +48,10 @@ extension HTTPParser {
                 // ["1", "1"]
                 let version = comps[1].split(separator: .period, maxSplits: 1)
 
-                major = version[0].int ?? 1
+                major = version[0].int
 
                 if version.count == 2 {
-                    minor = version[1].int ?? 1
+                    minor = version[1].int
                 }
             }
 

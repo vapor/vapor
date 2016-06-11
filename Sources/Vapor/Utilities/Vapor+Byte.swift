@@ -147,9 +147,9 @@ func ~=(pattern: Bytes, value: Bytes) -> Bool {
 
 extension Sequence where Iterator.Element == Byte {
     /**
-     Converts a slice of bytes to
-     string. Courtesy of Socks by @Czechboy0
-     */
+        Converts a slice of bytes to
+        string. Courtesy of Socks by @Czechboy0
+    */
     public var string: String {
         var utf = UTF8()
         var gen = makeIterator()
@@ -167,10 +167,10 @@ extension Sequence where Iterator.Element == Byte {
     }
 
     /**
-     Converts a byte representation
-     of a hex value into an `Int`.
-     */
-    var int: Int? {
+        Converts a byte representation
+        of a hex value into an `Int`.
+    */
+    var int: Int {
         var int: Int = 0
 
         for byte in self {

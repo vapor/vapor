@@ -97,9 +97,7 @@ final class HTTPParser: StreamParser {
                 }
 
                 // convert hex length data to int
-                guard let length = lengthData.int else {
-                    break
-                }
+                let length = lengthData.int
 
                 // end of chunked encoding
                 if length == 0 {
@@ -374,27 +372,91 @@ final class RequestParser {
     }
 
     func parse() throws -> Request {
-        let (method, uri, httpVersion) = try parseRequestLine()
+        let (methodSlice, uriSlice, httpVersionSlice) = try parseRequestLine()
 //        print("Got request line:\n\t\(method.string) \(uri.string) \(httpVersion.string)")
 //        guard try !next(equalsAny: .space, .carriageReturn, .lineFeed, .horizontalTab) else {
 //            throw "line after request line must not begin with whitespace"
 //        }
 
-
         let headers = try parseHeaders()
-//        let style = BodyStyle(headers)
+
+        // Request-URI    = "*" | absoluteURI | abs_path | authority
+        let uri: URI
+
+        // URI can never be empty
+        if uriSlice.first == .forwardSlash {
+            // abs_path
+
+            /*
+                The most common form of Request-URI is that used to identify a
+                resource on an origin server or gateway. In this case the absolute
+                path of the URI MUST be transmitted (see section 3.2.1, abs_path) as
+                the Request-URI, and the network location of the URI (authority) MUST
+                be transmitted in a Host header field. For example, a client wishing
+                to retrieve the resource above directly from the origin server would
+                create a TCP connection to port 80 of the host "www.w3.org" and send
+                the lines:
+             
+                    GET /pub/WWW/TheProject.html HTTP/1.1
+                    Host: www.w3.org
+            */
+
+            let host: String
+            let port: Int
+
+            if let hostHeader = headers["host"] {
+                let comps = hostHeader.data.split(separator: .colon, maxSplits: 1)
+                host = comps[0].string
+
+                if comps.count > 1 {
+                    port = comps[1].int
+                } else {
+                    port = 80
+                }
+            } else {
+                host = "*"
+                port = 80
+            }
+
+            let comps = uriSlice.split(separator: .questionMark)
+
+            let path = comps[0].string
+
+            let query: String?
+            if comps.count > 1 {
+                query = comps[1].string
+            } else {
+                query = nil
+            }
+
+            uri = URI(scheme: nil, userInfo: nil, host: host, port: port, path: path, query: query, fragment: nil)
+        } else {
+            // absoluteURI
+
+            /*
+                To allow for transition to absoluteURIs in all requests in future
+                versions of HTTP, all HTTP/1.1 servers MUST accept the absoluteURI
+                form in requests, even though HTTP/1.1 clients will only generate
+                them in requests to proxies.
+             
+                An example Request-Line would be:
+
+                    GET http://www.w3.org/pub/WWW/TheProject.html HTTP/1.1
+            */
+
+            uri = try URIParser.parse(uri: uriSlice)
+        }
+
+
         let body = try parseBody(headers: headers) // TODO:
 
-        let u = try URIParser.parse(uri: uri)
-        //let u = URI(scheme: nil, userInfo: nil, host: nil, port: nil, path: "plaintext", query: nil, fragment: nil)
         return Request(
-            method: Request.Method(uppercase: method),
-            uri: u,
+            method: Request.Method(uppercase: methodSlice),
+            uri: uri,
             version: Request.Version(major: 1, minor: 1), // TODO:
             headers: headers,
             body: .buffer(Data(body))
         )
-//        return Request(method: .get, path: "/", host: "*", headers: h, data: Data([]))
     }
 
     private func parseBody(headers: Request.Headers) throws -> Bytes {
@@ -419,9 +481,7 @@ final class RequestParser {
                 }
 
                 // convert hex length data to int
-                guard let length = lengthData.int else {
-                    break
-                }
+                let length = lengthData.int
 
                 // end of chunked encoding
                 if length == 0 {
