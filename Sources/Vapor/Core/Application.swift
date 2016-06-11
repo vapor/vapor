@@ -165,6 +165,7 @@ public class Application {
         self.session = session
 
         self.globalMiddleware = [
+            QueryMiddleware(),
             CookiesMiddleware(),
             JSONMiddleware(),
             FormURLEncodedMiddleware(),

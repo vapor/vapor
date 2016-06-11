@@ -71,8 +71,11 @@ class HTTPStreamTests: XCTestCase {
 
         let data = try! stream.receive(upTo: 2048, timingOut: 0)
 
-        let expected = "HTTP/1.1 420 Enhance Your Calm\r\nContent-Type: text/plain\r\nTest: 123\r\nTransfer-Encoding: chunked\r\n\r\n12\r\nHello, world\r\n0\r\n\r\n"
-        XCTAssertEqual(String(data), String(expected.data), "Serialization did not match")
+        XCTAssert(data.string.range(of: "HTTP/1.1 420 Enhance Your Calm") != nil)
+        XCTAssert(data.string.range(of: "Content-Type: text/plain") != nil)
+        XCTAssert(data.string.range(of: "Test: 123") != nil)
+        XCTAssert(data.string.range(of: "Transfer-Encoding: chunked") != nil)
+        XCTAssert(data.string.range(of: "\r\n\r\nC\r\nHello, world\r\n0\r\n\r\n") != nil)
     }
 }
 
