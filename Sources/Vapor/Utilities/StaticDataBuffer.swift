@@ -7,14 +7,15 @@
 */
 public class StaticDataBuffer {
     private var localBuffer: [Byte] = []
-    private var buffer: IndexingIterator<[Byte]>
+    private var buffer: AnyIterator<Byte>
 
     public convenience init(data: Data) {
         self.init(bytes: data.bytes)
     }
 
-    public init(bytes: [Byte]) {
-        self.buffer = bytes.makeIterator()
+    public init<S: Sequence where S.Iterator.Element == Byte>(bytes: S) {
+        var any = bytes.makeIterator()
+        self.buffer = AnyIterator { return any.next() }
     }
 
     // MARK: Next

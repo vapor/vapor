@@ -350,7 +350,7 @@ final class RequestParser {
         let m = method.string
         let u = try URIParser.parse(uri: uri)
         return Request(
-            method: S4.Method(m),
+            method: S4.Method.init(m),
             uri: u,
             version: Version(major: 1, minor: 1), // TODO:
             headers: headers,
@@ -366,8 +366,7 @@ final class RequestParser {
             return try collect(next: length)
         case .empty:
             return []
-        default:
-            print("Error")
+        case .chunked:
             fatalError()
         }
     }
@@ -645,6 +644,12 @@ final class RequestParser {
         return collection
     }
 
+    private func next(equals expectation: Byte) throws -> Bool {
+        guard let next = try next() else { return false }
+        returnToBuffer(next)
+        return next == expectation
+    }
+
     private func next(equalsAny expectations: Byte...) throws -> Bool {
         guard let next = try next() else { return false }
         returnToBuffer(next)
@@ -762,10 +767,6 @@ final class RequestParser {
         }
 }
 
-private let transferEncoding = "Transfer-Encoding".utf8.array
-private let contentLength = "Content-Length".utf8.array
-private let chunkedCoding = "chunked".utf8.array
-
 extension RequestParser {
     enum BodyStyle {
         case chunked
@@ -773,6 +774,7 @@ extension RequestParser {
         case empty
 
         init(_ headers: Headers) {
+            // chunked MUST be LAST component if multiple transfer encodings
             if let encoding = headers["Transfer-Encoding"] where encoding.hasSuffix("chunked") {
                 self = .chunked
             } else if let length = headers["Content-Length"]?.int {
@@ -781,41 +783,6 @@ extension RequestParser {
                 self = .empty
             }
         }
-    }
-
-    func parseBodyStyle(headers: [(field: [Byte], value: [Byte])]) throws -> BodyStyle {
-        /*
-         If a Transfer-Encoding header field is present and the chunked
-         transfer coding (Section 4.1) is the final encoding
-         
-         chunk must be present AND last
-         
-         // TODO: Is this enforced by everyone? It's in RFC
-        */
-        if let encoding = headers[transferEncoding] where encoding.suffix(chunkedCoding.count).array == chunkedCoding {
-//            print("Chunk encoding")
-            return .chunked
-        } else if let length = headers[contentLength] {
-            // MARK: Convert to string BEFORE converting to Int
-            let lengthString = try length.toString()
-            // throw or 0 on wrong value
-            let length = Int(lengthString) ?? 0
-//            print("Length: \(length)")
-            return .length(length)
-        } else {
-//            print("Unknown")
-            return .empty
-        }
-
-    }
-}
-
-extension Sequence where Iterator.Element == (field: [Byte], value: [Byte]) {
-    subscript(field: [Byte]) -> [Byte]? {
-        for header in self where header.field == field {
-            return header.value
-        }
-        return nil
     }
 }
 
@@ -924,3 +891,17 @@ extension Sequence where Iterator.Element == (field: [Byte], value: [Byte]) {
  separate response, since such behavior would be vulnerable to cache
  poisoning.
  */
+
+func ~=(pattern: [Byte], value: [Byte]) -> Bool {
+    return pattern == value
+}
+
+func test() {
+    let bytes = [Byte]()
+    switch bytes {
+    case [1,2,3]:
+        return
+    default:
+        break
+    }
+}
