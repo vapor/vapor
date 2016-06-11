@@ -162,6 +162,10 @@ extension String {
     }
 }
 
+func +=(lhs: inout Bytes, rhs: Byte) {
+    lhs.append(rhs)
+}
+
 func ~=(pattern: Bytes, value: Bytes) -> Bool {
     return pattern == value
 }

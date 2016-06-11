@@ -427,12 +427,14 @@ final class RequestParser {
      security filters along the request chain.
      */
     func parseRequestLine() throws -> (method: ArraySlice<Byte>, uri: ArraySlice<Byte>, httpVersion: ArraySlice<Byte>) {
-        let line = try collect(untilMatches: [.carriageReturn, .lineFeed])
-        try discardNext(2) // discard CRLF
+        let line = try nextLine()
 
-        guard !line.isEmpty else { return ([], [], []) }
         let comps = line.split(separator: .space)
-        guard comps.count == 3 else { throw "invalid request line" }
+
+        guard comps.count == 3 else {
+            throw "invalid request line"
+        }
+        
         return (comps[0], comps[1], comps[2])
     }
 
@@ -691,6 +693,32 @@ final class RequestParser {
         let next = try collect(next: expectations.count)
         returnToBuffer(next)
         return next == expectations
+    }
+
+    /**
+        Reads and filters non-valid ASCII characters
+        from the stream until a new line character is returned.
+    */
+    func nextLine() throws -> Bytes {
+        var line: Bytes = []
+
+        var lastByte: Byte? = nil
+
+        while let byte = try buffer.next() {
+            // Continues until a `crlf` sequence is found
+            if byte == .newLine && lastByte == .carriageReturn {
+                break
+            }
+
+            // Skip over any non-valid ASCII characters
+            if byte > .carriageReturn {
+                line += byte
+            }
+
+            lastByte = byte
+        }
+
+        return line
     }
 
     private func skipWhiteSpace() throws {
