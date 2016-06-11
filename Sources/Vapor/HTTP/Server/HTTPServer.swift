@@ -39,6 +39,8 @@ final class StreamServer<Server: StreamDriver>: ServerDriver {
     }
 
     private func parse(_ stream: Stream) {
+        let stream = StreamBuffer(stream)
+
         var keepAlive = false
         let serializer = HTTPSerializer(stream: stream)
         repeat {

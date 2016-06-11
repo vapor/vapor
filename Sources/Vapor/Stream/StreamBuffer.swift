@@ -53,7 +53,6 @@ extension StreamBuffer: Sending {
 
 extension StreamBuffer: Receiving {
     public func receive(upTo byteCount: Int, timingOut deadline: Double) throws -> Data {
-        let bytes = try next(chunk: byteCount)
-        return Data(bytes)
+        return try stream.receive(upTo: byteCount, timingOut: deadline)
     }
 }
