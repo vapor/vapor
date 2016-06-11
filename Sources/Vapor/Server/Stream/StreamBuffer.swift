@@ -6,7 +6,7 @@ import C7
  
     StreamBuffer itsself conforms to stream and can be used as such.
 */
-public final class StreamBuffer {
+public final class StreamBuffer: Stream {
     private let stream: Stream
     private let size: Int
     private var iterator: IndexingIterator<[Byte]>
@@ -17,6 +17,12 @@ public final class StreamBuffer {
         self.iterator = Data().makeIterator()
     }
 
+    /**
+        Returns the next byte from a buffered stream.
+     
+        Overrides the default implementation of `next()`
+        which calls `receive` each time.
+    */
     public func next() throws -> Byte? {
         guard let next = iterator.next() else {
             iterator = try stream.receive(upTo: size).makeIterator()
@@ -24,21 +30,7 @@ public final class StreamBuffer {
         }
         return next
     }
-
-    public func next(chunk size: Int) throws -> Data {
-        var data: Data = []
-
-        for _ in 0 ..< size {
-            if let byte = try next() {
-                data.append(byte)
-            }
-        }
-
-        return data
-    }
 }
-
-extension StreamBuffer: Stream {}
 
 extension StreamBuffer: Closable {
     public var closed: Bool {
@@ -61,6 +53,7 @@ extension StreamBuffer: Sending {
 
 extension StreamBuffer: Receiving {
     public func receive(upTo byteCount: Int, timingOut deadline: Double) throws -> Data {
-        return try next(chunk: byteCount)
+        let bytes = try next(chunk: byteCount)
+        return Data(bytes)
     }
 }

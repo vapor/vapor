@@ -15,11 +15,7 @@ extension Character {
     }
 }
 
-final class StreamServer<
-    Server: StreamDriver,
-    Parser: StreamParser,
-    Serializer: StreamSerializer
->: ServerDriver {
+final class StreamServer<Server: StreamDriver>: ServerDriver {
     var server: Server
     var responder: Responder
 
@@ -45,7 +41,7 @@ final class StreamServer<
     private func parse(_ stream: Stream) {
         var keepAlive = false
         let parser = RequestParser(stream: stream)
-        let serializer = Serializer(stream: stream)
+        let serializer = HTTPSerializer(stream: stream)
         repeat {
             do {
                 let request = try parser.parse()
@@ -61,7 +57,7 @@ final class StreamServer<
             } catch let e as SocksCore.Error where e.isBrokenPipe {
                 // broken pipe, abort
                 break
-            } catch let e as HTTPParser.Error where e == .streamEmpty {
+            } catch let e as RequestParser.Error where e == .streamEmpty {
                 // the stream we got was empty, abort
                 break
             } catch {

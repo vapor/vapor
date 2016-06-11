@@ -177,11 +177,7 @@ public class Application {
         ]
 
         self.router = routerProvided ?? BranchRouter()
-        self.server = serverProvided ?? StreamServer<
-            SynchronousTCPServer,
-            HTTPParser,
-            HTTPSerializer
-        >.self
+        self.server = serverProvided ?? StreamServer<SynchronousTCPServer>.self
 
         routes = []
 
