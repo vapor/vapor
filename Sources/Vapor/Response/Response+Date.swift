@@ -61,7 +61,7 @@ extension Response {
             mdString = String(monthDay)
         }
         
-        return "\(Response.DAY_NAMES[weekday]), \(mdString) \(Response.MONTH_NAMES[month - 1]) \(year) \(hours):\(minutes):\(seconds) GMT"
+        return "\(Response.DAY_NAMES[weekday - 1]), \(mdString) \(Response.MONTH_NAMES[month - 1]) \(year) \(hours):\(minutes):\(seconds) GMT"
 //
     }
 }
