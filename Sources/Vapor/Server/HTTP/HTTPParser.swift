@@ -1,5 +1,3 @@
-import S4
-
 final class HTTPParser: StreamParser {
     enum Error: ErrorProtocol {
         case streamEmpty
@@ -182,6 +180,44 @@ extension ArraySlice where Element: Hashable {
     }
 }
 
+private let GET = "GET".bytesSlice
+private let POST = "POST".bytesSlice
+private let PUT = "PUT".bytesSlice
+private let PATCH = "PATCH".bytesSlice
+private let DELETE = "DELETE".bytesSlice
+private let OPTIONS = "OPTIONS".bytesSlice
+private let HEAD = "HEAD".bytesSlice
+private let CONNECT = "CONNECT".bytesSlice
+private let TRACE = "TRACE".bytesSlice
+
+
+extension Request.Method {
+    init(uppercase method: BytesSlice) {
+        switch method {
+        case GET:
+            self = .get
+        case POST:
+            self = .post
+        case PUT:
+            self = .put
+        case PATCH:
+            self = .patch
+        case DELETE:
+            self = .delete
+        case OPTIONS:
+            self = .options
+        case HEAD:
+            self = .head
+        case CONNECT:
+            self = .connect
+        case TRACE:
+            self = .trace
+        default:
+            self = .other(method: method.string)
+        }
+    }
+}
+
 
 // MARK: RObustness 
 
@@ -340,19 +376,21 @@ final class RequestParser {
     func parse() throws -> Request {
         let (method, uri, httpVersion) = try parseRequestLine()
 //        print("Got request line:\n\t\(method.string) \(uri.string) \(httpVersion.string)")
-        guard try !next(equalsAny: .space, .carriageReturn, .lineFeed, .horizontalTab) else {
-            throw "line after request line must not begin with whitespace"
-        }
+//        guard try !next(equalsAny: .space, .carriageReturn, .lineFeed, .horizontalTab) else {
+//            throw "line after request line must not begin with whitespace"
+//        }
+
+
         let headers = try parseHeaders()
 //        let style = BodyStyle(headers)
         let body = try parseBody(with: .empty) // TODO:
 
-        let m = method.string
         let u = try URIParser.parse(uri: uri)
+        //let u = URI(scheme: nil, userInfo: nil, host: nil, port: nil, path: "plaintext", query: nil, fragment: nil)
         return Request(
-            method: S4.Method.init(m),
+            method: Request.Method(uppercase: method),
             uri: u,
-            version: Version(major: 1, minor: 1), // TODO:
+            version: Request.Version(major: 1, minor: 1), // TODO:
             headers: headers,
             body: .buffer(Data(body))
         )
@@ -390,12 +428,14 @@ final class RequestParser {
      security filters along the request chain.
      */
     func parseRequestLine() throws -> (method: ArraySlice<Byte>, uri: ArraySlice<Byte>, httpVersion: ArraySlice<Byte>) {
-        let line = try collect(untilMatches: [.carriageReturn, .lineFeed])
-        try discardNext(2) // discard CRLF
+        let line = try nextLine()
 
-        guard !line.isEmpty else { return ([], [], []) }
         let comps = line.split(separator: .space)
-        guard comps.count == 3 else { throw "invalid request line" }
+
+        guard comps.count == 3 else {
+            throw "invalid request line"
+        }
+
         return (comps[0], comps[1], comps[2])
     }
 
@@ -433,25 +473,44 @@ final class RequestParser {
      CRLF
      [ message-body ]
      */
-    func parseHeaders() throws -> Headers {
-        let headerSection = try collect(untilMatches: [.carriageReturn, .lineFeed, .carriageReturn, .lineFeed])
-        try discardNext(4)
+    func parseHeaders() throws -> Request.Headers {
+        var headers: Request.Headers = [:]
 
-        var headers: Headers = [:]
-        let lines = headerSection.split(separator: .lineFeed, omittingEmptySubsequences: true)
-        try lines.forEach { line in
-            let comps = line.split(separator: .colon, maxSplits: 1, omittingEmptySubsequences: false)
+        var first = true
+        while true {
+            let line = try nextLine()
+
+            if line.isEmpty {
+                break
+            }
+
+            if first {
+                first = false
+
+                if line[0] == .carriageReturn || line[0] == .newLine || line[0] == .space || line[0] == .horizontalTab {
+                    throw "cannot have leading white space on this line"
+                }
+            }
+
+            let comps = line.split(separator: .colon, maxSplits: 1)
+            guard comps.count == 2 else {
+                print(line.string)
+                continue
+            }
+
             /*
-             // TODO: assert header has no trailing or leading space!
-             RFC:
-             No whitespace is allowed between the header field-name and colon.
-             Might just be fIrst header line can't have leading, but I think it's all
-             */
-            guard comps.count == 2 else { throw "invalid header field" }
+                // TODO: assert header has no trailing or leading space!
+                RFC:
+
+                No whitespace is allowed between the header field-name and colon.
+                Might just be fIrst header line can't have leading, but I think it's all
+            */
+
             let field = comps[0].string
-            let value = comps[1].trimmed([.space, .carriageReturn, .lineFeed, .horizontalTab]).string
+            let value = comps[1].trimmed([.space, .horizontalTab]).string
             headers[field] = value
         }
+
         return headers
     }
 
@@ -662,6 +721,32 @@ final class RequestParser {
         return next == expectations
     }
 
+    /**
+        Reads and filters non-valid ASCII characters
+        from the stream until a new line character is returned.
+    */
+    func nextLine() throws -> Bytes {
+        var line: Bytes = []
+
+        var lastByte: Byte? = nil
+
+        while let byte = try buffer.next() {
+            // Continues until a `crlf` sequence is found
+            if byte == .newLine && lastByte == .carriageReturn {
+                break
+            }
+
+            // Skip over any non-valid ASCII characters
+            if byte > .carriageReturn {
+                line += byte
+            }
+
+            lastByte = byte
+        }
+
+        return line
+    }
+
     private func skipWhiteSpace() throws {
         while let next = try next() {
             if next.isWhitespace { continue }
@@ -773,7 +858,7 @@ extension RequestParser {
         case length(Int)
         case empty
 
-        init(_ headers: Headers) {
+        init(_ headers: Request.Headers) {
             // chunked MUST be LAST component if multiple transfer encodings
             if let encoding = headers["Transfer-Encoding"] where encoding.hasSuffix("chunked") {
                 self = .chunked
@@ -891,17 +976,3 @@ extension RequestParser {
  separate response, since such behavior would be vulnerable to cache
  poisoning.
  */
-
-func ~=(pattern: [Byte], value: [Byte]) -> Bool {
-    return pattern == value
-}
-
-func test() {
-    let bytes = [Byte]()
-    switch bytes {
-    case [1,2,3]:
-        return
-    default:
-        break
-    }
-}

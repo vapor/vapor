@@ -263,7 +263,7 @@ extension URIParser {
         */
 
         let hostStart = hostAndPort.startIndex
-        var hostEnd = hostAndPort.endIndex - 1
+        let hostEnd = hostAndPort.endIndex - 1
         guard hostStart < hostEnd else { return ([], nil) }
         for i in (hostStart...hostEnd).lazy.reversed() {
             let byte = hostAndPort[i]
