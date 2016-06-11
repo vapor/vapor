@@ -359,8 +359,7 @@ final class RequestParser {
         case streamEmpty
     }
 
-    private var localBuffer: [Byte] = []
-    private let buffer: StreamBuffer
+    private let stream: Stream
 
     /**
      Creates a new HTTP Parser that will
@@ -368,7 +367,7 @@ final class RequestParser {
      the supplied stream.
      */
     init(stream: Stream) {
-        self.buffer = StreamBuffer(stream)
+        self.stream = StreamBuffer(stream)
     }
 
     func parse() throws -> Request {
@@ -444,7 +443,7 @@ final class RequestParser {
             uri = try URIParser.parse(uri: uriSlice)
         }
 
-        let body = try parseBody(headers: headers)
+        let body = try Request.Body(headers: headers, stream: stream)
 
         // HTTP-Version   = "HTTP" "/" 1*DIGIT "." 1*DIGIT
         let version = parseVersion(httpVersionSlice)
@@ -454,7 +453,7 @@ final class RequestParser {
             uri: uri,
             version: version,
             headers: headers,
-            body: .buffer(Data(body))
+            body: body
         )
     }
 
@@ -519,7 +518,7 @@ final class RequestParser {
      security filters along the request chain.
      */
     func parseRequestLine() throws -> (method: ArraySlice<Byte>, uri: ArraySlice<Byte>, httpVersion: ArraySlice<Byte>) {
-        let line = try nextLine()
+        let line = try stream.nextLine()
         guard !line.isEmpty else { return ([], [], []) }
 
         let comps = line.split(separator: .space, omittingEmptySubsequences: true)
@@ -543,7 +542,7 @@ final class RequestParser {
         var lastField: Request.Headers.Key? = nil
 
         while true {
-            let line = try nextLine()
+            let line = try stream.nextLine()
 
             if line.isEmpty {
                 break
@@ -650,20 +649,4 @@ final class RequestParser {
         return bytes.trimmed([.space, .horizontalTab]).string
     }
 
-    /**
-     // TODO: Merge Overlapping Behavior w/ Static Buffer
-     */
-    // MARK: - ##########
-
-    // MARK: Next
-
-    func next() throws -> Byte? {
-        /*
-         local buffer is used to maintain last bytes while still interacting w/ byte buffer
-         */
-        guard localBuffer.isEmpty else {
-            return localBuffer.removeFirst()
-        }
-        return try buffer.next()
-    }
 }
