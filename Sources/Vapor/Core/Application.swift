@@ -177,7 +177,7 @@ public class Application {
         ]
 
         self.router = routerProvided ?? BranchRouter()
-        self.server = serverProvided ?? StreamServer<SynchronousTCPServer>.self
+        self.server = serverProvided ?? HTTPServer<SynchronousTCPServer>.self
 
         routes = []
 

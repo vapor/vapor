@@ -7,15 +7,7 @@
 import Strand
 import SocksCore
 
-// MARK: Byte => Character
-extension Character {
-    init(_ byte: Byte) {
-        let scalar = UnicodeScalar(byte)
-        self.init(scalar)
-    }
-}
-
-final class StreamServer<Server: StreamDriver>: ServerDriver {
+final class HTTPServer<Server: StreamDriver>: ServerDriver {
     var server: Server
     var responder: Responder
 

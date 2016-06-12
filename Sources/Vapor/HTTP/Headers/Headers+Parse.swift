@@ -124,7 +124,7 @@ extension Headers.Key {
 
 extension String {
     init(headerValue bytes: BytesSlice) {
-        self = bytes.trimmed([.space, .horizontalTab]).string
+        self = Bytes(bytes).trimmed([.space, .horizontalTab]).string
     }
 
     init(headerValue bytes: Bytes) {
