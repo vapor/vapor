@@ -227,12 +227,7 @@ public final class RequestParser {
                 }
 
                 // convert hex length data to int
-                let length = lengthData.int
-
-                // end of chunked encoding
-                if length == 0 {
-                    break
-                }
+                guard let length = lengthData.hexInt where length > 0 else { break }
 
                 let content = try stream.receive(max: length + 2)
                 buffer += content
@@ -274,7 +269,10 @@ public final class RequestParser {
                 host = comps[0].string
 
                 if comps.count > 1 {
-                    port = comps[1].int
+                    guard let int = comps[1].decimalInt else {
+                        throw Error.invalidRequest
+                    }
+                    port = int
                 } else {
                     port = 80
                 }
@@ -354,10 +352,12 @@ public final class RequestParser {
             // ["1", "1"]
             let version = comps[1].split(separator: .period, maxSplits: 1)
 
-            major = version[0].int
+            guard let maj = version[0].decimalInt else { throw Error.invalidRequest }
+            major = maj
 
             if version.count == 2 {
-                minor = version[1].int
+                guard let min = version[1].decimalInt else { throw Error.invalidRequest }
+                minor = min
             }
         }
 
