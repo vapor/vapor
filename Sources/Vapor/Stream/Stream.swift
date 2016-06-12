@@ -44,7 +44,7 @@ extension Stream {
      
         This can be overridden with something more performant.
     */
-    func receive() throws -> Byte? {
+    public func receive() throws -> Byte? {
         return try receive(max: 1).first
     }
 }

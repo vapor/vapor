@@ -1,6 +1,12 @@
 import Socks
 import SocksCore
 
+extension timeval {
+    init(seconds: Double) {
+        self.init(seconds: Int(seconds))
+    }
+}
+
 extension Socks.TCPClient: Stream {
     public var closed: Bool {
         return socket.closed
@@ -8,11 +14,12 @@ extension Socks.TCPClient: Stream {
 
     public var timeout: Double {
         get {
-            // todo
+            // TODO: Implement a way to view the timeout
             return 0
         }
         set {
-            // todo
+            socket.receivingTimeout = timeval(seconds: newValue)
+            socket.sendingTimeout = timeval(seconds: newValue)
         }
     }
 
@@ -27,15 +34,11 @@ extension Socks.TCPClient: Stream {
     public func receive(max: Int) throws -> Bytes {
         return try receive(maxBytes: max)
     }
-
-    public func receive() throws -> Byte? {
-        return try receive(maxBytes: 1).first
-    }
 }
 
 extension SynchronousTCPServer: StreamDriver {
     public static func make(host: String, port: Int) throws -> Self {
-        let port = Port.portNumber(UInt16(port))
+        let port = UInt16(port)
         let address = InternetAddress(hostname: host, port: port)
 
         return try .init(address: address)

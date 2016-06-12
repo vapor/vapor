@@ -1,9 +1,8 @@
 // Scraped from http://www.freeformatter.com/mime-types-list.html
 
 let mediaTypes = [
-    "N/A": "application/andrew-inset", // Andrew Toolkit IANA - Andrew Inset
     "aw": "application/applixware", // Applixware Vistasource
-    "atom, .xml": "application/atom+xml", // Atom Syndication Format RFC 4287
+    "atom": "application/atom+xml", // Atom Syndication Format RFC 4287
     "atomcat": "application/atomcat+xml", // Atom Publishing Protocol RFC 5023
     "atomsvc": "application/atomsvc+xml", // Atom Publishing Protocol Service Document RFC 5023
     "ccxml": "application/ccxml+xml,", // Voice Browser Call Control Voice Browser Call Control: CCXML Version 1.0
@@ -40,7 +39,6 @@ let mediaTypes = [
     "mets": "application/mets+xml", // Metadata Encoding and Transmission Standard RFC 6207
     "mods": "application/mods+xml", // Metadata Object Description Schema RFC 6207
     "m21": "application/mp21", // MPEG-21 Wikipedia: MPEG-21
-    "mp4": "application/mp4", // MPEG4 RFC 4337
     "doc": "application/msword", // Microsoft Word Wikipedia: Microsoft Word
     "mxf": "application/mxf", // Material Exchange Format RFC 4539
     "bin": "application/octet-stream", // Binary Data
@@ -50,7 +48,6 @@ let mediaTypes = [
     "onetoc": "application/onenote", // Microsoft OneNote MS OneNote 2010
     "xer": "application/patch-ops-error+xml", // XML Patch Framework RFC 5261
     "pdf": "application/pdf", // Adobe Portable Document Format Adobe PDF
-    "": "application/pgp-encrypted", // Pretty Good Privacy RFC 2015
     "pgp": "application/pgp-signature", // Pretty Good Privacy - Signature RFC 2015
     "prf": "application/pics-rules", // PICSRules W3C PICSRules
     "p10": "application/pkcs10", // PKCS #10 - Certification Request Standard RFC 2986
@@ -604,5 +601,5 @@ let mediaTypes = [
     "avi": "video/x-msvideo", // Audio Video Interleave (AVI) Wikipedia: AVI
     "movie": "video/x-sgi-movie", // SGI Movie SGI Facts
     "ice": "x-conference/x-cooltalk", // CoolTalk Wikipedia: CoolTalk
-    "par": "text/plain-bas", // BAS Partitur Format Phonetik BAS
+    "par": "text/plain-bas" // BAS Partitur Format Phonetik BAS
 ]
