@@ -9,7 +9,7 @@ public final class URIParser: StaticDataBuffer {
 
     public enum Error: ErrorProtocol {
         case invalidPercentEncoding
-        case unsupportedURICharacter(Character)
+        case unsupportedURICharacter(Byte)
     }
 
     public override init<S: Sequence where S.Iterator.Element == Byte>(bytes: S) {
@@ -110,7 +110,7 @@ public final class URIParser: StaticDataBuffer {
     public override func next() throws -> Byte? {
         guard let next = try super.next() else { return nil }
         guard !next.isWhitespace else { return try self.next() }
-        guard next.isValidUriCharacter else { throw Error.unsupportedURICharacter(Character(next)) }
+        guard next.isValidUriCharacter else { throw Error.unsupportedURICharacter(next) }
         return next
     }
 

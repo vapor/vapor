@@ -11,8 +11,14 @@ extension Byte {
     /// ' '
     static let space: Byte = 0x20
 
+    /// !
+    static let exclamation: Byte = 0x21
+
     /// #
     static let numberSign: Byte = 0x23
+
+    /// $
+    static let dollar: Byte = 0x24
 
     /// %
     static let percent: Byte = 0x25
@@ -20,8 +26,23 @@ extension Byte {
     /// &
     static let ampersand: Byte = 0x26
 
+    /// '
+    static let apostrophe: Byte = 0x27
+
+    /// (
+    static let leftParenthesis: Byte = 0x28
+
+    /// )
+    static let rightParenthesis: Byte = 0x29
+
+    /// *
+    static let asterisk: Byte = 0x2A
+
     /// +
     static let plus: Byte = 0x2B
+
+    /// ,
+    static let comma: Byte = 0x2C
 
     /// -
     static let hyphen: Byte = 0x2D
@@ -80,6 +101,9 @@ extension Byte {
     /// ]
     static let rightSquareBracket: Byte = 0x5D
 
+    /// _
+    static let underscore: Byte = 0x5F
+
     /// a
     static let a: Byte = 0x61
 
@@ -88,6 +112,13 @@ extension Byte {
 
     /// z
     static let z: Byte = 0x7A
+
+    /// ~
+    static let tilda: Byte = 0x7E
+}
+
+func ~=(pattern: Byte, value: Byte) -> Bool {
+    return pattern == value
 }
 
 extension Byte {
