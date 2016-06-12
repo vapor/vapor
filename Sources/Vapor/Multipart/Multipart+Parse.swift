@@ -108,7 +108,8 @@ extension Multipart {
             }
 
         }
-    
+
+        print("Returning form: \(form)")
         return form
     }
 
