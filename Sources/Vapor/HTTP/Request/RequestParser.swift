@@ -203,8 +203,8 @@ public final class RequestParser {
         if let contentLength = headers["content-length"]?.int {
             body = try stream.receive(max: contentLength)
         } else if
-            let transferEncoding = headers["transfer-encoding"]?.string
-            where transferEncoding.lowercased() == "chunked"
+            let transferEncoding = headers["transfer-encoding"]
+            where transferEncoding.lowercased().hasSuffix("chunked") // chunked MUST be last component
         {
             /*
              3.6.1 Chunked Transfer Coding
