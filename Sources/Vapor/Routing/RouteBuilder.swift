@@ -42,7 +42,7 @@ extension RouteBuilder {
     public func grouped(_ middlewares: Middleware...) -> Route.Link {
         return Route.Link(
             parent: self,
-            leadingPath: leadingPath,
+            leadingPath: nil,
             scopedMiddleware: scopedMiddleware + middlewares
         )
     }
@@ -50,7 +50,7 @@ extension RouteBuilder {
     public func grouped(_ middlewares: [Middleware]) -> Route.Link {
         return Route.Link(
             parent: self,
-            leadingPath: leadingPath,
+            leadingPath: nil,
             scopedMiddleware: scopedMiddleware + middlewares
         )
     }
