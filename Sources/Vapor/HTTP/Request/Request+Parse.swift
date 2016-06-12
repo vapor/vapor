@@ -115,7 +115,7 @@ extension Request {
                 host = comps[0].string
 
                 if comps.count > 1 {
-                    port = comps[1].int
+                    port = comps[1].decimalInt ?? 80
                 } else {
                     port = 80
                 }
@@ -156,7 +156,7 @@ extension Request {
         let body = try Body(headers: headers, stream: stream)
 
         // HTTP-Version   = "HTTP" "/" 1*DIGIT "." 1*DIGIT
-        let version = Version(versionSlice)
+        let version = try Version(versionSlice)
 
         self = Request(
             method: Request.Method(uppercase: methodSlice),

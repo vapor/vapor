@@ -38,15 +38,17 @@ extension Body {
                 }
 
                 // convert hex length data to int
-                let length = lengthData.int
+                guard let length = lengthData.hexInt else {
+                    break
+                }
 
                 // end of chunked encoding
                 if length == 0 {
                     break
                 }
 
-                let content = try stream.receive(max: length + 2)
-                buffer += content
+                let content = try stream.receive(max: length + Byte.crlf.count)
+                buffer += content[0 ..< content.count - Byte.crlf.count]
             }
             
             body = buffer

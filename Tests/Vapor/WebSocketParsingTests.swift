@@ -376,7 +376,7 @@ class UnsignedIntegerChunkingTests: XCTestCase {
     func testHex() {
         // 1, 0 => 16 in hex
         let hexIntegerBytes: Bytes = [0x31, 0x30]
-        let sixteen = hexIntegerBytes.int
+        let sixteen = hexIntegerBytes.hexInt
         XCTAssert(sixteen == 16)
     }
 }

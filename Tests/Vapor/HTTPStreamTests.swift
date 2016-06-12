@@ -35,7 +35,7 @@ class HTTPStreamTests: XCTestCase {
         data += "\r\n"
         data += content
 
-        try! stream.send(data.data, timingOut: 0)
+        try! stream.send(data.bytes)
 
 
         do {

@@ -1,4 +1,9 @@
 extension Version {
+    enum Error: ErrorProtocol {
+        case invalid
+        case invalidMajor
+        case invalidMinor
+    }
     /**
         HTTP uses a "<major>.<minor>" numbering scheme to indicate versions
         of the protocol. The protocol versioning policy is intended to allow
@@ -19,22 +24,33 @@ extension Version {
 
         HTTP-Version   = "HTTP" "/" 1*DIGIT "." 1*DIGIT
     */
-    init(_ bytes: BytesSlice) {
+    init(_ bytes: BytesSlice) throws {
         // ["HTTP", "1.1"]
         let comps = bytes.split(separator: .forwardSlash, maxSplits: 1)
 
-        var major = 0
-        var minor = 0
+        let major: Int
+        let minor: Int
 
         if comps.count == 2 {
             // ["1", "1"]
             let version = comps[1].split(separator: .period, maxSplits: 1)
 
-            major = version[0].int
+            guard let m = version[0].decimalInt else {
+                throw Error.invalidMajor
+            }
+            major = m
 
             if version.count == 2 {
-                minor = version[1].int
+                guard let m = version[1].decimalInt else {
+                    throw Error.invalidMinor
+                }
+
+                minor = m
+            } else {
+                minor = 0
             }
+        } else {
+            throw Error.invalid
         }
 
         self = Version(major: major, minor: minor)
