@@ -30,7 +30,7 @@ extension Body {
             var buffer: Bytes = []
 
             while true {
-                let lengthData = try stream.nextLine(timeout: 30)
+                let lengthData = try stream.receiveLine()
 
                 // size must be sent
                 guard lengthData.count > 0 else {

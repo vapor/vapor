@@ -186,7 +186,7 @@ extension Request {
         security filters along the request chain.
     */
     static func parseRequestLine(stream: Stream) throws -> (method: ArraySlice<Byte>, uri: ArraySlice<Byte>, httpVersion: ArraySlice<Byte>) {
-        let line = try stream.nextLine(timeout: 30)
+        let line = try stream.receiveLine()
         guard !line.isEmpty else { return ([], [], []) }
 
         let comps = line.split(separator: .space, omittingEmptySubsequences: true)

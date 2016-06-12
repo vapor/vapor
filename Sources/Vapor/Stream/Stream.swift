@@ -16,7 +16,7 @@ extension Stream {
         Reads and filters non-valid ASCII characters
         from the stream until a new line character is returned.
     */
-    func nextLine(timeout: Double) throws -> Bytes {
+    func receiveLine() throws -> Bytes {
         var line: Bytes = []
 
         var lastByte: Byte? = nil
