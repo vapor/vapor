@@ -5,7 +5,7 @@ class JSONMiddleware: Middleware {
         if 
             case .buffer(let data) = request.body,
             let contentType = request.contentType
-            where contentType.range(of: "application/json") != nil
+            where contentType.contains("application/json")
         {
             var request = request
             do {

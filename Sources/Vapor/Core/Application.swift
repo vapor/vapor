@@ -143,7 +143,7 @@ public class Application {
             ?? arguments.value(for: "workdir")
             ?? arguments.value(for: "workDir")
             ?? "./"
-        self.workDir = workDir.appending("/")
+        self.workDir = workDir.finish("/")
 
         let localization = localization ?? Localization(workingDirectory: workDir)
         self.localization = localization
