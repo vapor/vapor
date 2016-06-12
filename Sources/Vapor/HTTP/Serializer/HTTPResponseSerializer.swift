@@ -1,6 +1,12 @@
-extension Response {
+public final class HTTPResponseSerializer: ResponseSerializer {
     enum Error: ErrorProtocol {
         case unsupportedBody
+    }
+
+    let stream: Stream
+
+    public init(stream: Stream) {
+        self.stream = stream
     }
 
     /**
@@ -10,14 +16,17 @@ extension Response {
         Throws `Error.unsupportedBody` if the
         body is not a buffer or a sending stream.
     */
-    func serialize(to stream: Stream) throws {
+    public func serialize(_ response: Response) throws {
+        let version = response.version
+        let status = response.status
+
         // Status line
         try stream.send("HTTP/\(version.major).\(version.minor) \(status.statusCode) \(status.reasonPhrase)".bytes)
 
         try stream.sendLine()
 
         // Headers
-        try headers.forEach { key, value in
+        try response.headers.forEach { key, value in
             try stream.send(key.string)
             try stream.send(.colon)
             try stream.send(.space)
@@ -27,7 +36,7 @@ extension Response {
         try stream.sendLine()
 
         // Body
-        switch body {
+    switch response.body {
         case .buffer(let buffer):
             try stream.send(buffer.bytes)
         case .sender(let closure):
