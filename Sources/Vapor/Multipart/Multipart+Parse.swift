@@ -13,7 +13,7 @@ extension Multipart {
 
     static func parse(_ body: Data, boundary: String) -> [String: Multipart] {
         let boundary = Data([.hyphen, .hyphen] + boundary.data)
-
+        print("Boundary: \(boundary)")
         var form = [String: Multipart]()
         
         // Separate by boundry and loop over the "multi"-parts
@@ -30,10 +30,14 @@ extension Multipart {
                 continue
             }
 
+            print("Got storage: \(storage)")
+
             // There's always a name for a field. Otherwise we can't store it under a key
             guard let name = storage["name"] else {
                 continue
             }
+
+            print("NAME: \(name)")
 
             // If this key already exists it needs to be an array
             if form.keys.contains(name) {
@@ -48,7 +52,7 @@ extension Multipart {
 
                     // Create the suple to be added to the array
                     let new = Multipart.File(name: storage["filename"], type: mediaType, data: body)
-
+                    print("New file")
                     // If there is only one file. Make it a file array
                     if let o = form[name], case .file(let old) = o {
                         form[name] = .files([old, new])
@@ -79,6 +83,7 @@ extension Multipart {
 
                 // If it's a new key
             } else {
+                print("Not contained")
                 // Ensure it's a file. There's no proper way of detecting this if there's no filename and no content-type
                 if storage.keys.contains("content-type") || storage.keys.contains("filename") {
                     var mediaType: String? = nil

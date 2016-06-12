@@ -55,6 +55,7 @@ class ContentTests: XCTestCase {
         body += "--" + boundary + "\r\n"
 
         let parsedBoundary = try! Multipart.parseBoundary(contentType: "multipart/form-data; charset=utf-8; boundary=\(boundary)")
+        print("Got parsed boundary: \(parsedBoundary)")
         let data = Multipart.parse(body.data, boundary: parsedBoundary)
 
         XCTAssertEqual(data["value"]?.file?.data, "123".data, "Request did not parse correctly")
