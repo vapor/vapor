@@ -36,10 +36,10 @@ class HTTPStreamTests: XCTestCase {
         data += content
 
         try! stream.send(data.data, timingOut: 0)
-        let parser = HTTPParser(stream: stream)
+
 
         do {
-            let request = try parser.parse()
+            let request = try Request(stream: stream)
 
             //MARK: Verify Request
             XCTAssert(request.method == Request.Method.post, "Incorrect method \(request.method)")
@@ -62,14 +62,13 @@ class HTTPStreamTests: XCTestCase {
         response.cookies["key"] = "val"
 
         let stream = TestStream()
-        let serializer =  HTTPSerializer(stream: stream)
         do {
-            try serializer.serialize(response)
+            try response.serialize(to: stream)
         } catch {
             XCTFail("Could not serialize response: \(error)")
         }
 
-        let data = try! stream.receive(upTo: 2048, timingOut: 0)
+        let data = try! stream.receive(max: 2048)
 
         XCTAssert(data.string.range(of: "HTTP/1.1 420 Enhance Your Calm") != nil)
         XCTAssert(data.string.range(of: "Content-Type: text/plain") != nil)
@@ -81,7 +80,9 @@ class HTTPStreamTests: XCTestCase {
 
 final class TestStream: Stream {
     var closed: Bool
-    var buffer: Data
+    var buffer: Bytes
+
+    var timeout: Double = 0
 
     init() {
         closed = false
@@ -94,33 +95,32 @@ final class TestStream: Stream {
         }
     }
 
-    func send(_ data: Data, timingOut deadline: Double) throws {
+    func send(_ bytes: Bytes) throws {
         closed = false
-        buffer.append(contentsOf: data)
+        buffer += bytes
     }
 
-    func flush(timingOut deadline: Double) throws {
-        buffer = Data()
+    func flush() throws {
+
     }
 
-    func receive(upTo byteCount: Int, timingOut deadline: Double) throws -> Data {
+    func receive(max: Int) throws -> Bytes {
         if buffer.count == 0 {
             try close()
             return []
         }
 
-        if byteCount >= buffer.count {
+        if max >= buffer.count {
             try close()
             let data = buffer
             buffer = []
             return data
         }
 
-        let data = buffer.bytes[0..<byteCount]
-        buffer.bytes.removeFirst(byteCount)
+        let data = buffer[0..<max]
+        buffer.removeFirst(max)
 
-        let result = Data(data)
-        return result
+        return Bytes(data)
     }
 }
 

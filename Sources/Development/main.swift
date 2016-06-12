@@ -277,7 +277,7 @@ app.post("multipart-image") { request in
     var headers: Headers = [:]
 
     if let mediaType = image.type {
-        headers["Content-Type"] = mediaType.type + "/" + mediaType.subtype
+        headers["Content-Type"] = mediaType
     }
 
     return Response(status: .ok, headers: headers, data: image.data)
@@ -316,7 +316,7 @@ app.post("multifile") { request in
     var headers: Headers = [:]
 
     if let mediaType = file.type {
-        headers["Content-Type"] = mediaType.type + "/" + mediaType.subtype
+        headers["Content-Type"] = mediaType
     }
 
     return Response(status: .ok, headers: headers, data: file.data)

@@ -37,6 +37,16 @@ extension Stream {
 
         return line
     }
+
+    /**
+        Default implementation of receive grabs a one
+        byte array from the stream and returns the first.
+     
+        This can be overridden with something more performant.
+    */
+    func receive() throws -> Byte? {
+        return try receive(max: 1).first
+    }
 }
 
 extension Stream {

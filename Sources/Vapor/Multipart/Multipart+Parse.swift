@@ -1,5 +1,3 @@
-import MediaType
-
 extension Multipart {
     public enum Error: ErrorProtocol {
         case invalidBoundary
@@ -14,7 +12,7 @@ extension Multipart {
     }
 
     static func parse(_ body: Data, boundary: String) -> [String: Multipart] {
-        let boundary = [.hyphen, .hyphen] + boundary.data
+        let boundary = Data([.hyphen, .hyphen] + boundary.data)
 
         var form = [String: Multipart]()
         
@@ -41,11 +39,11 @@ extension Multipart {
             if form.keys.contains(name) {
                 // If it's a file.. there are multiple files being uploaded under the same key
                 if storage.keys.contains("content-type") || storage.keys.contains("filename") {
-                    var mediaType: MediaType? = nil
+                    var mediaType: String? = nil
 
                     // Take the content-type if it's there
                     if let contentType = storage["content-type"] {
-                        mediaType = try? MediaType(string: contentType)
+                        mediaType = contentType
                     }
 
                     // Create the suple to be added to the array
@@ -84,11 +82,11 @@ extension Multipart {
             } else {
                 // Ensure it's a file. There's no proper way of detecting this if there's no filename and no content-type
                 if storage.keys.contains("content-type") || storage.keys.contains("filename") {
-                    var mediaType: MediaType? = nil
+                    var mediaType: String? = nil
 
                     // Take the optional content type and convert it to a MediaType
                     if let contentType = storage["content-type"] {
-                        mediaType = try? MediaType(string: contentType)
+                        mediaType = contentType
                     }
 
                     // Store the file in the form

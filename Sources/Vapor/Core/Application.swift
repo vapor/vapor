@@ -1,5 +1,4 @@
 import libc
-import MediaType
 import Foundation
 import Socks
 
@@ -325,7 +324,7 @@ extension Application {
 
                 if
                     let fileExtension = filePath.components(separatedBy: ".").last,
-                    let type = mediaType(forFileExtension: fileExtension)
+                    let type = mediaTypes[fileExtension]
                 {
                     headers["Content-Type"] = type.description
                 }

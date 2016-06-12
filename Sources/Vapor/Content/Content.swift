@@ -1,5 +1,3 @@
-import MediaType
-
 @_exported import PathIndexable
 
 public protocol RequestContentSubscript {}
