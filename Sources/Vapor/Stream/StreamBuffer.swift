@@ -71,4 +71,21 @@ public final class StreamBuffer: Stream {
         try stream.send(sendBuffer)
         sendBuffer = []
     }
+
+    /**
+         Sometimes we let sockets queue things up before flushing, but in situations like web sockets,
+         we may want to skip that functionality
+     */
+    public func send(_ bytes: Bytes, flushing: Bool) throws {
+        guard flushing else {
+            try send(bytes)
+            return
+        }
+
+        if !sendBuffer.isEmpty {
+            try stream.send(bytes)
+            sendBuffer = []
+        }
+        try stream.send(bytes)
+    }
 }
