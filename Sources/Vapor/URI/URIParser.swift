@@ -284,41 +284,6 @@ extension URIParser {
         }
 
         return (hostAndPort[hostStart...hostEnd], nil)
-//        
-//        let host = hostAndPort[hostStart...hostEnd]
-//
-//        var host: [Byte] = []
-//        var port: [Byte]? = nil
-//
-////        var chunk: [Byte] = []
-//        // Parsing backwards because it makes logic surrounding ':' and IP Literal considerably easier
-//        var reverseIterator = hostAndPort.indices.reversed().makeIterator()
-//        while let indice = reverseIterator.next() {
-//            let byte = hostAndPort[hostStart + indice]
-//            if byte == .colon {
-//                // going reverse, if we found a colon BEFORE we found a ']' then it's a port
-//                hostEnd = indice
-//            }
-////            if byte.equals(any: .colon) {
-////                port = chunk.reversed()
-////                host = reverseIterator.reversed()
-////                return (host, port)
-////            } else if byte.equals(any: .rightSquareBracket) {
-////                // square brackets ONLY for IP Literal
-////                // if we found right square bracket first, just complete to end
-////                // return remaining bytes to standard orientation
-////                // if we found a colon before this
-////                // the port would have been collected
-////                port = port?.reversed()
-////                host = reverseIterator.reversed() + [.rightSquareBracket] // replace trailing AFTER reversing
-////                return (host, port)
-////            }
-////
-////            chunk.append(byte)
-//        }
-//
-//        host = chunk.reversed()
-//        return (host, port)
     }
 
     // MARK: UserInfo Parse

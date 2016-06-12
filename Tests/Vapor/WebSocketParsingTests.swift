@@ -372,6 +372,13 @@ class UnsignedIntegerChunkingTests: XCTestCase {
         expect(0x0A, 0xFF, 0x00, 0x54, 0xAA, 0xAB, 0xDE, 0xCC,
                equalTo: UInt64(0x0A_FF_00_54_AA_AB_DE_CC))
     }
+
+    func testHex() {
+        // 1, 0 => 16 in hex
+        let hexIntegerBytes: Bytes = [0x31, 0x30]
+        let sixteen = hexIntegerBytes.int
+        XCTAssert(sixteen == 16)
+    }
 }
 
 extension UInt8 {
