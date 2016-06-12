@@ -1,6 +1,6 @@
 extension Version {
     enum Error: ErrorProtocol {
-        case invalid
+        case invalidVersion
         case invalidMajor
         case invalidMinor
     }
@@ -50,7 +50,8 @@ extension Version {
                 minor = 0
             }
         } else {
-            throw Error.invalid
+            print(bytes.string)
+            throw Error.invalidVersion
         }
 
         self = Version(major: major, minor: minor)

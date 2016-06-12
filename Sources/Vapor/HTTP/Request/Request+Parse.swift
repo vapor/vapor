@@ -122,7 +122,9 @@ extension Request {
     */
     static func parseRequestLine(stream: Stream) throws -> (method: ArraySlice<Byte>, uri: ArraySlice<Byte>, httpVersion: ArraySlice<Byte>) {
         let line = try stream.receiveLine()
-        guard !line.isEmpty else { return ([], [], []) }
+        guard !line.isEmpty else {
+            throw ParseError.streamEmpty
+        }
 
         let comps = line.split(separator: .space, omittingEmptySubsequences: true)
         guard comps.count == 3 else {

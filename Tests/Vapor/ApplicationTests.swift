@@ -2,7 +2,7 @@ import XCTest
 @testable import Vapor
 
 class ApplicationTests: XCTestCase {
-    let allTests = [
+    static let allTests = [
         ("testMediaType", testMediaType),
         ("testProviders", testProviders),
         ("testProvidersOverride", testProvidersOverride),

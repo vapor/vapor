@@ -29,7 +29,7 @@ class HTTPVersionTests: XCTestCase {
         do {
             _ = try Version("ferrets")
             XCTFail("init should have thrown")
-        } catch Version.Error.invalid {
+        } catch Version.Error.invalidVersion {
             //
         } catch {
             XCTFail("Wrong error")
