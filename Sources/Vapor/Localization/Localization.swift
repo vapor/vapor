@@ -6,7 +6,7 @@ public class Localization {
     private let localization: JSONDirectory
 
     public init(workingDirectory: String = "./") {
-        let configDirectory = workingDirectory.finish("/") + "Localization/"
+        let configDirectory = workingDirectory.appending("/") + "Localization/"
         self.localizationDirectoryPath = configDirectory
         self.localization = FileManager.loadDirectory(configDirectory)
             ?? JSONDirectory(name: "empty", files: [])

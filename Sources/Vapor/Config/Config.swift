@@ -52,7 +52,7 @@ public class Config {
         environment: Environment? = nil,
         arguments: [String] = NSProcessInfo.processInfo().arguments
     ) {
-        let configDirectory = workingDirectory.finish("/") + "Config/"
+        let configDirectory = workingDirectory.appending("/") + "Config/"
         self.configDirectory = configDirectory
         self.environment = environment ?? Environment.loader(arguments: arguments)
 

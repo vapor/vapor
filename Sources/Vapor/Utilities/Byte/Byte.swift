@@ -14,6 +14,9 @@ extension Byte {
     /// !
     static let exclamation: Byte = 0x21
 
+    /// "
+    static let quote: Byte = 0x22
+
     /// #
     static let numberSign: Byte = 0x23
 
@@ -97,6 +100,9 @@ extension Byte {
 
     /// [
     static let leftSquareBracket: Byte = 0x5B
+
+    /// \
+    static let backSlash: Byte = 0x5C
 
     /// ]
     static let rightSquareBracket: Byte = 0x5D

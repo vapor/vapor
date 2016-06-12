@@ -24,7 +24,7 @@ extension Route.Link: RouteBuilder {
 		// if leading path is nil, a middleware was added with no path change
 		var currentPath = ""
 		if let path = leadingPath {
-			currentPath = path.finish("/")
+			currentPath = path.appending("/")
 		}
 
         parent.add(

@@ -65,8 +65,7 @@ extension Multipart {
                         form[name] = .file(file)
                     }
                 } else {
-                    var new = String(body)
-                    new.replace(string: "\r\n", with: "")
+                    let new = String(body).replacingOccurrences(of: "\r\n", with: "")
 
                     if let o = form[name], case .input(let old) = o {
                         form[name] = .inputArray([old, new])
@@ -95,8 +94,7 @@ extension Multipart {
 
                     // If it's not a file (or not for sure) we're storing the information String
                 } else {
-                    var input = String(body)
-                    input.replace(string: "\r\n", with: "")
+                    let input = String(body).replacingOccurrences(of: "\r\n", with: "")
 
                     form[name] = .input(input)
                 }
@@ -115,11 +113,10 @@ extension Multipart {
 
         for line in headers {
             // Make the header a String
-            var header = String(line)
-            header.replace(string: "\r\n", with: "")
+            let header = String(line).replacingOccurrences(of: "\r\n", with: "")
 
             // Split the header parts into an array
-            var headerParts = header.split(separator: ";")
+            var headerParts = header.characters.split(separator: ";").map(String.init)
 
             // The header has a base. Like "Content-Type: text/html; other=3" would have "Content-Type: text/html;
             guard let base = headerParts.first else {
@@ -127,7 +124,7 @@ extension Multipart {
             }
 
             // The base always has two parts. Key + Value
-            let baseParts = base.split(separator: ":", maxSplits: 1)
+            let baseParts = base.characters.split(separator: ":", maxSplits: 1).map(String.init)
 
             // Check that the count is right
             guard baseParts.count == 2 else {
@@ -135,7 +132,7 @@ extension Multipart {
             }
 
             // Add the header to the storage
-            storage[baseParts[0].trim().lowercased()] = baseParts[1].trim()
+            storage[baseParts[0].bytes.trimmed([.space]).lowercased.string] = baseParts[1].bytes.trimmed([.space]).string
 
             // Remove the header base so we can parse the rest
             headerParts.remove(at: 0)
@@ -143,7 +140,7 @@ extension Multipart {
             // remaining parts
             for part in headerParts {
                 // Split key-value
-                let subParts = part.split(separator: "=", maxSplits: 1)
+                let subParts = part.characters.split(separator: "=", maxSplits: 1).map(String.init)
 
                 // There's a key AND a Value. No more, no less
                 guard subParts.count == 2 else {
@@ -151,7 +148,8 @@ extension Multipart {
                 }
 
                 // Strip all unnecessary characters
-                storage[subParts[0].trim()] = subParts[1].trim([" ", "\t", "\r", "\n", "\"", "'"])
+                storage[subParts[0].bytes.trimmed([.space]).string] = subParts[1].bytes.trimmed([.space, .horizontalTab, .carriageReturn, .newLine, .backSlash, .apostrophe, .quote]).string
+                print(storage)
             }
         }
 

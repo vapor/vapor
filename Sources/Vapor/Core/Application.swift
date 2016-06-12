@@ -143,7 +143,7 @@ public class Application {
             ?? arguments.value(for: "workdir")
             ?? arguments.value(for: "workDir")
             ?? "./"
-        self.workDir = workDir.finish("/")
+        self.workDir = workDir.appending("/")
 
         let localization = localization ?? Localization(workingDirectory: workDir)
         self.localization = localization
@@ -285,9 +285,7 @@ extension Sequence where Iterator.Element == String {
         for item in self {
             let search = "--\(string)="
             if item.hasPrefix(search) {
-                var item = item
-                item.replace(string: search, with: "")
-                return item
+                return item.replacingOccurrences(of: search, with: "")
             }
         }
 

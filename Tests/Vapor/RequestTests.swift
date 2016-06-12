@@ -51,7 +51,7 @@ class RequestTests: XCTestCase {
         let parsedBoundary = try! Multipart.parseBoundary(contentType: "multipart/form-data; charset=utf-8; boundary=\(boundary)")
         let data = Multipart.parse(body.data, boundary: parsedBoundary)
 
-        XCTAssert(data["value"]?.int == 123, "Request did not parse correctly")
+        XCTAssertEqual(data["value"]?.int, 123, "Request did not parse correctly")
     }
 
     func testMultipartFile() {
@@ -67,7 +67,7 @@ class RequestTests: XCTestCase {
         let parsedBoundary = try! Multipart.parseBoundary(contentType: "multipart/form-data; charset=utf-8; boundary=\(boundary)")
         let data = Multipart.parse(body.data, boundary: parsedBoundary)
 
-        XCTAssert(data["value"]?.file?.data == "123".data, "Request did not parse correctly")
+        XCTAssertEqual(data["value"]?.file?.data, "123".data, "Request did not parse correctly")
     }
 
     func testFormURLEncoded() {
