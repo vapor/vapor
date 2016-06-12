@@ -9,6 +9,17 @@
 import XCTest
 @testable import Vapor
 
+public class TestMiddleware: Middleware {
+
+	public init() {
+	}
+
+	public func respond(to request: Request, chainingTo chain: Responder) throws -> Response {
+		return try chain.respond(to: request)
+	}
+	
+}
+
 class RouteTests: XCTestCase {
 
     static var allTests: [(String, (RouteTests) -> () throws -> Void)] {
@@ -71,6 +82,22 @@ class RouteTests: XCTestCase {
         assertRouteExists(at: "group/subgroup/1", method: .get, host: "*", inRoutes: app.routes)
         assertRouteExists(at: "group/2", method: .options, host: "*", inRoutes: app.routes)
     }
+
+	func testNestedRouteMiddlewareScopedPrefixPopsCorrectly() {
+		let app = Application()
+
+		app.grouped("group") { group in
+			group.grouped("subgroup") { subgroup in
+				subgroup.grouped(TestMiddleware()) { (middlewareGroup) in
+					middlewareGroup.get("1") { request in
+						return ""
+					}
+				}
+			}
+		}
+
+		assertRouteExists(at: "group/subgroup/1", method: .get, host: "*", inRoutes: app.routes)
+	}
 
     func testRouteAbort() {
         let app = Application()
