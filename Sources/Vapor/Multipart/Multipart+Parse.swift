@@ -41,6 +41,7 @@ extension Multipart {
 
             // If this key already exists it needs to be an array
             if form.keys.contains(name) {
+                print("Contained")
                 // If it's a file.. there are multiple files being uploaded under the same key
                 if storage.keys.contains("content-type") || storage.keys.contains("filename") {
                     var mediaType: String? = nil
@@ -86,6 +87,7 @@ extension Multipart {
                 print("Not contained")
                 // Ensure it's a file. There's no proper way of detecting this if there's no filename and no content-type
                 if storage.keys.contains("content-type") || storage.keys.contains("filename") {
+                    print("Contains content-type or filename")
                     var mediaType: String? = nil
 
                     // Take the optional content type and convert it to a MediaType
@@ -138,7 +140,7 @@ extension Multipart {
 
             // Add the header to the storage
             storage[baseParts[0].bytes.trimmed([.space]).lowercased.string] = baseParts[1].bytes.trimmed([.space]).string
-
+            print("Header parts: \(headerParts)")
             // Remove the header base so we can parse the rest
             headerParts.remove(at: 0)
 
