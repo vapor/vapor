@@ -12,7 +12,7 @@ extension Body {
         let body: Bytes
 
         if let contentLength = headers["content-length"]?.int {
-            body = try stream.next(chunk: contentLength)
+            body = try stream.receive(max: contentLength)
         } else if
             let transferEncoding = headers["transfer-encoding"]?.string
             where transferEncoding.lowercased() == "chunked"
@@ -30,7 +30,7 @@ extension Body {
             var buffer: Bytes = []
 
             while true {
-                let lengthData = try stream.nextLine()
+                let lengthData = try stream.nextLine(timeout: 30)
 
                 // size must be sent
                 guard lengthData.count > 0 else {
@@ -45,7 +45,7 @@ extension Body {
                     break
                 }
 
-                let content = try stream.next(chunk: length + 2)
+                let content = try stream.receive(max: length + 2)
                 buffer += content
             }
             

@@ -16,7 +16,7 @@ extension Headers {
         var lastField: Headers.Key? = nil
 
         while true {
-            let line = try stream.nextLine()
+            let line = try stream.nextLine(timeout: 30)
 
             if line.isEmpty {
                 break

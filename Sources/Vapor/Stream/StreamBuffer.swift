@@ -1,58 +1,74 @@
 import C7
 
 /**
-    Stream buffer wraps a stream and then acts as a stream itself to get access to single bytes 
-    as an iterator without as much of a performance hit on the underlying stream.
+    Buffers receive and send calls to a Stream.
  
-    StreamBuffer itsself conforms to stream and can be used as such.
+    Receive calls are buffered by the size used to initialize
+    the buffer.
+ 
+    Send calls are buffered until `flush()` is called.
 */
 public final class StreamBuffer: Stream {
-    private let stream: Stream
-    private let size: Int
-    private var iterator: IndexingIterator<[Byte]>
-
-    public init(_ stream: Stream, size: Int = 1024) {
-        self.size = size
-        self.stream = stream
-        self.iterator = Data().makeIterator()
-    }
-
-    /**
-        Returns the next byte from a buffered stream.
-     
-        Overrides the default implementation of `next()`
-        which calls `receive` each time.
-    */
-    public func next() throws -> Byte? {
-        guard let next = iterator.next() else {
-            iterator = try stream.receive(upTo: size).makeIterator()
-            return iterator.next()
-        }
-        return next
-    }
-}
-
-extension StreamBuffer: Closable {
     public var closed: Bool {
         return stream.closed
     }
     public func close() throws {
         try stream.close()
     }
-}
 
-extension StreamBuffer: Sending {
-    public func send(_ data: Data, timingOut deadline: Double) throws {
-        try stream.send(data, timingOut: deadline)
+    private let stream: Stream
+    private let size: Int
+
+    public var timeout: Double {
+        get {
+            return stream.timeout
+        }
+        set {
+            stream.timeout = newValue
+        }
     }
 
-    public func flush(timingOut deadline: Double) throws {
-        try stream.flush(timingOut: deadline)
-    }
-}
+    private var receiveIterator: IndexingIterator<[Byte]>
+    private var sendBuffer: Bytes
 
-extension StreamBuffer: Receiving {
-    public func receive(upTo byteCount: Int, timingOut deadline: Double) throws -> Data {
-        return try stream.receive(upTo: byteCount, timingOut: deadline)
+    public init(_ stream: Stream, size: Int = 2048) {
+        self.size = size
+        self.stream = stream
+
+        self.receiveIterator = Data().makeIterator()
+        self.sendBuffer = []
+
+        timeout = 0
+    }
+
+    public func receive() throws -> Byte? {
+        guard let next = receiveIterator.next() else {
+            receiveIterator = try stream.receive(max: size).makeIterator()
+            return receiveIterator.next()
+        }
+        return next
+    }
+
+    public func receive(max: Int) throws -> Bytes {
+        var bytes: Bytes = []
+
+        for _ in 0 ..< max {
+            guard let byte = try receive() else {
+                break
+            }
+
+            bytes += byte
+        }
+
+        return bytes
+    }
+
+    public func send(_ bytes: Bytes) throws {
+        sendBuffer += bytes
+    }
+
+    public func flush() throws {
+        try stream.send(sendBuffer)
+        sendBuffer = []
     }
 }

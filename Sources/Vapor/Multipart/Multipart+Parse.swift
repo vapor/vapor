@@ -21,7 +21,7 @@ extension Multipart {
         // Separate by boundry and loop over the "multi"-parts
         for part in body.split(separator: boundary, excludingFirst: true, excludingLast: true) {
 
-            let headBody = part.split(separator: .crlf + .crlf)
+            let headBody = part.split(separator: Data(Byte.crlf + Byte.crlf))
 
             // Separate the head and body
             guard headBody.count == 2, let head = headBody.first, let body = headBody.last else {
@@ -113,7 +113,7 @@ extension Multipart {
         var storage = [String: String]()
 
         // Separate the individual headers
-        let headers = head.split(separator: .crlf)
+        let headers = head.split(separator: Data(Byte.crlf))
 
         for line in headers {
             // Make the header a String

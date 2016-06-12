@@ -2,25 +2,34 @@ import Socks
 import SocksCore
 
 extension Socks.TCPClient: Stream {
-    public enum Error: ErrorProtocol {
-        case unsupported
-    }
-
     public var closed: Bool {
         return socket.closed
     }
 
-    public func send(_ data: Data, timingOut deadline: Double) throws {
-        try send(bytes: data.bytes)
+    public var timeout: Double {
+        get {
+            // todo
+            return 0
+        }
+        set {
+            // todo
+        }
     }
 
-    public func flush(timingOut deadline: Double) throws {
-        throw Error.unsupported
+    public func send(_ bytes: Bytes) throws {
+        try send(bytes: bytes)
     }
 
-    public func receive(upTo byteCount: Int, timingOut deadline: Double) throws -> Data {
-        let bytes = try receive(maxBytes: byteCount)
-        return Data(bytes)
+    public func flush() throws {
+        //
+    }
+
+    public func receive(max: Int) throws -> Bytes {
+        return try receive(maxBytes: max)
+    }
+
+    public func receive() throws -> Byte? {
+        return try receive(maxBytes: 1).first
     }
 }
 

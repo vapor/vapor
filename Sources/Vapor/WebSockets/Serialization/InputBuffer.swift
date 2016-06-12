@@ -22,7 +22,11 @@ extension InputBuffer {
 
 extension IndexingIterator: InputBuffer {}
 extension AnyIterator: InputBuffer {}
-extension StreamBuffer: InputBuffer {}
+extension StreamBuffer: InputBuffer {
+    public func next() throws -> Byte? {
+        return try receive()
+    }
+}
 extension Array: InputBuffer {
     public mutating func next() -> Element? {
         guard !isEmpty else { return nil }

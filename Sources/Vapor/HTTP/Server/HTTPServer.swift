@@ -32,10 +32,14 @@ final class HTTPServer<Server: StreamDriver>: ServerDriver {
 
     private func parse(_ stream: Stream) {
         let stream = StreamBuffer(stream)
+        stream.timeout = 30
 
         var keepAlive = false
         repeat {
             do {
+                //_ = try stream.receive(upTo: 2048, timingOut: 30)
+                //let request = Request(method: .get, path: "/plaintext")
+
                 let request = try Request(stream: stream)
                 keepAlive = request.keepAlive
                 let response = try responder.respond(to: request)

@@ -11,34 +11,31 @@ extension Response {
         body is not a buffer or a sending stream.
     */
     func serialize(to stream: Stream) throws {
-        // Start Serialization
-        var serialized: Data = []
-
         // Status line
-        serialized.bytes += "HTTP/\(version.major).\(version.minor) \(status.statusCode) \(status.reasonPhrase)".data.bytes
+        try stream.send("HTTP/\(version.major).\(version.minor) \(status.statusCode) \(status.reasonPhrase)".bytes)
 
-        serialized += .crlf
+        try stream.sendLine()
 
         // Headers
-        headers.forEach { key, value in
-            serialized += key.string.data
-            serialized += .colon
-            serialized += .space
-            serialized += value.data
-            serialized += .crlf
+        try headers.forEach { key, value in
+            try stream.send(key.string)
+            try stream.send(.colon)
+            try stream.send(.space)
+            try stream.send(value)
+            try stream.sendLine()
         }
-        serialized += .crlf
+        try stream.sendLine()
 
         // Body
         switch body {
         case .buffer(let buffer):
-            serialized += buffer
-            try stream.send(serialized)
+            try stream.send(buffer)
         case .sender(let closure):
-            try stream.send(serialized)
             try closure(stream)
         default:
             throw Error.unsupportedBody
         }
+
+        try stream.flush()
     }
 }

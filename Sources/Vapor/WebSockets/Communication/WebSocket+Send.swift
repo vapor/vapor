@@ -43,7 +43,7 @@ extension WebSocket {
         // TODO: Throw if control frame greater than 125 byte PAYLOAD. (from spec)
         let serializer = FrameSerializer(frame)
         let data = serializer.serialize()
-        try stream.send(Data(data))
+        try stream.send(data)
     }
 }
 

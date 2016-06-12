@@ -63,12 +63,12 @@ func +=(lhs: inout Data, rhs: Byte) {
     lhs.bytes.append(rhs)
 }
 
-extension Data {
+extension Byte {
     /**
         Defines the `crlf` used to denote
         line breaks in HTTP.
     */
-    static let crlf: Data = [
+    static let crlf: Bytes = [
         .carriageReturn,
         .newLine
     ]
@@ -80,6 +80,9 @@ extension Data {
     var string: String {
         return String(self)
     }
+}
+
+extension Sequence where Iterator.Element == Byte {
 
     /**
         Transforms anything between Byte.A ... Byte.Z
