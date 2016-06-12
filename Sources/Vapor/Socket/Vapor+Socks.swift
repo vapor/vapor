@@ -18,7 +18,7 @@ extension Socks.TCPClient: Stream {
             return 0
         }
         set {
-            socket.receivingTimeout = timeval(seconds: newValue)
+//            socket.receivingTimeout = timeval(seconds: newValue)
             socket.sendingTimeout = timeval(seconds: newValue)
         }
     }
