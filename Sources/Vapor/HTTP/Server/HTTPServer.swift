@@ -98,7 +98,7 @@ extension Request {
         // HTTP 1.1 defaults to true unless explicitly passed `Connection: close`
         guard let value = headers["Connection"] else { return true }
         // TODO: Decide on if 'contains' is better, test linux version
-        return !(value.bytes.trimmed([.space]).string == "close")
+        return !value.contains("close")
     }
 }
 
