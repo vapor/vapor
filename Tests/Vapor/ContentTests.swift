@@ -29,7 +29,7 @@ class ContentTests: XCTestCase {
         XCTAssertEqual(data["value"]?.int, 123, "Request did not parse correctly")
     }
 
-    func testMultipart() {
+    func testMultipart() throws {
         let boundary = "~~vapor~~"
 
         var body = "--" + boundary + "\r\n"
@@ -38,7 +38,7 @@ class ContentTests: XCTestCase {
         body += "123\r\n"
         body += "--" + boundary + "\r\n"
 
-        let parsedBoundary = try! Multipart.parseBoundary(contentType: "multipart/form-data; charset=utf-8; boundary=\(boundary)")
+        let parsedBoundary = try Multipart.parseBoundary(contentType: "multipart/form-data; charset=utf-8; boundary=\(boundary)")
         let data = Multipart.parse(body.data, boundary: parsedBoundary)
 
         XCTAssertEqual(data["value"]?.int, 123, "Request did not parse correctly")
