@@ -1,69 +1,3 @@
-
-/*
- ****************************** WARNING ******************************
-
- (reminders)
-
- ******************************
-
- A
- server MUST reject any received request message that contains
- whitespace between a header field-name and colon with a response code
- of 400 (Bad Request).
-
- ******************************
-
- A proxy or gateway that receives an obs-fold in a response message
- that is not within a message/http container MUST either discard the
- message and replace it with a 502 (Bad Gateway) response, preferably
- with a representation explaining that unacceptable line folding was
- received, or replace each received obs-fold with one or more SP
- octets prior to interpreting the field value or forwarding the
- message downstream.
-
- ******************************
-
- The presence of a message body in a response depends on both the
- request method to which it is responding and the response status code
- (Section 3.1.2).  Responses to the HEAD request method (Section 4.3.2
- of [RFC7231]) never include a message body because the associated
- response header fields (e.g., Transfer-Encoding, Content-Length,
- etc.), if present, indicate only what their values would have been if
- the request method had been GET (Section 4.3.1 of [RFC7231]). 2xx
- (Successful) responses to a CONNECT request method (Section 4.3.6 of
- [RFC7231]) switch to tunnel mode instead of having a message body.
- All 1xx (Informational), 204 (No Content), and 304 (Not Modified)
- responses do not include a message body.  All other responses do
- include a message body, although the body might be of zero length.
-
- ******************************
-
- A server MAY send a Content-Length header field in a response to a
- HEAD request (Section 4.3.2 of [RFC7231]); a server MUST NOT send
- Content-Length in such a response unless its field-value equals the
- decimal number of octets that would have been sent in the payload
- body of a response if the same request had used the GET method.
-
- *****************************
-
- If a message is received that has multiple Content-Length header
- fields with field-values consisting of the same decimal value, or a
- single Content-Length header field with a field value containing a
- list of identical decimal values (e.g., "Content-Length: 42, 42"),
- indicating that duplicate Content-Length header fields have been
- generated or combined by an upstream message processor, then the
- recipient MUST either reject the message as invalid or replace the
- duplicated field-values with a single valid Content-Length field
- containing that decimal value prior to determining the message body
- length or forwarding the message.
-
- ******************************
-
- A recipient MUST ignore unrecognized chunk extensions.
-
- ******************************
- */
-
 public final class RequestParser {
     enum Error: ErrorProtocol {
         case streamEmpty
@@ -94,23 +28,23 @@ public final class RequestParser {
     }
 
     /*
-     https://tools.ietf.org/html/rfc2616#section-5.1
+         https://tools.ietf.org/html/rfc2616#section-5.1
 
-     The Request-Line begins with a method token, followed by the
-     Request-URI and the protocol version, and ending with CRLF. The
-     elements are separated by SP characters. No CR or LF is allowed
-     except in the final CRLF sequence.
+         The Request-Line begins with a method token, followed by the
+         Request-URI and the protocol version, and ending with CRLF. The
+         elements are separated by SP characters. No CR or LF is allowed
+         except in the final CRLF sequence.
 
-     Request-Line   = Method SP Request-URI SP HTTP-Version CRLF
+         Request-Line   = Method SP Request-URI SP HTTP-Version CRLF
 
-     *** [WARNING] ***
-     Recipients of an invalid request-line SHOULD respond with either a
-     400 (Bad Request) error or a 301 (Moved Permanently) redirect with
-     the request-target properly encoded.  A recipient SHOULD NOT attempt
-     to autocorrect and then process the request without a redirect, since
-     the invalid request-line might be deliberately crafted to bypass
-     security filters along the request chain.
-     */
+         *** [WARNING] ***
+         Recipients of an invalid request-line SHOULD respond with either a
+         400 (Bad Request) error or a 301 (Moved Permanently) redirect with
+         the request-target properly encoded.  A recipient SHOULD NOT attempt
+         to autocorrect and then process the request without a redirect, since
+         the invalid request-line might be deliberately crafted to bypass
+         security filters along the request chain.
+    */
     private func parseRequestLine() throws -> (method: ArraySlice<Byte>, uri: ArraySlice<Byte>, httpVersion: ArraySlice<Byte>) {
         let line = try stream.receiveLine()
         guard !line.isEmpty else { return ([], [], []) }
@@ -130,61 +64,61 @@ public final class RequestParser {
             let line = try stream.receiveLine()
             guard !line.isEmpty else { break }
             /*
-             https://tools.ietf.org/html/rfc7230#section-3
+                 https://tools.ietf.org/html/rfc7230#section-3
 
-             ******* [WARNING] ********
+                 ******* [WARNING] ********
 
-             A sender MUST NOT send whitespace between the start-line and the
-             first header field.  A recipient that receives whitespace between the
-             start-line and the first header field MUST either reject the message
-             as invalid or consume each whitespace-preceded line without further
-             processing of it (i.e., ignore the entire line, along with any
-             subsequent lines preceded by whitespace, until a properly formed
-             header field is received or the header section is terminated).
+                 A sender MUST NOT send whitespace between the start-line and the
+                 first header field.  A recipient that receives whitespace between the
+                 start-line and the first header field MUST either reject the message
+                 as invalid or consume each whitespace-preceded line without further
+                 processing of it (i.e., ignore the entire line, along with any
+                 subsequent lines preceded by whitespace, until a properly formed
+                 header field is received or the header section is terminated).
 
-             The presence of such whitespace in a request might be an attempt to
-             trick a server into ignoring that field or processing the line after
-             it as a new request, either of which might result in a security
-             vulnerability if other implementations within the request chain
-             interpret the same message differently.  Likewise, the presence of
-             such whitespace in a response might be ignored by some clients or
-             cause others to cease parsing.
-             */
+                 The presence of such whitespace in a request might be an attempt to
+                 trick a server into ignoring that field or processing the line after
+                 it as a new request, either of which might result in a security
+                 vulnerability if other implementations within the request chain
+                 interpret the same message differently.  Likewise, the presence of
+                 such whitespace in a response might be ignored by some clients or
+                 cause others to cease parsing.
+            */
             guard whitespaceCheck || !line[0].isWhitespace else { throw Error.invalidRequest }
             whitespaceCheck = true
 
             /*
-             Each header field consists of a case-insensitive field name followed
-             by a colon (":"), optional leading whitespace, the field value, and
-             optional trailing whitespace.
+                 Each header field consists of a case-insensitive field name followed
+                 by a colon (":"), optional leading whitespace, the field value, and
+                 optional trailing whitespace.
 
-             header-field   = field-name ":" OWS field-value OWS
+                 header-field   = field-name ":" OWS field-value OWS
 
-             field-name     = token
-             field-value    = *( field-content / obs-fold )
-             field-content  = field-vchar [ 1*( SP / HTAB ) field-vchar ]
-             field-vchar    = VCHAR / obs-text
+                 field-name     = token
+                 field-value    = *( field-content / obs-fold )
+                 field-content  = field-vchar [ 1*( SP / HTAB ) field-vchar ]
+                 field-vchar    = VCHAR / obs-text
 
-             obs-fold       = CRLF 1*( SP / HTAB )
-             ; obsolete line folding
-             ; see Section 3.2.4
+                 obs-fold       = CRLF 1*( SP / HTAB )
+                 ; obsolete line folding
+                 ; see Section 3.2.4
 
-             The field-name token labels the corresponding field-value as having
-             the semantics defined by that header field.  For example, the Date
-             header field is defined in Section 7.1.1.2 of [RFC7231] as containing
-             the origination timestamp for the message in which it appears.
-             */
+                 The field-name token labels the corresponding field-value as having
+                 the semantics defined by that header field.  For example, the Date
+                 header field is defined in Section 7.1.1.2 of [RFC7231] as containing
+                 the origination timestamp for the message in which it appears.
+            */
             let comps = line.split(separator: .colon, maxSplits: 1)
             guard comps.count == 2 else { continue }
 
             /*
-             No whitespace is allowed between the header field-name and colon.  In
-             the past, differences in the handling of such whitespace have led to
-             security vulnerabilities in request routing and response handling.  A
-             server MUST reject any received request message that contains
-             whitespace between a header field-name and colon with a response code
-             of 400 (Bad Request).
-             */
+                 No whitespace is allowed between the header field-name and colon.  In
+                 the past, differences in the handling of such whitespace have led to
+                 security vulnerabilities in request routing and response handling.  A
+                 server MUST reject any received request message that contains
+                 whitespace between a header field-name and colon with a response code
+                 of 400 (Bad Request).
+            */
             guard comps[0].last?.isWhitespace == false else { throw Error.invalidKeyWhitespace }
             let field = comps[0].string
             let value = comps[1].array
@@ -207,15 +141,15 @@ public final class RequestParser {
             where transferEncoding.lowercased().hasSuffix("chunked") // chunked MUST be last component
         {
             /*
-             3.6.1 Chunked Transfer Coding
+                 3.6.1 Chunked Transfer Coding
 
-             The chunked encoding modifies the body of a message in order to
-             transfer it as a series of chunks, each with its own size indicator,
-             followed by an OPTIONAL trailer containing entity-header fields. This
-             allows dynamically produced content to be transferred along with the
-             information necessary for the recipient to verify that it has
-             received the full message.
-             */
+                 The chunked encoding modifies the body of a message in order to
+                 transfer it as a series of chunks, each with its own size indicator,
+                 followed by an OPTIONAL trailer containing entity-header fields. This
+                 allows dynamically produced content to be transferred along with the
+                 information necessary for the recipient to verify that it has
+                 received the full message.
+            */
             var buffer: Bytes = []
 
             while true {
@@ -249,18 +183,18 @@ public final class RequestParser {
             // abs_path
 
             /*
-             The most common form of Request-URI is that used to identify a
-             resource on an origin server or gateway. In this case the absolute
-             path of the URI MUST be transmitted (see section 3.2.1, abs_path) as
-             the Request-URI, and the network location of the URI (authority) MUST
-             be transmitted in a Host header field. For example, a client wishing
-             to retrieve the resource above directly from the origin server would
-             create a TCP connection to port 80 of the host "www.w3.org" and send
-             the lines:
+                 The most common form of Request-URI is that used to identify a
+                 resource on an origin server or gateway. In this case the absolute
+                 path of the URI MUST be transmitted (see section 3.2.1, abs_path) as
+                 the Request-URI, and the network location of the URI (authority) MUST
+                 be transmitted in a Host header field. For example, a client wishing
+                 to retrieve the resource above directly from the origin server would
+                 create a TCP connection to port 80 of the host "www.w3.org" and send
+                 the lines:
 
-             GET /pub/WWW/TheProject.html HTTP/1.1
-             Host: www.w3.org
-             */
+                 GET /pub/WWW/TheProject.html HTTP/1.1
+                 Host: www.w3.org
+            */
             let host: String
             let port: Int
 
@@ -305,23 +239,21 @@ public final class RequestParser {
             // absoluteURI
 
             /*
-             To allow for transition to absoluteURIs in all requests in future
-             versions of HTTP, all HTTP/1.1 servers MUST accept the absoluteURI
-             form in requests, even though HTTP/1.1 clients will only generate
-             them in requests to proxies.
+                 To allow for transition to absoluteURIs in all requests in future
+                 versions of HTTP, all HTTP/1.1 servers MUST accept the absoluteURI
+                 form in requests, even though HTTP/1.1 clients will only generate
+                 them in requests to proxies.
 
-             An example Request-Line would be:
+                 An example Request-Line would be:
 
-             GET http://www.w3.org/pub/WWW/TheProject.html HTTP/1.1
-             */
-            
+                 GET http://www.w3.org/pub/WWW/TheProject.html HTTP/1.1
+            */
             uri = try URIParser.parse(uri: uriSlice)
         }
         return uri
     }
 
-    private func parseVersion(_ slice: BytesSlice) throws -> Version {
-        /**
+    /**
          HTTP uses a "<major>.<minor>" numbering scheme to indicate versions
          of the protocol. The protocol versioning policy is intended to allow
          the sender to indicate the format of a message and its capacity for
@@ -340,7 +272,8 @@ public final class RequestParser {
          in the first line of the message.
 
          HTTP-Version   = "HTTP" "/" 1*DIGIT "." 1*DIGIT
-         */
+    */
+    private func parseVersion(_ slice: BytesSlice) throws -> Version {
 
         // ["HTTP", "1.1"]
         let comps = slice.split(separator: .forwardSlash, maxSplits: 1)
@@ -364,3 +297,68 @@ public final class RequestParser {
         return Version(major: major, minor: minor)
     }
 }
+
+/*
+     ****************************** WARNING ******************************
+
+     (reminders)
+
+     ******************************
+
+     A
+     server MUST reject any received request message that contains
+     whitespace between a header field-name and colon with a response code
+     of 400 (Bad Request).
+
+     ******************************
+
+     A proxy or gateway that receives an obs-fold in a response message
+     that is not within a message/http container MUST either discard the
+     message and replace it with a 502 (Bad Gateway) response, preferably
+     with a representation explaining that unacceptable line folding was
+     received, or replace each received obs-fold with one or more SP
+     octets prior to interpreting the field value or forwarding the
+     message downstream.
+
+     ******************************
+
+     The presence of a message body in a response depends on both the
+     request method to which it is responding and the response status code
+     (Section 3.1.2).  Responses to the HEAD request method (Section 4.3.2
+     of [RFC7231]) never include a message body because the associated
+     response header fields (e.g., Transfer-Encoding, Content-Length,
+     etc.), if present, indicate only what their values would have been if
+     the request method had been GET (Section 4.3.1 of [RFC7231]). 2xx
+     (Successful) responses to a CONNECT request method (Section 4.3.6 of
+     [RFC7231]) switch to tunnel mode instead of having a message body.
+     All 1xx (Informational), 204 (No Content), and 304 (Not Modified)
+     responses do not include a message body.  All other responses do
+     include a message body, although the body might be of zero length.
+
+     ******************************
+
+     A server MAY send a Content-Length header field in a response to a
+     HEAD request (Section 4.3.2 of [RFC7231]); a server MUST NOT send
+     Content-Length in such a response unless its field-value equals the
+     decimal number of octets that would have been sent in the payload
+     body of a response if the same request had used the GET method.
+
+     *****************************
+
+     If a message is received that has multiple Content-Length header
+     fields with field-values consisting of the same decimal value, or a
+     single Content-Length header field with a field value containing a
+     list of identical decimal values (e.g., "Content-Length: 42, 42"),
+     indicating that duplicate Content-Length header fields have been
+     generated or combined by an upstream message processor, then the
+     recipient MUST either reject the message as invalid or replace the
+     duplicated field-values with a single valid Content-Length field
+     containing that decimal value prior to determining the message body
+     length or forwarding the message.
+
+     ******************************
+
+     A recipient MUST ignore unrecognized chunk extensions.
+
+     ******************************
+ */
