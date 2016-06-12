@@ -1,4 +1,4 @@
-public protocol Stream: class, SendingStream {
+public protocol Stream: class {
     var timeout: Double { get set }
 
     var closed: Bool { get }
@@ -64,17 +64,3 @@ extension Stream {
         try send([.carriageReturn, .newLine])
     }
 }
-
-
-extension Stream {
-    public func send(_ data: Data, timingOut deadline: Double) throws {
-        timeout = deadline
-        try send(data.bytes)
-    }
-
-    public func flush(timingOut deadline: Double) throws {
-        timeout = deadline
-        try flush()
-    }
-}
-

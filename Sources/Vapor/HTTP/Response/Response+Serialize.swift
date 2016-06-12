@@ -29,9 +29,9 @@ extension Response {
         // Body
         switch body {
         case .buffer(let buffer):
-            try stream.send(buffer)
+            try stream.send(buffer.bytes)
         case .sender(let closure):
-            try closure(stream)
+            try closure(Sender(stream: stream))
         default:
             throw Error.unsupportedBody
         }

@@ -4,7 +4,7 @@ class FormURLEncodedMiddleware: Middleware {
         if 
             case .buffer(let data) = request.body,
             let contentType = request.contentType
-            where contentType.range(of: "application/x-www-form-urlencoded") != nil
+            where contentType.contains("application/x-www-form-urlencoded")
         {
             var request = request
             request.formURLEncoded = StructuredData(formURLEncoded: data)

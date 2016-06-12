@@ -46,19 +46,16 @@ import libc
     *  0x82 0x7F 0x0000000000010000 [65536 bytes of binary data]
 */
 class WebSocketSerializationTests: XCTestCase {
-    static var allTests: [(String, (WebSocketSerializationTests) -> () throws -> Void)] {
-        return [
-            ("testSingleFrameUnmaskedTextMessage", testSingleFrameUnmaskedTextMessage),
-            ("testSingleFrameMaskedTextMessage", testSingleFrameMaskedTextMessage),
-            ("testFragmentedUnmaskedTextMessageOne", testFragmentedUnmaskedTextMessageOne),
-            ("testFragmentedUnmaskedTextMessageTwo", testFragmentedUnmaskedTextMessageTwo),
-            ("testUnmaskedPingRequest", testUnmaskedPingRequest),
-            ("testMaskedPongResponse", testMaskedPongResponse),
-            ("test256BytesBinarySingleUnmaskedFrame", test256BytesBinarySingleUnmaskedFrame),
-            ("testSixtyFourKiBSingleUnmaskedFrame", testSixtyFourKiBSingleUnmaskedFrame),
-
-        ]
-    }
+    static let allTests = [
+        ("testSingleFrameUnmaskedTextMessage", testSingleFrameUnmaskedTextMessage),
+        ("testSingleFrameMaskedTextMessage", testSingleFrameMaskedTextMessage),
+        ("testFragmentedUnmaskedTextMessageOne", testFragmentedUnmaskedTextMessageOne),
+        ("testFragmentedUnmaskedTextMessageTwo", testFragmentedUnmaskedTextMessageTwo),
+        ("testUnmaskedPingRequest", testUnmaskedPingRequest),
+        ("testMaskedPongResponse", testMaskedPongResponse),
+        ("test256BytesBinarySingleUnmaskedFrame", test256BytesBinarySingleUnmaskedFrame),
+        ("testSixtyFourKiBSingleUnmaskedFrame", testSixtyFourKiBSingleUnmaskedFrame),
+    ]
 
     func testSingleFrameUnmaskedTextMessage() throws {
         let input: [Byte] = [0x81, 0x05, 0x48, 0x65, 0x6c, 0x6c, 0x6f]
@@ -376,7 +373,7 @@ class UnsignedIntegerChunkingTests: XCTestCase {
     func testHex() {
         // 1, 0 => 16 in hex
         let hexIntegerBytes: Bytes = [0x31, 0x30]
-        let sixteen = hexIntegerBytes.int
+        let sixteen = hexIntegerBytes.hexInt
         XCTAssert(sixteen == 16)
     }
 }

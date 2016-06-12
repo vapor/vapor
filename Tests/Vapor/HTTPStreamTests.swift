@@ -1,23 +1,13 @@
-//  JeevesTests.swift
-//  Vapor
-//
-//  Created by Logan Wright on 3/12/16.
-//  Copyright © 2016 Tanner Nelson. All rights reserved.
-//
-
 import Foundation
 import XCTest
 
 @testable import Vapor
 
 class HTTPStreamTests: XCTestCase {
-
-    static var allTests: [(String, (HTTPStreamTests) -> () throws -> Void)] {
-        return [
-           ("testParser", testParser),
-           ("testSerializer", testSerializer)
-        ]
-    }
+    static let allTests = [
+       ("testParser", testParser),
+       ("testSerializer", testSerializer)
+    ]
 
     func testParser() {
         let stream = TestStream()
@@ -35,7 +25,7 @@ class HTTPStreamTests: XCTestCase {
         data += "\r\n"
         data += content
 
-        try! stream.send(data.data, timingOut: 0)
+        try! stream.send(data.bytes)
 
 
         do {
@@ -70,11 +60,11 @@ class HTTPStreamTests: XCTestCase {
 
         let data = try! stream.receive(max: 2048)
 
-        XCTAssert(data.string.range(of: "HTTP/1.1 420 Enhance Your Calm") != nil)
-        XCTAssert(data.string.range(of: "Content-Type: text/plain") != nil)
-        XCTAssert(data.string.range(of: "Test: 123") != nil)
-        XCTAssert(data.string.range(of: "Transfer-Encoding: chunked") != nil)
-        XCTAssert(data.string.range(of: "\r\n\r\nC\r\nHello, world\r\n0\r\n\r\n") != nil)
+        XCTAssert(data.string.contains("HTTP/1.1 420 Enhance Your Calm"))
+        XCTAssert(data.string.contains("Content-Type: text/plain"))
+        XCTAssert(data.string.contains("Test: 123"))
+        XCTAssert(data.string.contains("Transfer-Encoding: chunked"))
+        XCTAssert(data.string.contains("\r\n\r\nC\r\nHello, world\r\n0\r\n\r\n"))
     }
 }
 

@@ -1,30 +1,18 @@
-//
-//  RouterTests.swift
-//  Vapor
-//
-//  Created by Tanner Nelson on 2/18/16.
-//  Copyright © 2016 Tanner Nelson. All rights reserved.
-//
-
 import Foundation
 import XCTest
 @testable import Vapor
 
 class Post: StringInitializable {
-
     required init?(from string: String) throws {
         return nil
     }
-
 }
 
 class TypedRouteTests: XCTestCase {
 
-    static var allTests: [(String, (TypedRouteTests) -> () throws -> Void)] {
-        return [
-           ("testRouting", testRouting),
-        ]
-    }
+    static let allTests = [
+       ("testRouting", testRouting),
+   ]
 
     func testRouting() {
 

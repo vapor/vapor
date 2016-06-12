@@ -2,11 +2,9 @@ import XCTest
 @testable import Vapor
 
 class LocalizationTests: XCTestCase {
-    static var allTests: [(String, (LocalizationTests) -> () throws -> Void)] {
-        return [
-           ("testSimple", testSimple)
-        ]
-    }
+    static let allTests = [
+       ("testSimple", testSimple)
+    ]
 
     var workDir: String {
         let parent = #file.characters.split(separator: "/").map(String.init).dropLast().joined(separator: "/")

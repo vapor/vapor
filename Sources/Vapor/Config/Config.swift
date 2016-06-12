@@ -52,7 +52,7 @@ public class Config {
         environment: Environment? = nil,
         arguments: [String] = NSProcessInfo.processInfo().arguments
     ) {
-        let configDirectory = workingDirectory.appending("/") + "Config/"
+        let configDirectory = workingDirectory.finish("/") + "Config/"
         self.configDirectory = configDirectory
         self.environment = environment ?? Environment.loader(arguments: arguments)
 
@@ -66,7 +66,7 @@ public class Config {
         // --config:passwords.mongo-password=password
         // --config:<name>.<path>.<to>.<value>=<actual-value>
         let cliDirectory = Config.makeCLIConfig(arguments: arguments)
-        prioritizedDirectories.append(cliDirectory)
+        prioritizedDirectories.insert(cliDirectory, at: 0) // should be most important
 
         // Json files are loaded in order of priority
         // it will go like this

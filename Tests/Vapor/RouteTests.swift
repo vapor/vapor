@@ -1,11 +1,3 @@
-//
-//  RouteTests.swift
-//  Vapor
-//
-//  Created by Matthew on 20/02/2016.
-//  Copyright © 2016 Tanner Nelson. All rights reserved.
-//
-
 import XCTest
 @testable import Vapor
 
@@ -21,14 +13,11 @@ public class TestMiddleware: Middleware {
 }
 
 class RouteTests: XCTestCase {
-
-    static var allTests: [(String, (RouteTests) -> () throws -> Void)] {
-        return [
-           ("testNestedRouteScopedPrefixPopsCorrectly", testNestedRouteScopedPrefixPopsCorrectly),
-           ("testRoute", testRoute),
-           ("testRouteScopedPrefix", testRouteScopedPrefix)
-        ]
-    }
+    static let allTests = [
+       ("testNestedRouteScopedPrefixPopsCorrectly", testNestedRouteScopedPrefixPopsCorrectly),
+       ("testRoute", testRoute),
+       ("testRouteScopedPrefix", testRouteScopedPrefix)
+    ]
 
     func testRoute() {
 

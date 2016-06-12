@@ -1,23 +1,13 @@
-//
-//  SessionTests.swift
-//  Vapor
-//
-//  Created by James Richard on 3/7/16.
-//  Copyright © 2016 Tanner Nelson. All rights reserved.
-//
-
 @testable import Vapor
 import XCTest
 
 class SessionTests: XCTestCase {
-    static var allTests: [(String, (SessionTests) -> () throws -> Void)] {
-        return [
-           ("testDestroy_asksDriverToDestroy", testDestroy_asksDriverToDestroy),
-           ("testSubscriptGet_asksDriverForValue", testSubscriptGet_asksDriverForValue),
-           ("testSubscriptSet_asksDriverToSetValue", testSubscriptSet_asksDriverToSetValue),
-           ("testIdentifierCreation", testIdentifierCreation)
-        ]
-    }
+    static let allTests = [
+       ("testDestroy_asksDriverToDestroy", testDestroy_asksDriverToDestroy),
+       ("testSubscriptGet_asksDriverForValue", testSubscriptGet_asksDriverForValue),
+       ("testSubscriptSet_asksDriverToSetValue", testSubscriptSet_asksDriverToSetValue),
+       ("testIdentifierCreation", testIdentifierCreation)
+    ]
 
     func testDestroy_asksDriverToDestroy() {
         let driver = TestDriver()

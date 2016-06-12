@@ -51,11 +51,11 @@ extension Sequence where Iterator.Element == Byte {
         Converts a byte representation
         of a hex value into an `Int`.
     */
-    var int: Int {
+    var hexInt: Int? {
         var int: Int = 0
 
         for byte in self {
-            int = int * 10
+            int = int * 16
 
             if byte >= .zero && byte <= .nine {
                 int += Int(byte - .zero)
@@ -63,12 +63,81 @@ extension Sequence where Iterator.Element == Byte {
                 int += Int(byte - .A) + 10
             } else if byte >= .a && byte <= .f {
                 int += Int(byte - .a) + 10
+            } else {
+                return nil
             }
         }
 
         return int
     }
-    
+
+    /**
+        Converts a byte representation
+        of a decimal value into an `Int`.
+    */
+    var decimalInt: Int? {
+        var int: Int = 0
+
+        for byte in self {
+            int = int * 10
+
+            if byte >= .zero && byte <= .nine {
+                int += Int(byte - .zero)
+            } else {
+                return nil
+            }
+        }
+
+        return int
+    }
+
+    /**
+        Transforms anything between Byte.A ... Byte.Z
+        into the range Byte.a ... Byte.z
+     */
+    var lowercased: Data {
+        var data = Data()
+
+        for byte in self {
+            if (.A ... .Z).contains(byte) {
+                data.append(byte + (.a - .A))
+            } else {
+                data.append(byte)
+            }
+        }
+
+        return data
+    }
+
+    /**
+        Transforms anything between Byte.a ... Byte.z
+        into the range Byte.A ... Byte.Z
+    */
+    var uppercased: Data {
+        var data = Data()
+
+        for byte in self {
+            if (.a ... .z).contains(byte) {
+                data.append(byte - (.a - .A))
+            } else {
+                data.append(byte)
+            }
+        }
+
+        return data
+    }
+}
+
+
+extension Byte {
+    /**
+        Defines the `crlf` used to denote
+        line breaks in HTTP.
+     */
+    static let crlf: Bytes = [
+        .carriageReturn,
+        .newLine
+    ]
 }
 
 extension Array where Element: Hashable {

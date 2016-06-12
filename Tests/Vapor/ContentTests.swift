@@ -1,11 +1,3 @@
-//
-//  Response.swift
-//  Vapor
-//
-//  Created by Tanner Nelson on 2/3/16.
-//  Copyright © 2016 Tanner Nelson. All rights reserved.
-//
-
 import XCTest
 @testable import Vapor
 
@@ -20,17 +12,15 @@ class TestResponder: Responder {
     }
 }
 
-class RequestTests: XCTestCase {
-    static var allTests: [(String, (RequestTests) -> () throws -> Void)] {
-        return [
-            ("testParse", testParse),
-            ("testMultipart", testMultipart),
-            ("testMultipartFile", testMultipartFile),
-            ("testFormURLEncoded", testFormURLEncoded),
-            ("testFormURLEncodedEdge", testFormURLEncodedEdge),
-            ("testSplitString", testSplitString)
-        ]
-    }
+class ContentTests: XCTestCase {
+    static var allTests = [
+        ("testParse", testParse),
+        ("testMultipart", testMultipart),
+        ("testMultipartFile", testMultipartFile),
+        ("testFormURLEncoded", testFormURLEncoded),
+        ("testFormURLEncodedEdge", testFormURLEncodedEdge),
+        ("testSplitString", testSplitString)
+    ]
 
     func testParse() {
         let string = "value=123"

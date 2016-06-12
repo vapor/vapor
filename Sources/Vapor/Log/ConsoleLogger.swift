@@ -24,7 +24,21 @@ public class ConsoleLogger: LogDriver {
         - parameter message: the message to log to console
      */
     public func log(_ level: Log.Level, message: String) {
-        let date = time(nil)
-        console.output("[\(date)] [\(level)] \(message)")
+        console.output(message, style: level.consoleStyle)
+    }
+}
+
+extension Log.Level {
+    var consoleStyle: Console.Style {
+        switch self {
+        case .debug, .verbose, .custom(_):
+            return .plain
+        case .info:
+            return .info
+        case .warning:
+            return .warning
+        case .error, .fatal:
+            return .error
+        }
     }
 }

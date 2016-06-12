@@ -10,12 +10,10 @@ import XCTest
 @testable import Vapor
 
 class ValidationConvenienceTests: XCTestCase {
-    static var allTests: [(String, (ValidationConvenienceTests) -> () throws -> Void)] {
-        return [
-                   ("testTrue", testTrue),
-                   ("testFalse", testFalse)
-        ]
-    }
+    static let allTests = [
+       ("testTrue", testTrue),
+       ("testFalse", testFalse)
+    ]
 
     func testTrue() throws {
     }

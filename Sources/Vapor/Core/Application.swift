@@ -143,7 +143,7 @@ public class Application {
             ?? arguments.value(for: "workdir")
             ?? arguments.value(for: "workDir")
             ?? "./"
-        self.workDir = workDir.appending("/")
+        self.workDir = workDir.finish("/")
 
         let localization = localization ?? Localization(workingDirectory: workDir)
         self.localization = localization
@@ -199,7 +199,7 @@ public class Application {
 
     private func restrictLogging(for environment: Environment) {
         guard config.environment == .production else { return }
-        Log.info("Production environment detected, disabling information logs.")
+        console.output("Production mode enabled, disabling informational logs.", style: .info)
         Log.enabledLevels = [.error, .fatal]
     }
 }
@@ -296,10 +296,12 @@ extension Sequence where Iterator.Element == String {
 extension Application {
     internal func serve() {
         do {
-            Log.info("Server starting at \(host):\(port)")
+            console.output("Server starting at \(host):\(port)", style: .info)
             // noreturn
             let server = try self.server.init(host: host, port: port, responder: self)
             try server.start()
+        } catch ServerError.bindFailed {
+            console.output("Could not bind to port \(port), it may be in use or require sudo.", style: .error)
         } catch {
             Log.error("Server start error: \(error)")
         }
