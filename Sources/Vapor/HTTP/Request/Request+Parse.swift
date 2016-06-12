@@ -156,7 +156,7 @@ extension Request {
         let body = try Body(headers: headers, stream: stream)
 
         // HTTP-Version   = "HTTP" "/" 1*DIGIT "." 1*DIGIT
-        let version = Version(versionSlice)
+        let version = Version.init(versionSlice)
 
         self = Request(
             method: Request.Method(uppercase: methodSlice),
