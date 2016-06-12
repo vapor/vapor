@@ -47,7 +47,6 @@ final class HTTPServer<Server: StreamDriver>: ServerDriver {
         var keepAlive = false
         repeat {
             do {
-//                let request = try Request(stream: stream)
                 let request = try parser.parseNext()
                 keepAlive = request.keepAlive
                 let response = try responder.respond(to: request)
