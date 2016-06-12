@@ -66,7 +66,7 @@ public class Config {
         // --config:passwords.mongo-password=password
         // --config:<name>.<path>.<to>.<value>=<actual-value>
         let cliDirectory = Config.makeCLIConfig(arguments: arguments)
-        prioritizedDirectories.append(cliDirectory)
+        prioritizedDirectories.insert(cliDirectory, at: 0)
 
         // Json files are loaded in order of priority
         // it will go like this

@@ -7,7 +7,13 @@
 import Strand
 import SocksCore
 
+enum ServerError: ErrorProtocol {
+    case bindFailed
+}
+
 final class HTTPServer<Server: StreamDriver>: ServerDriver {
+
+
     var server: Server
     var responder: Responder
 
@@ -17,7 +23,11 @@ final class HTTPServer<Server: StreamDriver>: ServerDriver {
     }
 
     func start() throws {
-        try server.start(handler: handle)
+        do {
+            try server.start(handler: handle)
+        } catch let e as SocksCore.Error where e.isBindFailed {
+            throw ServerError.bindFailed
+        }
     }
 
     private func handle(_ stream: Stream) {
@@ -80,6 +90,9 @@ extension SocksCore.Error {
     }
     var isBrokenPipe: Bool {
         return self.number == 32
+    }
+    var isBindFailed: Bool {
+        return self.number == 48
     }
 }
 

@@ -3,7 +3,8 @@ import SocksCore
 
 extension timeval {
     init(seconds: Double) {
-        self.init(seconds: Int(seconds))
+        let time = (seconds >= 0) ? Int(seconds) : 0
+        self.init(seconds: time)
     }
 }
 
