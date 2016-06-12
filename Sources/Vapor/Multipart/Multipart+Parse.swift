@@ -13,7 +13,7 @@ extension Multipart {
 
     static func parse(_ body: Data, boundary: String) -> [String: Multipart] {
         let boundary = Data([.hyphen, .hyphen] + boundary.data)
-        print("Boundary: \(boundary)")
+
         var form = [String: Multipart]()
         
         // Separate by boundry and loop over the "multi"-parts
@@ -30,18 +30,13 @@ extension Multipart {
                 continue
             }
 
-            print("Got storage: \(storage)")
-
             // There's always a name for a field. Otherwise we can't store it under a key
             guard let name = storage["name"] else {
                 continue
             }
 
-            print("NAME: \(name)")
-
             // If this key already exists it needs to be an array
             if form.keys.contains(name) {
-                print("Contained")
                 // If it's a file.. there are multiple files being uploaded under the same key
                 if storage.keys.contains("content-type") || storage.keys.contains("filename") {
                     var mediaType: String? = nil
@@ -53,7 +48,7 @@ extension Multipart {
 
                     // Create the suple to be added to the array
                     let new = Multipart.File(name: storage["filename"], type: mediaType, data: body)
-                    print("New file")
+
                     // If there is only one file. Make it a file array
                     if let o = form[name], case .file(let old) = o {
                         form[name] = .files([old, new])
@@ -70,7 +65,7 @@ extension Multipart {
                         form[name] = .file(file)
                     }
                 } else {
-                    let new = String(body).replacingOccurrences(of: "\r\n", with: "")
+                    let new = body.string.components(separatedBy: "\r\n").joined(separator: "")
 
                     if let o = form[name], case .input(let old) = o {
                         form[name] = .inputArray([old, new])
@@ -84,10 +79,8 @@ extension Multipart {
 
                 // If it's a new key
             } else {
-                print("Not contained")
                 // Ensure it's a file. There's no proper way of detecting this if there's no filename and no content-type
                 if storage.keys.contains("content-type") || storage.keys.contains("filename") {
-                    print("Contains content-type or filename")
                     var mediaType: String? = nil
 
                     // Take the optional content type and convert it to a MediaType
@@ -101,18 +94,11 @@ extension Multipart {
 
                     // If it's not a file (or not for sure) we're storing the information String
                 } else {
-                    print("No content type or filename")
-//                    let body = String(body)
-                    print("Body: \(body)")
                     let input = body.string.components(separatedBy: "\r\n").joined(separator: "")
-                    print("input: \(input)")
                     form[name] = .input(input)
                 }
             }
-
         }
-
-        print("Returning form: \(form)")
         return form
     }
 
@@ -124,7 +110,7 @@ extension Multipart {
 
         for line in headers {
             // Make the header a String
-            let header = String(line).replacingOccurrences(of: "\r\n", with: "")
+            let header = line.string.components(separatedBy: "\r\n").joined(separator: "")
 
             // Split the header parts into an array
             var headerParts = header.characters.split(separator: ";").map(String.init)
@@ -144,7 +130,7 @@ extension Multipart {
 
             // Add the header to the storage
             storage[baseParts[0].bytes.trimmed([.space]).lowercased.string] = baseParts[1].bytes.trimmed([.space]).string
-            print("Header parts: \(headerParts)")
+
             // Remove the header base so we can parse the rest
             headerParts.remove(at: 0)
 
@@ -160,7 +146,6 @@ extension Multipart {
 
                 // Strip all unnecessary characters
                 storage[subParts[0].bytes.trimmed([.space]).string] = subParts[1].bytes.trimmed([.space, .horizontalTab, .carriageReturn, .newLine, .backSlash, .apostrophe, .quote]).string
-                print(storage)
             }
         }
 

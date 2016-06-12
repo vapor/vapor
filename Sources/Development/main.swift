@@ -50,8 +50,8 @@ app.socket("socket") { request, ws in
         }
     }
 
-    ws.onClose = { data in
-        print("Did close w/ packet \(data)")
+    ws.onClose = { ws, status, reason, clean in
+        print("Did close w/ status \(status) reason \(reason)")
     }
 }
 
