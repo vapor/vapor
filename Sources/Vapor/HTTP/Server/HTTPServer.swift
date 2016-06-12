@@ -11,9 +11,11 @@ enum ServerError: ErrorProtocol {
     case bindFailed
 }
 
-final class HTTPServer<Server: StreamDriver>: ServerDriver {
-
-
+final class HTTPServer<
+    Server: StreamDriver,
+    Parser: RequestParser,
+    Serializer: ResponseSerializer
+>: ServerDriver {
     var server: Server
     var responder: Responder
 
@@ -43,14 +45,17 @@ final class HTTPServer<Server: StreamDriver>: ServerDriver {
     private func parse(_ stream: Stream) {
         let stream = StreamBuffer(stream)
         stream.timeout = 30
-        let parser = RequestParser(stream: stream)
+
+        let parser = Parser(stream: stream)
+        let serializer = Serializer(stream: stream)
+
         var keepAlive = false
         repeat {
             do {
-                let request = try parser.parseNext()
+                let request = try parser.parse()
                 keepAlive = request.keepAlive
                 let response = try responder.respond(to: request)
-                try response.serialize(to: stream)
+                try serializer.serialize(response)
 
                 guard response.isUpgradeResponse else { continue }
                 try response.onUpgrade?(stream)
@@ -60,7 +65,7 @@ final class HTTPServer<Server: StreamDriver>: ServerDriver {
             } catch let e as SocksCore.Error where e.isBrokenPipe {
                 // broken pipe, abort
                 break
-            } catch let e as Request.ParseError where e == .streamEmpty {
+            } catch HTTPRequestParser.Error.streamEmpty {
                 // the stream we got was empty, abort
                 break
             } catch {
