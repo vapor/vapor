@@ -1,7 +1,7 @@
 import XCTest
 @testable import Vapor
 
-class HTTPVHeadersTests: XCTestCase {
+class HTTPHeadersTests: XCTestCase {
     static var allTests = [
         ("testParse", testParse),
         ("testMultilineValue", testMultilineValue),
