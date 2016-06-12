@@ -1,12 +1,6 @@
 import XCTest
 @testable import Vapor
 
-extension Version {
-    init(_ string: String) throws {
-        try self.init(string.bytesSlice)
-    }
-}
-
 class HTTPVersionTests: XCTestCase {
     static var allTests = [
         ("testParse", testParse),
@@ -17,7 +11,7 @@ class HTTPVersionTests: XCTestCase {
 
     func testParse() {
         do {
-            let version = try Version("HTTP/1.1")
+            let version = try makeVersion(with: "HTTP/1.1")
             XCTAssertEqual(version.major, 1)
             XCTAssertEqual(version.major, 1)
         } catch {
@@ -27,9 +21,9 @@ class HTTPVersionTests: XCTestCase {
 
     func testInvalid() {
         do {
-            _ = try Version("ferrets")
+            _ = try makeVersion(with: "ferrets")
             XCTFail("init should have thrown")
-        } catch Version.Error.invalidVersion {
+        } catch HTTPRequestParser.Error.invalidVersion {
             //
         } catch {
             XCTFail("Wrong error")
@@ -38,9 +32,9 @@ class HTTPVersionTests: XCTestCase {
 
     func testInvalidMajor() {
         do {
-            _ = try Version("HTTP/ferret.0")
+            _ = try makeVersion(with: "HTTP/ferret.0")
             XCTFail("init should have thrown")
-        } catch Version.Error.invalidMajor {
+        } catch HTTPRequestParser.Error.invalidVersionMajor {
             //
         } catch {
             XCTFail("Wrong error")
@@ -49,12 +43,18 @@ class HTTPVersionTests: XCTestCase {
 
     func testInvalidMinor() {
         do {
-            _ = try Version("HTTP/1.f")
+            _ = try makeVersion(with: "HTTP/1.f")
             XCTFail("init should have thrown")
-        } catch Version.Error.invalidMinor {
+        } catch HTTPRequestParser.Error.invalidVersionMinor {
             //
         } catch {
             XCTFail("Wrong error")
         }
+    }
+
+    private func makeVersion(with versionString: String) throws -> Version {
+        let stream = TestStream()
+        let parser = HTTPRequestParser(stream: stream)
+        return try parser.parseVersion(versionString.bytesSlice)
     }
 }

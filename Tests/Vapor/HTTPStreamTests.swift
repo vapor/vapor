@@ -29,7 +29,7 @@ class HTTPStreamTests: XCTestCase {
 
 
         do {
-            let request = try Request(stream: stream)
+            let request = try HTTPRequestParser(stream: stream).parse()
 
             //MARK: Verify Request
             XCTAssert(request.method == Request.Method.post, "Incorrect method \(request.method)")
@@ -52,8 +52,9 @@ class HTTPStreamTests: XCTestCase {
         response.cookies["key"] = "val"
 
         let stream = TestStream()
+        let serializer = HTTPResponseSerializer(stream: stream)
         do {
-            try response.serialize(to: stream)
+            try serializer.serialize(response)
         } catch {
             XCTFail("Could not serialize response: \(error)")
         }

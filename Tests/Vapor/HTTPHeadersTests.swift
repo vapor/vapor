@@ -22,7 +22,7 @@ class HTTPHeadersTests: XCTestCase {
             try stream.sendLine()
             try stream.sendLine()
 
-            let headers = try Headers(stream: stream)
+            let headers = try HTTPRequestParser(stream: stream).parseHeaders()
             XCTAssertEqual(headers["accept"], "*/*")
             XCTAssertEqual(headers["host"], "localhost:8080")
             XCTAssertEqual(headers["content-type"], "application/json")
@@ -45,7 +45,7 @@ class HTTPHeadersTests: XCTestCase {
             try stream.sendLine()
             try stream.sendLine()
 
-            let headers = try Headers(stream: stream)
+            let headers = try HTTPRequestParser(stream: stream).parseHeaders()
             XCTAssertEqual(headers["cookie"], "1=1;2=2;")
         } catch {
             XCTFail("\(error)")
@@ -53,7 +53,7 @@ class HTTPHeadersTests: XCTestCase {
     }
 
     func testValueTrimming() {
-        let value = String(headerValue: " ferret\t".bytes)
+        let value = " ferret\t".bytes.trimmed([.space, .horizontalTab]).string
         XCTAssertEqual(value, "ferret")
     }
 
@@ -68,9 +68,9 @@ class HTTPHeadersTests: XCTestCase {
             try stream.sendLine()
             try stream.sendLine()
 
-            _ = try Headers(stream: stream)
+            _ = try HTTPRequestParser(stream: stream).parseHeaders()
             XCTFail("Headers init should have thrown")
-        } catch Headers.ParseError.invalidLeadingWhitespace {
+        } catch HTTPRequestParser.Error.invalidRequest {
             //
         } catch {
             XCTFail("Wrong error: \(error)")
@@ -87,9 +87,9 @@ class HTTPHeadersTests: XCTestCase {
             try stream.sendLine()
             try stream.sendLine()
 
-            _ = try Headers(stream: stream)
+            _ = try HTTPRequestParser(stream: stream).parseHeaders()
             XCTFail("Headers init should have thrown")
-        } catch Headers.ParseError.invalidKeyWhitespace {
+        } catch HTTPRequestParser.Error.invalidKeyWhitespace {
             //
         } catch {
             XCTFail("Wrong error: \(error)")

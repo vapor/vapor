@@ -228,10 +228,10 @@ public final class HTTPRequestParser: Vapor.RequestParser {
         14.41).
     */
     func parseBody(with headers: Headers) throws -> Body {
-        let bytes: Bytes
+        let body: Bytes
 
         if let contentLength = headers["content-length"]?.int {
-            bytes = try stream.receive(max: contentLength)
+            body = try stream.receive(max: contentLength)
         } else if
             let transferEncoding = headers["transfer-encoding"]
             where transferEncoding.lowercased().hasSuffix("chunked") // chunked MUST be last component
@@ -256,20 +256,21 @@ public final class HTTPRequestParser: Vapor.RequestParser {
                     break
                 }
 
-                // convert hex length data to int
+                // convert hex length data to int, or end of encoding
                 guard let length = lengthData.hexInt where length > 0 else {
                     break
                 }
 
-                let content = try stream.receive(max: length + 2)
-                buffer += content
+
+                let content = try stream.receive(max: length + Byte.crlf.count)
+                buffer += content[0 ..< content.count - Byte.crlf.count]
             }
 
-            bytes = buffer
+            body = buffer
         } else {
-            bytes = []
+            body = []
         }
-        return .buffer(Data(bytes))
+        return .buffer(Data(body))
     }
 
     func parseURI(with uriSlice: BytesSlice, host hostHeader : String?) throws -> URI {
