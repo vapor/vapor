@@ -5,13 +5,11 @@ import libc
 @testable import Vapor
 
 class PercentEncodingTests: XCTestCase {
-    static var allTests: [(String, (PercentEncodingTests) -> () throws -> Void)] {
-        return [
-            ("testEncoding", testEncoding),
-            ("testDecoding", testDecoding)
-        ]
-    }
-    
+    static let allTests = [
+        ("testEncoding", testEncoding),
+        ("testDecoding", testDecoding)
+    ]
+
     func testEncoding() throws {
         try utf8TestCases.forEach { character, encoding in
             let bytes = character.utf8

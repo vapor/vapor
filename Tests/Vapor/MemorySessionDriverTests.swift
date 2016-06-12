@@ -1,40 +1,24 @@
-//
-//  MemorySessionDriverTests.swift
-//  Vapor
-//
-//  Created by James Richard on 3/4/16.
-//
-
 import XCTest
 @testable import Vapor
 
 /**
- Working around linux testing bug
- */
+    Working around linux testing bug
+*/
 private class MSDTHelper {
     static var application = Application()
     static var identifier = "baz"
 }
 
 class MemorySessionDriverTests: XCTestCase {
-    static var allTests: [(String, (MemorySessionDriverTests) -> () throws -> Void)] {
-        return [
-            ("testValueForKey_onNonExistantSession_isNil",
-                testValueForKey_onNonExistantSession_isNil),
-            ("testValueForKey_onExistingSession_onNonExistingKey_isNil",
-                testValueForKey_onExistingSession_onNonExistingKey_isNil),
-            ("testValueForKey_onExistingSession_onExistingKey_isKeyValue",
-                testValueForKey_onExistingSession_onExistingKey_isKeyValue),
-            ("testSetValueForKey_setsValueCorrectly",
-                testSetValueForKey_setsValueCorrectly),
-            ("testSetValueForKey_withExistingValue_overwritesValueCorrectly",
-                testSetValueForKey_withExistingValue_overwritesValueCorrectly),
-            ("testSetValueForKey_withExistingValue_toNilErasesValue",
-                testSetValueForKey_withExistingValue_toNilErasesValue),
-            ("testDestroySession_removesSession",
-                testDestroySession_removesSession)
-        ]
-    }
+    static let allTests = [
+        ("testValueForKey_onNonExistantSession_isNil", testValueForKey_onNonExistantSession_isNil),
+        ("testValueForKey_onExistingSession_onNonExistingKey_isNil", testValueForKey_onExistingSession_onNonExistingKey_isNil),
+        ("testValueForKey_onExistingSession_onExistingKey_isKeyValue", testValueForKey_onExistingSession_onExistingKey_isKeyValue),
+        ("testSetValueForKey_setsValueCorrectly", testSetValueForKey_setsValueCorrectly),
+        ("testSetValueForKey_withExistingValue_overwritesValueCorrectly", testSetValueForKey_withExistingValue_overwritesValueCorrectly),
+        ("testSetValueForKey_withExistingValue_toNilErasesValue", testSetValueForKey_withExistingValue_toNilErasesValue),
+        ("testDestroySession_removesSession", testDestroySession_removesSession)
+    ]
 
     // MARK: - Obtaining Values
     func testValueForKey_onNonExistantSession_isNil() {

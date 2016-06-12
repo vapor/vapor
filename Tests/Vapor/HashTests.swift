@@ -1,21 +1,11 @@
-//
-//  HashTests.swift
-//  Vapor
-//
-//  Created by Tanner Nelson on 2/22/16.
-//  Copyright © 2016 Tanner Nelson. All rights reserved.
-//
-
 import Foundation
 import XCTest
 @testable import Vapor
 
 class HashTests: XCTestCase {
-    static var allTests: [(String, (HashTests) -> () throws -> Void)] {
-        return [
-            ("testHash", testHash)
-        ]
-    }
+    static let allTests = [
+        ("testHash", testHash)
+    ]
 
     func testHash() {
 

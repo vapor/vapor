@@ -2,13 +2,11 @@ import XCTest
 @testable import Vapor
 
 class ApplicationTests: XCTestCase {
-    static var allTests: [(String, (ApplicationTests) -> () throws -> Void)] {
-        return [
-            ("testMediaType", testMediaType),
-            ("testProviders", testProviders),
-            ("testProvidersOverride", testProvidersOverride),
-        ]
-    }
+    let allTests = [
+        ("testMediaType", testMediaType),
+        ("testProviders", testProviders),
+        ("testProvidersOverride", testProvidersOverride),
+    ]
 
     var workDir: String {
         let parent = #file.characters.split(separator: "/").map(String.init).dropLast().joined(separator: "/")

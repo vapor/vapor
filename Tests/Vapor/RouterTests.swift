@@ -1,24 +1,14 @@
-//
-//  RouterTests.swift
-//  Vapor
-//
-//  Created by Tanner Nelson on 2/18/16.
-//  Copyright © 2016 Tanner Nelson. All rights reserved.
-//
-
 import Foundation
 import XCTest
 @testable import Vapor
 
 class RouterTests: XCTestCase {
 
-    static var allTests: [(String, (RouterTests) -> () throws -> Void)] {
-        return [
-           ("testSingleHostRouting", testSingleHostRouting),
-           ("testMultipleHostsRouting", testMultipleHostsRouting),
-           ("testURLParameterDecoding", testURLParameterDecoding)
-        ]
-    }
+    static let allTests = [
+       ("testSingleHostRouting", testSingleHostRouting),
+       ("testMultipleHostsRouting", testMultipleHostsRouting),
+       ("testURLParameterDecoding", testURLParameterDecoding)
+    ]
 
     func testSingleHostRouting() {
         let router = BranchRouter()

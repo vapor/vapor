@@ -10,12 +10,10 @@ import XCTest
 @testable import Vapor
 
 class ValidationUniqueTests: XCTestCase {
-    static var allTests: [(String, (ValidationUniqueTests) -> () throws -> Void)] {
-        return [
-                   ("testIntsArray", testIntsArray),
-                   ("testStringArray", testStringArray)
-        ]
-    }
+    static let allTests = [
+       ("testIntsArray", testIntsArray),
+       ("testStringArray", testStringArray)
+    ]
 
     func testIntsArray() {
         let unique = [1, 2, 3, 4, 5, 6, 7, 8]

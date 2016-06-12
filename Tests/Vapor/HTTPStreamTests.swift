@@ -1,23 +1,13 @@
-//  JeevesTests.swift
-//  Vapor
-//
-//  Created by Logan Wright on 3/12/16.
-//  Copyright © 2016 Tanner Nelson. All rights reserved.
-//
-
 import Foundation
 import XCTest
 
 @testable import Vapor
 
 class HTTPStreamTests: XCTestCase {
-
-    static var allTests: [(String, (HTTPStreamTests) -> () throws -> Void)] {
-        return [
-           ("testParser", testParser),
-           ("testSerializer", testSerializer)
-        ]
-    }
+    static let allTests = [
+       ("testParser", testParser),
+       ("testSerializer", testSerializer)
+    ]
 
     func testParser() {
         let stream = TestStream()
