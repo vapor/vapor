@@ -101,8 +101,11 @@ extension Multipart {
 
                     // If it's not a file (or not for sure) we're storing the information String
                 } else {
-                    let input = String(body).replacingOccurrences(of: "\r\n", with: "")
-
+                    print("No content type or filename")
+//                    let body = String(body)
+                    print("Body: \(body)")
+                    let input = body.string.components(separatedBy: "\r\n").joined(separator: "")
+                    print("input: \(input)")
                     form[name] = .input(input)
                 }
             }
