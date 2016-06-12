@@ -37,7 +37,8 @@ class ContentTests: XCTestCase {
         body += "\r\n"
         body += "123\r\n"
         body += "--" + boundary + "\r\n"
-
+        print("Body: \(body)")
+        
         let parsedBoundary = try Multipart.parseBoundary(contentType: "multipart/form-data; charset=utf-8; boundary=\(boundary)")
         print("Parsed boundary: \(parsedBoundary)")
         let data = Multipart.parse(body.data, boundary: parsedBoundary)
