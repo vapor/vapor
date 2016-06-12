@@ -4,6 +4,7 @@ import XCTest
 class HTTPBodyTests: XCTestCase {
     static var allTests = [
         ("testBufferParse", testBufferParse),
+        ("testChunkedParse", testChunkedParse),
     ]
 
     func testBufferParse() {
