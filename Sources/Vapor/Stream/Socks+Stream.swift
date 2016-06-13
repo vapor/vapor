@@ -1,12 +1,4 @@
 import Socks
-import SocksCore
-
-extension timeval {
-    init(seconds: Double) {
-        let time = (seconds >= 0) ? Int(seconds) : 0
-        self.init(seconds: time)
-    }
-}
 
 extension Socks.TCPClient: Stream {
     public var closed: Bool {
