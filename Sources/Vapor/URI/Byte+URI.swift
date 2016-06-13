@@ -19,31 +19,43 @@ extension Byte {
                       "*" / "+" / "," / ";" / "="
 */
 extension Byte {
+    static let generalDelimiters: [Byte] = [
+        .colon,
+        .forwardSlash,
+        .questionMark,
+        .numberSign,
+        .leftSquareBracket,
+        .rightSquareBracket,
+        .at
+    ]
+
     /**
         gen-delims  = ":" / "/" / "?" / "#" / "[" / "]" / "@"
     */
     internal var isGeneralDelimiter: Bool {
-        let char = Character(self)
-        switch char {
-        case ":", "/", "?", "#", "[", "]", "@":
-            return true
-        default:
-            return false
-        }
+        return Byte.generalDelimiters.contains(self)
     }
+
+    static let subDelimiters: [Byte] = [
+        .exclamation,
+        .dollar,
+        .ampersand,
+        .apostrophe,
+        .leftParenthesis,
+        .rightParenthesis,
+        .asterisk,
+        .plus,
+        .comma,
+        .semicolon,
+        .equals
+    ]
 
     /**
         sub-delims  = "!" / "$" / "&" / "'" / "(" / ")"
         "*" / "+" / "," / ";" / "="
     */
     internal var isSubDelimiter: Bool {
-        let char = Character(self)
-        switch char {
-        case "!", "$", "&", "'", "(", ")", "*", "+", ",", ";", "=":
-            return true
-        default:
-            return false
-        }
+        return Byte.subDelimiters.contains(self)
     }
 }
 
@@ -66,19 +78,17 @@ extension Byte {
         unreserved  = ALPHA / DIGIT / "-" / "." / "_" / "~"
     */
     internal var isUnreservedUriCharacter: Bool {
-        let char = Character(self)
-        switch char {
-        case "a"..."z":
+        switch self {
+        case .a ... .z:
             return true
-        case "A"..."Z":
+        case .A ... .z:
             return true
-        case "0"..."9":
+        case .zero ... .nine:
             return true
-        case "-", ".", "_", "~":
+        case Byte.hyphen, Byte.period, Byte.underscore, Byte.tilda:
             return true
         default:
             return false
-
         }
     }
 }

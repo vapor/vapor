@@ -2,14 +2,14 @@ import XCTest
 @testable import Vapor
 
 class ConfigTests: XCTestCase {
-    static var allTests: [(String, (ConfigTests) -> () throws -> Void)] {
-        return [
-           ("testSimple", testSimple),
-           ("testNesting", testNesting),
-           ("testEnvironmentCascading", testEnvironmentCascading),
-           ("testEnvironmentCascadingNesting", testEnvironmentCascadingNesting),
-        ]
-    }
+    static let allTests = [
+       ("testSimple", testSimple),
+       ("testNesting", testNesting),
+       ("testEnvironmentCascading", testEnvironmentCascading),
+       ("testEnvironmentCascadingNesting", testEnvironmentCascadingNesting),
+       ("testConfigKeys", testConfigKeys),
+       ("testConfigParsing", testConfigParsing),
+    ]
 
     var workDir: String {
         let parent = #file.characters.split(separator: "/").map(String.init).dropLast().joined(separator: "/")

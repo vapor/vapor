@@ -10,6 +10,12 @@ var workDir: String {
 let config = Config(seed: JSON.object(["port": "8000"]), workingDirectory: workDir)
 let app = Application(workDir: workDir, config: config)
 
+let 😀: Response = Response(status: .ok)
+
+app.get("ping") { _ in
+    return 😀
+}
+
 //MARK: Basic
 
 app.get("/") { request in
@@ -44,8 +50,8 @@ app.socket("socket") { request, ws in
         }
     }
 
-    ws.onClose = { data in
-        print("Did close w/ packet \(data)")
+    ws.onClose = { ws, status, reason, clean in
+        print("Did close w/ status \(status) reason \(reason)")
     }
 }
 
@@ -267,10 +273,10 @@ app.post("multipart-image") { request in
         throw Abort.badRequest
     }
 
-    var headers: Response.Headers = [:]
+    var headers: Headers = [:]
 
     if let mediaType = image.type {
-        headers["Content-Type"] = mediaType.type + "/" + mediaType.subtype
+        headers["Content-Type"] = mediaType
     }
 
     return Response(status: .ok, headers: headers, data: image.data)
@@ -306,10 +312,10 @@ app.post("multifile") { request in
 
     let file = files[number]
 
-    var headers: Response.Headers = [:]
+    var headers: Headers = [:]
 
     if let mediaType = file.type {
-        headers["Content-Type"] = mediaType.type + "/" + mediaType.subtype
+        headers["Content-Type"] = mediaType
     }
 
     return Response(status: .ok, headers: headers, data: file.data)

@@ -1,5 +1,3 @@
-import MediaType
-
 /**
     Multipart data that can consist of a 
     single or multiple files or a single or
@@ -18,7 +16,7 @@ extension Multipart {
     */
     public struct File {
         public var name: String?
-        public var type: MediaType?
+        public var type: String?
         public var data: Data
     }
 }

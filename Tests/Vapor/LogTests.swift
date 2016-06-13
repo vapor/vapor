@@ -1,11 +1,3 @@
-//
-//  LogTests.swift
-//  Vapor
-//
-//  Created by Matthew on 23/02/2016.
-//  Copyright © 2016 Tanner Nelson. All rights reserved.
-//
-
 import XCTest
 @testable import Vapor
 
@@ -22,22 +14,19 @@ private class DummyLogger: LogDriver {
 }
 
 class LogTests: XCTestCase {
-
-    static var allTests: [(String, (LogTests) -> () throws -> Void)] {
-        return [
-            ("testCanOverrideDefaultLogger", testCanOverrideDefaultLogger),
-            ("testAllLevelsEnabledByDefault", testAllLevelsEnabledByDefault),
-            ("testCanOverrideDefaultEnabledLevels", testCanOverrideDefaultEnabledLevels),
-            ("testDisabledLogsDoNoOutput", testDisabledLogsDoNoOutput),
-            ("testVerboseDidLog", testVerboseDidLog),
-            ("testDebugDidLog", testDebugDidLog),
-            ("testInfoDidLog", testInfoDidLog),
-            ("testWarningDidLog", testWarningDidLog),
-            ("testErrorDidLog", testErrorDidLog),
-            ("testFatalDidLog", testFatalDidLog),
-            ("testCustomDidLog", testCustomDidLog)
-        ]
-    }
+    static let allTests = [
+        ("testCanOverrideDefaultLogger", testCanOverrideDefaultLogger),
+        ("testAllLevelsEnabledByDefault", testAllLevelsEnabledByDefault),
+        ("testCanOverrideDefaultEnabledLevels", testCanOverrideDefaultEnabledLevels),
+        ("testDisabledLogsDoNoOutput", testDisabledLogsDoNoOutput),
+        ("testVerboseDidLog", testVerboseDidLog),
+        ("testDebugDidLog", testDebugDidLog),
+        ("testInfoDidLog", testInfoDidLog),
+        ("testWarningDidLog", testWarningDidLog),
+        ("testErrorDidLog", testErrorDidLog),
+        ("testFatalDidLog", testFatalDidLog),
+        ("testCustomDidLog", testCustomDidLog)
+    ]
 
     /* Resets the logger for each test
      */

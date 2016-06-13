@@ -5,11 +5,10 @@ import libc
 @testable import Vapor
 
 class URISerializationTests: XCTestCase {
-    static var allTests: [(String, (URISerializationTests) -> () throws -> Void)] {
-        return [
-            ("testParsing", testParsing)
-        ]
-    }
+    
+    static let allTests = [
+        ("testParsing", testParsing)
+    ]
 
     func testParsing() throws {
         /*

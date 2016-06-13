@@ -2,11 +2,11 @@ public enum FrameParserError: ErrorProtocol {
     case missingByte
 }
 
-public final class FrameParser<Buffer: InputBuffer where Buffer.Element == Byte> {
-    private var buffer: Buffer
+public final class FrameParser {
+    private var stream: Stream
 
-    public init(buffer: Buffer) {
-        self.buffer = buffer
+    public init(stream: Stream) {
+        self.stream = stream
     }
 
     public func acceptFrame() throws -> WebSocket.Frame {
@@ -51,7 +51,7 @@ public final class FrameParser<Buffer: InputBuffer where Buffer.Element == Byte>
     // MARK: Private
     
     private func extractByteZero() throws -> (fin: Bool, rsv1: Bool, rsv2: Bool, rsv3: Bool, opCode: WebSocket.Frame.OpCode) {
-        guard let byteZero = try buffer.next() else {
+        guard let byteZero = try stream.receive() else {
             throw FrameParserError.missingByte
         }
         let fin = byteZero.containsMask(.finFlag)
@@ -64,7 +64,7 @@ public final class FrameParser<Buffer: InputBuffer where Buffer.Element == Byte>
     }
 
     private func extractByteOne() throws -> (maskKeyIncluded: Bool, payloadLength: Byte) {
-        guard let byteOne = try buffer.next() else {
+        guard let byteOne = try stream.receive() else {
             throw FrameParserError.missingByte
         }
         let maskKeyIncluded = byteOne.containsMask(.maskKeyIncludedFlag)
@@ -76,22 +76,22 @@ public final class FrameParser<Buffer: InputBuffer where Buffer.Element == Byte>
      Returns UInt64 to encompass highest possible length. Length will be UInt16
      */
     private func extractTwoBytePayloadLengthExtension() throws -> UInt64 {
-        let two = try buffer.chunk(length: 2)
+        let two = try stream.receive(max: 2)
         return UInt64(two)
     }
 
 
     private func extractEightBytePayloadLengthExtension() throws -> UInt64 {
-        let eight = try buffer.chunk(length: 8)
+        let eight = try stream.receive(max: 8)
         return UInt64(eight)
     }
 
     private func extractMaskingKey() throws -> WebSocket.Frame.MaskingKey {
         guard
-            let zero = try buffer.next(),
-            let one = try buffer.next(),
-            let two = try buffer.next(),
-            let three = try buffer.next()
+            let zero = try stream.receive(),
+            let one = try stream.receive(),
+            let two = try stream.receive(),
+            let three = try stream.receive()
             else { throw FrameParserError.missingByte }
 
         return .key(zero: zero, one: one, two: two, three: three)
@@ -101,18 +101,11 @@ public final class FrameParser<Buffer: InputBuffer where Buffer.Element == Byte>
         var count: UInt64 = 0
         var bytes: [UInt8] = []
 
-        while count < length, let next = try buffer.next() {
+        while count < length, let next = try stream.receive() {
             bytes.append(next)
             count += 1
         }
 
         return key.hash(bytes)
-    }
-}
-
-extension FrameParser where Buffer: StreamBuffer {
-    public convenience init(stream: Stream) {
-        let buffer = Buffer.init(stream)
-        self.init(buffer: buffer)
     }
 }

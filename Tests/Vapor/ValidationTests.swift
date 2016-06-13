@@ -21,15 +21,13 @@ class Name: ValidationSuite {
 
 
 class ValidationTests: XCTestCase {
-    static var allTests: [(String, (ValidationTests) -> () throws -> Void)] {
-        return [
-            ("testName", testName),
-            ("testPassword", testPassword),
-            ("testNot", testNot),
-            ("testComposition", testComposition),
-            ("testAlternateSyntax", testAlternateSyntax)
-        ]
-    }
+    static let allTests = [
+        ("testName", testName),
+        ("testPassword", testPassword),
+        ("testNot", testNot),
+        ("testComposition", testComposition),
+        ("testAlternateSyntax", testAlternateSyntax)
+    ]
 
     func testName() throws {
         let validName = try "fancyUser".validated(by: Name.self)

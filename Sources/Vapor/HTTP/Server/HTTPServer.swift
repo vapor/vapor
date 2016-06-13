@@ -7,18 +7,14 @@
 import Strand
 import SocksCore
 
-// MARK: Byte => Character
-extension Character {
-    init(_ byte: Byte) {
-        let scalar = UnicodeScalar(byte)
-        self.init(scalar)
-    }
+enum ServerError: ErrorProtocol {
+    case bindFailed
 }
 
-final class StreamServer<
+final class HTTPServer<
     Server: StreamDriver,
-    Parser: StreamParser,
-    Serializer: StreamSerializer
+    Parser: RequestParser,
+    Serializer: ResponseSerializer
 >: ServerDriver {
     var server: Server
     var responder: Responder
@@ -29,7 +25,11 @@ final class StreamServer<
     }
 
     func start() throws {
-        try server.start(handler: handle)
+        do {
+            try server.start(handler: handle)
+        } catch let e as SocksCore.Error where e.isBindFailed {
+            throw ServerError.bindFailed
+        }
     }
 
     private func handle(_ stream: Stream) {
@@ -43,10 +43,14 @@ final class StreamServer<
     }
 
     private func parse(_ stream: Stream) {
+        let stream = StreamBuffer(stream)
+        stream.timeout = 30
+
+        let parser = Parser(stream: stream)
+        let serializer = Serializer(stream: stream)
+
         var keepAlive = false
         repeat {
-            let parser = Parser(stream: stream)
-            let serializer = Serializer(stream: stream)
             do {
                 let request = try parser.parse()
                 keepAlive = request.keepAlive
@@ -61,7 +65,7 @@ final class StreamServer<
             } catch let e as SocksCore.Error where e.isBrokenPipe {
                 // broken pipe, abort
                 break
-            } catch let e as HTTPParser.Error where e == .streamEmpty {
+            } catch HTTPRequestParser.Error.streamEmpty {
                 // the stream we got was empty, abort
                 break
             } catch {
@@ -89,6 +93,9 @@ extension SocksCore.Error {
     var isBrokenPipe: Bool {
         return self.number == 32
     }
+    var isBindFailed: Bool {
+        return self.number == 48
+    }
 }
 
 extension Request {
@@ -96,7 +103,7 @@ extension Request {
         // HTTP 1.1 defaults to true unless explicitly passed `Connection: close`
         guard let value = headers["Connection"] else { return true }
         // TODO: Decide on if 'contains' is better, test linux version
-        return !(value.trim() == "close")
+        return !value.contains("close")
     }
 }
 

@@ -1,4 +1,4 @@
-public protocol StreamParser {
+public protocol RequestParser {
     init(stream: Stream)
     func parse() throws -> Request
 }

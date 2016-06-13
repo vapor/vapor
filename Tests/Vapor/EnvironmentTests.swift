@@ -1,22 +1,12 @@
-//
-//  EnvironmentTests.swift
-//  Vapor
-//
-//  Created by Shaun Harrison on 2/26/2016.
-//  Copyright © 2016 Tanner Nelson. All rights reserved.
-//
-
 import XCTest
 @testable import Vapor
 
 class EnvironmentTests: XCTestCase {
-    static var allTests: [(String, (EnvironmentTests) -> () throws -> Void)] {
-        return [
-           ("testEnvironment", testEnvironment),
-           ("testDetectEnvironmentHandler", testDetectEnvironmentHandler),
-           ("testInEnvironment", testInEnvironment)
-        ]
-    }
+    static let allTests = [
+       ("testEnvironment", testEnvironment),
+       ("testDetectEnvironmentHandler", testDetectEnvironmentHandler),
+       ("testInEnvironment", testInEnvironment)
+    ]
 
     func testEnvironment() {
         let app = Application()
@@ -33,5 +23,4 @@ class EnvironmentTests: XCTestCase {
         let app = Application(config: config)
         XCTAssert([.custom("xctest")].contains(app.config.environment), "Environment not correctly detected: \(app.config.environment)")
     }
-
 }

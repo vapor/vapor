@@ -1,11 +1,3 @@
-//
-//  RouteTests.swift
-//  Vapor
-//
-//  Created by Matthew on 20/02/2016.
-//  Copyright © 2016 Tanner Nelson. All rights reserved.
-//
-
 import XCTest
 @testable import Vapor
 
@@ -91,19 +83,15 @@ private class TestActionController: DefaultInitializable {
 
 
 class ControllerTests: XCTestCase {
-
-    static var allTests: [(String, (ControllerTests) -> () throws -> Void)] {
-        return [
-            ("testController", testController),
-            ("testControllerActionRouting_withFactory", testControllerActionRouting_withFactory),
-            ("testControllerActionRouting_withDefaultInitializable", testControllerActionRouting_withDefaultInitializable),
-            ("testControllerActionRouting_withApplicationInitializable", testControllerActionRouting_withApplicationInitializable),
-            ("testControllerMethodsHit", testControllerMethodsHit)
-        ]
-    }
+    static let allTests = [
+        ("testController", testController),
+        ("testControllerActionRouting_withFactory", testControllerActionRouting_withFactory),
+        ("testControllerActionRouting_withDefaultInitializable", testControllerActionRouting_withDefaultInitializable),
+        ("testControllerActionRouting_withApplicationInitializable", testControllerActionRouting_withApplicationInitializable),
+        ("testControllerMethodsHit", testControllerMethodsHit)
+    ]
 
     func testController() {
-
         let app = Application()
 
         let instance = TestController(application: app)
@@ -120,7 +108,6 @@ class ControllerTests: XCTestCase {
         } else {
             XCTFail("No handler found for foo.index")
         }
-
     }
 
     func testControllerActionRouting_withFactory() throws {

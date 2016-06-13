@@ -6,20 +6,15 @@ let package = Package(
         //Standards package. Contains protocols for cross-project compatability.
         .Package(url: "https://github.com/open-swift/S4.git", majorVersion: 0, minor: 10),
 
-        //Provides critical String functions Foundation is missing on Linux
-        .Package(url: "https://github.com/Zewo/String.git", majorVersion: 0, minor: 7),
-
         //Parses and serializes JSON - using fork until update core library
         .Package(url: "https://github.com/qutheory/pure-json.git", majorVersion: 2, minor: 5),
 
         //SHA2 + HMAC hashing. Used by the core to create session identifiers.
         .Package(url: "https://github.com/CryptoKitten/HMAC.git", majorVersion: 0, minor: 7),
         .Package(url: "https://github.com/CryptoKitten/SHA2.git", majorVersion: 0, minor: 7),
+        
         //Websockets
         .Package(url: "https://github.com/CryptoKitten/SHA1.git", majorVersion: 0, minor: 7),
-
-        //Determines Content-Type for file extensions
-        .Package(url: "https://github.com/Zewo/MediaType.git", majorVersion: 0, minor: 9),
 
         //ORM for interacting with databases
         .Package(url: "https://github.com/qutheory/fluent.git", majorVersion: 0, minor: 6),

@@ -1,4 +1,7 @@
 extension Byte {
+    /// '\t'
+    static let horizontalTab: Byte = 0x9
+
     /// '\n'
     static let newLine: Byte = 0xA
 
@@ -8,8 +11,17 @@ extension Byte {
     /// ' '
     static let space: Byte = 0x20
 
+    /// !
+    static let exclamation: Byte = 0x21
+
+    /// "
+    static let quote: Byte = 0x22
+
     /// #
     static let numberSign: Byte = 0x23
+
+    /// $
+    static let dollar: Byte = 0x24
 
     /// %
     static let percent: Byte = 0x25
@@ -17,8 +29,23 @@ extension Byte {
     /// &
     static let ampersand: Byte = 0x26
 
+    /// '
+    static let apostrophe: Byte = 0x27
+
+    /// (
+    static let leftParenthesis: Byte = 0x28
+
+    /// )
+    static let rightParenthesis: Byte = 0x29
+
+    /// *
+    static let asterisk: Byte = 0x2A
+
     /// +
     static let plus: Byte = 0x2B
+
+    /// ,
+    static let comma: Byte = 0x2C
 
     /// -
     static let hyphen: Byte = 0x2D
@@ -74,8 +101,14 @@ extension Byte {
     /// [
     static let leftSquareBracket: Byte = 0x5B
 
+    /// \
+    static let backSlash: Byte = 0x5C
+
     /// ]
     static let rightSquareBracket: Byte = 0x5D
+
+    /// _
+    static let underscore: Byte = 0x5F
 
     /// a
     static let a: Byte = 0x61
@@ -85,49 +118,33 @@ extension Byte {
 
     /// z
     static let z: Byte = 0x7A
+
+    /// ~
+    static let tilda: Byte = 0x7E
 }
 
+func ~=(pattern: Byte, value: Byte) -> Bool {
+    return pattern == value
+}
 
 extension Byte {
     var isWhitespace: Bool {
-        let char = Character(self)
-        switch char {
-        case " ", "\n", "\r", "\t":
-            return true
-        default:
-            return false
-        }
+        return self == .space || self == .newLine || self == .carriageReturn || self == .horizontalTab
     }
+
     var isLetter: Bool {
-        let char = Character(self)
-        switch char {
-        case "a"..."z":
-            return true
-        case "A"..."Z":
-            return true
-        default:
-            return false
-        }
+        return (.a ... .z).contains(self) || (.A ... .Z).contains(self)
     }
+
     var isDigit: Bool {
-        let char = Character(self)
-        switch char {
-        case "0"..."9":
-            return true
-        default:
-            return false
-        }
+        return (.zero ... .nine).contains(self)
     }
+
     var isAlphanumeric: Bool {
         return isLetter || isDigit
     }
+
     var isHexDigit: Bool {
-        let char = Character(self)
-        switch char {
-        case "a"..."f", "A"..."F", "0"..."9":
-            return true
-        default:
-            return false
-        }
+        return (.zero ... .nine).contains(self) || (.A ... .F).contains(self) || (.a ... .f).contains(self)
     }
 }

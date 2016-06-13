@@ -10,13 +10,11 @@ import XCTest
 @testable import Vapor
 
 class ValidationCountTests: XCTestCase {
-    static var allTests: [(String, (ValidationCountTests) -> () throws -> Void)] {
-        return [
-            ("testCountString", testCountString),
-            ("testCountInteger", testCountInteger),
-            ("testCountArray", testCountArray)
-        ]
-    }
+    static let allTests = [
+        ("testCountString", testCountString),
+        ("testCountInteger", testCountInteger),
+        ("testCountArray", testCountArray)
+    ]
 
     func testCountString() {
         let string = "123456789"

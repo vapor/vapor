@@ -1,5 +1,4 @@
 import libc
-import MediaType
 import Foundation
 import Socks
 
@@ -177,10 +176,10 @@ public class Application {
         ]
 
         self.router = routerProvided ?? BranchRouter()
-        self.server = serverProvided ?? StreamServer<
+        self.server = serverProvided ?? HTTPServer<
             SynchronousTCPServer,
-            HTTPParser,
-            HTTPSerializer
+            HTTPRequestParser,
+            HTTPResponseSerializer
         >.self
 
         routes = []
@@ -204,7 +203,7 @@ public class Application {
 
     private func restrictLogging(for environment: Environment) {
         guard config.environment == .production else { return }
-        Log.info("Production environment detected, disabling information logs.")
+        console.output("Production mode enabled, disabling informational logs.", style: .info)
         Log.enabledLevels = [.error, .fatal]
     }
 }
@@ -290,9 +289,7 @@ extension Sequence where Iterator.Element == String {
         for item in self {
             let search = "--\(string)="
             if item.hasPrefix(search) {
-                var item = item
-                item.replace(string: search, with: "")
-                return item
+                return item.replacingOccurrences(of: search, with: "")
             }
         }
 
@@ -303,10 +300,12 @@ extension Sequence where Iterator.Element == String {
 extension Application {
     internal func serve() {
         do {
-            Log.info("Server starting at \(host):\(port)")
+            console.output("Server starting at \(host):\(port)", style: .info)
             // noreturn
             let server = try self.server.init(host: host, port: port, responder: self)
             try server.start()
+        } catch ServerError.bindFailed {
+            console.output("Could not bind to port \(port), it may be in use or require sudo.", style: .error)
         } catch {
             Log.error("Server start error: \(error)")
         }
@@ -325,11 +324,11 @@ extension Application {
         // File exists
         if let fileBody = try? FileManager.readBytesFromFile(filePath) {
             return Request.Handler { _ in
-                var headers: Response.Headers = [:]
+                var headers: Headers = [:]
 
                 if
                     let fileExtension = filePath.components(separatedBy: ".").last,
-                    let type = mediaType(forFileExtension: fileExtension)
+                    let type = mediaTypes[fileExtension]
                 {
                     headers["Content-Type"] = type.description
                 }
