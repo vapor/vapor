@@ -145,7 +145,7 @@ final class TestTwoCommand: Command {
 }
 
 class TestConsoleDriver: ConsoleDriver {
-    var buffer: Data
+    var buffer: Vapor.Data
 
     init() {
         buffer = []

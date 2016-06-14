@@ -69,7 +69,7 @@ class HTTPStreamTests: XCTestCase {
     }
 }
 
-final class TestStream: Stream {
+final class TestStream: Vapor.Stream {
     var closed: Bool
     var buffer: Bytes
 
@@ -124,7 +124,7 @@ final class TestStreamDriver: StreamDriver {
         return .init()
 
     }
-    func start(handler: (Stream) throws -> ()) throws {
+    func start(handler: (Vapor.Stream) throws -> ()) throws {
 
     }
 }
