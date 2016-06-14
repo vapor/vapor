@@ -15,6 +15,7 @@ class SessionMiddleware: Middleware {
     }
 
     func respond(to request: Request, chainingTo chain: Responder) throws -> Response {
+        // mutable -- MUST be declared at top of function
         var request = request
 
         if

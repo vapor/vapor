@@ -1,13 +1,14 @@
 class JSONMiddleware: Middleware {
     func respond(to request: Request, chainingTo next: Responder) throws -> Response {
-        
+        // mutable -- MUST be declared at top of function
+        var request = request
+
         // Parse Request JSON
-        if 
+        if
             case .buffer(let data) = request.body,
             let contentType = request.contentType
             where contentType.contains("application/json")
         {
-            var request = request
             do {
                 request.json = try JSON(data)
             } catch {
