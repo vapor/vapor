@@ -136,7 +136,7 @@ public class Application {
             consoleProvided = provider.console ?? consoleProvided
         }
 
-        let arguments = arguments ?? NSProcessInfo.processInfo().arguments
+        let arguments = arguments ?? ProcessInfo.processInfo().arguments
         self.arguments = arguments
 
         let workDir = workDir

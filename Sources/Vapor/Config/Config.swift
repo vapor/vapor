@@ -50,7 +50,7 @@ public class Config {
         seed: JSON = [:],
         workingDirectory: String = "./",
         environment: Environment? = nil,
-        arguments: [String] = NSProcessInfo.processInfo().arguments
+        arguments: [String] = ProcessInfo.processInfo().arguments
     ) {
         let configDirectory = workingDirectory.finish("/") + "Config/"
         self.configDirectory = configDirectory

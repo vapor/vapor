@@ -13,15 +13,15 @@ if Process.arguments.count < 2 {
     fatalError("$(SRCROOT) must be passed as a parameter")
 }
 
-let path = NSProcessInfo.processInfo().arguments[1].replacingOccurrences(of: "XcodeProject", with: "")
-let url = NSURL(fileURLWithPath: path + "/Sources/Vapor/Core/Generated.swift")
+let path = ProcessInfo.processInfo().arguments[1].replacingOccurrences(of: "XcodeProject", with: "")
+let url = URL(fileURLWithPath: path + "/Sources/Vapor/Core/Generated.swift")
 
 do{
     let lines = code.characters.split(separator: "\n").count
     let functions = code.components(separatedBy: "func").count - 1
 
     // writing to disk
-    try code.write(to: url, atomically: true, encoding: NSUTF8StringEncoding)
+    try code.write(to: url, atomically: true, encoding: String.Encoding.utf8)
     print("✅ Code successfully generated.")
     print("Functions: \(functions)")
     print("Lines: \(lines)")
