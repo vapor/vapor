@@ -1,11 +1,129 @@
 import Vapor
 import libc
 
+import SocksCore
+import Socks
+
+
+////https://api.spotify.com/v1/search?q=beyonce&type=artist
+////let address = InternetAddress(hostname: "google.com", port: 80)
+//let address = InternetAddress(hostname: "api.spotify.com", port: 80)
+////let address = InternetAddress(hostname: "216.58.208.46", port: 80)
+//// let address = InternetAddress.localhost(port: 8080)
+////let address = InternetAddress(hostname: "192.168.1.170", port: 2425)
+//
+//let client = try TCPClient(address: address)
+//let serializer = HTTPRequestSerializer(stream: client)
+//let req = Request(version: Version(major: 1, minor: 1),
+//                  method: .get,
+//                  path: "api.spotify.com/v1/search?q=beyonce&type=artist",
+//                  host: "", // "api.spotify.com",
+//                  headers: [:],
+//                  data: [])
+//try serializer.serialize(req)
+//let response = try client.receiveAll()
+//print("Got resp: \n\n\n\(response.string)")
+//try client.close()
+
+/*
+ http://example.qutheory.io/json
+ */
+//https://api.spotify.com/v1/search?q=beyonce&type=artist
+//let address = InternetAddress(hostname: "google.com", port: 80)
+//let address = InternetAddress(hostname: "216.58.208.46", port: 80)
+// let address = InternetAddress.localhost(port: 8080)
+//let address = InternetAddress(hostname: "192.168.1.170", port: 2425)
+//let uri = URI(scheme: "http", userInfo: nil, host: "www.swiftpackages.io", port: 80, path: "/test", query: nil, fragment: nil)
+
+
+//let address = InternetAddress(hostname: "www.example.qutheory.io", port: 80)
+//let uri = URI(scheme: "http", userInfo: nil, host: "example.qutheory.io", port: 80, path: "/json", query: nil, fragment: nil)
+//let client = try TCPClient(address: address)
+//let serializer = HTTPRequestSerializer(stream: StreamBuffer(client))
+//let req = Request(method: .get, uri: uri, version: Version(major: 1, minor: 1), headers: [:], body: .buffer(Data([])))
+//try serializer.serialize(req)
+//var bytes: Bytes = []
+//let next = try client.receiveAll()
+//print("Got: \(next.string)")
+
+
+//let address = InternetAddress(hostname: "pokeapi.co", port: 80)
+extension URI {
+    init(_ str: String) throws {
+        self = try URIParser.parse(uri: str.utf8)
+    }
+}
+//let u = try URI("https://api.spotify.com/v1/search?q=beyonce&type=artist")
+//print(u)
+print("")
+import S4
+
+//let uri = URI(scheme: "http", userInfo: nil, host: "pokeapi.co", port: 80, path: "/api/v2/pokemon/1/", query: nil, fragment: nil)
+func get(_ str: String) throws {
+    let uri = try URI(str)
+    let method = Method.get
+    let version = Version(major: 1, minor: 1)
+    let headers: Headers = [:]
+    let body: Body = .buffer(Data([]))
+    let req = Request(method: method, uri: uri, version: version, headers: headers, body: body)
+
+
+    guard let host = uri.host else { fatalError("throw appropriate error") }
+    let port = uri.port ?? 80
+
+    // TODO: Get Port from scheme
+    let address = InternetAddress(hostname: host, port: Port(port))
+    let client = try TCPClient(address: address)
+    let buffer = StreamBuffer(client)
+    let serializer = HTTPRequestSerializer(stream: buffer)
+    try serializer.serialize(req)
+    let response = try client.receiveAll()
+    print("Got response: \(response.string)")
+    try client.close()
+}
+
+//try get("http://www.google.com")
+try get("http://www.example.qutheory.io/json")
+try get("http://www.pokeapi.co/api/v2/pokemon/1/")
+//let client = try TCPClient(address: address)
+//let serializer = HTTPRequestSerializer(stream: StreamBuffer(client))
+//let req = Request(method: .get, uri: uri, version: Version(major: 1, minor: 1), headers: [:], body: .buffer(Data([])))
+//try serializer.serialize(req)
+//var bytes: Bytes = []
+//let next = try client.receiveAll()
+//print("Got: \(next.string)")
+
+
+
+//while let next = try client.receive() {
+//    bytes.append(next)
+//    print("Got resp: \n\n\n\([next].string)")
+//}
+//
+//print("Got bytes: \(bytes.string)")
+//let response = try client.receiveAll()
+//try client.close()
+
+//do {
+//    try client.send(bytes: "GET /\r\n\r\n".toBytes())
+//    let str = try client.receiveAll().toString()
+//    try client.close()
+//    print("Received: \n\(str)")
+//} catch {
+//    print("Error \(error)")
+//}
+
 var workDir: String {
     let parent = #file.characters.split(separator: "/").map(String.init).dropLast().joined(separator: "/")
     let path = "/\(parent)/"
     return path
 }
+
+import Foundation
+let url = NSURL.init(string: "http://example.qutheory.io/json")
+let data = NSData.init(contentsOf: url!)
+let str = String.init(data: data!, encoding: NSUTF8StringEncoding)
+print("Data: \(str)")
 
 let config = Config(seed: JSON.object(["port": "8000"]), workingDirectory: workDir)
 let app = Application(workDir: workDir, config: config)

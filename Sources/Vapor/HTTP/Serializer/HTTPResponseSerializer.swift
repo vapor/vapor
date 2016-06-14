@@ -36,7 +36,7 @@ public final class HTTPResponseSerializer: ResponseSerializer {
         try stream.sendLine()
 
         // Body
-    switch response.body {
+        switch response.body {
         case .buffer(let buffer):
             try stream.send(buffer.bytes)
         case .sender(let closure):
