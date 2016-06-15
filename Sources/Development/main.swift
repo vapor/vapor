@@ -82,6 +82,69 @@ func get(_ str: String) throws {
     try client.close()
 }
 
+extension URI {
+    // TODO: Expose?
+    private mutating func append(query appendQuery: [String: String]) {
+        var new = ""
+        if let existing = query {
+            new += existing
+            new += "&"
+        }
+        new += appendQuery.map { key, val in "\(key)=\(val)" } .joined(separator: "&")
+        print("Got new: \(new)")
+        query = new
+    }
+}
+
+func request(_ method: Method, url: String, headers: Headers = [:], query: [String: String] = [:], body: Body = .buffer([])) throws -> Any {
+    let endpoint = url.hasSuffix("/") ? url : url + "/"
+    var uri = try URI(endpoint)
+    uri.append(query: query)
+
+    guard let host = uri.host else { fatalError("throw appropriate error") }
+    let port = uri.port ?? 80
+    // TODO: Get Port from scheme -- RFC
+    let address = InternetAddress(hostname: host, port: Port(port))
+    let client = try TCPClient(address: address)
+    let buffer = StreamBuffer(client)
+    defer {
+        _ = try? buffer.close()
+    }
+
+    let method = Method.get
+    let version = Version(major: 1, minor: 1)
+    let headers: Headers = headers
+    let body: Body = body
+    let req = Request(method: method, uri: uri, version: version, headers: headers, body: body)
+
+    let serializer = HTTPRequestSerializer(stream: buffer)
+    try serializer.serialize(req)
+    let bytes = try client.receiveAll()
+    return bytes.string
+}
+
+public final class WebRequest {
+    init(host: String) {
+
+    }
+
+    func get(_ path: String, query: [String: String]) throws -> Response {
+        fatalError()
+    }
+}
+
+//let spotifyApi = WebRequest(host: "http://api.spotify.com/v1")
+//let searchResults = try spotifyApi.get("/search", query: ["q": "beyonce", "type": "album, artist"])
+//let beyonceAlbum = try spotifyApi.get("/artists", query: ["id": "1234aaa"])
+
+
+let str = try request(.get, url: "http://example.qutheory.io/json", headers: [:])
+print(str)
+
+
+let poke = try request(.get, url: "http://pokeapi.co/api/v2/pokemon", query: ["limit": "20", "offset": "20"])
+print(poke)
+
 //try get("http://www.google.com")
 try get("http://www.example.qutheory.io/json")
 try get("http://www.pokeapi.co/api/v2/pokemon/1/")
@@ -119,11 +182,11 @@ var workDir: String {
     return path
 }
 
-import Foundation
-let url = NSURL.init(string: "http://example.qutheory.io/json")
-let data = NSData.init(contentsOf: url!)
-let str = String.init(data: data!, encoding: NSUTF8StringEncoding)
-print("Data: \(str)")
+//import Foundation
+//let url = NSURL.init(string: "http://example.qutheory.io/json")
+//let data = NSData.init(contentsOf: url!)
+//let str = String.init(data: data!, encoding: NSUTF8StringEncoding)
+//print("Data: \(str)")
 
 let config = Config(seed: JSON.object(["port": "8000"]), workingDirectory: workDir)
 let app = Application(workDir: workDir, config: config)
