@@ -98,6 +98,14 @@ import S4
 //    try client.close()
 //}
 
+// Until optional can use `==` on concrete types
+extension Extractable where Wrapped == String {
+    var isNilOrEmpty: Bool {
+        guard let val = extract() else { return true }
+        return val.isEmpty
+    }
+}
+
 extension URI {
     // TODO: Expose public?
     private mutating func append(query appendQuery: [String: String]) {
@@ -111,14 +119,24 @@ extension URI {
     }
 }
 
-public enum Body {
+public enum Payload {
     case data(Bytes)
     case chunked((SendingStream) throws -> Void)
 }
 
 extension Headers {
-    mutating func appendMetadata(for body: Body) {
-        switch body {
+    mutating func ensureConnection() {
+        if self["Connection"].isNilOrEmpty {
+            self["Connection"] = "close"
+        }
+    }
+
+    mutating func appendHost(for uri: URI) {
+        self["Host"] = uri.host
+    }
+
+    mutating func appendMetadata(for payload: Payload) {
+        switch payload {
         case .data(let bytes) where !bytes.isEmpty:
             self["Content-Length"] = bytes.count.description
         case .chunked(_):
@@ -141,7 +159,7 @@ extension Headers {
     }
 }
 
-extension Body {
+extension Payload {
     func makeS4Body() -> S4.Body {
         switch self {
         case .data(let bytes):
@@ -167,17 +185,23 @@ extension Headers {
 //    func populate
 }
 
-// Until optional can use `==` on concrete types
-extension Extractable where Wrapped == String {
-    var isNilOrEmpty: Bool {
-        guard let val = extract() else { return true }
-        return val.isEmpty
-    }
-}
-
 public protocol ClientDriver {
     // TODO: Using 'Any' until I build ResponseParser
-    func request(_ method: S4.Method, url: String, headers: Headers, query: [String: String], body: Body) throws -> Response
+    func request(_ method: S4.Method, url: String, headers: Headers, query: [String: String], payload: Payload) throws -> Response
+}
+
+extension ClientDriver {
+    public func makeConnection(to uri: URI) throws -> Vapor.Stream {
+        guard
+            let host = uri.host,
+            let port = uri.port
+                ?? uri.schemePort
+            else { fatalError("throw appropriate error, missing port") }
+        let address = InternetAddress(hostname: host, port: Port(port))
+        let client = try TCPClient(address: address)
+        let buffer = StreamBuffer(client)
+        return buffer
+    }
 }
 
 extension String {
@@ -190,54 +214,39 @@ extension String {
     }
 }
 
+import Foundation
+
+var a = NSDate()
+var b = a
+b.addingTimeInterval(10_000_000)
+print("A: \(a)")
+print("B: \(b)")
+
 public final class Client: ClientDriver {
     static let shared: Client = .init()
 
-    public func request(_ method: S4.Method, url: String, headers: Headers = [:], query: [String: String] = [:], body: Body = .data([])) throws -> Response {
+    public func request(_ method: S4.Method, url: String, headers: Headers = [:], query: [String: String] = [:], payload: Payload = .data([])) throws -> Response {
         let endpoint = url.finish("/")
         var uri = try URI(endpoint)
         uri.append(query: query)
-        guard let host = uri.host else { fatalError("throw appropriate error") }
+
         // TODO: Is it worth exposing Version? We don't support alternative serialization/parsing
         let version = Version(major: 1, minor: 1)
 
         // mutable
         var headers = headers
-        if headers["Connection"].isNilOrEmpty {
-            headers["Connection"] = "close"
-        }
-        headers["Host"] = uri.host
-        headers.appendMetadata(for: body)
+        headers.appendHost(for: uri)
+        headers.appendMetadata(for: payload)
+        headers.ensureConnection()
 
         // TODO: Omit this need if possible
-        let requestBody = body.makeS4Body()
-        let req = Request(method: method, uri: uri, version: version, headers: headers, body: requestBody)
-
+        let requestBody = payload.makeS4Body()
+        let request = Request(method: method, uri: uri, version: version, headers: headers, body: requestBody)
         let connection = try makeConnection(to: uri)
-        let serializer = HTTPRequestSerializer(stream: connection)
-        try serializer.serialize(req)
-        let parser = HTTPResponseParser(stream: connection)
-        let response: Response = try parser.parse()
-        _ = try? connection.close() // TODO: Support keep-alive?
-        
-        return response
+        return try perform(request, with: connection)
     }
 
-    private func makeConnection(to uri: URI) throws -> Vapor.Stream {
-        guard
-            let host = uri.host,
-            let port = uri.port
-                ?? uri.schemePort
-            else { fatalError("throw appropriate error, missing port") }
-        let address = InternetAddress(hostname: host, port: Port(port))
-        let client = try TCPClient(address: address)
-        let buffer = StreamBuffer(client)
-        return buffer
-    }
-
-    func perform(_ request: Request, to uri: URI) throws -> Response {
-        let connection = try makeConnection(to: uri)
-
+    private func perform(_ request: Request, with connection: Vapor.Stream) throws -> Response {
         let serializer = HTTPRequestSerializer(stream: connection)
         try serializer.serialize(request)
         let parser = HTTPResponseParser(stream: connection)
