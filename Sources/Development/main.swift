@@ -180,24 +180,25 @@ public protocol ClientDriver {
     func request(_ method: S4.Method, url: String, headers: Headers, query: [String: String], body: Body) throws -> Response
 }
 
+extension String {
+    func finish(_ end: String) -> String {
+        guard !self.hasSuffix(end) else {
+            return self
+        }
+
+        return self + end
+    }
+}
 
 public final class Client: ClientDriver {
     static let shared: Client = .init()
 
-    public func request(
-        _ method: S4.Method,
-        url: String,
-        headers: Headers = [:],
-        query: [String: String] = [:],
-        body: Body = .data([])) throws -> Response {
-
-        let endpoint = url //url.hasSuffix("/") ? url : url + "/"
+    public func request(_ method: S4.Method, url: String, headers: Headers = [:], query: [String: String] = [:], body: Body = .data([])) throws -> Response {
+        let endpoint = url.finish("/")
         var uri = try URI(endpoint)
         uri.append(query: query)
-
         guard let host = uri.host else { fatalError("throw appropriate error") }
-
-        let method = Method.get
+        // TODO: Is it worth exposing Version? We don't support alternative serialization/parsing
         let version = Version(major: 1, minor: 1)
 
         // mutable
@@ -212,20 +213,37 @@ public final class Client: ClientDriver {
         let requestBody = body.makeS4Body()
         let req = Request(method: method, uri: uri, version: version, headers: headers, body: requestBody)
 
+        let connection = try makeConnection(to: uri)
+        let serializer = HTTPRequestSerializer(stream: connection)
+        try serializer.serialize(req)
+        let parser = HTTPResponseParser(stream: connection)
+        let response: Response = try parser.parse()
+        _ = try? connection.close() // TODO: Support keep-alive?
+        
+        return response
+    }
+
+    private func makeConnection(to uri: URI) throws -> Vapor.Stream {
         guard
+            let host = uri.host,
             let port = uri.port
                 ?? uri.schemePort
             else { fatalError("throw appropriate error, missing port") }
         let address = InternetAddress(hostname: host, port: Port(port))
         let client = try TCPClient(address: address)
-
         let buffer = StreamBuffer(client)
-        let serializer = HTTPRequestSerializer(stream: buffer)
-        try serializer.serialize(req)
-        let parser = HTTPResponseParser(stream: buffer)
+        return buffer
+    }
+
+    func perform(_ request: Request, to uri: URI) throws -> Response {
+        let connection = try makeConnection(to: uri)
+
+        let serializer = HTTPRequestSerializer(stream: connection)
+        try serializer.serialize(request)
+        let parser = HTTPResponseParser(stream: connection)
         let response: Response = try parser.parse()
-        _ = try? buffer.close() // TODO: Support keep-alive?
-        
+        _ = try? connection.close() // TODO: Support keep-alive?
+
         return response
     }
 }
