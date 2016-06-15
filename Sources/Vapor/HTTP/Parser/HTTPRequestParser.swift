@@ -63,7 +63,6 @@
 
     ******************************
 */
-
 public final class HTTPRequestParser: Vapor.RequestParser {
     enum Error: ErrorProtocol {
         case streamEmpty
@@ -93,7 +92,7 @@ public final class HTTPRequestParser: Vapor.RequestParser {
             uri: uri,
             version: version,
             headers: headers,
-            body: body
+            body: body.makeS4Body()
         )
     }
 
@@ -270,7 +269,7 @@ public final class HTTPRequestParser: Vapor.RequestParser {
         } else {
             body = []
         }
-        return .buffer(Data(body))
+        return .data(body)
     }
 
     func parseURI(with uriSlice: BytesSlice, host hostHeader : String?) throws -> URI {

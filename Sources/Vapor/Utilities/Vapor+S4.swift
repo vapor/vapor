@@ -11,7 +11,7 @@ extension S4.Headers {
     public typealias Key = C7.CaseInsensitiveString
 }
 
-public typealias Body = S4.Body
+//public typealias Body = S4.Body
 public typealias Headers = S4.Headers
 public typealias Version = S4.Version
 

@@ -74,30 +74,6 @@ extension URI {
 print("")
 import S4
 
-//let uri = URI(scheme: "http", userInfo: nil, host: "pokeapi.co", port: 80, path: "/api/v2/pokemon/1/", query: nil, fragment: nil)
-//func get(_ str: String) throws {
-//    let uri = try URI(str)
-//    let method = Method.get
-//    let version = Version(major: 1, minor: 1)
-//    let headers: Headers = [:]
-//    let body: Body = .buffer(Data([]))
-//    let req = Request(method: method, uri: uri, version: version, headers: headers, body: body)
-//
-//
-//    guard let host = uri.host else { fatalError("throw appropriate error") }
-//    let port = uri.port ?? 80
-//
-//    // TODO: Get Port from scheme
-//    let address = InternetAddress(hostname: host, port: Port(port))
-//    let client = try TCPClient(address: address)
-//    let buffer = StreamBuffer(client)
-//    let serializer = HTTPRequestSerializer(stream: buffer)
-//    try serializer.serialize(req)
-//    let response = try client.receiveAll()
-//    print("Got response: \(response.string)")
-//    try client.close()
-//}
-
 // Until optional can use `==` on concrete types
 extension Extractable where Wrapped == String {
     var isNilOrEmpty: Bool {
@@ -107,8 +83,7 @@ extension Extractable where Wrapped == String {
 }
 
 extension URI {
-    // TODO: Expose public?
-    private mutating func append(query appendQuery: [String: String]) {
+    public mutating func append(query appendQuery: [String: String]) {
         var new = ""
         if let existing = query {
             new += existing
@@ -117,11 +92,6 @@ extension URI {
         new += appendQuery.map { key, val in "\(key)=\(val)" } .joined(separator: "&")
         query = new
     }
-}
-
-public enum Payload {
-    case data(Bytes)
-    case chunked((SendingStream) throws -> Void)
 }
 
 extension Headers {
@@ -135,8 +105,8 @@ extension Headers {
         self["Host"] = uri.host
     }
 
-    mutating func appendMetadata(for payload: Payload) {
-        switch payload {
+    mutating func appendMetadata(for body: Vapor.Body) {
+        switch body {
         case .data(let bytes) where !bytes.isEmpty:
             self["Content-Length"] = bytes.count.description
         case .chunked(_):
@@ -159,35 +129,9 @@ extension Headers {
     }
 }
 
-extension Payload {
-    func makeS4Body() -> S4.Body {
-        switch self {
-        case .data(let bytes):
-            return .buffer(Data(bytes))
-        case .chunked(let sender):
-            return .sender(sender)
-        }
-    }
-}
-
-import Foundation
-
-
-//headers["Host"] = request.uri.host
-////        headers["Content-Length"] = "0"
-//headers["Connection"] = "close"
-
-let DefaultHeaders: Headers = [
-    "Connection": "close"
-]
-
-extension Headers {
-//    func populate
-}
-
 public protocol ClientDriver {
     // TODO: Using 'Any' until I build ResponseParser
-    func request(_ method: S4.Method, url: String, headers: Headers, query: [String: String], payload: Payload) throws -> Response
+    func request(_ method: S4.Method, url: String, headers: Headers, query: [String: String], body: Vapor.Body) throws -> Response
 }
 
 extension ClientDriver {
@@ -204,6 +148,7 @@ extension ClientDriver {
     }
 }
 
+
 extension String {
     func finish(_ end: String) -> String {
         guard !self.hasSuffix(end) else {
@@ -214,18 +159,10 @@ extension String {
     }
 }
 
-import Foundation
-
-var a = NSDate()
-var b = a
-b.addingTimeInterval(10_000_000)
-print("A: \(a)")
-print("B: \(b)")
-
 public final class Client: ClientDriver {
-    static let shared: Client = .init()
+    public static let shared: Client = .init()
 
-    public func request(_ method: S4.Method, url: String, headers: Headers = [:], query: [String: String] = [:], payload: Payload = .data([])) throws -> Response {
+    public func request(_ method: S4.Method, url: String, headers: Headers = [:], query: [String: String] = [:], body: Vapor.Body = .data([])) throws -> Response {
         let endpoint = url.finish("/")
         var uri = try URI(endpoint)
         uri.append(query: query)
@@ -236,11 +173,11 @@ public final class Client: ClientDriver {
         // mutable
         var headers = headers
         headers.appendHost(for: uri)
-        headers.appendMetadata(for: payload)
+        headers.appendMetadata(for: body)
         headers.ensureConnection()
 
         // TODO: Omit this need if possible
-        let requestBody = payload.makeS4Body()
+        let requestBody = body.makeS4Body()
         let request = Request(method: method, uri: uri, version: version, headers: headers, body: requestBody)
         let connection = try makeConnection(to: uri)
         return try perform(request, with: connection)
@@ -257,20 +194,6 @@ public final class Client: ClientDriver {
     }
 }
 
-public final class WebRequest {
-    init(host: String) {
-
-    }
-
-    func get(_ path: String, query: [String: String]) throws -> Response {
-        fatalError()
-    }
-}
-
-//let spotifyApi = WebRequest(host: "http://api.spotify.com/v1")
-//let searchResults = try spotifyApi.get("/search", query: ["q": "beyonce", "type": "album, artist"])
-//let beyonceAlbum = try spotifyApi.get("/artists", query: ["id": "1234aaa"])
-
 extension S4.Body {
     var payload: Bytes {
         switch self {
@@ -282,53 +205,18 @@ extension S4.Body {
     }
 }
 
-let strr = try Client.shared.request(.get, url: "http://example.qutheory.io/json", headers: [:])
-print(strr.body.payload.string)
-
-
 let poke = try Client.shared.request(.get, url: "http://pokeapi.co/api/v2/pokemon", query: ["limit": "20", "offset": "20"])
 print(poke.body.payload.string)
 
-
-//let client = try TCPClient(address: address)
-//let serializer = HTTPRequestSerializer(stream: StreamBuffer(client))
-//let req = Request(method: .get, uri: uri, version: Version(major: 1, minor: 1), headers: [:], body: .buffer(Data([])))
-//try serializer.serialize(req)
-//var bytes: Bytes = []
-//let next = try client.receiveAll()
-//print("Got: \(next.string)")
-
-
-
-//while let next = try client.receive() {
-//    bytes.append(next)
-//    print("Got resp: \n\n\n\([next].string)")
-//}
-//
-//print("Got bytes: \(bytes.string)")
-//let response = try client.receiveAll()
-//try client.close()
-
-//do {
-//    try client.send(bytes: "GET /\r\n\r\n".toBytes())
-//    let str = try client.receiveAll().toString()
-//    try client.close()
-//    print("Received: \n\(str)")
-//} catch {
-//    print("Error \(error)")
-//}
+let artists = try Client.shared.request(.get, url: "http://api.spotify.com/v1/search", query: ["q": "beyonce", "type": "artist"])
+print(artists)
+print(artists.body.payload.string)
 
 var workDir: String {
     let parent = #file.characters.split(separator: "/").map(String.init).dropLast().joined(separator: "/")
     let path = "/\(parent)/"
     return path
 }
-
-//import Foundation
-//let url = NSURL.init(string: "http://example.qutheory.io/json")
-//let data = NSData.init(contentsOf: url!)
-//let str = String.init(data: data!, encoding: NSUTF8StringEncoding)
-//print("Data: \(str)")
 
 let config = Config(seed: JSON.object(["port": "8000"]), workingDirectory: workDir)
 let app = Application(workDir: workDir, config: config)

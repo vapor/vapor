@@ -1,3 +1,5 @@
+import S4
+
 public protocol RequestParser {
     init(stream: Stream)
     func parse() throws -> Request
@@ -25,10 +27,10 @@ public final class HTTPRequestSerializer: RequestSerializer {
         // status-line = HTTP-version SP status-code SP reason-phrase CRL
         // TODO: Prefix w/ `/` MUST
         var path = request.uri.path ?? "/"
-        if let q = request.uri.query {
+        if let q = request.uri.query where !q.isEmpty {
             path += "?\(q)"
         }
-        if let f = request.uri.fragment {
+        if let f = request.uri.fragment where !f.isEmpty {
             path += "#\(f)"
         }
 
@@ -103,7 +105,7 @@ public final class HTTPRequestSerializer: RequestSerializer {
         try stream.send(crlf)
     }
 
-    private func serialize(_ body: Body) throws {
+    private func serialize(_ body: S4.Body) throws {
         switch body {
         case .buffer(let buffer):
             guard !buffer.isEmpty else { return }

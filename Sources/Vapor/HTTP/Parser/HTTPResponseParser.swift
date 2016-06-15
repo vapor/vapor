@@ -94,7 +94,7 @@ public final class HTTPResponseParser: Vapor.ResponseParser {
                         status: status,
                         headers: headers,
                         cookieHeaders: [],
-                        body: body)
+                        body: body.makeS4Body())
     }
 
     public func parse() throws -> Request {
@@ -109,7 +109,7 @@ public final class HTTPResponseParser: Vapor.ResponseParser {
             uri: uri,
             version: version,
             headers: headers,
-            body: body
+            body: body.makeS4Body()
         )
     }
 
@@ -298,7 +298,7 @@ public final class HTTPResponseParser: Vapor.ResponseParser {
         } else {
             body = []
         }
-        return .buffer(Data(body))
+        return .data(body)
     }
 
     func parseURI(with uriSlice: BytesSlice, host hostHeader : String?) throws -> URI {
