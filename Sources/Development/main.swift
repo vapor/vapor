@@ -49,9 +49,25 @@ import Socks
 
 //let address = InternetAddress(hostname: "pokeapi.co", port: 80)
 extension URI {
+    public typealias Scheme = String
+    // TODO: Find RFC list of other defaults, implement and link source
+    static let defaultPorts: [Scheme: Int] = [
+        "http": 80,
+        "https": 443
+    ]
+
+    // The default port associated with the scheme
+    public var schemePort: Int? {
+        return scheme.flatMap { scheme in URI.defaultPorts[scheme] }
+    }
+
     init(_ str: String) throws {
         self = try URIParser.parse(uri: str.utf8)
+        // if no port, but yes scheme, use scheme default if possible
+        guard port == nil, let scheme = self.scheme else { return }
+        port = URI.defaultPorts[scheme]
     }
+
 }
 //let u = try URI("https://api.spotify.com/v1/search?q=beyonce&type=artist")
 //print(u)
@@ -59,31 +75,31 @@ print("")
 import S4
 
 //let uri = URI(scheme: "http", userInfo: nil, host: "pokeapi.co", port: 80, path: "/api/v2/pokemon/1/", query: nil, fragment: nil)
-func get(_ str: String) throws {
-    let uri = try URI(str)
-    let method = Method.get
-    let version = Version(major: 1, minor: 1)
-    let headers: Headers = [:]
-    let body: Body = .buffer(Data([]))
-    let req = Request(method: method, uri: uri, version: version, headers: headers, body: body)
-
-
-    guard let host = uri.host else { fatalError("throw appropriate error") }
-    let port = uri.port ?? 80
-
-    // TODO: Get Port from scheme
-    let address = InternetAddress(hostname: host, port: Port(port))
-    let client = try TCPClient(address: address)
-    let buffer = StreamBuffer(client)
-    let serializer = HTTPRequestSerializer(stream: buffer)
-    try serializer.serialize(req)
-    let response = try client.receiveAll()
-    print("Got response: \(response.string)")
-    try client.close()
-}
+//func get(_ str: String) throws {
+//    let uri = try URI(str)
+//    let method = Method.get
+//    let version = Version(major: 1, minor: 1)
+//    let headers: Headers = [:]
+//    let body: Body = .buffer(Data([]))
+//    let req = Request(method: method, uri: uri, version: version, headers: headers, body: body)
+//
+//
+//    guard let host = uri.host else { fatalError("throw appropriate error") }
+//    let port = uri.port ?? 80
+//
+//    // TODO: Get Port from scheme
+//    let address = InternetAddress(hostname: host, port: Port(port))
+//    let client = try TCPClient(address: address)
+//    let buffer = StreamBuffer(client)
+//    let serializer = HTTPRequestSerializer(stream: buffer)
+//    try serializer.serialize(req)
+//    let response = try client.receiveAll()
+//    print("Got response: \(response.string)")
+//    try client.close()
+//}
 
 extension URI {
-    // TODO: Expose?
+    // TODO: Expose public?
     private mutating func append(query appendQuery: [String: String]) {
         var new = ""
         if let existing = query {
@@ -91,36 +107,127 @@ extension URI {
             new += "&"
         }
         new += appendQuery.map { key, val in "\(key)=\(val)" } .joined(separator: "&")
-        print("Got new: \(new)")
         query = new
     }
 }
 
-func request(_ method: Method, url: String, headers: Headers = [:], query: [String: String] = [:], body: Body = .buffer([])) throws -> Any {
-    let endpoint = url.hasSuffix("/") ? url : url + "/"
-    var uri = try URI(endpoint)
-    uri.append(query: query)
+public enum Body {
+    case data(Bytes)
+    case chunked((SendingStream) throws -> Void)
+}
 
-    guard let host = uri.host else { fatalError("throw appropriate error") }
-    let port = uri.port ?? 80
-    // TODO: Get Port from scheme -- RFC
-    let address = InternetAddress(hostname: host, port: Port(port))
-    let client = try TCPClient(address: address)
-    let buffer = StreamBuffer(client)
-    defer {
-        _ = try? buffer.close()
+extension Headers {
+    mutating func appendMetadata(for body: Body) {
+        switch body {
+        case .data(let bytes) where !bytes.isEmpty:
+            self["Content-Length"] = bytes.count.description
+        case .chunked(_):
+            setTransferEncodingChunked()
+        default:
+            return
+        }
     }
 
-    let method = Method.get
-    let version = Version(major: 1, minor: 1)
-    let headers: Headers = headers
-    let body: Body = body
-    let req = Request(method: method, uri: uri, version: version, headers: headers, body: body)
+    private mutating func setTransferEncodingChunked() {
+        if let encoding = self["Transfer-Encoding"] where !encoding.isEmpty {
+            if encoding.hasSuffix("chunked") {
+                return
+            } else {
+                self["Transfer-Encoding"] = encoding + ", chunked"
+            }
+        } else {
+            self["Transfer-Encoding"] = "chunked"
+        }
+    }
+}
 
-    let serializer = HTTPRequestSerializer(stream: buffer)
-    try serializer.serialize(req)
-    let bytes = try client.receiveAll()
-    return bytes.string
+extension Body {
+    func makeS4Body() -> S4.Body {
+        switch self {
+        case .data(let bytes):
+            return .buffer(Data(bytes))
+        case .chunked(let sender):
+            return .sender(sender)
+        }
+    }
+}
+
+import Foundation
+
+
+//headers["Host"] = request.uri.host
+////        headers["Content-Length"] = "0"
+//headers["Connection"] = "close"
+
+let DefaultHeaders: Headers = [
+    "Connection": "close"
+]
+
+extension Headers {
+//    func populate
+}
+
+// Until optional can use `==` on concrete types
+extension Extractable where Wrapped == String {
+    var isNilOrEmpty: Bool {
+        guard let val = extract() else { return true }
+        return val.isEmpty
+    }
+}
+
+public protocol ClientDriver {
+    // TODO: Using 'Any' until I build ResponseParser
+    func request(_ method: S4.Method, url: String, headers: Headers, query: [String: String], body: Body) throws -> Response
+}
+
+
+public final class Client: ClientDriver {
+    static let shared: Client = .init()
+
+    public func request(
+        _ method: S4.Method,
+        url: String,
+        headers: Headers = [:],
+        query: [String: String] = [:],
+        body: Body = .data([])) throws -> Response {
+
+        let endpoint = url //url.hasSuffix("/") ? url : url + "/"
+        var uri = try URI(endpoint)
+        uri.append(query: query)
+
+        guard let host = uri.host else { fatalError("throw appropriate error") }
+
+        let method = Method.get
+        let version = Version(major: 1, minor: 1)
+
+        // mutable
+        var headers = headers
+        if headers["Connection"].isNilOrEmpty {
+            headers["Connection"] = "close"
+        }
+        headers["Host"] = uri.host
+        headers.appendMetadata(for: body)
+
+        // TODO: Omit this need if possible
+        let requestBody = body.makeS4Body()
+        let req = Request(method: method, uri: uri, version: version, headers: headers, body: requestBody)
+
+        guard
+            let port = uri.port
+                ?? uri.schemePort
+            else { fatalError("throw appropriate error, missing port") }
+        let address = InternetAddress(hostname: host, port: Port(port))
+        let client = try TCPClient(address: address)
+
+        let buffer = StreamBuffer(client)
+        let serializer = HTTPRequestSerializer(stream: buffer)
+        try serializer.serialize(req)
+        let parser = HTTPResponseParser(stream: buffer)
+        let response: Response = try parser.parse()
+        _ = try? buffer.close() // TODO: Support keep-alive?
+        
+        return response
+    }
 }
 
 public final class WebRequest {
@@ -137,17 +244,25 @@ public final class WebRequest {
 //let searchResults = try spotifyApi.get("/search", query: ["q": "beyonce", "type": "album, artist"])
 //let beyonceAlbum = try spotifyApi.get("/artists", query: ["id": "1234aaa"])
 
+extension S4.Body {
+    var payload: Bytes {
+        switch self {
+        case .buffer(let d):
+            return d.bytes
+        default:
+            fatalError()
+        }
+    }
+}
 
-let str = try request(.get, url: "http://example.qutheory.io/json", headers: [:])
-print(str)
+let strr = try Client.shared.request(.get, url: "http://example.qutheory.io/json", headers: [:])
+print(strr.body.payload.string)
 
 
-let poke = try request(.get, url: "http://pokeapi.co/api/v2/pokemon", query: ["limit": "20", "offset": "20"])
-print(poke)
+let poke = try Client.shared.request(.get, url: "http://pokeapi.co/api/v2/pokemon", query: ["limit": "20", "offset": "20"])
+print(poke.body.payload.string)
 
-//try get("http://www.google.com")
-try get("http://www.example.qutheory.io/json")
-try get("http://www.pokeapi.co/api/v2/pokemon/1/")
+
 //let client = try TCPClient(address: address)
 //let serializer = HTTPRequestSerializer(stream: StreamBuffer(client))
 //let req = Request(method: .get, uri: uri, version: Version(major: 1, minor: 1), headers: [:], body: .buffer(Data([])))

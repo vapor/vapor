@@ -34,15 +34,9 @@ public final class HTTPRequestSerializer: RequestSerializer {
 
         let version = "HTTP/\(request.version.major).\(request.version.minor)"
         let statusLine = "\(request.method) \(path) \(version)"
-        print("STATUSLINE: \(statusLine)")
         try stream.send(statusLine.bytes)
         try stream.send(crlf)
-        // TODO: Setup Content Length or Transfer Encoding
-        var headers = request.headers
-        headers["Host"] = request.uri.host
-//        headers["Content-Length"] = "0"
-        headers["Connection"] = "close"
-        try serialize(headers)
+        try serialize(request.headers)
         try serialize(request.body)
 
         let buf = stream as! StreamBuffer
@@ -94,22 +88,19 @@ public final class HTTPRequestSerializer: RequestSerializer {
      of [Kri2001] for details.)
      */
     private func serialize(_ headers: Headers) throws {
-        print("Got headers: \(headers)")
-        var headerSection = Bytes()
-
         /*
         // TODO: Ordered in future: https://tools.ietf.org/html/rfc7230#section-3.2.2
          
          Order is NOT enforced, but suggested, we will implement in future
          */
-        headers.forEach { field, value in
+        try headers.forEach { field, value in
             let headerLine = "\(field): \(value)"
-            print("headerLine: \(headerLine)")
-            headerSection += headerLine.bytes
-            headerSection += crlf
+            try stream.send(headerLine.bytes)
+            try stream.send(crlf)
         }
-        headerSection += crlf // Trailing CRLF on headers section
-        try stream.send(headerSection)
+
+        // trailing CRLF to end header section
+        try stream.send(crlf)
     }
 
     private func serialize(_ body: Body) throws {
