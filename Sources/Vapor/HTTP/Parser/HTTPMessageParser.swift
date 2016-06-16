@@ -64,17 +64,115 @@
  ******************************
  */
 
-public protocol StartLine {
-    init(line: Bytes) throws
-}
+//public protocol StartLine {
+//    var zero: BytesSlice
+//    var
+//    init(line: Bytes) throws
+//}
+//
+//public struct RequestLine {
+//    let method: Method
+//    let uri: URI
+//}
 
 public protocol HTTPMessage {
-    associatedtype StartLineType: StartLine
-    var startLine: StartLineType { get }
+    var startLine: [Bytes] { get }
     var headers: Headers { get }
     var body: Body { get }
+    init(startLineComponents: (BytesSlice, BytesSlice, BytesSlice), headers: Headers, body: Body) throws
+}
 
-    init(startLine: StartLineType, headers: Headers, body: Body) throws
+extension Request: HTTPMessage {
+
+    public var startLine: [Bytes] { fatalError() }
+    public var headers: Headers { fatalError() }
+    public var body: Body { fatalError() }
+    public init(startLineComponents: (BytesSlice, BytesSlice, BytesSlice), headers: Headers, body: Body) throws {
+        let (methodSlice, uriSlice, httpVersionSlice) = startLineComponents
+        let method = Method(uppercased: methodSlice.uppercased)
+        let uri = try Request.parseURI(with: uriSlice, host: headers["Host"])
+//        let httpVersion
+        fatalError()
+    }
+
+    private static func parseURI(with uriSlice: BytesSlice, host hostHeader : String?) throws -> URI {
+        // Request-URI    = "*" | absoluteURI | abs_path | authority
+        let uri: URI
+
+        // URI can never be empty
+        if uriSlice.first == .forwardSlash {
+            // abs_path
+
+            /*
+             The most common form of Request-URI is that used to identify a
+             resource on an origin server or gateway. In this case the absolute
+             path of the URI MUST be transmitted (see section 3.2.1, abs_path) as
+             the Request-URI, and the network location of the URI (authority) MUST
+             be transmitted in a Host header field. For example, a client wishing
+             to retrieve the resource above directly from the origin server would
+             create a TCP connection to port 80 of the host "www.w3.org" and send
+             the lines:
+
+             GET /pub/WWW/TheProject.html HTTP/1.1
+             Host: www.w3.org
+             */
+            let host: String
+            let port: Int
+
+            if let hostHeader = hostHeader {
+                let comps = hostHeader.data.split(separator: .colon, maxSplits: 1)
+                host = comps[0].string
+
+                if comps.count > 1 {
+                    guard let int = comps[1].decimalInt else {
+                        throw HTTPMessageParserError.invalidRequest
+                    }
+                    port = int
+                } else {
+                    port = 80
+                }
+            } else {
+                host = "*"
+                port = 80
+            }
+
+            let comps = uriSlice.split(separator: .questionMark)
+
+            let path = comps[0].string
+
+            let query: String?
+            if comps.count > 1 {
+                query = comps[1].string
+            } else {
+                query = nil
+            }
+
+            uri = URI(
+                scheme: nil,
+                userInfo: nil,
+                host: host,
+                port: port,
+                path: path,
+                query: query,
+                fragment: nil
+            )
+        } else {
+            // absoluteURI
+
+            /*
+             To allow for transition to absoluteURIs in all requests in future
+             versions of HTTP, all HTTP/1.1 servers MUST accept the absoluteURI
+             form in requests, even though HTTP/1.1 clients will only generate
+             them in requests to proxies.
+
+             An example Request-Line would be:
+
+             GET http://www.w3.org/pub/WWW/TheProject.html HTTP/1.1
+             */
+            uri = try URIParser.parse(uri: uriSlice)
+        }
+        return uri
+    }
 }
 
 public enum Body {
@@ -105,7 +203,7 @@ enum HTTPMessageParserError: ErrorProtocol {
     case invalidVersionMinor
 }
 
-public final class HTTPMessageParser<MessageType: HTTPMessage>: Vapor.RequestParser {
+public final class HTTPMessageParser<MessageType: HTTPMessage> {
 
     let stream: Stream
 
@@ -113,20 +211,34 @@ public final class HTTPMessageParser<MessageType: HTTPMessage>: Vapor.RequestPar
         self.stream = stream
     }
 
-    public func parse() throws -> Request {
-        let (methodSlice, uriSlice, httpVersionSlice) = try parseRequestLine()
+    public func parse() throws -> MessageType {
+        let startLineComponents = try parseRequestLine()
         let headers = try parseHeaders()
         let body = try parseBody(with: headers)
-        let uri = try parseURI(with: uriSlice, host: headers["host"])
-        let version = try parseVersion(httpVersionSlice)
-        let method = parseMethod(uppercase: methodSlice)
-        return Request(
-            method: method,
-            uri: uri,
-            version: version,
-            headers: headers,
-            body: body.makeS4Body()
-        )
+        return try MessageType(startLineComponents: startLineComponents, headers: headers, body: body)
+//        let uri = try parseURI(with: uriSlice, host: headers["host"])
+//        let version = try parseVersion(httpVersionSlice)
+//        let method = parseMethod(uppercase: methodSlice)
+//        return Request(
+//            method: method,
+//            uri: uri,
+//            version: version,
+//            headers: headers,
+//            body: body.makeS4Body()
+//        )
+//        fatalError()
+    }
+
+    func parseRequestLine() throws -> (method: ArraySlice<Byte>, uri: ArraySlice<Byte>, httpVersion: ArraySlice<Byte>) {
+        let line = try stream.receiveLine()
+        guard !line.isEmpty else { return ([], [], []) }
+
+        let comps = line.split(separator: .space, omittingEmptySubsequences: true)
+        guard comps.count == 3 else {
+            throw HTTPMessageParserError.invalidRequestLine
+        }
+
+        return (comps[0], comps[1], comps[2])
     }
 
     /**
@@ -147,12 +259,14 @@ public final class HTTPMessageParser<MessageType: HTTPMessage>: Vapor.RequestPar
      the invalid request-line might be deliberately crafted to bypass
      security filters along the request chain.
      */
-    func parseRequestLine() throws -> (method: ArraySlice<Byte>, uri: ArraySlice<Byte>, httpVersion: ArraySlice<Byte>) {
+    func parseStartLine() throws -> (method: ArraySlice<Byte>, uri: ArraySlice<Byte>, httpVersion: ArraySlice<Byte>) {
         let line = try stream.receiveLine()
         guard !line.isEmpty else { return ([], [], []) }
 
-        let comps = line.split(separator: .space, omittingEmptySubsequences: true)
+        // Maximum 3 components(2 splits) so reason phrase can have spaces within it
+        let comps = line.split(separator: .space, maxSplits: 2, omittingEmptySubsequences: true)
         guard comps.count == 3 else {
+            // TODO: StartLine
             throw HTTPMessageParserError.invalidRequestLine
         }
 
@@ -462,12 +576,39 @@ public final class HTTPMessageParser<MessageType: HTTPMessage>: Vapor.RequestPar
     }
 }
 
-private let GET = "GET".bytesSlice
-private let POST = "POST".bytesSlice
-private let PUT = "PUT".bytesSlice
-private let PATCH = "PATCH".bytesSlice
-private let DELETE = "DELETE".bytesSlice
-private let OPTIONS = "OPTIONS".bytesSlice
-private let HEAD = "HEAD".bytesSlice
-private let CONNECT = "CONNECT".bytesSlice
-private let TRACE = "TRACE".bytesSlice
+private let GET = "GET".bytes
+private let POST = "POST".bytes
+private let PUT = "PUT".bytes
+private let PATCH = "PATCH".bytes
+private let DELETE = "DELETE".bytes
+private let OPTIONS = "OPTIONS".bytes
+private let HEAD = "HEAD".bytes
+private let CONNECT = "CONNECT".bytes
+private let TRACE = "TRACE".bytes
+
+extension Method {
+    init(uppercased method: Bytes) {
+        switch method {
+        case GET:
+            self = .get
+        case POST:
+            self = .post
+        case PUT:
+            self = .put
+        case PATCH:
+            self = .patch
+        case DELETE:
+            self = .delete
+        case OPTIONS:
+            self = .options
+        case HEAD:
+            self = .head
+        case CONNECT:
+            self = .connect
+        case TRACE:
+            self = .trace
+        default:
+            self = .other(method: method.string)
+        }
+    }
+}
