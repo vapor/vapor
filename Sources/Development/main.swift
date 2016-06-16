@@ -132,7 +132,7 @@ extension URI {
 
 public protocol ClientDriver {
     // TODO: Using 'Any' until I build ResponseParser
-    func request(_ method: S4.Method, url: String, headers: Headers, query: [String: String], body: Vapor.Body) throws -> Response
+//    func request(_ method: S4.Method, url: String, headers: Headers, query: [String: String], body: Vapor.Body) throws -> Response
 }
 
 extension ClientDriver {
@@ -160,33 +160,59 @@ extension String {
     }
 }
 
-//public final class Client: ClientDriver {
-//    public static let shared: Client = .init()
-//
-//    public func request(_ method: S4.Method, url: String, headers: Headers = [:], query: [String: String] = [:], body: Vapor.Body = .data([])) throws -> Response {
-//        let endpoint = url.finish("/")
-//        var uri = try URI(endpoint)
-//        uri.append(query: query)
-//
-//        // TODO: Is it worth exposing Version? We don't support alternative serialization/parsing
-//        let version = Version(major: 1, minor: 1)
-//        // TODO: Omit this need if possible
-//        let requestBody = body.makeS4Body()
-//        let request = Request(method: method, uri: uri, version: version, headers: headers, body: requestBody)
-//        let connection = try makeConnection(to: uri)
-//        return try perform(request, with: connection)
-//    }
-//
-//    private func perform(_ request: Request, with connection: Vapor.Stream) throws -> Response {
-//        let serializer = HTTPMessageSerializer<Request>(stream: connection)
-//        try serializer.serialize(request)
-//        let parser = HTTPMessageParser<Response>(stream: connection)
-//        let response: Response = try parser.parse()
-//        _ = try? connection.close() // TODO: Support keep-alive?
-//
-//        return response
-//    }
-//}
+public final class Client: ClientDriver {
+    public static let shared: Client = .init()
+
+    public func request(_ method: S4.Method, url: String, headers: Headers = [:], query: [String: String] = [:], body: Vapor.Body = .data([])) throws -> Response {
+        let endpoint = url.finish("/")
+        var uri = try URI(endpoint)
+        uri.append(query: query)
+
+        // TODO: Is it worth exposing Version? We don't support alternative serialization/parsing
+        let version = Version(major: 1, minor: 1)
+        // TODO: Omit this need if possible
+        let requestBody = body.makeS4Body()
+        let request = Request(method: method, uri: uri, version: version, headers: headers, body: requestBody)
+        let connection = try makeConnection(to: uri)
+        return try perform(request, with: connection)
+    }
+
+    private func perform(_ request: Request, with connection: Vapor.Stream) throws -> Response {
+        let serializer = HTTPMessageSerializer<Request>(stream: connection)
+        try serializer.serialize(request)
+        let parser = HTTPMessageParser<Response>(stream: connection)
+        let response: Response = try parser.parse()
+        _ = try? connection.close() // TODO: Support keep-alive?
+
+        return response
+    }
+}
+
+public final class _Client: ClientDriver {
+    public static let shared: _Client = .init()
+
+    public func request(_ method: S4.Method, url: String, headers: Headers = [:], query: [String: String] = [:], body: HTTP.Body = .data([])) throws -> HTTP.Response {
+        let endpoint = url.finish("/")
+        var uri = try URI(endpoint)
+        uri.append(query: query)
+
+        // TODO: Is it worth exposing Version? We don't support alternative serialization/parsing
+        let version = Version(major: 1, minor: 1)
+        let request = HTTP.Request(method: method, uri: uri, version: version, headers: headers, body: body)
+        let connection = try makeConnection(to: uri)
+        return try perform(request, with: connection)
+    }
+
+    private func perform(_ request: HTTP.Request, with connection: Vapor.Stream) throws -> HTTP.Response {
+        let serializer = _HTTPMessageSerializer<HTTP.Request>(stream: connection)
+        try serializer.serialize(request)
+        let parser = _HTTPMessageParser<HTTP.Response>(stream: connection)
+        let response = try parser.parse()
+        _ = try? connection.close() // TODO: Support keep-alive?
+
+        return response
+    }
+}
 
 extension S4.Body {
     var payload: Bytes {
@@ -221,8 +247,8 @@ extension S4.Body {
 //    }
 //}
 
-let poke = try Client.shared.request(.get, url: "http://pokeapi.co/api/v2/pokemon", query: ["limit": "20", "offset": "20"])
-print(poke.body.payload.string)
+let poke = try _Client.shared.request(.get, url: "http://pokeapi.co/api/v2/pokemon", query: ["limit": "20", "offset": "20"])
+print(poke.body.bytes?.string)
 
 let artists = try Client.shared.request(.get, url: "http://api.spotify.com/v1/search", query: ["q": "beyonce", "type": "artist"])
 print(artists)
