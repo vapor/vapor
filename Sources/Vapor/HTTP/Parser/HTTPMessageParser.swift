@@ -76,102 +76,91 @@
 //}
 
 public protocol HTTPMessage {
-    var startLine: [Bytes] { get }
     var headers: Headers { get }
-    var body: Body { get }
+    var body: S4.Body { get } // TODO: Vapor.Body
+    func makeStartLine() throws -> Bytes
     init(startLineComponents: (BytesSlice, BytesSlice, BytesSlice), headers: Headers, body: Body) throws
+}
+
+extension Response: HTTPMessage {
+    public func makeStartLine() throws -> Bytes {
+        return "HTTP/\(version.major).\(version.minor) \(status.statusCode) \(status.reasonPhrase)".bytes
+    }
+
+    public init(startLineComponents: (BytesSlice, BytesSlice, BytesSlice), headers: Headers, body: Body) throws {
+        let (httpVersionSlice, statusCodeSlice, reasonPhrase) = startLineComponents
+        // TODO: Right now in Status, if you pass reason phrase, it automatically overrides status code. Try to use reason phrase
+        _ = reasonPhrase
+
+        let version = try Version(httpVersionSlice)
+        guard let statusCode = Int(statusCodeSlice.string) else { fatalError("throw real error") }
+        let status = Status(statusCode: statusCode)
+        // TODO: Cookies?
+        self = Response(version: version,
+                        status: status,
+                        headers: headers,
+                        cookieHeaders: [], // TODO: What should be here
+                        body: body.makeS4Body())
+    }
 }
 
 extension Request: HTTPMessage {
 
-    public var startLine: [Bytes] { fatalError() }
-    public var headers: Headers { fatalError() }
-    public var body: Body { fatalError() }
-    public init(startLineComponents: (BytesSlice, BytesSlice, BytesSlice), headers: Headers, body: Body) throws {
-        let (methodSlice, uriSlice, httpVersionSlice) = startLineComponents
-        let method = Method(uppercased: methodSlice.uppercased)
-        let uri = try Request.parseURI(with: uriSlice, host: headers["Host"])
-//        let httpVersion
-        fatalError()
+    public func makeStartLine() throws -> Bytes {
+        // https://tools.ietf.org/html/rfc7230#section-3.1.2
+        // status-line = HTTP-version SP status-code SP reason-phrase CRL
+        var path = uri.path ?? "/"
+        if let q = uri.query where !q.isEmpty {
+            path += "?\(q)"
+        }
+        if let f = uri.fragment where !f.isEmpty {
+            path += "#\(f)"
+        }
+        // Prefix w/ `/` to properly indicate that this we're not using absolute URI. 
+        // Absolute URIs are deprecated and MUST NOT be generated. (they should be parsed for robustness)
+        if !path.hasPrefix("/") {
+            path = "/" + path
+        }
+
+        let versionLine = "HTTP/\(version.major).\(version.minor)"
+        let statusLine = "\(method) \(path) \(versionLine)"
+        return statusLine.bytes
     }
 
-    private static func parseURI(with uriSlice: BytesSlice, host hostHeader : String?) throws -> URI {
-        // Request-URI    = "*" | absoluteURI | abs_path | authority
-        let uri: URI
+    public init(startLineComponents: (BytesSlice, BytesSlice, BytesSlice), headers: Headers, body: Body) throws {
+        /**
+         https://tools.ietf.org/html/rfc2616#section-5.1
 
-        // URI can never be empty
-        if uriSlice.first == .forwardSlash {
-            // abs_path
+         The Request-Line begins with a method token, followed by the
+         Request-URI and the protocol version, and ending with CRLF. The
+         elements are separated by SP characters. No CR or LF is allowed
+         except in the final CRLF sequence.
 
-            /*
-             The most common form of Request-URI is that used to identify a
-             resource on an origin server or gateway. In this case the absolute
-             path of the URI MUST be transmitted (see section 3.2.1, abs_path) as
-             the Request-URI, and the network location of the URI (authority) MUST
-             be transmitted in a Host header field. For example, a client wishing
-             to retrieve the resource above directly from the origin server would
-             create a TCP connection to port 80 of the host "www.w3.org" and send
-             the lines:
+         Request-Line   = Method SP Request-URI SP HTTP-Version CRLF
 
-             GET /pub/WWW/TheProject.html HTTP/1.1
-             Host: www.w3.org
-             */
-            let host: String
-            let port: Int
+         *** [WARNING] ***
+         Recipients of an invalid request-line SHOULD respond with either a
+         400 (Bad Request) error or a 301 (Moved Permanently) redirect with
+         the request-target properly encoded.  A recipient SHOULD NOT attempt
+         to autocorrect and then process the request without a redirect, since
+         the invalid request-line might be deliberately crafted to bypass
+         security filters along the request chain.
+         */
+        let (methodSlice, uriSlice, httpVersionSlice) = startLineComponents
+        let method = Method(uppercased: methodSlice.uppercased)
+        // TODO: Consider how to support other schemes here. 
+        // If on secure socket, defaults https, if not, defaults http
+        let uriParser = URIParser(bytes: uriSlice, existingHost: headers["Host"], existingScheme: "http")
+        let uri = try uriParser.parse()
+        let version = try Version(httpVersionSlice)
 
-            if let hostHeader = hostHeader {
-                let comps = hostHeader.data.split(separator: .colon, maxSplits: 1)
-                host = comps[0].string
-
-                if comps.count > 1 {
-                    guard let int = comps[1].decimalInt else {
-                        throw HTTPMessageParserError.invalidRequest
-                    }
-                    port = int
-                } else {
-                    port = 80
-                }
-            } else {
-                host = "*"
-                port = 80
-            }
-
-            let comps = uriSlice.split(separator: .questionMark)
-
-            let path = comps[0].string
-
-            let query: String?
-            if comps.count > 1 {
-                query = comps[1].string
-            } else {
-                query = nil
-            }
-
-            uri = URI(
-                scheme: nil,
-                userInfo: nil,
-                host: host,
-                port: port,
-                path: path,
-                query: query,
-                fragment: nil
-            )
-        } else {
-            // absoluteURI
-
-            /*
-             To allow for transition to absoluteURIs in all requests in future
-             versions of HTTP, all HTTP/1.1 servers MUST accept the absoluteURI
-             form in requests, even though HTTP/1.1 clients will only generate
-             them in requests to proxies.
-
-             An example Request-Line would be:
-
-             GET http://www.w3.org/pub/WWW/TheProject.html HTTP/1.1
-             */
-            uri = try URIParser.parse(uri: uriSlice)
-        }
-        return uri
+        self = Request(
+            method: method,
+            uri: uri,
+            version: version,
+            headers: headers,
+            body: body.makeS4Body()
+        )
     }
 }
 
@@ -212,33 +201,14 @@ public final class HTTPMessageParser<MessageType: HTTPMessage> {
     }
 
     public func parse() throws -> MessageType {
-        let startLineComponents = try parseRequestLine()
+        let startLineComponents = try parseStartLine()
         let headers = try parseHeaders()
         let body = try parseBody(with: headers)
-        return try MessageType(startLineComponents: startLineComponents, headers: headers, body: body)
-//        let uri = try parseURI(with: uriSlice, host: headers["host"])
-//        let version = try parseVersion(httpVersionSlice)
-//        let method = parseMethod(uppercase: methodSlice)
-//        return Request(
-//            method: method,
-//            uri: uri,
-//            version: version,
-//            headers: headers,
-//            body: body.makeS4Body()
-//        )
-//        fatalError()
-    }
-
-    func parseRequestLine() throws -> (method: ArraySlice<Byte>, uri: ArraySlice<Byte>, httpVersion: ArraySlice<Byte>) {
-        let line = try stream.receiveLine()
-        guard !line.isEmpty else { return ([], [], []) }
-
-        let comps = line.split(separator: .space, omittingEmptySubsequences: true)
-        guard comps.count == 3 else {
-            throw HTTPMessageParserError.invalidRequestLine
-        }
-
-        return (comps[0], comps[1], comps[2])
+        return try MessageType(
+            startLineComponents: startLineComponents,
+            headers: headers,
+            body: body
+        )
     }
 
     /**
@@ -418,162 +388,6 @@ public final class HTTPMessageParser<MessageType: HTTPMessage> {
         }
         return .data(body)
     }
-
-    func parseURI(with uriSlice: BytesSlice, host hostHeader : String?) throws -> URI {
-        // Request-URI    = "*" | absoluteURI | abs_path | authority
-        let uri: URI
-
-        // URI can never be empty
-        if uriSlice.first == .forwardSlash {
-            // abs_path
-
-            /*
-             The most common form of Request-URI is that used to identify a
-             resource on an origin server or gateway. In this case the absolute
-             path of the URI MUST be transmitted (see section 3.2.1, abs_path) as
-             the Request-URI, and the network location of the URI (authority) MUST
-             be transmitted in a Host header field. For example, a client wishing
-             to retrieve the resource above directly from the origin server would
-             create a TCP connection to port 80 of the host "www.w3.org" and send
-             the lines:
-
-             GET /pub/WWW/TheProject.html HTTP/1.1
-             Host: www.w3.org
-             */
-            let host: String
-            let port: Int
-
-            if let hostHeader = hostHeader {
-                let comps = hostHeader.data.split(separator: .colon, maxSplits: 1)
-                host = comps[0].string
-
-                if comps.count > 1 {
-                    guard let int = comps[1].decimalInt else {
-                        throw HTTPMessageParserError.invalidRequest
-                    }
-                    port = int
-                } else {
-                    port = 80
-                }
-            } else {
-                host = "*"
-                port = 80
-            }
-
-            let comps = uriSlice.split(separator: .questionMark)
-
-            let path = comps[0].string
-
-            let query: String?
-            if comps.count > 1 {
-                query = comps[1].string
-            } else {
-                query = nil
-            }
-
-            uri = URI(
-                scheme: nil,
-                userInfo: nil,
-                host: host,
-                port: port,
-                path: path,
-                query: query,
-                fragment: nil
-            )
-        } else {
-            // absoluteURI
-
-            /*
-             To allow for transition to absoluteURIs in all requests in future
-             versions of HTTP, all HTTP/1.1 servers MUST accept the absoluteURI
-             form in requests, even though HTTP/1.1 clients will only generate
-             them in requests to proxies.
-
-             An example Request-Line would be:
-
-             GET http://www.w3.org/pub/WWW/TheProject.html HTTP/1.1
-             */
-            uri = try URIParser.parse(uri: uriSlice)
-        }
-        return uri
-    }
-
-    /**
-     HTTP uses a "<major>.<minor>" numbering scheme to indicate versions
-     of the protocol. The protocol versioning policy is intended to allow
-     the sender to indicate the format of a message and its capacity for
-     understanding further HTTP communication, rather than the features
-     obtained via that communication. No change is made to the version
-     number for the addition of message components which do not affect
-     communication behavior or which only add to extensible field values.
-     The <minor> number is incremented when the changes made to the
-     protocol add features which do not change the general message parsing
-     algorithm, but which may add to the message semantics and imply
-     additional capabilities of the sender. The <major> number is
-     incremented when the format of a message within the protocol is
-     changed. See RFC 2145 [36] for a fuller explanation.
-
-     The version of an HTTP message is indicated by an HTTP-Version field
-     in the first line of the message.
-
-     HTTP-Version   = "HTTP" "/" 1*DIGIT "." 1*DIGIT
-     */
-    func parseVersion(_ bytes: BytesSlice) throws -> Version {
-        // ["HTTP", "1.1"]
-        let comps = bytes.split(separator: .forwardSlash, maxSplits: 1)
-
-        let major: Int
-        let minor: Int
-
-        if comps.count == 2 {
-            // ["1", "1"]
-            let version = comps[1].split(separator: .period, maxSplits: 1)
-
-            guard let m = version[0].decimalInt else {
-                throw HTTPMessageParserError.invalidVersionMajor
-            }
-            major = m
-
-            if version.count == 2 {
-                guard let m = version[1].decimalInt else {
-                    throw HTTPMessageParserError.invalidVersionMinor
-                }
-
-                minor = m
-            } else {
-                minor = 0
-            }
-        } else {
-            throw HTTPMessageParserError.invalidVersion
-        }
-
-        return Version(major: major, minor: minor)
-    }
-
-    func parseMethod(uppercase method: BytesSlice) -> Request.Method {
-        switch method {
-        case GET:
-            return .get
-        case POST:
-            return .post
-        case PUT:
-            return .put
-        case PATCH:
-            return .patch
-        case DELETE:
-            return .delete
-        case OPTIONS:
-            return .options
-        case HEAD:
-            return .head
-        case CONNECT:
-            return .connect
-        case TRACE:
-            return .trace
-        default:
-            return .other(method: method.string)
-        }
-    }
 }
 
 private let GET = "GET".bytes
@@ -610,5 +424,20 @@ extension Method {
         default:
             self = .other(method: method.string)
         }
+    }
+}
+
+extension Version {
+    init<S: Sequence where S.Iterator.Element == Byte>(_ bytes: S) throws {
+        // ["HTTP", "1.1"]
+        let comps = bytes.split(separator: .forwardSlash, maxSplits: 1, omittingEmptySubsequences: true)
+        guard comps.count == 2 else { throw HTTPMessageParserError.invalidVersion }
+        let version = comps[1].split(separator: .period, maxSplits: 1, omittingEmptySubsequences: true)
+        guard
+            version.count == 2,
+            let major = version.first?.decimalInt,
+            let minor = version.last?.decimalInt
+            else { throw HTTPMessageParserError.invalidVersion }
+        self = Version(major: major, minor: minor)
     }
 }

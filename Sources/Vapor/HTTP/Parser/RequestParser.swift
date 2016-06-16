@@ -10,6 +10,62 @@ public protocol RequestSerializer {
     func serialize(_ request: Request)  throws
 }
 
+extension Extractable where Wrapped == String {
+    var isNilOrEmpty: Bool {
+        guard let val = extract() else { return true }
+        return val.isEmpty
+    }
+}
+
+extension URI {
+    public mutating func append(query appendQuery: [String: String]) {
+        var new = ""
+        if let existing = query {
+            new += existing
+            new += "&"
+        }
+        new += appendQuery.map { key, val in "\(key)=\(val)" } .joined(separator: "&")
+        query = new
+    }
+}
+
+extension Headers {
+    mutating func ensureConnection() {
+        if self["Connection"].isNilOrEmpty {
+            self["Connection"] = "close"
+        }
+    }
+
+    mutating func appendHost(for uri: URI) {
+        self["Host"] = uri.host
+    }
+
+    mutating func appendMetadata(for body: S4.Body) {
+        switch body {
+        case .buffer(let bytes) where !bytes.isEmpty:
+            self["Content-Length"] = bytes.count.description
+        case .buffer(_):
+            break // empty data ok, but do NOT set Content-Length to 0, it will breaks nginx
+        case .sender(_):
+            setTransferEncodingChunked()
+        default:
+            fatalError("// TODO: CONSTRAIN THIS FUNCTION TO VAPOR BODY")
+        }
+    }
+
+    private mutating func setTransferEncodingChunked() {
+        if let encoding = self["Transfer-Encoding"] where !encoding.isEmpty {
+            if encoding.hasSuffix("chunked") {
+                return
+            } else {
+                self["Transfer-Encoding"] = encoding + ", chunked"
+            }
+        } else {
+            self["Transfer-Encoding"] = "chunked"
+        }
+    }
+}
+
 public final class HTTPRequestSerializer: RequestSerializer {
     enum Error: ErrorProtocol {
         case unsupportedBody
@@ -38,7 +94,12 @@ public final class HTTPRequestSerializer: RequestSerializer {
         let statusLine = "\(request.method) \(path) \(version)"
         try stream.send(statusLine.bytes)
         try stream.send(crlf)
-        try serialize(request.headers)
+        // mutable
+        var headers = request.headers
+        headers.appendHost(for: request.uri)
+        headers.appendMetadata(for: request.body)
+        headers.ensureConnection()
+        try serialize(headers)
         try serialize(request.body)
 
         let buf = stream as! StreamBuffer

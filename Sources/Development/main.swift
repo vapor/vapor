@@ -94,40 +94,41 @@ extension URI {
     }
 }
 
-extension Headers {
-    mutating func ensureConnection() {
-        if self["Connection"].isNilOrEmpty {
-            self["Connection"] = "close"
-        }
-    }
-
-    mutating func appendHost(for uri: URI) {
-        self["Host"] = uri.host
-    }
-
-    mutating func appendMetadata(for body: Vapor.Body) {
-        switch body {
-        case .data(let bytes) where !bytes.isEmpty:
-            self["Content-Length"] = bytes.count.description
-        case .chunked(_):
-            setTransferEncodingChunked()
-        default:
-            return
-        }
-    }
-
-    private mutating func setTransferEncodingChunked() {
-        if let encoding = self["Transfer-Encoding"] where !encoding.isEmpty {
-            if encoding.hasSuffix("chunked") {
-                return
-            } else {
-                self["Transfer-Encoding"] = encoding + ", chunked"
-            }
-        } else {
-            self["Transfer-Encoding"] = "chunked"
-        }
-    }
-}
+//extension Headers {
+//    mutating func ensureConnection() {
+//        if self["Connection"].isNilOrEmpty {
+//            self["Connection"] = "close"
+//        }
+//    }
+//
+//    mutating func appendHost(for uri: URI) {
+//        self["Host"] = uri.host
+//    }
+//
+//    mutating func appendMetadata(for body: S4.Body) {
+//        switch body {
+//        case .buffer(let bytes) where !bytes.isEmpty:
+//            self["Content-Length"] = bytes.count.description
+//        case .sender(_):
+//            setTransferEncodingChunked()
+//        default:
+//            fatalError("Constrain to Vapor Body when possible!")
+//            return
+//        }
+//    }
+//
+//    private mutating func setTransferEncodingChunked() {
+//        if let encoding = self["Transfer-Encoding"] where !encoding.isEmpty {
+//            if encoding.hasSuffix("chunked") {
+//                return
+//            } else {
+//                self["Transfer-Encoding"] = encoding + ", chunked"
+//            }
+//        } else {
+//            self["Transfer-Encoding"] = "chunked"
+//        }
+//    }
+//}
 
 public protocol ClientDriver {
     // TODO: Using 'Any' until I build ResponseParser
@@ -169,13 +170,6 @@ public final class Client: ClientDriver {
 
         // TODO: Is it worth exposing Version? We don't support alternative serialization/parsing
         let version = Version(major: 1, minor: 1)
-
-        // mutable
-        var headers = headers
-        headers.appendHost(for: uri)
-        headers.appendMetadata(for: body)
-        headers.ensureConnection()
-
         // TODO: Omit this need if possible
         let requestBody = body.makeS4Body()
         let request = Request(method: method, uri: uri, version: version, headers: headers, body: requestBody)
@@ -186,7 +180,7 @@ public final class Client: ClientDriver {
     private func perform(_ request: Request, with connection: Vapor.Stream) throws -> Response {
         let serializer = HTTPRequestSerializer(stream: connection)
         try serializer.serialize(request)
-        let parser = HTTPResponseParser(stream: connection)
+        let parser = HTTPMessageParser<Response>(stream: connection)
         let response: Response = try parser.parse()
         _ = try? connection.close() // TODO: Support keep-alive?
 

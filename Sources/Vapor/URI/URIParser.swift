@@ -5,6 +5,31 @@ extension URIParser {
     }
 }
 
+// TODO: This is shit, fix it
+// ************************************
+extension URI {
+    public typealias Scheme = String
+    // TODO: Find RFC list of other defaults, implement and link source
+    static let defaultPorts: [Scheme: Int] = [
+        "http": 80,
+        "https": 443
+    ]
+
+    // The default port associated with the scheme
+    public var schemePort: Int? {
+        return scheme.flatMap { scheme in URI.defaultPorts[scheme] }
+    }
+
+    init(_ str: String) throws {
+        self = try URIParser.parse(uri: str.utf8)
+        guard port == nil else { return }
+        // if no port, try scheme default if possible
+        port = schemePort
+    }
+    
+}
+// ************************************
+
 public final class URIParser: StaticDataBuffer {
 
     public enum Error: ErrorProtocol {
@@ -12,7 +37,28 @@ public final class URIParser: StaticDataBuffer {
         case unsupportedURICharacter(Byte)
     }
 
-    public override init<S: Sequence where S.Iterator.Element == Byte>(bytes: S) {
+    // If we have authority, we should also have scheme?
+    let existingHost: Bytes?
+    let existingScheme: Bytes?
+
+    /*
+     The most common form of Request-URI is that used to identify a
+     resource on an origin server or gateway. In this case the absolute
+     path of the URI MUST be transmitted (see section 3.2.1, abs_path) as
+     the Request-URI, and the network location of the URI (authority) MUST
+     be transmitted in a Host header field. For example, a client wishing
+     to retrieve the resource above directly from the origin server would
+     create a TCP connection to port 80 of the host "www.w3.org" and send
+     the lines:
+
+     GET /pub/WWW/TheProject.html HTTP/1.1
+     Host: www.w3.org
+     
+     If host exists, and scheme exists, use those
+     */
+    public init<S: Sequence where S.Iterator.Element == Byte>(bytes: S, existingHost: String? = nil, existingScheme: String? = nil) {
+        self.existingHost = existingHost?.bytes
+        self.existingScheme = existingScheme?.bytes
         super.init(bytes: bytes)
     }
 
@@ -80,6 +126,10 @@ public final class URIParser: StaticDataBuffer {
         )
     }
 
+    private func parseHost(_ host: BytesSlice) {
+
+    }
+
     // MARK: Percent Decoding
 
     private func percentDecodedString(_ input: [Byte]) throws -> String {
@@ -132,6 +182,8 @@ public final class URIParser: StaticDataBuffer {
         scheme      = ALPHA *( ALPHA / DIGIT / "+" / "-" / "." )
     */
     private func parseScheme() throws -> [Byte] {
+        if let existingScheme = existingScheme { return existingScheme } // TODO: Get scheme as bytes?
+
         let scheme = try collect(until: .colon, .forwardSlash)
         let colon = try checkLeadingBuffer(matches: .colon)
         guard colon else { return scheme }
@@ -153,6 +205,7 @@ public final class URIParser: StaticDataBuffer {
         authority   = [ userinfo "@" ] host [ ":" port ]
     */
     private func parseAuthority() throws -> [Byte]? {
+        if let existingHost = existingHost { return existingHost.array } // TODO: Retain Slice?
         guard try checkLeadingBuffer(matches: .forwardSlash, .forwardSlash) else { return nil }
         try discardNext(2) // discard '//'
         return try collect(until: .forwardSlash, .questionMark, .numberSign)
