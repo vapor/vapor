@@ -19,6 +19,8 @@ public class Terminal: ConsoleDriver {
             color = .yellow
         case .error:
             color = .red
+        case .success:
+            color = .green
         case .custom(let c):
             color = c
         }

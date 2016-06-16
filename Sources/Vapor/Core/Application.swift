@@ -94,6 +94,13 @@ public class Application {
     public let console: Console
 
     /**
+        The application's default Database.
+    */
+    public let database: Database?
+
+    let preparations: [Preparation.Type]
+
+    /**
         Resources directory relative to workDir
     */
     public var resourcesDir: String {
@@ -119,6 +126,8 @@ public class Application {
         server: ServerDriver.Type? = nil,
         router: RouterDriver? = nil,
         session: SessionDriver? = nil,
+        database: DatabaseDriver? = nil,
+        preparations: [Preparation.Type] = [],
         providers: [Provider] = [],
         arguments: [String]? = nil
     ) {
@@ -127,6 +136,7 @@ public class Application {
         var sessionProvided: SessionDriver? = session
         var hashProvided: HashDriver? = hash
         var consoleProvided: ConsoleDriver? = console
+        var databaseProvided: DatabaseDriver? = database
 
         for provider in providers {
             serverProvided = provider.server ?? serverProvided
@@ -134,6 +144,7 @@ public class Application {
             sessionProvided = provider.session ?? sessionProvided
             hashProvided = provider.hash ?? hashProvided
             consoleProvided = provider.console ?? consoleProvided
+            databaseProvided = provider.database ?? databaseProvided
         }
 
         let arguments = arguments ?? NSProcessInfo.processInfo().arguments
@@ -144,6 +155,14 @@ public class Application {
             ?? arguments.value(for: "workDir")
             ?? "./"
         self.workDir = workDir.finish("/")
+
+        if let database = databaseProvided {
+            self.database = Database(driver: database)
+        } else {
+            self.database = nil
+        }
+
+        self.preparations = preparations
 
         let localization = localization ?? Localization(workingDirectory: workDir)
         self.localization = localization
@@ -193,6 +212,7 @@ public class Application {
 
         commands.append(Help.self)
         commands.append(Serve.self)
+        commands.append(Prepare.self)
 
         restrictLogging(for: config.environment)
 
@@ -235,7 +255,7 @@ extension Application {
             case .invalidArgument(let name):
                 console.output("Invalid argument name '\(name)'.", style: .error)
             case .custom(let error):
-                console.output(error)
+                console.output(error, style: .error)
             }
         } catch  {
             console.output("Error: \(error)", style: .error)

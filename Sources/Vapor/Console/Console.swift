@@ -10,6 +10,7 @@ public class Console {
         case info
         case warning
         case error
+        case success
         case custom(Color)
     }
 

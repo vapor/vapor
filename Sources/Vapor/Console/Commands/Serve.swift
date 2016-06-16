@@ -14,11 +14,16 @@ public struct Serve: Command {
     ]
 
     public let app: Application
+    public let prepare: Prepare
+
     public init(app: Application) {
         self.app = app
+        self.prepare = Prepare(app: app)
     }
 
-    public func run() {
+    public func run() throws {
+        try prepare.run()
+
         app.serve()
     }
 }

@@ -55,6 +55,13 @@ public protocol Provider {
         implementation of `nil`.
     */
     var console: ConsoleDriver? { get }
+
+    /**
+        An optional `Database` to provide
+        to the application. Has a default
+        implementation of `nil`.
+    */
+    var database: DatabaseDriver? { get }
 }
 
 extension Provider {
@@ -75,6 +82,10 @@ extension Provider {
     }
 
     public var console: ConsoleDriver? {
+        return nil
+    }
+
+    public var database: DatabaseDriver? {
         return nil
     }
 }

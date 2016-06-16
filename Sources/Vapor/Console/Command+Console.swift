@@ -28,7 +28,13 @@ extension Command {
     */
     public func error(_ string: String) {
         print(string, style: .error)
+    }
 
+    /**
+        Prints a success message.
+    */
+    public func success(_ string: String) {
+        print(string, style: .success)
     }
 
     /**
