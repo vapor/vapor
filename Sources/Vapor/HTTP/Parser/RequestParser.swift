@@ -37,19 +37,24 @@ extension Headers {
     }
 
     mutating func appendHost(for uri: URI) {
+        // TODO: Should this overwrite, or only if non-existant so user can customize if there's something we're not considering
+        guard self["Host"] == nil else { return }
         self["Host"] = uri.host
     }
 
     mutating func appendMetadata(for body: S4.Body) {
+        fatalError("update to HTTP.BOdy")
+    }
+
+    mutating func appendMetadata(for body: HTTP.Body) {
         switch body {
-        case .buffer(let bytes) where !bytes.isEmpty:
-            self["Content-Length"] = bytes.count.description
-        case .buffer(_):
-            break // empty data ok, but do NOT set Content-Length to 0, it will breaks nginx
-        case .sender(_):
+        case .chunked(_):
             setTransferEncodingChunked()
+        case .data(let bytes) where !bytes.isEmpty:
+            self["Content-Length"] = bytes.count.description
         default:
-            fatalError("// TODO: CONSTRAIN THIS FUNCTION TO VAPOR BODY")
+            // empty data ok, but do NOT set Content-Length to 0, it will breaks nginx
+            return
         }
     }
 

@@ -17,15 +17,16 @@ extension Response {
         var headers = headers
         headers["Transfer-Encoding"] = "chunked"
 
-        self.init(
-            version: Version(major: 1, minor: 1),
-            status: status,
-            headers: headers,
-            cookieHeaders: [],
-            body: .sender({ stream in
-                let chunkStream = ChunkStream(stream: stream)
-                try closure(chunkStream)
-            })
-        )
+        fatalError("Fix this")
+//        self.init(
+//            version: Version(major: 1, minor: 1),
+//            status: status,
+//            headers: headers,
+//            cookieHeaders: [],
+//            body: .sender({ stream in
+//                let chunkStream = ChunkStream(stream: stream)
+//                try closure(chunkStream)
+//            })
+//        )
     }
 }

@@ -10,11 +10,11 @@
  
     https://en.wikipedia.org/wiki/Chunked_transfer_encoding
 */
-public class ChunkStream: SendingStream {
-    public let raw: SendingStream
+public class ChunkStream {
+    public let raw: Stream
     public var closed: Bool
 
-    public init(stream: SendingStream) {
+    public init(stream: Stream) {
         self.raw = stream
         closed = false
     }
@@ -24,19 +24,18 @@ public class ChunkStream: SendingStream {
     }
 
     public func send(_ string: String) throws {
-        try send(string.data)
+        try send(string.bytes)
     }
 
-    public func send(_ data: Data) throws {
-        try send(data, timingOut: 0)
+    public func send(_ bytes: Bytes) throws {
+        try send(bytes, timingOut: 0)
     }
 
-    public func send(_ data: Data, timingOut deadline: Double) throws {
-        var buffer = "\(data.bytes.count.hex)\r\n".data
-        buffer.bytes += data.bytes
-        buffer.bytes += "\r\n".data.bytes
-
-        try raw.send(buffer, timingOut: deadline)
+    public func send(_ bytes: Bytes, timingOut deadline: Double) throws {
+        var buffer = "\(bytes.count.hex)\r\n".bytes
+        buffer += bytes
+        buffer += "\r\n".data.bytes
+        try raw.send(buffer)
     }
 
     public func flush(timingOut deadline: Double) throws {
