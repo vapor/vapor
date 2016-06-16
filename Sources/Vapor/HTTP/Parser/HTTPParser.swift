@@ -1,5 +1,3 @@
-import S4
-
 /*
  ****************************** WARNING ******************************
 
@@ -64,43 +62,15 @@ import S4
 
  ******************************
  */
-public protocol HTTPParserProtocol {
-    init(stream: Stream)
-    func parse<MessageType: HTTP.Message>(_ type: MessageType.Type) throws -> MessageType
-}
-
-public protocol HTTPSerializerProtocol {
-    init(stream: Stream)
-    func serialize(_ message: HTTP.Message) throws
-}
-
-extension HTTP {
-    // Can't nest protocol, but can typealias to make nested
-    public typealias Message = HTTPMessage
-    public typealias SerializerProtocol = HTTPSerializerProtocol
-    public typealias ParserProtocol = HTTPParserProtocol
-
-    public typealias Version = S4.Version
-    public typealias Method = S4.Method
-
-}
-
-extension HTTP {
-    public enum Body {
-        case data(Bytes)
-        case chunked((ChunkStream) throws -> Void)
-    }
-}
-
-extension HTTP.Body {
-    public var bytes: Bytes? {
-        guard case let .data(bytes) = self else { return nil }
-        return bytes
-    }
-}
-
 extension HTTP {
     public final class Parser: ParserProtocol {
+        enum Error: ErrorProtocol {
+            case streamEmpty
+            case invalidRequestLine
+            case invalidRequest
+            case invalidKeyWhitespace
+            case invalidVersion
+        }
 
         let stream: Stream
 
@@ -145,7 +115,7 @@ extension HTTP {
             let comps = line.split(separator: .space, maxSplits: 2, omittingEmptySubsequences: true)
             guard comps.count == 3 else {
                 // TODO: StartLine
-                throw HTTPMessageParserError.invalidRequestLine
+                throw Error.invalidRequestLine
             }
 
             return (comps[0], comps[1], comps[2])
@@ -180,7 +150,7 @@ extension HTTP {
                          such whitespace in a response might be ignored by some clients or
                          cause others to cease parsing.
                          */
-                        throw HTTPMessageParserError.invalidRequest
+                        throw Error.invalidRequest
                     }
 
                     /*
@@ -228,7 +198,7 @@ extension HTTP {
                      whitespace between a header field-name and colon with a response code
                      of 400 (Bad Request).
                      */
-                    guard comps[0].last?.isWhitespace == false else { throw HTTPMessageParserError.invalidKeyWhitespace }
+                    guard comps[0].last?.isWhitespace == false else { throw Error.invalidKeyWhitespace }
                     let field = comps[0].string
                     let value = comps[1].array
                         .trimmed([.horizontalTab, .space])
@@ -271,21 +241,21 @@ extension HTTP {
                  received the full message.
                  */
                 var buffer: Bytes = []
-                
+
                 while true {
                     let lengthData = try stream.receiveLine()
-                    
+
                     // size must be sent
                     guard lengthData.count > 0 else {
                         break
                     }
-                    
+
                     // convert hex length data to int, or end of encoding
                     guard let length = lengthData.hexInt where length > 0 else {
                         break
                     }
-                    
-                    
+
+
                     let content = try stream.receive(max: length + Byte.crlf.count)
                     buffer += content[0 ..< content.count - Byte.crlf.count]
                 }

@@ -63,7 +63,8 @@
 
     ******************************
 */
-public final class HTTPRequestParser: Vapor.RequestParser {
+import S4
+public final class HTTPResponseParser: Vapor.ResponseParser {
     enum Error: ErrorProtocol {
         case streamEmpty
         case invalidRequestLine
@@ -80,6 +81,23 @@ public final class HTTPRequestParser: Vapor.RequestParser {
         self.stream = stream
     }
 
+    public func parse() throws -> Response {
+        let (httpVersionSlice, statusCodeSlice, _) = try parseStartLine()
+        let headers = try parseHeaders()
+        let body = try parseBody(with: headers)
+        let version = try parseVersion(httpVersionSlice)
+
+        guard let statusCode = Int(statusCodeSlice.string) else { fatalError("throw real error") }
+        let status = Status(statusCode: statusCode)
+        // TODO: Cookies?
+        fatalError()
+//        return Response(version: version,
+//                        status: status,
+//                        headers: headers,
+//                        cookieHeaders: [],
+//                        body: body.makeS4Body())
+    }
+
     public func parse() throws -> Request {
         let (methodSlice, uriSlice, httpVersionSlice) = try parseRequestLine()
         let headers = try parseHeaders()
@@ -87,13 +105,26 @@ public final class HTTPRequestParser: Vapor.RequestParser {
         let uri = try parseURI(with: uriSlice, host: headers["host"])
         let version = try parseVersion(httpVersionSlice)
         let method = parseMethod(uppercase: methodSlice)
-        return Request(
-            method: method,
-            uri: uri,
-            version: version,
-            headers: headers,
-            body: body.makeS4Body()
-        )
+        fatalError()
+//        return Request(
+//            method: method,
+//            uri: uri,
+//            version: version,
+//            headers: headers,
+//            body: body.makeS4Body()
+//        )
+    }
+
+    func parseStartLine() throws -> (BytesSlice, BytesSlice, BytesSlice) {
+        let line = try stream.receiveLine()
+        guard !line.isEmpty else { return ([], [], []) }
+        // Max split 2 in case reason phrase has spaces.
+        let comps = line.split(separator: .space, maxSplits: 2, omittingEmptySubsequences: true)
+        guard comps.count == 3 else {
+            throw Error.invalidRequestLine
+        }
+
+        return (comps[0], comps[1], comps[2])
     }
 
     /**
@@ -269,7 +300,8 @@ public final class HTTPRequestParser: Vapor.RequestParser {
         } else {
             body = []
         }
-        return .data(body)
+        fatalError()
+//        return .data(body)
     }
 
     func parseURI(with uriSlice: BytesSlice, host hostHeader : String?) throws -> URI {
