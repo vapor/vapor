@@ -66,8 +66,7 @@ import S4
  */
 
 // Empty for now, will hopefully fill with more metadata, things like parsers /
-public protocol ProtocolFormat {
-}
+public protocol ProtocolFormat {}
 
 public protocol _HTTPMessage {
     var startLine: String { get }
@@ -77,11 +76,25 @@ public protocol _HTTPMessage {
     init(startLineComponents: (BytesSlice, BytesSlice, BytesSlice), headers: Headers, body: HTTP.Body) throws
 }
 
+public protocol HTTPParserType {
+    init(stream: Stream)
+    func parse<MessageType: HTTP.Message>(_ type: MessageType.Type) throws -> MessageType
+}
+
+public protocol HTTPSerializerType {
+    init(stream: Stream)
+    func serialize(_ message: HTTP.Message) throws
+}
+
 public struct HTTP: ProtocolFormat {
     // Can't nest protocol, but can typealias to make nested
     public typealias Message = _HTTPMessage
+    public typealias SerializerType = HTTPSerializerType
+    public typealias ParserType = HTTPParserType
+
     public typealias Version = S4.Version
     public typealias Method = S4.Method
+
 }
 
 extension HTTP {
@@ -192,10 +205,10 @@ extension HTTP {
 
         // TODO: Establish appropriate cookie handling? Should it be built off of headers?
         //        public let cookies: Any! = nil
-
         public convenience init(startLineComponents: (BytesSlice, BytesSlice, BytesSlice), headers: Headers, body: HTTP.Body) throws {
             let (httpVersionSlice, statusCodeSlice, reasonPhrase) = startLineComponents
             // TODO: Right now in Status, if you pass reason phrase, it automatically overrides status code. Try to use reason phrase
+            // keeping weirdness here to help reminder and silence warnings
             _ = reasonPhrase
 
             let version = try Version(httpVersionSlice)
@@ -217,7 +230,7 @@ extension HTTP.Response {
 private let crlf: Bytes = [.carriageReturn, .newLine]
 
 extension HTTP {
-    public final class Serializer {
+    public final class Serializer: SerializerType {
 
         let stream: Stream
 
@@ -313,7 +326,7 @@ extension HTTP {
 }
 
 extension HTTP {
-    public final class Parser {
+    public final class Parser: ParserType {
 
         let stream: Stream
 
