@@ -1,7 +1,7 @@
 private let crlf: Bytes = [.carriageReturn, .newLine]
 
 extension HTTP {
-    public final class Serializer: SerializerType {
+    public final class Serializer: SerializerProtocol {
 
         let stream: Stream
 

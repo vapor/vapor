@@ -64,12 +64,12 @@ import S4
 
  ******************************
  */
-public protocol HTTPParserType {
+public protocol HTTPParserProtocol {
     init(stream: Stream)
     func parse<MessageType: HTTP.Message>(_ type: MessageType.Type) throws -> MessageType
 }
 
-public protocol HTTPSerializerType {
+public protocol HTTPSerializerProtocol {
     init(stream: Stream)
     func serialize(_ message: HTTP.Message) throws
 }
@@ -77,8 +77,8 @@ public protocol HTTPSerializerType {
 extension HTTP {
     // Can't nest protocol, but can typealias to make nested
     public typealias Message = HTTPMessage
-    public typealias SerializerType = HTTPSerializerType
-    public typealias ParserType = HTTPParserType
+    public typealias SerializerProtocol = HTTPSerializerProtocol
+    public typealias ParserProtocol = HTTPParserProtocol
 
     public typealias Version = S4.Version
     public typealias Method = S4.Method
@@ -100,7 +100,7 @@ extension HTTP.Body {
 }
 
 extension HTTP {
-    public final class Parser: ParserType {
+    public final class Parser: ParserProtocol {
 
         let stream: Stream
 
