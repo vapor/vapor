@@ -7,7 +7,6 @@ extension HTTP {
         public let uri: URI
         public let version: Version
         public internal(set) var parameters: [String: String] = [:]
-        public var onSuccess: ((Request, Vapor.Stream) -> Void)? = nil
 
         public init(method: Method, uri: URI, version: Version = Version(major: 1, minor: 1), headers: Headers = [:], body: Body = .data([])) {
             var headers = headers
@@ -72,5 +71,28 @@ extension HTTP.Request {
         let versionLine = "HTTP/\(version.major).\(version.minor)"
         let requestLine = "\(method) \(path) \(versionLine)"
         return requestLine
+    }
+}
+
+extension HTTP.Request {
+    public struct Handler: Responder {
+        public typealias Closure = (Request) throws -> Response
+
+        private let closure: Closure
+
+        public init(_ closure: Closure) {
+            self.closure = closure
+        }
+
+        /**
+         Respond to a given request or throw if fails
+
+         - parameter request: request to respond to
+         - throws: an error if response fails
+         - returns: a response if possible
+         */
+        public func respond(to request: Request) throws -> Response {
+            return try closure(request)
+        }
     }
 }

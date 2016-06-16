@@ -38,14 +38,11 @@ extension Socks.TCPClient: Stream {
 }
 
 extension SynchronousTCPServer: StreamDriver {
-    public static func make(host: String, port: Int) throws -> Self {
+    @noreturn
+    public static func listen(host: String, port: Int, handler: (Stream) throws -> ()) throws {
         let port = UInt16(port)
         let address = InternetAddress(hostname: host, port: port)
-
-        return try .init(address: address)
-    }
-
-    public func start(handler: (Stream) throws -> ()) throws {
-        try self.startWithHandler(handler: handler)
+        let server = try SynchronousTCPServer(address: address)
+        try server.startWithHandler(handler: handler)
     }
 }

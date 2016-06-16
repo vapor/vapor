@@ -20,13 +20,15 @@ final class HTTPServer<
     var responder: Responder
 
     required init(host: String, port: Int, responder: Responder) throws {
-        server = try Server.make(host: host, port: port)
-        self.responder = responder
+        fatalError()
+//        server = try Server(host: host, port: port)
+//        self.responder = responder
     }
 
     func start() throws {
         do {
-            try server.start(handler: handle)
+            fatalError()
+//            try server.start(handler: handle)
         } catch let e as SocksCore.Error where e.isBindFailed {
             throw ServerError.bindFailed
         }
@@ -82,6 +84,100 @@ final class HTTPServer<
         }
     }
 
+}
+
+import Socks
+
+public protocol HTTPResponder {
+    func respond(to request: HTTP.Request) throws -> HTTP.Response
+}
+
+extension HTTP {
+    // Can't nest protocol, but can nest typealias
+    public typealias Responder = HTTPResponder
+
+    final class Server {
+        let host: String
+        let port: Int
+
+        let driver: StreamDriver.Type
+        let parser: HTTP.ParserProtocol.Type
+        let serializer: HTTP.SerializerProtocol.Type
+
+        let responder: HTTP.Responder
+
+        required init(host: String = "0.0.0.0",
+                      port: Int = 8080,
+                      responder: HTTP.Responder,
+                      driver: StreamDriver.Type = SynchronousTCPServer.self,
+                      parser: HTTP.ParserProtocol.Type = HTTP.Parser.self,
+                      serializer: HTTP.SerializerProtocol.Type = HTTP.Serializer.self) throws {
+            self.host = host
+            self.port = port
+
+            self.driver = driver
+            self.parser = parser
+            self.serializer = serializer
+
+            self.responder = responder
+        }
+
+        func start() throws {
+            do {
+                try driver.listen(host: host, port: port, handler: handle)
+            } catch let e as SocksCore.Error where e.isBindFailed {
+                throw ServerError.bindFailed
+            }
+        }
+
+        private func handle(_ stream: Stream) {
+            do {
+                _ = try Strand {
+                    self.loop(with: stream)
+                }
+            } catch {
+                Log.error("Could not create thread: \(error)")
+            }
+        }
+
+        private func loop(with stream: Stream) {
+            let stream = StreamBuffer(stream)
+            stream.timeout = 30
+
+            let parser = self.parser.init(stream: stream)
+            let serializer = self.serializer.init(stream: stream)
+
+            var keepAlive = false
+            repeat {
+                do {
+                    let request = try parser.parse(HTTP.Request.self)
+                    keepAlive = request.keepAlive
+                    let response = try responder.respond(to: request)
+                    try serializer.serialize(response)
+                    try response.onComplete?(stream)
+                } catch let e as SocksCore.Error where e.isClosedByPeer {
+                    // stream was closed by peer, abort
+                    break
+                } catch let e as SocksCore.Error where e.isBrokenPipe {
+                    // broken pipe, abort
+                    break
+                } catch HTTPRequestParser.Error.streamEmpty {
+                    // the stream we got was empty, abort
+                    break
+                } catch {
+                    // unknown error, abort
+                    Log.error("HTTP error: \(error)")
+                    break
+                }
+            } while keepAlive && !stream.closed
+            
+            do {
+                try stream.close()
+            } catch {
+                Log.error("Could not close stream: \(error)")
+            }
+        }
+    }
 }
 
 extension SocksCore.Error {

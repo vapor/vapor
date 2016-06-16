@@ -8,6 +8,8 @@ extension HTTP {
         public let version: Version
         public let status: Status
 
+        public var onComplete: ((Stream) throws -> Void)?
+
         public init(version: Version, status: Status, headers: Headers, body: Body) {
             self.version = version
             self.status = status
