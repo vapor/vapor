@@ -77,17 +77,17 @@
 
 public protocol HTTPMessage {
     var body: S4.Body { get } // TODO: Vapor.Body
-    func makeStartLine() throws -> Bytes
-    func makeHeaders() throws -> Headers
+    func makeStartLine() -> Bytes
+    func makeHeaders() -> Headers
     init(startLineComponents: (BytesSlice, BytesSlice, BytesSlice), headers: Headers, body: Body) throws
 }
 
 extension Response: HTTPMessage {
-    public func makeStartLine() throws -> Bytes {
+    public func makeStartLine() -> Bytes {
         return "HTTP/\(version.major).\(version.minor) \(status.statusCode) \(status.reasonPhrase)".bytes
     }
 
-    public func makeHeaders() throws -> Headers {
+    public func makeHeaders() -> Headers {
         var headers = self.headers
         headers.appendMetadata(for: body)
         headers.ensureConnection()
@@ -113,7 +113,7 @@ extension Response: HTTPMessage {
 
 extension Request: HTTPMessage {
 
-    public func makeStartLine() throws -> Bytes {
+    public func makeStartLine() -> Bytes {
         // https://tools.ietf.org/html/rfc7230#section-3.1.2
         // status-line = HTTP-version SP status-code SP reason-phrase CRL
         var path = uri.path ?? "/"
@@ -134,7 +134,7 @@ extension Request: HTTPMessage {
         return statusLine.bytes
     }
 
-    public func makeHeaders() throws -> Headers {
+    public func makeHeaders() -> Headers {
         var headers = self.headers
         headers.appendHost(for: uri)
         headers.appendMetadata(for: body)

@@ -199,6 +199,28 @@ extension S4.Body {
     }
 }
 
+// TODO: Interesting, but it should really only be two options and this supports 4, possible future of groups of two
+public final class HTTPInterchange<Input: HTTPMessage, Output: HTTPMessage> {
+    private let stream: Vapor.Stream
+
+    private let parser: HTTPMessageParser<Input>
+    private let serializer: HTTPMessageSerializer<Output>
+
+    public init(_ stream: Vapor.Stream) {
+        self.stream = stream
+        self.parser = HTTPMessageParser<Input>(stream: stream)
+        self.serializer = HTTPMessageSerializer<Output>(stream: stream)
+    }
+
+    public func parse() throws -> Input {
+        return try parser.parse()
+    }
+
+    public func serialize(_ output: Output) throws {
+        try serializer.serialize(output)
+    }
+}
+
 let poke = try Client.shared.request(.get, url: "http://pokeapi.co/api/v2/pokemon", query: ["limit": "20", "offset": "20"])
 print(poke.body.payload.string)
 
