@@ -142,9 +142,9 @@ extension Application {
         - parameter action: The curried action to run on the provided type.
      */
     public final func add<ActionController: ApplicationInitializable>(
-        _ method: Request.Method,
+        _ method: HTTP.Method,
         path: String,
-        action: (ActionController) -> (Request) throws -> ResponseRepresentable) {
+        action: (ActionController) -> (HTTP.Request) throws -> ResponseRepresentable) {
         add(method, path: path, action: action) {
             ActionController(application: self)
         }
@@ -164,9 +164,9 @@ extension Application {
          - parameter action: The curried action to run on the provided type.
      */
     public final func add<ActionController: DefaultInitializable>(
-        _ method: Request.Method,
+        _ method: HTTP.Method,
         path: String,
-        action: (ActionController) -> (Request) throws -> ResponseRepresentable) {
+        action: (ActionController) -> (HTTP.Request) throws -> ResponseRepresentable) {
         add(method, path: path, action: action) {
             ActionController()
         }
@@ -187,9 +187,9 @@ extension Application {
         - parameter factory: The closure to instantiate the controller type.
      */
     public final func add<ActionController>(
-        _ method: Request.Method,
+        _ method: HTTP.Method,
         path: String,
-        action: (ActionController) -> (Request) throws -> ResponseRepresentable,
+        action: (ActionController) -> (HTTP.Request) throws -> ResponseRepresentable,
         makeControllerWith factory: () throws -> ActionController) {
         add(method, path: path) { request in
             let controller = try factory()

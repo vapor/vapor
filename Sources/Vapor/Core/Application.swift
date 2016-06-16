@@ -79,7 +79,7 @@ public class Application {
         Make sure to append your custom `Middleware`
         if you don't want to overwrite default behavior.
      */
-    public var globalMiddleware: [Middleware]
+    public var globalMiddleware: [HTTP.Middleware]
 
     /**
         Available Commands to use when starting
@@ -176,11 +176,7 @@ public class Application {
         ]
 
         self.router = routerProvided ?? BranchRouter()
-        self.server = serverProvided ?? HTTPServer<
-            SynchronousTCPServer,
-            HTTPRequestParser,
-            HTTPResponseSerializer
-        >.self
+        self.server = serverProvided ?? HTTPServer<SynchronousTCPServer, HTTP.Parser, HTTP.Serializer>.self
 
         routes = []
 
@@ -313,7 +309,7 @@ extension Application {
 }
 
 extension Application {
-    func checkFileSystem(for request: Request) -> Request.Handler? {
+    func checkFileSystem(for request: HTTP.Request) -> HTTP.Request.Handler? {
         // Check in file system
         let filePath = self.workDir + "Public" + (request.uri.path ?? "")
 
@@ -323,7 +319,7 @@ extension Application {
 
         // File exists
         if let fileBody = try? FileManager.readBytesFromFile(filePath) {
-            return Request.Handler { _ in
+            return HTTP.Request.Handler { _ in
                 var headers: Headers = [:]
 
                 if
@@ -333,12 +329,13 @@ extension Application {
                     headers["Content-Type"] = type.description
                 }
 
-                return Response(status: .ok, headers: headers, data: Data(fileBody))
+                return HTTP.Response(status: .ok, headers: headers, body: .data(fileBody))
             }
         } else {
-            return Request.Handler { _ in
+            return HTTP.Request.Handler { _ in
                 Log.warning("Could not open file, returning 404")
-                return Response(status: .notFound, text: "Page not found")
+                let bod = "Page not found".utf8.array
+                return HTTP.Response(status: .notFound, body: .data(bod))
             }
         }
     }
@@ -353,7 +350,7 @@ extension Application {
     }
 }
 
-extension Application: Responder {
+extension Application: HTTP.Responder {
 
     /**
         Returns a response to the given request
@@ -364,10 +361,10 @@ extension Application: Responder {
 
         - returns: response if possible
      */
-    public func respond(to request: Request) throws -> Response {
+    public func respond(to request: HTTP.Request) throws -> HTTP.Response {
         Log.info("\(request.method) \(request.uri.path ?? "/")")
 
-        var responder: Responder
+        var responder: HTTP.Responder
         var request = request
 
         /*
@@ -382,34 +379,32 @@ extension Application: Responder {
 
 
         // Check in routes
-        if let (parameters, routerHandler) = router.route(request) {
-            request.parameters = parameters
-            responder = routerHandler
+        if let handler = router.route(request) {
+            responder = handler
         } else if let fileHander = self.checkFileSystem(for: request) {
             responder = fileHander
         } else {
             // Default not found handler
-            responder = Request.Handler { _ in
-                let normal: [Request.Method] = [.get, .post, .put, .patch, .delete]
+            responder = HTTP.Request.Handler { _ in
+                let normal: [HTTP.Method] = [.get, .post, .put, .patch, .delete]
 
                 if normal.contains(request.method) {
-                    return Response(status: .notFound, text: "Page not found")
+                    let data = "Page not found".utf8.array
+                    return HTTP.Response(status: .notFound, body: .data(data))
                 } else if case .options = request.method {
-                    return Response(status: .ok, headers: [
+                    return HTTP.Response(status: .ok, headers: [
                         "Allow": "OPTIONS"
-                        ], data: [])
+                        ])
                 } else {
-                    return Response(status: .notImplemented, data: [])
+                    return HTTP.Response(status: .notImplemented)
                 }
             }
         }
 
         // Loop through middlewares in order
-        for middleware in self.globalMiddleware.reversed() {
-            responder = middleware.chain(to: responder)
-        }
+        responder = self.globalMiddleware.chain(to: responder)
 
-        var response: Response
+        var response: HTTP.Response
         do {
             response = try responder.respond(to: request)
 
@@ -422,7 +417,8 @@ extension Application: Responder {
                 error = "Something went wrong"
             }
 
-            response = Response(error: error)
+            fatalError("// TODO: ")
+//            response = Response(error: error)
         }
 
         response.headers["Date"] = Response.date
@@ -434,7 +430,8 @@ extension Application: Responder {
             https://tools.ietf.org/html/rfc2616#section-9.4
         */
         if case .head = originalMethod {
-            response.body = .buffer([])
+            // TODO: What if body is set to chunked¿?
+            response.body = .data([])
         }
 
         return response

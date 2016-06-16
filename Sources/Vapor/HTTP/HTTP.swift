@@ -9,4 +9,6 @@ public struct HTTP: ProtocolFormat {
 
     public typealias Version = S4.Version
     public typealias Method = S4.Method
+
+    public typealias Middleware = HTTPMiddleware
 }

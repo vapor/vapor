@@ -15,10 +15,11 @@ extension S4.Headers {
 public typealias Headers = S4.Headers
 public typealias Version = S4.Version
 
-public typealias Request = S4.Request
 extension Request {
     public typealias Method = S4.Method
 }
+
+public typealias Method = S4.Method
 
 public typealias Response = S4.Response
 extension Response {
@@ -26,7 +27,11 @@ extension Response {
 }
 
 
-public typealias ServerDriver = S4.Server
+public typealias ServerDriver = HTTP.ServerProtocol
 public typealias Responder = S4.Responder
 
-public typealias Middleware = S4.Middleware
+// TODO: ? Convenient to have as top level
+public typealias Middleware = HTTPMiddleware
+public protocol HTTPMiddleware {
+    func respond(to request: HTTP.Request, chainingTo next: HTTP.Responder) throws -> HTTP.Response
+}

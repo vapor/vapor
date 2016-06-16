@@ -266,7 +266,7 @@ var workDir: String {
 let config = Config(seed: JSON.object(["port": "8000"]), workingDirectory: workDir)
 let app = Application(workDir: workDir, config: config)
 
-let 😀: Response = Response(status: .ok)
+let 😀 = HTTP.Response(status: .ok)
 
 app.get("ping") { _ in
     return 😀
@@ -359,29 +359,31 @@ app.get("json") { request in
 app.post("json") { request in
     //parse a key inside the received json
     guard let count = request.data["unicorns"].int else {
-        return Response(error: "No unicorn count provided")
+        return HTTP.Response(error: "No unicorn count provided")
     }
     return "Received \(count) unicorns"
 }
 
 app.post("form") { request in
     guard let name = request.data["name"].string else {
-        return Response(error: "No name provided")
+        return HTTP.Response(error: "No name provided")
     }
 
     return "Hello \(name)"
 }
 
 app.get("redirect") { request in
-    return Response(redirect: "http://qutheory.io:8001")
+    return "// TODO: "
+//    return HTTP.Response(redirect: "http://qutheory.io:8001")
 }
 
 app.post("json2") { request in
     //parse a key inside the received json
     guard let count = request.data["unicorns"].int else {
-        return Response(error: "No unicorn count provided")
+        return HTTP.Response(error: "No unicorn count provided")
     }
-    return Response(status: .created, json: JSON(["message":"Received \(count) unicorns"]))
+    return "// TODO: "
+//    return HTTP.Response(status: .created, json: JSON(["message":"Received \(count) unicorns"]))
 }
 
 app.grouped("abort") { group in
@@ -451,22 +453,24 @@ app.post("login") { request in
     make sure to update the Response section.
  */
 app.get("cookie") { request in
-    var response = Response(status: .ok, text: "Cookie set")
-    response.cookies["id"] = "123"
-
-    return response
+    return "// TODO: "
+//    var response = Response(status: .ok, text: "Cookie set")
+//    response.cookies["id"] = "123"
+//
+//    return response
 }
 
 
 app.get("cookies") { request in
-    var response = JSON([
-        "cookies": "\(request.cookies)"
-    ]).makeResponse()
-
-    response.cookies["cookie-1"] = "value-1"
-    response.cookies["hello"] = "world"
-
-    return response
+    return "// TODO: "
+//    var response = JSON([
+//        "cookies": "\(request.cookies)"
+//    ]).makeResponse()
+//
+//    response.cookies["cookie-1"] = "value-1"
+//    response.cookies["hello"] = "world"
+//
+//    return response
 }
 
 class Name: ValidationSuite {
@@ -483,7 +487,7 @@ class Employee {
     var name: Valid<Name>
     var email: Valid<Email>
 
-    init(request: Request) throws {
+    init(request: HTTP.Request) throws {
         name = try request.data["name"].validated()
         email = try request.data["email"].validated()
     }
@@ -513,7 +517,8 @@ app.get("multipart-image") { _ in
     response += "<button>Submit</button>"
     response += "</form>"
 
-    return Response(status: .ok, data: response.data)
+    return "// TODO: "
+//    return Response(status: .ok, data: response.data)
 }
 
 app.post("multipart-image") { request in
@@ -535,7 +540,7 @@ app.post("multipart-image") { request in
         headers["Content-Type"] = mediaType
     }
 
-    return Response(status: .ok, headers: headers, data: image.data)
+    return HTTP.Response(status: .ok, headers: headers, body: .data(image.data.bytes))
 }
 
 app.get("multifile") { _ in
@@ -546,7 +551,7 @@ app.get("multifile") { _ in
     response += "<button>Submit</button>"
     response += "</form>"
 
-    return Response(status: .ok, data: response.data)
+    return HTTP.Response(status: .ok, body: .data(response.data.bytes))
 }
 
 app.post("multifile") { request in
@@ -574,7 +579,7 @@ app.post("multifile") { request in
         headers["Content-Type"] = mediaType
     }
 
-    return Response(status: .ok, headers: headers, data: file.data)
+    return HTTP.Response(status: .ok, headers: headers, body: .data(file.data.bytes))
 }
 
 app.get("options") { _ in
@@ -595,7 +600,7 @@ app.get("options") { _ in
     response += "<button>Submit</button>"
     response += "</form>"
 
-    return Response(status: .ok, data: response.data)
+    return HTTP.Response(status: .ok, body: .data(response.data.bytes))
 }
 
 app.post("options") { request in
@@ -635,16 +640,17 @@ app.grouped(AuthMiddleware()) { group in
 //MARK: Chunked
 
 app.get("chunked") { request in
-    return Response(headers: [
-        "Content-Type": "text/plain"
-    ], chunked: { stream in
-        try stream.send("Counting:")
-        for i in 1 ..< 10{
-            sleep(1)
-            try stream.send(i)
-        }
-        try stream.close()
-    })
+    return "// TODO: "
+//    return Response(headers: [
+//        "Content-Type": "text/plain"
+//    ], chunked: { stream in
+//        try stream.send("Counting:")
+//        for i in 1 ..< 10{
+//            sleep(1)
+//            try stream.send(i)
+//        }
+//        try stream.close()
+//    })
 }
 
 app.start()

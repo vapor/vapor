@@ -1,19 +1,21 @@
-class CookiesMiddleware: Middleware {
-    func respond(to request: Request, chainingTo next: Responder) throws -> Response {
+class CookiesMiddleware: HTTP.Middleware {
+    func respond(to request: HTTP.Request, chainingTo next: HTTP.Responder) throws -> HTTP.Response {
         // mutable -- MUST be declared at top of function
-        var request = request
+//        var request = request
 
-        if let cookie = request.headers["Cookie"] {
-            request.cookies = Cookies(cookie.data)
-        }
+        // TODO:
+//        if let cookie = request.headers["Cookie"] {
+//            request.cookies = Cookies(cookie.data)
+//        }
 
         // Serialize cookies to Response headers
-        var response = try next.respond(to: request)
+        let response = try next.respond(to: request)
 
-        let cookies = response.cookies.serialize()
-        if cookies.count > 0 {
-            response.headers["Set-Cookie"] = cookies.string
-        }
+        // TODO:
+//        let cookies = response.cookies.serialize()
+//        if cookies.count > 0 {
+//            response.headers["Set-Cookie"] = cookies.string
+//        }
 
         return response
     }

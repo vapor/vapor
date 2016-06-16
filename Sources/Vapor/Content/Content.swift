@@ -10,9 +10,9 @@ extension Int: RequestContentSubscript {}
 */
 public struct Content {
     // MARK: Initialization
-    let request: Request
+    let request: HTTP.Request
 
-    internal init(request: Request) {
+    internal init(request: HTTP.Request) {
         self.request = request
     }
 

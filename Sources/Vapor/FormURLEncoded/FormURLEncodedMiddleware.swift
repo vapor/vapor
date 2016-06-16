@@ -1,14 +1,14 @@
 class FormURLEncodedMiddleware: Middleware {
-    func respond(to request: Request, chainingTo next: Responder) throws -> Response {
+    func respond(to request: HTTP.Request, chainingTo next: HTTP.Responder) throws -> HTTP.Response {
         // mutable -- MUST be declared at top of function
         var request = request
 
         if
-            case .buffer(let data) = request.body,
+            case .data(let data) = request.body,
             let contentType = request.contentType
             where contentType.contains("application/x-www-form-urlencoded")
         {
-            request.formURLEncoded = StructuredData(formURLEncoded: data)
+            request.formURLEncoded = StructuredData(formURLEncoded: Data(data))
         }
 
         return try next.respond(to: request)

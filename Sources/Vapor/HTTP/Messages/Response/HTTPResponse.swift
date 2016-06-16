@@ -2,15 +2,18 @@ import S4
 
 extension HTTP {
     public final class Response: Message {
-        public let headers: Headers
-        public let body: HTTP.Body
+        public internal(set) var headers: Headers
+        // Settable for HEAD request -- evaluate alternatives
+        public internal(set) var body: HTTP.Body
 
         public let version: Version
         public let status: Status
 
         public var onComplete: ((Stream) throws -> Void)?
 
-        public init(version: Version, status: Status, headers: Headers, body: Body) {
+        public var storage: [String: Any] = [:]
+
+        public init(version: Version = Version(major: 1, minor: 1), status: Status = .ok, headers: Headers = [:], body: Body = .data([])) {
             self.version = version
             self.status = status
             self.headers = headers
@@ -38,5 +41,13 @@ extension HTTP {
 extension HTTP.Response {
     public var startLine: String {
         return "HTTP/\(version.major).\(version.minor) \(status.statusCode) \(status.reasonPhrase)"
+    }
+}
+
+extension HTTP.Response {
+    public convenience init(error: String) {
+        // TODO: Replicate original behavior!!
+        let body = error.utf8.array
+        self.init(status: .internalServerError, body: .data(body))
     }
 }

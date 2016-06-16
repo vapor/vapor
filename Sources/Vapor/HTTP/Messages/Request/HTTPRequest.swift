@@ -3,10 +3,14 @@ extension HTTP {
         public let headers: Headers
         public let body: Body
 
-        public let method: Method
+        // TODO: internal set for head request in application, we should change it there
+        public internal(set) var method: Method
         public let uri: URI
         public let version: Version
         public internal(set) var parameters: [String: String] = [:]
+
+        // TODO: Evaluate
+        internal var storage: [String: Any] = [:]
 
         public init(method: Method, uri: URI, version: Version = Version(major: 1, minor: 1), headers: Headers = [:], body: Body = .data([])) {
             var headers = headers
@@ -75,8 +79,8 @@ extension HTTP.Request {
 }
 
 extension HTTP.Request {
-    public struct Handler: Responder {
-        public typealias Closure = (Request) throws -> Response
+    public struct Handler: HTTP.Responder {
+        public typealias Closure = (HTTP.Request) throws -> HTTP.Response
 
         private let closure: Closure
 
@@ -91,8 +95,225 @@ extension HTTP.Request {
          - throws: an error if response fails
          - returns: a response if possible
          */
-        public func respond(to request: Request) throws -> Response {
+        public func respond(to request: HTTP.Request) throws -> HTTP.Response {
             return try closure(request)
         }
+    }
+}
+
+extension HTTP.Request {
+    /**
+     Upgrades the request to a WebSocket connection
+     WebSocket connection to provide two way information
+     transfer between the client and the server.
+     */
+    public func upgradeToWebSocket(
+        supportedProtocols: ([String]) -> [String] = { $0 },
+        body: (ws: WebSocket) throws -> Void) throws -> HTTP.Response {
+        guard let requestKey = headers.secWebSocketKey else {
+            throw WebSocketRequestFormat.missingSecKeyHeader
+        }
+        guard headers.upgrade == "websocket" else {
+            throw WebSocketRequestFormat.missingUpgradeHeader
+        }
+        guard headers.connection?.range(of: "Upgrade") != nil else {
+            throw WebSocketRequestFormat.missingConnectionHeader
+        }
+
+        // TODO: Find other versions and see if we can support -- this is version mentioned in RFC
+        guard let version = headers.secWebSocketVersion where version == "13" else {
+            throw WebSocketRequestFormat.invalidOrUnsupportedVersion
+        }
+
+        var responseHeaders: Headers = [:]
+        responseHeaders.connection = "Upgrade"
+        responseHeaders.upgrade = "websocket"
+        responseHeaders.secWebSocketAccept = WebSocket.exchange(requestKey: requestKey)
+        responseHeaders.secWebSocketVersion = version
+
+        if let passedProtocols = headers.secWebProtocol {
+            responseHeaders.secWebProtocol = supportedProtocols(passedProtocols)
+        }
+
+        let response = HTTP.Response(status: .switchingProtocols, headers: responseHeaders)
+        response.onComplete = { stream in
+            let ws = WebSocket(stream)
+            try body(ws: ws)
+            try ws.listen()
+        }
+        return response
+        
+    }
+}
+
+// TODO: Evaluate better management here
+
+extension HTTP.Request {
+    /// Query data from the URI path
+    public var query: StructuredData {
+        get {
+            guard let query = storage["query"] as? StructuredData else {
+                return .null
+            }
+
+            return query
+        }
+        set(data) {
+            storage["query"] = data
+        }
+    }
+
+    /**
+     Request Content from Query, JSON, Form URL-Encoded, or Multipart.
+
+     Access using PathIndexable and Polymorphic, e.g.
+
+     `request.data["users", 0, "name"].string`
+     */
+    public var data: Content {
+        get {
+            guard let content = storage["content"] as? Content else {
+                Log.warning("Request Content not parsed, make sure \(ContentMiddleware.self) is installed.")
+                return Content(request: self)
+            }
+
+            return content
+        }
+        set(data) {
+            storage["content"] = data
+        }
+    }
+}
+
+extension HTTP.Request {
+    public var cookies: Cookies {
+        get {
+            guard let cookies = storage["cookies"] as? Cookies else {
+                return []
+            }
+
+            return cookies
+        }
+        set(data) {
+            storage["cookies"] = data
+        }
+    }
+}
+
+extension HTTP.Request {
+    /// JSON encoded request data
+    public var json: JSON? {
+        get {
+            return storage["json"] as? JSON
+        }
+        set(data) {
+            storage["json"] = data
+        }
+    }
+}
+
+extension HTTP.Request {
+    /// JSON encoded request data
+    public var formURLEncoded: StructuredData? {
+        get {
+            return storage["form-urlencoded"] as? StructuredData
+        }
+        set(data) {
+            storage["form-urlencoded"] = data
+        }
+    }
+}
+
+extension HTTP.Request {
+    /**
+     Multipart encoded request data sent using
+     the `multipart/form-data...` header.
+
+     Used by web browsers to send files.
+     */
+    public var multipart: [String: Multipart]? {
+        get {
+            return storage["multipart"] as? [String: Multipart]
+        }
+        set(data) {
+            storage["multipart"] = data
+        }
+    }
+}
+
+
+extension HTTP.Request {
+    public var keepAlive: Bool {
+        // HTTP 1.1 defaults to true unless explicitly passed `Connection: close`
+        guard let value = headers["Connection"] else { return true }
+        // TODO: Decide on if 'contains' is better, test linux version
+        return !value.contains("close")
+    }
+}
+
+extension HTTP.Request {
+    /// Server stored information related from session cookie.
+    public var session: Session? {
+        get {
+            return storage["session"] as? Session
+        }
+        set(session) {
+            storage["session"] = session
+        }
+    }
+}
+
+
+// TODO: WebSockets
+
+public enum WebSocketRequestFormat: ErrorProtocol {
+    case missingSecKeyHeader
+    case missingUpgradeHeader
+    case missingConnectionHeader
+    case invalidOrUnsupportedVersion
+}
+
+extension HTTP.Request {
+    /**
+     Upgrades the request to a WebSocket connection
+     WebSocket connection to provide two way information
+     transfer between the client and the server.
+     */
+    public func upgradeToWebSocket(
+        supportedProtocols: ([String]) -> [String] = { $0 },
+        body: (ws: WebSocket) throws -> Void) throws -> Response {
+        guard let requestKey = headers.secWebSocketKey else {
+            throw WebSocketRequestFormat.missingSecKeyHeader
+        }
+        guard headers.upgrade == "websocket" else {
+            throw WebSocketRequestFormat.missingUpgradeHeader
+        }
+        guard headers.connection?.range(of: "Upgrade") != nil else {
+            throw WebSocketRequestFormat.missingConnectionHeader
+        }
+
+        // TODO: Find other versions and see if we can support -- this is version mentioned in RFC
+        guard let version = headers.secWebSocketVersion where version == "13" else {
+            throw WebSocketRequestFormat.invalidOrUnsupportedVersion
+        }
+
+        var responseHeaders: Headers = [:]
+        responseHeaders.connection = "Upgrade"
+        responseHeaders.upgrade = "websocket"
+        responseHeaders.secWebSocketAccept = WebSocket.exchange(requestKey: requestKey)
+        responseHeaders.secWebSocketVersion = version
+
+        if let passedProtocols = headers.secWebProtocol {
+            responseHeaders.secWebProtocol = supportedProtocols(passedProtocols)
+        }
+
+        var response = Response(status: .switchingProtocols, headers: responseHeaders, cookies: [], data: [])
+        response.onUpgrade = { stream in
+            let ws = WebSocket(stream)
+            try body(ws: ws)
+            try ws.listen()
+        }
+        return response
+        
     }
 }

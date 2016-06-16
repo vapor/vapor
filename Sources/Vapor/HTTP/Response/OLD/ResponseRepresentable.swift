@@ -7,19 +7,20 @@
     }```
 */
 public protocol ResponseRepresentable {
-    func makeResponse() -> Response
+    func makeResponse() throws -> HTTP.Response
 }
 
 ///Allows responses to be returned through closures
-extension Response: ResponseRepresentable {
-    public func makeResponse() -> Response {
+extension HTTP.Response: ResponseRepresentable {
+    public func makeResponse() -> HTTP.Response {
         return self
     }
 }
 
 ///Allows Swift Strings to be returned through closures
 extension Swift.String: ResponseRepresentable {
-    public func makeResponse() -> Response {
-        return Response(status: .ok, text: self)
+    public func makeResponse() -> HTTP.Response {
+        fatalError("// TODO:")
+//        return Response(status: .ok, text: self)
     }
 }

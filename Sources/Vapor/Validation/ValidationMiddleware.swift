@@ -4,7 +4,7 @@
 */
 class ValidationMiddleware: Middleware {
 
-    func respond(to request: Request, chainingTo chain: Responder) throws -> Response {
+    func respond(to request: HTTP.Request, chainingTo chain: HTTP.Responder) throws -> HTTP.Response {
         do {
             return try chain.respond(to: request)
         } catch let error as ValidationErrorProtocol {
@@ -12,7 +12,8 @@ class ValidationMiddleware: Middleware {
                 "error": true,
                 "message": error.message
             ])
-            return Response(status: .badRequest, json: json)
+            let data = try JSON.serializer(json: json).utf8.array
+            return HTTP.Response(status: .badRequest, body: .data(data))
         }
     }
     
