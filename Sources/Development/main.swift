@@ -178,7 +178,7 @@ public final class Client: ClientDriver {
     }
 
     private func perform(_ request: Request, with connection: Vapor.Stream) throws -> Response {
-        let serializer = HTTPRequestSerializer(stream: connection)
+        let serializer = HTTPMessageSerializer<Request>(stream: connection)
         try serializer.serialize(request)
         let parser = HTTPMessageParser<Response>(stream: connection)
         let response: Response = try parser.parse()
