@@ -204,6 +204,7 @@ extension HTTP.Request {
 extension HTTPMessage {
     /// JSON encoded request data
     // TODO: We don't need to parse these anymore, should they be lazy loaded? It'd make it easier for client right now
+    // middleware concept is great, discuss contenttype middleware, can't access as normal
     // discuss w/ tanner, maybe both, ideally most extensible.
     // also discuss possibility to extend content types to content
     public var json: JSON? {
