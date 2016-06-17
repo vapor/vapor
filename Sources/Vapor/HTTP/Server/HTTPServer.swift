@@ -79,7 +79,7 @@ final class HTTPServer<StreamDriverType: StreamDriver, Parser: HTTP.ParserProtoc
             } catch let e as SocksCore.Error where e.isBrokenPipe {
                 // broken pipe, abort
                 break
-            } catch HTTPRequestParser.Error.streamEmpty {
+            } catch HTTP.Parser.Error.streamEmpty {
                 // the stream we got was empty, abort
                 break
             } catch {
