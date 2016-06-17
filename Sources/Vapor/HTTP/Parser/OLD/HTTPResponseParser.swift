@@ -64,7 +64,7 @@
     ******************************
 */
 import S4
-public final class HTTPResponseParser: Vapor.ResponseParser {
+public final class HTTPResponseParser {//: Vapor.ResponseParser {
     enum Error: ErrorProtocol {
         case streamEmpty
         case invalidRequestLine
@@ -435,7 +435,7 @@ public final class HTTPResponseParser: Vapor.ResponseParser {
         return Version(major: major, minor: minor)
     }
 
-    func parseMethod(uppercase method: BytesSlice) -> Request.Method {
+    func parseMethod(uppercase method: BytesSlice) -> Method {
         switch method {
         case GET:
             return .get

@@ -20,7 +20,7 @@ extension HTTP.Response: ResponseRepresentable {
 ///Allows Swift Strings to be returned through closures
 extension Swift.String: ResponseRepresentable {
     public func makeResponse() -> HTTP.Response {
-        fatalError("// TODO:")
-//        return Response(status: .ok, text: self)
+        let data = self.utf8.array
+        return HTTP.Response(body: .data(data))
     }
 }

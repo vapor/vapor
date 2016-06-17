@@ -365,7 +365,7 @@ extension Application: HTTP.Responder {
         Log.info("\(request.method) \(request.uri.path ?? "/")")
 
         var responder: HTTP.Responder
-        var request = request
+        let request = request
 
         /*
             The HEAD method is identical to GET.
@@ -416,12 +416,10 @@ extension Application: HTTP.Responder {
             if config.environment == .production {
                 error = "Something went wrong"
             }
-
-            fatalError("// TODO: ")
-//            response = Response(error: error)
+            response = HTTP.Response(error: error)
         }
 
-        response.headers["Date"] = Response.date
+        response.headers["Date"] = RFC1123.now()
         response.headers["Server"] = "Vapor \(Vapor.VERSION)"
 
         /**

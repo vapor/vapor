@@ -15,16 +15,17 @@ extension S4.Headers {
 public typealias Headers = S4.Headers
 public typealias Version = S4.Version
 
-extension Request {
-    public typealias Method = S4.Method
-}
+//extension HTTP.Request {
+//    public typealias Method = S4.Method
+//}
 
+public typealias Status = S4.Status
 public typealias Method = S4.Method
 
-public typealias Response = S4.Response
-extension Response {
-    public typealias Status = S4.Status
-}
+//public typealias Response = S4.Response
+//extension Response {
+//    public typealias Status = S4.Status
+//}
 
 
 public typealias ServerDriver = HTTP.ServerProtocol

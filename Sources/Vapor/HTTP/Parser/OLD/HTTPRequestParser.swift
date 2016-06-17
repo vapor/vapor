@@ -406,7 +406,7 @@ public final class HTTPRequestParser: Vapor.RequestParser {
         return Version(major: major, minor: minor)
     }
 
-    func parseMethod(uppercase method: BytesSlice) -> Request.Method {
+    func parseMethod(uppercase method: BytesSlice) -> Method {
         switch method {
         case GET:
             return .get

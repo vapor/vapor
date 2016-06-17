@@ -110,9 +110,3 @@ extension SocksCore.Error {
         return self.number == 48
     }
 }
-
-extension Response {
-    var isUpgradeResponse: Bool {
-        return headers.connection == "Upgrade"
-    }
-}
