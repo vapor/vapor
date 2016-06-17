@@ -2,7 +2,7 @@ import S4
 
 extension HTTP {
     public final class Response: Message {
-        public internal(set) var headers: Headers
+        public var headers: Headers
         // Settable for HEAD request -- evaluate alternatives
         public internal(set) var body: HTTP.Body
 

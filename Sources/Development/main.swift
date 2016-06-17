@@ -1,86 +1,6 @@
 import Vapor
 import libc
 
-import SocksCore
-import Socks
-
-
-////https://api.spotify.com/v1/search?q=beyonce&type=artist
-////let address = InternetAddress(hostname: "google.com", port: 80)
-//let address = InternetAddress(hostname: "api.spotify.com", port: 80)
-////let address = InternetAddress(hostname: "216.58.208.46", port: 80)
-//// let address = InternetAddress.localhost(port: 8080)
-////let address = InternetAddress(hostname: "192.168.1.170", port: 2425)
-//
-//let client = try TCPClient(address: address)
-//let serializer = HTTPRequestSerializer(stream: client)
-//let req = Request(version: Version(major: 1, minor: 1),
-//                  method: .get,
-//                  path: "api.spotify.com/v1/search?q=beyonce&type=artist",
-//                  host: "", // "api.spotify.com",
-//                  headers: [:],
-//                  data: [])
-//try serializer.serialize(req)
-//let response = try client.receiveAll()
-//print("Got resp: \n\n\n\(response.string)")
-//try client.close()
-
-/*
- http://example.qutheory.io/json
- */
-//https://api.spotify.com/v1/search?q=beyonce&type=artist
-//let address = InternetAddress(hostname: "google.com", port: 80)
-//let address = InternetAddress(hostname: "216.58.208.46", port: 80)
-// let address = InternetAddress.localhost(port: 8080)
-//let address = InternetAddress(hostname: "192.168.1.170", port: 2425)
-//let uri = URI(scheme: "http", userInfo: nil, host: "www.swiftpackages.io", port: 80, path: "/test", query: nil, fragment: nil)
-
-
-//let address = InternetAddress(hostname: "www.example.qutheory.io", port: 80)
-//let uri = URI(scheme: "http", userInfo: nil, host: "example.qutheory.io", port: 80, path: "/json", query: nil, fragment: nil)
-//let client = try TCPClient(address: address)
-//let serializer = HTTPRequestSerializer(stream: StreamBuffer(client))
-//let req = Request(method: .get, uri: uri, version: Version(major: 1, minor: 1), headers: [:], body: .buffer(Data([])))
-//try serializer.serialize(req)
-//var bytes: Bytes = []
-//let next = try client.receiveAll()
-//print("Got: \(next.string)")
-
-
-//let address = InternetAddress(hostname: "pokeapi.co", port: 80)
-extension URI {
-    public typealias Scheme = String
-    // TODO: Find RFC list of other defaults, implement and link source
-    static let defaultPorts: [Scheme: Int] = [
-        "http": 80,
-        "https": 443
-    ]
-
-    // The default port associated with the scheme
-    public var schemePort: Int? {
-        return scheme.flatMap { scheme in URI.defaultPorts[scheme] }
-    }
-
-    init(_ str: String) throws {
-        self = try URIParser.parse(uri: str.utf8)
-        // if no port, but yes scheme, use scheme default if possible
-        guard port == nil, let scheme = self.scheme else { return }
-        port = URI.defaultPorts[scheme]
-    }
-
-}
-//let u = try URI("https://api.spotify.com/v1/search?q=beyonce&type=artist")
-//print(u)
-print("")
-import S4
-
-let poke = try Vapor.Client.shared.request(.get, url: "http://pokeapi.co/api/v2/pokemon", query: ["limit": "20", "offset": "20"])
-print(poke.body.bytes?.string)
-
-let artists = try Vapor.Client.shared.request(.get, url: "http://api.spotify.com/v1/search", query: ["q": "beyonce", "type": "artist"])
-print(artists)
-print(artists.body.bytes?.string)
-
 var workDir: String {
     let parent = #file.characters.split(separator: "/").map(String.init).dropLast().joined(separator: "/")
     let path = "/\(parent)/"
@@ -89,17 +9,20 @@ var workDir: String {
 
 let config = Config(seed: JSON.object(["port": "8000"]), workingDirectory: workDir)
 let app = Application(workDir: workDir, config: config)
-
 let 😀 = HTTP.Response(status: .ok)
+
+//MARK: Basic
+
+app.get { request in
+    return try app.view("welcome.html")
+}
 
 app.get("ping") { _ in
     return 😀
 }
 
-//MARK: Basic
-
-app.get("/") { request in
-    return try app.view("welcome.html")
+app.get("pokemon") { req in
+    return try app.client.get("http://pokeapi.co/api/v2/pokemon", query: ["limit": "20", "offset": "20"])
 }
 
 app.get("test") { request in

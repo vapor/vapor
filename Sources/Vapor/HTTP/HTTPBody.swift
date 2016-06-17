@@ -12,3 +12,28 @@ extension HTTP.Body {
     }
 }
 
+extension HTTP.Body {
+    public init(_ str: String) {
+        self.init(str.utf8)
+    }
+    public init<S: Sequence where S.Iterator.Element == Byte>(_ s: S) {
+        self = .data(s.array)
+    }
+    public init(_ chunker: (ChunkStream) throws -> Void) {
+        self = .chunked(chunker)
+    }
+}
+
+extension HTTP.Body {
+    public init(_ json: JSON) {
+        let bytes = json.serialize().utf8
+        self.init(bytes)
+    }
+}
+
+extension HTTP.Body: ArrayLiteralConvertible {
+    /// Creates an instance initialized with the given elements.
+    public init(arrayLiteral elements: Byte...) {
+        self.init(elements)
+    }
+}

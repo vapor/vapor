@@ -15,15 +15,22 @@ extension Headers {
         switch body {
         case .chunked(_):
             setTransferEncodingChunked()
-        case .data(let bytes) where !bytes.isEmpty:
-            self["Content-Length"] = bytes.count.description
-        default:
-            // empty data ok, but do NOT set Content-Length to 0, it will breaks nginx
-            return
+        case .data(let bytes):
+            // Can't have transfer encoding w/ data payload
+            self["Transfer-Encoding"] = nil
+            if bytes.isEmpty {
+                // Empty payload MUST NOT have length of `0`, content length should be empty
+                self["Content-Length"] = nil
+            } else {
+                self["Content-Length"] = bytes.count.description
+            }
         }
     }
 
     private mutating func setTransferEncodingChunked() {
+        // Remove Content Length For Chunked Encoding
+        self["Content-Length"] = nil
+
         if let encoding = self["Transfer-Encoding"] where !encoding.isEmpty {
             if encoding.hasSuffix("chunked") {
                 return

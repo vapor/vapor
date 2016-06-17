@@ -88,10 +88,17 @@ public class Application {
     public var commands: [Command.Type]
 
     /**
-        Send output and receive input from the console
-        using the underlying `ConsoleDriver`.
+         Send output and receive input from the console
+         using the underlying `ConsoleDriver`.
     */
     public let console: Console
+
+    /**
+        TODO: Expose to end users to customize driver
+        Make outgoing requests
+    */
+    public let client: ClientDriver = Client()
+
 
     /**
         Resources directory relative to workDir
