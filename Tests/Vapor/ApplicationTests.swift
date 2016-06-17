@@ -19,10 +19,10 @@ class ApplicationTests: XCTestCase {
         files have appropriate "Content-Type"
         headers returned.
     */
-    func testMediaType() {
+    func testMediaType() throws {
         let app = Application(workDir: workDir)
 
-        let request = Request(method: .get, path: "/styles/app.css")
+        let request = try Request(method: .get, uri: "/styles/app.css")
 
         guard let response = try? app.respond(to: request) else {
             XCTFail("App could not respond")

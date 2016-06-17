@@ -29,10 +29,10 @@ class HTTPStreamTests: XCTestCase {
 
 
         do {
-            let request = try HTTPRequestParser(stream: stream).parse()
+            let request = try HTTP.Parser(stream: stream).parse(HTTP.Request.self)
 
             //MARK: Verify Request
-            XCTAssert(request.method == Request.Method.post, "Incorrect method \(request.method)")
+            XCTAssert(request.method == Method.post, "Incorrect method \(request.method)")
             XCTAssert(request.uri.path == "/json", "Incorrect path \(request.uri.path)")
             XCTAssert(request.version.major == 1 && request.version.minor == 1, "Incorrect version")
         } catch {
@@ -42,17 +42,17 @@ class HTTPStreamTests: XCTestCase {
 
     func testSerializer() {
         //MARK: Create Response
-        var response = Response(status: .enhanceYourCalm, headers: [
+        let response = Response(status: .enhanceYourCalm, headers: [
             "Test": "123",
             "Content-Type": "text/plain"
         ], chunked: { stream in
             try stream.send("Hello, world")
             try stream.close()
         })
-        response.cookies["key"] = "val"
+//        response.cookies["key"] = "val"
 
         let stream = TestStream()
-        let serializer = HTTPResponseSerializer(stream: stream)
+        let serializer = HTTP.Serializer(stream: stream)
         do {
             try serializer.serialize(response)
         } catch {
@@ -112,19 +112,5 @@ final class TestStream: Stream {
         buffer.removeFirst(max)
 
         return Bytes(data)
-    }
-}
-
-final class TestStreamDriver: StreamDriver {
-    init() {
-
-    }
-
-    static func make(host: String, port: Int) throws -> Self {
-        return .init()
-
-    }
-    func start(handler: (Stream) throws -> ()) throws {
-
     }
 }

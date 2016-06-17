@@ -81,10 +81,10 @@ extension HTTP.Response {
 
 extension HTTP.Response {
     /**
-     Convenience Initializer
+         Convenience Initializer
 
-     - parameter status: the http status
-     - parameter json: any value that will be attempted to be serialized as json.  Use 'Json' for more complex objects
+         - parameter status: the http status
+         - parameter json: any value that will be attempted to be serialized as json.  Use 'Json' for more complex objects
      */
     public convenience init(status: Status, json: JSON) {
         let headers: Headers = [
@@ -94,3 +94,25 @@ extension HTTP.Response {
     }
 }
 
+extension HTTP.Response {
+    /*
+        Creates a redirect response with
+        the 301 Status an `Location` header.
+    */
+    public convenience init(headers: Headers = [:], redirect location: String) {
+        var headers = headers
+        headers["Location"] = location
+        self.init(status: .movedPermanently, headers: headers)
+    }
+}
+
+extension HTTP.Response {
+    /*
+     Creates a redirect response with
+     the 301 Status an `Location` header.
+     */
+    public convenience init<S: Sequence where S.Iterator.Element == Byte>(version: Version = Version(major: 1, minor: 1), status: Status = .ok, headers: Headers = [:], body: S) {
+        let body = Body(body)
+        self.init(version: version, status: status, headers: headers, body: body)
+    }
+}

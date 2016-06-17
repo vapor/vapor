@@ -29,7 +29,7 @@ public typealias Method = S4.Method
 
 
 public typealias ServerDriver = HTTP.ServerProtocol
-public typealias Responder = S4.Responder
+//public typealias Responder = S4.Responder
 
 // TODO: ? Convenient to have as top level
 public typealias Middleware = HTTPMiddleware

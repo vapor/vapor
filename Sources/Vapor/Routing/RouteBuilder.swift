@@ -112,6 +112,14 @@ extension Application: RouteBuilder {
     }
 }
 
+extension HTTPMiddleware {
+    func chain(to responder: HTTP.Responder) -> HTTP.Responder {
+        return HTTP.Request.Handler { request in
+            return try self.respond(to: request, chainingTo: responder)
+        }
+    }
+}
+
 extension Collection where Iterator.Element == Middleware {
     func chain(to responder: HTTP.Responder) -> HTTP.Responder {
         return reversed().reduce(responder) { nextResponder, nextMiddleware in

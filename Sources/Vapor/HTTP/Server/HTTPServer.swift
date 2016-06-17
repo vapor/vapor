@@ -11,13 +11,14 @@ enum ServerError: ErrorProtocol {
     case bindFailed
 }
 
+public typealias Responder = HTTPResponder
 public protocol HTTPResponder {
     func respond(to request: HTTP.Request) throws -> HTTP.Response
 }
 
 public protocol HTTPServerProtocol {
     init(host: String, port: Int, responder: HTTP.Responder) throws
-    @noreturn func start() throws
+    func start() throws
 }
 
 extension HTTP {
@@ -40,7 +41,7 @@ final class HTTPServer<StreamDriverType: StreamDriver, Parser: HTTP.ParserProtoc
         self.responder = responder
     }
 
-    @noreturn func start() throws {
+    func start() throws {
         do {
             try StreamDriverType.listen(host: host, port: port, handler: dispatch)
         } catch let e as SocksCore.Error where e.isBindFailed {

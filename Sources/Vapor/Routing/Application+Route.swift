@@ -85,14 +85,14 @@ extension Application {
 
         // OPTIONS /entities
         self.options(path) { request in
-            var response = try controllerFactory().options(request: request).makeResponse()
+            let response = try controllerFactory().options(request: request).makeResponse()
             response.headers["Allow"] = "GET,POST,DELETE,OPTIONS"
             return response
         }
 
         // OPTIONS /entities/:id
         self.options(path, Resource.Item.self) { request, item in
-            var response = try controllerFactory().options(request: request, item: item).makeResponse()
+            let response = try controllerFactory().options(request: request, item: item).makeResponse()
             response.headers["Allow"] = "GET,POST,PUT,PATCH,DELETE,OPTIONS"
             return response
         }

@@ -18,6 +18,17 @@ extension HTTP {
         public var storage: [String: Any] = [:]
         public private(set) lazy var data: Content = Content(self)
 
+        public convenience init(method: Method, path: String, host: String = "*", version: Version = Version(major: 1, minor: 1), headers: Headers = [:], body: Body = .data([])) throws {
+            let path = path.hasPrefix("/") ? path : "/" + path
+            var uri = try URI(path)
+            uri.host = host
+            self.init(method: method, uri: uri, version: version, headers: headers, body: body)
+        }
+
+        public convenience init(method: Method, uri: String, version: Version = Version(major: 1, minor: 1), headers: Headers = [:], body: Body = .data([])) throws {
+            let uri = try URI(uri)
+            self.init(method: method, uri: uri, version: version, headers: headers, body: body)
+        }
 
         public init(method: Method, uri: URI, version: Version = Version(major: 1, minor: 1), headers: Headers = [:], body: Body = .data([])) {
             var headers = headers
@@ -97,6 +108,10 @@ extension HTTP.Request {
         let requestLine = "\(method) \(path) \(versionLine)"
         return requestLine
     }
+}
+
+extension HTTP.Request {
+
 }
 
 extension HTTP.Request {
