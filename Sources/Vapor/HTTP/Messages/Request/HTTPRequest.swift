@@ -10,7 +10,7 @@ extension HTTP {
         public internal(set) var parameters: [String: String] = [:]
 
         // TODO: Evaluate
-        internal var storage: [String: Any] = [:]
+        public var storage: [String: Any] = [:]
 
         public init(method: Method, uri: URI, version: Version = Version(major: 1, minor: 1), headers: Headers = [:], body: Body = .data([])) {
             var headers = headers
@@ -148,7 +148,7 @@ extension HTTP.Request {
 
 // TODO: Evaluate better management here
 
-extension HTTP.Request {
+extension HTTPMessage {
     /// Query data from the URI path
     public var query: StructuredData {
         get {
@@ -172,12 +172,13 @@ extension HTTP.Request {
      */
     public var data: Content {
         get {
-            guard let content = storage["content"] as? Content else {
-                Log.warning("Request Content not parsed, make sure \(ContentMiddleware.self) is installed.")
-                return Content(request: self)
+            if let existing = storage["content"] as? Content {
+                return existing
+            } else {
+                let new = Content(self)
+                storage["content"] = new
+                return new
             }
-
-            return content
         }
         set(data) {
             storage["content"] = data
@@ -200,11 +201,23 @@ extension HTTP.Request {
     }
 }
 
-extension HTTP.Request {
+extension HTTPMessage {
     /// JSON encoded request data
+    // TODO: We don't need to parse these anymore, should they be lazy loaded? It'd make it easier for client right now
+    // discuss w/ tanner, maybe both, ideally most extensible.
+    // also discuss possibility to extend content types to content
     public var json: JSON? {
         get {
-            return storage["json"] as? JSON
+            if let existing = storage["json"] as? JSON {
+                return existing
+            } else if let type = headers["Content-Type"] where type.contains("application/json") {
+                guard case let .data(body) = body else { return nil }
+                guard let json = try? JSON.deserializer(data: body) else { return nil }
+                storage["json"] = json
+                return json
+            } else {
+                return nil
+            }
         }
         set(data) {
             storage["json"] = data
@@ -212,7 +225,7 @@ extension HTTP.Request {
     }
 }
 
-extension HTTP.Request {
+extension HTTPMessage {
     /// JSON encoded request data
     public var formURLEncoded: StructuredData? {
         get {
@@ -224,7 +237,7 @@ extension HTTP.Request {
     }
 }
 
-extension HTTP.Request {
+extension HTTPMessage {
     /**
      Multipart encoded request data sent using
      the `multipart/form-data...` header.

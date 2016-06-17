@@ -1,8 +1,10 @@
-public protocol HTTPMessage {
+public protocol HTTPMessage: class {
     var startLine: String { get }
     var headers: Headers { get }
     var body: HTTP.Body { get }
 
+    var storage: [String: Any] { get set }
+    
     init(startLineComponents: (BytesSlice, BytesSlice, BytesSlice), headers: Headers, body: HTTP.Body) throws
 }
 

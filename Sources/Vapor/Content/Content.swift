@@ -10,21 +10,21 @@ extension Int: RequestContentSubscript {}
 */
 public struct Content {
     // MARK: Initialization
-    let request: HTTP.Request
+    private weak var message: HTTP.Message?
 
-    internal init(request: HTTP.Request) {
-        self.request = request
+    internal init(_ message: HTTP.Message) {
+        self.message = message
     }
 
     // MARK: Subscripting
     public subscript(index: Int) -> Polymorphic? {
-        if let value = request.query["\(index)"] {
+        if let value = message?.query["\(index)"] {
             return value
-        } else if let value = request.json?.array?[index] {
+        } else if let value = message?.json?.array?[index] {
             return value
-        } else if let value = request.formURLEncoded?["\(index)"] {
+        } else if let value = message?.formURLEncoded?["\(index)"] {
             return value
-        } else if let value = request.multipart?["\(index)"] {
+        } else if let value = message?.multipart?["\(index)"] {
             return value
         } else {
             return nil
@@ -32,13 +32,13 @@ public struct Content {
     }
 
     public subscript(key: String) -> Polymorphic? {
-        if let value = request.query[key] {
+        if let value = message?.query[key] {
             return value
-        } else if let value = request.json?.object?[key] {
+        } else if let value = message?.json?.object?[key] {
             return value
-        } else if let value = request.formURLEncoded?[key] {
+        } else if let value = message?.formURLEncoded?[key] {
             return value
-        } else if let value = request.multipart?[key] {
+        } else if let value = message?.multipart?[key] {
             return value
         } else {
             return nil
@@ -50,11 +50,11 @@ public struct Content {
     }
 
     public subscript(indexes: [PathIndex]) -> Polymorphic? {
-        if let value = request.query[indexes] {
+        if let value = message?.query[indexes] {
             return value
-        } else if let value = request.json?[indexes] {
+        } else if let value = message?.json?[indexes] {
             return value
-        } else if let value = request.formURLEncoded?[indexes] {
+        } else if let value = message?.formURLEncoded?[indexes] {
             return value
         } else {
             return nil
