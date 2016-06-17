@@ -16,8 +16,6 @@ class SessionMiddleware: Middleware {
 
     func respond(to request: HTTP.Request, chainingTo chain: HTTP.Responder) throws -> HTTP.Response {
         // mutable -- MUST be declared at top of function
-        var request = request
-
         if
             let sessionIdentifier = request.cookies["vapor-session"]
             where driver.contains(identifier: sessionIdentifier)
@@ -27,9 +25,9 @@ class SessionMiddleware: Middleware {
             request.session = Session(driver: driver)
         }
 
-        var response = try chain.respond(to: request)
+        let response = try chain.respond(to: request)
 
-        // TODO: 
+        // TODO: Tanner, halp
 //        if let identifier = request.session?.identifier {
 //            response.cookies["vapor-session"] = identifier
 //        }

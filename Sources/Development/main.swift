@@ -271,8 +271,7 @@ app.get("multipart-image") { _ in
     response += "<button>Submit</button>"
     response += "</form>"
 
-    return "// TODO: "
-//    return Response(status: .ok, data: response.data)
+    return Response(body: Body(response))
 }
 
 app.post("multipart-image") { request in
@@ -294,7 +293,7 @@ app.post("multipart-image") { request in
         headers["Content-Type"] = mediaType
     }
 
-    return HTTP.Response(status: .ok, headers: headers, body: .data(image.data.bytes))
+    return Response(status: .ok, headers: headers, body: Body(image.data.bytes))
 }
 
 app.get("multifile") { _ in
@@ -305,7 +304,7 @@ app.get("multifile") { _ in
     response += "<button>Submit</button>"
     response += "</form>"
 
-    return HTTP.Response(status: .ok, body: .data(response.data.bytes))
+    return Response(body: Body(response))
 }
 
 app.post("multifile") { request in
@@ -394,17 +393,14 @@ app.grouped(AuthMiddleware()) { group in
 //MARK: Chunked
 
 app.get("chunked") { request in
-    return "// TODO: "
-//    return Response(headers: [
-//        "Content-Type": "text/plain"
-//    ], chunked: { stream in
-//        try stream.send("Counting:")
-//        for i in 1 ..< 10{
-//            sleep(1)
-//            try stream.send(i)
-//        }
-//        try stream.close()
-//    })
+    return Response(headers: ["Content-Type": "text/plain"]) { stream in
+        try stream.send("Counting:")
+        for i in 1 ..< 10{
+            sleep(1)
+            try stream.send(i)
+        }
+        try stream.close()
+    }
 }
 
 app.start()

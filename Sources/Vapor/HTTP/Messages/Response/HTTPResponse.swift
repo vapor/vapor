@@ -1,23 +1,33 @@
 import S4
 
+public typealias Response = HTTP.Response
+
 extension HTTP {
     public final class Response: Message {
         public var headers: Headers
-        // Settable for HEAD request -- evaluate alternatives
+        // Settable for HEAD request -- evaluate alternatives -- Perhaps serializer should handle it.
+        // must NOT be exposed public because changing body will break behavior most of time
         public internal(set) var body: HTTP.Body
 
         public let version: Version
         public let status: Status
 
-        public var onComplete: ((Stream) throws -> Void)?
+        // MARK: Extensibility
 
         public var storage: [String: Any] = [:]
+        public private(set) lazy var data: Content = Content(self)
+
+        // MARK: Post Serialization
+
+        public var onComplete: ((Stream) throws -> Void)?
 
         public init(version: Version = Version(major: 1, minor: 1), status: Status = .ok, headers: Headers = [:], body: Body = .data([])) {
             self.version = version
             self.status = status
             self.headers = headers
             self.body = body
+
+            self.data.append(self.json)
         }
 
         // TODO: Establish appropriate cookie handling? Should it be built off of headers?
@@ -54,21 +64,33 @@ extension HTTP.Response {
 
 extension HTTP.Response {
     /**
-     Send chunked data with the
-     `Transfer-Encoding: Chunked` header.
+         Send chunked data with the
+         `Transfer-Encoding: Chunked` header.
 
-     Chunked uses the Transfer-Encoding HTTP header in
-     place of the Content-Length header.
+         Chunked uses the Transfer-Encoding HTTP header in
+         place of the Content-Length header.
 
-     https://en.wikipedia.org/wiki/Chunked_transfer_encoding
-     */
-    public convenience init(
-        status: Status = .ok,
-        headers: Headers = [:],
-        chunked closure: ((ChunkStream) throws -> Void)
-        ) {
+         https://en.wikipedia.org/wiki/Chunked_transfer_encoding
+    */
+    public convenience init(status: Status = .ok, headers: Headers = [:], chunked closure: ((ChunkStream) throws -> Void)) {
         var headers = headers
-        headers["Transfer-Encoding"] = "chunked"
+        headers.setTransferEncodingChunked()
         self.init(status: status, headers: headers, body: .chunked(closure))
     }
 }
+
+extension HTTP.Response {
+    /**
+     Convenience Initializer
+
+     - parameter status: the http status
+     - parameter json: any value that will be attempted to be serialized as json.  Use 'Json' for more complex objects
+     */
+    public convenience init(status: Status, json: JSON) {
+        let headers: Headers = [
+            "Content-Type": "application/json; charset=utf-8"
+        ]
+        self.init(status: status, headers: headers, body: HTTP.Body(json))
+    }
+}
+

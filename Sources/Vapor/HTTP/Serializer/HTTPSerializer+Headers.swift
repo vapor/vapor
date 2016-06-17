@@ -27,7 +27,7 @@ extension Headers {
         }
     }
 
-    private mutating func setTransferEncodingChunked() {
+    mutating func setTransferEncodingChunked() {
         // Remove Content Length For Chunked Encoding
         self["Content-Length"] = nil
 

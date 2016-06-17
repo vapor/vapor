@@ -1,16 +1,23 @@
+public typealias Request = HTTP.Request
+
 extension HTTP {
     public final class Request: Message {
-        public let headers: Headers
+        public var headers: Headers
         public let body: Body
 
-        // TODO: internal set for head request in application, we should change it there
+        // TODO: internal set for head request in application, serializer should change it, avoid exposing to end user
         public internal(set) var method: Method
+        
         public let uri: URI
         public let version: Version
+
         public internal(set) var parameters: [String: String] = [:]
 
-        // TODO: Evaluate
+        // TODO: Extensibility
+
         public var storage: [String: Any] = [:]
+        public private(set) lazy var data: Content = Content(self)
+
 
         public init(method: Method, uri: URI, version: Version = Version(major: 1, minor: 1), headers: Headers = [:], body: Body = .data([])) {
             var headers = headers
@@ -21,6 +28,20 @@ extension HTTP {
             self.version = version
             self.headers = headers
             self.body = body
+
+            self.data.append(self.query)
+            self.data.append(self.json)
+            self.data.append(self.formURLEncoded)
+            self.data.append { [weak self] indexes in
+                guard let first = indexes.first else { return nil }
+                if let string = first as? String {
+                    return self?.multipart?[string]
+                } else if let int = first as? Int {
+                    return self?.multipart?["\(int)"]
+                } else {
+                    return nil
+                }
+            }
         }
 
         public convenience init(startLineComponents: (BytesSlice, BytesSlice, BytesSlice), headers: Headers, body: HTTP.Body) throws {
@@ -101,6 +122,15 @@ extension HTTP.Request {
     }
 }
 
+// TODO: WebSockets
+
+public enum WebSocketRequestFormat: ErrorProtocol {
+    case missingSecKeyHeader
+    case missingUpgradeHeader
+    case missingConnectionHeader
+    case invalidOrUnsupportedVersion
+}
+
 extension HTTP.Request {
     /**
      Upgrades the request to a WebSocket connection
@@ -146,42 +176,17 @@ extension HTTP.Request {
     }
 }
 
-// TODO: Evaluate better management here
-
-extension HTTPMessage {
+extension HTTP.Request {
     /// Query data from the URI path
-    public var query: StructuredData {
-        get {
-            guard let query = storage["query"] as? StructuredData else {
-                return .null
-            }
-
+    public var query: StructuredData? {
+        if let existing = storage["query"] {
+            return existing as? StructuredData
+        } else if let queryRaw = uri.query {
+            let query = StructuredData(formURLEncoded: queryRaw.data)
+            storage["query"] = query
             return query
-        }
-        set(data) {
-            storage["query"] = data
-        }
-    }
-
-    /**
-     Request Content from Query, JSON, Form URL-Encoded, or Multipart.
-
-     Access using PathIndexable and Polymorphic, e.g.
-
-     `request.data["users", 0, "name"].string`
-     */
-    public var data: Content {
-        get {
-            if let existing = storage["content"] as? Content {
-                return existing
-            } else {
-                let new = Content(self)
-                storage["content"] = new
-                return new
-            }
-        }
-        set(data) {
-            storage["content"] = data
+        } else {
+            return nil
         }
     }
 }
@@ -201,36 +206,20 @@ extension HTTP.Request {
     }
 }
 
-extension HTTPMessage {
-    /// JSON encoded request data
-    // TODO: We don't need to parse these anymore, should they be lazy loaded? It'd make it easier for client right now
-    // middleware concept is great, discuss contenttype middleware, can't access as normal
-    // discuss w/ tanner, maybe both, ideally most extensible.
-    // also discuss possibility to extend content types to content
-    public var json: JSON? {
+extension HTTP.Request {
+    /// form url encoded encoded request data
+    public var formURLEncoded: StructuredData? {
         get {
-            if let existing = storage["json"] as? JSON {
+            if let existing = storage["form-urlencoded"] as? StructuredData {
                 return existing
-            } else if let type = headers["Content-Type"] where type.contains("application/json") {
+            } else if let type = headers["Content-Type"] where type.contains("application/x-www-form-urlencoded") {
                 guard case let .data(body) = body else { return nil }
-                guard let json = try? JSON.deserializer(data: body) else { return nil }
-                storage["json"] = json
-                return json
+                let formURLEncoded = StructuredData(formURLEncoded: Data(body))
+                storage["form-urlencoded"] = formURLEncoded
+                return formURLEncoded
             } else {
                 return nil
             }
-        }
-        set(data) {
-            storage["json"] = data
-        }
-    }
-}
-
-extension HTTPMessage {
-    /// JSON encoded request data
-    public var formURLEncoded: StructuredData? {
-        get {
-            return storage["form-urlencoded"] as? StructuredData
         }
         set(data) {
             storage["form-urlencoded"] = data
@@ -238,7 +227,7 @@ extension HTTPMessage {
     }
 }
 
-extension HTTPMessage {
+extension HTTP.Request {
     /**
      Multipart encoded request data sent using
      the `multipart/form-data...` header.
@@ -246,15 +235,19 @@ extension HTTPMessage {
      Used by web browsers to send files.
      */
     public var multipart: [String: Multipart]? {
-        get {
-            return storage["multipart"] as? [String: Multipart]
-        }
-        set(data) {
-            storage["multipart"] = data
+        if let existing = storage["multipart"] as? [String: Multipart]? {
+            return existing
+        } else if let type = headers["Content-Type"] where type.contains("multipart/form-data") {
+            guard case let .data(body) = body else { return nil }
+            guard let boundary = try? Multipart.parseBoundary(contentType: type) else { return nil }
+            let multipart = Multipart.parse(Data(body), boundary: boundary)
+            storage["multipart"] = multipart
+            return multipart
+        } else {
+            return nil
         }
     }
 }
-
 
 extension HTTP.Request {
     public var keepAlive: Bool {
@@ -275,14 +268,4 @@ extension HTTP.Request {
             storage["session"] = session
         }
     }
-}
-
-
-// TODO: WebSockets
-
-public enum WebSocketRequestFormat: ErrorProtocol {
-    case missingSecKeyHeader
-    case missingUpgradeHeader
-    case missingConnectionHeader
-    case invalidOrUnsupportedVersion
 }

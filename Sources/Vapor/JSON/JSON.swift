@@ -143,9 +143,7 @@ extension Bool: JSONRepresentable {
 
 extension JSON: ResponseRepresentable {
     public func makeResponse() throws -> HTTP.Response {
-        let bytes = try JSON.serializer(json: self).utf8.array
-        return HTTP.Response(status: .ok, headers: ["Content-Type": "application/json"], body: .data(bytes))
-//        return Response(status: .ok, json: self)
+        return HTTP.Response(status: .ok, json: self)
     }
 }
 

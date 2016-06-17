@@ -69,7 +69,7 @@ extension HTTP {
          */
         private func serialize(_ headers: Headers) throws {
             /*
-             // TODO: Ordered in future: https://tools.ietf.org/html/rfc7230#section-3.2.2
+             // TODO: Ordered in future, but not necessary now: https://tools.ietf.org/html/rfc7230#section-3.2.2
 
              Order is NOT enforced, but suggested, we will implement in future
              */

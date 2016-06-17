@@ -1,3 +1,5 @@
+public typealias Body = HTTP.Body
+
 extension HTTP {
     public enum Body {
         case data(Bytes)
