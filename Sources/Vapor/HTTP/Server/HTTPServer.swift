@@ -42,13 +42,13 @@ final class HTTPServer<StreamDriverType: StreamDriver, Parser: HTTP.ParserProtoc
 
     @noreturn func start() throws {
         do {
-            try StreamDriverType.listen(host: host, port: port, handler: handle)
+            try StreamDriverType.listen(host: host, port: port, handler: dispatch)
         } catch let e as SocksCore.Error where e.isBindFailed {
             throw ServerError.bindFailed
         }
     }
 
-    private func handle(_ stream: Stream) {
+    private func dispatch(_ stream: Stream) {
         do {
             _ = try Strand {
                 self.loop(with: stream)
