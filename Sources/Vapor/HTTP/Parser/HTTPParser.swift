@@ -109,7 +109,7 @@ extension HTTP {
          */
         func parseStartLine() throws -> (method: ArraySlice<Byte>, uri: ArraySlice<Byte>, httpVersion: ArraySlice<Byte>) {
             let line = try stream.receiveLine()
-            guard !line.isEmpty else { return ([], [], []) }
+            guard !line.isEmpty else { throw Error.streamEmpty }
 
             // Maximum 3 components(2 splits) so reason phrase can have spaces within it
             let comps = line.split(separator: .space, maxSplits: 2, omittingEmptySubsequences: true)

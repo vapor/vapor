@@ -38,7 +38,6 @@ extension Socks.TCPClient: Stream {
 }
 
 extension SynchronousTCPServer: StreamDriver {
-    @noreturn
     public static func listen(host: String, port: Int, handler: (Stream) throws -> ()) throws {
         let port = UInt16(port)
         let address = InternetAddress(hostname: host, port: port)
