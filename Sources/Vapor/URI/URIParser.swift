@@ -1,5 +1,5 @@
 extension URIParser {
-    public static func parse<S: Sequence where S.Iterator.Element == Byte>(uri: S) throws -> URI {
+    public static func parse(uri: Bytes) throws -> URI {
         let parser = URIParser(bytes: uri) // TODO: Retain splice format
         return try parser.parse()
     }
@@ -21,7 +21,7 @@ extension URI {
     }
 
     init(_ str: String) throws {
-        self = try URIParser.parse(uri: str.utf8)
+        self = try URIParser.parse(uri: str.utf8.array)
         guard port == nil else { return }
         // if no port, try scheme default if possible
         port = schemePort
@@ -39,7 +39,6 @@ public final class URIParser: StaticDataBuffer {
 
     // If we have authority, we should also have scheme?
     let existingHost: Bytes?
-    let existingScheme: Bytes?
 
     /*
      The most common form of Request-URI is that used to identify a
@@ -56,9 +55,8 @@ public final class URIParser: StaticDataBuffer {
      
      If host exists, and scheme exists, use those
      */
-    public init<S: Sequence where S.Iterator.Element == Byte>(bytes: S, existingHost: String? = nil, existingScheme: String? = nil) {
+    public init(bytes: Bytes, existingHost: String? = nil) {
         self.existingHost = existingHost?.bytes
-        self.existingScheme = existingScheme?.bytes
         super.init(bytes: bytes)
     }
 
@@ -126,10 +124,6 @@ public final class URIParser: StaticDataBuffer {
         )
     }
 
-    private func parseHost(_ host: BytesSlice) {
-
-    }
-
     // MARK: Percent Decoding
 
     private func percentDecodedString(_ input: [Byte]) throws -> String {
@@ -182,8 +176,6 @@ public final class URIParser: StaticDataBuffer {
         scheme      = ALPHA *( ALPHA / DIGIT / "+" / "-" / "." )
     */
     private func parseScheme() throws -> [Byte] {
-        if let existingScheme = existingScheme { return existingScheme } // TODO: Get scheme as bytes?
-
         let scheme = try collect(until: .colon, .forwardSlash)
         let colon = try checkLeadingBuffer(matches: .colon)
         guard colon else { return scheme }

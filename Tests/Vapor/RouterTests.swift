@@ -107,6 +107,7 @@ class RouterTests: XCTestCase {
         router.register(route)
 
         let request = try Request(method: .get, path: "test/\(percentEncodedString)")
+        print("URI: \(request.uri)")
         guard let handler = router.route(request) else {
             XCTFail("Route not found")
             return

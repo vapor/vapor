@@ -76,10 +76,9 @@ extension HTTP {
              */
             let (methodSlice, uriSlice, httpVersionSlice) = startLineComponents
             let method = Method(uppercased: methodSlice.uppercased)
-            // TODO: Consider how to support other schemes here.
-            // If on secure socket, defaults https, if not, defaults http
-            let uriParser = URIParser(bytes: uriSlice, existingHost: headers["Host"], existingScheme: "http")
-            let uri = try uriParser.parse()
+            let uriParser = URIParser(bytes: uriSlice.array, existingHost: headers["Host"])
+            var uri = try uriParser.parse()
+            uri.scheme = uri.scheme.isNilOrEmpty ? "http" : uri.scheme
             let version = try Version(httpVersionSlice)
 
             self.init(method: method, uri: uri, version: version, headers: headers, body: body)

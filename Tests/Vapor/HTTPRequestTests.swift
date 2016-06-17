@@ -22,7 +22,7 @@ class HTTPRequestTests: XCTestCase {
             let request = try HTTP.Parser(stream: stream).parse(HTTP.Request.self)
             XCTAssertEqual(request.method, Method.get)
             XCTAssertEqual(request.uri.host, "qutheory.io")
-            XCTAssertEqual(request.uri.port, 80)
+            XCTAssertEqual(request.uri.schemePort, 80)
             XCTAssertEqual(request.uri.path, "/plaintext")
             XCTAssertEqual(request.version.major, 1)
             XCTAssertEqual(request.version.minor, 1)
@@ -56,6 +56,7 @@ class HTTPRequestTests: XCTestCase {
             XCTAssertEqual(request.headers["accept"], "*/*")
             XCTAssertEqual(request.headers["content-type"], "application/json")
         } catch {
+            print("ERRRR: \(error)")
             XCTFail("\(error)")
         }
     }
