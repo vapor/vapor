@@ -15,7 +15,6 @@ extension HTTP {
             try stream.send(crlf)
             // mutable
             var headers = message.headers
-            headers.ensureConnection()
             headers.appendMetadata(for: message.body)
 
             try serialize(headers)

@@ -1,10 +1,4 @@
 extension Headers {
-    mutating func ensureConnection() {
-        if self["Connection"].isNilOrEmpty {
-            self["Connection"] = "close"
-        }
-    }
-
     mutating func appendHost(for uri: URI) {
         // TODO: Should this overwrite, or only if non-existant so user can customize if there's something we're not considering
         guard self["Host"] == nil else { return }
