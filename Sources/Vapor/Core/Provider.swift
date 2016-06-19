@@ -47,7 +47,7 @@ public protocol Provider {
         to the application. Has a default
         implementation of `nil`.
      */
-    var hash: HashDriver? { get }
+    var hash: Hash? { get }
 
     /**
         An optional `ConsoleDriver` to provide
@@ -77,7 +77,7 @@ extension Provider {
         return nil
     }
 
-    public var hash: HashDriver? {
+    public var hash: Hash? {
         return nil
     }
 

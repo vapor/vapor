@@ -5,12 +5,14 @@ import SHA2
     Create SHA + HMAC hashes with the
     Hash class by applying this driver.
 */
-public class SHA2Hasher: HashDriver {
+public class SHA2Hasher: Hash {
 
     var variant: Variant
 
     init(variant: Variant) {
         self.variant = variant
+        self.key = ""
+        self.keyBuffer = []
     }
 
     /**
@@ -23,6 +25,18 @@ public class SHA2Hasher: HashDriver {
     }
 
     /**
+        HMAC key.
+    */
+    public var key: String {
+        didSet {
+            keyBuffer = key.bytes
+        }
+    }
+
+    //
+    private var keyBuffer: Bytes
+
+    /**
         Hash given string with key
 
         - parameter message: message to hash
@@ -30,19 +44,18 @@ public class SHA2Hasher: HashDriver {
 
         - returns: a hashed string
      */
-    public func hash(_ message: String, key: String) -> String {
-        let keyBuff = key.data.bytes
+    public func make(_ message: String) -> String {
         let msgBuff = message.data.bytes
 
-        let hashed: [Byte]
+        let hashed: Bytes
 
         switch variant {
         case .sha256:
-            hashed = HMAC<SHA2<SHA256>>.authenticate(message: msgBuff, withKey: keyBuff)
+            hashed = HMAC<SHA2<SHA256>>.authenticate(message: msgBuff, withKey: keyBuffer)
         case .sha384:
-            hashed = HMAC<SHA2<SHA384>>.authenticate(message: msgBuff, withKey: keyBuff)
+            hashed = HMAC<SHA2<SHA384>>.authenticate(message: msgBuff, withKey: keyBuffer)
         case .sha512:
-            hashed = HMAC<SHA2<SHA512>>.authenticate(message: msgBuff, withKey: keyBuff)
+            hashed = HMAC<SHA2<SHA512>>.authenticate(message: msgBuff, withKey: keyBuffer)
         }
 
         return hashed.hexString

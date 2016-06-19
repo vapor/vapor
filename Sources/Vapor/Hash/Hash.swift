@@ -3,35 +3,17 @@ import libc
 /**
     Hash strings using the static methods on this class.
 */
-public class Hash {
-
-    private let key: String
-
-    private let driver: HashDriver
+public protocol Hash {
+    /**
+        A string used to add an additional 
+        layer of security to all hashes
+    */
+    var key: String { get set }
 
     /**
-        Initialize the Hash.
-
-        - parameter key: a string used to add an additional layer of security to all hashes
-        - parameter driver: instance of a class conforming to the HashDriver protocol,
-                            defaulting to SHA2Hasher(.sha256), used to create hashes
-
-        - warning: Ensure the key stays the same during the lifetime of your application,
-                   since changing it will result in mismatching hashes.
+        Given a string, this function will
+        return the hashed string according
+        to whatever algorithm it chooses to implement.
     */
-    public init(key: String? = nil, driver: HashDriver? = nil) {
-        self.key = key ?? ""
-        self.driver = driver ?? SHA2Hasher(variant: .sha256)
-    }
-
-    /**
-        Hashes a string using the `Hash` class's
-        current `HashDriver` and `applicationString` salt.
-
-        - returns: Hashed string
-    */
-    public func make(_ string: String) -> String {
-        return driver.hash(string, key: key)
-    }
-
+    func make(_ string: String) -> String
 }

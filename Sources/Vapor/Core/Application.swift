@@ -121,7 +121,7 @@ public class Application {
         workDir: String? = nil,
         config: Config? = nil,
         localization: Localization? = nil,
-        hash: HashDriver? = nil,
+        hash: Hash? = nil,
         console: ConsoleDriver? = nil,
         server: ServerDriver.Type? = nil,
         router: RouterDriver? = nil,
@@ -134,7 +134,7 @@ public class Application {
         var serverProvided: ServerDriver.Type? = server
         var routerProvided: RouterDriver? = router
         var sessionProvided: SessionDriver? = session
-        var hashProvided: HashDriver? = hash
+        var hashProvided: Hash? = hash
         var consoleProvided: ConsoleDriver? = console
         var databaseProvided: DatabaseDriver? = database
 
@@ -178,7 +178,8 @@ public class Application {
         self.port = port
 
         let key = config["app", "key"].string
-        let hash = Hash(key: key, driver: hashProvided)
+        
+        let hash = hashProvided ?? SHA2Hasher(variant: .sha256)
         self.hash = hash
 
         let session = sessionProvided ?? MemorySessionDriver(hash: hash)
