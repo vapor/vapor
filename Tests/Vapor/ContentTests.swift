@@ -1,7 +1,7 @@
 import XCTest
 @testable import Vapor
 
-class TestResponder: Responder {
+class TestResponder: HTTPResponder {
     var closure: (Request) throws -> Response
 
     init(closure: (Request) throws -> Response) {

@@ -23,7 +23,7 @@ class HTTPVersionTests: XCTestCase {
         do {
             _ = try makeVersion(with: "ferrets")
             XCTFail("init should have thrown")
-        } catch HTTP.Parser.Error.invalidVersion {
+        } catch HTTPParserError.invalidVersion {
             //
         } catch {
             XCTFail("Wrong error")
@@ -34,7 +34,7 @@ class HTTPVersionTests: XCTestCase {
         do {
             _ = try makeVersion(with: "HTTP/ferret.0")
             XCTFail("init should have thrown")
-        } catch HTTP.Parser.Error.invalidVersion {
+        } catch HTTPParserError.invalidVersion {
             //
         } catch {
             XCTFail("Wrong error")
@@ -45,7 +45,7 @@ class HTTPVersionTests: XCTestCase {
         do {
             _ = try makeVersion(with: "HTTP/1.f")
             XCTFail("init should have thrown")
-        } catch HTTP.Parser.Error.invalidVersion {
+        } catch HTTPParserError.invalidVersion {
             //
         } catch {
             XCTFail("Wrong error")

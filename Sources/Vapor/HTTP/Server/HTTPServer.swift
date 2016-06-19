@@ -12,6 +12,8 @@ enum ServerError: ErrorProtocol {
     case bindFailed
 }
 
+public typealias Responder = HTTPResponder
+
 public protocol HTTPResponder {
     func respond(to request: HTTPRequest) throws -> HTTPResponse
 }

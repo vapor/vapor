@@ -6,7 +6,7 @@ public class TestMiddleware: Middleware {
 	public init() {
 	}
 
-	public func respond(to request: Request, chainingTo chain: Responder) throws -> Response {
+	public func respond(to request: Request, chainingTo chain: HTTPResponder) throws -> Response {
 		return try chain.respond(to: request)
 	}
 	
@@ -128,7 +128,7 @@ class RouteTests: XCTestCase {
  */
 
 internal func assertRouteExists(at path: String,
-                                method: HTTP.Method,
+                                method: Vapor.Method,
                                 host: String,
                                 inRoutes routes: [Route]) {
     var found = false

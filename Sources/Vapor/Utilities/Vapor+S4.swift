@@ -11,27 +11,13 @@ extension S4.Headers {
     public typealias Key = C7.CaseInsensitiveString
 }
 
-//public typealias Body = S4.Body
 public typealias Headers = S4.Headers
 public typealias Version = S4.Version
-
-//extension HTTPRequest {
-//    public typealias Method = S4.Method
-//}
 
 public typealias Status = S4.Status
 public typealias Method = S4.Method
 
-//public typealias Response = S4.Response
-//extension Response {
-//    public typealias Status = S4.Status
-//}
-
-
 public typealias ServerDriver = HTTPServerProtocol
-//public typealias Responder = S4.Responder
-
-// TODO: ? Convenient to have as top level
 public typealias Middleware = HTTPMiddleware
 public protocol HTTPMiddleware {
     func respond(to request: HTTPRequest, chainingTo next: HTTPResponder) throws -> HTTPResponse
