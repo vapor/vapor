@@ -46,6 +46,9 @@ public struct Prepare: Command {
                     do {
                         try database.prepare(preparation)
                         success("Prepared '\(name)'")
+                    } catch PreparationError.automationFailed(let string) {
+                        self.error("Automatic preparation for '\(name)' failed.")
+                        throw CommandError.custom("\(string)")
                     } catch {
                         self.error("Failed to prepare '\(name)'")
                         throw CommandError.custom("\(error)")

@@ -1,11 +1,3 @@
-//
-//  StructuredData.swift
-//  Vapor
-//
-//  Created by Tanner Nelson on 5/24/16.
-//
-//
-
 import Foundation
 
 extension StructuredData: PathIndexable {
