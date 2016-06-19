@@ -2,9 +2,6 @@ public typealias Request = HTTP.Request
 
 extension HTTP {
     public final class Request: Message {
-        public var headers: Headers
-        public let body: Body
-
         // TODO: internal set for head request in application, serializer should change it, avoid exposing to end user
         public internal(set) var method: Method
         
@@ -12,11 +9,6 @@ extension HTTP {
         public let version: Version
 
         public internal(set) var parameters: [String: String] = [:]
-
-        // TODO: Extensibility
-
-        public var storage: [String: Any] = [:]
-        public private(set) lazy var data: Content = Content(self)
 
         public convenience init(method: Method, path: String, host: String = "*", version: Version = Version(major: 1, minor: 1), headers: Headers = [:], body: Body = .data([])) throws {
             let path = path.hasPrefix("/") ? path : "/" + path
@@ -30,32 +22,41 @@ extension HTTP {
             self.init(method: method, uri: uri, version: version, headers: headers, body: body)
         }
 
-        public init(method: Method, uri: URI, version: Version = Version(major: 1, minor: 1), headers: Headers = [:], body: Body = .data([])) {
+        public init(method: Method,
+                    uri: URI,
+                    version: Version = Version(major: 1, minor: 1),
+                    headers: Headers = [:],
+                    body: Body = .data([])) {
             var headers = headers
             headers.appendHost(for: uri)
 
             self.method = method
             self.uri = uri
             self.version = version
-            self.headers = headers
-            self.body = body
 
-            self.data.append(self.query)
-            self.data.append(self.json)
-            self.data.append(self.formURLEncoded)
-            self.data.append { [weak self] indexes in
-                guard let first = indexes.first else { return nil }
-                if let string = first as? String {
-                    return self?.multipart?[string]
-                } else if let int = first as? Int {
-                    return self?.multipart?["\(int)"]
-                } else {
-                    return nil
-                }
+            // https://tools.ietf.org/html/rfc7230#section-3.1.2
+            // status-line = HTTP-version SP status-code SP reason-phrase CRL
+            var path = uri.path ?? "/"
+            if let q = uri.query where !q.isEmpty {
+                path += "?\(q)"
             }
+            if let f = uri.fragment where !f.isEmpty {
+                path += "#\(f)"
+            }
+            // Prefix w/ `/` to properly indicate that this we're not using absolute URI.
+            // Absolute URIs are deprecated and MUST NOT be generated. (they should be parsed for robustness)
+            if !path.hasPrefix("/") {
+                path = "/" + path
+            }
+
+            let versionLine = "HTTP/\(version.major).\(version.minor)"
+            let requestLine = "\(method) \(path) \(versionLine)"
+            super.init(startLine: requestLine, headers: headers, body: body)
+
+            setupContent()
         }
 
-        public convenience init(startLineComponents: (BytesSlice, BytesSlice, BytesSlice), headers: Headers, body: HTTP.Body) throws {
+        public convenience required init(startLineComponents: (BytesSlice, BytesSlice, BytesSlice), headers: Headers, body: HTTP.Body) throws {
             /**
              https://tools.ietf.org/html/rfc2616#section-5.1
 
@@ -83,29 +84,22 @@ extension HTTP {
 
             self.init(method: method, uri: uri, version: version, headers: headers, body: body)
         }
-    }
-}
 
-extension HTTP.Request {
-    public var startLine: String {
-        // https://tools.ietf.org/html/rfc7230#section-3.1.2
-        // status-line = HTTP-version SP status-code SP reason-phrase CRL
-        var path = uri.path ?? "/"
-        if let q = uri.query where !q.isEmpty {
-            path += "?\(q)"
+        private func setupContent() {
+            self.data.append(self.query)
+            self.data.append(self.json)
+            self.data.append(self.formURLEncoded)
+            self.data.append { [weak self] indexes in
+                guard let first = indexes.first else { return nil }
+                if let string = first as? String {
+                    return self?.multipart?[string]
+                } else if let int = first as? Int {
+                    return self?.multipart?["\(int)"]
+                } else {
+                    return nil
+                }
+            }
         }
-        if let f = uri.fragment where !f.isEmpty {
-            path += "#\(f)"
-        }
-        // Prefix w/ `/` to properly indicate that this we're not using absolute URI.
-        // Absolute URIs are deprecated and MUST NOT be generated. (they should be parsed for robustness)
-        if !path.hasPrefix("/") {
-            path = "/" + path
-        }
-
-        let versionLine = "HTTP/\(version.major).\(version.minor)"
-        let requestLine = "\(method) \(path) \(versionLine)"
-        return requestLine
     }
 }
 
@@ -260,15 +254,6 @@ extension HTTP.Request {
         } else {
             return nil
         }
-    }
-}
-
-extension HTTP.Request {
-    public var keepAlive: Bool {
-        // HTTP 1.1 defaults to true unless explicitly passed `Connection: close`
-        guard let value = headers["Connection"] else { return true }
-        // TODO: Decide on if 'contains' is better, test linux version
-        return !value.contains("close")
     }
 }
 

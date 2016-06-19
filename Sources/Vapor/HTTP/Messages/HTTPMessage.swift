@@ -1,17 +1,36 @@
-public protocol HTTPMessage: class {
-    var startLine: String { get }
-    var headers: Headers { get set }
-    var body: HTTP.Body { get }
+extension HTTP {
+    public class Message {
+        public let startLine: String
+        public var headers: Headers
 
-    // MARK: Extensibility
+        // Settable for HEAD request -- evaluate alternatives -- Perhaps serializer should handle it.
+        // must NOT be exposed public because changing body will break behavior most of time
+        public internal(set) var body: HTTP.Body
 
-    var data: Content { get }
-    var storage: [String: Any] { get set }
-    
-    init(startLineComponents: (BytesSlice, BytesSlice, BytesSlice), headers: Headers, body: HTTP.Body) throws
+        public var storage: [String: Any] = [:]
+        public private(set) final lazy var data: Content = Content(self)
+
+        public convenience required init(startLineComponents: (BytesSlice, BytesSlice, BytesSlice),
+                                headers: Headers,
+                                body: HTTP.Body) throws {
+            let startLine = startLineComponents.0.string
+                + " "
+                + startLineComponents.1.string
+                + " "
+                + startLineComponents.2.string
+
+            self.init(startLine: startLine, headers: headers,body: body)
+        }
+
+        public init(startLine: String, headers: Headers, body: HTTP.Body) {
+            self.startLine = startLine
+            self.headers = headers
+            self.body = body
+        }
+    }
 }
 
-extension HTTPMessage {
+extension HTTP.Message {
     public var contentType: String? {
         return headers["Content-Type"]
     }
@@ -23,7 +42,7 @@ extension HTTPMessage {
     }
 }
 
-extension HTTPMessage {
+extension HTTP.Message {
     public var json: JSON? {
         if let existing = storage["json"] as? JSON {
             return existing

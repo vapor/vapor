@@ -3,7 +3,6 @@ import S4
 public protocol ProtocolFormat {}
 public struct HTTP: ProtocolFormat {
     // Can't nest protocol, but can typealias to make nested
-    public typealias Message = HTTPMessage
     public typealias SerializerProtocol = HTTPSerializerProtocol
     public typealias ParserProtocol = HTTPParserProtocol
 

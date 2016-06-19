@@ -1,21 +1,12 @@
 import S4
 
+// HTTP.Response so common it gets a public typealias
 public typealias Response = HTTP.Response
 
 extension HTTP {
     public final class Response: Message {
-        public var headers: Headers
-        // Settable for HEAD request -- evaluate alternatives -- Perhaps serializer should handle it.
-        // must NOT be exposed public because changing body will break behavior most of time
-        public internal(set) var body: HTTP.Body
-
         public let version: Version
         public let status: Status
-
-        // MARK: Extensibility
-
-        public var storage: [String: Any] = [:]
-        public private(set) lazy var data: Content = Content(self)
 
         // MARK: Post Serialization
 
@@ -24,15 +15,17 @@ extension HTTP {
         public init(version: Version = Version(major: 1, minor: 1), status: Status = .ok, headers: Headers = [:], body: Body = .data([])) {
             self.version = version
             self.status = status
-            self.headers = headers
-            self.body = body
+
+
+            let statusLine = "HTTP/\(version.major).\(version.minor) \(status.statusCode) \(status.reasonPhrase)"
+            super.init(startLine: statusLine, headers: headers, body: body)
 
             self.data.append(self.json)
         }
 
         // TODO: Establish appropriate cookie handling? Should it be built off of headers?
         //        public let cookies: Any! = nil
-        public convenience init(startLineComponents: (BytesSlice, BytesSlice, BytesSlice), headers: Headers, body: HTTP.Body) throws {
+        public convenience required init(startLineComponents: (BytesSlice, BytesSlice, BytesSlice), headers: Headers, body: HTTP.Body) throws {
             let (httpVersionSlice, statusCodeSlice, reasonPhrase) = startLineComponents
             // TODO: Right now in Status, if you pass reason phrase, it automatically overrides status code. Try to use reason phrase
             // keeping weirdness here to help reminder and silence warnings
@@ -45,12 +38,6 @@ extension HTTP {
 
             self.init(version: version, status: status, headers: headers, body: body)
         }
-    }
-}
-
-extension HTTP.Response {
-    public var startLine: String {
-        return "HTTP/\(version.major).\(version.minor) \(status.statusCode) \(status.reasonPhrase)"
     }
 }
 
