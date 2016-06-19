@@ -157,7 +157,9 @@ public class Application {
         self.workDir = workDir.finish("/")
 
         if let database = databaseProvided {
-            self.database = Database(driver: database)
+            let d = Database(driver: database)
+            Database.default = d
+            self.database = d
         } else {
             self.database = nil
         }

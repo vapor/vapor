@@ -23,29 +23,37 @@ public struct Prepare: Command {
         }
 
         guard let database = app.database else {
-            throw CommandError.custom("Cannot run preparations, application has no database.")
+            throw CommandError.custom("Can not run preparations, application has no database")
         }
 
         if option("revert").bool == true {
-            throw CommandError.custom("Revert is not yet supported.")
+            throw CommandError.custom("Revert is not yet supported")
         } else {
             for preparation in app.preparations {
                 let name = preparation.name
 
-                print("Preparing '\(name)'")
+                let hasPrepared: Bool
+
                 do {
-                    try database.prepare(preparation)
-                    success("Prepared '\(name)'")
-                } catch PreparationError.alreadyPrepared {
-                    print("... already prepared")
+                    try hasPrepared = database.hasPrepared(preparation)
                 } catch {
-                    self.error("Failed to prepare '\(name)'")
-                    print("\(error)")
-                    return
+                    self.error("Failed to start preparation")
+                    throw CommandError.custom("\(error)")
+                }
+
+                if !hasPrepared {
+                    print("Preparing '\(name)'")
+                    do {
+                        try database.prepare(preparation)
+                        success("Prepared '\(name)'")
+                    } catch {
+                        self.error("Failed to prepare '\(name)'")
+                        throw CommandError.custom("\(error)")
+                    }
                 }
             }
 
-            info("Database prepared.")
+            info("Database prepared")
         }
     }
 }
