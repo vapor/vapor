@@ -5,43 +5,47 @@
 #endif
 
 import Strand
+import Socks
 import SocksCore
 
 enum ServerError: ErrorProtocol {
     case bindFailed
 }
 
-public typealias Responder = HTTPResponder
 public protocol HTTPResponder {
     func respond(to request: HTTP.Request) throws -> HTTP.Response
 }
 
 public protocol HTTPServerProtocol {
-    init(host: String, port: Int, responder: HTTP.Responder) throws
+    init(host: String, port: Int, responder: HTTPResponder) throws
     func start() throws
 }
 
 extension HTTP {
-    // Can't nest protocol, but can nest typealias
-    public typealias Responder = HTTPResponder
-    public typealias ServerProtocol = HTTPServerProtocol
+    public typealias DefaultServer =
+        HTTPServer<SynchronousTCPServer, HTTPParser<HTTP.Request>, HTTPSerializer<HTTP.Response>>
 }
 
-final class HTTPServer<StreamDriverType: StreamDriver, Parser: HTTP.ParserProtocol, Serializer: HTTP.SerializerProtocol>: HTTPServerProtocol {
+public final class HTTPServer<
+        StreamDriverType: StreamDriver,
+        Parser: TransferParser,
+        Serializer: TransferSerializer
+        where Parser.MessageType == HTTP.Request,
+              Serializer.MessageType == HTTP.Response>: HTTPServerProtocol {
     let host: String
     let port: Int
 
-    let responder: HTTP.Responder
+    let responder: HTTPResponder
 
-    required init(host: String = "0.0.0.0",
+    public required init(host: String = "0.0.0.0",
                   port: Int = 8080,
-                  responder: HTTP.Responder) throws {
+                  responder: HTTPResponder) throws {
         self.host = host
         self.port = port
         self.responder = responder
     }
 
-    func start() throws {
+    public func start() throws {
         do {
             try StreamDriverType.listen(host: host, port: port, handler: dispatch)
         } catch let e as SocksCore.Error where e.isBindFailed {
@@ -69,7 +73,7 @@ final class HTTPServer<StreamDriverType: StreamDriver, Parser: HTTP.ParserProtoc
         var keepAlive = false
         repeat {
             do {
-                let request = try parser.parse(HTTP.Request.self)
+                let request = try parser.parse()
                 keepAlive = request.keepAlive
                 let response = try responder.respond(to: request)
                 try serializer.serialize(response)
@@ -80,7 +84,7 @@ final class HTTPServer<StreamDriverType: StreamDriver, Parser: HTTP.ParserProtoc
             } catch let e as SocksCore.Error where e.isBrokenPipe {
                 // broken pipe, abort
                 break
-            } catch HTTP.Parser.Error.streamEmpty {
+            } catch HTTPParser.Error.streamEmpty {
                 // the stream we got was empty, abort
                 break
             } catch {

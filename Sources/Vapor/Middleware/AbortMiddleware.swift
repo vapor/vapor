@@ -17,7 +17,7 @@ public class AbortMiddleware: Middleware {
 
      - returns: a valid response
      */
-    public func respond(to request: HTTP.Request, chainingTo chain: HTTP.Responder) throws -> HTTP.Response {
+    public func respond(to request: HTTP.Request, chainingTo chain: HTTPResponder) throws -> HTTP.Response {
         do {
             return try chain.respond(to: request)
         } catch Abort.badRequest {

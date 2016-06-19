@@ -178,7 +178,7 @@ public class Application {
         ]
 
         self.router = routerProvided ?? BranchRouter()
-        self.server = serverProvided ?? HTTPServer<SynchronousTCPServer, HTTP.Parser, HTTP.Serializer>.self
+        self.server = serverProvided ?? HTTP.DefaultServer.self
 
         routes = []
 
@@ -352,7 +352,7 @@ extension Application {
     }
 }
 
-extension Application: HTTP.Responder {
+extension Application: HTTPResponder {
 
     /**
         Returns a response to the given request
@@ -366,7 +366,7 @@ extension Application: HTTP.Responder {
     public func respond(to request: HTTP.Request) throws -> HTTP.Response {
         Log.info("\(request.method) \(request.uri.path ?? "/")")
 
-        var responder: HTTP.Responder
+        var responder: HTTPResponder
         let request = request
 
         /*

@@ -1,36 +1,37 @@
-extension HTTP {
-    public class Message {
-        public let startLine: String
-        public var headers: Headers
 
-        // Settable for HEAD request -- evaluate alternatives -- Perhaps serializer should handle it.
-        // must NOT be exposed public because changing body will break behavior most of time
-        public internal(set) var body: HTTP.Body
+public class HTTPMessage {
+    public let startLine: String
+    public var headers: Headers
 
-        public var storage: [String: Any] = [:]
-        public private(set) final lazy var data: Content = Content(self)
+    // Settable for HEAD request -- evaluate alternatives -- Perhaps serializer should handle it.
+    // must NOT be exposed public because changing body will break behavior most of time
+    public internal(set) var body: HTTP.Body
 
-        public convenience required init(startLineComponents: (BytesSlice, BytesSlice, BytesSlice),
-                                headers: Headers,
-                                body: HTTP.Body) throws {
-            let startLine = startLineComponents.0.string
-                + " "
-                + startLineComponents.1.string
-                + " "
-                + startLineComponents.2.string
+    public var storage: [String: Any] = [:]
+    public private(set) final lazy var data: Content = Content(self)
 
-            self.init(startLine: startLine, headers: headers,body: body)
-        }
+    public convenience required init(startLineComponents: (BytesSlice, BytesSlice, BytesSlice),
+                                     headers: Headers,
+                                     body: HTTP.Body) throws {
+        let startLine = startLineComponents.0.string
+            + " "
+            + startLineComponents.1.string
+            + " "
+            + startLineComponents.2.string
 
-        public init(startLine: String, headers: Headers, body: HTTP.Body) {
-            self.startLine = startLine
-            self.headers = headers
-            self.body = body
-        }
+        self.init(startLine: startLine, headers: headers,body: body)
+    }
+
+    public init(startLine: String, headers: Headers, body: HTTP.Body) {
+        self.startLine = startLine
+        self.headers = headers
+        self.body = body
     }
 }
 
-extension HTTP.Message {
+extension HTTPMessage: TransferMessage {}
+
+extension HTTPMessage {
     public var contentType: String? {
         return headers["Content-Type"]
     }
@@ -42,7 +43,7 @@ extension HTTP.Message {
     }
 }
 
-extension HTTP.Message {
+extension HTTPMessage {
     public var json: JSON? {
         if let existing = storage["json"] as? JSON {
             return existing

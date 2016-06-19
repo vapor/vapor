@@ -1,7 +1,7 @@
 public typealias Request = HTTP.Request
 
 extension HTTP {
-    public final class Request: Message {
+    public final class Request: HTTPMessage {
         // TODO: internal set for head request in application, serializer should change it, avoid exposing to end user
         public internal(set) var method: Method
         
@@ -104,11 +104,7 @@ extension HTTP {
 }
 
 extension HTTP.Request {
-
-}
-
-extension HTTP.Request {
-    public struct Handler: HTTP.Responder {
+    public struct Handler: HTTPResponder {
         public typealias Closure = (HTTP.Request) throws -> HTTP.Response
 
         private let closure: Closure

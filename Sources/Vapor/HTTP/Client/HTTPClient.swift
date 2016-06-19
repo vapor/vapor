@@ -21,10 +21,10 @@ public final class Client: ClientDriver {
     }
 
     private func perform(_ request: HTTP.Request, with connection: Vapor.Stream) throws -> HTTP.Response {
-        let serializer = HTTP.Serializer(stream: connection)
+        let serializer = HTTPSerializer<Request>(stream: connection)
         try serializer.serialize(request)
-        let parser = HTTP.Parser(stream: connection)
-        let response = try parser.parse(HTTP.Response.self)
+        let parser = HTTPParser<HTTP.Response>(stream: connection)
+        let response = try parser.parse()
         _ = try? connection.close() // TODO: Support keep-alive?
         return response
     }

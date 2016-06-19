@@ -4,7 +4,7 @@ import S4
 public typealias Response = HTTP.Response
 
 extension HTTP {
-    public final class Response: Message {
+    public final class Response: HTTPMessage {
         public let version: Version
         public let status: Status
 

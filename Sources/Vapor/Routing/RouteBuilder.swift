@@ -101,7 +101,7 @@ extension Application: RouteBuilder {
         handler: Route.Handler
     ) {
         // Convert Route.Handler to Request.Handler
-        let wrapped: HTTP.Responder = HTTP.Request.Handler { request in
+        let wrapped: HTTPResponder = HTTP.Request.Handler { request in
             return try handler(request).makeResponse()
         }
         let responder = middleware.chain(to: wrapped)
@@ -113,7 +113,7 @@ extension Application: RouteBuilder {
 }
 
 extension HTTPMiddleware {
-    func chain(to responder: HTTP.Responder) -> HTTP.Responder {
+    func chain(to responder: HTTPResponder) -> HTTPResponder {
         return HTTP.Request.Handler { request in
             return try self.respond(to: request, chainingTo: responder)
         }
@@ -121,7 +121,7 @@ extension HTTPMiddleware {
 }
 
 extension Collection where Iterator.Element == Middleware {
-    func chain(to responder: HTTP.Responder) -> HTTP.Responder {
+    func chain(to responder: HTTPResponder) -> HTTPResponder {
         return reversed().reduce(responder) { nextResponder, nextMiddleware in
             return HTTP.Request.Handler { request in
                 return try nextMiddleware.respond(to: request, chainingTo: nextResponder)

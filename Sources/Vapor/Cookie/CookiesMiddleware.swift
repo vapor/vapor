@@ -1,5 +1,5 @@
-class CookiesMiddleware: HTTP.Middleware {
-    func respond(to request: HTTP.Request, chainingTo next: HTTP.Responder) throws -> HTTP.Response {
+class CookiesMiddleware: Middleware {
+    func respond(to request: HTTP.Request, chainingTo next: HTTPResponder) throws -> HTTP.Response {
         // mutable -- MUST be declared at top of function
 //        var request = request
 

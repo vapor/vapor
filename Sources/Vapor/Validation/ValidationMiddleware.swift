@@ -2,9 +2,9 @@
     Catches validation errors and prints
     out a more readable JSON response.
 */
-class ValidationMiddleware: Middleware {
+class ValidationMiddleware: HTTPMiddleware {
 
-    func respond(to request: HTTP.Request, chainingTo chain: HTTP.Responder) throws -> HTTP.Response {
+    func respond(to request: HTTP.Request, chainingTo chain: HTTPResponder) throws -> HTTP.Response {
         do {
             return try chain.respond(to: request)
         } catch let error as ValidationErrorProtocol {

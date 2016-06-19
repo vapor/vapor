@@ -7,7 +7,7 @@ public final class BranchRouter: RouterDriver {
     private final var tree: [Host : [HTTP.Method : Branch]] = [:]
 
     // MARK: Routing
-    public final func route(_ request: HTTP.Request) -> HTTP.Responder? {
+    public final func route(_ request: HTTP.Request) -> HTTPResponder? {
         let path = request.uri.path ?? ""
         let host = request.uri.host ?? ""
 

@@ -28,11 +28,11 @@ public typealias Method = S4.Method
 //}
 
 
-public typealias ServerDriver = HTTP.ServerProtocol
+public typealias ServerDriver = HTTPServerProtocol
 //public typealias Responder = S4.Responder
 
 // TODO: ? Convenient to have as top level
 public typealias Middleware = HTTPMiddleware
 public protocol HTTPMiddleware {
-    func respond(to request: HTTP.Request, chainingTo next: HTTP.Responder) throws -> HTTP.Response
+    func respond(to request: HTTP.Request, chainingTo next: HTTPResponder) throws -> HTTP.Response
 }

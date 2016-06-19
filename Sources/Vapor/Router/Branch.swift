@@ -27,7 +27,7 @@ internal final class Branch {
 
         *indicates a supported branch.
      */
-    private var handler: HTTP.Responder?
+    private var handler: HTTPResponder?
 
     /**
         key or *
@@ -61,7 +61,7 @@ internal final class Branch {
 
         - returns: a request handler or nil if not supported
      */
-    func handle(request: HTTP.Request, comps: CompatibilityGenerator<String>) -> HTTP.Responder? {
+    func handle(request: HTTP.Request, comps: CompatibilityGenerator<String>) -> HTTPResponder? {
         guard let key = comps.next() else {
             if let handler = handler {
                 return handler
@@ -90,7 +90,7 @@ internal final class Branch {
         - parameter generator: the generator that will be used to match the path components.  /users/messages/:id will return a generator that is 'users' <- 'messages' <- '*id'
         - parameter handler:   the handler to assign to the end path component
      */
-    func extendBranch(_ generator: CompatibilityGenerator<String>, handler: HTTP.Responder) {
+    func extendBranch(_ generator: CompatibilityGenerator<String>, handler: HTTPResponder) {
         guard let key = generator.next() else {
             self.handler = handler
             return
