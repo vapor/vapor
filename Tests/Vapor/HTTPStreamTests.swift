@@ -29,7 +29,7 @@ class HTTPStreamTests: XCTestCase {
 
 
         do {
-            let request = try HTTP.Parser(stream: stream).parse(HTTP.Request.self)
+            let request = try HTTP.Parser(stream: stream).parse(HTTPRequest.self)
 
             //MARK: Verify Request
             XCTAssert(request.method == Method.post, "Incorrect method \(request.method)")

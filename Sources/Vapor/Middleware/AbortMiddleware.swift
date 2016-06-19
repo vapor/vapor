@@ -17,7 +17,7 @@ public class AbortMiddleware: Middleware {
 
      - returns: a valid response
      */
-    public func respond(to request: HTTP.Request, chainingTo chain: HTTPResponder) throws -> HTTP.Response {
+    public func respond(to request: HTTPRequest, chainingTo chain: HTTPResponder) throws -> HTTPResponse {
         do {
             return try chain.respond(to: request)
         } catch Abort.badRequest {
@@ -36,13 +36,13 @@ public class AbortMiddleware: Middleware {
         }
     }
 
-    func errorResponse(_ status: Status, message: String) throws -> HTTP.Response {
+    func errorResponse(_ status: Status, message: String) throws -> HTTPResponse {
         let json = JSON([
             "error": true,
             "message": "\(message)"
         ])
         let data = try JSON.serializer(json: json).utf8.array
-        return HTTP.Response(status: status, body: .data(data))
+        return HTTPResponse(status: status, body: .data(data))
     }
 
 }

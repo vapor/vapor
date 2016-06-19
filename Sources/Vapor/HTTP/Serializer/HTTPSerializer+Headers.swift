@@ -5,7 +5,7 @@ extension Headers {
         self["Host"] = uri.host
     }
 
-    mutating func appendMetadata(for body: HTTP.Body) {
+    mutating func appendMetadata(for body: HTTPBody) {
         switch body {
         case .chunked(_):
             setTransferEncodingChunked()

@@ -13,7 +13,7 @@ enum ServerError: ErrorProtocol {
 }
 
 public protocol HTTPResponder {
-    func respond(to request: HTTP.Request) throws -> HTTP.Response
+    func respond(to request: HTTPRequest) throws -> HTTPResponse
 }
 
 public protocol HTTPServerProtocol {
@@ -21,17 +21,15 @@ public protocol HTTPServerProtocol {
     func start() throws
 }
 
-extension HTTP {
-    public typealias DefaultServer =
-        HTTPServer<SynchronousTCPServer, HTTPParser<HTTP.Request>, HTTPSerializer<HTTP.Response>>
-}
+public typealias DefaultServer =
+    HTTPServer<SynchronousTCPServer, HTTPParser<HTTPRequest>, HTTPSerializer<HTTPResponse>>
 
 public final class HTTPServer<
         StreamDriverType: StreamDriver,
         Parser: TransferParser,
         Serializer: TransferSerializer
-        where Parser.MessageType == HTTP.Request,
-              Serializer.MessageType == HTTP.Response>: HTTPServerProtocol {
+        where Parser.MessageType == HTTPRequest,
+              Serializer.MessageType == HTTPResponse>: HTTPServerProtocol {
     let host: String
     let port: Int
 

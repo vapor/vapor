@@ -47,7 +47,7 @@ internal final class Branch {
 
         - returns: an initialized request Branch
      */
-    init(name: String, handler: HTTP.Request.Handler? = nil) {
+    init(name: String, handler: HTTPRequest.Handler? = nil) {
         self.name = name
         self.handler = handler
     }
@@ -61,7 +61,7 @@ internal final class Branch {
 
         - returns: a request handler or nil if not supported
      */
-    func handle(request: HTTP.Request, comps: CompatibilityGenerator<String>) -> HTTPResponder? {
+    func handle(request: HTTPRequest, comps: CompatibilityGenerator<String>) -> HTTPResponder? {
         guard let key = comps.next() else {
             if let handler = handler {
                 return handler

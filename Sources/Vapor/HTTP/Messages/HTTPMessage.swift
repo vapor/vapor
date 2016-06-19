@@ -5,14 +5,14 @@ public class HTTPMessage {
 
     // Settable for HEAD request -- evaluate alternatives -- Perhaps serializer should handle it.
     // must NOT be exposed public because changing body will break behavior most of time
-    public internal(set) var body: HTTP.Body
+    public internal(set) var body: HTTPBody
 
     public var storage: [String: Any] = [:]
     public private(set) final lazy var data: Content = Content(self)
 
     public convenience required init(startLineComponents: (BytesSlice, BytesSlice, BytesSlice),
                                      headers: Headers,
-                                     body: HTTP.Body) throws {
+                                     body: HTTPBody) throws {
         let startLine = startLineComponents.0.string
             + " "
             + startLineComponents.1.string
@@ -22,7 +22,7 @@ public class HTTPMessage {
         self.init(startLine: startLine, headers: headers,body: body)
     }
 
-    public init(startLine: String, headers: Headers, body: HTTP.Body) {
+    public init(startLine: String, headers: Headers, body: HTTPBody) {
         self.startLine = startLine
         self.headers = headers
         self.body = body

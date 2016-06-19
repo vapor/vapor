@@ -7,20 +7,20 @@
     }```
 */
 public protocol ResponseRepresentable {
-    func makeResponse() throws -> HTTP.Response
+    func makeResponse() throws -> HTTPResponse
 }
 
 ///Allows responses to be returned through closures
-extension HTTP.Response: ResponseRepresentable {
-    public func makeResponse() -> HTTP.Response {
+extension HTTPResponse: ResponseRepresentable {
+    public func makeResponse() -> HTTPResponse {
         return self
     }
 }
 
 ///Allows Swift Strings to be returned through closures
 extension Swift.String: ResponseRepresentable {
-    public func makeResponse() -> HTTP.Response {
+    public func makeResponse() -> HTTPResponse {
         let data = self.utf8.array
-        return HTTP.Response(body: .data(data))
+        return HTTPResponse(body: .data(data))
     }
 }

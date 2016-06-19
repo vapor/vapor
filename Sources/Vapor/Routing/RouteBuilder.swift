@@ -1,10 +1,10 @@
 public protocol RouteBuilder {
     var leadingPath: String { get }
-    var scopedMiddleware: [HTTP.Middleware] { get }
+    var scopedMiddleware: [HTTPMiddleware] { get }
 
     func add(
-        middleware: [HTTP.Middleware],
-        method: HTTP.Method,
+        middleware: [HTTPMiddleware],
+        method: Method,
         path: String,
         handler: Route.Handler
     )
@@ -12,7 +12,7 @@ public protocol RouteBuilder {
 
 extension RouteBuilder {
     public func add(
-        _ method: HTTP.Method,
+        _ method: Method,
         path: String,
         handler: Route.Handler
     ) {
@@ -22,7 +22,7 @@ extension RouteBuilder {
 
 extension RouteBuilder {
     public var leadingPath: String { return "" }
-    public var scopedMiddleware: [HTTP.Middleware] { return [] }
+    public var scopedMiddleware: [Middleware] { return [] }
 }
 
 extension RouteBuilder {
@@ -39,7 +39,7 @@ extension RouteBuilder {
         body(group: group)
     }
 
-    public func grouped(_ middlewares: HTTP.Middleware...) -> Route.Link {
+    public func grouped(_ middlewares: HTTPMiddleware...) -> Route.Link {
         return Route.Link(
             parent: self,
             leadingPath: nil,
@@ -47,7 +47,7 @@ extension RouteBuilder {
         )
     }
 
-    public func grouped(_ middlewares: [HTTP.Middleware]) -> Route.Link {
+    public func grouped(_ middlewares: [HTTPMiddleware]) -> Route.Link {
         return Route.Link(
             parent: self,
             leadingPath: nil,
@@ -55,26 +55,26 @@ extension RouteBuilder {
         )
     }
 
-    public func grouped(_ middlewares: HTTP.Middleware..., _ body: @noescape (group: Route.Link) -> Void) {
+    public func grouped(_ middlewares: HTTPMiddleware..., _ body: @noescape (group: Route.Link) -> Void) {
         let groupObject = grouped(middlewares)
         body(group: groupObject)
     }
 
-    public func grouped(middleware middlewares: [HTTP.Middleware], _ body: @noescape (group: Route.Link) -> Void) {
+    public func grouped(middleware middlewares: [HTTPMiddleware], _ body: @noescape (group: Route.Link) -> Void) {
         let groupObject = grouped(middlewares)
         body(group: groupObject)
     }
 }
 
 //public struct CombineMiddleware: Middleware {
-//    let combination: (respondTo: HTTP.Request, chainingTo: Responder) throws -> HTTP.Response
+//    let combination: (respondTo: HTTPRequest, chainingTo: Responder) throws -> HTTPResponse
 //
 //    init(_ left: Middleware, _ right: Middleware) {
 //        combination = { request, responder in
 //            left.respond(to: request, chainingTo: right)
 //        }
 //    }
-//    public func respond(to request: HTTP.Request, chainingTo next: Responder) throws -> HTTP.Response {
+//    public func respond(to request: HTTPRequest, chainingTo next: Responder) throws -> HTTPResponse {
 //        let response = combination(request)
 ////        next.respond(to: 
 ////            { request in
@@ -96,12 +96,12 @@ extension Application: RouteBuilder {
     */
     public func add(
         middleware: [Middleware],
-        method: HTTP.Method,
+        method: Method,
         path: String,
         handler: Route.Handler
     ) {
         // Convert Route.Handler to Request.Handler
-        let wrapped: HTTPResponder = HTTP.Request.Handler { request in
+        let wrapped: HTTPResponder = HTTPRequest.Handler { request in
             return try handler(request).makeResponse()
         }
         let responder = middleware.chain(to: wrapped)
@@ -114,7 +114,7 @@ extension Application: RouteBuilder {
 
 extension HTTPMiddleware {
     func chain(to responder: HTTPResponder) -> HTTPResponder {
-        return HTTP.Request.Handler { request in
+        return HTTPRequest.Handler { request in
             return try self.respond(to: request, chainingTo: responder)
         }
     }
@@ -123,7 +123,7 @@ extension HTTPMiddleware {
 extension Collection where Iterator.Element == Middleware {
     func chain(to responder: HTTPResponder) -> HTTPResponder {
         return reversed().reduce(responder) { nextResponder, nextMiddleware in
-            return HTTP.Request.Handler { request in
+            return HTTPRequest.Handler { request in
                 return try nextMiddleware.respond(to: request, chainingTo: nextResponder)
             }
         }

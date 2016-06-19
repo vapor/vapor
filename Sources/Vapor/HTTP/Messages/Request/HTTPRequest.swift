@@ -1,111 +1,109 @@
-public typealias Request = HTTP.Request
+public typealias Request = HTTPRequest
 
-extension HTTP {
-    public final class Request: HTTPMessage {
-        // TODO: internal set for head request in application, serializer should change it, avoid exposing to end user
-        public internal(set) var method: Method
-        
-        public let uri: URI
-        public let version: Version
+public final class HTTPRequest: HTTPMessage {
+    // TODO: internal set for head request in application, serializer should change it, avoid exposing to end user
+    public internal(set) var method: Method
 
-        public internal(set) var parameters: [String: String] = [:]
+    public let uri: URI
+    public let version: Version
 
-        public convenience init(method: Method, path: String, host: String = "*", version: Version = Version(major: 1, minor: 1), headers: Headers = [:], body: Body = .data([])) throws {
-            let path = path.hasPrefix("/") ? path : "/" + path
-            var uri = try URI(path)
-            uri.host = host
-            self.init(method: method, uri: uri, version: version, headers: headers, body: body)
+    public internal(set) var parameters: [String: String] = [:]
+
+    public convenience init(method: Method, path: String, host: String = "*", version: Version = Version(major: 1, minor: 1), headers: Headers = [:], body: HTTPBody = .data([])) throws {
+        let path = path.hasPrefix("/") ? path : "/" + path
+        var uri = try URI(path)
+        uri.host = host
+        self.init(method: method, uri: uri, version: version, headers: headers, body: body)
+    }
+
+    public convenience init(method: Method, uri: String, version: Version = Version(major: 1, minor: 1), headers: Headers = [:], body: HTTPBody = .data([])) throws {
+        let uri = try URI(uri)
+        self.init(method: method, uri: uri, version: version, headers: headers, body: body)
+    }
+
+    public init(method: Method,
+                uri: URI,
+                version: Version = Version(major: 1, minor: 1),
+                headers: Headers = [:],
+                body: HTTPBody = .data([])) {
+        var headers = headers
+        headers.appendHost(for: uri)
+
+        self.method = method
+        self.uri = uri
+        self.version = version
+
+        // https://tools.ietf.org/html/rfc7230#section-3.1.2
+        // status-line = HTTP-version SP status-code SP reason-phrase CRL
+        var path = uri.path ?? "/"
+        if let q = uri.query where !q.isEmpty {
+            path += "?\(q)"
+        }
+        if let f = uri.fragment where !f.isEmpty {
+            path += "#\(f)"
+        }
+        // Prefix w/ `/` to properly indicate that this we're not using absolute URI.
+        // Absolute URIs are deprecated and MUST NOT be generated. (they should be parsed for robustness)
+        if !path.hasPrefix("/") {
+            path = "/" + path
         }
 
-        public convenience init(method: Method, uri: String, version: Version = Version(major: 1, minor: 1), headers: Headers = [:], body: Body = .data([])) throws {
-            let uri = try URI(uri)
-            self.init(method: method, uri: uri, version: version, headers: headers, body: body)
-        }
+        let versionLine = "HTTP/\(version.major).\(version.minor)"
+        let requestLine = "\(method) \(path) \(versionLine)"
+        super.init(startLine: requestLine, headers: headers, body: body)
 
-        public init(method: Method,
-                    uri: URI,
-                    version: Version = Version(major: 1, minor: 1),
-                    headers: Headers = [:],
-                    body: Body = .data([])) {
-            var headers = headers
-            headers.appendHost(for: uri)
+        setupContent()
+    }
 
-            self.method = method
-            self.uri = uri
-            self.version = version
+    public convenience required init(startLineComponents: (BytesSlice, BytesSlice, BytesSlice), headers: Headers, body: HTTPBody) throws {
+        /**
+         https://tools.ietf.org/html/rfc2616#section-5.1
 
-            // https://tools.ietf.org/html/rfc7230#section-3.1.2
-            // status-line = HTTP-version SP status-code SP reason-phrase CRL
-            var path = uri.path ?? "/"
-            if let q = uri.query where !q.isEmpty {
-                path += "?\(q)"
-            }
-            if let f = uri.fragment where !f.isEmpty {
-                path += "#\(f)"
-            }
-            // Prefix w/ `/` to properly indicate that this we're not using absolute URI.
-            // Absolute URIs are deprecated and MUST NOT be generated. (they should be parsed for robustness)
-            if !path.hasPrefix("/") {
-                path = "/" + path
-            }
+         The Request-Line begins with a method token, followed by the
+         Request-URI and the protocol version, and ending with CRLF. The
+         elements are separated by SP characters. No CR or LF is allowed
+         except in the final CRLF sequence.
 
-            let versionLine = "HTTP/\(version.major).\(version.minor)"
-            let requestLine = "\(method) \(path) \(versionLine)"
-            super.init(startLine: requestLine, headers: headers, body: body)
+         Request-Line   = Method SP Request-URI SP HTTP-Version CRLF
 
-            setupContent()
-        }
+         *** [WARNING] ***
+         Recipients of an invalid request-line SHOULD respond with either a
+         400 (Bad Request) error or a 301 (Moved Permanently) redirect with
+         the request-target properly encoded.  A recipient SHOULD NOT attempt
+         to autocorrect and then process the request without a redirect, since
+         the invalid request-line might be deliberately crafted to bypass
+         security filters along the request chain.
+         */
+        let (methodSlice, uriSlice, httpVersionSlice) = startLineComponents
+        let method = Method(uppercased: methodSlice.uppercased)
+        let uriParser = URIParser(bytes: uriSlice.array, existingHost: headers["Host"])
+        var uri = try uriParser.parse()
+        uri.scheme = uri.scheme.isNilOrEmpty ? "http" : uri.scheme
+        let version = try Version(httpVersionSlice)
 
-        public convenience required init(startLineComponents: (BytesSlice, BytesSlice, BytesSlice), headers: Headers, body: HTTP.Body) throws {
-            /**
-             https://tools.ietf.org/html/rfc2616#section-5.1
+        self.init(method: method, uri: uri, version: version, headers: headers, body: body)
+    }
 
-             The Request-Line begins with a method token, followed by the
-             Request-URI and the protocol version, and ending with CRLF. The
-             elements are separated by SP characters. No CR or LF is allowed
-             except in the final CRLF sequence.
-
-             Request-Line   = Method SP Request-URI SP HTTP-Version CRLF
-
-             *** [WARNING] ***
-             Recipients of an invalid request-line SHOULD respond with either a
-             400 (Bad Request) error or a 301 (Moved Permanently) redirect with
-             the request-target properly encoded.  A recipient SHOULD NOT attempt
-             to autocorrect and then process the request without a redirect, since
-             the invalid request-line might be deliberately crafted to bypass
-             security filters along the request chain.
-             */
-            let (methodSlice, uriSlice, httpVersionSlice) = startLineComponents
-            let method = Method(uppercased: methodSlice.uppercased)
-            let uriParser = URIParser(bytes: uriSlice.array, existingHost: headers["Host"])
-            var uri = try uriParser.parse()
-            uri.scheme = uri.scheme.isNilOrEmpty ? "http" : uri.scheme
-            let version = try Version(httpVersionSlice)
-
-            self.init(method: method, uri: uri, version: version, headers: headers, body: body)
-        }
-
-        private func setupContent() {
-            self.data.append(self.query)
-            self.data.append(self.json)
-            self.data.append(self.formURLEncoded)
-            self.data.append { [weak self] indexes in
-                guard let first = indexes.first else { return nil }
-                if let string = first as? String {
-                    return self?.multipart?[string]
-                } else if let int = first as? Int {
-                    return self?.multipart?["\(int)"]
-                } else {
-                    return nil
-                }
+    private func setupContent() {
+        self.data.append(self.query)
+        self.data.append(self.json)
+        self.data.append(self.formURLEncoded)
+        self.data.append { [weak self] indexes in
+            guard let first = indexes.first else { return nil }
+            if let string = first as? String {
+                return self?.multipart?[string]
+            } else if let int = first as? Int {
+                return self?.multipart?["\(int)"]
+            } else {
+                return nil
             }
         }
     }
 }
 
-extension HTTP.Request {
+extension HTTPRequest {
     public struct Handler: HTTPResponder {
-        public typealias Closure = (HTTP.Request) throws -> HTTP.Response
+        public typealias Closure = (HTTPRequest) throws -> HTTPResponse
 
         private let closure: Closure
 
@@ -120,7 +118,7 @@ extension HTTP.Request {
          - throws: an error if response fails
          - returns: a response if possible
          */
-        public func respond(to request: HTTP.Request) throws -> HTTP.Response {
+        public func respond(to request: HTTPRequest) throws -> HTTPResponse {
             return try closure(request)
         }
     }
@@ -135,7 +133,7 @@ public enum WebSocketRequestFormat: ErrorProtocol {
     case invalidOrUnsupportedVersion
 }
 
-extension HTTP.Request {
+extension HTTPRequest {
     /**
      Upgrades the request to a WebSocket connection
      WebSocket connection to provide two way information
@@ -143,7 +141,7 @@ extension HTTP.Request {
      */
     public func upgradeToWebSocket(
         supportedProtocols: ([String]) -> [String] = { $0 },
-        body: (ws: WebSocket) throws -> Void) throws -> HTTP.Response {
+        body: (ws: WebSocket) throws -> Void) throws -> HTTPResponse {
         guard let requestKey = headers.secWebSocketKey else {
             throw WebSocketRequestFormat.missingSecKeyHeader
         }
@@ -169,7 +167,7 @@ extension HTTP.Request {
             responseHeaders.secWebProtocol = supportedProtocols(passedProtocols)
         }
 
-        let response = HTTP.Response(status: .switchingProtocols, headers: responseHeaders)
+        let response = HTTPResponse(status: .switchingProtocols, headers: responseHeaders)
         response.onComplete = { stream in
             let ws = WebSocket(stream)
             try body(ws: ws)
@@ -180,7 +178,7 @@ extension HTTP.Request {
     }
 }
 
-extension HTTP.Request {
+extension HTTPRequest {
     /// Query data from the URI path
     public var query: StructuredData? {
         if let existing = storage["query"] {
@@ -195,7 +193,7 @@ extension HTTP.Request {
     }
 }
 
-extension HTTP.Request {
+extension HTTPRequest {
     public var cookies: Cookies {
         get {
             guard let cookies = storage["cookies"] as? Cookies else {
@@ -210,7 +208,7 @@ extension HTTP.Request {
     }
 }
 
-extension HTTP.Request {
+extension HTTPRequest {
     /// form url encoded encoded request data
     public var formURLEncoded: StructuredData? {
         get {
@@ -231,7 +229,7 @@ extension HTTP.Request {
     }
 }
 
-extension HTTP.Request {
+extension HTTPRequest {
     /**
      Multipart encoded request data sent using
      the `multipart/form-data...` header.
@@ -253,7 +251,7 @@ extension HTTP.Request {
     }
 }
 
-extension HTTP.Request {
+extension HTTPRequest {
     /// Server stored information related from session cookie.
     public var session: Session? {
         get {

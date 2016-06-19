@@ -82,7 +82,7 @@ public final class HTTPSerializer<Message: HTTPMessage>: TransferSerializer {
         try stream.send(crlf)
     }
 
-    private func serialize(_ body: HTTP.Body) throws {
+    private func serialize(_ body: HTTPBody) throws {
         switch body {
         case .data(let buffer):
             guard !buffer.isEmpty else { return }

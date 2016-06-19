@@ -1,20 +1,32 @@
-public typealias Body = HTTP.Body
+public enum HTTPBody {
+    case data(Bytes)
+    case chunked((ChunkStream) throws -> Void)
+}
 
-extension HTTP {
-    public enum Body {
-        case data(Bytes)
-        case chunked((ChunkStream) throws -> Void)
+public protocol HTTPBodyConvertible {
+    func makeBody() -> HTTPBody
+}
+
+extension String: HTTPBodyConvertible {
+    public func makeBody() -> HTTPBody {
+        return HTTPBody(self)
     }
 }
 
-extension HTTP.Body {
+extension JSON: HTTPBodyConvertible {
+    public func makeBody() -> HTTPBody {
+        return HTTPBody(self)
+    }
+}
+
+extension HTTPBody {
     public var bytes: Bytes? {
         guard case let .data(bytes) = self else { return nil }
         return bytes
     }
 }
 
-extension HTTP.Body {
+extension HTTPBody {
     public init(_ str: String) {
         self.init(str.utf8)
     }
@@ -26,14 +38,14 @@ extension HTTP.Body {
     }
 }
 
-extension HTTP.Body {
+extension HTTPBody {
     public init(_ json: JSON) {
         let bytes = json.serialize().utf8
         self.init(bytes)
     }
 }
 
-extension HTTP.Body: ArrayLiteralConvertible {
+extension HTTPBody: ArrayLiteralConvertible {
     /// Creates an instance initialized with the given elements.
     public init(arrayLiteral elements: Byte...) {
         self.init(elements)

@@ -224,7 +224,7 @@ public final class HTTPParser<Message: HTTPMessage>: TransferParser {
      applied, as indicated by the Transfer-Encoding header field (section
      14.41).
      */
-    func parseBody(with headers: Headers) throws -> HTTP.Body {
+    func parseBody(with headers: Headers) throws -> HTTPBody {
         let body: Bytes
 
         if let contentLength = headers["content-length"]?.int {
@@ -269,6 +269,4 @@ public final class HTTPParser<Message: HTTPMessage>: TransferParser {
         }
         return .data(body)
     }
-}
-extension HTTP {
 }

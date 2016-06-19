@@ -15,7 +15,7 @@ extension S4.Headers {
 public typealias Headers = S4.Headers
 public typealias Version = S4.Version
 
-//extension HTTP.Request {
+//extension HTTPRequest {
 //    public typealias Method = S4.Method
 //}
 
@@ -34,5 +34,5 @@ public typealias ServerDriver = HTTPServerProtocol
 // TODO: ? Convenient to have as top level
 public typealias Middleware = HTTPMiddleware
 public protocol HTTPMiddleware {
-    func respond(to request: HTTP.Request, chainingTo next: HTTPResponder) throws -> HTTP.Response
+    func respond(to request: HTTPRequest, chainingTo next: HTTPResponder) throws -> HTTPResponse
 }

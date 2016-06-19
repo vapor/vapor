@@ -79,7 +79,7 @@ public class Application {
         Make sure to append your custom `Middleware`
         if you don't want to overwrite default behavior.
      */
-    public var globalMiddleware: [HTTP.Middleware]
+    public var globalMiddleware: [HTTPMiddleware]
 
     /**
         Available Commands to use when starting
@@ -178,7 +178,7 @@ public class Application {
         ]
 
         self.router = routerProvided ?? BranchRouter()
-        self.server = serverProvided ?? HTTP.DefaultServer.self
+        self.server = serverProvided ?? DefaultServer.self
 
         routes = []
 
@@ -311,7 +311,7 @@ extension Application {
 }
 
 extension Application {
-    func checkFileSystem(for request: HTTP.Request) -> HTTP.Request.Handler? {
+    func checkFileSystem(for request: HTTPRequest) -> HTTPRequest.Handler? {
         // Check in file system
         let filePath = self.workDir + "Public" + (request.uri.path ?? "")
 
@@ -321,7 +321,7 @@ extension Application {
 
         // File exists
         if let fileBody = try? FileManager.readBytesFromFile(filePath) {
-            return HTTP.Request.Handler { _ in
+            return HTTPRequest.Handler { _ in
                 var headers: Headers = [:]
 
                 if
@@ -331,13 +331,13 @@ extension Application {
                     headers["Content-Type"] = type.description
                 }
 
-                return HTTP.Response(status: .ok, headers: headers, body: .data(fileBody))
+                return HTTPResponse(status: .ok, headers: headers, body: .data(fileBody))
             }
         } else {
-            return HTTP.Request.Handler { _ in
+            return HTTPRequest.Handler { _ in
                 Log.warning("Could not open file, returning 404")
                 let bod = "Page not found".utf8.array
-                return HTTP.Response(status: .notFound, body: .data(bod))
+                return HTTPResponse(status: .notFound, body: .data(bod))
             }
         }
     }
@@ -363,7 +363,7 @@ extension Application: HTTPResponder {
 
         - returns: response if possible
      */
-    public func respond(to request: HTTP.Request) throws -> HTTP.Response {
+    public func respond(to request: HTTPRequest) throws -> HTTPResponse {
         Log.info("\(request.method) \(request.uri.path ?? "/")")
 
         var responder: HTTPResponder
@@ -387,18 +387,18 @@ extension Application: HTTPResponder {
             responder = fileHander
         } else {
             // Default not found handler
-            responder = HTTP.Request.Handler { _ in
-                let normal: [HTTP.Method] = [.get, .post, .put, .patch, .delete]
+            responder = HTTPRequest.Handler { _ in
+                let normal: [Method] = [.get, .post, .put, .patch, .delete]
 
                 if normal.contains(request.method) {
                     let data = "Page not found".utf8.array
-                    return HTTP.Response(status: .notFound, body: .data(data))
+                    return HTTPResponse(status: .notFound, body: .data(data))
                 } else if case .options = request.method {
-                    return HTTP.Response(status: .ok, headers: [
+                    return HTTPResponse(status: .ok, headers: [
                         "Allow": "OPTIONS"
                         ])
                 } else {
-                    return HTTP.Response(status: .notImplemented)
+                    return HTTPResponse(status: .notImplemented)
                 }
             }
         }
@@ -406,7 +406,7 @@ extension Application: HTTPResponder {
         // Loop through middlewares in order
         responder = self.globalMiddleware.chain(to: responder)
 
-        var response: HTTP.Response
+        var response: HTTPResponse
         do {
             response = try responder.respond(to: request)
 
@@ -418,7 +418,7 @@ extension Application: HTTPResponder {
             if config.environment == .production {
                 error = "Something went wrong"
             }
-            response = HTTP.Response(error: error)
+            response = HTTPResponse(error: error)
         }
 
         response.headers["Date"] = RFC1123.now()

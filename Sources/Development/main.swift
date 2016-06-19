@@ -9,7 +9,7 @@ var workDir: String {
 
 let config = Config(seed: JSON.object(["port": "8000"]), workingDirectory: workDir)
 let app = Application(workDir: workDir, config: config)
-let 😀 = HTTP.Response(status: .ok)
+let 😀 = HTTPResponse(status: .ok)
 
 //MARK: Basic
 
@@ -26,7 +26,7 @@ app.get("pokemon") { req in
     let offset = req.data["offset"].int ?? 0
     let pokemonResponse = try app.client.get("http://pokeapi.co/api/v2/pokemon", query: ["limit": "\(limit)", "offset": "\(offset)"])
     guard let names = pokemonResponse.data["results", "name"].array?.flatMap({ $0.string }) else {
-        return HTTP.Response(error: "didn't parse json correctly")
+        return HTTPResponse(error: "didn't parse json correctly")
     }
 
     return names.joined(separator: "\n")
@@ -113,14 +113,14 @@ app.get("json") { request in
 app.post("json") { request in
     //parse a key inside the received json
     guard let count = request.data["unicorns"].int else {
-        return HTTP.Response(error: "No unicorn count provided")
+        return HTTPResponse(error: "No unicorn count provided")
     }
     return "Received \(count) unicorns"
 }
 
 app.post("form") { request in
     guard let name = request.data["name"].string else {
-        return HTTP.Response(error: "No name provided")
+        return HTTPResponse(error: "No name provided")
     }
 
     return "Hello \(name)"
@@ -128,16 +128,16 @@ app.post("form") { request in
 
 app.get("redirect") { request in
     return "// TODO: "
-//    return HTTP.Response(redirect: "http://qutheory.io:8001")
+//    return HTTPResponse(redirect: "http://qutheory.io:8001")
 }
 
 app.post("json2") { request in
     //parse a key inside the received json
     guard let count = request.data["unicorns"].int else {
-        return HTTP.Response(error: "No unicorn count provided")
+        return HTTPResponse(error: "No unicorn count provided")
     }
     return "// TODO: "
-//    return HTTP.Response(status: .created, json: JSON(["message":"Received \(count) unicorns"]))
+//    return HTTPResponse(status: .created, json: JSON(["message":"Received \(count) unicorns"]))
 }
 
 app.grouped("abort") { group in
@@ -241,7 +241,7 @@ class Employee {
     var name: Valid<Name>
     var email: Valid<Email>
 
-    init(request: HTTP.Request) throws {
+    init(request: HTTPRequest) throws {
         name = try request.data["name"].validated()
         email = try request.data["email"].validated()
     }
@@ -271,7 +271,7 @@ app.get("multipart-image") { _ in
     response += "<button>Submit</button>"
     response += "</form>"
 
-    return Response(body: Body(response))
+    return Response(body: response)
 }
 
 app.post("multipart-image") { request in
@@ -293,7 +293,7 @@ app.post("multipart-image") { request in
         headers["Content-Type"] = mediaType
     }
 
-    return Response(status: .ok, headers: headers, body: Body(image.data.bytes))
+    return Response(status: .ok, headers: headers, body: image.data.bytes)
 }
 
 app.get("multifile") { _ in
@@ -304,7 +304,7 @@ app.get("multifile") { _ in
     response += "<button>Submit</button>"
     response += "</form>"
 
-    return Response(body: Body(response))
+    return Response(body: response)
 }
 
 app.post("multifile") { request in
@@ -332,7 +332,7 @@ app.post("multifile") { request in
         headers["Content-Type"] = mediaType
     }
 
-    return HTTP.Response(status: .ok, headers: headers, body: .data(file.data.bytes))
+    return HTTPResponse(status: .ok, headers: headers, body: .data(file.data.bytes))
 }
 
 app.get("options") { _ in
@@ -353,7 +353,7 @@ app.get("options") { _ in
     response += "<button>Submit</button>"
     response += "</form>"
 
-    return HTTP.Response(status: .ok, body: .data(response.data.bytes))
+    return HTTPResponse(status: .ok, body: .data(response.data.bytes))
 }
 
 app.post("options") { request in

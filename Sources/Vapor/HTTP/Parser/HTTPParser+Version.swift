@@ -1,4 +1,4 @@
-extension HTTP.Version {
+extension Version {
     init<S: Sequence where S.Iterator.Element == Byte>(_ bytes: S) throws {
         // ["HTTP", "1.1"]
         let comps = bytes.split(separator: .forwardSlash, maxSplits: 1, omittingEmptySubsequences: true)
