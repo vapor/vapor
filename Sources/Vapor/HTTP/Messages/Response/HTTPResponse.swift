@@ -23,8 +23,6 @@ public final class HTTPResponse: HTTPMessage {
         self.data.append(self.json)
     }
 
-    // TODO: Establish appropriate cookie handling? Should it be built off of headers?
-    //        public let cookies: Any! = nil
     public convenience required init(startLineComponents: (BytesSlice, BytesSlice, BytesSlice), headers: Headers, body: HTTPBody) throws {
         let (httpVersionSlice, statusCodeSlice, reasonPhrase) = startLineComponents
         // TODO: Right now in Status, if you pass reason phrase, it automatically overrides status code. Try to use reason phrase
@@ -42,9 +40,7 @@ public final class HTTPResponse: HTTPMessage {
 
 extension HTTPResponse {
     public convenience init(error: String) {
-        // TODO: Replicate original behavior!!
-        let body = error.utf8.array
-        self.init(status: .internalServerError, body: .data(body))
+        self.init(status: .internalServerError, body: error)
     }
 }
 

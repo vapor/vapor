@@ -1,15 +1,19 @@
-// TODO: 
-//extension Response {
-//    public var cookies: Cookies {
-//        get {
-//            guard let cookies = storage["cookies"] as? Cookies else {
-//                return []
-//            }
-//
-//            return cookies
-//        }
-//        set(data) {
-//            storage["cookies"] = data
-//        }
-//    }
-//}
+extension HTTPResponse {
+    public var cookies: Cookies? {
+        get {
+            if let cookies = storage["Set-Cookie"] as? Cookies {
+                return cookies
+            } else if let cookieString = headers["Set-Cookie"] {
+                let cookie = Cookies(cookieString)
+                storage["Set-Cookie"] = cookie
+                return cookie
+            } else {
+                return nil
+            }
+        }
+        set(cookie) {
+            storage["Set-Cookie"] = cookie
+            headers["Set-Cookie"] = cookie?.serialize()
+        }
+    }
+}

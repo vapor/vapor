@@ -65,7 +65,7 @@
 
 public enum HTTPParserError: ErrorProtocol {
     case streamEmpty
-    case invalidRequestLine
+    case invalidStartLine
     case invalidRequest
     case invalidKeyWhitespace
     case invalidVersion
@@ -117,8 +117,7 @@ public final class HTTPParser<Message: HTTPMessage>: TransferParser {
         // Maximum 3 components(2 splits) so reason phrase can have spaces within it
         let comps = line.split(separator: .space, maxSplits: 2, omittingEmptySubsequences: true)
         guard comps.count == 3 else {
-            // TODO: StartLine
-            throw Error.invalidRequestLine
+            throw Error.invalidStartLine
         }
 
         return (comps[0], comps[1], comps[2])

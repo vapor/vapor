@@ -194,21 +194,6 @@ extension HTTPRequest {
 }
 
 extension HTTPRequest {
-    public var cookies: Cookies {
-        get {
-            guard let cookies = storage["cookies"] as? Cookies else {
-                return []
-            }
-
-            return cookies
-        }
-        set(data) {
-            storage["cookies"] = data
-        }
-    }
-}
-
-extension HTTPRequest {
     /// form url encoded encoded request data
     public var formURLEncoded: StructuredData? {
         get {

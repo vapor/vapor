@@ -176,6 +176,9 @@ public final class URIParser: StaticDataBuffer {
         scheme      = ALPHA *( ALPHA / DIGIT / "+" / "-" / "." )
     */
     private func parseScheme() throws -> [Byte] {
+        // MUST begin with letter
+        guard try next(matches: { $0.isLetter } ) else { return [] }
+
         let scheme = try collect(until: .colon, .forwardSlash)
         let colon = try checkLeadingBuffer(matches: .colon)
         guard colon else { return scheme }
@@ -197,7 +200,7 @@ public final class URIParser: StaticDataBuffer {
         authority   = [ userinfo "@" ] host [ ":" port ]
     */
     private func parseAuthority() throws -> [Byte]? {
-        if let existingHost = existingHost { return existingHost.array } // TODO: Retain Slice?
+        if let existingHost = existingHost { return existingHost.array }
         guard try checkLeadingBuffer(matches: .forwardSlash, .forwardSlash) else { return nil }
         try discardNext(2) // discard '//'
         return try collect(until: .forwardSlash, .questionMark, .numberSign)
