@@ -1,8 +1,8 @@
-public protocol ClientDriver {
+public protocol HTTPClientProtocol {
     func request(_ method: Method, url: String, headers: Headers, query: [String: String], body: HTTPBody) throws -> HTTPResponse
 }
 
-extension ClientDriver {
+extension HTTPClientProtocol {
     public func get(_ url: String, headers: Headers = [:], query: [String: String] = [:], body: HTTPBody = []) throws -> HTTPResponse {
         return try request(.get, url: url, headers: headers, query: query, body: body)
     }

@@ -44,3 +44,11 @@ extension SynchronousTCPServer: StreamDriver {
         try server.startWithHandler(handler: handler)
     }
 }
+
+extension TCPClient: ClientStream {
+    public static func makeConnection(host: String, port: Int) throws -> Stream {
+        let port = UInt16(port)
+        let address = InternetAddress(hostname: host, port: port)
+        return try TCPClient(address: address)
+    }
+}

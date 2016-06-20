@@ -1,9 +1,7 @@
 import Socks
 import SocksCore
 
-public final class Client: ClientDriver {
-    public static let shared: Client = .init()
-
+public final class HTTPClient<Stream: ClientStream>: HTTPClientProtocol {
     public func request(_ method: Method,
                         url: String,
                         headers: Headers = [:],
@@ -35,8 +33,8 @@ public final class Client: ClientDriver {
             let port = uri.port
                 ?? uri.schemePort
             else { fatalError("throw appropriate error, missing port") }
-        let address = InternetAddress(hostname: host, port: Port(port))
-        let client = try TCPClient(address: address)
+
+        let client = try Stream.makeConnection(host: host, port: port)
         let buffer = StreamBuffer(client)
         return buffer
     }
