@@ -7,6 +7,8 @@ public enum HTTPClientError: ErrorProtocol {
 }
 
 public final class HTTPClient<Stream: ClientStream>: HTTPClientProtocol {
+    public init() {}
+    
     public func request(_ method: Method,
                         url: String,
                         headers: Headers = [:],
