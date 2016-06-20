@@ -1,5 +1,5 @@
 extension HTTPResponse {
-    public var cookies: Cookies? {
+    public var cookies: Cookies {
         get {
             if let cookies = storage["Set-Cookie"] as? Cookies {
                 return cookies
@@ -8,12 +8,12 @@ extension HTTPResponse {
                 storage["Set-Cookie"] = cookie
                 return cookie
             } else {
-                return nil
+                return []
             }
         }
         set(cookie) {
             storage["Set-Cookie"] = cookie
-            headers["Set-Cookie"] = cookie?.serialize()
+            headers["Set-Cookie"] = cookie.serialize()
         }
     }
 }

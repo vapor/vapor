@@ -70,10 +70,10 @@ class SessionTests: XCTestCase {
 
         XCTAssert(sessionMiddleware?.driver.contains(identifier: "123") == false, "Session should not contain 123")
 
-//        XCTAssert(response.cookies["vapor-session"] != nil, "No cookie was added")
-//
-//        let id = response.cookies["vapor-session"] ?? ""
-//        XCTAssert(sessionMiddleware?.driver.contains(identifier: id) == true, "Session did not contain cookie")
+        XCTAssert(response.cookies["vapor-session"] != nil, "No cookie was added")
+
+        let id = response.cookies["vapor-session"] ?? ""
+        XCTAssert(sessionMiddleware?.driver.contains(identifier: id) == true, "Session did not contain cookie")
     }
 }
 

@@ -42,14 +42,17 @@ class HTTPStreamTests: XCTestCase {
 
     func testSerializer() {
         //MARK: Create Response
-        let response = Response(status: .enhanceYourCalm, headers: [
-            "Test": "123",
-            "Content-Type": "text/plain"
-        ], chunked: { stream in
-            try stream.send("Hello, world")
-            try stream.close()
-        })
-//        response.cookies["key"] = "val"
+        let response = Response(
+            status: .enhanceYourCalm,
+            headers: [
+                "Test": "123",
+                "Content-Type": "text/plain"
+            ],
+            chunked: { stream in
+                try stream.send("Hello, world")
+                try stream.close()
+            }
+        )
 
         let stream = TestStream()
         let serializer = HTTPSerializer<HTTPResponse>(stream: stream)
