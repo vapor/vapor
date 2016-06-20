@@ -23,7 +23,8 @@ extension Request {
     public var data: Content {
         get {
             guard let content = storage["content"] as? Content else {
-                Log.warning("Request Content not parsed, make sure \(ContentMiddleware.self) is installed.")
+                // TODO: throw
+                //Log.warning("Request Content not parsed, make sure \(ContentMiddleware.self) is installed.")
                 return Content(request: self)
             }
 

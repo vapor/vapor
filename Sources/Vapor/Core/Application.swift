@@ -6,25 +6,24 @@ public let VERSION = "0.11"
 
 public class Application {
     /**
-        The router driver is responsible
-        for returning registered `Route` handlers
-        for a given request.
+        The router is responsible for returning 
+        registered `Route` handlers for a given request.
     */
-    public let router: RouterDriver
+    public let router: Router
 
     /**
         The server that will accept requesting
         connections and return the desired
         response.
     */
-    public let server: ServerDriver.Type
+    public let server: Server.Type
 
     /**
         The session driver is responsible for
         storing and reading values written to the
         users session.
     */
-    public let session: SessionDriver
+    public let sessions: Sessions
 
     /**
      Provides access to config settings.
@@ -94,6 +93,11 @@ public class Application {
     public let console: Console
 
     /**
+        Log info, warnings, errors, etc.
+    */
+    public let log: Log
+
+    /**
         The application's default Database.
     */
     public let database: Database?
@@ -122,28 +126,31 @@ public class Application {
         config: Config? = nil,
         localization: Localization? = nil,
         hash: Hash? = nil,
-        console: ConsoleDriver? = nil,
-        server: ServerDriver.Type? = nil,
-        router: RouterDriver? = nil,
-        session: SessionDriver? = nil,
+        console: Console? = nil,
+        log: Log? = nil,
+        server: Server.Type? = nil,
+        router: Router? = nil,
+        sessions: Sessions? = nil,
         database: DatabaseDriver? = nil,
         preparations: [Preparation.Type] = [],
         providers: [Provider] = [],
         arguments: [String]? = nil
     ) {
-        var serverProvided: ServerDriver.Type? = server
-        var routerProvided: RouterDriver? = router
-        var sessionProvided: SessionDriver? = session
+        var serverProvided: Server.Type? = server
+        var routerProvided: Router? = router
+        var sessionProvided: Sessions? = sessions
         var hashProvided: Hash? = hash
-        var consoleProvided: ConsoleDriver? = console
+        var consoleProvided: Console? = console
+        var logProvided: Log? = log
         var databaseProvided: DatabaseDriver? = database
 
         for provider in providers {
             serverProvided = provider.server ?? serverProvided
             routerProvided = provider.router ?? routerProvided
-            sessionProvided = provider.session ?? sessionProvided
+            sessionProvided = provider.sessions ?? sessionProvided
             hashProvided = provider.hash ?? hashProvided
             consoleProvided = provider.console ?? consoleProvided
+            logProvided = provider.log ?? logProvided
             databaseProvided = provider.database ?? databaseProvided
         }
 
@@ -180,10 +187,11 @@ public class Application {
         let key = config["app", "key"].string
         
         let hash = hashProvided ?? SHA2Hasher(variant: .sha256)
+        hash.key = key ?? ""
         self.hash = hash
 
-        let session = sessionProvided ?? MemorySessionDriver(hash: hash)
-        self.session = session
+        let sessions = sessionProvided ?? MemorySessions(hash: hash)
+        self.sessions = sessions
 
         self.globalMiddleware = [
             QueryMiddleware(),
@@ -194,7 +202,7 @@ public class Application {
             ContentMiddleware(),
             AbortMiddleware(),
             ValidationMiddleware(),
-            SessionMiddleware(session: session)
+            SessionMiddleware(sessions: sessions)
         ]
 
         self.router = routerProvided ?? BranchRouter()
@@ -208,10 +216,10 @@ public class Application {
 
         commands = []
 
-        let console = Console(driver: consoleProvided ?? Terminal())
+        let console = consoleProvided ?? Terminal()
         self.console = console
 
-        Log.driver = ConsoleLogger(console: console)
+        self.log = logProvided ?? ConsoleLogger(console: console)
 
         commands.append(Help.self)
         commands.append(Serve.self)
@@ -227,7 +235,7 @@ public class Application {
     private func restrictLogging(for environment: Environment) {
         guard config.environment == .production else { return }
         console.output("Production mode enabled, disabling informational logs.", style: .info)
-        Log.enabledLevels = [.error, .fatal]
+        log.enabled = [.error, .fatal]
     }
 }
 
@@ -330,7 +338,7 @@ extension Application {
         } catch ServerError.bindFailed {
             console.output("Could not bind to port \(port), it may be in use or require sudo.", style: .error)
         } catch {
-            Log.error("Server start error: \(error)")
+            log.error("Server start error: \(error)")
         }
     }
 }
@@ -360,7 +368,7 @@ extension Application {
             }
         } else {
             return Request.Handler { _ in
-                Log.warning("Could not open file, returning 404")
+                self.log.warning("Could not open file, returning 404")
                 return Response(status: .notFound, text: "Page not found")
             }
         }
@@ -388,7 +396,7 @@ extension Application: Responder {
         - returns: response if possible
      */
     public func respond(to request: Request) throws -> Response {
-        Log.info("\(request.method) \(request.uri.path ?? "/")")
+        log.info("\(request.method) \(request.uri.path ?? "/")")
 
         var responder: Responder
         var request = request
@@ -437,7 +445,7 @@ extension Application: Responder {
             response = try responder.respond(to: request)
 
             if response.headers["Content-Type"] == nil {
-                Log.warning("Response had no 'Content-Type' header.")
+                log.warning("Response had no 'Content-Type' header.")
             }
         } catch {
             var error = "Server Error: \(error)"

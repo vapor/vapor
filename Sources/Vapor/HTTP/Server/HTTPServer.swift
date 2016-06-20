@@ -12,15 +12,15 @@ enum ServerError: ErrorProtocol {
 }
 
 final class HTTPServer<
-    Server: StreamDriver,
+    Streamer: StreamServer,
     Parser: RequestParser,
     Serializer: ResponseSerializer
->: ServerDriver {
-    var server: Server
+>: Server {
+    var server: Streamer
     var responder: Responder
 
     required init(host: String, port: Int, responder: Responder) throws {
-        server = try Server.make(host: host, port: port)
+        server = try Streamer.make(host: host, port: port)
         self.responder = responder
     }
 
@@ -38,7 +38,9 @@ final class HTTPServer<
                 self.parse(stream)
             }
         } catch {
-            Log.error("Could not create thread: \(error)")
+            // TODO: Pass server a logger object
+            // or add error to delegate
+            // Log.error("Could not create thread: \(error)")
         }
     }
 
@@ -70,7 +72,7 @@ final class HTTPServer<
                 break
             } catch {
                 // unknown error, abort
-                Log.error("HTTP error: \(error)")
+                // Log.error("HTTP error: \(error)")
                 break
             }
         } while keepAlive && !stream.closed
@@ -78,7 +80,7 @@ final class HTTPServer<
         do {
             try stream.close()
         } catch {
-            Log.error("Could not close stream: \(error)")
+            // Log.error("Could not close stream: \(error)")
         }
     }
 

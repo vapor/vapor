@@ -23,7 +23,6 @@ public class View {
 
         guard let fileBody = try? FileManager.readBytesFromFile(filesPath) else {
             self.data = Data()
-            Log.error("No view found in path: \(filesPath)")
             throw Error.InvalidPath
         }
         self.data = Data(fileBody)

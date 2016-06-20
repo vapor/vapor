@@ -25,36 +25,43 @@ public protocol Provider {
         they are not initialized until the 
         application starts.
     */
-    var server: ServerDriver.Type? { get }
+    var server: Server.Type? { get }
 
     /**
-        An optional `RouterDriver` to provide 
+        An optional `Router` to provide 
         to the application. Has a default
         implementation of `nil`.
     */
-    var router: RouterDriver? { get }
+    var router: Router? { get }
 
     /**
-        An optional `SessionDriver` to provide
+        An optional `Sessions` to provide
         to the application. Has a default
         implementation of `nil`.
     */
-    var session: SessionDriver? { get }
+    var sessions: Sessions? { get }
 
 
     /**
-        An optional `HashDriver` to provide
+        An optional `Hash` to provide
         to the application. Has a default
         implementation of `nil`.
      */
     var hash: Hash? { get }
 
     /**
-        An optional `ConsoleDriver` to provide
+        An optional `Console` to provide
         to the application. Has a default
         implementation of `nil`.
     */
-    var console: ConsoleDriver? { get }
+    var console: Console? { get }
+
+    /**
+        An optional `Console` to provide
+        to the application. Has a default
+        implementation of `nil`.
+    */
+    var log: Log? { get }
 
     /**
         An optional `Database` to provide
@@ -65,15 +72,15 @@ public protocol Provider {
 }
 
 extension Provider {
-    public var server: ServerDriver.Type? {
+    public var server: Server.Type? {
         return nil
     }
 
-    public var router: RouterDriver? {
+    public var router: Router? {
         return nil
     }
 
-    public var session: SessionDriver? {
+    public var sessions: Sessions? {
         return nil
     }
 
@@ -81,7 +88,11 @@ extension Provider {
         return nil
     }
 
-    public var console: ConsoleDriver? {
+    public var console: Console? {
+        return nil
+    }
+
+    public var log: Log? {
         return nil
     }
 

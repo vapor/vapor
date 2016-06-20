@@ -1,4 +1,4 @@
-public class Terminal: ConsoleDriver {
+public class Terminal: Console {
     let startOfCode = "\u{001B}["
     let endOfCode = "m"
 
@@ -6,10 +6,10 @@ public class Terminal: ConsoleDriver {
 
     }
 
-    public func output(_ string: String, style: Console.Style, newLine: Bool) {
+    public func output(_ string: String, style: ConsoleStyle, newLine: Bool) {
         let terminator = newLine ? "\n" : ""
 
-        let color: Console.Color?
+        let color: ConsoleColor?
         switch style {
         case .plain:
             color = nil
@@ -40,7 +40,7 @@ public class Terminal: ConsoleDriver {
     }
 }
 
-extension Console.Color {
+extension ConsoleColor {
     var terminal: Int {
         switch self {
         case .black:

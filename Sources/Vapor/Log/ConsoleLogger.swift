@@ -6,8 +6,10 @@ import libc
     - parameter level: LogLevel enum
     - parameter message: String to log
 */
-public class ConsoleLogger: LogDriver {
+public class ConsoleLogger: Log {
     let console: Console
+
+    public var enabled: [LogLevel]
 
     /**
         Creates an instance of `ConsoleLogger`
@@ -15,6 +17,7 @@ public class ConsoleLogger: LogDriver {
     */
     public init(console: Console) {
         self.console = console
+        enabled = LogLevel.all
     }
 
     /**
@@ -23,13 +26,15 @@ public class ConsoleLogger: LogDriver {
         - parameter level: the level with which to filter
         - parameter message: the message to log to console
      */
-    public func log(_ level: Log.Level, message: String) {
-        console.output(message, style: level.consoleStyle)
+    public func log(_ level: LogLevel, message: String) {
+        if enabled.contains(level) {
+            console.output(message, style: level.consoleStyle)
+        }
     }
 }
 
-extension Log.Level {
-    var consoleStyle: Console.Style {
+extension LogLevel {
+    var consoleStyle: ConsoleStyle {
         switch self {
         case .debug, .verbose, .custom(_):
             return .plain

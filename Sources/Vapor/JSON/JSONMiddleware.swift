@@ -12,7 +12,7 @@ class JSONMiddleware: Middleware {
             do {
                 request.json = try JSON(data)
             } catch {
-                Log.warning("Could not parse JSON: \(error)")
+                //Log.warning("Could not parse JSON: \(error)")
             }
         }
 

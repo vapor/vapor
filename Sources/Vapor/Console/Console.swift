@@ -1,35 +1,35 @@
-public class Console {
-    public init(driver: ConsoleDriver) {
-        self.driver = driver
-    }
+/**
+    Objects capable of sending output to
+    and receiving input from a console can
+    conform to this protocol to power the Console.
+*/
+public protocol Console {
+    func output(_ string: String, style: ConsoleStyle, newLine: Bool)
+    func input() -> String
+}
 
-    let driver: ConsoleDriver
+public enum ConsoleStyle {
+    case plain
+    case info
+    case warning
+    case error
+    case success
+    case custom(ConsoleColor)
+}
 
-    public enum Style {
-        case plain
-        case info
-        case warning
-        case error
-        case success
-        case custom(Color)
-    }
+public enum ConsoleColor {
+    case black
+    case red
+    case green
+    case yellow
+    case blue
+    case magenta
+    case cyan
+    case white
+}
 
-    public enum Color {
-        case black
-        case red
-        case green
-        case yellow
-        case blue
-        case magenta
-        case cyan
-        case white
-    }
-
-    public func output(_ string: String, style: Console.Style = .plain, newLine: Bool = true) {
-        driver.output(string, style: style, newLine: newLine)
-    }
-
-    public func input() -> String {
-        return driver.input()
+extension Console {
+    public func output(_ string: String, style: ConsoleStyle = .plain, newLine: Bool = true) {
+        output(string, style: style, newLine: newLine)
     }
 }

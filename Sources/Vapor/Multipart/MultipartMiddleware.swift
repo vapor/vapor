@@ -12,7 +12,7 @@ class MultipartMiddleware: Middleware {
                 let boundary = try Multipart.parseBoundary(contentType: contentType)
                 request.multipart = Multipart.parse(data, boundary: boundary)
             } catch {
-                Log.warning("Could not parse MultiPart: \(error)")
+                // Log.warning("Could not parse MultiPart: \(error)")
             }
         }
 

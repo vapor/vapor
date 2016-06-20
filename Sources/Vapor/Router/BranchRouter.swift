@@ -1,7 +1,7 @@
 public typealias Host = String
 
 
-public final class BranchRouter: RouterDriver {
+public final class BranchRouter: Router {
 
     // MARK: Private Tree Representation
     private final var tree: [Host : [Request.Method : Branch]] = [:]

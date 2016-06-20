@@ -3,7 +3,7 @@ import libc
 /**
     Hash strings using the static methods on this class.
 */
-public protocol Hash {
+public protocol Hash: class {
     /**
         A string used to add an additional 
         layer of security to all hashes
