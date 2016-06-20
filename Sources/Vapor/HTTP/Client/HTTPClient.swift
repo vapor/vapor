@@ -1,6 +1,11 @@
 import Socks
 import SocksCore
 
+public enum HTTPClientError: ErrorProtocol {
+    case missingHost
+    case missingPort
+}
+
 public final class HTTPClient<Stream: ClientStream>: HTTPClientProtocol {
     public func request(_ method: Method,
                         url: String,
@@ -28,13 +33,11 @@ public final class HTTPClient<Stream: ClientStream>: HTTPClientProtocol {
     }
 
     private func makeConnection(to uri: URI) throws -> Vapor.Stream {
-        guard
-            let host = uri.host,
-            let port = uri.port
-                ?? uri.schemePort
-            else { fatalError("throw appropriate error, missing port") }
+        guard let host = uri.host else { throw HTTPClientError.missingHost }
+        guard let port = uri.port ?? uri.schemePort else { throw HTTPClientError.missingPort }
 
-        let client = try Stream.makeConnection(host: host, port: port)
+        let useSSL = uri.scheme?.hasSuffix("s") == true
+        let client = try Stream.makeConnection(host: host, port: port, usingSSL: useSSL)
         let buffer = StreamBuffer(client)
         return buffer
     }

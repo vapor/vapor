@@ -46,7 +46,10 @@ extension SynchronousTCPServer: StreamDriver {
 }
 
 extension TCPClient: ClientStream {
-    public static func makeConnection(host: String, port: Int) throws -> Stream {
+    public static func makeConnection(host: String, port: Int, usingSSL: Bool) throws -> Stream {
+        if usingSSL {
+            print("TCP CLIENT DOES NOT SUPPORT SSL CONNECTIONS")
+        }
         let port = UInt16(port)
         let address = InternetAddress(hostname: host, port: port)
         return try TCPClient(address: address)
