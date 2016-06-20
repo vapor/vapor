@@ -36,8 +36,7 @@ public class Application {
     public let localization: Localization
 
     /**
-        Provides access to the underlying
-        `HashDriver`.
+        Creates hashes from Strings.
     */
     public let hash: Hash
 
@@ -87,8 +86,7 @@ public class Application {
     public var commands: [Command.Type]
 
     /**
-        Send output and receive input from the console
-        using the underlying `ConsoleDriver`.
+        Send output and receive input from the console.
     */
     public let console: Console
 

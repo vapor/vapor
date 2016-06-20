@@ -46,7 +46,7 @@ class ApplicationTests: XCTestCase {
         method is being called.
     */
     func testProviders() {
-        final class TestServer: ServerDriver {
+        final class TestServer: Server {
             init(host: String, port: Int, responder: Responder) throws {}
             func start() throws {}
         }
@@ -58,7 +58,7 @@ class ApplicationTests: XCTestCase {
                 bootRan = true
             }
 
-            var server: ServerDriver.Type?
+            var server: Server.Type?
 
             init() {
                 server = TestServer.self
@@ -79,12 +79,12 @@ class ApplicationTests: XCTestCase {
         init arguments to the application.
     */
     func testProvidersOverride() {
-        final class TestServerAlpha: ServerDriver {
+        final class TestServerAlpha: Server {
             init(host: String, port: Int, responder: Responder) throws {}
             func start() throws {}
         }
 
-        final class TestServerBeta: ServerDriver {
+        final class TestServerBeta: Server {
             init(host: String, port: Int, responder: Responder) throws {}
             func start() throws {}
         }
@@ -92,7 +92,7 @@ class ApplicationTests: XCTestCase {
         class TestProvider: Provider {
             func boot(with application: Application) {}
 
-            var server: ServerDriver.Type?
+            var server: Server.Type?
 
             init() {
                 server = TestServerAlpha.self

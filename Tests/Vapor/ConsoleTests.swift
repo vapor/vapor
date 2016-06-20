@@ -144,14 +144,14 @@ final class TestTwoCommand: Command {
     }
 }
 
-class TestConsoleDriver: ConsoleDriver {
+class TestConsoleDriver: Console {
     var buffer: Data
 
     init() {
         buffer = []
     }
 
-    func output(_ string: String, style: Console.Style, newLine: Bool) {
+    func output(_ string: String, style: ConsoleStyle, newLine: Bool) {
         buffer.bytes += string.data.bytes
     }
 

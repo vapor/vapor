@@ -115,7 +115,7 @@ final class TestStream: Stream {
     }
 }
 
-final class TestStreamDriver: StreamDriver {
+final class TestStreamDriver: StreamServer {
     init() {
 
     }

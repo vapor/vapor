@@ -29,7 +29,7 @@ public class MemorySessions: Sessions {
     /**
         Sets value for session id at given key
     */
-    public func set(_ value: String?, forKey key: String, identifier: String) {
+    public func set(_ value: String?, for key: String, identifier: String) {
         sessionsLock.locked {
             if sessions[identifier] == nil {
                 sessions[identifier] = [String: String]()

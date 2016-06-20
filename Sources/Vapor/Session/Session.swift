@@ -48,7 +48,7 @@ public class Session {
                 identifier = i
             }
 
-            sessions.set(newValue, forKey: key, identifier: i)
+            sessions.set(newValue, for: key, identifier: i)
         }
     }
 }

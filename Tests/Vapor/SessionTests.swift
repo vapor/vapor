@@ -11,7 +11,7 @@ class SessionTests: XCTestCase {
 
     func testDestroy_asksDriverToDestroy() {
         let driver = TestDriver()
-        let subject = Session(identifier: "baz", driver: driver)
+        let subject = Session(identifier: "baz", sessions: driver)
         subject.destroy()
         guard let action = driver.actions.first, case .Destroy = action else {
             XCTFail("No actions recorded or recorded action was not a destroy action")
@@ -21,7 +21,7 @@ class SessionTests: XCTestCase {
 
     func testSubscriptGet_asksDriverForValue() {
         let driver = TestDriver()
-        let subject = Session(identifier: "baz", driver: driver)
+        let subject = Session(identifier: "baz", sessions: driver)
         _ = subject["test"]
 
         guard let action = driver.actions.first, case .ValueFor(let key) = action else {
@@ -34,7 +34,7 @@ class SessionTests: XCTestCase {
 
     func testSubscriptSet_asksDriverToSetValue() {
         let driver = TestDriver()
-        let subject = Session(identifier: "baz", driver: driver)
+        let subject = Session(identifier: "baz", sessions: driver)
         subject["foo"] = "bar"
 
         guard let action = driver.actions.first, case .SetValue(let key) = action else {
@@ -72,16 +72,16 @@ class SessionTests: XCTestCase {
 
         XCTAssert(sessionMiddleware != nil, "Could not find session middleware")
 
-        XCTAssert(sessionMiddleware?.driver.contains(identifier: "123") == false, "Session should not contain 123")
+        XCTAssert(sessionMiddleware?.sessions.contains(identifier: "123") == false, "Session should not contain 123")
 
         XCTAssert(response.cookies["vapor-session"] != nil, "No cookie was added")
 
         let id = response.cookies["vapor-session"] ?? ""
-        XCTAssert(sessionMiddleware?.driver.contains(identifier: id) == true, "Session did not contain cookie")
+        XCTAssert(sessionMiddleware?.sessions.contains(identifier: id) == true, "Session did not contain cookie")
     }
 }
 
-private class TestDriver: SessionDriver {
+private class TestDriver: Sessions {
     var app = Application()
 
     enum Action {
@@ -92,11 +92,11 @@ private class TestDriver: SessionDriver {
 
     var actions = [Action]()
 
-    func makeSessionIdentifier() -> String {
+    func makeIdentifier() -> String {
         return "Foo"
     }
 
-    func valueFor(key: String, identifier: String) -> String? {
+    func value(for key: String, identifier: String) -> String? {
         actions.append(.ValueFor(key: key, identifier: identifier))
         return nil
     }
@@ -105,7 +105,7 @@ private class TestDriver: SessionDriver {
         return false
     }
 
-    func set(_ value: String?, forKey key: String, identifier: String) {
+    func set(_ value: String?, for key: String, identifier: String) {
         actions.append(.SetValue(value: value, key: key, identifier: identifier))
     }
 

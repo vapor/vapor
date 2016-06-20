@@ -35,7 +35,7 @@ public protocol Sessions: class {
         - parameter key: key to set
         - parameter identifier: identifier of the session
      */
-    func set(_ value: String?, forKey key: String, identifier: String)
+    func set(_ value: String?, for key: String, identifier: String)
 
     /**
         Destroy the session associated with given identifier
