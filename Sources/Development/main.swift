@@ -181,9 +181,20 @@ app.get("error") { request in
 
 //MARK: Session
 
-app.get("session") { request in
-    request.session?["name"] = "Vapor"
+app.post("session") { request in
+    guard let name = request.data["name"].string else {
+        throw Abort.badRequest
+    }
+
     return "Session set"
+}
+
+app.get("session") { request in
+    guard let name = request.session?["name"] else {
+        return "No session data"
+    }
+
+    return name
 }
 
 app.get("login") { request in
