@@ -21,6 +21,19 @@ app.get("ping") { _ in
     return 😀
 }
 
+
+app.get("spotify-artists") { req in
+    let name = req.data["name"].string ?? "beyonce"
+    let spotifyResponse = try app.client.get("https://api.spotify.com/v1/search", query: ["type": "artist", "q": name])
+    guard
+        let names = spotifyResponse.data["artists", "items", "name"]
+            .array?
+            .flatMap({ $0.string })
+            .map({ JSON($0) })
+        else { return Response(error: "unable to get names") }
+    return JSON.array(names)
+}
+
 app.get("pokemon") { req in
     let limit = req.data["limit"].int ?? 20
     let offset = req.data["offset"].int ?? 0
