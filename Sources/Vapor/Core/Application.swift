@@ -97,7 +97,7 @@ public class Application {
         TODO: Expose to end users to customize driver
         Make outgoing requests
     */
-    public let client: HTTPClientProtocol = HTTPClient<TCPClient>()
+    public let client: HTTPClientProtocol
 
 
     /**
@@ -124,6 +124,7 @@ public class Application {
         hash: HashDriver? = nil,
         console: ConsoleDriver? = nil,
         server: ServerDriver.Type? = nil,
+        client: HTTPClientProtocol? = nil,
         router: RouterDriver? = nil,
         session: SessionDriver? = nil,
         providers: [Provider] = [],
@@ -134,13 +135,16 @@ public class Application {
         var sessionProvided: SessionDriver? = session
         var hashProvided: HashDriver? = hash
         var consoleProvided: ConsoleDriver? = console
+        var clientProvided: HTTPClientProtocol? = nil
 
         for provider in providers {
+            // TODO: Warn if multiple providers attempt to add server
             serverProvided = provider.server ?? serverProvided
             routerProvided = provider.router ?? routerProvided
             sessionProvided = provider.session ?? sessionProvided
             hashProvided = provider.hash ?? hashProvided
             consoleProvided = provider.console ?? consoleProvided
+            clientProvided = provider.client ?? clientProvided
         }
 
         let arguments = arguments ?? NSProcessInfo.processInfo().arguments
@@ -178,6 +182,7 @@ public class Application {
 
         self.router = routerProvided ?? BranchRouter()
         self.server = serverProvided ?? DefaultServer.self
+        self.client = clientProvided ?? HTTPClient<TCPClient>()
 
         routes = []
 
