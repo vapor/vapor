@@ -185,6 +185,7 @@ app.post("session") { request in
     guard let name = request.data["name"].string else {
         throw Abort.badRequest
     }
+    request.session?["name"] = name
 
     return "Session set"
 }
@@ -196,7 +197,6 @@ app.get("session") { request in
 
     return name
 }
-
 app.get("login") { request in
     guard let id = request.session?["id"] else {
         throw Abort.badRequest
