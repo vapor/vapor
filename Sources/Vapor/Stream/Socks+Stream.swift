@@ -8,8 +8,6 @@ extension timeval {
     }
 }
 
-
-
 extension TCPInternetSocket: Stream {
     public func setTimeout(_ timeout: Double) throws {
         sendingTimeout = timeval(seconds: timeout)

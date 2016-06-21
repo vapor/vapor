@@ -182,7 +182,7 @@ public class Application {
 
         self.router = routerProvided ?? BranchRouter()
         self.server = serverProvided ?? HTTPServer<TCPServerStream, HTTPParser<HTTPRequest>, HTTPSerializer<HTTPResponse>>()
-        self.client = clientProvided ?? HTTPClient<TCPClientStream>()
+        self.client = clientProvided ?? HTTPClient<TCPClientStream, SecureFoundationStream>()
 
         routes = []
 

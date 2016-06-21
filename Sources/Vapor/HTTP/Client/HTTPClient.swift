@@ -6,7 +6,7 @@ public enum HTTPClientError: ErrorProtocol {
     case missingPort
 }
 
-public final class HTTPClient<ClientStreamType: ClientStream, SecureClientStreamType: ClientStream>: HTTPClientProtocol {
+public final class HTTPClient<ClientStreamType: ClientStream, SecureStreamType: ClientStream>: HTTPClientProtocol {
     public init() {}
     
     public func request(_ method: Method,
@@ -37,8 +37,19 @@ public final class HTTPClient<ClientStreamType: ClientStream, SecureClientStream
     private func makeConnection(to uri: URI) throws -> Vapor.Stream {
         guard let host = uri.host else { throw HTTPClientError.missingHost }
         guard let port = uri.port ?? uri.schemePort else { throw HTTPClientError.missingPort }
-        let client = try ClientStreamType(host: host, port: port)
-        let stream = try client.connect()
-        return StreamBuffer(stream)
+
+        let https = uri.scheme == "https"
+        let wss = uri.scheme == "wss"
+        let secure = wss || https
+        
+        if secure {
+            let client = try SecureStreamType(host: host, port: port)
+            let stream = try client.connect()
+            return StreamBuffer(stream)
+        } else  {
+            let client = try ClientStreamType(host: host, port: port)
+            let stream = try client.connect()
+            return StreamBuffer(stream)
+        }
     }
 }

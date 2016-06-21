@@ -2,7 +2,7 @@
 
     import Foundation
 
-    public final class FoundationStream: NSObject, Stream, NSStreamDelegate {
+    public class FoundationStream: NSObject, Stream, ClientStream, NSStreamDelegate {
         public enum Error: ErrorProtocol {
             case unableToCompleteWriteOperation
             case unableToConnectToHost
@@ -21,7 +21,7 @@
         let input: NSInputStream
         let output: NSOutputStream
 
-        init(host: String, port: Int) throws {
+        public required init(host: String, port: Int) throws {
             var inputStream: NSInputStream? = nil
             var outputStream: NSOutputStream? = nil
             NSStream.getStreamsToHost(withName: host,
@@ -32,8 +32,6 @@
                 let input = inputStream,
                 let output = outputStream
                 else { throw Error.unableToConnectToHost }
-            input.open()
-            output.open()
             self.input = input
             self.output = output
             super.init()
@@ -71,6 +69,14 @@
             return buffer.prefix(read).array
         }
 
+        // MARK: Connect
+
+        public func connect() throws -> Stream {
+            input.open()
+            output.open()
+            return self
+        }
+
         // MARK: Stream Events
 
         public func stream(_ aStream: NSStream, handle eventCode: NSStreamEvent) {
@@ -78,23 +84,19 @@
         }
     }
 
-    /*
- extension FoundationStream: ClientStream {
-        public static func makeConnection(host: String, port: Int, secure: Bool) throws -> Stream {
-            let stream = try FoundationStream(host: host, port: port)
-            if secure {
-                guard stream.output.upgradeSSL() else { throw Error.unableToUpgradeToSSL }
-                guard stream.input.upgradeSSL() else { throw Error.unableToUpgradeToSSL }
-            }
-            return stream
-        }
-    }*/
-
     // TODO: Fix foundation stream
     
     extension NSStream {
         func upgradeSSL() -> Bool {
             return setProperty(NSStreamSocketSecurityLevelNegotiatedSSL, forKey: NSStreamSocketSecurityLevelKey)
+        }
+    }
+
+    public final class SecureFoundationStream: FoundationStream {
+        public override func connect() throws -> Stream {
+            _ = input.upgradeSSL()
+            _ = output.upgradeSSL()
+            return try super.connect()
         }
     }
 
