@@ -63,25 +63,6 @@ public final class TCPClientStream: TCPAddressStream, ClientStream  {
     }
 }
 
-public final class _TCPClientStream: AddressStream, ClientStream  {
-    public let scheme: String
-    public let host: String
-    public let port: Int
-    private let address: InternetAddress
-
-    public required init(scheme: String, host: String, port: Int) throws {
-        self.scheme = scheme
-        self.host = host
-        self.port = port
-
-        self.address = InternetAddress(hostname: host, port: Port(port))
-    }
-    public func connect() throws -> Stream {
-        return try TCPClient(address: address)
-    }
-}
-
-
 public final class TCPServerStream: TCPAddressStream, ServerStream {
     public required init(scheme: String, host: String, port: Int) throws {
         try super.init(scheme: scheme, host: host, port: port)
