@@ -8,10 +8,6 @@ import Strand
 import Socks
 import SocksCore
 
-enum ServerError: ErrorProtocol {
-    case bindFailed
-}
-
 public typealias Responder = HTTPResponder
 
 public protocol HTTPResponder {
@@ -23,47 +19,49 @@ public protocol HTTPServerProtocol {
     func start() throws
 }
 
-public typealias DefaultServer =
-    HTTPServer<SynchronousTCPServer, HTTPParser<HTTPRequest>, HTTPSerializer<HTTPResponse>>
+public enum ServerError: ErrorProtocol {
+    case bind(ErrorProtocol)
+    case accept(ErrorProtocol)
+    case respond(ErrorProtocol)
+    case dispatch(ErrorProtocol)
+    case unknown(ErrorProtocol)
+}
+
+public typealias ServerErrorHandler = (ServerError) -> ()
+
+public protocol Server {
+    static func start(host: String, port: Int, secure: Bool, responder: Responder, errors: ServerErrorHandler) throws
+}
+
+public protocol ServerStream {
+    static func listen(host: String, port: Int, secure: Bool, handler: (Stream) throws -> ()) throws
+}
 
 public final class HTTPServer<
-        StreamDriverType: StreamDriver,
+        ServerStreamType: ServerStream,
         Parser: TransferParser,
         Serializer: TransferSerializer
         where Parser.MessageType == HTTPRequest,
-              Serializer.MessageType == HTTPResponse>: HTTPServerProtocol {
-    let host: String
-    let port: Int
+              Serializer.MessageType == HTTPResponse>: Server {
 
-    let responder: HTTPResponder
-
-    public required init(host: String = "0.0.0.0",
-                  port: Int = 8080,
-                  responder: HTTPResponder) throws {
-        self.host = host
-        self.port = port
-        self.responder = responder
-    }
-
-    public func start() throws {
+    public static func start(host: String, port: Int, secure: Bool, responder: Responder, errors: ServerErrorHandler) throws {
         do {
-            try StreamDriverType.listen(host: host, port: port, handler: dispatch)
-        } catch let e as SocksCore.Error where e.isBindFailed {
-            throw ServerError.bindFailed
-        }
-    }
-
-    private func dispatch(_ stream: Stream) {
-        do {
-            _ = try Strand {
-                self.loop(with: stream)
+            try ServerStreamType.listen(host: host, port: port, secure: secure) { stream in
+                do {
+                    _ = try Strand {
+                        self.loop(with: stream, notifying: responder)
+                    }
+                } catch {
+                    Log.error("Could not create thread: \(error)")
+                    errors(.dispatch(error))
+                }
             }
-        } catch {
-            Log.error("Could not create thread: \(error)")
+        } catch let e as SocksCore.Error where e.isBindFailed {
+            errors(.bind(e))
         }
     }
 
-    private func loop(with stream: Stream) {
+    private static func loop(with stream: Stream, notifying responder: Responder) {
         let stream = StreamBuffer(stream)
         stream.timeout = 30
 

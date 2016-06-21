@@ -17,7 +17,7 @@ public class Application {
         connections and return the desired
         response.
     */
-    public let server: ServerDriver.Type
+    public let server: Server.Type
 
     /**
         The session driver is responsible for
@@ -57,12 +57,24 @@ public class Application {
         The port the application should listen to. Set through Config
 
         Command Line Argument:
-            `--config:app.port=8080`
+            `--port=8080`
 
         Config:
             Set "port" key in app.json file
     */
     public let port: Int
+
+
+    /**
+         The port the application should listen to. Set through Config
+
+         Command Line Argument:
+         `--secureport=8080`
+
+         Config:
+         Set "secureport" key in app.json file
+     */
+    public let securePort: Int
 
     /**
         The work directory of your application is
@@ -123,14 +135,14 @@ public class Application {
         localization: Localization? = nil,
         hash: HashDriver? = nil,
         console: ConsoleDriver? = nil,
-        server: ServerDriver.Type? = nil,
+        server: Server.Type? = nil,
         client: HTTPClientProtocol? = nil,
         router: RouterDriver? = nil,
         session: SessionDriver? = nil,
         providers: [Provider] = [],
         arguments: [String]? = nil
     ) {
-        var serverProvided: ServerDriver.Type? = server
+        var serverProvided: Server.Type? = server
         var routerProvided: RouterDriver? = router
         var sessionProvided: SessionDriver? = session
         var hashProvided: HashDriver? = hash
@@ -166,6 +178,7 @@ public class Application {
         let port = config["app", "port"].int ?? 8080
         self.host = host
         self.port = port
+        self.securePort = config["app", "secureport"].int ?? 443
 
         let key = config["app", "key"].string
         let hash = Hash(key: key, driver: hashProvided)
@@ -181,7 +194,7 @@ public class Application {
         ]
 
         self.router = routerProvided ?? BranchRouter()
-        self.server = serverProvided ?? DefaultServer.self
+        self.server = serverProvided ?? HTTPServer<SynchronousTCPServer, HTTPParser<HTTPRequest>, HTTPSerializer<HTTPResponse>>.self
         self.client = clientProvided ?? HTTPClient<TCPClient>()
 
         routes = []
@@ -300,13 +313,15 @@ extension Sequence where Iterator.Element == String {
 }
 
 extension Application {
-    internal func serve() {
+    internal func serve(secure: Bool) {
         do {
-            console.output("Server starting at \(host):\(port)", style: .info)
+            let p = secure ? securePort : port
+            console.output("\(secure ? "🔒" : "🔓"): Server starting at \(host):\(p)", style: .info)
             // noreturn
-            let server = try self.server.init(host: host, port: port, responder: self)
-            try server.start()
-        } catch ServerError.bindFailed {
+            try self.server.start(host: host, port: p, secure: secure, responder: self) { [weak self] error in
+                self?.console.output("Server error: \(error)")
+            }
+        } catch ServerError.bind(_) {
             console.output("Could not bind to port \(port), it may be in use or require sudo.", style: .error)
         } catch {
             Log.error("Server start error: \(error)")
