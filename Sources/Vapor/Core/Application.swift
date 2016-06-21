@@ -319,7 +319,7 @@ extension Application {
 extension Application {
     public func client(_ url: String) throws -> Client {
         let uri = try URI(url)
-        return try self.client(scheme: uri.scheme ?? "http", host: uri.host ?? "localhost", port: uri.port ?? 80)
+        return try self.client(scheme: uri.scheme ?? "https", host: uri.host ?? "localhost", port: uri.port ?? uri.schemePort ?? 80)
     }
 
     public func client(scheme: String, host: String, port: Int) throws -> Client {
