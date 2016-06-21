@@ -1,4 +1,6 @@
-public protocol Client: Responder, Program { }
+public protocol Client: Responder {
+    init(_ base: URI) throws
+}
 
 public enum ClientError: ErrorProtocol {
 
