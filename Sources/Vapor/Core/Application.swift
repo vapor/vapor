@@ -2,7 +2,7 @@ import libc
 import Foundation
 import Socks
 
-public let VERSION = "0.11"
+public let VERSION = "0.12"
 
 public class Application {
     /**
@@ -79,7 +79,7 @@ public class Application {
         Make sure to append your custom `Middleware`
         if you don't want to overwrite default behavior.
      */
-    public var globalMiddleware: [Middleware]
+    public var globalMiddleware: [HTTPMiddleware]
 
     /**
         Available Commands to use when starting
@@ -88,10 +88,17 @@ public class Application {
     public var commands: [Command.Type]
 
     /**
-        Send output and receive input from the console
-        using the underlying `ConsoleDriver`.
+         Send output and receive input from the console
+         using the underlying `ConsoleDriver`.
     */
     public let console: Console
+
+    /**
+        TODO: Expose to end users to customize driver
+        Make outgoing requests
+    */
+    public let client: HTTPClientProtocol
+
 
     /**
         Resources directory relative to workDir
@@ -117,6 +124,7 @@ public class Application {
         hash: HashDriver? = nil,
         console: ConsoleDriver? = nil,
         server: ServerDriver.Type? = nil,
+        client: HTTPClientProtocol? = nil,
         router: RouterDriver? = nil,
         session: SessionDriver? = nil,
         providers: [Provider] = [],
@@ -127,13 +135,16 @@ public class Application {
         var sessionProvided: SessionDriver? = session
         var hashProvided: HashDriver? = hash
         var consoleProvided: ConsoleDriver? = console
+        var clientProvided: HTTPClientProtocol? = client
 
         for provider in providers {
+            // TODO: Warn if multiple providers attempt to add server
             serverProvided = provider.server ?? serverProvided
             routerProvided = provider.router ?? routerProvided
             sessionProvided = provider.session ?? sessionProvided
             hashProvided = provider.hash ?? hashProvided
             consoleProvided = provider.console ?? consoleProvided
+            clientProvided = provider.client ?? clientProvided
         }
 
         let arguments = arguments ?? NSProcessInfo.processInfo().arguments
@@ -164,23 +175,14 @@ public class Application {
         self.session = session
 
         self.globalMiddleware = [
-            QueryMiddleware(),
-            CookiesMiddleware(),
-            JSONMiddleware(),
-            FormURLEncodedMiddleware(),
-            MultipartMiddleware(),
-            ContentMiddleware(),
             AbortMiddleware(),
             ValidationMiddleware(),
             SessionMiddleware(session: session)
         ]
 
         self.router = routerProvided ?? BranchRouter()
-        self.server = serverProvided ?? HTTPServer<
-            SynchronousTCPServer,
-            HTTPRequestParser,
-            HTTPResponseSerializer
-        >.self
+        self.server = serverProvided ?? DefaultServer.self
+        self.client = clientProvided ?? HTTPClient<TCPClient>()
 
         routes = []
 
@@ -313,7 +315,7 @@ extension Application {
 }
 
 extension Application {
-    func checkFileSystem(for request: Request) -> Request.Handler? {
+    func checkFileSystem(for request: HTTPRequest) -> HTTPRequest.Handler? {
         // Check in file system
         let filePath = self.workDir + "Public" + (request.uri.path ?? "")
 
@@ -323,7 +325,7 @@ extension Application {
 
         // File exists
         if let fileBody = try? FileManager.readBytesFromFile(filePath) {
-            return Request.Handler { _ in
+            return HTTPRequest.Handler { _ in
                 var headers: Headers = [:]
 
                 if
@@ -333,12 +335,13 @@ extension Application {
                     headers["Content-Type"] = type.description
                 }
 
-                return Response(status: .ok, headers: headers, data: Data(fileBody))
+                return HTTPResponse(status: .ok, headers: headers, body: .data(fileBody))
             }
         } else {
-            return Request.Handler { _ in
+            return HTTPRequest.Handler { _ in
                 Log.warning("Could not open file, returning 404")
-                return Response(status: .notFound, text: "Page not found")
+                let bod = "Page not found".utf8.array
+                return HTTPResponse(status: .notFound, body: .data(bod))
             }
         }
     }
@@ -353,22 +356,20 @@ extension Application {
     }
 }
 
-extension Application: Responder {
+extension Application: HTTPResponder {
 
     /**
         Returns a response to the given request
 
         - parameter request: received request
-
         - throws: error if something fails in finding response
-
         - returns: response if possible
      */
-    public func respond(to request: Request) throws -> Response {
+    public func respond(to request: HTTPRequest) throws -> HTTPResponse {
         Log.info("\(request.method) \(request.uri.path ?? "/")")
 
-        var responder: Responder
-        var request = request
+        var responder: HTTPResponder
+        let request = request
 
         /*
             The HEAD method is identical to GET.
@@ -382,34 +383,32 @@ extension Application: Responder {
 
 
         // Check in routes
-        if let (parameters, routerHandler) = router.route(request) {
-            request.parameters = parameters
-            responder = routerHandler
+        if let handler = router.route(request) {
+            responder = handler
         } else if let fileHander = self.checkFileSystem(for: request) {
             responder = fileHander
         } else {
             // Default not found handler
-            responder = Request.Handler { _ in
-                let normal: [Request.Method] = [.get, .post, .put, .patch, .delete]
+            responder = HTTPRequest.Handler { _ in
+                let normal: [Method] = [.get, .post, .put, .patch, .delete]
 
                 if normal.contains(request.method) {
-                    return Response(status: .notFound, text: "Page not found")
+                    let data = "Page not found".utf8.array
+                    return HTTPResponse(status: .notFound, body: .data(data))
                 } else if case .options = request.method {
-                    return Response(status: .ok, headers: [
+                    return HTTPResponse(status: .ok, headers: [
                         "Allow": "OPTIONS"
-                        ], data: [])
+                        ])
                 } else {
-                    return Response(status: .notImplemented, data: [])
+                    return HTTPResponse(status: .notImplemented)
                 }
             }
         }
 
         // Loop through middlewares in order
-        for middleware in self.globalMiddleware.reversed() {
-            responder = middleware.chain(to: responder)
-        }
+        responder = self.globalMiddleware.chain(to: responder)
 
-        var response: Response
+        var response: HTTPResponse
         do {
             response = try responder.respond(to: request)
 
@@ -421,11 +420,10 @@ extension Application: Responder {
             if config.environment == .production {
                 error = "Something went wrong"
             }
-
-            response = Response(error: error)
+            response = HTTPResponse(error: error)
         }
 
-        response.headers["Date"] = Response.date
+        response.headers["Date"] = RFC1123.now()
         response.headers["Server"] = "Vapor \(Vapor.VERSION)"
 
         /**
@@ -434,7 +432,8 @@ extension Application: Responder {
             https://tools.ietf.org/html/rfc2616#section-9.4
         */
         if case .head = originalMethod {
-            response.body = .buffer([])
+            // TODO: What if body is set to chunked¿?
+            response.body = .data([])
         }
 
         return response

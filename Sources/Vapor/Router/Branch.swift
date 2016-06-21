@@ -27,7 +27,7 @@ internal final class Branch {
 
         *indicates a supported branch.
      */
-    private var handler: Responder?
+    private var handler: HTTPResponder?
 
     /**
         key or *
@@ -47,7 +47,7 @@ internal final class Branch {
 
         - returns: an initialized request Branch
      */
-    init(name: String, handler: Request.Handler? = nil) {
+    init(name: String, handler: HTTPRequest.Handler? = nil) {
         self.name = name
         self.handler = handler
     }
@@ -61,21 +61,20 @@ internal final class Branch {
 
         - returns: a request handler or nil if not supported
      */
-    func handle(parameters: [String: String], request: Request, comps: CompatibilityGenerator<String>) -> ([String: String], Responder)? {
+    func handle(request: HTTPRequest, comps: CompatibilityGenerator<String>) -> HTTPResponder? {
         guard let key = comps.next() else {
             if let handler = handler {
-                return (parameters, handler)
+                return handler
             } else {
                 return nil
             }
         }
 
         if let next = subBranches[key] {
-            return next.handle(parameters: parameters, request: request, comps: comps)
+            return next.handle(request: request, comps: comps)
         } else if let wildcard = subBranches["*"] {
-            var parameters = parameters
-            parameters[wildcard.name] = percentDecoded(key.data)?.string
-            return wildcard.handle(parameters: parameters, request: request, comps: comps)
+            request.parameters[wildcard.name] = percentDecoded(key.data)?.string
+            return wildcard.handle(request: request, comps: comps)
         } else {
             return nil
         }
@@ -91,7 +90,7 @@ internal final class Branch {
         - parameter generator: the generator that will be used to match the path components.  /users/messages/:id will return a generator that is 'users' <- 'messages' <- '*id'
         - parameter handler:   the handler to assign to the end path component
      */
-    func extendBranch(_ generator: CompatibilityGenerator<String>, handler: Responder) {
+    func extendBranch(_ generator: CompatibilityGenerator<String>, handler: HTTPResponder) {
         guard let key = generator.next() else {
             self.handler = handler
             return

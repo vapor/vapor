@@ -10,14 +10,14 @@ extension Route {
         public let leadingPath: String?
 
         /// The middleware to prefix to all requested routing
-        public let scopedMiddleware: [Middleware]
+        public let scopedMiddleware: [HTTPMiddleware]
     }
 }
 
 extension Route.Link: RouteBuilder {
     public func add(
-        middleware: [Middleware],
-        method: Request.Method,
+        middleware: [HTTPMiddleware],
+        method: Method,
         path: String,
         handler: Route.Handler
     ) {

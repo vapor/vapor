@@ -7,13 +7,13 @@ public struct Route {
     /**
         The responder type that is used when a route is matched
      */
-    public typealias Handler = (Request) throws -> ResponseRepresentable
+    public typealias Handler = (HTTPRequest) throws -> ResponseRepresentable
 
     // MARK: Attributes
 
-    let method: Request.Method
+    let method: Method
     let path: String
-    let responder: Responder
+    let responder: HTTPResponder
     let hostname: String
 
     /**
@@ -23,15 +23,15 @@ public struct Route {
         - parameter path: the path to use when deciding the route
         - parameter handler: the handler to route when the path is called
      */
-    init(host: String = "*", method: Request.Method, path: String, responder: Responder) {
+    init(host: String = "*", method: Method, path: String, responder: HTTPResponder) {
         self.hostname = host
         self.method = method
         self.path = path
         self.responder = responder
     }
 
-    init(host: String = "*", method: Request.Method = .get, path: String = "/", closure: Request.Handler.Closure) {
-        let responder = Request.Handler(closure: closure)
+    init(host: String = "*", method: Method = .get, path: String = "/", closure: HTTPRequest.Handler.Closure) {
+        let responder = HTTPRequest.Handler(closure)
         self.init(host: host, method: method, path: path, responder: responder)
     }
 }

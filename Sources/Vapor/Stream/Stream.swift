@@ -5,10 +5,11 @@ public protocol Stream: class {
     func close() throws
 
     func send(_ bytes: Bytes) throws
-    func send(_ bytes: Bytes, flushing: Bool) throws
     func flush() throws
 
     func receive(max: Int) throws -> Bytes
+
+    // Optional, performance
     func receive() throws -> Byte?
 }
 

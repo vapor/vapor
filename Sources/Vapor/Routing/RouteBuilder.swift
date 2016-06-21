@@ -1,10 +1,10 @@
 public protocol RouteBuilder {
     var leadingPath: String { get }
-    var scopedMiddleware: [Middleware] { get }
+    var scopedMiddleware: [HTTPMiddleware] { get }
 
     func add(
-        middleware: [Middleware],
-        method: Request.Method,
+        middleware: [HTTPMiddleware],
+        method: Method,
         path: String,
         handler: Route.Handler
     )
@@ -12,7 +12,7 @@ public protocol RouteBuilder {
 
 extension RouteBuilder {
     public func add(
-        _ method: Request.Method,
+        _ method: Method,
         path: String,
         handler: Route.Handler
     ) {
@@ -39,7 +39,7 @@ extension RouteBuilder {
         body(group: group)
     }
 
-    public func grouped(_ middlewares: Middleware...) -> Route.Link {
+    public func grouped(_ middlewares: HTTPMiddleware...) -> Route.Link {
         return Route.Link(
             parent: self,
             leadingPath: nil,
@@ -47,7 +47,7 @@ extension RouteBuilder {
         )
     }
 
-    public func grouped(_ middlewares: [Middleware]) -> Route.Link {
+    public func grouped(_ middlewares: [HTTPMiddleware]) -> Route.Link {
         return Route.Link(
             parent: self,
             leadingPath: nil,
@@ -55,16 +55,33 @@ extension RouteBuilder {
         )
     }
 
-    public func grouped(_ middlewares: Middleware..., _ body: @noescape (group: Route.Link) -> Void) {
+    public func grouped(_ middlewares: HTTPMiddleware..., _ body: @noescape (group: Route.Link) -> Void) {
         let groupObject = grouped(middlewares)
         body(group: groupObject)
     }
 
-    public func grouped(middleware middlewares: [Middleware], _ body: @noescape (group: Route.Link) -> Void) {
+    public func grouped(middleware middlewares: [HTTPMiddleware], _ body: @noescape (group: Route.Link) -> Void) {
         let groupObject = grouped(middlewares)
         body(group: groupObject)
     }
 }
+
+//public struct CombineMiddleware: Middleware {
+//    let combination: (respondTo: HTTPRequest, chainingTo: Responder) throws -> HTTPResponse
+//
+//    init(_ left: Middleware, _ right: Middleware) {
+//        combination = { request, responder in
+//            left.respond(to: request, chainingTo: right)
+//        }
+//    }
+//    public func respond(to request: HTTPRequest, chainingTo next: Responder) throws -> HTTPResponse {
+//        let response = combination(request)
+////        next.respond(to: 
+////            { request in
+////                return try self.respond(to: request, chainingTo: responder)
+////            }
+////    }
+//}
 
 extension Application: RouteBuilder {
     /**
@@ -79,20 +96,36 @@ extension Application: RouteBuilder {
     */
     public func add(
         middleware: [Middleware],
-        method: Request.Method,
+        method: Method,
         path: String,
         handler: Route.Handler
     ) {
         // Convert Route.Handler to Request.Handler
-        let wrapped: Request.Handler = Request.Handler { request in
+        let wrapped: HTTPResponder = HTTPRequest.Handler { request in
             return try handler(request).makeResponse()
         }
-        let responder: Responder = middleware.reduce(wrapped) { resp, nextMiddleware in
-            return nextMiddleware.chain(to: resp)
-        }
+        let responder = middleware.chain(to: wrapped)
         let route = Route(host: "*", method: method, path: path, responder: responder)
 
         routes.append(route)
         router.register(route)
+    }
+}
+
+extension HTTPMiddleware {
+    func chain(to responder: HTTPResponder) -> HTTPResponder {
+        return HTTPRequest.Handler { request in
+            return try self.respond(to: request, chainingTo: responder)
+        }
+    }
+}
+
+extension Collection where Iterator.Element == Middleware {
+    func chain(to responder: HTTPResponder) -> HTTPResponder {
+        return reversed().reduce(responder) { nextResponder, nextMiddleware in
+            return HTTPRequest.Handler { request in
+                return try nextMiddleware.respond(to: request, chainingTo: nextResponder)
+            }
+        }
     }
 }

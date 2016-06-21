@@ -46,7 +46,7 @@ class SessionTests: XCTestCase {
         XCTAssertEqual(key.key, "foo")
     }
 
-    func testIdentifierCreation() {
+    func testIdentifierCreation() throws {
         let app = Application()
 
         app.get("cookie") { request in
@@ -54,13 +54,9 @@ class SessionTests: XCTestCase {
             return "hi"
         }
 
-        var request = Request(method: .get, path: "cookie")
+        let request = try Request(method: .get, path: "cookie")
         request.headers["Cookie"] = "vapor-session=123"
-
-        guard let response = try? app.respond(to: request) else {
-            XCTFail("Could not get response")
-            return
-        }
+        let response = try app.respond(to: request)
 
         var sessionMiddleware: SessionMiddleware?
 

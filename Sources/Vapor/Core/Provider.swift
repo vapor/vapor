@@ -55,6 +55,13 @@ public protocol Provider {
         implementation of `nil`.
     */
     var console: ConsoleDriver? { get }
+
+
+    /**
+         An optional `HTTPClient` add-on used to make
+         outgoing web request operations
+     */
+    var client: HTTPClientProtocol? { get }
 }
 
 extension Provider {
@@ -75,6 +82,10 @@ extension Provider {
     }
 
     public var console: ConsoleDriver? {
+        return nil
+    }
+
+    public var client: HTTPClientProtocol? {
         return nil
     }
 }

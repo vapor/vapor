@@ -19,10 +19,10 @@ class ApplicationTests: XCTestCase {
         files have appropriate "Content-Type"
         headers returned.
     */
-    func testMediaType() {
+    func testMediaType() throws {
         let app = Application(workDir: workDir)
 
-        let request = Request(method: .get, path: "/styles/app.css")
+        let request = try Request(method: .get, uri: "/styles/app.css")
 
         guard let response = try? app.respond(to: request) else {
             XCTFail("App could not respond")
@@ -47,7 +47,7 @@ class ApplicationTests: XCTestCase {
     */
     func testProviders() {
         final class TestServer: ServerDriver {
-            init(host: String, port: Int, responder: Responder) throws {}
+            init(host: String, port: Int, responder: HTTPResponder) throws {}
             func start() throws {}
         }
 
@@ -80,12 +80,12 @@ class ApplicationTests: XCTestCase {
     */
     func testProvidersOverride() {
         final class TestServerAlpha: ServerDriver {
-            init(host: String, port: Int, responder: Responder) throws {}
+            init(host: String, port: Int, responder: HTTPResponder) throws {}
             func start() throws {}
         }
 
         final class TestServerBeta: ServerDriver {
-            init(host: String, port: Int, responder: Responder) throws {}
+            init(host: String, port: Int, responder: HTTPResponder) throws {}
             func start() throws {}
         }
 

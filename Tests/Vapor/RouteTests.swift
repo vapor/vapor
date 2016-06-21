@@ -6,7 +6,7 @@ public class TestMiddleware: Middleware {
 	public init() {
 	}
 
-	public func respond(to request: Request, chainingTo chain: Responder) throws -> Response {
+	public func respond(to request: Request, chainingTo chain: HTTPResponder) throws -> Response {
 		return try chain.respond(to: request)
 	}
 	
@@ -88,7 +88,7 @@ class RouteTests: XCTestCase {
 		assertRouteExists(at: "group/subgroup/1", method: .get, host: "*", inRoutes: app.routes)
 	}
 
-    func testRouteAbort() {
+    func testRouteAbort() throws {
         let app = Application()
 
         app.get("400") { request in
@@ -96,8 +96,8 @@ class RouteTests: XCTestCase {
             throw Abort.badRequest
         }
 
-        let request = Request(method: .get, path: "400")
-        guard var handler = app.router.route(request)?.handler else {
+        let request = try Request(method: .get, path: "400")
+        guard var handler = app.router.route(request) else {
             XCTFail("No handler found")
             return
         }
@@ -128,7 +128,7 @@ class RouteTests: XCTestCase {
  */
 
 internal func assertRouteExists(at path: String,
-                                method: Request.Method,
+                                method: Vapor.Method,
                                 host: String,
                                 inRoutes routes: [Route]) {
     var found = false
