@@ -1,9 +1,34 @@
 extension URIParser {
-    public static func parse<S: Sequence where S.Iterator.Element == Byte>(uri: S) throws -> URI {
+    public static func parse(uri: Bytes) throws -> URI {
         let parser = URIParser(bytes: uri) // TODO: Retain splice format
         return try parser.parse()
     }
 }
+
+extension URI {
+    public typealias Scheme = String
+    // TODO: Find RFC list of other defaults, implement and link source
+    static let defaultPorts: [Scheme: Int] = [
+        "http": 80,
+        "https": 443,
+        "ws": 80,
+        "wss": 443
+    ]
+
+    // The default port associated with the scheme
+    public var schemePort: Int? {
+        return scheme.flatMap { scheme in URI.defaultPorts[scheme] }
+    }
+
+    public init(_ str: String) throws {
+        self = try URIParser.parse(uri: str.utf8.array)
+        guard port == nil else { return }
+        // if no port, try scheme default if possible
+        port = schemePort
+    }
+    
+}
+// ************************************
 
 public final class URIParser: StaticDataBuffer {
 
@@ -12,7 +37,26 @@ public final class URIParser: StaticDataBuffer {
         case unsupportedURICharacter(Byte)
     }
 
-    public override init<S: Sequence where S.Iterator.Element == Byte>(bytes: S) {
+    // If we have authority, we should also have scheme?
+    let existingHost: Bytes?
+
+    /*
+     The most common form of Request-URI is that used to identify a
+     resource on an origin server or gateway. In this case the absolute
+     path of the URI MUST be transmitted (see section 3.2.1, abs_path) as
+     the Request-URI, and the network location of the URI (authority) MUST
+     be transmitted in a Host header field. For example, a client wishing
+     to retrieve the resource above directly from the origin server would
+     create a TCP connection to port 80 of the host "www.w3.org" and send
+     the lines:
+
+     GET /pub/WWW/TheProject.html HTTP/1.1
+     Host: www.w3.org
+     
+     If host exists, and scheme exists, use those
+     */
+    public init(bytes: Bytes, existingHost: String? = nil) {
+        self.existingHost = existingHost?.bytes
         super.init(bytes: bytes)
     }
 
@@ -132,6 +176,9 @@ public final class URIParser: StaticDataBuffer {
         scheme      = ALPHA *( ALPHA / DIGIT / "+" / "-" / "." )
     */
     private func parseScheme() throws -> [Byte] {
+        // MUST begin with letter
+        guard try next(matches: { $0.isLetter } ) else { return [] }
+
         let scheme = try collect(until: .colon, .forwardSlash)
         let colon = try checkLeadingBuffer(matches: .colon)
         guard colon else { return scheme }
@@ -153,6 +200,7 @@ public final class URIParser: StaticDataBuffer {
         authority   = [ userinfo "@" ] host [ ":" port ]
     */
     private func parseAuthority() throws -> [Byte]? {
+        if let existingHost = existingHost { return existingHost.array }
         guard try checkLeadingBuffer(matches: .forwardSlash, .forwardSlash) else { return nil }
         try discardNext(2) // discard '//'
         return try collect(until: .forwardSlash, .questionMark, .numberSign)

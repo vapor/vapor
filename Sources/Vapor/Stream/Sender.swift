@@ -23,12 +23,12 @@ class Sender: SendingStream {
     }
 
     func send(_ data: Data, timingOut deadline: Double) throws {
-        stream.timeout = deadline
+        try stream.setTimeout(deadline)
         try stream.send(data.bytes)
     }
 
     func flush(timingOut deadline: Double) throws {
-        stream.timeout = deadline
+        try stream.setTimeout(deadline)
         try stream.flush()
     }
     

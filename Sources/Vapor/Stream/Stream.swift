@@ -1,14 +1,20 @@
+public enum StreamError: ErrorProtocol {
+    case unsupported
+    case custom(String)
+}
+
 public protocol Stream: class {
-    var timeout: Double { get set }
+    func setTimeout(_ timeout: Double) throws
 
     var closed: Bool { get }
     func close() throws
 
     func send(_ bytes: Bytes) throws
-    func send(_ bytes: Bytes, flushing: Bool) throws
     func flush() throws
 
     func receive(max: Int) throws -> Bytes
+
+    // Optional, performance
     func receive() throws -> Byte?
 }
 

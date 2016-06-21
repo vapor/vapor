@@ -19,13 +19,9 @@ public final class StreamBuffer: Stream {
     private let stream: Stream
     private let size: Int
 
-    public var timeout: Double {
-        get {
-            return stream.timeout
-        }
-        set {
-            stream.timeout = newValue
-        }
+
+    public func setTimeout(_ timeout: Double) throws {
+        try stream.setTimeout(timeout)
     }
 
     private var receiveIterator: IndexingIterator<[Byte]>
@@ -37,8 +33,6 @@ public final class StreamBuffer: Stream {
 
         self.receiveIterator = Data().makeIterator()
         self.sendBuffer = []
-
-        timeout = 0
     }
 
     public func receive() throws -> Byte? {

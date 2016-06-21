@@ -4,7 +4,7 @@ public protocol RouteBuilder {
 
     func add(
         middleware: [Middleware],
-        method: Request.Method,
+        method: Method,
         path: String,
         handler: Route.Handler
     )
@@ -12,7 +12,7 @@ public protocol RouteBuilder {
 
 extension RouteBuilder {
     public func add(
-        _ method: Request.Method,
+        _ method: Method,
         path: String,
         handler: Route.Handler
     ) {
@@ -79,20 +79,36 @@ extension Application: RouteBuilder {
     */
     public func add(
         middleware: [Middleware],
-        method: Request.Method,
+        method: Method,
         path: String,
         handler: Route.Handler
     ) {
         // Convert Route.Handler to Request.Handler
-        let wrapped: Request.Handler = Request.Handler { request in
+        let wrapped: Responder = Request.Handler { request in
             return try handler(request).makeResponse()
         }
-        let responder: Responder = middleware.reduce(wrapped) { resp, nextMiddleware in
-            return nextMiddleware.chain(to: resp)
-        }
+        let responder = middleware.chain(to: wrapped)
         let route = Route(host: "*", method: method, path: path, responder: responder)
 
         routes.append(route)
         router.register(route)
+    }
+}
+
+extension Middleware {
+    func chain(to responder: Responder) -> Responder {
+        return Request.Handler { request in
+            return try self.respond(to: request, chainingTo: responder)
+        }
+    }
+}
+
+extension Collection where Iterator.Element == Middleware {
+    func chain(to responder: Responder) -> Responder {
+        return reversed().reduce(responder) { nextResponder, nextMiddleware in
+            return Request.Handler { request in
+                return try nextMiddleware.respond(to: request, chainingTo: nextResponder)
+            }
+        }
     }
 }

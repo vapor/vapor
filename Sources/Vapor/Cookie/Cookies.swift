@@ -69,10 +69,10 @@ extension Cookies: Sequence {
 // MARK: Parsing
 
 extension Cookies {
-    init(_ data: Data) {
+    init(_ cookieString: String) {
         var cookies: Cookies = []
 
-        let tokens = data.split(separator: .semicolon)
+        let tokens = cookieString.utf8.split(separator: .semicolon)
 
         for token in tokens {
             let cookieTokens = token.split(separator: .equals, maxSplits: 1)
@@ -94,15 +94,12 @@ extension Cookies {
 // MARK: Serialization
 
 extension Cookies {
-    func serialize() -> Data {
-        let cookies = self.map { cookie in
-            return "\(cookie.name)=\(cookie.value)"
-        }
-
-        if cookies.count >= 1 {
-            return cookies.joined(separator: ";").data
-        }
-
-        return []
+    func serialize() -> String? {
+        guard !self.cookies.isEmpty else { return nil }
+        return self
+            .map { cookie in
+                return "\(cookie.name)=\(cookie.value)"
+            }
+            .joined(separator: ";")
     }
 }
