@@ -30,16 +30,15 @@ extension TCPInternetSocket: Stream {
 }
 
 public class TCPProgramStream: ProgramStream {
+    let scheme: String
+    let host: String
+    let port: Int
     public let stream: TCPInternetSocket
 
     public required init(scheme: String, host: String, port: Int) throws {
-        if scheme == "https" || scheme == "wss" {
-            throw ProgramStreamError.unsupportedScheme
-        }
-
-        print(host)
-        print(port)
-
+        self.scheme = scheme
+        self.host = host
+        self.port = port
         let address = InternetAddress(hostname: host, port: Port(port))
         stream = try TCPInternetSocket(address: address)
     }
@@ -47,6 +46,15 @@ public class TCPProgramStream: ProgramStream {
 
 public final class TCPClientStream: TCPProgramStream, ClientStream  {
     public func connect() throws -> Stream {
+        if scheme == "wss" || scheme == "https" {
+            #if !os(Linux)
+                Log.warning("Using Foundation stream for now. This is not supported on linux ... visit https://github.com/qutheory/vapor-ssl for install instructions")
+                let foundation = try FoundationStream(scheme: scheme, host: host, port: port)
+                return try foundation.connect()
+            #else
+                Log.warning("TCP CLIENT DOES NOT SUPPORT SSL CONNECTIONS ... visit https://github.com/qutheory/vapor-ssl for install")
+            #endif
+        }
         try stream.connect()
         return stream
     }
