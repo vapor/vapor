@@ -47,7 +47,7 @@ internal final class Branch {
 
         - returns: an initialized request Branch
      */
-    init(name: String, handler: HTTPRequest.Handler? = nil) {
+    init(name: String, handler: Request.Handler? = nil) {
         self.name = name
         self.handler = handler
     }

@@ -144,7 +144,7 @@ extension Application {
     public final func add<ActionController: ApplicationInitializable>(
         _ method: Method,
         path: String,
-        action: (ActionController) -> (HTTPRequest) throws -> ResponseRepresentable) {
+        action: (ActionController) -> (Request) throws -> ResponseRepresentable) {
         add(method, path: path, action: action) {
             ActionController(application: self)
         }
@@ -166,7 +166,7 @@ extension Application {
     public final func add<ActionController: DefaultInitializable>(
         _ method: Method,
         path: String,
-        action: (ActionController) -> (HTTPRequest) throws -> ResponseRepresentable) {
+        action: (ActionController) -> (Request) throws -> ResponseRepresentable) {
         add(method, path: path, action: action) {
             ActionController()
         }
@@ -189,7 +189,7 @@ extension Application {
     public final func add<ActionController>(
         _ method: Method,
         path: String,
-        action: (ActionController) -> (HTTPRequest) throws -> ResponseRepresentable,
+        action: (ActionController) -> (Request) throws -> ResponseRepresentable,
         makeControllerWith factory: () throws -> ActionController) {
         add(method, path: path) { request in
             let controller = try factory()

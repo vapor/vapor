@@ -66,23 +66,6 @@ extension RouteBuilder {
     }
 }
 
-//public struct CombineMiddleware: Middleware {
-//    let combination: (respondTo: HTTPRequest, chainingTo: Responder) throws -> HTTPResponse
-//
-//    init(_ left: Middleware, _ right: Middleware) {
-//        combination = { request, responder in
-//            left.respond(to: request, chainingTo: right)
-//        }
-//    }
-//    public func respond(to request: HTTPRequest, chainingTo next: Responder) throws -> HTTPResponse {
-//        let response = combination(request)
-////        next.respond(to: 
-////            { request in
-////                return try self.respond(to: request, chainingTo: responder)
-////            }
-////    }
-//}
-
 extension Application: RouteBuilder {
     /**
         Adds a route handler for an HTTP request using a given HTTP verb at a given
@@ -114,7 +97,7 @@ extension Application: RouteBuilder {
 
 extension Middleware {
     func chain(to responder: Responder) -> Responder {
-        return HTTPRequest.Handler { request in
+        return Request.Handler { request in
             return try self.respond(to: request, chainingTo: responder)
         }
     }
