@@ -2,8 +2,6 @@ import S4
 
 // So common we simplify it
 
-public typealias Response = HTTPResponse
-
 public final class HTTPResponse: HTTPMessage {
     public let version: Version
     public let status: Status

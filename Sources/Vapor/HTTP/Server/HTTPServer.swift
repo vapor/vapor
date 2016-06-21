@@ -8,19 +8,8 @@ import Strand
 import Socks
 import SocksCore
 
-public protocol Responder {
-    func respond(to request: Request) throws -> Response
-}
-
 public protocol Program {
     init(host: String, port: Int, securityLayer: SecurityLayer) throws
-}
-
-
-public enum Servers {
-    case plaintext(Server)
-    case secure(Server)
-    case both(plaintext: Server)
 }
 
 public protocol Server: Program {
