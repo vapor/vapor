@@ -25,7 +25,7 @@ public protocol Provider {
         they are not initialized until the 
         application starts.
     */
-    var server: ServerDriver.Type? { get }
+    var server: Server.Type? { get }
 
     /**
         An optional `RouterDriver` to provide 

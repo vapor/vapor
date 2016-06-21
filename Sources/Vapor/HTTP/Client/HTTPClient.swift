@@ -18,7 +18,7 @@ public final class HTTPClient<Stream: ClientStream>: HTTPClientProtocol {
         var uri = try URI(endpoint)
         uri.append(query: query)
 
-        // TODO: Is it worth exposing Version? We don't support alternative serialization/parsing
+        // TODO: Is it worth exposing Version? We don't sfupport alternative serialization/parsing
         let version = Version(major: 1, minor: 1)
         let request = HTTPRequest(method: method, uri: uri, version: version, headers: headers, body: body)
         let connection = try makeConnection(to: uri)
