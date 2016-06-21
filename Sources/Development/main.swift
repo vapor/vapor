@@ -9,7 +9,7 @@ var workDir: String {
 
 let config = Config(seed: JSON.object(["port": "8080"]), workingDirectory: workDir)
 let app = Application(workDir: workDir, config: config)
-let 😀 = HTTPResponse(status: .ok)
+let 😀 = Response(status: .ok)
 
 //MARK: Basic
 
@@ -24,12 +24,16 @@ app.get("ping") { _ in
 app.get("spotify-artists") { req in
     let name = req.data["name"].string ?? "beyonce"
     let spotifyResponse = try app.client("https://api.spotify.com").get("/v1/search", query: ["type": "artist", "q": name])
+    
     guard
         let names = spotifyResponse.data["artists", "items", "name"]
             .array?
             .flatMap({ $0.string })
             .map({ JSON($0) })
-        else { return Response(error: "unable to get names") }
+    else {
+        throw Abort.custom(status: .badRequest, message: "Could not parse response")
+    }
+
     return JSON.array(names)
 }
 
@@ -39,7 +43,7 @@ app.get("pokemon") { req in
     let pokemonResponse = try app.client("http://pokeapi.co").get("/api/v2/pokemon", query: ["limit": limit, "offset": offset])
 
     guard let names = pokemonResponse.data["results", "name"].array?.flatMap({ $0.string }) else {
-        return HTTPResponse(error: "didn't parse json correctly")
+        throw Abort.custom(status: .badRequest, message: "Didn't parse JSON correctly")
     }
 
     return names.joined(separator: "\n")
@@ -142,31 +146,21 @@ app.get("json") { request in
 app.post("json") { request in
     //parse a key inside the received json
     guard let count = request.data["unicorns"].int else {
-        return HTTPResponse(error: "No unicorn count provided")
+        throw Abort.custom(status: .badRequest, message: "No unicorn count provided")
     }
     return "Received \(count) unicorns"
 }
 
 app.post("form") { request in
     guard let name = request.data["name"].string else {
-        return HTTPResponse(error: "No name provided")
+        throw Abort.custom(status: .badRequest, message: "No name provided")
     }
 
     return "Hello \(name)"
 }
 
 app.get("redirect") { request in
-    return "// TODO: "
-//    return HTTPResponse(redirect: "http://qutheory.io:8001")
-}
-
-app.post("json2") { request in
-    //parse a key inside the received json
-    guard let count = request.data["unicorns"].int else {
-        return HTTPResponse(error: "No unicorn count provided")
-    }
-    return "// TODO: "
-//    return HTTPResponse(status: .created, json: JSON(["message":"Received \(count) unicorns"]))
+    return Response(redirect: "http://qutheory.io:8001")
 }
 
 app.grouped("abort") { group in
@@ -281,7 +275,7 @@ class Employee {
     var name: Valid<Name>
     var email: Valid<Email>
 
-    init(request: HTTPRequest) throws {
+    init(request: Request) throws {
         name = try request.data["name"].validated()
         email = try request.data["email"].validated()
     }
@@ -372,7 +366,7 @@ app.post("multifile") { request in
         headers["Content-Type"] = mediaType
     }
 
-    return HTTPResponse(status: .ok, headers: headers, body: .data(file.data.bytes))
+    return Response(status: .ok, headers: headers, body: .data(file.data.bytes))
 }
 
 app.get("options") { _ in
@@ -393,7 +387,7 @@ app.get("options") { _ in
     response += "<button>Submit</button>"
     response += "</form>"
 
-    return HTTPResponse(status: .ok, body: .data(response.data.bytes))
+    return Response(status: .ok, body: .data(response.data.bytes))
 }
 
 app.post("options") { request in

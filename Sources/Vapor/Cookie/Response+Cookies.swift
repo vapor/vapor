@@ -1,4 +1,4 @@
-extension HTTPResponse {
+extension Response {
     public var cookies: Cookies {
         get {
             if let cookies = storage["Set-Cookie"] as? Cookies {

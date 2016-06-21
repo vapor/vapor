@@ -1,3 +1,6 @@
+public enum HTTPMessageError: ErrorProtocol {
+    case invalidStartLine
+}
 
 public class HTTPMessage {
     public let startLine: String
@@ -10,9 +13,11 @@ public class HTTPMessage {
     public var storage: [String: Any] = [:]
     public private(set) final lazy var data: Content = Content(self)
 
-    public convenience required init(startLineComponents: (BytesSlice, BytesSlice, BytesSlice),
-                                     headers: Headers,
-                                     body: HTTPBody) throws {
+    public convenience required init(
+        startLineComponents: (BytesSlice, BytesSlice, BytesSlice),
+        headers: Headers,
+        body: HTTPBody
+    ) throws {
         let startLine = startLineComponents.0.string
             + " "
             + startLineComponents.1.string

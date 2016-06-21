@@ -1,4 +1,4 @@
-extension HTTPResponse {
+extension Response {
     /**
         Convenience Initializer
 

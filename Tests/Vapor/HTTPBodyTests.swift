@@ -13,7 +13,7 @@ class HTTPBodyTests: XCTestCase {
 
             let stream = TestStream()
             try stream.send(expected)
-            let body = try HTTPParser<HTTPRequest>(stream: stream).parseBody(with: ["content-length": expected.count.description])
+            let body = try HTTPParser<Request>(stream: stream).parseBody(with: ["content-length": expected.count.description])
 
             switch body {
             case .data(let data):
@@ -36,7 +36,7 @@ class HTTPBodyTests: XCTestCase {
             try chunkStream.send("hello worl")
             try chunkStream.send("d!")
 
-            let body = try HTTPParser<HTTPRequest>(stream: stream).parseBody(with: ["transfer-encoding": "chunked"])
+            let body = try HTTPParser<Request>(stream: stream).parseBody(with: ["transfer-encoding": "chunked"])
 
             switch body {
             case .data(let data):

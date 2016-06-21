@@ -181,7 +181,7 @@ public class Application {
         ]
 
         self.router = routerProvided ?? BranchRouter()
-        self.serverType = serverProvided ?? HTTPServer<TCPServerStream, HTTPParser<HTTPRequest>, HTTPSerializer<Response>>.self
+        self.serverType = serverProvided ?? HTTPServer<TCPServerStream, HTTPParser<Request>, HTTPSerializer<Response>>.self
         self.clientType = clientProvided ?? HTTPClient<TCPClientStream>.self
 
         routes = []
@@ -328,7 +328,7 @@ extension Application {
 }
 
 extension Application {
-    func checkFileSystem(for request: HTTPRequest) -> HTTPRequest.Handler? {
+    func checkFileSystem(for request: Request) -> Request.Handler? {
         // Check in file system
         let filePath = self.workDir + "Public" + (request.uri.path ?? "")
 
@@ -338,7 +338,7 @@ extension Application {
 
         // File exists
         if let fileBody = try? FileManager.readBytesFromFile(filePath) {
-            return HTTPRequest.Handler { _ in
+            return Request.Handler { _ in
                 var headers: Headers = [:]
 
                 if
@@ -433,7 +433,7 @@ extension Application: Responder {
             if config.environment == .production {
                 error = "Something went wrong"
             }
-            response = Response(error: error)
+            response = Response(status: .internalServerError, body: error.bytes)
         }
 
         response.headers["Date"] = RFC1123.now()

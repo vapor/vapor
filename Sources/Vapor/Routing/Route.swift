@@ -31,7 +31,7 @@ public struct Route {
     }
 
     init(host: String = "*", method: Method = .get, path: String = "/", closure: Request.Handler.Closure) {
-        let responder = HTTPRequest.Handler(closure)
+        let responder = Request.Handler(closure)
         self.init(host: host, method: method, path: path, responder: responder)
     }
 }

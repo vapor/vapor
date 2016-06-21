@@ -98,7 +98,7 @@ extension Signature {
     }
 
     var handlerInput: String {
-        var items = ["HTTPRequest"]
+        var items = ["Request"]
 
         if variant == .socket {
             items.append("WebSocket")
