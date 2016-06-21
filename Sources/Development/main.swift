@@ -47,7 +47,11 @@ app.get("pokemon") { req in
 
 app.get("pokemon-multi") { req in
     let pokemonClient = try app.client("http://pokeapi.co")
+    let responder: (ChunkStream) throws -> Void = { stream in
+        for i in 0 ..< 2 {
+            let response = try pokemonClient.get("/api/v2/pokemon", query: ["limit": "\(20)", "offset": "\(i)"])
 
+<<<<<<< HEAD
     var names: [String] = []
 
     for i in 0 ..< 2 {
@@ -55,10 +59,17 @@ app.get("pokemon-multi") { req in
 
         if let n = response.data["results", "name"].array?.flatMap({ $0.string }) {
             names += n
+=======
+            if let n = response.data["results", "name"].array?.flatMap({ $0.string }) {
+                try stream.send(n.joined(separator: "\n"))
+            }
+>>>>>>> f65a73558c04714daf6c8975b98185850609149b
         }
+
+        try stream.close()
     }
 
-    return names.joined(separator: "\n")
+    return Response(chunked: responder)
 }
 
 app.get("test") { request in
