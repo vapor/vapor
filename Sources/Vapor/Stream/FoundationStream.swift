@@ -101,14 +101,4 @@
             return setProperty(NSStreamSocketSecurityLevelNegotiatedSSL, forKey: NSStreamSocketSecurityLevelKey)
         }
     }
-
-    public final class SecureFoundationStream: FoundationStream {
-        public override func connect() throws -> Stream {
-            Log.warning("Using Secure Foundation Stream -- This is NOT supported on linux. Make sure to visit https://github.com/qutheory/vapor-ssl")
-            _ = input.upgradeSSL()
-            _ = output.upgradeSSL()
-            return try super.connect()
-        }
-    }
-
 #endif

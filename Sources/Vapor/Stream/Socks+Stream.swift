@@ -49,6 +49,26 @@ public final class TCPClientStream: TCPAddressStream, ClientStream  {
     }
 }
 
+public final class _TCPClientStream: AddressStream, ClientStream  {
+    public let scheme: String
+    public let host: String
+    public let port: Int
+    private let address: InternetAddress
+//    public let client: TCPClient
+
+    public required init(scheme: String, host: String, port: Int) throws {
+        self.scheme = scheme
+        self.host = host
+        self.port = port
+
+        self.address = InternetAddress(hostname: host, port: Port(port))
+    }
+    public func connect() throws -> Stream {
+        return try TCPClient(address: address)
+    }
+}
+
+
 public final class TCPServerStream: TCPAddressStream, ServerStream {
     public required init(scheme: String, host: String, port: Int) throws {
         try super.init(scheme: scheme, host: host, port: port)
@@ -68,3 +88,47 @@ public final class TCPServerStream: TCPAddressStream, ServerStream {
         return try stream.accept()
     }
 }
+
+extension Socks.TCPClient: Stream {
+    public var closed: Bool {
+        return socket.closed
+    }
+
+    public func setTimeout(_ timeout: Double) throws {
+        //
+    }
+
+    public var timeout: Double {
+        get {
+            // TODO: Implement a way to view the timeout
+            return 0
+        }
+        set {
+            socket.sendingTimeout = timeval(seconds: newValue)
+        }
+    }
+
+    public func send(_ bytes: Bytes) throws {
+        try send(bytes: bytes)
+    }
+
+    public func flush() throws {
+        //
+    }
+
+    public func receive(max: Int) throws -> Bytes {
+        return try receive(maxBytes: max)
+    }
+}
+//
+//public final class _TCPClientStream {
+
+//}
+//extension TCPClient: ClientStream {
+//    public static func makeConnection(host: String, port: Int) throws -> Stream {
+//        let port = UInt16(port)
+//        let address = InternetAddress(hostname: host, port: port)
+//        return try TCPClient(address: address)
+//    }
+//}
+

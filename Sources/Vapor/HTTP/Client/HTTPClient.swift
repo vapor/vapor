@@ -41,6 +41,6 @@ public final class HTTPClient<ClientStreamType: ClientStream>: Client {
         let scheme = uri.scheme ?? "https" // web clients generally default to secure connection outgoing
         let client = try ClientStreamType(scheme: scheme, host: host, port: port)
         let stream = try client.connect()
-        return StreamBuffer(stream)
+        return stream //StreamBuffer(stream)
     }
 }
