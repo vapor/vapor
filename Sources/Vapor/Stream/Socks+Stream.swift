@@ -53,7 +53,7 @@ public final class TCPClientStream: TCPAddressStream, ClientStream  {
                 Log.warning("Using Secure Foundation Stream -- This is NOT supported on linux. Make sure to visit https://github.com/qutheory/vapor-ssl")
                 return try FoundationStream(scheme: scheme, host: host, port: port).connect()
             #else
-                Log.error("Client doesn't support ssl")
+                Log.error("Client doesn't support ssl visit https://github.com/qutheory/vapor-ssl")
                 throw ClientsError.unsupportedScheme
             #endif
         } else {
@@ -68,7 +68,6 @@ public final class _TCPClientStream: AddressStream, ClientStream  {
     public let host: String
     public let port: Int
     private let address: InternetAddress
-//    public let client: TCPClient
 
     public required init(scheme: String, host: String, port: Int) throws {
         self.scheme = scheme
@@ -134,15 +133,3 @@ extension Socks.TCPClient: Stream {
         return try receive(maxBytes: max)
     }
 }
-//
-//public final class _TCPClientStream {
-
-//}
-//extension TCPClient: ClientStream {
-//    public static func makeConnection(host: String, port: Int) throws -> Stream {
-//        let port = UInt16(port)
-//        let address = InternetAddress(hostname: host, port: port)
-//        return try TCPClient(address: address)
-//    }
-//}
-
