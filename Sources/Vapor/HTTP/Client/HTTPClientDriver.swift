@@ -11,7 +11,7 @@ extension Client {
         let path = path.finish("/")
         var uri = try URI(path)
         uri.append(query: query)
-        let request = Request(method: method, uri: uri)
+        let request = Request(method: method, uri: uri, headers: headers, body: body)
         return try respond(to: request)
     }
     
