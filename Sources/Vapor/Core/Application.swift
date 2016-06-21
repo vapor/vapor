@@ -97,7 +97,7 @@ public class Application {
         TODO: Expose to end users to customize driver
         Make outgoing requests
     */
-    public let client: HTTPClientProtocol
+    public let client: Client
 
 
     /**
@@ -124,7 +124,7 @@ public class Application {
         hash: HashDriver? = nil,
         console: ConsoleDriver? = nil,
         server: Server? = nil,
-        client: HTTPClientProtocol? = nil,
+        client: Client? = nil,
         router: RouterDriver? = nil,
         session: SessionDriver? = nil,
         providers: [Provider] = [],
@@ -135,7 +135,7 @@ public class Application {
         var sessionProvided: SessionDriver? = session
         var hashProvided: HashDriver? = hash
         var consoleProvided: ConsoleDriver? = console
-        var clientProvided: HTTPClientProtocol? = client
+        var clientProvided: Client? = client
 
         for provider in providers {
             // TODO: Warn if multiple providers attempt to add server
@@ -182,7 +182,7 @@ public class Application {
 
         self.router = routerProvided ?? BranchRouter()
         self.server = serverProvided ?? HTTPServer<TCPServerStream, HTTPParser<HTTPRequest>, HTTPSerializer<HTTPResponse>>()
-        self.client = clientProvided ?? HTTPClient<TCPClientStream, SecureFoundationStream>()
+        self.client = clientProvided ?? HTTPClient<TCPClientStream>()// Clients.both(plaintext: HTTPClient<TCPClientStream>(), secure: HTTPClient<SecureFoundationStream>())
 
         routes = []
 

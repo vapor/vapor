@@ -12,7 +12,18 @@ public protocol Responder {
     func respond(to request: Request) throws -> Response
 }
 
-public protocol Server {
+public protocol Program {
+
+}
+
+
+public enum Servers {
+    case plaintext(Server)
+    case secure(Server)
+    case both(plaintext: Server)
+}
+
+public protocol Server: Program {
     func start(host: String, port: Int, responder: Responder, errors: ServerErrorHandler) throws
 }
 

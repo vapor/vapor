@@ -37,10 +37,10 @@ app.get("pokemon") { req in
     let limit = req.data["limit"].int ?? 20
     let offset = req.data["offset"].int ?? 0
     let pokemonResponse = try app.client.get("http://pokeapi.co/api/v2/pokemon", query: ["limit": "\(limit)", "offset": "\(offset)"])
+    print("Poke response: \(pokemonResponse.body.bytes?.string)")
     guard let names = pokemonResponse.data["results", "name"].array?.flatMap({ $0.string }) else {
         return HTTPResponse(error: "didn't parse json correctly")
     }
-
     return names.joined(separator: "\n")
 }
 

@@ -6,16 +6,17 @@ public enum HTTPClientError: ErrorProtocol {
     case missingPort
 }
 
-public final class HTTPClient<ClientStreamType: ClientStream, SecureStreamType: ClientStream>: HTTPClientProtocol {
+public final class HTTPClient<ClientStreamType: ClientStream>: Client {
     public init() {}
     
-    public func request(_ method: Method,
-                        url: String,
-                        headers: Headers = [:],
-                        query: [String: String] = [:],
-                        body: HTTPBody = .data([])) throws -> HTTPResponse {
-        let endpoint = url.finish("/")
-        var uri = try URI(endpoint)
+    public func request(
+        _ method: Method,
+        uri: URI,
+        headers: Headers = [:],
+        query: [String: String] = [:],
+        body: HTTPBody = .data([])) throws -> HTTPResponse
+    {
+        var uri = uri
         uri.append(query: query)
 
         // TODO: Is it worth exposing Version? We don't support alternative serialization/parsing
@@ -37,19 +38,8 @@ public final class HTTPClient<ClientStreamType: ClientStream, SecureStreamType: 
     private func makeConnection(to uri: URI) throws -> Vapor.Stream {
         guard let host = uri.host else { throw HTTPClientError.missingHost }
         guard let port = uri.port ?? uri.schemePort else { throw HTTPClientError.missingPort }
-
-        let https = uri.scheme == "https"
-        let wss = uri.scheme == "wss"
-        let secure = wss || https
-        
-        if secure {
-            let client = try SecureStreamType(host: host, port: port)
-            let stream = try client.connect()
-            return StreamBuffer(stream)
-        } else  {
-            let client = try ClientStreamType(host: host, port: port)
-            let stream = try client.connect()
-            return StreamBuffer(stream)
-        }
+        let client = try ClientStreamType(host: host, port: port)
+        let stream = try client.connect()
+        return StreamBuffer(stream)
     }
 }
