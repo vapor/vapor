@@ -50,9 +50,7 @@ public final class Event<T> {
         Adds a subscriber for this event with a handler to fire on post.
 
         - parameter handler: the closure to fire when event data is posted
-
         - Warning: subscription returned from this function must be retained to receive events
-
         - returns: a subscription. As long as it's retained, the passed handler will fire
      */
     public func subscribe(_ handler: Handler) -> Subscription {
