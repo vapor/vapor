@@ -47,8 +47,8 @@ class ApplicationTests: XCTestCase {
     */
     func testProviders() {
         final class TestServer: Server {
-            init() {}
-            func start(host: String, port: Int, responder: Responder, errors: ServerErrorHandler) throws {}
+            init(host: String, port: Int, securityLayer: SecurityLayer) {}
+            func start(responder: Responder, errors: ServerErrorHandler) throws {}
         }
 
         class TestProvider: Provider {
@@ -58,10 +58,10 @@ class ApplicationTests: XCTestCase {
                 bootRan = true
             }
 
-            var server: Server?
+            var server: Server.Type?
 
             init() {
-                server = TestServer()
+                server = TestServer.self
             }
         }
 
@@ -70,7 +70,7 @@ class ApplicationTests: XCTestCase {
             provider
         ])
 
-        XCTAssert(app.server.dynamicType == TestServer.self, "Provider did not provide TestServer")
+        XCTAssert(app.serverType == TestServer.self, "Provider did not provide TestServer")
         XCTAssert(provider.bootRan == true, "Application did not boot provider")
     }
 
@@ -80,32 +80,32 @@ class ApplicationTests: XCTestCase {
     */
     func testProvidersOverride() {
         final class TestServerAlpha: Server {
-            init() {}
-            func start(host: String, port: Int, responder: Responder, errors: ServerErrorHandler) throws {}
+            init(host: String, port: Int, securityLayer: SecurityLayer) {}
+            func start(responder: Responder, errors: ServerErrorHandler) throws {}
         }
 
         final class TestServerBeta: Server {
-            init() {}
-            func start(host: String, port: Int, responder: Responder, errors: ServerErrorHandler) throws {}
+            init(host: String, port: Int, securityLayer: SecurityLayer) {}
+            func start(responder: Responder, errors: ServerErrorHandler) throws {}
         }
 
         class TestProvider: Provider {
             func boot(with application: Application) {}
 
-            var server: Server?
+            var server: Server.Type?
 
             init() {
-                server = TestServerAlpha()
+                server = TestServerAlpha.self
             }
         }
 
         let provider = TestProvider()
 
-        let app = Application(server: TestServerBeta(), providers: [
+        let app = Application(serverType: TestServerBeta.self, providers: [
             provider
         ])
 
-        XCTAssert(app.server.dynamicType == TestServerAlpha.self, "Provider did not override with TestServerAlpha")
+        XCTAssert(app.serverType == TestServerAlpha.self, "Provider did not override with TestServerAlpha")
     }
 
  }
