@@ -5,7 +5,7 @@ extension HTTPBody {
     }
 }
 
-extension JSON: HTTPBodyConvertible {
+extension JSON: HTTPBodyRepresentable {
     public func makeBody() -> HTTPBody {
         return HTTPBody(self)
     }

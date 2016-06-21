@@ -75,7 +75,7 @@ extension HTTPResponse {
      Creates a redirect response with
      the 301 Status an `Location` header.
      */
-    public convenience init(version: Version = Version(major: 1, minor: 1), status: Status = .ok, headers: Headers = [:], body: HTTPBodyConvertible) {
+    public convenience init(version: Version = Version(major: 1, minor: 1), status: Status = .ok, headers: Headers = [:], body: HTTPBodyRepresentable) {
         let body = body.makeBody()
         self.init(version: version, status: status, headers: headers, body: body)
     }
