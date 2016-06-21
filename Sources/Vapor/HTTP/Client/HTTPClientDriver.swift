@@ -3,12 +3,10 @@ public protocol Client: Program {
 }
 
 extension Client {
-
     public func request(_ method: Method, url: String, headers: Headers, query: [String: String], body: HTTPBody) throws -> HTTPResponse {
         let uri = try URIParser.parse(uri: url.bytes)
         return try request(method, uri: uri, headers: headers, query: query, body: body)
     }
-
     public func get(_ url: String, headers: Headers = [:], query: [String: String] = [:], body: HTTPBody = []) throws -> HTTPResponse {
         return try request(.get, url: url, headers: headers, query: query, body: body)
     }
