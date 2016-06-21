@@ -52,6 +52,7 @@ public final class TCPClientStream: TCPProgramStream, ClientStream  {
                 return try foundation.connect()
             #else
                 Log.warning("TCP CLIENT DOES NOT SUPPORT SSL CONNECTIONS ... visit https://github.com/qutheory/vapor-ssl for install")
+                throw ProgramStreamError.unsupportedSecurityLayer
             #endif
 
         }
