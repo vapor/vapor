@@ -14,7 +14,6 @@ extension TCPInternetSocket: Stream {
     }
 
     public func send(_ bytes: Bytes) throws {
-        print(bytes.string, terminator: "")
         try send(data: bytes)
     }
 

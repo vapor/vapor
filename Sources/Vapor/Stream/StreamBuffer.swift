@@ -82,8 +82,4 @@ public final class StreamBuffer: Stream {
         }
         try stream.send(bytes)
     }
-
-    public func TEMPORARY_REMOVE_LOG_BUFFER() {
-        print("BUFFER:\n\n**\(sendBuffer.string)**")
-    }
 }
