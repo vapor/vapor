@@ -1,3 +1,3 @@
-public protocol StreamDriver {
-    static func listen(host: String, port: Int, handler: (Stream) throws -> ()) throws
+public protocol ServerStream: AddressStream {
+    func accept() throws -> Stream
 }

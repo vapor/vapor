@@ -76,7 +76,8 @@
         }
     }
 
-    extension FoundationStream: ClientStream {
+    /*
+ extension FoundationStream: ClientStream {
         public static func makeConnection(host: String, port: Int, secure: Bool) throws -> Stream {
             let stream = try FoundationStream(host: host, port: port)
             if secure {
@@ -85,7 +86,9 @@
             }
             return stream
         }
-    }
+    }*/
+
+    // TODO: Fix foundation stream
     
     extension NSStream {
         func upgradeSSL() -> Bool {

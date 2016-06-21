@@ -3,6 +3,6 @@
     different paths to the application
 */
 public protocol RouterDriver {
-    func route(_ request: HTTPRequest) -> HTTPResponder?
+    func route(_ request: Request) -> Responder?
     func register(_ route: Route)
 }
