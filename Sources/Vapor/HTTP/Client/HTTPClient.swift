@@ -30,7 +30,7 @@ public final class HTTPClient<ClientStreamType: ClientStream>: Client {
         let serializer = HTTPSerializer<Request>(stream: buffer)
         try serializer.serialize(request)
 
-        let parser = HTTPParser<HTTPResponse>(stream: buffer)
+        let parser = HTTPParser<Response>(stream: buffer)
         let response = try parser.parse()
 
         try buffer.flush()

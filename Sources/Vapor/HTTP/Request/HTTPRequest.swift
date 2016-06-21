@@ -2,7 +2,7 @@ public final class HTTPRequest: HTTPMessage {
     // TODO: internal set for head request in application, serializer should change it, avoid exposing to end user
     public internal(set) var method: Method
 
-    public let uri: URI
+    public var uri: URI
     public let version: Version
 
     public internal(set) var parameters: [String: String] = [:]
@@ -55,23 +55,23 @@ public final class HTTPRequest: HTTPMessage {
 
     public convenience required init(startLineComponents: (BytesSlice, BytesSlice, BytesSlice), headers: Headers, body: HTTPBody) throws {
         /**
-         https://tools.ietf.org/html/rfc2616#section-5.1
+            https://tools.ietf.org/html/rfc2616#section-5.1
 
-         The Request-Line begins with a method token, followed by the
-         Request-URI and the protocol version, and ending with CRLF. The
-         elements are separated by SP characters. No CR or LF is allowed
-         except in the final CRLF sequence.
+            The Request-Line begins with a method token, followed by the
+            Request-URI and the protocol version, and ending with CRLF. The
+            elements are separated by SP characters. No CR or LF is allowed
+            except in the final CRLF sequence.
 
-         Request-Line   = Method SP Request-URI SP HTTP-Version CRLF
+            Request-Line   = Method SP Request-URI SP HTTP-Version CRLF
 
-         *** [WARNING] ***
-         Recipients of an invalid request-line SHOULD respond with either a
-         400 (Bad Request) error or a 301 (Moved Permanently) redirect with
-         the request-target properly encoded.  A recipient SHOULD NOT attempt
-         to autocorrect and then process the request without a redirect, since
-         the invalid request-line might be deliberately crafted to bypass
-         security filters along the request chain.
-         */
+            *** [WARNING] ***
+            Recipients of an invalid request-line SHOULD respond with either a
+            400 (Bad Request) error or a 301 (Moved Permanently) redirect with
+            the request-target properly encoded.  A recipient SHOULD NOT attempt
+            to autocorrect and then process the request without a redirect, since
+            the invalid request-line might be deliberately crafted to bypass
+            security filters along the request chain.
+        */
         let (methodSlice, uriSlice, httpVersionSlice) = startLineComponents
         let method = Method(uppercased: methodSlice.uppercased)
         let uriParser = URIParser(bytes: uriSlice.array, existingHost: headers["Host"])
@@ -110,133 +110,14 @@ extension HTTPRequest {
         }
 
         /**
-         Respond to a given request or throw if fails
+            Respond to a given request or throw if fails
 
-         - parameter request: request to respond to
-         - throws: an error if response fails
-         - returns: a response if possible
-         */
-        public func respond(to request: HTTPRequest) throws -> HTTPResponse {
+            - parameter request: request to respond to
+            - throws: an error if response fails
+            - returns: a response if possible
+        */
+        public func respond(to request: Request) throws -> Response {
             return try closure(request)
-        }
-    }
-}
-
-// TODO: WebSockets
-
-public enum WebSocketRequestFormat: ErrorProtocol {
-    case missingSecKeyHeader
-    case missingUpgradeHeader
-    case missingConnectionHeader
-    case invalidOrUnsupportedVersion
-}
-
-extension HTTPRequest {
-    /**
-     Upgrades the request to a WebSocket connection
-     WebSocket connection to provide two way information
-     transfer between the client and the server.
-     */
-    public func upgradeToWebSocket(
-        supportedProtocols: ([String]) -> [String] = { $0 },
-        body: (ws: WebSocket) throws -> Void) throws -> HTTPResponse {
-        guard let requestKey = headers.secWebSocketKey else {
-            throw WebSocketRequestFormat.missingSecKeyHeader
-        }
-        guard headers.upgrade == "websocket" else {
-            throw WebSocketRequestFormat.missingUpgradeHeader
-        }
-        guard headers.connection?.range(of: "Upgrade") != nil else {
-            throw WebSocketRequestFormat.missingConnectionHeader
-        }
-
-        // TODO: Find other versions and see if we can support -- this is version mentioned in RFC
-        guard let version = headers.secWebSocketVersion where version == "13" else {
-            throw WebSocketRequestFormat.invalidOrUnsupportedVersion
-        }
-
-        var responseHeaders: Headers = [:]
-        responseHeaders.connection = "Upgrade"
-        responseHeaders.upgrade = "websocket"
-        responseHeaders.secWebSocketAccept = WebSocket.exchange(requestKey: requestKey)
-        responseHeaders.secWebSocketVersion = version
-
-        if let passedProtocols = headers.secWebProtocol {
-            responseHeaders.secWebProtocol = supportedProtocols(passedProtocols)
-        }
-
-        let response = HTTPResponse(status: .switchingProtocols, headers: responseHeaders)
-        response.onComplete = { stream in
-            let ws = WebSocket(stream)
-            try body(ws: ws)
-            try ws.listen()
-        }
-        return response
-        
-    }
-}
-
-extension HTTPRequest {
-    /// Query data from the URI path
-    public var query: StructuredData? {
-        if let existing = storage["query"] {
-            return existing as? StructuredData
-        } else if let queryRaw = uri.query {
-            let query = StructuredData(formURLEncoded: queryRaw.data)
-            storage["query"] = query
-            return query
-        } else {
-            return nil
-        }
-    }
-}
-
-extension HTTPRequest {
-    /// form url encoded encoded request data
-    public var formURLEncoded: StructuredData? {
-        if let existing = storage["form-urlencoded"] as? StructuredData {
-            return existing
-        } else if let type = headers["Content-Type"] where type.contains("application/x-www-form-urlencoded") {
-            guard case let .data(body) = body else { return nil }
-            let formURLEncoded = StructuredData(formURLEncoded: Data(body))
-            storage["form-urlencoded"] = formURLEncoded
-            return formURLEncoded
-        } else {
-            return nil
-        }
-    }
-}
-
-extension HTTPRequest {
-    /**
-     Multipart encoded request data sent using
-     the `multipart/form-data...` header.
-
-     Used by web browsers to send files.
-     */
-    public var multipart: [String: Multipart]? {
-        if let existing = storage["multipart"] as? [String: Multipart]? {
-            return existing
-        } else if let type = headers["Content-Type"] where type.contains("multipart/form-data") {
-            guard case let .data(body) = body else { return nil }
-            guard let boundary = try? Multipart.parseBoundary(contentType: type) else { return nil }
-            let multipart = Multipart.parse(Data(body), boundary: boundary)
-            storage["multipart"] = multipart
-            return multipart
-        } else {
-            return nil
-        }
-    }
-}
-
-extension HTTPRequest {
-    /// Server stored information related from session cookie.
-    public var session: Session? {
-        get {
-            return storage["session"] as? Session
-        }
-        set(session) {
-            storage["session"] = session
         }
     }
 }

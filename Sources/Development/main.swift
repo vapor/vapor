@@ -36,7 +36,7 @@ app.get("spotify-artists") { req in
 app.get("pokemon") { req in
     let limit = req.data["limit"].int ?? 20
     let offset = req.data["offset"].int ?? 0
-    let pokemonResponse = try app.client("http://pokeapi.co").get("/api/v2/pokemon", query: ["limit": "\(limit)", "offset": "\(offset)"])
+    let pokemonResponse = try app.client("http://pokeapi.co").get("/api/v2/pokemon", query: ["limit": limit, "offset": offset])
 
     guard let names = pokemonResponse.data["results", "name"].array?.flatMap({ $0.string }) else {
         return HTTPResponse(error: "didn't parse json correctly")
@@ -51,7 +51,7 @@ app.get("pokemon-multi") { req in
     var names: [String] = []
 
     for i in 0 ..< 2 {
-        let response = try pokemonClient.get("/api/v2/pokemon", query: ["limit": "\(20)", "offset": "\(i)"])
+        let response = try pokemonClient.get("/api/v2/pokemon", query: ["limit": 20, "offset": i])
 
         if let n = response.data["results", "name"].array?.flatMap({ $0.string }) {
             names += n

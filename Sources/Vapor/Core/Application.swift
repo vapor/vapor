@@ -348,13 +348,13 @@ extension Application {
                     headers["Content-Type"] = type.description
                 }
 
-                return HTTPResponse(status: .ok, headers: headers, body: .data(fileBody))
+                return Response(status: .ok, headers: headers, body: .data(fileBody))
             }
         } else {
-            return HTTPRequest.Handler { _ in
+            return Request.Handler { _ in
                 Log.warning("Could not open file, returning 404")
                 let bod = "Page not found".utf8.array
-                return HTTPResponse(status: .notFound, body: .data(bod))
+                return Response(status: .notFound, body: .data(bod))
             }
         }
     }
@@ -407,13 +407,13 @@ extension Application: Responder {
 
                 if normal.contains(request.method) {
                     let data = "Page not found".utf8.array
-                    return HTTPResponse(status: .notFound, body: .data(data))
+                    return Response(status: .notFound, body: .data(data))
                 } else if case .options = request.method {
-                    return HTTPResponse(status: .ok, headers: [
+                    return Response(status: .ok, headers: [
                         "Allow": "OPTIONS"
                         ])
                 } else {
-                    return HTTPResponse(status: .notImplemented)
+                    return Response(status: .notImplemented)
                 }
             }
         }
@@ -433,7 +433,7 @@ extension Application: Responder {
             if config.environment == .production {
                 error = "Something went wrong"
             }
-            response = HTTPResponse(error: error)
+            response = Response(error: error)
         }
 
         response.headers["Date"] = RFC1123.now()
