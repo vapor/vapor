@@ -7,19 +7,41 @@ var workDir: String {
     return path
 }
 
-let config = Config(seed: JSON.object(["port": "8000"]), workingDirectory: workDir)
+let config = Config(seed: JSON.object(["port": "8080"]), workingDirectory: workDir)
 let app = Application(workDir: workDir, config: config)
+let 😀 = HTTPResponse(status: .ok)
 
-let 😀: Response = Response(status: .ok)
+//MARK: Basic
+
+app.get { request in
+    return try app.view("welcome.html")
+}
 
 app.get("ping") { _ in
     return 😀
 }
 
-//MARK: Basic
+app.get("spotify-artists") { req in
+    let name = req.data["name"].string ?? "beyonce"
+    let spotifyResponse = try app.client.get("https://api.spotify.com/v1/search", query: ["type": "artist", "q": name])
+    guard
+        let names = spotifyResponse.data["artists", "items", "name"]
+            .array?
+            .flatMap({ $0.string })
+            .map({ JSON($0) })
+        else { return Response(error: "unable to get names") }
+    return JSON.array(names)
+}
 
-app.get("/") { request in
-    return try app.view("welcome.html")
+app.get("pokemon") { req in
+    let limit = req.data["limit"].int ?? 20
+    let offset = req.data["offset"].int ?? 0
+    let pokemonResponse = try app.client.get("http://pokeapi.co/api/v2/pokemon", query: ["limit": "\(limit)", "offset": "\(offset)"])
+    guard let names = pokemonResponse.data["results", "name"].array?.flatMap({ $0.string }) else {
+        return HTTPResponse(error: "didn't parse json correctly")
+    }
+
+    return names.joined(separator: "\n")
 }
 
 app.get("test") { request in
@@ -103,29 +125,31 @@ app.get("json") { request in
 app.post("json") { request in
     //parse a key inside the received json
     guard let count = request.data["unicorns"].int else {
-        return Response(error: "No unicorn count provided")
+        return HTTPResponse(error: "No unicorn count provided")
     }
     return "Received \(count) unicorns"
 }
 
 app.post("form") { request in
     guard let name = request.data["name"].string else {
-        return Response(error: "No name provided")
+        return HTTPResponse(error: "No name provided")
     }
 
     return "Hello \(name)"
 }
 
 app.get("redirect") { request in
-    return Response(redirect: "http://qutheory.io:8001")
+    return "// TODO: "
+//    return HTTPResponse(redirect: "http://qutheory.io:8001")
 }
 
 app.post("json2") { request in
     //parse a key inside the received json
     guard let count = request.data["unicorns"].int else {
-        return Response(error: "No unicorn count provided")
+        return HTTPResponse(error: "No unicorn count provided")
     }
-    return Response(status: .created, json: JSON(["message":"Received \(count) unicorns"]))
+    return "// TODO: "
+//    return HTTPResponse(status: .created, json: JSON(["message":"Received \(count) unicorns"]))
 }
 
 app.grouped("abort") { group in
@@ -156,11 +180,22 @@ app.get("error") { request in
 
 //MARK: Session
 
-app.get("session") { request in
-    request.session?["name"] = "Vapor"
+app.post("session") { request in
+    guard let name = request.data["name"].string else {
+        throw Abort.badRequest
+    }
+    request.session?["name"] = name
+
     return "Session set"
 }
 
+app.get("session") { request in
+    guard let name = request.session?["name"] else {
+        return "No session data"
+    }
+
+    return name
+}
 app.get("login") { request in
     guard let id = request.session?["id"] else {
         throw Abort.badRequest
@@ -195,22 +230,24 @@ app.post("login") { request in
     make sure to update the Response section.
  */
 app.get("cookie") { request in
-    var response = Response(status: .ok, text: "Cookie set")
-    response.cookies["id"] = "123"
-
-    return response
+    return "// TODO: "
+//    var response = Response(status: .ok, text: "Cookie set")
+//    response.cookies["id"] = "123"
+//
+//    return response
 }
 
 
 app.get("cookies") { request in
-    var response = JSON([
-        "cookies": "\(request.cookies)"
-    ]).makeResponse()
-
-    response.cookies["cookie-1"] = "value-1"
-    response.cookies["hello"] = "world"
-
-    return response
+    return "// TODO: "
+//    var response = JSON([
+//        "cookies": "\(request.cookies)"
+//    ]).makeResponse()
+//
+//    response.cookies["cookie-1"] = "value-1"
+//    response.cookies["hello"] = "world"
+//
+//    return response
 }
 
 class Name: ValidationSuite {
@@ -227,7 +264,7 @@ class Employee {
     var name: Valid<Name>
     var email: Valid<Email>
 
-    init(request: Request) throws {
+    init(request: HTTPRequest) throws {
         name = try request.data["name"].validated()
         email = try request.data["email"].validated()
     }
@@ -257,7 +294,7 @@ app.get("multipart-image") { _ in
     response += "<button>Submit</button>"
     response += "</form>"
 
-    return Response(status: .ok, data: response.data)
+    return Response(body: response)
 }
 
 app.post("multipart-image") { request in
@@ -279,7 +316,7 @@ app.post("multipart-image") { request in
         headers["Content-Type"] = mediaType
     }
 
-    return Response(status: .ok, headers: headers, data: image.data)
+    return Response(status: .ok, headers: headers, body: image.data.bytes)
 }
 
 app.get("multifile") { _ in
@@ -290,7 +327,7 @@ app.get("multifile") { _ in
     response += "<button>Submit</button>"
     response += "</form>"
 
-    return Response(status: .ok, data: response.data)
+    return Response(body: response)
 }
 
 app.post("multifile") { request in
@@ -318,7 +355,7 @@ app.post("multifile") { request in
         headers["Content-Type"] = mediaType
     }
 
-    return Response(status: .ok, headers: headers, data: file.data)
+    return HTTPResponse(status: .ok, headers: headers, body: .data(file.data.bytes))
 }
 
 app.get("options") { _ in
@@ -339,7 +376,7 @@ app.get("options") { _ in
     response += "<button>Submit</button>"
     response += "</form>"
 
-    return Response(status: .ok, data: response.data)
+    return HTTPResponse(status: .ok, body: .data(response.data.bytes))
 }
 
 app.post("options") { request in
@@ -379,16 +416,14 @@ app.grouped(AuthMiddleware()) { group in
 //MARK: Chunked
 
 app.get("chunked") { request in
-    return Response(headers: [
-        "Content-Type": "text/plain"
-    ], chunked: { stream in
+    return Response(headers: ["Content-Type": "text/plain"]) { stream in
         try stream.send("Counting:")
         for i in 1 ..< 10{
             sleep(1)
             try stream.send(i)
         }
         try stream.close()
-    })
+    }
 }
 
 app.start()

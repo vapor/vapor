@@ -7,42 +7,47 @@ extension Int: RequestContentSubscript {}
 
 /**
     The data received from the request in json body or url query
+ 
+    Can be extended by third party applications and middleware
 */
-public struct Content {
-    // MARK: Initialization
-    let request: Request
+public final class Content {
 
-    internal init(request: Request) {
-        self.request = request
+    public typealias ContentLoader = ([PathIndex]) -> Polymorphic?
+
+    // MARK: Initialization
+
+    private weak var message: HTTPMessage?
+    private var content: [ContentLoader] = []
+
+    internal init(_ message: HTTPMessage) {
+        self.message = message
+    }
+
+    // Some closure weirdness to allow more complex capturing or lazy loading internally
+
+    public func append<E where E: PathIndexable, E: Polymorphic>(_ element: (Void) -> E?) {
+        let finder: ContentLoader = { indexes in return element()?[indexes] }
+        content.append(finder)
+    }
+
+    public func append(_ element: ContentLoader) {
+        content.append(element)
+    }
+
+    public func append<E where E: PathIndexable, E: Polymorphic>(_ element: E?) {
+        guard let element = element else { return }
+        let finder: ContentLoader = { indexes in return element[indexes] }
+        content.append(finder)
     }
 
     // MARK: Subscripting
+
     public subscript(index: Int) -> Polymorphic? {
-        if let value = request.query["\(index)"] {
-            return value
-        } else if let value = request.json?.array?[index] {
-            return value
-        } else if let value = request.formURLEncoded?["\(index)"] {
-            return value
-        } else if let value = request.multipart?["\(index)"] {
-            return value
-        } else {
-            return nil
-        }
+        return self[[index]] ?? self [["\(index)"]]
     }
 
     public subscript(key: String) -> Polymorphic? {
-        if let value = request.query[key] {
-            return value
-        } else if let value = request.json?.object?[key] {
-            return value
-        } else if let value = request.formURLEncoded?[key] {
-            return value
-        } else if let value = request.multipart?[key] {
-            return value
-        } else {
-            return nil
-        }
+        return self[[key]]
     }
 
     public subscript(indexes: PathIndex...) -> Polymorphic? {
@@ -50,14 +55,6 @@ public struct Content {
     }
 
     public subscript(indexes: [PathIndex]) -> Polymorphic? {
-        if let value = request.query[indexes] {
-            return value
-        } else if let value = request.json?[indexes] {
-            return value
-        } else if let value = request.formURLEncoded?[indexes] {
-            return value
-        } else {
-            return nil
-        }
+        return content.lazy.flatMap { finder in finder(indexes) } .first
     }
 }

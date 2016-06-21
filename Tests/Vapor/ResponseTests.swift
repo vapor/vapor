@@ -21,6 +21,6 @@ class ResponseTests: XCTestCase {
         let data = cookies.serialize()
 
         let expected = "key=val"
-        XCTAssert(data == expected.data, "Cookies did not serialize")
+        XCTAssert(data == expected, "Cookies did not serialize")
     }
 }

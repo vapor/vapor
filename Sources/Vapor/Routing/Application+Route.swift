@@ -85,14 +85,14 @@ extension Application {
 
         // OPTIONS /entities
         self.options(path) { request in
-            var response = try controllerFactory().options(request: request).makeResponse()
+            let response = try controllerFactory().options(request: request).makeResponse()
             response.headers["Allow"] = "GET,POST,DELETE,OPTIONS"
             return response
         }
 
         // OPTIONS /entities/:id
         self.options(path, Resource.Item.self) { request, item in
-            var response = try controllerFactory().options(request: request, item: item).makeResponse()
+            let response = try controllerFactory().options(request: request, item: item).makeResponse()
             response.headers["Allow"] = "GET,POST,PUT,PATCH,DELETE,OPTIONS"
             return response
         }
@@ -142,9 +142,9 @@ extension Application {
         - parameter action: The curried action to run on the provided type.
      */
     public final func add<ActionController: ApplicationInitializable>(
-        _ method: Request.Method,
+        _ method: Method,
         path: String,
-        action: (ActionController) -> (Request) throws -> ResponseRepresentable) {
+        action: (ActionController) -> (HTTPRequest) throws -> ResponseRepresentable) {
         add(method, path: path, action: action) {
             ActionController(application: self)
         }
@@ -164,9 +164,9 @@ extension Application {
          - parameter action: The curried action to run on the provided type.
      */
     public final func add<ActionController: DefaultInitializable>(
-        _ method: Request.Method,
+        _ method: Method,
         path: String,
-        action: (ActionController) -> (Request) throws -> ResponseRepresentable) {
+        action: (ActionController) -> (HTTPRequest) throws -> ResponseRepresentable) {
         add(method, path: path, action: action) {
             ActionController()
         }
@@ -187,9 +187,9 @@ extension Application {
         - parameter factory: The closure to instantiate the controller type.
      */
     public final func add<ActionController>(
-        _ method: Request.Method,
+        _ method: Method,
         path: String,
-        action: (ActionController) -> (Request) throws -> ResponseRepresentable,
+        action: (ActionController) -> (HTTPRequest) throws -> ResponseRepresentable,
         makeControllerWith factory: () throws -> ActionController) {
         add(method, path: path) { request in
             let controller = try factory()

@@ -25,7 +25,7 @@ public protocol Provider {
         they are not initialized until the 
         application starts.
     */
-    var server: ServerDriver.Type? { get }
+    var server: Server? { get }
 
     /**
         An optional `RouterDriver` to provide 
@@ -55,10 +55,17 @@ public protocol Provider {
         implementation of `nil`.
     */
     var console: ConsoleDriver? { get }
+
+
+    /**
+         An optional `HTTPClient` add-on used to make
+         outgoing web request operations
+     */
+    var client: HTTPClientProtocol? { get }
 }
 
 extension Provider {
-    public var server: ServerDriver.Type? {
+    public var server: Server? {
         return nil
     }
 
@@ -75,6 +82,10 @@ extension Provider {
     }
 
     public var console: ConsoleDriver? {
+        return nil
+    }
+
+    public var client: HTTPClientProtocol? {
         return nil
     }
 }

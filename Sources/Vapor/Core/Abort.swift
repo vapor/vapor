@@ -9,5 +9,5 @@ public enum Abort: ErrorProtocol {
     case badRequest
     case notFound
     case internalServerError
-    case custom(status: Response.Status, message: String)
+    case custom(status: Status, message: String)
 }

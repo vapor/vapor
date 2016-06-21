@@ -12,7 +12,7 @@ let package = Package(
         //SHA2 + HMAC hashing. Used by the core to create session identifiers.
         .Package(url: "https://github.com/CryptoKitten/HMAC.git", majorVersion: 0, minor: 7),
         .Package(url: "https://github.com/CryptoKitten/SHA2.git", majorVersion: 0, minor: 7),
-        
+
         //Websockets
         .Package(url: "https://github.com/CryptoKitten/SHA1.git", majorVersion: 0, minor: 7),
 
@@ -26,7 +26,7 @@ let package = Package(
         .Package(url: "https://github.com/ketzusaka/Strand.git", majorVersion: 1, minor: 4),
 
         //Sockets, used by the built in HTTP server
-        .Package(url: "https://github.com/czechboy0/Socks.git", majorVersion: 0, minor: 6),
+        .Package(url: "https://github.com/czechboy0/Socks.git", majorVersion: 0, minor: 7),
 
         // Syntax for easily accessing values from generic data.
         .Package(url: "https://github.com/qutheory/polymorphic.git", majorVersion: 0, minor: 2)
