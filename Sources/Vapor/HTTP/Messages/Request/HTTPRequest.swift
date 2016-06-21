@@ -181,14 +181,19 @@ extension HTTPRequest {
 extension HTTPRequest {
     /// Query data from the URI path
     public var query: StructuredData? {
-        if let existing = storage["query"] {
-            return existing as? StructuredData
-        } else if let queryRaw = uri.query {
-            let query = StructuredData(formURLEncoded: queryRaw.data)
-            storage["query"] = query
-            return query
-        } else {
-            return nil
+        get {
+            if let existing = storage["query"] {
+                return existing as? StructuredData
+            } else if let queryRaw = uri.query {
+                let query = StructuredData(formURLEncoded: queryRaw.data)
+                storage["query"] = query
+                return query
+            } else {
+                return nil
+            }
+        }
+        set(data) {
+            storage["query"] = data
         }
     }
 }

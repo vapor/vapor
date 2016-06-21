@@ -6,21 +6,25 @@ public enum HTTPClientError: ErrorProtocol {
     case missingPort
 }
 
-public final class HTTPClient<ClientStreamType: ClientStream>: HTTPClientProtocol {
+public final class HTTPClient<ClientStreamType: ClientStream>: Client {
     public init() {}
     
-    public func request(_ method: Method,
-                        url: String,
-                        headers: Headers = [:],
-                        query: [String: String] = [:],
-                        body: HTTPBody = .data([])) throws -> HTTPResponse {
-        let endpoint = url.finish("/")
-        var uri = try URI(endpoint)
-        uri.append(query: query)
+    public func request(
+        _ method: Method,
+        uri: URI,
+        headers: Headers = [:],
+        query q: [String: String] = [:],
+        body: HTTPBody = .data([])) throws -> HTTPResponse
+    {
+        var query: [String: StructuredData] = [:]
+        for (key, val) in q {
+            query[key] = .string(val)
+        }
 
         // TODO: Is it worth exposing Version? We don't support alternative serialization/parsing
         let version = Version(major: 1, minor: 1)
         let request = HTTPRequest(method: method, uri: uri, version: version, headers: headers, body: body)
+        request.query = .dictionary(query)
         let connection = try makeConnection(to: uri)
         return try perform(request, with: connection)
     }
