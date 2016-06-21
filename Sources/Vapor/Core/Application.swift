@@ -135,7 +135,7 @@ public class Application {
         var sessionProvided: SessionDriver? = session
         var hashProvided: HashDriver? = hash
         var consoleProvided: ConsoleDriver? = console
-        var clientProvided: HTTPClientProtocol? = nil
+        var clientProvided: HTTPClientProtocol? = client
 
         for provider in providers {
             // TODO: Warn if multiple providers attempt to add server
