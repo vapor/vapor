@@ -13,7 +13,7 @@ public protocol Responder {
 }
 
 public protocol Program {
-
+    init(host: String, port: Int, securityLayer: SecurityLayer) throws
 }
 
 
@@ -24,7 +24,7 @@ public enum Servers {
 }
 
 public protocol Server: Program {
-    func start(host: String, port: Int, responder: Responder, errors: ServerErrorHandler) throws
+    func start(responder: Responder, errors: ServerErrorHandler) throws
 }
 
 public typealias ServerErrorHandler = (ServerError) -> ()
@@ -45,21 +45,18 @@ public final class HTTPServer<
         Parser.MessageType == HTTPRequest,
         Serializer.MessageType == HTTPResponse
 >: Server {
-    public init() { }
 
-    public func start(
-        host: String = "0.0.0.0",
-        port: Int = 8080,
-        responder: Responder,
-        errors: ServerErrorHandler
-    ) throws {
-        let server: ServerStreamType
+    let server: ServerStreamType
+
+    public init(host: String = "0.0.0.0", port: Int = 8080, securityLayer: SecurityLayer = .none) throws {
         do {
-            server = try ServerStreamType(scheme: "http", host: host, port: port)
+            server = try ServerStreamType(host: host, port: port)
         } catch {
             throw ServerError.bind(error)
         }
+    }
 
+    public func start(responder: Responder, errors: ServerErrorHandler) throws {
         // no throwing inside of the loop
         while true {
             let stream: Stream

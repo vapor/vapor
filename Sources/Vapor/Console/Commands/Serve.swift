@@ -21,6 +21,6 @@ public struct Serve: Command {
 
     public func run() {
         let scheme = option("scheme").string ?? "http" // servers generally use http behind proxy, default that
-        app.serve() // TODO: fix scheme
+        app.serve(securityLayer: scheme.securityLayer) // TODO: fix scheme
     }
 }

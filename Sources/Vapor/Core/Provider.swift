@@ -25,7 +25,7 @@ public protocol Provider {
         they are not initialized until the 
         application starts.
     */
-    var server: Server? { get }
+    var server: Server.Type? { get }
 
     /**
         An optional `RouterDriver` to provide 
@@ -65,7 +65,7 @@ public protocol Provider {
 }
 
 extension Provider {
-    public var server: Server? {
+    public var server: Server.Type? {
         return nil
     }
 

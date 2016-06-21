@@ -1,19 +1,12 @@
-import Socks
-import SocksCore
-
-public enum HTTPClientError: ErrorProtocol {
-    case missingHost
-    case missingPort
-}
-
 public final class HTTPClient<ClientStreamType: ClientStream>: Client {
     public let client: ClientStreamType
     public let host: String
     public var stream: Stream
 
-    public init(scheme: String, host: String, port: Int) throws {
+    public init(host: String, port: Int, securityLayer: SecurityLayer) throws {
         self.host = host
-        let client = try ClientStreamType(scheme: scheme, host: host, port: port)
+
+        let client = try ClientStreamType(host: host, port: port, securityLayer: securityLayer)
         let stream = try client.connect()
 
         self.client = client

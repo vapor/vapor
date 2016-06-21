@@ -1,9 +1,7 @@
-public protocol Client: Responder {
-    init(scheme: String, host: String, port: Int) throws
-}
+public protocol Client: Responder, Program { }
 
 public enum ClientError: ErrorProtocol {
-    case unsupportedScheme
+
 }
 
 extension Client {
@@ -14,7 +12,7 @@ extension Client {
         let request = Request(method: method, uri: uri)
         return try respond(to: request)
     }
-    
+
     public func get(_ path: String, headers: Headers = [:], query: [String: String] = [:], body: HTTPBody = []) throws -> HTTPResponse {
         return try request(.get, path: path, headers: headers, query: query, body: body)
     }

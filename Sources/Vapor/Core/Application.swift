@@ -17,7 +17,7 @@ public class Application {
         connections and return the desired
         response.
     */
-    public let server: Server
+    public let serverType: Server.Type
 
     /**
         The session driver is responsible for
@@ -123,14 +123,14 @@ public class Application {
         localization: Localization? = nil,
         hash: HashDriver? = nil,
         console: ConsoleDriver? = nil,
-        server: Server? = nil,
+        serverType: Server.Type? = nil,
         clientType: Client.Type? = nil,
         router: RouterDriver? = nil,
         session: SessionDriver? = nil,
         providers: [Provider] = [],
         arguments: [String]? = nil
     ) {
-        var serverProvided: Server? = server
+        var serverProvided: Server.Type? = serverType
         var routerProvided: RouterDriver? = router
         var sessionProvided: SessionDriver? = session
         var hashProvided: HashDriver? = hash
@@ -181,7 +181,7 @@ public class Application {
         ]
 
         self.router = routerProvided ?? BranchRouter()
-        self.server = serverProvided ?? HTTPServer<TCPServerStream, HTTPParser<HTTPRequest>, HTTPSerializer<HTTPResponse>>()
+        self.serverType = serverProvided ?? HTTPServer<TCPServerStream, HTTPParser<HTTPRequest>, HTTPSerializer<HTTPResponse>>.self
         self.clientType = clientProvided ?? HTTPClient<TCPClientStream>.self
 
         routes = []
@@ -300,11 +300,12 @@ extension Sequence where Iterator.Element == String {
 }
 
 extension Application {
-    internal func serve() {
+    internal func serve(securityLayer: SecurityLayer) {
         do {
             console.output("Server starting at \(host):\(port)", style: .info)
             // noreturn
-            try self.server.start(host: host, port: port, responder: self) { [weak self] error in
+            let server = try serverType.init(host: host, port: port, securityLayer: securityLayer)
+            try server.start(responder: self) { [weak self] error in
                 self?.console.output("Server error: \(error)")
             }
         } catch ServerError.bind {
@@ -318,11 +319,11 @@ extension Application {
 extension Application {
     public func client(_ url: String) throws -> Client {
         let uri = try URI(url)
-        return try self.clientType.init(scheme: uri.scheme ?? "http", host: uri.host ?? "localhost", port: uri.port ?? 80)
+        return try self.client(scheme: uri.scheme ?? "http", host: uri.host ?? "localhost", port: uri.port ?? 80)
     }
 
     public func client(scheme: String, host: String, port: Int) throws -> Client {
-        return try self.clientType.init(scheme: scheme, host: host, port: port)
+        return try self.clientType.init(host: host, port: port, securityLayer: scheme.securityLayer)
     }
 }
 

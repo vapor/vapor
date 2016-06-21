@@ -18,13 +18,12 @@
                 || output.streamStatus == .closed
         }
 
-        let scheme: String
+        let securityLayer: SecurityLayer
         let input: NSInputStream
         let output: NSOutputStream
 
-        public required init(scheme: String, host: String, port: Int) throws {
-            self.scheme = scheme
-
+        public required init(host: String, port: Int, securityLayer: SecurityLayer) throws {
+            self.securityLayer = securityLayer
             var inputStream: NSInputStream? = nil
             var outputStream: NSOutputStream? = nil
             NSStream.getStreamsToHost(withName: host,
@@ -75,10 +74,7 @@
         // MARK: Connect
 
         public func connect() throws -> Stream {
-            let wss = scheme == "wss"
-            let https = scheme == "https"
-            let secure = wss || https
-            if secure {
+            if securityLayer == .tls {
                 _ = input.upgradeSSL()
                 _ = output.upgradeSSL()
             }

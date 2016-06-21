@@ -8,8 +8,6 @@ extension timeval {
     }
 }
 
-
-
 extension TCPInternetSocket: Stream {
     public func setTimeout(_ timeout: Double) throws {
         sendingTimeout = timeval(seconds: timeout)
@@ -32,13 +30,10 @@ extension TCPInternetSocket: Stream {
 public class TCPProgramStream: ProgramStream {
     public let stream: TCPInternetSocket
 
-    public required init(scheme: String, host: String, port: Int) throws {
-        if scheme == "https" || scheme == "wss" {
-            throw ProgramStreamError.unsupportedScheme
+    public required init(host: String, port: Int, securityLayer: SecurityLayer) throws {
+        guard case .none = securityLayer else {
+            throw ProgramStreamError.unsupportedSecurityLayer
         }
-
-        print(host)
-        print(port)
 
         let address = InternetAddress(hostname: host, port: Port(port))
         stream = try TCPInternetSocket(address: address)
@@ -53,8 +48,8 @@ public final class TCPClientStream: TCPProgramStream, ClientStream  {
 }
 
 public final class TCPServerStream: TCPProgramStream, ServerStream {
-    public required init(scheme: String, host: String, port: Int) throws {
-        try super.init(scheme: scheme, host: host, port: port)
+    public required init(host: String, port: Int, securityLayer: SecurityLayer) throws {
+        try super.init(host: host, port: port, securityLayer: securityLayer)
 
         try stream.bind()
         try stream.listen(queueLimit: 4096)
