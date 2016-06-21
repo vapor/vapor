@@ -44,37 +44,6 @@ extension HTTPResponse {
     }
 }
 
-extension HTTPResponse {
-    /**
-         Send chunked data with the
-         `Transfer-Encoding: Chunked` header.
-
-         Chunked uses the Transfer-Encoding HTTP header in
-         place of the Content-Length header.
-
-         https://en.wikipedia.org/wiki/Chunked_transfer_encoding
-    */
-    public convenience init(status: Status = .ok, headers: Headers = [:], chunked closure: ((ChunkStream) throws -> Void)) {
-        var headers = headers
-        headers.setTransferEncodingChunked()
-        self.init(status: status, headers: headers, body: .chunked(closure))
-    }
-}
-
-extension HTTPResponse {
-    /**
-         Convenience Initializer
-
-         - parameter status: the http status
-         - parameter json: any value that will be attempted to be serialized as json.  Use 'Json' for more complex objects
-     */
-    public convenience init(status: Status, json: JSON) {
-        let headers: Headers = [
-            "Content-Type": "application/json; charset=utf-8"
-        ]
-        self.init(status: status, headers: headers, body: HTTPBody(json))
-    }
-}
 
 extension HTTPResponse {
     /*
