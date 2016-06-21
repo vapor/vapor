@@ -38,7 +38,8 @@ public final class HTTPClient<ClientStreamType: ClientStream>: Client {
     private func makeConnection(to uri: URI) throws -> Vapor.Stream {
         guard let host = uri.host else { throw HTTPClientError.missingHost }
         guard let port = uri.port ?? uri.schemePort else { throw HTTPClientError.missingPort }
-        let client = try ClientStreamType(host: host, port: port)
+        let scheme = uri.scheme ?? "https" // web clients generally default to secure connection outgoing
+        let client = try ClientStreamType(scheme: scheme, host: host, port: port)
         let stream = try client.connect()
         return StreamBuffer(stream)
     }

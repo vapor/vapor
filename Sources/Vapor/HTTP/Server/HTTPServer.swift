@@ -24,7 +24,7 @@ public enum Servers {
 }
 
 public protocol Server: Program {
-    func start(host: String, port: Int, responder: Responder, errors: ServerErrorHandler) throws
+    func start(scheme: String, host: String, port: Int, responder: Responder, errors: ServerErrorHandler) throws
 }
 
 public typealias ServerErrorHandler = (ServerError) -> ()
@@ -48,6 +48,7 @@ public final class HTTPServer<
     public init() { }
 
     public func start(
+        scheme: String,
         host: String = "0.0.0.0",
         port: Int = 8080,
         responder: Responder,
@@ -55,7 +56,7 @@ public final class HTTPServer<
     ) throws {
         let server: ServerStreamType
         do {
-            server = try ServerStreamType(host: host, port: port)
+            server = try ServerStreamType(scheme: scheme, host: host, port: port)
         } catch {
             throw ServerError.bind(error)
         }

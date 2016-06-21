@@ -6,7 +6,8 @@ public struct Serve: Command {
 
     public static let signature: [Signature] = [
         Option("port"),
-        Option("workdir")
+        Option("workdir"),
+        Option("scheme")
     ]
 
     public static let help: [String] = [
@@ -19,6 +20,7 @@ public struct Serve: Command {
     }
 
     public func run() {
-        app.serve()
+        let scheme = option("scheme").string ?? "http" // servers generally use http behind proxy, default that
+        app.serve(scheme: scheme)
     }
 }

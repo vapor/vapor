@@ -1,5 +1,5 @@
 public protocol AddressStream {
-    init(host: String, port: Int) throws
+    init(scheme: String, host: String, port: Int) throws
 }
 
 public protocol ClientStream: AddressStream {

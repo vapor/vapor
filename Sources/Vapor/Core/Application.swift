@@ -305,11 +305,11 @@ extension Sequence where Iterator.Element == String {
 }
 
 extension Application {
-    internal func serve() {
+    internal func serve(scheme: String) {
         do {
             console.output("Server starting at \(host):\(port)", style: .info)
             // noreturn
-            try self.server.start(host: host, port: port, responder: self) { [weak self] error in
+            try self.server.start(scheme: scheme, host: host, port: port, responder: self) { [weak self] error in
                 self?.console.output("Server error: \(error)")
             }
         } catch ServerError.bind {

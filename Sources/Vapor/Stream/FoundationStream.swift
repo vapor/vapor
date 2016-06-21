@@ -18,10 +18,13 @@
                 || output.streamStatus == .closed
         }
 
+        let scheme: String
         let input: NSInputStream
         let output: NSOutputStream
 
-        public required init(host: String, port: Int) throws {
+        public required init(scheme: String, host: String, port: Int) throws {
+            self.scheme = scheme
+
             var inputStream: NSInputStream? = nil
             var outputStream: NSOutputStream? = nil
             NSStream.getStreamsToHost(withName: host,
@@ -72,6 +75,13 @@
         // MARK: Connect
 
         public func connect() throws -> Stream {
+            let wss = scheme == "wss"
+            let https = scheme == "https"
+            let secure = wss || https
+            if secure {
+                _ = input.upgradeSSL()
+                _ = output.upgradeSSL()
+            }
             input.open()
             output.open()
             return self
