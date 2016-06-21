@@ -28,9 +28,9 @@ extension TCPInternetSocket: Stream {
 }
 
 public class TCPProgramStream: ProgramStream {
-    let host: String
-    let port: Int
-    let securityLayer: SecurityLayer
+    public let host: String
+    public let port: Int
+    public let securityLayer: SecurityLayer
     public let stream: TCPInternetSocket
 
     public required init(host: String, port: Int, securityLayer: SecurityLayer) throws {
