@@ -1,5 +1,3 @@
-public typealias Request = HTTPRequest
-
 public final class HTTPRequest: HTTPMessage {
     // TODO: internal set for head request in application, serializer should change it, avoid exposing to end user
     public internal(set) var method: Method
