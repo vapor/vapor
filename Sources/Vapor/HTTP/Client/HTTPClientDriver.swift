@@ -27,36 +27,3 @@ extension Client {
 public enum ClientsError: ErrorProtocol {
     case unsupportedScheme
 }
-
-public enum Clients {
-    case plaintext(Client)
-    case secure(Client)
-    case both(plaintext: Client, secure: Client)
-}
-
-extension Clients: Client {
-    public func request(_ method: Method, uri: URI, headers: Headers, query: [String: String], body: HTTPBody) throws -> HTTPResponse {
-        let wss = uri.scheme == "wss"
-        let https = uri.scheme == "https"
-        let isSecure = wss || https
-
-        switch self {
-        case .plaintext(let plaintext):
-            guard !isSecure else {
-                throw ClientsError.unsupportedScheme
-            }
-            return try plaintext.request(method, uri: uri, headers: headers, query: query, body: body)
-        case .secure(let secure):
-            guard isSecure else {
-                throw ClientsError.unsupportedScheme
-            }
-            return try secure.request(method, uri: uri, headers: headers, query: query, body: body)
-        case .both(let plaintext, let secure):
-            if isSecure {
-                return try secure.request(method, uri: uri, headers: headers, query: query, body: body)
-            } else {
-                return try plaintext.request(method, uri: uri, headers: headers, query: query, body: body)
-            }
-        }
-    }
-}

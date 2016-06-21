@@ -85,7 +85,7 @@ extension Provider {
         return nil
     }
 
-    public var client: Clients? {
+    public var client: Client? {
         return nil
     }
 }

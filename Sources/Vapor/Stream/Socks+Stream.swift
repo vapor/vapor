@@ -44,8 +44,22 @@ public class TCPAddressStream: AddressStream {
 
 public final class TCPClientStream: TCPAddressStream, ClientStream  {
     public func connect() throws -> Stream {
-        try stream.connect()
-        return stream
+        let wss = scheme == "wss"
+        let https = scheme == "https"
+        let secure = wss || https
+
+        if secure {
+            #if !os(Linux)
+                Log.warning("Using Secure Foundation Stream -- This is NOT supported on linux. Make sure to visit https://github.com/qutheory/vapor-ssl")
+                return try FoundationStream(scheme: scheme, host: host, port: port).connect()
+            #else
+                Log.error("Client doesn't support ssl")
+                throw ClientsError.unsupportedScheme
+            #endif
+        } else {
+            try stream.connect()
+            return stream
+        }
     }
 }
 
