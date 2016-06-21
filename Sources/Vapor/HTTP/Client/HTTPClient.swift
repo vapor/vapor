@@ -20,6 +20,12 @@ public final class HTTPClient<ClientStreamType: ClientStream>: Client {
         self.stream = stream
     }
 
+    deinit {
+        if !stream.closed {
+            _ = try? stream.close()
+        }
+    }
+    
     public func respond(to request: Request) throws -> Response {
         if stream.closed {
             stream = try client.connect()

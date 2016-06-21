@@ -76,7 +76,7 @@ public final class HTTPServer<
                     do {
                         try self.respond(stream: stream, responder: responder)
                     } catch {
-                        errors(.respond(error))
+                        errors(.dispatch(error))
                     }
                 }
             } catch {
