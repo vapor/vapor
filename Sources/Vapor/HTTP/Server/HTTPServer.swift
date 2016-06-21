@@ -76,7 +76,7 @@ public final class HTTPServer<
 
     private func respond(stream: Stream, responder: Responder) throws {
         let stream = StreamBuffer(stream)
-        stream.timeout = 30
+        try stream.setTimeout(30)
 
         let parser = Parser(stream: stream)
         let serializer = Serializer(stream: stream)

@@ -9,7 +9,9 @@
             case unableToUpgradeToSSL
         }
 
-        public var timeout: Double = 0
+        public func setTimeout(_ timeout: Double) throws {
+            throw StreamError.unsupported
+        }
 
         public var closed: Bool {
             return input.streamStatus == .closed

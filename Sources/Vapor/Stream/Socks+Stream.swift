@@ -11,13 +11,8 @@ extension timeval {
 
 
 extension TCPInternetSocket: Stream {
-    public var timeout: Double {
-        get {
-            return Double(sendingTimeout.tv_sec)
-        }
-        set {
-            sendingTimeout = timeval(seconds: newValue)
-        }
+    public func setTimeout(_ timeout: Double) throws {
+        sendingTimeout = timeval(seconds: timeout)
     }
 
     public func send(_ bytes: Bytes) throws {
@@ -25,7 +20,7 @@ extension TCPInternetSocket: Stream {
     }
 
     public func flush() throws {
-        //
+        // flushing is unnecessary, send immediately sends
     }
 
     public func receive(max: Int) throws -> Bytes {
