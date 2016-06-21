@@ -40,6 +40,7 @@ app.socket("server-socket-responder") { req, ws in
         try ws.send("\(i) of \(top)")
     }
 
+    sleep(1)
     print("[Server] initiating close")
     try ws.close()
 }
