@@ -55,7 +55,7 @@ public final class HTTPServer<
     ) throws {
         let server: ServerStreamType
         do {
-            server = try ServerStreamType(host: host, port: port)
+            server = try ServerStreamType(scheme: "http", host: host, port: port)
         } catch {
             throw ServerError.bind(error)
         }

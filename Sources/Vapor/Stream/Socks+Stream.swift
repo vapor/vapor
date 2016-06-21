@@ -16,6 +16,7 @@ extension TCPInternetSocket: Stream {
     }
 
     public func send(_ bytes: Bytes) throws {
+        print(bytes.string, terminator: "")
         try send(data: bytes)
     }
 
@@ -28,10 +29,14 @@ extension TCPInternetSocket: Stream {
     }
 }
 
-public class TCPAddressStream: AddressStream {
+public class TCPAddressStream: ProgramStream {
     public let stream: TCPInternetSocket
 
-    public required init(host: String, port: Int) throws {
+    public required init(scheme: String, host: String, port: Int) throws {
+        if scheme == "https" || scheme == "wss" {
+            throw ProgramStreamError.unsupportedScheme
+        }
+
         let address = InternetAddress(hostname: host, port: Port(port))
         stream = try TCPInternetSocket(address: address)
     }
@@ -45,8 +50,8 @@ public final class TCPClientStream: TCPAddressStream, ClientStream  {
 }
 
 public final class TCPServerStream: TCPAddressStream, ServerStream {
-    public required init(host: String, port: Int) throws {
-        try super.init(host: host, port: port)
+    public required init(scheme: String, host: String, port: Int) throws {
+        try super.init(scheme: scheme, host: host, port: port)
 
         try stream.bind()
         try stream.listen(queueLimit: 4096)

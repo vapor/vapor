@@ -1,3 +1,3 @@
-public protocol ServerStream: AddressStream {
+public protocol ServerStream: ProgramStream {
     func accept() throws -> Stream
 }

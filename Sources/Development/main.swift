@@ -23,7 +23,7 @@ app.get("ping") { _ in
 
 app.get("spotify-artists") { req in
     let name = req.data["name"].string ?? "beyonce"
-    let spotifyResponse = try app.client.get("https://api.spotify.com/v1/search", query: ["type": "artist", "q": name])
+    let spotifyResponse = try app.client("https://api.spotify.com").get("/v1/search", query: ["type": "artist", "q": name])
     guard
         let names = spotifyResponse.data["artists", "items", "name"]
             .array?
@@ -36,7 +36,13 @@ app.get("spotify-artists") { req in
 app.get("pokemon") { req in
     let limit = req.data["limit"].int ?? 20
     let offset = req.data["offset"].int ?? 0
-    let pokemonResponse = try app.client.get("http://pokeapi.co/api/v2/pokemon", query: ["limit": "\(limit)", "offset": "\(offset)"])
+    let pokemonResponse = try app.client("http://pokeapi.co").get("/api/v2/pokemon", query: ["limit": "\(limit)", "offset": "\(offset)"])
+    switch pokemonResponse.body {
+    case .data(let bytes):
+        print("x")
+        print(bytes.string)
+    default: break
+    }
     guard let names = pokemonResponse.data["results", "name"].array?.flatMap({ $0.string }) else {
         return HTTPResponse(error: "didn't parse json correctly")
     }

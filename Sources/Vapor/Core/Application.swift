@@ -97,7 +97,7 @@ public class Application {
         TODO: Expose to end users to customize driver
         Make outgoing requests
     */
-    public let client: Clients
+    public let clientType: Client.Type
 
 
     /**
@@ -124,7 +124,7 @@ public class Application {
         hash: HashDriver? = nil,
         console: ConsoleDriver? = nil,
         server: Server? = nil,
-        client: Clients? = nil,
+        clientType: Client.Type? = nil,
         router: RouterDriver? = nil,
         session: SessionDriver? = nil,
         providers: [Provider] = [],
@@ -135,7 +135,7 @@ public class Application {
         var sessionProvided: SessionDriver? = session
         var hashProvided: HashDriver? = hash
         var consoleProvided: ConsoleDriver? = console
-        var clientProvided: Clients? = client
+        var clientProvided: Client.Type? = clientType
 
         for provider in providers {
             // TODO: Warn if multiple providers attempt to add server
@@ -182,7 +182,7 @@ public class Application {
 
         self.router = routerProvided ?? BranchRouter()
         self.server = serverProvided ?? HTTPServer<TCPServerStream, HTTPParser<HTTPRequest>, HTTPSerializer<HTTPResponse>>()
-        self.client = clientProvided ?? .plaintext(HTTPClient<TCPClientStream>())
+        self.clientType = clientProvided ?? HTTPClient<TCPClientStream>.self
 
         routes = []
 
@@ -312,6 +312,17 @@ extension Application {
         } catch {
             Log.error("Unknown start error: \(error)")
         }
+    }
+}
+
+extension Application {
+    public func client(_ url: String) throws -> Client {
+        let uri = try URI(url)
+        return try self.clientType.init(scheme: uri.scheme ?? "http", host: uri.host ?? "localhost", port: uri.port ?? 80)
+    }
+
+    public func client(scheme: String, host: String, port: Int) throws -> Client {
+        return try self.clientType.init(scheme: scheme, host: host, port: port)
     }
 }
 

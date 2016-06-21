@@ -61,7 +61,7 @@ public protocol Provider {
          An optional `HTTPClient` add-on used to make
          outgoing web request operations
      */
-    var client: Clients? { get }
+    var client: Client.Type? { get }
 }
 
 extension Provider {
@@ -85,7 +85,7 @@ extension Provider {
         return nil
     }
 
-    public var client: Clients? {
+    public var client: Client.Type? {
         return nil
     }
 }

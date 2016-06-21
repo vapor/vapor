@@ -1,47 +1,19 @@
-public protocol Client: Program {
-    func request(_ method: Method, uri: URI, headers: Headers, query: [String: String], body: HTTPBody) throws -> HTTPResponse
+public protocol Client: Responder {
+    init(scheme: String, host: String, port: Int) throws
 }
 
-public enum ClientsError: ErrorProtocol {
+public enum ClientError: ErrorProtocol {
     case unsupportedScheme
 }
 
-public enum Clients {
-    case plaintext(Client)
-    case secure(Client)
-    case both(plaintext: Client, secure: Client)
-}
-
-
-extension Clients {
+extension Client {
     public func request(_ method: Method, url: String, headers: Headers, query: [String: String], body: HTTPBody) throws -> HTTPResponse {
-        let uri = try URIParser.parse(uri: url.bytes)
-        return try request(method, uri: uri, headers: headers, query: query, body: body)
+        var uri = try URI(url)
+        uri.append(query: query)
+        let request = Request(method: method, uri: uri)
+        return try respond(to: request)
     }
-    public func request(_ method: Method, uri: URI, headers: Headers, query: [String: String], body: HTTPBody) throws -> HTTPResponse {
-        let isSecure = uri.scheme?.hasSuffix("s") ?? false
-        switch self {
-        case .plaintext(let plaintext):
-            guard !isSecure else {
-                throw ClientsError.unsupportedScheme
-            }
-            return try plaintext.request(method, uri: uri, headers: headers, query: query, body: body)
-        case .secure(let secure):
-            guard isSecure else {
-                throw ClientsError.unsupportedScheme
-            }
-            return try secure.request(method, uri: uri, headers: headers, query: query, body: body)
-        case .both(let plaintext, let secure):
-            if isSecure {
-                return try secure.request(method, uri: uri, headers: headers, query: query, body: body)
-            } else {
-                return try plaintext.request(method, uri: uri, headers: headers, query: query, body: body)
-            }
-        }
-    }
-}
-
-extension Clients {
+    
     public func get(_ url: String, headers: Headers = [:], query: [String: String] = [:], body: HTTPBody = []) throws -> HTTPResponse {
         return try request(.get, url: url, headers: headers, query: query, body: body)
     }

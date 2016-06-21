@@ -7,47 +7,26 @@ public enum HTTPClientError: ErrorProtocol {
 }
 
 public final class HTTPClient<ClientStreamType: ClientStream>: Client {
-    public init() {}
-    
-    public func request(
-        _ method: Method,
-        uri: URI,
-        headers: Headers = [:],
-        query q: [String: String] = [:],
-        body: HTTPBody = .data([])) throws -> HTTPResponse
-    {
-        var query: [String: StructuredData] = [:]
-        for (key, val) in q {
-            query[key] = .string(val)
-        }
+    public let client: ClientStreamType
+    public var stream: Stream
+    public let host: String
 
-        // TODO: Is it worth exposing Version? We don't support alternative serialization/parsing
-        let version = Version(major: 1, minor: 1)
-        let request = HTTPRequest(method: method, uri: uri, version: version, headers: headers, body: body)
-        request.query = .dictionary(query)
-        let connection = try makeConnection(to: uri)
-        return try perform(request, with: connection)
+    public init(scheme: String, host: String, port: Int) throws {
+        self.host = host
+        client = try ClientStreamType(scheme: scheme, host: host, port: port)
+        stream = try client.connect()
     }
 
-    private func perform(_ request: HTTPRequest, with connection: Vapor.Stream) throws -> HTTPResponse {
-        let serializer = HTTPSerializer<Request>(stream: connection)
+    public func respond(to request: Request) throws -> Response {
+        request.headers["Host"] = host
+        request.headers["Content-Length"] = 0.description
+
+        let serializer = HTTPSerializer<Request>(stream: stream)
         try serializer.serialize(request)
-        let parser = HTTPParser<HTTPResponse>(stream: connection)
+
+        let parser = HTTPParser<HTTPResponse>(stream: stream)
         let response = try parser.parse()
-        _ = try? connection.close() // TODO: Support keep-alive?
+
         return response
-    }
-
-    private func makeConnection(to uri: URI) throws -> Vapor.Stream {
-        guard let host = uri.host else { throw HTTPClientError.missingHost }
-        guard let port = uri.port ?? uri.schemePort else { throw HTTPClientError.missingPort }
-
-        let client = try ClientStreamType(host: host, port: port)
-
-        //let useSSL = uri.scheme?.hasSuffix("s") == true
-        //let client = try Stream.makeConnection(host: host, port: port, secure: useSSL)
-
-        let stream = try client.connect()
-        return StreamBuffer(stream)
     }
 }
