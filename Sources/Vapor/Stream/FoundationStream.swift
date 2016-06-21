@@ -75,9 +75,9 @@ public final class FoundationStream: NSObject, Stream, NSStreamDelegate {
 }
 
 extension FoundationStream: ClientStream {
-    public static func makeConnection(host: String, port: Int, usingSSL: Bool) throws -> Stream {
+    public static func makeConnection(host: String, port: Int, secure: Bool) throws -> Stream {
         let stream = try FoundationStream(host: host, port: port)
-        if usingSSL {
+        if secure {
             guard stream.output.upgradeSSL() else { throw Error.unableToUpgradeToSSL }
             guard stream.input.upgradeSSL() else { throw Error.unableToUpgradeToSSL }
         }

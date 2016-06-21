@@ -38,6 +38,9 @@ extension Socks.TCPClient: Stream {
 
 extension SynchronousTCPServer: StreamDriver {
     public static func listen(host: String, port: Int, handler: (Stream) throws -> ()) throws {
+        if port == 443 {
+            Log.warning("SYNCHRONOUS TCP SERVER DOES NOT SUPPORT SSL CONNECTIONS ... visit https://github.com/qutheory/vapor-ssl for install instructions")
+        }
         let port = UInt16(port)
         let address = InternetAddress(hostname: host, port: port)
         let server = try SynchronousTCPServer(address: address)
@@ -46,13 +49,13 @@ extension SynchronousTCPServer: StreamDriver {
 }
 
 extension TCPClient: ClientStream {
-    public static func makeConnection(host: String, port: Int, usingSSL: Bool) throws -> Stream {
-        if usingSSL {
+    public static func makeConnection(host: String, port: Int, secure: Bool) throws -> Stream {
+        if secure {
             #if !os(Linux)
-                Log.warning("Using Foundation stream for now. This is not supported on linux ... // TODO: link to instructions")
-                return try FoundationStream.makeConnection(host: host, port: port, usingSSL: usingSSL)
+                Log.warning("Using Foundation stream for now. This is not supported on linux ... visit https://github.com/qutheory/vapor-ssl for install instructions")
+                return try FoundationStream.makeConnection(host: host, port: port, secure: secure)
             #else
-                Log.warning("TCP CLIENT DOES NOT SUPPORT SSL CONNECTIONS")
+                Log.warning("TCP CLIENT DOES NOT SUPPORT SSL CONNECTIONS ... visit https://github.com/qutheory/vapor-ssl for install instructions")
             #endif
         }
         let port = UInt16(port)

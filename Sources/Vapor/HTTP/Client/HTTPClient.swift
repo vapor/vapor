@@ -39,7 +39,7 @@ public final class HTTPClient<Stream: ClientStream>: HTTPClientProtocol {
         guard let port = uri.port ?? uri.schemePort else { throw HTTPClientError.missingPort }
 
         let useSSL = uri.scheme?.hasSuffix("s") == true
-        let client = try Stream.makeConnection(host: host, port: port, usingSSL: useSSL)
+        let client = try Stream.makeConnection(host: host, port: port, secure: useSSL)
         let buffer = StreamBuffer(client)
         return buffer
     }
