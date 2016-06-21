@@ -7,26 +7,27 @@ public enum ClientError: ErrorProtocol {
 }
 
 extension Client {
-    public func request(_ method: Method, url: String, headers: Headers, query: [String: String], body: HTTPBody) throws -> HTTPResponse {
-        var uri = try URI(url)
+    public func request(_ method: Method, path: String, headers: Headers, query: [String: String], body: HTTPBody) throws -> HTTPResponse {
+        let path = path.finish("/")
+        var uri = try URI(path)
         uri.append(query: query)
         let request = Request(method: method, uri: uri)
         return try respond(to: request)
     }
     
-    public func get(_ url: String, headers: Headers = [:], query: [String: String] = [:], body: HTTPBody = []) throws -> HTTPResponse {
-        return try request(.get, url: url, headers: headers, query: query, body: body)
+    public func get(_ path: String, headers: Headers = [:], query: [String: String] = [:], body: HTTPBody = []) throws -> HTTPResponse {
+        return try request(.get, path: path, headers: headers, query: query, body: body)
     }
-    public func post(_ url: String, headers: Headers = [:], query: [String: String] = [:], body: HTTPBody = []) throws -> HTTPResponse {
-        return try request(.post, url: url, headers: headers, query: query, body: body)
+    public func post(_ path: String, headers: Headers = [:], query: [String: String] = [:], body: HTTPBody = []) throws -> HTTPResponse {
+        return try request(.post, path: path, headers: headers, query: query, body: body)
     }
-    public func put(_ url: String, headers: Headers = [:], query: [String: String] = [:], body: HTTPBody = []) throws -> HTTPResponse {
-        return try request(.put, url: url, headers: headers, query: query, body: body)
+    public func put(_ path: String, headers: Headers = [:], query: [String: String] = [:], body: HTTPBody = []) throws -> HTTPResponse {
+        return try request(.put, path: path, headers: headers, query: query, body: body)
     }
-    public func patch(_ url: String, headers: Headers = [:], query: [String: String] = [:], body: HTTPBody = []) throws -> HTTPResponse {
-        return try request(.patch, url: url, headers: headers, query: query, body: body)
+    public func patch(_ path: String, headers: Headers = [:], query: [String: String] = [:], body: HTTPBody = []) throws -> HTTPResponse {
+        return try request(.patch, path: path, headers: headers, query: query, body: body)
     }
-    public func delete(_ url: String, headers: Headers = [:], query: [String: String] = [:], body: HTTPBody = []) throws -> HTTPResponse {
-        return try request(.delete, url: url, headers: headers, query: query, body: body)
+    public func delete(_ path: String, headers: Headers = [:], query: [String: String] = [:], body: HTTPBody = []) throws -> HTTPResponse {
+        return try request(.delete, path: path, headers: headers, query: query, body: body)
     }
 }

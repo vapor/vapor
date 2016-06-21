@@ -29,7 +29,7 @@ extension TCPInternetSocket: Stream {
     }
 }
 
-public class TCPAddressStream: ProgramStream {
+public class TCPProgramStream: ProgramStream {
     public let stream: TCPInternetSocket
 
     public required init(scheme: String, host: String, port: Int) throws {
@@ -37,19 +37,22 @@ public class TCPAddressStream: ProgramStream {
             throw ProgramStreamError.unsupportedScheme
         }
 
+        print(host)
+        print(port)
+
         let address = InternetAddress(hostname: host, port: Port(port))
         stream = try TCPInternetSocket(address: address)
     }
 }
 
-public final class TCPClientStream: TCPAddressStream, ClientStream  {
+public final class TCPClientStream: TCPProgramStream, ClientStream  {
     public func connect() throws -> Stream {
         try stream.connect()
         return stream
     }
 }
 
-public final class TCPServerStream: TCPAddressStream, ServerStream {
+public final class TCPServerStream: TCPProgramStream, ServerStream {
     public required init(scheme: String, host: String, port: Int) throws {
         try super.init(scheme: scheme, host: host, port: port)
 
