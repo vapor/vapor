@@ -2,7 +2,7 @@ import libc
 import Foundation
 import Socks
 
-public let VERSION = "0.11"
+public let VERSION = "0.12"
 
 public class Application {
     /**
