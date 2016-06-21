@@ -17,7 +17,7 @@ public class Application {
         connections and return the desired
         response.
     */
-    public let server: ServerDriver.Type
+    public let server: Server
 
     /**
         The session driver is responsible for
@@ -79,7 +79,7 @@ public class Application {
         Make sure to append your custom `Middleware`
         if you don't want to overwrite default behavior.
      */
-    public var globalMiddleware: [HTTPMiddleware]
+    public var globalMiddleware: [Middleware]
 
     /**
         Available Commands to use when starting
@@ -123,14 +123,14 @@ public class Application {
         localization: Localization? = nil,
         hash: HashDriver? = nil,
         console: ConsoleDriver? = nil,
-        server: ServerDriver.Type? = nil,
+        server: Server? = nil,
         client: HTTPClientProtocol? = nil,
         router: RouterDriver? = nil,
         session: SessionDriver? = nil,
         providers: [Provider] = [],
         arguments: [String]? = nil
     ) {
-        var serverProvided: ServerDriver.Type? = server
+        var serverProvided: Server? = server
         var routerProvided: RouterDriver? = router
         var sessionProvided: SessionDriver? = session
         var hashProvided: HashDriver? = hash
@@ -181,8 +181,8 @@ public class Application {
         ]
 
         self.router = routerProvided ?? BranchRouter()
-        self.server = serverProvided ?? DefaultServer.self
-        self.client = clientProvided ?? HTTPClient<TCPClient>()
+        self.server = serverProvided ?? HTTPServer<TCPServerStream, HTTPParser<HTTPRequest>, HTTPSerializer<HTTPResponse>>()
+        self.client = clientProvided ?? HTTPClient<TCPClientStream>()
 
         routes = []
 
@@ -304,12 +304,13 @@ extension Application {
         do {
             console.output("Server starting at \(host):\(port)", style: .info)
             // noreturn
-            let server = try self.server.init(host: host, port: port, responder: self)
-            try server.start()
-        } catch ServerError.bindFailed {
+            try self.server.start(host: host, port: port, responder: self) { [weak self] error in
+                self?.console.output("Server error: \(error)")
+            }
+        } catch ServerError.bind {
             console.output("Could not bind to port \(port), it may be in use or require sudo.", style: .error)
         } catch {
-            Log.error("Server start error: \(error)")
+            Log.error("Unknown start error: \(error)")
         }
     }
 }
@@ -356,7 +357,7 @@ extension Application {
     }
 }
 
-extension Application: HTTPResponder {
+extension Application: Responder {
 
     /**
         Returns a response to the given request
@@ -365,10 +366,10 @@ extension Application: HTTPResponder {
         - throws: error if something fails in finding response
         - returns: response if possible
      */
-    public func respond(to request: HTTPRequest) throws -> HTTPResponse {
+    public func respond(to request: Request) throws -> Response {
         Log.info("\(request.method) \(request.uri.path ?? "/")")
 
-        var responder: HTTPResponder
+        var responder: Responder
         let request = request
 
         /*
@@ -389,7 +390,7 @@ extension Application: HTTPResponder {
             responder = fileHander
         } else {
             // Default not found handler
-            responder = HTTPRequest.Handler { _ in
+            responder = Request.Handler { _ in
                 let normal: [Method] = [.get, .post, .put, .patch, .delete]
 
                 if normal.contains(request.method) {
@@ -408,7 +409,7 @@ extension Application: HTTPResponder {
         // Loop through middlewares in order
         responder = self.globalMiddleware.chain(to: responder)
 
-        var response: HTTPResponse
+        var response: Response
         do {
             response = try responder.respond(to: request)
 

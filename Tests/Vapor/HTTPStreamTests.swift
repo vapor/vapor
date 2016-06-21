@@ -76,7 +76,9 @@ final class TestStream: Stream {
     var closed: Bool
     var buffer: Bytes
 
-    var timeout: Double = 0
+    func setTimeout(_ timeout: Double) throws {
+        
+    }
 
     init() {
         closed = false

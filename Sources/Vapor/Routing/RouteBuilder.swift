@@ -1,9 +1,9 @@
 public protocol RouteBuilder {
     var leadingPath: String { get }
-    var scopedMiddleware: [HTTPMiddleware] { get }
+    var scopedMiddleware: [Middleware] { get }
 
     func add(
-        middleware: [HTTPMiddleware],
+        middleware: [Middleware],
         method: Method,
         path: String,
         handler: Route.Handler
@@ -39,7 +39,7 @@ extension RouteBuilder {
         body(group: group)
     }
 
-    public func grouped(_ middlewares: HTTPMiddleware...) -> Route.Link {
+    public func grouped(_ middlewares: Middleware...) -> Route.Link {
         return Route.Link(
             parent: self,
             leadingPath: nil,
@@ -47,7 +47,7 @@ extension RouteBuilder {
         )
     }
 
-    public func grouped(_ middlewares: [HTTPMiddleware]) -> Route.Link {
+    public func grouped(_ middlewares: [Middleware]) -> Route.Link {
         return Route.Link(
             parent: self,
             leadingPath: nil,
@@ -55,12 +55,12 @@ extension RouteBuilder {
         )
     }
 
-    public func grouped(_ middlewares: HTTPMiddleware..., _ body: @noescape (group: Route.Link) -> Void) {
+    public func grouped(_ middlewares: Middleware..., _ body: @noescape (group: Route.Link) -> Void) {
         let groupObject = grouped(middlewares)
         body(group: groupObject)
     }
 
-    public func grouped(middleware middlewares: [HTTPMiddleware], _ body: @noescape (group: Route.Link) -> Void) {
+    public func grouped(middleware middlewares: [Middleware], _ body: @noescape (group: Route.Link) -> Void) {
         let groupObject = grouped(middlewares)
         body(group: groupObject)
     }
@@ -101,7 +101,7 @@ extension Application: RouteBuilder {
         handler: Route.Handler
     ) {
         // Convert Route.Handler to Request.Handler
-        let wrapped: HTTPResponder = HTTPRequest.Handler { request in
+        let wrapped: Responder = Request.Handler { request in
             return try handler(request).makeResponse()
         }
         let responder = middleware.chain(to: wrapped)
@@ -112,8 +112,8 @@ extension Application: RouteBuilder {
     }
 }
 
-extension HTTPMiddleware {
-    func chain(to responder: HTTPResponder) -> HTTPResponder {
+extension Middleware {
+    func chain(to responder: Responder) -> Responder {
         return HTTPRequest.Handler { request in
             return try self.respond(to: request, chainingTo: responder)
         }
@@ -121,9 +121,9 @@ extension HTTPMiddleware {
 }
 
 extension Collection where Iterator.Element == Middleware {
-    func chain(to responder: HTTPResponder) -> HTTPResponder {
+    func chain(to responder: Responder) -> Responder {
         return reversed().reduce(responder) { nextResponder, nextMiddleware in
-            return HTTPRequest.Handler { request in
+            return Request.Handler { request in
                 return try nextMiddleware.respond(to: request, chainingTo: nextResponder)
             }
         }
