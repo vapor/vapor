@@ -1,92 +1,96 @@
-import Foundation
+#if !os(Linux)
 
-public final class FoundationStream: NSObject, Stream, NSStreamDelegate {
-    public enum Error: ErrorProtocol {
-        case unableToCompleteWriteOperation
-        case unableToConnectToHost
-        case unableToUpgradeToSSL
-    }
+    import Foundation
 
-    public var timeout: Double = 0
+    public final class FoundationStream: NSObject, Stream, NSStreamDelegate {
+        public enum Error: ErrorProtocol {
+            case unableToCompleteWriteOperation
+            case unableToConnectToHost
+            case unableToUpgradeToSSL
+        }
 
-    public var closed: Bool {
-        return input.streamStatus == .closed
-            || output.streamStatus == .closed
-    }
+        public var timeout: Double = 0
 
-    let input: NSInputStream
-    let output: NSOutputStream
+        public var closed: Bool {
+            return input.streamStatus == .closed
+                || output.streamStatus == .closed
+        }
 
-    init(host: String, port: Int) throws {
-        var inputStream: NSInputStream? = nil
-        var outputStream: NSOutputStream? = nil
-        NSStream.getStreamsToHost(withName: host,
-                                  port: port,
-                                  inputStream: &inputStream,
-                                  outputStream: &outputStream)
-        guard
-            let input = inputStream,
-            let output = outputStream
-            else { throw Error.unableToConnectToHost }
-        input.open()
-        output.open()
-        self.input = input
-        self.output = output
-        super.init()
+        let input: NSInputStream
+        let output: NSOutputStream
 
-        self.input.delegate = self
-        self.output.delegate = self
-    }
+        init(host: String, port: Int) throws {
+            var inputStream: NSInputStream? = nil
+            var outputStream: NSOutputStream? = nil
+            NSStream.getStreamsToHost(withName: host,
+                                      port: port,
+                                      inputStream: &inputStream,
+                                      outputStream: &outputStream)
+            guard
+                let input = inputStream,
+                let output = outputStream
+                else { throw Error.unableToConnectToHost }
+            input.open()
+            output.open()
+            self.input = input
+            self.output = output
+            super.init()
 
-    public func close() throws {
-        output.close()
-        input.close()
-    }
+            self.input.delegate = self
+            self.output.delegate = self
+        }
 
-    func send(_ byte: Byte) throws {
-        try send([byte])
-    }
+        public func close() throws {
+            output.close()
+            input.close()
+        }
 
-    public func send(_ bytes: Bytes) throws {
-        var buffer = bytes
-        let written = output.write(&buffer, maxLength: buffer.count)
-        guard written == bytes.count else {
-            throw Error.unableToCompleteWriteOperation
+        func send(_ byte: Byte) throws {
+            try send([byte])
+        }
+
+        public func send(_ bytes: Bytes) throws {
+            var buffer = bytes
+            let written = output.write(&buffer, maxLength: buffer.count)
+            guard written == bytes.count else {
+                throw Error.unableToCompleteWriteOperation
+            }
+        }
+
+        public func flush() throws {}
+
+        public func receive() throws -> Byte? {
+            return try receive(max: 1).first
+        }
+
+        public func receive(max: Int) throws -> Bytes {
+            var buffer = Bytes(repeating: 0, count: max)
+            let read = input.read(&buffer, maxLength: max)
+            return buffer.prefix(read).array
+        }
+
+        // MARK: Stream Events
+
+        public func stream(_ aStream: NSStream, handle eventCode: NSStreamEvent) {
+            if eventCode.contains(.endEncountered) { _ = try? close() }
         }
     }
 
-    public func flush() throws {}
-
-    public func receive() throws -> Byte? {
-        return try receive(max: 1).first
-    }
-
-    public func receive(max: Int) throws -> Bytes {
-        var buffer = Bytes(repeating: 0, count: max)
-        let read = input.read(&buffer, maxLength: max)
-        return buffer.prefix(read).array
-    }
-
-    // MARK: Stream Events
-
-    public func stream(_ aStream: NSStream, handle eventCode: NSStreamEvent) {
-        if eventCode.contains(.endEncountered) { _ = try? close() }
-    }
-}
-
-extension FoundationStream: ClientStream {
-    public static func makeConnection(host: String, port: Int, secure: Bool) throws -> Stream {
-        let stream = try FoundationStream(host: host, port: port)
-        if secure {
-            guard stream.output.upgradeSSL() else { throw Error.unableToUpgradeToSSL }
-            guard stream.input.upgradeSSL() else { throw Error.unableToUpgradeToSSL }
+    extension FoundationStream: ClientStream {
+        public static func makeConnection(host: String, port: Int, secure: Bool) throws -> Stream {
+            let stream = try FoundationStream(host: host, port: port)
+            if secure {
+                guard stream.output.upgradeSSL() else { throw Error.unableToUpgradeToSSL }
+                guard stream.input.upgradeSSL() else { throw Error.unableToUpgradeToSSL }
+            }
+            return stream
         }
-        return stream
     }
-}
+    
+    extension NSStream {
+        func upgradeSSL() -> Bool {
+            return setProperty(NSStreamSocketSecurityLevelNegotiatedSSL, forKey: NSStreamSocketSecurityLevelKey)
+        }
+    }
 
-extension NSStream {
-    func upgradeSSL() -> Bool {
-        return setProperty(NSStreamSocketSecurityLevelNegotiatedSSL, forKey: NSStreamSocketSecurityLevelKey)
-    }
-}
+#endif
