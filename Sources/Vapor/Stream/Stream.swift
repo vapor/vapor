@@ -1,5 +1,10 @@
+public enum StreamError: ErrorProtocol {
+    case unsupported
+    case custom(String)
+}
+
 public protocol Stream: class {
-    var timeout: Double { get set }
+    func setTimeout(_ timeout: Double) throws
 
     var closed: Bool { get }
     func close() throws

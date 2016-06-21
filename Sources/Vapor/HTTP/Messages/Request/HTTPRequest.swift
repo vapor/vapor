@@ -102,8 +102,8 @@ public final class HTTPRequest: HTTPMessage {
 }
 
 extension HTTPRequest {
-    public struct Handler: HTTPResponder {
-        public typealias Closure = (HTTPRequest) throws -> HTTPResponse
+    public struct Handler: Responder {
+        public typealias Closure = (Request) throws -> Response
 
         private let closure: Closure
 

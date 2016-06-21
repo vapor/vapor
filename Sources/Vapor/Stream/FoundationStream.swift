@@ -9,7 +9,9 @@
             case unableToUpgradeToSSL
         }
 
-        public var timeout: Double = 0
+        public func setTimeout(_ timeout: Double) throws {
+            throw StreamError.unsupported
+        }
 
         public var closed: Bool {
             return input.streamStatus == .closed
@@ -76,7 +78,8 @@
         }
     }
 
-    extension FoundationStream: ClientStream {
+    /*
+ extension FoundationStream: ClientStream {
         public static func makeConnection(host: String, port: Int, secure: Bool) throws -> Stream {
             let stream = try FoundationStream(host: host, port: port)
             if secure {
@@ -85,7 +88,9 @@
             }
             return stream
         }
-    }
+    }*/
+
+    // TODO: Fix foundation stream
     
     extension NSStream {
         func upgradeSSL() -> Bool {

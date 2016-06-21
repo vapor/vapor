@@ -6,7 +6,7 @@
     If an active Session is found on the request when the response
     is being made, the Session identifier is returned as a `vapor-session` cookie.
 */
-class SessionMiddleware: HTTPMiddleware {
+class SessionMiddleware: Middleware {
 
     var driver: SessionDriver
 
@@ -14,7 +14,7 @@ class SessionMiddleware: HTTPMiddleware {
         driver = session
     }
 
-    func respond(to request: HTTPRequest, chainingTo chain: HTTPResponder) throws -> HTTPResponse {
+    func respond(to request: HTTPRequest, chainingTo chain: Responder) throws -> HTTPResponse {
         // mutable -- MUST be declared at top of function
         if
             let sessionIdentifier = request.cookies["vapor-session"]

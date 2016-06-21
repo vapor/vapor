@@ -8,58 +8,51 @@ extension timeval {
     }
 }
 
-extension Socks.TCPClient: Stream {
-    public var closed: Bool {
-        return socket.closed
-    }
 
-    public var timeout: Double {
-        get {
-            // TODO: Implement a way to view the timeout
-            return 0
-        }
-        set {
-            socket.sendingTimeout = timeval(seconds: newValue)
-        }
+
+extension TCPInternetSocket: Stream {
+    public func setTimeout(_ timeout: Double) throws {
+        sendingTimeout = timeval(seconds: timeout)
     }
 
     public func send(_ bytes: Bytes) throws {
-        try send(bytes: bytes)
+        try send(data: bytes)
     }
 
     public func flush() throws {
-        //
+        // flushing is unnecessary, send immediately sends
     }
 
     public func receive(max: Int) throws -> Bytes {
-        return try receive(maxBytes: max)
+        return try recv(maxBytes: max)
     }
 }
 
-extension SynchronousTCPServer: StreamDriver {
-    public static func listen(host: String, port: Int, handler: (Stream) throws -> ()) throws {
-        if port == 443 {
-            Log.warning("SYNCHRONOUS TCP SERVER DOES NOT SUPPORT SSL CONNECTIONS ... visit https://github.com/qutheory/vapor-ssl for install instructions")
-        }
-        let port = UInt16(port)
-        let address = InternetAddress(hostname: host, port: port)
-        let server = try SynchronousTCPServer(address: address)
-        try server.startWithHandler(handler: handler)
+public class TCPAddressStream: AddressStream {
+    public let stream: TCPInternetSocket
+
+    public required init(host: String, port: Int) throws {
+        let address = InternetAddress(hostname: host, port: Port(port))
+        stream = try TCPInternetSocket(address: address)
     }
 }
 
-extension TCPClient: ClientStream {
-    public static func makeConnection(host: String, port: Int, secure: Bool) throws -> Stream {
-        if secure {
-            #if !os(Linux)
-                Log.warning("Using Foundation stream for now. This is not supported on linux ... visit https://github.com/qutheory/vapor-ssl for install instructions")
-                return try FoundationStream.makeConnection(host: host, port: port, secure: secure)
-            #else
-                Log.warning("TCP CLIENT DOES NOT SUPPORT SSL CONNECTIONS ... visit https://github.com/qutheory/vapor-ssl for install instructions")
-            #endif
-        }
-        let port = UInt16(port)
-        let address = InternetAddress(hostname: host, port: port)
-        return try TCPClient(address: address)
+public final class TCPClientStream: TCPAddressStream, ClientStream  {
+    public func connect() throws -> Stream {
+        try stream.connect()
+        return stream
+    }
+}
+
+public final class TCPServerStream: TCPAddressStream, ServerStream {
+    public required init(host: String, port: Int) throws {
+        try super.init(host: host, port: port)
+
+        try stream.bind()
+        try stream.listen(queueLimit: 4096)
+    }
+
+    public func accept() throws -> Stream {
+        return try stream.accept()
     }
 }

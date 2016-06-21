@@ -6,7 +6,7 @@ public class TestMiddleware: Middleware {
 	public init() {
 	}
 
-	public func respond(to request: Request, chainingTo chain: HTTPResponder) throws -> Response {
+	public func respond(to request: Request, chainingTo chain: Responder) throws -> Response {
 		return try chain.respond(to: request)
 	}
 	

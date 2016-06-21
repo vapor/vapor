@@ -4,10 +4,10 @@ public typealias Host = String
 public final class BranchRouter: RouterDriver {
 
     // MARK: Private Tree Representation
-    private final var tree: [Host : [Method : Branch]] = [:]
+    private final var tree: [Host: [Method: Branch]] = [:]
 
     // MARK: Routing
-    public final func route(_ request: HTTPRequest) -> HTTPResponder? {
+    public final func route(_ request: Request) -> Responder? {
         let path = request.uri.path ?? ""
         let host = request.uri.host ?? ""
 

@@ -17,8 +17,6 @@ public typealias Version = S4.Version
 public typealias Status = S4.Status
 public typealias Method = S4.Method
 
-public typealias ServerDriver = HTTPServerProtocol
-public typealias Middleware = HTTPMiddleware
-public protocol HTTPMiddleware {
-    func respond(to request: HTTPRequest, chainingTo next: HTTPResponder) throws -> HTTPResponse
+public protocol Middleware {
+    func respond(to request: Request, chainingTo next: Responder) throws -> Response
 }
