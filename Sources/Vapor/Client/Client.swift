@@ -20,19 +20,19 @@ extension Client {
         return try respond(to: request)
     }
 
-    public func get(_ path: String, headers: Headers = [:], query: [String: StructuredDataRepresentable] = [:], body: HTTPBody = []) throws -> Response {
+    public func get(_ path: String = "/", headers: Headers = [:], query: [String: StructuredDataRepresentable] = [:], body: HTTPBody = []) throws -> Response {
         return try request(.get, path: path, headers: headers, query: query, body: body)
     }
-    public func post(_ path: String, headers: Headers = [:], query: [String: StructuredDataRepresentable] = [:], body: HTTPBody = []) throws -> Response {
+    public func post(_ path: String = "/", headers: Headers = [:], query: [String: StructuredDataRepresentable] = [:], body: HTTPBody = []) throws -> Response {
         return try request(.post, path: path, headers: headers, query: query, body: body)
     }
-    public func put(_ path: String, headers: Headers = [:], query: [String: StructuredDataRepresentable] = [:], body: HTTPBody = []) throws -> Response {
+    public func put(_ path: String = "/", headers: Headers = [:], query: [String: StructuredDataRepresentable] = [:], body: HTTPBody = []) throws -> Response {
         return try request(.put, path: path, headers: headers, query: query, body: body)
     }
-    public func patch(_ path: String, headers: Headers = [:], query: [String: StructuredDataRepresentable] = [:], body: HTTPBody = []) throws -> Response {
+    public func patch(_ path: String = "/", headers: Headers = [:], query: [String: StructuredDataRepresentable] = [:], body: HTTPBody = []) throws -> Response {
         return try request(.patch, path: path, headers: headers, query: query, body: body)
     }
-    public func delete(_ path: String, headers: Headers = [:], query: [String: StructuredDataRepresentable] = [:], body: HTTPBody = []) throws -> Response {
+    public func delete(_ path: String = "/", headers: Headers = [:], query: [String: StructuredDataRepresentable] = [:], body: HTTPBody = []) throws -> Response {
         return try request(.delete, path: path, headers: headers, query: query, body: body)
     }
 }
