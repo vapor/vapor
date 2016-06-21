@@ -5,14 +5,14 @@ extension URIParser {
     }
 }
 
-// TODO: This is shit, fix it
-// ************************************
 extension URI {
     public typealias Scheme = String
     // TODO: Find RFC list of other defaults, implement and link source
     static let defaultPorts: [Scheme: Int] = [
         "http": 80,
-        "https": 443
+        "https": 443,
+        "ws": 80,
+        "wss": 443
     ]
 
     // The default port associated with the scheme
@@ -20,7 +20,7 @@ extension URI {
         return scheme.flatMap { scheme in URI.defaultPorts[scheme] }
     }
 
-    init(_ str: String) throws {
+    public init(_ str: String) throws {
         self = try URIParser.parse(uri: str.utf8.array)
         guard port == nil else { return }
         // if no port, try scheme default if possible
