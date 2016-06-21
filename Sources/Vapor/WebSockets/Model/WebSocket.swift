@@ -1,8 +1,3 @@
-// TODO:
-// More thorough testing
-// Client/Server Dual Support
-//
-
 public final class WebSocket {
 
     public typealias EventHandler<T> = (T) throws -> Void

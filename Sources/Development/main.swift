@@ -17,6 +17,33 @@ app.get { request in
     return try app.view("welcome.html")
 }
 
+app.get("client-socket") { req in
+    _ = try Background {
+        _ = try? WebSocket.connect(to: "ws://\(app.host):\(app.port)/server-socket-responder") { (ws) in
+            ws.onText = { ws, text in
+                print("[Client] received - \(text)")
+            }
+
+            ws.onClose = { _ in
+                print("[Client] closed.....")
+            }
+        }
+    }
+
+    return "Beginning client socket test, check your console ..."
+}
+
+app.socket("server-socket-responder") { req, ws in
+    let top = 10
+    for i in 1...top {
+        sleep(1)
+        try ws.send("\(i) of \(top)")
+    }
+
+    print("[Server] initiating close")
+    try ws.close()
+}
+
 app.get("ping") { _ in
     return 😀
 }
@@ -75,28 +102,40 @@ app.add(.trace, path: "trace") { request in
 }
 
 // MARK: WebSockets
-
-app.socket("socket") { request, ws in
-    try ws.send("WebSocket Connected :)")
-
-    ws.onText = { ws, text in
-        try ws.send("You said \(text)!")
-
-        if text == "stop" {
-            ws.onText = nil
-            try ws.send("🚫 stopping connection listener -- socket remains open")
+app.get("socket") { req in
+    print("Got request: \(req)")
+    return try req.upgradeToWebSocket(body: { (ws) in
+        print("Upgraded: \(ws)")
+        for i in 1...10 {
+            sleep(1)
+            try ws.send(":    \(i)    :")
         }
 
-        if text == "close" {
-            try ws.send("... closing 👋")
-            try ws.close()
-        }
-    }
-
-    ws.onClose = { ws, status, reason, clean in
-        print("Did close w/ status \(status) reason \(reason)")
-    }
+        try ws.close()
+    })
 }
+
+//app.socket("socket") { request, ws in
+//    try ws.send("WebSocket Connected :)")
+//
+//    ws.onText = { ws, text in
+//        try ws.send("You said \(text)!")
+//
+//        if text == "stop" {
+//            ws.onText = nil
+//            try ws.send("🚫 stopping connection listener -- socket remains open")
+//        }
+//
+//        if text == "close" {
+//            try ws.send("... closing 👋")
+//            try ws.close()
+//        }
+//    }
+//
+//    ws.onClose = { ws, status, reason, clean in
+//        print("Did close w/ status \(status) reason \(reason)")
+//    }
+//}
 
 //MARK: Resource
 
