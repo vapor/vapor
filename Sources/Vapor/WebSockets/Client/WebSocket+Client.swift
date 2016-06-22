@@ -2,6 +2,18 @@ import CryptoEssentials
 import libc
 
 extension WebSocket {
+    public static func background(to uri: String, protocols: [String]? = nil, onConnect: (WebSocket) throws -> Void) throws {
+        let uri = try URI(uri)
+        try background(to: uri, protocols: protocols, onConnect: onConnect)
+    }
+
+    public static func background(to uri: URI, protocols: [String]? = nil, onConnect: (WebSocket) throws -> Void) throws {
+        _ = try Background {
+            // TODO: Need to notify failure
+            _ = try? connect(to: uri, protocols: protocols, onConnect: onConnect)
+        }
+    }
+
     public static func connect(to uri: String, protocols: [String]? = nil, onConnect: (WebSocket) throws -> Void) throws {
         let uri = try URI(uri)
         try connect(to: uri, protocols: protocols, onConnect: onConnect)
