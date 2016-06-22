@@ -161,6 +161,7 @@ extension Array where Element: Hashable {
             trailing -= 1
         }
 
+        guard trailing >= leading else { return [] }
         return self[leading...trailing]
     }
 }

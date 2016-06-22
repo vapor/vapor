@@ -1,10 +1,3 @@
-public enum WebSocketRequestFormat: ErrorProtocol {
-    case missingSecKeyHeader
-    case missingUpgradeHeader
-    case missingConnectionHeader
-    case invalidOrUnsupportedVersion
-}
-
 extension Request {
     /**
         Upgrades the request to a WebSocket connection
@@ -15,18 +8,18 @@ extension Request {
         supportedProtocols: ([String]) -> [String] = { $0 },
         body: (ws: WebSocket) throws -> Void) throws -> Response {
         guard let requestKey = headers.secWebSocketKey else {
-            throw WebSocketRequestFormat.missingSecKeyHeader
+            throw WebSocket.FormatError.missingSecKeyHeader
         }
         guard headers.upgrade == "websocket" else {
-            throw WebSocketRequestFormat.missingUpgradeHeader
+            throw WebSocket.FormatError.missingUpgradeHeader
         }
         guard headers.connection?.range(of: "Upgrade") != nil else {
-            throw WebSocketRequestFormat.missingConnectionHeader
+            throw WebSocket.FormatError.missingConnectionHeader
         }
 
         // TODO: Find other versions and see if we can support -- this is version mentioned in RFC
         guard let version = headers.secWebSocketVersion where version == "13" else {
-            throw WebSocketRequestFormat.invalidOrUnsupportedVersion
+            throw WebSocket.FormatError.invalidOrUnsupportedVersion
         }
 
         var responseHeaders: Headers = [:]

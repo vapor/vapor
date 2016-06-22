@@ -5,7 +5,7 @@ public enum HTTPClientError: ErrorProtocol {
 public final class HTTPClient<ClientStreamType: ClientStream>: Client {
     public let client: ClientStreamType
     public let base: URI
-    public var stream: Stream
+    public private(set) var stream: Stream
 
     public init(_ base: URI) throws {
         self.base = base
@@ -56,8 +56,8 @@ extension Request {
 
 extension URI {
     func combine(with uri: URI) -> URI {
-        let scheme = self.scheme ?? uri.scheme
-        let host = self.host ?? uri.host
+        let scheme = choose(self.scheme, uri.scheme)
+        let host = choose(self.host, uri.host)
         let userInfo = self.userInfo ?? uri.userInfo
         let port = self.port ?? uri.schemePort ?? uri.port ?? uri.schemePort ?? 80
         let currentPath = self.path ?? ""
@@ -69,6 +69,14 @@ extension URI {
         let query = self.appended(query: uri.query)
         let fragment = self.appended(fragment: uri.fragment)
         return URI(scheme: scheme, userInfo: userInfo, host: host, port: port, path: path, query: query, fragment: fragment)
+    }
+
+    private func choose(_ lhs: String?, _ rhs: String?) -> String? {
+        if let lhs = lhs where !lhs.isEmpty {
+            return lhs
+        } else {
+            return rhs
+        }
     }
 }
 
