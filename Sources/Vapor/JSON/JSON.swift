@@ -4,8 +4,8 @@ import Jay
 public typealias JSON = C7.JSON
 
 extension JSON {
-    static var deserializer: (data: Bytes) throws -> JSON = { try Jay().typesafeJsonFromData($0) }
-    static var serializer: (json: JSON) throws -> Bytes = { try Jay(formatting: .minified).dataFromJson(json: $0) }
+    static var parse: (Bytes) throws -> JSON = { try Jay().typesafeJsonFromData($0) }
+    static var serialize: (JSON) throws -> Bytes = { try Jay(formatting: .minified).dataFromJson(json: $0) }
 }
 
 extension JSON {
@@ -31,12 +31,12 @@ extension JSON {
     }
 
     public init(_ value: Data) throws {
-        self = try JSON.deserializer(data: value.bytes)
+        self = try JSON.parse(value.bytes)
     }
 
     public var data: Data {
         do {
-            let bytes = try JSON.serializer(json: self)
+            let bytes = try JSON.serialize(self)
             return Data(bytes)
         } catch {
             return Data()

@@ -88,22 +88,6 @@ class RouteTests: XCTestCase {
 		assertRouteExists(at: "group/subgroup/1", method: .get, host: "*", inRoutes: app.routes)
 	}
 
-    func testJay() throws {
-        let json = JSON( [
-            "error": true,
-            "message": "hello"
-            ]
-        )
-
-        do {
-            let data = try JSON.serializer(json: json)
-            print("Got data: \(data)")
-        } catch {
-            print("Got error: \(error)")
-            print("")
-        }
-    }
-
     func testRouteAbort() throws {
         let app = Application()
 

@@ -53,7 +53,7 @@ extension HTTPMessage {
             return existing
         } else if let type = headers["Content-Type"] where type.contains("application/json") {
             guard case let .data(body) = body else { return nil }
-            guard let json = try? JSON.deserializer(data: body) else { return nil }
+            guard let json = try? JSON.parse(body) else { return nil }
             storage["json"] = json
             return json
         } else {

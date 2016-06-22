@@ -12,7 +12,7 @@ class ValidationMiddleware: Middleware {
                 "error": true,
                 "message": error.message
             ])
-            let data = try JSON.serializer(json: json)
+            let data = try JSON.serialize(json)
             return Response(status: .badRequest, body: .data(data))
         }
     }

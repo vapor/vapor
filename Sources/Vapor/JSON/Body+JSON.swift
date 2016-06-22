@@ -1,6 +1,6 @@
 extension HTTPBody {
     public init(_ json: JSON) throws {
-        let bytes = try JSON.serializer(json: json)
+        let bytes = try JSON.serialize(json)
         self.init(bytes)
     }
 }
