@@ -2,14 +2,13 @@ import XCTest
 @testable import Vapor
 
 class ConsoleTests: XCTestCase {
-    static var allTests: [(String, (ConsoleTests) -> () throws -> Void)] {
-        return [
-            ("testCommandRun", testCommandRun),
-            ("testCommandInsufficientArgs", testCommandInsufficientArgs),
-            ("testCommandFetchOptions", testCommandFetchOptions),
-            ("testDefaultServe", testDefaultServe),
-        ]
-    }
+    static let allTests = [
+        ("testCommandRun", testCommandRun),
+        ("testCommandInsufficientArgs", testCommandInsufficientArgs),
+        ("testCommandFetchArgs", testCommandFetchArgs),
+        ("testCommandFetchOptions", testCommandFetchOptions),
+        ("testDefaultServe", testDefaultServe),
+    ]
 
     func testCommandRun() {
         let console = TestConsoleDriver()

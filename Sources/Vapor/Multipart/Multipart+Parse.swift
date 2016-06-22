@@ -1,5 +1,3 @@
-import MediaType
-
 extension Multipart {
     public enum Error: ErrorProtocol {
         case invalidBoundary
@@ -14,14 +12,14 @@ extension Multipart {
     }
 
     static func parse(_ body: Data, boundary: String) -> [String: Multipart] {
-        let boundary = [.hyphen, .hyphen] + boundary.data
+        let boundary = Data([.hyphen, .hyphen] + boundary.data)
 
         var form = [String: Multipart]()
         
         // Separate by boundry and loop over the "multi"-parts
         for part in body.split(separator: boundary, excludingFirst: true, excludingLast: true) {
 
-            let headBody = part.split(separator: .crlf + .crlf)
+            let headBody = part.split(separator: Data(Byte.crlf + Byte.crlf))
 
             // Separate the head and body
             guard headBody.count == 2, let head = headBody.first, let body = headBody.last else {
@@ -41,11 +39,11 @@ extension Multipart {
             if form.keys.contains(name) {
                 // If it's a file.. there are multiple files being uploaded under the same key
                 if storage.keys.contains("content-type") || storage.keys.contains("filename") {
-                    var mediaType: MediaType? = nil
+                    var mediaType: String? = nil
 
                     // Take the content-type if it's there
                     if let contentType = storage["content-type"] {
-                        mediaType = try? MediaType(string: contentType)
+                        mediaType = contentType
                     }
 
                     // Create the suple to be added to the array
@@ -67,8 +65,7 @@ extension Multipart {
                         form[name] = .file(file)
                     }
                 } else {
-                    var new = String(body)
-                    new.replace(string: "\r\n", with: "")
+                    let new = body.string.components(separatedBy: "\r\n").joined(separator: "")
 
                     if let o = form[name], case .input(let old) = o {
                         form[name] = .inputArray([old, new])
@@ -84,11 +81,11 @@ extension Multipart {
             } else {
                 // Ensure it's a file. There's no proper way of detecting this if there's no filename and no content-type
                 if storage.keys.contains("content-type") || storage.keys.contains("filename") {
-                    var mediaType: MediaType? = nil
+                    var mediaType: String? = nil
 
                     // Take the optional content type and convert it to a MediaType
                     if let contentType = storage["content-type"] {
-                        mediaType = try? MediaType(string: contentType)
+                        mediaType = contentType
                     }
 
                     // Store the file in the form
@@ -97,15 +94,11 @@ extension Multipart {
 
                     // If it's not a file (or not for sure) we're storing the information String
                 } else {
-                    var input = String(body)
-                    input.replace(string: "\r\n", with: "")
-
+                    let input = body.string.components(separatedBy: "\r\n").joined(separator: "")
                     form[name] = .input(input)
                 }
             }
-
         }
-    
         return form
     }
 
@@ -113,15 +106,14 @@ extension Multipart {
         var storage = [String: String]()
 
         // Separate the individual headers
-        let headers = head.split(separator: .crlf)
+        let headers = head.split(separator: Data(Byte.crlf))
 
         for line in headers {
             // Make the header a String
-            var header = String(line)
-            header.replace(string: "\r\n", with: "")
+            let header = line.string.components(separatedBy: "\r\n").joined(separator: "")
 
             // Split the header parts into an array
-            var headerParts = header.split(separator: ";")
+            var headerParts = header.characters.split(separator: ";").map(String.init)
 
             // The header has a base. Like "Content-Type: text/html; other=3" would have "Content-Type: text/html;
             guard let base = headerParts.first else {
@@ -129,7 +121,7 @@ extension Multipart {
             }
 
             // The base always has two parts. Key + Value
-            let baseParts = base.split(separator: ":", maxSplits: 1)
+            let baseParts = base.characters.split(separator: ":", maxSplits: 1).map(String.init)
 
             // Check that the count is right
             guard baseParts.count == 2 else {
@@ -137,7 +129,7 @@ extension Multipart {
             }
 
             // Add the header to the storage
-            storage[baseParts[0].trim().lowercased()] = baseParts[1].trim()
+            storage[baseParts[0].bytes.trimmed([.space]).lowercased.string] = baseParts[1].bytes.trimmed([.space]).string
 
             // Remove the header base so we can parse the rest
             headerParts.remove(at: 0)
@@ -145,7 +137,7 @@ extension Multipart {
             // remaining parts
             for part in headerParts {
                 // Split key-value
-                let subParts = part.split(separator: "=", maxSplits: 1)
+                let subParts = part.characters.split(separator: "=", maxSplits: 1).map(String.init)
 
                 // There's a key AND a Value. No more, no less
                 guard subParts.count == 2 else {
@@ -153,7 +145,7 @@ extension Multipart {
                 }
 
                 // Strip all unnecessary characters
-                storage[subParts[0].trim()] = subParts[1].trim([" ", "\t", "\r", "\n", "\"", "'"])
+                storage[subParts[0].bytes.trimmed([.space]).string] = subParts[1].bytes.trimmed([.space, .horizontalTab, .carriageReturn, .newLine, .backSlash, .apostrophe, .quote]).string
             }
         }
 

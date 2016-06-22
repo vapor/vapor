@@ -1,15 +1,63 @@
 extension URIParser {
-    public static func parse(uri: [Byte]) throws -> URI {
-        let parser = URIParser(bytes: uri)
+    public static func parse(uri: Bytes) throws -> URI {
+        let parser = URIParser(bytes: uri) // TODO: Retain splice format
         return try parser.parse()
     }
 }
+
+extension URI {
+    public typealias Scheme = String
+    // TODO: Find RFC list of other defaults, implement and link source
+    static let defaultPorts: [Scheme: Int] = [
+        "http": 80,
+        "https": 443,
+        "ws": 80,
+        "wss": 443
+    ]
+
+    // The default port associated with the scheme
+    public var schemePort: Int? {
+        return scheme.flatMap { scheme in URI.defaultPorts[scheme] }
+    }
+
+    public init(_ str: String) throws {
+        self = try URIParser.parse(uri: str.utf8.array)
+        guard port == nil else { return }
+        // if no port, try scheme default if possible
+        port = schemePort
+    }
+    
+}
+// ************************************
 
 public final class URIParser: StaticDataBuffer {
 
     public enum Error: ErrorProtocol {
         case invalidPercentEncoding
-        case unsupportedURICharacter(Character)
+        case unsupportedURICharacter(Byte)
+    }
+
+    // If we have authority, we should also have scheme?
+    let existingHost: Bytes?
+
+    /*
+     The most common form of Request-URI is that used to identify a
+     resource on an origin server or gateway. In this case the absolute
+     path of the URI MUST be transmitted (see section 3.2.1, abs_path) as
+     the Request-URI, and the network location of the URI (authority) MUST
+     be transmitted in a Host header field. For example, a client wishing
+     to retrieve the resource above directly from the origin server would
+     create a TCP connection to port 80 of the host "www.w3.org" and send
+     the lines:
+
+     GET /pub/WWW/TheProject.html HTTP/1.1
+     Host: www.w3.org
+     
+     If host exists, and scheme exists, use those
+     */
+    public init(bytes: Bytes, existingHost: String? = nil) {
+        self.existingHost = existingHost?.bytes
+        super.init(bytes: bytes)
     }
 
     // MARK: Paser URI
@@ -80,10 +128,20 @@ public final class URIParser: StaticDataBuffer {
 
     private func percentDecodedString(_ input: [Byte]) throws -> String {
         guard let decoded = percentDecoded(input) else { throw Error.invalidPercentEncoding }
-        return try decoded.toString()
+        return decoded.string
     }
 
     private func percentDecodedString(_ input: [Byte]?) throws -> String? {
+        guard let i = input else { return nil }
+        return try percentDecodedString(i)
+    }
+
+    private func percentDecodedString(_ input: ArraySlice<Byte>) throws -> String {
+        guard let decoded = percentDecoded(input) else { throw Error.invalidPercentEncoding }
+        return decoded.string
+    }
+
+    private func percentDecodedString(_ input: ArraySlice<Byte>?) throws -> String? {
         guard let i = input else { return nil }
         return try percentDecodedString(i)
     }
@@ -96,7 +154,7 @@ public final class URIParser: StaticDataBuffer {
     public override func next() throws -> Byte? {
         guard let next = try super.next() else { return nil }
         guard !next.isWhitespace else { return try self.next() }
-        guard next.isValidUriCharacter else { throw Error.unsupportedURICharacter(Character(next)) }
+        guard next.isValidUriCharacter else { throw Error.unsupportedURICharacter(next) }
         return next
     }
 
@@ -118,6 +176,9 @@ public final class URIParser: StaticDataBuffer {
         scheme      = ALPHA *( ALPHA / DIGIT / "+" / "-" / "." )
     */
     private func parseScheme() throws -> [Byte] {
+        // MUST begin with letter
+        guard try next(matches: { $0.isLetter } ) else { return [] }
+
         let scheme = try collect(until: .colon, .forwardSlash)
         let colon = try checkLeadingBuffer(matches: .colon)
         guard colon else { return scheme }
@@ -139,6 +200,7 @@ public final class URIParser: StaticDataBuffer {
         authority   = [ userinfo "@" ] host [ ":" port ]
     */
     private func parseAuthority() throws -> [Byte]? {
+        if let existingHost = existingHost { return existingHost.array }
         guard try checkLeadingBuffer(matches: .forwardSlash, .forwardSlash) else { return nil }
         try discardNext(2) // discard '//'
         return try collect(until: .forwardSlash, .questionMark, .numberSign)
@@ -211,10 +273,10 @@ extension URIParser {
         authority   = [ userinfo "@" ] host [ ":" port ]
     */
     private func parse(authority: [Byte]) throws -> (
-        username: [Byte]?,
-        auth: [Byte]?,
-        host: [Byte],
-        port: [Byte]?
+        username: ArraySlice<Byte>?,
+        auth: ArraySlice<Byte>?,
+        host: ArraySlice<Byte>,
+        port: ArraySlice<Byte>?
     ) {
         let comps = authority.split(
             separator: .at,
@@ -239,7 +301,7 @@ extension URIParser {
         Port:
         https://tools.ietf.org/html/rfc3986#section-3.2.3
     */
-    private func parse(hostAndPort: [Byte]) throws -> (host: [Byte], port: [Byte]?) {
+    private func parse(hostAndPort: [Byte]) throws -> (host: ArraySlice<Byte>, port: ArraySlice<Byte>?) {
         /**
             move in reverse looking for ':' or ']' or end of line
 
@@ -247,34 +309,29 @@ extension URIParser {
             if ']' then we have IP Literal -- scan to end of string // TODO: Validate `[` closing?
             if end of line, then we have no port, just host. assign chunk of bytes to host
         */
-        var host: [Byte] = []
-        var port: [Byte]? = nil
 
-        var chunk: [Byte] = []
-        // Parsing backwards because it makes logic surrounding ':' and IP Literal considerably easier
-        var reverseIterator = hostAndPort.reversed().makeIterator()
-        while let byte = reverseIterator.next() {
-            if byte.equals(any: .colon) {
+        let hostStart = hostAndPort.startIndex
+        let hostEnd = hostAndPort.endIndex - 1
+        guard hostStart < hostEnd else { return ([], nil) }
+        for i in (hostStart...hostEnd).lazy.reversed() {
+            let byte = hostAndPort[i]
+            if byte == .colon {
                 // going reverse, if we found a colon BEFORE we found a ']' then it's a port
-                port = chunk.reversed()
-                host = reverseIterator.reversed()
+                let host = hostAndPort[hostStart..<i]
+                // TODO: Check what happens w/ `example.com:` ... it MUST not crash
+                let port = hostAndPort[(i + 1)...hostEnd]
                 return (host, port)
-            } else if byte.equals(any: .rightSquareBracket) {
+            } else if byte == .rightSquareBracket {
                 // square brackets ONLY for IP Literal
                 // if we found right square bracket first, just complete to end
                 // return remaining bytes to standard orientation
                 // if we found a colon before this
                 // the port would have been collected
-                port = port?.reversed()
-                host = reverseIterator.reversed() + [.rightSquareBracket] // replace trailing AFTER reversing
-                return (host, port)
+                return (hostAndPort[hostStart...i], nil)
             }
-
-            chunk.append(byte)
         }
 
-        host = chunk.reversed()
-        return (host, port)
+        return (hostAndPort[hostStart...hostEnd], nil)
     }
 
     // MARK: UserInfo Parse
@@ -299,21 +356,14 @@ extension URIParser {
         passing of authentication information in clear text has proven to be
         a security risk in almost every case where it has been used.
     */
-    private func parse(userInfo: [Byte]) throws -> (username: [Byte], auth: [Byte]?) {
+    private func parse(userInfo: [Byte]) throws -> (username: ArraySlice<Byte>, auth: ArraySlice<Byte>?) {
         /**
             Iterate as 'username' until we find `:`, then give `auth` remaining bytes
         */
-        var username: [Byte] = []
-        var auth: [Byte]? = nil
-        var iterator = userInfo.makeIterator()
-        while let next = iterator.next() {
-            if next.equals(any: .colon) {
-                auth = iterator.array // collect remaining post colon
-                break
-            }
-            username.append(next)
-        }
-        
-        return (username, auth)
+        let split = userInfo.split(separator: .colon, maxSplits: 1)
+        guard !split.isEmpty else { return ([], nil) }
+        let username = split[0]
+        guard split.count == 2 else { return (username, nil) }
+        return (username, split[1])
     }
 }

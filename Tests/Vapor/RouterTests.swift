@@ -1,83 +1,69 @@
-//
-//  RouterTests.swift
-//  Vapor
-//
-//  Created by Tanner Nelson on 2/18/16.
-//  Copyright © 2016 Tanner Nelson. All rights reserved.
-//
-
 import Foundation
 import XCTest
 @testable import Vapor
 
 class RouterTests: XCTestCase {
 
-    static var allTests: [(String, (RouterTests) -> () throws -> Void)] {
-        return [
-           ("testSingleHostRouting", testSingleHostRouting),
-           ("testMultipleHostsRouting", testMultipleHostsRouting),
-           ("testURLParameterDecoding", testURLParameterDecoding)
-        ]
-    }
+    static let allTests = [
+       ("testSingleHostRouting", testSingleHostRouting),
+       ("testMultipleHostsRouting", testMultipleHostsRouting),
+       ("testURLParameterDecoding", testURLParameterDecoding)
+    ]
 
-    func testSingleHostRouting() {
+    func testSingleHostRouting() throws {
         let router = BranchRouter()
         let compare = "Hello Text Data Processing Test"
         let data = Data(compare.utf8)
 
         let route = Route.init(host: "other.test", method: .get, path: "test") { request in
-            return Response(status: .ok, data: data)
+            return Response(status: .ok, body: data)
         }
         router.register(route)
 
-        let request = Request(method: .get, path: "test", host: "other.test")
+        let request = try Request(method: .get, path: "test", host: "other.test")
 
-        do {
-            guard let (_, result) = router.route(request) else {
-                XCTFail("no route found")
-                return
-            }
-
-            let body = try result.respond(to: request).body
-
-            guard case .buffer(let data) = body else {
-                XCTFail("Data was not buffer")
-                return
-            }
-
-            let string = try String(data: data)
-            XCTAssert(string == compare)
-        } catch {
-            XCTFail()
+        guard let result = router.route(request) else {
+            XCTFail("no route found")
+            return
         }
+
+        let body = try result.respond(to: request).body
+
+        guard case .data(let bytes) = body else {
+            XCTFail("Data was not buffer")
+            return
+        }
+
+        let string = bytes.string
+        XCTAssert(string == compare)
     }
 
-    func testMultipleHostsRouting() {
+    func testMultipleHostsRouting() throws {
         let router = BranchRouter()
 
-        let data_1 = "1".data
-        let data_2 = "2".data
+        let data_1 = "1".bytes
+        let data_2 = "2".bytes
 
         let route_1 = Route.init(method: .get, path: "test") { request in
-            return Response(status: .ok, data: data_1)
+            return Response(status: .ok, body: data_1)
         }
         router.register(route_1)
 
         let route_2 = Route.init(host: "vapor.test", method: .get, path: "test") { request in
-            return Response(status: .ok, data: data_2)
+            return Response(status: .ok, body: data_2)
         }
         router.register(route_2)
 
-        let request_1 = Request(method: .get, path: "test", host: "other.test")
+        let request_1 = try Request(method: .get, path: "test", host: "other.test")
 
-        let request_2 = Request(method: .get, path: "test", host: "vapor.test")
+        let request_2 = try Request(method: .get, path: "test", host: "vapor.test")
 
         let handler_1 = router.route(request_1)
         let handler_2 = router.route(request_2)
 
-        if let response_1 = try? handler_1?.handler.respond(to: request_1) {
+        if let response_1 = try? handler_1?.respond(to: request_1) {
             let body = response_1!.body
-            guard case .buffer(let buffer) = body else {
+            guard case .data(let buffer) = body else {
                 XCTFail("Data was not buffer")
                 return
             }
@@ -87,9 +73,9 @@ class RouterTests: XCTestCase {
             XCTFail("Handler 1 did not return a response")
         }
 
-        if let response_2 = try? handler_2?.handler.respond(to: request_2) {
+        if let response_2 = try? handler_2?.respond(to: request_2) {
             let body = response_2!.body
-            guard case .buffer(let buffer) = body else {
+            guard case .data(let buffer) = body else {
                 XCTFail("Data was not buffer")
                 return
             }
@@ -100,11 +86,11 @@ class RouterTests: XCTestCase {
         }
     }
 
-    func testURLParameterDecoding() {
+    func testURLParameterDecoding() throws {
         let router = BranchRouter()
 
-        let percentEncodedString = "testing%20parameter%21%23%24%26%27%28%29%2A%2B%2C%2F%3A%3B%3D%3F%40%5B%5D"
-        let decodedString = "testing parameter!#$&'()*+,/:;=?@[]"
+        let percentEncodedString = "testing%20parameter%21%23%24%26%27%28%29%2A%2B%2C%3A%3B%3D%3F%40%5B%5D"
+        let decodedString = "testing parameter!#$&'()*+,:;=?@[]"
 
         var handlerRan = false
 
@@ -116,19 +102,19 @@ class RouterTests: XCTestCase {
 
             handlerRan = true
 
-            return Response(status: .ok, data: [])
+            return Response(status: .ok, body: [])
         }
         router.register(route)
 
-        var request = Request(method: .get, path: "test/\(percentEncodedString)")
+        let request = try Request(method: .get, path: "test/\(percentEncodedString)")
+        print("URI: \(request.uri)")
         guard let handler = router.route(request) else {
             XCTFail("Route not found")
             return
         }
 
         do {
-            request.parameters = handler.parameters
-            let _ = try handler.handler.respond(to: request)
+            let _ = try handler.respond(to: request)
         } catch {
             XCTFail("Handler threw error \(error)")
         }

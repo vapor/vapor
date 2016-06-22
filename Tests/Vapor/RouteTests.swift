@@ -1,11 +1,3 @@
-//
-//  RouteTests.swift
-//  Vapor
-//
-//  Created by Matthew on 20/02/2016.
-//  Copyright © 2016 Tanner Nelson. All rights reserved.
-//
-
 import XCTest
 @testable import Vapor
 
@@ -21,14 +13,11 @@ public class TestMiddleware: Middleware {
 }
 
 class RouteTests: XCTestCase {
-
-    static var allTests: [(String, (RouteTests) -> () throws -> Void)] {
-        return [
-           ("testNestedRouteScopedPrefixPopsCorrectly", testNestedRouteScopedPrefixPopsCorrectly),
-           ("testRoute", testRoute),
-           ("testRouteScopedPrefix", testRouteScopedPrefix)
-        ]
-    }
+    static let allTests = [
+       ("testNestedRouteScopedPrefixPopsCorrectly", testNestedRouteScopedPrefixPopsCorrectly),
+       ("testRoute", testRoute),
+       ("testRouteScopedPrefix", testRouteScopedPrefix)
+    ]
 
     func testRoute() {
 
@@ -99,7 +88,7 @@ class RouteTests: XCTestCase {
 		assertRouteExists(at: "group/subgroup/1", method: .get, host: "*", inRoutes: app.routes)
 	}
 
-    func testRouteAbort() {
+    func testRouteAbort() throws {
         let app = Application()
 
         app.get("400") { request in
@@ -107,8 +96,8 @@ class RouteTests: XCTestCase {
             throw Abort.badRequest
         }
 
-        let request = Request(method: .get, path: "400")
-        guard var handler = app.router.route(request)?.handler else {
+        let request = try Request(method: .get, path: "400")
+        guard var handler = app.router.route(request) else {
             XCTFail("No handler found")
             return
         }
@@ -139,7 +128,7 @@ class RouteTests: XCTestCase {
  */
 
 internal func assertRouteExists(at path: String,
-                                method: Request.Method,
+                                method: Vapor.Method,
                                 host: String,
                                 inRoutes routes: [Route]) {
     var found = false

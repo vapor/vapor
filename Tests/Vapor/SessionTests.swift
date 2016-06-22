@@ -1,23 +1,13 @@
-//
-//  SessionTests.swift
-//  Vapor
-//
-//  Created by James Richard on 3/7/16.
-//  Copyright © 2016 Tanner Nelson. All rights reserved.
-//
-
 @testable import Vapor
 import XCTest
 
 class SessionTests: XCTestCase {
-    static var allTests: [(String, (SessionTests) -> () throws -> Void)] {
-        return [
-           ("testDestroy_asksDriverToDestroy", testDestroy_asksDriverToDestroy),
-           ("testSubscriptGet_asksDriverForValue", testSubscriptGet_asksDriverForValue),
-           ("testSubscriptSet_asksDriverToSetValue", testSubscriptSet_asksDriverToSetValue),
-           ("testIdentifierCreation", testIdentifierCreation)
-        ]
-    }
+    static let allTests = [
+       ("testDestroy_asksDriverToDestroy", testDestroy_asksDriverToDestroy),
+       ("testSubscriptGet_asksDriverForValue", testSubscriptGet_asksDriverForValue),
+       ("testSubscriptSet_asksDriverToSetValue", testSubscriptSet_asksDriverToSetValue),
+       ("testIdentifierCreation", testIdentifierCreation)
+    ]
 
     func testDestroy_asksDriverToDestroy() {
         let driver = TestDriver()
@@ -56,7 +46,7 @@ class SessionTests: XCTestCase {
         XCTAssertEqual(key.key, "foo")
     }
 
-    func testIdentifierCreation() {
+    func testIdentifierCreation() throws {
         let app = Application()
 
         app.get("cookie") { request in
@@ -64,13 +54,9 @@ class SessionTests: XCTestCase {
             return "hi"
         }
 
-        var request = Request(method: .get, path: "cookie")
+        let request = try Request(method: .get, path: "cookie")
         request.headers["Cookie"] = "vapor-session=123"
-
-        guard let response = try? app.respond(to: request) else {
-            XCTFail("Could not get response")
-            return
-        }
+        let response = try app.respond(to: request)
 
         var sessionMiddleware: SessionMiddleware?
 

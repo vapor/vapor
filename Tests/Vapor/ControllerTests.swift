@@ -1,11 +1,3 @@
-//
-//  RouteTests.swift
-//  Vapor
-//
-//  Created by Matthew on 20/02/2016.
-//  Copyright © 2016 Tanner Nelson. All rights reserved.
-//
-
 import XCTest
 @testable import Vapor
 
@@ -91,26 +83,22 @@ private class TestActionController: DefaultInitializable {
 
 
 class ControllerTests: XCTestCase {
+    static let allTests = [
+        ("testController", testController),
+        ("testControllerActionRouting_withFactory", testControllerActionRouting_withFactory),
+        ("testControllerActionRouting_withDefaultInitializable", testControllerActionRouting_withDefaultInitializable),
+        ("testControllerActionRouting_withApplicationInitializable", testControllerActionRouting_withApplicationInitializable),
+        ("testControllerMethodsHit", testControllerMethodsHit)
+    ]
 
-    static var allTests: [(String, (ControllerTests) -> () throws -> Void)] {
-        return [
-            ("testController", testController),
-            ("testControllerActionRouting_withFactory", testControllerActionRouting_withFactory),
-            ("testControllerActionRouting_withDefaultInitializable", testControllerActionRouting_withDefaultInitializable),
-            ("testControllerActionRouting_withApplicationInitializable", testControllerActionRouting_withApplicationInitializable),
-            ("testControllerMethodsHit", testControllerMethodsHit)
-        ]
-    }
-
-    func testController() {
-
+    func testController() throws {
         let app = Application()
 
         let instance = TestController(application: app)
         app.resource("foo", makeControllerWith: { return instance })
 
-        let fooIndex = Request(method: .get, path: "foo")
-        if let (_, handler) = app.router.route(fooIndex) {
+        let fooIndex = try Request(method: .get, path: "foo")
+        if let handler = app.router.route(fooIndex) {
             do {
                 let _ = try handler.respond(to: fooIndex)
                 XCTAssert(instance.lock.index == 1, "foo.index Lock not correct")
@@ -120,7 +108,6 @@ class ControllerTests: XCTestCase {
         } else {
             XCTFail("No handler found for foo.index")
         }
-
     }
 
     func testControllerActionRouting_withFactory() throws {
@@ -129,8 +116,8 @@ class ControllerTests: XCTestCase {
 
         app.add(.get, path: "/hello", action: TestActionController.hello) { TestActionController(person: "Tanner") }
 
-        let request = Request(method: .get, path: "hello")
-        guard let (_, handler) = app.router.route(request) else {
+        let request = try Request(method: .get, path: "hello")
+        guard let handler = app.router.route(request) else {
             XCTFail("No handler found for TestActionController.hello")
             return
         }
@@ -145,8 +132,8 @@ class ControllerTests: XCTestCase {
 
         app.add(.get, path: "/hello", action: TestActionController.hello)
 
-        let request = Request(method: .get, path: "hello")
-        guard let (_, handler) = app.router.route(request) else {
+        let request = try Request(method: .get, path: "hello")
+        guard let handler = app.router.route(request) else {
             XCTFail("No handler found for TestActionController.hello")
             return
         }
@@ -162,8 +149,8 @@ class ControllerTests: XCTestCase {
 
         app.add(.get, path: "/hello", action: TestActionController.hello)
 
-        let request = Request(method: .get, path: "hello")
-        guard let (_, handler) = app.router.route(request) else {
+        let request = try Request(method: .get, path: "hello")
+        guard let handler = app.router.route(request) else {
             XCTFail("No handler found for TestController.hello")
             return
         }
@@ -181,14 +168,12 @@ class ControllerTests: XCTestCase {
         app.resource("/test", makeControllerWith: factory)
 
         func handleRequest(req: Request) throws {
-            guard let (parameters, handler) = app.router.route(req) else { return }
-            var mutable = req
-            mutable.parameters = parameters
-            let _ = try handler.respond(to: mutable)
+            guard let handler = app.router.route(req) else { return }
+            let _ = try handler.respond(to: req)
         }
 
-        let arrayRequests: [Request] = [.get, .post, .delete].map {
-            return Request(method: $0, path: "/test", host: "0.0.0.0")
+        let arrayRequests: [Request] = try [.get, .post, .delete].map {
+            return try Request(method: $0, path: "/test", host: "0.0.0.0")
         }
 
         try arrayRequests.forEach(handleRequest)
@@ -200,8 +185,8 @@ class ControllerTests: XCTestCase {
         XCTAssert(testInstance.lock.modify == 0)
         XCTAssert(testInstance.lock.destroy == 0)
 
-        let individualRequests: [Request] = [.get, .post, .put, .patch, .delete].map {
-            return Request(method: $0, path: "test/123", host: "0.0.0.0")
+        let individualRequests: [Request] = try [.get, .post, .put, .patch, .delete].map {
+            return try Request(method: $0, path: "test/123", host: "0.0.0.0")
         }
         try individualRequests.forEach(handleRequest)
 

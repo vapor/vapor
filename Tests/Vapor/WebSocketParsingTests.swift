@@ -46,24 +46,23 @@ import libc
     *  0x82 0x7F 0x0000000000010000 [65536 bytes of binary data]
 */
 class WebSocketSerializationTests: XCTestCase {
-    static var allTests: [(String, (WebSocketSerializationTests) -> () throws -> Void)] {
-        return [
-            ("testSingleFrameUnmaskedTextMessage", testSingleFrameUnmaskedTextMessage),
-            ("testSingleFrameMaskedTextMessage", testSingleFrameMaskedTextMessage),
-            ("testFragmentedUnmaskedTextMessageOne", testFragmentedUnmaskedTextMessageOne),
-            ("testFragmentedUnmaskedTextMessageTwo", testFragmentedUnmaskedTextMessageTwo),
-            ("testUnmaskedPingRequest", testUnmaskedPingRequest),
-            ("testMaskedPongResponse", testMaskedPongResponse),
-            ("test256BytesBinarySingleUnmaskedFrame", test256BytesBinarySingleUnmaskedFrame),
-            ("testSixtyFourKiBSingleUnmaskedFrame", testSixtyFourKiBSingleUnmaskedFrame),
-
-        ]
-    }
+    static let allTests = [
+        ("testSingleFrameUnmaskedTextMessage", testSingleFrameUnmaskedTextMessage),
+        ("testSingleFrameMaskedTextMessage", testSingleFrameMaskedTextMessage),
+        ("testFragmentedUnmaskedTextMessageOne", testFragmentedUnmaskedTextMessageOne),
+        ("testFragmentedUnmaskedTextMessageTwo", testFragmentedUnmaskedTextMessageTwo),
+        ("testUnmaskedPingRequest", testUnmaskedPingRequest),
+        ("testMaskedPongResponse", testMaskedPongResponse),
+        ("test256BytesBinarySingleUnmaskedFrame", test256BytesBinarySingleUnmaskedFrame),
+        ("testSixtyFourKiBSingleUnmaskedFrame", testSixtyFourKiBSingleUnmaskedFrame),
+    ]
 
     func testSingleFrameUnmaskedTextMessage() throws {
         let input: [Byte] = [0x81, 0x05, 0x48, 0x65, 0x6c, 0x6c, 0x6f]
-        let msg = try FrameParser(buffer: input).acceptFrame()
-        let str = try msg.payload.toString()
+        let test = TestStream()
+        try test.send(input)
+        let msg = try FrameParser(stream: test).acceptFrame()
+        let str = msg.payload.string
         XCTAssert(str == "Hello")
 
         let header = msg.header
@@ -81,8 +80,10 @@ class WebSocketSerializationTests: XCTestCase {
 
     func testSingleFrameMaskedTextMessage() throws {
         let input: [Byte] = [0x81, 0x85, 0x37, 0xfa, 0x21, 0x3d, 0x7f, 0x9f, 0x4d, 0x51, 0x58]
-        let msg = try FrameParser(buffer: input).acceptFrame()
-        let str = try msg.payload.toString()
+        let test = TestStream()
+        try test.send(input)
+        let msg = try FrameParser(stream: test).acceptFrame()
+        let str = msg.payload.string
         XCTAssert(str == "Hello")
 
         let header = msg.header
@@ -107,7 +108,9 @@ class WebSocketSerializationTests: XCTestCase {
     */
     func testFragmentedUnmaskedTextMessageOne() throws {
         let input: [Byte] = [0x01, 0x03, 0x48, 0x65, 0x6c]
-        let msg = try FrameParser(buffer: input).acceptFrame()
+        let test = TestStream()
+        try test.send(input)
+        let msg = try FrameParser(stream: test).acceptFrame()
         XCTAssert(msg.isFragment)
         XCTAssert(msg.isFragmentHeader)
         XCTAssertFalse(msg.isControlFrame)
@@ -130,7 +133,9 @@ class WebSocketSerializationTests: XCTestCase {
 
     func testFragmentedUnmaskedTextMessageTwo() throws {
         let input: [Byte] = [0x80, 0x02, 0x6c, 0x6f]
-        let msg = try FrameParser(buffer: input).acceptFrame()
+        let test = TestStream()
+        try test.send(input)
+        let msg = try FrameParser(stream: test).acceptFrame()
         XCTAssert(msg.isFragment)
         XCTAssert(msg.isFragmentFooter)
         XCTAssertFalse(msg.isControlFrame)
@@ -162,7 +167,9 @@ class WebSocketSerializationTests: XCTestCase {
      */
     func testUnmaskedPingRequest() throws {
         let input: [Byte] = [0x89, 0x05, 0x48, 0x65, 0x6c, 0x6c, 0x6f]
-        let msg = try FrameParser(buffer: input).acceptFrame()
+        let test = TestStream()
+        try test.send(input)
+        let msg = try FrameParser(stream: test).acceptFrame()
         XCTAssert(msg.isControlFrame)
 
         // is Hello, but message doesn't matter
@@ -187,7 +194,9 @@ class WebSocketSerializationTests: XCTestCase {
          Client to Server MUST be masked
          */
         let input: [Byte] = [0x8a, 0x85, 0x37, 0xfa, 0x21, 0x3d, 0x7f, 0x9f, 0x4d, 0x51, 0x58]
-        let msg = try FrameParser(buffer: input).acceptFrame()
+        let test = TestStream()
+        try test.send(input)
+        let msg = try FrameParser(stream: test).acceptFrame()
         XCTAssert(msg.isControlFrame)
 
         // is Hello, but message doesn't matter. Must match `ping` payload
@@ -225,7 +234,9 @@ class WebSocketSerializationTests: XCTestCase {
         let headerBytes: [Byte] = [0x82, 0x7E] + twoFiftySix
 
         let input = headerBytes + randomBinary
-        let msg = try FrameParser(buffer: input).acceptFrame()
+        let test = TestStream()
+        try test.send(input)
+        let msg = try FrameParser(stream: test).acceptFrame()
         XCTAssertFalse(msg.isControlFrame)
 
         let payload = msg.payload.bytes
@@ -264,7 +275,9 @@ class WebSocketSerializationTests: XCTestCase {
         let headerBytes: [Byte] = [0x82, 0x7F] + sixFiveFiveThreeSix
 
         let input = headerBytes + randomBinary
-        let msg = try FrameParser(buffer: input).acceptFrame()
+        let test = TestStream()
+        try test.send(input)
+        let msg = try FrameParser(stream: test).acceptFrame()
         XCTAssertFalse(msg.isControlFrame)
 
         let payload = msg.payload.bytes
@@ -371,6 +384,13 @@ class UnsignedIntegerChunkingTests: XCTestCase {
 
         expect(0x0A, 0xFF, 0x00, 0x54, 0xAA, 0xAB, 0xDE, 0xCC,
                equalTo: UInt64(0x0A_FF_00_54_AA_AB_DE_CC))
+    }
+
+    func testHex() {
+        // 1, 0 => 16 in hex
+        let hexIntegerBytes: Bytes = [0x31, 0x30]
+        let sixteen = hexIntegerBytes.hexInt
+        XCTAssert(sixteen == 16)
     }
 }
 

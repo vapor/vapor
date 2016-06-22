@@ -55,6 +55,13 @@ public protocol Extractable {
     func extract() -> Wrapped?
 }
 
+extension Extractable where Wrapped == String {
+    var isNilOrEmpty: Bool {
+        guard let val = extract() else { return true }
+        return val.isEmpty
+    }
+}
+
 extension Extractable where Wrapped == Polymorphic {
 
     /**

@@ -13,7 +13,7 @@ public final class WebSocket {
         case closed
     }
 
-    internal enum Mode {
+    public enum Mode {
         case client, server
 
         var maskOutgoingMessages: Bool {
@@ -71,7 +71,7 @@ public final class WebSocket {
          Aggregator should only be disabled in situations where the aggregator is customized. 
          Fragmented messages will only be delivered through `onFrame`
     */
-    internal init(_ stream: Stream, mode: Mode = .server, disableFragmentAggregation: Bool = false) {
+    public init(_ stream: Stream, mode: Mode = .server, disableFragmentAggregation: Bool = false) {
         self.mode = mode
         self.state = .open
         self.stream = stream
@@ -98,9 +98,8 @@ extension WebSocket {
         If you're using built in Vapor syntax you should NOT call this manually.
      */
     public func listen() throws {
-        let buffer = StreamBuffer(stream)
-        let deserializer = FrameParser(buffer: buffer)
-        try loop(with: deserializer)
+        let parser = FrameParser(stream: stream)
+        try loop(with: parser)
     }
 
     /**
@@ -108,7 +107,7 @@ extension WebSocket {
          to prevent losing bytes trapped in the buffer. ALWAYS pass deserializer
          as argument
     */
-    private func loop<Buffer: InputBuffer>(with deserializer: FrameParser<Buffer>) throws {
+    private func loop(with parser: FrameParser) throws {
         while state != .closed {
             // not a part of while logic, we need to separately acknowledge
             // that TCP closed w/o handshake
@@ -118,7 +117,7 @@ extension WebSocket {
             }
 
             do {
-                let frame = try deserializer.acceptFrame()
+                let frame = try parser.acceptFrame()
                 try received(frame)
             } catch {
                 Log.error("WebSocket Failed w/ error: \(error)")

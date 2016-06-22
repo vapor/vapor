@@ -7,14 +7,15 @@
 */
 public class StaticDataBuffer {
     private var localBuffer: [Byte] = []
-    private var buffer: IndexingIterator<[Byte]>
+    private var buffer: AnyIterator<Byte>
 
     public convenience init(data: Data) {
         self.init(bytes: data.bytes)
     }
 
-    public init(bytes: [Byte]) {
-        self.buffer = bytes.makeIterator()
+    public init<S: Sequence where S.Iterator.Element == Byte>(bytes: S) {
+        var any = bytes.makeIterator()
+        self.buffer = AnyIterator { return any.next() }
     }
 
     // MARK: Next
@@ -28,6 +29,18 @@ public class StaticDataBuffer {
             return localBuffer.removeFirst()
         }
         return buffer.next()
+    }
+
+    public func next(matchesAny: Byte...) throws -> Bool {
+        guard let next = try next() else { return false }
+        returnToBuffer(next)
+        return matchesAny.contains(next)
+    }
+
+    public func next(matches: (Byte) throws -> Bool) throws -> Bool {
+        guard let next = try next() else { return false }
+        returnToBuffer(next)
+        return try matches(next)
     }
 
     // MARK:

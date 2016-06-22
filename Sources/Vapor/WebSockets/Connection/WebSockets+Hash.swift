@@ -1,5 +1,6 @@
 import SHA1
 import CryptoEssentials
+import Foundation
 
 extension WebSocket {
     // UUID defined here: https://tools.ietf.org/html/rfc6455#section-1.3
@@ -28,7 +29,7 @@ extension WebSocket {
          the |Sec-WebSocket-Accept| header field.
     */
     public static func exchange(requestKey: String) -> String {
-        let combination = requestKey.trim() + hashKey
+        let combination = requestKey.bytes.trimmed([.space]).string + hashKey
         let shaBytes = SHA1.calculate(combination)
         let hashed = shaBytes.base64
         return hashed

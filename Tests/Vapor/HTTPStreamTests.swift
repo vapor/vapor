@@ -1,23 +1,13 @@
-//  JeevesTests.swift
-//  Vapor
-//
-//  Created by Logan Wright on 3/12/16.
-//  Copyright © 2016 Tanner Nelson. All rights reserved.
-//
-
 import Foundation
 import XCTest
 
 @testable import Vapor
 
 class HTTPStreamTests: XCTestCase {
-
-    static var allTests: [(String, (HTTPStreamTests) -> () throws -> Void)] {
-        return [
-           ("testParser", testParser),
-           ("testSerializer", testSerializer)
-        ]
-    }
+    static let allTests = [
+       ("testParser", testParser),
+       ("testSerializer", testSerializer)
+    ]
 
     func testParser() {
         let stream = TestStream()
@@ -35,14 +25,14 @@ class HTTPStreamTests: XCTestCase {
         data += "\r\n"
         data += content
 
-        try! stream.send(data.data, timingOut: 0)
-        let parser = HTTPParser(stream: stream)
+        try! stream.send(data.bytes)
+
 
         do {
-            let request = try parser.parse()
+            let request = try HTTPParser<Request>(stream: stream).parse()
 
             //MARK: Verify Request
-            XCTAssert(request.method == Request.Method.post, "Incorrect method \(request.method)")
+            XCTAssert(request.method == Method.post, "Incorrect method \(request.method)")
             XCTAssert(request.uri.path == "/json", "Incorrect path \(request.uri.path)")
             XCTAssert(request.version.major == 1 && request.version.minor == 1, "Incorrect version")
         } catch {
@@ -52,36 +42,43 @@ class HTTPStreamTests: XCTestCase {
 
     func testSerializer() {
         //MARK: Create Response
-        var response = Response(status: .enhanceYourCalm, headers: [
-            "Test": "123",
-            "Content-Type": "text/plain"
-        ], chunked: { stream in
-            try stream.send("Hello, world")
-            try stream.close()
-        })
-        response.cookies["key"] = "val"
+        let response = Response(
+            status: .enhanceYourCalm,
+            headers: [
+                "Test": "123",
+                "Content-Type": "text/plain"
+            ],
+            chunked: { stream in
+                try stream.send("Hello, world")
+                try stream.close()
+            }
+        )
 
         let stream = TestStream()
-        let serializer =  HTTPSerializer(stream: stream)
+        let serializer = HTTPSerializer<HTTPResponse>(stream: stream)
         do {
             try serializer.serialize(response)
         } catch {
             XCTFail("Could not serialize response: \(error)")
         }
 
-        let data = try! stream.receive(upTo: 2048, timingOut: 0)
+        let data = try! stream.receive(max: 2048)
 
-        XCTAssert(data.string.range(of: "HTTP/1.1 420 Enhance Your Calm") != nil)
-        XCTAssert(data.string.range(of: "Content-Type: text/plain") != nil)
-        XCTAssert(data.string.range(of: "Test: 123") != nil)
-        XCTAssert(data.string.range(of: "Transfer-Encoding: chunked") != nil)
-        XCTAssert(data.string.range(of: "\r\n\r\nC\r\nHello, world\r\n0\r\n\r\n") != nil)
+        XCTAssert(data.string.contains("HTTP/1.1 420 Enhance Your Calm"))
+        XCTAssert(data.string.contains("Content-Type: text/plain"))
+        XCTAssert(data.string.contains("Test: 123"))
+        XCTAssert(data.string.contains("Transfer-Encoding: chunked"))
+        XCTAssert(data.string.contains("\r\n\r\nC\r\nHello, world\r\n0\r\n\r\n"))
     }
 }
 
 final class TestStream: Stream {
     var closed: Bool
-    var buffer: Data
+    var buffer: Bytes
+
+    func setTimeout(_ timeout: Double) throws {
+        
+    }
 
     init() {
         closed = false
@@ -94,46 +91,31 @@ final class TestStream: Stream {
         }
     }
 
-    func send(_ data: Data, timingOut deadline: Double) throws {
+    func send(_ bytes: Bytes) throws {
         closed = false
-        buffer.append(contentsOf: data)
+        buffer += bytes
     }
 
-    func flush(timingOut deadline: Double) throws {
-        buffer = Data()
+    func flush() throws {
+
     }
 
-    func receive(upTo byteCount: Int, timingOut deadline: Double) throws -> Data {
+    func receive(max: Int) throws -> Bytes {
         if buffer.count == 0 {
             try close()
             return []
         }
 
-        if byteCount >= buffer.count {
+        if max >= buffer.count {
             try close()
             let data = buffer
             buffer = []
             return data
         }
 
-        let data = buffer.bytes[0..<byteCount]
-        buffer.bytes.removeFirst(byteCount)
+        let data = buffer[0..<max]
+        buffer.removeFirst(max)
 
-        let result = Data(data)
-        return result
-    }
-}
-
-final class TestStreamDriver: StreamDriver {
-    init() {
-
-    }
-
-    static func make(host: String, port: Int) throws -> Self {
-        return .init()
-
-    }
-    func start(handler: (Stream) throws -> ()) throws {
-
+        return Bytes(data)
     }
 }

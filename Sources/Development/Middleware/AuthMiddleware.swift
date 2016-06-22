@@ -16,5 +16,4 @@ class AuthMiddleware: Middleware {
 
         return try chain.respond(to: request)
     }
-
 }
