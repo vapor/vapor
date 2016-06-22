@@ -182,7 +182,7 @@ extension JSON: Polymorphic {
 @_exported import PathIndexable
 extension JSON: PathIndexable {
     public var pathIndexableObject: [String : JSON]? {
-        return self.object as? [String: JSON]
+        return self.dictionary
     }
     public var pathIndexableArray: [JSON]? {
         return self.array
