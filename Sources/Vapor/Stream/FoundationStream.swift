@@ -18,11 +18,15 @@
                 || output.streamStatus == .closed
         }
 
-        let securityLayer: SecurityLayer
+        public let host: String
+        public let port: Int
+        public let securityLayer: SecurityLayer
         let input: NSInputStream
         let output: NSOutputStream
 
         public required init(host: String, port: Int, securityLayer: SecurityLayer) throws {
+            self.host = host
+            self.port = port
             self.securityLayer = securityLayer
             var inputStream: NSInputStream? = nil
             var outputStream: NSOutputStream? = nil
