@@ -1,4 +1,4 @@
-import Socks
+import SocksCore
 
 extension TCPInternetSocket: Stream {
     public func setTimeout(_ timeout: Double) throws {
