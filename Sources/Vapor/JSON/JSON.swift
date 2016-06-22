@@ -412,42 +412,19 @@ extension JSON {
     }
 }
 
-//extension JSON: CustomStringConvertible {
-//    public var description: String {
-//        do {
-//            return try JSON.serializer(json: self).string
-//        } catch {
-//            return "Unable to serialize: \(error)"
-//        }
-//    }
-//}
-//
-//extension JSON: CustomDebugStringConvertible {
-//    public var debugDescription: String {
-//        return description
-//    }
-//}
+extension JSON: CustomStringConvertible {
+    public var description: String {
+        do {
+            return try JSON.serialize(self).string
+        } catch {
+            return "Unable to serialize: \(error)"
+        }
+    }
+}
 
-public func ==(lhs: JSON, rhs: JSON) -> Bool {
-    switch lhs {
-    case .null:
-        guard case .null = rhs else { return false }
-        return true
-    case .boolean(let lhsValue):
-        guard case .boolean(let rhsValue) = rhs else { return false }
-        return lhsValue == rhsValue
-    case .string(let lhsValue):
-        guard case .string(let rhsValue) = rhs else { return false }
-        return lhsValue == rhsValue
-    case .number(let lhsValue):
-        guard case .number(let rhsValue) = rhs else { return false }
-        return lhsValue == rhsValue
-    case .array(let lhsValue):
-        guard case .array(let rhsValue) = rhs else { return false }
-        return lhsValue == rhsValue
-    case .object(let lhsValue):
-        guard case .object(let rhsValue) = rhs else { return false }
-        return lhsValue == rhsValue
+extension JSON: CustomDebugStringConvertible {
+    public var debugDescription: String {
+        return description
     }
 }
 
