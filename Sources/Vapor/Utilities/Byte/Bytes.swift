@@ -113,18 +113,18 @@ extension Sequence where Iterator.Element == Byte {
         Transforms anything between Byte.a ... Byte.z
         into the range Byte.A ... Byte.Z
     */
-    var uppercased: Data {
-        var data = Data()
+    var uppercased: Bytes {
+        var bytes = Bytes()
 
         for byte in self {
             if (.a ... .z).contains(byte) {
-                data.append(byte - (.a - .A))
+                bytes.append(byte - (.a - .A))
             } else {
-                data.append(byte)
+                bytes.append(byte)
             }
         }
 
-        return data
+        return bytes
     }
 }
 

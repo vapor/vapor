@@ -19,10 +19,10 @@ class ApplicationTests: XCTestCase {
         files have appropriate "Content-Type"
         headers returned.
     */
-    func testMediaType() {
+    func testMediaType() throws {
         let app = Application(workDir: workDir)
 
-        let request = Request(method: .get, path: "/styles/app.css")
+        let request = try Request(method: .get, uri: "/styles/app.css")
 
         guard let response = try? app.respond(to: request) else {
             XCTFail("App could not respond")
@@ -46,9 +46,9 @@ class ApplicationTests: XCTestCase {
         method is being called.
     */
     func testProviders() {
-        final class TestServer: ServerDriver {
-            init(host: String, port: Int, responder: Responder) throws {}
-            func start() throws {}
+        final class TestServer: Server {
+            init(host: String, port: Int, securityLayer: SecurityLayer) {}
+            func start(responder: Responder, errors: ServerErrorHandler) throws {}
         }
 
         class TestProvider: Provider {
@@ -58,7 +58,7 @@ class ApplicationTests: XCTestCase {
                 bootRan = true
             }
 
-            var server: ServerDriver.Type?
+            var server: Server.Type?
 
             init() {
                 server = TestServer.self
@@ -70,7 +70,7 @@ class ApplicationTests: XCTestCase {
             provider
         ])
 
-        XCTAssert(app.server == TestServer.self, "Provider did not provide TestServer")
+        XCTAssert(app.serverType == TestServer.self, "Provider did not provide TestServer")
         XCTAssert(provider.bootRan == true, "Application did not boot provider")
     }
 
@@ -79,31 +79,33 @@ class ApplicationTests: XCTestCase {
         init arguments to the application.
     */
     func testProvidersOverride() {
-        final class TestServerAlpha: ServerDriver {
-            init(host: String, port: Int, responder: Responder) throws {}
-            func start() throws {}
+        final class TestServerAlpha: Server {
+            init(host: String, port: Int, securityLayer: SecurityLayer) {}
+            func start(responder: Responder, errors: ServerErrorHandler) throws {}
         }
 
-        final class TestServerBeta: ServerDriver {
-            init(host: String, port: Int, responder: Responder) throws {}
-            func start() throws {}
+        final class TestServerBeta: Server {
+            init(host: String, port: Int, securityLayer: SecurityLayer) {}
+            func start(responder: Responder, errors: ServerErrorHandler) throws {}
         }
 
         class TestProvider: Provider {
             func boot(with application: Application) {}
 
-            var server: ServerDriver.Type?
+            var server: Server.Type?
 
             init() {
                 server = TestServerAlpha.self
             }
         }
 
-        let app = Application(server: TestServerBeta.self, providers: [
-            TestProvider()
+        let provider = TestProvider()
+
+        let app = Application(serverType: TestServerBeta.self, providers: [
+            provider
         ])
 
-        XCTAssert(app.server == TestServerAlpha.self, "Provider did not override with TestServerAlpha")
+        XCTAssert(app.serverType == TestServerAlpha.self, "Provider did not override with TestServerAlpha")
     }
 
  }

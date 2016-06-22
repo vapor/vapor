@@ -13,10 +13,10 @@ class HTTPBodyTests: XCTestCase {
 
             let stream = TestStream()
             try stream.send(expected)
-            let body = try HTTPRequestParser(stream: stream).parseBody(with: ["content-length": expected.count.description])
+            let body = try HTTPParser<Request>(stream: stream).parseBody(with: ["content-length": expected.count.description])
 
             switch body {
-            case .buffer(let data):
+            case .data(let data):
                 XCTAssertEqual(data.string, expected)
             default:
                 XCTFail("Body not buffer")
@@ -31,15 +31,15 @@ class HTTPBodyTests: XCTestCase {
             let expected = "hello world!"
 
             let stream = TestStream()
-            let chunkStream = ChunkStream(stream: stream.sender)
+            let chunkStream = ChunkStream(stream: stream)
 
             try chunkStream.send("hello worl")
             try chunkStream.send("d!")
 
-            let body = try HTTPRequestParser(stream: stream).parseBody(with: ["transfer-encoding": "chunked"])
+            let body = try HTTPParser<Request>(stream: stream).parseBody(with: ["transfer-encoding": "chunked"])
 
             switch body {
-            case .buffer(let data):
+            case .data(let data):
                 XCTAssertEqual(data.string, expected)
             default:
                 XCTFail("Body not buffer")

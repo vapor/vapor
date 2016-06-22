@@ -25,7 +25,7 @@ class ContentTests: XCTestCase {
     func testParse() {
         let string = "value=123"
 
-        let data = StructuredData(formURLEncoded: string.data)
+        let data = StructuredData(formURLEncoded: string.bytes)
         XCTAssertEqual(data["value"]?.int, 123, "Request did not parse correctly")
     }
 
@@ -66,7 +66,7 @@ class ContentTests: XCTestCase {
     func testFormURLEncoded() {
         let body = "first=value&arr[]=foo+bar&arr[]=b%3Daz"
 
-        let data = StructuredData(formURLEncoded: body.data)
+        let data = StructuredData(formURLEncoded: body.bytes)
 
         XCTAssert(data["first"]?.string == "value", "Request key first did not parse correctly")
         XCTAssert(data["arr", 0]?.string == "foo bar", "Request key arr did not parse correctly")
@@ -76,7 +76,7 @@ class ContentTests: XCTestCase {
     func testFormURLEncodedEdge() {
         let body = "singleKeyArray[]=value&implicitArray=1&implicitArray=2"
 
-        let data = StructuredData(formURLEncoded: body.data)
+        let data = StructuredData(formURLEncoded: body.bytes)
 
         XCTAssert(data["singleKeyArray", 0]?.string == "value", "singleKeyArray did not parse correctly")
         XCTAssert(data["implicitArray", 0]?.string == "1", "implicitArray did not parse correctly")
@@ -92,7 +92,7 @@ class ContentTests: XCTestCase {
     func testCookies() {
         let cookieString = "1=1;2=2;"
 
-        let cookies = Cookies(cookieString.data)
+        let cookies = Cookies(cookieString)
         XCTAssertEqual(cookies["1"]?.int, 1)
         XCTAssertEqual(cookies["2"]?.int, 2)
     }

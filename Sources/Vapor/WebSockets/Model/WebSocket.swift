@@ -13,7 +13,7 @@ public final class WebSocket {
         case closed
     }
 
-    internal enum Mode {
+    public enum Mode {
         case client, server
 
         var maskOutgoingMessages: Bool {
@@ -71,7 +71,7 @@ public final class WebSocket {
          Aggregator should only be disabled in situations where the aggregator is customized. 
          Fragmented messages will only be delivered through `onFrame`
     */
-    internal init(_ stream: Stream, mode: Mode = .server, disableFragmentAggregation: Bool = false) {
+    public init(_ stream: Stream, mode: Mode = .server, disableFragmentAggregation: Bool = false) {
         self.mode = mode
         self.state = .open
         self.stream = stream

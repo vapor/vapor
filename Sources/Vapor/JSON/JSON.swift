@@ -106,8 +106,8 @@ public protocol JSONRepresentable: ResponseRepresentable {
 
 extension JSONRepresentable {
     ///Allows any JsonRepresentable to be returned through closures
-    public func makeResponse() -> Response {
-        return makeJson().makeResponse()
+    public func makeResponse() throws -> Response {
+        return try makeJson().makeResponse()
     }
 }
 
@@ -142,7 +142,7 @@ extension Bool: JSONRepresentable {
 }
 
 extension JSON: ResponseRepresentable {
-    public func makeResponse() -> Response {
+    public func makeResponse() throws -> Response {
         return Response(status: .ok, json: self)
     }
 }
