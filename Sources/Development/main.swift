@@ -17,6 +17,32 @@ app.get { request in
     return try app.view("welcome.html")
 }
 
+app.get("client-socket") { req in
+    _ = try? WebSocket.background(to: "ws://\(app.host):\(app.port)/server-socket-responder") { (ws) in
+        ws.onText = { ws, text in
+            print("[Client] received - \(text)")
+        }
+
+        ws.onClose = { _ in
+            print("[Client] closed.....")
+        }
+    }
+
+    return "Beginning client socket test, check your console ..."
+}
+
+app.socket("server-socket-responder") { req, ws in
+    let top = 10
+    for i in 1...top {
+        sleep(1)
+        try ws.send("\(i) of \(top)")
+    }
+
+    sleep(1)
+    print("[Server] initiating close")
+    try ws.close()
+}
+
 app.get("ping") { _ in
     return 😀
 }
@@ -73,8 +99,6 @@ app.get("test") { request in
 app.add(.trace, path: "trace") { request in
     return "trace request"
 }
-
-// MARK: WebSockets
 
 app.socket("socket") { request, ws in
     try ws.send("WebSocket Connected :)")
