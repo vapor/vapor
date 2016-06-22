@@ -18,11 +18,11 @@ public class HTTPMessage {
         headers: Headers,
         body: HTTPBody
     ) throws {
-        let startLine = startLineComponents.0.string
-            + " "
-            + startLineComponents.1.string
-            + " "
-            + startLineComponents.2.string
+        var startLine = startLineComponents.0.string
+        startLine += " "
+        startLine += startLineComponents.1.string
+        startLine += " "
+        startLine += startLineComponents.2.string
 
         self.init(startLine: startLine, headers: headers,body: body)
     }
