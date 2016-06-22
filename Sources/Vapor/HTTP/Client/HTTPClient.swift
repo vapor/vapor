@@ -1,5 +1,84 @@
 public enum HTTPClientError: ErrorProtocol {
     case missingHost
+    case unableToConnect
+}
+
+public protocol AltClientProtocol: Responder {
+    init(existingConnection: Stream?) throws
+}
+
+extension AltClientProtocol {
+    public static func perform(_ request: Request) throws -> Response {
+        let instance = try Self.init(existingConnection: nil)
+        return try instance.respond(to: request)
+    }
+
+    public static func request(_ method: Vapor.Method, _ uri: String, headers: Headers = [:], query: [String: StructuredDataRepresentable], body: Vapor.HTTPBody = []) throws -> Response {
+        var uri = try URI(uri)
+        let structure = StructuredData(query)
+        uri.append(query: structure)
+        let request = Request(method: method, uri: uri, headers: headers, body: body)
+        return try perform(request)
+    }
+
+    public static func get(_ uri: String, headers: Headers = [:], query: [String: String], body: Vapor.HTTPBody = []) throws -> Response {
+        return try request(.get, uri, headers: headers, query: query, body: body)
+    }
+
+    public static func post(_ uri: String, headers: Headers = [:], query: [String: String], body: Vapor.HTTPBody = []) throws -> Response {
+        return try request(.post, uri, headers: headers, query: query, body: body)
+    }
+
+    public static func put(_ uri: String, headers: Headers = [:], query: [String: String], body: Vapor.HTTPBody = []) throws -> Response {
+        return try request(.put, uri, headers: headers, query: query, body: body)
+    }
+
+    public static func patch(_ uri: String, headers: Headers = [:], query: [String: String], body: Vapor.HTTPBody = []) throws -> Response {
+        return try request(.patch, uri, headers: headers, query: query, body: body)
+    }
+
+    public static func delete(_ uri: String, headers: Headers = [:], query: [String: String], body: Vapor.HTTPBody = []) throws -> Response {
+        return try request(.delete, uri, headers: headers, query: query, body: body)
+    }
+}
+
+public final class AAAAAAltClient<ClientStreamType: ClientStream>: AltClientProtocol {
+    public private(set) var connection: Stream?
+
+    public init(existingConnection: Stream? = nil) throws {
+        self.connection = existingConnection
+    }
+
+    public func respond(to request: Request) throws -> Response {
+        let stream = try getConnection(to: request.uri)
+        guard !stream.closed else { throw HTTPClientError.unableToConnect }
+        let buffer = StreamBuffer(stream)
+
+        request.headers["Host"] = request.uri.host
+
+        let serializer = HTTPSerializer<Request>(stream: buffer)
+        try serializer.serialize(request)
+
+        let parser = HTTPParser<Response>(stream: buffer)
+        let response = try parser.parse()
+
+        try buffer.flush()
+        return response
+    }
+
+    private func getConnection(to uri: URI) throws -> Stream {
+        if let connection = connection {
+            return connection
+        } else {
+            guard let host = uri.host else { throw HTTPClientError.missingHost }
+            let port = uri.port ?? uri.schemePort ?? 80
+            let securityLayer = uri.scheme?.securityLayer ?? .tls // Default to secure -- opt out
+            let client = try ClientStreamType(host: host, port: port, securityLayer: securityLayer)
+            let stream = try client.connect()
+            connection = stream
+            return stream
+        }
+    }
 }
 
 public final class HTTPClient<ClientStreamType: ClientStream>: Client {
