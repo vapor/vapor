@@ -5,7 +5,7 @@ public typealias JSON = C7.JSON
 
 extension JSON {
     static var deserializer: (data: Bytes) throws -> JSON = { try Jay().typesafeJsonFromData($0) }
-    static var serializer: (json: JSON) throws -> Bytes = { try Jay(formatting: .minified).dataFromJson($0) }
+    static var serializer: (json: JSON) throws -> Bytes = { try Jay(formatting: .minified).dataFromJson(json: $0) }
 }
 
 extension JSON {
