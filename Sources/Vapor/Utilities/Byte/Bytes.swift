@@ -29,7 +29,7 @@ func ~=(pattern: Bytes, value: Bytes) -> Bool {
 extension Sequence where Iterator.Element == Byte {
     /**
         Converts a slice of bytes to
-        string. Courtesy of Socks by @Czechboy0
+        string. Courtesy of Socks by @czechboy0
     */
     public var string: String {
         var utf = UTF8()
