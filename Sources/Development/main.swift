@@ -49,7 +49,7 @@ app.get("ping") { _ in
 
 app.get("spotify-artists") { req in
     let name = req.data["name"].string ?? "beyonce"
-    let spotifyResponse = try app.client("https://api.spotify.com").get("/v1/search", query: ["type": "artist", "q": name])
+    let spotifyResponse = try app.client.get("https://api.spotify.com/v1/search", query: ["type": "artist", "q": name])
     
     guard
         let names = spotifyResponse.data["artists", "items", "name"]
@@ -66,8 +66,7 @@ app.get("spotify-artists") { req in
 app.get("pokemon") { req in
     let limit = req.data["limit"].int ?? 20
     let offset = req.data["offset"].int ?? 0
-    let pokemonResponse = try app.client("http://pokeapi.co").get("/api/v2/pokemon", query: ["limit": limit, "offset": offset])
-
+    let pokemonResponse = try app.client.get("http://pokeapi.co/api/v2/pokemon/", query: ["limit": limit, "offset": offset])
     guard let names = pokemonResponse.data["results", "name"].array?.flatMap({ $0.string }) else {
         throw Abort.custom(status: .badRequest, message: "Didn't parse JSON correctly")
     }
@@ -75,14 +74,16 @@ app.get("pokemon") { req in
     return names.joined(separator: "\n")
 }
 
-app.get("pokemon-multi") { req in
+app.get("pokemon-multi") { [weak app] req in
     return Response { chunker in
-        let pokemonClient = try app.client("http://pokeapi.co")
-
+        /**
+         Advanced usage, maintain connection
+         */
+        let pokemonClient = try app?.client.make(scheme: "http", host: "pokeapi.co")
         for i in 0 ..< 2 {
-            let response = try pokemonClient.get("/api/v2/pokemon", query: ["limit": 20, "offset": i])
+            let response = try pokemonClient?.get(path: "/api/v2/pokemon/", query: ["limit": 20, "offset": i])
 
-            if let n = response.data["results", "name"].array?.flatMap({ $0.string }) {
+            if let n = response?.data["results", "name"].array?.flatMap({ $0.string }) {
                 try chunker.send(n.joined(separator: "\n"))
             }
         }

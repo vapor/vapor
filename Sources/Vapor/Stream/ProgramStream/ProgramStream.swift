@@ -3,6 +3,9 @@ public enum ProgramStreamError: ErrorProtocol {
 }
 
 public protocol ProgramStream {
+    var host: String { get }
+    var port: Int { get }
+    var securityLayer: SecurityLayer { get }
     init(host: String, port: Int, securityLayer: SecurityLayer) throws
 }
 

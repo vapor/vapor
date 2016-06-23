@@ -11,6 +11,16 @@ public typealias StructuredDataInitializable = C7.StructuredDataInitializable
 public typealias StructuredDataRepresentable = C7.StructuredDataRepresentable
 public typealias StructuredDataConvertible = C7.StructuredDataConvertible
 
+extension StructuredData {
+    public init(_ representableObject: [String: StructuredDataRepresentable]) {
+        var object: [String: StructuredData] = [:]
+        representableObject.forEach { key, val in
+            object[key] = val.structuredData
+        }
+        self = .dictionary(object)
+    }
+}
+
 extension String: StructuredDataRepresentable {
     public var structuredData: StructuredData {
         return .string(self)
