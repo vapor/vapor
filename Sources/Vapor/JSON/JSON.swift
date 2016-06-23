@@ -175,9 +175,7 @@ extension JSON: Polymorphic {
     }
 }
 
-/*
- 
- */
+// MARK: Path Indexable
 
 @_exported import PathIndexable
 extension JSON: PathIndexable {
