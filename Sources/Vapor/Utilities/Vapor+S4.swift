@@ -48,7 +48,3 @@ public typealias Version = S4.Version
 
 public typealias Status = S4.Status
 public typealias Method = S4.Method
-
-public protocol Middleware {
-    func respond(to request: Request, chainingTo next: Responder) throws -> Response
-}

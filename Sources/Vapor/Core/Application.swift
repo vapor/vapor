@@ -177,7 +177,8 @@ public class Application {
         self.globalMiddleware = [
             AbortMiddleware(),
             ValidationMiddleware(),
-            SessionMiddleware(session: session)
+            SessionMiddleware(session: session),
+            DateMiddleware()
         ]
 
         self.router = routerProvided ?? BranchRouter()
@@ -425,7 +426,6 @@ extension Application: Responder {
             response = Response(status: .internalServerError, body: error.bytes)
         }
 
-        response.headers["Date"] = RFC1123.now()
         response.headers["Server"] = "Vapor \(Vapor.VERSION)"
 
         /**
