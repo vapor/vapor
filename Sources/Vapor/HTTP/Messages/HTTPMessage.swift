@@ -18,11 +18,11 @@ public class HTTPMessage {
         headers: Headers,
         body: HTTPBody
     ) throws {
-        let startLine = startLineComponents.0.string
-            + " "
-            + startLineComponents.1.string
-            + " "
-            + startLineComponents.2.string
+        var startLine = startLineComponents.0.string
+        startLine += " "
+        startLine += startLineComponents.1.string
+        startLine += " "
+        startLine += startLineComponents.2.string
 
         self.init(startLine: startLine, headers: headers,body: body)
     }
@@ -53,7 +53,7 @@ extension HTTPMessage {
             return existing
         } else if let type = headers["Content-Type"] where type.contains("application/json") {
             guard case let .data(body) = body else { return nil }
-            guard let json = try? JSON.deserializer(data: body) else { return nil }
+            guard let json = try? JSON.parse(body) else { return nil }
             storage["json"] = json
             return json
         } else {
