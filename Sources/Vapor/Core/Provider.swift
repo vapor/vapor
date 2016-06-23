@@ -28,47 +28,40 @@ public protocol Provider {
     var server: Server.Type? { get }
 
     /**
-        An optional `Router` to provide 
+        An optional `RouterDriver` to provide 
         to the application. Has a default
         implementation of `nil`.
     */
-    var router: Router? { get }
+    var router: RouterDriver? { get }
 
     /**
-        An optional `Sessions` to provide
+        An optional `SessionDriver` to provide
         to the application. Has a default
         implementation of `nil`.
     */
-    var sessions: Sessions? { get }
+    var session: SessionDriver? { get }
 
 
     /**
-        An optional `Hash` to provide
+        An optional `HashDriver` to provide
         to the application. Has a default
         implementation of `nil`.
      */
-    var hash: Hash? { get }
+    var hash: HashDriver? { get }
 
     /**
-        An optional `Console` to provide
+        An optional `ConsoleDriver` to provide
         to the application. Has a default
         implementation of `nil`.
     */
-    var console: Console? { get }
+    var console: ConsoleDriver? { get }
+
 
     /**
-        An optional `Console` to provide
-        to the application. Has a default
-        implementation of `nil`.
-    */
-    var log: Log? { get }
-
-    /**
-        An optional `Database` to provide
-        to the application. Has a default
-        implementation of `nil`.
-    */
-    var database: DatabaseDriver? { get }
+         An optional `HTTPClient` add-on used to make
+         outgoing web request operations
+     */
+    var client: Client.Type? { get }
 }
 
 extension Provider {
@@ -76,27 +69,23 @@ extension Provider {
         return nil
     }
 
-    public var router: Router? {
+    public var router: RouterDriver? {
         return nil
     }
 
-    public var sessions: Sessions? {
+    public var session: SessionDriver? {
         return nil
     }
 
-    public var hash: Hash? {
+    public var hash: HashDriver? {
         return nil
     }
 
-    public var console: Console? {
+    public var console: ConsoleDriver? {
         return nil
     }
 
-    public var log: Log? {
-        return nil
-    }
-
-    public var database: DatabaseDriver? {
+    public var client: Client.Type? {
         return nil
     }
 }

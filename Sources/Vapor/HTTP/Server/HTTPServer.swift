@@ -5,112 +5,88 @@
 #endif
 
 import Strand
+import Socks
 import SocksCore
 
-enum ServerError: ErrorProtocol {
-    case bindFailed
+public protocol Program {
+    init(host: String, port: Int, securityLayer: SecurityLayer) throws
 }
 
-final class HTTPServer<
-    Streamer: StreamServer,
-    Parser: RequestParser,
-    Serializer: ResponseSerializer
+public protocol Server: Program {
+    func start(responder: Responder, errors: ServerErrorHandler) throws
+}
+
+public typealias ServerErrorHandler = (ServerError) -> ()
+
+public enum ServerError: ErrorProtocol {
+    case bind(ErrorProtocol)
+    case accept(ErrorProtocol)
+    case respond(ErrorProtocol)
+    case dispatch(ErrorProtocol)
+    case unknown(ErrorProtocol)
+}
+
+public final class HTTPServer<
+    ServerStreamType: ServerStream,
+    Parser: TransferParser,
+    Serializer: TransferSerializer
+    where
+        Parser.MessageType == HTTPRequest,
+        Serializer.MessageType == HTTPResponse
 >: Server {
-    var server: Streamer
-    var responder: Responder
 
-    required init(host: String, port: Int, responder: Responder) throws {
-        server = try Streamer.make(host: host, port: port)
-        self.responder = responder
-    }
+    let server: ServerStreamType
 
-    func start() throws {
+    public init(host: String = "0.0.0.0", port: Int = 8080, securityLayer: SecurityLayer = .none) throws {
         do {
-            try server.start(handler: handle)
-        } catch let e as SocksCore.Error where e.isBindFailed {
-            throw ServerError.bindFailed
-        }
-    }
-
-    private func handle(_ stream: Stream) {
-        do {
-            _ = try Strand {
-                self.parse(stream)
-            }
+            server = try ServerStreamType(host: host, port: port)
         } catch {
-            // TODO: Pass server a logger object
-            // or add error to delegate
-            // Log.error("Could not create thread: \(error)")
+            throw ServerError.bind(error)
         }
     }
 
-    private func parse(_ stream: Stream) {
+    public func start(responder: Responder, errors: ServerErrorHandler) throws {
+        // no throwing inside of the loop
+        while true {
+            let stream: Stream
+
+            do {
+                stream = try server.accept()
+            } catch {
+                errors(.accept(error))
+                continue
+            }
+
+            do {
+                _ = try Strand {
+                    do {
+                        try self.respond(stream: stream, responder: responder)
+                    } catch {
+                        errors(.dispatch(error))
+                    }
+                }
+            } catch {
+                errors(.dispatch(error))
+            }
+        }
+    }
+
+    private func respond(stream: Stream, responder: Responder) throws {
         let stream = StreamBuffer(stream)
-        stream.timeout = 30
+        try stream.setTimeout(30)
 
         let parser = Parser(stream: stream)
         let serializer = Serializer(stream: stream)
 
         var keepAlive = false
         repeat {
-            do {
-                let request = try parser.parse()
-                keepAlive = request.keepAlive
-                let response = try responder.respond(to: request)
-                try serializer.serialize(response)
-
-                guard response.isUpgradeResponse else { continue }
-                try response.onUpgrade?(stream)
-            } catch let e as SocksCore.Error where e.isClosedByPeer {
-                // stream was closed by peer, abort
-                break
-            } catch let e as SocksCore.Error where e.isBrokenPipe {
-                // broken pipe, abort
-                break
-            } catch HTTPRequestParser.Error.streamEmpty {
-                // the stream we got was empty, abort
-                break
-            } catch {
-                // unknown error, abort
-                // Log.error("HTTP error: \(error)")
-                break
-            }
+            let request = try parser.parse()
+            keepAlive = request.keepAlive
+            let response = try responder.respond(to: request)
+            try serializer.serialize(response)
+            try response.onComplete?(stream)
         } while keepAlive && !stream.closed
 
-        do {
-            try stream.close()
-        } catch {
-            // Log.error("Could not close stream: \(error)")
-        }
-    }
-
-}
-
-extension SocksCore.Error {
-    var isClosedByPeer: Bool {
-        guard case .readFailed = type else { return false }
-        let message = String(validatingUTF8: strerror(errno))
-        return message == "Connection reset by peer"
-    }
-    var isBrokenPipe: Bool {
-        return self.number == 32
-    }
-    var isBindFailed: Bool {
-        return self.number == 48
-    }
-}
-
-extension Request {
-    var keepAlive: Bool {
-        // HTTP 1.1 defaults to true unless explicitly passed `Connection: close`
-        guard let value = headers["Connection"] else { return true }
-        // TODO: Decide on if 'contains' is better, test linux version
-        return !value.contains("close")
-    }
-}
-
-extension Response {
-    var isUpgradeResponse: Bool {
-        return headers.connection == "Upgrade"
+        try stream.close()
     }
 }

@@ -1,7 +1,7 @@
 import Foundation
 
 extension StructuredData {
-    init(formURLEncoded data: Data) {
+    public init(formURLEncoded data: Bytes) {
         var urlEncoded: [String: StructuredData] = [:]
 
         for pair in data.split(separator: .ampersand) {
@@ -57,5 +57,23 @@ extension StructuredData {
         }
         
         self = .dictionary(urlEncoded)
+    }
+
+    public func formURLEncoded() throws -> Bytes {
+        guard case .dictionary(let dict) = self else {
+            return []
+        }
+
+        var bytes: [[Byte]] = []
+
+        for (key, val) in dict {
+            var subbytes: [Byte] = []
+            subbytes += try percentEncoded(key.bytes)
+            subbytes += Byte.equals
+            subbytes += try percentEncoded(val.string?.bytes ?? [])
+            bytes.append(subbytes)
+        }
+
+        return bytes.joined(separator: [Byte.ampersand]).array
     }
 }

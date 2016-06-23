@@ -36,12 +36,13 @@ public class AbortMiddleware: Middleware {
         }
     }
 
-    func errorResponse(_ status: Response.Status, message: String) throws -> Response {
+    func errorResponse(_ status: Status, message: String) throws -> Response {
         let json = JSON([
             "error": true,
             "message": "\(message)"
         ])
-        return Response(status: status, json: json)
+        let data = try JSON.serialize(json)
+        return Response(status: status, body: .data(data))
     }
 
 }

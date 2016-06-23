@@ -29,7 +29,7 @@ func ~=(pattern: Bytes, value: Bytes) -> Bool {
 extension Sequence where Iterator.Element == Byte {
     /**
         Converts a slice of bytes to
-        string. Courtesy of Socks by @Czechboy0
+        string. Courtesy of Socks by @czechboy0
     */
     public var string: String {
         var utf = UTF8()
@@ -113,18 +113,18 @@ extension Sequence where Iterator.Element == Byte {
         Transforms anything between Byte.a ... Byte.z
         into the range Byte.A ... Byte.Z
     */
-    var uppercased: Data {
-        var data = Data()
+    var uppercased: Bytes {
+        var bytes = Bytes()
 
         for byte in self {
             if (.a ... .z).contains(byte) {
-                data.append(byte - (.a - .A))
+                bytes.append(byte - (.a - .A))
             } else {
-                data.append(byte)
+                bytes.append(byte)
             }
         }
 
-        return data
+        return bytes
     }
 }
 
@@ -161,6 +161,7 @@ extension Array where Element: Hashable {
             trailing -= 1
         }
 
+        guard trailing >= leading else { return [] }
         return self[leading...trailing]
     }
 }

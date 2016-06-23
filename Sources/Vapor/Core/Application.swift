@@ -2,28 +2,29 @@ import libc
 import Foundation
 import Socks
 
-public let VERSION = "0.11"
+public let VERSION = "0.12"
 
 public class Application {
     /**
-        The router is responsible for returning 
-        registered `Route` handlers for a given request.
+        The router driver is responsible
+        for returning registered `Route` handlers
+        for a given request.
     */
-    public let router: Router
+    public let router: RouterDriver
 
     /**
         The server that will accept requesting
         connections and return the desired
         response.
     */
-    public let server: Server.Type
+    public let serverType: Server.Type
 
     /**
         The session driver is responsible for
         storing and reading values written to the
         users session.
     */
-    public let sessions: Sessions
+    public let session: SessionDriver
 
     /**
      Provides access to config settings.
@@ -36,7 +37,8 @@ public class Application {
     public let localization: Localization
 
     /**
-        Creates hashes from Strings.
+        Provides access to the underlying
+        `HashDriver`.
     */
     public let hash: Hash
 
@@ -86,21 +88,17 @@ public class Application {
     public var commands: [Command.Type]
 
     /**
-        Send output and receive input from the console.
+         Send output and receive input from the console
+         using the underlying `ConsoleDriver`.
     */
     public let console: Console
 
     /**
-        Log info, warnings, errors, etc.
+        TODO: Expose to end users to customize driver
+        Make outgoing requests
     */
-    public let log: Log
+    public let client: Client.Type
 
-    /**
-        The application's default Database.
-    */
-    public let database: Database?
-
-    let preparations: [Preparation.Type]
 
     /**
         Resources directory relative to workDir
@@ -123,33 +121,30 @@ public class Application {
         workDir: String? = nil,
         config: Config? = nil,
         localization: Localization? = nil,
-        hash: Hash? = nil,
-        console: Console? = nil,
-        log: Log? = nil,
-        server: Server.Type? = nil,
-        router: Router? = nil,
-        sessions: Sessions? = nil,
-        database: DatabaseDriver? = nil,
-        preparations: [Preparation.Type] = [],
+        hash: HashDriver? = nil,
+        console: ConsoleDriver? = nil,
+        serverType: Server.Type? = nil,
+        clientType: Client.Type? = nil,
+        router: RouterDriver? = nil,
+        session: SessionDriver? = nil,
         providers: [Provider] = [],
         arguments: [String]? = nil
     ) {
-        var serverProvided: Server.Type? = server
-        var routerProvided: Router? = router
-        var sessionProvided: Sessions? = sessions
-        var hashProvided: Hash? = hash
-        var consoleProvided: Console? = console
-        var logProvided: Log? = log
-        var databaseProvided: DatabaseDriver? = database
+        var serverProvided: Server.Type? = serverType
+        var routerProvided: RouterDriver? = router
+        var sessionProvided: SessionDriver? = session
+        var hashProvided: HashDriver? = hash
+        var consoleProvided: ConsoleDriver? = console
+        var clientProvided: Client.Type? = clientType
 
         for provider in providers {
+            // TODO: Warn if multiple providers attempt to add server
             serverProvided = provider.server ?? serverProvided
             routerProvided = provider.router ?? routerProvided
-            sessionProvided = provider.sessions ?? sessionProvided
+            sessionProvided = provider.session ?? sessionProvided
             hashProvided = provider.hash ?? hashProvided
             consoleProvided = provider.console ?? consoleProvided
-            logProvided = provider.log ?? logProvided
-            databaseProvided = provider.database ?? databaseProvided
+            clientProvided = provider.client ?? clientProvided
         }
 
         let arguments = arguments ?? NSProcessInfo.processInfo().arguments
@@ -160,16 +155,6 @@ public class Application {
             ?? arguments.value(for: "workDir")
             ?? "./"
         self.workDir = workDir.finish("/")
-
-        if let database = databaseProvided {
-            let d = Database(driver: database)
-            Database.default = d
-            self.database = d
-        } else {
-            self.database = nil
-        }
-
-        self.preparations = preparations
 
         let localization = localization ?? Localization(workingDirectory: workDir)
         self.localization = localization
@@ -183,45 +168,34 @@ public class Application {
         self.port = port
 
         let key = config["app", "key"].string
-        
-        let hash = hashProvided ?? SHA2Hasher(variant: .sha256)
-        hash.key = key ?? ""
+        let hash = Hash(key: key, driver: hashProvided)
         self.hash = hash
 
-        let sessions = sessionProvided ?? MemorySessions(hash: hash)
-        self.sessions = sessions
+        let session = sessionProvided ?? MemorySessionDriver(hash: hash)
+        self.session = session
 
         self.globalMiddleware = [
-            QueryMiddleware(),
-            CookiesMiddleware(),
-            JSONMiddleware(),
-            FormURLEncodedMiddleware(),
-            MultipartMiddleware(),
-            ContentMiddleware(),
             AbortMiddleware(),
             ValidationMiddleware(),
-            SessionMiddleware(sessions: sessions)
+            SessionMiddleware(session: session),
+            DateMiddleware()
         ]
 
         self.router = routerProvided ?? BranchRouter()
-        self.server = serverProvided ?? HTTPServer<
-            SynchronousTCPServer,
-            HTTPRequestParser,
-            HTTPResponseSerializer
-        >.self
+        self.serverType = serverProvided ?? HTTPServer<TCPServerStream, HTTPParser<Request>, HTTPSerializer<Response>>.self
+        self.client = clientProvided ?? HTTPClient<TCPClientStream>.self
 
         routes = []
 
         commands = []
 
-        let console = consoleProvided ?? Terminal()
+        let console = Console(driver: consoleProvided ?? Terminal())
         self.console = console
 
-        self.log = logProvided ?? ConsoleLogger(console: console)
+        Log.driver = ConsoleLogger(console: console)
 
         commands.append(Help.self)
         commands.append(Serve.self)
-        commands.append(Prepare.self)
 
         restrictLogging(for: config.environment)
 
@@ -233,7 +207,7 @@ public class Application {
     private func restrictLogging(for environment: Environment) {
         guard config.environment == .production else { return }
         console.output("Production mode enabled, disabling informational logs.", style: .info)
-        log.enabled = [.error, .fatal]
+        Log.enabledLevels = [.error, .fatal]
     }
 }
 
@@ -264,7 +238,7 @@ extension Application {
             case .invalidArgument(let name):
                 console.output("Invalid argument name '\(name)'.", style: .error)
             case .custom(let error):
-                console.output(error, style: .error)
+                console.output(error)
             }
         } catch  {
             console.output("Error: \(error)", style: .error)
@@ -327,16 +301,18 @@ extension Sequence where Iterator.Element == String {
 }
 
 extension Application {
-    internal func serve() {
+    internal func serve(securityLayer: SecurityLayer) {
         do {
             console.output("Server starting at \(host):\(port)", style: .info)
             // noreturn
-            let server = try self.server.init(host: host, port: port, responder: self)
-            try server.start()
-        } catch ServerError.bindFailed {
+            let server = try serverType.init(host: host, port: port, securityLayer: securityLayer)
+            try server.start(responder: self) { [weak self] error in
+                self?.console.output("Server error: \(error)")
+            }
+        } catch ServerError.bind {
             console.output("Could not bind to port \(port), it may be in use or require sudo.", style: .error)
         } catch {
-            log.error("Server start error: \(error)")
+            Log.error("Unknown start error: \(error)")
         }
     }
 }
@@ -362,12 +338,13 @@ extension Application {
                     headers["Content-Type"] = type.description
                 }
 
-                return Response(status: .ok, headers: headers, data: Data(fileBody))
+                return Response(status: .ok, headers: headers, body: .data(fileBody))
             }
         } else {
             return Request.Handler { _ in
-                self.log.warning("Could not open file, returning 404")
-                return Response(status: .notFound, text: "Page not found")
+                Log.warning("Could not open file, returning 404")
+                let bod = "Page not found".utf8.array
+                return Response(status: .notFound, body: .data(bod))
             }
         }
     }
@@ -388,16 +365,14 @@ extension Application: Responder {
         Returns a response to the given request
 
         - parameter request: received request
-
         - throws: error if something fails in finding response
-
         - returns: response if possible
      */
     public func respond(to request: Request) throws -> Response {
-        log.info("\(request.method) \(request.uri.path ?? "/")")
+        Log.info("\(request.method) \(request.uri.path ?? "/")")
 
         var responder: Responder
-        var request = request
+        let request = request
 
         /*
             The HEAD method is identical to GET.
@@ -411,50 +386,46 @@ extension Application: Responder {
 
 
         // Check in routes
-        if let (parameters, routerHandler) = router.route(request) {
-            request.parameters = parameters
-            responder = routerHandler
+        if let handler = router.route(request) {
+            responder = handler
         } else if let fileHander = self.checkFileSystem(for: request) {
             responder = fileHander
         } else {
             // Default not found handler
             responder = Request.Handler { _ in
-                let normal: [Request.Method] = [.get, .post, .put, .patch, .delete]
+                let normal: [Method] = [.get, .post, .put, .patch, .delete]
 
                 if normal.contains(request.method) {
-                    return Response(status: .notFound, text: "Page not found")
+                    let data = "Page not found".utf8.array
+                    return Response(status: .notFound, body: .data(data))
                 } else if case .options = request.method {
                     return Response(status: .ok, headers: [
                         "Allow": "OPTIONS"
-                        ], data: [])
+                        ])
                 } else {
-                    return Response(status: .notImplemented, data: [])
+                    return Response(status: .notImplemented)
                 }
             }
         }
 
         // Loop through middlewares in order
-        for middleware in self.globalMiddleware.reversed() {
-            responder = middleware.chain(to: responder)
-        }
+        responder = self.globalMiddleware.chain(to: responder)
 
         var response: Response
         do {
             response = try responder.respond(to: request)
 
             if response.headers["Content-Type"] == nil {
-                log.warning("Response had no 'Content-Type' header.")
+                Log.warning("Response had no 'Content-Type' header.")
             }
         } catch {
             var error = "Server Error: \(error)"
             if config.environment == .production {
                 error = "Something went wrong"
             }
-
-            response = Response(error: error)
+            response = Response(status: .internalServerError, body: error.bytes)
         }
 
-        response.headers["Date"] = Response.date
         response.headers["Server"] = "Vapor \(Vapor.VERSION)"
 
         /**
@@ -463,7 +434,8 @@ extension Application: Responder {
             https://tools.ietf.org/html/rfc2616#section-9.4
         */
         if case .head = originalMethod {
-            response.body = .buffer([])
+            // TODO: What if body is set to chunked¿?
+            response.body = .data([])
         }
 
         return response

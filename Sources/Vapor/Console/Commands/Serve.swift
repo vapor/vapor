@@ -6,7 +6,8 @@ public struct Serve: Command {
 
     public static let signature: [Signature] = [
         Option("port"),
-        Option("workdir")
+        Option("workdir"),
+        Option("scheme")
     ]
 
     public static let help: [String] = [
@@ -14,16 +15,12 @@ public struct Serve: Command {
     ]
 
     public let app: Application
-    public let prepare: Prepare
-
     public init(app: Application) {
         self.app = app
-        self.prepare = Prepare(app: app)
     }
 
-    public func run() throws {
-        try prepare.run()
-
-        app.serve()
+    public func run() {
+        let scheme = option("scheme").string ?? "http" // servers generally use http behind proxy, default that
+        app.serve(securityLayer: scheme.securityLayer) // TODO: fix scheme
     }
 }

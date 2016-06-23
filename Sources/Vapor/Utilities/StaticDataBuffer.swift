@@ -31,6 +31,18 @@ public class StaticDataBuffer {
         return buffer.next()
     }
 
+    public func next(matchesAny: Byte...) throws -> Bool {
+        guard let next = try next() else { return false }
+        returnToBuffer(next)
+        return matchesAny.contains(next)
+    }
+
+    public func next(matches: (Byte) throws -> Bool) throws -> Bool {
+        guard let next = try next() else { return false }
+        returnToBuffer(next)
+        return try matches(next)
+    }
+
     // MARK:
 
     public func returnToBuffer(_ byte: Byte) {
