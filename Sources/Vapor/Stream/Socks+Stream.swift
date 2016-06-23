@@ -38,11 +38,9 @@ public final class TCPClientStream: TCPProgramStream, ClientStream  {
     public func connect() throws -> Stream {
         if securityLayer == .tls {
             #if !os(Linux)
-                /*Log.warning("Using Foundation stream for now. This is not supported on linux ... visit https://github.com/qutheory/vapor-ssl for install instructions")*/
                 let foundation = try FoundationStream(host: host, port: port, securityLayer: securityLayer)
                 return try foundation.connect()
             #else
-                /*Log.warning("TCP CLIENT DOES NOT SUPPORT SSL CONNECTIONS ... visit https://github.com/qutheory/vapor-ssl for install")*/
                 throw ProgramStreamError.unsupportedSecurityLayer
             #endif
 
