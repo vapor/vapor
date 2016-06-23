@@ -51,7 +51,7 @@ extension WebSocket {
         let expected = WebSocket.exchange(requestKey: requestKey)
         guard accept == expected else { throw FormatError.invalidSecAcceptHeader }
 
-        let ws = WebSocket(client.stream)
+        let ws = WebSocket(client.stream, mode: .client)
         try onConnect(ws)
         try ws.listen()
     }
