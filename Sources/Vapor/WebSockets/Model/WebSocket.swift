@@ -11,9 +11,13 @@ public final class WebSocket {
     public enum Mode {
         case client, server
 
-        var maskOutgoingMessages: Bool {
+        public var maskOutgoingMessages: Bool {
             // RFC: Client must mask messages
             return self == .client
+        }
+
+        public func makeKey() -> Frame.MaskingKey {
+            return .make(isMasked: maskOutgoingMessages)
         }
     }
 
@@ -56,17 +60,11 @@ public final class WebSocket {
 
     // MARK: Initialization
 
-    public convenience init(_ stream: Stream) {
-        self.init(stream, mode: .server, disableFragmentAggregation: false)
-    }
-
     /**
-         Internal until we can properly test implications and explain to user
-         
          Aggregator should only be disabled in situations where the aggregator is customized. 
          Fragmented messages will only be delivered through `onFrame`
     */
-    public init(_ stream: Stream, mode: Mode = .server, disableFragmentAggregation: Bool = false) {
+    public init(_ stream: Stream, mode: Mode, disableFragmentAggregation: Bool = false) {
         self.mode = mode
         self.state = .open
         self.stream = stream
@@ -242,9 +240,9 @@ extension WebSocket {
             rsv2: false,
             rsv3: false,
             opCode: .connectionClose,
-            isMasked: false,
+            isMasked: mode.maskOutgoingMessages,
             payloadLength: 0,
-            maskingKey: .none
+            maskingKey: mode.makeKey()
         )
 
         // Reason can _only_ exist if statusCode also exists
@@ -277,9 +275,9 @@ extension WebSocket {
             rsv2: false,
             rsv3: false,
             opCode: .connectionClose,
-            isMasked: false,
+            isMasked: mode.maskOutgoingMessages,
             payloadLength: UInt64(payload.count),
-            maskingKey: .none
+            maskingKey: mode.makeKey()
         )
         let msg = Frame(header: header, payload: payload)
         try send(msg)
