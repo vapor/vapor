@@ -67,7 +67,6 @@ app.get("pokemon") { req in
     let limit = req.data["limit"].int ?? 20
     let offset = req.data["offset"].int ?? 0
     let pokemonResponse = try app.client.get("http://pokeapi.co/api/v2/pokemon", query: ["limit": limit, "offset": offset])
-    print("HEADERS: \(pokemonResponse.headers)")
     guard let names = pokemonResponse.data["results", "name"].array?.flatMap({ $0.string }) else {
         throw Abort.custom(status: .badRequest, message: "Didn't parse JSON correctly")
     }

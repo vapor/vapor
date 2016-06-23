@@ -89,7 +89,8 @@ public final class URIParser: StaticDataBuffer {
         // port MUST convert to string, THEN to Int
         let host = try percentDecodedString(hostBytes)
         let port = try percentDecodedString(portBytes).flatMap { Int($0) }
-        let path = try percentDecodedString(pathBytes)
+        // TODO: URI Initializer should finish path ... it's required by some endpoints
+        let path = try percentDecodedString(pathBytes).finish("/")
         let query = try percentDecodedString(queryBytes)
         let fragment = try percentDecodedString(fragmentBytes)
         let uri = URI(
