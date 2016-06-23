@@ -2,24 +2,24 @@ import CryptoEssentials
 import libc
 
 extension WebSocket {
-    public static func background(to uri: String, protocols: [String]? = nil, onConnect: (WebSocket) throws -> Void) throws {
+    public static func background(to uri: String, using client: Client.Type = HTTPClient<TCPClientStream>.self, protocols: [String]? = nil, onConnect: (WebSocket) throws -> Void) throws {
         let uri = try URI(uri)
-        try background(to: uri, protocols: protocols, onConnect: onConnect)
+        try background(to: uri, using: client, protocols: protocols, onConnect: onConnect)
     }
 
-    public static func background(to uri: URI, protocols: [String]? = nil, onConnect: (WebSocket) throws -> Void) throws {
+    public static func background(to uri: URI, using client: Client.Type = HTTPClient<TCPClientStream>.self, protocols: [String]? = nil, onConnect: (WebSocket) throws -> Void) throws {
         _ = try Background {
             // TODO: Need to notify failure
-            _ = try? connect(to: uri, protocols: protocols, onConnect: onConnect)
+            _ = try? connect(to: uri, using: client, protocols: protocols, onConnect: onConnect)
         }
     }
 
-    public static func connect(to uri: String, protocols: [String]? = nil, onConnect: (WebSocket) throws -> Void) throws {
+    public static func connect(to uri: String, using client: Client.Type = HTTPClient<TCPClientStream>.self, protocols: [String]? = nil, onConnect: (WebSocket) throws -> Void) throws {
         let uri = try URI(uri)
-        try connect(to: uri, protocols: protocols, onConnect: onConnect)
+        try connect(to: uri, using: client, protocols: protocols, onConnect: onConnect)
     }
 
-    public static func connect(to uri: URI, protocols: [String]? = nil, onConnect: (WebSocket) throws -> Void) throws {
+    public static func connect(to uri: URI, using client: Client.Type = HTTPClient<TCPClientStream>.self, protocols: [String]? = nil, onConnect: (WebSocket) throws -> Void) throws {
         guard let host = uri.host else { throw WebSocket.FormatError.invalidURI }
 
         let requestKey = WebSocket.makeRequestKey()
@@ -38,7 +38,8 @@ extension WebSocket {
             headers.secWebProtocol = protocols
         }
 
-        let client = try HTTPClient<TCPClientStream>.make(scheme: uri.scheme, host: host, port: uri.port)
+        let client = try client.make(scheme: uri.scheme, host: host, port: uri.port)
+        // manually requesting to preserve queries that might be in URI easily
         let request = Request(method: .get, uri: uri, version: Version(major: 1, minor: 1), headers: headers, body: .data([]))
         let response = try client.respond(to: request)
 
