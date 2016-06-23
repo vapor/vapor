@@ -34,7 +34,7 @@ extension Request {
 
         let response = HTTPResponse(status: .switchingProtocols, headers: responseHeaders)
         response.onComplete = { stream in
-            let ws = WebSocket(stream)
+            let ws = WebSocket(stream, mode: .server)
             try body(ws: ws)
             try ws.listen()
         }

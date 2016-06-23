@@ -11,7 +11,7 @@ extension WebSocket {
             opCode: .ping,
             isMasked: mode.maskOutgoingMessages,
             payloadLength: UInt64(payload.count),
-            maskingKey: .none
+            maskingKey: mode.makeKey()
         )
         let msg = Frame(header: header, payload: Data(payload))
         try send(msg)
@@ -29,9 +29,9 @@ extension WebSocket {
             rsv2: false,
             rsv3: false,
             opCode: .pong,
-            isMasked: false,
+            isMasked: mode.maskOutgoingMessages,
             payloadLength: UInt64(payload.count),
-            maskingKey: .none
+            maskingKey: mode.makeKey()
         )
         let msg = Frame(header: header, payload: payload)
         try send(msg)
