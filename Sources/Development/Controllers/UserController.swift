@@ -2,7 +2,7 @@ import Vapor
 
 class UserController: Controller {
     required init(application: Application) {
-        Log.info("User controller created")
+        application.log.info("User controller created")
     }
 
     /**

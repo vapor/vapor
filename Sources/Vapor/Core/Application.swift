@@ -10,7 +10,7 @@ public class Application {
         for returning registered `Route` handlers
         for a given request.
     */
-    public let router: RouterDriver
+    public let router: Router
 
     /**
         The server that will accept requesting
@@ -24,7 +24,7 @@ public class Application {
         storing and reading values written to the
         users session.
     */
-    public let session: SessionDriver
+    public let sessions: Sessions
 
     /**
      Provides access to config settings.
@@ -114,6 +114,12 @@ public class Application {
 
     var routes: [Route]
 
+    public let preparations: [Preparation.Type]
+
+    public let database: Database?
+
+    public let log: Log
+
     /**
         Initialize the Application.
     */
@@ -121,27 +127,29 @@ public class Application {
         workDir: String? = nil,
         config: Config? = nil,
         localization: Localization? = nil,
-        hash: HashDriver? = nil,
-        console: ConsoleDriver? = nil,
+        hash: Hash? = nil,
+        console: Console? = nil,
         serverType: Server.Type? = nil,
         clientType: Client.Type? = nil,
-        router: RouterDriver? = nil,
-        session: SessionDriver? = nil,
+        router: Router? = nil,
+        session: Sessions? = nil,
+        database: DatabaseDriver? = nil,
+        preparations: [Preparation.Type] = [],
         providers: [Provider] = [],
         arguments: [String]? = nil
     ) {
         var serverProvided: Server.Type? = serverType
-        var routerProvided: RouterDriver? = router
-        var sessionProvided: SessionDriver? = session
-        var hashProvided: HashDriver? = hash
-        var consoleProvided: ConsoleDriver? = console
+        var routerProvided: Router? = router
+        var sessionsProvided: Sessions? = session
+        var hashProvided: Hash? = hash
+        var consoleProvided: Console? = console
         var clientProvided: Client.Type? = clientType
 
         for provider in providers {
             // TODO: Warn if multiple providers attempt to add server
             serverProvided = provider.server ?? serverProvided
             routerProvided = provider.router ?? routerProvided
-            sessionProvided = provider.session ?? sessionProvided
+            sessionsProvided = provider.sessions ?? sessionsProvided
             hashProvided = provider.hash ?? hashProvided
             consoleProvided = provider.console ?? consoleProvided
             clientProvided = provider.client ?? clientProvided
@@ -168,16 +176,17 @@ public class Application {
         self.port = port
 
         let key = config["app", "key"].string
-        let hash = Hash(key: key, driver: hashProvided)
+        let hash = hashProvided ?? SHA2Hasher(variant: .sha256)
+        hash.key = key ?? ""
         self.hash = hash
 
-        let session = sessionProvided ?? MemorySessionDriver(hash: hash)
-        self.session = session
+        let sessions = sessionsProvided ?? MemorySessions(hash: hash)
+        self.sessions = sessions
 
         self.globalMiddleware = [
             AbortMiddleware(),
             ValidationMiddleware(),
-            SessionMiddleware(session: session),
+            SessionMiddleware(sessions: sessions),
             DateMiddleware()
         ]
 
@@ -189,10 +198,18 @@ public class Application {
 
         commands = []
 
-        let console = Console(driver: consoleProvided ?? Terminal())
+        let console = consoleProvided ?? Terminal()
         self.console = console
 
-        Log.driver = ConsoleLogger(console: console)
+        self.log = ConsoleLogger(console: console)
+
+        self.preparations = preparations
+
+        if let driver = database {
+            self.database = Database(driver: driver)
+        } else {
+            self.database = nil
+        }
 
         commands.append(Help.self)
         commands.append(Serve.self)
@@ -207,7 +224,7 @@ public class Application {
     private func restrictLogging(for environment: Environment) {
         guard config.environment == .production else { return }
         console.output("Production mode enabled, disabling informational logs.", style: .info)
-        Log.enabledLevels = [.error, .fatal]
+        log.enabled = [.error, .fatal]
     }
 }
 
@@ -312,7 +329,7 @@ extension Application {
         } catch ServerError.bind {
             console.output("Could not bind to port \(port), it may be in use or require sudo.", style: .error)
         } catch {
-            Log.error("Unknown start error: \(error)")
+            log.error("Unknown start error: \(error)")
         }
     }
 }
@@ -342,7 +359,7 @@ extension Application {
             }
         } else {
             return Request.Handler { _ in
-                Log.warning("Could not open file, returning 404")
+                self.log.warning("Could not open file, returning 404")
                 let bod = "Page not found".utf8.array
                 return Response(status: .notFound, body: .data(bod))
             }
@@ -369,7 +386,7 @@ extension Application: Responder {
         - returns: response if possible
      */
     public func respond(to request: Request) throws -> Response {
-        Log.info("\(request.method) \(request.uri.path ?? "/")")
+        log.info("\(request.method) \(request.uri.path ?? "/")")
 
         var responder: Responder
         let request = request
@@ -416,7 +433,7 @@ extension Application: Responder {
             response = try responder.respond(to: request)
 
             if response.headers["Content-Type"] == nil {
-                Log.warning("Response had no 'Content-Type' header.")
+                log.warning("Response had no 'Content-Type' header.")
             }
         } catch {
             var error = "Server Error: \(error)"

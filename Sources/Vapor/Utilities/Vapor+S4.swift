@@ -21,24 +21,6 @@ extension StructuredData {
     }
 }
 
-extension String: StructuredDataRepresentable {
-    public var structuredData: StructuredData {
-        return .string(self)
-    }
-}
-
-extension Double: StructuredDataRepresentable {
-    public var structuredData: StructuredData {
-        return .double(self)
-    }
-}
-
-extension Int: StructuredDataRepresentable {
-    public var structuredData: StructuredData {
-        return .int(self)
-    }
-}
-
 extension S4.Headers {
     public typealias Key = C7.CaseInsensitiveString
 }
