@@ -74,16 +74,16 @@ app.get("pokemon") { req in
     return names.joined(separator: "\n")
 }
 
-app.get("pokemon-multi") { req in
+app.get("pokemon-multi") { [weak app] req in
     return Response { chunker in
         /**
          Advanced usage, maintain connection
          */
-        let pokemonClient = try app.client.make(scheme: "http", host: "pokeapi.co")
+        let pokemonClient = try app?.client.make(scheme: "http", host: "pokeapi.co")
         for i in 0 ..< 2 {
-            let response = try pokemonClient.get(path: "/api/v2/pokemon/", query: ["limit": 20, "offset": i])
+            let response = try pokemonClient?.get(path: "/api/v2/pokemon/", query: ["limit": 20, "offset": i])
 
-            if let n = response.data["results", "name"].array?.flatMap({ $0.string }) {
+            if let n = response?.data["results", "name"].array?.flatMap({ $0.string }) {
                 try chunker.send(n.joined(separator: "\n"))
             }
         }
