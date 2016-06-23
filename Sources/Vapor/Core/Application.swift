@@ -97,7 +97,7 @@ public class Application {
         TODO: Expose to end users to customize driver
         Make outgoing requests
     */
-    public let clientType: Client.Type
+    public let client: Client.Type
 
 
     /**
@@ -182,7 +182,7 @@ public class Application {
 
         self.router = routerProvided ?? BranchRouter()
         self.serverType = serverProvided ?? HTTPServer<TCPServerStream, HTTPParser<Request>, HTTPSerializer<Response>>.self
-        self.clientType = clientProvided ?? HTTPClient<TCPClientStream>.self
+        self.client = clientProvided ?? HTTPClient<TCPClientStream>.self
 
         routes = []
 
@@ -313,18 +313,6 @@ extension Application {
         } catch {
             Log.error("Unknown start error: \(error)")
         }
-    }
-}
-
-extension Application {
-    public func client(_ url: String) throws -> Client {
-        let uri = try URI(url)
-        return try self.clientType.init(uri)
-    }
-
-    public func client(scheme: String, host: String, port: Int) throws -> Client {
-        let uri = URI.init(scheme: scheme, userInfo: nil, host: host, port: port, path: nil, query: nil, fragment: nil)
-        return try self.clientType.init(uri)
     }
 }
 

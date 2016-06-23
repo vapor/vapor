@@ -4,7 +4,7 @@ extension URI {
         let appendQuery = object
             .flatMap { key, value in
                 guard let string = value.string else { return nil }
-                return "\(key)=\(value.string)"
+                return "\(key)=\(string)"
             }
             .joined(separator: "&")
 

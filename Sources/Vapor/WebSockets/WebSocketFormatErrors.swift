@@ -5,6 +5,7 @@ extension WebSocket {
         case invalidSecAcceptHeader
         case missingUpgradeHeader
         case missingConnectionHeader
+        case invalidURI
         case invalidOrUnsupportedVersion
         case invalidOrUnsupportedStatus
     }

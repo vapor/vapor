@@ -20,6 +20,8 @@ extension WebSocket {
     }
 
     public static func connect(to uri: URI, protocols: [String]? = nil, onConnect: (WebSocket) throws -> Void) throws {
+        guard let host = uri.host else { throw WebSocket.FormatError.invalidURI }
+
         let requestKey = WebSocket.makeRequestKey()
 
         var headers = Headers()
@@ -27,6 +29,7 @@ extension WebSocket {
         headers.connection = "Upgrade"
         headers.upgrade = "websocket"
         headers.secWebSocketVersion = "13"
+
         /*
          If protocols are empty they should not be added,
          it was kicking back errors on nginx proxies in tests
@@ -35,10 +38,11 @@ extension WebSocket {
             headers.secWebProtocol = protocols
         }
 
-        let client = try HTTPClient<TCPClientStream>(uri)
+        let client = try HTTPClient<TCPClientStream>.make(scheme: uri.scheme, host: host, port: uri.port)
+        let request = Request(method: .get, uri: uri, version: Version(major: 1, minor: 1), headers: headers, body: .data([]))
+        let response = try client.respond(to: request)
 
-        let response = try client.get(headers: headers)
-        guard response.headers.secWebSocketVersion == "13" else { throw FormatError.invalidOrUnsupportedVersion }
+        // Don't need to check version in server response
         guard response.headers.connection == "Upgrade" else { throw FormatError.missingConnectionHeader }
         guard response.headers.upgrade == "websocket" else { throw FormatError.missingUpgradeHeader }
         guard case .switchingProtocols = response.status else { throw FormatError.invalidOrUnsupportedStatus }

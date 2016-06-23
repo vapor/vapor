@@ -74,10 +74,16 @@ public final class URIParser: StaticDataBuffer {
         let scheme = try percentDecodedString(schemeBytes)
         let username = try percentDecodedString(usernameBytes)
         let auth = try percentDecodedString(authBytes)
-        let userInfo = URI.UserInfo(
-            username: username ?? "",
-            password: auth ?? ""
-        )
+
+        let userInfo: URI.UserInfo?
+        if let username = username where !username.isEmpty {
+            userInfo = URI.UserInfo(
+                username: username,
+                password: auth ?? ""
+            )
+        } else {
+            userInfo = nil
+        }
 
 
         // port MUST convert to string, THEN to Int
