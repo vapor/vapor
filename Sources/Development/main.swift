@@ -1,3 +1,5 @@
+/*
+
 import Vapor
 import libc
 
@@ -7,8 +9,8 @@ var workDir: String {
     return path
 }
 
-let config = Config(seed: JSON.object(["port": "8080"]), workingDirectory: workDir)
-let app = Application(workDir: workDir, config: config)
+//let config = try! Config(seed: JSON.object(["port": "8080"]), workingDirectory: workDir)
+let app = Application() //workDir: workDir) //, config: config)
 let 😀 = Response(status: .ok)
 
 //MARK: Basic
@@ -18,7 +20,10 @@ app.get { request in
 }
 
 app.get("client-socket") { req in
-    _ = try? WebSocket.background(to: "ws://\(app.host):\(app.port)/server-socket-responder") { (ws) in
+    let host = app.config["servers", 0, "host"].string ?? "localhost"
+    let port = app.config["servers", 0, "port"].int ?? 80
+    
+    _ = try? WebSocket.background(to: "ws://\(host):\(port)/server-socket-responder") { (ws) in
         ws.onText = { ws, text in
             print("[Client] received - \(text)")
         }
@@ -462,4 +467,4 @@ app.get("chunked") { request in
     }
 }
 
-app.start()
+app.serve()*/*/

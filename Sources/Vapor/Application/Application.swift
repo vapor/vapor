@@ -1,8 +1,11 @@
 import libc
 import Foundation
 import Socks
+import Strand
 
 public let VERSION = "0.12"
+
+public typealias Droplet = Application
 
 public class Application {
     /**
@@ -17,7 +20,7 @@ public class Application {
         connections and return the desired
         response.
     */
-    public let serverType: Server.Type
+    public var server: Server.Type
 
     /**
         The session driver is responsible for
@@ -41,28 +44,6 @@ public class Application {
         `HashDriver`.
     */
     public let hash: Hash
-
-    /**
-        The base host to serve for a given application. Set through Config
-     
-        Command Line Argument:
-            `--config:app.host=127.0.0.1`
-         
-        Config:
-            Set "host" key in app.json file
-    */
-    public let host: String
-
-    /**
-        The port the application should listen to. Set through Config
-
-        Command Line Argument:
-            `--config:app.port=8080`
-
-        Config:
-            Set "port" key in app.json file
-    */
-    public let port: Int
 
     /**
         The work directory of your application is
@@ -158,22 +139,45 @@ public class Application {
         let arguments = arguments ?? NSProcessInfo.processInfo().arguments
         self.arguments = arguments
 
+        let console = consoleProvided ?? Terminal()
+        self.console = console
+
+        let log = ConsoleLogger(console: console)
+        self.log = log
+
         let workDir = workDir
             ?? arguments.value(for: "workdir")
             ?? arguments.value(for: "workDir")
             ?? "./"
         self.workDir = workDir.finish("/")
 
-        let localization = localization ?? Localization(workingDirectory: workDir)
+        let localizationProvided = localization
+        let localization: Localization
+        if let provided = localizationProvided {
+            localization = provided
+        } else {
+            do {
+                localization = try Localization(workingDirectory: workDir)
+            } catch {
+                log.error("Could not load localization files: \(error)")
+                localization = Localization()
+            }
+        }
         self.localization = localization
 
-        let config = config ?? Config(workingDirectory: workDir, arguments: arguments)
+        let configProvided = config
+        let config: Config
+        if let provided = configProvided {
+            config = provided
+        } else {
+            do {
+                config = try Config(workingDirectory: workDir, arguments: arguments)
+            } catch {
+                log.error("Could not load configuration files: \(error)")
+                config = Config()
+            }
+        }
         self.config = config
-
-        let host = config["app", "host"].string ?? "0.0.0.0"
-        let port = config["app", "port"].int ?? 8080
-        self.host = host
-        self.port = port
 
         let key = config["app", "key"].string
         let hash = hashProvided ?? SHA2Hasher(variant: .sha256)
@@ -190,18 +194,16 @@ public class Application {
             DateMiddleware()
         ]
 
-        self.router = routerProvided ?? BranchRouter()
-        self.serverType = serverProvided ?? HTTPServer<TCPServerStream, HTTPParser<Request>, HTTPSerializer<Response>>.self
-        self.client = clientProvided ?? HTTPClient<TCPClientStream>.self
+        let router = routerProvided ?? BranchRouter()
+        self.router = router
+
+        let serverType = serverProvided ?? HTTPServer<TCPServerStream, HTTPParser<Request>, HTTPSerializer<Response>>.self
+        self.server = serverType
+
+        client = clientProvided ?? HTTPClient<TCPClientStream>.self
 
         routes = []
-
         commands = []
-
-        let console = consoleProvided ?? Terminal()
-        self.console = console
-
-        self.log = ConsoleLogger(console: console)
 
         self.preparations = preparations
 
@@ -226,6 +228,10 @@ public class Application {
         console.output("Production mode enabled, disabling informational logs.", style: .info)
         log.enabled = [.error, .fatal]
     }
+
+    func serverErrors(error: ServerError) {
+        log.error("Server error: \(error)")
+    }
 }
 
 extension Application {
@@ -237,9 +243,15 @@ extension Application {
         Starts console
     */
     @noreturn
-    public func start() {
+    public func serve(onServe: Serve.OnServe? = nil) {
         do {
-            try execute()
+            let command = try execute()
+
+            if let serve = command as? Serve {
+                serve.onServe = onServe
+            }
+
+            try command.run()
             exit(0)
         } catch let error as ExecutionError {
             switch error {
@@ -263,7 +275,7 @@ extension Application {
         exit(1)
     }
 
-    func execute() throws {
+    func execute() throws -> Command {
         // options prefixed w/ `--` are accessible through `app.config["app", "argument"]`
         var iterator = self.arguments.filter { item in
             return !item.hasPrefix("--")
@@ -295,8 +307,7 @@ extension Application {
                     throw ExecutionError.insufficientArguments
                 }
 
-                try command.run()
-                return
+                return command
             }
         }
 
@@ -314,23 +325,6 @@ extension Sequence where Iterator.Element == String {
         }
 
         return nil
-    }
-}
-
-extension Application {
-    internal func serve(securityLayer: SecurityLayer) {
-        do {
-            console.output("Server starting at \(host):\(port)", style: .info)
-            // noreturn
-            let server = try serverType.init(host: host, port: port, securityLayer: securityLayer)
-            try server.start(responder: self) { [weak self] error in
-                self?.console.output("Server error: \(error)")
-            }
-        } catch ServerError.bind {
-            console.output("Could not bind to port \(port), it may be in use or require sudo.", style: .error)
-        } catch {
-            log.error("Unknown start error: \(error)")
-        }
     }
 }
 
@@ -376,85 +370,6 @@ extension Application {
     }
 }
 
-extension Application: Responder {
-
-    /**
-        Returns a response to the given request
-
-        - parameter request: received request
-        - throws: error if something fails in finding response
-        - returns: response if possible
-     */
-    public func respond(to request: Request) throws -> Response {
-        log.info("\(request.method) \(request.uri.path ?? "/")")
-
-        var responder: Responder
-        let request = request
-
-        /*
-            The HEAD method is identical to GET.
-            
-            https://tools.ietf.org/html/rfc2616#section-9.4
-        */
-        let originalMethod = request.method
-        if case .head = request.method {
-            request.method = .get
-        }
-
-
-        // Check in routes
-        if let handler = router.route(request) {
-            responder = handler
-        } else if let fileHander = self.checkFileSystem(for: request) {
-            responder = fileHander
-        } else {
-            // Default not found handler
-            responder = Request.Handler { _ in
-                let normal: [Method] = [.get, .post, .put, .patch, .delete]
-
-                if normal.contains(request.method) {
-                    let data = "Page not found".utf8.array
-                    return Response(status: .notFound, body: .data(data))
-                } else if case .options = request.method {
-                    return Response(status: .ok, headers: [
-                        "Allow": "OPTIONS"
-                        ])
-                } else {
-                    return Response(status: .notImplemented)
-                }
-            }
-        }
-
-        // Loop through middlewares in order
-        responder = self.globalMiddleware.chain(to: responder)
-
-        var response: Response
-        do {
-            response = try responder.respond(to: request)
-
-            if response.headers["Content-Type"] == nil {
-                log.warning("Response had no 'Content-Type' header.")
-            }
-        } catch {
-            var error = "Server Error: \(error)"
-            if config.environment == .production {
-                error = "Something went wrong"
-            }
-            response = Response(status: .internalServerError, body: error.bytes)
-        }
-
-        response.headers["Server"] = "Vapor \(Vapor.VERSION)"
-
-        /**
-            The server MUST NOT return a message-body in the response for HEAD.
-
-            https://tools.ietf.org/html/rfc2616#section-9.4
-        */
-        if case .head = originalMethod {
-            // TODO: What if body is set to chunked¿?
-            response.body = .data([])
-        }
-
-        return response
-    }
+func +=(lhs: inout [String], rhs: String) {
+    lhs.append(rhs)
 }

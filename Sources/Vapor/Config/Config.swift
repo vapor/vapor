@@ -37,8 +37,6 @@ public class Config {
         The environment loaded from `Environment.loader
     */
     public let environment: Environment
-
-    private let configDirectory: String
     private let directoryQueue: PrioritizedDirectoryQueue
 
     /**
@@ -51,9 +49,8 @@ public class Config {
         workingDirectory: String = "./",
         environment: Environment? = nil,
         arguments: [String] = NSProcessInfo.processInfo().arguments
-    ) {
+    ) throws {
         let configDirectory = workingDirectory.finish("/") + "Config/"
-        self.configDirectory = configDirectory
         self.environment = environment ?? Environment.loader(arguments: arguments)
 
         let seedFile = JSONFile(name: "app", json: seed)
@@ -71,17 +68,22 @@ public class Config {
         // Json files are loaded in order of priority
         // it will go like this
         // paths will be searched for in top down order
-        if let directory = FileManager.loadDirectory(configDirectory + "secrets") {
+        if let directory = try FileManager.loadDirectory(configDirectory + "secrets") {
             prioritizedDirectories.append(directory)
         }
-        if let directory = FileManager.loadDirectory(configDirectory + self.environment.description) {
+        if let directory = try FileManager.loadDirectory(configDirectory + self.environment.description) {
             prioritizedDirectories.append(directory)
         }
-        if let directory = FileManager.loadDirectory(configDirectory) {
+        if let directory = try FileManager.loadDirectory(configDirectory) {
             prioritizedDirectories.append(directory)
         }
 
         directoryQueue = PrioritizedDirectoryQueue(directories: prioritizedDirectories)
+    }
+
+    internal init() {
+        self.environment = Environment.loader(arguments: NSProcessInfo.processInfo().arguments)
+        self.directoryQueue = PrioritizedDirectoryQueue(directories: [])
     }
 
     /**
