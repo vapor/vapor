@@ -18,9 +18,9 @@ class UserController: Controller {
     /**
         Create a new instance.
      */
-    func store(request: Request) throws -> ResponseRepresentable {
+    func post(request: Request) throws -> ResponseRepresentable {
         return JSON([
-            "controller": "MyController.store"
+            "controller": "MyController.post"
         ])
     }
 
@@ -28,10 +28,10 @@ class UserController: Controller {
     /**
         Show an instance.
      */
-    func show(request: Request, item user: User) throws -> ResponseRepresentable {
+    func get(request: Request, item user: User) throws -> ResponseRepresentable {
         //User can be used like JSON with JsonRepresentable
         return JSON([
-            "controller": "MyController.show",
+            "controller": "MyController.get",
             "user": user
         ])
     }
@@ -39,7 +39,7 @@ class UserController: Controller {
     /** 
         Update an instance.
      */
-    func update(request: Request, item user: User) throws -> ResponseRepresentable {
+    func put(request: Request, item user: User) throws -> ResponseRepresentable {
         //Testing JsonRepresentable
         return user.makeJson()
     }
@@ -47,7 +47,7 @@ class UserController: Controller {
     /**
         Modify an instance (only the fields that are present in the request)
      */
-    func modify(request: Request, item user: User) throws -> ResponseRepresentable {
+    func patch(request: Request, item user: User) throws -> ResponseRepresentable {
         //Testing JsonRepresentable
         return user.makeJson()
     }
@@ -55,7 +55,7 @@ class UserController: Controller {
     /**
         Delete an instance.
      */
-    func destroy(request: Request, item user: User) throws -> ResponseRepresentable {
+    func delete(request: Request, item user: User) throws -> ResponseRepresentable {
         //User is ResponseRepresentable by proxy of JsonRepresentable
         return user
     }
@@ -63,7 +63,7 @@ class UserController: Controller {
     /**
         Delete all instances.
      */
-    func destroy(request: Request) throws -> ResponseRepresentable {
+    func delete(request: Request) throws -> ResponseRepresentable {
         return JSON([
             "controller": "MyController.destroyAll"
         ])
