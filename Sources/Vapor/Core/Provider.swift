@@ -32,14 +32,14 @@ public protocol Provider {
         to the application. Has a default
         implementation of `nil`.
     */
-    var router: RouterDriver? { get }
+    var router: Router? { get }
 
     /**
-        An optional `SessionDriver` to provide
+        An optional `Session` to provide
         to the application. Has a default
         implementation of `nil`.
     */
-    var session: SessionDriver? { get }
+    var sessions: Sessions? { get }
 
 
     /**
@@ -47,14 +47,14 @@ public protocol Provider {
         to the application. Has a default
         implementation of `nil`.
      */
-    var hash: HashDriver? { get }
+    var hash: Hash? { get }
 
     /**
         An optional `ConsoleDriver` to provide
         to the application. Has a default
         implementation of `nil`.
     */
-    var console: ConsoleDriver? { get }
+    var console: Console? { get }
 
 
     /**
@@ -69,19 +69,19 @@ extension Provider {
         return nil
     }
 
-    public var router: RouterDriver? {
+    public var router: Router? {
         return nil
     }
 
-    public var session: SessionDriver? {
+    public var sessions: Sessions? {
         return nil
     }
 
-    public var hash: HashDriver? {
+    public var hash: Hash? {
         return nil
     }
 
-    public var console: ConsoleDriver? {
+    public var console: Console? {
         return nil
     }
 

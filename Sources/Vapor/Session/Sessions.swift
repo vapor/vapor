@@ -2,13 +2,13 @@
     Session storage engines that conform to this
     protocol can be used to power the Session class.
 */
-public protocol SessionDriver: class {
+public protocol Sessions: class {
      /**
         Make a randomized session identifier
 
         - returns: a session identifier to use with a new session
      */
-    func makeSessionIdentifier() -> String
+    func makeIdentifier() -> String
 
     /**
         Load the value at a specified key for a session with the given identifier
@@ -18,7 +18,7 @@ public protocol SessionDriver: class {
 
         - returns: the value for given key, if exists
      */
-    func valueFor(key: String, identifier: String) -> String?
+    func value(for key: String, identifier: String) -> String?
 
     /**
         Returns true if the session driver
@@ -35,7 +35,7 @@ public protocol SessionDriver: class {
         - parameter key: key to set
         - parameter identifier: identifier of the session
      */
-    func set(_ value: String?, forKey key: String, identifier: String)
+    func set(_ value: String?, for key: String, identifier: String)
 
     /**
         Destroy the session associated with given identifier

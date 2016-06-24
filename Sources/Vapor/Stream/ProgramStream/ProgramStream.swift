@@ -1,4 +1,8 @@
 public enum ProgramStreamError: ErrorProtocol {
+    /**
+        Visit https://github.com/qutheory/vapor-tls
+        to learn about adding Transport Layer Security to Vapor.
+    */
     case unsupportedSecurityLayer
 }
 

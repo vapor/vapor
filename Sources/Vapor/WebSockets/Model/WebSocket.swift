@@ -113,7 +113,9 @@ extension WebSocket {
                 let frame = try parser.acceptFrame()
                 try received(frame)
             } catch {
-                Log.error("WebSocket Failed w/ error: \(error)")
+                // TODO: Throw for application to catch
+                // or pass logger
+                // Log.error("WebSocket Failed w/ error: \(error)")
                 try completeCloseHandshake(statusCode: nil, reason: nil, cleanly: false)
             }
         }
@@ -203,7 +205,11 @@ extension WebSocket {
             // we requested close, opponent responded
             try completeCloseHandshake(statusCode: statusCode, reason: reason, cleanly: true)
         case .closed:
-            Log.info("Received close frame, already closed.")
+            break
+            // TODO: Throw for application to catch
+            // or pass logger
+
+            // Log.info("Received close frame, already closed.")
         }
     }
 }

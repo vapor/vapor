@@ -8,21 +8,21 @@
 */
 class SessionMiddleware: Middleware {
 
-    var driver: SessionDriver
+    var sessions: Sessions
 
-    init(session: SessionDriver) {
-        driver = session
+    init(sessions: Sessions) {
+        self.sessions = sessions
     }
 
     func respond(to request: Request, chainingTo chain: Responder) throws -> Response {
         // mutable -- MUST be declared at top of function
         if
-            let sessionIdentifier = request.cookies["vapor-session"]
-            where driver.contains(identifier: sessionIdentifier)
+            let identifier = request.cookies["vapor-session"]
+            where sessions.contains(identifier: identifier)
         {
-            request.session = Session(identifier: sessionIdentifier, driver: driver)
+            request.session = Session(identifier: identifier, sessions: sessions)
         } else {
-            request.session = Session(driver: driver)
+            request.session = Session(sessions: sessions)
         }
 
         let response = try chain.respond(to: request)

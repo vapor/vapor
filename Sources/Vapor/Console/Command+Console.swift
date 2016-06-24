@@ -5,7 +5,7 @@ extension Command {
     /**
         Prints a message to the app's console.
     */
-    public func print(_ string: String, style: Console.Style = .plain, newLine: Bool = true) {
+    public func print(_ string: String, style: ConsoleStyle = .plain, newLine: Bool = true) {
         app.console.output(string, style: style, newLine: newLine)
     }
 
@@ -28,14 +28,20 @@ extension Command {
     */
     public func error(_ string: String) {
         print(string, style: .error)
+    }
 
+    /**
+        Prints a success message.
+    */
+    public func success(_ string: String) {
+        print(string, style: .success)
     }
 
     /**
         Requests input from the console
         after displaying the desired prompt.
     */
-    public func ask(_ prompt: String, style: Console.Style = .info) -> Polymorphic {
+    public func ask(_ prompt: String, style: ConsoleStyle = .info) -> Polymorphic {
         print(prompt, style: style)
         return app.console.input()
     }
@@ -44,7 +50,7 @@ extension Command {
         Requests yes/no confirmation from 
         the console.
     */
-    public func confirm(_ prompt: String, style: Console.Style = .info) -> Bool {
+    public func confirm(_ prompt: String, style: ConsoleStyle = .info) -> Bool {
         var i = 0
         var result = ""
         while result != "y" && result != "yes" && result != "n" && result != "no" {

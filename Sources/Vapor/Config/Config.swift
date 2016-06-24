@@ -131,7 +131,6 @@ extension Environment {
      */
     static var loader: (arguments: [String]) -> Environment = { arguments in
         if let env = arguments.value(for: "env").flatMap(Environment.init(id:)) {
-            Log.info("Environment override: \(env)")
             return env
         } else {
             return .development

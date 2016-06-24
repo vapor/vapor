@@ -22,7 +22,8 @@ class HashTests: XCTestCase {
         XCTAssert(defaultExpected == result, "Hash did not match")
 
         //test Hash by itself
-        let hash = Hash(key: defaultKey, driver: SHA2Hasher(variant: .sha256))
+        let hash = SHA2Hasher(variant: .sha256)
+        hash.key = defaultKey
         XCTAssert(defaultExpected == hash.make(string), "Hash did not match")
 
         //test all variants of manually
@@ -33,7 +34,8 @@ class HashTests: XCTestCase {
 
         for (variant, expect) in expected {
             let hasher = SHA2Hasher(variant: variant)
-            let result = hasher.hash(string, key: defaultKey)
+            hasher.key = defaultKey
+            let result = hasher.make(string)
             XCTAssert(result == expect, "Hash for \(variant) did not match")
         }
         

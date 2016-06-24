@@ -40,7 +40,6 @@ extension Config {
         } else if info.count == 2, let key = info.first, let value = info.last {
             return (key, value)
         } else {
-            Log.info("Unable to parse possible config argument: \(arg)")
             return nil
         }
     }
@@ -71,7 +70,6 @@ extension Config {
             //
             where keyPaths.count > 1
             else {
-                Log.info("Unable to parse possible config path: \(key)")
                 return nil
         }
 
