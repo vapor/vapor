@@ -46,28 +46,3 @@ extension HTTPMessage {
         return !value.contains("close")
     }
 }
-
-extension HTTPMessage {
-    public var json: JSON? {
-        get {
-            if let existing = storage["json"] as? JSON {
-                return existing
-            } else if let type = headers["Content-Type"] where type.contains("application/json") {
-                guard case let .data(body) = body else { return nil }
-                guard let json = try? JSON.parse(body) else { return nil }
-                storage["json"] = json
-                return json
-            } else {
-                return nil
-            }
-        }
-        set(data) {
-            if let data = data {
-                if let body = try? HTTPBody(data) {
-                    self.body = body
-                    headers["Content-Type"] = "application/json"
-                }
-            }
-        }
-    }
-}
