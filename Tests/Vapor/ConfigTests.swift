@@ -17,23 +17,23 @@ class ConfigTests: XCTestCase {
         return path
     }
 
-    func testSimple() {
-        let config = Config(workingDirectory: workDir, environment: .development)
+    func testSimple() throws {
+        let config = try Config(workingDirectory: workDir, environment: .development)
 		XCTAssert(config["app", "debug"].bool == true, "Config incorrectly loaded.")
 	}
 
-	func testNesting() {
-        let config = Config(workingDirectory: workDir, environment: .development)
+	func testNesting() throws {
+        let config = try Config(workingDirectory: workDir, environment: .development)
 		XCTAssert(config["app", "nested", "c", "true"].bool == true, "Nesting config incorrectly loaded.")
 	}
 
-	func testEnvironmentCascading() {
-        let config = Config(workingDirectory: workDir, environment: .production)
+	func testEnvironmentCascading() throws {
+        let config = try Config(workingDirectory: workDir, environment: .production)
 		XCTAssert(config["app", "debug"].bool == false, "Cascading config incorrectly loaded.")
 	}
 
-	func testEnvironmentCascadingNesting() {
-        let config = Config(workingDirectory: workDir, environment: .production)
+	func testEnvironmentCascadingNesting() throws {
+        let config = try Config(workingDirectory: workDir, environment: .production)
 		XCTAssert(config["app", "nested", "c", "true"].bool == false, "Nesting config incorrectly loaded.")
 	}
 

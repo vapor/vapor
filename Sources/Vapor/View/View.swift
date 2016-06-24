@@ -18,8 +18,8 @@ public class View {
         information supplied.
         - context Passed to RenderDrivers
     */
-    public init(application: Application, path: String, context: [String: Any] = [:]) throws {
-        let filesPath = application.workDir + "Resources/Views/" + path
+    public init(workDir: String, path: String, context: [String: Any] = [:]) throws {
+        let filesPath = workDir + "Resources/Views/" + path
 
         guard let fileBody = try? FileManager.readBytesFromFile(filesPath) else {
             self.data = Data()
@@ -41,10 +41,24 @@ public class View {
 
 ///Allows Views to be returned in Vapor closures
 extension View: ResponseRepresentable {
-    public func makeResponse() -> Response {
+    public func makeResponse(for: Request) -> Response {
         return Response(status: .ok, headers: [
             "Content-Type": "text/html; charset=utf-8"
         ], body: .data(data.bytes))
+    }
+}
+
+extension Response {
+    public var view: View? {
+        get {
+            return nil
+        }
+        set(view) {
+            if let view = view {
+                body = HTTPBody(view.data.bytes)
+                headers["Content-Type"] = "text/html; charset=utf-8"
+            }
+        }
     }
 }
 
@@ -67,7 +81,7 @@ extension Application {
      - throws: an error if loading fails
      */
     public func view(_ path: String, context: [String: Any] = [:]) throws -> View {
-        return try View(application: self, path: path, context: context)
+        return try View(workDir: self.workDir, path: path, context: context)
     }
 
 }

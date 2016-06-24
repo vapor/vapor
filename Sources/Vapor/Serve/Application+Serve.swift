@@ -10,7 +10,7 @@ extension Application {
                     continue
                 }
 
-                try bootServer(config: server, isLastServer: bootedServers == servers.keys.count - 1)
+                try bootServer(config: server, name: key, isLastServer: bootedServers == servers.keys.count - 1)
                 bootedServers += 1
             }
         } else {
@@ -31,7 +31,7 @@ extension Application {
         }
     }
 
-    func bootServer(config: [String: Polymorphic], isLastServer: Bool) throws {
+    func bootServer(config: [String: Polymorphic], name: String, isLastServer: Bool) throws {
         let securityLayer: SecurityLayer = config["securityLayer"].string == "tls" ? .tls : .none
 
         let host = config["host"].string ?? "localhost"
@@ -40,7 +40,7 @@ extension Application {
         let runInBackground = !isLastServer
 
         var message: [String] = []
-        message += "Server starting"
+        message += "Server '\(name)' starting"
         if runInBackground {
             message += "in background"
         }

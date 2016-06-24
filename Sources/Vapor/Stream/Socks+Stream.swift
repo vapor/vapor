@@ -6,6 +6,7 @@ extension TCPInternetSocket: Stream {
     }
 
     public func send(_ bytes: Bytes) throws {
+        //print(bytes.string)
         try send(data: bytes)
     }
 
@@ -14,7 +15,9 @@ extension TCPInternetSocket: Stream {
     }
 
     public func receive(max: Int) throws -> Bytes {
-        return try recv(maxBytes: max)
+        let bytes = try recv(maxBytes: max)
+        //print(bytes.string)
+        return bytes
     }
 }
 

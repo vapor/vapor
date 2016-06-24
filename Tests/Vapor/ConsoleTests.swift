@@ -19,7 +19,7 @@ class ConsoleTests: XCTestCase {
         ]
 
         do {
-            try app.execute()
+            try app.execute().run()
             XCTAssert(console.input() == "Test 1 Ran", "Command 1 did not run")
         } catch {
             XCTFail("Command 1 failed: \(error)")
@@ -39,7 +39,7 @@ class ConsoleTests: XCTestCase {
         XCTAssert(commandTwoSignature == "test-2 <arg-1> {--opt-1} {--opt-2}", "Signature did not match")
 
         do {
-            try app.execute()
+            try app.execute().run()
             XCTFail("Command 2 did not fail")
         } catch {
             //
@@ -56,7 +56,7 @@ class ConsoleTests: XCTestCase {
         ]
 
         do {
-            try app.execute()
+            try app.execute().run()
             XCTAssert(console.input() == "123", "Did not print 123")
         } catch {
             XCTFail("Command 2 failed to run: \(error)")
@@ -73,7 +73,7 @@ class ConsoleTests: XCTestCase {
         ]
 
         do {
-            try app.execute()
+            try app.execute().run()
             XCTAssert(console.input() == "123abc", "Did not print 123abc")
         } catch {
             XCTFail("Command 2 failed to run: \(error)")
@@ -99,7 +99,7 @@ class ConsoleTests: XCTestCase {
         app.commands = [TestServe.self]
 
         do {
-            try app.execute()
+            try app.execute().run()
             XCTAssert(TestServe.ran, "Serve did not default")
         } catch {
             XCTFail("Serve did not default: \(error)")

@@ -27,7 +27,33 @@ public struct Prepare: Command {
         }
 
         if option("revert").bool == true {
-            throw CommandError.custom("Revert is not yet supported")
+            guard confirm("Are you sure you want to revert the database?", style: .warning) else {
+                error("Reversion cancelled")
+                return
+            }
+
+            for preparation in app.preparations {
+                let name = preparation.name
+                let hasPrepared: Bool
+
+                do {
+                    try hasPrepared = database.hasPrepared(preparation)
+                } catch {
+                    self.error("Failed to start preparation")
+                    throw CommandError.custom("\(error)")
+                }
+
+                if hasPrepared {
+                    print("Reverting \(name)")
+                    try preparation.revert(database: database)
+                    success("Reverted \(name)")
+                }
+            }
+
+            print("Removing metadata")
+            let schema = Schema.delete(entity: "fluent")
+            try database.driver.schema(schema)
+            success("Reversion complete")
         } else {
             for preparation in app.preparations {
                 let name = preparation.name
@@ -42,15 +68,15 @@ public struct Prepare: Command {
                 }
 
                 if !hasPrepared {
-                    print("Preparing '\(name)'")
+                    print("Preparing \(name)")
                     do {
                         try database.prepare(preparation)
                         success("Prepared '\(name)'")
                     } catch PreparationError.automationFailed(let string) {
-                        self.error("Automatic preparation for '\(name)' failed.")
+                        self.error("Automatic preparation for \(name) failed.")
                         throw CommandError.custom("\(string)")
                     } catch {
-                        self.error("Failed to prepare '\(name)'")
+                        self.error("Failed to prepare \(name)")
                         throw CommandError.custom("\(error)")
                     }
                 }

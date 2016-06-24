@@ -215,6 +215,7 @@ public class Application {
 
         commands.append(Help.self)
         commands.append(Serve.self)
+        commands.append(Prepare.self)
 
         restrictLogging(for: config.environment)
 
@@ -267,7 +268,7 @@ extension Application {
             case .invalidArgument(let name):
                 console.output("Invalid argument name '\(name)'.", style: .error)
             case .custom(let error):
-                console.output(error)
+                console.output(error, style: .error)
             }
         } catch  {
             console.output("Error: \(error)", style: .error)

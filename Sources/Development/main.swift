@@ -1,5 +1,3 @@
-/*
-
 import Vapor
 import libc
 
@@ -130,7 +128,7 @@ app.socket("socket") { request, ws in
 
 //MARK: Resource
 
-app.resource("users", controller: UserController.self)
+app.resource("users", UserController.self)
 
 //MARK: Request data
 
@@ -467,4 +465,4 @@ app.get("chunked") { request in
     }
 }
 
-app.serve()*/*/
+app.serve()

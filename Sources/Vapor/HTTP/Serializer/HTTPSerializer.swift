@@ -13,9 +13,26 @@ public final class HTTPSerializer<Message: HTTPMessage>: TransferSerializer {
         let startLine = message.startLine
         try stream.send(startLine)
         try stream.send(crlf)
-        // mutable
+
         var headers = message.headers
-        headers.appendMetadata(for: message.body)
+        switch message.body {
+        case .data(let data):
+            headers["Transfer-Encoding"] = nil
+            // 0 vs nil works with different implementations
+            headers["Content-Length"] = data.isEmpty ? "0" : data.count.description
+        case .chunked(_):
+            headers["Content-Length"] = nil
+
+            if let encoding = headers["Transfer-Encoding"] where !encoding.isEmpty {
+                if encoding.hasSuffix("chunked") {
+                    return
+                } else {
+                    headers["Transfer-Encoding"] = encoding + ", chunked"
+                }
+            } else {
+                headers["Transfer-Encoding"] = "chunked"
+            }
+        }
 
         try serialize(headers)
         try serialize(message.body)

@@ -9,7 +9,7 @@ extension Model {
         }
     }
 
-    public func makeJSON() -> JSON {
+    public func makeJson() -> JSON {
         var json: [String: JSON] = [:]
 
         for (key, value) in serialize() {
