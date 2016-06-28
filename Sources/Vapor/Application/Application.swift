@@ -110,8 +110,8 @@ public class Application {
         localization: Localization? = nil,
         hash: Hash? = nil,
         console: Console? = nil,
-        serverType: Server.Type? = nil,
-        clientType: Client.Type? = nil,
+        server: Server.Type? = nil,
+        client: Client.Type? = nil,
         router: Router? = nil,
         session: Sessions? = nil,
         database: DatabaseDriver? = nil,
@@ -119,12 +119,13 @@ public class Application {
         providers: [Provider] = [],
         arguments: [String]? = nil
     ) {
-        var serverProvided: Server.Type? = serverType
+        var serverProvided: Server.Type? = server
         var routerProvided: Router? = router
         var sessionsProvided: Sessions? = session
         var hashProvided: Hash? = hash
         var consoleProvided: Console? = console
-        var clientProvided: Client.Type? = clientType
+        var clientProvided: Client.Type? = client
+        var databaseProvided: DatabaseDriver? = database
 
         for provider in providers {
             // TODO: Warn if multiple providers attempt to add server
@@ -134,6 +135,7 @@ public class Application {
             hashProvided = provider.hash ?? hashProvided
             consoleProvided = provider.console ?? consoleProvided
             clientProvided = provider.client ?? clientProvided
+            databaseProvided = provider.database ?? databaseProvided
         }
 
         let arguments = arguments ?? NSProcessInfo.processInfo().arguments
@@ -200,15 +202,22 @@ public class Application {
         let serverType = serverProvided ?? HTTPServer<TCPServerStream, HTTPParser<Request>, HTTPSerializer<Response>>.self
         self.server = serverType
 
-        client = clientProvided ?? HTTPClient<TCPClientStream>.self
+        let client = clientProvided ?? HTTPClient<TCPClientStream>.self
+        self.client = client
 
         routes = []
         commands = []
 
         self.preparations = preparations
 
-        if let driver = database {
-            self.database = Database(driver: driver)
+        if let driver = databaseProvided {
+            let database = Database(driver: driver)
+            for preparation in preparations {
+                if let model = preparation as? Model.Type {
+                    model.database = database
+                }
+            }
+            self.database = database
         } else {
             self.database = nil
         }

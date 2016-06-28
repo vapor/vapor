@@ -41,10 +41,7 @@ let package = Package(
     ],
     targets: [
         Target(
-            name: "Vapor",
-            dependencies: [
-                .Target(name: "libc")
-            ]
+            name: "Vapor"
         ),
         Target(
             name: "Development",
