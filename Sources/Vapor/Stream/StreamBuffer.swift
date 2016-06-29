@@ -62,6 +62,7 @@ public final class StreamBuffer: Stream {
     }
 
     public func flush() throws {
+        guard !sendBuffer.isEmpty else { return }
         try stream.send(sendBuffer)
         sendBuffer = []
     }
