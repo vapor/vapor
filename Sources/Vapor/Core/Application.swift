@@ -207,8 +207,14 @@ public class Application {
 
         self.preparations = preparations
 
-        if let driver = database {
-            self.database = Database(driver: driver)
+        if let driver = databaseProvided {
+            let database = Database(driver: driver)
+            for preparation in preparations {
+                if let model = preparation as? Model.Type {
+                    model.database = database
+                }
+            }
+            self.database = database
         } else {
             self.database = nil
         }
