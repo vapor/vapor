@@ -15,7 +15,7 @@ extension JSON {
 
     public init(_ value: [JSONRepresentable]) {
         let array: [JSON] = value.map { item in
-            return item.makeJson()
+            return item.makeJSON()
         }
         self = .array(array)
     }
@@ -24,7 +24,7 @@ extension JSON {
         var object: [String: JSON] = [:]
 
         value.forEach { (key, item) in
-            object[key] = item.makeJson()
+            object[key] = item.makeJSON()
         }
 
         self = .object(object)
