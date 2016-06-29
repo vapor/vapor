@@ -62,7 +62,9 @@ public final class StreamBuffer: Stream {
     }
 
     public func flush() throws {
+        guard !sendBuffer.isEmpty else { return }
         try stream.send(sendBuffer)
+        try stream.flush()
         sendBuffer = []
     }
 
@@ -71,15 +73,7 @@ public final class StreamBuffer: Stream {
          we may want to skip that functionality
      */
     public func send(_ bytes: Bytes, flushing: Bool) throws {
-        guard flushing else {
-            try send(bytes)
-            return
-        }
-
-        if !sendBuffer.isEmpty {
-            try stream.send(bytes)
-            sendBuffer = []
-        }
-        try stream.send(bytes)
+        try send(bytes)
+        if flushing { try flush() }
     }
 }

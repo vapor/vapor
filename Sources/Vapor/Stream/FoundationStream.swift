@@ -56,6 +56,8 @@
         }
 
         public func send(_ bytes: Bytes) throws {
+            guard !bytes.isEmpty else { return }
+            
             var buffer = bytes
             let written = output.write(&buffer, maxLength: buffer.count)
             guard written == bytes.count else {
