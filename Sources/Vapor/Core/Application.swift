@@ -144,6 +144,7 @@ public class Application {
         var hashProvided: Hash? = hash
         var consoleProvided: Console? = console
         var clientProvided: Client.Type? = clientType
+        var databaseProvided: DatabaseDriver? = database
 
         for provider in providers {
             // TODO: Warn if multiple providers attempt to add server
@@ -153,6 +154,7 @@ public class Application {
             hashProvided = provider.hash ?? hashProvided
             consoleProvided = provider.console ?? consoleProvided
             clientProvided = provider.client ?? clientProvided
+            databaseProvided = provider.database ?? databaseProvided
         }
 
         let arguments = arguments ?? NSProcessInfo.processInfo().arguments
