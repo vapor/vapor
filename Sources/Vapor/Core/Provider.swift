@@ -62,6 +62,8 @@ public protocol Provider {
          outgoing web request operations
      */
     var client: Client.Type? { get }
+
+    var database: DatabaseDriver? { get }
 }
 
 extension Provider {
@@ -86,6 +88,10 @@ extension Provider {
     }
 
     public var client: Client.Type? {
+        return nil
+    }
+
+    public var database: DatabaseDriver? {
         return nil
     }
 }
