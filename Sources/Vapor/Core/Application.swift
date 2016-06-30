@@ -421,8 +421,7 @@ extension Application: Responder {
                 let normal: [Method] = [.get, .post, .put, .patch, .delete]
 
                 if normal.contains(request.method) {
-                    let data = "Page not found".utf8.array
-                    return Response(status: .notFound, body: .data(data))
+                    throw Abort.notFound
                 } else if case .options = request.method {
                     return Response(status: .ok, headers: [
                         "Allow": "OPTIONS"
