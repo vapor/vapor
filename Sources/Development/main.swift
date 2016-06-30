@@ -1,11 +1,15 @@
 import Vapor
 import libc
 
+#if !os(Linux)
 var workDir: String {
     let parent = #file.characters.split(separator: "/").map(String.init).dropLast().joined(separator: "/")
     let path = "/\(parent)/"
     return path
 }
+#else
+    var workDir = "./"
+#endif
 
 let config = Config(seed: JSON.object(["port": "8080"]), workingDirectory: workDir)
 let app = Application(workDir: workDir, config: config)
