@@ -23,7 +23,7 @@ let package = Package(
         .Package(url: "https://github.com/qutheory/path-indexable.git", majorVersion: 0, minor: 2),
 
         //Wrapper around pthreads
-         .Package(url: "https://github.com/ketzusaka/Strand.git", majorVersion: 0, minor: 0),
+         .Package(url: "https://github.com/ketzusaka/Strand.git", majorVersion: 1, minor: 5),
 
         //Sockets, used by the built in HTTP server
         .Package(url: "https://github.com/czechboy0/Socks.git", majorVersion: 0, minor: 8),
