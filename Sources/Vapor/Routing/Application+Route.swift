@@ -55,32 +55,32 @@ extension Application {
 
         // POST /entities
         self.post(path) { request in
-            return try controllerFactory().store(request: request)
+            return try controllerFactory().post(request: request)
         }
 
         // GET /entities/:id
         self.get(path, Resource.Item.self) { request, item in
-            return try controllerFactory().show(request: request, item: item)
+            return try controllerFactory().get(request: request, item: item)
         }
 
         // PUT /entities/:id
         self.put(path, Resource.Item.self) { request, item in
-            return try controllerFactory().replace(request: request, item: item)
+            return try controllerFactory().put(request: request, item: item)
         }
 
         // DELETE /entities
         self.delete(path) { request in
-            return try controllerFactory().destroy(request: request)
+            return try controllerFactory().delete(request: request)
         }
 
         // DELETE /entities/:id
         self.delete(path, Resource.Item.self) { request, item in
-            return try controllerFactory().destroy(request: request, item: item)
+            return try controllerFactory().delete(request: request, item: item)
         }
 
         // PATCH /entities/:id
         self.patch(path, Resource.Item.self) { request, item in
-            return try controllerFactory().modify(request: request, item:item)
+            return try controllerFactory().patch(request: request, item:item)
         }
 
         // OPTIONS /entities

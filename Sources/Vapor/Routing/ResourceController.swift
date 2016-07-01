@@ -15,32 +15,32 @@ public protocol ResourceController {
     /**
         Create a new instance.
      */
-    func store(request: Request) throws -> ResponseRepresentable
+    func post(request: Request) throws -> ResponseRepresentable
 
     /**
         Show an instance.
      */
-    func show(request: Request, item: Item) throws -> ResponseRepresentable
+    func get(request: Request, item: Item) throws -> ResponseRepresentable
 
     /**
         Replaces an instance, deleting fields no longer presen in the request.
     */
-    func replace(request: Request, item: Item) throws -> ResponseRepresentable
+    func put(request: Request, item: Item) throws -> ResponseRepresentable
 
     /**
         Modify an instance, updating only the fields that are present in the request.
     */
-    func modify(request: Request, item: Item) throws -> ResponseRepresentable
+    func patch(request: Request, item: Item) throws -> ResponseRepresentable
 
     /** 
         Delete an instance.
      */
-    func destroy(request: Request, item: Item) throws -> ResponseRepresentable
+    func delete(request: Request, item: Item) throws -> ResponseRepresentable
 
     /**
         Delete all instances.
      */
-    func destroy(request: Request) throws -> ResponseRepresentable
+    func delete(request: Request) throws -> ResponseRepresentable
 
     /**
         Options for all instances.
@@ -58,27 +58,27 @@ extension ResourceController {
         throw Abort.notFound
     }
 
-    public func store(request: Request) throws -> ResponseRepresentable {
+    public func post(request: Request) throws -> ResponseRepresentable {
         throw Abort.notFound
     }
 
-    public func show(request: Request, item: Item) throws -> ResponseRepresentable {
+    public func get(request: Request, item: Item) throws -> ResponseRepresentable {
         throw Abort.notFound
     }
 
-    public func replace(request: Request, item: Item) throws -> ResponseRepresentable {
+    public func put(request: Request, item: Item) throws -> ResponseRepresentable {
         throw Abort.notFound
     }
 
-    public func modify(request: Request, item: Item) throws -> ResponseRepresentable {
+    public func patch(request: Request, item: Item) throws -> ResponseRepresentable {
         throw Abort.notFound
     }
 
-    public func destroy(request: Request, item: Item) throws -> ResponseRepresentable {
+    public func delete(request: Request, item: Item) throws -> ResponseRepresentable {
         throw Abort.notFound
     }
 
-    public func destroy(request: Request) throws -> ResponseRepresentable {
+    public func delete(request: Request) throws -> ResponseRepresentable {
         throw Abort.notFound
     }
 
