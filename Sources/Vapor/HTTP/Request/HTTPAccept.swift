@@ -1,26 +1,25 @@
 public struct HTTPAccept {
-    var mediaType: String
-    var preference: Double
+    public let mediaType: String
+    public let preference: Double
+
+    public init(mediaType: String, preference: Double) {
+        self.mediaType = mediaType
+        self.preference = preference
+    }
 }
 
 extension Sequence where Iterator.Element == HTTPAccept {
     public func prefers(_ mediaType: String) -> Bool {
-        var foundPreference: Double? = nil
+        guard
+            let preference = self.lazy
+                .filter({ accept in accept.mediaType.contains(mediaType) })
+                .first?
+                .preference
+            else { return false }
 
-        for accept in self {
-            if accept.mediaType.contains(mediaType) {
-                foundPreference = accept.preference
-            }
-        }
-
-        guard let preference = foundPreference else {
-            return false
-        }
-
-        for accept in self {
-            if accept.preference > preference && !accept.mediaType.contains(mediaType) {
-                return false
-            }
+        // we need another loop to make sure that another media type isn't _more_ preferred
+        for accept in self where accept.preference > preference {
+            guard accept.mediaType.contains(mediaType) else { return false }
         }
 
         return true
@@ -37,8 +36,8 @@ extension HTTPRequest {
 
         for acceptSlice in acceptString.characters.split(separator: ",") {
             let pieces = acceptSlice.split(separator: ";")
+            guard let mediaType = pieces.first.flatMap({ String($0) }) else { continue }
 
-            let mediaType = String(pieces[0])
 
             let preference: Double
             if pieces.count == 2 {
