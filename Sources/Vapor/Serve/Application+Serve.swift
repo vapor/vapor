@@ -1,7 +1,7 @@
 import Strand
 
 extension Application {
-    func onServe() throws {
+    func serve() throws {
         if let servers = config["servers"].object {
             var bootedServers = 0
             for (key, server) in servers {

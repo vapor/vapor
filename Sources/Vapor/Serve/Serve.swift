@@ -2,6 +2,9 @@
     Serves the application.
 */
 public class Serve: Command {
+
+    public typealias ServeFunction = () throws -> ()
+
     public static let id: String = "serve"
 
     public static let signature: [Signature] = [
@@ -14,23 +17,20 @@ public class Serve: Command {
     ]
 
     public let app: Application
+    public var serve: ServeFunction?
+
     public required init(app: Application) {
         self.app = app
-        self.onServe = {}
     }
-
-    public typealias OnServe = () throws -> ()
-
-    public var onServe: OnServe?
 
     public func run() throws {
         let prepare = Prepare(app: app)
         try prepare.run()
 
-        let onServe = self.onServe ?? app.onServe
+        let serve = self.serve ?? app.serve
 
         do {
-            try onServe()
+            try serve()
         } catch ServerError.bind(let host, let port, _) {
             self.error("Could not bind to \(host):\(port), it may be in use or require sudo.")
         } catch {

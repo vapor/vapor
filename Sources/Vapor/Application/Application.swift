@@ -253,12 +253,12 @@ extension Application {
         Starts console
     */
     @noreturn
-    public func serve(onServe: Serve.OnServe? = nil) {
+    public func serve(_ closure: Serve.ServeFunction? = nil) {
         do {
             let command = try commandToExecute()
 
-            if let serve = command as? Serve {
-                serve.onServe = onServe
+            if let serveCommand = command as? Serve {
+                serveCommand.serve = closure
             }
 
             try command.run()
