@@ -15,7 +15,7 @@ extension JSON {
 
     public init(_ value: [JSONRepresentable]) {
         let array: [JSON] = value.map { item in
-            return item.makeJson()
+            return item.makeJSON()
         }
         self = .array(array)
     }
@@ -24,7 +24,7 @@ extension JSON {
         var object: [String: JSON] = [:]
 
         value.forEach { (key, item) in
-            object[key] = item.makeJson()
+            object[key] = item.makeJSON()
         }
 
         self = .object(object)
@@ -100,43 +100,43 @@ extension JSON {
 }
 
 public protocol JSONRepresentable: ResponseRepresentable {
-    func makeJson() -> JSON
+    func makeJSON() -> JSON
 }
 
 
 extension JSONRepresentable {
     ///Allows any JsonRepresentable to be returned through closures
     public func makeResponse() throws -> Response {
-        return try makeJson().makeResponse()
+        return try makeJSON().makeResponse()
     }
 }
 
 extension JSON: JSONRepresentable {
-    public func makeJson() -> JSON {
+    public func makeJSON() -> JSON {
         return self
     }
 }
 
 extension String: JSONRepresentable {
-    public func makeJson() -> JSON {
+    public func makeJSON() -> JSON {
         return JSON(self)
     }
 }
 
 extension Int: JSONRepresentable {
-    public func makeJson() -> JSON {
+    public func makeJSON() -> JSON {
         return JSON(self)
     }
 }
 
 extension Double: JSONRepresentable {
-    public func makeJson() -> JSON {
+    public func makeJSON() -> JSON {
         return JSON(self)
     }
 }
 
 extension Bool: JSONRepresentable {
-    public func makeJson() -> JSON {
+    public func makeJSON() -> JSON {
         return JSON(self)
     }
 }
