@@ -122,7 +122,7 @@ class ApplicationTests: XCTestCase {
 
         let provider = TestProvider()
 
-        let app = Application(serverType: TestServerBeta.self, providers: [
+        let app = Application(server: TestServerBeta.self, providers: [
             provider
         ])
 

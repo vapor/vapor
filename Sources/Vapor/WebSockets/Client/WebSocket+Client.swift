@@ -1,3 +1,4 @@
+import Strand
 import CryptoEssentials
 import libc
 
@@ -8,8 +9,8 @@ extension WebSocket {
     }
 
     public static func background(to uri: URI, using client: Client.Type = HTTPClient<TCPClientStream>.self, protocols: [String]? = nil, onConnect: (WebSocket) throws -> Void) throws {
-        _ = try Background {
-            // TODO: Need to notify failure
+        _ = try Strand {
+            // TODO: Need to notify failure -- Result<WebSocket>?
             _ = try? connect(to: uri, using: client, protocols: protocols, onConnect: onConnect)
         }
     }
