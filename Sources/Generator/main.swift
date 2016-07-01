@@ -13,7 +13,12 @@ if Process.arguments.count < 2 {
     fatalError("$(SRCROOT) must be passed as a parameter")
 }
 
-let path = ProcessInfo.processInfo().arguments[1].replacingOccurrences(of: "XcodeProject", with: "")
+#if !os(Linux)
+    let path = ProcessInfo.processInfo().arguments[1].replacingOccurrences(of: "XcodeProject", with: "")
+#else
+    let path = NSProcessInfo.processInfo().arguments[1].replacingOccurrences(of: "XcodeProject", with: "")
+#endif
+
 let url = URL(fileURLWithPath: path + "/Sources/Vapor/Core/Generated.swift")
 
 do{

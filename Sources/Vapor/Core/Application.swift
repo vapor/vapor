@@ -157,7 +157,7 @@ public class Application {
             databaseProvided = provider.database ?? databaseProvided
         }
 
-        let arguments = arguments ?? ProcessInfo.processInfo().arguments
+        let arguments = arguments ?? NSProcessInfo.processInfo().arguments
         self.arguments = arguments
 
         let workDir = workDir
