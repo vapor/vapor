@@ -4,9 +4,10 @@
     import Darwin
 #endif
 
-import Strand
+//import Strand
 import Socks
 import SocksCore
+import Foundation
 
 public protocol Program {
     init(host: String, port: Int, securityLayer: SecurityLayer) throws
@@ -45,7 +46,18 @@ public final class HTTPServer<
         }
     }
 
+
+    let queue = DispatchQueue.init(label: "dispatch",
+                                   attributes: [
+                                    DispatchQueueAttributes.concurrent
+                                   ],
+                                   target: nil)
+
     public func start(responder: Responder, errors: ServerErrorHandler) throws {
+//        Dispat
+//        let qos = DispatchQoS.init(qosClass: DispatchQoS.QoSClass.background, relativePriority: 99)
+//        var queue = DispatchQueue(label: "asdf")
+//        DispatchQueue(label: "fff")
         // no throwing inside of the loop
         while true {
             let stream: Stream
@@ -58,7 +70,8 @@ public final class HTTPServer<
             }
 
             do {
-                _ = try Strand {
+                queue.async {
+//                _ = try Strand {
                     do {
                         try self.respond(stream: stream, responder: responder)
                     } catch {

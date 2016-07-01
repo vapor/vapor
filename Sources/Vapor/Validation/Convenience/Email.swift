@@ -11,7 +11,7 @@ public class Email: ValidationSuite {
 
         // Thanks Ben Wu :)
         let range = value.range(of: ".@.+\\..",
-                                options: .regularExpressionSearch)
+                                options: .regularExpression)
         guard let _ = range else {
             throw error(with: value)
         }
