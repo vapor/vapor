@@ -156,7 +156,7 @@ class TestConsoleDriver: Console {
     }
 
     func input() -> String {
-        let string = String(buffer)
+        let string = buffer.string
         buffer = []
         return string
     }
