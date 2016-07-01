@@ -81,7 +81,7 @@ public class Config {
         directoryQueue = PrioritizedDirectoryQueue(directories: prioritizedDirectories)
     }
 
-    internal init() {
+    public init() {
         self.environment = Environment.loader(arguments: NSProcessInfo.processInfo().arguments)
         self.directoryQueue = PrioritizedDirectoryQueue(directories: [])
     }

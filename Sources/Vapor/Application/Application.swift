@@ -20,7 +20,7 @@ public class Application {
         connections and return the desired
         response.
     */
-    public var server: Server.Type
+    public let server: Server.Type
 
     /**
         The session driver is responsible for
@@ -255,7 +255,7 @@ extension Application {
     @noreturn
     public func serve(onServe: Serve.OnServe? = nil) {
         do {
-            let command = try execute()
+            let command = try commandToExecute()
 
             if let serve = command as? Serve {
                 serve.onServe = onServe
@@ -285,7 +285,7 @@ extension Application {
         exit(1)
     }
 
-    func execute() throws -> Command {
+    func commandToExecute() throws -> Command {
         // options prefixed w/ `--` are accessible through `app.config["app", "argument"]`
         var iterator = self.arguments.filter { item in
             return !item.hasPrefix("--")
@@ -339,6 +339,7 @@ extension Sequence where Iterator.Element == String {
 }
 
 extension Application {
+    // TODO: Can this be middleware?
     func checkFileSystem(for request: Request) -> Request.Handler? {
         // Check in file system
         let filePath = self.workDir + "Public" + (request.uri.path ?? "")
