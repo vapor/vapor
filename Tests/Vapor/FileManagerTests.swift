@@ -22,7 +22,7 @@ class FileManagerTests: XCTestCase {
         do {
             let _ = try FileManager.readBytesFromFile(filename)
             XCTFail("Should never reach here")
-        } catch FileManager.Error.CouldNotOpenFile {
+        } catch Vapor.FileManager.Error.CouldNotOpenFile {
             // We're happy here
         } catch {
             XCTFail("Should never reach here")

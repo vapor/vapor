@@ -72,7 +72,7 @@ class HTTPStreamTests: XCTestCase {
     }
 }
 
-final class TestStream: Stream {
+final class TestStream: Vapor.Stream {
     var closed: Bool
     var buffer: Bytes
 

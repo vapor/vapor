@@ -11,7 +11,7 @@ var workDir: String {
 }
 #endif
 
-let config = Config(seed: JSON.object(["port": "8080"]), workingDirectory: workDir)
+let config = Config(seed: JSON.object(["port": "8000"]), workingDirectory: workDir)
 let app = Application(workDir: workDir, config: config)
 let 😀 = Response(status: .ok)
 
@@ -270,24 +270,22 @@ app.post("login") { request in
     make sure to update the Response section.
  */
 app.get("cookie") { request in
-    return "// TODO: "
-//    var response = Response(status: .ok, text: "Cookie set")
-//    response.cookies["id"] = "123"
-//
-//    return response
+    var response = Response(status: .ok, body: "Cookie set")
+    response.cookies["id"] = "123"
+
+    return response
 }
 
 
 app.get("cookies") { request in
-    return "// TODO: "
-//    var response = JSON([
-//        "cookies": "\(request.cookies)"
-//    ]).makeResponse()
-//
-//    response.cookies["cookie-1"] = "value-1"
-//    response.cookies["hello"] = "world"
-//
-//    return response
+    var response = try JSON([
+        "cookies": "\(request.cookies)"
+    ]).makeResponse()
+
+    response.cookies["cookie-1"] = "value-1"
+    response.cookies["hello"] = "world"
+
+    return response
 }
 
 class Name: ValidationSuite {
