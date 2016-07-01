@@ -15,11 +15,12 @@ if Process.arguments.count < 2 {
 
 #if !os(Linux)
     let path = ProcessInfo.processInfo().arguments[1].replacingOccurrences(of: "XcodeProject", with: "")
+    let url = URL(fileURLWithPath: path + "/Sources/Vapor/Core/Generated.swift")
 #else
+    let url = NSURL(fileURLWithPath: path + "/Sources/Vapor/Core/Generated.swift")
     let path = NSProcessInfo.processInfo().arguments[1].replacingOccurrences(of: "XcodeProject", with: "")
 #endif
 
-let url = URL(fileURLWithPath: path + "/Sources/Vapor/Core/Generated.swift")
 
 do{
     let lines = code.characters.split(separator: "\n").count
