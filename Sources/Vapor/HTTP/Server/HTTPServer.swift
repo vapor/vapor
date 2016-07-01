@@ -7,7 +7,6 @@
 import Strand
 import Socks
 import SocksCore
-import Foundation
 
 public protocol Program {
     init(host: String, port: Int, securityLayer: SecurityLayer) throws
@@ -47,7 +46,6 @@ public final class HTTPServer<
     }
 
     public func start(responder: Responder, errors: ServerErrorHandler) throws {
-
         // no throwing inside of the loop
         while true {
             let stream: Stream

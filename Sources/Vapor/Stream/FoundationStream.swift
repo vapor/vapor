@@ -96,21 +96,11 @@
         }
     }
 
-    // TODO: Fix foundation stream
-    
     extension Foundation.Stream {
         func upgradeSSL() -> Bool {
-//            return false
-//            StreamSocketSecurityLevel.
-//            extension Stream.PropertyKey {
-//
-//
-//                // NSString constants for the propertyForKey/setProperty:forKey: API
-//                // String constants for the setting of the socket security level.
-//                @available(OSX 10.3, *)
-//                public static let socketSecurityLevelKey: Stream.PropertyKey
-            return setProperty(Foundation.StreamSocketSecurityLevel.negotiatedSSL, forKey: Foundation.Stream.PropertyKey.socketSecurityLevelKey.rawValue)
-//            return setProperty(NSStreamSocketSecurityLevelNegotiatedSSL, forKey: NSStreamSocketSecurityLevelKey)
+            return setProperty(Foundation.StreamSocketSecurityLevel.negotiatedSSL,
+                               forKey: Foundation.Stream.PropertyKey.socketSecurityLevelKey.rawValue)
         }
     }
+
 #endif

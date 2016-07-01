@@ -11,7 +11,7 @@ var workDir: String {
 }
 #endif
 
-let config = Config(seed: JSON.object(["port": "8080"]), workingDirectory: workDir)
+let config = Config(seed: JSON.object(["port": "8000"]), workingDirectory: workDir)
 let app = Application(workDir: workDir, config: config)
 let 😀 = Response(status: .ok)
 
