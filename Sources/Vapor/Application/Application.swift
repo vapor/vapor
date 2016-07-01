@@ -255,7 +255,7 @@ extension Application {
     @noreturn
     public func serve(_ closure: Serve.ServeFunction? = nil) {
         do {
-            let command = try commandToExecute()
+            let command = try loadCommand()
 
             if let serveCommand = command as? Serve {
                 serveCommand.serve = closure
@@ -285,7 +285,7 @@ extension Application {
         exit(1)
     }
 
-    func commandToExecute() throws -> Command {
+    func loadCommand() throws -> Command {
         // options prefixed w/ `--` are accessible through `app.config["app", "argument"]`
         var iterator = self.arguments.filter { item in
             return !item.hasPrefix("--")

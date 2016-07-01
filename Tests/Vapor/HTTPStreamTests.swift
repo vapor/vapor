@@ -20,7 +20,7 @@ class HTTPStreamTests: XCTestCase {
         data += "Accept: */*\r\n"
         data += "Accept-Language: en-us\r\n"
         data += "Cookie: 1=1;2=2\r\n"
-        data += "Content-Type: application/json\r\n"
+        data += "Content-Type: application/json; charset=utf-8\r\n"
         data += "Content-Length: \(content.characters.count)\r\n"
         data += "\r\n"
         data += content

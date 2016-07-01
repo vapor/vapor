@@ -16,7 +16,7 @@ extension HTTPMessage {
             if let data = data {
                 if let body = try? HTTPBody(data) {
                     self.body = body
-                    headers["Content-Type"] = "application/json"
+                    headers["Content-Type"] = "application/json; charset=utf-8"
                 }
             }
         }

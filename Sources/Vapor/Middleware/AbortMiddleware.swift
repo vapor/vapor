@@ -43,7 +43,7 @@ public class AbortMiddleware: Middleware {
         ])
         let data = try JSON.serialize(json)
         let response = Response(status: status, body: .data(data))
-        response.headers["Content-Type"] = "application/json"
+        response.headers["Content-Type"] = "application/json; charset=utf-8"
         return response
     }
 
