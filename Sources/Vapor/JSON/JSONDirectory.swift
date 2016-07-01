@@ -19,12 +19,7 @@ extension FileManager {
             return nil
         }
 
-        let contents: [String]
-        do {
-            contents = try FileManager.contentsOfDirectory(path)
-        } catch {
-            return nil
-        }
+        guard let contents = try? FileManager.contentsOfDirectory(path) else { return nil }
 
         var jsonFiles: [JSONFile] = []
         for file in contents where file.hasSuffix(".json") {
