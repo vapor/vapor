@@ -48,20 +48,6 @@ extension View: ResponseRepresentable {
     }
 }
 
-extension Response {
-    public var view: View? {
-        get {
-            return nil
-        }
-        set(view) {
-            if let view = view {
-                body = HTTPBody(view.data.bytes)
-                headers["Content-Type"] = "text/html; charset=utf-8"
-            }
-        }
-    }
-}
-
 ///Adds convenience method to Application to create a view
 extension Application {
 

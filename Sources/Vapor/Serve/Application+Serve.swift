@@ -25,7 +25,7 @@ extension Application {
                 message += " 🔒"
             }
 
-            console.output("Starting default server at \(host):\(port)", style: .info)
+            console.output(message, style: .info)
             try server.start(host: host, port: port, securityLayer: securityLayer, responder: self, errors: self.serverErrors)
 
         }
@@ -52,14 +52,14 @@ extension Application {
 
         if runInBackground {
             _ = try Strand { [weak self] in
-                guard let w = self else {
+                guard let welf = self else {
                     return
                 }
                 do {
-                    w.console.output(info, style: .info)
-                    try w.server.start(host: host, port: port, securityLayer: securityLayer, responder: w, errors: w.serverErrors)
+                    welf.console.output(info, style: .info)
+                    try welf.server.start(host: host, port: port, securityLayer: securityLayer, responder: welf, errors: welf.serverErrors)
                 } catch {
-                    w.console.output("Background server start error: \(error)", style: .error)
+                    welf.console.output("Background server start error: \(error)", style: .error)
                 }
             }
         } else {
