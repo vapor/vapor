@@ -1,9 +1,9 @@
 import XCTest
 @testable import Vapor
 
-private class TestController: Controller {
+private class TestController: ApplicationInitializable, Resource {
 
-    required init(application: Application) { }
+    required init(droplet: Application) { }
 
     var lock: (
         index: Int,
@@ -94,7 +94,7 @@ class ControllerTests: XCTestCase {
     func testController() throws {
         let app = Application()
 
-        let instance = TestController(application: app)
+        let instance = TestController(droplet: app)
         app.resource("foo", makeControllerWith: { return instance })
 
         let fooIndex = try Request(method: .get, path: "foo")
@@ -163,7 +163,7 @@ class ControllerTests: XCTestCase {
     func testControllerMethodsHit() throws {
         let app = Application()
         // Need single instance to test
-        let testInstance = TestController(application: app)
+        let testInstance = TestController(droplet: app)
         let factory: (Void) -> TestController = { print("blahblah : \(testInstance)"); return testInstance }
         app.resource("/test", makeControllerWith: factory)
 

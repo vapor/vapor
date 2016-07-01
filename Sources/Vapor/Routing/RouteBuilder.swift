@@ -85,7 +85,7 @@ extension Application: RouteBuilder {
     ) {
         // Convert Route.Handler to Request.Handler
         let wrapped: Responder = Request.Handler { request in
-            return try handler(request).makeResponse()
+            return try handler(request).makeResponse(for: request)
         }
         let responder = middleware.chain(to: wrapped)
         let route = Route(host: "*", method: method, path: path, responder: responder)

@@ -7,14 +7,14 @@ class HashTests: XCTestCase {
         ("testHash", testHash)
     ]
 
-    func testHash() {
+    func testHash() throws {
 
         let string = "vapor"
         let defaultExpected = "97ce9a45eaf0b1ceafc3bba00dfec047526386bbd69241e4a4f0c9fde7c638ea"
         let defaultKey = "123"
 
         //test app facade
-        let config = Config(seed: JSON([
+        let config = try Config(seed: JSON([
             "key": defaultKey
         ]))
         let app = Application(config: config)

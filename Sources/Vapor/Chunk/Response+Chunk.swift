@@ -9,8 +9,6 @@ extension Response {
         https://en.wikipedia.org/wiki/Chunked_transfer_encoding
     */
     public convenience init(status: Status = .ok, headers: Headers = [:], chunked closure: ((ChunkStream) throws -> Void)) {
-        var headers = headers
-        headers.setTransferEncodingChunked()
         self.init(status: status, headers: headers, body: .chunked(closure))
     }
 }

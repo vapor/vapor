@@ -8,4 +8,4 @@ app.get("plaintext") { request in
 
 app.globalMiddleware = []
 
-app.start()
+app.serve()

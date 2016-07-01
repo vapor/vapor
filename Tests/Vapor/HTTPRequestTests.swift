@@ -54,7 +54,7 @@ class HTTPRequestTests: XCTestCase {
             XCTAssertEqual(request.version.major, 4)
             XCTAssertEqual(request.version.minor, 0)
             XCTAssertEqual(request.headers["accept"], "*/*")
-            XCTAssertEqual(request.headers["content-type"], "application/json")
+            XCTAssertTrue(request.headers["content-type"]?.contains("application/json") == true)
         } catch {
             print("ERRRR: \(error)")
             XCTFail("\(error)")

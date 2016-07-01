@@ -12,12 +12,7 @@ extension Headers {
         case .data(let bytes):
             // Can't have transfer encoding w/ data payload
             self["Transfer-Encoding"] = nil
-            if bytes.isEmpty {
-                // Empty payload MUST NOT have length of `0`, content length should be empty
-                self["Content-Length"] = nil
-            } else {
-                self["Content-Length"] = bytes.count.description
-            }
+            self["Content-Length"] = bytes.count.description
         }
     }
 

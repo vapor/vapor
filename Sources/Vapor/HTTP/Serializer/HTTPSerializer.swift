@@ -13,7 +13,7 @@ public final class HTTPSerializer<Message: HTTPMessage>: TransferSerializer {
         let startLine = message.startLine
         try stream.send(startLine)
         try stream.send(crlf)
-        // mutable
+
         var headers = message.headers
         headers.appendMetadata(for: message.body)
 

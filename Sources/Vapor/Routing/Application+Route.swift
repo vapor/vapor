@@ -44,9 +44,9 @@ extension Application {
 
         Note: You are responsible for pluralizing your endpoints.
     */
-    public final func resource<Resource: ResourceController>(
+    public final func resource<R: Resource>(
         _ path: String,
-        makeControllerWith controllerFactory: () -> Resource
+        makeControllerWith controllerFactory: () -> R
     ) {
         // GET /entities
         self.get(path) { request in
@@ -59,12 +59,12 @@ extension Application {
         }
 
         // GET /entities/:id
-        self.get(path, Resource.Item.self) { request, item in
+        self.get(path, R.Item.self) { request, item in
             return try controllerFactory().show(request: request, item: item)
         }
 
         // PUT /entities/:id
-        self.put(path, Resource.Item.self) { request, item in
+        self.put(path, R.Item.self) { request, item in
             return try controllerFactory().replace(request: request, item: item)
         }
 
@@ -74,27 +74,35 @@ extension Application {
         }
 
         // DELETE /entities/:id
-        self.delete(path, Resource.Item.self) { request, item in
+        self.delete(path, R.Item.self) { request, item in
             return try controllerFactory().destroy(request: request, item: item)
         }
 
         // PATCH /entities/:id
-        self.patch(path, Resource.Item.self) { request, item in
+        self.patch(path, R.Item.self) { request, item in
             return try controllerFactory().modify(request: request, item:item)
         }
 
         // OPTIONS /entities
         self.options(path) { request in
-            let response = try controllerFactory().options(request: request).makeResponse()
+            let response = try controllerFactory().options(request: request).makeResponse(for: request)
             response.headers["Allow"] = "GET,POST,DELETE,OPTIONS"
             return response
         }
 
         // OPTIONS /entities/:id
-        self.options(path, Resource.Item.self) { request, item in
-            let response = try controllerFactory().options(request: request, item: item).makeResponse()
+        self.options(path, R.Item.self) { request, item in
+            let response = try controllerFactory().options(request: request, item: item).makeResponse(for: request)
             response.headers["Allow"] = "GET,POST,PUT,PATCH,DELETE,OPTIONS"
             return response
+        }
+    }
+
+    public final func resource<R: Resource>(
+        _ path: String,
+        _ resources: R) {
+        resource(path) {
+            return resources
         }
     }
 
@@ -104,12 +112,15 @@ extension Application {
         - parameter path: path associated w/ resource controller
         - parameter controller: controller type to use
      */
-    public final func resource<Resource: ResourceController
-                               where Resource: ApplicationInitializable>(
-                                    _ path: String,
-                                    controller: Resource.Type) {
+    public final func resource<
+        R: Resource
+        where R: ApplicationInitializable
+    >(
+        _ path: String,
+        _ controller: R.Type
+    ) {
         resource(path) {
-            return controller.init(application: self)
+            return controller.init(droplet: self)
         }
     }
 
@@ -119,10 +130,12 @@ extension Application {
      - parameter path: path associated w/ resource controller
      - parameter controller: controller type to use
      */
-    public final func resource<Resource: ResourceController
-                               where Resource: DefaultInitializable>(
-                                    _ path: String,
-                                    controller: Resource.Type) {
+    public final func resource<
+        R: Resource
+        where R: DefaultInitializable>(
+        _ path: String,
+        _ controller: R.Type
+    ) {
         resource(path) {
             return controller.init()
         }
@@ -146,7 +159,7 @@ extension Application {
         path: String,
         action: (ActionController) -> (Request) throws -> ResponseRepresentable) {
         add(method, path: path, action: action) {
-            ActionController(application: self)
+            ActionController(droplet: self)
         }
     }
 
@@ -193,7 +206,7 @@ extension Application {
         makeControllerWith factory: () throws -> ActionController) {
         add(method, path: path) { request in
             let controller = try factory()
-            return try action(controller)(request).makeResponse()
+            return try action(controller)(request).makeResponse(for: request)
         }
     }
 }

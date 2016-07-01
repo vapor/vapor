@@ -1,6 +1,6 @@
 {
     "debug": true,
-    "port": 8000,
+    "port": 8523,
 
     "nested": {
         "a": "a",

@@ -11,7 +11,7 @@ var workDir: String {
 }
 #endif
 
-let config = Config(seed: JSON.object(["port": "8000"]), workingDirectory: workDir)
+let config = try Config(seed: JSON.object(["port": "8000"]), workingDirectory: workDir)
 let app = Application(workDir: workDir, config: config)
 let 😀 = Response(status: .ok)
 
@@ -22,7 +22,11 @@ app.get { request in
 }
 
 app.get("client-socket") { req in
-    _ = try? WebSocket.background(to: "ws://\(app.host):\(app.port)/server-socket-responder") { (ws) in
+    // TODO: Find way to support multiple applications while still having concrete reference to host / port. This will only work on one application ...
+    let host = app.config["servers", 0, "host"].string ?? "localhost"
+    let port = app.config["servers", 0, "port"].int ?? 80
+    
+    _ = try? WebSocket.background(to: "ws://\(host):\(port)/server-socket-responder") { (ws) in
         ws.onText = { ws, text in
             print("[Client] received - \(text)")
         }
@@ -129,7 +133,7 @@ app.socket("socket") { request, ws in
 
 //MARK: Resource
 
-app.resource("users", controller: UserController.self)
+app.resource("users", UserController.self)
 
 //MARK: Request data
 
@@ -280,7 +284,8 @@ app.get("cookie") { request in
 app.get("cookies") { request in
     var response = try JSON([
         "cookies": "\(request.cookies)"
-    ]).makeResponse()
+        ])
+        .makeResponse(for: request)
 
     response.cookies["cookie-1"] = "value-1"
     response.cookies["hello"] = "world"
@@ -464,4 +469,4 @@ app.get("chunked") { request in
     }
 }
 
-app.start()
+app.serve()
