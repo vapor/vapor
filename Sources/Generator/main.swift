@@ -1,3 +1,4 @@
+#if !os(Linux)
 import Foundation
 
 let generator = Generator(max: 5)
@@ -13,21 +14,15 @@ if Process.arguments.count < 2 {
     fatalError("$(SRCROOT) must be passed as a parameter")
 }
 
-#if !os(Linux)
-    let path = ProcessInfo.processInfo().arguments[1].replacingOccurrences(of: "XcodeProject", with: "")
-    let url = URL(fileURLWithPath: path + "/Sources/Vapor/Core/Generated.swift")
-#else
-    let url = NSURL(fileURLWithPath: path + "/Sources/Vapor/Core/Generated.swift")
-    let path = NSProcessInfo.processInfo().arguments[1].replacingOccurrences(of: "XcodeProject", with: "")
-#endif
-
+let path = ProcessInfo.processInfo().arguments[1].replacingOccurrences(of: "XcodeProject", with: "")
+let url = URL(fileURLWithPath: path + "/Sources/Vapor/Core/Generated.swift")
 
 do{
     let lines = code.characters.split(separator: "\n").count
     let functions = code.components(separatedBy: "func").count - 1
 
     // writing to disk
-    try code.write(to: url, atomically: true, encoding: String.Encoding.utf8)
+    try code.write(to: url, atomically: true, encoding: .utf8)
     print("✅ Code successfully generated.")
     print("Functions: \(functions)")
     print("Lines: \(lines)")
@@ -37,3 +32,8 @@ do{
     print("Error writing generated file at \(url)")
     print(error.localizedDescription)
 }
+    
+#else
+    print("Linux not supported by generator.")
+#endif
+
