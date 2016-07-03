@@ -16,33 +16,6 @@ public final class S {
 
 import Foundation
 
-public func orig_asyncPromise<T>(returning: T.Type = T.self, _ handler: (S) throws -> Void) throws -> T {
-    let semaphore = DispatchSemaphore(value: 0)
-
-    print("Before")
-    let url = URL(string: "https://api.spotify.com/v1/search/?q=beyonce&type=artist")
-    URLSession.shared().dataTask(with: url!) { data, response, error in
-        print("Completed Task")
-//        print("Got data: \(data) response: \(response) error: \(error)")
-//        let str = String(data: data!, encoding: .utf8)
-//        print(str)
-//        print("")
-        semaphore.signal()
-    } .resume()
-
-    print("Past")
-
-    let result = semaphore.wait(timeout: .distantFuture)
-    switch result {
-    case .Success:
-        print("Great Success")
-    case .TimedOut:
-        print("Uh Oh!")
-    }
-
-    fatalError()
-}
-
 public enum Result<T> {
     case success(T)
     case failure(ErrorProtocol)
@@ -72,32 +45,30 @@ public final class Sender<T> {
     }
 
     public func send(_ value: T) {
+        // TODO: Fatal error or throw? It's REALLY convenient NOT to throw here. Should at least log warning
+        guard result == nil else { return }
         result = .success(value)
         semaphore.signal()
     }
 
     public func send(_ error: ErrorProtocol) {
+        guard result == nil else { return }
         result = .failure(error)
         semaphore.signal()
     }
 }
 
-public func asyncPromise<T>(returning: T.Type = T.self, _ handler: (Sender<T>) throws -> Void) throws -> T {
-    print("0")
+public func asyncPromise<T>(returning: T.Type = T.self, timeout: DispatchTime = .distantFuture, _ handler: (Sender<T>) throws -> Void) throws -> T {
     let semaphore = DispatchSemaphore(value: 0)
-    print("1")
     let sender = Sender<T>(semaphore)
     // Ok to call synchronously, since will still unblock semaphore
-    print("2")
     // TODO: Find a way to enforce sender is called, not calling will perpetually block w/ long timeout
     try handler(sender)
-    print("3")
     // TODO: Expose timeout customization -- I think Foundation is missing initializer
-    let semaphoreResult = semaphore.wait(timeout: .distantFuture)
-    print("4")
+    let semaphoreResult = semaphore.wait(timeout: timeout)
     switch semaphoreResult {
     case .Success:
-        guard let result = sender.result else { throw AsyncPromiseError.unexpectedEmptyResult }
+        guard let result = sender.result else { throw AsyncPromiseError.senderNotCalled }
         return try result.extract()
     case .TimedOut:
         throw AsyncPromiseError.timedOut
