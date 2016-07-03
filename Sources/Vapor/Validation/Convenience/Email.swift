@@ -9,14 +9,8 @@ public class Email: ValidationSuite {
                 throw error(with: value)
             }
 
-        // Thanks Ben Wu :)
-        #if os(Linux)
-        let range = value.range(of: ".@.+\\..",
-                                options: .regularExpressionSearch)
-        #else
         let range = value.range(of: ".@.+\\..",
                                 options: .regularExpression)
-        #endif
         guard let _ = range else {
             throw error(with: value)
         }
