@@ -21,7 +21,7 @@ Vapor is the first true web framework for Swift. It provides a beautifully expre
 
 This repository is the framework's source code. To view some sample projects, check out our list [here](/Projects.md).
 
-## Current Release
+## 🚦 Current Environment
 
 | Vapor | Xcode | Swift |
 |:-:|:-:|:-:|
