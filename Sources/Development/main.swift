@@ -11,25 +11,6 @@ var workDir: String {
 }
 #endif
 
-import Foundation
-
-let int: Int = try Promise.async { sender in
-    let url = URL(string: "https://api.spotify.com/v1/search/?q=beyonce&type=artist")
-    URLSession.shared().dataTask(with: url!) { data, response, error in
-        print("Completed Task")
-        //        print("Got data: \(data) response: \(response) error: \(error)")
-        //        let str = String(data: data!, encoding: .utf8)
-        //        print(str)
-        //        print("")
-        sender.send(42)
-        print("Done signalling")
-        } .resume()
-
-    print("Leaving scope")
-}
-
-print("Got int: \(int)")
-
 let config = try Config(seed: JSON.object(["port": "8000"]), workingDirectory: workDir)
 let app = Application(workDir: workDir, config: config)
 let 😀 = Response(status: .ok)
@@ -38,13 +19,6 @@ let 😀 = Response(status: .ok)
 
 app.get { request in
     return try app.view("welcome.html")
-}
-
-app.get("async") { request in
-    return try Promise.async { promise in
-        // do whatever backgrounding is necessary here.
-        promise.send(JSON.object([:]))
-    }
 }
 
 app.get("client-socket") { req in
@@ -494,5 +468,27 @@ app.get("chunked") { request in
         try stream.close()
     }
 }
+
+#if !os(Linux)
+    /*
+    Temporarily not available on Linux because of Dispatch APIs
+    */
+    app.get("async") { request in
+        return try Response.async { promise in
+            _ = try background {
+                do {
+                    let beyonceQuery = "https://api.spotify.com/v1/search/?q=beyonce&type=artist"
+                    let response = try HTTPClient<FoundationStream>.get(beyonceQuery)
+                    let artists = response.data["artists", "items", "name"].array ?? []
+                    let artistsJSON = artists.flatMap { $0.string } .map { JSON.string($0) }
+                    let js = JSON.array(artists.flatMap { $0.string } .map { JSON.string($0) })
+                    promise.send(js)
+                } catch {
+                    promise.send(error)
+                }
+            }
+        }
+    }
+#endif
 
 app.serve()

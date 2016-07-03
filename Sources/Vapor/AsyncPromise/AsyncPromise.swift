@@ -46,7 +46,7 @@ public final class Promise<T> {
 
 extension Promise {
     public static func async(timingOut timeout: DispatchTime = .distantFuture,
-                             with handler: (Promise) throws -> Void) throws -> T {
+                             _ handler: (Promise) throws -> Void) throws -> T {
         let semaphore = DispatchSemaphore(value: 0)
         let sender = Promise<T>(semaphore)
         // Ok to call synchronously, since will still unblock semaphore
@@ -64,11 +64,8 @@ extension Promise {
     }
 }
 
-public protocol Empty {}
-extension HTTPResponse: Empty {}
-
-extension Empty where Self: HTTPResponse {
-    public init(async: (Promise<Self>) throws -> Void) throws {
-        self = try Promise.async(with: async)
+extension Response {
+    public static func async(timingOut timeout: DispatchTime = .distantFuture, _ handler: (Promise<ResponseRepresentable>) throws -> Void) throws -> ResponseRepresentable {
+        return try Promise.async(timingOut: timeout, handler)
     }
 }
