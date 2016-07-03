@@ -2,6 +2,26 @@ import PackageDescription
 
 let package = Package(
     name: "Vapor",
+        targets: [
+        Target(
+            name: "Vapor"
+        ),
+        Target(
+            name: "Development",
+            dependencies: [
+                .Target(name: "Vapor")
+            ]
+        ),
+        Target(
+            name: "Performance",
+            dependencies: [
+                .Target(name: "Vapor")
+            ]
+        ),
+        Target(
+            name: "Generator"
+        )
+    ],
     dependencies: [
         //Standards package. Contains protocols for cross-project compatability.
         .Package(url: "https://github.com/open-swift/S4.git", majorVersion: 0, minor: 10),
@@ -38,25 +58,5 @@ let package = Package(
         "XcodeProject",
         "Generator",
         "Development"
-    ],
-    targets: [
-        Target(
-            name: "Vapor"
-        ),
-        Target(
-            name: "Development",
-            dependencies: [
-                .Target(name: "Vapor")
-            ]
-        ),
-        Target(
-            name: "Performance",
-            dependencies: [
-                .Target(name: "Vapor")
-            ]
-        ),
-        Target(
-            name: "Generator"
-        )
     ]
 )
