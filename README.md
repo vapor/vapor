@@ -21,6 +21,20 @@ Vapor is the first true web framework for Swift. It provides a beautifully expre
 
 This repository is the framework's source code. To view some sample projects, check out our list [here](/Projects.md).
 
+## Current Release
+
+| Vapor | Xcode | Swift |
+|:-:|:-:|:-:|
+|0.12.x|7.3|DEVELOPMENT-SNAPSHOT-2016-06-06-a|
+
+**NOTES**
+
+If you've installed Xcode 8, you'll likely get an SDK error when building from command line. The following command has been known to help:
+
+```
+xcode-select -s /Applications/Xcode.app/
+```
+
 ## 📖 Documentation
 
 Visit the [Documentation](http://docs.qutheory.io) for extensive information on getting setup, using, and deploying Vapor.
