@@ -43,7 +43,6 @@
             // Ok to call synchronously, since will still unblock semaphore
             // TODO: Find a way to enforce sender is called, not calling will perpetually block w/ long timeout
             try handler(sender)
-            // TODO: Expose timeout customization -- I think Foundation is missing initializer
             let semaphoreResult = semaphore.wait(timeout: timeout)
             switch semaphoreResult {
             case .Success:
