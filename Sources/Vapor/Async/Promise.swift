@@ -11,8 +11,9 @@
         case timedOut
     }
 
-    // TODO: Is Promise the right word here?
-
+    /*:
+        This class is designed to make it possible to use asynchronous contexts in a synchronous environment.
+    */
     public final class Promise<T> {
         private var result: Result<T>? = .none
         private let semaphore: DispatchSemaphore
@@ -22,6 +23,9 @@
             self.semaphore = semaphore
         }
 
+        /*:
+            Resolve the promise with a successful result
+        */
         public func resolve(with value: T) {
             lock.locked {
                 // TODO: Fatal error or throw? It's REALLY convenient NOT to throw here. Should at least log warning
@@ -31,6 +35,9 @@
             }
         }
 
+        /*:
+            Reject the promise with an appropriate error
+        */
         public func reject(with error: ErrorProtocol) {
             lock.locked {
                 guard result == nil else { return }
@@ -41,6 +48,23 @@
     }
 
     extension Promise {
+        /*:
+            This function is used to enter an asynchronous supported context with a promise
+            object that can be used to complete a given operation.
+         
+                let value = try Promise<Int>.async { promise in 
+                    // .. do whatever necessary passing around `promise` object
+                    // eventually call
+                    
+                    promise.resolve(with: 42)
+                    
+                    // or
+         
+                    promise.resolve(with: errorSignifyingFailure)
+                }
+         
+            - warning: Calling a `promise` multiple times will have no effect.
+        */
         public static func async(timingOut timeout: DispatchTime = .distantFuture,
                                  _ handler: (Promise) throws -> Void) throws -> T {
             let semaphore = DispatchSemaphore(value: 0)
