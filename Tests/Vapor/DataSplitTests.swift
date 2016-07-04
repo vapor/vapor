@@ -1,7 +1,7 @@
 import XCTest
 @testable import Vapor
 
-class DataSplit: XCTestCase {
+class DataSplitTests: XCTestCase {
     static let allTests = [
         ("testSplitLargeFiles", testSplitLargeFiles)
     ]
