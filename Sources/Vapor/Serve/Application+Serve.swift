@@ -3,6 +3,7 @@ import Strand
 extension Application {
     func serve() throws {
         if let servers = config["servers"].object {
+            print("Servers: \(servers)")
             var bootedServers = 0
             for (key, server) in servers {
                 guard let server = server.object else {
