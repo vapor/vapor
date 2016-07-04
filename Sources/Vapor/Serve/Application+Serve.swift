@@ -27,7 +27,7 @@ extension Application {
                 ?? "none"
             let securityLayer: SecurityLayer = security.securityLayer
 
-            var message = "Starting default server at \(host):\(port)"
+            var message = "Starting server at \(host):\(port)"
             if securityLayer == .tls {
                 message += " 🔒"
             }
