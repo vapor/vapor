@@ -1,1 +1,1 @@
-web: Development --port=$PORT --env=production
+web: Development --servers.heroku.port=$PORT --env=production
