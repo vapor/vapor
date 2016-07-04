@@ -469,4 +469,26 @@ app.get("chunked") { request in
     }
 }
 
+#if !os(Linux)
+    /*
+    Temporarily not available on Linux because of Dispatch APIs
+    */
+    app.get("async") { request in
+        return try Response.async { promise in
+            _ = try background {
+                do {
+                    let beyonceQuery = "https://api.spotify.com/v1/search/?q=beyonce&type=artist"
+                    let response = try HTTPClient<FoundationStream>.get(beyonceQuery)
+                    let artists = response.data["artists", "items", "name"].array ?? []
+                    let artistsJSON = artists.flatMap { $0.string } .map { JSON.string($0) }
+                    let js = JSON.array(artistsJSON)
+                    promise.resolve(with: js)
+                } catch {
+                    promise.reject(with: error)
+                }
+            }
+        }
+    }
+#endif
+
 app.serve()
