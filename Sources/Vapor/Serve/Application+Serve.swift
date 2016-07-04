@@ -45,7 +45,7 @@ extension Application {
     func bootServer(config: [String: Polymorphic], name: String, isLastServer: Bool) throws {
         let securityLayer: SecurityLayer = config["securityLayer"].string == "tls" ? .tls : .none
 
-        let host = config["host"].string ?? "localhost"
+        let host = config["host"].string ?? "0.0.0.0"
         let port = config["port"].int ?? 80
 
         let runInBackground = !isLastServer
