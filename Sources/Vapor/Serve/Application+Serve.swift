@@ -16,17 +16,27 @@ extension Application {
         } else {
             console.output("No servers.json configuration found.", style: .warning, newLine: true)
 
-            let host = config["servers", "default", "host"].string ?? "localhost"
-            let port = config["servers", "default", "port"].int ?? 8080
-            let securityLayer: SecurityLayer = config["servers", "default", "securityLayer"].string == "tls" ? .tls : .none
+            let host = config["servers", "default", "host"].string
+                ?? config["app", "host"].string
+                ?? "0.0.0.0"
+            let port = config["servers", "default", "port"].int
+                ?? config["app", "port"].int
+                ?? 8080
+            let security = config["servers", "default", "securityLayer"].string
+                ?? config["app", "securityLayer"].string
+                ?? "none"
+            let securityLayer: SecurityLayer = security.securityLayer
 
-            var message = "Starting default server at \(host):\(port)"
+            var message = "Starting server at \(host):\(port)"
             if securityLayer == .tls {
                 message += " 🔒"
             }
 
             console.output(message, style: .info)
-            try server.start(host: host, port: port, securityLayer: securityLayer, responder: self, errors: self.serverErrors)
+            try server.start(host: host, port: port,
+                             securityLayer: securityLayer,
+                             responder: self,
+                             errors: self.serverErrors)
 
         }
     }
@@ -34,8 +44,8 @@ extension Application {
     func bootServer(config: [String: Polymorphic], name: String, isLastServer: Bool) throws {
         let securityLayer: SecurityLayer = config["securityLayer"].string == "tls" ? .tls : .none
 
-        let host = config["host"].string ?? "localhost"
-        let port = config["port"].int ?? 80
+        let host = config["host"].string ?? "0.0.0.0"
+        let port = config["port"].int ?? 8080
 
         let runInBackground = !isLastServer
 
