@@ -1,33 +1,33 @@
 extension Data {
     func split(separator: Data, excludingFirst: Bool = false, excludingLast: Bool = false, maxSplits: Int? = nil) -> [Data] {
-        var ranges = [(from: Int, to: Int)]()
-        var parts = [Data]()
-
         // "\r\n\r\n\r\n".split(separator: "\r\n\r\n") would break without this because it occurs twice in the same place
-        var highestOccurence = -1
-
-        // Find occurences of boundries
-        for (index, element) in self.enumerated() where index > highestOccurence && !(maxSplits != nil && ranges.count >= maxSplits) {
+        var parts = [Data]()
+        let array = self.enumerated().filter { (index, element) in
             // If this first element matches and there are enough bytes left
-            guard element == separator.first && self.count >= index + separator.count else {
-                continue
-            }
-
+            let leftMatch = element == separator.first
+            let rightIndex = index + separator.count - 1
             // Take the last byte of where the end of the separator would be and check it
-            guard self[index + separator.count - 1] == separator.bytes.last else {
-                continue
+            let rightMatch: Bool
+            if rightIndex < self.bytes.count {
+                rightMatch = self[rightIndex] == separator.bytes.last
+            } else {
+                rightMatch = false
             }
-
-            // Check if this range matches (put separately for efficiency)
-            guard Data(self[index..<(index+separator.count)]) == separator else {
-                continue
+            if leftMatch && rightMatch {
+                // Check if this range matches (put separately for efficiency)
+                return Data(self[index..<(index+separator.count)]) == separator
+            } else {
+                return false
             }
-            
-            // Append the range of the separator
-            ranges.append((index, index + separator.count))
-
-            // Increase the highest occurrence to prevent a crash as described above
-            highestOccurence = index + separator.count
+        }
+        let separatorLength = separator.count
+        var ranges = array.map { (index, element) -> (from: Int, to: Int) in
+            return (index, index + separatorLength)
+        }
+        if let max = maxSplits {
+            if ranges.count > max {
+                ranges = ranges.prefix(upTo: max).array
+            }
         }
 
         // The first data (before the first separator)
