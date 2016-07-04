@@ -9,7 +9,7 @@ final class User {
 }
 
 extension User: JSONRepresentable {
-    func makeJson() -> JSON {
+    func makeJSON() -> JSON {
         return JSON([
             "name": "\(name)"
         ])
