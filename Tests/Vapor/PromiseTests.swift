@@ -21,10 +21,7 @@ class PromiseTests: XCTestCase {
     Temporary until we get libdispatch support on Linux, then remove this section.
     */
     static let allTests = [
-        ("testPromiseResult", testPromiseResult),
-        ("testPromiseFailure", testPromiseFailure),
-        ("testDuplicateResults", testDuplicateResults),
-        ("testDuplicateErrors", testDuplicateErrors)
+        ("testLinux", testLinux)
     ]
 
     func testLinux() {
