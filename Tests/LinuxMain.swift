@@ -23,6 +23,7 @@ XCTMain([
     testCase(MemorySessionDriverTests.allTests),
     testCase(PercentEncodingTests.allTests),
     testCase(ProcessTests.allTests),
+    testCase(PromiseTests.allTests),
     testCase(ResponseTests.allTests),
     testCase(RouterTests.allTests),
     testCase(RouteTests.allTests),
