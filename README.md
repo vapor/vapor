@@ -27,7 +27,7 @@ This repository is the framework's source code. To view some sample projects, ch
 |:-:|:-:|:-:|
 |0.12.x|7.3|DEVELOPMENT-SNAPSHOT-2016-06-06-a|
 
-<h3 align="center">❗️\*\*\* WARNING \*\*\* ❗️</h3>
+<h3 align="center">❗️**WARNING** ❗️</h3>
 
 If you've installed Xcode 8, you'll likely get an SDK error when building from command line. The following command has been known to help:
 
