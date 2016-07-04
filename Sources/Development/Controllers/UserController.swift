@@ -42,7 +42,7 @@ class UserController: Resource, ApplicationInitializable {
      */
     func update(request: Request, item user: User) throws -> ResponseRepresentable {
         //Testing JsonRepresentable
-        return user.makeJson()
+        return user.makeJSON()
     }
 
     /**
@@ -50,7 +50,7 @@ class UserController: Resource, ApplicationInitializable {
      */
     func modify(request: Request, item user: User) throws -> ResponseRepresentable {
         //Testing JsonRepresentable
-        return user.makeJson()
+        return user.makeJSON()
     }
 
     /**

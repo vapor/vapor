@@ -314,7 +314,7 @@ class Employee {
 }
 
 extension Employee: JSONRepresentable {
-    func makeJson() -> JSON {
+    func makeJSON() -> JSON {
         return JSON([
             "name": name.value,
             "email": email.value
