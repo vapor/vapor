@@ -482,9 +482,9 @@ app.get("chunked") { request in
                     let artists = response.data["artists", "items", "name"].array ?? []
                     let artistsJSON = artists.flatMap { $0.string } .map { JSON.string($0) }
                     let js = JSON.array(artistsJSON)
-                    promise.send(js)
+                    promise.resolve(with: js)
                 } catch {
-                    promise.send(error)
+                    promise.reject(with: error)
                 }
             }
         }

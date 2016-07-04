@@ -16,22 +16,27 @@
     public final class Promise<T> {
         private var result: Result<T>? = .none
         private let semaphore: DispatchSemaphore
+        private let lock = Lock()
 
         private init(_ semaphore: DispatchSemaphore) {
             self.semaphore = semaphore
         }
 
-        public func send(_ value: T) {
-            // TODO: Fatal error or throw? It's REALLY convenient NOT to throw here. Should at least log warning
-            guard result == nil else { return }
-            result = .success(value)
-            semaphore.signal()
+        public func resolve(with value: T) {
+            lock.locked {
+                // TODO: Fatal error or throw? It's REALLY convenient NOT to throw here. Should at least log warning
+                guard result == nil else { return }
+                result = .success(value)
+                semaphore.signal()
+            }
         }
 
-        public func send(_ error: ErrorProtocol) {
-            guard result == nil else { return }
-            result = .failure(error)
-            semaphore.signal()
+        public func reject(with error: ErrorProtocol) {
+            lock.locked {
+                guard result == nil else { return }
+                result = .failure(error)
+                semaphore.signal()
+            }
         }
     }
 
@@ -53,11 +58,4 @@
             }
         }
     }
-
-    extension Response {
-        public static func async(timingOut timeout: DispatchTime = .distantFuture, _ handler: (Promise<ResponseRepresentable>) throws -> Void) throws -> ResponseRepresentable {
-            return try Promise.async(timingOut: timeout, handler)
-        }
-    }
-
 #endif
