@@ -49,13 +49,17 @@ public final class HTTPResponse: HTTPMessage {
 
 extension HTTPResponse {
     /*
-        Creates a redirect response with
-        the 301 Status an `Location` header.
+        Creates a redirect response.
+     
+        Set permanently to 'true' to allow caching to automatically redirect from browsers.
+        Defaulting to non-permanent to prevent unexpected caching.
     */
-    public convenience init(headers: Headers = [:], redirect location: String) {
+    public convenience init(headers: Headers = [:], redirect location: String, permanently: Bool = false) {
         var headers = headers
         headers["Location"] = location
-        self.init(status: .movedPermanently, headers: headers)
+        // .found == 302 and is commonly used for temporarily moved
+        let status: Status = permanently ? .movedPermanently : .found
+        self.init(status: status, headers: headers)
     }
 }
 
