@@ -4,5 +4,7 @@
     as an initialization parameter.
 */
 public protocol ApplicationInitializable {
-    init(application: Application)
+    init(droplet: Application)
 }
+
+public typealias DropletInitializable = ApplicationInitializable

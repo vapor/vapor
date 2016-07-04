@@ -8,24 +8,6 @@ import Strand
 import Socks
 import SocksCore
 
-public protocol Program {
-    init(host: String, port: Int, securityLayer: SecurityLayer) throws
-}
-
-public protocol Server: Program {
-    func start(responder: Responder, errors: ServerErrorHandler) throws
-}
-
-public typealias ServerErrorHandler = (ServerError) -> ()
-
-public enum ServerError: ErrorProtocol {
-    case bind(ErrorProtocol)
-    case accept(ErrorProtocol)
-    case respond(ErrorProtocol)
-    case dispatch(ErrorProtocol)
-    case unknown(ErrorProtocol)
-}
-
 public final class HTTPServer<
     ServerStreamType: ServerStream,
     Parser: TransferParser,
@@ -37,11 +19,19 @@ public final class HTTPServer<
 
     let server: ServerStreamType
 
+    public let host: String
+    public let port: Int
+    public let securityLayer: SecurityLayer
+
     public init(host: String = "0.0.0.0", port: Int = 8080, securityLayer: SecurityLayer = .none) throws {
+        self.host = host
+        self.port = port
+        self.securityLayer = securityLayer
+
         do {
-            server = try ServerStreamType(host: host, port: port)
+            server = try ServerStreamType(host: host, port: port, securityLayer: securityLayer)
         } catch {
-            throw ServerError.bind(error)
+            throw ServerError.bind(host: host, port:port, error)
         }
     }
 

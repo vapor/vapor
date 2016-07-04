@@ -1,8 +1,9 @@
 import Vapor
 
-class UserController: Controller {
-    required init(application: Application) {
-        application.log.info("User controller created")
+class UserController: Resource, ApplicationInitializable {
+    required init(droplet: Droplet) {
+        droplet.console.output("User controller created")
+
     }
 
     /**
@@ -41,7 +42,7 @@ class UserController: Controller {
      */
     func update(request: Request, item user: User) throws -> ResponseRepresentable {
         //Testing JsonRepresentable
-        return user.makeJson()
+        return user.makeJSON()
     }
 
     /**
@@ -49,7 +50,7 @@ class UserController: Controller {
      */
     func modify(request: Request, item user: User) throws -> ResponseRepresentable {
         //Testing JsonRepresentable
-        return user.makeJson()
+        return user.makeJSON()
     }
 
     /**

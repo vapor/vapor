@@ -4,6 +4,7 @@
 
     public class FoundationStream: NSObject, Stream, ClientStream, Foundation.StreamDelegate {
         public enum Error: ErrorProtocol {
+            case unableToCompleteReadOperation
             case unableToCompleteWriteOperation
             case unableToConnectToHost
             case unableToUpgradeToSSL
@@ -74,6 +75,7 @@
         public func receive(max: Int) throws -> Bytes {
             var buffer = Bytes(repeating: 0, count: max)
             let read = input.read(&buffer, maxLength: max)
+            guard read != -1 else { throw Error.unableToCompleteReadOperation }
             return buffer.prefix(read).array
         }
 

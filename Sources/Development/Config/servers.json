@@ -1,0 +1,9 @@
+{
+	"default": {
+		"port": 8080
+	},
+	"secure": {
+		"port": 8443,
+		"securityLayer": "tls"
+	}
+}

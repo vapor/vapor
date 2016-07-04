@@ -47,7 +47,14 @@ class ApplicationTests: XCTestCase {
     */
     func testProviders() {
         final class TestServer: Server {
-            init(host: String, port: Int, securityLayer: SecurityLayer) {}
+            var host: String
+            var port: Int
+            var securityLayer: SecurityLayer
+            init(host: String, port: Int, securityLayer: SecurityLayer) throws {
+                self.host = host
+                self.port = port
+                self.securityLayer = securityLayer
+            }
             func start(responder: Responder, errors: ServerErrorHandler) throws {}
         }
 
@@ -70,7 +77,7 @@ class ApplicationTests: XCTestCase {
             provider
         ])
 
-        XCTAssert(app.serverType == TestServer.self, "Provider did not provide TestServer")
+        XCTAssert(app.server == TestServer.self, "Provider did not provide TestServer")
         XCTAssert(provider.bootRan == true, "Application did not boot provider")
     }
 
@@ -80,12 +87,26 @@ class ApplicationTests: XCTestCase {
     */
     func testProvidersOverride() {
         final class TestServerAlpha: Server {
-            init(host: String, port: Int, securityLayer: SecurityLayer) {}
+            var host: String
+            var port: Int
+            var securityLayer: SecurityLayer
+            init(host: String, port: Int, securityLayer: SecurityLayer) throws {
+                self.host = host
+                self.port = port
+                self.securityLayer = securityLayer
+            }
             func start(responder: Responder, errors: ServerErrorHandler) throws {}
         }
 
         final class TestServerBeta: Server {
-            init(host: String, port: Int, securityLayer: SecurityLayer) {}
+            var host: String
+            var port: Int
+            var securityLayer: SecurityLayer
+            init(host: String, port: Int, securityLayer: SecurityLayer) throws {
+                self.host = host
+                self.port = port
+                self.securityLayer = securityLayer
+            }
             func start(responder: Responder, errors: ServerErrorHandler) throws {}
         }
 
@@ -101,11 +122,11 @@ class ApplicationTests: XCTestCase {
 
         let provider = TestProvider()
 
-        let app = Application(serverType: TestServerBeta.self, providers: [
+        let app = Application(server: TestServerBeta.self, providers: [
             provider
         ])
 
-        XCTAssert(app.serverType == TestServerAlpha.self, "Provider did not override with TestServerAlpha")
+        XCTAssert(app.server == TestServerAlpha.self, "Provider did not override with TestServerAlpha")
     }
 
  }

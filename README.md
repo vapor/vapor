@@ -14,18 +14,36 @@ A Web Framework for Swift that works on iOS, OS X, and Ubuntu.
 [![Twitter Follow](https://img.shields.io/twitter/follow/shields_io.svg?style=social&label=Follow&maxAge=2592000)](https://twitter.com/qutheory)
 [![codebeat badge](https://codebeat.co/badges/3334c72c-c6e6-4061-a86b-f077b5250252)](https://codebeat.co/projects/github-com-qutheory-vapor)
 [![PRs Welcome](https://img.shields.io/badge/prs-welcome-brightgreen.svg)](http://makeapullrequest.com)
-[![OpenCollective](https://opencollective.com/vapor/backers/badge.svg)](#backers) 
+[![OpenCollective](https://opencollective.com/vapor/backers/badge.svg)](#backers)
 [![OpenCollective](https://opencollective.com/vapor/sponsors/badge.svg)](#sponsors)
 
 Vapor is the first true web framework for Swift. It provides a beautifully expressive and easy to use foundation for your next website or API.
 
-This repository is the framework's source code. To view a sample project, check out the [Vapor Example](https://github.com/qutheory/vapor-example).
+This repository is the framework's source code. To view some sample projects, check out our list [here](/Projects.md).
+
+## 🚦 Current Environment
+
+| Vapor | Xcode | Swift |
+|:-:|:-:|:-:|
+|0.12.x|7.3|DEVELOPMENT-SNAPSHOT-2016-06-06-a|
+
+<h3 align="center">❗️<b>WARNING</b>❗️</h3>
+
+If you've installed Xcode 8, you'll likely get an SDK error when building from command line. The following command has been known to help:
+
+```
+xcode-select -s /Applications/Xcode.app/
+```
 
 ## 📖 Documentation
 
 Visit the [Documentation](http://docs.qutheory.io) for extensive information on getting setup, using, and deploying Vapor.
 
 ## 🚀 Contributing
+
+All developers should feel welcome and encouraged to contribute to Vapor, see our [getting started](/Contributing.md) document here to get involved.
+
+To contribute code, see our [getting started](/Contributing.md) guide for how to do so.
 
 To contribute a **feature or idea** to Vapor, submit an issue and fill in the template. If the request is approved, you or one of the members of the community can start working on it.
 
@@ -35,13 +53,33 @@ If you find a **security vulnerability**, please contact [tanner@qutheory.io](ta
 
 ## 💙 Code of Conduct
 
-Our goal is to create a safe and empowering environment for anyone who decides to use or contribute to Vapor. Please help us make the community a better place by abiding to this [Code of Conduct](https://github.com/qutheory/vapor/blob/master/CODE_OF_CONDUCT.md) during your interactions surrounding this project. 
+Our goal is to create a safe and empowering environment for anyone who decides to use or contribute to Vapor. Please help us make the community a better place by abiding to this [Code of Conduct](https://github.com/qutheory/vapor/blob/master/CODE_OF_CONDUCT.md) during your interactions surrounding this project.
+
+## ⭐ Projects
+
+Vapor has [several projects](/Projects.md) that are live now in the cloud. Most are also open source, so check them out for great examples.
+
+## 🏫 Tutorials
+
+The awesome Vapor community is always adding new tutorials and articles out there, we do our best to keep a record of relevant tutorials [here](/Tutorials.md).
+
+## 💡 Evolution
+
+Contributing code isn't the only way to participate in Vapor. Taking a page out of the Swift team's playbook, we want _you_ to participate in the evolution of the Vapor framework. File a GitHub issue on this repository to start a discussion or suggest an awesome idea.
+
+## 💧 Community
+
+We pride ourselves on providing a diverse and welcoming community. Join your fellow Vapor developers in [our slack](slack.qutheory.io) and take part in the conversation.
 
 ## 🔧 Compatibility
 
-Vapor has been tested on OS X 10.11, Ubuntu 14.04, and Ubuntu 15.10. 
+Vapor has been tested on OS X 10.11, Ubuntu 14.04, and Ubuntu 15.10.
 
 Our homepage [http://qutheory.io](http://qutheory.io) is currently running using Vapor on DigitalOcean.
+
+## ⚠️ State of Vapor
+
+Vapor is in a generally stable state with [several projects](/Projects.md) currently active and hosted in the cloud. With that said, we are still considered _under development_ at least until the official Swift 3 release, and future api changes should be anticipated.
 
 ## Backers
 
@@ -114,9 +152,6 @@ Become a sponsor and get your logo on our README on Github with a link to your s
 <a href="https://opencollective.com/vapor/sponsor/28/website" target="_blank"><img src="https://opencollective.com/vapor/sponsor/28/avatar.svg"></a>
 <a href="https://opencollective.com/vapor/sponsor/29/website" target="_blank"><img src="https://opencollective.com/vapor/sponsor/29/avatar.svg"></a>
 
-## ⚠️ Work in Progress
-
-This is a work in progress, so *do not* rely on this for anything important. And pull requests are welcome!
 
 ## 👥 Authors
 

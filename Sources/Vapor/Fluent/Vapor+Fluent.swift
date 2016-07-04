@@ -10,6 +10,7 @@ public typealias PreparationError = Fluent.PreparationError
 
 public typealias Query = Fluent.Query
 public typealias Value = Fluent.Value
+public typealias Schema = Fluent.Schema
 
 extension Extractable where Wrapped == Value {
     public var isNull: Bool {

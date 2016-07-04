@@ -4,7 +4,7 @@
     a single protocol that, by default, conforms to standard
     CRUD operations.
 */
-public protocol ResourceController {
+public protocol Resource {
     associatedtype Item: StringInitializable
 
     /**
@@ -53,7 +53,7 @@ public protocol ResourceController {
     func options(request: Request, item: Item) throws -> ResponseRepresentable
 }
 
-extension ResourceController {
+extension Resource {
     public func index(request: Request) throws -> ResponseRepresentable {
         throw Abort.notFound
     }

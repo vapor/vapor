@@ -14,22 +14,20 @@ struct JSONDirectory {
 }
 
 extension FileManager {
-    internal static func loadDirectory(_ path: String) -> JSONDirectory? {
+    internal static func loadDirectory(_ path: String) throws -> JSONDirectory? {
         guard let directoryName = path.components(separatedBy: "/").last else {
             return nil
         }
-        guard let contents = try? FileManager.contentsOfDirectory(path) else {
-            return nil
-        }
+
+        guard let contents = try? FileManager.contentsOfDirectory(path) else { return nil }
 
         var jsonFiles: [JSONFile] = []
         for file in contents where file.hasSuffix(".json") {
             guard let name = file.components(separatedBy: "/").last else {
                 continue
             }
-            guard let json = try? loadJson(file) else {
-                continue
-            }
+
+            let json = try loadJson(file)
 
             let jsonFile = JSONFile(name: name, json: json)
             jsonFiles.append(jsonFile)

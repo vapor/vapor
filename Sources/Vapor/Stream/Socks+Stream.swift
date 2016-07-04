@@ -6,7 +6,12 @@ extension TCPInternetSocket: Stream {
     }
 
     public func send(_ bytes: Bytes) throws {
-        try send(data: bytes)
+        //print(bytes.string)
+        do {
+            try send(data: bytes)
+        } catch {
+            throw StreamError.send("There was a problem while sending data.", error)
+        }
     }
 
     public func flush() throws {
@@ -14,7 +19,13 @@ extension TCPInternetSocket: Stream {
     }
 
     public func receive(max: Int) throws -> Bytes {
-        return try recv(maxBytes: max)
+        do {
+            let bytes = try recv(maxBytes: max)
+            //print(bytes.string)
+            return bytes
+        } catch {
+            throw StreamError.receive("There was a problem while receiving data.", error)
+        }
     }
 }
 

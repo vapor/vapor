@@ -7,16 +7,17 @@ public enum HTTPClientError: ErrorProtocol {
 }
 
 public final class HTTPClient<ClientStreamType: ClientStream>: Client {
-    public let scheme: String
     public let host: String
     public let port: Int
+    public let securityLayer: SecurityLayer
+
     public let stream: Stream
 
-    public init(scheme: String, host: String, port: Int) throws {
-        self.scheme = scheme
+    public init(host: String, port: Int, securityLayer: SecurityLayer) throws {
         self.host = host
         self.port = port
-        let securityLayer = scheme.securityLayer ?? .tls // Default to secure -- opt out
+        self.securityLayer = securityLayer
+
         let client = try ClientStreamType(host: host, port: port, securityLayer: securityLayer)
         let stream = try client.connect()
         self.stream = stream
@@ -55,7 +56,7 @@ public final class HTTPClient<ClientStreamType: ClientStream>: Client {
         }
 
         if !request.uri.scheme.isNilOrEmpty {
-            guard request.uri.scheme == scheme else { throw HTTPClientError.invalidRequestScheme }
+            guard request.uri.scheme?.securityLayer == securityLayer else { throw HTTPClientError.invalidRequestScheme }
         }
 
         if let requestPort = request.uri.port {

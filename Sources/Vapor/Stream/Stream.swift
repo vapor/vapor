@@ -1,5 +1,7 @@
 public enum StreamError: ErrorProtocol {
     case unsupported
+    case send(String, ErrorProtocol)
+    case receive(String, ErrorProtocol)
     case custom(String)
 }
 
