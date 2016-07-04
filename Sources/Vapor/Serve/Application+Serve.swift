@@ -3,7 +3,6 @@ import Strand
 extension Application {
     func serve() throws {
         if let servers = config["servers"].object {
-            print("Servers: \(servers)")
             var bootedServers = 0
             for (key, server) in servers {
                 guard let server = server.object else {
@@ -19,7 +18,7 @@ extension Application {
 
             let host = config["servers", "default", "host"].string
                 ?? config["app", "host"].string
-                ?? "localhost"
+                ?? "0.0.0.0"
             let port = config["servers", "default", "port"].int
                 ?? config["app", "port"].int
                 ?? 8080
@@ -46,7 +45,7 @@ extension Application {
         let securityLayer: SecurityLayer = config["securityLayer"].string == "tls" ? .tls : .none
 
         let host = config["host"].string ?? "0.0.0.0"
-        let port = config["port"].int ?? 80
+        let port = config["port"].int ?? 8080
 
         let runInBackground = !isLastServer
 

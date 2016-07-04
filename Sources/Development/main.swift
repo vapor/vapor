@@ -18,7 +18,6 @@ let 😀 = Response(status: .ok)
 //MARK: Basic
 
 app.get { request in
-    print("RUNNING GET")
     return try app.view("welcome.html")
 }
 
