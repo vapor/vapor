@@ -25,9 +25,11 @@ This repository is the framework's source code. To view some sample projects, ch
 
 | Vapor | Xcode | Swift |
 |:-:|:-:|:-:|
-|0.12.x|7.3|DEVELOPMENT-SNAPSHOT-2016-06-06-a|
+|0.13.x|8.0 Beta|DEVELOPMENT-SNAPSHOT-2016-06-20-a|
 
 <h3 align="center">❗️<b>WARNING</b>❗️</h3>
+
+<b>Only applies to versions <= 0.12.x</b>
 
 If you've installed Xcode 8, you'll likely get an SDK error when building from command line. The following command has been known to help:
 
