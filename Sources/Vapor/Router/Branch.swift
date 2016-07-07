@@ -73,7 +73,7 @@ internal final class Branch {
         if let next = subBranches[key] {
             return next.handle(request: request, comps: comps)
         } else if let wildcard = subBranches["*"] {
-            request.parameters[wildcard.name] = percentDecoded(key.data)?.string
+            request.parameters[wildcard.name] = percentDecoded(key.bytes)?.string
             return wildcard.handle(request: request, comps: comps)
         } else {
             return nil

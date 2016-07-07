@@ -69,7 +69,7 @@ extension WebSocket {
             let frame = Frame(header: header, payload: payload)
             try send(frame)
         } else {
-            let chunks = payload.bytes.split(by: PayloadSplitSize)
+            let chunks = payload.bytes.chunked(size: PayloadSplitSize)
             let first = 0
             let last = chunks.count - 1
             try chunks.enumerated().forEach { idx, bytes in

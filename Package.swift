@@ -32,7 +32,10 @@ let package = Package(
         .Package(url: "https://github.com/qutheory/polymorphic.git", majorVersion: 0, minor: 2),
 
         // libc
-        .Package(url: "https://github.com/qutheory/libc.git", majorVersion: 0, minor: 1)
+        .Package(url: "https://github.com/qutheory/libc.git", majorVersion: 0, minor: 1),
+
+        //Core vapor transport layer
+        .Package(url: "https://github.com/qutheory/engine.git", majorVersion: 0, minor: 0)
     ],
     exclude: [
         "XcodeProject",

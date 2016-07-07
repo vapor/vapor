@@ -30,7 +30,7 @@ class AlphanumericValidationTests: ValidationConvenienceTests {
 
     override func testFalse() throws {
         let not = "I've got all types of characters!"
-        XCTAssertFalse(not.passes(OnlyAlphanumeric))
+        XCTAssertFalse(not.passes(OnlyAlphanumeric.self))
     }
 }
 
