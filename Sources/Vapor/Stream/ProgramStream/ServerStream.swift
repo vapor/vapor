@@ -1,3 +1,3 @@
-public protocol ServerStream: ProgramStream {
-    func accept() throws -> Stream
-}
+//public protocol ServerStream: ProgramStream {
+//    func accept() throws -> Stream
+//}

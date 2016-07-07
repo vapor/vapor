@@ -1,3 +1,3 @@
-public protocol ClientStream: ProgramStream {
-    func connect() throws -> Stream
-}
+//public protocol ClientStream: ProgramStream {
+//    func connect() throws -> Stream
+//}

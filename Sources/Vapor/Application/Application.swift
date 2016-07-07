@@ -357,7 +357,7 @@ extension Application {
                     let fileExtension = filePath.components(separatedBy: ".").last,
                     let type = mediaTypes[fileExtension]
                 {
-                    headers["Content-Type"] = type.description
+                    headers["Content-Type"] = type
                 }
 
                 return Response(status: .ok, headers: headers, body: .data(fileBody))

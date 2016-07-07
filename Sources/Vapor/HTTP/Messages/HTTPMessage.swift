@@ -1,48 +1,75 @@
-public enum HTTPMessageError: ErrorProtocol {
-    case invalidStartLine
+// TODO: Replicate for Response w/ just JSON
+extension HTTPRequest {
+
+    // TODO: Weird but solves problem, keep?
+    public typealias ContentDidLoad = (request: HTTPRequest, data: Content) -> Void
+
+    // extensible content loading
+    private static var contentDidLoad: ContentDidLoad = { _ in }
+
+    public static func register(_ newLoader: ContentDidLoad) {
+        let currentLoader = contentDidLoad
+        contentDidLoad = { request, content in
+            // FIFO
+            currentLoader(request: request, data: content)
+            newLoader(request: request, data: content)
+        }
+    }
+
+
+    public var data: Content {
+        if let data = storage["data"] as? Content {
+            return data
+        } else {
+            let data = Content()
+            HTTPRequest.contentDidLoad(request: self, data: data)
+
+            data.append(self.query)
+            data.append(self.json)
+            data.append(self.formURLEncoded)
+            data.append { [weak self] indexes in
+                guard let first = indexes.first else { return nil }
+                if let string = first as? String {
+                    return self?.multipart?[string]
+                } else if let int = first as? Int {
+                    return self?.multipart?["\(int)"]
+                } else {
+                    return nil
+                }
+            }
+
+            storage["data"] = data
+            return data
+        }
+    }
 }
 
-public class HTTPMessage {
-    public let startLine: String
-    public var headers: Headers
+extension HTTPResponse {
 
-    // Settable for HEAD request -- evaluate alternatives -- Perhaps serializer should handle it.
-    // must NOT be exposed public because changing body will break behavior most of time
-    public var body: HTTPBody
+    // TODO: Weird but solves problem, keep?
+    public typealias ContentDidLoad = (request: HTTPResponse, data: Content) -> Void
 
-    public var storage: [String: Any] = [:]
-    public private(set) final lazy var data: Content = Content(self)
+    // extensible content loading
+    private static var contentDidLoad: ContentDidLoad = { _ in }
 
-    public convenience required init(
-        startLineComponents: (BytesSlice, BytesSlice, BytesSlice),
-        headers: Headers,
-        body: HTTPBody
-    ) throws {
-        var startLine = startLineComponents.0.string
-        startLine += " "
-        startLine += startLineComponents.1.string
-        startLine += " "
-        startLine += startLineComponents.2.string
-
-        self.init(startLine: startLine, headers: headers,body: body)
+    public static func register(_ newLoader: ContentDidLoad) {
+        let currentLoader = contentDidLoad
+        contentDidLoad = { request, content in
+            // FIFO
+            currentLoader(request: request, data: content)
+            newLoader(request: request, data: content)
+        }
     }
 
-    public init(startLine: String, headers: Headers, body: HTTPBody) {
-        self.startLine = startLine
-        self.headers = headers
-        self.body = body
-    }
-}
-
-extension HTTPMessage: TransferMessage {}
-
-extension HTTPMessage {
-    public var contentType: String? {
-        return headers["Content-Type"]
-    }
-    public var keepAlive: Bool {
-        // HTTP 1.1 defaults to true unless explicitly passed `Connection: close`
-        guard let value = headers["Connection"] else { return true }
-        return !value.contains("close")
+    public var data: Content {
+        if let data = storage["data"] as? Content {
+            return data
+        } else {
+            let data = Content()
+            HTTPResponse.contentDidLoad(request: self, data: data)
+            data.append(self.json)
+            storage["data"] = data
+            return data
+        }
     }
 }
