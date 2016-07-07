@@ -5,7 +5,7 @@ let mediaTypes = [
     "atom": "application/atom+xml", // Atom Syndication Format RFC 4287
     "atomcat": "application/atomcat+xml", // Atom Publishing Protocol RFC 5023
     "atomsvc": "application/atomsvc+xml", // Atom Publishing Protocol Service Document RFC 5023
-    "ccxml": "application/ccxml+xml,", // Voice Browser Call Control Voice Browser Call Control: CCXML Version 1.0
+    "ccxml": "application/ccxml+xml", // Voice Browser Call Control Voice Browser Call Control: CCXML Version 1.0
     "cdmia": "application/cdmi-capability", // Cloud Data Management Interface (CDMI) - Capability RFC 6208
     "cdmic": "application/cdmi-container", // Cloud Data Management Interface (CDMI) - Contaimer RFC 6209
     "cdmid": "application/cdmi-domain", // Cloud Data Management Interface (CDMI) - Domain RFC 6210
