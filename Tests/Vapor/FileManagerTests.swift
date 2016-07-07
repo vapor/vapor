@@ -10,7 +10,7 @@ import XCTest
 @testable import Vapor
 
 class FileManagerTests: XCTestCase {
-    let allTests = [
+    static let allTests = [
         ("testReadsFromExistingFile", testReadsFromExistingFile),
         ("testReadsFromNonExistingFile", testReadsFromNonExistingFile)
     ]
