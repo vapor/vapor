@@ -37,6 +37,10 @@ If you've installed Xcode 8, you'll likely get an SDK error when building from c
 xcode-select -s /Applications/Xcode.app/
 ```
 
+## 🦄 Deploy
+
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/qutheory/vapor-example/tree/master)
+
 ## 📖 Documentation
 
 Visit the [Documentation](http://docs.qutheory.io) for extensive information on getting setup, using, and deploying Vapor.
