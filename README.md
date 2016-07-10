@@ -33,6 +33,8 @@ There have been many issues associated w/ Xcode 8 and transitioning to new tools
 
 > <unknown>:0: error: Swift does not support the SDK 'MacOSX10.11.sdk'`
 
+Please consult the following [Q & A](http://stackoverflow.com/questions/38296145/vapor-web-framework-error-swift-does-not-support-the-sdk-macosx10-11-sdk) or follow below.
+
 <b>Before continuing make sure that you have completely opened Xcode 8 at least once.</b>
 
 Run the following command:
