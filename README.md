@@ -27,7 +27,7 @@ This repository is the framework's source code. To view some sample projects, ch
 |:-:|:-:|:-:|
 |0.13.x|8.0 Beta|DEVELOPMENT-SNAPSHOT-2016-06-20-a|
 
-<h1 align="center" style="color:red;">❗️<b>WARNING</b>❗️</h1>
+<h1 align="center" style="color:red;">❗️⚠️❗️<b>WARNING</b>❗️⚠️❗️</h1>
 
 There have been many issues associated w/ Xcode 8 and transitioning to new tools. If you get the following error:
 
