@@ -27,15 +27,25 @@ This repository is the framework's source code. To view some sample projects, ch
 |:-:|:-:|:-:|
 |0.13.x|8.0 Beta|DEVELOPMENT-SNAPSHOT-2016-06-20-a|
 
-<h3 align="center">❗️<b>WARNING</b>❗️</h3>
+<h1 align="center" style="color:red;">❗️<b>WARNING</b>❗️</h1>
 
-<b>Only applies to versions <= 0.12.x</b>
+There have been many issues associated w/ Xcode 8 and transitioning to new tools. If you get the following error:
 
-If you've installed Xcode 8, you'll likely get an SDK error when building from command line. The following command has been known to help:
+> <unknown>:0: error: Swift does not support the SDK 'MacOSX10.11.sdk'`
 
+<b>Before continuing make sure that you have completely opened Xcode 8 at least once.</b>
+
+Run the following command:
+
+```Swift
+sudo xcode-select -s /Applications/Xcode-beta.app/
 ```
-xcode-select -s /Applications/Xcode.app/
-```
+
+> NOTE: In above example, `Xcode-beta` is expected to be the name of your beta. If you change the names to something like `Xcode-beta2`, replace above. In occasional situations, users have had to do `-s /Applications/Xcode-beta.app/Contents/Developer`
+
+This will tell your system to use the `Xcode-beta` tools which support latest Swift 3.
+
+If you still have problems, visit the [`#help`](http://slack.qutheory.io) channel in [our slack](http://slack.qutheory.io)
 
 ## 🦄 Deploy
 
