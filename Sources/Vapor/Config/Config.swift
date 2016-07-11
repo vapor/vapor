@@ -48,7 +48,7 @@ public class Config {
         seed: JSON = [:],
         workingDirectory: String = "./",
         environment: Environment? = nil,
-        arguments: [String] = NSProcessInfo.processInfo().arguments
+        arguments: [String] = ProcessInfo.processInfo().arguments
     ) throws {
         let configDirectory = workingDirectory.finish("/") + "Config/"
         self.environment = environment ?? Environment.loader(arguments: arguments)
@@ -82,7 +82,7 @@ public class Config {
     }
 
     public init() {
-        self.environment = Environment.loader(arguments: NSProcessInfo.processInfo().arguments)
+        self.environment = Environment.loader(arguments: ProcessInfo.processInfo().arguments)
         self.directoryQueue = PrioritizedDirectoryQueue(directories: [])
     }
 
