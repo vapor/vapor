@@ -138,7 +138,7 @@ public class Application {
             databaseProvided = provider.database ?? databaseProvided
         }
 
-        let arguments = arguments ?? NSProcessInfo.processInfo().arguments
+        let arguments = arguments ?? NSProcessInfo.arguments()
         self.arguments = arguments
 
         let console = consoleProvided ?? Terminal()
