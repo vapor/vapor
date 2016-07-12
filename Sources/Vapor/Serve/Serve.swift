@@ -2,39 +2,41 @@
     Serves the application.
 */
 public class Serve: Command {
-
     public typealias ServeFunction = () throws -> ()
 
-    public static let id: String = "serve"
-
-    public static let signature: [Signature] = [
-        Option("port"),
-        Option("workdir")
+    public let signature: [Argument] = [
+        Option(name: "port", help: ["Overrides the default serving port."]),
+        Option(name: "workdir", help: ["Overrides the working directory to a custom path."])
     ]
 
-    public static let help: [String] = [
-        "tells the application to begin serving"
+    public let help: [String] = [
+        "Boots the Droplet's servers and begins accepting requests."
     ]
 
-    public let app: Application
-    public var serve: ServeFunction?
+    public let id: String = "serve"
+    public let serve: ServeFunction
+    public let console: Console
+    public let prepare: Prepare
 
-    public required init(app: Application) {
-        self.app = app
+    public required init(
+        console: Console,
+        prepare: Prepare,
+        serve: ServeFunction
+    ) {
+        self.console = console
+        self.prepare = prepare
+        self.serve = serve
     }
 
-    public func run() throws {
-        let prepare = Prepare(app: app)
-        try prepare.run()
-
-        let serve = self.serve ?? app.serve
+    public func run(arguments: [String]) throws {
+        try prepare.run(arguments: arguments)
 
         do {
             try serve()
         } catch ServerError.bind(let host, let port, _) {
-            self.error("Could not bind to \(host):\(port), it may be in use or require sudo.")
+            console.error("Could not bind to \(host):\(port), it may be in use or require sudo.")
         } catch {
-            self.error("Serve error: \(error)")
+            console.error("Serve error: \(error)")
         }
     }
 }
