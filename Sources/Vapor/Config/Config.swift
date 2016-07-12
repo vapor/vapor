@@ -133,7 +133,19 @@ public class Config {
          - returns: value if it exists.
      */
     public subscript(_ file: String, _ paths: [PathIndex]) -> Polymorphic? {
-        return directoryQueue[file, paths]
+        let value = directoryQueue[file, paths]
+
+        // check if value exists in Env
+        if let string = value?.string {
+            if string.characters.first == "$" {
+                let name = String(string.characters.dropFirst())
+                if let env = Env.get(name) {
+                    return env
+                }
+            }
+        }
+
+        return value
     }
 }
 

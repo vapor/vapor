@@ -2,6 +2,8 @@
     "debug": true,
     "port": 8523,
 
+    "tanner": "$TANNER",
+
     "nested": {
         "a": "a",
         "b": "b",
