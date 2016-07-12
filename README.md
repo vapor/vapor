@@ -19,7 +19,7 @@ A Web Framework for Swift that works on iOS, OS X, and Ubuntu.
 
 Vapor is the first true web framework for Swift. It provides a beautifully expressive and easy to use foundation for your next website or API.
 
-This repository is the framework's source code. To view some sample projects, check out our list [here](/Projects.md).
+This repository is the framework's source code. To view some sample projects, check out our list [here](/Documents/Projects.md).
 
 ## 🚦 Current Environment
 
@@ -51,9 +51,9 @@ Visit the [Documentation](http://docs.qutheory.io) for extensive information on 
 
 ## 🚀 Contributing
 
-All developers should feel welcome and encouraged to contribute to Vapor, see our [getting started](/Contributing.md) document here to get involved.
+All developers should feel welcome and encouraged to contribute to Vapor, see our [getting started](/Documents/CONTRIBUTING.md) document here to get involved.
 
-To contribute code, see our [getting started](/Contributing.md) guide for how to do so.
+To contribute code, see our [getting started](/Documents/CONTRIBUTING.md) guide for how to do so.
 
 To contribute a **feature or idea** to Vapor, submit an issue and fill in the template. If the request is approved, you or one of the members of the community can start working on it.
 
@@ -63,15 +63,15 @@ If you find a **security vulnerability**, please contact [tanner@qutheory.io](ta
 
 ## 💙 Code of Conduct
 
-Our goal is to create a safe and empowering environment for anyone who decides to use or contribute to Vapor. Please help us make the community a better place by abiding to this [Code of Conduct](https://github.com/qutheory/vapor/blob/master/CODE_OF_CONDUCT.md) during your interactions surrounding this project.
+Our goal is to create a safe and empowering environment for anyone who decides to use or contribute to Vapor. Please help us make the community a better place by abiding to this [Code of Conduct](/Documents/CODE_OF_CONDUCT.md) during your interactions surrounding this project.
 
 ## ⭐ Projects
 
-Vapor has [several projects](/Projects.md) that are live now in the cloud. Most are also open source, so check them out for great examples.
+Vapor has [several projects](/Documents/PROJECTS.md) that are live now in the cloud. Most are also open source, so check them out for great examples.
 
 ## 🏫 Tutorials
 
-The awesome Vapor community is always adding new tutorials and articles out there, we do our best to keep a record of relevant tutorials [here](/Tutorials.md).
+The awesome Vapor community is always adding new tutorials and articles out there, we do our best to keep a record of relevant tutorials [here](/Documents/TUTORIALS.md).
 
 ## 💡 Evolution
 
@@ -89,7 +89,7 @@ Our homepage [http://qutheory.io](http://qutheory.io) is currently running using
 
 ## ⚠️ State of Vapor
 
-Vapor is in a generally stable state with [several projects](/Projects.md) currently active and hosted in the cloud. With that said, we are still considered _under development_ at least until the official Swift 3 release, and future api changes should be anticipated.
+Vapor is in a generally stable state with [several projects](/Documents/PROJECTS.md) currently active and hosted in the cloud. With that said, we are still considered _under development_ at least until the official Swift 3 release, and future api changes should be anticipated.
 
 ## Backers
 
