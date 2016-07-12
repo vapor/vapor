@@ -15,3 +15,6 @@ public typealias HTTPResponder = Engine.HTTPResponder
 public typealias HTTPBodyRepresentable = Engine.HTTPBodyRepresentable
 public typealias ServerError = Engine.ServerError
 public typealias FoundationStream = Engine.FoundationStream
+public typealias Server = Engine.Server
+public typealias ServerErrorHandler = Engine.ServerErrorHandler
+public typealias SecurityLayer = Engine.SecurityLayer
