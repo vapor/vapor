@@ -1,4 +1,5 @@
 import Foundation
+import Base
 
 extension StructuredData {
     public init(formURLEncoded data: Bytes) {
@@ -29,7 +30,7 @@ extension StructuredData {
                     if let keySlice = keyData
                         .split(separator: .leftSquareBracket, maxSplits: 1)
                         .first {
-                        keyData = Data(keySlice)
+                        keyData = keySlice.array
                     }
 
                     keyIndicatedArray = true

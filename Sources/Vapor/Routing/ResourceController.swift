@@ -1,3 +1,5 @@
+import protocol Engine.ResponseRepresentable
+
 /**
     Organize your routing logic with a conformance of
     `ResourceController`. Controls group related route logic into

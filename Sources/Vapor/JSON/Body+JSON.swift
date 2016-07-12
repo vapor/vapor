@@ -1,3 +1,6 @@
+import enum Engine.HTTPBody
+import protocol Engine.HTTPBodyRepresentable
+
 extension HTTPBody {
     public init(_ json: JSON) throws {
         let bytes = try JSON.serialize(json)

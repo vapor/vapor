@@ -1,3 +1,4 @@
+import protocol Base.Extractable
 @_exported import Polymorphic
 
 extension Extractable where Wrapped == Polymorphic {

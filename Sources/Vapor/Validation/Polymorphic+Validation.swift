@@ -1,3 +1,5 @@
+import protocol Base.Extractable
+
 extension Polymorphic {
     /**
         Transform and validate a node
@@ -31,34 +33,6 @@ extension Polymorphic {
     ) throws -> Valid<T> {
         let value = try T.InputType.init(polymorphic: self)
         return try value.validated(by: validator)
-    }
-}
-
-/**
-    We can't generically extend optionals based on their contents being protocols concretely,
-    ie: where Wrapped == SomeProtocol
- 
-    This allows us to do so because extending protocol can use concrete generic constraints
-*/
-public protocol Extractable {
-
-    /**
-        The underlying type
-    */
-    associatedtype Wrapped
-
-    /**
-        Access the underlying value
-
-        - returns: the underlying value if exists
-    */
-    func extract() -> Wrapped?
-}
-
-extension Extractable where Wrapped == String {
-    var isNilOrEmpty: Bool {
-        guard let val = extract() else { return true }
-        return val.isEmpty
     }
 }
 
@@ -210,16 +184,5 @@ extension Extractable where Wrapped == [String : Polymorphic] {
         }
 
         return try mapped.validated(by: validator)
-    }
-}
-
-extension Optional: Extractable {
-    /**
-        Extract the underlying value if possible
-
-        - returns: a value if possible
-     */
-    public func extract() -> Wrapped? {
-        return self
     }
 }

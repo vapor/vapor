@@ -3,16 +3,8 @@ import XCTest
 
 class ResponseTests: XCTestCase {
     static let allTests = [
-       ("testRedirect", testRedirect),
        ("testCookiesSerialization", testCookiesSerialization)
     ]
-
-    func testRedirect() {
-        let url = "http://tanner.xyz"
-
-        let redirect = Response(redirect: url)
-        XCTAssert(redirect.headers["location"] == url, "Location header should be in headers")
-    }
 
     func testCookiesSerialization() {
         var cookies: Cookies = []

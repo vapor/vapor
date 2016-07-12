@@ -1,3 +1,6 @@
+import enum Engine.HTTPBody
+import class Engine.HTTPMessage
+
 extension HTTPMessage {
     public var json: JSON? {
         get {

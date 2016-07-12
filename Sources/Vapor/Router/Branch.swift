@@ -1,3 +1,5 @@
+import Base
+
 /**
     When routing requests, different branches will be established,
     in a linked list style stemming from their host and request method.
@@ -73,7 +75,7 @@ internal final class Branch {
         if let next = subBranches[key] {
             return next.handle(request: request, comps: comps)
         } else if let wildcard = subBranches["*"] {
-            request.parameters[wildcard.name] = percentDecoded(key.data)?.string
+            request.parameters[wildcard.name] = percentDecoded(key.bytes)?.string
             return wildcard.handle(request: request, comps: comps)
         } else {
             return nil

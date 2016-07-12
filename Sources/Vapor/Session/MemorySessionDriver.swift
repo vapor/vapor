@@ -1,4 +1,5 @@
 import libc
+import class Base.Lock
 
 /**
     The `MemorySessionDriver` stores session data

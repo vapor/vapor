@@ -1,3 +1,5 @@
+import Engine
+
 /**
     Any type that conforms to this protocol
     can be passed as a requirement to Vapor's

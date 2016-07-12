@@ -16,12 +16,9 @@ public final class Content {
 
     // MARK: Initialization
 
-    private weak var message: HTTPMessage?
     private var content: [ContentLoader] = []
 
-    internal init(_ message: HTTPMessage) {
-        self.message = message
-    }
+    public init() {}
 
     // Some closure weirdness to allow more complex capturing or lazy loading internally
 

@@ -1,3 +1,5 @@
+import class Engine.HTTPRequest
+
 public struct HTTPAccept {
     public let mediaType: String
     public let preference: Double

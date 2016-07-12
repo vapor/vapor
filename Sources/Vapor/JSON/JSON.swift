@@ -1,4 +1,6 @@
 import Jay
+import struct Base.Bytes
+import protocol Engine.ResponseRepresentable
 
 // Exporting type w/o forcing import
 public typealias JSON = C7.JSON

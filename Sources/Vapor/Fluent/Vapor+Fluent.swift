@@ -1,4 +1,5 @@
 import Fluent
+import protocol Base.Extractable
 
 public typealias Database = Fluent.Database
 

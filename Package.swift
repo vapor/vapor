@@ -7,9 +7,6 @@ exclude.append("Sources/Generator")
 
 var targets: [Target] = [
     Target(
-        name: "Vapor"
-    ),
-    Target(
         name: "Development",
         dependencies: [
             .Target(name: "Vapor")
@@ -22,7 +19,6 @@ var targets: [Target] = [
         ]
     ),
 ]
-
 #if !os(Linux)
 targets += [
   Target(
@@ -52,18 +48,12 @@ let package = Package(
 
         //Allows complex key path subscripts
         .Package(url: "https://github.com/qutheory/path-indexable.git", majorVersion: 0, minor: 2),
-
-        //Wrapper around pthreads
-        .Package(url: "https://github.com/ketzusaka/Strand.git", majorVersion: 1, minor: 5),
-
-        //Sockets, used by the built in HTTP server
-        .Package(url: "https://github.com/czechboy0/Socks.git", majorVersion: 0, minor: 8),
-
+        
         // Syntax for easily accessing values from generic data.
         .Package(url: "https://github.com/qutheory/polymorphic.git", majorVersion: 0, minor: 2),
 
-        // libc
-        .Package(url: "https://github.com/qutheory/libc.git", majorVersion: 0, minor: 1),
+        //Core vapor transport layer
+        .Package(url: "https://github.com/qutheory/engine.git", majorVersion: 0, minor: 1),
 
         // Console protocol and implementation for powering command line interface.
         .Package(url: "https://github.com/qutheory/console.git", majorVersion: 0, minor: 2)

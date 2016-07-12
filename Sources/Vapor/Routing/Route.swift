@@ -1,3 +1,5 @@
+import protocol Engine.ResponseRepresentable
+
 /**
     The route class that will be used to model the various paths
     the application can take

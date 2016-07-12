@@ -1,7 +1,7 @@
 import libc
 import Foundation
 import Socks
-import Strand
+import Engine
 
 public let VERSION = "0.14.0"
 
@@ -161,7 +161,7 @@ public class Application {
             ?? arguments.value(for: "workDir")
             ?? fileWorkDirectory()
             ?? "./"
-        self.workDir = workDir.finish("/")
+        self.workDir = workDir.finished(with: "/")
 
         let localizationProvided = localization
         let localization: Localization
@@ -351,7 +351,7 @@ extension Application {
                     let fileExtension = filePath.components(separatedBy: ".").last,
                     let type = mediaTypes[fileExtension]
                 {
-                    headers["Content-Type"] = type.description
+                    headers["Content-Type"] = type
                 }
 
                 return Response(status: .ok, headers: headers, body: .data(fileBody))
