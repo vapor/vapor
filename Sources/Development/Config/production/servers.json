@@ -1,0 +1,5 @@
+{
+	"heroku": {
+		"port": "$PORT"
+	}
+}
