@@ -17,16 +17,16 @@ class ValidationUniqueTests: XCTestCase {
 
     func testIntsArray() {
         let unique = [1, 2, 3, 4, 5, 6, 7, 8]
-        XCTAssertTrue(unique.passes(Unique))
+        XCTAssertTrue(unique.passes(Unique.self))
         let notUnique = unique + unique
-        XCTAssertFalse(notUnique.passes(Unique))
+        XCTAssertFalse(notUnique.passes(Unique.self))
     }
 
     func testStringArray() {
         let unique = ["a", "b", "c", "d", "e"]
-        XCTAssertTrue(unique.passes(Unique))
+        XCTAssertTrue(unique.passes(Unique.self))
         let notUnique = unique + unique
-        XCTAssertFalse(notUnique.passes(Unique))
+        XCTAssertFalse(notUnique.passes(Unique.self))
     }
 }
 
@@ -40,16 +40,16 @@ class ValidationInTests: XCTestCase {
 
     func testIntsArray() {
         let unique = [1, 2, 3, 4, 5, 6, 7, 8]
-        XCTAssertTrue(unique.passes(Unique))
+        XCTAssertTrue(unique.passes(Unique.self))
         let notUnique = unique + unique
-        XCTAssertFalse(notUnique.passes(Unique))
+        XCTAssertFalse(notUnique.passes(Unique.self))
     }
 
     func testStringArray() {
         let unique = ["a", "b", "c", "d", "e"]
-        XCTAssertTrue(unique.passes(Unique))
+        XCTAssertTrue(unique.passes(Unique.self))
         let notUnique = unique + unique
-        XCTAssertFalse(notUnique.passes(Unique))
+        XCTAssertFalse(notUnique.passes(Unique.self))
     }
 
     func testInArray() {
