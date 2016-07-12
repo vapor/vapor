@@ -3,7 +3,7 @@ import Foundation
 import Socks
 import Strand
 
-public let VERSION = "0.12"
+public let VERSION = "0.14.0"
 
 public typealias Droplet = Application
 
@@ -66,7 +66,7 @@ public class Application {
         Available Commands to use when starting
         the application.
     */
-    public var commands: [Command.Type]
+    public var commands: [Command]
 
     /**
          Send output and receive input from the console
@@ -141,15 +141,25 @@ public class Application {
         let arguments = arguments ?? NSProcessInfo.arguments()
         self.arguments = arguments
 
-        let console = consoleProvided ?? Terminal()
+        let console = consoleProvided ?? Terminal(arguments: arguments)
         self.console = console
 
         let log = ConsoleLogger(console: console)
         self.log = log
 
+        func fileWorkDirectory() -> String? {
+            let parts = #file.components(separatedBy: "/Packages/Vapor-")
+            guard parts.count == 2 else {
+                return nil
+            }
+
+            return parts.first
+        }
+
         let workDir = workDir
             ?? arguments.value(for: "workdir")
             ?? arguments.value(for: "workDir")
+            ?? fileWorkDirectory()
             ?? "./"
         self.workDir = workDir.finish("/")
 
@@ -222,9 +232,17 @@ public class Application {
             self.database = nil
         }
 
-        commands.append(Help.self)
-        commands.append(Serve.self)
-        commands.append(Prepare.self)
+        let prepare = Prepare(console: console, preparations: preparations, database: self.database)
+
+        let serve = Serve(console: console, prepare: prepare) {
+            try self.serve()
+        }
+
+        let version = VersionCommand(console: console)
+
+        commands.append(serve)
+        commands.append(prepare)
+        commands.append(version)
 
         restrictLogging(for: config.environment)
 
@@ -250,78 +268,54 @@ extension Application {
     }
 
     /**
-        Starts console
+        Runs the Droplet's commands, defaulting to serve.
     */
     @noreturn
     public func serve(_ closure: Serve.ServeFunction? = nil) {
         do {
-            let command = try loadCommand()
-
-            if let serveCommand = command as? Serve {
-                serveCommand.serve = closure
-            }
-
-            try command.run()
-            exit(0)
-        } catch let error as ExecutionError {
-            switch error {
-            case .insufficientArguments:
-                console.output("Insufficient arguments.", style: .error)
-            case .noCommandFound:
-                console.output("Command not recognized. Run 'help' for a list of available commands.", style: .error)
-            }
-        } catch let error as CommandError {
-            switch error {
-            case .insufficientArguments:
-                console.output("Insufficient arguments.", style: .error)
-            case .invalidArgument(let name):
-                console.output("Invalid argument name '\(name)'.", style: .error)
-            case .custom(let error):
-                console.output(error, style: .error)
-            }
-        } catch  {
-            console.output("Error: \(error)", style: .error)
+            try runCommands()
+        } catch CommandError.general(let error) {
+            console.output(error, style: .error)
+            exit(1)
+        } catch ConsoleError.help {
+            //
+        } catch ConsoleError.cancelled {
+            exit(2)
+        } catch ConsoleError.commandNotFound(let command) {
+            console.error("Error: ", newLine: false)
+            console.print("Command \"\(command)\" not found.")
+        } catch {
+            console.error("Error: ", newLine: false)
+            console.print("\(error)")
+            exit(1)
         }
-        exit(1)
+        exit(0)
     }
 
-    func loadCommand() throws -> Command {
-        // options prefixed w/ `--` are accessible through `app.config["app", "argument"]`
-        var iterator = self.arguments.filter { item in
-            return !item.hasPrefix("--")
-        }.makeIterator()
+    public func runCommands() throws {
+        var iterator = arguments.makeIterator()
 
-        _ = iterator.next() // pop location arg
-
-        let commandId: String
-        if let next = iterator.next() {
-            commandId = next
-        } else {
-            commandId = "serve"
-            console.output("No command supplied, defaulting to 'serve'.", style: .warning)
+        guard let executable = iterator.next() else {
+            throw CommandError.general("No executable.")
         }
 
-        let arguments = Array(iterator)
+        var args = Array(iterator)
 
-        for commandType in commands {
-            if commandType.id == commandId {
-                let command = commandType.init(app: self)
-                
-                let requiredArguments = command.dynamicType.signature.filter { signature in
-                    return signature is Argument
-                }
-
-                if arguments.count < requiredArguments.count {
-                    let signature = command.dynamicType.signature()
-                    console.output(signature)
-                    throw ExecutionError.insufficientArguments
-                }
-
-                return command
-            }
+        if !args.flag("help") && args.values.count == 0 {
+            console.warning("No command supplied, defaulting to serve...")
+            args.insert("serve", at: 0)
         }
 
-        throw ExecutionError.noCommandFound
+        try console.run(
+            executable: executable,
+            commands: commands.map { $0 as Runnable },
+            arguments: args,
+            help: [
+                "This command line interface is used to serve your application, prepare the database, and more.",
+                "Custom commands can be added by appending them to the Droplet's commands array.",
+                "Use --help on individual commands to learn more."
+            ]
+        )
     }
 }
 
