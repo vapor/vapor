@@ -17,10 +17,8 @@ extension Application {
             console.output("No servers.json configuration found.", style: .warning, newLine: true)
 
             let host = config["servers", "default", "host"].string
-                ?? config["app", "host"].string
                 ?? "0.0.0.0"
             let port = config["servers", "default", "port"].int
-                ?? config["app", "port"].int
                 ?? 8080
             let security = config["servers", "default", "securityLayer"].string
                 ?? config["app", "securityLayer"].string

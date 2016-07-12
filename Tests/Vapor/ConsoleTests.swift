@@ -15,12 +15,12 @@ class ConsoleTests: XCTestCase {
         let app = Application(console: console, arguments: ["/path/to/exe", "test-1"])
 
         app.commands = [
-            TestOneCommand.self
+            TestOneCommand(console: console)
         ]
 
         do {
-            try app.loadCommand().run()
-            XCTAssert(console.input() == "Test 1 Ran", "Command 1 did not run")
+            try app.runCommands()
+            XCTAssertEqual(console.input(), "Test 1 Ran", "Command 1 did not run")
         } catch {
             XCTFail("Command 1 failed: \(error)")
         }
@@ -30,20 +30,16 @@ class ConsoleTests: XCTestCase {
         let console = TestConsoleDriver()
         let app = Application(console: console, arguments: ["/path/to/exe", "test-2"])
 
+        let command = TestTwoCommand(console: console)
         app.commands = [
-            TestTwoCommand.self
+            command
         ]
 
-        let commandTwoSignature = TestTwoCommand.signature()
-
-        XCTAssert(commandTwoSignature == "test-2 <arg-1> {--opt-1} {--opt-2}", "Signature did not match")
-
         do {
-            try app.loadCommand().run()
+            try app.runCommands()
             XCTFail("Command 2 did not fail")
         } catch {
-            //
-            XCTAssert(console.input() == commandTwoSignature, "Did not print signature")
+            XCTAssert(console.input().contains("Usage: /path/to/exe test-2 <arg-1> [--opt-1] [--opt-2]"), "Did not print signature")
         }
     }
 
@@ -51,13 +47,14 @@ class ConsoleTests: XCTestCase {
         let console = TestConsoleDriver()
         let app = Application(console: console, arguments: ["/path/to/ext", "test-2", "123"])
 
+        let command = TestTwoCommand(console: console)
         app.commands = [
-            TestTwoCommand.self
+            command
         ]
 
         do {
-            try app.loadCommand().run()
-            XCTAssert(console.input() == "123", "Did not print 123")
+            try app.runCommands()
+            XCTAssertEqual(console.input(), "123", "Did not print 123")
         } catch {
             XCTFail("Command 2 failed to run: \(error)")
         }
@@ -68,12 +65,13 @@ class ConsoleTests: XCTestCase {
         let console = TestConsoleDriver()
         let app = Application(console: console, arguments: ["/path/to/ext", "test-2", "123", "--opt-1=abc"])
 
+        let command = TestTwoCommand(console: console)
         app.commands = [
-            TestTwoCommand.self
+            command
         ]
 
         do {
-            try app.loadCommand().run()
+            try app.runCommands()
             XCTAssert(console.input() == "123abc", "Did not print 123abc")
         } catch {
             XCTFail("Command 2 failed to run: \(error)")
@@ -82,24 +80,24 @@ class ConsoleTests: XCTestCase {
 
     func testDefaultServe() {
         final class TestServe: Command {
-            static let id: String = "serve"
-            let app: Application
+            let id: String = "serve"
+            let console: Console
             static var ran = false
 
-            init(app: Application) {
-                self.app = app
+            init(console: Console) {
+                self.console = console
             }
 
-            func run() {
+            func run(arguments: [String]) {
                 TestServe.ran = true
             }
         }
 
         let app = Application(arguments: ["/path/to/exec"])
-        app.commands = [TestServe.self]
+        app.commands = [TestServe(console: app.console)]
 
         do {
-            try app.loadCommand().run()
+            try app.runCommands()
             XCTAssert(TestServe.ran, "Serve did not default")
         } catch {
             XCTFail("Serve did not default: \(error)")
@@ -108,39 +106,39 @@ class ConsoleTests: XCTestCase {
 }
 
 final class TestOneCommand: Command {
-    static let id: String = "test-1"
-    let app: Application
+    let id: String = "test-1"
+    let console: Console
     var counter = 0
 
-    init(app: Application) {
-        self.app = app
+    init(console: Console) {
+        self.console = console
     }
 
-    func run() throws {
-        print("Test 1 Ran")
+    func run(arguments: [String]) throws {
+        console.print("Test 1 Ran")
     }
 }
 
 final class TestTwoCommand: Command {
-    static let id: String = "test-2"
-    let app: Application
+    let id: String = "test-2"
+    let console: Console
 
-    static let signature: [Signature] = [
-        Argument("arg-1"),
-        Option("opt-1"),
-        Option("opt-2")
+    let signature: [Argument] = [
+        ArgValue(name: "arg-1"),
+        Option(name: "opt-1"),
+        Option(name: "opt-2")
     ]
 
-    init(app: Application) {
-        self.app = app
+    init(console: Console) {
+        self.console = console
     }
 
-    func run() throws {
-        let arg1 = try argument("arg-1").string ?? ""
-        print(arg1)
+    func run(arguments: [String]) throws {
+        let arg1 = try value("arg-1", from: arguments).string ?? ""
+        console.print(arg1)
 
-        let opt1 = option("opt-1").string ?? ""
-        print(opt1)
+        let opt1 = arguments.option("opt-1").string ?? ""
+        console.print(opt1)
     }
 }
 
@@ -160,4 +158,19 @@ class TestConsoleDriver: Console {
         buffer = []
         return string
     }
+
+    func clear(_ clear: ConsoleClear) {
+
+    }
+
+    func execute(_ command: String) throws {
+
+    }
+
+    func subexecute(_ command: String, input: String) throws -> String {
+        return ""
+    }
+
+
+    let size: (width: Int, height: Int) = (0,0)
 }

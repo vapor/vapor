@@ -9,10 +9,10 @@ public typealias Preparation = Fluent.Preparation
 public typealias PreparationError = Fluent.PreparationError
 
 public typealias Query = Fluent.Query
-public typealias Value = Fluent.Value
+public typealias FluentValue = Fluent.Value
 public typealias Schema = Fluent.Schema
 
-extension Extractable where Wrapped == Value {
+extension Extractable where Wrapped == FluentValue {
     public var isNull: Bool {
         return extract()?.isNull ?? false
     }
