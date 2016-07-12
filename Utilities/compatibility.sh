@@ -21,6 +21,26 @@ OS=`uname`
 
 if [[ $OS == "Darwin" ]]; # macOS
 then
+	XCBVERSION=`xcodebuild -version`
+	if [[ $XCBVERSION != *$VALID_XCB* ]];
+	then
+		echo "⚠️  It looks like your Command Line Tools version is incorrect."
+		echo "Make sure Xcode > Preferences > Locations > Command Line Tools is set correctly."
+		echo "Correct: Xcode 8.0 ($VALID_XCB)"
+		echo "Current: $XCBVERSION"
+		echo ""
+	fi
+	
+	SWIFTLOC=`which swift`
+	SWIFTDESIRED="/usr/bin/swift" 
+	if [[ $SWIFTLOC != $SWIFTDESIRED ]];
+	then
+		echo "⚠️  It looks like your Swift install location has been modified."
+		echo "Correct: $SWIFTDESIRED"
+		echo "Current: $SWIFTLOC"
+		echo ""
+	fi
+
 	if [[ $SWIFTV == *$VALID_MAC* ]];
 	then
 		echo "✅  Compatible"
@@ -31,24 +51,6 @@ then
 		echo "Reason: Invalid Swift version" 
 		echo "Output must contain '$VALID_MAC'"
 		echo ""
-		XCBVERSION=`xcodebuild -version`
-		if [[ $XCBVERSION != *$VALID_XCB* ]];
-		then
-			echo "⚠️  It looks like your Command Line Tools version is incorrect."
-			echo "Make sure Xcode > Preferences > Locations > Command Line Tools is set correctly."
-			echo "Correct: Xcode 8.0 ($VALID_XCB)"
-			echo "Current: $XCBVERSION"
-			echo ""
-		fi
-		SWIFTLOC=`which swift`
-		SWIFTDESIRED="/usr/bin/swift" 
-		if [[ $SWIFTLOC != $SWIFTDESIRED ]];
-		then
-			echo "⚠️  It looks like your Swift install location has been modified."
-			echo "Correct: $SWIFTDESIRED"
-			echo "Current: $SWIFTLOC"
-			echo ""
-		fi
 		echo "Current 'swift -version' output:"
 		echo $SWIFTV
 		exit 1;

@@ -19,27 +19,20 @@ A Web Framework for Swift that works on iOS, OS X, and Ubuntu.
 
 Vapor is the first true web framework for Swift. It provides a beautifully expressive and easy to use foundation for your next website or API.
 
-This repository is the framework's source code. To view some sample projects, check out our list [here](/Documents/Projects.md).
+This repository is the framework's source code. To view some sample projects, check out our list [here](/Documents/PROJECTS.md).
 
-## 🚦 Current Environment
+## 🌏 Current Environment
 
-| Vapor |   Xcode  |    Swift    |
-|:-----:|:--------:|:-----------:|
-|0.14.x |8.0 Beta 2|3.0-PREVIEW-2|
+| Vapor |     Xcode    |    Swift    |
+|:-----:|:------------:|:-----------:|
+|0.14.x |8.0 Beta **2**|3.0-PREVIEW-2|
 
-Run the following command to print your Swift version.
+You can run the following script to verify your environment is correct.
 
 ```sh
-swift --version
-# Swift version 3.0 (<version>)
-# Target: x86_64-<os>
+# Verifies your environment is compatible with Vaopr 0.14.x
+curl -sL check.qutheory.io | bash
 ```
-
-The output **must** match the following. If you see a different version, Vapor will not compile.
-
-|      macOS         |      Linux        |
-|:------------------:|:-----------------:|
-|swiftlang-800.0.33.1|swift-3.0-PREVIEW-2|
 
 ## 🦄 Deploy
 
