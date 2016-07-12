@@ -138,9 +138,7 @@ public class Config {
         // check if value exists in Env
         if let string = value?.string where string.characters.first == "$" {
             let name = String(string.characters.dropFirst())
-            if let env = Env.get(name) {
-                return env
-            }
+            return Env.get(name) // will return nil if env variable not found
         }
 
         return value
