@@ -39,7 +39,7 @@ extension Route.Link: RouteBuilder {
 /**
     An organizational protocol that allows building of routes in separate files.
     
-    Add to your application using the add function:
+    Add to your droplet using the add function:
  
          app.add(UserRouteGroup.self)
  

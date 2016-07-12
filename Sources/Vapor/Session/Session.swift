@@ -1,6 +1,6 @@
 /**
     Use the Session class to store sensitive
-    information for individual users of your application
+    information for individual users of your droplet
     such as API keys or login tokens.
 
     Access the current Droplet's Sessions using

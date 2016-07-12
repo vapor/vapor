@@ -61,7 +61,7 @@ class DropletTests: XCTestCase {
         class TestProvider: Provider {
             var bootRan = false
 
-            func boot(with application: Droplet) {
+            func boot(with droplet: Droplet) {
                 bootRan = true
             }
 
@@ -83,7 +83,7 @@ class DropletTests: XCTestCase {
 
     /**
         Tests that Providers override other
-        init arguments to the application.
+        init arguments to the droplet.
     */
     func testProvidersOverride() {
         final class TestServerAlpha: Server {
@@ -111,7 +111,7 @@ class DropletTests: XCTestCase {
         }
 
         class TestProvider: Provider {
-            func boot(with application: Droplet) {}
+            func boot(with droplet: Droplet) {}
 
             var server: Server.Type?
 

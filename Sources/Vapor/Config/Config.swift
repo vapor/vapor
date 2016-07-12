@@ -52,7 +52,7 @@ public class Config {
     /**
         Creates an instance of `Config` with
         starting configurations.
-        The application is required to detect environment.
+        The droplet is required to detect environment.
     */
     public init(
         seed: JSON = [:],

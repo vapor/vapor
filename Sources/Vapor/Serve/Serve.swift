@@ -1,7 +1,7 @@
 import enum Engine.ServerError
 
 /**
-    Serves the application.
+    Serves the droplet.
 */
 public class Serve: Command {
     public typealias ServeFunction = () throws -> ()

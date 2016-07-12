@@ -5,7 +5,7 @@ import XCTest
     Working around linux testing bug
 */
 private class MSDTHelper {
-    static var application = Droplet()
+    static var droplet = Droplet()
     static var identifier = "baz"
 }
 
@@ -22,20 +22,20 @@ class MemorySessionDriverTests: XCTestCase {
 
     // MARK: - Obtaining Values
     func testValueForKey_onNonExistantSession_isNil() {
-        let subject = MemorySessions(hash: MSDTHelper.application.hash)
+        let subject = MemorySessions(hash: MSDTHelper.droplet.hash)
         _ = Session(identifier: MSDTHelper.identifier, sessions: subject)
         XCTAssertNil(subject.value(for: "foo", identifier: MSDTHelper.identifier))
     }
 
     func testValueForKey_onExistingSession_onNonExistingKey_isNil() {
-        let subject = MemorySessions(hash: MSDTHelper.application.hash)
+        let subject = MemorySessions(hash: MSDTHelper.droplet.hash)
         _ = Session(identifier: MSDTHelper.identifier, sessions: subject)
         subject.sessions = ["baz": [:]]
         XCTAssertNil(subject.value(for: "foo", identifier: MSDTHelper.identifier))
     }
 
     func testValueForKey_onExistingSession_onExistingKey_isKeyValue() {
-        let subject = MemorySessions(hash: MSDTHelper.application.hash)
+        let subject = MemorySessions(hash: MSDTHelper.droplet.hash)
         _ = Session(identifier: MSDTHelper.identifier, sessions: subject)
         subject.sessions = ["baz": ["foo":"bar"]]
         XCTAssertEqual(subject.value(for: "foo", identifier: MSDTHelper.identifier), "bar")
@@ -43,14 +43,14 @@ class MemorySessionDriverTests: XCTestCase {
 
     // MARK: - Setting Values
     func testSetValueForKey_setsValueCorrectly() {
-        let subject = MemorySessions(hash: MSDTHelper.application.hash)
+        let subject = MemorySessions(hash: MSDTHelper.droplet.hash)
         let _ = Session(identifier: MSDTHelper.identifier, sessions: subject)
         subject.set("foo", for: "bar", identifier: MSDTHelper.identifier)
         XCTAssertEqual(subject.sessions["baz"]?["bar"], "foo")
     }
 
     func testSetValueForKey_withExistingValue_overwritesValueCorrectly() {
-        let subject = MemorySessions(hash: MSDTHelper.application.hash)
+        let subject = MemorySessions(hash: MSDTHelper.droplet.hash)
         let _ = Session(identifier: MSDTHelper.identifier, sessions: subject)
         subject.sessions = ["baz":["bar":"foo"]]
         subject.set("frob", for: "bar", identifier: MSDTHelper.identifier)
@@ -58,7 +58,7 @@ class MemorySessionDriverTests: XCTestCase {
     }
 
     func testSetValueForKey_withExistingValue_toNilErasesValue() {
-        let subject = MemorySessions(hash: MSDTHelper.application.hash)
+        let subject = MemorySessions(hash: MSDTHelper.droplet.hash)
         let _ = Session(identifier: MSDTHelper.identifier, sessions: subject)
         subject.sessions = ["baz":["bar":"foo"]]
         subject.set(nil, for: "bar", identifier: MSDTHelper.identifier)
@@ -68,7 +68,7 @@ class MemorySessionDriverTests: XCTestCase {
     // MARK: - Destroying
 
     func testDestroySession_removesSession() {
-        let subject = MemorySessions(hash: MSDTHelper.application.hash)
+        let subject = MemorySessions(hash: MSDTHelper.droplet.hash)
         subject.sessions = ["baz":["bar":"foo"], "frob": [:]]
         let _ = Session(identifier: MSDTHelper.identifier, sessions: subject)
         subject.destroy(MSDTHelper.identifier)

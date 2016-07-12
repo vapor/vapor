@@ -8,7 +8,7 @@ extension Int: RequestContentSubscript {}
 /**
     The data received from the request in json body or url query
  
-    Can be extended by third party applications and middleware
+    Can be extended by third party droplets and middleware
 */
 public final class Content {
 

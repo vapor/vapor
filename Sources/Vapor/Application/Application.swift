@@ -44,7 +44,7 @@ public class Droplet {
     public let hash: Hash
 
     /**
-        The work directory of your application is
+        The work directory of your droplet is
         the directory in which your Resources, Public, etc
         folders are stored. This is normally `./` if
         you are running Vapor using `.build/xxx/App`
@@ -62,7 +62,7 @@ public class Droplet {
 
     /**
         Available Commands to use when starting
-        the application.
+        the droplet.
     */
     public var commands: [Command]
 
@@ -87,7 +87,7 @@ public class Droplet {
     }
 
     /**
-        The arguments passed to the application.
+        The arguments passed to the droplet.
     */
     public let arguments: [String]
 
@@ -309,7 +309,7 @@ extension Droplet {
             commands: commands.map { $0 as Runnable },
             arguments: args,
             help: [
-                "This command line interface is used to serve your application, prepare the database, and more.",
+                "This command line interface is used to serve your droplet, prepare the database, and more.",
                 "Custom commands can be added by appending them to the Droplet's commands array.",
                 "Use --help on individual commands to learn more."
             ]

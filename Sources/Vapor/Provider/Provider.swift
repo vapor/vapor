@@ -2,7 +2,7 @@ import Engine
 
 /**
     Providers allow external projects to be easily
-    integrated into a Vapor application.
+    integrated into a Vapor droplet.
 
     Simply append a dependencies provider to the Droplet's
     `providers` array.
@@ -14,31 +14,31 @@ public protocol Provider {
     /**
         Providers should use this function to do any setup or configuration necessary to provide
 
-        - parameter application: the application to which the provider will be providing
+        - parameter droplet: the droplet to which the provider will be providing
     */
-    func boot(with application: Droplet)
+    func boot(with droplet: Droplet)
 
     /**
         An optional `ServerDriver` Type to provide
-        to the application. Has a default 
+        to the droplet. Has a default 
         implementation of `nil`.
      
         `ServerDriver`s are passed as types since
         they are not initialized until the 
-        application starts.
+        droplet starts.
     */
     var server: Server.Type? { get }
 
     /**
         An optional `RouterDriver` to provide 
-        to the application. Has a default
+        to the droplet. Has a default
         implementation of `nil`.
     */
     var router: Router? { get }
 
     /**
         An optional `Session` to provide
-        to the application. Has a default
+        to the droplet. Has a default
         implementation of `nil`.
     */
     var sessions: Sessions? { get }
@@ -46,14 +46,14 @@ public protocol Provider {
 
     /**
         An optional `HashDriver` to provide
-        to the application. Has a default
+        to the droplet. Has a default
         implementation of `nil`.
      */
     var hash: Hash? { get }
 
     /**
         An optional `ConsoleDriver` to provide
-        to the application. Has a default
+        to the droplet. Has a default
         implementation of `nil`.
     */
     var console: Console? { get }
