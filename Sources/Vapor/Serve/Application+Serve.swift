@@ -5,12 +5,12 @@ extension Application {
         if let servers = config["servers"].object {
             var bootedServers = 0
             for (key, server) in servers {
-                guard let server = server.object else {
+                guard let _ = server.object else {
                     console.output("Invalid server configuration for \(key).", style: .error, newLine: true)
                     continue
                 }
 
-                try bootServer(config: server, name: key, isLastServer: bootedServers == servers.keys.count - 1)
+                try bootServer(name: key, isLastServer: bootedServers == servers.keys.count - 1)
                 bootedServers += 1
             }
         } else {
@@ -31,19 +31,21 @@ extension Application {
             }
 
             console.output(message, style: .info)
-            try server.start(host: host, port: port,
-                             securityLayer: securityLayer,
-                             responder: self,
-                             errors: self.serverErrors)
+            try server.start(
+                host: host, port: port,
+                securityLayer: securityLayer,
+                responder: self,
+                errors: self.serverErrors
+            )
 
         }
     }
 
-    func bootServer(config: [String: Polymorphic], name: String, isLastServer: Bool) throws {
-        let securityLayer: SecurityLayer = config["securityLayer"].string == "tls" ? .tls : .none
+    func bootServer(name: String, isLastServer: Bool) throws {
+        let securityLayer: SecurityLayer = config["servers", name, "securityLayer"].string == "tls" ? .tls : .none
 
-        let host = config["host"].string ?? "0.0.0.0"
-        let port = config["port"].int ?? 8080
+        let host = config["servers", name, "host"].string ?? "0.0.0.0"
+        let port = config["servers", name, "port"].int ?? 8080
 
         let runInBackground = !isLastServer
 
