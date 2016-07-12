@@ -1,8 +1,10 @@
 #!/bin/sh
 
 SWIFTC=`which swift`
+
 VALID_MAC="swiftlang-800.0.33.1"
 VALID_LINUX="swift-3.0-PREVIEW-2"
+VALID_XCB="8S162m"
 
 if [[ $SWIFTC == "" ]];
 then
@@ -29,9 +31,24 @@ then
 		echo "Reason: Invalid Swift version" 
 		echo "Output must contain '$VALID_MAC'"
 		echo ""
-		echo "Make sure Xcode > Preferences > Locations > Command Line Tools is set to:"
-		echo "Xcode 8.0 (8S162m)"
-		echo ""
+		XCBVERSION=`xcodebuild -version`
+		if [[ $XCBVERSION != *$VALID_XCB* ]];
+		then
+			echo "⚠️  It looks like your Command Line Tools version is incorrect."
+			echo "Make sure Xcode > Preferences > Locations > Command Line Tools is set correctly."
+			echo "Correct: Xcode 8.0 ($VALID_XCB)"
+			echo "Current: $XCBVERSION"
+			echo ""
+		fi
+		SWIFTLOC=`which swift`
+		SWIFTDESIRED="/usr/bin/swift" 
+		if [[ $SWIFTLOC != $SWIFTDESIRED ]];
+		then
+			echo "⚠️  It looks like your Swift install location has been modified."
+			echo "Correct: $SWIFTDESIRED"
+			echo "Current: $SWIFTLOC"
+			echo ""
+		fi
 		echo "Current 'swift -version' output:"
 		echo $SWIFTV
 		exit 1;
