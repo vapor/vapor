@@ -4,7 +4,7 @@ import XCTest
 @testable import VaporTestSuite
 
 XCTMain([
-    testCase(ApplicationTests.allTests),
+    testCase(DropletTests.allTests),
     testCase(ConfigTests.allTests),
     testCase(ConsoleTests.allTests),
     testCase(ContentTests.allTests),
