@@ -1,3 +1,5 @@
+import protocol Base.Extractable
+
 extension Polymorphic {
     /**
         Transform and validate a node

@@ -1,3 +1,5 @@
+import protocol Engine.ResponseRepresentable
+
 /**
     Loads and renders a file from the `Resources` folder
     in the Application's work directory.

@@ -1,3 +1,5 @@
+import Engine
+
 /**
     Providers allow external projects to be easily
     integrated into a Vapor application.

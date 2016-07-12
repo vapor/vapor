@@ -1,3 +1,5 @@
+import enum Engine.HTTPBody
+
 extension Response {
     /**
         Convenience Initializer

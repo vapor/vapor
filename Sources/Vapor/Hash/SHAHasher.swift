@@ -1,5 +1,6 @@
 import HMAC
 import SHA2
+import struct Base.Bytes
 
 /**
     Create SHA + HMAC hashes with the

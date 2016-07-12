@@ -1,3 +1,5 @@
+import class Engine.HTTPResponse
+
 extension HTTPResponse {
     public var data: Content {
         if let data = storage["data"] as? Content {

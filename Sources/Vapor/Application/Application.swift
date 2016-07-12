@@ -1,7 +1,7 @@
 import libc
 import Foundation
 import Socks
-import Strand
+import Engine
 
 public let VERSION = "0.12"
 

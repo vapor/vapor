@@ -1,4 +1,5 @@
 import Foundation
+import Base
 
 extension StructuredData {
     public init(formURLEncoded data: Bytes) {
