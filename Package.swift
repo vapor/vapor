@@ -1,5 +1,36 @@
 import PackageDescription
 
+var exclude: [String] = []
+#if os(Linux)
+exclude.append("Sources/Generator")
+#endif
+
+var targets: [Target] = [
+    Target(
+        name: "Vapor"
+    ),
+    Target(
+        name: "Development",
+        dependencies: [
+            .Target(name: "Vapor")
+        ]
+    ),
+    Target(
+        name: "Performance",
+        dependencies: [
+            .Target(name: "Vapor")
+        ]
+    ),
+]
+
+#if !os(Linux)
+targets += [
+  Target(
+      name: "Generator"
+  )
+]
+#endif
+
 let package = Package(
     name: "Vapor",
     dependencies: [
@@ -34,29 +65,6 @@ let package = Package(
         // libc
         .Package(url: "https://github.com/qutheory/libc.git", majorVersion: 0, minor: 1)
     ],
-    exclude: [
-        "XcodeProject",
-        "Generator",
-        "Development"
-    ],
-    targets: [
-        Target(
-            name: "Vapor"
-        ),
-        Target(
-            name: "Development",
-            dependencies: [
-                .Target(name: "Vapor")
-            ]
-        ),
-        Target(
-            name: "Performance",
-            dependencies: [
-                .Target(name: "Vapor")
-            ]
-        ),
-        Target(
-            name: "Generator"
-        )
-    ]
+    exclude: exclude,
+    targets: targets
 )
