@@ -66,7 +66,7 @@ extension RouteBuilder {
     }
 }
 
-extension Application: RouteBuilder {
+extension Droplet: RouteBuilder {
     /**
         Adds a route handler for an HTTP request using a given HTTP verb at a given
         path. The provided handler will be ran whenever the path is requested with

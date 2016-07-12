@@ -12,7 +12,7 @@ class ConsoleTests: XCTestCase {
 
     func testCommandRun() {
         let console = TestConsoleDriver()
-        let app = Application(console: console, arguments: ["/path/to/exe", "test-1"])
+        let app = Droplet(console: console, arguments: ["/path/to/exe", "test-1"])
 
         app.commands = [
             TestOneCommand(console: console)
@@ -28,7 +28,7 @@ class ConsoleTests: XCTestCase {
 
     func testCommandInsufficientArgs() {
         let console = TestConsoleDriver()
-        let app = Application(console: console, arguments: ["/path/to/exe", "test-2"])
+        let app = Droplet(console: console, arguments: ["/path/to/exe", "test-2"])
 
         let command = TestTwoCommand(console: console)
         app.commands = [
@@ -45,7 +45,7 @@ class ConsoleTests: XCTestCase {
 
     func testCommandFetchArgs() {
         let console = TestConsoleDriver()
-        let app = Application(console: console, arguments: ["/path/to/ext", "test-2", "123"])
+        let app = Droplet(console: console, arguments: ["/path/to/ext", "test-2", "123"])
 
         let command = TestTwoCommand(console: console)
         app.commands = [
@@ -63,7 +63,7 @@ class ConsoleTests: XCTestCase {
 
     func testCommandFetchOptions() {
         let console = TestConsoleDriver()
-        let app = Application(console: console, arguments: ["/path/to/ext", "test-2", "123", "--opt-1=abc"])
+        let app = Droplet(console: console, arguments: ["/path/to/ext", "test-2", "123", "--opt-1=abc"])
 
         let command = TestTwoCommand(console: console)
         app.commands = [
@@ -93,7 +93,7 @@ class ConsoleTests: XCTestCase {
             }
         }
 
-        let app = Application(arguments: ["/path/to/exec"])
+        let app = Droplet(arguments: ["/path/to/exec"])
         app.commands = [TestServe(console: app.console)]
 
         do {

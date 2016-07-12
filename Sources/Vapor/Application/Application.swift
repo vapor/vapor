@@ -5,9 +5,7 @@ import Engine
 
 public let VERSION = "0.14.0"
 
-public typealias Droplet = Application
-
-public class Application {
+public class Droplet {
     /**
         The router driver is responsible
         for returning registered `Route` handlers
@@ -102,7 +100,7 @@ public class Application {
     public let log: Log
 
     /**
-        Initialize the Application.
+        Initialize the Droplet.
     */
     public init(
         workDir: String? = nil,
@@ -262,7 +260,7 @@ public class Application {
     }
 }
 
-extension Application {
+extension Droplet {
     enum ExecutionError: ErrorProtocol {
         case insufficientArguments, noCommandFound
     }
@@ -332,7 +330,7 @@ extension Sequence where Iterator.Element == String {
     }
 }
 
-extension Application {
+extension Droplet {
     // TODO: Can this be middleware?
     func checkFileSystem(for request: Request) -> Request.Handler? {
         // Check in file system
@@ -366,7 +364,7 @@ extension Application {
     }
 }
 
-extension Application {
+extension Droplet {
     public func add(_ middleware: Middleware...) {
         middleware.forEach { globalMiddleware.append($0) }
     }

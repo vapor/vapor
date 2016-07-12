@@ -3,8 +3,6 @@
     will get the requesting application passed
     as an initialization parameter.
 */
-public protocol ApplicationInitializable {
-    init(droplet: Application)
+public protocol DropletInitializable {
+    init(droplet: Droplet)
 }
-
-public typealias DropletInitializable = ApplicationInitializable

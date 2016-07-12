@@ -17,7 +17,7 @@ class HashTests: XCTestCase {
         let config = try Config(seed: JSON([
             "key": defaultKey
         ]))
-        let app = Application(config: config)
+        let app = Droplet(config: config)
         let result = app.hash.make(string)
         XCTAssert(defaultExpected == result, "Hash did not match")
 

@@ -16,7 +16,7 @@ class TypedRouteTests: XCTestCase {
 
     func testRouting() {
 
-        let app = Application()
+        let app = Droplet()
 
 
         app.get("users", Int.self) { request, userId in

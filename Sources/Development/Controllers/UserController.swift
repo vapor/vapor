@@ -1,6 +1,6 @@
 import Vapor
 
-class UserController: Resource, ApplicationInitializable {
+class UserController: Resource, DropletInitializable {
     required init(droplet: Droplet) {
         droplet.console.output("User controller created")
 

@@ -21,7 +21,7 @@ class RouteTests: XCTestCase {
 
     func testRoute() {
 
-        let app = Application()
+        let app = Droplet()
 
         app.get("foo") { request in
             return ""
@@ -37,7 +37,7 @@ class RouteTests: XCTestCase {
 
 
     func testRouteScopedPrefix() {
-        let app = Application()
+        let app = Droplet()
 
         app.grouped("group/path") { group in
             group.get("1") { request in
@@ -54,7 +54,7 @@ class RouteTests: XCTestCase {
     }
 
     func testNestedRouteScopedPrefixPopsCorrectly() {
-        let app = Application()
+        let app = Droplet()
 
         app.grouped("group") { group in
             group.grouped("subgroup") { subgroup in
@@ -73,7 +73,7 @@ class RouteTests: XCTestCase {
     }
 
 	func testNestedRouteMiddlewareScopedPrefixPopsCorrectly() {
-		let app = Application()
+		let app = Droplet()
 
 		app.grouped("group") { group in
 			group.grouped("subgroup") { subgroup in
@@ -89,7 +89,7 @@ class RouteTests: XCTestCase {
 	}
 
     func testRouteAbort() throws {
-        let app = Application()
+        let app = Droplet()
 
         app.get("400") { request in
             print("from 400")

@@ -27,7 +27,7 @@ extension String: StringInitializable {
     }
 }
 
-extension Application {
+extension Droplet {
     /**
         Creates a route for all HTTP methods.
         `get`, `post`, `put`, `patch`, and `delete`.
@@ -116,7 +116,7 @@ extension Application {
      */
     public final func resource<
         R: Resource
-        where R: ApplicationInitializable
+        where R: DropletInitializable
     >(
         _ path: String,
         _ controller: R.Type
@@ -144,7 +144,7 @@ extension Application {
     }
 
     /**
-        Adds a route handled by a type that can be initialized with an `Application`.
+        Adds a route handled by a type that can be initialized with an `Droplet`.
         This method is useful if you have a controller and would like to add an action
         that is not a common REST action.
 
@@ -156,7 +156,7 @@ extension Application {
         - parameter path: The HTTP path that the action can run at.
         - parameter action: The curried action to run on the provided type.
      */
-    public final func add<ActionController: ApplicationInitializable>(
+    public final func add<ActionController: DropletInitializable>(
         _ method: Method,
         path: String,
         action: (ActionController) -> (Request) throws -> ResponseRepresentable) {

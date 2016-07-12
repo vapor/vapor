@@ -11,7 +11,7 @@ var workDir: String {
 }
 #endif
 
-let app = Application(workDir: workDir)
+let app = Droplet(workDir: workDir)
 let 😀 = Response(status: .ok)
 
 //MARK: Basic

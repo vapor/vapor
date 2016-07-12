@@ -2,7 +2,7 @@ import protocol Engine.ResponseRepresentable
 
 /**
     Loads and renders a file from the `Resources` folder
-    in the Application's work directory.
+    in the Droplet's work directory.
 */
 public class View {
     ///Currently applied RenderDrivers
@@ -50,11 +50,11 @@ extension View: ResponseRepresentable {
     }
 }
 
-///Adds convenience method to Application to create a view
-extension Application {
+///Adds convenience method to Droplet to create a view
+extension Droplet {
 
     /**
-        Views directory relative to Application.resourcesDir
+        Views directory relative to Droplet.resourcesDir
     */
     public var viewsDir: String {
         return resourcesDir + "Views/"

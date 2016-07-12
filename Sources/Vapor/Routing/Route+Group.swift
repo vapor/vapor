@@ -3,7 +3,7 @@ extension Route {
         An intermediary object used to group routes by middleware and leading paths
     */
     public struct Link {
-        /// The parent to forward requests -- intended to ultimately be Application
+        /// The parent to forward requests -- intended to ultimately be Droplet
         public let parent: RouteBuilder
 
         /// The leading path to prefix ahead of additional routing

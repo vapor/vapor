@@ -1,6 +1,6 @@
 import Vapor
 
-let app = Application()
+let app = Droplet()
 
 app.get("plaintext") { request in
     return "Hello, world"

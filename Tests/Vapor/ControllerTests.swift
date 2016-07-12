@@ -1,9 +1,9 @@
 import XCTest
 @testable import Vapor
 
-private class TestController: ApplicationInitializable, Resource {
+private class TestController: DropletInitializable, Resource {
 
-    required init(droplet: Application) { }
+    required init(droplet: Droplet) { }
 
     var lock: (
         index: Int,
@@ -87,12 +87,12 @@ class ControllerTests: XCTestCase {
         ("testController", testController),
         ("testControllerActionRouting_withFactory", testControllerActionRouting_withFactory),
         ("testControllerActionRouting_withDefaultInitializable", testControllerActionRouting_withDefaultInitializable),
-        ("testControllerActionRouting_withApplicationInitializable", testControllerActionRouting_withApplicationInitializable),
+        ("testControllerActionRouting_withDropletInitializable", testControllerActionRouting_withDropletInitializable),
         ("testControllerMethodsHit", testControllerMethodsHit)
     ]
 
     func testController() throws {
-        let app = Application()
+        let app = Droplet()
 
         let instance = TestController(droplet: app)
         app.resource("foo", makeControllerWith: { return instance })
@@ -112,7 +112,7 @@ class ControllerTests: XCTestCase {
 
     func testControllerActionRouting_withFactory() throws {
         TestActionController.helloRunCount = 0
-        let app = Application()
+        let app = Droplet()
 
         app.add(.get, path: "/hello", action: TestActionController.hello) { TestActionController(person: "Tanner") }
 
@@ -128,7 +128,7 @@ class ControllerTests: XCTestCase {
 
     func testControllerActionRouting_withDefaultInitializable() throws {
         TestActionController.helloRunCount = 0
-        let app = Application()
+        let app = Droplet()
 
         app.add(.get, path: "/hello", action: TestActionController.hello)
 
@@ -142,10 +142,10 @@ class ControllerTests: XCTestCase {
         XCTAssertEqual(TestActionController.helloRunCount, 1)
     }
 
-    func testControllerActionRouting_withApplicationInitializable() throws {
+    func testControllerActionRouting_withDropletInitializable() throws {
         TestActionController.helloRunCount = 0
 
-        let app = Application()
+        let app = Droplet()
 
         app.add(.get, path: "/hello", action: TestActionController.hello)
 
@@ -161,7 +161,7 @@ class ControllerTests: XCTestCase {
 
 
     func testControllerMethodsHit() throws {
-        let app = Application()
+        let app = Droplet()
         // Need single instance to test
         let testInstance = TestController(droplet: app)
         let factory: (Void) -> TestController = { print("blahblah : \(testInstance)"); return testInstance }

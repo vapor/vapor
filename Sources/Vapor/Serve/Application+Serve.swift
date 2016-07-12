@@ -1,7 +1,7 @@
 import Base
 import Engine
 
-extension Application {
+extension Droplet {
     func serve() throws {
         if let servers = config["servers"].object {
             var bootedServers = 0

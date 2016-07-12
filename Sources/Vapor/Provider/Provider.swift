@@ -4,11 +4,11 @@ import Engine
     Providers allow external projects to be easily
     integrated into a Vapor application.
 
-    Simply append a dependencies provider to the Application's
+    Simply append a dependencies provider to the Droplet's
     `providers` array.
 
     The Provider should take care of setting up any
-    necessary configurations on itself and the Application.
+    necessary configurations on itself and the Droplet.
 */
 public protocol Provider {
     /**
@@ -16,7 +16,7 @@ public protocol Provider {
 
         - parameter application: the application to which the provider will be providing
     */
-    func boot(with application: Application)
+    func boot(with application: Droplet)
 
     /**
         An optional `ServerDriver` Type to provide

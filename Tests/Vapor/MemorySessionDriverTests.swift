@@ -5,7 +5,7 @@ import XCTest
     Working around linux testing bug
 */
 private class MSDTHelper {
-    static var application = Application()
+    static var application = Droplet()
     static var identifier = "baz"
 }
 

@@ -47,7 +47,7 @@ class SessionTests: XCTestCase {
     }
 
     func testIdentifierCreation() throws {
-        let app = Application()
+        let app = Droplet()
 
         app.get("cookie") { request in
             request.session?["hi"] = "test"
@@ -78,7 +78,7 @@ class SessionTests: XCTestCase {
 }
 
 private class TestDriver: Sessions {
-    var app = Application()
+    var app = Droplet()
 
     enum Action {
         case ValueFor(key: String, identifier: String)

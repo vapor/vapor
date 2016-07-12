@@ -9,7 +9,7 @@ class EnvironmentTests: XCTestCase {
     ]
 
     func testEnvironment() {
-        let app = Application()
+        let app = Droplet()
         XCTAssert(app.config.environment == .development, "Incorrect environment: \(app.config.environment)")
     }
 
@@ -20,7 +20,7 @@ class EnvironmentTests: XCTestCase {
 
     func testInEnvironment() throws {
         let config = try Config(environment: .custom("xctest"))
-        let app = Application(config: config)
+        let app = Droplet(config: config)
         XCTAssert([.custom("xctest")].contains(app.config.environment), "Environment not correctly detected: \(app.config.environment)")
     }
 }

@@ -1,7 +1,7 @@
 import XCTest
 @testable import Vapor
 
-class ApplicationTests: XCTestCase {
+class DropletTests: XCTestCase {
     static let allTests = [
         ("testMediaType", testMediaType),
         ("testProviders", testProviders),
@@ -20,7 +20,7 @@ class ApplicationTests: XCTestCase {
         headers returned.
     */
     func testMediaType() throws {
-        let app = Application(workDir: workDir)
+        let app = Droplet(workDir: workDir)
 
         let request = try Request(method: .get, uri: "/styles/app.css")
 
@@ -42,7 +42,7 @@ class ApplicationTests: XCTestCase {
     /**
         Tests to make sure Providers
         are properly overriding properties
-        on the Application and that the boot
+        on the Droplet and that the boot
         method is being called.
     */
     func testProviders() {
@@ -61,7 +61,7 @@ class ApplicationTests: XCTestCase {
         class TestProvider: Provider {
             var bootRan = false
 
-            func boot(with application: Application) {
+            func boot(with application: Droplet) {
                 bootRan = true
             }
 
@@ -73,12 +73,12 @@ class ApplicationTests: XCTestCase {
         }
 
         let provider = TestProvider()
-        let app = Application(providers: [
+        let app = Droplet(providers: [
             provider
         ])
 
         XCTAssert(app.server == TestServer.self, "Provider did not provide TestServer")
-        XCTAssert(provider.bootRan == true, "Application did not boot provider")
+        XCTAssert(provider.bootRan == true, "Droplet did not boot provider")
     }
 
     /**
@@ -111,7 +111,7 @@ class ApplicationTests: XCTestCase {
         }
 
         class TestProvider: Provider {
-            func boot(with application: Application) {}
+            func boot(with application: Droplet) {}
 
             var server: Server.Type?
 
@@ -122,7 +122,7 @@ class ApplicationTests: XCTestCase {
 
         let provider = TestProvider()
 
-        let app = Application(server: TestServerBeta.self, providers: [
+        let app = Droplet(server: TestServerBeta.self, providers: [
             provider
         ])
 

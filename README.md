@@ -23,31 +23,23 @@ This repository is the framework's source code. To view some sample projects, ch
 
 ## 🚦 Current Environment
 
-| Vapor | Xcode | Swift |
-|:-:|:-:|:-:|
-|0.13.x|8.0 Beta|DEVELOPMENT-SNAPSHOT-2016-06-20-a|
+| Vapor |   Xcode  |    Swift    |
+|:-----:|:--------:|:-----------:|
+|0.14.x |8.0 Beta 2|3.0-PREVIEW-2|
 
-<p align="center"><img src="warning.png" alt="Drawing" width="50%"></p>
+Run the following command to print your Swift version.
 
-There have been many issues associated w/ Xcode 8 and transitioning to new tools. If you get the following error:
-
-> <unknown>:0: error: Swift does not support the SDK 'MacOSX10.11.sdk'`
-
-Please consult the following [Q & A](http://stackoverflow.com/questions/38296145/vapor-web-framework-error-swift-does-not-support-the-sdk-macosx10-11-sdk) or follow below.
-
-<b>Before continuing make sure that you have completely opened Xcode 8 at least once.</b>
-
-Run the following command:
-
-```Swift
-sudo xcode-select -s /Applications/Xcode-beta.app/
+```sh
+swift --version
+# Swift version 3.0 (<version>)
+# Target: x86_64-<os>
 ```
 
-> NOTE: In above example, `Xcode-beta` is expected to be the name of your beta. If you change the names to something like `Xcode-beta2`, replace above. In occasional situations, users have had to do `-s /Applications/Xcode-beta.app/Contents/Developer`
+The output **must** match the following. If you see a different version, Vapor will not compile.
 
-This will tell your system to use the `Xcode-beta` tools which support latest Swift 3.
-
-If you still have problems, visit the [`#help`](http://slack.qutheory.io) channel in [our slack](http://slack.qutheory.io)
+|      macOS         |      Linux        |
+|:------------------:|:-----------------:|
+|swiftlang-800.0.33.1|swift-3.0-PREVIEW-2|
 
 ## 🦄 Deploy
 

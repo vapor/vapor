@@ -3,7 +3,7 @@
     information for individual users of your application
     such as API keys or login tokens.
 
-    Access the current Application's Sessions using
+    Access the current Droplet's Sessions using
     `app.sessions`.
 */
 public class Session {
