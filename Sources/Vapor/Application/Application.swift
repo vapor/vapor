@@ -47,7 +47,7 @@ public class Droplet {
         The work directory of your droplet is
         the directory in which your Resources, Public, etc
         folders are stored. This is normally `./` if
-        you are running Vapor using `.build/xxx/App`
+        you are running Vapor using `.build/xxx/drop`
     */
     public let workDir: String
 

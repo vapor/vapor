@@ -4,7 +4,7 @@
     such as API keys or login tokens.
 
     Access the current Droplet's Sessions using
-    `app.sessions`.
+    `drop.sessions`.
 */
 public class Session {
 

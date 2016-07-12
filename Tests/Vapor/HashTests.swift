@@ -13,12 +13,12 @@ class HashTests: XCTestCase {
         let defaultExpected = "97ce9a45eaf0b1ceafc3bba00dfec047526386bbd69241e4a4f0c9fde7c638ea"
         let defaultKey = "123"
 
-        //test app facade
+        //test drop facade
         let config = try Config(seed: JSON([
             "key": defaultKey
         ]))
-        let app = Droplet(config: config)
-        let result = app.hash.make(string)
+        let drop = Droplet(config: config)
+        let result = drop.hash.make(string)
         XCTAssert(defaultExpected == result, "Hash did not match")
 
         //test Hash by itself

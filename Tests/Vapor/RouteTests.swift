@@ -21,25 +21,25 @@ class RouteTests: XCTestCase {
 
     func testRoute() {
 
-        let app = Droplet()
+        let drop = Droplet()
 
-        app.get("foo") { request in
+        drop.get("foo") { request in
             return ""
         }
 
-        app.post("bar") { request in
+        drop.post("bar") { request in
             return ""
         }
 
-        assertRouteExists(at: "foo", method: .get, host: "*", inRoutes: app.routes)
-        assertRouteExists(at: "bar", method: .post, host: "*", inRoutes: app.routes)
+        assertRouteExists(at: "foo", method: .get, host: "*", inRoutes: drop.routes)
+        assertRouteExists(at: "bar", method: .post, host: "*", inRoutes: drop.routes)
     }
 
 
     func testRouteScopedPrefix() {
-        let app = Droplet()
+        let drop = Droplet()
 
-        app.grouped("group/path") { group in
+        drop.grouped("group/path") { group in
             group.get("1") { request in
                 return ""
             }
@@ -49,14 +49,14 @@ class RouteTests: XCTestCase {
             }
         }
 
-        assertRouteExists(at: "group/path/1", method: .get, host: "*", inRoutes: app.routes)
-        assertRouteExists(at: "group/path/2", method: .options, host: "*", inRoutes: app.routes)
+        assertRouteExists(at: "group/path/1", method: .get, host: "*", inRoutes: drop.routes)
+        assertRouteExists(at: "group/path/2", method: .options, host: "*", inRoutes: drop.routes)
     }
 
     func testNestedRouteScopedPrefixPopsCorrectly() {
-        let app = Droplet()
+        let drop = Droplet()
 
-        app.grouped("group") { group in
+        drop.grouped("group") { group in
             group.grouped("subgroup") { subgroup in
                 subgroup.get("1") { request in
                     return ""
@@ -68,14 +68,14 @@ class RouteTests: XCTestCase {
             }
         }
 
-        assertRouteExists(at: "group/subgroup/1", method: .get, host: "*", inRoutes: app.routes)
-        assertRouteExists(at: "group/2", method: .options, host: "*", inRoutes: app.routes)
+        assertRouteExists(at: "group/subgroup/1", method: .get, host: "*", inRoutes: drop.routes)
+        assertRouteExists(at: "group/2", method: .options, host: "*", inRoutes: drop.routes)
     }
 
 	func testNestedRouteMiddlewareScopedPrefixPopsCorrectly() {
-		let app = Droplet()
+		let drop = Droplet()
 
-		app.grouped("group") { group in
+		drop.grouped("group") { group in
 			group.grouped("subgroup") { subgroup in
 				subgroup.grouped(TestMiddleware()) { (middlewareGroup) in
 					middlewareGroup.get("1") { request in
@@ -85,19 +85,19 @@ class RouteTests: XCTestCase {
 			}
 		}
 
-		assertRouteExists(at: "group/subgroup/1", method: .get, host: "*", inRoutes: app.routes)
+		assertRouteExists(at: "group/subgroup/1", method: .get, host: "*", inRoutes: drop.routes)
 	}
 
     func testRouteAbort() throws {
-        let app = Droplet()
+        let drop = Droplet()
 
-        app.get("400") { request in
+        drop.get("400") { request in
             print("from 400")
             throw Abort.badRequest
         }
 
         let request = try Request(method: .get, path: "400")
-        guard var handler = app.router.route(request) else {
+        guard var handler = drop.router.route(request) else {
             XCTFail("No handler found")
             return
         }

@@ -41,11 +41,11 @@ extension Route.Link: RouteBuilder {
     
     Add to your droplet using the add function:
  
-         app.add(UserRouteGroup.self)
+         drop.add(UserRouteGroup.self)
  
     Or to nest further:
  
-         app.add("special-user", UserRouteGroup.self)
+         drop.add("special-user", UserRouteGroup.self)
  
     Example:
  

@@ -92,13 +92,13 @@ class ControllerTests: XCTestCase {
     ]
 
     func testController() throws {
-        let app = Droplet()
+        let drop = Droplet()
 
-        let instance = TestController(droplet: app)
-        app.resource("foo", makeControllerWith: { return instance })
+        let instance = TestController(droplet: drop)
+        drop.resource("foo", makeControllerWith: { return instance })
 
         let fooIndex = try Request(method: .get, path: "foo")
-        if let handler = app.router.route(fooIndex) {
+        if let handler = drop.router.route(fooIndex) {
             do {
                 let _ = try handler.respond(to: fooIndex)
                 XCTAssert(instance.lock.index == 1, "foo.index Lock not correct")
@@ -112,12 +112,12 @@ class ControllerTests: XCTestCase {
 
     func testControllerActionRouting_withFactory() throws {
         TestActionController.helloRunCount = 0
-        let app = Droplet()
+        let drop = Droplet()
 
-        app.add(.get, path: "/hello", action: TestActionController.hello) { TestActionController(person: "Tanner") }
+        drop.add(.get, path: "/hello", action: TestActionController.hello) { TestActionController(person: "Tanner") }
 
         let request = try Request(method: .get, path: "hello")
-        guard let handler = app.router.route(request) else {
+        guard let handler = drop.router.route(request) else {
             XCTFail("No handler found for TestActionController.hello")
             return
         }
@@ -128,12 +128,12 @@ class ControllerTests: XCTestCase {
 
     func testControllerActionRouting_withDefaultInitializable() throws {
         TestActionController.helloRunCount = 0
-        let app = Droplet()
+        let drop = Droplet()
 
-        app.add(.get, path: "/hello", action: TestActionController.hello)
+        drop.add(.get, path: "/hello", action: TestActionController.hello)
 
         let request = try Request(method: .get, path: "hello")
-        guard let handler = app.router.route(request) else {
+        guard let handler = drop.router.route(request) else {
             XCTFail("No handler found for TestActionController.hello")
             return
         }
@@ -145,12 +145,12 @@ class ControllerTests: XCTestCase {
     func testControllerActionRouting_withDropletInitializable() throws {
         TestActionController.helloRunCount = 0
 
-        let app = Droplet()
+        let drop = Droplet()
 
-        app.add(.get, path: "/hello", action: TestActionController.hello)
+        drop.add(.get, path: "/hello", action: TestActionController.hello)
 
         let request = try Request(method: .get, path: "hello")
-        guard let handler = app.router.route(request) else {
+        guard let handler = drop.router.route(request) else {
             XCTFail("No handler found for TestController.hello")
             return
         }
@@ -161,14 +161,14 @@ class ControllerTests: XCTestCase {
 
 
     func testControllerMethodsHit() throws {
-        let app = Droplet()
+        let drop = Droplet()
         // Need single instance to test
-        let testInstance = TestController(droplet: app)
+        let testInstance = TestController(droplet: drop)
         let factory: (Void) -> TestController = { print("blahblah : \(testInstance)"); return testInstance }
-        app.resource("/test", makeControllerWith: factory)
+        drop.resource("/test", makeControllerWith: factory)
 
         func handleRequest(req: Request) throws {
-            guard let handler = app.router.route(req) else { return }
+            guard let handler = drop.router.route(req) else { return }
             let _ = try handler.respond(to: req)
         }
 

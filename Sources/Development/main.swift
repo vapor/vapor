@@ -11,19 +11,19 @@ var workDir: String {
 }
 #endif
 
-let app = Droplet(workDir: workDir)
+let drop = Droplet(workDir: workDir)
 let 😀 = Response(status: .ok)
 
 //MARK: Basic
 
-app.get { request in
-    return try app.view("welcome.html")
+drop.get { request in
+    return try drop.view("welcome.html")
 }
 
-app.get("client-socket") { req in
+drop.get("client-socket") { req in
     // TODO: Find way to support multiple droplets while still having concrete reference to host / port. This will only work on one droplet ...
-    let host = app.config["servers", 0, "host"].string ?? "localhost"
-    let port = app.config["servers", 0, "port"].int ?? 80
+    let host = drop.config["servers", 0, "host"].string ?? "localhost"
+    let port = drop.config["servers", 0, "port"].int ?? 80
     
     _ = try? WebSocket.background(to: "ws://\(host):\(port)/server-socket-responder") { (ws) in
         ws.onText = { ws, text in
@@ -38,7 +38,7 @@ app.get("client-socket") { req in
     return "Beginning client socket test, check your console ..."
 }
 
-app.socket("server-socket-responder") { req, ws in
+drop.socket("server-socket-responder") { req, ws in
     let top = 10
     for i in 1...top {
         sleep(1)
@@ -50,13 +50,13 @@ app.socket("server-socket-responder") { req, ws in
     try ws.close()
 }
 
-app.get("ping") { _ in
+drop.get("ping") { _ in
     return 😀
 }
 
-app.get("spotify-artists") { req in
+drop.get("spotify-artists") { req in
     let name = req.data["name"].string ?? "beyonce"
-    let spotifyResponse = try app.client.get("https://api.spotify.com/v1/search", query: ["type": "artist", "q": name])
+    let spotifyResponse = try drop.client.get("https://api.spotify.com/v1/search", query: ["type": "artist", "q": name])
     
     guard
         let names = spotifyResponse.data["artists", "items", "name"]
@@ -70,10 +70,10 @@ app.get("spotify-artists") { req in
     return JSON.array(names)
 }
 
-app.get("pokemon") { req in
+drop.get("pokemon") { req in
     let limit = req.data["limit"].int ?? 20
     let offset = req.data["offset"].int ?? 0
-    let pokemonResponse = try app.client.get("http://pokeapi.co/api/v2/pokemon/", query: ["limit": limit, "offset": offset])
+    let pokemonResponse = try drop.client.get("http://pokeapi.co/api/v2/pokemon/", query: ["limit": limit, "offset": offset])
     guard let names = pokemonResponse.data["results", "name"].array?.flatMap({ $0.string }) else {
         throw Abort.custom(status: .badRequest, message: "Didn't parse JSON correctly")
     }
@@ -81,12 +81,12 @@ app.get("pokemon") { req in
     return names.joined(separator: "\n")
 }
 
-app.get("pokemon-multi") { [weak app] req in
+drop.get("pokemon-multi") { [weak drop] req in
     return Response { chunker in
         /**
          Advanced usage, maintain connection
          */
-        let pokemonClient = try app?.client.make(scheme: "http", host: "pokeapi.co")
+        let pokemonClient = try drop?.client.make(scheme: "http", host: "pokeapi.co")
         for i in 0 ..< 2 {
             let response = try pokemonClient?.get(path: "/api/v2/pokemon/", query: ["limit": 20, "offset": i])
 
@@ -99,16 +99,16 @@ app.get("pokemon-multi") { [weak app] req in
     }
 }
 
-app.get("test") { request in
+drop.get("test") { request in
     print("Request: \(request)")
     return "123"
 }
 
-app.add(.trace, path: "trace") { request in
+drop.add(.trace, path: "trace") { request in
     return "trace request"
 }
 
-app.socket("socket") { request, ws in
+drop.socket("socket") { request, ws in
     try ws.send("WebSocket Connected :)")
 
     ws.onText = { ws, text in
@@ -132,18 +132,18 @@ app.socket("socket") { request, ws in
 
 //MARK: Resource
 
-app.resource("users", UserController.self)
+drop.resource("users", UserController.self)
 
 //MARK: Request data
 
-app.post("jsondata") { request in
+drop.post("jsondata") { request in
     print(request.json?["hi"].string)
     return "yup"
 }
 
 //MARK: Type safe routing
 
-app.get("test", Int.self, String.self) { request, int, string in
+drop.get("test", Int.self, String.self) { request, int, string in
     return JSON([
         "message": "Int \(int) String \(string)"
     ])
@@ -159,14 +159,14 @@ app.get("test", Int.self, String.self) { request, int, string in
     ]
  ]
  */
-app.get("users-test") { req in
+drop.get("users-test") { req in
     let friendName = req.data[0, "name", "friend", "name"].string
     return "Hello \(friendName)"
 }
 
 //MARK: Json
 
-app.get("json") { request in
+drop.get("json") { request in
     return JSON([
         "number": 123,
         "text": "unicorns",
@@ -175,7 +175,7 @@ app.get("json") { request in
     ])
 }
 
-app.post("json") { request in
+drop.post("json") { request in
     //parse a key inside the received json
     guard let count = request.data["unicorns"].int else {
         throw Abort.custom(status: .badRequest, message: "No unicorn count provided")
@@ -183,7 +183,7 @@ app.post("json") { request in
     return "Received \(count) unicorns"
 }
 
-app.post("form") { request in
+drop.post("form") { request in
     guard let name = request.data["name"].string else {
         throw Abort.custom(status: .badRequest, message: "No name provided")
     }
@@ -191,11 +191,11 @@ app.post("form") { request in
     return "Hello \(name)"
 }
 
-app.get("redirect") { request in
+drop.get("redirect") { request in
     return Response(redirect: "http://qutheory.io:8001")
 }
 
-app.grouped("abort") { group in
+drop.grouped("abort") { group in
     group.get("400") { request in
         throw Abort.badRequest
     }
@@ -217,13 +217,13 @@ enum Error: ErrorProtocol {
     case Unhandled
 }
 
-app.get("error") { request in
+drop.get("error") { request in
     throw Error.Unhandled
 }
 
 //MARK: Session
 
-app.post("session") { request in
+drop.post("session") { request in
     guard let name = request.data["name"].string else {
         throw Abort.badRequest
     }
@@ -232,14 +232,14 @@ app.post("session") { request in
     return "Session set"
 }
 
-app.get("session") { request in
+drop.get("session") { request in
     guard let name = request.session?["name"] else {
         return "No session data"
     }
 
     return name
 }
-app.get("login") { request in
+drop.get("login") { request in
     guard let id = request.session?["id"] else {
         throw Abort.badRequest
     }
@@ -249,7 +249,7 @@ app.get("login") { request in
     ])
 }
 
-app.post("login") { request in
+drop.post("login") { request in
     guard
         let email = request.data["email"]?.string,
         let password = request.data["password"]?.string
@@ -272,7 +272,7 @@ app.post("login") { request in
     This example is in the docs. If it changes,
     make sure to update the Response section.
  */
-app.get("cookie") { request in
+drop.get("cookie") { request in
     var response = Response(status: .ok, body: "Cookie set")
     response.cookies["id"] = "123"
 
@@ -280,7 +280,7 @@ app.get("cookie") { request in
 }
 
 
-app.get("cookies") { request in
+drop.get("cookies") { request in
     var response = try JSON([
         "cookies": "\(request.cookies)"
         ])
@@ -321,14 +321,14 @@ extension Employee: JSONRepresentable {
     }
 }
 
-app.post("validation") { request in
+drop.post("validation") { request in
     let employee = try Employee(request: request)
     return employee
 }
 
 //MARK: Forms
 
-app.get("multipart-image") { _ in
+drop.get("multipart-image") { _ in
     var response = "<form method='post' action='/multipart-image/' ENCTYPE='multipart/form-data'>"
 
     response += "<input type='text' name='name' />"
@@ -339,7 +339,7 @@ app.get("multipart-image") { _ in
     return Response(body: response)
 }
 
-app.post("multipart-image") { request in
+drop.post("multipart-image") { request in
     guard let form = request.multipart else {
         throw Abort.badRequest
     }
@@ -361,7 +361,7 @@ app.post("multipart-image") { request in
     return Response(status: .ok, headers: headers, body: image.data.bytes)
 }
 
-app.get("multifile") { _ in
+drop.get("multifile") { _ in
     var response = "<form method='post' action='/multifile/' ENCTYPE='multipart/form-data'>"
 
     response += "<input type='text' name='response' />"
@@ -372,7 +372,7 @@ app.get("multifile") { _ in
     return Response(body: response)
 }
 
-app.post("multifile") { request in
+drop.post("multifile") { request in
     guard let form = request.multipart else {
         throw Abort.badRequest
     }
@@ -400,7 +400,7 @@ app.post("multifile") { request in
     return Response(status: .ok, headers: headers, body: .data(file.data.bytes))
 }
 
-app.get("options") { _ in
+drop.get("options") { _ in
     var response = "<form method='post' action='/options/' ENCTYPE='multipart/form-data'>"
 
     response += "<select name='options' multiple='multiple'>"
@@ -421,7 +421,7 @@ app.get("options") { _ in
     return Response(status: .ok, body: .data(response.data.bytes))
 }
 
-app.post("options") { request in
+drop.post("options") { request in
     guard let form = request.multipart, let multipart = form["options"] else {
         return "No form submited"
     }
@@ -430,7 +430,7 @@ app.post("options") { request in
     return "You have selected \"\(selected ?? "whoops!")\"\n"
 }
 
-app.post("multipart-print") { request in
+drop.post("multipart-print") { request in
     print(request.data)
     print(request.formURLEncoded)
 
@@ -447,8 +447,8 @@ app.post("multipart-print") { request in
 
 //MARK: Middleware
 
-app.grouped(AuthMiddleware()) { group in
-    app.get("protected") { request in
+drop.grouped(AuthMiddleware()) { group in
+    drop.get("protected") { request in
         return JSON([
             "message": "Welcome authorized user"
         ])
@@ -457,7 +457,7 @@ app.grouped(AuthMiddleware()) { group in
 
 //MARK: Chunked
 
-app.get("chunked") { request in
+drop.get("chunked") { request in
     return Response(headers: ["Content-Type": "text/plain"]) { stream in
         try stream.send("Counting:")
         for i in 1 ..< 10{
@@ -472,7 +472,7 @@ app.get("chunked") { request in
     /*
     Temporarily not available on Linux because of Dispatch APIs
     */
-    app.get("async") { request in
+    drop.get("async") { request in
         return try Response.async { promise in
             _ = try background {
                 do {
@@ -490,4 +490,4 @@ app.get("chunked") { request in
     }
 #endif
 
-app.serve()
+drop.serve()

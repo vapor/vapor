@@ -150,7 +150,7 @@ extension Droplet {
 
         Here's an example of how you would add a route with this method:
 
-        ```app.add(.get, path: "/foo", action: TestController.foo)```
+        ```drop.add(.get, path: "/foo", action: TestController.foo)```
 
         - parameter method: The `Request.Method` that the action should be executed for.
         - parameter path: The HTTP path that the action can run at.
@@ -172,7 +172,7 @@ extension Droplet {
 
          Here's an example of how you would add a route with this method:
 
-         ```app.add(.get, path: "/bar", action: TestController.bar)```
+         ```drop.add(.get, path: "/bar", action: TestController.bar)```
 
          - parameter method: The `Request.Method` that the action should be executed for.
          - parameter path: The HTTP path that the action can run at.
@@ -194,7 +194,7 @@ extension Droplet {
 
         Here's an example of how you would add a route with this method:
 
-        ```app.add(.get, path: "/baz", action: TestController.baz) { TestController() }```
+        ```drop.add(.get, path: "/baz", action: TestController.baz) { TestController() }```
 
         - parameter method: The `Request.Method` that the action should be executed for.
         - parameter path: The HTTP path that the action can run at.

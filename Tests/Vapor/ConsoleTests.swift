@@ -12,14 +12,14 @@ class ConsoleTests: XCTestCase {
 
     func testCommandRun() {
         let console = TestConsoleDriver()
-        let app = Droplet(console: console, arguments: ["/path/to/exe", "test-1"])
+        let drop = Droplet(console: console, arguments: ["/path/to/exe", "test-1"])
 
-        app.commands = [
+        drop.commands = [
             TestOneCommand(console: console)
         ]
 
         do {
-            try app.runCommands()
+            try drop.runCommands()
             XCTAssertEqual(console.input(), "Test 1 Ran", "Command 1 did not run")
         } catch {
             XCTFail("Command 1 failed: \(error)")
@@ -28,15 +28,15 @@ class ConsoleTests: XCTestCase {
 
     func testCommandInsufficientArgs() {
         let console = TestConsoleDriver()
-        let app = Droplet(console: console, arguments: ["/path/to/exe", "test-2"])
+        let drop = Droplet(console: console, arguments: ["/path/to/exe", "test-2"])
 
         let command = TestTwoCommand(console: console)
-        app.commands = [
+        drop.commands = [
             command
         ]
 
         do {
-            try app.runCommands()
+            try drop.runCommands()
             XCTFail("Command 2 did not fail")
         } catch {
             XCTAssert(console.input().contains("Usage: /path/to/exe test-2 <arg-1> [--opt-1] [--opt-2]"), "Did not print signature")
@@ -45,15 +45,15 @@ class ConsoleTests: XCTestCase {
 
     func testCommandFetchArgs() {
         let console = TestConsoleDriver()
-        let app = Droplet(console: console, arguments: ["/path/to/ext", "test-2", "123"])
+        let drop = Droplet(console: console, arguments: ["/path/to/ext", "test-2", "123"])
 
         let command = TestTwoCommand(console: console)
-        app.commands = [
+        drop.commands = [
             command
         ]
 
         do {
-            try app.runCommands()
+            try drop.runCommands()
             XCTAssertEqual(console.input(), "123", "Did not print 123")
         } catch {
             XCTFail("Command 2 failed to run: \(error)")
@@ -63,15 +63,15 @@ class ConsoleTests: XCTestCase {
 
     func testCommandFetchOptions() {
         let console = TestConsoleDriver()
-        let app = Droplet(console: console, arguments: ["/path/to/ext", "test-2", "123", "--opt-1=abc"])
+        let drop = Droplet(console: console, arguments: ["/path/to/ext", "test-2", "123", "--opt-1=abc"])
 
         let command = TestTwoCommand(console: console)
-        app.commands = [
+        drop.commands = [
             command
         ]
 
         do {
-            try app.runCommands()
+            try drop.runCommands()
             XCTAssert(console.input() == "123abc", "Did not print 123abc")
         } catch {
             XCTFail("Command 2 failed to run: \(error)")
@@ -93,11 +93,11 @@ class ConsoleTests: XCTestCase {
             }
         }
 
-        let app = Droplet(arguments: ["/path/to/exec"])
-        app.commands = [TestServe(console: app.console)]
+        let drop = Droplet(arguments: ["/path/to/exec"])
+        drop.commands = [TestServe(console: drop.console)]
 
         do {
-            try app.runCommands()
+            try drop.runCommands()
             XCTAssert(TestServe.ran, "Serve did not default")
         } catch {
             XCTFail("Serve did not default: \(error)")

@@ -20,12 +20,12 @@ class DropletTests: XCTestCase {
         headers returned.
     */
     func testMediaType() throws {
-        let app = Droplet(workDir: workDir)
+        let drop = Droplet(workDir: workDir)
 
         let request = try Request(method: .get, uri: "/styles/app.css")
 
-        guard let response = try? app.respond(to: request) else {
-            XCTFail("App could not respond")
+        guard let response = try? drop.respond(to: request) else {
+            XCTFail("drop could not respond")
             return
         }
 
@@ -73,11 +73,11 @@ class DropletTests: XCTestCase {
         }
 
         let provider = TestProvider()
-        let app = Droplet(providers: [
+        let drop = Droplet(providers: [
             provider
         ])
 
-        XCTAssert(app.server == TestServer.self, "Provider did not provide TestServer")
+        XCTAssert(drop.server == TestServer.self, "Provider did not provide TestServer")
         XCTAssert(provider.bootRan == true, "Droplet did not boot provider")
     }
 
@@ -122,11 +122,11 @@ class DropletTests: XCTestCase {
 
         let provider = TestProvider()
 
-        let app = Droplet(server: TestServerBeta.self, providers: [
+        let drop = Droplet(server: TestServerBeta.self, providers: [
             provider
         ])
 
-        XCTAssert(app.server == TestServerAlpha.self, "Provider did not override with TestServerAlpha")
+        XCTAssert(drop.server == TestServerAlpha.self, "Provider did not override with TestServerAlpha")
     }
 
  }
