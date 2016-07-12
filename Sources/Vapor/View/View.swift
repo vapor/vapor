@@ -1,4 +1,4 @@
-import protocol Engine.ResponseRepresentable
+import protocol Engine.HTTPResponseRepresentable
 
 /**
     Loads and renders a file from the `Resources` folder

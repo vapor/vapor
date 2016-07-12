@@ -1,4 +1,4 @@
-import protocol Engine.ResponseRepresentable
+import protocol Engine.HTTPResponseRepresentable
 
 /**
     Organize your routing logic with a conformance of
