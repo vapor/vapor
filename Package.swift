@@ -63,7 +63,10 @@ let package = Package(
         .Package(url: "https://github.com/qutheory/polymorphic.git", majorVersion: 0, minor: 2),
 
         // libc
-        .Package(url: "https://github.com/qutheory/libc.git", majorVersion: 0, minor: 1)
+        .Package(url: "https://github.com/qutheory/libc.git", majorVersion: 0, minor: 1),
+
+        // Console protocol and implementation for powering command line interface.
+        .Package(url: "https://github.com/qutheory/console.git", majorVersion: 0, minor: 2)
     ],
     exclude: exclude,
     targets: targets
