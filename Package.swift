@@ -48,12 +48,15 @@ let package = Package(
 
         //Allows complex key path subscripts
         .Package(url: "https://github.com/qutheory/path-indexable.git", majorVersion: 0, minor: 2),
-
+        
         // Syntax for easily accessing values from generic data.
         .Package(url: "https://github.com/qutheory/polymorphic.git", majorVersion: 0, minor: 2),
 
         //Core vapor transport layer
-        .Package(url: "https://github.com/qutheory/engine.git", majorVersion: 0, minor: 1)
+        .Package(url: "https://github.com/qutheory/engine.git", majorVersion: 0, minor: 1),
+
+        // Console protocol and implementation for powering command line interface.
+        .Package(url: "https://github.com/qutheory/console.git", majorVersion: 0, minor: 2)
     ],
     exclude: exclude,
     targets: targets
