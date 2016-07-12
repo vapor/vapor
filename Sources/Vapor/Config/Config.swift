@@ -136,12 +136,10 @@ public class Config {
         let value = directoryQueue[file, paths]
 
         // check if value exists in Env
-        if let string = value?.string {
-            if string.characters.first == "$" {
-                let name = String(string.characters.dropFirst())
-                if let env = Env.get(name) {
-                    return env
-                }
+        if let string = value?.string where string.characters.first == "$" {
+            let name = String(string.characters.dropFirst())
+            if let env = Env.get(name) {
+                return env
             }
         }
 
