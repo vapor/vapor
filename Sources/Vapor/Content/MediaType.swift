@@ -210,7 +210,7 @@ let mediaTypes = [
     "kia": "application/vnd.kidspiration", // Kidspiration IANA: Kidspiration
     "kne": "application/vnd.kinar", // Kinar Applications IANA: Kina Applications
     "skp": "application/vnd.koan", // SSEYO Koan Play File IANA: SSEYO Koan Play File
-    "sse": "application/vnd.kodak-descriptor", // Kodak Storyshare IANA: Kodak StoryshareIANA: Laser drop EnterpriseIANA: Life
+    "sse": "application/vnd.kodak-descriptor", // Kodak Storyshare IANA: Kodak StoryshareIANA: Laser app EnterpriseIANA: Life
     "lbe": "application/vnd.llamagraphics.life-balance.exchange+xml", // Life Balance - Exchange Format IANA:
     "123": "application/vnd.lotus-1-2-3", // Lotus 1-2-3 IANA: Lotus 1-2-3
     "apr": "application/vnd.lotus-approach", // Lotus Approach IANA: Lotus Approach
@@ -276,7 +276,7 @@ let mediaTypes = [
     "odm": "application/vnd.oasis.opendocument.text-master", // OpenDocument Text Master IANA:
     "ott": "application/vnd.oasis.opendocument.text-template", // OpenDocument Text Template IANA:
     "oth": "application/vnd.oasis.opendocument.text-web", // Open Document Text Web IANA:
-    "xo": "application/vnd.olpc-sugar", // Sugar Linux Application Bundle IANA: Sugar Linux drop BundleIANA: OMA Download Agents
+    "xo": "application/vnd.olpc-sugar", // Sugar Linux Application Bundle IANA: Sugar Linux app BundleIANA: OMA Download Agents
     "oxt": "application/vnd.openofficeorg.extension", // Open Office Extension IANA: Open Office
     "pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation", // Microsoft Office - OOXML - Presentation
     "xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", // Microsoft Office - OOXML - Spreadsheet IANA: MapGuide DBXMLIANA: OSGi Deployment Package
@@ -427,7 +427,7 @@ let mediaTypes = [
     "sh": "application/x-sh", // Bourne Shell Script Wikipedia: Bourne Shell
     "shar": "application/x-shar", // Shell Archive Wikipedia: Shell Archie
     "swf": "application/x-shockwave-flash", // Adobe Flash Wikipedia: Adobe Flash
-    "xap": "application/x-silverlight-drop", // Microsoft Silverlight Wikipedia: Silverlight
+    "xap": "application/x-silverlight-app", // Microsoft Silverlight Wikipedia: Silverlight
     "sit": "application/x-stuffit", // Stuffit Archive Wikipedia: Stuffit
     "sitx": "application/x-stuffitx", // Stuffit Archive Wikipedia: Stuffit
     "sv4cpio": "application/x-sv4cpio", // System V Release 4 CPIO Archive Wikipedia: pax
@@ -555,7 +555,7 @@ let mediaTypes = [
     "gv": "text/vnd.graphviz", // Graphviz IANA: Graphviz
     "3dml": "text/vnd.in3d.3dml", // In3D - 3DML IANA: In3D
     "spot": "text/vnd.in3d.spot", // In3D - 3DML IANA: In3D
-    "jad": "text/vnd.sun.j2me.drop-descriptor", // J2ME drop Descriptor IANA: J2ME drop DescriptorWikipedia: WML
+    "jad": "text/vnd.sun.j2me.app-descriptor", // J2ME app Descriptor IANA: J2ME app DescriptorWikipedia: WML
     "wmls": "text/vnd.wap.wmlscript", // Wireless Markup Language Script (WMLScript) Wikipedia: WMLScript
     "s": "text/x-asm", // Assembler Source File Wikipedia: Assembly
     "c": "text/x-c", // C Source File Wikipedia: C Programming Language
