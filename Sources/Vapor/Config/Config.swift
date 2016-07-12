@@ -1,6 +1,16 @@
 import Foundation
 import PathIndexable
 
+extension NSProcessInfo {
+    static func arguments() -> [String] {
+        #if !os(Linux)
+            return NSProcessInfo.processInfo.arguments
+        #else
+            return NSProcessInfo.processInfo().arguments
+        #endif
+    }
+}
+
 private struct PrioritizedDirectoryQueue {
     let directories: [JSONDirectory]
 
@@ -48,7 +58,7 @@ public class Config {
         seed: JSON = [:],
         workingDirectory: String = "./",
         environment: Environment? = nil,
-        arguments: [String] = NSProcessInfo.processInfo().arguments
+        arguments: [String] = NSProcessInfo.arguments()
     ) throws {
         let configDirectory = workingDirectory.finished(with: "/") + "Config/"
         self.environment = environment ?? Environment.loader(arguments: arguments)
@@ -82,7 +92,7 @@ public class Config {
     }
 
     public init() {
-        self.environment = Environment.loader(arguments: NSProcessInfo.processInfo().arguments)
+        self.environment = Environment.loader(arguments: NSProcessInfo.arguments())
         self.directoryQueue = PrioritizedDirectoryQueue(directories: [])
     }
 

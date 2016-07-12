@@ -1,5 +1,32 @@
 import PackageDescription
 
+var exclude: [String] = []
+#if os(Linux)
+exclude.append("Sources/Generator")
+#endif
+
+var targets: [Target] = [
+    Target(
+        name: "Development",
+        dependencies: [
+            .Target(name: "Vapor")
+        ]
+    ),
+    Target(
+        name: "Performance",
+        dependencies: [
+            .Target(name: "Vapor")
+        ]
+    ),
+]
+#if !os(Linux)
+targets += [
+  Target(
+      name: "Generator"
+  )
+]
+#endif
+
 let package = Package(
     name: "Vapor",
     dependencies: [
@@ -22,9 +49,6 @@ let package = Package(
         //Allows complex key path subscripts
         .Package(url: "https://github.com/qutheory/path-indexable.git", majorVersion: 0, minor: 2),
 
-        //Wrapper around pthreads
-        .Package(url: "https://github.com/ketzusaka/Strand.git", majorVersion: 1, minor: 5),
-
         //Sockets, used by the built in HTTP server
         .Package(url: "https://github.com/czechboy0/Socks.git", majorVersion: 0, minor: 8),
 
@@ -35,31 +59,8 @@ let package = Package(
         .Package(url: "https://github.com/qutheory/libc.git", majorVersion: 0, minor: 1),
 
         //Core vapor transport layer
-        .Package(url: "https://github.com/qutheory/engine.git", majorVersion: 0, minor: 0)
+        .Package(url: "https://github.com/qutheory/engine.git", majorVersion: 0, minor: 1)
     ],
-    exclude: [
-        "XcodeProject",
-        "Generator",
-        "Development"
-    ],
-    targets: [
-        Target(
-            name: "Vapor"
-        ),
-        Target(
-            name: "Development",
-            dependencies: [
-                .Target(name: "Vapor")
-            ]
-        ),
-        Target(
-            name: "Performance",
-            dependencies: [
-                .Target(name: "Vapor")
-            ]
-        ),
-        Target(
-            name: "Generator"
-        )
-    ]
+    exclude: exclude,
+    targets: targets
 )
