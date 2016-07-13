@@ -91,27 +91,30 @@ extension JSON {
     private static func _uncast(_ json: JSON) -> AnyObject {
         switch json {
         case .object(let object):
-            var dict: [String: AnyObject] = [:]
+            let dict: NSMutableDictionary = [:]
             for (key, val) in object {
                 dict[key] = _uncast(val)
             }
-            return dict
+            return dict.copy()
         case .array(let array):
-            return array.map { _uncast($0) }
+            let nsarray: NSMutableArray = []
+            for item in array {
+                nsarray.add(_uncast(item))
+            }
+            return nsarray.copy()
         case .number(let number):
             switch number {
             case .double(let double):
-                return double
+                return NSNumber(floatLiteral: double)
             case .integer(let int):
-                return int
+                return NSNumber(integerLiteral: int)
             }
         case .string(let string):
-            return string
+            return NSString(string: string)
         case .bool(let bool):
-            return bool
+            return NSNumber(booleanLiteral: bool)
         case .null:
-            // FIXME
-            return "null"
+            return NSNull()
         }
     }
 
