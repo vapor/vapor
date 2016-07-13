@@ -5,40 +5,6 @@ import Foundation
     private typealias NSData = Foundation.Data
 #endif
 
-#if os(Linux)
-    extension NSData {
-        var count: Int {
-            return length
-        }
-
-        func copyBytes(to bytes: UnsafeMutablePointer<Void>, count: Int) {
-            getBytes(bytes, length: count)
-        }
-    }
-
-    typealias JSONSerialization = Foundation.NSJSONSerialization
-
-    extension Foundation.NSMutableDictionary {
-        public subscript(key: String) -> AnyObject? {
-            get {
-                return self.objectForKey(NSString(string: key))
-            }
-            set {
-                guard let value = newValue else {
-                    return
-                }
-                self.setObject(value, forKey: NSString(string: key))
-            }
-        }
-    }
-
-    extension Foundation.NSMutableArray {
-        public func add(_ object: AnyObject) {
-            self.addObject(object)
-        }
-    }
-#endif
-
 import struct Base.Bytes
 import protocol Engine.HTTPResponseRepresentable
 
@@ -80,7 +46,6 @@ public enum JSON {
     public init(_ object: [String: JSON]) {
         self = .object(object)
     }
-
 }
 
 // MARK: Nasty Foundation code
@@ -91,8 +56,6 @@ extension JSON {
         let json = try JSONSerialization.jsonObject(with: data)
 
         self = JSON._cast(json)
-
-        print(self)
     }
 
     private static func _cast(_ anyObject: Any) -> JSON {
@@ -222,6 +185,29 @@ extension JSON: Polymorphic {
         switch self {
         case .bool(let bool):
             return bool
+        case .string(let string):
+            return string.bool
+        case .number(let number):
+            switch number {
+            case .integer(let int):
+                switch int {
+                case 1:
+                    return true
+                case 0:
+                    return false
+                default:
+                    return nil
+                }
+            case .double(let double):
+                switch double {
+                case 1.0:
+                    return true
+                case 0.0:
+                    return false
+                default:
+                    return nil
+                }
+            }
         default:
             return false
         }
@@ -233,8 +219,8 @@ extension JSON: Polymorphic {
             switch number {
             case .double(let double):
                 return Float(double)
-            default:
-                return nil
+            case .integer(let int):
+                return Float(int)
             }
         default:
             return nil
@@ -247,8 +233,8 @@ extension JSON: Polymorphic {
             switch number {
             case .double(let double):
                 return double
-            default:
-                return nil
+            case .integer(let int):
+                return Double(int)
             }
         default:
             return nil
@@ -261,9 +247,11 @@ extension JSON: Polymorphic {
             switch number {
             case .integer(let int):
                 return int
-            default:
-                return nil
+            case .double(let double):
+                return Int(double)
             }
+        case .string(let string):
+            return Int(string)
         default:
             return nil
         }
@@ -273,6 +261,15 @@ extension JSON: Polymorphic {
         switch self {
         case .string(let string):
             return string
+        case .bool(let bool):
+            return bool ? "true" : "false"
+        case .number(let number):
+            switch number {
+            case .double(let double):
+                return String(double)
+            case .integer(let int):
+                return String(int)
+            }
         default:
             return nil
         }
