@@ -137,7 +137,7 @@ drop.resource("users", UserController.self)
 //MARK: Request data
 
 drop.post("jsondata") { request in
-    print(request.json?["hi"].string)
+    print(request.json?["hi"])
     return "yup"
 }
 
