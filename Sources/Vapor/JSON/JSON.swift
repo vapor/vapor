@@ -19,7 +19,7 @@ import Foundation
     typealias JSONSerialization = Foundation.NSJSONSerialization
 
     extension Foundation.NSMutableDictionary {
-        public subscript(key: String) -> AnyObject {
+        public subscript(key: String) -> AnyObject? {
             get {
                 return self.objectForKey(NSString(string: key))
             }
