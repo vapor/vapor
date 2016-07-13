@@ -30,7 +30,6 @@ This repository is the framework's source code. To view some sample projects, ch
 You can run the following script to verify your environment is correct.
 
 ```sh
-# Verifies your environment is compatible with Vaopr 0.14.x
 curl -sL check.qutheory.io | bash
 ```
 
