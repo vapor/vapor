@@ -71,7 +71,7 @@ Contributing code isn't the only way to participate in Vapor. Taking a page out 
 
 ## 💧 Community
 
-We pride ourselves on providing a diverse and welcoming community. Join your fellow Vapor developers in [our slack](slack.qutheory.io) and take part in the conversation.
+We pride ourselves on providing a diverse and welcoming community. Join your fellow Vapor developers in [our slack](http://slack.qutheory.io) and take part in the conversation.
 
 ## 🔧 Compatibility
 
@@ -81,7 +81,7 @@ Our homepage [http://qutheory.io](http://qutheory.io) is currently running using
 
 ## ⚠️ State of Vapor
 
-Vapor is in a generally stable state with [several projects](/Documents/PROJECTS.md) currently active and hosted in the cloud. With that said, we are still considered _under development_ at least until the official Swift 3 release, and future api changes should be anticipated.
+Vapor is in a generally stable state with [several projects](/Documents/PROJECTS.md) currently active and hosted in the cloud. With that said, we are still considered _under development_ at least until the official Swift 3 release, and future API changes should be anticipated.
 
 ## Backers
 
