@@ -1,4 +1,4 @@
-extension Application: Responder {
+extension Droplet: Responder {
     /**
         Returns a response to the given request
 

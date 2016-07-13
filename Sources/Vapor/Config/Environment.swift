@@ -1,6 +1,6 @@
 /**
     Represents the current environment the
-    application is running in. This information
+    droplet is running in. This information
     can be used to conditionally show debug or testing information.
 */
 public enum Environment: Equatable {

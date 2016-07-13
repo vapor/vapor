@@ -1,10 +1,10 @@
 /**
     Use the Session class to store sensitive
-    information for individual users of your application
+    information for individual users of your droplet
     such as API keys or login tokens.
 
-    Access the current Application's Sessions using
-    `app.sessions`.
+    Access the current Droplet's Sessions using
+    `drop.sessions`.
 */
 public class Session {
 

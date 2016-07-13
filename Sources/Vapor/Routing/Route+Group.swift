@@ -3,7 +3,7 @@ extension Route {
         An intermediary object used to group routes by middleware and leading paths
     */
     public struct Link {
-        /// The parent to forward requests -- intended to ultimately be Application
+        /// The parent to forward requests -- intended to ultimately be Droplet
         public let parent: RouteBuilder
 
         /// The leading path to prefix ahead of additional routing
@@ -39,13 +39,13 @@ extension Route.Link: RouteBuilder {
 /**
     An organizational protocol that allows building of routes in separate files.
     
-    Add to your application using the add function:
+    Add to your droplet using the add function:
  
-         app.add(UserRouteGroup.self)
+         drop.add(UserRouteGroup.self)
  
     Or to nest further:
  
-         app.add("special-user", UserRouteGroup.self)
+         drop.add("special-user", UserRouteGroup.self)
  
     Example:
  

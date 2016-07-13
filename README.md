@@ -19,35 +19,19 @@ A Web Framework for Swift that works on iOS, OS X, and Ubuntu.
 
 Vapor is the first true web framework for Swift. It provides a beautifully expressive and easy to use foundation for your next website or API.
 
-This repository is the framework's source code. To view some sample projects, check out our list [here](/Projects.md).
+This repository is the framework's source code. To view some sample projects, check out our list [here](/Documents/PROJECTS.md).
 
-## 🚦 Current Environment
+## 🌏 Current Environment
 
-| Vapor | Xcode | Swift |
-|:-:|:-:|:-:|
-|0.13.x|8.0 Beta|DEVELOPMENT-SNAPSHOT-2016-06-20-a|
+| Vapor |     Xcode    |    Swift    |
+|:-----:|:------------:|:-----------:|
+|0.14.x |8.0 Beta **2**|3.0-PREVIEW-2|
 
-<p align="center"><img src="warning.png" alt="Drawing" width="50%"></p>
+You can run the following script to verify your environment is correct.
 
-There have been many issues associated w/ Xcode 8 and transitioning to new tools. If you get the following error:
-
-> <unknown>:0: error: Swift does not support the SDK 'MacOSX10.11.sdk'`
-
-Please consult the following [Q & A](http://stackoverflow.com/questions/38296145/vapor-web-framework-error-swift-does-not-support-the-sdk-macosx10-11-sdk) or follow below.
-
-<b>Before continuing make sure that you have completely opened Xcode 8 at least once.</b>
-
-Run the following command:
-
-```Swift
-sudo xcode-select -s /Applications/Xcode-beta.app/
+```sh
+curl -sL check.qutheory.io | bash
 ```
-
-> NOTE: In above example, `Xcode-beta` is expected to be the name of your beta. If you change the names to something like `Xcode-beta2`, replace above. In occasional situations, users have had to do `-s /Applications/Xcode-beta.app/Contents/Developer`
-
-This will tell your system to use the `Xcode-beta` tools which support latest Swift 3.
-
-If you still have problems, visit the [`#help`](http://slack.qutheory.io) channel in [our slack](http://slack.qutheory.io)
 
 ## 🦄 Deploy
 
@@ -59,9 +43,9 @@ Visit the [Documentation](http://docs.qutheory.io) for extensive information on 
 
 ## 🚀 Contributing
 
-All developers should feel welcome and encouraged to contribute to Vapor, see our [getting started](/Contributing.md) document here to get involved.
+All developers should feel welcome and encouraged to contribute to Vapor, see our [getting started](/Documents/CONTRIBUTING.md) document here to get involved.
 
-To contribute code, see our [getting started](/Contributing.md) guide for how to do so.
+To contribute code, see our [getting started](/Documents/CONTRIBUTING.md) guide for how to do so.
 
 To contribute a **feature or idea** to Vapor, submit an issue and fill in the template. If the request is approved, you or one of the members of the community can start working on it.
 
@@ -71,15 +55,15 @@ If you find a **security vulnerability**, please contact [tanner@qutheory.io](ta
 
 ## 💙 Code of Conduct
 
-Our goal is to create a safe and empowering environment for anyone who decides to use or contribute to Vapor. Please help us make the community a better place by abiding to this [Code of Conduct](https://github.com/qutheory/vapor/blob/master/CODE_OF_CONDUCT.md) during your interactions surrounding this project.
+Our goal is to create a safe and empowering environment for anyone who decides to use or contribute to Vapor. Please help us make the community a better place by abiding to this [Code of Conduct](/Documents/CODE_OF_CONDUCT.md) during your interactions surrounding this project.
 
 ## ⭐ Projects
 
-Vapor has [several projects](/Projects.md) that are live now in the cloud. Most are also open source, so check them out for great examples.
+Vapor has [several projects](/Documents/PROJECTS.md) that are live now in the cloud. Most are also open source, so check them out for great examples.
 
 ## 🏫 Tutorials
 
-The awesome Vapor community is always adding new tutorials and articles out there, we do our best to keep a record of relevant tutorials [here](/Tutorials.md).
+The awesome Vapor community is always adding new tutorials and articles out there, we do our best to keep a record of relevant tutorials [here](/Documents/TUTORIALS.md).
 
 ## 💡 Evolution
 
@@ -87,7 +71,7 @@ Contributing code isn't the only way to participate in Vapor. Taking a page out 
 
 ## 💧 Community
 
-We pride ourselves on providing a diverse and welcoming community. Join your fellow Vapor developers in [our slack](slack.qutheory.io) and take part in the conversation.
+We pride ourselves on providing a diverse and welcoming community. Join your fellow Vapor developers in [our slack](http://slack.qutheory.io) and take part in the conversation.
 
 ## 🔧 Compatibility
 
@@ -97,7 +81,7 @@ Our homepage [http://qutheory.io](http://qutheory.io) is currently running using
 
 ## ⚠️ State of Vapor
 
-Vapor is in a generally stable state with [several projects](/Projects.md) currently active and hosted in the cloud. With that said, we are still considered _under development_ at least until the official Swift 3 release, and future api changes should be anticipated.
+Vapor is in a generally stable state with [several projects](/Documents/PROJECTS.md) currently active and hosted in the cloud. With that said, we are still considered _under development_ at least until the official Swift 3 release, and future API changes should be anticipated.
 
 ## Backers
 

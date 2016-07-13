@@ -1,10 +1,8 @@
 /**
     Controllers that conform to this protocol
-    will get the requesting application passed
+    will get the requesting droplet passed
     as an initialization parameter.
 */
-public protocol ApplicationInitializable {
-    init(droplet: Application)
+public protocol DropletInitializable {
+    init(droplet: Droplet)
 }
-
-public typealias DropletInitializable = ApplicationInitializable

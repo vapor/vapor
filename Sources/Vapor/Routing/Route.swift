@@ -1,8 +1,8 @@
-import protocol Engine.ResponseRepresentable
+import protocol Engine.HTTPResponseRepresentable
 
 /**
     The route class that will be used to model the various paths
-    the application can take
+    the droplet can take
 */
 public struct Route {
 

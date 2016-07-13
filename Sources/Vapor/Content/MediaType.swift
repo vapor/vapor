@@ -210,7 +210,7 @@ let mediaTypes = [
     "kia": "application/vnd.kidspiration", // Kidspiration IANA: Kidspiration
     "kne": "application/vnd.kinar", // Kinar Applications IANA: Kina Applications
     "skp": "application/vnd.koan", // SSEYO Koan Play File IANA: SSEYO Koan Play File
-    "sse": "application/vnd.kodak-descriptor", // Kodak Storyshare IANA: Kodak StoryshareIANA: Laser App EnterpriseIANA: Life
+    "sse": "application/vnd.kodak-descriptor", // Kodak Storyshare IANA: Kodak StoryshareIANA: Laser app EnterpriseIANA: Life
     "lbe": "application/vnd.llamagraphics.life-balance.exchange+xml", // Life Balance - Exchange Format IANA:
     "123": "application/vnd.lotus-1-2-3", // Lotus 1-2-3 IANA: Lotus 1-2-3
     "apr": "application/vnd.lotus-approach", // Lotus Approach IANA: Lotus Approach
@@ -276,7 +276,7 @@ let mediaTypes = [
     "odm": "application/vnd.oasis.opendocument.text-master", // OpenDocument Text Master IANA:
     "ott": "application/vnd.oasis.opendocument.text-template", // OpenDocument Text Template IANA:
     "oth": "application/vnd.oasis.opendocument.text-web", // Open Document Text Web IANA:
-    "xo": "application/vnd.olpc-sugar", // Sugar Linux Application Bundle IANA: Sugar Linux App BundleIANA: OMA Download Agents
+    "xo": "application/vnd.olpc-sugar", // Sugar Linux Application Bundle IANA: Sugar Linux app BundleIANA: OMA Download Agents
     "oxt": "application/vnd.openofficeorg.extension", // Open Office Extension IANA: Open Office
     "pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation", // Microsoft Office - OOXML - Presentation
     "xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", // Microsoft Office - OOXML - Spreadsheet IANA: MapGuide DBXMLIANA: OSGi Deployment Package
@@ -555,7 +555,7 @@ let mediaTypes = [
     "gv": "text/vnd.graphviz", // Graphviz IANA: Graphviz
     "3dml": "text/vnd.in3d.3dml", // In3D - 3DML IANA: In3D
     "spot": "text/vnd.in3d.spot", // In3D - 3DML IANA: In3D
-    "jad": "text/vnd.sun.j2me.app-descriptor", // J2ME App Descriptor IANA: J2ME App DescriptorWikipedia: WML
+    "jad": "text/vnd.sun.j2me.app-descriptor", // J2ME app Descriptor IANA: J2ME app DescriptorWikipedia: WML
     "wmls": "text/vnd.wap.wmlscript", // Wireless Markup Language Script (WMLScript) Wikipedia: WMLScript
     "s": "text/x-asm", // Assembler Source File Wikipedia: Assembly
     "c": "text/x-c", // C Source File Wikipedia: C Programming Language

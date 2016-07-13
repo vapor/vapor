@@ -16,7 +16,7 @@ extension RouteBuilder {
        **Body**
        The body closure is given access to the Request
        that started the connection as well as the WebSocket.
-           app.socket("test") { request, ws in
+           drop.socket("test") { request, ws in
        }
        **Sending Data**
        Data is sent to the WebSocket stream using `send(_:Data)`
@@ -25,7 +25,7 @@ extension RouteBuilder {
        Data is received from the WebSocket using
        the `onText` callback.
        ws.onText = { ws, text in
-           app.console.output("Received \(text)")
+           drop.console.output("Received \(text)")
        }
        **Closing**
        Close the Socket when you are done.
@@ -109,7 +109,7 @@ extension RouteBuilder {
        **Body**
        The body closure is given access to the Request
        that started the connection as well as the WebSocket.
-           app.socket("test") { request, ws in
+           drop.socket("test") { request, ws in
        }
        **Sending Data**
        Data is sent to the WebSocket stream using `send(_:Data)`
@@ -118,7 +118,7 @@ extension RouteBuilder {
        Data is received from the WebSocket using
        the `onText` callback.
        ws.onText = { ws, text in
-           app.console.output("Received \(text)")
+           drop.console.output("Received \(text)")
        }
        **Closing**
        Close the Socket when you are done.
@@ -251,7 +251,7 @@ extension RouteBuilder {
        **Body**
        The body closure is given access to the Request
        that started the connection as well as the WebSocket.
-           app.socket("test") { request, ws in
+           drop.socket("test") { request, ws in
        }
        **Sending Data**
        Data is sent to the WebSocket stream using `send(_:Data)`
@@ -260,7 +260,7 @@ extension RouteBuilder {
        Data is received from the WebSocket using
        the `onText` callback.
        ws.onText = { ws, text in
-           app.console.output("Received \(text)")
+           drop.console.output("Received \(text)")
        }
        **Closing**
        Close the Socket when you are done.
@@ -344,7 +344,7 @@ extension RouteBuilder {
        **Body**
        The body closure is given access to the Request
        that started the connection as well as the WebSocket.
-           app.socket("test") { request, ws in
+           drop.socket("test") { request, ws in
        }
        **Sending Data**
        Data is sent to the WebSocket stream using `send(_:Data)`
@@ -353,7 +353,7 @@ extension RouteBuilder {
        Data is received from the WebSocket using
        the `onText` callback.
        ws.onText = { ws, text in
-           app.console.output("Received \(text)")
+           drop.console.output("Received \(text)")
        }
        **Closing**
        Close the Socket when you are done.
@@ -486,7 +486,7 @@ extension RouteBuilder {
        **Body**
        The body closure is given access to the Request
        that started the connection as well as the WebSocket.
-           app.socket("test") { request, ws in
+           drop.socket("test") { request, ws in
        }
        **Sending Data**
        Data is sent to the WebSocket stream using `send(_:Data)`
@@ -495,7 +495,7 @@ extension RouteBuilder {
        Data is received from the WebSocket using
        the `onText` callback.
        ws.onText = { ws, text in
-           app.console.output("Received \(text)")
+           drop.console.output("Received \(text)")
        }
        **Closing**
        Close the Socket when you are done.
@@ -628,7 +628,7 @@ extension RouteBuilder {
        **Body**
        The body closure is given access to the Request
        that started the connection as well as the WebSocket.
-           app.socket("test") { request, ws in
+           drop.socket("test") { request, ws in
        }
        **Sending Data**
        Data is sent to the WebSocket stream using `send(_:Data)`
@@ -637,7 +637,7 @@ extension RouteBuilder {
        Data is received from the WebSocket using
        the `onText` callback.
        ws.onText = { ws, text in
-           app.console.output("Received \(text)")
+           drop.console.output("Received \(text)")
        }
        **Closing**
        Close the Socket when you are done.
@@ -819,7 +819,7 @@ extension RouteBuilder {
        **Body**
        The body closure is given access to the Request
        that started the connection as well as the WebSocket.
-           app.socket("test") { request, ws in
+           drop.socket("test") { request, ws in
        }
        **Sending Data**
        Data is sent to the WebSocket stream using `send(_:Data)`
@@ -828,7 +828,7 @@ extension RouteBuilder {
        Data is received from the WebSocket using
        the `onText` callback.
        ws.onText = { ws, text in
-           app.console.output("Received \(text)")
+           drop.console.output("Received \(text)")
        }
        **Closing**
        Close the Socket when you are done.
@@ -912,7 +912,7 @@ extension RouteBuilder {
        **Body**
        The body closure is given access to the Request
        that started the connection as well as the WebSocket.
-           app.socket("test") { request, ws in
+           drop.socket("test") { request, ws in
        }
        **Sending Data**
        Data is sent to the WebSocket stream using `send(_:Data)`
@@ -921,7 +921,7 @@ extension RouteBuilder {
        Data is received from the WebSocket using
        the `onText` callback.
        ws.onText = { ws, text in
-           app.console.output("Received \(text)")
+           drop.console.output("Received \(text)")
        }
        **Closing**
        Close the Socket when you are done.
@@ -1054,7 +1054,7 @@ extension RouteBuilder {
        **Body**
        The body closure is given access to the Request
        that started the connection as well as the WebSocket.
-           app.socket("test") { request, ws in
+           drop.socket("test") { request, ws in
        }
        **Sending Data**
        Data is sent to the WebSocket stream using `send(_:Data)`
@@ -1063,7 +1063,7 @@ extension RouteBuilder {
        Data is received from the WebSocket using
        the `onText` callback.
        ws.onText = { ws, text in
-           app.console.output("Received \(text)")
+           drop.console.output("Received \(text)")
        }
        **Closing**
        Close the Socket when you are done.
@@ -1196,7 +1196,7 @@ extension RouteBuilder {
        **Body**
        The body closure is given access to the Request
        that started the connection as well as the WebSocket.
-           app.socket("test") { request, ws in
+           drop.socket("test") { request, ws in
        }
        **Sending Data**
        Data is sent to the WebSocket stream using `send(_:Data)`
@@ -1205,7 +1205,7 @@ extension RouteBuilder {
        Data is received from the WebSocket using
        the `onText` callback.
        ws.onText = { ws, text in
-           app.console.output("Received \(text)")
+           drop.console.output("Received \(text)")
        }
        **Closing**
        Close the Socket when you are done.
@@ -1387,7 +1387,7 @@ extension RouteBuilder {
        **Body**
        The body closure is given access to the Request
        that started the connection as well as the WebSocket.
-           app.socket("test") { request, ws in
+           drop.socket("test") { request, ws in
        }
        **Sending Data**
        Data is sent to the WebSocket stream using `send(_:Data)`
@@ -1396,7 +1396,7 @@ extension RouteBuilder {
        Data is received from the WebSocket using
        the `onText` callback.
        ws.onText = { ws, text in
-           app.console.output("Received \(text)")
+           drop.console.output("Received \(text)")
        }
        **Closing**
        Close the Socket when you are done.
@@ -1529,7 +1529,7 @@ extension RouteBuilder {
        **Body**
        The body closure is given access to the Request
        that started the connection as well as the WebSocket.
-           app.socket("test") { request, ws in
+           drop.socket("test") { request, ws in
        }
        **Sending Data**
        Data is sent to the WebSocket stream using `send(_:Data)`
@@ -1538,7 +1538,7 @@ extension RouteBuilder {
        Data is received from the WebSocket using
        the `onText` callback.
        ws.onText = { ws, text in
-           app.console.output("Received \(text)")
+           drop.console.output("Received \(text)")
        }
        **Closing**
        Close the Socket when you are done.
@@ -1720,7 +1720,7 @@ extension RouteBuilder {
        **Body**
        The body closure is given access to the Request
        that started the connection as well as the WebSocket.
-           app.socket("test") { request, ws in
+           drop.socket("test") { request, ws in
        }
        **Sending Data**
        Data is sent to the WebSocket stream using `send(_:Data)`
@@ -1729,7 +1729,7 @@ extension RouteBuilder {
        Data is received from the WebSocket using
        the `onText` callback.
        ws.onText = { ws, text in
-           app.console.output("Received \(text)")
+           drop.console.output("Received \(text)")
        }
        **Closing**
        Close the Socket when you are done.
@@ -1911,7 +1911,7 @@ extension RouteBuilder {
        **Body**
        The body closure is given access to the Request
        that started the connection as well as the WebSocket.
-           app.socket("test") { request, ws in
+           drop.socket("test") { request, ws in
        }
        **Sending Data**
        Data is sent to the WebSocket stream using `send(_:Data)`
@@ -1920,7 +1920,7 @@ extension RouteBuilder {
        Data is received from the WebSocket using
        the `onText` callback.
        ws.onText = { ws, text in
-           app.console.output("Received \(text)")
+           drop.console.output("Received \(text)")
        }
        **Closing**
        Close the Socket when you are done.
@@ -2151,7 +2151,7 @@ extension RouteBuilder {
        **Body**
        The body closure is given access to the Request
        that started the connection as well as the WebSocket.
-           app.socket("test") { request, ws in
+           drop.socket("test") { request, ws in
        }
        **Sending Data**
        Data is sent to the WebSocket stream using `send(_:Data)`
@@ -2160,7 +2160,7 @@ extension RouteBuilder {
        Data is received from the WebSocket using
        the `onText` callback.
        ws.onText = { ws, text in
-           app.console.output("Received \(text)")
+           drop.console.output("Received \(text)")
        }
        **Closing**
        Close the Socket when you are done.
@@ -2244,7 +2244,7 @@ extension RouteBuilder {
        **Body**
        The body closure is given access to the Request
        that started the connection as well as the WebSocket.
-           app.socket("test") { request, ws in
+           drop.socket("test") { request, ws in
        }
        **Sending Data**
        Data is sent to the WebSocket stream using `send(_:Data)`
@@ -2253,7 +2253,7 @@ extension RouteBuilder {
        Data is received from the WebSocket using
        the `onText` callback.
        ws.onText = { ws, text in
-           app.console.output("Received \(text)")
+           drop.console.output("Received \(text)")
        }
        **Closing**
        Close the Socket when you are done.
@@ -2386,7 +2386,7 @@ extension RouteBuilder {
        **Body**
        The body closure is given access to the Request
        that started the connection as well as the WebSocket.
-           app.socket("test") { request, ws in
+           drop.socket("test") { request, ws in
        }
        **Sending Data**
        Data is sent to the WebSocket stream using `send(_:Data)`
@@ -2395,7 +2395,7 @@ extension RouteBuilder {
        Data is received from the WebSocket using
        the `onText` callback.
        ws.onText = { ws, text in
-           app.console.output("Received \(text)")
+           drop.console.output("Received \(text)")
        }
        **Closing**
        Close the Socket when you are done.
@@ -2528,7 +2528,7 @@ extension RouteBuilder {
        **Body**
        The body closure is given access to the Request
        that started the connection as well as the WebSocket.
-           app.socket("test") { request, ws in
+           drop.socket("test") { request, ws in
        }
        **Sending Data**
        Data is sent to the WebSocket stream using `send(_:Data)`
@@ -2537,7 +2537,7 @@ extension RouteBuilder {
        Data is received from the WebSocket using
        the `onText` callback.
        ws.onText = { ws, text in
-           app.console.output("Received \(text)")
+           drop.console.output("Received \(text)")
        }
        **Closing**
        Close the Socket when you are done.
@@ -2719,7 +2719,7 @@ extension RouteBuilder {
        **Body**
        The body closure is given access to the Request
        that started the connection as well as the WebSocket.
-           app.socket("test") { request, ws in
+           drop.socket("test") { request, ws in
        }
        **Sending Data**
        Data is sent to the WebSocket stream using `send(_:Data)`
@@ -2728,7 +2728,7 @@ extension RouteBuilder {
        Data is received from the WebSocket using
        the `onText` callback.
        ws.onText = { ws, text in
-           app.console.output("Received \(text)")
+           drop.console.output("Received \(text)")
        }
        **Closing**
        Close the Socket when you are done.
@@ -2861,7 +2861,7 @@ extension RouteBuilder {
        **Body**
        The body closure is given access to the Request
        that started the connection as well as the WebSocket.
-           app.socket("test") { request, ws in
+           drop.socket("test") { request, ws in
        }
        **Sending Data**
        Data is sent to the WebSocket stream using `send(_:Data)`
@@ -2870,7 +2870,7 @@ extension RouteBuilder {
        Data is received from the WebSocket using
        the `onText` callback.
        ws.onText = { ws, text in
-           app.console.output("Received \(text)")
+           drop.console.output("Received \(text)")
        }
        **Closing**
        Close the Socket when you are done.
@@ -3052,7 +3052,7 @@ extension RouteBuilder {
        **Body**
        The body closure is given access to the Request
        that started the connection as well as the WebSocket.
-           app.socket("test") { request, ws in
+           drop.socket("test") { request, ws in
        }
        **Sending Data**
        Data is sent to the WebSocket stream using `send(_:Data)`
@@ -3061,7 +3061,7 @@ extension RouteBuilder {
        Data is received from the WebSocket using
        the `onText` callback.
        ws.onText = { ws, text in
-           app.console.output("Received \(text)")
+           drop.console.output("Received \(text)")
        }
        **Closing**
        Close the Socket when you are done.
@@ -3243,7 +3243,7 @@ extension RouteBuilder {
        **Body**
        The body closure is given access to the Request
        that started the connection as well as the WebSocket.
-           app.socket("test") { request, ws in
+           drop.socket("test") { request, ws in
        }
        **Sending Data**
        Data is sent to the WebSocket stream using `send(_:Data)`
@@ -3252,7 +3252,7 @@ extension RouteBuilder {
        Data is received from the WebSocket using
        the `onText` callback.
        ws.onText = { ws, text in
-           app.console.output("Received \(text)")
+           drop.console.output("Received \(text)")
        }
        **Closing**
        Close the Socket when you are done.
@@ -3483,7 +3483,7 @@ extension RouteBuilder {
        **Body**
        The body closure is given access to the Request
        that started the connection as well as the WebSocket.
-           app.socket("test") { request, ws in
+           drop.socket("test") { request, ws in
        }
        **Sending Data**
        Data is sent to the WebSocket stream using `send(_:Data)`
@@ -3492,7 +3492,7 @@ extension RouteBuilder {
        Data is received from the WebSocket using
        the `onText` callback.
        ws.onText = { ws, text in
-           app.console.output("Received \(text)")
+           drop.console.output("Received \(text)")
        }
        **Closing**
        Close the Socket when you are done.
@@ -3625,7 +3625,7 @@ extension RouteBuilder {
        **Body**
        The body closure is given access to the Request
        that started the connection as well as the WebSocket.
-           app.socket("test") { request, ws in
+           drop.socket("test") { request, ws in
        }
        **Sending Data**
        Data is sent to the WebSocket stream using `send(_:Data)`
@@ -3634,7 +3634,7 @@ extension RouteBuilder {
        Data is received from the WebSocket using
        the `onText` callback.
        ws.onText = { ws, text in
-           app.console.output("Received \(text)")
+           drop.console.output("Received \(text)")
        }
        **Closing**
        Close the Socket when you are done.
@@ -3816,7 +3816,7 @@ extension RouteBuilder {
        **Body**
        The body closure is given access to the Request
        that started the connection as well as the WebSocket.
-           app.socket("test") { request, ws in
+           drop.socket("test") { request, ws in
        }
        **Sending Data**
        Data is sent to the WebSocket stream using `send(_:Data)`
@@ -3825,7 +3825,7 @@ extension RouteBuilder {
        Data is received from the WebSocket using
        the `onText` callback.
        ws.onText = { ws, text in
-           app.console.output("Received \(text)")
+           drop.console.output("Received \(text)")
        }
        **Closing**
        Close the Socket when you are done.
@@ -4007,7 +4007,7 @@ extension RouteBuilder {
        **Body**
        The body closure is given access to the Request
        that started the connection as well as the WebSocket.
-           app.socket("test") { request, ws in
+           drop.socket("test") { request, ws in
        }
        **Sending Data**
        Data is sent to the WebSocket stream using `send(_:Data)`
@@ -4016,7 +4016,7 @@ extension RouteBuilder {
        Data is received from the WebSocket using
        the `onText` callback.
        ws.onText = { ws, text in
-           app.console.output("Received \(text)")
+           drop.console.output("Received \(text)")
        }
        **Closing**
        Close the Socket when you are done.
@@ -4247,7 +4247,7 @@ extension RouteBuilder {
        **Body**
        The body closure is given access to the Request
        that started the connection as well as the WebSocket.
-           app.socket("test") { request, ws in
+           drop.socket("test") { request, ws in
        }
        **Sending Data**
        Data is sent to the WebSocket stream using `send(_:Data)`
@@ -4256,7 +4256,7 @@ extension RouteBuilder {
        Data is received from the WebSocket using
        the `onText` callback.
        ws.onText = { ws, text in
-           app.console.output("Received \(text)")
+           drop.console.output("Received \(text)")
        }
        **Closing**
        Close the Socket when you are done.
@@ -4438,7 +4438,7 @@ extension RouteBuilder {
        **Body**
        The body closure is given access to the Request
        that started the connection as well as the WebSocket.
-           app.socket("test") { request, ws in
+           drop.socket("test") { request, ws in
        }
        **Sending Data**
        Data is sent to the WebSocket stream using `send(_:Data)`
@@ -4447,7 +4447,7 @@ extension RouteBuilder {
        Data is received from the WebSocket using
        the `onText` callback.
        ws.onText = { ws, text in
-           app.console.output("Received \(text)")
+           drop.console.output("Received \(text)")
        }
        **Closing**
        Close the Socket when you are done.
@@ -4678,7 +4678,7 @@ extension RouteBuilder {
        **Body**
        The body closure is given access to the Request
        that started the connection as well as the WebSocket.
-           app.socket("test") { request, ws in
+           drop.socket("test") { request, ws in
        }
        **Sending Data**
        Data is sent to the WebSocket stream using `send(_:Data)`
@@ -4687,7 +4687,7 @@ extension RouteBuilder {
        Data is received from the WebSocket using
        the `onText` callback.
        ws.onText = { ws, text in
-           app.console.output("Received \(text)")
+           drop.console.output("Received \(text)")
        }
        **Closing**
        Close the Socket when you are done.
@@ -4918,7 +4918,7 @@ extension RouteBuilder {
        **Body**
        The body closure is given access to the Request
        that started the connection as well as the WebSocket.
-           app.socket("test") { request, ws in
+           drop.socket("test") { request, ws in
        }
        **Sending Data**
        Data is sent to the WebSocket stream using `send(_:Data)`
@@ -4927,7 +4927,7 @@ extension RouteBuilder {
        Data is received from the WebSocket using
        the `onText` callback.
        ws.onText = { ws, text in
-           app.console.output("Received \(text)")
+           drop.console.output("Received \(text)")
        }
        **Closing**
        Close the Socket when you are done.
@@ -5207,7 +5207,7 @@ extension RouteBuilder {
        **Body**
        The body closure is given access to the Request
        that started the connection as well as the WebSocket.
-           app.socket("test") { request, ws in
+           drop.socket("test") { request, ws in
        }
        **Sending Data**
        Data is sent to the WebSocket stream using `send(_:Data)`
@@ -5216,7 +5216,7 @@ extension RouteBuilder {
        Data is received from the WebSocket using
        the `onText` callback.
        ws.onText = { ws, text in
-           app.console.output("Received \(text)")
+           drop.console.output("Received \(text)")
        }
        **Closing**
        Close the Socket when you are done.
@@ -5300,7 +5300,7 @@ extension RouteBuilder {
        **Body**
        The body closure is given access to the Request
        that started the connection as well as the WebSocket.
-           app.socket("test") { request, ws in
+           drop.socket("test") { request, ws in
        }
        **Sending Data**
        Data is sent to the WebSocket stream using `send(_:Data)`
@@ -5309,7 +5309,7 @@ extension RouteBuilder {
        Data is received from the WebSocket using
        the `onText` callback.
        ws.onText = { ws, text in
-           app.console.output("Received \(text)")
+           drop.console.output("Received \(text)")
        }
        **Closing**
        Close the Socket when you are done.
@@ -5442,7 +5442,7 @@ extension RouteBuilder {
        **Body**
        The body closure is given access to the Request
        that started the connection as well as the WebSocket.
-           app.socket("test") { request, ws in
+           drop.socket("test") { request, ws in
        }
        **Sending Data**
        Data is sent to the WebSocket stream using `send(_:Data)`
@@ -5451,7 +5451,7 @@ extension RouteBuilder {
        Data is received from the WebSocket using
        the `onText` callback.
        ws.onText = { ws, text in
-           app.console.output("Received \(text)")
+           drop.console.output("Received \(text)")
        }
        **Closing**
        Close the Socket when you are done.
@@ -5584,7 +5584,7 @@ extension RouteBuilder {
        **Body**
        The body closure is given access to the Request
        that started the connection as well as the WebSocket.
-           app.socket("test") { request, ws in
+           drop.socket("test") { request, ws in
        }
        **Sending Data**
        Data is sent to the WebSocket stream using `send(_:Data)`
@@ -5593,7 +5593,7 @@ extension RouteBuilder {
        Data is received from the WebSocket using
        the `onText` callback.
        ws.onText = { ws, text in
-           app.console.output("Received \(text)")
+           drop.console.output("Received \(text)")
        }
        **Closing**
        Close the Socket when you are done.
@@ -5775,7 +5775,7 @@ extension RouteBuilder {
        **Body**
        The body closure is given access to the Request
        that started the connection as well as the WebSocket.
-           app.socket("test") { request, ws in
+           drop.socket("test") { request, ws in
        }
        **Sending Data**
        Data is sent to the WebSocket stream using `send(_:Data)`
@@ -5784,7 +5784,7 @@ extension RouteBuilder {
        Data is received from the WebSocket using
        the `onText` callback.
        ws.onText = { ws, text in
-           app.console.output("Received \(text)")
+           drop.console.output("Received \(text)")
        }
        **Closing**
        Close the Socket when you are done.
@@ -5917,7 +5917,7 @@ extension RouteBuilder {
        **Body**
        The body closure is given access to the Request
        that started the connection as well as the WebSocket.
-           app.socket("test") { request, ws in
+           drop.socket("test") { request, ws in
        }
        **Sending Data**
        Data is sent to the WebSocket stream using `send(_:Data)`
@@ -5926,7 +5926,7 @@ extension RouteBuilder {
        Data is received from the WebSocket using
        the `onText` callback.
        ws.onText = { ws, text in
-           app.console.output("Received \(text)")
+           drop.console.output("Received \(text)")
        }
        **Closing**
        Close the Socket when you are done.
@@ -6108,7 +6108,7 @@ extension RouteBuilder {
        **Body**
        The body closure is given access to the Request
        that started the connection as well as the WebSocket.
-           app.socket("test") { request, ws in
+           drop.socket("test") { request, ws in
        }
        **Sending Data**
        Data is sent to the WebSocket stream using `send(_:Data)`
@@ -6117,7 +6117,7 @@ extension RouteBuilder {
        Data is received from the WebSocket using
        the `onText` callback.
        ws.onText = { ws, text in
-           app.console.output("Received \(text)")
+           drop.console.output("Received \(text)")
        }
        **Closing**
        Close the Socket when you are done.
@@ -6299,7 +6299,7 @@ extension RouteBuilder {
        **Body**
        The body closure is given access to the Request
        that started the connection as well as the WebSocket.
-           app.socket("test") { request, ws in
+           drop.socket("test") { request, ws in
        }
        **Sending Data**
        Data is sent to the WebSocket stream using `send(_:Data)`
@@ -6308,7 +6308,7 @@ extension RouteBuilder {
        Data is received from the WebSocket using
        the `onText` callback.
        ws.onText = { ws, text in
-           app.console.output("Received \(text)")
+           drop.console.output("Received \(text)")
        }
        **Closing**
        Close the Socket when you are done.
@@ -6539,7 +6539,7 @@ extension RouteBuilder {
        **Body**
        The body closure is given access to the Request
        that started the connection as well as the WebSocket.
-           app.socket("test") { request, ws in
+           drop.socket("test") { request, ws in
        }
        **Sending Data**
        Data is sent to the WebSocket stream using `send(_:Data)`
@@ -6548,7 +6548,7 @@ extension RouteBuilder {
        Data is received from the WebSocket using
        the `onText` callback.
        ws.onText = { ws, text in
-           app.console.output("Received \(text)")
+           drop.console.output("Received \(text)")
        }
        **Closing**
        Close the Socket when you are done.
@@ -6681,7 +6681,7 @@ extension RouteBuilder {
        **Body**
        The body closure is given access to the Request
        that started the connection as well as the WebSocket.
-           app.socket("test") { request, ws in
+           drop.socket("test") { request, ws in
        }
        **Sending Data**
        Data is sent to the WebSocket stream using `send(_:Data)`
@@ -6690,7 +6690,7 @@ extension RouteBuilder {
        Data is received from the WebSocket using
        the `onText` callback.
        ws.onText = { ws, text in
-           app.console.output("Received \(text)")
+           drop.console.output("Received \(text)")
        }
        **Closing**
        Close the Socket when you are done.
@@ -6872,7 +6872,7 @@ extension RouteBuilder {
        **Body**
        The body closure is given access to the Request
        that started the connection as well as the WebSocket.
-           app.socket("test") { request, ws in
+           drop.socket("test") { request, ws in
        }
        **Sending Data**
        Data is sent to the WebSocket stream using `send(_:Data)`
@@ -6881,7 +6881,7 @@ extension RouteBuilder {
        Data is received from the WebSocket using
        the `onText` callback.
        ws.onText = { ws, text in
-           app.console.output("Received \(text)")
+           drop.console.output("Received \(text)")
        }
        **Closing**
        Close the Socket when you are done.
@@ -7063,7 +7063,7 @@ extension RouteBuilder {
        **Body**
        The body closure is given access to the Request
        that started the connection as well as the WebSocket.
-           app.socket("test") { request, ws in
+           drop.socket("test") { request, ws in
        }
        **Sending Data**
        Data is sent to the WebSocket stream using `send(_:Data)`
@@ -7072,7 +7072,7 @@ extension RouteBuilder {
        Data is received from the WebSocket using
        the `onText` callback.
        ws.onText = { ws, text in
-           app.console.output("Received \(text)")
+           drop.console.output("Received \(text)")
        }
        **Closing**
        Close the Socket when you are done.
@@ -7303,7 +7303,7 @@ extension RouteBuilder {
        **Body**
        The body closure is given access to the Request
        that started the connection as well as the WebSocket.
-           app.socket("test") { request, ws in
+           drop.socket("test") { request, ws in
        }
        **Sending Data**
        Data is sent to the WebSocket stream using `send(_:Data)`
@@ -7312,7 +7312,7 @@ extension RouteBuilder {
        Data is received from the WebSocket using
        the `onText` callback.
        ws.onText = { ws, text in
-           app.console.output("Received \(text)")
+           drop.console.output("Received \(text)")
        }
        **Closing**
        Close the Socket when you are done.
@@ -7494,7 +7494,7 @@ extension RouteBuilder {
        **Body**
        The body closure is given access to the Request
        that started the connection as well as the WebSocket.
-           app.socket("test") { request, ws in
+           drop.socket("test") { request, ws in
        }
        **Sending Data**
        Data is sent to the WebSocket stream using `send(_:Data)`
@@ -7503,7 +7503,7 @@ extension RouteBuilder {
        Data is received from the WebSocket using
        the `onText` callback.
        ws.onText = { ws, text in
-           app.console.output("Received \(text)")
+           drop.console.output("Received \(text)")
        }
        **Closing**
        Close the Socket when you are done.
@@ -7734,7 +7734,7 @@ extension RouteBuilder {
        **Body**
        The body closure is given access to the Request
        that started the connection as well as the WebSocket.
-           app.socket("test") { request, ws in
+           drop.socket("test") { request, ws in
        }
        **Sending Data**
        Data is sent to the WebSocket stream using `send(_:Data)`
@@ -7743,7 +7743,7 @@ extension RouteBuilder {
        Data is received from the WebSocket using
        the `onText` callback.
        ws.onText = { ws, text in
-           app.console.output("Received \(text)")
+           drop.console.output("Received \(text)")
        }
        **Closing**
        Close the Socket when you are done.
@@ -7974,7 +7974,7 @@ extension RouteBuilder {
        **Body**
        The body closure is given access to the Request
        that started the connection as well as the WebSocket.
-           app.socket("test") { request, ws in
+           drop.socket("test") { request, ws in
        }
        **Sending Data**
        Data is sent to the WebSocket stream using `send(_:Data)`
@@ -7983,7 +7983,7 @@ extension RouteBuilder {
        Data is received from the WebSocket using
        the `onText` callback.
        ws.onText = { ws, text in
-           app.console.output("Received \(text)")
+           drop.console.output("Received \(text)")
        }
        **Closing**
        Close the Socket when you are done.
@@ -8263,7 +8263,7 @@ extension RouteBuilder {
        **Body**
        The body closure is given access to the Request
        that started the connection as well as the WebSocket.
-           app.socket("test") { request, ws in
+           drop.socket("test") { request, ws in
        }
        **Sending Data**
        Data is sent to the WebSocket stream using `send(_:Data)`
@@ -8272,7 +8272,7 @@ extension RouteBuilder {
        Data is received from the WebSocket using
        the `onText` callback.
        ws.onText = { ws, text in
-           app.console.output("Received \(text)")
+           drop.console.output("Received \(text)")
        }
        **Closing**
        Close the Socket when you are done.
@@ -8405,7 +8405,7 @@ extension RouteBuilder {
        **Body**
        The body closure is given access to the Request
        that started the connection as well as the WebSocket.
-           app.socket("test") { request, ws in
+           drop.socket("test") { request, ws in
        }
        **Sending Data**
        Data is sent to the WebSocket stream using `send(_:Data)`
@@ -8414,7 +8414,7 @@ extension RouteBuilder {
        Data is received from the WebSocket using
        the `onText` callback.
        ws.onText = { ws, text in
-           app.console.output("Received \(text)")
+           drop.console.output("Received \(text)")
        }
        **Closing**
        Close the Socket when you are done.
@@ -8596,7 +8596,7 @@ extension RouteBuilder {
        **Body**
        The body closure is given access to the Request
        that started the connection as well as the WebSocket.
-           app.socket("test") { request, ws in
+           drop.socket("test") { request, ws in
        }
        **Sending Data**
        Data is sent to the WebSocket stream using `send(_:Data)`
@@ -8605,7 +8605,7 @@ extension RouteBuilder {
        Data is received from the WebSocket using
        the `onText` callback.
        ws.onText = { ws, text in
-           app.console.output("Received \(text)")
+           drop.console.output("Received \(text)")
        }
        **Closing**
        Close the Socket when you are done.
@@ -8787,7 +8787,7 @@ extension RouteBuilder {
        **Body**
        The body closure is given access to the Request
        that started the connection as well as the WebSocket.
-           app.socket("test") { request, ws in
+           drop.socket("test") { request, ws in
        }
        **Sending Data**
        Data is sent to the WebSocket stream using `send(_:Data)`
@@ -8796,7 +8796,7 @@ extension RouteBuilder {
        Data is received from the WebSocket using
        the `onText` callback.
        ws.onText = { ws, text in
-           app.console.output("Received \(text)")
+           drop.console.output("Received \(text)")
        }
        **Closing**
        Close the Socket when you are done.
@@ -9027,7 +9027,7 @@ extension RouteBuilder {
        **Body**
        The body closure is given access to the Request
        that started the connection as well as the WebSocket.
-           app.socket("test") { request, ws in
+           drop.socket("test") { request, ws in
        }
        **Sending Data**
        Data is sent to the WebSocket stream using `send(_:Data)`
@@ -9036,7 +9036,7 @@ extension RouteBuilder {
        Data is received from the WebSocket using
        the `onText` callback.
        ws.onText = { ws, text in
-           app.console.output("Received \(text)")
+           drop.console.output("Received \(text)")
        }
        **Closing**
        Close the Socket when you are done.
@@ -9218,7 +9218,7 @@ extension RouteBuilder {
        **Body**
        The body closure is given access to the Request
        that started the connection as well as the WebSocket.
-           app.socket("test") { request, ws in
+           drop.socket("test") { request, ws in
        }
        **Sending Data**
        Data is sent to the WebSocket stream using `send(_:Data)`
@@ -9227,7 +9227,7 @@ extension RouteBuilder {
        Data is received from the WebSocket using
        the `onText` callback.
        ws.onText = { ws, text in
-           app.console.output("Received \(text)")
+           drop.console.output("Received \(text)")
        }
        **Closing**
        Close the Socket when you are done.
@@ -9458,7 +9458,7 @@ extension RouteBuilder {
        **Body**
        The body closure is given access to the Request
        that started the connection as well as the WebSocket.
-           app.socket("test") { request, ws in
+           drop.socket("test") { request, ws in
        }
        **Sending Data**
        Data is sent to the WebSocket stream using `send(_:Data)`
@@ -9467,7 +9467,7 @@ extension RouteBuilder {
        Data is received from the WebSocket using
        the `onText` callback.
        ws.onText = { ws, text in
-           app.console.output("Received \(text)")
+           drop.console.output("Received \(text)")
        }
        **Closing**
        Close the Socket when you are done.
@@ -9698,7 +9698,7 @@ extension RouteBuilder {
        **Body**
        The body closure is given access to the Request
        that started the connection as well as the WebSocket.
-           app.socket("test") { request, ws in
+           drop.socket("test") { request, ws in
        }
        **Sending Data**
        Data is sent to the WebSocket stream using `send(_:Data)`
@@ -9707,7 +9707,7 @@ extension RouteBuilder {
        Data is received from the WebSocket using
        the `onText` callback.
        ws.onText = { ws, text in
-           app.console.output("Received \(text)")
+           drop.console.output("Received \(text)")
        }
        **Closing**
        Close the Socket when you are done.
@@ -9987,7 +9987,7 @@ extension RouteBuilder {
        **Body**
        The body closure is given access to the Request
        that started the connection as well as the WebSocket.
-           app.socket("test") { request, ws in
+           drop.socket("test") { request, ws in
        }
        **Sending Data**
        Data is sent to the WebSocket stream using `send(_:Data)`
@@ -9996,7 +9996,7 @@ extension RouteBuilder {
        Data is received from the WebSocket using
        the `onText` callback.
        ws.onText = { ws, text in
-           app.console.output("Received \(text)")
+           drop.console.output("Received \(text)")
        }
        **Closing**
        Close the Socket when you are done.
@@ -10178,7 +10178,7 @@ extension RouteBuilder {
        **Body**
        The body closure is given access to the Request
        that started the connection as well as the WebSocket.
-           app.socket("test") { request, ws in
+           drop.socket("test") { request, ws in
        }
        **Sending Data**
        Data is sent to the WebSocket stream using `send(_:Data)`
@@ -10187,7 +10187,7 @@ extension RouteBuilder {
        Data is received from the WebSocket using
        the `onText` callback.
        ws.onText = { ws, text in
-           app.console.output("Received \(text)")
+           drop.console.output("Received \(text)")
        }
        **Closing**
        Close the Socket when you are done.
@@ -10418,7 +10418,7 @@ extension RouteBuilder {
        **Body**
        The body closure is given access to the Request
        that started the connection as well as the WebSocket.
-           app.socket("test") { request, ws in
+           drop.socket("test") { request, ws in
        }
        **Sending Data**
        Data is sent to the WebSocket stream using `send(_:Data)`
@@ -10427,7 +10427,7 @@ extension RouteBuilder {
        Data is received from the WebSocket using
        the `onText` callback.
        ws.onText = { ws, text in
-           app.console.output("Received \(text)")
+           drop.console.output("Received \(text)")
        }
        **Closing**
        Close the Socket when you are done.
@@ -10658,7 +10658,7 @@ extension RouteBuilder {
        **Body**
        The body closure is given access to the Request
        that started the connection as well as the WebSocket.
-           app.socket("test") { request, ws in
+           drop.socket("test") { request, ws in
        }
        **Sending Data**
        Data is sent to the WebSocket stream using `send(_:Data)`
@@ -10667,7 +10667,7 @@ extension RouteBuilder {
        Data is received from the WebSocket using
        the `onText` callback.
        ws.onText = { ws, text in
-           app.console.output("Received \(text)")
+           drop.console.output("Received \(text)")
        }
        **Closing**
        Close the Socket when you are done.
@@ -10947,7 +10947,7 @@ extension RouteBuilder {
        **Body**
        The body closure is given access to the Request
        that started the connection as well as the WebSocket.
-           app.socket("test") { request, ws in
+           drop.socket("test") { request, ws in
        }
        **Sending Data**
        Data is sent to the WebSocket stream using `send(_:Data)`
@@ -10956,7 +10956,7 @@ extension RouteBuilder {
        Data is received from the WebSocket using
        the `onText` callback.
        ws.onText = { ws, text in
-           app.console.output("Received \(text)")
+           drop.console.output("Received \(text)")
        }
        **Closing**
        Close the Socket when you are done.
@@ -11187,7 +11187,7 @@ extension RouteBuilder {
        **Body**
        The body closure is given access to the Request
        that started the connection as well as the WebSocket.
-           app.socket("test") { request, ws in
+           drop.socket("test") { request, ws in
        }
        **Sending Data**
        Data is sent to the WebSocket stream using `send(_:Data)`
@@ -11196,7 +11196,7 @@ extension RouteBuilder {
        Data is received from the WebSocket using
        the `onText` callback.
        ws.onText = { ws, text in
-           app.console.output("Received \(text)")
+           drop.console.output("Received \(text)")
        }
        **Closing**
        Close the Socket when you are done.
@@ -11476,7 +11476,7 @@ extension RouteBuilder {
        **Body**
        The body closure is given access to the Request
        that started the connection as well as the WebSocket.
-           app.socket("test") { request, ws in
+           drop.socket("test") { request, ws in
        }
        **Sending Data**
        Data is sent to the WebSocket stream using `send(_:Data)`
@@ -11485,7 +11485,7 @@ extension RouteBuilder {
        Data is received from the WebSocket using
        the `onText` callback.
        ws.onText = { ws, text in
-           app.console.output("Received \(text)")
+           drop.console.output("Received \(text)")
        }
        **Closing**
        Close the Socket when you are done.
@@ -11765,7 +11765,7 @@ extension RouteBuilder {
        **Body**
        The body closure is given access to the Request
        that started the connection as well as the WebSocket.
-           app.socket("test") { request, ws in
+           drop.socket("test") { request, ws in
        }
        **Sending Data**
        Data is sent to the WebSocket stream using `send(_:Data)`
@@ -11774,7 +11774,7 @@ extension RouteBuilder {
        Data is received from the WebSocket using
        the `onText` callback.
        ws.onText = { ws, text in
-           app.console.output("Received \(text)")
+           drop.console.output("Received \(text)")
        }
        **Closing**
        Close the Socket when you are done.

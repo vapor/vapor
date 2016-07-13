@@ -3,7 +3,7 @@
     in any Vapor closure.
 
     To stop this behavior, remove the
-    AbortMiddleware for the Application's `middleware` array.
+    AbortMiddleware for the Droplet's `middleware` array.
 */
 public class AbortMiddleware: Middleware {
 

@@ -1,7 +1,7 @@
 import XCTest
 @testable import Vapor
 
-class ApplicationTests: XCTestCase {
+class DropletTests: XCTestCase {
     static let allTests = [
         ("testMediaType", testMediaType),
         ("testProviders", testProviders),
@@ -20,12 +20,12 @@ class ApplicationTests: XCTestCase {
         headers returned.
     */
     func testMediaType() throws {
-        let app = Application(workDir: workDir)
+        let drop = Droplet(workDir: workDir)
 
         let request = try Request(method: .get, uri: "/styles/app.css")
 
-        guard let response = try? app.respond(to: request) else {
-            XCTFail("App could not respond")
+        guard let response = try? drop.respond(to: request) else {
+            XCTFail("drop could not respond")
             return
         }
 
@@ -42,7 +42,7 @@ class ApplicationTests: XCTestCase {
     /**
         Tests to make sure Providers
         are properly overriding properties
-        on the Application and that the boot
+        on the Droplet and that the boot
         method is being called.
     */
     func testProviders() {
@@ -61,7 +61,7 @@ class ApplicationTests: XCTestCase {
         class TestProvider: Provider {
             var bootRan = false
 
-            func boot(with application: Application) {
+            func boot(with droplet: Droplet) {
                 bootRan = true
             }
 
@@ -73,17 +73,17 @@ class ApplicationTests: XCTestCase {
         }
 
         let provider = TestProvider()
-        let app = Application(providers: [
+        let drop = Droplet(providers: [
             provider
         ])
 
-        XCTAssert(app.server == TestServer.self, "Provider did not provide TestServer")
-        XCTAssert(provider.bootRan == true, "Application did not boot provider")
+        XCTAssert(drop.server == TestServer.self, "Provider did not provide TestServer")
+        XCTAssert(provider.bootRan == true, "Droplet did not boot provider")
     }
 
     /**
         Tests that Providers override other
-        init arguments to the application.
+        init arguments to the droplet.
     */
     func testProvidersOverride() {
         final class TestServerAlpha: Server {
@@ -111,7 +111,7 @@ class ApplicationTests: XCTestCase {
         }
 
         class TestProvider: Provider {
-            func boot(with application: Application) {}
+            func boot(with droplet: Droplet) {}
 
             var server: Server.Type?
 
@@ -122,11 +122,11 @@ class ApplicationTests: XCTestCase {
 
         let provider = TestProvider()
 
-        let app = Application(server: TestServerBeta.self, providers: [
+        let drop = Droplet(server: TestServerBeta.self, providers: [
             provider
         ])
 
-        XCTAssert(app.server == TestServerAlpha.self, "Provider did not override with TestServerAlpha")
+        XCTAssert(drop.server == TestServerAlpha.self, "Provider did not override with TestServerAlpha")
     }
 
  }

@@ -27,14 +27,14 @@ private struct PrioritizedDirectoryQueue {
     included under Config in the working directory.
 
     Files stored in the Config directory can be accessed
-    via `app.config["filename", "property"]`.
+    via `drop.config["filename", "property"]`.
 
-    For example, a file named `Config/app.json` containing
-    `{"port": 80}` can be accessed with `app.config["app" "port"].int`.
+    For example, a file named `Config/drop.json` containing
+    `{"port": 80}` can be accessed with `drop.config["app" "port"].int`.
     To override certain configurations for a given environment,
     create a file with the same name in a subdirectory of the environment.
-    For example, a file named `Config/production/app.json` would override
-    any properties in `Config/app.json` when the app is in production mode.
+    For example, a file named `Config/production/drop.json` would override
+    any properties in `Config/drop.json` when the drop is in production mode.
 
     Finally, Vapor supports sensitive environment specific information, such
     as API keys, to be stored in a special configuration folder at `Config/secrets`.
@@ -52,7 +52,7 @@ public class Config {
     /**
         Creates an instance of `Config` with
         starting configurations.
-        The application is required to detect environment.
+        The droplet is required to detect environment.
     */
     public init(
         seed: JSON = [:],
@@ -68,7 +68,7 @@ public class Config {
         var prioritizedDirectories: [JSONDirectory] = [seedDirectory]
 
         // command line args passed w/ following syntax loaded first after seed
-        // --config:app.port=9090
+        // --config:drop.port=9090
         // --config:passwords.mongo-user=user
         // --config:passwords.mongo-password=password
         // --config:<name>.<path>.<to>.<value>=<actual-value>
@@ -109,7 +109,7 @@ public class Config {
 
          You would access the port like this:
 
-             let port = app.config["metadata", "info", "por"].int ?? 8080
+             let port = drop.config["metadata", "info", "por"].int ?? 8080
 
          Follows format
 

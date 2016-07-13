@@ -47,20 +47,20 @@ class SessionTests: XCTestCase {
     }
 
     func testIdentifierCreation() throws {
-        let app = Application()
+        let drop = Droplet()
 
-        app.get("cookie") { request in
+        drop.get("cookie") { request in
             request.session?["hi"] = "test"
             return "hi"
         }
 
         let request = try Request(method: .get, path: "cookie")
         request.headers["Cookie"] = "vapor-session=123"
-        let response = try app.respond(to: request)
+        let response = try drop.respond(to: request)
 
         var sessionMiddleware: SessionMiddleware?
 
-        for middleware in app.globalMiddleware {
+        for middleware in drop.globalMiddleware {
             if let middleware = middleware as? SessionMiddleware {
                 sessionMiddleware = middleware
             }
@@ -78,7 +78,7 @@ class SessionTests: XCTestCase {
 }
 
 private class TestDriver: Sessions {
-    var app = Application()
+    var drop = Droplet()
 
     enum Action {
         case ValueFor(key: String, identifier: String)

@@ -5,9 +5,7 @@ import Engine
 
 public let VERSION = "0.14.0"
 
-public typealias Droplet = Application
-
-public class Application {
+public class Droplet {
     /**
         The router driver is responsible
         for returning registered `Route` handlers
@@ -46,10 +44,10 @@ public class Application {
     public let hash: Hash
 
     /**
-        The work directory of your application is
+        The work directory of your droplet is
         the directory in which your Resources, Public, etc
         folders are stored. This is normally `./` if
-        you are running Vapor using `.build/xxx/App`
+        you are running Vapor using `.build/xxx/drop`
     */
     public let workDir: String
 
@@ -64,7 +62,7 @@ public class Application {
 
     /**
         Available Commands to use when starting
-        the application.
+        the droplet.
     */
     public var commands: [Command]
 
@@ -89,7 +87,7 @@ public class Application {
     }
 
     /**
-        The arguments passed to the application.
+        The arguments passed to the droplet.
     */
     public let arguments: [String]
 
@@ -102,7 +100,7 @@ public class Application {
     public let log: Log
 
     /**
-        Initialize the Application.
+        Initialize the Droplet.
     */
     public init(
         workDir: String? = nil,
@@ -262,7 +260,7 @@ public class Application {
     }
 }
 
-extension Application {
+extension Droplet {
     enum ExecutionError: ErrorProtocol {
         case insufficientArguments, noCommandFound
     }
@@ -311,7 +309,7 @@ extension Application {
             commands: commands.map { $0 as Runnable },
             arguments: args,
             help: [
-                "This command line interface is used to serve your application, prepare the database, and more.",
+                "This command line interface is used to serve your droplet, prepare the database, and more.",
                 "Custom commands can be added by appending them to the Droplet's commands array.",
                 "Use --help on individual commands to learn more."
             ]
@@ -332,7 +330,7 @@ extension Sequence where Iterator.Element == String {
     }
 }
 
-extension Application {
+extension Droplet {
     // TODO: Can this be middleware?
     func checkFileSystem(for request: Request) -> Request.Handler? {
         // Check in file system
@@ -366,7 +364,7 @@ extension Application {
     }
 }
 
-extension Application {
+extension Droplet {
     public func add(_ middleware: Middleware...) {
         middleware.forEach { globalMiddleware.append($0) }
     }

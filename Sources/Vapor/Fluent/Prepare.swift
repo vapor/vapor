@@ -1,5 +1,5 @@
 /**
-    Runs the application's `Preparation`s.
+    Runs the droplet's `Preparation`s.
 */
 public struct Prepare: Command {
     public let id: String = "prepare"
@@ -9,7 +9,7 @@ public struct Prepare: Command {
     ]
 
     public let help: [String] = [
-        "runs the application's preparations"
+        "runs the droplet's preparations"
     ]
 
     public let console: Console
@@ -32,7 +32,7 @@ public struct Prepare: Command {
         }
 
         guard let database = database else {
-            throw CommandError.general("Can not run preparations, application has no database")
+            throw CommandError.general("Can not run preparations, droplet has no database")
         }
 
         if arguments.option("revert").bool == true {

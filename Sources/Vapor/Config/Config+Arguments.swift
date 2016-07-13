@@ -53,8 +53,8 @@ extension Config {
     }
 
     private static func parseComplexConfigKey(_ key: String) -> (file: String, path: [PathIndex])? {
-        // --config:app.port
-        // expect [--config, app.port]
+        // --config:drop.port
+        // expect [--config, drop.port]
         let paths = key
             .characters
             .split(separator: ":",

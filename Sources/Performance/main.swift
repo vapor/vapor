@@ -1,11 +1,11 @@
 import Vapor
 
-let app = Application()
+let drop = Droplet()
 
-app.get("plaintext") { request in
+drop.get("plaintext") { request in
     return "Hello, world"
 }
 
-app.globalMiddleware = []
+drop.globalMiddleware = []
 
-app.serve()
+drop.serve()

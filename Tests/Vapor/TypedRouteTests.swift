@@ -16,22 +16,22 @@ class TypedRouteTests: XCTestCase {
 
     func testRouting() {
 
-        let app = Application()
+        let drop = Droplet()
 
 
-        app.get("users", Int.self) { request, userId in
+        drop.get("users", Int.self) { request, userId in
             return ""
         }
 
-        app.put("posts", Post.self) { request, post in
+        drop.put("posts", Post.self) { request, post in
             return ""
         }
 
-        app.delete("one", Int.self, "two", String.self, "three/four") { request, one, two in
+        drop.delete("one", Int.self, "two", String.self, "three/four") { request, one, two in
             return ""
         }
 
-        app.grouped("v1") { group in
+        drop.grouped("v1") { group in
             group.patch("posts", Post.self) { request, post in
                 return ""
             }
@@ -40,19 +40,19 @@ class TypedRouteTests: XCTestCase {
         assertRouteExists(at: "users/:w0",
                           method: .get,
                           host: "*",
-                          inRoutes: app.routes)
+                          inRoutes: drop.routes)
         assertRouteExists(at: "posts/:w0",
                           method: .put,
                           host: "*",
-                          inRoutes: app.routes)
+                          inRoutes: drop.routes)
         assertRouteExists(at: "one/:w0/two/:w1/three/four",
                           method: .delete,
                           host: "*",
-                          inRoutes: app.routes)
+                          inRoutes: drop.routes)
         assertRouteExists(at: "v1/posts/:w0",
                           method: .patch,
                           host: "*",
-                          inRoutes: app.routes)
+                          inRoutes: drop.routes)
     }
 
 }
