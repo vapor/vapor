@@ -10,17 +10,21 @@ import Foundation
         var count: Int {
             return length
         }
+
+        func copyBytes(to bytes: UnsafeMutablePointer<Void>, count: Int) {
+            getBytes(bytes, length: count)
+        }
     }
-    
+
     typealias JSONSerialization = Foundation.NSJSONSerialization
 
     extension Foundation.NSMutableDictionary {
         public subscript(key: String) -> AnyObject {
             get {
-                return self.objectForKey(key)
+                return self.objectForKey(NSString(string: key))
             }
             set {
-                self.setObject(newValue, forKey: key)
+                self.setObject(newValue, forKey: NSString(string: key))
             }
         }
     }
