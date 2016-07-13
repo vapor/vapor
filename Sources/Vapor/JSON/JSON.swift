@@ -2,16 +2,22 @@
 import Foundation
 
 #if !os(Linux)
-    typealias NSData = Foundation.Data
+    private typealias NSData = Foundation.Data
 #endif
 
 #if os(Linux)
+    extension NSData {
+        var count: Int {
+            return length
+        }
+    }
+    
     typealias JSONSerialization = Foundation.NSJSONSerialization
 
-    extension Foundation.NSDictionary {
+    extension Foundation.NSMutableDictionary {
         public subscript(key: String) -> AnyObject {
             get {
-                return self.object(forKey: key)
+                return self.objectForKey(key)
             }
             set {
                 self.setObject(newValue, forKey: key)
@@ -19,7 +25,7 @@ import Foundation
         }
     }
 
-    extension Foundation.NSArray {
+    extension Foundation.NSMutableArray {
         public func add(_ object: AnyObject) {
             self.addObject(object)
         }
@@ -82,7 +88,7 @@ extension JSON {
         print(self)
     }
 
-    private static func _cast(_ anyObject: AnyObject) -> JSON {
+    private static func _cast(_ anyObject: Any) -> JSON {
         if let dict = anyObject as? [String: AnyObject] {
             var object: [String: JSON] = [:]
             for (key, val) in dict {
