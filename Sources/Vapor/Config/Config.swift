@@ -30,7 +30,7 @@ private struct PrioritizedDirectoryQueue {
     via `drop.config["filename", "property"]`.
 
     For example, a file named `Config/drop.json` containing
-    `{"port": 80}` can be accessed with `drop.config["drop" "port"].int`.
+    `{"port": 80}` can be accessed with `drop.config["app" "port"].int`.
     To override certain configurations for a given environment,
     create a file with the same name in a subdirectory of the environment.
     For example, a file named `Config/production/drop.json` would override
