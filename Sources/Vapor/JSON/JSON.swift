@@ -24,7 +24,10 @@ import Foundation
                 return self.objectForKey(NSString(string: key))
             }
             set {
-                self.setObject(newValue, forKey: NSString(string: key))
+                guard let value = newValue else {
+                    return
+                }
+                self.setObject(value, forKey: NSString(string: key))
             }
         }
     }
@@ -100,6 +103,14 @@ extension JSON {
             }
             return .object(object)
         } else if let array = anyObject as? [AnyObject] {
+            return .array(array.map { _cast($0) })
+        } else if let dict = anyObject as? [String: Any] {
+            var object: [String: JSON] = [:]
+            for (key, val) in dict {
+                object[key] = _cast(val)
+            }
+            return .object(object)
+        } else if let array = anyObject as? [Any] {
             return .array(array.map { _cast($0) })
         } else if let int = anyObject as? Int {
             return .number(.integer(int))
