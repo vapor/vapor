@@ -1,3 +1,5 @@
+import Foundation
+
 #if os(Linux)
     extension NSData {
         var count: Int {
