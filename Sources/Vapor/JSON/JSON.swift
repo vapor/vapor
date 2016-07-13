@@ -1,6 +1,31 @@
 //import Jay
 import Foundation
 
+#if !os(Linux)
+    typealias NSData = Foundation.Data
+#endif
+
+#if os(Linux)
+    typealias JSONSerialization = Foundation.NSJSONSerialization
+
+    extension Foundation.NSDictionary {
+        public subscript(key: String) -> AnyObject {
+            get {
+                return self.object(forKey: key)
+            }
+            set {
+                self.setObject(newValue, forKey: key)
+            }
+        }
+    }
+
+    extension Foundation.NSArray {
+        public func add(_ object: AnyObject) {
+            self.addObject(object)
+        }
+    }
+#endif
+
 import struct Base.Bytes
 import protocol Engine.HTTPResponseRepresentable
 
@@ -49,7 +74,7 @@ public enum JSON {
 
 extension JSON {
     public init(serialized: Bytes) throws {
-        let data = Foundation.Data(bytes: serialized)
+        let data = NSData(bytes: serialized)
         let json = try JSONSerialization.jsonObject(with: data)
 
         self = JSON._cast(json)
@@ -91,13 +116,13 @@ extension JSON {
     private static func _uncast(_ json: JSON) -> AnyObject {
         switch json {
         case .object(let object):
-            let dict: NSMutableDictionary = [:]
+            let dict = NSMutableDictionary()
             for (key, val) in object {
                 dict[key] = _uncast(val)
             }
             return dict.copy()
         case .array(let array):
-            let nsarray: NSMutableArray = []
+            let nsarray = NSMutableArray()
             for item in array {
                 nsarray.add(_uncast(item))
             }
