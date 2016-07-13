@@ -6,6 +6,14 @@ VALID_MAC="swiftlang-800.0.33.1"
 VALID_LINUX="swift-3.0-PREVIEW-2"
 VALID_XCB="8S162m"
 
+help() {
+	echo "📖  Visit our docs for step-by-step instructions on installing Swift correctly."
+	echo "http://docs.qutheory.io"
+	echo ""
+	echo "👋  or Join our Slack and we'll help you get setup."
+	echo "http://slack.qutheory.io"
+}
+
 if [[ $SWIFTC == "" ]];
 then
 	echo "❌  Incompatible"
@@ -30,7 +38,7 @@ then
 		echo "Current: $XCBVERSION"
 		echo ""
 	fi
-	
+
 	SWIFTLOC=`which swift`
 	SWIFTDESIRED="/usr/bin/swift" 
 	if [[ $SWIFTLOC != $SWIFTDESIRED ]];
@@ -53,6 +61,8 @@ then
 		echo ""
 		echo "Current 'swift -version' output:"
 		echo $SWIFTV
+		echo ""
+		help
 		exit 1;
 	fi
 else # Linux
@@ -71,6 +81,8 @@ else # Linux
 		echo ""
 		echo "Current 'swift -version' output:"
 		echo $SWIFTV
+		echo ""
+		help
 		exit 1;
 	fi
 fi
