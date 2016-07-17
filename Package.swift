@@ -29,6 +29,7 @@ targets += [
 
 let package = Package(
     name: "Vapor",
+    targets: targets,
     dependencies: [
         //Standards package. Contains protocols for cross-project compatability.
         .Package(url: "https://github.com/open-swift/S4.git", majorVersion: 0, minor: 10),
@@ -58,6 +59,5 @@ let package = Package(
         // Console protocol and implementation for powering command line interface.
         .Package(url: "https://github.com/qutheory/console.git", majorVersion: 0, minor: 2)
     ],
-    exclude: exclude,
-    targets: targets
+    exclude: exclude
 )
