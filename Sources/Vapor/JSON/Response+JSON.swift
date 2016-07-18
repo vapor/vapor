@@ -1,6 +1,6 @@
-import enum Engine.HTTPBody
+import Engine
 
-extension Response {
+extension HTTPResponse {
     /**
         Convenience Initializer
 

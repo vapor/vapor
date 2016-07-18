@@ -1,4 +1,6 @@
 import Fluent
+import Engine
+
 import protocol Base.Extractable
 
 public typealias Database = Fluent.Database
@@ -41,5 +43,5 @@ extension Extractable where Wrapped == FluentValue {
 }
 
 public protocol RequestInitializable {
-    init(request: Request) throws
+    init(request: HTTPRequest) throws
 }

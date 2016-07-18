@@ -1,10 +1,12 @@
-public protocol JSONRepresentable: ResponseRepresentable {
+import Engine
+
+public protocol JSONRepresentable: HTTPResponseRepresentable {
     func makeJSON() -> JSON
 }
 
-extension JSON: ResponseRepresentable {
-    public func makeResponse(for: Request) throws -> Response {
-        return try Response(status: .ok, json: self)
+extension JSON: HTTPResponseRepresentable {
+    public func makeResponse(for: HTTPResponse) throws -> HTTPResponse {
+        return try HTTPResponse(status: .ok, json: self)
     }
 }
 
@@ -34,7 +36,7 @@ extension Int: JSONRepresentable {
 
 extension JSONRepresentable {
     ///Allows any JsonRepresentable to be returned through closures
-    public func makeResponse(for request: Request) throws -> Response {
+    public func makeResponse(for request: HTTPRequest) throws -> HTTPResponse {
         return try makeJSON().makeResponse(for: request)
     }
 }

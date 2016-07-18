@@ -1,3 +1,5 @@
+import Engine
+
 public protocol RouteBuilder {
     var leadingPath: String { get }
     var scopedMiddleware: [Middleware] { get }
@@ -84,7 +86,7 @@ extension Droplet: RouteBuilder {
         handler: Route.Handler
     ) {
         // Convert Route.Handler to Request.Handler
-        let wrapped: Responder = Request.Handler { request in
+        let wrapped: HTTPResponder = HTTPRequest.Handler { request in
             return try handler(request).makeResponse(for: request)
         }
         let responder = middleware.chain(to: wrapped)
@@ -96,17 +98,17 @@ extension Droplet: RouteBuilder {
 }
 
 extension Middleware {
-    func chain(to responder: Responder) -> Responder {
-        return Request.Handler { request in
+    func chain(to responder: HTTPResponder) -> HTTPResponder {
+        return HTTPRequest.Handler { request in
             return try self.respond(to: request, chainingTo: responder)
         }
     }
 }
 
 extension Collection where Iterator.Element == Middleware {
-    func chain(to responder: Responder) -> Responder {
+    func chain(to responder: HTTPResponder) -> HTTPResponder {
         return reversed().reduce(responder) { nextResponder, nextMiddleware in
-            return Request.Handler { request in
+            return HTTPRequest.Handler { request in
                 return try nextMiddleware.respond(to: request, chainingTo: nextResponder)
             }
         }

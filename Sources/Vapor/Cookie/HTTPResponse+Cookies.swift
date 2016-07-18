@@ -1,4 +1,6 @@
-extension Response {
+import Engine
+
+extension HTTPResponse {
     public var cookies: Cookies {
         get {
             if let cookies = storage["Set-Cookie"] as? Cookies {

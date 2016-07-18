@@ -1,10 +1,12 @@
+import Engine
+
 /**
     Catches validation errors and prints
     out a more readable JSON response.
 */
 class ValidationMiddleware: Middleware {
 
-    func respond(to request: Request, chainingTo chain: Responder) throws -> Response {
+    func respond(to request: HTTPRequest, chainingTo chain: HTTPResponder) throws -> HTTPResponse {
         do {
             return try chain.respond(to: request)
         } catch let error as ValidationErrorProtocol {
@@ -13,7 +15,7 @@ class ValidationMiddleware: Middleware {
                 "message": error.message
             ])
             let data = try json.serialize()
-            return Response(status: .badRequest, body: .data(data))
+            return HTTPResponse(status: .badRequest, body: .data(data))
         }
     }
     

@@ -1,10 +1,12 @@
 import Engine
 
-public typealias Request = HTTPRequest
-public typealias Accept = HTTPAccept
-public typealias Responder = HTTPResponder
-public typealias Response = HTTPResponse
-public typealias ResponseRepresentable = Engine.HTTPResponseRepresentable
+//public typealias Request = HTTPRequest
+//public typealias Accept = HTTPAccept
+//public typealias Responder = HTTPResponder
+//public typealias Response = HTTPResponse
+//public typealias ResponseRepresentable = Engine.HTTPResponseRepresentable
+
+// public typealias HTTPBody = Engine.HTTPRequest
 public typealias HTTPBody = Engine.HTTPBody
 public typealias HTTPClient = Engine.HTTPClient
 public typealias HTTPServer = Engine.HTTPServer

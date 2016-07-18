@@ -1,4 +1,6 @@
-extension Droplet: Responder {
+import Engine
+
+extension Droplet: HTTPResponder {
     /**
         Returns a response to the given request
 
@@ -6,10 +8,10 @@ extension Droplet: Responder {
         - throws: error if something fails in finding response
         - returns: response if possible
     */
-    public func respond(to request: Request) throws -> Response {
+    public func respond(to request: HTTPRequest) throws -> HTTPResponse {
         log.info("\(request.method) \(request.uri.path ?? "/")")
 
-        var responder: Responder
+        var responder: HTTPResponder
         let request = request
 
         /*
@@ -30,17 +32,17 @@ extension Droplet: Responder {
             responder = fileHander
         } else {
             // Default not found handler
-            responder = Request.Handler { _ in
+            responder = HTTPRequest.Handler { _ in
                 let normal: [Method] = [.get, .post, .put, .patch, .delete]
 
                 if normal.contains(request.method) {
                     throw Abort.notFound
                 } else if case .options = request.method {
-                    return Response(status: .ok, headers: [
+                    return HTTPResponse(status: .ok, headers: [
                         "Allow": "OPTIONS"
-                        ])
+                    ])
                 } else {
-                    return Response(status: .notImplemented)
+                    return HTTPResponse(status: .notImplemented)
                 }
             }
         }
@@ -48,7 +50,7 @@ extension Droplet: Responder {
         // Loop through middlewares in order
         responder = self.globalMiddleware.chain(to: responder)
 
-        var response: Response
+        var response: HTTPResponse
         do {
             response = try responder.respond(to: request)
 
@@ -60,7 +62,7 @@ extension Droplet: Responder {
             if config.environment == .production {
                 error = "Something went wrong"
             }
-            response = Response(status: .internalServerError, body: error.bytes)
+            response = HTTPResponse(status: .internalServerError, body: error.bytes)
         }
 
         response.headers["Server"] = "Vapor \(Vapor.VERSION)"
