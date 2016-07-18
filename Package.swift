@@ -5,27 +5,10 @@ var exclude: [String] = []
 exclude.append("Sources/Generator")
 #endif
 
-var targets: [Target] = [
-    Target(
-        name: "Development",
-        dependencies: [
-            .Target(name: "Vapor")
-        ]
-    ),
-    Target(
-        name: "Performance",
-        dependencies: [
-            .Target(name: "Vapor")
-        ]
-    ),
+var targets = [
+    Target(name: "Development", dependencies: ["Vapor"]),
+    Target(name: "Performance", dependencies: ["Vapor"])
 ]
-#if !os(Linux)
-targets += [
-  Target(
-      name: "Generator"
-  )
-]
-#endif
 
 let package = Package(
     name: "Vapor",
