@@ -2,6 +2,7 @@ import libc
 import Foundation
 import Socks
 import Engine
+import Console
 
 public let VERSION = "0.14.0"
 
@@ -70,7 +71,7 @@ public class Droplet {
          Send output and receive input from the console
          using the underlying `ConsoleDriver`.
     */
-    public let console: Console
+    public let console: ConsoleProtocol
 
     /**
         TODO: Expose to end users to customize driver
@@ -107,7 +108,7 @@ public class Droplet {
         config: Config? = nil,
         localization: Localization? = nil,
         hash: Hash? = nil,
-        console: Console? = nil,
+        console: ConsoleProtocol? = nil,
         server: Server.Type? = nil,
         client: Client.Type? = nil,
         router: Router? = nil,
@@ -121,7 +122,7 @@ public class Droplet {
         var routerProvided: Router? = router
         var sessionsProvided: Sessions? = session
         var hashProvided: Hash? = hash
-        var consoleProvided: Console? = console
+        var consoleProvided: ConsoleProtocol? = console
         var clientProvided: Client.Type? = client
         var databaseProvided: DatabaseDriver? = database
 

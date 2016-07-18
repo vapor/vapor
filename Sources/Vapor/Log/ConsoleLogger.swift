@@ -1,4 +1,5 @@
 import libc
+import Console
 
 /**
     Logs to the console
@@ -7,7 +8,7 @@ import libc
     - parameter message: String to log
 */
 public class ConsoleLogger: Log {
-    let console: Console
+    let console: ConsoleProtocol
 
     public var enabled: [LogLevel]
 
@@ -15,7 +16,7 @@ public class ConsoleLogger: Log {
         Creates an instance of `ConsoleLogger`
         with the desired `Console`.
     */
-    public init(console: Console) {
+    public init(console: ConsoleProtocol) {
         self.console = console
         enabled = LogLevel.all
     }
