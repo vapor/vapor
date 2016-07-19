@@ -31,6 +31,11 @@ public class Droplet {
      Provides access to config settings.
      */
     public let config: Config
+    
+    /**
+     Storage to add/manage dependencies, identified by a string
+    */
+    public var storage: [String: Any]
 
     /**
      Provides access to config settings.
@@ -188,6 +193,8 @@ public class Droplet {
             }
         }
         self.config = config
+        
+        self.storage = [String: Any]()
 
         let key = config["app", "key"].string
         let hash = hashProvided ?? SHA2Hasher(variant: .sha256)
