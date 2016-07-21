@@ -95,11 +95,7 @@ extension Cookies {
 
 extension Cookies {
     func serialize() -> String? {
-        guard !self.cookies.isEmpty else { return nil }
-        return self
-            .map { cookie in
-                return "\(cookie.name)=\(cookie.value)"
-            }
-            .joined(separator: ";")
+        guard !cookies.isEmpty else { return nil }
+        return map({ $0.serialize() }).joined(separator: ";")
     }
 }
