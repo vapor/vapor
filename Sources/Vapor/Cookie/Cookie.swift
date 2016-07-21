@@ -28,6 +28,36 @@ public struct Cookie {
         self.secure = secure
         self.HTTPOnly = HTTPOnly
     }
+
+    public var serialized: String {
+        var serialized = "\(name)=\(value)"
+
+        if let expires = expires {
+            serialized += "; Expires=\(expires)"
+        }
+
+        if let maxAge = maxAge {
+            serialized += "; Max-Age=\(maxAge)"
+        }
+
+        if let domain = domain {
+            serialized += "; Domain=\(domain)"
+        }
+
+        if let path = path {
+            serialized += "; Path=\(path)"
+        }
+
+        if secure {
+            serialized += "; Secure"
+        }
+
+        if HTTPOnly {
+            serialized += "; HttpOnly"
+        }
+
+        return serialized
+    }
 }
 
 extension Cookie: Hashable, Equatable {
