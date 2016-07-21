@@ -15,7 +15,7 @@ class CookieTests: XCTestCase {
         ("testInit_setsHTTPOnlyCorrectly", testInit_setsHTTPOnlyCorrectly),
         ("testHashValue_usesNamesHash", testHashValue_usesNamesHash),
         ("testEquality_reliesSolelyOnName", testEquality_reliesSolelyOnName),
-        ("testSerialized_producesExpectedOutput", testSerialized_producesExpectedOutput)
+        ("testSerialize_producesExpectedOutput", testSerialize_producesExpectedOutput)
     ]
 
     func testInit_setsNameCorrectly() {
@@ -82,20 +82,20 @@ class CookieTests: XCTestCase {
         XCTAssertNotEqual(subject2, subject3)
     }
 
-    func testSerialized_producesExpectedOutput() {
+    func testSerialize_producesExpectedOutput() {
         var subject = Cookie(name: "Foo", value: "Bar")
-        XCTAssertEqual(subject.serialized, "Foo=Bar")
+        XCTAssertEqual(subject.serialize(), "Foo=Bar")
         subject.expires = "Wed, 20 Jul 2016 09:00:15 GMT"
-        XCTAssertEqual(subject.serialized, "Foo=Bar; Expires=Wed, 20 Jul 2016 09:00:15 GMT")
+        XCTAssertEqual(subject.serialize(), "Foo=Bar; Expires=Wed, 20 Jul 2016 09:00:15 GMT")
         subject.path = "/bar/food/yum"
-        XCTAssertEqual(subject.serialized, "Foo=Bar; Expires=Wed, 20 Jul 2016 09:00:15 GMT; Path=/bar/food/yum")
+        XCTAssertEqual(subject.serialize(), "Foo=Bar; Expires=Wed, 20 Jul 2016 09:00:15 GMT; Path=/bar/food/yum")
         subject.domain = "vapor.qutheory.io"
-        XCTAssertEqual(subject.serialized, "Foo=Bar; Expires=Wed, 20 Jul 2016 09:00:15 GMT; Domain=vapor.qutheory.io; Path=/bar/food/yum")
+        XCTAssertEqual(subject.serialize(), "Foo=Bar; Expires=Wed, 20 Jul 2016 09:00:15 GMT; Domain=vapor.qutheory.io; Path=/bar/food/yum")
         subject.maxAge = 600
-        XCTAssertEqual(subject.serialized, "Foo=Bar; Expires=Wed, 20 Jul 2016 09:00:15 GMT; Max-Age=600; Domain=vapor.qutheory.io; Path=/bar/food/yum")
+        XCTAssertEqual(subject.serialize(), "Foo=Bar; Expires=Wed, 20 Jul 2016 09:00:15 GMT; Max-Age=600; Domain=vapor.qutheory.io; Path=/bar/food/yum")
         subject.secure = true
-        XCTAssertEqual(subject.serialized, "Foo=Bar; Expires=Wed, 20 Jul 2016 09:00:15 GMT; Max-Age=600; Domain=vapor.qutheory.io; Path=/bar/food/yum; Secure")
+        XCTAssertEqual(subject.serialize(), "Foo=Bar; Expires=Wed, 20 Jul 2016 09:00:15 GMT; Max-Age=600; Domain=vapor.qutheory.io; Path=/bar/food/yum; Secure")
         subject.HTTPOnly = true
-        XCTAssertEqual(subject.serialized, "Foo=Bar; Expires=Wed, 20 Jul 2016 09:00:15 GMT; Max-Age=600; Domain=vapor.qutheory.io; Path=/bar/food/yum; Secure; HttpOnly")
+        XCTAssertEqual(subject.serialize(), "Foo=Bar; Expires=Wed, 20 Jul 2016 09:00:15 GMT; Max-Age=600; Domain=vapor.qutheory.io; Path=/bar/food/yum; Secure; HttpOnly")
     }
 }

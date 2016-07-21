@@ -29,7 +29,7 @@ public struct Cookie {
         self.HTTPOnly = HTTPOnly
     }
 
-    public var serialized: String {
+    public func serialize() -> String {
         var serialized = "\(name)=\(value)"
 
         if let expires = expires {
