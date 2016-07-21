@@ -194,7 +194,7 @@ public class Droplet {
         }
         self.config = config
         
-        self.storage = [String: Any]()
+        self.storage = [:]
 
         let key = config["app", "key"].string
         let hash = hashProvided ?? SHA2Hasher(variant: .sha256)
