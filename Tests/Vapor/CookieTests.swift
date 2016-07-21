@@ -28,8 +28,8 @@ class CookieTests: XCTestCase {
     }
 
     func testInit_setsExpiresCorrectly() {
-        let subject = Cookie(name: "Foo", value: "Bar", expires: "2999-12-30 :23:59:59")
-        XCTAssertEqual(subject.expires, "2999-12-30 :23:59:59")
+        let subject = Cookie(name: "Foo", value: "Bar", expires: "Wed, 20 Jul 2016 13:20:15 GMT")
+        XCTAssertEqual(subject.expires, "Wed, 20 Jul 2016 13:20:15 GMT")
     }
 
     func testInit_setsMaxAgeCorrectly() {
