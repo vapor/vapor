@@ -1,15 +1,16 @@
 import Engine
+import Branches
 
 public typealias Host = String
 
-public final class BranchRouter: Router {
+public final class BranchRouter: Vapor.Router {
 
     // MARK: Private Tree Representation
     private final var tree: [Host: [HTTPMethod: Branch]] = [:]
 
     // MARK: Routing
     public final func route(_ request: Request) -> Responder? {
-        let path = request.uri.path 
+        let path = request.uri.path
         let host = request.uri.host
 
         //get root from hostname, or * route

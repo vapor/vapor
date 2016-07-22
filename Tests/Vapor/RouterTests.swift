@@ -38,6 +38,42 @@ class RouterTests: XCTestCase {
         XCTAssert(string == compare)
     }
 
+    func testPerformance() {
+        // Original Branch Router
+        // 1.907
+        // 1.945
+        // 1.915
+        // Generic Branch Router
+        // 0.930
+        // 0.937
+        // 0.929
+        let router = AltRouter()
+
+        let data_1 = "1".bytes
+        let data_2 = "2".bytes
+
+        let route_1 = Route.init(method: .get, path: "test/a/very/long/path/for/router/to/search") { request in
+            return Response(status: .ok, body: data_1)
+        }
+        router.register(route_1)
+
+        let route_2 = Route.init(host: "vapor.test", method: .get, path: "test/a/very/long/path/for/router/to/search") { request in
+            return Response(status: .ok, body: data_2)
+        }
+        router.register(route_2)
+
+        let request_1 = try! Request(method: .get, path: "test/a/very/long/path/for/router/to/search", host: "other.test")
+
+        let request_2 = try! Request(method: .get, path: "test/a/very/long/path/for/router/to/search", host: "vapor.test")
+
+        measure {
+            for _ in 1...10_000 {
+                XCTAssertNotNil(router.route(request_1))
+                XCTAssertNotNil(router.route(request_2))
+            }
+        }
+    }
+
     func testMultipleHostsRouting() throws {
         let router = BranchRouter()
 

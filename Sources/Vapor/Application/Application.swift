@@ -1,3 +1,4 @@
+@_exported import Branches
 import libc
 import Foundation
 import Socks
@@ -213,7 +214,7 @@ public class Droplet {
             DateMiddleware()
         ]
 
-        let router = routerProvided ?? BranchRouter()
+        let router = routerProvided ?? AltRouter()
         self.router = router
 
         let serverType = serverProvided ?? HTTPServer<TCPServerStream, HTTPParser<HTTPRequest>, HTTPSerializer<HTTPResponse>>.self
