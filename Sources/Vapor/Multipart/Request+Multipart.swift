@@ -6,7 +6,7 @@ extension Request {
         Used by web browsers to send files.
     */
     public var multipart: [String: Multipart]? {
-        if let existing = storage["multipart"] as? [String: Multipart]? {
+        if let existing = storage["multipart"] as? [String: Multipart] {
             return existing
         } else if let type = headers["Content-Type"] where type.contains("multipart/form-data") {
             guard case let .data(body) = body else { return nil }
