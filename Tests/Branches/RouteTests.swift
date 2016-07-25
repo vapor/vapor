@@ -76,7 +76,7 @@ class RouteTests: XCTestCase {
     }
 
     func testRoutesLog() throws {
-        let route = Route<HTTPRequestHandler>(host: "0.0.0.0", method: .get, path: "/hello", responder: { _ in HTTPResponse() })
+        let route = Route<HTTPRequestHandler>(host: "0.0.0.0", method: .get, path: "/hello", output: { _ in HTTPResponse() })
         XCTAssert("\(route)" == "GET 0.0.0.0 /hello")
     }
 }

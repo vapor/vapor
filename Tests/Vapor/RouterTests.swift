@@ -39,37 +39,22 @@ class RouterTests: XCTestCase {
     }
 
     func testPerformance() {
-        // Original Branch Router
-        // 1.907
-        // 1.945
-        // 1.915
-        // Generic Branch Router
-        // 0.930
-        // 0.937
-        // 0.929
-        let router = AltRouter()
+        let router = BranchRouter()
 
-        let data_1 = "1".bytes
-        let data_2 = "2".bytes
+        let longPath = [String](repeating: "long-path", count: 20).joined(separator: "/")
 
-        let route_1 = Route.init(method: .get, path: "test/a/very/long/path/for/router/to/search") { request in
-            return Response(status: .ok, body: data_1)
+        let data = "1".bytes
+
+        let route = Route(method: .get, path: longPath) { request in
+            return Response(status: .ok, body: data)
         }
-        router.register(route_1)
+        router.register(route)
 
-        let route_2 = Route.init(host: "vapor.test", method: .get, path: "test/a/very/long/path/for/router/to/search") { request in
-            return Response(status: .ok, body: data_2)
-        }
-        router.register(route_2)
-
-        let request_1 = try! Request(method: .get, path: "test/a/very/long/path/for/router/to/search", host: "other.test")
-
-        let request_2 = try! Request(method: .get, path: "test/a/very/long/path/for/router/to/search", host: "vapor.test")
+        let request = try! Request(method: .get, path: longPath, host: "other.test")
 
         measure {
             for _ in 1...10_000 {
-                XCTAssertNotNil(router.route(request_1))
-                XCTAssertNotNil(router.route(request_2))
+                XCTAssertNotNil(router.route(request))
             }
         }
     }

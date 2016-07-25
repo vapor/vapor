@@ -214,7 +214,7 @@ public class Droplet {
             DateMiddleware()
         ]
 
-        let router = routerProvided ?? AltRouter()
+        let router = routerProvided ?? BranchRouter()
         self.router = router
 
         let serverType = serverProvided ?? HTTPServer<TCPServerStream, HTTPParser<HTTPRequest>, HTTPSerializer<HTTPResponse>>.self

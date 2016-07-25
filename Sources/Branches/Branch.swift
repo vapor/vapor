@@ -1,5 +1,4 @@
-import Engine
-import Base
+import Core
 
 extension Branch {
     public func params(for path: [String]) -> [String: String] {
@@ -143,6 +142,11 @@ public class Branch<Output> { // TODO: Rename Context
         if let result = subBranches[":"]?.fetch(comps) where result.branch.hasValidOutput {
             return result
         }
+
+        if let result = subBranches["*"]?.fetch(comps) where result.branch.hasValidOutput {
+            return result
+        }
+
         if let wildcard = subBranches["*"] where wildcard.hasValidOutput {
             let subRoute = [key] + comps
             return BranchResult(wildcard, subRoute.makeIterator())

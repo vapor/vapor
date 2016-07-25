@@ -1,7 +1,7 @@
 import protocol Engine.HTTPResponseRepresentable
 import class Engine.HTTPRequest
 import protocol Engine.HTTPResponder
-import enum Engine.Method
+import enum Engine.HTTPMethod
 
 /**
  The route class that will be used to model the various paths
@@ -12,9 +12,9 @@ public struct Route<Output> {
     // MARK: Attributes
 
     public let host: String
-    public let method: Method
+    public let method: HTTPMethod
     public let path: String
-    public let handler: Output
+    public let output: Output
 
     /**
      Designated Initializer
@@ -23,11 +23,11 @@ public struct Route<Output> {
      - parameter path: the path to use when deciding the route
      - parameter handler: the handler to route when the path is called
      */
-    public init(host: String = "*", method: Method = .get, path: String = "/", responder: Output) {
+    public init(host: String = "*", method: HTTPMethod = .get, path: String = "/", output: Output) {
         self.host = host
         self.method = method
         self.path = path
-        self.handler = responder
+        self.output = output
     }
 }
 
@@ -44,7 +44,7 @@ extension Router {
             host: route.host,
             method: route.method.description,
             path: route.path,
-            output: route.handler
+            output: route.output
         )
     }
 }

@@ -1,7 +1,3 @@
-import Engine
-
-extension String: ErrorProtocol {}
-
 public typealias Host = String
 
 public protocol ParameterContainer: class {

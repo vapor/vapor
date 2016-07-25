@@ -10,6 +10,8 @@ import XCTest
 import Engine
 import Branches
 
+extension String: Swift.Error {}
+
 class BranchRouterTests: XCTestCase {
     func testRouter() throws {
         let router = Router<HTTPRequestHandler>()
@@ -30,7 +32,7 @@ class BranchRouterTests: XCTestCase {
             return HTTPResponse(body: "Hello, World!")
         }
 
-        let method: [Engine.Method] = [.get, .post, .put, .patch, .delete, .trace, .head, .options]
+        let method: [Engine.HTTPMethod] = [.get, .post, .put, .patch, .delete, .trace, .head, .options]
         try method.forEach { method in
             let request = try HTTPRequest(method: method, uri: "http://0.0.0.0/hello")
             let handler = router.route(request)
@@ -139,10 +141,10 @@ class BranchRouterTests: XCTestCase {
             return HTTPResponse(body: "Hello, Empty!")
         }
 
-        let empties: [String?] = ["", "/", nil]
+        let empties: [String] = ["", "/"]
         try empties.forEach { emptypath in
-            let request = try HTTPRequest(method: .get, uri: "http://0.0.0.0")
-            request.uri.path = emptypath
+            let uri = URI(scheme: "http", host: "0.0.0.0", path: emptypath)
+            let request = HTTPRequest(method: .get, uri: uri)
             let handler = router.route(request)
             XCTAssert(handler != nil)
             let response = try handler?(request).makeResponse(for: request)
@@ -157,13 +159,8 @@ class BranchRouterTests: XCTestCase {
         }
 
         let uri = URI(
-            scheme: nil,
-            userInfo: nil,
-            host: nil,
-            port: nil,
-            path: nil,
-            query: nil,
-            fragment: nil
+            scheme: "",
+            host: ""
         )
         let request = HTTPRequest(method: .get, uri: uri)
         let handler = router.route(request)
