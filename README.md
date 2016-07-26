@@ -51,7 +51,7 @@ To contribute a **feature or idea** to Vapor, submit an issue and fill in the te
 
 If you find a **bug**, please submit a pull request with a failing test case displaying the bug or create an issue.
 
-If you find a **security vulnerability**, please contact [tanner@qutheory.io](tanner@qutheory.io) as soon as possible. We take these matters seriously.
+If you find a **security vulnerability**, please contact [tanner@qutheory.io](mailto:tanner@qutheory.io) as soon as possible. We take these matters seriously.
 
 ## 💙 Code of Conduct
 
