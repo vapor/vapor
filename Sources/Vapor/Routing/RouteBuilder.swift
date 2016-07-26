@@ -1,10 +1,12 @@
+import Engine
+
 public protocol RouteBuilder {
     var leadingPath: String { get }
     var scopedMiddleware: [Middleware] { get }
 
     func add(
         middleware: [Middleware],
-        method: Method,
+        method: HTTPMethod,
         path: String,
         handler: Route.Handler
     )
@@ -12,7 +14,7 @@ public protocol RouteBuilder {
 
 extension RouteBuilder {
     public func add(
-        _ method: Method,
+        _ method: HTTPMethod,
         path: String,
         handler: Route.Handler
     ) {
@@ -79,7 +81,7 @@ extension Droplet: RouteBuilder {
     */
     public func add(
         middleware: [Middleware],
-        method: Method,
+        method: HTTPMethod,
         path: String,
         handler: Route.Handler
     ) {

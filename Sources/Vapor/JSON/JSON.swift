@@ -5,7 +5,7 @@ import Foundation
     private typealias NSData = Foundation.Data
 #endif
 
-import struct Base.Bytes
+import struct Core.Bytes
 import protocol Engine.HTTPResponseRepresentable
 
 public enum JSON {

@@ -1,3 +1,7 @@
+import Engine
+// TODO: mv
+@_exported import enum Engine.HTTPMethod
+
 extension Droplet: Responder {
     /**
         Returns a response to the given request
@@ -31,12 +35,12 @@ extension Droplet: Responder {
         } else {
             // Default not found handler
             responder = Request.Handler { _ in
-                let normal: [Method] = [.get, .post, .put, .patch, .delete]
+                let normal: [HTTPMethod] = [.get, .post, .put, .patch, .delete]
 
                 if normal.contains(request.method) {
                     throw Abort.notFound
                 } else if case .options = request.method {
-                    return Response(status: .ok, headers: [
+                    return HTTPResponse(status: .ok, headers: [
                         "Allow": "OPTIONS"
                         ])
                 } else {

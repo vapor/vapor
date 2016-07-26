@@ -1,4 +1,4 @@
-import protocol Engine.HTTPResponseRepresentable
+import Engine
 
 /**
     The route class that will be used to model the various paths
@@ -13,7 +13,7 @@ public struct Route {
 
     // MARK: Attributes
 
-    let method: Method
+    let method: HTTPMethod
     let path: String
     let responder: Responder
     let hostname: String
@@ -25,14 +25,14 @@ public struct Route {
         - parameter path: the path to use when deciding the route
         - parameter handler: the handler to route when the path is called
      */
-    init(host: String = "*", method: Method, path: String, responder: Responder) {
+    init(host: String = "*", method: HTTPMethod, path: String, responder: Responder) {
         self.hostname = host
         self.method = method
         self.path = path
         self.responder = responder
     }
 
-    init(host: String = "*", method: Method = .get, path: String = "/", closure: Request.Handler.Closure) {
+    init(host: String = "*", method: HTTPMethod = .get, path: String = "/", closure: Request.Handler.Closure) {
         let responder = Request.Handler(closure)
         self.init(host: host, method: method, path: path, responder: responder)
     }

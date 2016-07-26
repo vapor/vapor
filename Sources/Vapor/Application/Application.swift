@@ -75,7 +75,7 @@ public class Droplet {
          Send output and receive input from the console
          using the underlying `ConsoleDriver`.
     */
-    public let console: Console
+    public let console: ConsoleProtocol
 
     /**
         TODO: Expose to end users to customize driver
@@ -112,7 +112,7 @@ public class Droplet {
         config: Config? = nil,
         localization: Localization? = nil,
         hash: Hash? = nil,
-        console: Console? = nil,
+        console: ConsoleProtocol? = nil,
         server: Server.Type? = nil,
         client: Client.Type? = nil,
         router: Router? = nil,
@@ -126,7 +126,7 @@ public class Droplet {
         var routerProvided: Router? = router
         var sessionsProvided: Sessions? = session
         var hashProvided: Hash? = hash
-        var consoleProvided: Console? = console
+        var consoleProvided: ConsoleProtocol? = console
         var clientProvided: Client.Type? = client
         var databaseProvided: DatabaseDriver? = database
 
@@ -226,7 +226,7 @@ public class Droplet {
         self.preparations = preparations
 
         if let driver = databaseProvided {
-            let database = Database(driver: driver)
+            let database = Database(driver)
             for preparation in preparations {
                 if let model = preparation as? Model.Type {
                     model.database = database
@@ -268,7 +268,7 @@ public class Droplet {
 }
 
 extension Droplet {
-    enum ExecutionError: ErrorProtocol {
+    enum ExecutionError: Swift.Error {
         case insufficientArguments, noCommandFound
     }
 
@@ -350,7 +350,7 @@ extension Droplet {
         // File exists
         if let fileBody = try? FileManager.readBytesFromFile(filePath) {
             return Request.Handler { _ in
-                var headers: Headers = [:]
+                var headers: [HeaderKey: String] = [:]
 
                 if
                     let fileExtension = filePath.components(separatedBy: ".").last,

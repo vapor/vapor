@@ -1,5 +1,6 @@
 import Engine
 
+public typealias Headers = [HeaderKey: String]
 public typealias Request = HTTPRequest
 public typealias Accept = HTTPAccept
 public typealias Responder = HTTPResponder

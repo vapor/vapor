@@ -1,5 +1,5 @@
 import libc
-import class Base.Lock
+import class Core.Lock
 
 /**
     The `MemorySessionDriver` stores session data
@@ -51,13 +51,13 @@ public class MemorySessions: Sessions {
         Create new unique session id
     */
     public func makeIdentifier() -> String {
-        var identifier = String(time(nil))
+        var identifier = time(nil).description
         identifier += "v@p0r"
-        identifier += String(Int.random(min: 0, max: 9999))
+        identifier += Int.random(min: 0, max: 9999).description
         identifier += "s3sS10n"
-        identifier += String(Int.random(min: 0, max: 9999))
+        identifier += Int.random(min: 0, max: 9999).description
         identifier += "k3y"
-        identifier += String(Int.random(min: 0, max: 9999))
+        identifier += Int.random(min: 0, max: 9999).description
         return hash.make(identifier)
     }
 

@@ -6,7 +6,7 @@ import libc
     implementation from Swift's core libraries.
 */
 class FileManager {
-    enum Error: ErrorProtocol {
+    enum Error: Swift.Error {
         case CouldNotOpenFile
         case Unreadable
     }

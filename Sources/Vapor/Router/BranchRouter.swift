@@ -1,10 +1,9 @@
 public typealias Host = String
 
-
 public final class BranchRouter: Router {
 
     // MARK: Private Tree Representation
-    private final var tree: [Host: [Method: Branch]] = [:]
+    private final var tree: [Host: [HTTPMethod: Branch]] = [:]
 
     // MARK: Routing
     public final func route(_ request: Request) -> Responder? {

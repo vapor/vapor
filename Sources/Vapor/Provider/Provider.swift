@@ -56,7 +56,7 @@ public protocol Provider {
         to the droplet. Has a default
         implementation of `nil`.
     */
-    var console: Console? { get }
+    var console: ConsoleProtocol? { get }
 
 
     /**
@@ -85,7 +85,7 @@ extension Provider {
         return nil
     }
 
-    public var console: Console? {
+    public var console: ConsoleProtocol? {
         return nil
     }
 

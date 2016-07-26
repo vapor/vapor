@@ -12,12 +12,12 @@ public struct Prepare: Command {
         "runs the droplet's preparations"
     ]
 
-    public let console: Console
+    public let console: ConsoleProtocol
     public let preparations: [Preparation.Type]
     public let database: Database?
 
     public init(
-        console: Console,
+        console: ConsoleProtocol,
         preparations: [Preparation.Type],
         database: Database?
     ) {
@@ -54,7 +54,7 @@ public struct Prepare: Command {
 
                 if hasPrepared {
                     print("Reverting \(name)")
-                    try preparation.revert(database: database)
+                    try preparation.revert(database)
                     console.success("Reverted \(name)")
                 }
             }

@@ -72,9 +72,9 @@ extension Signature {
 
     var list: String {
         if
+            parameters.count == 1,
             let first = parameters.first,
             case .path(let path) = first
-            where parameters.count == 1
         {
             return "_ \(path.name): String = \"\""
         } else {

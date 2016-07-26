@@ -1,7 +1,7 @@
 import Vapor
 
 class AuthMiddleware: Middleware {
-    enum Error: ErrorProtocol {
+    enum Error: Swift.Error {
         case Unauthorized
     }
 

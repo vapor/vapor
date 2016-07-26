@@ -213,7 +213,7 @@ drop.grouped("abort") { group in
     }
 }
 
-enum Error: ErrorProtocol {
+enum Error: Swift.Error {
     case Unhandled
 }
 
@@ -358,7 +358,7 @@ drop.post("multipart-image") { request in
         headers["Content-Type"] = mediaType
     }
 
-    return Response(status: .ok, headers: headers, body: image.data.bytes)
+    return Response(status: .ok, headers: headers, body: image.data)
 }
 
 drop.get("multifile") { _ in

@@ -1,5 +1,5 @@
 import Console
-@_exported import protocol Console.Console
+@_exported import protocol Console.ConsoleProtocol
 @_exported import protocol Console.Command
 @_exported import struct Console.Option
 @_exported import protocol Console.Argument
@@ -13,6 +13,6 @@ import Console
 public typealias ArgValue = Value
 
 
-public enum CommandError: ErrorProtocol {
+public enum CommandError: Swift.Error {
     case general(String)
 }

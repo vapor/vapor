@@ -1,16 +1,16 @@
 import Fluent
-import protocol Base.Extractable
+import protocol Core.Extractable
 
 public typealias Database = Fluent.Database
 
 public typealias DatabaseDriver = Fluent.Driver
-public typealias DatabaseModel = Fluent.Model
+public typealias DatabaseModel = Fluent.Entity
 
 public typealias Preparation = Fluent.Preparation
 public typealias PreparationError = Fluent.PreparationError
 
 public typealias Query = Fluent.Query
-public typealias FluentValue = Fluent.Value
+public typealias FluentValue = Fluent.Node
 public typealias Schema = Fluent.Schema
 
 extension Extractable where Wrapped == FluentValue {
