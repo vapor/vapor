@@ -1,16 +1,16 @@
-extension JSON: NilLiteralConvertible {
+extension JSON: ExpressibleByNilLiteral {
     public init(nilLiteral value: Void) {
         self = .null
     }
 }
 
-extension JSON: ArrayLiteralConvertible {
+extension JSON: ExpressibleByArrayLiteral {
     public init(arrayLiteral elements: JSON...) {
         self = .array(elements)
     }
 }
 
-extension JSON: DictionaryLiteralConvertible {
+extension JSON: ExpressibleByDictionaryLiteral {
     public init(dictionaryLiteral elements: (String, JSON)...) {
         var object = [String : JSON](minimumCapacity: elements.count)
         elements.forEach { key, value in

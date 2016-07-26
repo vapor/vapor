@@ -6,7 +6,7 @@ extension HTTPMessage {
         get {
             if let existing = storage["json"] as? JSON {
                 return existing
-            } else if let type = headers["Content-Type"] where type.contains("application/json") {
+            } else if let type = headers["Content-Type"], type.contains("application/json") {
                 guard case let .data(body) = body else { return nil }
                 guard let json = try? JSON(serialized: body) else { return nil }
                 storage["json"] = json

@@ -275,8 +275,7 @@ extension Droplet {
     /**
         Runs the Droplet's commands, defaulting to serve.
     */
-    @noreturn
-    public func serve(_ closure: Serve.ServeFunction? = nil) {
+    public func serve(_ closure: Serve.ServeFunction? = nil) -> Never  {
         do {
             try runCommands()
         } catch CommandError.general(let error) {
@@ -341,7 +340,7 @@ extension Droplet {
     // TODO: Can this be middleware?
     func checkFileSystem(for request: Request) -> Request.Handler? {
         // Check in file system
-        let filePath = self.workDir + "Public" + (request.uri.path ?? "")
+        let filePath = self.workDir + "Public" + request.uri.path
 
         guard FileManager.fileAtPath(filePath).exists else {
             return nil

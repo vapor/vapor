@@ -10,7 +10,7 @@ struct RFC1123 {
 
     init() {
         formatter = NSDateFormatter()
-        formatter.locale = NSLocale(localeIdentifier: "en_US")
+        formatter.locale = NSLocale(identifier: "en_US")
         formatter.timeZone = NSTimeZone(abbreviation: "GMT")
         formatter.dateFormat = "EEE',' dd MMM yyyy HH':'mm':'ss 'GMT'"
     }

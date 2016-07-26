@@ -3,8 +3,8 @@ import Foundation
 public class Email: ValidationSuite {
     public static func validate(input value: String) throws {
         guard
-            let localName = value.components(separatedBy: "@").first
-            where isValidLocalName(localName)
+            let localName = value.components(separatedBy: "@").first,
+            isValidLocalName(localName)
             else {
                 throw error(with: value)
             }

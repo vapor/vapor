@@ -136,7 +136,7 @@ public class Config {
         let value = directoryQueue[file, paths]
 
         // check if value exists in Env
-        if let string = value?.string where string.characters.first == "$" {
+        if let string = value?.string, string.characters.first == "$" {
             let name = String(string.characters.dropFirst())
             return Env.get(name) // will return nil if env variable not found
         }

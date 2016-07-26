@@ -54,7 +54,7 @@ class SessionTests: XCTestCase {
             return "hi"
         }
 
-        let request = try Request(method: .get, path: "cookie")
+        let request = Request(method: .get, path: "cookie")
         request.headers["Cookie"] = "vapor-session=123"
         let response = try drop.respond(to: request)
 

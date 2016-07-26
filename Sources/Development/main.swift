@@ -397,29 +397,29 @@ drop.post("multifile") { request in
         headers["Content-Type"] = mediaType
     }
 
-    return Response(status: .ok, headers: headers, body: .data(file.data.bytes))
+    return Response(status: .ok, headers: headers, body: .data(file.data))
 }
 
-drop.get("options") { _ in
-    var response = "<form method='post' action='/options/' ENCTYPE='multipart/form-data'>"
-
-    response += "<select name='options' multiple='multiple'>"
-    response += "<option value='0'>0</option>"
-    response += "<option value='1'>1</option>"
-    response += "<option value='2'>2</option>"
-    response += "<option value='3'>3</option>"
-    response += "<option value='4'>4</option>"
-    response += "<option value='5'>5</option>"
-    response += "<option value='6'>6</option>"
-    response += "<option value='7'>7</option>"
-    response += "<option value='8'>8</option>"
-    response += "<option value='9'>9</option>"
-    response += "</select>"
-    response += "<button>Submit</button>"
-    response += "</form>"
-
-    return Response(status: .ok, body: .data(response.data.bytes))
-}
+//drop.get("options") { _ in
+//    var response = "<form method='post' action='/options/' ENCTYPE='multipart/form-data'>"
+//
+//    response += "<select name='options' multiple='multiple'>"
+//    response += "<option value='0'>0</option>"
+//    response += "<option value='1'>1</option>"
+//    response += "<option value='2'>2</option>"
+//    response += "<option value='3'>3</option>"
+//    response += "<option value='4'>4</option>"
+//    response += "<option value='5'>5</option>"
+//    response += "<option value='6'>6</option>"
+//    response += "<option value='7'>7</option>"
+//    response += "<option value='8'>8</option>"
+//    response += "<option value='9'>9</option>"
+//    response += "</select>"
+//    response += "<button>Submit</button>"
+//    response += "</form>"
+//
+//    return HTTPResponse(status: .ok, body: .data(response.data))
+//}
 
 drop.post("options") { request in
     guard let form = request.multipart, let multipart = form["options"] else {

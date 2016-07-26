@@ -11,7 +11,7 @@ extension Droplet: Responder {
         - returns: response if possible
     */
     public func respond(to request: Request) throws -> Response {
-        log.info("\(request.method) \(request.uri.path ?? "/")")
+        log.info("\(request.method) \(request.uri.path)")
 
         var responder: Responder
         let request = request

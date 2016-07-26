@@ -81,10 +81,10 @@ class ConsoleTests: XCTestCase {
     func testDefaultServe() {
         final class TestServe: Command {
             let id: String = "serve"
-            let console: Console
+            let console: ConsoleProtocol
             static var ran = false
 
-            init(console: Console) {
+            init(console: ConsoleProtocol) {
                 self.console = console
             }
 
@@ -107,10 +107,10 @@ class ConsoleTests: XCTestCase {
 
 final class TestOneCommand: Command {
     let id: String = "test-1"
-    let console: Console
+    let console: ConsoleProtocol
     var counter = 0
 
-    init(console: Console) {
+    init(console: ConsoleProtocol) {
         self.console = console
     }
 
@@ -121,7 +121,7 @@ final class TestOneCommand: Command {
 
 final class TestTwoCommand: Command {
     let id: String = "test-2"
-    let console: Console
+    let console: ConsoleProtocol
 
     let signature: [Argument] = [
         ArgValue(name: "arg-1"),
@@ -129,7 +129,7 @@ final class TestTwoCommand: Command {
         Option(name: "opt-2")
     ]
 
-    init(console: Console) {
+    init(console: ConsoleProtocol) {
         self.console = console
     }
 
@@ -142,7 +142,7 @@ final class TestTwoCommand: Command {
     }
 }
 
-class TestConsoleDriver: Console {
+class TestConsoleDriver: ConsoleProtocol {
     var buffer: Bytes
 
     init() {
@@ -150,7 +150,7 @@ class TestConsoleDriver: Console {
     }
 
     func output(_ string: String, style: ConsoleStyle, newLine: Bool) {
-        buffer += string.data.bytes
+        buffer += string.bytes
     }
 
     func input() -> String {

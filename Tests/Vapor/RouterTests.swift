@@ -20,7 +20,7 @@ class RouterTests: XCTestCase {
         }
         router.register(route)
 
-        let request = try Request(method: .get, path: "test", host: "other.test")
+        let request = Request(method: .get, path: "test", host: "other.test")
 
         guard let result = router.route(request) else {
             XCTFail("no route found")
@@ -54,9 +54,9 @@ class RouterTests: XCTestCase {
         }
         router.register(route_2)
 
-        let request_1 = try Request(method: .get, path: "test", host: "other.test")
+        let request_1 = Request(method: .get, path: "test", host: "other.test")
 
-        let request_2 = try Request(method: .get, path: "test", host: "vapor.test")
+        let request_2 = Request(method: .get, path: "test", host: "vapor.test")
 
         let handler_1 = router.route(request_1)
         let handler_2 = router.route(request_2)
@@ -106,7 +106,7 @@ class RouterTests: XCTestCase {
         }
         router.register(route)
 
-        let request = try Request(method: .get, path: "test/\(percentEncodedString)")
+        let request = Request(method: .get, path: "test/\(percentEncodedString)")
         print("URI: \(request.uri)")
         guard let handler = router.route(request) else {
             XCTFail("Route not found")

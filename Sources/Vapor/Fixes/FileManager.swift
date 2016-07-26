@@ -15,7 +15,7 @@ class FileManager {
         guard let data = NSData(contentsOfFile: path) else {
             throw Error.CouldNotOpenFile
         }
-        return data.byteArray ?? []
+        return data.byteArray 
     }
 
     static func fileAtPath(_ path: String) -> (exists: Bool, isDirectory: Bool) {

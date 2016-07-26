@@ -14,13 +14,13 @@ public enum LogLevel: Equatable, CustomStringConvertible {
 
     public var description: String {
         switch self {
-        case verbose: return "VERBOSE"
-        case debug: return "DEBUG"
-        case info: return "INFO"
-        case warning: return "WARNING"
-        case error: return "ERROR"
-        case fatal: return "FATAL"
-        case custom(let string): return "\(string.uppercased())"
+        case .verbose: return "VERBOSE"
+        case .debug: return "DEBUG"
+        case .info: return "INFO"
+        case .warning: return "WARNING"
+        case .error: return "ERROR"
+        case .fatal: return "FATAL"
+        case .custom(let string): return "\(string.uppercased())"
         }
     }
 }
