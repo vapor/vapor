@@ -2,6 +2,7 @@
 
 People have built some awesome things with Vapor, and we can't wait to see what you add to the list! All projects listed here are live and hosted on the cloud. Please report any links that are no longer active.
 
+* [PDX Cocoaheads Website](#pdx-cocoaheads) - The pdx cocoaheads.com site
 * [Vapor Chat](#vapor-chat) - realtime chat site / iOS app
 * [Qutheory.io](#qutheory.io) - the official Vapor site
 * [Byte Fish](#byte-fish) - url shortener
@@ -10,6 +11,16 @@ People have built some awesome things with Vapor, and we can't wait to see what 
 * [Emergency Numbers](#emergency-numbers-api) - an api providing the emergency number for various locations
 * [Slack Bot](#slack-bot) - a basic realtime slackbot
 * [Vapor Example](#vapor-example) - an up to date example project
+
+# PDX Cocoaheads
+
+### GitHub
+
+https://github.com/pdx-cocoaheads/pdxcocoaheads.com
+
+### Site
+
+http://pdxcocoaheads.com
 
 # Vapor Chat
 
