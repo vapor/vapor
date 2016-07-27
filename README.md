@@ -20,13 +20,26 @@ Vapor is the [most used](https://swiftpkgs.ng.bluemix.net/browse#?chart=mostesse
 
 This repository is the framework's source code. To view some sample projects, check out our list [here](/Documents/PROJECTS.md).
 
-## 🌏 Current Environment
+## 🌏 Environment
 
-| Vapor |     Xcode    |    Swift    |
-|:-----:|:------------:|:-----------:|
-|0.14.x |8.0 Beta **2**|3.0-PREVIEW-2|
+|Vapor|Xcode|Swift|
+|:-:|:-:|:-:|
+|0.15.x|8.0 Beta **3**|DEVELOPMENT-SNAPSHOT-2016-07-25-a|
+|0.14.x|8.0 Beta **2**|3.0-PREVIEW-2|
+|0.13.x|8.0 Beta **1**|DEVELOPMENT-SNAPSHOT-2016-06-20-a|
+|0.12.x|7.3.1|DEVELOPMENT-SNAPSHOT-2016-06-06-a|
+|0.11.x|7.3.1|DEVELOPMENT-SNAPSHOT-2016-06-06-a|
+|0.10.x|7.3.1|DEVELOPMENT-SNAPSHOT-2016-05-31-a|
+|0.9.x|7.3.1|DEVELOPMENT-SNAPSHOT-2016-05-09-a|
+|0.8.x|7.3.1|DEVELOPMENT-SNAPSHOT-2016-05-03-a|
+|0.7.x|7.3.1|DEVELOPMENT-SNAPSHOT-2016-04-25-a|
+|0.6.x|7.3.1|DEVELOPMENT-SNAPSHOT-2016-04-12-a|
+|0.5.x|7.3.1|DEVELOPMENT-SNAPSHOT-2016-03-24-a|
+|0.4.x|7.3.1|DEVELOPMENT-SNAPSHOT-2016-03-24-a|
+|0.3.x|7.3.1|DEVELOPMENT-SNAPSHOT-2016-03-01-a|
+|0.3.x|7.3.1|DEVELOPMENT-SNAPSHOT-2016-03-01-a|
 
-You can run the following script to verify your environment is correct.
+You can run the following script to verify your environment is correct for the latest version.
 
 ```sh
 curl -sL check.qutheory.io | bash
