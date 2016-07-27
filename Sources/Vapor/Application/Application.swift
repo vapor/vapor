@@ -3,6 +3,7 @@ import Foundation
 import Socks
 import Engine
 import Console
+import Fluent
 
 public let VERSION = "0.14.0"
 
@@ -118,7 +119,7 @@ public class Droplet {
         client: Client.Type? = nil,
         router: Router? = nil,
         session: Sessions? = nil,
-        database: DatabaseDriver? = nil,
+        database: Database? = nil,
         preparations: [Preparation.Type] = [],
         providers: [Provider] = [],
         arguments: [String]? = nil
@@ -129,7 +130,7 @@ public class Droplet {
         var hashProvided: Hash? = hash
         var consoleProvided: ConsoleProtocol? = console
         var clientProvided: Client.Type? = client
-        var databaseProvided: DatabaseDriver? = database
+        var databaseProvided: Database? = database
 
         for provider in providers {
             // TODO: Warn if multiple providers attempt to add server
@@ -226,8 +227,7 @@ public class Droplet {
 
         self.preparations = preparations
 
-        if let driver = databaseProvided {
-            let database = Database(driver)
+        if let database = databaseProvided {
             for preparation in preparations {
                 if let model = preparation as? Model.Type {
                     model.database = database

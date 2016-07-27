@@ -1,5 +1,6 @@
 import Engine
 import Console
+import Fluent
 
 /**
     Providers allow external projects to be easily
@@ -66,7 +67,11 @@ public protocol Provider {
      */
     var client: Client.Type? { get }
 
-    var database: DatabaseDriver? { get }
+    /**
+        An optional `Database` that will be used
+        by the droplet for all Fluent queries.
+    */
+    var database: Database? { get }
 }
 
 extension Provider {
@@ -94,7 +99,7 @@ extension Provider {
         return nil
     }
 
-    public var database: DatabaseDriver? {
+    public var database: Database? {
         return nil
     }
 }
