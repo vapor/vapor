@@ -1,6 +1,7 @@
 import Node
+import Engine
 
-extension Request {
+extension HTTPRequest {
     /// form url encoded encoded request data
     public var formURLEncoded: Node? {
         if let existing = storage["form-urlencoded"] as? Node {
@@ -16,7 +17,7 @@ extension Request {
     }
 }
 
-extension Request {
+extension HTTPRequest {
     /// Query data from the URI path
     public var query: Node? {
         get {

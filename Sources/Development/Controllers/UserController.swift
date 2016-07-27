@@ -1,4 +1,7 @@
+import Node
+import JSON
 import Vapor
+import Engine
 
 class UserController: Resource, DropletInitializable {
     required init(droplet: Droplet) {
@@ -10,7 +13,7 @@ class UserController: Resource, DropletInitializable {
         Display many instances
      */
     func index(request: Request) throws -> ResponseRepresentable {
-        return JSON([
+        return try JSON([
             "controller": "MyController.index"
         ])
     }
@@ -20,7 +23,7 @@ class UserController: Resource, DropletInitializable {
         Create a new instance.
      */
     func store(request: Request) throws -> ResponseRepresentable {
-        return JSON([
+        return try JSON([
             "controller": "MyController.store"
         ])
     }
@@ -31,10 +34,10 @@ class UserController: Resource, DropletInitializable {
      */
     func show(request: Request, item user: User) throws -> ResponseRepresentable {
         //User can be used like JSON with JsonRepresentable
-        return JSON([
+        return try JSON([
             "controller": "MyController.show",
             "user": user
-        ])
+            ] as [String: NodeRepresentable])
     }
 
     /** 
@@ -42,7 +45,7 @@ class UserController: Resource, DropletInitializable {
      */
     func update(request: Request, item user: User) throws -> ResponseRepresentable {
         //Testing JsonRepresentable
-        return user.makeJSON()
+        return try user.makeJSON()
     }
 
     /**
@@ -50,7 +53,7 @@ class UserController: Resource, DropletInitializable {
      */
     func modify(request: Request, item user: User) throws -> ResponseRepresentable {
         //Testing JsonRepresentable
-        return user.makeJSON()
+        return try user.makeJSON()
     }
 
     /**
@@ -58,22 +61,28 @@ class UserController: Resource, DropletInitializable {
      */
     func destroy(request: Request, item user: User) throws -> ResponseRepresentable {
         //User is ResponseRepresentable by proxy of JsonRepresentable
-        return user
+        return try user.makeJSON()
     }
 
     /**
         Delete all instances.
      */
     func destroy(request: Request) throws -> ResponseRepresentable {
-        return JSON([
+        return try JSON([
             "controller": "MyController.destroyAll"
         ])
     }
 
 
     func options(request: Request) throws -> ResponseRepresentable {
-        return JSON([
+        return try JSON([
             "info": "This is the Users resource"
         ])
+    }
+}
+
+extension User: ResponseRepresentable {
+    func makeResponse(for request: HTTPRequest) throws -> HTTPResponse {
+        return try makeJSON().makeResponse(for: request)
     }
 }

@@ -3,7 +3,7 @@ import protocol Engine.HTTPBodyRepresentable
 
 extension HTTPBody {
     public init(_ json: JSON) throws {
-        let bytes = try json.serialize()
+        let bytes = try json.makeBytes()
         self.init(bytes)
     }
 }

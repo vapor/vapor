@@ -159,7 +159,7 @@ extension Droplet {
     public final func add<ActionController: DropletInitializable>(
         _ method: HTTPMethod,
         path: String,
-        action: (ActionController) -> (Request) throws -> ResponseRepresentable) {
+        action: (ActionController) -> (HTTPRequest) throws -> HTTPResponseRepresentable) {
         add(method, path: path, action: action) {
             ActionController(droplet: self)
         }
@@ -181,7 +181,7 @@ extension Droplet {
     public final func add<ActionController: DefaultInitializable>(
         _ method: HTTPMethod,
         path: String,
-        action: (ActionController) -> (Request) throws -> ResponseRepresentable) {
+        action: (ActionController) -> (HTTPRequest) throws -> HTTPResponseRepresentable) {
         add(method, path: path, action: action) {
             ActionController()
         }
@@ -204,7 +204,7 @@ extension Droplet {
     public final func add<ActionController>(
         _ method: HTTPMethod,
         path: String,
-        action: (ActionController) -> (Request) throws -> ResponseRepresentable,
+        action: (ActionController) -> (HTTPRequest) throws -> HTTPResponseRepresentable,
         makeControllerWith factory: () throws -> ActionController) {
         add(method, path: path) { request in
             let controller = try factory()

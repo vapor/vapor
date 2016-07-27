@@ -98,7 +98,7 @@ extension Signature {
     }
 
     var handlerInput: String {
-        var items = ["Request"]
+        var items = ["HTTPRequest"]
 
         if variant == .socket {
             items.append("WebSocket")
@@ -114,7 +114,7 @@ extension Signature {
         case .socket:
             return "()"
         case .base:
-            return "ResponseRepresentable"
+            return "HTTPResponseRepresentable"
         }
     }
 

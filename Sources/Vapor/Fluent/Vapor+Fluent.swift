@@ -1,19 +1,20 @@
 import Fluent
+import Engine
 import protocol Core.Extractable
 
+// publically available
 public typealias Database = Fluent.Database
-
 public typealias DatabaseDriver = Fluent.Driver
 public typealias DatabaseModel = Fluent.Entity
+
 
 public typealias Preparation = Fluent.Preparation
 public typealias PreparationError = Fluent.PreparationError
 
 public typealias Query = Fluent.Query
-public typealias FluentValue = Fluent.Node
 public typealias Schema = Fluent.Schema
 
-extension Extractable where Wrapped == FluentValue {
+extension Extractable where Wrapped == Node {
     public var isNull: Bool {
         return extract()?.isNull ?? false
     }
@@ -41,5 +42,5 @@ extension Extractable where Wrapped == FluentValue {
 }
 
 public protocol RequestInitializable {
-    init(request: Request) throws
+    init(request: HTTPRequest) throws
 }

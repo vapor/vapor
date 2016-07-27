@@ -1,6 +1,10 @@
 import PathIndexable
 
 extension JSON: PathIndexable {
+    public init(_ object: [String : JSON]) {
+        self = .object(object)
+    }
+
     public var pathIndexableObject: [String: JSON]? {
         switch self {
         case .object(let object):
@@ -17,5 +21,9 @@ extension JSON: PathIndexable {
         default:
             return nil
         }
+    }
+
+    public init(_ array: [JSON]) {
+        self = .array(array)
     }
 }

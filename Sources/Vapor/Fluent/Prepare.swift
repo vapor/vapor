@@ -1,3 +1,5 @@
+import Console
+
 /**
     Runs the droplet's `Preparation`s.
 */

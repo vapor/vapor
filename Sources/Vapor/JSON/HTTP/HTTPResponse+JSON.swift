@@ -1,6 +1,6 @@
 import Engine
 
-extension Response {
+extension HTTPResponse {
     /**
         Convenience Initializer
 

@@ -28,6 +28,8 @@ class Generator {
 
         var generated = [
             warning,
+            "import Engine",
+            "",
             "extension RouteBuilder {",
         ]
         for function in functions {

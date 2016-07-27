@@ -15,7 +15,7 @@ if Process.arguments.count < 2 {
 }
 
 let path = ProcessInfo.processInfo.arguments[1].replacingOccurrences(of: "XcodeProject", with: "")
-let url = URL(fileURLWithPath: path + "/Sources/Vapor/Core/Generated.swift")
+let url = URL(fileURLWithPath: path + "/Sources/Vapor/Routing/Generated.swift")
 
 do{
     let lines = code.characters.split(separator: "\n").count

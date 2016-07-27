@@ -1,4 +1,7 @@
-public protocol Model: DatabaseModel, JSONRepresentable, StringInitializable { }
+import JSON
+import Fluent
+
+public protocol Model: Entity, JSONRepresentable, StringInitializable { }
 
 extension Model {
     public init?(from string: String) throws {

@@ -1,3 +1,5 @@
+import Node
+import JSON
 import Vapor
 
 final class User {
@@ -9,8 +11,12 @@ final class User {
 }
 
 extension User: JSONRepresentable {
-    func makeJSON() -> JSON {
-        return JSON([
+    public func makeJSON() throws -> JSON {
+        return try makeNode().converted()
+    }
+
+    func makeNode() throws -> Node {
+        return try Node([
             "name": "\(name)"
         ])
     }

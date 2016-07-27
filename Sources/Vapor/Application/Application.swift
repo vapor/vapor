@@ -2,6 +2,7 @@ import libc
 import Foundation
 import Socks
 import Engine
+import Console
 
 public let VERSION = "0.14.0"
 
@@ -214,7 +215,7 @@ public class Droplet {
         let router = routerProvided ?? BranchRouter()
         self.router = router
 
-        let serverType = serverProvided ?? HTTPServer<TCPServerStream, HTTPParser<Request>, HTTPSerializer<Response>>.self
+        let serverType = serverProvided ?? HTTPServer<TCPServerStream, HTTPParser<HTTPRequest>, HTTPSerializer<HTTPResponse>>.self
         self.server = serverType
 
         let client = clientProvided ?? HTTPClient<TCPClientStream>.self
@@ -338,7 +339,7 @@ extension Sequence where Iterator.Element == String {
 
 extension Droplet {
     // TODO: Can this be middleware?
-    func checkFileSystem(for request: Request) -> Request.Handler? {
+    func checkFileSystem(for request: HTTPRequest) -> HTTPRequest.Handler? {
         // Check in file system
         let filePath = self.workDir + "Public" + request.uri.path
 
@@ -348,7 +349,7 @@ extension Droplet {
 
         // File exists
         if let fileBody = try? FileManager.readBytesFromFile(filePath) {
-            return Request.Handler { _ in
+            return HTTPRequest.Handler { _ in
                 var headers: [HeaderKey: String] = [:]
 
                 if
@@ -358,13 +359,13 @@ extension Droplet {
                     headers["Content-Type"] = type
                 }
 
-                return Response(status: .ok, headers: headers, body: .data(fileBody))
+                return HTTPResponse(status: .ok, headers: headers, body: .data(fileBody))
             }
         } else {
-            return Request.Handler { _ in
+            return HTTPRequest.Handler { _ in
                 self.log.warning("Could not open file, returning 404")
                 let bod = "Page not found".utf8.array
-                return Response(status: .notFound, body: .data(bod))
+                return HTTPResponse(status: .notFound, body: .data(bod))
             }
         }
     }

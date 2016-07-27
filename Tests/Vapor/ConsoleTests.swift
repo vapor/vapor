@@ -1,5 +1,6 @@
 import XCTest
 @testable import Vapor
+import Console
 
 class ConsoleTests: XCTestCase {
     static let allTests = [
@@ -124,7 +125,7 @@ final class TestTwoCommand: Command {
     let console: ConsoleProtocol
 
     let signature: [Argument] = [
-        ArgValue(name: "arg-1"),
+        Console.Value(name: "arg-1"),
         Option(name: "opt-1"),
         Option(name: "opt-2")
     ]

@@ -55,7 +55,7 @@ extension Multipart: Polymorphic {
 
     public var json: JSON? {
         if case .input(let j) = self {
-            return JSON(j)
+            return .string(j)
         }
 
         return nil

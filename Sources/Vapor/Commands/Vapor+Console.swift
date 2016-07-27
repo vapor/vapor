@@ -12,7 +12,6 @@ import Console
 
 public typealias ArgValue = Value
 
-
 public enum CommandError: Swift.Error {
     case general(String)
 }

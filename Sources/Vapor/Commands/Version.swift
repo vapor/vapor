@@ -1,3 +1,5 @@
+import Console
+
 public final class VersionCommand: Command {
     public let id = "version"
     public let help = ["Prints out the version of the Vapor framework being used."]

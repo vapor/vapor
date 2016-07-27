@@ -1,5 +1,7 @@
+import JSON
 import Vapor
 import libc
+import Engine
 
 #if os(Linux)
 let workDir = "./Sources/Development"
@@ -59,10 +61,10 @@ drop.get("spotify-artists") { req in
     let spotifyResponse = try drop.client.get("https://api.spotify.com/v1/search", query: ["type": "artist", "q": name])
     
     guard
-        let names = spotifyResponse.data["artists", "items", "name"]
+        let names = try spotifyResponse.data["artists", "items", "name"]
             .array?
             .flatMap({ $0.string })
-            .map({ JSON($0) })
+            .map({ try JSON($0) })
     else {
         throw Abort.custom(status: .badRequest, message: "Could not parse response")
     }
@@ -144,7 +146,7 @@ drop.post("jsondata") { request in
 //MARK: Type safe routing
 
 drop.get("test", Int.self, String.self) { request, int, string in
-    return JSON([
+    return try JSON([
         "message": "Int \(int) String \(string)"
     ])
 }
@@ -167,11 +169,11 @@ drop.get("users-test") { req in
 //MARK: Json
 
 drop.get("json") { request in
-    return JSON([
+    return try JSON([
         "number": 123,
         "text": "unicorns",
         "bool": false,
-        "nested": JSON(["one", 2, false])
+        "nested": try JSON(["one", 2, false])
     ])
 }
 
@@ -244,7 +246,7 @@ drop.get("login") { request in
         throw Abort.badRequest
     }
 
-    return JSON([
+    return try JSON([
         "id": id
     ])
 }
@@ -263,7 +265,7 @@ drop.post("login") { request in
 
     request.session?["id"] = "123"
 
-    return JSON([
+    return try JSON([
         "message": "Logged in"
     ])
 }
@@ -313,8 +315,8 @@ class Employee {
 }
 
 extension Employee: JSONRepresentable {
-    func makeJSON() -> JSON {
-        return JSON([
+    func makeNode() throws -> Node {
+        return try Node([
             "name": name.value,
             "email": email.value
         ])
@@ -323,7 +325,7 @@ extension Employee: JSONRepresentable {
 
 drop.post("validation") { request in
     let employee = try Employee(request: request)
-    return employee
+    return try employee.makeJSON()
 }
 
 //MARK: Forms
@@ -400,26 +402,26 @@ drop.post("multifile") { request in
     return Response(status: .ok, headers: headers, body: .data(file.data))
 }
 
-//drop.get("options") { _ in
-//    var response = "<form method='post' action='/options/' ENCTYPE='multipart/form-data'>"
-//
-//    response += "<select name='options' multiple='multiple'>"
-//    response += "<option value='0'>0</option>"
-//    response += "<option value='1'>1</option>"
-//    response += "<option value='2'>2</option>"
-//    response += "<option value='3'>3</option>"
-//    response += "<option value='4'>4</option>"
-//    response += "<option value='5'>5</option>"
-//    response += "<option value='6'>6</option>"
-//    response += "<option value='7'>7</option>"
-//    response += "<option value='8'>8</option>"
-//    response += "<option value='9'>9</option>"
-//    response += "</select>"
-//    response += "<button>Submit</button>"
-//    response += "</form>"
-//
-//    return HTTPResponse(status: .ok, body: .data(response.data))
-//}
+drop.get("options") { _ in
+    var response = "<form method='post' action='/options/' ENCTYPE='multipart/form-data'>"
+
+    response += "<select name='options' multiple='multiple'>"
+    response += "<option value='0'>0</option>"
+    response += "<option value='1'>1</option>"
+    response += "<option value='2'>2</option>"
+    response += "<option value='3'>3</option>"
+    response += "<option value='4'>4</option>"
+    response += "<option value='5'>5</option>"
+    response += "<option value='6'>6</option>"
+    response += "<option value='7'>7</option>"
+    response += "<option value='8'>8</option>"
+    response += "<option value='9'>9</option>"
+    response += "</select>"
+    response += "<button>Submit</button>"
+    response += "</form>"
+
+    return HTTPResponse(status: .ok, body: .data(response.bytes))
+}
 
 drop.post("options") { request in
     guard let form = request.multipart, let multipart = form["options"] else {
@@ -440,7 +442,7 @@ drop.post("multipart-print") { request in
     print(request.multipart?["test"])
     print(request.multipart?["test"]?.file)
 
-    return JSON([
+    return try JSON([
         "message": "Printed details to console"
     ])
 }
@@ -449,7 +451,7 @@ drop.post("multipart-print") { request in
 
 drop.grouped(AuthMiddleware()) { group in
     drop.get("protected") { request in
-        return JSON([
+        return try JSON([
             "message": "Welcome authorized user"
         ])
     }

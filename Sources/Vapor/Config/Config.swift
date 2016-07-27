@@ -1,4 +1,5 @@
 import Foundation
+import JSON
 import PathIndexable
 
 extension ProcessInfo {

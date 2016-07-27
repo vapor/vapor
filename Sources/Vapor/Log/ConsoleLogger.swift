@@ -1,4 +1,5 @@
 import libc
+import Console
 
 /**
     Logs to the console
