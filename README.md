@@ -2,7 +2,7 @@
 
 # Vapor
 
-A Web Framework for Swift that works on iOS, OS X, and Ubuntu.
+A Web Framework for Swift that works on iOS, macOS, and Ubuntu.
 
 - [x] Pure Swift
 - [x] Modular
@@ -16,7 +16,7 @@ A Web Framework for Swift that works on iOS, OS X, and Ubuntu.
 [![Slack Status](http://slack.qutheory.io/badge.svg)](http://slack.qutheory.io)
 [![Twitter Follow](https://img.shields.io/twitter/follow/shields_io.svg?style=social&label=Follow&maxAge=2592000)](https://twitter.com/qutheory)
 
-Vapor is the first true web framework for Swift. It provides a beautifully expressive and easy to use foundation for your next website or API.
+Vapor is the [most used](https://swiftpkgs.ng.bluemix.net/browse#?chart=mostessential) web framework for Swift. It provides a beautifully expressive and easy to use foundation for your next website or API.
 
 This repository is the framework's source code. To view some sample projects, check out our list [here](/Documents/PROJECTS.md).
 
