@@ -1,5 +1,13 @@
 import XCTest
+import Engine
 @testable import Vapor
+
+extension Request {
+    convenience init(method: HTTPMethod, path: String) {
+        let uri = URI(scheme: "", userInfo: nil, host: "", port: nil, path: path, query: nil, fragment: nil)
+        self.init(method: method, uri: uri)
+    }
+}
 
 private class TestController: DropletInitializable, Resource {
 
@@ -97,7 +105,7 @@ class ControllerTests: XCTestCase {
         let instance = TestController(droplet: drop)
         drop.resource("foo", makeControllerWith: { return instance })
 
-        let fooIndex = try Request(method: .get, path: "foo")
+        let fooIndex = Request(method: .get, path: "foo")
         if let handler = drop.router.route(fooIndex) {
             do {
                 let _ = try handler.respond(to: fooIndex)
@@ -116,7 +124,7 @@ class ControllerTests: XCTestCase {
 
         drop.add(.get, path: "/hello", action: TestActionController.hello) { TestActionController(person: "Tanner") }
 
-        let request = try Request(method: .get, path: "hello")
+        let request = Request(method: .get, path: "hello")
         guard let handler = drop.router.route(request) else {
             XCTFail("No handler found for TestActionController.hello")
             return
@@ -132,7 +140,7 @@ class ControllerTests: XCTestCase {
 
         drop.add(.get, path: "/hello", action: TestActionController.hello)
 
-        let request = try Request(method: .get, path: "hello")
+        let request = Request(method: .get, path: "hello")
         guard let handler = drop.router.route(request) else {
             XCTFail("No handler found for TestActionController.hello")
             return
@@ -149,7 +157,7 @@ class ControllerTests: XCTestCase {
 
         drop.add(.get, path: "/hello", action: TestActionController.hello)
 
-        let request = try Request(method: .get, path: "hello")
+        let request = Request(method: .get, path: "hello")
         guard let handler = drop.router.route(request) else {
             XCTFail("No handler found for TestController.hello")
             return
@@ -172,8 +180,8 @@ class ControllerTests: XCTestCase {
             let _ = try handler.respond(to: req)
         }
 
-        let arrayRequests: [Request] = try [.get, .post, .delete].map {
-            return try Request(method: $0, path: "/test", host: "0.0.0.0")
+        let arrayRequests: [Request] = [.get, .post, .delete].map {
+            return Request(method: $0, path: "/test", host: "0.0.0.0")
         }
 
         try arrayRequests.forEach(handleRequest)
@@ -185,8 +193,8 @@ class ControllerTests: XCTestCase {
         XCTAssert(testInstance.lock.modify == 0)
         XCTAssert(testInstance.lock.destroy == 0)
 
-        let individualRequests: [Request] = try [.get, .post, .put, .patch, .delete].map {
-            return try Request(method: $0, path: "test/123", host: "0.0.0.0")
+        let individualRequests: [Request] = [.get, .post, .put, .patch, .delete].map {
+            return Request(method: $0, path: "test/123", host: "0.0.0.0")
         }
         try individualRequests.forEach(handleRequest)
 
@@ -196,4 +204,11 @@ class ControllerTests: XCTestCase {
         XCTAssert(testInstance.lock.destroy == 1)
     }
 
+}
+
+extension Request {
+    convenience init(method: HTTPMethod, path: String, host: String) {
+        let uri = URI(scheme: "", userInfo: nil, host: host, port: nil, path: path, query: nil, fragment: nil)
+        self.init(method: method, uri: uri)
+    }
 }

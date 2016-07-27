@@ -10,11 +10,11 @@ class ValidationMiddleware: Middleware {
         do {
             return try chain.respond(to: request)
         } catch let error as ValidationErrorProtocol {
-            let json = JSON([
+            let json = try JSON([
                 "error": true,
                 "message": error.message
             ])
-            let data = try json.serialize()
+            let data = try json.makeBytes()
             return HTTPResponse(status: .badRequest, body: .data(data))
         }
     }

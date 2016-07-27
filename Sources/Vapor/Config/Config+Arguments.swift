@@ -65,10 +65,10 @@ extension Config {
         guard
             paths.count == 2,
             var keyPaths = paths.last?.components(separatedBy: "."),
-            let fileName = keyPaths.first
+            let fileName = keyPaths.first,
             // first argument is file name, subsequent args are actual path
             //
-            where keyPaths.count > 1
+            keyPaths.count > 1
             else {
                 return nil
         }

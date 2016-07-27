@@ -17,7 +17,7 @@ extension Multipart {
     public struct File {
         public var name: String?
         public var type: String?
-        public var data: Data
+        public var data: Bytes
     }
 }
 

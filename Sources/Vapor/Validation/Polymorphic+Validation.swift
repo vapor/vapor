@@ -1,4 +1,4 @@
-import protocol Base.Extractable
+import protocol Core.Extractable
 
 extension Polymorphic {
     /**

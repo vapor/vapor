@@ -1,23 +1,20 @@
 import Fluent
 import Engine
-
-// internal bridge
-public typealias Entity = Fluent.Model
-
-import protocol Base.Extractable
+import protocol Core.Extractable
 
 // publically available
 public typealias Database = Fluent.Database
 public typealias DatabaseDriver = Fluent.Driver
+public typealias DatabaseModel = Fluent.Entity
+
 
 public typealias Preparation = Fluent.Preparation
 public typealias PreparationError = Fluent.PreparationError
 
 public typealias Query = Fluent.Query
-public typealias Value = Fluent.Value
 public typealias Schema = Fluent.Schema
 
-extension Extractable where Wrapped == Value {
+extension Extractable where Wrapped == Node {
     public var isNull: Bool {
         return extract()?.isNull ?? false
     }

@@ -1,5 +1,8 @@
 import Engine
 
+// TODO: mv
+@_exported import enum Engine.HTTPMethod
+
 extension Droplet: HTTPResponder {
     /**
         Returns a response to the given request
@@ -9,7 +12,7 @@ extension Droplet: HTTPResponder {
         - returns: response if possible
     */
     public func respond(to request: HTTPRequest) throws -> HTTPResponse {
-        log.info("\(request.method) \(request.uri.path ?? "/")")
+        log.info("\(request.method) \(request.uri.path)")
 
         var responder: HTTPResponder
         let request = request
@@ -33,7 +36,7 @@ extension Droplet: HTTPResponder {
         } else {
             // Default not found handler
             responder = HTTPRequest.Handler { _ in
-                let normal: [Method] = [.get, .post, .put, .patch, .delete]
+                let normal: [HTTPMethod] = [.get, .post, .put, .patch, .delete]
 
                 if normal.contains(request.method) {
                     throw Abort.notFound

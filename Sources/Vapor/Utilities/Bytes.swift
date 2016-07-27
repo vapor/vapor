@@ -1,4 +1,4 @@
-import Base
+import Core
 
-public typealias Byte = Base.Byte
-public typealias Bytes = Base.Bytes
+public typealias Byte = Core.Byte
+public typealias Bytes = Core.Bytes

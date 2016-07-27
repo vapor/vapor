@@ -27,10 +27,10 @@ extension Environment: CustomStringConvertible {
 
     public var description: String {
         switch self {
-        case production: return "production"
-        case test: return "test"
-        case development: return "development"
-        case custom(let string): return string
+        case .production: return "production"
+        case .test: return "test"
+        case .development: return "development"
+        case .custom(let string): return string
         }
     }
 

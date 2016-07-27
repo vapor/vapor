@@ -12,9 +12,7 @@ class DataSplitTests: XCTestCase {
         let group = setZero + setOne // 5kb
         let count = 60 // 60 * 5 == 300 which is breaking test case
         let largeByteArray = [Bytes](repeating: group, count: count).flatMap { $0 }
-        let largeData = Data(largeByteArray)
-        let setZeroData = Data(setZero)
-        let split = largeData.split(separator: setZeroData, excludingFirst: true) //, excludingLast: <#T##Bool#>, maxSplits: <#T##Int?#>)
+        let split = largeByteArray.split(separator: setZero, excludingFirst: true) //, excludingLast: <#T##Bool#>, maxSplits: <#T##Int?#>)
         XCTAssert(split.count == count)
     }
 }

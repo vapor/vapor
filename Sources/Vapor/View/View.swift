@@ -8,9 +8,9 @@ public class View {
     ///Currently applied RenderDrivers
     public static var renderers: [String: RenderDriver] = [:]
 
-    var data: Data
+    var data: Bytes
 
-    enum Error: ErrorProtocol {
+    enum Error: Swift.Error {
         case InvalidPath
     }
 
@@ -24,16 +24,16 @@ public class View {
         let filesPath = workDir + "Resources/Views/" + path
 
         guard let fileBody = try? FileManager.readBytesFromFile(filesPath) else {
-            self.data = Data()
+            self.data = Bytes()
             throw Error.InvalidPath
         }
-        self.data = Data(fileBody)
+        self.data = fileBody
 
         for (suffix, renderer) in View.renderers {
             if path.hasSuffix(suffix) {
-                let template = try String(data: data)
+                let template = data.string
                 let rendered = try renderer.render(template: template, context: context)
-                self.data = rendered.data
+                self.data = rendered.bytes
             }
         }
 
@@ -46,7 +46,7 @@ extension View: HTTPResponseRepresentable {
     public func makeResponse(for: HTTPRequest) -> HTTPResponse {
         return HTTPResponse(status: .ok, headers: [
             "Content-Type": "text/html; charset=utf-8"
-        ], body: .data(data.bytes))
+        ], body: .data(data))
     }
 }
 

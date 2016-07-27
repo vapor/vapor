@@ -56,7 +56,7 @@ public struct Prepare: Command {
 
                 if hasPrepared {
                     print("Reverting \(name)")
-                    try preparation.revert(database: database)
+                    try preparation.revert(database)
                     console.success("Reverted \(name)")
                 }
             }

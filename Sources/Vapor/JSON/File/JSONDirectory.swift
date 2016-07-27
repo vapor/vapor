@@ -39,6 +39,6 @@ extension FileManager {
 
     private static func loadJson(_ path: String) throws -> JSON {
         let bytes = try FileManager.readBytesFromFile(path)
-        return try JSON(serialized: bytes)
+        return try JSON(bytes: bytes)
     }
 }

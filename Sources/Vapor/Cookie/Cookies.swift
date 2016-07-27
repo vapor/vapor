@@ -52,7 +52,7 @@ public struct Cookies {
     }
 }
 
-extension Cookies: ArrayLiteralConvertible {
+extension Cookies: ExpressibleByArrayLiteral {
     public init(arrayLiteral cookies: Cookie...) {
         self.init(cookies: cookies)
     }
@@ -81,8 +81,8 @@ extension Cookies {
                 continue
             }
 
-            let name = cookieTokens[0].string ?? ""
-            let value = cookieTokens[1].string ?? ""
+            let name = cookieTokens[0].string 
+            let value = cookieTokens[1].string 
 
             cookies[name] = value
         }
@@ -95,11 +95,7 @@ extension Cookies {
 
 extension Cookies {
     func serialize() -> String? {
-        guard !self.cookies.isEmpty else { return nil }
-        return self
-            .map { cookie in
-                return "\(cookie.name)=\(cookie.value)"
-            }
-            .joined(separator: ";")
+        guard !cookies.isEmpty else { return nil }
+        return map { $0.serialize() } .joined(separator: "\r\nSet-Cookie: ")
     }
 }

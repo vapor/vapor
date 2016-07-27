@@ -94,9 +94,9 @@ extension JSON: Polymorphic {
         case .number(let number):
             switch number {
             case .double(let double):
-                return String(double)
+                return double.description
             case .integer(let int):
-                return String(int)
+                return int.description
             }
         default:
             return nil
