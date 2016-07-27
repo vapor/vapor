@@ -1,3 +1,5 @@
+import Engine
+
 public protocol Middleware {
-    func respond(to request: Request, chainingTo next: Responder) throws -> Response
+    func respond(to request: HTTPRequest, chainingTo next: HTTPResponder) throws -> HTTPResponse
 }

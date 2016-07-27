@@ -1,5 +1,6 @@
-public typealias Host = String
+import Engine
 
+public typealias Host = String
 
 public final class BranchRouter: Router {
 
@@ -7,7 +8,7 @@ public final class BranchRouter: Router {
     private final var tree: [Host: [Method: Branch]] = [:]
 
     // MARK: Routing
-    public final func route(_ request: Request) -> Responder? {
+    public final func route(_ request: HTTPRequest) -> HTTPResponder? {
         let path = request.uri.path ?? ""
         let host = request.uri.host ?? ""
 

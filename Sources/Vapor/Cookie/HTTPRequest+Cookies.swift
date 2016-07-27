@@ -1,4 +1,6 @@
-extension Request {
+import Engine
+
+extension HTTPRequest {
     public var cookies: Cookies {
         get {
             if let cookies = storage["Cookie"] as? Cookies {
