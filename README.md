@@ -2,22 +2,21 @@
 
 # Vapor
 
-A Web Framework for Swift that works on iOS, OS X, and Ubuntu.
+A Web Framework for Swift that works on iOS, macOS, and Ubuntu.
 
 - [x] Pure Swift
 - [x] Modular
 - [x] Beautifully expressive
 
-![Swift](https://camo.githubusercontent.com/0727f3687a1e263cac101c5387df41048641339c/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f53776966742d332e302d6f72616e67652e7376673f7374796c653d666c6174)
+![Swift](http://img.shields.io/badge/swift-v3.0--dev.07.25-brightgreen.svg)
 [![Build Status](https://api.travis-ci.org/qutheory/vapor.svg?branch=master)](https://travis-ci.org/qutheory/vapor)
+[![CircleCI](https://circleci.com/gh/qutheory/vapor.svg?style=shield)](https://circleci.com/gh/qutheory/vapor)
+[![Code Coverage](https://codecov.io/gh/qutheory/vapor/branch/master/graph/badge.svg)](https://codecov.io/gh/qutheory/vapor)
+[![Codebeat](https://codebeat.co/badges/a793ad97-47e3-40d9-82cf-2aafc516ef4e)](https://codebeat.co/projects/github-com-qutheory-vapor)
 [![Slack Status](http://slack.qutheory.io/badge.svg)](http://slack.qutheory.io)
 [![Twitter Follow](https://img.shields.io/twitter/follow/shields_io.svg?style=social&label=Follow&maxAge=2592000)](https://twitter.com/qutheory)
-[![codebeat badge](https://codebeat.co/badges/3334c72c-c6e6-4061-a86b-f077b5250252)](https://codebeat.co/projects/github-com-qutheory-vapor)
-[![PRs Welcome](https://img.shields.io/badge/prs-welcome-brightgreen.svg)](http://makeapullrequest.com)
-[![OpenCollective](https://opencollective.com/vapor/backers/badge.svg)](#backers)
-[![OpenCollective](https://opencollective.com/vapor/sponsors/badge.svg)](#sponsors)
 
-Vapor is the first true web framework for Swift. It provides a beautifully expressive and easy to use foundation for your next website or API.
+Vapor is the [most used](https://swiftpkgs.ng.bluemix.net/browse#?chart=mostessential) web framework for Swift. It provides a beautifully expressive and easy to use foundation for your next website or API.
 
 This repository is the framework's source code. To view some sample projects, check out our list [here](/Documents/PROJECTS.md).
 
