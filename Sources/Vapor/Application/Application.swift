@@ -141,7 +141,7 @@ public class Droplet {
             databaseProvided = provider.database ?? databaseProvided
         }
 
-        let arguments = arguments ?? NSProcessInfo.arguments()
+        let arguments = arguments ?? ProcessInfo.arguments()
         self.arguments = arguments
 
         let console = consoleProvided ?? Terminal(arguments: arguments)

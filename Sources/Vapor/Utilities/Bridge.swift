@@ -5,7 +5,6 @@
     import Foundation
     typealias NSDate = Date
     typealias NSDateFormatter = DateFormatter
-    typealias NSProcessInfo = ProcessInfo
     typealias NSURL = URL
     typealias NSLocale = Locale
     typealias NSTimeZone = TimeZone
