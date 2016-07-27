@@ -1,5 +1,7 @@
+import Core
+
 extension Multipart {
-    public enum Error: ErrorProtocol {
+    public enum Error: Swift.Error {
         case invalidBoundary
     }
 
@@ -11,15 +13,15 @@ extension Multipart {
         return boundaryPieces[1]
     }
 
-    static func parse(_ body: Data, boundary: String) -> [String: Multipart] {
-        let boundary = Data([.hyphen, .hyphen] + boundary.data)
+    static func parse(_ body: Bytes, boundary: String) -> [String: Multipart] {
+        let boundary: Bytes = [.hyphen, .hyphen] + boundary.bytes
 
         var form = [String: Multipart]()
         
         // Separate by boundry and loop over the "multi"-parts
         for part in body.split(separator: boundary, excludingFirst: true, excludingLast: true) {
 
-            let headBody = part.split(separator: Data(Byte.crlf + Byte.crlf))
+            let headBody = part.split(separator: Byte.crlf + Byte.crlf)
 
             // Separate the head and body
             guard headBody.count == 2, let head = headBody.first, let body = headBody.last else {
@@ -102,11 +104,11 @@ extension Multipart {
         return form
     }
 
-    static func parseMultipartStorage(head: Data, body: Data) -> [String: String]? {
+    static func parseMultipartStorage(head: Bytes, body: Bytes) -> [String: String]? {
         var storage = [String: String]()
 
         // Separate the individual headers
-        let headers = head.split(separator: Data(Byte.crlf))
+        let headers = head.split(separator: Byte.crlf)
 
         for line in headers {
             // Make the header a String

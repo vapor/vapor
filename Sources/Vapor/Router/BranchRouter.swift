@@ -5,12 +5,12 @@ public typealias Host = String
 public final class BranchRouter: Router {
 
     // MARK: Private Tree Representation
-    private final var tree: [Host: [Method: Branch]] = [:]
+    private final var tree: [Host: [HTTPMethod: Branch]] = [:]
 
     // MARK: Routing
-    public final func route(_ request: HTTPRequest) -> HTTPResponder? {
-        let path = request.uri.path ?? ""
-        let host = request.uri.host ?? ""
+    public final func route(_ request: Request) -> Responder? {
+        let path = request.uri.path 
+        let host = request.uri.host
 
         //get root from hostname, or * route
         let root = tree[host] ?? tree["*"]

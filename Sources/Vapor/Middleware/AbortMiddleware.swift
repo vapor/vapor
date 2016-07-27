@@ -39,11 +39,11 @@ public class AbortMiddleware: Middleware {
     }
 
     func errorResponse(_ status: Status, message: String) throws -> HTTPResponse {
-        let json = JSON([
+        let json = try JSON([
             "error": true,
             "message": "\(message)"
         ])
-        let data = try json.serialize()
+        let data = try json.makeBytes()
         let response = HTTPResponse(status: status, body: .data(data))
         response.headers["Content-Type"] = "application/json; charset=utf-8"
         return response

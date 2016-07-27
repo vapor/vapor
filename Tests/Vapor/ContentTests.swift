@@ -1,4 +1,5 @@
 import XCTest
+import Node
 @testable import Vapor
 
 class TestResponder: Responder {
@@ -25,7 +26,7 @@ class ContentTests: XCTestCase {
     func testParse() {
         let string = "value=123"
 
-        let data = StructuredData(formURLEncoded: string.bytes)
+        let data = Node(formURLEncoded: string.bytes)
         XCTAssertEqual(data["value"]?.int, 123, "Request did not parse correctly")
     }
 
@@ -41,7 +42,7 @@ class ContentTests: XCTestCase {
         
         let parsedBoundary = try Multipart.parseBoundary(contentType: "multipart/form-data; charset=utf-8; boundary=\(boundary)")
         print("Parsed boundary: \(parsedBoundary)")
-        let data = Multipart.parse(body.data, boundary: parsedBoundary)
+        let data = Multipart.parse(body.bytes, boundary: parsedBoundary)
         print("Data: \(data)")
         XCTAssertEqual(data["value"]?.int, 123, "Request did not parse correctly")
     }
@@ -58,15 +59,15 @@ class ContentTests: XCTestCase {
 
         let parsedBoundary = try! Multipart.parseBoundary(contentType: "multipart/form-data; charset=utf-8; boundary=\(boundary)")
         print("Got parsed boundary: \(parsedBoundary)")
-        let data = Multipart.parse(body.data, boundary: parsedBoundary)
+        let data = Multipart.parse(body.bytes, boundary: parsedBoundary)
 
-        XCTAssertEqual(data["value"]?.file?.data, "123".data, "Request did not parse correctly")
+        XCTAssertEqual(data["value"]?.file?.data ?? [1,2,3], "123".bytes, "Request did not parse correctly")
     }
 
     func testFormURLEncoded() {
         let body = "first=value&arr[]=foo+bar&arr[]=b%3Daz"
 
-        let data = StructuredData(formURLEncoded: body.bytes)
+        let data = Node(formURLEncoded: body.bytes)
 
         XCTAssert(data["first"]?.string == "value", "Request key first did not parse correctly")
         XCTAssert(data["arr", 0]?.string == "foo bar", "Request key arr did not parse correctly")
@@ -76,7 +77,7 @@ class ContentTests: XCTestCase {
     func testFormURLEncodedEdge() {
         let body = "singleKeyArray[]=value&implicitArray=1&implicitArray=2"
 
-        let data = StructuredData(formURLEncoded: body.bytes)
+        let data = Node(formURLEncoded: body.bytes)
 
         XCTAssert(data["singleKeyArray", 0]?.string == "value", "singleKeyArray did not parse correctly")
         XCTAssert(data["implicitArray", 0]?.string == "1", "implicitArray did not parse correctly")

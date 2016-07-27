@@ -6,7 +6,7 @@ public protocol PolymorphicInitializable {
     init(polymorphic: Polymorphic) throws
 }
 
-public enum PolymorphicInitializableError: ErrorProtocol {
+public enum PolymorphicInitializableError: Swift.Error {
     case couldNotInitialize(String)
 }
 

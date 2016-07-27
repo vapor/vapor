@@ -157,7 +157,7 @@ extension Droplet {
         - parameter action: The curried action to run on the provided type.
      */
     public final func add<ActionController: DropletInitializable>(
-        _ method: Method,
+        _ method: HTTPMethod,
         path: String,
         action: (ActionController) -> (HTTPRequest) throws -> HTTPResponseRepresentable) {
         add(method, path: path, action: action) {
@@ -179,7 +179,7 @@ extension Droplet {
          - parameter action: The curried action to run on the provided type.
      */
     public final func add<ActionController: DefaultInitializable>(
-        _ method: Method,
+        _ method: HTTPMethod,
         path: String,
         action: (ActionController) -> (HTTPRequest) throws -> HTTPResponseRepresentable) {
         add(method, path: path, action: action) {
@@ -202,7 +202,7 @@ extension Droplet {
         - parameter factory: The closure to instantiate the controller type.
      */
     public final func add<ActionController>(
-        _ method: Method,
+        _ method: HTTPMethod,
         path: String,
         action: (ActionController) -> (HTTPRequest) throws -> HTTPResponseRepresentable,
         makeControllerWith factory: () throws -> ActionController) {

@@ -1,12 +1,13 @@
 import Foundation
+import JSON
 import PathIndexable
 
-extension NSProcessInfo {
+extension ProcessInfo {
     static func arguments() -> [String] {
         #if !os(Linux)
-            return NSProcessInfo.processInfo.arguments
+            return ProcessInfo.processInfo.arguments
         #else
-            return NSProcessInfo.processInfo().arguments
+            return ProcessInfo.processInfo().arguments
         #endif
     }
 }
@@ -58,7 +59,7 @@ public class Config {
         seed: JSON = [:],
         workingDirectory: String = "./",
         environment: Environment? = nil,
-        arguments: [String] = NSProcessInfo.arguments()
+        arguments: [String] = ProcessInfo.arguments()
     ) throws {
         let configDirectory = workingDirectory.finished(with: "/") + "Config/"
         self.environment = environment ?? Environment.loader(arguments: arguments)
@@ -92,7 +93,7 @@ public class Config {
     }
 
     public init() {
-        self.environment = Environment.loader(arguments: NSProcessInfo.arguments())
+        self.environment = Environment.loader(arguments: ProcessInfo.arguments())
         self.directoryQueue = PrioritizedDirectoryQueue(directories: [])
     }
 
@@ -136,7 +137,7 @@ public class Config {
         let value = directoryQueue[file, paths]
 
         // check if value exists in Env
-        if let string = value?.string where string.characters.first == "$" {
+        if let string = value?.string, string.characters.first == "$" {
             let name = String(string.characters.dropFirst())
             return Env.get(name) // will return nil if env variable not found
         }

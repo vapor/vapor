@@ -1,6 +1,6 @@
 import HMAC
 import SHA2
-import struct Base.Bytes
+import struct Core.Bytes
 
 /**
     Create SHA + HMAC hashes with the
@@ -46,7 +46,7 @@ public class SHA2Hasher: Hash {
         - returns: a hashed string
      */
     public func make(_ message: String) -> String {
-        let msgBuff = message.data.bytes
+        let msgBuff = message.bytes
 
         let hashed: Bytes
 

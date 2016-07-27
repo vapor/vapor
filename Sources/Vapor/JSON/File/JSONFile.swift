@@ -6,8 +6,8 @@ struct JSONFile {
 
     init(name: String, json: JSON) {
         if
-            let nameSequence = name.characters.split(separator: ".").first
-            where name.hasSuffix(JSONFile.suffix)
+            let nameSequence = name.characters.split(separator: ".").first,
+            name.hasSuffix(JSONFile.suffix)
         {
             self.name = String(nameSequence)
         } else {

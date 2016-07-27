@@ -151,7 +151,7 @@ class TestConsoleDriver: ConsoleProtocol {
     }
 
     func output(_ string: String, style: ConsoleStyle, newLine: Bool) {
-        buffer += string.data.bytes
+        buffer += string.bytes
     }
 
     func input() -> String {

@@ -95,8 +95,8 @@ class RouteTests: XCTestCase {
             print("from 400")
             throw Abort.badRequest
         }
-
-        let request = try Request(method: .get, path: "400")
+        
+        let request = Request(method: .get, path: "400")
         guard var handler = drop.router.route(request) else {
             XCTFail("No handler found")
             return
@@ -128,7 +128,7 @@ class RouteTests: XCTestCase {
  */
 
 internal func assertRouteExists(at path: String,
-                                method: Vapor.Method,
+                                method: HTTPMethod,
                                 host: String,
                                 inRoutes routes: [Route]) {
     var found = false

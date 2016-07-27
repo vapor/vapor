@@ -17,7 +17,7 @@ extension Route {
 extension Route.Link: RouteBuilder {
     public func add(
         middleware: [Middleware],
-        method: Method,
+        method: HTTPMethod,
         path: String,
         handler: Route.Handler
     ) {

@@ -142,7 +142,7 @@ public class Droplet {
             databaseProvided = provider.database ?? databaseProvided
         }
 
-        let arguments = arguments ?? NSProcessInfo.arguments()
+        let arguments = arguments ?? ProcessInfo.arguments()
         self.arguments = arguments
 
         let console = consoleProvided ?? Terminal(arguments: arguments)
@@ -227,7 +227,7 @@ public class Droplet {
         self.preparations = preparations
 
         if let driver = databaseProvided {
-            let database = Database(driver: driver)
+            let database = Database(driver)
             for preparation in preparations {
                 if let model = preparation as? Model.Type {
                     model.database = database
@@ -269,15 +269,14 @@ public class Droplet {
 }
 
 extension Droplet {
-    enum ExecutionError: ErrorProtocol {
+    enum ExecutionError: Swift.Error {
         case insufficientArguments, noCommandFound
     }
 
     /**
         Runs the Droplet's commands, defaulting to serve.
     */
-    @noreturn
-    public func serve(_ closure: Serve.ServeFunction? = nil) {
+    public func serve(_ closure: Serve.ServeFunction? = nil) -> Never  {
         do {
             try runCommands()
         } catch CommandError.general(let error) {
@@ -342,7 +341,7 @@ extension Droplet {
     // TODO: Can this be middleware?
     func checkFileSystem(for request: HTTPRequest) -> HTTPRequest.Handler? {
         // Check in file system
-        let filePath = self.workDir + "Public" + (request.uri.path ?? "")
+        let filePath = self.workDir + "Public" + request.uri.path
 
         guard FileManager.fileAtPath(filePath).exists else {
             return nil
@@ -351,7 +350,7 @@ extension Droplet {
         // File exists
         if let fileBody = try? FileManager.readBytesFromFile(filePath) {
             return HTTPRequest.Handler { _ in
-                var headers: Headers = [:]
+                var headers: [HeaderKey: String] = [:]
 
                 if
                     let fileExtension = filePath.components(separatedBy: ".").last,

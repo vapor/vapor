@@ -1,9 +1,10 @@
 import Foundation
-import Base
+import Core
+import Node
 
-extension StructuredData {
+extension Node {
     public init(formURLEncoded data: Bytes) {
-        var urlEncoded: [String: StructuredData] = [:]
+        var urlEncoded: [String: Node] = [:]
 
         for pair in data.split(separator: .ampersand) {
             let token = pair.split(separator: .equals)
@@ -17,10 +18,10 @@ extension StructuredData {
                     }
                 }
 
-                var keyData = percentDecoded(token[0], transform: replacePlus) ?? []
-                let valueData = percentDecoded(token[1], transform: replacePlus) ?? []
+                var keyData = percentDecoded(token[0], nonEncodedTransform: replacePlus) ?? []
+                let valueData = percentDecoded(token[1], nonEncodedTransform: replacePlus) ?? []
 
-                var value: StructuredData = .string(valueData.string)
+                var value: Node = .string(valueData.string)
 
                 var keyIndicatedArray = false
 
@@ -57,11 +58,11 @@ extension StructuredData {
             }
         }
         
-        self = .dictionary(urlEncoded)
+        self = .object(urlEncoded)
     }
 
     public func formURLEncoded() throws -> Bytes {
-        guard case .dictionary(let dict) = self else {
+        guard case .object(let dict) = self else {
             return []
         }
 

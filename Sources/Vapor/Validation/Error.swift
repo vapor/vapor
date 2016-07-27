@@ -5,7 +5,7 @@
  
     Will be caught automatically by ValidationMiddleware
 */
-public protocol ValidationErrorProtocol: ErrorProtocol {
+public protocol ValidationErrorProtocol: Swift.Error {
     /**
         Description of what went wrong
     */
@@ -104,7 +104,7 @@ extension Validator {
 
         - returns: a ValidationFailure object to throw
     */
-    public static func error(with input: InputType, message: String? = nil) -> ErrorProtocol {
+    public static func error(with input: InputType, message: String? = nil) -> Swift.Error {
         return ValidationError(self, input: input, message: message)
     }
 
@@ -116,7 +116,7 @@ extension Validator {
 
         - returns: a ValidationFailure object to throw
     */
-    public func error(with input: InputType, message: String? = nil) -> ErrorProtocol {
+    public func error(with input: InputType, message: String? = nil) -> Swift.Error {
         return ValidationError(self, input: input, message: message)
     }
 }
