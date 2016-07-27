@@ -229,7 +229,7 @@ public class Droplet {
         if let driver = databaseProvided {
             let database = Database(driver)
             for preparation in preparations {
-                if let model = preparation as? Model.Type {
+                if let model = preparation as? DatabaseModel.Type {
                     model.database = database
                 }
             }
