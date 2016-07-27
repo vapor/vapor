@@ -1,3 +1,5 @@
+import Console
+
 /**
     Runs the droplet's `Preparation`s.
 */
@@ -12,12 +14,12 @@ public struct Prepare: Command {
         "runs the droplet's preparations"
     ]
 
-    public let console: Console
+    public let console: ConsoleProtocol
     public let preparations: [Preparation.Type]
     public let database: Database?
 
     public init(
-        console: Console,
+        console: ConsoleProtocol,
         preparations: [Preparation.Type],
         database: Database?
     ) {

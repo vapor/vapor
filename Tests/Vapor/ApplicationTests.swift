@@ -1,5 +1,6 @@
 import XCTest
 @testable import Vapor
+import Engine
 
 class DropletTests: XCTestCase {
     static let allTests = [
