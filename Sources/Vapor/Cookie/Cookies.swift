@@ -96,6 +96,6 @@ extension Cookies {
 extension Cookies {
     func serialize() -> String? {
         guard !cookies.isEmpty else { return nil }
-        return map({ $0.serialize() }).joined(separator: ";")
+        return map { $0.serialize() } .joined(separator: "\r\nSet-Cookie: ")
     }
 }
