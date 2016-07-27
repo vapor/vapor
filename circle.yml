@@ -1,0 +1,3 @@
+test:
+  override:
+    - eval "$(curl -sL swift.qutheory.io/ci)"
