@@ -13,7 +13,7 @@ class RouterTests: XCTestCase {
     func testSingleHostRouting() throws {
         let router = BranchRouter()
         let compare = "Hello Text Data Processing Test"
-        let data = Data(compare.utf8)
+        let data = compare.utf8
 
         let route = Route.init(host: "other.test", method: .get, path: "test") { request in
             return Response(status: .ok, body: data)
