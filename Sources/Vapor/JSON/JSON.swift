@@ -1,9 +1,4 @@
-//import Jay
 import Foundation
-
-#if !os(Linux)
-    private typealias NSData = Foundation.Data
-#endif
 
 import struct Core.Bytes
 import protocol Engine.HTTPResponseRepresentable
@@ -52,7 +47,7 @@ public enum JSON {
 
 extension JSON {
     public init(serialized: Bytes) throws {
-        let data = NSData(bytes: serialized)
+        let data = Data(bytes: serialized)
         let json = try JSONSerialization.jsonObject(with: data)
 
         self = JSON._cast(json)
