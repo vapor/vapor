@@ -21,12 +21,6 @@ let package = Package(
         //ORM for interacting with databases
         .Package(url: "https://github.com/qutheory/fluent.git", majorVersion: 0, minor: 0),
 
-        //Allows complex key path subscripts
-        .Package(url: "https://github.com/qutheory/path-indexable.git", majorVersion: 0, minor: 3),
-
-        // Syntax for easily accessing values from generic data.
-        .Package(url: "https://github.com/qutheory/polymorphic.git", majorVersion: 0, minor: 3),
-
         //Core vapor transport layer
         .Package(url: "https://github.com/qutheory/engine.git", majorVersion: 0, minor: 3),
 
