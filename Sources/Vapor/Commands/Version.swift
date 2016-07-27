@@ -1,9 +1,11 @@
+import Console
+
 public final class VersionCommand: Command {
     public let id = "version"
     public let help = ["Prints out the version of the Vapor framework being used."]
-    public let console: Console
+    public let console: ConsoleProtocol
 
-    public init(console: Console) {
+    public init(console: ConsoleProtocol) {
         self.console = console
     }
 

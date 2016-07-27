@@ -1,4 +1,6 @@
-extension Request {
+import Engine
+
+extension HTTPRequest {
     /// Server stored information related from session cookie.
     public var session: Session? {
         get {

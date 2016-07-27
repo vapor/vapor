@@ -1,4 +1,6 @@
-extension Request {
+import Engine
+
+extension HTTPRequest {
     /// form url encoded encoded request data
     public var formURLEncoded: StructuredData? {
         if let existing = storage["form-urlencoded"] as? StructuredData {
@@ -14,7 +16,7 @@ extension Request {
     }
 }
 
-extension Request {
+extension HTTPRequest {
     /// Query data from the URI path
     public var query: StructuredData? {
         get {

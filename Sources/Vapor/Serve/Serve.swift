@@ -1,4 +1,5 @@
 import enum Engine.ServerError
+import Console
 
 /**
     Serves the droplet.
@@ -17,11 +18,11 @@ public class Serve: Command {
 
     public let id: String = "serve"
     public let serve: ServeFunction
-    public let console: Console
+    public let console: ConsoleProtocol
     public let prepare: Prepare
 
     public required init(
-        console: Console,
+        console: ConsoleProtocol,
         prepare: Prepare,
         serve: ServeFunction
     ) {

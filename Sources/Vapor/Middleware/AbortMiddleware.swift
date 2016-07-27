@@ -1,3 +1,5 @@
+import Engine
+
 /**
     Handles the various Abort errors that can be thrown
     in any Vapor closure.
@@ -17,7 +19,7 @@ public class AbortMiddleware: Middleware {
 
      - returns: a valid response
      */
-    public func respond(to request: Request, chainingTo chain: Responder) throws -> Response {
+    public func respond(to request: HTTPRequest, chainingTo chain: HTTPResponder) throws -> HTTPResponse {
         do {
             return try chain.respond(to: request)
         } catch Abort.badRequest {
@@ -36,13 +38,13 @@ public class AbortMiddleware: Middleware {
         }
     }
 
-    func errorResponse(_ status: Status, message: String) throws -> Response {
+    func errorResponse(_ status: Status, message: String) throws -> HTTPResponse {
         let json = JSON([
             "error": true,
             "message": "\(message)"
         ])
         let data = try json.serialize()
-        let response = Response(status: status, body: .data(data))
+        let response = HTTPResponse(status: status, body: .data(data))
         response.headers["Content-Type"] = "application/json; charset=utf-8"
         return response
     }

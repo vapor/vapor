@@ -1,4 +1,4 @@
-public protocol Model: DatabaseModel, JSONRepresentable, StringInitializable { }
+public protocol Model: Entity, JSONRepresentable, StringInitializable { }
 
 extension Model {
     public init?(from string: String) throws {
