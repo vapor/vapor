@@ -19,7 +19,7 @@ let package = Package(
         .Package(url: "https://github.com/CryptoKitten/SHA2.git", majorVersion: 0, minor: 9),
 
         //ORM for interacting with databases
-        .Package(url: "https://github.com/qutheory/fluent.git", majorVersion: 0, minor: 0),
+        .Package(url: "https://github.com/qutheory/fluent.git", majorVersion: 0, minor: 8),
 
         //Core vapor transport layer
         .Package(url: "https://github.com/qutheory/engine.git", majorVersion: 0, minor: 3),
