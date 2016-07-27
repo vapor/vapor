@@ -11,8 +11,6 @@ import Foundation
         }
     }
 
-    typealias JSONSerialization = Foundation.NSJSONSerialization
-
     extension Foundation.NSMutableDictionary {
         public subscript(key: String) -> AnyObject? {
             get {
@@ -24,12 +22,6 @@ import Foundation
                 }
                 self.setObject(value, forKey: NSString(string: key))
             }
-        }
-    }
-
-    extension Foundation.NSMutableArray {
-        public func add(_ object: AnyObject) {
-            self.addObject(object)
         }
     }
 #endif

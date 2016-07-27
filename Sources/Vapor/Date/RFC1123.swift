@@ -10,7 +10,11 @@ struct RFC1123 {
 
     init() {
         formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "en_US")
+        #if os(Linux)
+        formatter.locale = Locale(localeIdentifier: "en_US")
+        #else
+            formatter.locale = Locale(identifier: "en_US")
+        #endif
         formatter.timeZone = TimeZone(abbreviation: "GMT")
         formatter.dateFormat = "EEE',' dd MMM yyyy HH':'mm':'ss 'GMT'"
     }
