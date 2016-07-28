@@ -1,6 +1,4 @@
-import Engine
-import Console
-import Fluent
+import Core
 
 /**
     Providers allow external projects to be easily
@@ -12,94 +10,32 @@ import Fluent
     The Provider should take care of setting up any
     necessary configurations on itself and the Droplet.
 */
-public protocol Provider {
-    /**
-        Providers should use this function to do any setup or configuration necessary to provide
+public protocol Provider: ConfigInitializable {
+    var provided: Providable { get }
 
-        - parameter droplet: the droplet to which the provider will be providing
+    /**
+        Called after the Droplet has completed
+        initialization and all provided items
+        have been accepted.
     */
-    func boot(with droplet: Droplet)
+    func afterInit(_: Droplet)
 
     /**
-        An optional `ServerDriver` Type to provide
-        to the droplet. Has a default 
-        implementation of `nil`.
-     
-        `ServerDriver`s are passed as types since
-        they are not initialized until the 
-        droplet starts.
+        Called before the Droplet begins serving
+        which is @noreturn.
     */
-    var server: Server.Type? { get }
-
-    /**
-        An optional `RouterDriver` to provide 
-        to the droplet. Has a default
-        implementation of `nil`.
-    */
-    var router: Router? { get }
-
-    /**
-        An optional `Session` to provide
-        to the droplet. Has a default
-        implementation of `nil`.
-    */
-    var sessions: Sessions? { get }
-
-
-    /**
-        An optional `HashDriver` to provide
-        to the droplet. Has a default
-        implementation of `nil`.
-     */
-    var hash: Hash? { get }
-
-    /**
-        An optional `ConsoleDriver` to provide
-        to the droplet. Has a default
-        implementation of `nil`.
-    */
-    var console: ConsoleProtocol? { get }
-
-
-    /**
-         An optional `HTTPClient` add-on used to make
-         outgoing web request operations
-     */
-    var client: Client.Type? { get }
-
-    /**
-        An optional `Database` that will be used
-        by the droplet for all Fluent queries.
-    */
-    var database: Database? { get }
+    func beforeServe(_: Droplet)
 }
 
 extension Provider {
-    public var server: Server.Type? {
-        return nil
-    }
+    public var name: String {
+        let type = "\(self.dynamicType)"
+        guard let characters = type.characters.split(separator: " ").first else {
+            return "Provider"
+        }
 
-    public var router: Router? {
-        return nil
-    }
+        let trimmed = Array(characters).trimmed(["("])
 
-    public var sessions: Sessions? {
-        return nil
-    }
-
-    public var hash: Hash? {
-        return nil
-    }
-
-    public var console: ConsoleProtocol? {
-        return nil
-    }
-
-    public var client: Client.Type? {
-        return nil
-    }
-
-    public var database: Database? {
-        return nil
+        return String(Array(trimmed))
     }
 }

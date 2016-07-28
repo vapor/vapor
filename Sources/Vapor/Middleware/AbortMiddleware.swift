@@ -10,14 +10,14 @@ import Engine
 public class AbortMiddleware: Middleware {
 
     /**
-     Respond to a given request chaining to the next
+        Respond to a given request chaining to the next
 
-     - parameter request: request to process
-     - parameter chain: next responder to pass request to
+        - parameter request: request to process
+        - parameter chain: next responder to pass request to
 
-     - throws: an error on failure
+        - throws: an error on failure
 
-     - returns: a valid response
+        - returns: a valid response
      */
     public func respond(to request: HTTPRequest, chainingTo chain: HTTPResponder) throws -> HTTPResponse {
         do {

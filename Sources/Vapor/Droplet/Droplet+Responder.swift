@@ -18,10 +18,10 @@ extension Droplet: HTTPResponder {
         let request = request
 
         /*
-         The HEAD method is identical to GET.
+            The HEAD method is identical to GET.
 
-         https://tools.ietf.org/html/rfc2616#section-9.4
-         */
+            https://tools.ietf.org/html/rfc2616#section-9.4
+        */
         let originalMethod = request.method
         if case .head = request.method {
             request.method = .get
@@ -31,8 +31,6 @@ extension Droplet: HTTPResponder {
         // Check in routes
         if let handler = router.route(request) {
             responder = handler
-        } else if let fileHander = self.checkFileSystem(for: request) {
-            responder = fileHander
         } else {
             // Default not found handler
             responder = HTTPRequest.Handler { _ in
@@ -51,7 +49,7 @@ extension Droplet: HTTPResponder {
         }
 
         // Loop through middlewares in order
-        responder = self.globalMiddleware.chain(to: responder)
+        responder = globalMiddleware.reversed().chain(to: responder)
 
         var response: HTTPResponse
         do {
