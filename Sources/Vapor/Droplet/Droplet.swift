@@ -332,7 +332,7 @@ public class Droplet {
 
         // hook into all providers after init
         for provider in providers {
-            provider.afterInit(with: self)
+            provider.afterInit(self)
         }
     }
 

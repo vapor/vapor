@@ -83,11 +83,11 @@ private final class FastServerProvider: Provider {
         provided = Providable(server: FastServer.self)
     }
 
-    func afterInit(with droplet: Droplet) {
+    func afterInit(_ drop: Droplet) {
         afterInitFlag = true
     }
 
-    func beforeServe(with droplet: Droplet) {
+    func beforeServe(_ drop: Droplet) {
         beforeServeFlag = true
     }
 }
@@ -119,11 +119,11 @@ private final class SlowServerProvider: Provider {
         provided = Providable(server: SlowServer.self)
     }
 
-    func afterInit(with droplet: Droplet) {
+    func afterInit(_ drop: Droplet) {
         afterInitFlag = true
     }
 
-    func beforeServe(with droplet: Droplet) {
+    func beforeServe(_ drop: Droplet) {
         beforeServeFlag = true
     }
 }

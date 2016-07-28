@@ -18,13 +18,13 @@ public protocol Provider: ConfigInitializable {
         initialization and all provided items
         have been accepted.
     */
-    func afterInit(with droplet: Droplet)
+    func afterInit(_: Droplet)
 
     /**
         Called before the Droplet begins serving
         which is @noreturn.
     */
-    func beforeServe(with droplet: Droplet)
+    func beforeServe(_: Droplet)
 }
 
 extension Provider {
