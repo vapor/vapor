@@ -37,7 +37,7 @@ class BranchTests: XCTestCase {
             return
         }
 
-        let params = result.branch.params(for: path)
+        let params = result.branch.slugs(for: path)
         XCTAssert(params["a"] == "zero")
         XCTAssert(params["b"] == "one")
         XCTAssert(params["c"] == "two")
@@ -54,7 +54,7 @@ class BranchTests: XCTestCase {
             return
         }
 
-        let params = result.branch.params(for: ["zero", "one"])
+        let params = result.branch.slugs(for: ["zero", "one"])
         XCTAssert(params["a"] == "zero")
         XCTAssert(params["b"] == "one")
         XCTAssert(params["c"] == nil)

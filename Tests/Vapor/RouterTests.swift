@@ -50,7 +50,7 @@ class RouterTests: XCTestCase {
         }
         router.register(route)
 
-        let request = try! Request(method: .get, path: longPath, host: "other.test")
+        let request = Request(method: .get, path: longPath, host: "other.test")
 
         measure {
             for _ in 1...10_000 {

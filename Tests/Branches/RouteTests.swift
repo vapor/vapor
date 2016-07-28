@@ -19,20 +19,18 @@ extension HTTPRequest: ParameterContainer {}
 extension Router {
     public func route(_ request: HTTPRequest) -> Output? {
         return route(for: request,
-                     host: request.uri.host ?? "*",
+                     host: request.uri.host,
                      method: request.method.description,
-                     path: request.uri.path ?? "")
+                     path: request.uri.path)
     }
 }
 
 class RouteTests: XCTestCase {
     func testRoute() throws {
-        let route = Route<HTTPRequestHandler>(host: "0.0.0.0", method: .get, path: "/hello") { req in
+        let router = Router<HTTPRequestHandler>()
+        router.register(host: "0.0.0.0", method: HTTPMethod.get.description, path: "/hello") { req in
             return HTTPResponse(body: "HI")
         }
-
-        let router = Router<HTTPRequestHandler>()
-        router.register(route)
 
         let request = try HTTPRequest(method: .get, uri: "http://0.0.0.0/hello")
         let handler = router.route(request)
@@ -42,15 +40,13 @@ class RouteTests: XCTestCase {
     }
 
     func testRouteParams() throws {
-        let route = Route<HTTPRequestHandler>(host: "0.0.0.0", method: .get, path: "/:zero/:one/:two/*") { req in
+        let router = Router<HTTPRequestHandler>()
+        router.register(host: "0.0.0.0", method: HTTPMethod.get.description, path: "/:zero/:one/:two/*") { req in
             let zero = req.parameters["zero"] ?? "[fail]"
             let one = req.parameters["one"] ?? "[fail]"
             let two = req.parameters["two"] ?? "[fail]"
             return HTTPResponse(body: "\(zero):\(one):\(two)")
         }
-
-        let router = Router<HTTPRequestHandler>()
-        router.register(route)
 
         let paths: [[String]] = [
             ["a", "b", "c"],
@@ -73,10 +69,5 @@ class RouteTests: XCTestCase {
             let response = try handler?(request).makeResponse(for: request)
             XCTAssert(response?.body.bytes?.string == path.prefix(3).joined(separator: ":"))
         }
-    }
-
-    func testRoutesLog() throws {
-        let route = Route<HTTPRequestHandler>(host: "0.0.0.0", method: .get, path: "/hello", output: { _ in HTTPResponse() })
-        XCTAssert("\(route)" == "GET 0.0.0.0 /hello")
     }
 }
