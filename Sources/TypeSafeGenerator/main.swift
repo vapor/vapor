@@ -1,7 +1,7 @@
 #if !os(Linux)
 import Foundation
 
-let generator = Generator(max: 5)
+let generator = Generator(max: 3)
 let code = generator.generate()
 
 if Process.arguments.count < 2 {
@@ -15,7 +15,7 @@ if Process.arguments.count < 2 {
 }
 
 let path = ProcessInfo.processInfo.arguments[1].replacingOccurrences(of: "XcodeProject", with: "")
-let url = URL(fileURLWithPath: path + "/Sources/Vapor/Routing/Generated.swift")
+let url = URL(fileURLWithPath: path + "/Sources/TypeSafeRouting/Generated.swift")
 
 do{
     let lines = code.characters.split(separator: "\n").count

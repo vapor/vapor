@@ -39,7 +39,7 @@ extension Body: CustomStringConvertible {
         return signature.wildcards.map { wildcard in
             return [
                 "guard let v\(wildcard.name) = request.parameters[\"\(wildcard.name)\"] else {",
-                "    throw Abort.badRequest",
+                "    throw TypeSafeRoutingError.missingParameter",
                 "}"
             ].joined(separator: "\n")
         }.joined(separator: "\n")
@@ -55,7 +55,7 @@ extension Body: CustomStringConvertible {
         return signature.wildcards.map { wildcard in
             return [
                 "guard let c\(wildcard.name) = e\(wildcard.name) else {",
-                "    throw Abort.invalidParameter(\"\(wildcard.name)\", \(wildcard.generic).self)",
+                "    throw TypeSafeRoutingError.invalidParameterType(\(wildcard.generic).self)",
                 "}"
             ].joined(separator: "\n")
         }.joined(separator: "\n")

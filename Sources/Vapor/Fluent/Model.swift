@@ -1,5 +1,6 @@
 import JSON
 import Fluent
+import TypeSafeRouting
 
 public protocol Model: Entity, JSONRepresentable, StringInitializable { }
 

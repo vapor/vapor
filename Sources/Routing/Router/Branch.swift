@@ -125,7 +125,7 @@ public class Branch<Output> { // TODO: Rename Context
          If it is `:`, it is a slug point and the name
          represents a key for a dynamic value.
     */
-    private var subBranches: [String : Branch<Output>] = [:]
+    private var subBranches: [String: Branch] = [:]
 
 
     /**
@@ -144,9 +144,9 @@ public class Branch<Output> { // TODO: Rename Context
 
          - returns: an initialized request Branch
     */
-    required public init(name: String, output: Output? = nil) {
+    required public init(name: String, handler: Output? = nil) {
         self.name = name
-        self.value = output
+        self.value = handler
     }
 
     /**
@@ -221,7 +221,7 @@ public class Branch<Output> { // TODO: Rename Context
         }
 
         let link = key.characters.first == ":" ? ":" : key
-        let next = subBranches[link] ?? self.dynamicType.init(name: key, output: nil)
+        let next = subBranches[link] ?? self.dynamicType.init(name: key, handler: nil)
         next.parent = self
         // trigger lazy loads at extension time -- seek out cleaner way to do this
         _ = next.path
@@ -229,5 +229,11 @@ public class Branch<Output> { // TODO: Rename Context
         _ = next.slugIndexes
         subBranches[link] = next
         return next.extend(path, output: output)
+    }
+}
+
+extension Branch: CustomStringConvertible {
+    public var description: String {
+        return "<\(name)> \(subBranches)"
     }
 }

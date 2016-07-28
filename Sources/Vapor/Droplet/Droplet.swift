@@ -4,6 +4,8 @@ import Engine
 import Console
 import Fluent
 
+import Routing
+
 public let VERSION = "0.15.0"
 
 public class Droplet {
@@ -12,7 +14,8 @@ public class Droplet {
         for returning registered `Route` handlers
         for a given request.
     */
-    public let router: Router
+    //FIXME: protocol
+    public let router: Routing.Router<HTTPResponder>
 
     /**
         The server that will accept requesting
@@ -281,8 +284,8 @@ public class Droplet {
 
         // set the router, server, and client
         // from provided or defaults.
-        let router = provided.router ?? BranchRouter()
-        self.router = router
+        //let router = provided.router ?? BranchRouter() //fIXME: Routing
+        self.router = Routing.Router()
         let serverType = provided.server ?? HTTPServer<TCPServerStream, HTTPParser<HTTPRequest>, HTTPSerializer<HTTPResponse>>.self
         self.server = serverType
         let client = provided.client ?? HTTPClient<TCPClientStream>.self

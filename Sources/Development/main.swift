@@ -40,17 +40,18 @@ drop.get("client-socket") { req in
     return "Beginning client socket test, check your console ..."
 }
 
-drop.socket("server-socket-responder") { req, ws in
-    let top = 10
-    for i in 1...top {
-        sleep(1)
-        try ws.send("\(i) of \(top)")
-    }
-
-    sleep(1)
-    print("[Server] initiating close")
-    try ws.close()
-}
+//FIXME
+//drop.socket("server-socket-responder") { req, ws in
+//    let top = 10
+//    for i in 1...top {
+//        sleep(1)
+//        try ws.send("\(i) of \(top)")
+//    }
+//
+//    sleep(1)
+//    print("[Server] initiating close")
+//    try ws.close()
+//}
 
 drop.get("ping") { _ in
     return 😀
@@ -110,31 +111,33 @@ drop.add(.trace, path: "trace") { request in
     return "trace request"
 }
 
-drop.socket("socket") { request, ws in
-    try ws.send("WebSocket Connected :)")
+// FIXME: uncomment
 
-    ws.onText = { ws, text in
-        try ws.send("You said \(text)!")
-
-        if text == "stop" {
-            ws.onText = nil
-            try ws.send("🚫 stopping connection listener -- socket remains open")
-        }
-
-        if text == "close" {
-            try ws.send("... closing 👋")
-            try ws.close()
-        }
-    }
-
-    ws.onClose = { ws, status, reason, clean in
-        print("Did close w/ status \(status) reason \(reason)")
-    }
-}
-
-//MARK: Resource
-
-drop.resource("users", UserController.self)
+//drop.socket("socket") { request, ws in
+//    try ws.send("WebSocket Connected :)")
+//
+//    ws.onText = { ws, text in
+//        try ws.send("You said \(text)!")
+//
+//        if text == "stop" {
+//            ws.onText = nil
+//            try ws.send("🚫 stopping connection listener -- socket remains open")
+//        }
+//
+//        if text == "close" {
+//            try ws.send("... closing 👋")
+//            try ws.close()
+//        }
+//    }
+//
+//    ws.onClose = { ws, status, reason, clean in
+//        print("Did close w/ status \(status) reason \(reason)")
+//    }
+//}
+//
+////MARK: Resource
+//
+//drop.resource("users", UserController.self)
 
 //MARK: Request data
 
@@ -145,11 +148,11 @@ drop.post("jsondata") { request in
 
 //MARK: Type safe routing
 
-drop.get("test", Int.self, String.self) { request, int, string in
-    return try JSON([
-        "message": "Int \(int) String \(string)"
-    ])
-}
+//drop.get("test", Int.self, String.self) { request, int, string in
+//    return try JSON([
+//        "message": "Int \(int) String \(string)"
+//    ])
+//}
 
 /* Expected Users Format
  [
@@ -197,23 +200,24 @@ drop.get("redirect") { request in
     return Response(redirect: "http://qutheory.io:8001")
 }
 
-drop.grouped("abort") { group in
-    group.get("400") { request in
-        throw Abort.badRequest
-    }
-
-    group.get("404") { request in
-        throw Abort.notFound
-    }
-
-    group.get("420") { request in
-        throw Abort.custom(status: .enhanceYourCalm, message: "Enhance your calm")
-    }
-
-    group.get("500") { request in
-        throw Abort.internalServerError
-    }
-}
+// FIXME
+//drop.grouped("abort") { group in
+//    group.get("400") { request in
+//        throw Abort.badRequest
+//    }
+//
+//    group.get("404") { request in
+//        throw Abort.notFound
+//    }
+//
+//    group.get("420") { request in
+//        throw Abort.custom(status: .enhanceYourCalm, message: "Enhance your calm")
+//    }
+//
+//    group.get("500") { request in
+//        throw Abort.internalServerError
+//    }
+//}
 
 enum Error: Swift.Error {
     case Unhandled
@@ -449,13 +453,14 @@ drop.post("multipart-print") { request in
 
 //MARK: Middleware
 
-drop.grouped(AuthMiddleware()) { group in
-    drop.get("protected") { request in
-        return try JSON([
-            "message": "Welcome authorized user"
-        ])
-    }
-}
+// FIXME
+//drop.grouped(AuthMiddleware()) { group in
+//    drop.get("protected") { request in
+//        return try JSON([
+//            "message": "Welcome authorized user"
+//        ])
+//    }
+//}
 
 //MARK: Chunked
 

@@ -26,13 +26,8 @@ public class AbortMiddleware: Middleware {
             return try self.errorResponse(.badRequest, message: "Invalid request")
         } catch Abort.notFound {
             return try self.errorResponse(.notFound, message: "Page not found")
-        } catch Abort.internalServerError {
+        } catch Abort.serverError {
             return try self.errorResponse(.internalServerError, message: "Something went wrong")
-        } catch Abort.invalidParameter(let name, let type) {
-            return try self.errorResponse(
-                .badRequest,
-                message: "Invalid request. Expected parameter \(name) to be type \(type)"
-            )
         } catch Abort.custom(let status, let message) {
             return try self.errorResponse(status, message: message)
         }

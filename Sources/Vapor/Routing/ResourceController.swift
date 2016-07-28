@@ -1,4 +1,5 @@
 import Engine
+import TypeSafeRouting
 
 /**
     Organize your routing logic with a conformance of

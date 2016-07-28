@@ -28,9 +28,13 @@ class Generator {
 
         var generated = [
             warning,
+            "import Routing",
             "import Engine",
-            "",
-            "extension RouteBuilder {",
+            "import WebSockets",
+            " ",
+            "public typealias HTTPClosure = (HTTPRequest) throws -> (HTTPResponseRepresentable)",
+            " ",
+            "extension RouteBuilder where Value == HTTPClosure {",
         ]
         for function in functions {
             generated.append(function.description.indented)

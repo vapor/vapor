@@ -1,0 +1,103 @@
+private typealias Host = String
+private typealias Method = String
+
+/**
+    When routing objects, it's common for us to want to associate the given slugs or params
+    with that object. By conforming here, objects can be passed in.
+*/
+public protocol ParametersContainer: class {
+    /**
+        The contained parameters
+    */
+    var parameters: [String: String] { get set }
+}
+
+// MARK: Router
+
+/**
+    A simple, flexible, and efficient HTTP Router built on top of Branches
+ 
+    Output represents the object, closure, etc. that the router should be registering and returning
+*/
+public class Router<Output> {
+
+    // MARK: Private Tree Representation
+
+    /**
+        Internal router tree representation.
+    */
+    private final var tree: [Host: [Method: Branch<RouteHandler<Output>>]] = [:]
+
+    // MARK: Init
+
+    /**
+        Base Initializer
+    */
+    public init() {}
+
+    // MARK: Registration
+
+    /**
+     Register a given path. Use `*` for host OR method to define wildcards that will be matched
+     if no concrete match exists.
+
+     - parameter host: the host to match, ie: '0.0.0.0', or `*` to match any
+     - parameter method: the method to match, ie: `GET`, or `*` to match any
+     - parameter path: the path that should be registered
+     - parameter output: the associated output of this path, usually a responder, or `nil`
+     */
+    @discardableResult
+    public func register(path: [String], output: RouteHandler<Output>?) -> Branch<RouteHandler<Output>> {
+        var iterator = path.makeIterator()
+
+        //get the current root for the host, or create one if none
+        let host = iterator.next() ?? "*"
+        var base = tree[host] ?? [:]
+
+        //look for a branch for the method, or create one if none
+        let method = iterator.next() ?? "*"
+        let branch = base[method] ?? Branch(name: "", handler: nil)
+
+        //assign the branch and root to the tree
+        base[method] = branch
+        tree[host] = base
+
+        let path = Array(iterator)
+        return branch.extend(path, output: output)
+    }
+
+    // MARK: Route
+
+    public func route(_ routeable: Routeable, with container: ParametersContainer) -> Output? {
+        var iterator = routeable.routeablePath.makeIterator()
+
+        let host = iterator.next() ?? "*"
+        let root = tree[host] ?? tree["*"]
+
+        let method = iterator.next() ?? "*"
+
+        let path = Array(iterator)
+
+        // MUST fetch here, do NOT do `root?[method] ?? root?["*"]`
+        let result = root?[method]?.fetch(path) ?? root?["*"]?.fetch(path)
+        container.parameters = result?.branch.slugs(for: path) ?? [:]
+        guard let output = result?.branch.output else {
+            return nil
+        }
+
+        switch output {
+        case .dynamic(let closure):
+            return closure(routeable, container)
+        case .static(let output):
+            return output
+        }
+    }
+}
+
+extension String {
+    private var components: [String] {
+        return characters
+            .split(separator: "/", omittingEmptySubsequences: true)
+            .map { String($0) }
+    }
+}

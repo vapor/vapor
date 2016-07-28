@@ -1,20 +1,20 @@
 import PackageDescription
 
-var exclude: [String] = []
-#if os(Linux)
-exclude.append("Sources/Generator")
-#endif
-
-var targets = [
-    Target(name: "Vapor", dependencies: ["Branches"]),
-    Target(name: "Branches"),
-    Target(name: "Development", dependencies: ["Vapor"]),
-    Target(name: "Performance", dependencies: ["Vapor"])
-]
-
 let package = Package(
     name: "Vapor",
-    targets: targets,
+    targets: [
+        // Framework
+        Target(name: "Vapor", dependencies: ["Routing", "TypeSafeRouting"]),
+        Target(name: "Routing"),
+
+        // Type Safe Routing
+        Target(name: "TypeSafeRouting", dependencies: ["Routing"]),
+        Target(name: "TypeSafeGenerator"),
+        
+        // Development and Testing
+        Target(name: "Development", dependencies: ["Vapor"]),
+        Target(name: "Performance", dependencies: ["Vapor"])
+    ],
     dependencies: [
         //SHA2 + HMAC hashing. Used by the core to create session identifiers.
         .Package(url: "https://github.com/CryptoKitten/HMAC.git", majorVersion: 0, minor: 10),
@@ -32,5 +32,7 @@ let package = Package(
         //JSON
         .Package(url: "https://github.com/qutheory/json.git", majorVersion: 0, minor: 2)
     ],
-    exclude: exclude
+    exclude: [
+        // No excludes currently
+    ]
 )
