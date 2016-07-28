@@ -3,11 +3,10 @@ import Fluent
 
 public struct Providable {
     /**
-        An optional `ServerDriver` Type to provide
-        to the droplet. Has a default 
-        implementation of `nil`.
+        An optional `Server` Type to provide
+        to the droplet.
      
-        `ServerDriver`s are passed as types since
+        `Server`s are passed as types since
         they are not initialized until the 
         droplet starts.
     */

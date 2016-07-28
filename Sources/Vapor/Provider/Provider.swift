@@ -34,6 +34,8 @@ extension Provider {
             return "Provider"
         }
 
-        return String(Array(Array(characters).trimmed(["("])))
+        let trimmed = Array(characters).trimmed(["("])
+
+        return String(Array(trimmed))
     }
 }

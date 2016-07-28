@@ -164,7 +164,7 @@ extension Sequence where Iterator.Element == String {
         for item in self {
             let search = "--\(string)="
             if item.hasPrefix(search) {
-                return item.replacingOccurrences(of: search, with: "")
+                return item.components(separatedBy: search).joined(separator: "")
             }
         }
 

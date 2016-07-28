@@ -54,7 +54,7 @@ extension Collection where Iterator.Element == Byte, IndexDistance == Int, Index
     }
 }
 
-public func +=<T: Any>(lhs: inout [T], rhs: T) {
+public func += <T: Any>(lhs: inout [T], rhs: T) {
     lhs.append(rhs)
 }
 
