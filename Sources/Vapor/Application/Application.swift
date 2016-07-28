@@ -1,4 +1,4 @@
-@_exported import Branches
+import Branches
 import libc
 import Foundation
 import Socks
