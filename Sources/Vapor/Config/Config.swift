@@ -159,6 +159,18 @@ extension Environment {
     }
 }
 
+extension Sequence where Iterator.Element == String {
+    func value(for string: String) -> String? {
+        for item in self {
+            let search = "--\(string)="
+            if item.hasPrefix(search) {
+                return item.replacingOccurrences(of: search, with: "")
+            }
+        }
+
+        return nil
+    }
+}
 
 extension String {
     private var keyPathComponents: [String] {

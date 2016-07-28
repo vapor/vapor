@@ -2,7 +2,7 @@ import Core
 import Engine
 
 extension Droplet {
-    func serve() throws {
+    func bootServers() throws {
         if let servers = config["servers"].object {
             var bootedServers = 0
             for (key, server) in servers {
