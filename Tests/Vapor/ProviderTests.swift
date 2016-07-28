@@ -37,7 +37,7 @@ class ProviderTests: XCTestCase {
         let fast = try FastServerProvider(config: Config())
         let slow = try SlowServerProvider(config: Config())
 
-        let drop = Droplet(arguments: ["vapor", "serve"], console: dc, providerInstances: [fast, slow])
+        let drop = Droplet(arguments: ["vapor", "serve"], console: dc, initializedProviders: [fast, slow])
 
         XCTAssertEqual(dc.outputBuffer, "SlowServerProvider attempted to overwrite Server.Type.\n")
         XCTAssert(drop.server is FastServer.Type)

@@ -33,7 +33,7 @@ extension Droplet {
         for provider in providers {
             provider.beforeServe(with: self)
         }
-        
+
         var iterator = arguments.makeIterator()
 
         guard let executable = iterator.next() else {

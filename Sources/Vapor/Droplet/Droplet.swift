@@ -145,7 +145,7 @@ public class Droplet {
 
         // providers
         providers providerTypes: [Provider.Type] = [],
-        providerInstances: [Provider] = []
+        initializedProviders: [Provider] = []
     ) {
         // back log warnings and errors until logs are initialized
         var logs: [(level: LogLevel, message: String)] = []
@@ -187,6 +187,7 @@ public class Droplet {
         // using both the providers passed as
         // instances and those that are ConfigInitializable.
         var providers: [Provider] = []
+        providers += initializedProviders
         for providerType in providerTypes {
             do {
                 let provider = try providerType.init(config: config)
@@ -195,7 +196,6 @@ public class Droplet {
                 logs.append((.error, "Could not initialize provider \(providerType): \(error)"))
             }
         }
-        providers += providerInstances
         self.providers = providers
 
         // account for all types provided
