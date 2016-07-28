@@ -38,6 +38,27 @@ class RouterTests: XCTestCase {
         XCTAssert(string == compare)
     }
 
+    func testPerformance() {
+        let router = BranchRouter()
+
+        let longPath = [String](repeating: "long-path", count: 20).joined(separator: "/")
+
+        let data = "1".bytes
+
+        let route = Route(method: .get, path: longPath) { request in
+            return Response(status: .ok, body: data)
+        }
+        router.register(route)
+
+        let request = Request(method: .get, path: longPath, host: "other.test")
+
+        measure {
+            for _ in 1...10_000 {
+                XCTAssertNotNil(router.route(request))
+            }
+        }
+    }
+
     func testMultipleHostsRouting() throws {
         let router = BranchRouter()
 

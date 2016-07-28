@@ -6,6 +6,8 @@ exclude.append("Sources/Generator")
 #endif
 
 var targets = [
+    Target(name: "Vapor", dependencies: ["Branches"]),
+    Target(name: "Branches"),
     Target(name: "Development", dependencies: ["Vapor"]),
     Target(name: "Performance", dependencies: ["Vapor"])
 ]
