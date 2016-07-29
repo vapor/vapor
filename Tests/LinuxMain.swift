@@ -7,7 +7,6 @@ XCTMain([
     testCase(ConfigTests.allTests),
     testCase(ConsoleTests.allTests),
     testCase(ContentTests.allTests),
-    testCase(ControllerTests.allTests),
     testCase(CookieTests.allTests),
     testCase(DataSplitTests.allTests),
     testCase(DropletTests.allTests),
