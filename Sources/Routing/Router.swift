@@ -35,37 +35,43 @@ public class Router<Output> {
      - parameter path: the path that should be registered
      - parameter output: the associated output of this path, usually a responder, or `nil`
      */
-    public func register(host: Host?, method: Method?, path: [String], output: Output?) {
+    public func register(path: [String], output: Output?) {
+        let path = path.filter { !$0.isEmpty }
+        var iterator = path.makeIterator()
+
         //get the current root for the host, or create one if none
-        let host = host ?? "*"
+        let host = iterator.next() ?? "*"
         var base = tree[host] ?? [:]
 
         //look for a branch for the method, or create one if none
-        let method = method ?? "*"
+        let method = iterator.next() ?? "*"
         let branch = base[method] ?? Branch(name: "", output: nil)
 
         //assign the branch and root to the tree
         base[method] = branch
         tree[host] = base
 
-        let path = path.filter { !$0.isEmpty }
-        branch.extend(path, output: output)
+        branch.extend(Array(iterator), output: output)
     }
 
     // MARK: Route
 
-    public func route(host: Host?, method: Method?, path: [String], with container: ParametersContainer) -> Output? {
-        let host = host ?? "*"
-        let method = method ?? "*"
+    public func route(path: [String], with container: ParametersContainer) -> Output? {
         let path = path.filter { !$0.isEmpty }
 
-        // fetch the result using fallbacks
-        let result = tree["*"]?[method]?.fetch(path)
-            ?? tree["*"]?["*"]?.fetch(path)
-            ?? tree[host]?[method]?.fetch(path)
-            ?? tree[host]?["*"]?.fetch(path)
+        var iterator = path.makeIterator()
+        let host = iterator.next() ?? "*"
+        let method = iterator.next() ?? "*"
 
-        container.parameters = result?.branch.slugs(for: path) ?? [:]
+        let seg = Array(iterator)
+
+        // fetch the result using fallbacks
+        let result = tree["*"]?[method]?.fetch(seg)
+            ?? tree["*"]?["*"]?.fetch(seg)
+            ?? tree[host]?[method]?.fetch(seg)
+            ?? tree[host]?["*"]?.fetch(seg)
+
+        container.parameters = result?.branch.slugs(for: seg) ?? [:]
         guard let output = result?.branch.output else {
             return nil
         }

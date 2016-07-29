@@ -1,4 +1,4 @@
 public enum TypeSafeRoutingError: Error {
-	case missingParameter
-	case invalidParameterType(StringInitializable.Type)
- }
+    case missingParameter
+    case invalidParameterType(StringInitializable.Type)
+}

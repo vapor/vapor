@@ -12,7 +12,7 @@ extension Body: CustomStringConvertible {
             "let handler = HTTPRequest.Handler { request in",
             innerBody.indented,
             "}",
-            "self.add(host: nil, method: \"\(signature.method.uppercase)\", path: [\(path)], value: handler)"
+            "self.add(.\(signature.method), [\(path)], handler)"
         ].joined(separator: "\n")
     }
 

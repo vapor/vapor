@@ -4,11 +4,14 @@ let package = Package(
     name: "Vapor",
     targets: [
         // Framework
-        Target(name: "Vapor", dependencies: ["Routing", "TypeSafeRouting"]),
-        Target(name: "Routing"),
+        Target(name: "Vapor", dependencies: ["Routing", "HTTPRouting", "TypeSafeRouting"]),
 
-        // Type Safe Routing
-        Target(name: "TypeSafeRouting", dependencies: ["Routing"]),
+        // Routing
+        Target(name: "Routing"),
+        Target(name: "HTTPRouting", dependencies: ["Routing"]),
+
+        // Type Safe
+        Target(name: "TypeSafeRouting", dependencies: ["Routing", "HTTPRouting"]),
         Target(name: "TypeSafeGenerator"),
         
         // Development and Testing

@@ -44,10 +44,10 @@ drop.resource("users", User.self) { users in
     }
 }
 
-let foo = drop.grouped(host: nil, method: nil, path: ["foo"], filter: nil)
-foo.get("hello") { request in
-    return "foo hello"
-}
+//let foo = drop.grouped(host: nil, method: nil, path: ["foo"], filter: nil)
+//foo.get("hello") { request in
+//    return "foo hello"
+//}
 
 
 drop.group("testingx") { group in
