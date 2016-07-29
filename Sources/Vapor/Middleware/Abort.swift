@@ -7,9 +7,8 @@ import Engine
     a desired response.
 */
 public enum Abort: Swift.Error {
-    case invalidParameter(String, StringInitializable.Type)
     case badRequest
     case notFound
-    case internalServerError
+    case serverError
     case custom(status: Status, message: String)
 }

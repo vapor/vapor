@@ -20,7 +20,6 @@ extension Providable {
         }
 
         var server: Server.Type?
-        var router: Router?
         var sessions: Sessions?
         var hash: Hash?
         var console: ConsoleProtocol?
@@ -29,7 +28,6 @@ extension Providable {
         var database: Database?
 
         server = try attempt(self.server, other.server)
-        router = try attempt(self.router, other.router)
         sessions = try attempt(self.sessions, other.sessions)
         hash = try attempt(self.hash, other.hash)
         console = try attempt(self.console, other.console)
@@ -39,7 +37,6 @@ extension Providable {
 
         return Providable(
             server: server,
-            router: router,
             sessions: sessions,
             hash: hash,
             console: console,

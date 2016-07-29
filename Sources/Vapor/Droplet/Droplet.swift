@@ -105,11 +105,6 @@ public class Droplet {
     public let arguments: [String]
 
     /**
-        The routes registered.
-    */
-    public var routes: [Route]
-
-    /**
         The Database for this Droplet
         to run preparations on, if supplied.
     */
@@ -132,7 +127,6 @@ public class Droplet {
 
         // providable
         server: Server.Type? = nil,
-        router: Router? = nil,
         sessions: Sessions? = nil,
         hash: Hash? = nil,
         console: ConsoleProtocol? = nil,
@@ -202,7 +196,6 @@ public class Droplet {
         // to the droplet's init method
         var provided = Providable(
             server: server,
-            router: router,
             sessions: sessions,
             hash: hash,
             console: console,
@@ -276,13 +269,13 @@ public class Droplet {
             SessionMiddleware(sessions: sessions),
             ValidationMiddleware(),
             DateMiddleware(),
+            TypeSafeErrorMiddleware(),
             AbortMiddleware()
         ]
 
         // set the router, server, and client
         // from provided or defaults.
-        let router = provided.router ?? BranchRouter()
-        self.router = router
+        self.router = Router()
         let serverType = provided.server ?? HTTPServer<TCPServerStream, HTTPParser<HTTPRequest>, HTTPSerializer<HTTPResponse>>.self
         self.server = serverType
         let client = provided.client ?? HTTPClient<TCPClientStream>.self
@@ -290,7 +283,6 @@ public class Droplet {
 
         // misc arrays and other stored properties
         storage = [:]
-        routes = []
         commands = []
 
         // iterate over preparations to set the

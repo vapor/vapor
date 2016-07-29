@@ -106,10 +106,6 @@ drop.get("test") { request in
     return "123"
 }
 
-drop.add(.trace, path: "trace") { request in
-    return "trace request"
-}
-
 drop.socket("socket") { request, ws in
     try ws.send("WebSocket Connected :)")
 
@@ -134,7 +130,7 @@ drop.socket("socket") { request, ws in
 
 //MARK: Resource
 
-drop.resource("users", UserController.self)
+drop.resource("users", UserController())
 
 //MARK: Request data
 
@@ -143,7 +139,7 @@ drop.post("jsondata") { request in
     return "yup"
 }
 
-//MARK: Type safe routing
+// MARK: Type safe routing
 
 drop.get("test", Int.self, String.self) { request, int, string in
     return try JSON([
@@ -197,7 +193,7 @@ drop.get("redirect") { request in
     return Response(redirect: "http://qutheory.io:8001")
 }
 
-drop.grouped("abort") { group in
+drop.group("abort") { group in
     group.get("400") { request in
         throw Abort.badRequest
     }
@@ -211,7 +207,7 @@ drop.grouped("abort") { group in
     }
 
     group.get("500") { request in
-        throw Abort.internalServerError
+        throw Abort.serverError
     }
 }
 
@@ -449,7 +445,7 @@ drop.post("multipart-print") { request in
 
 //MARK: Middleware
 
-drop.grouped(AuthMiddleware()) { group in
+drop.group(AuthMiddleware()) { group in
     drop.get("protected") { request in
         return try JSON([
             "message": "Welcome authorized user"
@@ -472,7 +468,7 @@ drop.get("chunked") { request in
 
 #if !os(Linux)
     /*
-    Temporarily not available on Linux because of Dispatch APIs
+        Temporarily not available on Linux because of Dispatch APIs
     */
     drop.get("async") { request in
         return try Response.async { promise in

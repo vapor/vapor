@@ -1,5 +1,5 @@
 import Engine
-
+import HTTPRouting
 // TODO: mv
 @_exported import enum Engine.HTTPMethod
 
@@ -29,7 +29,7 @@ extension Droplet: HTTPResponder {
 
 
         // Check in routes
-        if let handler = router.route(request) {
+        if let handler = router.route(request, with: request) {
             responder = handler
         } else {
             // Default not found handler
