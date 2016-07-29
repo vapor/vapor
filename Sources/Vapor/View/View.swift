@@ -61,13 +61,13 @@ extension Droplet {
     }
 
     /**
-     Loads a view with a given context
+        Loads a view with a given context
 
-     - parameter path: the path to the view
-     - parameter context: the context to use when loading the view
+        - parameter path: the path to the view
+        - parameter context: the context to use when loading the view
 
-     - throws: an error if loading fails
-     */
+        - throws: an error if loading fails
+    */
     public func view(_ path: String, context: [String: Any] = [:]) throws -> View {
         return try View(workDir: self.workDir, path: path, context: context)
     }
