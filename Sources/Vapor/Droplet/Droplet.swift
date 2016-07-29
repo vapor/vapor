@@ -12,7 +12,6 @@ public class Droplet {
         for returning registered `Route` handlers
         for a given request.
     */
-    //FIXME: protocol
     public let router: Router
 
     /**
@@ -270,7 +269,7 @@ public class Droplet {
             SessionMiddleware(sessions: sessions),
             ValidationMiddleware(),
             DateMiddleware(),
-            TypeSafeMiddleware(),
+            TypeSafeErrorMiddleware(),
             AbortMiddleware()
         ]
 

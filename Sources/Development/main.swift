@@ -193,7 +193,6 @@ drop.get("redirect") { request in
     return Response(redirect: "http://qutheory.io:8001")
 }
 
-// FIXME
 drop.group("abort") { group in
     group.get("400") { request in
         throw Abort.badRequest
