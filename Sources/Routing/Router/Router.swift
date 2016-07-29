@@ -82,11 +82,12 @@ public class Router<Wrapped> {
         if item == "*" {
             matches += branch.children.values
         } else {
-            if let found = branch.children[item] {
-                matches.append(found)
-            }
-            if let wildcard = branch.children["*"] {
-                matches.append(wildcard)
+            for (key, child) in branch.children {
+                if key == "*" || key == item {
+                    matches.append(child)
+                } else if key.characters.first == ":" {
+                    matches.append(child)
+                }
             }
         }
 

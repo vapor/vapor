@@ -16,40 +16,10 @@ extension RouteBuilder {
         method: String?,
         path: [String],
         filter: (Value) -> (Value) = { $0 },
-        closure: (RouteBuilderShim<Value, Self>) -> ()
+        closure: (DynamicRouteBuilder<Value, Self>) -> ()
     ) {
-        // create the template for this
-        // route that makes use of fallbacks
-        var template: [String] = []
-        //template += prefix
-        template += path
-        //template += ["*"]
-
-        let shim = RouteBuilderShim(builder: self, host: host, method: method, prefix: path)
-        closure(shim)
-
-        /*let handler = RouteHandler<Value>.dynamic { remaining, container in
-            // create a new router for registering
-            // the grouped routes
-            let router: Router<Value> = Router()
-            closure(router)
-
-            // cut out the path that has already been routed
-            var full = prefix
-            full += remaining
-
-            // create a new routeable item from the
-            // fixed path
-            guard let value = router.route(path: full, with: container) else {
-                return nil
-            }
-
-            // optionally filter the value
-            // this is useful for injecting middleware
-            return filter(value)
-        }
-
-        add(path: template, handler: handler, behavior: .wildcard)*/
+        let dynamic = DynamicRouteBuilder(builder: self, host: host, method: method, prefix: path)
+        closure(dynamic)
     }
 
     public func add(path: [String], handler: RouteHandler<Value>) {
@@ -57,7 +27,7 @@ extension RouteBuilder {
     }
 }
 
-public class RouteBuilderShim<Wrapped, Builder: RouteBuilder where Builder.Value == Wrapped> {
+public class DynamicRouteBuilder<Wrapped, Builder: RouteBuilder where Builder.Value == Wrapped> {
     var builder: Builder
     var host: String?
     var method: String?
@@ -71,7 +41,7 @@ public class RouteBuilderShim<Wrapped, Builder: RouteBuilder where Builder.Value
     }
 }
 
-extension RouteBuilderShim: RouteBuilder {
+extension DynamicRouteBuilder: RouteBuilder {
     public typealias Value = Wrapped
 
     public func add(host: String, method: String, path: [String], handler: RouteHandler<Value>) {

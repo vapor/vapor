@@ -31,7 +31,7 @@ extension RouteBuilder where Value == HTTPResponder {
     public func group(
         _ path: String,
         filter: (Value) -> (Value) = { $0 },
-        closure: (RouteBuilderShim<Value, Self>) -> ()
+        closure: (DynamicRouteBuilder<Value, Self>) -> ()
     ) {
         return dynamic(
             host: nil,
@@ -40,7 +40,7 @@ extension RouteBuilder where Value == HTTPResponder {
         )
     }
 
-    public func group(_ middleware: Middleware, closure: (RouteBuilderShim<Value, Self>) ->()) {
+    public func group(_ middleware: Middleware, closure: (DynamicRouteBuilder<Value, Self>) ->()) {
         group("/", filter: { handler in
             return HTTPRequest.Handler { request in
                 return try middleware.respond(to: request, chainingTo: handler)
@@ -50,7 +50,7 @@ extension RouteBuilder where Value == HTTPResponder {
 
     public func group(
         host: String,
-        closure: (RouteBuilderShim<Value, Self>) -> ()
+        closure: (DynamicRouteBuilder<Value, Self>) -> ()
     ) {
         return dynamic(host: host, method: nil, path: [], closure: closure)
     }
