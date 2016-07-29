@@ -1,21 +1,17 @@
-//
-//  BranchRouterTests.swift
-//  BranchRouter
-//
-//  Created by Logan Wright on 7/19/16.
-//
-//
-
 import XCTest
 import Engine
-import Branches
+import Routing
 
 extension String: Swift.Error {}
 
 class BranchRouterTests: XCTestCase {
+    static var allTests = [
+        ("testRouter", testRouter),
+        ("testWildcardMethod", testWildcardMethod)
+    ]
     func testRouter() throws {
         let router = Router<HTTPRequestHandler>()
-        router.register(host: "0.0.0.0", method: "GET", path: "/hello/") { request in
+        router.register(host: "0.0.0.0", method: "GET", path: ["hello"]) { request in
             return HTTPResponse(body: "Hello, World!")
         }
 
@@ -28,7 +24,7 @@ class BranchRouterTests: XCTestCase {
 
     func testWildcardMethod() throws {
         let router = Router<HTTPRequestHandler>()
-        router.register(host: "0.0.0.0", method: "*", path: "/hello/") { request in
+        router.register(host: "0.0.0.0", method: "*", path: ["hello"]) { request in
             return HTTPResponse(body: "Hello, World!")
         }
 
@@ -44,7 +40,7 @@ class BranchRouterTests: XCTestCase {
 
     func testWildcardHost() throws {
         let router = Router<HTTPRequestHandler>()
-        router.register(host: "*", method: "GET", path: "/hello/") { request in
+        router.register(host: "*", method: "GET", path: ["hello"]) { request in
             return HTTPResponse(body: "Hello, World!")
         }
 
@@ -63,7 +59,7 @@ class BranchRouterTests: XCTestCase {
 
         let hosts: [String] = ["0.0.0.0", "chat.app.com", "[255.255.255.255.255]", "slack.app.com"]
         hosts.forEach { host in
-            router.register(host: host, method: "GET", path: "/hello/") { request in
+            router.register(host: host, method: "GET", path: ["hello"]) { request in
                 return HTTPResponse(body: "Host: \(host)")
             }
         }
@@ -79,7 +75,7 @@ class BranchRouterTests: XCTestCase {
 
     func testMiss() throws {
         let router = Router<HTTPRequestHandler>()
-        router.register(host: "0.0.0.0", method: "*", path: "/hello/") { request in
+        router.register(host: "0.0.0.0", method: "*", path: ["hello"]) { request in
             XCTFail("should not be found, wrong host")
             return HTTPResponse(body: "[fail]")
         }
@@ -91,7 +87,7 @@ class BranchRouterTests: XCTestCase {
 
     func testWildcardPath() throws {
         let router = Router<HTTPRequestHandler>()
-        router.register(host: "0.0.0.0", method: "GET", path: "/hello/*") { request in
+        router.register(host: "0.0.0.0", method: "GET", path: ["hello", "*"]) { request in
             return HTTPResponse(body: "Hello, World!")
         }
 
@@ -113,7 +109,7 @@ class BranchRouterTests: XCTestCase {
 
     func testParameters() throws {
         let router = Router<HTTPRequestHandler>()
-        router.register(host: "0.0.0.0", method: "GET", path: "/hello/:name/:age") { request in
+        router.register(host: "0.0.0.0", method: "GET", path: ["hello", ":name", ":age"]) { request in
             guard let name = request.parameters["name"] else { throw "missing param: name" }
             guard let age = request.parameters["age"].flatMap({ Int($0) }) else { throw "missing or invalid param: age" }
             return HTTPResponse(body: "Hello, \(name) aged \(age).")
@@ -137,7 +133,7 @@ class BranchRouterTests: XCTestCase {
 
     func testEmpty() throws {
         let router = Router<HTTPRequestHandler>()
-        router.register(host: "0.0.0.0", method: "GET", path: "/") { request in
+        router.register(host: "0.0.0.0", method: "GET", path: []) { request in
             return HTTPResponse(body: "Hello, Empty!")
         }
 
@@ -154,7 +150,7 @@ class BranchRouterTests: XCTestCase {
 
     func testNoHostWildcard() throws {
         let router = Router<HTTPRequestHandler>()
-        router.register(host: "*", method: "GET", path: "/") { request in
+        router.register(host: "*", method: "GET", path: []) { request in
             return HTTPResponse(body: "Hello, World!")
         }
 

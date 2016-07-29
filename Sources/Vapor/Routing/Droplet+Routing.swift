@@ -26,25 +26,37 @@ extension RouteBuilder where Value == HTTPResponder {
         add(
             host: nil,
             method: method.description,
-            path: path.components,
+            path: path.pathComponents,
             value: value
         )
     }
 
     public func group(
         _ path: String,
-        filter: (Value) -> (Value) = { $0 },
         closure: (GroupRouteBuilder<Value, Self>) -> ()
     ) {
         return group(
             host: nil,
             method: nil,
-            path: path.components, filter: filter, closure: closure
+            path: path.pathComponents,
+            filter: nil,
+            closure: closure
+        )
+    }
+
+    public func grouped(
+        _ path: String
+    ) -> GroupRouteBuilder<Value, Self> {
+        return grouped(
+            host: nil,
+            method: nil,
+            path: path.pathComponents,
+            filter: nil
         )
     }
 
     public func group(_ middleware: Middleware, closure: (GroupRouteBuilder<Value, Self>) ->()) {
-        group("/", filter: { handler in
+        group(host: nil, method: nil, path: [], filter: { handler in
             return HTTPRequest.Handler { request in
                 return try middleware.respond(to: request, chainingTo: handler)
             }
@@ -55,7 +67,7 @@ extension RouteBuilder where Value == HTTPResponder {
         host: String,
         closure: (GroupRouteBuilder<Value, Self>) -> ()
     ) {
-        return group(host: host, method: nil, path: [], closure: closure)
+        return group(host: host, method: nil, path: [], filter: nil, closure: closure)
     }
 }
 
@@ -75,12 +87,3 @@ extension HTTPRequest {
         return path
     }
 }
-
-extension String {
-    public var components: [String] {
-        return characters
-            .split(separator: "/", omittingEmptySubsequences: true)
-            .map { String($0) }
-    }
-}
-

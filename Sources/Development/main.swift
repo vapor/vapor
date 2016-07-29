@@ -107,10 +107,6 @@ drop.get("test") { request in
     return "123"
 }
 
-drop.add(.trace, path: "trace") { request in
-    return "trace request"
-}
-
 // FIXME: uncomment
 
 //drop.socket("socket") { request, ws in

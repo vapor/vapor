@@ -1,34 +1,28 @@
-//
-//  RouteTests.swift
-//  BranchRouter
-//
-//  Created by Logan Wright on 7/19/16.
-//
-//
-
 import XCTest
 
 import Engine
-import Branches
+import Routing
 
 public typealias HTTPRequestHandler = (HTTPRequest) throws -> HTTPResponseRepresentable
 
 
-extension HTTPRequest: ParameterContainer {}
+extension HTTPRequest: ParametersContainer {}
 
 extension Router {
     public func route(_ request: HTTPRequest) -> Output? {
-        return route(for: request,
-                     host: request.uri.host,
-                     method: request.method.description,
-                     path: request.uri.path)
+        return route(
+            host: request.uri.host,
+            method: request.method.description,
+            path: request.uri.path.pathComponents,
+            with: request
+        )
     }
 }
 
 class RouteTests: XCTestCase {
     func testRoute() throws {
         let router = Router<HTTPRequestHandler>()
-        router.register(host: "0.0.0.0", method: HTTPMethod.get.description, path: "/hello") { req in
+        router.register(host: "0.0.0.0", method: HTTPMethod.get.description, path: ["hello"]) { req in
             return HTTPResponse(body: "HI")
         }
 
@@ -41,7 +35,7 @@ class RouteTests: XCTestCase {
 
     func testRouteParams() throws {
         let router = Router<HTTPRequestHandler>()
-        router.register(host: "0.0.0.0", method: HTTPMethod.get.description, path: "/:zero/:one/:two/*") { req in
+        router.register(host: "0.0.0.0", method: HTTPMethod.get.description, path: [":zero", ":one", ":two", "*"]) { req in
             let zero = req.parameters["zero"] ?? "[fail]"
             let one = req.parameters["one"] ?? "[fail]"
             let two = req.parameters["two"] ?? "[fail]"

@@ -15,17 +15,26 @@ extension RouteBuilder {
         host: String?,
         method: String?,
         path: [String],
-        filter: (Value) -> (Value) = { $0 },
+        filter: ((Value) -> (Value))?,
         closure: (GroupRouteBuilder<Value, Self>) -> ()
     ) {
-        let dynamic = GroupRouteBuilder(
+        let group = grouped(host: host, method: method, path: path, filter: filter)
+        closure(group)
+    }
+
+    public func grouped(
+        host: String?,
+        method: String?,
+        path: [String],
+        filter: ((Value) -> (Value))?
+    ) -> GroupRouteBuilder<Value, Self> {
+         return GroupRouteBuilder(
             builder: self,
             host: host,
             method: method,
             prefix: path,
             filter: filter
         )
-        closure(dynamic)
     }
 }
 
@@ -43,7 +52,7 @@ public class GroupRouteBuilder<Wrapped, Builder: RouteBuilder where Builder.Valu
         host: String?,
         method: String?,
         prefix: [String],
-        filter: Filter
+        filter: Filter?
     ) {
         self.builder = builder
         self.host = host

@@ -42,7 +42,7 @@ public class Router<Output> {
 
         //look for a branch for the method, or create one if none
         let method = method ?? "*"
-        let branch = base[method] ?? Branch(name: "", handler: nil)
+        let branch = base[method] ?? Branch(name: "", output: nil)
 
         //assign the branch and root to the tree
         base[method] = branch
@@ -87,3 +87,10 @@ extension Router: CustomStringConvertible {
     }
 }
 
+extension String {
+    public var pathComponents: [String] {
+        return characters
+            .split(separator: "/", omittingEmptySubsequences: true)
+            .map { String($0) }
+    }
+}

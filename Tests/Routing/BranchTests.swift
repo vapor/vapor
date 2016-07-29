@@ -1,5 +1,5 @@
 import XCTest
-import Branches
+import Routing
 
 class BranchTests: XCTestCase {
     func testSimple() {

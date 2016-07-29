@@ -144,9 +144,9 @@ public class Branch<Output> { // TODO: Rename Context
 
          - returns: an initialized request Branch
     */
-    required public init(name: String, handler: Output? = nil) {
+    required public init(name: String, output: Output? = nil) {
         self.name = name
-        self.value = handler
+        self.value = output
     }
 
     /**
@@ -221,7 +221,7 @@ public class Branch<Output> { // TODO: Rename Context
         }
 
         let link = key.characters.first == ":" ? ":" : key
-        let next = subBranches[link] ?? self.dynamicType.init(name: key, handler: nil)
+        let next = subBranches[link] ?? self.dynamicType.init(name: key, output: nil)
         next.parent = self
         // trigger lazy loads at extension time -- seek out cleaner way to do this
         _ = next.path

@@ -32,7 +32,7 @@ extension Droplet: HTTPResponder {
         if let handler = router.route(
             host: request.uri.host,
             method: request.method.description,
-            path: request.uri.path.components,
+            path: request.uri.path.pathComponents,
             with: request
         ) {
             responder = handler
