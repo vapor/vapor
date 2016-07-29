@@ -11,40 +11,59 @@ public protocol RouteBuilder {
 }
 
 extension RouteBuilder {
-    public func dynamic(
+    public func group(
         host: String?,
         method: String?,
         path: [String],
         filter: (Value) -> (Value) = { $0 },
-        closure: (DynamicRouteBuilder<Value, Self>) -> ()
+        closure: (GroupRouteBuilder<Value, Self>) -> ()
     ) {
-        let dynamic = DynamicRouteBuilder(builder: self, host: host, method: method, prefix: path)
+        let dynamic = GroupRouteBuilder(
+            builder: self,
+            host: host,
+            method: method,
+            prefix: path,
+            filter: filter
+        )
         closure(dynamic)
     }
-
 }
 
-public class DynamicRouteBuilder<Wrapped, Builder: RouteBuilder where Builder.Value == Wrapped> {
-    var builder: Builder
-    var host: String?
-    var method: String?
-    var prefix: [String]
+public class GroupRouteBuilder<Wrapped, Builder: RouteBuilder where Builder.Value == Wrapped> {
+    public typealias Filter = (Value) -> (Value)
 
-    init(builder: Builder, host: String?, method: String?, prefix: [String]) {
+    public let builder: Builder
+    public let host: String?
+    public let method: String?
+    public let prefix: [String]
+    public let filter: Filter?
+
+    init(
+        builder: Builder,
+        host: String?,
+        method: String?,
+        prefix: [String],
+        filter: Filter
+    ) {
         self.builder = builder
         self.host = host
         self.method = method
         self.prefix = prefix
+        self.filter = filter
     }
 }
 
-extension DynamicRouteBuilder: RouteBuilder {
+extension GroupRouteBuilder: RouteBuilder {
     public typealias Value = Wrapped
 
     public func add(host: String?, method: String?, path: [String], value: Value) {
         let host = self.host ?? host
         let method = self.method ?? method
         let path = self.prefix + path
+        var value = value
+        if let filter = filter {
+            value = filter(value)
+        }
         builder.add(host: host, method: method, path: path, value: value)
     }
 }

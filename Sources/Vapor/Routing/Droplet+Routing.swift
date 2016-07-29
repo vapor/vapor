@@ -34,16 +34,16 @@ extension RouteBuilder where Value == HTTPResponder {
     public func group(
         _ path: String,
         filter: (Value) -> (Value) = { $0 },
-        closure: (DynamicRouteBuilder<Value, Self>) -> ()
+        closure: (GroupRouteBuilder<Value, Self>) -> ()
     ) {
-        return dynamic(
+        return group(
             host: nil,
             method: nil,
             path: path.components, filter: filter, closure: closure
         )
     }
 
-    public func group(_ middleware: Middleware, closure: (DynamicRouteBuilder<Value, Self>) ->()) {
+    public func group(_ middleware: Middleware, closure: (GroupRouteBuilder<Value, Self>) ->()) {
         group("/", filter: { handler in
             return HTTPRequest.Handler { request in
                 return try middleware.respond(to: request, chainingTo: handler)
@@ -53,9 +53,9 @@ extension RouteBuilder where Value == HTTPResponder {
 
     public func group(
         host: String,
-        closure: (DynamicRouteBuilder<Value, Self>) -> ()
+        closure: (GroupRouteBuilder<Value, Self>) -> ()
     ) {
-        return dynamic(host: host, method: nil, path: [], closure: closure)
+        return group(host: host, method: nil, path: [], closure: closure)
     }
 }
 
