@@ -3,7 +3,6 @@ import Socks
 import Engine
 import Console
 import Fluent
-import Routing
 
 public let VERSION = "0.15.0"
 
@@ -14,7 +13,7 @@ public class Droplet {
         for a given request.
     */
     //FIXME: protocol
-    public let router: Router<HTTPResponder>
+    public let router: Router
 
     /**
         The server that will accept requesting

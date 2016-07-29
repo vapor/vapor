@@ -27,13 +27,13 @@ public class Router<Output> {
     // MARK: Registration
 
     /**
-     Register a given path. Use `*` for host OR method to define wildcards that will be matched
-     if no concrete match exists.
+        Register a given path. Use `*` for host OR method to define wildcards that will be matched
+        if no concrete match exists.
 
-     - parameter host: the host to match, ie: '0.0.0.0', or `*` to match any
-     - parameter method: the method to match, ie: `GET`, or `*` to match any
-     - parameter path: the path that should be registered
-     - parameter output: the associated output of this path, usually a responder, or `nil`
+        - parameter host: the host to match, ie: '0.0.0.0', or `*` to match any
+        - parameter method: the method to match, ie: `GET`, or `*` to match any
+        - parameter path: the path that should be registered
+        - parameter output: the associated output of this path, usually a responder, or `nil`
      */
     public func register(path: [String], output: Output?) {
         let path = path.filter { !$0.isEmpty }
@@ -56,6 +56,12 @@ public class Router<Output> {
 
     // MARK: Route
 
+    /**
+        Routes an incoming path, filling the parameters container
+        with any found parameters.
+     
+        If an Output is found, it is returned.
+    */
     public func route(path: [String], with container: ParametersContainer) -> Output? {
         let path = path.filter { !$0.isEmpty }
 
@@ -66,37 +72,15 @@ public class Router<Output> {
         let seg = Array(iterator)
 
         // fetch the result using fallbacks
-        let result = tree["*"]?[method]?.fetch(seg)
-            ?? tree["*"]?["*"]?.fetch(seg)
-            ?? tree[host]?[method]?.fetch(seg)
+        let result = tree[host]?[method]?.fetch(seg)
+            ?? tree["*"]?[method]?.fetch(seg)
             ?? tree[host]?["*"]?.fetch(seg)
+            ?? tree["*"]?["*"]?.fetch(seg)
 
         container.parameters = result?.branch.slugs(for: seg) ?? [:]
         guard let output = result?.branch.output else {
             return nil
         }
         return output
-    }
-}
-
-extension Router: CustomStringConvertible {
-    public var description: String {
-        var d: [String] = []
-        for (host, mb) in tree {
-            d.append(host)
-            for (method, branch) in mb {
-                d.append(method.indented)
-                d.append(branch.description.indented.indented)
-            }
-        }
-        return d.joined(separator: "\n")
-    }
-}
-
-extension String {
-    public var pathComponents: [String] {
-        return characters
-            .split(separator: "/", omittingEmptySubsequences: true)
-            .map { String($0) }
     }
 }

@@ -231,25 +231,3 @@ public class Branch<Output> { // TODO: Rename Context
         return next.extend(path, output: output)
     }
 }
-
-extension Branch: CustomStringConvertible {
-    public var description: String {
-        var d: [String] = []
-
-        let n = name.isEmpty ? "/" : name
-        d.append("\(n) \(output)")
-
-        for (_, branch) in subBranches {
-            d.append(branch.description.indented)
-        }
-
-        return d.joined(separator: "\n")
-    }
-}
-
-extension String {
-    var indented: String {
-        let split = self.characters.split(separator: "\n")
-        return split.map { "    " + String($0) }.joined(separator: "\n")
-    }
-}

@@ -29,6 +29,7 @@ class Generator {
         var generated = [
             warning,
             "import Routing",
+            "import HTTPRouting",
             "import Engine",
             "import WebSockets",
             " ",

@@ -2,6 +2,16 @@ import XCTest
 import Routing
 
 class BranchTests: XCTestCase {
+    static let allTests = [
+        ("testSimple", testSimple),
+        ("testWildcard", testWildcard),
+        ("testWildcardTrailing", testWildcardTrailing),
+        ("testParams", testParams),
+        ("testOutOfBoundsParams", testOutOfBoundsParams),
+        ("testLeadingPath", testLeadingPath),
+        ("testEmpty", testEmpty)
+    ]
+
     func testSimple() {
         let base = Branch<String>(name: "[base]", output: nil)
         base.extend(["a", "b", "c"], output: "abc")

@@ -1,28 +1,16 @@
 import XCTest
-
 import Engine
 import Routing
 
-public typealias HTTPRequestHandler = (HTTPRequest) throws -> HTTPResponseRepresentable
-
-
-extension HTTPRequest: ParametersContainer {}
-
-extension Router {
-    public func route(_ request: HTTPRequest) -> Output? {
-        return route(
-            host: request.uri.host,
-            method: request.method.description,
-            path: request.uri.path.pathComponents,
-            with: request
-        )
-    }
-}
-
 class RouteTests: XCTestCase {
+    static var allTests = [
+        ("testRoute", testRoute),
+        ("testRouteParams", testRouteParams),
+    ]
+
     func testRoute() throws {
         let router = Router<HTTPRequestHandler>()
-        router.register(host: "0.0.0.0", method: HTTPMethod.get.description, path: ["hello"]) { req in
+        router.register(path: ["0.0.0.0", HTTPMethod.get.description, "hello"]) { req in
             return HTTPResponse(body: "HI")
         }
 
@@ -35,7 +23,7 @@ class RouteTests: XCTestCase {
 
     func testRouteParams() throws {
         let router = Router<HTTPRequestHandler>()
-        router.register(host: "0.0.0.0", method: HTTPMethod.get.description, path: [":zero", ":one", ":two", "*"]) { req in
+        router.register(path: ["0.0.0.0", HTTPMethod.get.description, ":zero", ":one", ":two", "*"]) { req in
             let zero = req.parameters["zero"] ?? "[fail]"
             let one = req.parameters["one"] ?? "[fail]"
             let two = req.parameters["two"] ?? "[fail]"

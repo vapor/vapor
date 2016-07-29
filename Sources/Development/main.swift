@@ -40,18 +40,17 @@ drop.get("client-socket") { req in
     return "Beginning client socket test, check your console ..."
 }
 
-//FIXME
-//drop.socket("server-socket-responder") { req, ws in
-//    let top = 10
-//    for i in 1...top {
-//        sleep(1)
-//        try ws.send("\(i) of \(top)")
-//    }
-//
-//    sleep(1)
-//    print("[Server] initiating close")
-//    try ws.close()
-//}
+drop.socket("server-socket-responder") { req, ws in
+    let top = 10
+    for i in 1...top {
+        sleep(1)
+        try ws.send("\(i) of \(top)")
+    }
+
+    sleep(1)
+    print("[Server] initiating close")
+    try ws.close()
+}
 
 drop.get("ping") { _ in
     return 😀
@@ -107,33 +106,31 @@ drop.get("test") { request in
     return "123"
 }
 
-// FIXME: uncomment
+drop.socket("socket") { request, ws in
+    try ws.send("WebSocket Connected :)")
 
-//drop.socket("socket") { request, ws in
-//    try ws.send("WebSocket Connected :)")
-//
-//    ws.onText = { ws, text in
-//        try ws.send("You said \(text)!")
-//
-//        if text == "stop" {
-//            ws.onText = nil
-//            try ws.send("🚫 stopping connection listener -- socket remains open")
-//        }
-//
-//        if text == "close" {
-//            try ws.send("... closing 👋")
-//            try ws.close()
-//        }
-//    }
-//
-//    ws.onClose = { ws, status, reason, clean in
-//        print("Did close w/ status \(status) reason \(reason)")
-//    }
-//}
-//
-////MARK: Resource
-//
-//drop.resource("users", UserController.self)
+    ws.onText = { ws, text in
+        try ws.send("You said \(text)!")
+
+        if text == "stop" {
+            ws.onText = nil
+            try ws.send("🚫 stopping connection listener -- socket remains open")
+        }
+
+        if text == "close" {
+            try ws.send("... closing 👋")
+            try ws.close()
+        }
+    }
+
+    ws.onClose = { ws, status, reason, clean in
+        print("Did close w/ status \(status) reason \(reason)")
+    }
+}
+
+//MARK: Resource
+
+drop.resource("users", UserController())
 
 //MARK: Request data
 
@@ -142,13 +139,13 @@ drop.post("jsondata") { request in
     return "yup"
 }
 
-//MARK: Type safe routing
+// MARK: Type safe routing
 
-//drop.get("test", Int.self, String.self) { request, int, string in
-//    return try JSON([
-//        "message": "Int \(int) String \(string)"
-//    ])
-//}
+drop.get("test", Int.self, String.self) { request, int, string in
+    return try JSON([
+        "message": "Int \(int) String \(string)"
+    ])
+}
 
 /* Expected Users Format
  [
@@ -197,23 +194,23 @@ drop.get("redirect") { request in
 }
 
 // FIXME
-//drop.grouped("abort") { group in
-//    group.get("400") { request in
-//        throw Abort.badRequest
-//    }
-//
-//    group.get("404") { request in
-//        throw Abort.notFound
-//    }
-//
-//    group.get("420") { request in
-//        throw Abort.custom(status: .enhanceYourCalm, message: "Enhance your calm")
-//    }
-//
-//    group.get("500") { request in
-//        throw Abort.internalServerError
-//    }
-//}
+drop.group("abort") { group in
+    group.get("400") { request in
+        throw Abort.badRequest
+    }
+
+    group.get("404") { request in
+        throw Abort.notFound
+    }
+
+    group.get("420") { request in
+        throw Abort.custom(status: .enhanceYourCalm, message: "Enhance your calm")
+    }
+
+    group.get("500") { request in
+        throw Abort.serverError
+    }
+}
 
 enum Error: Swift.Error {
     case Unhandled
@@ -449,14 +446,13 @@ drop.post("multipart-print") { request in
 
 //MARK: Middleware
 
-// FIXME
-//drop.grouped(AuthMiddleware()) { group in
-//    drop.get("protected") { request in
-//        return try JSON([
-//            "message": "Welcome authorized user"
-//        ])
-//    }
-//}
+drop.group(AuthMiddleware()) { group in
+    drop.get("protected") { request in
+        return try JSON([
+            "message": "Welcome authorized user"
+        ])
+    }
+}
 
 //MARK: Chunked
 
@@ -473,7 +469,7 @@ drop.get("chunked") { request in
 
 #if !os(Linux)
     /*
-    Temporarily not available on Linux because of Dispatch APIs
+        Temporarily not available on Linux because of Dispatch APIs
     */
     drop.get("async") { request in
         return try Response.async { promise in

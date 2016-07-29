@@ -3,10 +3,8 @@ import JSON
 import Vapor
 import Engine
 
-/*
-class UserController: Resource, DropletInitializable {
-    required init(droplet: Droplet) {
-        droplet.console.output("User controller created")
+final class UserController: ResourceRepresentable {
+    init() {
 
     }
 
@@ -80,7 +78,13 @@ class UserController: Resource, DropletInitializable {
             "info": "This is the Users resource"
         ])
     }
-}*/
+
+    func makeResource() -> Resource<User> {
+        return Resource(
+            index: index
+        )
+    }
+}
 
 extension User: ResponseRepresentable {
     func makeResponse(for request: HTTPRequest) throws -> HTTPResponse {

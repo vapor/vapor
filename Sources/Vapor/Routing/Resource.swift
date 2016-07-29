@@ -16,7 +16,7 @@ public final class Resource<Model: StringInitializable> {
     public var aboutItem: Item?
     public var aboutMultiple: Multiple?
 
-    init(
+    public init(
         index: Multiple? = nil,
         store: Multiple? = nil,
         show: Item? = nil,
@@ -39,7 +39,17 @@ public final class Resource<Model: StringInitializable> {
     }
 }
 
+public protocol ResourceRepresentable {
+    associatedtype Model: StringInitializable
+    func makeResource() -> Resource<Model>
+}
+
 extension RouteBuilder where Value == HTTPResponder {
+    public func resource<Resource: ResourceRepresentable>(_ path: String, _ resource: Resource) {
+        let resource = resource.makeResource()
+        self.resource(path, resource)
+    }
+
     public func resource<Model: StringInitializable>(_ path: String, _ resource: Resource<Model>) {
         var itemMethods: [HTTPMethod] = []
         var multipleMethods: [HTTPMethod] = []
@@ -51,7 +61,7 @@ extension RouteBuilder where Value == HTTPResponder {
 
             itemMethods += method
 
-            let handler = HTTPRequest.Handler { request in
+            self.add(method, path, ":id") { request in
                 guard let id = request.parameters["id"] else {
                     throw Abort.notFound
                 }
@@ -62,7 +72,6 @@ extension RouteBuilder where Value == HTTPResponder {
 
                 return try item(request, model).makeResponse(for: request)
             }
-            self.add(method, "\(path)/:id", handler)
         }
 
         func multiple(_ method: HTTPMethod, _ multiple: Resource<Model>.Multiple?) {
@@ -72,10 +81,10 @@ extension RouteBuilder where Value == HTTPResponder {
 
             multipleMethods += method
 
-            let handler = HTTPRequest.Handler { request in
+            self.add(method, path) { request in
                 return try multiple(request).makeResponse(for: request)
             }
-            self.add(method, "\(path)", handler)
+
         }
 
 

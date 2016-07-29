@@ -9,10 +9,9 @@ struct Body {
 extension Body: CustomStringConvertible {
     var description: String {
         return [
-            "let handler = HTTPRequest.Handler { request in",
+            "self.add(.\(signature.method), \(path)) { request in",
             innerBody.indented,
             "}",
-            "self.add(.\(signature.method), [\(path)], handler)"
         ].joined(separator: "\n")
     }
 

@@ -7,11 +7,19 @@ extension String: Swift.Error {}
 class BranchRouterTests: XCTestCase {
     static var allTests = [
         ("testRouter", testRouter),
-        ("testWildcardMethod", testWildcardMethod)
+        ("testWildcardMethod", testWildcardMethod),
+        ("testWildcardHost", testWildcardHost),
+        ("testHostMatch", testHostMatch),
+        ("testMiss", testMiss),
+        ("testWildcardPath", testWildcardPath),
+        ("testParameters", testParameters),
+        ("testEmpty", testEmpty),
+        ("testNoHostWildcard", testNoHostWildcard)
     ]
+
     func testRouter() throws {
         let router = Router<HTTPRequestHandler>()
-        router.register(host: "0.0.0.0", method: "GET", path: ["hello"]) { request in
+        router.register(path: ["0.0.0.0", "GET", "hello"]) { request in
             return HTTPResponse(body: "Hello, World!")
         }
 
@@ -24,7 +32,7 @@ class BranchRouterTests: XCTestCase {
 
     func testWildcardMethod() throws {
         let router = Router<HTTPRequestHandler>()
-        router.register(host: "0.0.0.0", method: "*", path: ["hello"]) { request in
+        router.register(path: ["0.0.0.0", "*", "hello"]) { request in
             return HTTPResponse(body: "Hello, World!")
         }
 
@@ -40,7 +48,7 @@ class BranchRouterTests: XCTestCase {
 
     func testWildcardHost() throws {
         let router = Router<HTTPRequestHandler>()
-        router.register(host: "*", method: "GET", path: ["hello"]) { request in
+        router.register(path: ["*", "GET", "hello"]) { request in
             return HTTPResponse(body: "Hello, World!")
         }
 
@@ -59,7 +67,7 @@ class BranchRouterTests: XCTestCase {
 
         let hosts: [String] = ["0.0.0.0", "chat.app.com", "[255.255.255.255.255]", "slack.app.com"]
         hosts.forEach { host in
-            router.register(host: host, method: "GET", path: ["hello"]) { request in
+            router.register(path: [host, "GET", "hello"]) { request in
                 return HTTPResponse(body: "Host: \(host)")
             }
         }
@@ -75,7 +83,7 @@ class BranchRouterTests: XCTestCase {
 
     func testMiss() throws {
         let router = Router<HTTPRequestHandler>()
-        router.register(host: "0.0.0.0", method: "*", path: ["hello"]) { request in
+        router.register(path: ["0.0.0.0", "*", "hello"]) { request in
             XCTFail("should not be found, wrong host")
             return HTTPResponse(body: "[fail]")
         }
@@ -87,7 +95,7 @@ class BranchRouterTests: XCTestCase {
 
     func testWildcardPath() throws {
         let router = Router<HTTPRequestHandler>()
-        router.register(host: "0.0.0.0", method: "GET", path: ["hello", "*"]) { request in
+        router.register(path: ["0.0.0.0", "GET", "hello", "*"]) { request in
             return HTTPResponse(body: "Hello, World!")
         }
 
@@ -109,7 +117,7 @@ class BranchRouterTests: XCTestCase {
 
     func testParameters() throws {
         let router = Router<HTTPRequestHandler>()
-        router.register(host: "0.0.0.0", method: "GET", path: ["hello", ":name", ":age"]) { request in
+        router.register(path: ["0.0.0.0", "GET", "hello", ":name", ":age"]) { request in
             guard let name = request.parameters["name"] else { throw "missing param: name" }
             guard let age = request.parameters["age"].flatMap({ Int($0) }) else { throw "missing or invalid param: age" }
             return HTTPResponse(body: "Hello, \(name) aged \(age).")
@@ -133,7 +141,7 @@ class BranchRouterTests: XCTestCase {
 
     func testEmpty() throws {
         let router = Router<HTTPRequestHandler>()
-        router.register(host: "0.0.0.0", method: "GET", path: []) { request in
+        router.register(path: []) { request in
             return HTTPResponse(body: "Hello, Empty!")
         }
 
@@ -141,7 +149,7 @@ class BranchRouterTests: XCTestCase {
         try empties.forEach { emptypath in
             let uri = URI(scheme: "http", host: "0.0.0.0", path: emptypath)
             let request = HTTPRequest(method: .get, uri: uri)
-            let handler = router.route(request)
+            let handler = router.route(path: [], with: request)
             XCTAssert(handler != nil)
             let response = try handler?(request).makeResponse(for: request)
             XCTAssert(response?.body.bytes?.string == "Hello, Empty!")
@@ -150,7 +158,7 @@ class BranchRouterTests: XCTestCase {
 
     func testNoHostWildcard() throws {
         let router = Router<HTTPRequestHandler>()
-        router.register(host: "*", method: "GET", path: []) { request in
+        router.register(path: ["*", "GET"]) { request in
             return HTTPResponse(body: "Hello, World!")
         }
 

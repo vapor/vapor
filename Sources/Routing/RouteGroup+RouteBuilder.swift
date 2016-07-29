@@ -1,21 +1,40 @@
 extension RouteGroup: RouteBuilder {
+    /**
+        The Value type allowed in RouteBuilder
+        extensions should be the same as the RouteGroup's
+        wrapped type.
+    */
     public typealias Value = Wrapped
 
-    public func add(path: [String], value: Value) {
-        var prefix: [String] = []
+    /**
+        Adds a Value to the RouteGroup by combining
+        the prefix, path, and incoming path.
+    */
+    public func add(path incomingPath: [String], value: Value) {
+        // will hold the beginning of the path
+        var start: [String] = []
+
+        // iterate through the RouteGroup's prefix
+        // any nil values encountered should be pulled
+        // from the incoming path
         for (i, p) in self.prefix.enumerated() {
             if let p = p {
-                prefix.append(p)
+                start.append(p)
             } else {
-                prefix.append(path[i])
+                start.append(incomingPath[i])
             }
         }
-        let path = prefix + self.path + Array(path.dropFirst(prefix.count))
 
+        // create the resulting path by combining the
+        // start, hard coded path, and incoming path with the start removed
+        let result = start + path + Array(incomingPath.dropFirst(prefix.count))
+
+        // if there is a filter, then map the value
         var value = value
-        if let filter = filter {
-            value = filter(value)
+        if let map = map {
+            value = map(value)
         }
-        builder.add(path: path, value: value)
+
+        builder.add(path: result, value: value)
     }
 }

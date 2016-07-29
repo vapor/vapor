@@ -2,8 +2,11 @@
 
 import XCTest
 @testable import VaporTestSuite
+@testable import RoutingTestSuite
+@testable import HTTPRoutingTestSuite
 
 XCTMain([
+    // Vapor
     testCase(ConfigTests.allTests),
     testCase(ConsoleTests.allTests),
     testCase(ContentTests.allTests),
@@ -24,6 +27,17 @@ XCTMain([
     testCase(ValidationCountTests.allTests),
     testCase(ValidationTests.allTests),
     testCase(ValidationUniqueTests.allTests),
+
+    // Routing
+    testCase(BranchTests.allTests),
+    testCase(RouteBuilderTests.allTests),
+    testCase(RouterTests.allTests),
+    testCase(RouteTests.allTests),
+
+    // HTTPRouting
+    testCase(AddTests.allTests),
+    testCase(GroupedTests.allTests),
+    testCase(GroupTests.allTests),
 ])
 
 #endif
