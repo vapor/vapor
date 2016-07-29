@@ -142,7 +142,7 @@ drop.post("jsondata") { request in
 // MARK: Type safe routing
 
 drop.get("test", Int.self, String.self) { request, int, string in
-    return JSON([
+    return try JSON([
         "message": "Int \(int) String \(string)"
     ])
 }
@@ -165,11 +165,11 @@ drop.get("users-test") { req in
 //MARK: Json
 
 drop.get("json") { request in
-    return JSON([
+    return try JSON([
         "number": 123,
         "text": "unicorns",
         "bool": false,
-        "nested": JSON(["one", 2, false])
+        "nested": try JSON(["one", 2, false])
     ])
 }
 
@@ -311,8 +311,8 @@ class Employee {
 }
 
 extension Employee: JSONRepresentable {
-    func makeJSON() -> JSON {
-        return JSON([
+    func makeJSON() throws -> JSON {
+        return try JSON([
             "name": name.value,
             "email": email.value
         ])
@@ -321,7 +321,7 @@ extension Employee: JSONRepresentable {
 
 drop.post("validation") { request in
     let employee = try Employee(request: request)
-    return employee.makeJSON()
+    return try employee.makeJSON()
 }
 
 //MARK: Forms
@@ -438,7 +438,7 @@ drop.post("multipart-print") { request in
     print(request.multipart?["test"])
     print(request.multipart?["test"]?.file)
 
-    return JSON([
+    return try JSON([
         "message": "Printed details to console"
     ])
 }
@@ -447,7 +447,7 @@ drop.post("multipart-print") { request in
 
 drop.group(AuthMiddleware()) { group in
     drop.get("protected") { request in
-        return JSON([
+        return try JSON([
             "message": "Welcome authorized user"
         ])
     }

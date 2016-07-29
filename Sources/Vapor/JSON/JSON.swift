@@ -7,16 +7,16 @@ extension JSON {
         self = .null
     }
     
-    public init(_ obj: [String: JSONRepresentable]) {
+    public init(_ obj: [String: JSONRepresentable]) throws {
         var json: [String: JSON] = [:]
         for (key, val) in obj {
-            json[key] = val.makeJSON()
+            json[key] = try val.makeJSON()
         }
         self = .object(json)
     }
 
-    public init(_ arr: [JSONRepresentable]) {
-        let json = arr.map { $0.makeJSON() }
+    public init(_ arr: [JSONRepresentable]) throws {
+        let json = try arr.map { try $0.makeJSON() }
         self = .array(json)
     }
 }

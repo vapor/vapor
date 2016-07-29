@@ -1,16 +1,6 @@
 import JSON
 import HTTP
 
-public protocol JSONRepresentable {
-    func makeJSON() -> JSON
-}
-
-extension JSON: JSONRepresentable {
-    public func makeJSON() -> JSON {
-        return self
-    }
-}
-
 extension JSON: ResponseRepresentable {
     public func makeResponse() throws -> Response {
         return try Response(status: .ok, json: self)
