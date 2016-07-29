@@ -4,7 +4,7 @@ import Routing
 
 extension String: Swift.Error {}
 
-class BranchRouterTests: XCTestCase {
+class RouterTests: XCTestCase {
     static var allTests = [
         ("testRouter", testRouter),
         ("testWildcardMethod", testWildcardMethod),
