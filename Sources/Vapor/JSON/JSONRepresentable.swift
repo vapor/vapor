@@ -17,6 +17,12 @@ extension JSON: ResponseRepresentable {
     }
 }
 
+extension Double: JSONRepresentable {
+    public func makeJSON() -> JSON {
+        return .number(.double(self))
+    }
+}
+
 extension String: JSONRepresentable {
     public func makeJSON() -> JSON {
         return .string(self)
