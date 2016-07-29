@@ -1,6 +1,7 @@
 import XCTest
-import Engine
+import HTTP
 import Routing
+import URI
 
 class RouteTests: XCTestCase {
     static var allTests = [
@@ -9,25 +10,25 @@ class RouteTests: XCTestCase {
     ]
 
     func testRoute() throws {
-        let router = Router<HTTPRequestHandler>()
-        router.register(path: ["0.0.0.0", HTTPMethod.get.description, "hello"]) { req in
-            return HTTPResponse(body: "HI")
+        let router = Router<RequestHandler>()
+        router.register(path: ["0.0.0.0", Method.get.description, "hello"]) { req in
+            return Response(body: "HI")
         }
 
-        let request = try HTTPRequest(method: .get, uri: "http://0.0.0.0/hello")
+        let request = try Request(method: .get, uri: "http://0.0.0.0/hello")
         let handler = router.route(request)
         XCTAssert(handler != nil)
-        let response = try handler?(request).makeResponse(for: request)
+        let response = try handler?(request).makeResponse()
         XCTAssert(response?.body.bytes?.string == "HI")
     }
 
     func testRouteParams() throws {
-        let router = Router<HTTPRequestHandler>()
-        router.register(path: ["0.0.0.0", HTTPMethod.get.description, ":zero", ":one", ":two", "*"]) { req in
+        let router = Router<RequestHandler>()
+        router.register(path: ["0.0.0.0", Method.get.description, ":zero", ":one", ":two", "*"]) { req in
             let zero = req.parameters["zero"] ?? "[fail]"
             let one = req.parameters["one"] ?? "[fail]"
             let two = req.parameters["two"] ?? "[fail]"
-            return HTTPResponse(body: "\(zero):\(one):\(two)")
+            return Response(body: "\(zero):\(one):\(two)")
         }
 
         let paths: [[String]] = [
@@ -45,10 +46,10 @@ class RouteTests: XCTestCase {
                 query: nil,
                 fragment: nil
             )
-            let request = HTTPRequest(method: .get, uri: uri)
+            let request = Request(method: .get, uri: uri)
             let handler = router.route(request)
             XCTAssert(handler != nil)
-            let response = try handler?(request).makeResponse(for: request)
+            let response = try handler?(request).makeResponse()
             XCTAssert(response?.body.bytes?.string == path.prefix(3).joined(separator: ":"))
         }
     }

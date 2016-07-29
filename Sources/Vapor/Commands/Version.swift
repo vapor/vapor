@@ -13,4 +13,3 @@ public final class VersionCommand: Command {
         console.print("Vapor Framework v\(VERSION)")
     }
 }
-

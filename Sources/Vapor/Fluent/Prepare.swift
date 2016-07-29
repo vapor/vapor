@@ -31,6 +31,7 @@ public struct Prepare: Command {
 
     public func run(arguments: [String]) throws {
         guard preparations.count > 0 else {
+            console.info("No preparations.")
             return
         }
 

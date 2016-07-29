@@ -1,10 +1,10 @@
 import Routing
-import Engine
+import HTTP
 import TypeSafeRouting
 
 public final class Resource<Model: StringInitializable> {
-    public typealias Multiple = (HTTPRequest) throws -> HTTPResponseRepresentable
-    public typealias Item = (HTTPRequest, Model) throws -> HTTPResponseRepresentable
+    public typealias Multiple = (Request) throws -> ResponseRepresentable
+    public typealias Item = (Request, Model) throws -> ResponseRepresentable
 
     public var index: Multiple?
     public var store: Multiple?
@@ -44,17 +44,17 @@ public protocol ResourceRepresentable {
     func makeResource() -> Resource<Model>
 }
 
-extension RouteBuilder where Value == HTTPResponder {
+extension RouteBuilder where Value == Responder {
     public func resource<Resource: ResourceRepresentable>(_ path: String, _ resource: Resource) {
         let resource = resource.makeResource()
         self.resource(path, resource)
     }
 
     public func resource<Model: StringInitializable>(_ path: String, _ resource: Resource<Model>) {
-        var itemMethods: [HTTPMethod] = []
-        var multipleMethods: [HTTPMethod] = []
+        var itemMethods: [Method] = []
+        var multipleMethods: [Method] = []
 
-        func item(_ method: HTTPMethod, _ item: Resource<Model>.Item?) {
+        func item(_ method: Method, _ item: Resource<Model>.Item?) {
             guard let item = item else {
                 return
             }
@@ -70,11 +70,11 @@ extension RouteBuilder where Value == HTTPResponder {
                     throw Abort.notFound
                 }
 
-                return try item(request, model).makeResponse(for: request)
+                return try item(request, model).makeResponse()
             }
         }
 
-        func multiple(_ method: HTTPMethod, _ multiple: Resource<Model>.Multiple?) {
+        func multiple(_ method: Method, _ multiple: Resource<Model>.Multiple?) {
             guard let multiple = multiple else {
                 return
             }
@@ -82,7 +82,7 @@ extension RouteBuilder where Value == HTTPResponder {
             multipleMethods += method
 
             self.add(method, path) { request in
-                return try multiple(request).makeResponse(for: request)
+                return try multiple(request).makeResponse()
             }
 
         }
@@ -100,9 +100,9 @@ extension RouteBuilder where Value == HTTPResponder {
             item(.options, about)
         } else {
             item(.options) { request in
-                return try JSON([
+                return try JSON(node: [
                     "resource": "\(path)/:id",
-                    "methods": try JSON(itemMethods.map { $0.description })
+                    "methods": try JSON(node: itemMethods.map { $0.description })
                 ])
             }
         }
@@ -111,9 +111,10 @@ extension RouteBuilder where Value == HTTPResponder {
             multiple(.options, about)
         }else {
             multiple(.options) { request in
-                return try JSON([
+                let methods: [String] = multipleMethods.map { $0.description }
+                return try JSON(node: [
                     "resource": path,
-                    "methods": try JSON(multipleMethods.map { $0.description })
+                    "methods": try JSON(node: methods)
                 ])
             }
         }

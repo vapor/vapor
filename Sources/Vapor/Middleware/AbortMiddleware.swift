@@ -1,4 +1,4 @@
-import Engine
+import HTTP
 
 /**
     Handles the various Abort errors that can be thrown
@@ -19,7 +19,7 @@ public class AbortMiddleware: Middleware {
 
         - returns: a valid response
      */
-    public func respond(to request: HTTPRequest, chainingTo chain: HTTPResponder) throws -> HTTPResponse {
+    public func respond(to request: Request, chainingTo chain: Responder) throws -> Response {
         do {
             return try chain.respond(to: request)
         } catch Abort.badRequest {
@@ -33,13 +33,13 @@ public class AbortMiddleware: Middleware {
         }
     }
 
-    func errorResponse(_ status: Status, message: String) throws -> HTTPResponse {
-        let json = try JSON([
+    func errorResponse(_ status: Status, message: String) throws -> Response {
+        let json = try JSON(node: [
             "error": true,
             "message": "\(message)"
         ])
         let data = try json.makeBytes()
-        let response = HTTPResponse(status: status, body: .data(data))
+        let response = Response(status: status, body: .data(data))
         response.headers["Content-Type"] = "application/json; charset=utf-8"
         return response
     }

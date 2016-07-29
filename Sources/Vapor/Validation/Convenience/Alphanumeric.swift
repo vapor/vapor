@@ -1,4 +1,3 @@
-
 /**
     A validator that can be used to check that a
     given string contains only alphanumeric characters

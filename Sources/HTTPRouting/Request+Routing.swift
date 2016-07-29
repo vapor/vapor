@@ -1,5 +1,5 @@
 import Routing
-import Engine
+import HTTP
 
 /**
     Allows Requests to be used as a
@@ -8,4 +8,4 @@ import Engine
     Request by default has a parameters dictionary
     so no additional methods are necessary.
 */
-extension HTTPRequest: ParametersContainer { }
+extension HTTP.Request: Routing.ParametersContainer { }

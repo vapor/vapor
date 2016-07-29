@@ -1,6 +1,6 @@
-import Engine
+import HTTP
 
-extension HTTPResponse {
+extension Response {
     /**
         Convenience Initializer
 
@@ -11,6 +11,6 @@ extension HTTPResponse {
         let headers: [HeaderKey: String] = [
             "Content-Type": "application/json; charset=utf-8"
         ]
-        self.init(status: status, headers: headers, body: try HTTPBody(json))
+        self.init(status: status, headers: headers, body: try Body(json))
     }
 }

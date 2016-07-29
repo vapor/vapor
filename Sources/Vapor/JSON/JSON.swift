@@ -1,6 +1,22 @@
 import Foundation
 
-import struct Core.Bytes
-import protocol Engine.HTTPResponseRepresentable
+@_exported import JSON
 
-@_exported import enum JSON.JSON
+extension JSON {
+    public init() {
+        self = .null
+    }
+    
+    public init(_ obj: [String: JSONRepresentable]) throws {
+        var json: [String: JSON] = [:]
+        for (key, val) in obj {
+            json[key] = try val.makeJSON()
+        }
+        self = .object(json)
+    }
+
+    public init(_ arr: [JSONRepresentable]) throws {
+        let json = try arr.map { try $0.makeJSON() }
+        self = .array(json)
+    }
+}

@@ -1,4 +1,4 @@
-import Engine
+import HTTP
 
 /**
     Catches validation errors and prints
@@ -6,16 +6,16 @@ import Engine
 */
 class ValidationMiddleware: Middleware {
 
-    func respond(to request: HTTPRequest, chainingTo chain: HTTPResponder) throws -> HTTPResponse {
+    func respond(to request: Request, chainingTo chain: Responder) throws -> Response {
         do {
             return try chain.respond(to: request)
         } catch let error as ValidationErrorProtocol {
-            let json = try JSON([
+            let json = try JSON(node: [
                 "error": true,
                 "message": error.message
             ])
             let data = try json.makeBytes()
-            return HTTPResponse(status: .badRequest, body: .data(data))
+            return Response(status: .badRequest, body: .data(data))
         }
     }
     

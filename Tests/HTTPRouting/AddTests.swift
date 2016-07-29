@@ -1,5 +1,5 @@
 import XCTest
-import Engine
+import HTTP
 import HTTPRouting
 
 class AddTests: XCTestCase {
@@ -14,7 +14,7 @@ class AddTests: XCTestCase {
             return "foo"
         }
 
-        let request = HTTPRequest(method: .get, path: "ferret")
+        let request = Request(method: .get, path: "ferret")
         let bytes = try request.bytes(running: router)
 
         XCTAssertEqual(bytes, "foo".bytes)
@@ -26,7 +26,7 @@ class AddTests: XCTestCase {
             return "1337"
         }
 
-        let request = HTTPRequest(method: .trace, path: "foo/bar/baz")
+        let request = Request(method: .trace, path: "foo/bar/baz")
         let bytes = try request.bytes(running: router)
         
         XCTAssertEqual(bytes, "1337".bytes)

@@ -1,4 +1,4 @@
-import Engine
+import HTTP
 
 /**
     Loads and renders a file from the `Resources` folder
@@ -42,9 +42,9 @@ public class View {
 }
 
 ///Allows Views to be returned in Vapor closures
-extension View: HTTPResponseRepresentable {
-    public func makeResponse(for: HTTPRequest) -> HTTPResponse {
-        return HTTPResponse(status: .ok, headers: [
+extension View: ResponseRepresentable {
+    public func makeResponse() -> Response {
+        return Response(status: .ok, headers: [
             "Content-Type": "text/html; charset=utf-8"
         ], body: .data(data))
     }
@@ -61,13 +61,13 @@ extension Droplet {
     }
 
     /**
-     Loads a view with a given context
+        Loads a view with a given context
 
-     - parameter path: the path to the view
-     - parameter context: the context to use when loading the view
+        - parameter path: the path to the view
+        - parameter context: the context to use when loading the view
 
-     - throws: an error if loading fails
-     */
+        - throws: an error if loading fails
+    */
     public func view(_ path: String, context: [String: Any] = [:]) throws -> View {
         return try View(workDir: self.workDir, path: path, context: context)
     }

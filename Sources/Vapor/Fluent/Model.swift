@@ -7,9 +7,9 @@ public protocol Model: Entity, JSONRepresentable, StringInitializable { }
 // MARK: JSONRepresentable
 
 extension Model {
-    public func makeJSON() throws -> JSON {
-        let node = try makeNode()
-        return try JSON(node)
+    public func makeJSON() -> JSON {
+        let node = try! makeNode()
+        return try! JSON(node: node)
     }
 }
 

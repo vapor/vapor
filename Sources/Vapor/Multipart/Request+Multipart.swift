@@ -1,6 +1,6 @@
-import Engine
+import HTTP
 
-extension HTTPRequest {
+extension Request {
     /**
         Multipart encoded request data sent using
         the `multipart/form-data...` header.

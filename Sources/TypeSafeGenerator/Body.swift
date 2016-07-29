@@ -75,7 +75,7 @@ extension Body: CustomStringConvertible {
         case .socket:
             return "return try request.upgradeToWebSocket { try handler(request, $0\(additions)) }"
         case .base:
-            return "return try handler(request\(additions)).makeResponse(for: request)"
+            return "return try handler(request\(additions)).makeResponse()"
         }
     }
 }

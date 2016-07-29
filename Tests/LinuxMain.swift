@@ -21,6 +21,8 @@ XCTMain([
     testCase(LogTests.allTests),
     testCase(MemorySessionDriverTests.allTests),
     testCase(ProcessTests.allTests),
+    testCase(ProviderTests.allTests),
+    testCase(ResourceTests.allTests),
     testCase(ResponseTests.allTests),
     testCase(SessionTests.allTests),
     testCase(ValidationConvenienceTests.allTests),

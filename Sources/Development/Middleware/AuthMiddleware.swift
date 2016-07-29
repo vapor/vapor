@@ -1,4 +1,5 @@
 import Vapor
+import HTTP
 
 class AuthMiddleware: Middleware {
     enum Error: Swift.Error {

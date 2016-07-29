@@ -1,5 +1,5 @@
 import XCTest
-import Engine
+import HTTP
 import HTTPRouting
 
 class GroupedTests: XCTestCase {
@@ -18,7 +18,7 @@ class GroupedTests: XCTestCase {
             return "show"
         }
 
-        let request = HTTPRequest(method: .get, path: "users/5")
+        let request = Request(method: .get, path: "users/5")
         let bytes = try request.bytes(running: router)
 
         XCTAssertEqual(bytes, "show".bytes)
@@ -33,7 +33,7 @@ class GroupedTests: XCTestCase {
             return "show"
         }
 
-        let request = HTTPRequest(method: .get, path: "users/devices/etc/5")
+        let request = Request(method: .get, path: "users/devices/etc/5")
         let bytes = try request.bytes(running: router)
 
         XCTAssertEqual(bytes, "show".bytes)
@@ -48,7 +48,7 @@ class GroupedTests: XCTestCase {
             return "show"
         }
 
-        let request = HTTPRequest(method: .get, path: "users/devices/etc/even/deeper/5")
+        let request = Request(method: .get, path: "users/devices/etc/even/deeper/5")
         let bytes = try request.bytes(running: router)
 
         XCTAssertEqual(bytes, "show".bytes)
@@ -67,7 +67,7 @@ class GroupedTests: XCTestCase {
             return "nothost"
         }
 
-        let request = HTTPRequest(method: .get, path: "host-only", host: "192.168.0.1")
+        let request = Request(method: .get, path: "host-only", host: "192.168.0.1")
         let bytes = try request.bytes(running: router)
 
         XCTAssertEqual(bytes, "host".bytes)

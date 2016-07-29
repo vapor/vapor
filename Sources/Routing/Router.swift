@@ -1,5 +1,5 @@
-public typealias Host = String
-public typealias Method = String
+private typealias Host = String
+private typealias Method = String
 
 // MARK: Router
 
