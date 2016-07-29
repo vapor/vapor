@@ -13,12 +13,6 @@ public struct Providable {
     var server: Server.Type?
 
     /**
-        An optional `RouterDriver` to provide 
-        to the droplet.
-    */
-    var router: Router?
-
-    /**
         An optional `Sessions` to provide
         to the droplet.
     */
@@ -56,7 +50,6 @@ public struct Providable {
 
     init(
         server: Server.Type? = nil,
-        router: Router? = nil,
         sessions: Sessions? = nil,
         hash: Hash? = nil,
         console: ConsoleProtocol? = nil,
@@ -65,7 +58,6 @@ public struct Providable {
         database: Database? = nil
     ) {
         self.server = server
-        self.router = router
         self.sessions = sessions
         self.hash = hash
         self.console = console

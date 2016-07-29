@@ -234,6 +234,21 @@ public class Branch<Output> { // TODO: Rename Context
 
 extension Branch: CustomStringConvertible {
     public var description: String {
-        return "<\(name)> \(subBranches)"
+        var d: [String] = []
+
+        d.append(name.isEmpty ? "empty" : name)
+
+        for (_, branch) in subBranches {
+            d.append(branch.description.indented)
+        }
+
+        return d.joined(separator: "\n")
+    }
+}
+
+extension String {
+    var indented: String {
+        let split = self.characters.split(separator: "\n")
+        return split.map { "    " + String($0) }.joined(separator: "\n")
     }
 }

@@ -32,9 +32,7 @@ class Generator {
             "import Engine",
             "import WebSockets",
             " ",
-            "public typealias HTTPClosure = (HTTPRequest) throws -> (HTTPResponseRepresentable)",
-            " ",
-            "extension RouteBuilder where Value == HTTPClosure {",
+            "extension RouteBuilder where Value == HTTPResponder {",
         ]
         for function in functions {
             generated.append(function.description.indented)

@@ -62,8 +62,7 @@ public class Router<Output> {
         base[method] = branch
         tree[host] = base
 
-        let path = Array(iterator)
-        return branch.extend(path, output: output)
+        return branch.extend(Array(iterator), output: output)
     }
 
     // MARK: Route
@@ -91,6 +90,24 @@ public class Router<Output> {
         case .static(let output):
             return output
         }
+    }
+}
+
+extension Router: CustomStringConvertible {
+    public var description: String {
+        var d: [String] = []
+
+        for (host, mb) in tree {
+            d.append("\(host)")
+            for (method, branch) in mb {
+                d.append("    \(method)")
+                d.append(branch.description.indented.indented)
+            }
+        }
+
+        d += [" ", " "]
+
+        return d.joined(separator: "\n")
     }
 }
 

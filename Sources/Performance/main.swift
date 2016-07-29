@@ -15,13 +15,44 @@ final class TestMiddleware: Middleware {
 
 let drop = Droplet()
 
+drop.get { request in
+    return "root"
+}
+
 drop.get("plaintext") { request in
     return "Hello, world"
 }
 
-drop.group("users") { group in
+final class User: StringInitializable {
+    var id: String
+    init(id: String) {
+        self.id = id
+    }
+
+    convenience init?(from string: String) throws {
+        self.init(id: string)
+    }
+}
+
+drop.resource("users", User.self) { users in
+    users.show = { request, user in
+        return "Showing user \(user.id)"
+    }
+
+    users.index = { request in
+        return "Showing all users"
+    }
+}
+
+drop.group("testingx") { group in
     group.get { request in
         return "index"
+    }
+
+    group.group(host: "0.0.0.0") { special in
+        special.get("host-only") { request in
+            return "for the host only"
+        }
     }
 
     group.group("deeper") { sub in
@@ -45,8 +76,6 @@ drop.group("users") { group in
     }
 }
 
-drop.globalMiddleware = []
-
-
+// drop.globalMiddleware = []
 
 drop.serve()

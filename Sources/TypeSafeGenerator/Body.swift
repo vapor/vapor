@@ -9,9 +9,10 @@ struct Body {
 extension Body: CustomStringConvertible {
     var description: String {
         return [
-            "self.add(.\(signature.method), path: \"\(path)\") { request in ",
+            "let handler = HTTPRequest.Handler { request in",
             innerBody.indented,
-            "}"
+            "}",
+            "self.add(path: [\"*\", \"\(signature.method.uppercase)\", \(path)], handler: .static(handler))"
         ].joined(separator: "\n")
     }
 
@@ -19,11 +20,11 @@ extension Body: CustomStringConvertible {
         return signature.parameters.map { parameter in
             switch parameter {
             case .path(let path):
-                return "\\(\(path.name))"
+                return path.name
             case .wildcard(let wildcard):
-                return ":\(wildcard.name)"
+                return "\":\(wildcard.name)\""
             }
-        }.joined(separator: "/")
+        }.joined(separator: ", ")
     }
 
     var innerBody: String {
@@ -75,7 +76,7 @@ extension Body: CustomStringConvertible {
         case .socket:
             return "return try request.upgradeToWebSocket { try handler(request, $0\(additions)) }"
         case .base:
-            return "return try handler(request\(additions))"
+            return "return try handler(request\(additions)).makeResponse(for: request)"
         }
     }
 }
