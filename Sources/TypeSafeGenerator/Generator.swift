@@ -29,11 +29,11 @@ class Generator {
         var generated = [
             warning,
             "import Routing",
+            "import HTTP",
             "import HTTPRouting",
-            "import Engine",
             "import WebSockets",
             " ",
-            "extension RouteBuilder where Value == HTTPResponder {",
+            "extension Routing.RouteBuilder where Value == HTTP.Responder {",
         ]
         for function in functions {
             generated.append(function.description.indented)

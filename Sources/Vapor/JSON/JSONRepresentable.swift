@@ -1,8 +1,12 @@
 import JSON
-import Engine
+import HTTP
+
+public protocol JSONRepresentable {
+    func makeJSON() -> JSON
+}
 
 extension JSON: HTTPResponseRepresentable {
-    public func makeResponse(for request: HTTPRequest) throws -> HTTPResponse {
+    public func makeResponse(for request: Request) throws -> HTTPResponse {
         return try HTTPResponse(status: .ok, json: self)
     }
 }

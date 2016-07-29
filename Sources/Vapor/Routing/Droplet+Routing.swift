@@ -1,4 +1,4 @@
-import Engine
+import HTTP
 import Routing
 
 @_exported import HTTPRouting
@@ -18,7 +18,7 @@ extension Droplet: RouteBuilder {
 extension RouteBuilder where Value == HTTPResponder {
     public func group(_ middleware: Middleware ..., closure: (RouteGroup<Value, Self>) ->()) {
         group(prefix: ["*", "*"], path: [], map: { handler in
-            return HTTPRequest.Handler { request in
+            return Request.Handler { request in
                 return try middleware.chain(to: handler).respond(to: request)
             }
         }, closure: closure)

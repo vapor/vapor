@@ -1,10 +1,10 @@
 import Routing
-import Engine
+import HTTP
 import TypeSafeRouting
 
 public final class Resource<Model: StringInitializable> {
-    public typealias Multiple = (HTTPRequest) throws -> HTTPResponseRepresentable
-    public typealias Item = (HTTPRequest, Model) throws -> HTTPResponseRepresentable
+    public typealias Multiple = (Request) throws -> HTTPResponseRepresentable
+    public typealias Item = (Request, Model) throws -> HTTPResponseRepresentable
 
     public var index: Multiple?
     public var store: Multiple?

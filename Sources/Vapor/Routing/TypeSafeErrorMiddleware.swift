@@ -1,10 +1,10 @@
 import TypeSafeRouting
-import Engine
+import HTTP
 
 public final class TypeSafeErrorMiddleware: Middleware {
     public init() { }
 
-    public func respond(to request: HTTPRequest, chainingTo next: HTTPResponder) throws -> HTTPResponse {
+    public func respond(to request: Request, chainingTo next: HTTPResponder) throws -> HTTPResponse {
         do {
             return try next.respond(to: request)
         } catch TypeSafeRoutingError.invalidParameterType(_) {

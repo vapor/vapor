@@ -27,13 +27,13 @@ let package = Package(
         .Package(url: "https://github.com/qutheory/fluent.git", majorVersion: 0, minor: 8),
 
         //Core vapor transport layer
-        .Package(url: "https://github.com/qutheory/engine.git", majorVersion: 0, minor: 3),
+        .Package(url: "https://github.com/qutheory/engine.git", majorVersion: 0, minor: 4),
 
         //Console protocol and implementation for powering command line interface.
         .Package(url: "https://github.com/qutheory/console.git", majorVersion: 0, minor: 4),
 
         //JSON
-        .Package(url: "https://github.com/qutheory/json.git", majorVersion: 0, minor: 2)
+        .Package(url: "https://github.com/qutheory/json.git", majorVersion: 0, minor: 3)
     ],
     exclude: [
         // No excludes currently

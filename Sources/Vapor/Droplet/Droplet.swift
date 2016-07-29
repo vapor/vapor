@@ -1,6 +1,6 @@
 import Foundation
 import Socks
-import Engine
+import HTTP
 import Console
 import Fluent
 
@@ -276,7 +276,7 @@ public class Droplet {
         // set the router, server, and client
         // from provided or defaults.
         self.router = Router()
-        let serverType = provided.server ?? HTTPServer<TCPServerStream, HTTPParser<HTTPRequest>, HTTPSerializer<HTTPResponse>>.self
+        let serverType = provided.server ?? HTTPServer<TCPServerStream, HTTPParser<Request>, HTTPSerializer<HTTPResponse>>.self
         self.server = serverType
         let client = provided.client ?? HTTPClient<TCPClientStream>.self
         self.client = client

@@ -1,5 +1,5 @@
 import XCTest
-import Engine
+import HTTP
 import Routing
 
 class RouteTests: XCTestCase {
@@ -9,12 +9,12 @@ class RouteTests: XCTestCase {
     ]
 
     func testRoute() throws {
-        let router = Router<HTTPRequestHandler>()
+        let router = Router<RequestHandler>()
         router.register(path: ["0.0.0.0", HTTPMethod.get.description, "hello"]) { req in
             return HTTPResponse(body: "HI")
         }
 
-        let request = try HTTPRequest(method: .get, uri: "http://0.0.0.0/hello")
+        let request = try Request(method: .get, uri: "http://0.0.0.0/hello")
         let handler = router.route(request)
         XCTAssert(handler != nil)
         let response = try handler?(request).makeResponse(for: request)
@@ -22,7 +22,7 @@ class RouteTests: XCTestCase {
     }
 
     func testRouteParams() throws {
-        let router = Router<HTTPRequestHandler>()
+        let router = Router<RequestHandler>()
         router.register(path: ["0.0.0.0", HTTPMethod.get.description, ":zero", ":one", ":two", "*"]) { req in
             let zero = req.parameters["zero"] ?? "[fail]"
             let one = req.parameters["one"] ?? "[fail]"
@@ -45,7 +45,7 @@ class RouteTests: XCTestCase {
                 query: nil,
                 fragment: nil
             )
-            let request = HTTPRequest(method: .get, uri: uri)
+            let request = Request(method: .get, uri: uri)
             let handler = router.route(request)
             XCTAssert(handler != nil)
             let response = try handler?(request).makeResponse(for: request)

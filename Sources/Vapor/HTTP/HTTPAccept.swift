@@ -1,6 +1,6 @@
-import class Engine.HTTPRequest
+import HTTP
 
-public struct HTTPAccept {
+public struct Accept {
     public let mediaType: String
     public let preference: Double
 
@@ -28,13 +28,13 @@ extension Sequence where Iterator.Element == HTTPAccept {
     }
 }
 
-extension HTTPRequest {
-    public var accept: [HTTPAccept] {
+extension Request {
+    public var accept: [Accept] {
         guard let acceptString = headers["accept"] else {
             return []
         }
 
-        var accept: [HTTPAccept] = []
+        var accept: [Accept] = []
 
         for acceptSlice in acceptString.characters.split(separator: ",") {
             let pieces = acceptSlice.split(separator: ";")

@@ -1,21 +1,21 @@
 import Routing
-import Engine
+import HTTP
 
-extension RouteBuilder where Value == HTTPResponder {
+extension Routing.RouteBuilder where Value == HTTP.Responder {
 
     /**
         Adds a route using an HTTP method,
         variadic array of path strings and HTTP closure.
     */
     public func add(
-        _ method: HTTPMethod,
+        _ method: HTTP.Method,
         _ path: String ...,
-        _ value: (HTTPRequest) throws -> HTTPResponseRepresentable
+        _ value: (HTTP.Request) throws -> HTTP.ResponseRepresentable
     ) {
         add(
             path: ["*", method.description] + path,
-            value: HTTPRequest.Handler({ request in
-                return try value(request).makeResponse(for: request)
+            value: HTTP.Request.Handler({ request in
+                return try value(request).makeResponse()
             })
         )
     }
@@ -25,7 +25,7 @@ extension RouteBuilder where Value == HTTPResponder {
         The route group will prefix all routes
         built inside with the given path.
     */
-    public func group(_ path: String ..., closure: (RouteGroup<Value, Self>) -> ()) {
+    public func group(_ path: String ..., closure: (Routing.RouteGroup<Value, Self>) -> ()) {
         return group(
             prefix: [nil, nil],
             path: path,
@@ -39,7 +39,7 @@ extension RouteBuilder where Value == HTTPResponder {
         The route group will filter all routes
         built inside with the given host.
     */
-    public func group(host: String, closure: (RouteGroup<Value, Self>) -> ()) {
+    public func group(host: String, closure: (Routing.RouteGroup<Value, Self>) -> ()) {
         return group(
             prefix: [host, nil],
             path: [],
@@ -53,7 +53,7 @@ extension RouteBuilder where Value == HTTPResponder {
         The route group will prefix all routes
         built inside with the given path.
     */
-    public func grouped(_ path: String ...) -> RouteGroup<Value, Self> {
+    public func grouped(_ path: String ...) -> Routing.RouteGroup<Value, Self> {
         return grouped(
             prefix: [nil, nil],
             path: path,
@@ -66,7 +66,7 @@ extension RouteBuilder where Value == HTTPResponder {
         The route group will filter all routes
         built inside with the given host.
     */
-    public func grouped(host: String) -> RouteGroup<Value, Self> {
+    public func grouped(host: String) -> Routing.RouteGroup<Value, Self> {
         return grouped(
             prefix: [host, nil],
             path: [],

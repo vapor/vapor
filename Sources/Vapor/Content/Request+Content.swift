@@ -1,6 +1,6 @@
-import class Engine.HTTPRequest
+import HTTP
 
-extension HTTPRequest {
+extension Request {
     public var data: Content {
         if let data = storage["data"] as? Content {
             return data

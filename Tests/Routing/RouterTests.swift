@@ -1,5 +1,5 @@
 import XCTest
-import Engine
+import HTTP
 import Routing
 
 extension String: Swift.Error {}
@@ -18,12 +18,12 @@ class RouterTests: XCTestCase {
     ]
 
     func testRouter() throws {
-        let router = Router<HTTPRequestHandler>()
+        let router = Router<RequestHandler>()
         router.register(path: ["0.0.0.0", "GET", "hello"]) { request in
             return HTTPResponse(body: "Hello, World!")
         }
 
-        let request = try HTTPRequest(method: .get, uri: "http://0.0.0.0/hello")
+        let request = try Request(method: .get, uri: "http://0.0.0.0/hello")
         let handler = router.route(request)
         XCTAssert(handler != nil)
         let response = try handler?(request).makeResponse(for: request)
@@ -31,14 +31,14 @@ class RouterTests: XCTestCase {
     }
 
     func testWildcardMethod() throws {
-        let router = Router<HTTPRequestHandler>()
+        let router = Router<RequestHandler>()
         router.register(path: ["0.0.0.0", "*", "hello"]) { request in
             return HTTPResponse(body: "Hello, World!")
         }
 
         let method: [Engine.HTTPMethod] = [.get, .post, .put, .patch, .delete, .trace, .head, .options]
         try method.forEach { method in
-            let request = try HTTPRequest(method: method, uri: "http://0.0.0.0/hello")
+            let request = try Request(method: method, uri: "http://0.0.0.0/hello")
             let handler = router.route(request)
             XCTAssert(handler != nil)
             let response = try handler?(request).makeResponse(for: request)
@@ -47,14 +47,14 @@ class RouterTests: XCTestCase {
     }
 
     func testWildcardHost() throws {
-        let router = Router<HTTPRequestHandler>()
+        let router = Router<RequestHandler>()
         router.register(path: ["*", "GET", "hello"]) { request in
             return HTTPResponse(body: "Hello, World!")
         }
 
         let hosts: [String] = ["0.0.0.0", "chat.app.com", "[255.255.255.255.255]", "slack.app.com"]
         try hosts.forEach { host in
-            let request = try HTTPRequest(method: .get, uri: "http://\(host)/hello")
+            let request = try Request(method: .get, uri: "http://\(host)/hello")
             let handler = router.route(request)
             XCTAssert(handler != nil)
             let response = try handler?(request).makeResponse(for: request)
@@ -63,7 +63,7 @@ class RouterTests: XCTestCase {
     }
 
     func testHostMatch() throws {
-        let router = Router<HTTPRequestHandler>()
+        let router = Router<RequestHandler>()
 
         let hosts: [String] = ["0.0.0.0", "chat.app.com", "[255.255.255.255.255]", "slack.app.com"]
         hosts.forEach { host in
@@ -73,7 +73,7 @@ class RouterTests: XCTestCase {
         }
 
         try hosts.forEach { host in
-            let request = try HTTPRequest(method: .get, uri: "http://\(host)/hello")
+            let request = try Request(method: .get, uri: "http://\(host)/hello")
             let handler = router.route(request)
             XCTAssert(handler != nil)
             let response = try handler?(request).makeResponse(for: request)
@@ -82,19 +82,19 @@ class RouterTests: XCTestCase {
     }
 
     func testMiss() throws {
-        let router = Router<HTTPRequestHandler>()
+        let router = Router<RequestHandler>()
         router.register(path: ["0.0.0.0", "*", "hello"]) { request in
             XCTFail("should not be found, wrong host")
             return HTTPResponse(body: "[fail]")
         }
 
-        let request = try HTTPRequest(method: .get, uri: "http://[255.255.255.255.255]/hello")
+        let request = try Request(method: .get, uri: "http://[255.255.255.255.255]/hello")
         let handler = router.route(request)
         XCTAssert(handler == nil)
     }
 
     func testWildcardPath() throws {
-        let router = Router<HTTPRequestHandler>()
+        let router = Router<RequestHandler>()
         router.register(path: ["0.0.0.0", "GET", "hello", "*"]) { request in
             return HTTPResponse(body: "Hello, World!")
         }
@@ -107,7 +107,7 @@ class RouterTests: XCTestCase {
         ]
 
         try paths.forEach { path in
-            let request = try HTTPRequest(method: .get, uri: "http://0.0.0.0/\(path)")
+            let request = try Request(method: .get, uri: "http://0.0.0.0/\(path)")
             let handler = router.route(request)
             XCTAssert(handler != nil)
             let response = try handler?(request).makeResponse(for: request)
@@ -116,7 +116,7 @@ class RouterTests: XCTestCase {
     }
 
     func testParameters() throws {
-        let router = Router<HTTPRequestHandler>()
+        let router = Router<RequestHandler>()
         router.register(path: ["0.0.0.0", "GET", "hello", ":name", ":age"]) { request in
             guard let name = request.parameters["name"] else { throw "missing param: name" }
             guard let age = request.parameters["age"].flatMap({ Int($0) }) else { throw "missing or invalid param: age" }
@@ -131,7 +131,7 @@ class RouterTests: XCTestCase {
         ]
 
         try namesAndAges.forEach { name, age in
-            let request = try HTTPRequest(method: .get, uri: "http://0.0.0.0/hello/\(name)/\(age)")
+            let request = try Request(method: .get, uri: "http://0.0.0.0/hello/\(name)/\(age)")
             let handler = router.route(request)
             XCTAssert(handler != nil)
             let response = try handler?(request).makeResponse(for: request)
@@ -140,7 +140,7 @@ class RouterTests: XCTestCase {
     }
 
     func testEmpty() throws {
-        let router = Router<HTTPRequestHandler>()
+        let router = Router<RequestHandler>()
         router.register(path: []) { request in
             return HTTPResponse(body: "Hello, Empty!")
         }
@@ -148,7 +148,7 @@ class RouterTests: XCTestCase {
         let empties: [String] = ["", "/"]
         try empties.forEach { emptypath in
             let uri = URI(scheme: "http", host: "0.0.0.0", path: emptypath)
-            let request = HTTPRequest(method: .get, uri: uri)
+            let request = Request(method: .get, uri: uri)
             let handler = router.route(path: [], with: request)
             XCTAssert(handler != nil)
             let response = try handler?(request).makeResponse(for: request)
@@ -157,7 +157,7 @@ class RouterTests: XCTestCase {
     }
 
     func testNoHostWildcard() throws {
-        let router = Router<HTTPRequestHandler>()
+        let router = Router<RequestHandler>()
         router.register(path: ["*", "GET"]) { request in
             return HTTPResponse(body: "Hello, World!")
         }
@@ -166,7 +166,7 @@ class RouterTests: XCTestCase {
             scheme: "",
             host: ""
         )
-        let request = HTTPRequest(method: .get, uri: uri)
+        let request = Request(method: .get, uri: uri)
         let handler = router.route(request)
         XCTAssert(handler != nil)
         let response = try handler?(request).makeResponse(for: request)

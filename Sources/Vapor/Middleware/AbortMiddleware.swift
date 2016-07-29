@@ -1,4 +1,4 @@
-import Engine
+import HTTP
 
 /**
     Handles the various Abort errors that can be thrown
@@ -19,7 +19,7 @@ public class AbortMiddleware: Middleware {
 
         - returns: a valid response
      */
-    public func respond(to request: HTTPRequest, chainingTo chain: HTTPResponder) throws -> HTTPResponse {
+    public func respond(to request: Request, chainingTo chain: HTTPResponder) throws -> HTTPResponse {
         do {
             return try chain.respond(to: request)
         } catch Abort.badRequest {

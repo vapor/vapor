@@ -1,4 +1,4 @@
-import Engine
+import HTTP
 
 public class FileMiddleware: Middleware {
     public var workDir: String
@@ -6,7 +6,7 @@ public class FileMiddleware: Middleware {
         self.workDir = workDir
     }
 
-    public func respond(to request: HTTPRequest, chainingTo next: HTTPResponder) throws -> HTTPResponse {
+    public func respond(to request: Request, chainingTo next: HTTPResponder) throws -> HTTPResponse {
         do {
             return try next.respond(to: request)
         } catch Abort.notFound {

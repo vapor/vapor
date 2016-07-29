@@ -1,6 +1,6 @@
 import XCTest
 @testable import Vapor
-import Engine
+import HTTP
 
 class ProviderTests: XCTestCase {
     static let allTests = [

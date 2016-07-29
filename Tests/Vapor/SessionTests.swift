@@ -1,5 +1,5 @@
 @testable import Vapor
-import Engine
+import HTTP
 import XCTest
 
 class SessionTests: XCTestCase {

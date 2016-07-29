@@ -9,7 +9,7 @@ public protocol Model: Entity, JSONRepresentable, StringInitializable { }
 extension Model {
     public func makeJSON() throws -> JSON {
         let node = try makeNode()
-        return try JSON(node)
+        return try JSON(node: node)
     }
 }
 

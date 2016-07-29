@@ -1,15 +1,14 @@
-import enum Engine.HTTPBody
-import protocol Engine.HTTPBodyRepresentable
+import HTTP
 
-extension HTTPBody {
+extension Body {
     public init(_ json: JSON) throws {
         let bytes = try json.makeBytes()
         self.init(bytes)
     }
 }
 
-extension JSON: HTTPBodyRepresentable {
-    public func makeBody() -> HTTPBody {
+extension JSON: BodyRepresentable {
+    public func makeBody() -> Body {
         if let body = try? HTTPBody(self) { return body }
         else { return .data([]) }
     }

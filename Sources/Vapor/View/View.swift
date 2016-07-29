@@ -1,4 +1,4 @@
-import Engine
+import HTTP
 
 /**
     Loads and renders a file from the `Resources` folder
@@ -43,7 +43,7 @@ public class View {
 
 ///Allows Views to be returned in Vapor closures
 extension View: HTTPResponseRepresentable {
-    public func makeResponse(for: HTTPRequest) -> HTTPResponse {
+    public func makeResponse(for: Request) -> HTTPResponse {
         return HTTPResponse(status: .ok, headers: [
             "Content-Type": "text/html; charset=utf-8"
         ], body: .data(data))
