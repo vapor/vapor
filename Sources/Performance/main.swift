@@ -45,17 +45,24 @@ drop.resource("users", User.self) { users in
 }
 
 drop.group("testingx") { group in
+    print("Going testingx...")
     group.get { request in
         return "index"
     }
 
     group.group(host: "0.0.0.0") { special in
+        print("Going host only...")
         special.get("host-only") { request in
             return "for the host only"
         }
     }
 
+    group.get("easy") { req in
+        return "sup"
+    }
+
     group.group("deeper") { sub in
+        print("Going deeper...")
         sub.post("hello") { request in
             return "echo!!"
         }
@@ -76,6 +83,6 @@ drop.group("testingx") { group in
     }
 }
 
-// drop.globalMiddleware = []
+drop.globalMiddleware = []
 
 drop.serve()

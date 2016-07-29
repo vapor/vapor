@@ -2,39 +2,45 @@ import Foundation
 
 public protocol RouteBuilder {
     associatedtype Value
-    func add(path: [String], handler: RouteHandler<Value>)
+    func add(
+        host: String,
+        method: String,
+        path: [String],
+        handler: RouteHandler<Value>
+    )
 }
 
 extension RouteBuilder {
     public func dynamic(
-        prefix: [String],
+        host: String?,
+        method: String?,
         path: [String],
         filter: (Value) -> (Value) = { $0 },
-        closure: (Router<Value>) -> ()
+        closure: (RouteBuilderShim<Value, Self>) -> ()
     ) {
         // create the template for this
         // route that makes use of fallbacks
         var template: [String] = []
-        template += prefix
+        //template += prefix
         template += path
-        template += ["*"]
+        //template += ["*"]
 
-        let handler = RouteHandler<Value>.dynamic { routeable, container in
+        let shim = RouteBuilderShim(builder: self, host: host, method: method, prefix: path)
+        closure(shim)
+
+        /*let handler = RouteHandler<Value>.dynamic { remaining, container in
             // create a new router for registering
             // the grouped routes
             let router: Router<Value> = Router()
             closure(router)
 
             // cut out the path that has already been routed
-            var keep = Array(routeable.routeablePath[0..<prefix.count])
-            keep += Array(routeable.routeablePath[(prefix.count + path.count)..<routeable.routeablePath.count])
-
-            print("KEEP: \(keep)")
+            var full = prefix
+            full += remaining
 
             // create a new routeable item from the
             // fixed path
-            let routeable = BasicRouteable(keep)
-            guard let value = router.route(routeable, with: container) else {
+            guard let value = router.route(path: full, with: container) else {
                 return nil
             }
 
@@ -43,15 +49,45 @@ extension RouteBuilder {
             return filter(value)
         }
 
-        add(path: template, handler: handler)
+        add(path: template, handler: handler, behavior: .wildcard)*/
+    }
+
+    public func add(path: [String], handler: RouteHandler<Value>) {
+        add(host: path[0], method: path[1], path: Array(path[2..<path.count]), handler: handler)
+    }
+}
+
+public class RouteBuilderShim<Wrapped, Builder: RouteBuilder where Builder.Value == Wrapped> {
+    var builder: Builder
+    var host: String?
+    var method: String?
+    var prefix: [String]
+
+    init(builder: Builder, host: String?, method: String?, prefix: [String]) {
+        self.builder = builder
+        self.host = host
+        self.method = method
+        self.prefix = prefix
+    }
+}
+
+extension RouteBuilderShim: RouteBuilder {
+    public typealias Value = Wrapped
+
+    public func add(host: String, method: String, path: [String], handler: RouteHandler<Value>) {
+        let host = self.host ?? host
+        let method = self.method ?? method
+        let path = self.prefix + path
+        builder.add(host: host, method: method, path: path, handler: handler)
     }
 }
 
 extension Router: RouteBuilder {
-    public typealias Value = Output
+    public typealias Value = Wrapped
 
-    public func add(path: [String], handler: RouteHandler<Value>) {
-        register(path: path, output: handler)
-        print(self)
+    public func add(host: String, method: String, path: [String], handler: RouteHandler<Value>) {
+        var p = [host, method]
+        p += path
+        register(path: p, handler: handler)
     }
 }

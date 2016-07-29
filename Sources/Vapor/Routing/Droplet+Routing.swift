@@ -7,10 +7,12 @@ extension Droplet: RouteBuilder {
     public typealias HandlerOutput = HTTPResponder
 
     public func add(
+        host: String,
+        method: String,
         path: [String],
         handler: RouteHandler<HandlerOutput>
     ) {
-        router.add(path: path, handler: handler)
+        router.add(host: host, method: method, path: path, handler: handler)
     }
 }
 
@@ -29,30 +31,28 @@ extension RouteBuilder where Value == HTTPResponder {
     public func group(
         _ path: String,
         filter: (Value) -> (Value) = { $0 },
-        closure: (Routing.Router<Value>) -> ()
+        closure: (RouteBuilderShim<Value, Self>) -> ()
     ) {
-        return dynamic(prefix: [
-            "*",
-            "*"
-        ], path: path.components, filter: filter, closure: closure)
+        return dynamic(
+            host: nil,
+            method: nil,
+            path: path.components, filter: filter, closure: closure
+        )
     }
 
-    public func group(_ middleware: Middleware, closure: (Routing.Router<Value>) ->()) {
+    public func group(_ middleware: Middleware, closure: (RouteBuilderShim<Value, Self>) ->()) {
         group("/", filter: { handler in
             return HTTPRequest.Handler { request in
                 return try middleware.respond(to: request, chainingTo: handler)
             }
-            }, closure: closure)
+        }, closure: closure)
     }
 
     public func group(
         host: String,
-        closure: (Routing.Router<Value>) -> ()
+        closure: (RouteBuilderShim<Value, Self>) -> ()
     ) {
-        return dynamic(prefix: [
-            host,
-            "*"
-        ], path: [], closure: closure)
+        return dynamic(host: host, method: nil, path: [], closure: closure)
     }
 }
 

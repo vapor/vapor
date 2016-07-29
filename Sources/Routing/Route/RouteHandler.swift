@@ -1,4 +1,4 @@
 public enum RouteHandler<Output> {
     case `static`(Output?)
-    case dynamic((Routeable, ParametersContainer) -> (Output?))
+    case dynamic(([String], ParametersContainer) -> (Output?))
 }

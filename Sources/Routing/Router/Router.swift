@@ -11,105 +11,201 @@ public protocol ParametersContainer: class {
     */
     var parameters: [String: String] { get set }
 }
+public final class Branch<Wrapped> {
+    public var wrapped: Wrapped?
+    public var children: [String: Branch<Wrapped>]
 
-// MARK: Router
+    public init(wrapped: Wrapped? = nil) {
+        self.wrapped = wrapped
+        children = [:]
+    }
+}
 
-/**
-    A simple, flexible, and efficient HTTP Router built on top of Branches
- 
-    Output represents the object, closure, etc. that the router should be registering and returning
-*/
-public class Router<Output> {
+extension Branch: CustomStringConvertible {
+    public var description: String {
+        var d: [String] = []
+        d.append("\(wrapped)")
+        for (key, child) in children {
+            d.append("\(key)")
+            d.append(child.description.indented)
+        }
+        return d.joined(separator: "\n")
+    }
+}
 
-    // MARK: Private Tree Representation
+public class Router<Wrapped> {
+    public typealias Handler = RouteHandler<Wrapped>
+    public typealias RouteBranch = Branch<Handler>
 
-    /**
-        Internal router tree representation.
-    */
-    private final var tree: [Host: [Method: Branch<RouteHandler<Output>>]] = [:]
+    public var root: RouteBranch
 
-    // MARK: Init
+    public func register(path: [String], handler: Handler) {
+        print("Register: \(path)")
+        let path = path.filter { !$0.isEmpty }
+        var branch = root
 
-    /**
-        Base Initializer
-    */
-    public init() {}
+        for item in path {
+            if let found = branch.children[item] {
+                branch = found
+            } else {
+                let new = RouteBranch()
+                branch.children[item] = new
+                branch = new
+            }
+        }
 
-    // MARK: Registration
-
-    /**
-     Register a given path. Use `*` for host OR method to define wildcards that will be matched
-     if no concrete match exists.
-
-     - parameter host: the host to match, ie: '0.0.0.0', or `*` to match any
-     - parameter method: the method to match, ie: `GET`, or `*` to match any
-     - parameter path: the path that should be registered
-     - parameter output: the associated output of this path, usually a responder, or `nil`
-     */
-    @discardableResult
-    public func register(path: [String], output: RouteHandler<Output>?) -> Branch<RouteHandler<Output>> {
-        var iterator = path.makeIterator()
-
-        //get the current root for the host, or create one if none
-        let host = iterator.next() ?? "*"
-        var base = tree[host] ?? [:]
-
-        //look for a branch for the method, or create one if none
-        let method = iterator.next() ?? "*"
-        let branch = base[method] ?? Branch(name: "", handler: nil)
-
-        //assign the branch and root to the tree
-        base[method] = branch
-        tree[host] = base
-
-        return branch.extend(Array(iterator), output: output)
+        branch.wrapped = handler
     }
 
-    // MARK: Route
+    public func route(path: [String], with container: ParametersContainer) -> Wrapped? {
+        print("Routing: \(path)")
+        let path = path.filter { !$0.isEmpty }
+        return route(iterator: path.makeIterator(), with: container, in: root)
+    }
 
-    public func route(_ routeable: Routeable, with container: ParametersContainer) -> Output? {
-        var iterator = routeable.routeablePath.makeIterator()
+    func route(
+        iterator: IndexingIterator<[String]>,
+        with container: ParametersContainer,
+        in branch: RouteBranch
+    ) -> Wrapped? {
+        var iterator = iterator
+        var matches: [RouteBranch] = []
 
-        let host = iterator.next() ?? "*"
-        let root = tree[host] ?? tree["*"]
-
-        let method = iterator.next() ?? "*"
-
-        let path = Array(iterator)
-
-        // MUST fetch here, do NOT do `root?[method] ?? root?["*"]`
-        let result = root?[method]?.fetch(path) ?? root?["*"]?.fetch(path)
-        container.parameters = result?.branch.slugs(for: path) ?? [:]
-        guard let output = result?.branch.output else {
+        let locked = Array(iterator)
+        guard let item = iterator.next() else {
+            if let wrapped = branch.wrapped?.output(path: locked, with: container) {
+                return wrapped
+            }
             return nil
         }
 
-        switch output {
+        if item == "*" {
+            matches += branch.children.values
+        } else {
+            if let found = branch.children[item] {
+                matches.append(found)
+            }
+            if let wildcard = branch.children["*"] {
+                matches.append(wildcard)
+            }
+        }
+
+        for match in matches {
+            if let wrapped = route(
+                iterator: iterator,
+                with: container,
+                in: match
+            ) {
+                return wrapped
+            }
+        }
+
+        return nil
+    }
+
+    public init() {
+        print("Creating a router")
+        root = RouteBranch()
+    }
+}
+
+extension RouteHandler {
+    func output(path: [String], with container: ParametersContainer) -> Output? {
+        switch self {
         case .dynamic(let closure):
-            return closure(routeable, container)
+            return closure(path, container)
         case .static(let output):
             return output
         }
     }
 }
 
-extension Router: CustomStringConvertible {
-    public var description: String {
-        var d: [String] = []
+// MARK: Router
 
-        for (host, mb) in tree {
-            d.append("\(host)")
-            for (method, branch) in mb {
-                d.append("    \(method)")
-                d.append(branch.description.indented.indented)
-            }
-        }
+///**
+//    A simple, flexible, and efficient HTTP Router built on top of Branches
+// 
+//    Output represents the object, closure, etc. that the router should be registering and returning
+//*/
+//public class Router<Output> {
+//
+//    // MARK: Private Tree Representation
+//
+//    /**
+//        Internal router tree representation.
+//    */
+//    private final var tree: [Host: [Method: Branch<RouteHandler<Output>>]] = [:]
+//
+//    // MARK: Init
+//
+//    /**
+//        Base Initializer
+//    */
+//    public init() {}
+//
+//    // MARK: Registration
+//
+//    /**
+//     Register a given path. Use `*` for host OR method to define wildcards that will be matched
+//     if no concrete match exists.
+//
+//     - parameter host: the host to match, ie: '0.0.0.0', or `*` to match any
+//     - parameter method: the method to match, ie: `GET`, or `*` to match any
+//     - parameter path: the path that should be registered
+//     - parameter output: the associated output of this path, usually a responder, or `nil`
+//     */
+//    @discardableResult
+//    public func register(path: [String], output: RouteHandler<Output>?) -> Branch<RouteHandler<Output>> {
+//        var iterator = path.makeIterator()
+//
+//        //get the current root for the host, or create one if none
+//        let host = iterator.next() ?? "*"
+//        var base = tree[host] ?? [:]
+//
+//        //look for a branch for the method, or create one if none
+//        let method = iterator.next() ?? "*"
+//        let branch = base[method] ?? Branch(name: "", handler: nil)
+//
+//        //assign the branch and root to the tree
+//        base[method] = branch
+//        tree[host] = base
+//
+//        let path = Array(iterator)
+//        return branch.extend(path, output: output)
+//    }
+//
+//    // MARK: Route
+//
+//    public func route(_ routeable: Routeable, with container: ParametersContainer) -> Output? {
+//        var iterator = routeable.routeablePath.makeIterator()
+//
+//        let host = iterator.next() ?? "*"
+//        let root = tree[host] ?? tree["*"]
+//
+//        let method = iterator.next() ?? "*"
+//
+//        let path = Array(iterator)
+//
+//        // MUST fetch here, do NOT do `root?[method] ?? root?["*"]`
+//        let result = root?[method]?
+//            .fetch(path)?
+//            .branch
+//            .output?
+//            .output(with: routeable, container: container)
+//            ?? root?["*"]?
+//                .fetch(path)?
+//                .branch
+//                .output?
+//                .output(with: routeable, container: container)
+//
+//        guard let output = result else {
+//            return nil
+//        }
+//
+//        return output
+//    }
+//}
 
-        d += [" ", " "]
-
-        return d.joined(separator: "\n")
-    }
-}
 
 extension String {
     private var components: [String] {
