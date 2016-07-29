@@ -1,11 +1,11 @@
-import Engine
+import HTTP
 import Routing
 
-public typealias HTTPRequestHandler = (HTTPRequest) throws -> HTTPResponseRepresentable
-extension HTTPRequest: ParametersContainer {}
+public typealias RequestHandler = (Request) throws -> ResponseRepresentable
+extension Request: ParametersContainer {}
 
 extension Router {
-    public func route(_ request: HTTPRequest) -> Output? {
+    public func route(_ request: Request) -> Output? {
         let host = request.uri.host.isEmpty ? "*" : request.uri.host
         return route(
             path: [host, request.method.description] + request.uri.path.pathComponents,

@@ -1,6 +1,6 @@
-import class Engine.HTTPRequest
+import HTTP
 
-public struct HTTPAccept {
+public struct Accept {
     public let mediaType: String
     public let preference: Double
 
@@ -10,7 +10,7 @@ public struct HTTPAccept {
     }
 }
 
-extension Sequence where Iterator.Element == HTTPAccept {
+extension Sequence where Iterator.Element == Accept {
     public func prefers(_ mediaType: String) -> Bool {
         guard
             let preference = self.lazy
@@ -28,13 +28,13 @@ extension Sequence where Iterator.Element == HTTPAccept {
     }
 }
 
-extension HTTPRequest {
-    public var accept: [HTTPAccept] {
+extension Request {
+    public var accept: [Accept] {
         guard let acceptString = headers["accept"] else {
             return []
         }
 
-        var accept: [HTTPAccept] = []
+        var accept: [Accept] = []
 
         for acceptSlice in acceptString.characters.split(separator: ",") {
             let pieces = acceptSlice.split(separator: ";")
@@ -54,7 +54,7 @@ extension HTTPRequest {
                 preference = 1.0
             }
 
-            accept.append(HTTPAccept(mediaType: mediaType, preference: preference))
+            accept.append(Accept(mediaType: mediaType, preference: preference))
         }
 
         return accept

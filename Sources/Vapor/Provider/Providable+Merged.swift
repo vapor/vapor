@@ -1,5 +1,6 @@
-import Engine
+import HTTP
 import Fluent
+import Console
 
 extension Providable {
     /**
@@ -19,12 +20,12 @@ extension Providable {
             }
         }
 
-        var server: Server.Type?
+        var server: ServerProtocol.Type?
         var sessions: Sessions?
         var hash: Hash?
         var console: ConsoleProtocol?
         var log: Log?
-        var client: Client.Type?
+        var client: ClientProtocol.Type?
         var database: Database?
 
         server = try attempt(self.server, other.server)

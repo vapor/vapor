@@ -1,7 +1,7 @@
 import Node
 import JSON
 import Vapor
-import Engine
+import HTTP
 
 final class UserController: ResourceRepresentable {
     init() {
@@ -36,7 +36,7 @@ final class UserController: ResourceRepresentable {
         return try JSON([
             "controller": "MyController.show",
             "user": user
-            ] as [String: NodeRepresentable])
+        ])
     }
 
     /** 
@@ -83,11 +83,5 @@ final class UserController: ResourceRepresentable {
         return Resource(
             index: index
         )
-    }
-}
-
-extension User: ResponseRepresentable {
-    func makeResponse(for request: HTTPRequest) throws -> HTTPResponse {
-        return try makeJSON().makeResponse(for: request)
     }
 }

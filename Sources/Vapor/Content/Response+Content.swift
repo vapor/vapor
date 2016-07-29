@@ -1,6 +1,6 @@
-import class Engine.HTTPResponse
+import HTTP
 
-extension HTTPResponse {
+extension Response {
     public var data: Content {
         if let data = storage["data"] as? Content {
             return data

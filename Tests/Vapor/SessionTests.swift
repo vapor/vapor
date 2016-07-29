@@ -1,6 +1,7 @@
 @testable import Vapor
-import Engine
+import HTTP
 import XCTest
+import URI
 
 class SessionTests: XCTestCase {
     static let allTests = [

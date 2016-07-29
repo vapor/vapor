@@ -1,4 +1,4 @@
-import Engine
+import HTTP
 
 /**
     Looks for the `vapor-session` cookie on incoming
@@ -16,7 +16,7 @@ class SessionMiddleware: Middleware {
         self.sessions = sessions
     }
 
-    func respond(to request: HTTPRequest, chainingTo chain: HTTPResponder) throws -> HTTPResponse {
+    func respond(to request: Request, chainingTo chain: Responder) throws -> Response {
         // mutable -- MUST be declared at top of function
         if
             let identifier = request.cookies["vapor-session"],

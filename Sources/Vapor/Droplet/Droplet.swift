@@ -1,8 +1,9 @@
 import Foundation
 import Socks
-import Engine
+import HTTP
 import Console
 import Fluent
+import Transport
 
 public let VERSION = "0.15.0"
 
@@ -19,7 +20,7 @@ public class Droplet {
         connections and return the desired
         response.
     */
-    public let server: Server.Type
+    public let server: ServerProtocol.Type
 
     /**
         The session driver is responsible for
@@ -90,7 +91,7 @@ public class Droplet {
         Expose to end users to customize driver
         Make outgoing requests
     */
-    public let client: Client.Type
+    public let client: ClientProtocol.Type
 
     /**
         Resources directory relative to workDir
@@ -126,12 +127,12 @@ public class Droplet {
         localization localizationProvided: Localization? = nil,
 
         // providable
-        server: Server.Type? = nil,
+        server: ServerProtocol.Type? = nil,
         sessions: Sessions? = nil,
         hash: Hash? = nil,
         console: ConsoleProtocol? = nil,
         log: Log? = nil,
-        client: Client.Type? = nil,
+        client: ClientProtocol.Type? = nil,
         database: Database? = nil,
 
         // database preparations
@@ -276,9 +277,8 @@ public class Droplet {
         // set the router, server, and client
         // from provided or defaults.
         self.router = Router()
-        let serverType = provided.server ?? HTTPServer<TCPServerStream, HTTPParser<HTTPRequest>, HTTPSerializer<HTTPResponse>>.self
-        self.server = serverType
-        let client = provided.client ?? HTTPClient<TCPClientStream>.self
+        self.server = provided.server ?? Server<TCPServerStream, Parser<Request>, Serializer<Response>>.self
+        let client = provided.client ?? Client<TCPClientStream>.self
         self.client = client
 
         // misc arrays and other stored properties

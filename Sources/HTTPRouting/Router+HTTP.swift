@@ -1,12 +1,12 @@
 import Routing
-import Engine
+import HTTP
 
 extension Routing.Router {
     /**
         Registers a route using an Request.
         The Request will also be used as the ParametersContainer.
     */
-    public func route(_ request: HTTPRequest) -> Output? {
+    public func route(_ request: HTTP.Request) -> Output? {
         return route(request, with: request)
     }
 
@@ -14,7 +14,7 @@ extension Routing.Router {
         Registers a route using a Request 
         and a ParamatersContainer.
     */
-    public func route(_ request: HTTPRequest, with container: ParametersContainer) -> Output? {
+    public func route(_ request: HTTP.Request, with container: Routing.ParametersContainer) -> Output? {
         return route(
             host: request.uri.host,
             method: request.method,
@@ -29,9 +29,9 @@ extension Routing.Router {
     */
     public func route(
         host: String?,
-        method: HTTPMethod,
+        method: HTTP.Method,
         path: String,
-        with container: ParametersContainer
+        with container: Routing.ParametersContainer
     ) -> Output? {
         var host = host
         if host?.isEmpty == true {
