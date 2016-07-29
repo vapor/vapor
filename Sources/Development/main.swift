@@ -2,6 +2,7 @@ import JSON
 import Vapor
 import libc
 import HTTP
+import Transport
 
 #if os(Linux)
 let workDir = "./Sources/Development"
@@ -61,15 +62,14 @@ drop.get("spotify-artists") { req in
     let spotifyResponse = try drop.client.get("https://api.spotify.com/v1/search", query: ["type": "artist", "q": name])
     
     guard
-        let names = try spotifyResponse.data["artists", "items", "name"]
+        let names = spotifyResponse.data["artists", "items", "name"]
             .array?
             .flatMap({ $0.string })
-            .map({ try JSON($0) })
     else {
         throw Abort.custom(status: .badRequest, message: "Could not parse response")
     }
 
-    return JSON.array(names)
+    return JSON.array(names.map({ $0.makeJSON() }))
 }
 
 drop.get("pokemon") { req in
@@ -142,7 +142,7 @@ drop.post("jsondata") { request in
 // MARK: Type safe routing
 
 drop.get("test", Int.self, String.self) { request, int, string in
-    return try JSON([
+    return JSON([
         "message": "Int \(int) String \(string)"
     ])
 }
@@ -165,11 +165,11 @@ drop.get("users-test") { req in
 //MARK: Json
 
 drop.get("json") { request in
-    return try JSON([
+    return JSON([
         "number": 123,
         "text": "unicorns",
         "bool": false,
-        "nested": try JSON(["one", 2, false])
+        "nested": JSON(["one", 2, false])
     ])
 }
 
@@ -282,7 +282,7 @@ drop.get("cookies") { request in
     var response = try JSON([
         "cookies": "\(request.cookies)"
         ])
-        .makeResponse(for: request)
+        .makeResponse()
 
     response.cookies["cookie-1"] = "value-1"
     response.cookies["hello"] = "world"
@@ -311,8 +311,8 @@ class Employee {
 }
 
 extension Employee: JSONRepresentable {
-    func makeNode() throws -> Node {
-        return try Node([
+    func makeJSON() -> JSON {
+        return JSON([
             "name": name.value,
             "email": email.value
         ])
@@ -321,7 +321,7 @@ extension Employee: JSONRepresentable {
 
 drop.post("validation") { request in
     let employee = try Employee(request: request)
-    return try employee.makeJSON()
+    return employee.makeJSON()
 }
 
 //MARK: Forms
@@ -350,7 +350,7 @@ drop.post("multipart-image") { request in
         throw Abort.badRequest
     }
 
-    var headers: Headers = [:]
+    var headers: [HeaderKey: String] = [:]
 
     if let mediaType = image.type {
         headers["Content-Type"] = mediaType
@@ -389,7 +389,7 @@ drop.post("multifile") { request in
 
     let file = files[number]
 
-    var headers: Headers = [:]
+    var headers: [HeaderKey: String] = [:]
 
     if let mediaType = file.type {
         headers["Content-Type"] = mediaType
@@ -416,7 +416,7 @@ drop.get("options") { _ in
     response += "<button>Submit</button>"
     response += "</form>"
 
-    return HTTPResponse(status: .ok, body: .data(response.bytes))
+    return Response(status: .ok, body: .data(response.bytes))
 }
 
 drop.post("options") { request in
@@ -438,7 +438,7 @@ drop.post("multipart-print") { request in
     print(request.multipart?["test"])
     print(request.multipart?["test"]?.file)
 
-    return try JSON([
+    return JSON([
         "message": "Printed details to console"
     ])
 }
@@ -447,7 +447,7 @@ drop.post("multipart-print") { request in
 
 drop.group(AuthMiddleware()) { group in
     drop.get("protected") { request in
-        return try JSON([
+        return JSON([
             "message": "Welcome authorized user"
         ])
     }
@@ -475,7 +475,7 @@ drop.get("chunked") { request in
             _ = try background {
                 do {
                     let beyonceQuery = "https://api.spotify.com/v1/search/?q=beyonce&type=artist"
-                    let response = try HTTPClient<FoundationStream>.get(beyonceQuery)
+                    let response = try Client<FoundationStream>.get(beyonceQuery)
                     let artists = response.data["artists", "items", "name"].array ?? []
                     let artistsJSON = artists.flatMap { $0.string } .map { JSON.string($0) }
                     let js = JSON.array(artistsJSON)

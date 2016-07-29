@@ -10,7 +10,7 @@ public struct Accept {
     }
 }
 
-extension Sequence where Iterator.Element == HTTPAccept {
+extension Sequence where Iterator.Element == Accept {
     public func prefers(_ mediaType: String) -> Bool {
         guard
             let preference = self.lazy
@@ -54,7 +54,7 @@ extension Request {
                 preference = 1.0
             }
 
-            accept.append(HTTPAccept(mediaType: mediaType, preference: preference))
+            accept.append(Accept(mediaType: mediaType, preference: preference))
         }
 
         return accept

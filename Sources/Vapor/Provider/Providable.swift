@@ -11,7 +11,7 @@ public struct Providable {
         they are not initialized until the 
         droplet starts.
     */
-    var server: Server.Type?
+    var server: ServerProtocol.Type?
 
     /**
         An optional `Sessions` to provide
@@ -41,7 +41,7 @@ public struct Providable {
          An optional `HTTPClient` add-on used to make
          outgoing web request operations.
      */
-    var client: Client.Type?
+    var client: ClientProtocol.Type?
 
     /**
         An optional `Database` that will be used
@@ -50,12 +50,12 @@ public struct Providable {
     var database: Database?
 
     init(
-        server: Server.Type? = nil,
+        server: ServerProtocol.Type? = nil,
         sessions: Sessions? = nil,
         hash: Hash? = nil,
         console: ConsoleProtocol? = nil,
         log: Log? = nil,
-        client: Client.Type? = nil,
+        client: ClientProtocol.Type? = nil,
         database: Database? = nil
     ) {
         self.server = server

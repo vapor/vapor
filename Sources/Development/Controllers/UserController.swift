@@ -12,7 +12,7 @@ final class UserController: ResourceRepresentable {
         Display many instances
      */
     func index(request: Request) throws -> ResponseRepresentable {
-        return try JSON([
+        return JSON([
             "controller": "MyController.index"
         ])
     }
@@ -22,7 +22,7 @@ final class UserController: ResourceRepresentable {
         Create a new instance.
      */
     func store(request: Request) throws -> ResponseRepresentable {
-        return try JSON([
+        return JSON([
             "controller": "MyController.store"
         ])
     }
@@ -33,10 +33,10 @@ final class UserController: ResourceRepresentable {
      */
     func show(request: Request, item user: User) throws -> ResponseRepresentable {
         //User can be used like JSON with JsonRepresentable
-        return try JSON([
+        return JSON([
             "controller": "MyController.show",
             "user": user
-            ] as [String: NodeRepresentable])
+        ])
     }
 
     /** 
@@ -67,14 +67,14 @@ final class UserController: ResourceRepresentable {
         Delete all instances.
      */
     func destroy(request: Request) throws -> ResponseRepresentable {
-        return try JSON([
+        return JSON([
             "controller": "MyController.destroyAll"
         ])
     }
 
 
     func options(request: Request) throws -> ResponseRepresentable {
-        return try JSON([
+        return JSON([
             "info": "This is the Users resource"
         ])
     }
@@ -83,11 +83,5 @@ final class UserController: ResourceRepresentable {
         return Resource(
             index: index
         )
-    }
-}
-
-extension User: ResponseRepresentable {
-    func makeResponse(for request: Request) throws -> HTTPResponse {
-        return try makeJSON().makeResponse(for: request)
     }
 }

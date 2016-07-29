@@ -1,6 +1,7 @@
 import XCTest
 @testable import Vapor
 import HTTP
+import Transport
 
 class ProviderTests: XCTestCase {
     static let allTests = [
@@ -16,7 +17,7 @@ class ProviderTests: XCTestCase {
         let dc = DebugConsole()
         let drop = Droplet(server: SlowServer.self, console: dc, providers: [FastServerProvider.self])
 
-        XCTAssertEqual(dc.outputBuffer, "FastServerProvider attempted to overwrite Server.Type.\n")
+        XCTAssertEqual(dc.outputBuffer, "FastServerProvider attempted to overwrite ServerProtocol.Type.\n")
         XCTAssert(drop.server is SlowServer.Type)
     }
 
@@ -27,7 +28,7 @@ class ProviderTests: XCTestCase {
             SlowServerProvider.self
         ])
 
-        XCTAssertEqual(dc.outputBuffer, "SlowServerProvider attempted to overwrite Server.Type.\n")
+        XCTAssertEqual(dc.outputBuffer, "SlowServerProvider attempted to overwrite ServerProtocol.Type.\n")
         XCTAssert(drop.server is FastServer.Type)
     }
 
@@ -39,7 +40,7 @@ class ProviderTests: XCTestCase {
 
         let drop = Droplet(arguments: ["vapor", "serve"], console: dc, initializedProviders: [fast, slow])
 
-        XCTAssertEqual(dc.outputBuffer, "SlowServerProvider attempted to overwrite Server.Type.\n")
+        XCTAssertEqual(dc.outputBuffer, "SlowServerProvider attempted to overwrite ServerProtocol.Type.\n")
         XCTAssert(drop.server is FastServer.Type)
 
         XCTAssertEqual(fast.afterInitFlag, true)
@@ -58,7 +59,7 @@ class ProviderTests: XCTestCase {
 
 // Fast
 
-private final class FastServer: Server {
+private final class FastServer: ServerProtocol {
     var host: String
     var port: Int
     var securityLayer: SecurityLayer
@@ -68,7 +69,7 @@ private final class FastServer: Server {
         self.securityLayer = securityLayer
     }
 
-    func start(responder: HTTPResponder, errors: ServerErrorHandler) throws {
+    func start(responder: Responder, errors: ServerErrorHandler) throws {
 
     }
 }
@@ -94,7 +95,7 @@ private final class FastServerProvider: Provider {
 
 // Slow
 
-private final class SlowServer: Server {
+private final class SlowServer: ServerProtocol {
     var host: String
     var port: Int
     var securityLayer: SecurityLayer
@@ -104,7 +105,7 @@ private final class SlowServer: Server {
         self.securityLayer = securityLayer
     }
 
-    func start(responder: HTTPResponder, errors: ServerErrorHandler) throws {
+    func start(responder: Responder, errors: ServerErrorHandler) throws {
 
     }
 }

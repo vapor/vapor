@@ -1,6 +1,6 @@
 import HTTP
 
-extension HTTPMessage {
+extension Message {
     public var json: JSON? {
         get {
             if let existing = storage["json"] as? JSON {
@@ -16,7 +16,7 @@ extension HTTPMessage {
         }
         set(data) {
             if let data = data {
-                if let body = try? HTTPBody(data) {
+                if let body = try? Body(data) {
                     self.body = body
                     headers["Content-Type"] = "application/json; charset=utf-8"
                 }

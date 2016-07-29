@@ -4,7 +4,7 @@ import HTTP
 public final class TypeSafeErrorMiddleware: Middleware {
     public init() { }
 
-    public func respond(to request: Request, chainingTo next: HTTPResponder) throws -> HTTPResponse {
+    public func respond(to request: Request, chainingTo next: Responder) throws -> Response {
         do {
             return try next.respond(to: request)
         } catch TypeSafeRoutingError.invalidParameterType(_) {

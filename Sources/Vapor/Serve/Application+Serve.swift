@@ -1,5 +1,6 @@
 import Core
 import HTTP
+import Transport
 
 extension Droplet {
     func bootServers() throws {

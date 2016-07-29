@@ -1,9 +1,10 @@
 import XCTest
 import HTTP
 import HTTPRouting
+import URI
 
 extension Request {
-    convenience init(method: HTTPMethod, path: String, host: String = "0.0.0.0") {
+    convenience init(method: HTTP.Method, path: String, host: String = "0.0.0.0") {
         let uri = URI(host: host, path: path)
         self.init(method: method, uri: uri)
     }

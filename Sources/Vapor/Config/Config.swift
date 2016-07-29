@@ -56,7 +56,7 @@ public class Config {
         The droplet is required to detect environment.
     */
     public init(
-        seed: JSON = [:],
+        seed: JSON = JSON(),
         workingDirectory: String = "./",
         environment: Environment? = nil,
         arguments: [String] = ProcessInfo.arguments()

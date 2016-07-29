@@ -6,7 +6,7 @@ public class FileMiddleware: Middleware {
         self.workDir = workDir
     }
 
-    public func respond(to request: Request, chainingTo next: HTTPResponder) throws -> HTTPResponse {
+    public func respond(to request: Request, chainingTo next: Responder) throws -> Response {
         do {
             return try next.respond(to: request)
         } catch Abort.notFound {
@@ -28,7 +28,7 @@ public class FileMiddleware: Middleware {
                     headers["Content-Type"] = type
                 }
 
-                return HTTPResponse(status: .ok, headers: headers, body: .data(fileBody))
+                return Response(status: .ok, headers: headers, body: .data(fileBody))
             } else {
                 throw Abort.notFound
             }

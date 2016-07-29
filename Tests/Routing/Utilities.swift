@@ -1,7 +1,7 @@
 import HTTP
 import Routing
 
-public typealias RequestHandler = (Request) throws -> HTTPResponseRepresentable
+public typealias RequestHandler = (Request) throws -> ResponseRepresentable
 extension Request: ParametersContainer {}
 
 extension Router {
