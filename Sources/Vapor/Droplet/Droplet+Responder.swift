@@ -29,7 +29,12 @@ extension Droplet: HTTPResponder {
 
 
         // Check in routes
-        if let handler = router.route(path: request.routeablePath, with: request) {
+        if let handler = router.route(
+            host: request.uri.host,
+            method: request.method.description,
+            path: request.uri.path.components,
+            with: request
+        ) {
             responder = handler
         } else {
             // Default not found handler

@@ -4,15 +4,15 @@ import Routing
 @_exported import TypeSafeRouting
 
 extension Droplet: RouteBuilder {
-    public typealias HandlerOutput = HTTPResponder
+    public typealias Value = HTTPResponder
 
     public func add(
-        host: String,
-        method: String,
+        host: String?,
+        method: String?,
         path: [String],
-        handler: RouteHandler<HandlerOutput>
+        value: Value
     ) {
-        router.add(host: host, method: method, path: path, handler: handler)
+        router.add(host: host, method: method, path: path, value: value)
     }
 }
 
@@ -23,9 +23,12 @@ extension RouteBuilder where Value == HTTPResponder {
         _ path: String,
         _ value: Value
     ) {
-        var p: [String] = ["*", method.description]
-        p += path.components
-        add(path: p, handler: .static(value))
+        add(
+            host: nil,
+            method: method.description,
+            path: path.components,
+            value: value
+        )
     }
 
     public func group(
@@ -58,7 +61,7 @@ extension RouteBuilder where Value == HTTPResponder {
 
 extension HTTPRequest: ParametersContainer { }
 
-extension HTTPRequest: Routeable {
+extension HTTPRequest {
     public var routeablePath: [String] {
         var path = [
             uri.host,
@@ -74,7 +77,7 @@ extension HTTPRequest: Routeable {
 }
 
 extension String {
-    private var components: [String] {
+    public var components: [String] {
         return characters
             .split(separator: "/", omittingEmptySubsequences: true)
             .map { String($0) }
