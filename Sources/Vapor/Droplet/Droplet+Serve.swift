@@ -12,7 +12,7 @@ extension Droplet {
     public func serve(_ closure: Serve.ServeFunction? = nil) -> Never  {
         do {
             try runCommands()
-            exit(1)
+            exit(0)
         } catch CommandError.general(let error) {
             console.output(error, style: .error)
             exit(1)
