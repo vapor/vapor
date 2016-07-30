@@ -5,7 +5,7 @@ import Console
 import Fluent
 import Transport
 
-public let VERSION = "0.15.0"
+public let VERSION = "0.15.1"
 
 public class Droplet {
     /**
