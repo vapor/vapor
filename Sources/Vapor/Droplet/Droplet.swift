@@ -300,7 +300,7 @@ public class Droplet {
 
         // the prepare command will run all
         // of the supplied preparations on the database.
-        let prepare = Prepare(console: console, preparations: preparations, database: database)
+        let prepare = Prepare(console: console, preparations: preparations, database: self.database)
 
         // the serve command will boot the servers
         // and always runs the prepare command
