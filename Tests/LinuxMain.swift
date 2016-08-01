@@ -33,6 +33,7 @@ XCTMain([
     // Routing
     testCase(BranchTests.allTests),
     testCase(RouteBuilderTests.allTests),
+    testCase(RouteCollectionTests.allTests),
     testCase(RouterTests.allTests),
     testCase(RouteTests.allTests),
 

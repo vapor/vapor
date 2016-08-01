@@ -3,6 +3,7 @@ import Vapor
 import libc
 import HTTP
 import Transport
+import Routing
 
 #if os(Linux)
 let workDir = "./Sources/Development"
@@ -465,6 +466,17 @@ drop.get("chunked") { request in
         try stream.close()
     }
 }
+
+struct TestCollection: RouteCollection, EmptyInitializable {
+    typealias Wrapped = Responder
+    func build<Builder : RouteBuilder where Builder.Value == Responder>(_ builder: Builder) {
+        builder.get("test") { request in
+            return "Test Collection"
+        }
+    }
+}
+
+drop.grouped("test-collection").collection(TestCollection.self)
 
 #if !os(Linux)
     /*
