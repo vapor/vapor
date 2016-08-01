@@ -24,3 +24,14 @@ extension RouteBuilder where Value == Responder {
         }, closure: closure)
     }
 }
+
+extension RouteBuilder {
+    public func collection<
+        C: RouteCollection
+        where C.Wrapped == Value,
+        C: EmptyInitializable
+    >(_ collectionType: C.Type) {
+        let collection = collectionType.init()
+        self.collection(collection)
+    }
+}
