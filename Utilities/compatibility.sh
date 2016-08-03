@@ -3,7 +3,6 @@
 SWIFTC=`which swift`
 
 VALID="Swift 395e967875"
-VALID_XCB="8S174q"
 
 help() {
 	echo "📖  Visit our docs for step-by-step instructions on installing Swift correctly."
@@ -50,14 +49,14 @@ fi
 if [[ $OS == "Darwin" ]]; # macOS
 then
 	XCBVERSION=`xcodebuild -version`
-	if [[ $XCBVERSION != *$VALID_XCB* ]];
+	if [[ $XCBVERSION != *"Xcode 8.0"* ]];
 	then
 		echo "⚠️  It looks like your Command Line Tools version is incorrect."
 		echo ""
 		echo "Open Xcode and make sure the correct SDK is selected:"
 		echo "👀  Xcode > Preferences > Locations > Command Line Tools"
 		echo ""
-		echo "Correct: Xcode 8.0 ($VALID_XCB)"
+		echo "Correct: Xcode 8.0 (Any Build Number)"
 		echo "Current: $XCBVERSION"
 		echo ""
 	fi
