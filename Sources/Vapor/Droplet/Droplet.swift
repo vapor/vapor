@@ -289,8 +289,11 @@ public class Droplet {
         // supplied database on the models
         if let database = provided.database {
             for preparation in preparations {
-                if let model = preparation as? Model.Type {
-                    model.database = database
+            	// casting the type to `Entity.Type` instead
+                // of `Model.Type` in order to catch all
+                // `Model` types as well as `Pivot` generics
+                if let entity = preparation as? Entity.Type {
+                    entity.database = database
                 }
             }
             self.database = database
