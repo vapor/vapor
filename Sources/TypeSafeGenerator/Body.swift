@@ -38,7 +38,7 @@ extension Body: CustomStringConvertible {
     var badRequestGuards: String {
         return signature.wildcards.map { wildcard in
             return [
-                "guard let v\(wildcard.name) = request.parameters[\"\(wildcard.name)\"] else {",
+                "guard let v\(wildcard.name) = request.parameters[\"\(wildcard.name)\"]?.string else {",
                 "    throw TypeSafeRoutingError.missingParameter",
                 "}"
             ].joined(separator: "\n")

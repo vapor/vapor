@@ -18,6 +18,29 @@ var workDir: String {
 let drop = Droplet(workDir: workDir)
 let 😀 = Response(status: .ok)
 
+
+enum FooError: Error {
+    case fooServiceUnavailable
+}
+
+final class FooErrorMiddleware: Middleware {
+    func respond(to request: Request, chainingTo next: Responder) throws -> Response {
+        do {
+            return try next.respond(to: request)
+        } catch FooError.fooServiceUnavailable {
+            throw Abort.custom(
+                status: .badRequest,
+                message: "Sorry, we were unable to query the Foo service."
+            )
+        }
+    }
+}
+
+
+drop.get("users", Int.self) { request, userId in
+    return "You requested User #\(userId)"
+}
+
 //MARK: Basic
 
 drop.get { request in
