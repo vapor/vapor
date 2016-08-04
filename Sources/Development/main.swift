@@ -15,8 +15,12 @@ var workDir: String {
 }
 #endif
 
-let drop = Droplet(workDir: workDir)
+let sha512 = SHA2Hasher(variant: .sha512)
+
+let drop = Droplet(workDir: workDir, hash: sha512)
 let 😀 = Response(status: .ok)
+
+let hashed = drop.hash.make("test")
 
 
 enum FooError: Error {
