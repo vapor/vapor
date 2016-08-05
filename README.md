@@ -1,4 +1,4 @@
-[![Vapor](https://cloud.githubusercontent.com/assets/1342803/15592871/46decfda-2375-11e6-9494-a9bf4e6aaebf.png)](http://slack.qutheory.io)
+[![Vapor](https://cloud.githubusercontent.com/assets/1342803/15592871/46decfda-2375-11e6-9494-a9bf4e6aaebf.png)](http://vapor.team)
 
 # Vapor
 
@@ -9,12 +9,12 @@ A Web Framework for Swift that works on iOS, macOS, and Ubuntu.
 - [x] Beautifully expressive
 
 ![Swift](http://img.shields.io/badge/swift-v3.0--dev.07.25-brightgreen.svg)
-[![Build Status](https://api.travis-ci.org/qutheory/vapor.svg?branch=master)](https://travis-ci.org/qutheory/vapor)
-[![CircleCI](https://circleci.com/gh/qutheory/vapor.svg?style=shield)](https://circleci.com/gh/qutheory/vapor)
-[![Code Coverage](https://codecov.io/gh/qutheory/vapor/branch/master/graph/badge.svg)](https://codecov.io/gh/qutheory/vapor)
-[![Codebeat](https://codebeat.co/badges/a793ad97-47e3-40d9-82cf-2aafc516ef4e)](https://codebeat.co/projects/github-com-qutheory-vapor)
-[![Slack Status](http://slack.qutheory.io/badge.svg)](http://slack.qutheory.io)
-[![Twitter Follow](https://img.shields.io/twitter/follow/shields_io.svg?style=social&label=Follow&maxAge=2592000)](https://twitter.com/qutheory)
+[![Build Status](https://api.travis-ci.org/vapor/vapor.svg?branch=master)](https://travis-ci.org/vapor/vapor)
+[![CircleCI](https://circleci.com/gh/vapory/vapor.svg?style=shield)](https://circleci.com/gh/vapor/vapor)
+[![Code Coverage](https://codecov.io/gh/vapor/vapor/branch/master/graph/badge.svg)](https://codecov.io/gh/vapor/vapor)
+[![Codebeat](https://codebeat.co/badges/a793ad97-47e3-40d9-82cf-2aafc516ef4e)](https://codebeat.co/projects/github-com-vapor-vapor)
+[![Slack Status](http://vapor.team/badge.svg)](http://slack.qutheory.io)
+[![Twitter Follow](https://img.shields.io/twitter/follow/shields_io.svg?style=social&label=Follow&maxAge=2592000)](https://twitter.com/codevapor)
 
 Vapor is the [most used](https://swiftpkgs.ng.bluemix.net/browse#?chart=mostessential) web framework for Swift. It provides a beautifully expressive and easy to use foundation for your next website or API.
 
@@ -42,16 +42,16 @@ This repository is the framework's source code. To view some sample projects, ch
 You can run the following script to verify your environment is correct for the latest version.
 
 ```sh
-curl -sL check.qutheory.io | bash
+curl -sL check.vapor.sh | bash
 ```
 
 ## 🦄 Deploy
 
-[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/qutheory/vapor-example/tree/master)
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/vapor/vapor-example/tree/master)
 
 ## 📖 Documentation
 
-Visit the [Documentation](http://docs.qutheory.io) for extensive information on getting setup, using, and deploying Vapor.
+Visit the [Documentation](http://docs.vapor.codes) for extensive information on getting setup, using, and deploying Vapor.
 
 ## 🚀 Contributing
 
@@ -83,13 +83,13 @@ Contributing code isn't the only way to participate in Vapor. Taking a page out 
 
 ## 💧 Community
 
-We pride ourselves on providing a diverse and welcoming community. Join your fellow Vapor developers in [our slack](http://slack.qutheory.io) and take part in the conversation.
+We pride ourselves on providing a diverse and welcoming community. Join your fellow Vapor developers in [our slack](http://vapor.team) and take part in the conversation.
 
 ## 🔧 Compatibility
 
 Vapor has been tested on OS X 10.11, Ubuntu 14.04, and Ubuntu 15.10.
 
-Our homepage [http://qutheory.io](http://qutheory.io) is currently running using Vapor on DigitalOcean.
+Our homepage [http://vapor.codes](http://vapor.codes) is currently running using Vapor on DigitalOcean.
 
 ## ⚠️ State of Vapor
 
@@ -169,4 +169,4 @@ Become a sponsor and get your logo on our README on Github with a link to your s
 
 ## 👥 Authors
 
-Made by [Tanner Nelson](https://twitter.com/tanner0101), [Logan Wright](https://twitter.com/logmaestro), and the hundreds of members of the Qutheory community.
+Made by [Tanner Nelson](https://twitter.com/tanner0101), [Logan Wright](https://twitter.com/logmaestro), and the hundreds of members of the Vapor community.
