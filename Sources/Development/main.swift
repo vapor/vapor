@@ -15,8 +15,35 @@ var workDir: String {
 }
 #endif
 
-let drop = Droplet(workDir: workDir)
+let sha512 = SHA2Hasher(variant: .sha512)
+
+let drop = Droplet(workDir: workDir, hash: sha512)
 let 😀 = Response(status: .ok)
+
+let hashed = drop.hash.make("test")
+
+
+enum FooError: Error {
+    case fooServiceUnavailable
+}
+
+final class FooErrorMiddleware: Middleware {
+    func respond(to request: Request, chainingTo next: Responder) throws -> Response {
+        do {
+            return try next.respond(to: request)
+        } catch FooError.fooServiceUnavailable {
+            throw Abort.custom(
+                status: .badRequest,
+                message: "Sorry, we were unable to query the Foo service."
+            )
+        }
+    }
+}
+
+
+drop.get("users", Int.self) { request, userId in
+    return "You requested User #\(userId)"
+}
 
 //MARK: Basic
 

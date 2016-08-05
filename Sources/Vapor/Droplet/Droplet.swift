@@ -5,7 +5,7 @@ import Console
 import Fluent
 import Transport
 
-public let VERSION = "0.15.1"
+public let VERSION = "0.16.0"
 
 public class Droplet {
     /**
@@ -66,7 +66,7 @@ public class Droplet {
         Make sure to append your custom `Middleware`
         if you don't want to overwrite default behavior.
      */
-    public var globalMiddleware: [Middleware]
+    public var middleware: [Middleware]
 
     /**
         Available Commands to use when starting
@@ -265,7 +265,7 @@ public class Droplet {
         // this can be overridden by doing
         //      droplet.globalMiddleware = p[
         // or removing middleware individually
-        self.globalMiddleware = [
+        self.middleware = [
             FileMiddleware(workDir: workDir),
             SessionMiddleware(sessions: sessions),
             ValidationMiddleware(),

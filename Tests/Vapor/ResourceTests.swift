@@ -22,7 +22,7 @@ class ResourceTests: XCTestCase {
             }
         }
 
-        drop.globalMiddleware = []
+        drop.middleware = []
 
         XCTAssertEqual(try drop.responseBody(for: .get, "users"), "index")
         XCTAssertEqual(try drop.responseBody(for: .get, "users/bob"), "user bob")
