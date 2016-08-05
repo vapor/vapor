@@ -10,7 +10,7 @@ A Web Framework for Swift that works on iOS, macOS, and Ubuntu.
 
 ![Swift](http://img.shields.io/badge/swift-v3.0--dev.07.25-brightgreen.svg)
 [![Build Status](https://api.travis-ci.org/vapor/vapor.svg?branch=master)](https://travis-ci.org/vapor/vapor)
-[![CircleCI](https://circleci.com/gh/vapory/vapor.svg?style=shield)](https://circleci.com/gh/vapor/vapor)
+[![CircleCI](https://circleci.com/gh/vapor/vapor.svg?style=shield)](https://circleci.com/gh/vapor/vapor)
 [![Code Coverage](https://codecov.io/gh/vapor/vapor/branch/master/graph/badge.svg)](https://codecov.io/gh/vapor/vapor)
 [![Codebeat](https://codebeat.co/badges/a793ad97-47e3-40d9-82cf-2aafc516ef4e)](https://codebeat.co/projects/github-com-vapor-vapor)
 [![Slack Status](http://vapor.team/badge.svg)](http://slack.qutheory.io)
