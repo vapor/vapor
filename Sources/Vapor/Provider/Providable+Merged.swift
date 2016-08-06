@@ -1,6 +1,7 @@
 import HTTP
 import Fluent
 import Console
+import Cache
 
 extension Providable {
     /**
@@ -27,6 +28,7 @@ extension Providable {
         var log: Log?
         var client: ClientProtocol.Type?
         var database: Database?
+        var cache: CacheProtocol?
 
         server = try attempt(self.server, other.server)
         sessions = try attempt(self.sessions, other.sessions)
@@ -35,6 +37,7 @@ extension Providable {
         log = try attempt(self.log, other.log)
         client = try attempt(self.client, other.client)
         database = try attempt(self.database, other.database)
+        cache = try attempt(self.cache, other.cache)
 
         return Providable(
             server: server,
@@ -43,7 +46,8 @@ extension Providable {
             console: console,
             log: log,
             client: client,
-            database: database
+            database: database,
+            cache: cache
         )
     }
 }

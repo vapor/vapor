@@ -4,7 +4,13 @@ let package = Package(
     name: "Vapor",
     targets: [
         // Framework
-        Target(name: "Vapor", dependencies: ["Routing", "HTTPRouting", "TypeSafeRouting"]),
+        Target(name: "Vapor", dependencies: [
+            "Routing",
+            "HTTPRouting",
+            "TypeSafeRouting",
+            "Cache",
+            "VaporRedis"
+        ]),
 
         // Routing
         Target(name: "Routing"),
@@ -14,11 +20,21 @@ let package = Package(
         Target(name: "TypeSafeRouting", dependencies: ["Routing", "HTTPRouting"]),
         Target(name: "TypeSafeGenerator"),
 
+        // Cache
+        Target(name: "Cache"),
+
         // Development and Testing
         Target(name: "Development", dependencies: ["Vapor"]),
-        Target(name: "Performance", dependencies: ["Vapor"])
+        Target(name: "Performance", dependencies: ["Vapor"]),
+
+        // TEMPORARY VaporRedis Targets
+        Target(name: "VaporRedis", dependencies: ["Cache"])
     ],
     dependencies: [
+        // TEMPORARY VaporRedis Packages
+        .Package(url: "https://github.com/czechboy0/Redbird.git", majorVersion: 0, minor: 9),
+
+
         //SHA2 + HMAC hashing. Used by the core to create session identifiers.
         .Package(url: "https://github.com/CryptoKitten/HMAC.git", majorVersion: 0, minor: 10),
         .Package(url: "https://github.com/CryptoKitten/SHA2.git", majorVersion: 0, minor: 9),

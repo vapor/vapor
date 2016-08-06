@@ -1,6 +1,7 @@
 import HTTP
 import Fluent
 import Console
+import Cache
 
 public struct Providable {
     /**
@@ -49,6 +50,12 @@ public struct Providable {
     */
     public var database: Database?
 
+    /**
+        An optional `CacheProtocol` that will be used
+        by the droplet for key:value pair storage.
+    */
+    public var cache: CacheProtocol?
+
     public init(
         server: ServerProtocol.Type? = nil,
         sessions: Sessions? = nil,
@@ -56,7 +63,8 @@ public struct Providable {
         console: ConsoleProtocol? = nil,
         log: Log? = nil,
         client: ClientProtocol.Type? = nil,
-        database: Database? = nil
+        database: Database? = nil,
+        cache: CacheProtocol? = nil
     ) {
         self.server = server
         self.sessions = sessions
@@ -65,5 +73,6 @@ public struct Providable {
         self.log = log
         self.client = client
         self.database = database
+        self.cache = cache
     }
 }
