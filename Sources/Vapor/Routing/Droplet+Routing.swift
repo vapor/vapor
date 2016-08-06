@@ -17,7 +17,7 @@ extension Droplet: RouteBuilder {
 
 extension RouteBuilder where Value == Responder {
     public func group(_ middleware: Middleware ..., closure: (RouteGroup<Value, Self>) ->()) {
-        group(prefix: ["*", "*"], path: [], map: { handler in
+        group(prefix: [nil, nil], path: [], map: { handler in
             return Request.Handler { request in
                 return try middleware.chain(to: handler).respond(to: request)
             }
