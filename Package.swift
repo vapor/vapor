@@ -8,8 +8,7 @@ let package = Package(
             "Routing",
             "HTTPRouting",
             "TypeSafeRouting",
-            "Cache",
-            "VaporRedis"
+            "Cache"
         ]),
 
         // Routing
@@ -24,11 +23,11 @@ let package = Package(
         Target(name: "Cache"),
 
         // Development and Testing
-        Target(name: "Development", dependencies: ["Vapor"]),
+        Target(name: "Development", dependencies: ["Vapor", "VaporRedis"]),
         Target(name: "Performance", dependencies: ["Vapor"]),
 
         // TEMPORARY VaporRedis Targets
-        Target(name: "VaporRedis", dependencies: ["Cache"])
+        Target(name: "VaporRedis", dependencies: ["Cache", "Vapor"])
     ],
     dependencies: [
         // TEMPORARY VaporRedis Packages
