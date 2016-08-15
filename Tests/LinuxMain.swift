@@ -1,9 +1,9 @@
 #if os(Linux)
 
 import XCTest
-@testable import VaporTestSuite
-@testable import RoutingTestSuite
-@testable import HTTPRoutingTestSuite
+@testable import VaporTests
+@testable import RoutingTests
+@testable import HTTPRoutingTests
 
 XCTMain([
     // Vapor
