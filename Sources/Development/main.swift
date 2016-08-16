@@ -4,7 +4,6 @@ import libc
 import HTTP
 import Transport
 import Routing
-import VaporRedis
 
 #if os(Linux)
 let workDir = "./Sources/Development"
@@ -18,7 +17,7 @@ var workDir: String {
 
 let sha512 = SHA2Hasher(variant: .sha512)
 
-let drop = Droplet(workDir: workDir, hash: sha512, providers: [VaporRedis.Provider.self])
+let drop = Droplet(workDir: workDir, hash: sha512)
 let 😀 = Response(status: .ok)
 
 let hashed = drop.hash.make("test")

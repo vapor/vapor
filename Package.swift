@@ -23,7 +23,7 @@ let package = Package(
         Target(name: "Cache"),
 
         // Development and Testing
-        Target(name: "Development", dependencies: ["Vapor", "VaporRedis"]),
+        Target(name: "Development", dependencies: ["Vapor"]),
         Target(name: "Performance", dependencies: ["Vapor"]),
     ],
     dependencies: [
