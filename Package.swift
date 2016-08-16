@@ -25,15 +25,8 @@ let package = Package(
         // Development and Testing
         Target(name: "Development", dependencies: ["Vapor", "VaporRedis"]),
         Target(name: "Performance", dependencies: ["Vapor"]),
-
-        // TEMPORARY VaporRedis Targets
-        Target(name: "VaporRedis", dependencies: ["Cache", "Vapor"])
     ],
     dependencies: [
-        // TEMPORARY VaporRedis Packages
-        .Package(url: "https://github.com/czechboy0/Redbird.git", majorVersion: 0, minor: 9),
-
-
         //SHA2 + HMAC hashing. Used by the core to create session identifiers.
         .Package(url: "https://github.com/CryptoKitten/HMAC.git", majorVersion: 0, minor: 10),
         .Package(url: "https://github.com/CryptoKitten/SHA2.git", majorVersion: 0, minor: 9),
