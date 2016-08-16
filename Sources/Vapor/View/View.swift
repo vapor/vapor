@@ -1,5 +1,7 @@
 import HTTP
 
+private var _cache: [String: Bytes] = [:]
+
 /**
     Loads and renders a file from the `Resources` folder
     in the Droplet's work directory.
@@ -23,11 +25,15 @@ public class View {
     public init(workDir: String, path: String, context: [String: Any] = [:]) throws {
         let filesPath = workDir + "Resources/Views/" + path
 
-        guard let fileBody = try? FileManager.readBytesFromFile(filesPath) else {
-            self.data = Bytes()
+        if let fileBody = _cache[filesPath] {
+            data = fileBody
+        } else if let fileBody = try? FileManager.readBytesFromFile(filesPath) {
+            data = fileBody
+            _cache[filesPath] = fileBody
+        } else {
+            data = Bytes()
             throw Error.InvalidPath
         }
-        self.data = fileBody
 
         for (suffix, renderer) in View.renderers {
             if path.hasSuffix(suffix) {
