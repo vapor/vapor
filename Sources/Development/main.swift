@@ -51,6 +51,39 @@ drop.get { request in
     return try drop.view("welcome.html")
 }
 
+// MARK: Cache
+
+drop.get("cache") { request in
+    guard let key = request.data["key"].string else {
+        throw Abort.badRequest
+    }
+
+    return try drop.cache.get(key).string ?? "nil"
+}
+
+drop.post("cache") { request in
+    guard
+        let key = request.data["key"].string,
+        let value = request.data["value"].string
+    else {
+        throw Abort.badRequest
+    }
+
+    try drop.cache.set(key, value)
+
+    return "Set"
+}
+
+drop.delete("cache") { request in
+    guard let key = request.data["key"].string else {
+        throw Abort.badRequest
+    }
+
+    try drop.cache.delete(key)
+
+    return "Deleted"
+}
+
 drop.get("client-socket") { req in
     // TODO: Find way to support multiple droplets while still having concrete reference to host / port. This will only work on one droplet ...
     let host = drop.config["servers", 0, "host"].string ?? "localhost"

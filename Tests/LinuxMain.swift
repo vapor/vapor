@@ -1,11 +1,16 @@
 #if os(Linux)
 
 import XCTest
+@testable import CacheTestSuite
 @testable import VaporTestSuite
 @testable import RoutingTestSuite
 @testable import HTTPRoutingTestSuite
 
 XCTMain([
+    // Cache
+    testCase(FluentCacheTests.allTests),
+    testCase(MemoryCacheTests.allTests),
+
     // Vapor
     testCase(ConfigTests.allTests),
     testCase(ConsoleTests.allTests),

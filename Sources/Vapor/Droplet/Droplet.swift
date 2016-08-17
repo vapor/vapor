@@ -4,6 +4,7 @@ import HTTP
 import Console
 import Fluent
 import Transport
+import Cache
 
 public let VERSION = "0.16.0"
 
@@ -94,6 +95,12 @@ public class Droplet {
     public let client: ClientProtocol.Type
 
     /**
+        Store and retreive key:value
+        pair information.
+    */
+    public let cache: CacheProtocol
+
+    /**
         Resources directory relative to workDir
     */
     public var resourcesDir: String {
@@ -134,6 +141,7 @@ public class Droplet {
         log: Log? = nil,
         client: ClientProtocol.Type? = nil,
         database: Database? = nil,
+        cache: CacheProtocol? = nil,
 
         // database preparations
         preparations: [Preparation.Type] = [],
@@ -202,7 +210,8 @@ public class Droplet {
             console: console,
             log: log,
             client: client,
-            database: database
+            database: database,
+            cache: cache
         )
 
         // extract a single providable struct
@@ -299,6 +308,15 @@ public class Droplet {
             self.database = database
         } else {
             self.database = nil
+        }
+
+        // provided cache, fluent, or memory as a backup
+        if let cache = provided.cache {
+            self.cache = cache
+        } else if let database = provided.database {
+            self.cache = FluentCache(database: database)
+        } else {
+            self.cache = MemoryCache()
         }
 
         // the prepare command will run all
