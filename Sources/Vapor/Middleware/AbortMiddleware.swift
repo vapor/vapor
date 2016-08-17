@@ -23,13 +23,15 @@ public class AbortMiddleware: Middleware {
         do {
             return try chain.respond(to: request)
         } catch Abort.badRequest {
-            return try self.errorResponse(.badRequest, message: "Invalid request")
+            return try errorResponse(.badRequest, message: "Invalid request")
         } catch Abort.notFound {
-            return try self.errorResponse(.notFound, message: "Page not found")
+            let view = ErrorView(request: request, code: 404, message: "Page not found")
+            return try view.makeResponse()
+            // return try errorResponse(.notFound, message: "Page not found")
         } catch Abort.serverError {
-            return try self.errorResponse(.internalServerError, message: "Something went wrong")
+            return try errorResponse(.internalServerError, message: "Something went wrong")
         } catch Abort.custom(let status, let message) {
-            return try self.errorResponse(status, message: message)
+            return try errorResponse(status, message: message)
         }
     }
 
