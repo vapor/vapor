@@ -8,8 +8,9 @@ let package = Package(
             "Routing",
             "HTTPRouting",
             "TypeSafeRouting",
+            "Auth",
             "Cache",
-            "Auth"
+            "Cookies"
         ]),
 
         // Routing
@@ -20,9 +21,11 @@ let package = Package(
         Target(name: "TypeSafeRouting", dependencies: ["Routing", "HTTPRouting"]),
         Target(name: "TypeSafeGenerator"),
 
-        // Other
-        Target(name: "Cache"),
+        // Misc
         Target(name: "Auth"),
+        Target(name: "Cache"),
+        Target(name: "Cookies"),
+
 
         // Development and Testing
         Target(name: "Development", dependencies: ["Vapor"]),

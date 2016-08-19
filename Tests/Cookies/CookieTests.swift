@@ -1,5 +1,5 @@
 import XCTest
-@testable import Vapor
+@testable import Cookies
 
 class CookieTests: XCTestCase {
     static let allTests = [
@@ -29,8 +29,8 @@ class CookieTests: XCTestCase {
     }
 
     func testInit_setsExpiresCorrectly() {
-        let subject = Cookie(name: "Foo", value: "Bar", expires: "Wed, 20 Jul 2016 13:20:15 GMT")
-        XCTAssertEqual(subject.expires, "Wed, 20 Jul 2016 13:20:15 GMT")
+        let subject = Cookie(name: "Foo", value: "Bar", expires: Date(rfc1123: "Wed, 20 Jul 2016 13:20:15 GMT"))
+        XCTAssertEqual(subject.expires?.rfc1123, "Wed, 20 Jul 2016 13:20:15 GMT")
     }
 
     func testInit_setsMaxAgeCorrectly() {
@@ -60,12 +60,12 @@ class CookieTests: XCTestCase {
 
     func testInit_defaultsToNonHTTPOnly() {
         let subject = Cookie(name: "Foo", value: "Bar")
-        XCTAssertFalse(subject.HTTPOnly)
+        XCTAssertFalse(subject.httpOnly)
     }
 
     func testInit_setsHTTPOnlyCorrectly() {
-        let subject = Cookie(name: "Foo", value: "Bar", HTTPOnly: true)
-        XCTAssertTrue(subject.HTTPOnly)
+        let subject = Cookie(name: "Foo", value: "Bar", httpOnly: true)
+        XCTAssertTrue(subject.httpOnly)
     }
 
     func testHashValue_usesNamesHash() {
@@ -84,9 +84,9 @@ class CookieTests: XCTestCase {
 
     func testSerialize_producesExpectedOutput() {
         var subject = Cookie(name: "Foo", value: "Bar")
-        XCTAssertEqual(subject.serialize(), "Foo=Bar")
-        subject.expires = "Wed, 20 Jul 2016 09:00:15 GMT"
-        XCTAssertEqual(subject.serialize(), "Foo=Bar; Expires=Wed, 20 Jul 2016 09:00:15 GMT")
+        XCTAssertEqual(subject.serialize(), "Foo=Bar; Path=/")
+        subject.expires = Date(rfc1123: "Wed, 20 Jul 2016 09:00:15 GMT")
+        XCTAssertEqual(subject.serialize(), "Foo=Bar; Expires=Wed, 20 Jul 2016 09:00:15 GMT; Path=/")
         subject.path = "/bar/food/yum"
         XCTAssertEqual(subject.serialize(), "Foo=Bar; Expires=Wed, 20 Jul 2016 09:00:15 GMT; Path=/bar/food/yum")
         subject.domain = "vapor.qutheory.io"
@@ -95,7 +95,7 @@ class CookieTests: XCTestCase {
         XCTAssertEqual(subject.serialize(), "Foo=Bar; Expires=Wed, 20 Jul 2016 09:00:15 GMT; Max-Age=600; Domain=vapor.qutheory.io; Path=/bar/food/yum")
         subject.secure = true
         XCTAssertEqual(subject.serialize(), "Foo=Bar; Expires=Wed, 20 Jul 2016 09:00:15 GMT; Max-Age=600; Domain=vapor.qutheory.io; Path=/bar/food/yum; Secure")
-        subject.HTTPOnly = true
+        subject.httpOnly = true
         XCTAssertEqual(subject.serialize(), "Foo=Bar; Expires=Wed, 20 Jul 2016 09:00:15 GMT; Max-Age=600; Domain=vapor.qutheory.io; Path=/bar/food/yum; Secure; HttpOnly")
     }
 }
