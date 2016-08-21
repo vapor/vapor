@@ -67,35 +67,34 @@ public struct Prepare: Command {
             let schema = Schema.delete(entity: "fluent")
             try database.driver.schema(schema)
             console.success("Reversion complete")
-        } else {
-            for preparation in preparations {
-                let name = preparation.name
+        }
+        
+        for preparation in preparations {
+            let name = preparation.name
+            let hasPrepared: Bool
 
-                let hasPrepared: Bool
-
-                do {
-                    hasPrepared = try database.hasPrepared(preparation)
-                } catch {
-                    console.error("Failed to start preparation")
-                    throw CommandError.general("\(error)")
-                }
-
-                if !hasPrepared {
-                    print("Preparing \(name)")
-                    do {
-                        try database.prepare(preparation)
-                        console.success("Prepared '\(name)'")
-                    } catch PreparationError.automationFailed(let string) {
-                        console.error("Automatic preparation for \(name) failed.")
-                        throw CommandError.general("\(string)")
-                    } catch {
-                        console.error("Failed to prepare \(name)")
-                        throw CommandError.general("\(error)")
-                    }
-                }
+            do {
+                hasPrepared = try database.hasPrepared(preparation)
+            } catch {
+                console.error("Failed to start preparation")
+                throw CommandError.general("\(error)")
             }
 
-            console.info("Database prepared")
+            if !hasPrepared {
+                print("Preparing \(name)")
+                do {
+                    try database.prepare(preparation)
+                    console.success("Prepared '\(name)'")
+                } catch PreparationError.automationFailed(let string) {
+                    console.error("Automatic preparation for \(name) failed.")
+                    throw CommandError.general("\(string)")
+                } catch {
+                    console.error("Failed to prepare \(name)")
+                    throw CommandError.general("\(error)")
+                }
+            }
         }
+
+        console.info("Database prepared")
     }
 }
