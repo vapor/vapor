@@ -90,3 +90,4 @@ public struct Cookies {
         return cookies.index(where: { $0.name == name })
     }
 }
+

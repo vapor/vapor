@@ -7,7 +7,7 @@ extension Request {
                 return cookies
             } else if let cookies = headers["Cookie"] {
                 do {
-                    let cookie = try Cookies(cookies.bytes)
+                    let cookie = try Cookies(cookies.bytes, for: .request)
                     storage["Cookie"] = cookie
                     return cookie
                 } catch {

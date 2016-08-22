@@ -7,7 +7,7 @@ extension Response {
                 return cookies
             } else if let cookies = headers["Set-Cookie"] {
                 do {
-                    let cookie = try Cookies(cookies.bytes)
+                    let cookie = try Cookies(cookies.bytes, for: .response)
                     storage["Set-Cookie"] = cookie
                     return cookie
                 } catch {
