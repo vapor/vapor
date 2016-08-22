@@ -25,9 +25,7 @@ public class AbortMiddleware: Middleware {
         } catch Abort.badRequest {
             return try errorResponse(.badRequest, message: "Invalid request")
         } catch Abort.notFound {
-            let view = ErrorView(request: request, code: 404, message: "Page not found")
-            return try view.makeResponse()
-            // return try errorResponse(.notFound, message: "Page not found")
+            return try errorResponse(.notFound, message: "Page not found")
         } catch Abort.serverError {
             return try errorResponse(.internalServerError, message: "Something went wrong")
         } catch Abort.custom(let status, let message) {
