@@ -84,7 +84,7 @@ public struct Prepare: Command {
                     print("Preparing \(name)")
                     do {
                         try database.prepare(preparation)
-                        console.success("Prepared '\(name)'")
+                        console.success("Prepared \(name)")
                     } catch PreparationError.automationFailed(let string) {
                         console.error("Automatic preparation for \(name) failed.")
                         throw CommandError.general("\(string)")
