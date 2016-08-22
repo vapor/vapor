@@ -2,6 +2,7 @@
 
 import XCTest
 @testable import CacheTestSuite
+@testable import CookieTestSuite
 @testable import VaporTestSuite
 @testable import RoutingTestSuite
 @testable import HTTPRoutingTestSuite
