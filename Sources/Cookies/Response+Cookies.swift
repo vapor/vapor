@@ -5,18 +5,21 @@ extension Response {
         get {
             if let cookies = storage["Set-Cookie"] as? Cookies {
                 return cookies
-            } else if let cookies = headers["Set-Cookie"] {
+            } else if let string = headers["Set-Cookie"] {
+                let cookies: Cookies
+
                 do {
-                    let cookie = try Cookies(cookies.bytes, for: .response)
-                    storage["Set-Cookie"] = cookie
-                    return cookie
+                    cookies = try Cookies(string.bytes, for: .response)
                 } catch {
                     print("Could not parse cookies: \(error)")
-                    return []
+                    cookies = Cookies()
                 }
-            } else {
-                return []
+                
+                storage["Set-Cookie"] = cookies
+                return cookies
             }
+
+            return []
         }
         set(cookie) {
             storage["Set-Cookie"] = cookie

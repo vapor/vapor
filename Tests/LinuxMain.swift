@@ -11,6 +11,13 @@ XCTMain([
     testCase(FluentCacheTests.allTests),
     testCase(MemoryCacheTests.allTests),
 
+    // Cookies
+    testCase(CookiesTests.allTests),
+    testCase(CookieTests.allTests),
+    testCase(HTTPTests.allTests),
+    testCase(ParsingTests.allTests),
+    testCase(SerializingTests.allTests),
+
     // Vapor
     testCase(ConfigTests.allTests),
     testCase(ConsoleTests.allTests),
