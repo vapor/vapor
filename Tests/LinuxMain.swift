@@ -1,11 +1,11 @@
 #if os(Linux)
 
 import XCTest
-@testable import CacheTests
-@testable import CookieTests
-@testable import VaporTests
-@testable import RoutingTests
-@testable import HTTPRoutingTests
+@testable import CacheTestSuite
+@testable import CookiesTestSuite
+@testable import VaporTestSuite
+@testable import RoutingTestSuite
+@testable import HTTPRoutingTestSuite
 
 XCTMain([
     // Cache
