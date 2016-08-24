@@ -4,6 +4,7 @@ import libc
 import HTTP
 import Transport
 import Routing
+import Cookies
 
 #if os(Linux)
 let workDir = "./Sources/Development"
@@ -38,6 +39,17 @@ final class FooErrorMiddleware: Middleware {
             )
         }
     }
+}
+
+drop.get("sess") { req in
+    print(req.cookies)
+    let res = Response()
+    res.cookies["test-cookie"] = "123"
+
+    let cookie = Cookie(name: "custom", value: "42")
+    res.cookies.insert(cookie)
+    
+    return res
 }
 
 

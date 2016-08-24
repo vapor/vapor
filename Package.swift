@@ -8,7 +8,9 @@ let package = Package(
             "Routing",
             "HTTPRouting",
             "TypeSafeRouting",
-            "Cache"
+            "Auth",
+            "Cache",
+            "Cookies"
         ]),
 
         // Routing
@@ -19,8 +21,11 @@ let package = Package(
         Target(name: "TypeSafeRouting", dependencies: ["Routing", "HTTPRouting"]),
         Target(name: "TypeSafeGenerator"),
 
-        // Cache
+        // Misc
+        Target(name: "Auth"),
         Target(name: "Cache"),
+        Target(name: "Cookies"),
+
 
         // Development and Testing
         Target(name: "Development", dependencies: ["Vapor"]),
@@ -41,7 +46,10 @@ let package = Package(
         .Package(url: "https://github.com/vapor/console.git", majorVersion: 0, minor: 5),
 
         // JSON enum wrapper around Foundation JSON
-        .Package(url: "https://github.com/vapor/json.git", majorVersion: 0, minor: 4)
+        .Package(url: "https://github.com/vapor/json.git", majorVersion: 0, minor: 4),
+
+        // A security framework for Swift.
+        .Package(url: "https://github.com/stormpath/Turnstile.git", majorVersion: 0, minor: 1),
     ],
     exclude: [
         // No excludes currently
