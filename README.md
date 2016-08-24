@@ -49,6 +49,10 @@ curl -sL check.vapor.sh | bash
 
 [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/vapor/vapor-example/tree/master)
 
+## Dependencies
+
+![](http://swiftpm-deps.honza.tech/dependencies/vapor/vapor?format=png)
+
 ## 📖 Documentation
 
 Visit the [Documentation](http://docs.vapor.codes) for extensive information on getting setup, using, and deploying Vapor.
