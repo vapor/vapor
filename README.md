@@ -8,7 +8,7 @@ A Web Framework for Swift that works on iOS, macOS, and Ubuntu.
 - [x] Modular
 - [x] Beautifully expressive
 
-![Swift](http://img.shields.io/badge/swift-v3.0--dev.07.25-brightgreen.svg)
+![Swift](http://img.shields.io/badge/swift-v3.0--dev.08.18-brightgreen.svg)
 [![Build Status](https://api.travis-ci.org/vapor/vapor.svg?branch=master)](https://travis-ci.org/vapor/vapor)
 [![CircleCI](https://circleci.com/gh/vapor/vapor.svg?style=shield)](https://circleci.com/gh/vapor/vapor)
 [![Code Coverage](https://codecov.io/gh/vapor/vapor/branch/master/graph/badge.svg)](https://codecov.io/gh/vapor/vapor)
