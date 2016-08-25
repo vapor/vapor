@@ -52,7 +52,7 @@ public final class Event<T> {
         - Warning: subscription returned from this function must be retained to receive events
         - returns: a subscription. As long as it's retained, the passed handler will fire
      */
-    public func subscribe(_ handler: Handler) -> Subscription {
+    public func subscribe(_ handler: @escaping Handler) -> Subscription {
         let newSubscription = Subscription()
         newSubscription.completion = { [weak self, weak newSubscription] in
             guard let welf = self else { return }

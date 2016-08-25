@@ -52,9 +52,9 @@ extension Validatable {
         - returns: self if passed tester
     */
     public func tested(
-        by tester: @noescape (Self) throws -> Void)
+        by tester: (Self) throws -> Void)
         rethrows -> Self {
-            try tester(input: self)
+            try tester(self)
             return self
     }
 
@@ -67,10 +67,9 @@ extension Validatable {
 
         - returns: self if passed validator
     */
-    public func tested<
-        V: Validator
-        where V.InputType == Self>(by validator: V)
-        throws -> Self {
+    public func tested<V: Validator>(by validator: V)
+        throws -> Self
+        where V.InputType == Self {
             return try tested(by: validator.validate)
     }
 
@@ -143,9 +142,9 @@ extension Validatable {
 
         - returns: whether or not the caller passed
     */
-    public func passes(_ tester: @noescape (Self) throws -> Void) -> Bool {
+    public func passes(_ tester: (Self) throws -> Void) -> Bool {
         do {
-            try tester(input: self)
+            try tester(self)
             return true
         } catch {
             return false
@@ -159,7 +158,7 @@ extension Validatable {
 
         - returns: whether or not the caller passed
     */
-    public func passes<V: Validator where V.InputType == Self>(_ validator: V) -> Bool {
+    public func passes<V: Validator>(_ validator: V) -> Bool where V.InputType == Self {
         return passes(validator.validate)
     }
 
@@ -170,7 +169,7 @@ extension Validatable {
 
         - returns: whether or not the caller passed
     */
-    public func passes<S: ValidationSuite where S.InputType == Self>(_ suite: S.Type) -> Bool {
+    public func passes<S: ValidationSuite>(_ suite: S.Type) -> Bool where S.InputType == Self {
         return passes(suite.validate)
     }
 }
@@ -184,7 +183,7 @@ extension Optional where Wrapped: Validatable {
 
         - returns: whether or not the caller passed
     */
-    public func passes(_ tester: @noescape (Wrapped) throws -> Void) -> Bool {
+    public func passes(_ tester: (Wrapped) throws -> Void) -> Bool {
         guard case .some(let value) = self else { return false }
         return value.passes(tester)
     }
@@ -197,7 +196,7 @@ extension Optional where Wrapped: Validatable {
 
         - returns: whether or not the caller passed
     */
-    public func passes<V: Validator where V.InputType == Wrapped>(_ validator: V) -> Bool {
+    public func passes<V: Validator>(_ validator: V) -> Bool where V.InputType == Wrapped {
         return passes(validator.validate)
     }
 
@@ -209,7 +208,7 @@ extension Optional where Wrapped: Validatable {
 
         - returns: whether or not the caller passed
     */
-    public func passes<S: ValidationSuite where S.InputType == Wrapped>(_ suite: S.Type) -> Bool {
+    public func passes<S: ValidationSuite>(_ suite: S.Type) -> Bool where S.InputType == Wrapped {
         return passes(suite.validate)
     }
 }
@@ -227,9 +226,9 @@ extension Validatable {
         - returns: a Valid<V> protecting a successfully validated value
     */
     public func validated<
-        V: Validator
-        where V.InputType == Self>(by validator: V)
-        throws -> Valid<V> {
+        V: Validator>(by validator: V)
+        throws -> Valid<V>
+        where V.InputType == Self {
             return try Valid<V>(self, by: validator)
     }
 
@@ -243,9 +242,9 @@ extension Validatable {
         - returns: a Valid<V> protecting a successfully validated value
     */
     public func validated<
-        S: ValidationSuite
-        where S.InputType == Self>(by suite: S.Type = S.self)
-        throws -> Valid<S> {
+        S: ValidationSuite>(by suite: S.Type = S.self)
+        throws -> Valid<S>
+        where S.InputType == Self {
             return try Valid<S>(self, by: suite)
     }
 }

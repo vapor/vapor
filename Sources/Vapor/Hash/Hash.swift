@@ -5,15 +5,23 @@ import libc
 */
 public protocol Hash: class {
     /**
-        A string used to add an additional 
-        layer of security to all hashes
+         A string used to add an additional
+         layer of security to all hashes
     */
-    var key: String { get set }
+    var defaultKey: String? { get }
 
     /**
-        Given a string, this function will
-        return the hashed string according
-        to whatever algorithm it chooses to implement.
+         Given a string, this function will
+         return the hashed string according
+         to whatever algorithm it chooses to implement.
     */
-    func make(_ string: String) -> String
+    func make(_ string: String, key: String?) throws -> String
+}
+
+extension Hash {
+    public var defaultKey: String? { return nil }
+
+    public func make(_ string: String) throws -> String {
+        return try make(string, key: defaultKey)
+    }
 }

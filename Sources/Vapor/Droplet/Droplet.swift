@@ -257,14 +257,13 @@ public class Droplet {
         }
         self.localization = localization
 
-        // initialize the hash from one provided
-        // or use a default SHA2 hasher
-        let hash = provided.hash ?? SHA2Hasher(variant: .sha256)
-        self.hash = hash
-
         // set the hashing key to the key
         // from the configuration files or nothing.
-        hash.key = config["app", "key"].string ?? ""
+        let key = config["app", "key"].string
+        // initialize the hash from one provided
+        // or use a default SHA2 hasher
+        let hash = provided.hash ?? SHA2Hasher(variant: .sha256, defaultKey: key)
+        self.hash = hash
 
         // use provided sessions or MemorySessions by default
         let sessions = provided.sessions ?? MemorySessions(hash: hash)

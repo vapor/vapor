@@ -3,7 +3,8 @@ import URI
 
 extension Request {
     convenience init() {
-        self.init(method: .get, uri: URI(host: "test", path: "/"))
+        let uri = URI(host: "test", path: "/")
+        try! self.init(method: .get, uri: uri)
     }
 }
 

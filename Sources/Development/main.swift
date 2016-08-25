@@ -16,12 +16,12 @@ var workDir: String {
 }
 #endif
 
-let sha512 = SHA2Hasher(variant: .sha512)
+let sha512 = SHA2Hasher(variant: .sha512, defaultKey: "")
 
 let drop = Droplet(workDir: workDir, hash: sha512)
 let 😀 = Response(status: .ok)
 
-let hashed = drop.hash.make("test")
+let hashed = try drop.hash.make("test")
 
 
 enum FooError: Error {
@@ -550,26 +550,21 @@ struct TestCollection: RouteCollection, EmptyInitializable {
 
 drop.grouped("test-collection").collection(TestCollection.self)
 
-#if !os(Linux)
-    /*
-        Temporarily not available on Linux because of Dispatch APIs
-    */
-    drop.get("async") { request in
-        return try Response.async { promise in
-            _ = try background {
-                do {
-                    let beyonceQuery = "https://api.spotify.com/v1/search/?q=beyonce&type=artist"
-                    let response = try Client<FoundationStream>.get(beyonceQuery)
-                    let artists = response.data["artists", "items", "name"].array ?? []
-                    let artistsJSON = artists.flatMap { $0.string } .map { JSON.string($0) }
-                    let js = JSON.array(artistsJSON)
-                    promise.resolve(with: js)
-                } catch {
-                    promise.reject(with: error)
-                }
+drop.get("async") { request in
+    return try Response.async { portal in
+        _ = try background {
+            do {
+                let beyonceQuery = "https://api.spotify.com/v1/search/?q=beyonce&type=artist"
+                let response = try drop.client.get(beyonceQuery)
+                let artists = response.data["artists", "items", "name"].array ?? []
+                let artistsJSON = artists.flatMap { $0.string } .map { JSON.string($0) }
+                let js = JSON.array(artistsJSON)
+                portal.close(with: js)
+            } catch {
+                portal.close(with: error)
             }
         }
     }
-#endif
+}
 
 drop.serve()

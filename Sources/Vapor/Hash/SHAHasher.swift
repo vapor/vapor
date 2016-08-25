@@ -1,3 +1,4 @@
+import Essentials
 import HMAC
 import SHA2
 import struct Core.Bytes
@@ -7,16 +8,8 @@ import struct Core.Bytes
     Hash class by applying this driver.
 */
 public class SHA2Hasher: Hash {
-
-    public let variant: Variant
-
-    public init(variant: Variant) {
-        self.variant = variant
-        self.keyBuffer = []
-    }
-
     /**
-        Hashing variant to use
+     Hashing variant to use
      */
     public enum Variant  {
         case sha224
@@ -25,17 +18,23 @@ public class SHA2Hasher: Hash {
         case sha512
     }
 
+    public let variant: Variant
+
     /**
         HMAC key.
     */
-    public var key: String {
-        didSet {
-            keyBuffer = key.bytes
-        }
-    }
+    public let defaultKey: String?
 
     //
-    private var keyBuffer: Bytes
+    private var keyBuffer: Bytes?
+
+    /**
+    */
+    public init(variant: Variant, defaultKey: String?) {
+        self.variant = variant
+        self.defaultKey = defaultKey
+        self.keyBuffer = defaultKey?.bytes
+    }
 
     /**
         Hash given string with key
@@ -45,21 +44,26 @@ public class SHA2Hasher: Hash {
 
         - returns: a hashed string
      */
-    public func make(_ message: String) -> String {
-        let auth: Authenticatable.Type
+    public func make(_ message: String, key: String?) throws -> String {
+        let method: (auth: Method, hash: Essentials.Hash.Type)
 
         switch variant {
         case .sha224:
-            auth = SHA224.self
+            method = (.sha224, SHA224.self)
         case .sha256:
-            auth = SHA256.self
+            method = (.sha256, SHA256.self)
         case .sha384:
-            auth = SHA384.self
+            method = (.sha384, SHA384.self)
         case .sha512:
-            auth = SHA512.self
+            method = (.sha512, SHA512.self)
         }
 
-        return HMAC(auth, message.bytes).authenticate(key: keyBuffer).hexString
+        if let key = key {
+            let hmac = HMAC(method.auth, message.bytes)
+            return try hmac.authenticate(key: key.bytes).hexString
+        } else {
+            return try method.hash.init(message.bytes).hash().hexString
+        }
     }
 
 }

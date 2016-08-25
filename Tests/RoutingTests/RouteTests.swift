@@ -46,7 +46,7 @@ class RouteTests: XCTestCase {
                 query: nil,
                 fragment: nil
             )
-            let request = Request(method: .get, uri: uri)
+            let request = try Request(method: .get, uri: uri)
             let handler = router.route(request)
             XCTAssert(handler != nil)
             let response = try handler?(request).makeResponse()

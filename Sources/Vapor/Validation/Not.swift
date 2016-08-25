@@ -30,15 +30,15 @@
      !validatorToInvert
 */
 public struct Not<V: Validator> {
-    private typealias Validator = (V.InputType) throws -> Void
-    private let validator: Validator
+    fileprivate typealias Validator = (V.InputType) throws -> Void
+    fileprivate let validator: Validator
 
     /**
         Convenience only.
 
         Must stay private.
     */
-    private init(_ validator: @escaping Validator) {
+    fileprivate init(_ validator: @escaping Validator) {
         self.validator = { value in
             do {
                 try validator(value)
@@ -61,7 +61,7 @@ extension Not: Validator {
         - parameter value: value to validate
     */
     public func validate(input value: V.InputType) throws {
-        try validator(input: value)
+        try validator(value)
     }
 }
 

@@ -6,7 +6,7 @@ import HTTP
 class TestResponder: Responder {
     var closure: (Request) throws -> Response
 
-    init(closure: (Request) throws -> Response) {
+    init(closure: @escaping (Request) throws -> Response) {
         self.closure = closure
     }
     func respond(to request: Request) throws -> Response {
