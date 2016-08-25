@@ -31,4 +31,16 @@ class AddTests: XCTestCase {
         
         XCTAssertEqual(bytes, "1337".bytes)
     }
+
+    func testWithSlash() throws {
+        let router = Router()
+        router.add(.get, "foo/bar") { request in
+            return "foo"
+        }
+
+        let request = Request(method: .get, path: "foo/bar")
+        let bytes = try request.bytes(running: router)
+
+        XCTAssertEqual(bytes, "foo".bytes)
+    }
 }

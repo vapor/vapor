@@ -4,8 +4,9 @@ import HTTP
 import Console
 import Fluent
 import Transport
+import Cache
 
-public let VERSION = "0.15.0"
+public let VERSION = "0.16.0"
 
 public class Droplet {
     /**
@@ -66,7 +67,7 @@ public class Droplet {
         Make sure to append your custom `Middleware`
         if you don't want to overwrite default behavior.
      */
-    public var globalMiddleware: [Middleware]
+    public var middleware: [Middleware]
 
     /**
         Available Commands to use when starting
@@ -92,6 +93,12 @@ public class Droplet {
         Make outgoing requests
     */
     public let client: ClientProtocol.Type
+
+    /**
+        Store and retreive key:value
+        pair information.
+    */
+    public let cache: CacheProtocol
 
     /**
         Resources directory relative to workDir
@@ -134,6 +141,7 @@ public class Droplet {
         log: Log? = nil,
         client: ClientProtocol.Type? = nil,
         database: Database? = nil,
+        cache: CacheProtocol? = nil,
 
         // database preparations
         preparations: [Preparation.Type] = [],
@@ -202,7 +210,8 @@ public class Droplet {
             console: console,
             log: log,
             client: client,
-            database: database
+            database: database,
+            cache: cache
         )
 
         // extract a single providable struct
@@ -265,7 +274,7 @@ public class Droplet {
         // this can be overridden by doing
         //      droplet.globalMiddleware = p[
         // or removing middleware individually
-        self.globalMiddleware = [
+        self.middleware = [
             FileMiddleware(workDir: workDir),
             SessionMiddleware(sessions: sessions),
             ValidationMiddleware(),
@@ -289,8 +298,11 @@ public class Droplet {
         // supplied database on the models
         if let database = provided.database {
             for preparation in preparations {
-                if let model = preparation as? Model.Type {
-                    model.database = database
+            	// casting the type to `Entity.Type` instead
+                // of `Model.Type` in order to catch all
+                // `Model` types as well as `Pivot` generics
+                if let entity = preparation as? Entity.Type {
+                    entity.database = database
                 }
             }
             self.database = database
@@ -298,9 +310,18 @@ public class Droplet {
             self.database = nil
         }
 
+        // provided cache, fluent, or memory as a backup
+        if let cache = provided.cache {
+            self.cache = cache
+        } else if let database = provided.database {
+            self.cache = FluentCache(database: database)
+        } else {
+            self.cache = MemoryCache()
+        }
+
         // the prepare command will run all
         // of the supplied preparations on the database.
-        let prepare = Prepare(console: console, preparations: preparations, database: database)
+        let prepare = Prepare(console: console, preparations: preparations, database: self.database)
 
         // the serve command will boot the servers
         // and always runs the prepare command

@@ -1,8 +1,15 @@
 import JSON
 import Fluent
 import TypeSafeRouting
+import HTTP
 
-public protocol Model: Entity, JSONRepresentable, StringInitializable { }
+public protocol Model: Entity, JSONRepresentable, StringInitializable, ResponseRepresentable { }
+
+extension Model {
+    public func makeResponse() throws -> Response {
+        return try makeJSON().makeResponse()
+    }
+}
 
 // MARK: JSONRepresentable
 

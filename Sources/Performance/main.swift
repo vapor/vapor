@@ -7,6 +7,6 @@ drop.get("plaintext") { request in
     return "Hello, world"
 }
 
-drop.globalMiddleware = []
+//drop.globalMiddleware = []
 
 drop.serve()

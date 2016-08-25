@@ -1,6 +1,7 @@
 import HTTP
 import Fluent
 import Console
+import Cache
 
 public struct Providable {
     /**
@@ -11,52 +12,59 @@ public struct Providable {
         they are not initialized until the 
         droplet starts.
     */
-    var server: ServerProtocol.Type?
+    public var server: ServerProtocol.Type?
 
     /**
         An optional `Sessions` to provide
         to the droplet.
     */
-    var sessions: Sessions?
+    public var sessions: Sessions?
 
 
     /**
         An optional `HashDriver` to provide
         to the droplet.
      */
-    var hash: Hash?
+    public var hash: Hash?
 
     /**
         An optional `ConsoleProtocol` to provide
         to the droplet.
     */
-    var console: ConsoleProtocol?
+    public var console: ConsoleProtocol?
 
     /**
         An optional `Log` to provide to the droplet.
     */
-    var log: Log?
+    public var log: Log?
 
     /**
          An optional `HTTPClient` add-on used to make
          outgoing web request operations.
      */
-    var client: ClientProtocol.Type?
+    public var client: ClientProtocol.Type?
 
     /**
         An optional `Database` that will be used
         by the droplet for all Fluent queries.
     */
-    var database: Database?
+    public var database: Database?
 
-    init(
+    /**
+        An optional `CacheProtocol` that will be used
+        by the droplet for key:value pair storage.
+    */
+    public var cache: CacheProtocol?
+
+    public init(
         server: ServerProtocol.Type? = nil,
         sessions: Sessions? = nil,
         hash: Hash? = nil,
         console: ConsoleProtocol? = nil,
         log: Log? = nil,
         client: ClientProtocol.Type? = nil,
-        database: Database? = nil
+        database: Database? = nil,
+        cache: CacheProtocol? = nil
     ) {
         self.server = server
         self.sessions = sessions
@@ -65,5 +73,6 @@ public struct Providable {
         self.log = log
         self.client = client
         self.database = database
+        self.cache = cache
     }
 }

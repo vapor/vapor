@@ -47,7 +47,7 @@ extension Droplet: Responder {
         }
 
         // Loop through middlewares in order
-        responder = globalMiddleware.reversed().chain(to: responder)
+        responder = middleware.reversed().chain(to: responder)
 
         var response: Response
         do {

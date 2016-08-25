@@ -63,7 +63,7 @@ class SessionTests: XCTestCase {
 
         var sessionMiddleware: SessionMiddleware?
 
-        for middleware in drop.globalMiddleware {
+        for middleware in drop.middleware {
             if let middleware = middleware as? SessionMiddleware {
                 sessionMiddleware = middleware
             }

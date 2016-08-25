@@ -25,9 +25,9 @@ class RouteTests: XCTestCase {
     func testRouteParams() throws {
         let router = Router<RequestHandler>()
         router.register(path: ["0.0.0.0", Method.get.description, ":zero", ":one", ":two", "*"]) { req in
-            let zero = req.parameters["zero"] ?? "[fail]"
-            let one = req.parameters["one"] ?? "[fail]"
-            let two = req.parameters["two"] ?? "[fail]"
+            let zero = req.parameters["zero"]?.string ?? "[fail]"
+            let one = req.parameters["one"]?.string ?? "[fail]"
+            let two = req.parameters["two"]?.string ?? "[fail]"
             return Response(body: "\(zero):\(one):\(two)")
         }
 

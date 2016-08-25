@@ -8,9 +8,9 @@ import struct Core.Bytes
 */
 public class SHA2Hasher: Hash {
 
-    var variant: Variant
+    public let variant: Variant
 
-    init(variant: Variant) {
+    public init(variant: Variant) {
         self.variant = variant
         self.key = ""
         self.keyBuffer = []

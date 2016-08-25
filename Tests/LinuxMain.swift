@@ -1,11 +1,24 @@
 #if os(Linux)
 
 import XCTest
+@testable import CacheTestSuite
+@testable import CookiesTestSuite
 @testable import VaporTestSuite
 @testable import RoutingTestSuite
 @testable import HTTPRoutingTestSuite
 
 XCTMain([
+    // Cache
+    testCase(FluentCacheTests.allTests),
+    testCase(MemoryCacheTests.allTests),
+
+    // Cookies
+    testCase(CookiesTests.allTests),
+    testCase(CookieTests.allTests),
+    testCase(HTTPTests.allTests),
+    testCase(ParsingTests.allTests),
+    testCase(SerializingTests.allTests),
+
     // Vapor
     testCase(ConfigTests.allTests),
     testCase(ConsoleTests.allTests),
@@ -23,7 +36,7 @@ XCTMain([
     testCase(ProcessTests.allTests),
     testCase(ProviderTests.allTests),
     testCase(ResourceTests.allTests),
-    testCase(ResponseTests.allTests),
+    testCase(RoutingTests.allTests),
     testCase(SessionTests.allTests),
     testCase(ValidationConvenienceTests.allTests),
     testCase(ValidationCountTests.allTests),
@@ -33,6 +46,7 @@ XCTMain([
     // Routing
     testCase(BranchTests.allTests),
     testCase(RouteBuilderTests.allTests),
+    testCase(RouteCollectionTests.allTests),
     testCase(RouterTests.allTests),
     testCase(RouteTests.allTests),
 

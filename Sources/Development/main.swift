@@ -3,6 +3,8 @@ import Vapor
 import libc
 import HTTP
 import Transport
+import Routing
+import Cookies
 
 #if os(Linux)
 let workDir = "./Sources/Development"
@@ -14,13 +16,84 @@ var workDir: String {
 }
 #endif
 
-let drop = Droplet(workDir: workDir)
+let sha512 = SHA2Hasher(variant: .sha512)
+
+let drop = Droplet(workDir: workDir, hash: sha512)
 let 😀 = Response(status: .ok)
+
+let hashed = drop.hash.make("test")
+
+
+enum FooError: Error {
+    case fooServiceUnavailable
+}
+
+final class FooErrorMiddleware: Middleware {
+    func respond(to request: Request, chainingTo next: Responder) throws -> Response {
+        do {
+            return try next.respond(to: request)
+        } catch FooError.fooServiceUnavailable {
+            throw Abort.custom(
+                status: .badRequest,
+                message: "Sorry, we were unable to query the Foo service."
+            )
+        }
+    }
+}
+
+drop.get("sess") { req in
+    print(req.cookies)
+    let res = Response()
+    res.cookies["test-cookie"] = "123"
+
+    let cookie = Cookie(name: "custom", value: "42")
+    res.cookies.insert(cookie)
+    
+    return res
+}
+
+
+drop.get("users", Int.self) { request, userId in
+    return "You requested User #\(userId)"
+}
 
 //MARK: Basic
 
 drop.get { request in
     return try drop.view("welcome.html")
+}
+
+// MARK: Cache
+
+drop.get("cache") { request in
+    guard let key = request.data["key"].string else {
+        throw Abort.badRequest
+    }
+
+    return try drop.cache.get(key).string ?? "nil"
+}
+
+drop.post("cache") { request in
+    guard
+        let key = request.data["key"].string,
+        let value = request.data["value"].string
+    else {
+        throw Abort.badRequest
+    }
+
+    try drop.cache.set(key, value)
+
+    return "Set"
+}
+
+drop.delete("cache") { request in
+    guard let key = request.data["key"].string else {
+        throw Abort.badRequest
+    }
+
+    try drop.cache.delete(key)
+
+    return "Deleted"
 }
 
 drop.get("client-socket") { req in
@@ -465,6 +538,17 @@ drop.get("chunked") { request in
         try stream.close()
     }
 }
+
+struct TestCollection: RouteCollection, EmptyInitializable {
+    typealias Wrapped = Responder
+    func build<Builder : RouteBuilder where Builder.Value == Responder>(_ builder: Builder) {
+        builder.get("test") { request in
+            return "Test Collection"
+        }
+    }
+}
+
+drop.grouped("test-collection").collection(TestCollection.self)
 
 #if !os(Linux)
     /*

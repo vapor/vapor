@@ -119,8 +119,8 @@ class RouterTests: XCTestCase {
     func testParameters() throws {
         let router = Router<RequestHandler>()
         router.register(path: ["0.0.0.0", "GET", "hello", ":name", ":age"]) { request in
-            guard let name = request.parameters["name"] else { throw "missing param: name" }
-            guard let age = request.parameters["age"].flatMap({ Int($0) }) else { throw "missing or invalid param: age" }
+            guard let name = request.parameters["name"]?.string else { throw "missing param: name" }
+            guard let age = request.parameters["age"]?.int else { throw "missing or invalid param: age" }
             return Response(body: "Hello, \(name) aged \(age).")
         }
 
