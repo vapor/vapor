@@ -30,7 +30,7 @@
 */
 public struct Both<
     V: Validator,
-    U: Validator where V.InputType == U.InputType> {
+    U: Validator> where V.InputType == U.InputType {
     fileprivate typealias Validator = (V.InputType) throws -> Void
     fileprivate let validator: Validator
 

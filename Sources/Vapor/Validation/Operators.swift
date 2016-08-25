@@ -39,7 +39,7 @@ public prefix func ! <V: ValidationSuite> (rhs: V.Type) -> Not<V> {
 
     - returns: Either<V,U> representing the || combination of the two validators
 */
-public func || <V: Validator, U: Validator where V.InputType == U.InputType> (lhs: V, rhs: U) -> Either<V, U> {
+public func || <V: Validator, U: Validator> (lhs: V, rhs: U) -> Either<V, U> where V.InputType == U.InputType {
     return  Either(lhs, rhs)
 }
 
@@ -52,7 +52,7 @@ public func || <V: Validator, U: Validator where V.InputType == U.InputType> (lh
 
     - returns: Either<V,U> representing the || combination of the two validators
 */
-public func || <V: Validator, U: ValidationSuite where V.InputType == U.InputType> (lhs: V, rhs: U.Type) -> Either<V, U> {
+public func || <V: Validator, U: ValidationSuite> (lhs: V, rhs: U.Type) -> Either<V, U> where V.InputType == U.InputType {
     return  Either(lhs, rhs)
 }
 
@@ -65,7 +65,7 @@ public func || <V: Validator, U: ValidationSuite where V.InputType == U.InputTyp
 
     - returns: Either<V,U> representing the || combination of the two validators
 */
-public func || <V: ValidationSuite, U: Validator where V.InputType == U.InputType> (lhs: V.Type, rhs: U) -> Either<V, U> {
+public func || <V: ValidationSuite, U: Validator> (lhs: V.Type, rhs: U) -> Either<V, U> where V.InputType == U.InputType {
     return  Either(lhs, rhs)
 }
 
@@ -78,7 +78,7 @@ public func || <V: ValidationSuite, U: Validator where V.InputType == U.InputTyp
 
     - returns: Either<V,U> representing the || combination of the two validators
 */
-public func || <V: ValidationSuite, U: ValidationSuite where V.InputType == U.InputType> (lhs: V.Type, rhs: U.Type) -> Either<V, U> {
+public func || <V: ValidationSuite, U: ValidationSuite> (lhs: V.Type, rhs: U.Type) -> Either<V, U> where V.InputType == U.InputType {
     return  Either(lhs, rhs)
 }
 
@@ -93,7 +93,7 @@ public func || <V: ValidationSuite, U: ValidationSuite where V.InputType == U.In
 
     - returns: an Both<V,U> object representing the concatination of the two validators
 */
-public func && <V: Validator, U: Validator where V.InputType == U.InputType> (lhs: V, rhs: U) -> Both<V, U> {
+public func && <V: Validator, U: Validator> (lhs: V, rhs: U) -> Both<V, U> where V.InputType == U.InputType {
     return Both(lhs, rhs)
 }
 
@@ -106,7 +106,7 @@ public func && <V: Validator, U: Validator where V.InputType == U.InputType> (lh
 
     - returns: an Both<V,U> object representing the concatination of the two validators
 */
-public func && <V: Validator, U: ValidationSuite where V.InputType == U.InputType> (lhs: V, rhs: U.Type) -> Both<V, U> {
+public func && <V: Validator, U: ValidationSuite> (lhs: V, rhs: U.Type) -> Both<V, U> where V.InputType == U.InputType {
     return Both(lhs, rhs)
 }
 
@@ -119,7 +119,7 @@ public func && <V: Validator, U: ValidationSuite where V.InputType == U.InputTyp
 
     - returns: an Both<V,U> object representing the concatination of the two validators
 */
-public func && <V: ValidationSuite, U: Validator where V.InputType == U.InputType> (lhs: V.Type, rhs: U) -> Both<V, U> {
+public func && <V: ValidationSuite, U: Validator> (lhs: V.Type, rhs: U) -> Both<V, U> where V.InputType == U.InputType {
     return Both(lhs, rhs)
 }
 
@@ -132,6 +132,6 @@ public func && <V: ValidationSuite, U: Validator where V.InputType == U.InputTyp
 
     - returns: an Both<V,U> object representing the concatination of the two validators
 */
-public func && <V: ValidationSuite, U: ValidationSuite where V.InputType == U.InputType> (lhs: V.Type, rhs: U.Type) -> Both<V, U> {
+public func && <V: ValidationSuite, U: ValidationSuite> (lhs: V.Type, rhs: U.Type) -> Both<V, U> where V.InputType == U.InputType {
     return Both(lhs, rhs)
 }

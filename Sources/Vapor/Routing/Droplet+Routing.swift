@@ -27,10 +27,10 @@ extension RouteBuilder where Value == Responder {
 
 extension RouteBuilder {
     public func collection<
-        C: RouteCollection
+        C: RouteCollection>(_ collectionType: C.Type)
         where C.Wrapped == Value,
         C: EmptyInitializable
-    >(_ collectionType: C.Type) {
+    {
         let collection = collectionType.init()
         self.collection(collection)
     }

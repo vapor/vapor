@@ -83,9 +83,9 @@ extension Validatable {
         - returns: self if passed suite
     */
     public func tested<
-        S: ValidationSuite
-        where S.InputType == Self>(by suite: S.Type)
-        throws -> Self {
+        S: ValidationSuite>(by suite: S.Type)
+        throws -> Self
+        where S.InputType == Self {
             return try tested(by: suite.validate)
     }
 }
@@ -102,9 +102,9 @@ extension Optional where Wrapped: Validatable {
         - returns: self if passed validator
     */
     public func tested<
-        V: Validator
-        where V.InputType == Wrapped>(by validator: V)
-        throws -> Wrapped {
+        V: Validator>(by validator: V)
+        throws -> Wrapped
+        where V.InputType == Wrapped {
             guard case .some(let value) = self else {
                 throw ValidationError(validator, input: nil)
             }
@@ -122,9 +122,9 @@ extension Optional where Wrapped: Validatable {
         - returns: self if passed suite
     */
     public func tested<
-        S: ValidationSuite
-        where S.InputType == Wrapped>(by suite: S.Type)
-        throws -> Wrapped {
+        S: ValidationSuite>(by suite: S.Type)
+        throws -> Wrapped
+        where S.InputType == Wrapped {
             guard case .some(let value) = self else {
                 throw ValidationError(suite, input: nil)
             }
@@ -261,9 +261,9 @@ extension Optional where Wrapped: Validatable {
         - returns: a Valid<V> protecting a successfully validated value
     */
     public func validated<
-        V: Validator
-        where V.InputType == Wrapped>(by validator: V)
-        throws -> Valid<V> {
+        V: Validator>(by validator: V)
+        throws -> Valid<V>
+        where V.InputType == Wrapped {
             guard case .some(let value) = self else {
                 throw ValidationError(validator, input: nil)
             }
@@ -281,9 +281,9 @@ extension Optional where Wrapped: Validatable {
         - returns: a Valid<V> protecting a successfully validated value
     */
     public func validated<
-        S: ValidationSuite
-        where S.InputType == Wrapped>(by suite: S.Type = S.self)
-        throws -> Valid<S> {
+        S: ValidationSuite>(by suite: S.Type = S.self)
+        throws -> Valid<S>
+        where S.InputType == Wrapped {
             guard case .some(let value) = self else {
                 throw ValidationError(suite, input: nil)
             }

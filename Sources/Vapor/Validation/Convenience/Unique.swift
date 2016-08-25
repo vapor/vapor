@@ -2,10 +2,11 @@
     Validates a given sequence is unique
 */
 public struct Unique<
-    T where
+    T>: ValidationSuite where
     T: Sequence,
     T: Validatable,
-    T.Iterator.Element: Equatable>: ValidationSuite {
+    T.Iterator.Element: Equatable
+{
 
     /**
         validate
