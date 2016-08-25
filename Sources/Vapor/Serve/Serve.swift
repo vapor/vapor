@@ -24,7 +24,7 @@ public class Serve: Command {
     public required init(
         console: ConsoleProtocol,
         prepare: Prepare,
-        serve: ServeFunction
+        serve: @escaping ServeFunction
     ) {
         self.console = console
         self.prepare = prepare

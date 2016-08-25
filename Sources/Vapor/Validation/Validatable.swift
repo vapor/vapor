@@ -52,7 +52,7 @@ extension Validatable {
         - returns: self if passed tester
     */
     public func tested(
-        by tester: @noescape (input: Self) throws -> Void)
+        by tester: @noescape (Self) throws -> Void)
         rethrows -> Self {
             try tester(input: self)
             return self
@@ -143,7 +143,7 @@ extension Validatable {
 
         - returns: whether or not the caller passed
     */
-    public func passes(_ tester: @noescape (input: Self) throws -> Void) -> Bool {
+    public func passes(_ tester: @noescape (Self) throws -> Void) -> Bool {
         do {
             try tester(input: self)
             return true
@@ -184,7 +184,7 @@ extension Optional where Wrapped: Validatable {
 
         - returns: whether or not the caller passed
     */
-    public func passes(_ tester: @noescape (input: Wrapped) throws -> Void) -> Bool {
+    public func passes(_ tester: @noescape (Wrapped) throws -> Void) -> Bool {
         guard case .some(let value) = self else { return false }
         return value.passes(tester)
     }

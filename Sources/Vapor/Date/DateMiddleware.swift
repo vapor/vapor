@@ -1,6 +1,6 @@
 import Foundation
 import HTTP
-import Cookies
+import Core
 
 public final class DateMiddleware: Middleware {
     public func respond(to request: Request, chainingTo next: Responder) throws -> Response {

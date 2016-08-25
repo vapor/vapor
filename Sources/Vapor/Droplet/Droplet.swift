@@ -287,7 +287,7 @@ public class Droplet {
         // from provided or defaults.
         self.router = Router()
         self.server = provided.server ?? Server<TCPServerStream, Parser<Request>, Serializer<Response>>.self
-        let client = provided.client ?? Client<TCPClientStream>.self
+        let client = provided.client ?? Client<TCPClientStream, Serializer<Request>, Parser<Response>>.self
         self.client = client
 
         // misc arrays and other stored properties

@@ -31,7 +31,7 @@
 public struct Both<
     V: Validator,
     U: Validator where V.InputType == U.InputType> {
-    private typealias Validator = (input: V.InputType) throws -> Void
+    private typealias Validator = (V.InputType) throws -> Void
     private let validator: Validator
 
     /**
@@ -41,8 +41,8 @@ public struct Both<
     */
     private init(_ lhs: Validator, _ rhs: Validator) {
         validator = { value in
-            try lhs(input: value)
-            try rhs(input: value)
+            try lhs(value)
+            try rhs(value)
         }
     }
 }

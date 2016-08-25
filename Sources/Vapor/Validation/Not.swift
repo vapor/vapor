@@ -30,7 +30,7 @@
      !validatorToInvert
 */
 public struct Not<V: Validator> {
-    private typealias Validator = (input: V.InputType) throws -> Void
+    private typealias Validator = (V.InputType) throws -> Void
     private let validator: Validator
 
     /**
@@ -38,10 +38,10 @@ public struct Not<V: Validator> {
 
         Must stay private.
     */
-    private init(_ validator: Validator) {
+    private init(_ validator: @escaping Validator) {
         self.validator = { value in
             do {
-                try validator(input: value)
+                try validator(value)
             } catch {
                 return
             }

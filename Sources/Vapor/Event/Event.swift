@@ -5,7 +5,7 @@ extension Subscription {
 
         It should only be used internally.
      */
-    private struct Holder {
+    fileprivate struct Holder {
         /// The subscription that should be contained
         weak var subscription: Subscription?
     }

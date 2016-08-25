@@ -62,7 +62,7 @@ public class Config {
         arguments: [String] = ProcessInfo.arguments()
     ) throws {
         let configDirectory = workingDirectory.finished(with: "/") + "Config/"
-        self.environment = environment ?? Environment.loader(arguments: arguments)
+        self.environment = environment ?? Environment.loader(arguments)
 
         let seedFile = JSONFile(name: "app", json: seed)
         let seedDirectory = JSONDirectory(name: "seed-data", files: [seedFile])
@@ -93,7 +93,7 @@ public class Config {
     }
 
     public init() {
-        self.environment = Environment.loader(arguments: ProcessInfo.arguments())
+        self.environment = Environment.loader(ProcessInfo.arguments())
         self.directoryQueue = PrioritizedDirectoryQueue(directories: [])
     }
 
@@ -150,7 +150,7 @@ extension Environment {
     /**
         Used to load Environment automatically. Defaults to looking for `env` command line argument
      */
-    static var loader: (arguments: [String]) -> Environment = { arguments in
+    static var loader: ([String]) -> Environment = { arguments in
         if let env = arguments.value(for: "env").flatMap(Environment.init(id:)) {
             return env
         } else {

@@ -12,7 +12,6 @@ public class SHA2Hasher: Hash {
 
     public init(variant: Variant) {
         self.variant = variant
-        self.key = ""
         self.keyBuffer = []
     }
 
@@ -20,6 +19,7 @@ public class SHA2Hasher: Hash {
         Hashing variant to use
      */
     public enum Variant  {
+        case sha224
         case sha256
         case sha384
         case sha512
@@ -46,20 +46,20 @@ public class SHA2Hasher: Hash {
         - returns: a hashed string
      */
     public func make(_ message: String) -> String {
-        let msgBuff = message.bytes
-
-        let hashed: Bytes
+        let auth: Authenticatable.Type
 
         switch variant {
+        case .sha224:
+            auth = SHA224.self
         case .sha256:
-            hashed = HMAC<SHA2<SHA256>>.authenticate(message: msgBuff, withKey: keyBuffer)
+            auth = SHA256.self
         case .sha384:
-            hashed = HMAC<SHA2<SHA384>>.authenticate(message: msgBuff, withKey: keyBuffer)
+            auth = SHA384.self
         case .sha512:
-            hashed = HMAC<SHA2<SHA512>>.authenticate(message: msgBuff, withKey: keyBuffer)
+            auth = SHA512.self
         }
 
-        return hashed.hexString
+        return HMAC(auth, message.bytes).authenticate(key: keyBuffer).hexString
     }
 
 }
