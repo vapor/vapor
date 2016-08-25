@@ -94,7 +94,7 @@ extension Signature {
     }
 
     var handler: String {
-        return "handler: (\(handlerInput)) throws -> \(handlerOutput)"
+        return "handler: @escaping (\(handlerInput)) throws -> \(handlerOutput)"
     }
 
     var handlerInput: String {
