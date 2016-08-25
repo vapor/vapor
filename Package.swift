@@ -33,14 +33,13 @@ let package = Package(
     ],
     dependencies: [
         // SHA2 + HMAC hashing. Used by the core to create session identifiers.
-        .Package(url: "https://github.com/CryptoKitten/HMAC.git", majorVersion: 0, minor: 10),
-        .Package(url: "https://github.com/CryptoKitten/SHA2.git", majorVersion: 0, minor: 9),
+        .Package(url: "https://github.com/vapor/crypto.git", majorVersion: 0),
 
         // ORM for interacting with databases
         .Package(url: "https://github.com/vapor/fluent.git", majorVersion: 0, minor: 9),
 
         // Core vapor transport layer
-        .Package(url: "https://github.com/vapor/engine.git", majorVersion: 0, minor: 5),
+        .Package(url: "https://github.com/vapor/engine.git", majorVersion: 0, minor: 0),
 
         // Console protocol and implementation for powering command line interface.
         .Package(url: "https://github.com/vapor/console.git", majorVersion: 0, minor: 5),
