@@ -14,7 +14,7 @@ public struct Cookies {
         Initialize a Cookies with
         a sequence of cookies.
     */
-    public init<C: Sequence where C.Iterator.Element == Cookie>(cookies: C) {
+    public init<C: Sequence>(cookies: C) where C.Iterator.Element == Cookie {
         self.cookies = []
 
         for cookie in cookies {

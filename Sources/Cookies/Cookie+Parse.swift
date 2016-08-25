@@ -16,7 +16,7 @@ extension Cookie {
 
         cookie=42; Domain=.foo.com
     */
-    public init<B: Sequence where B.Iterator.Element == Byte>(_ bytes: B) throws {
+    public init<B: Sequence>(_ bytes: B) throws where B.Iterator.Element == Byte {
         var name: String?
         var value: String?
         var expires: Date?

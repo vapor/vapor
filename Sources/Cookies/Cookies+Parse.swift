@@ -11,7 +11,7 @@ extension Cookies {
      
              cookie=42; cookie-2=1337;
     */
-    public init<B: Sequence where B.Iterator.Element == Byte>(_ bytes: B, for method: ParseMethod) throws {
+    public init<B: Sequence>(_ bytes: B, for method: ParseMethod) throws where B.Iterator.Element == Byte {
         var cookies: Cookies = []
 
         // cookies are sent separated by semicolons
