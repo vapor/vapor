@@ -24,7 +24,7 @@ class RouteCollectionTests: XCTestCase {
 final class TestRouteCollection: RouteCollection {
     init() {}
     typealias Wrapped = Int
-    func build<Builder: RouteBuilder where Builder.Value == Wrapped>(_ builder: Builder) {
+    func build<Builder: RouteBuilder>(_ builder: Builder) where Builder.Value == Wrapped {
         builder.add(path: ["foo", "bar"], value: 5)
 
         builder.group(prefix: [], path: ["group"], map: nil, closure: { group in

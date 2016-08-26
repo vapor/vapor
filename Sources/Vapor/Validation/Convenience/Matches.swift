@@ -1,7 +1,7 @@
 /**
     Validates that matches a given input
 */
-public struct Matches<T where T: Validatable, T: Equatable>: Validator {
+public struct Matches<T>: Validator where T: Validatable, T: Equatable {
     /**
         The value expected to be in sequence
     */

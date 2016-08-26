@@ -37,7 +37,7 @@ extension Routing.Router {
 }
 
 extension String {
-    private var pathComponents: [String] {
+    fileprivate var pathComponents: [String] {
         return characters
             .split(separator: "/", omittingEmptySubsequences: true)
             .map { String($0) }

@@ -156,7 +156,7 @@ public class Droplet {
         // use arguments provided in init or
         // default to the arguments provided
         // via the command line interface
-        let arguments = arguments ?? ProcessInfo.arguments()
+        let arguments = arguments ?? CommandLine.arguments
         self.arguments = arguments
 
         // use the working directory provided
@@ -257,14 +257,13 @@ public class Droplet {
         }
         self.localization = localization
 
-        // initialize the hash from one provided
-        // or use a default SHA2 hasher
-        let hash = provided.hash ?? SHA2Hasher(variant: .sha256)
-        self.hash = hash
-
         // set the hashing key to the key
         // from the configuration files or nothing.
-        hash.key = config["app", "key"].string ?? ""
+        let key = config["app", "key"].string
+        // initialize the hash from one provided
+        // or use a default SHA2 hasher
+        let hash = provided.hash ?? SHA2Hasher(variant: .sha256, defaultKey: key)
+        self.hash = hash
 
         // use provided sessions or MemorySessions by default
         let sessions = provided.sessions ?? MemorySessions(hash: hash)
@@ -287,7 +286,7 @@ public class Droplet {
         // from provided or defaults.
         self.router = Router()
         self.server = provided.server ?? Server<TCPServerStream, Parser<Request>, Serializer<Response>>.self
-        let client = provided.client ?? Client<TCPClientStream>.self
+        let client = provided.client ?? Client<TCPClientStream, Serializer<Request>, Parser<Response>>.self
         self.client = client
 
         // misc arrays and other stored properties

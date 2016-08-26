@@ -3,7 +3,7 @@
     and value map that are added to the underlying
     RouteBuilder when used.
 */
-public class RouteGroup<Wrapped, Builder: RouteBuilder where Builder.Value == Wrapped> {
+public class RouteGroup<Wrapped, Builder: RouteBuilder> where Builder.Value == Wrapped {
     /**
         A closure that maps values
         to other values, useful for middleware.

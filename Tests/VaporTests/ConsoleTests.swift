@@ -164,8 +164,7 @@ class TestConsoleDriver: ConsoleProtocol {
 
     }
 
-    func execute(_ command: String) throws {
-
+    public func execute(program: String, arguments: [String], input: Int32?, output: Int32?, error: Int32?) throws {
     }
 
     func subexecute(_ command: String, input: String) throws -> String {

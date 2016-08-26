@@ -1,6 +1,7 @@
 import Console
 
 class DebugConsole: ConsoleProtocol {
+
     let size: (width: Int, height: Int)
     init() {
         size = (0, 0)
@@ -25,6 +26,6 @@ class DebugConsole: ConsoleProtocol {
     }
 
     func clear(_ clear: ConsoleClear) { }
-    func execute(_ command: String) throws { }
+    public func execute(program: String, arguments: [String], input: Int32?, output: Int32?, error: Int32?) throws {}
     func subexecute(_ command: String, input: String) throws -> String { return "" }
 }

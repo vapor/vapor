@@ -58,7 +58,12 @@ public class MemorySessions: Sessions {
         identifier += Int.random(min: 0, max: 9999).description
         identifier += "k3y"
         identifier += Int.random(min: 0, max: 9999).description
-        return hash.make(identifier)
+        // FIXME:
+        if let properHash = try? hash.make(identifier) {
+            return properHash
+        } else {
+            return ""
+        }
     }
 
     /**

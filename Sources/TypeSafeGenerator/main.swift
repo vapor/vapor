@@ -4,7 +4,7 @@ import Foundation
 let generator = Generator(max: 3)
 let code = generator.generate()
 
-if Process.arguments.count < 2 {
+if CommandLine.arguments.count < 2 {
     print("⚠️ IMPORTANT")
     print("To run the Generator, you must pass the $(SRCROOT)")
     print("as the first argument to the executable.")
@@ -14,7 +14,7 @@ if Process.arguments.count < 2 {
     fatalError("$(SRCROOT) must be passed as a parameter")
 }
 
-let path = ProcessInfo.processInfo.arguments[1].replacingOccurrences(of: "XcodeProject", with: "")
+let path = CommandLine.arguments[1].replacingOccurrences(of: "XcodeProject", with: "")
 let url = URL(fileURLWithPath: path + "/Sources/TypeSafeRouting/Generated.swift")
 
 do{

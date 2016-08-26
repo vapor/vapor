@@ -1,3 +1,4 @@
+import Core
 import Foundation
 import libc
 
@@ -12,12 +13,10 @@ class FileManager {
     }
 
     static func readBytesFromFile(_ path: String) throws -> [UInt8] {
-        guard let data = NSData(contentsOfFile: path) else {
-            throw Error.CouldNotOpenFile
-        }
-        return data.byteArray 
+        return try DataFile().load(path: path)
     }
 
+    // TODO: Try FileManager
     static func fileAtPath(_ path: String) -> (exists: Bool, isDirectory: Bool) {
         var isDirectory = false
         var s = stat()

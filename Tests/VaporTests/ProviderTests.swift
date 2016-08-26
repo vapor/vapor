@@ -69,7 +69,7 @@ private final class FastServer: ServerProtocol {
         self.securityLayer = securityLayer
     }
 
-    func start(responder: Responder, errors: ServerErrorHandler) throws {
+    func start(responder: Responder, errors: @escaping ServerErrorHandler) throws {
 
     }
 }
@@ -105,7 +105,7 @@ private final class SlowServer: ServerProtocol {
         self.securityLayer = securityLayer
     }
 
-    func start(responder: Responder, errors: ServerErrorHandler) throws {
+    func start(responder: Responder, errors: @escaping ServerErrorHandler) throws {
 
     }
 }

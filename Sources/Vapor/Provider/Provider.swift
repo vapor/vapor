@@ -29,7 +29,7 @@ public protocol Provider: ConfigInitializable {
 
 extension Provider {
     public var name: String {
-        let type = "\(self.dynamicType)"
+        let type = "\(type(of: self))"
         guard let characters = type.characters.split(separator: " ").first else {
             return "Provider"
         }

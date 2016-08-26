@@ -7,5 +7,5 @@
 */
 public protocol RouteCollection {
     associatedtype Wrapped
-    func build<Builder: RouteBuilder where Builder.Value == Wrapped>(_ builder: Builder)
+    func build<Builder: RouteBuilder>(_ builder: Builder) where Builder.Value == Wrapped
 }
