@@ -89,6 +89,11 @@ public class Droplet {
     public let log: Log
 
     /**
+        Render static and templated views.
+    */
+    public let view: ViewRenderer
+
+    /**
         Expose to end users to customize driver
         Make outgoing requests
     */
@@ -139,6 +144,7 @@ public class Droplet {
         hash: Hash? = nil,
         console: ConsoleProtocol? = nil,
         log: Log? = nil,
+        view: ViewRenderer? = nil,
         client: ClientProtocol.Type? = nil,
         database: Database? = nil,
         cache: CacheProtocol? = nil,
@@ -209,6 +215,7 @@ public class Droplet {
             hash: hash,
             console: console,
             log: log,
+            view: view,
             client: client,
             database: database,
             cache: cache
@@ -241,6 +248,8 @@ public class Droplet {
         for item in logs {
             log.log(item.level, message: item.message)
         }
+
+        self.view = provided.view ?? LeafRenderer(viewsDir: workDir + "Resources/View")
 
         // use the provided localization or 
         // initialize one from the working directory.

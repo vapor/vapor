@@ -39,6 +39,12 @@ public struct Providable {
     public var log: Log?
 
     /**
+        An optional `ViewRenderer` to provide to
+        the droplet.
+    */
+    public var view: ViewRenderer?
+
+    /**
          An optional `HTTPClient` add-on used to make
          outgoing web request operations.
      */
@@ -62,6 +68,7 @@ public struct Providable {
         hash: Hash? = nil,
         console: ConsoleProtocol? = nil,
         log: Log? = nil,
+        view: ViewRenderer? = nil,
         client: ClientProtocol.Type? = nil,
         database: Database? = nil,
         cache: CacheProtocol? = nil
@@ -71,6 +78,7 @@ public struct Providable {
         self.hash = hash
         self.console = console
         self.log = log
+        self.view = view
         self.client = client
         self.database = database
         self.cache = cache

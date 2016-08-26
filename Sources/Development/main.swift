@@ -60,7 +60,9 @@ drop.get("users", Int.self) { request, userId in
 //MARK: Basic
 
 drop.get { request in
-    return try drop.view("welcome.html")
+    return try drop.view.make("welcome", [
+        "name": "World"
+    ])
 }
 
 // MARK: Cache
