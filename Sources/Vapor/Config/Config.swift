@@ -2,16 +2,6 @@ import Foundation
 import JSON
 import PathIndexable
 
-extension ProcessInfo {
-    static func arguments() -> [String] {
-        #if !os(Linux)
-            return ProcessInfo.processInfo.arguments
-        #else
-            return ProcessInfo.processInfo().arguments
-        #endif
-    }
-}
-
 private struct PrioritizedDirectoryQueue {
     let directories: [JSONDirectory]
 
@@ -59,7 +49,7 @@ public class Config {
         seed: JSON = JSON(),
         workingDirectory: String = "./",
         environment: Environment? = nil,
-        arguments: [String] = ProcessInfo.arguments()
+        arguments: [String] = CommandLine.arguments
     ) throws {
         let configDirectory = workingDirectory.finished(with: "/") + "Config/"
         self.environment = environment ?? Environment.loader(arguments)
@@ -93,7 +83,7 @@ public class Config {
     }
 
     public init() {
-        self.environment = Environment.loader(ProcessInfo.arguments())
+        self.environment = Environment.loader(CommandLine.arguments)
         self.directoryQueue = PrioritizedDirectoryQueue(directories: [])
     }
 

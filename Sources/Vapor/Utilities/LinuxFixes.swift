@@ -14,13 +14,13 @@ import Foundation
     extension Foundation.NSMutableDictionary {
         public subscript(key: String) -> AnyObject? {
             get {
-                return self.objectForKey(NSString(string: key))
+                return object(forKey: key)
             }
             set {
                 guard let value = newValue else {
                     return
                 }
-                self.setObject(value, forKey: NSString(string: key))
+                self.setObject(value, forKey: key)
             }
         }
     }

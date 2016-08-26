@@ -156,7 +156,7 @@ public class Droplet {
         // use arguments provided in init or
         // default to the arguments provided
         // via the command line interface
-        let arguments = arguments ?? ProcessInfo.arguments()
+        let arguments = arguments ?? CommandLine.arguments
         self.arguments = arguments
 
         // use the working directory provided
