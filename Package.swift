@@ -48,6 +48,9 @@ let package = Package(
 
         // A security framework for Swift.
         // .Package(url: "https://github.com/stormpath/Turnstile.git", majorVersion: 0, minor: 1),
+
+		// An extensible templating language built for Vapor. 🍃
+		.Package(url: "https://github.com/vapor/leaf.git", majorVersion: 0, minor: 1)
     ],
     exclude: [
         // No excludes currently
