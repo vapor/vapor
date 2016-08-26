@@ -249,7 +249,7 @@ public class Droplet {
             log.log(item.level, message: item.message)
         }
 
-        self.view = provided.view ?? LeafRenderer(viewsDir: workDir + "Resources/View")
+        self.view = provided.view ?? LeafRenderer(viewsDir: workDir + "Resources/Views")
 
         // use the provided localization or 
         // initialize one from the working directory.
