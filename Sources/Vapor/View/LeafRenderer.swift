@@ -1,7 +1,7 @@
 import Leaf
 
 public final class LeafRenderer: ViewRenderer {
-    let stem: Stem
+    public let stem: Stem
 
     public init(viewsDir: String) {
         stem = Stem(workingDirectory: viewsDir)
