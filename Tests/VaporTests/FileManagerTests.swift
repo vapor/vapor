@@ -7,6 +7,7 @@
 //
 
 import XCTest
+import Core
 @testable import Vapor
 
 class FileManagerTests: XCTestCase {
@@ -21,15 +22,13 @@ class FileManagerTests: XCTestCase {
         XCTAssertFalse(bytes.isEmpty)
     }
     
-    func testReadsFromNonExistingFile() {
+    func testReadsFromNonExistingFile() throws {
         let filename = "/nonsene/doesntExist.txt"
         do {
             let _ = try FileManager.readBytesFromFile(filename)
             XCTFail("Should never reach here")
-        } catch Vapor.FileManager.Error.CouldNotOpenFile {
+        } catch DataFile.Error.fileLoad {
             // We're happy here
-        } catch {
-            XCTFail("Should never reach here")
         }
     }
     

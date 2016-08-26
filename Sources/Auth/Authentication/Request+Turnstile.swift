@@ -1,4 +1,4 @@
-import Turnstile
+/*import Turnstile
 import HTTP
 
 public extension Request {
@@ -10,4 +10,4 @@ public extension Request {
             storage["user"] = newValue
         }
     }
-}
+}*/

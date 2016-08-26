@@ -93,6 +93,6 @@ extension ValidationSuite {
         - throws: an error if validation fails
     */
     public func validate(input value: InputType) throws {
-        try self.dynamicType.validate(input: value)
+        try type(of: self).validate(input: value)
     }
 }

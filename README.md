@@ -8,7 +8,7 @@ A Web Framework for Swift that works on iOS, macOS, and Ubuntu.
 - [x] Modular
 - [x] Beautifully expressive
 
-![Swift](http://img.shields.io/badge/swift-v3.0--dev.07.25-brightgreen.svg)
+![Swift](http://img.shields.io/badge/swift-v3.0--dev.08.18-brightgreen.svg)
 [![Build Status](https://api.travis-ci.org/vapor/vapor.svg?branch=master)](https://travis-ci.org/vapor/vapor)
 [![CircleCI](https://circleci.com/gh/vapor/vapor.svg?style=shield)](https://circleci.com/gh/vapor/vapor)
 [![Code Coverage](https://codecov.io/gh/vapor/vapor/branch/master/graph/badge.svg)](https://codecov.io/gh/vapor/vapor)
@@ -24,6 +24,8 @@ This repository is the framework's source code. To view some sample projects, ch
 
 |Vapor|Xcode|Swift|
 |:-:|:-:|:-:|
+|0.17.x|8.0 Beta **6**|DEVELOPMENT-SNAPSHOT-2016-08-18-a|
+|0.16.x|8.0 Beta **3**|DEVELOPMENT-SNAPSHOT-2016-07-25-a|
 |0.15.x|8.0 Beta **3**|DEVELOPMENT-SNAPSHOT-2016-07-25-a|
 |0.14.x|8.0 Beta **2**|3.0-PREVIEW-2|
 |0.13.x|8.0 Beta **1**|DEVELOPMENT-SNAPSHOT-2016-06-20-a|

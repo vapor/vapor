@@ -57,7 +57,7 @@ class SessionTests: XCTestCase {
         }
 
         let uri = URI(host: "0.0.0.0", path: "cookie")
-        let request = Request(method: .get, uri: uri)
+        let request = try Request(method: .get, uri: uri)
         request.headers["Cookie"] = "vapor-session=123"
         let response = try drop.respond(to: request)
 
@@ -79,7 +79,7 @@ class SessionTests: XCTestCase {
     }
 }
 
-private class TestDriver: Sessions {
+fileprivate class TestDriver: Sessions {
     var drop = Droplet()
 
     enum Action {
@@ -99,7 +99,7 @@ private class TestDriver: Sessions {
         return nil
     }
 
-    private func contains(identifier: String) -> Bool {
+    fileprivate func contains(identifier: String) -> Bool {
         return false
     }
 

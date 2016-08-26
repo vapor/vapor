@@ -22,16 +22,16 @@ public final class Content {
 
     // Some closure weirdness to allow more complex capturing or lazy loading internally
 
-    public func append<E where E: PathIndexable, E: Polymorphic>(_ element: (Void) -> E?) {
+    public func append<E>(_ element: @escaping (Void) -> E?) where E: PathIndexable, E: Polymorphic {
         let finder: ContentLoader = { indexes in return element()?[indexes] }
         content.append(finder)
     }
 
-    public func append(_ element: ContentLoader) {
+    public func append(_ element: @escaping ContentLoader) {
         content.append(element)
     }
 
-    public func append<E where E: PathIndexable, E: Polymorphic>(_ element: E?) {
+    public func append<E>(_ element: E?) where E: PathIndexable, E: Polymorphic {
         guard let element = element else { return }
         let finder: ContentLoader = { indexes in return element[indexes] }
         content.append(finder)

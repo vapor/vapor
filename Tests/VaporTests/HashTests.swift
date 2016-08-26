@@ -18,13 +18,12 @@ class HashTests: XCTestCase {
             "key": defaultKey
         ]))
         let drop = Droplet(config: config)
-        let result = drop.hash.make(string)
+        let result = try drop.hash.make(string)
         XCTAssert(defaultExpected == result, "Hash did not match")
 
         //test Hash by itself
-        let hash = SHA2Hasher(variant: .sha256)
-        hash.key = defaultKey
-        XCTAssert(defaultExpected == hash.make(string), "Hash did not match")
+        let hash = SHA2Hasher(variant: .sha256, defaultKey: defaultKey)
+        XCTAssert(try defaultExpected == hash.make(string), "Hash did not match")
 
         //test all variants of manually
         var expected: [SHA2Hasher.Variant: String] = [:]
@@ -33,9 +32,8 @@ class HashTests: XCTestCase {
         expected[.sha512] = "9215c98b5ea5826961395de57f8e4cd2baf3d08c429d4db0f4e2d83feb12e989ffbc7dbf8611ed65ef13e6e8d5f370a803065708f38fd73a349f0869b7891bc6"
 
         for (variant, expect) in expected {
-            let hasher = SHA2Hasher(variant: variant)
-            hasher.key = defaultKey
-            let result = hasher.make(string)
+            let hasher = SHA2Hasher(variant: variant, defaultKey: defaultKey)
+            let result = try hasher.make(string)
             XCTAssert(result == expect, "Hash for \(variant) did not match")
         }
         

@@ -222,7 +222,7 @@ public class Branch<Output> { // TODO: Rename Context
         }
 
         let link = key.characters.first == ":" ? ":" : key
-        let next = subBranches[link] ?? self.dynamicType.init(name: key, output: nil)
+        let next = subBranches[link] ?? type(of: self).init(name: key, output: nil)
         next.parent = self
         // trigger lazy loads at extension time -- seek out cleaner way to do this
         _ = next.path

@@ -33,21 +33,23 @@
 */
 public struct Either<
     V: Validator,
-    U: Validator where V.InputType == U.InputType> {
-    private typealias Validator = (input: V.InputType) throws -> Void
-    private let validator: Validator
+    U: Validator
+> where V.InputType == U.InputType {
+    fileprivate typealias Validator = (V.InputType) throws -> Void
+    
+    fileprivate let validator: Validator
 
     /**
         Convenience only.
 
         Must stay private.
     */
-    private init(_ lhs: Validator, _ rhs: Validator) {
+    fileprivate init(_ lhs: @escaping Validator, _ rhs: @escaping Validator) {
         validator = { value in
             do {
-                try lhs(input: value)
+                try lhs(value)
             } catch {
-                try rhs(input: value)
+                try rhs(value)
             }
         }
     }
@@ -63,7 +65,7 @@ extension Either: Validator {
         - throws: an error on failed validation
     */
     public func validate(input value: V.InputType) throws {
-        try validator(input: value)
+        try validator(value)
     }
 }
 

@@ -2,9 +2,10 @@
     Validate that is in given collection
 */
 public struct In<
-    T where
+    T>: Validator where
     T: Validatable,
-    T: Equatable>: Validator {
+    T: Equatable
+{
 
     private let iteratorFactory: (Void) -> AnyIterator<T>
 
@@ -13,7 +14,7 @@ public struct In<
 
      - parameter sequence: the sequence to check if contains
     */
-    public init<S: Sequence where S.Iterator.Element == T>(_ sequence: S) {
+    public init<S: Sequence>(_ sequence: S) where S.Iterator.Element == T {
         iteratorFactory = {
             var iterator = sequence.makeIterator()
             return AnyIterator { iterator.next() }

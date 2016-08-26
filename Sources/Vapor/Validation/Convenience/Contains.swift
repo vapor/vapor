@@ -2,10 +2,10 @@
     Validate that a sequence contains a given value
 */
 public struct Contains<
-    T where
+    T>: Validator where
     T: Sequence,
     T: Validatable,
-    T.Iterator.Element: Equatable>: Validator {
+T.Iterator.Element: Equatable {
 
     /**
         The value expected to be in sequence

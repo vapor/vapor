@@ -10,7 +10,7 @@ extension Routing.RouteBuilder where Value == HTTP.Responder {
     public func add(
         _ method: HTTP.Method,
         _ path: String ...,
-        _ value: (HTTP.Request) throws -> HTTP.ResponseRepresentable
+        _ value: @escaping (HTTP.Request) throws -> HTTP.ResponseRepresentable
     ) {
         add(
             path: ["*", method.description] + path.splitPaths(),
