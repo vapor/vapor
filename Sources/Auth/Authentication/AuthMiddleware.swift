@@ -8,13 +8,23 @@ import Cache
 public class AuthMiddleware<U: User>: Middleware {
     private let turnstile: Turnstile
 
-    public init(user: U.Type = U.self, cache: CacheProtocol = MemoryCache()) {
-        // let sessionManager = CacheSessionManager(cache: cache, turnstile: nil)
-        let realm = AuthenticatorRealm(U.self)
-        let sessionManager = MemorySessionManager()
-        turnstile = Turnstile(sessionManager: sessionManager, realm: realm)
-        // sessionManager.turnstile = turnstile // FIXME
+    public init(
+        user: U.Type = U.self,
+        realm: Realm = AuthenticatorRealm(U.self),
+        session: SessionManager = MemorySessionManager()
+    ) {
+        turnstile = Turnstile(sessionManager: session, realm: realm)
     }
+
+    // FIXME
+    /*public convenience init(
+        user: U.Type = U.self,
+        realm: Realm = AuthenticatorRealm(U.self),
+        cache: CacheProtocol = MemoryCache()
+    ) {
+        let session = CacheSessionManager(cache: cache, turnstile: nil)
+        turnstile = Turnstile(sessionManager: session, realm: realm)
+    }*/
 
     public func respond(to request: Request, chainingTo next: Responder) throws -> Response {
 

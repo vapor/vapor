@@ -1,7 +1,7 @@
 import Turnstile
 
 extension User {
-    public static func authenticate(credentials: Credentials) throws -> Account {
+    public static func authenticate(credentials: Credentials) throws -> User {
         if let apiKey = credentials as? APIKey {
             return try authenticate(apiKey: apiKey)
         } else if let accessToken = credentials as? AccessToken {
@@ -13,7 +13,7 @@ extension User {
         }
     }
 
-    public static func authenticate(apiKey: APIKey) throws -> Account {
+    public static func authenticate(apiKey: APIKey) throws -> User {
         guard
             let match = try Self
                 .query()
@@ -27,7 +27,7 @@ extension User {
         return match
     }
 
-    public static func authenticate(accessToken: AccessToken) throws -> Account {
+    public static func authenticate(accessToken: AccessToken) throws -> User {
         guard
             let match = try Self
                 .query()
@@ -40,7 +40,7 @@ extension User {
         return match
     }
 
-    public static func authenticate(identifier: Identifier) throws -> Account {
+    public static func authenticate(identifier: Identifier) throws -> User {
         guard
             let match = try Self.find(identifier.id)
         else {

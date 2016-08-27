@@ -54,7 +54,6 @@ drop.get("sess") { req in
 
 import Auth
 import Fluent
-import Turnstile
 
 final class TestUser: Model, Auth.User {
     var id: Node?
@@ -84,7 +83,7 @@ final class TestUser: Model, Auth.User {
 
     }
 
-    static func authenticate(credentials: Credentials) throws -> Account {
+    static func authenticate(credentials: Credentials) throws -> Auth.User {
         guard
             let match = try TestUser.find(1)
         else {
@@ -97,7 +96,7 @@ final class TestUser: Model, Auth.User {
 
 extension Request {
     func user() throws -> TestUser {
-        guard let user = try authenticated() as? TestUser else {
+        guard let user = try auth.user() as? TestUser else {
             throw Abort.badRequest
         }
 

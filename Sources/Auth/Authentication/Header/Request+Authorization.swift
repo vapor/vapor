@@ -18,6 +18,20 @@ public final class Helper {
     public func login(_ credentials: Credentials, persist: Bool = true) throws {
         return try request.subject().login(credentials: credentials, persist: persist)
     }
+
+    public func user() throws -> User {
+        let subject = try request.subject()
+
+        guard let details = subject.authDetails else {
+            throw AuthError.notAuthenticated
+        }
+
+        guard let user = details.account as? User else {
+            throw AuthError.invalidAccountType
+        }
+        
+        return user
+    }
 }
 
 extension Request {
