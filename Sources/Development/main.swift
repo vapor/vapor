@@ -54,21 +54,25 @@ drop.get("sess") { req in
 
 import Auth
 import Fluent
+import Turnstile
 
-final class TestUser: Auth.User {
+final class TestUser: Model, Auth.User {
     var id: Node?
+    var name: String
 
-    init() {
-        id = .string("42")
+    init(name: String) {
+        self.name = name
     }
 
     init(node: Node, in context: Context) throws {
-        id = .string("42")
+        id = try node.extract("id")
+        name = try node.extract("name")
     }
 
     func makeNode() throws -> Node {
         return try Node(node: [
-            "id": id
+            "id": id,
+            "name": name
         ])
     }
 
@@ -79,22 +83,40 @@ final class TestUser: Auth.User {
     static func revert(_ database: Database) throws {
 
     }
+
+    static func authenticate(credentials: Credentials) throws -> Account {
+        guard
+            let match = try TestUser.find(1)
+            else {
+                throw AuthError.invalidCredentials
+        }
+
+        return match
+    }
 }
 
-import Random
+extension Request {
+    func user() throws -> TestUser {
+        guard let user = try authenticated() as? TestUser else {
+            throw AuthError.invalidAccountType
+        }
 
-let id2 = URandom.bytes(16).base64String
+        return user
+    }
+}
 
-let id = CryptoRandom.bytes(16).base64String
 
-
-let auth = AuthMiddleware(TestUser.self)
+let auth = AuthMiddleware(user: TestUser.self)
 drop.middleware.append(auth)
 
-drop.post("login") { req in
-    let credentials = try req.authorization().bearer()
+let memory = MemoryDriver()
+TestUser.database = Database(memory)
+var user = TestUser(name: "Vapor")
+try user.save()
 
-    try req.user().login(credentials: credentials, persist: true)
+drop.post("login") { req in
+    let credentials = try req.authorization().basic()
+    try req.subject().login(credentials: credentials, persist: true)
 
     return try JSON(node: [
         "message": "Logged in!"
@@ -102,48 +124,12 @@ drop.post("login") { req in
 }
 
 let protect = ProtectMiddleware()
-
-// Here is the crash :(
-let secure = drop.grouped(protect, auth)
-secure.get("user") { req in
-    return "hello"
-}
-
-drop.grouped(auth, protect).group("secure") { secure in
+drop.grouped(protect).group("secure") { secure in
     secure.get("user") { req in
         let user = try req.user()
-        return "\(user)"
+        return user
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 drop.get("users", Int.self) { request, userId in
     return "You requested User #\(userId)"
