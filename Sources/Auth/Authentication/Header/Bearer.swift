@@ -1,9 +1,9 @@
 import Turnstile
 
 extension Authorization {
-	public func bearer() throws -> AccessToken {
+    public var bearer: AccessToken? {
         guard let range = header.range(of: "Bearer ") else {
-            throw AuthError.invalidBearerAuthorization
+            return nil
         }
 
         let token = header.substring(from: range.upperBound)

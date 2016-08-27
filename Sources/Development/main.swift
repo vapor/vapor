@@ -87,8 +87,8 @@ final class TestUser: Model, Auth.User {
     static func authenticate(credentials: Credentials) throws -> Account {
         guard
             let match = try TestUser.find(1)
-            else {
-                throw AuthError.invalidCredentials
+        else {
+            throw Abort.custom(status: .forbidden, message: "Invalid credentials.")
         }
 
         return match
@@ -98,7 +98,7 @@ final class TestUser: Model, Auth.User {
 extension Request {
     func user() throws -> TestUser {
         guard let user = try authenticated() as? TestUser else {
-            throw AuthError.invalidAccountType
+            throw Abort.badRequest
         }
 
         return user
@@ -115,15 +115,19 @@ var user = TestUser(name: "Vapor")
 try user.save()
 
 drop.post("login") { req in
-    let credentials = try req.authorization().basic()
-    try req.subject().login(credentials: credentials, persist: true)
+    guard let credentials = req.auth.header?.basic else {
+        throw Abort.badRequest
+    }
+
+    try req.auth.login(credentials)
 
     return try JSON(node: [
         "message": "Logged in!"
     ])
 }
 
-let protect = ProtectMiddleware()
+let error = Abort.custom(status: .forbidden, message: "Invalid credentials.")
+let protect = ProtectMiddleware(error: error)
 drop.grouped(protect).group("secure") { secure in
     secure.get("user") { req in
         let user = try req.user()

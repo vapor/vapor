@@ -3,9 +3,9 @@ import Foundation
 import Core
 
 extension Authorization {
-    public func basic() throws -> APIKey {
+    public var basic: APIKey? {
         guard let range = header.range(of: "Basic ") else {
-            throw AuthError.invalidBasicAuthorization
+            return nil
         }
 
         let token = header.substring(from: range.upperBound)
@@ -13,7 +13,7 @@ extension Authorization {
 
         let decodedToken = token.base64DecodedString
         guard let separatorRange = decodedToken.range(of: ":") else {
-            throw AuthError.invalidBasicAuthorization
+            return nil
         }
 
         let apiKeyID = decodedToken.substring(to: separatorRange.lowerBound)
