@@ -1,4 +1,5 @@
 import HTTP
+import Middleware
 
 extension Middleware {
     func chain(to responder: Responder) -> Responder {

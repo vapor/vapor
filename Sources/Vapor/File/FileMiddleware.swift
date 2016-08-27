@@ -1,4 +1,5 @@
 import HTTP
+import Middleware
 
 public class FileMiddleware: Middleware {
     public var workDir: String

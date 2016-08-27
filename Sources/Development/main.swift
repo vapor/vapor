@@ -52,6 +52,98 @@ drop.get("sess") { req in
     return res
 }
 
+import Auth
+import Fluent
+
+final class TestUser: Auth.User {
+    var id: Node?
+
+    init() {
+        id = .string("42")
+    }
+
+    init(node: Node, in context: Context) throws {
+        id = .string("42")
+    }
+
+    func makeNode() throws -> Node {
+        return try Node(node: [
+            "id": id
+        ])
+    }
+
+    static func prepare(_ database: Database) throws {
+
+    }
+
+    static func revert(_ database: Database) throws {
+
+    }
+}
+
+import Random
+
+let id2 = URandom.bytes(16).base64String
+
+let id = CryptoRandom.bytes(16).base64String
+
+
+let auth = AuthMiddleware(TestUser.self)
+drop.middleware.append(auth)
+
+drop.post("login") { req in
+    let credentials = try req.authorization().bearer()
+
+    try req.user().login(credentials: credentials, persist: true)
+
+    return try JSON(node: [
+        "message": "Logged in!"
+    ])
+}
+
+let protect = ProtectMiddleware()
+
+// Here is the crash :(
+let secure = drop.grouped(protect, auth)
+secure.get("user") { req in
+    return "hello"
+}
+
+drop.grouped(auth, protect).group("secure") { secure in
+    secure.get("user") { req in
+        let user = try req.user()
+        return "\(user)"
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 drop.get("users", Int.self) { request, userId in
     return "You requested User #\(userId)"
@@ -312,34 +404,6 @@ drop.get("session") { request in
 
     return name
 }
-drop.get("login") { request in
-    guard let id = request.session?["id"] else {
-        throw Abort.badRequest
-    }
-
-    return try JSON([
-        "id": id
-    ])
-}
-
-drop.post("login") { request in
-    guard
-        let email = request.data["email"]?.string,
-        let password = request.data["password"]?.string
-    else {
-        throw Abort.badRequest
-    }
-
-    guard email == "user@qutheory.io" && password == "test123" else {
-        throw Abort.badRequest
-    }
-
-    request.session?["id"] = "123"
-
-    return try JSON([
-        "message": "Logged in"
-    ])
-}
 
 /**
     This example is in the docs. If it changes,
@@ -516,16 +580,6 @@ drop.post("multipart-print") { request in
     return try JSON([
         "message": "Printed details to console"
     ])
-}
-
-//MARK: Middleware
-
-drop.group(AuthMiddleware()) { group in
-    drop.get("protected") { request in
-        return try JSON([
-            "message": "Welcome authorized user"
-        ])
-    }
 }
 
 //MARK: Chunked

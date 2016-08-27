@@ -1,13 +1,20 @@
-/*import Turnstile
+import Turnstile
 import HTTP
 
+public enum AuthError: Swift.Error {
+    case noUser
+    case invalidBasicAuthorization
+    case invalidBearerAuthorization
+    case noAuthorizationHeader
+    case notAuthenticated
+}
+
 public extension Request {
-    internal(set) public var user: Subject? {
-        get {
-            return storage["user"] as? Subject
+    public func user() throws -> Subject {
+        guard let user = storage["auth:user"] as? Subject else {
+            throw AuthError.noUser
         }
-        set {
-            storage["user"] = newValue
-        }
+
+        return user
     }
-}*/
+}
