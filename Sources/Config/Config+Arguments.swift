@@ -1,0 +1,66 @@
+import Foundation
+import Node
+
+extension Node {
+    static func makeCLIConfig(arguments: [String] = CommandLine.arguments) -> Node {
+        let configArgs = arguments.filter { $0.hasPrefix("--config") }
+
+        // [FileName: Node]
+        var cli = [String: Node]()
+
+        configArgs.forEach { arg in
+            guard
+                let (key, value) = parseInput(arg),
+                let (name, path) = parseConfigKey(key)
+                else { return }
+
+            var argument = Node([:])
+
+            if path.isEmpty {
+                argument = .string(value)
+            } else {
+                argument[path] = .string(value)
+            }
+
+            cli.merge(with: [name: argument])
+        }
+
+        return Node(cli)
+    }
+
+    static func parseInput(_ arg: String) -> (key: String, value: String)? {
+        let info = arg
+            .characters
+            .split(separator: "=",
+                   maxSplits: 1,
+                   omittingEmptySubsequences: true)
+            .map(String.init)
+
+        if info.count == 1, let key = info.first {
+            // Keys like --config:release default to `release = true`
+            return (key, "true")
+        } else if info.count == 2, let key = info.first, let value = info.last {
+            return (key, value)
+        } else {
+            return nil
+        }
+    }
+
+    static func parseConfigKey(_ key: String) -> (name: String, path: [String])? {
+        // --config:drop.port
+        // expect [--config, drop.port]
+        guard
+            let path = key
+                .characters
+                .split(separator: ":",
+                       maxSplits: 1,
+                       omittingEmptySubsequences: true)
+                .map(String.init)
+                .last?
+                .components(separatedBy: "."),
+            !path.isEmpty
+            else { return nil }
+
+        return (path[0], path.dropFirst().array)
+    }
+}
