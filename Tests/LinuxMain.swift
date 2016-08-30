@@ -32,6 +32,7 @@ XCTMain([
     testCase(HashTests.allTests),
     testCase(LocalizationTests.allTests),
     testCase(LogTests.allTests),
+    testCase(MiddlewareTests.allTests),
     testCase(MemorySessionDriverTests.allTests),
     testCase(ProcessTests.allTests),
     testCase(ProviderTests.allTests),
