@@ -54,6 +54,15 @@ class ConfigTests: XCTestCase {
         ]
         XCTAssertEqual(config, expectation)
     }
+
+    func testEmpty() throws {
+        let config = try Node.makeConfig(
+            prioritized: [
+                .directory(root: "i/dont/exist")
+            ]
+        )
+        XCTAssertEqual(config, [:])
+    }
 }
 
 

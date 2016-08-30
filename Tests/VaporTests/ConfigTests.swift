@@ -16,12 +16,8 @@ class ConfigIntegrationTests: XCTestCase {
     }
 
     func testSimple() throws {
-        do {
-            let config = try Node.makeTestConfig(workDir: workDir, env: .development)
-            XCTAssert(config["app", "debug"].bool == true, "Config incorrectly loaded.")
-        } catch {
-            XCTFail("E: \(error)")
-        }
+        let config = try Node.makeTestConfig(workDir: workDir, env: .development)
+        XCTAssert(config["app", "debug"].bool == true, "Config incorrectly loaded.")
 	}
 
     func testNesting() throws {
