@@ -26,6 +26,7 @@ extension Providable {
         var hash: Hash?
         var console: ConsoleProtocol?
         var log: Log?
+        var view: ViewRenderer?
         var client: ClientProtocol.Type?
         var database: Database?
         var cache: CacheProtocol?
@@ -35,6 +36,7 @@ extension Providable {
         hash = try attempt(self.hash, other.hash)
         console = try attempt(self.console, other.console)
         log = try attempt(self.log, other.log)
+        view = try attempt(self.view, other.view)
         client = try attempt(self.client, other.client)
         database = try attempt(self.database, other.database)
         cache = try attempt(self.cache, other.cache)
@@ -45,6 +47,7 @@ extension Providable {
             hash: hash,
             console: console,
             log: log,
+            view: view,
             client: client,
             database: database,
             cache: cache

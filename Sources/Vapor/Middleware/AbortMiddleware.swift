@@ -9,6 +9,8 @@ import HTTP
 */
 public class AbortMiddleware: Middleware {
 
+    public init() {}
+
     /**
         Respond to a given request chaining to the next
 

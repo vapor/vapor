@@ -4,9 +4,11 @@ import HTTP
     Catches validation errors and prints
     out a more readable JSON response.
 */
-class ValidationMiddleware: Middleware {
+public class ValidationMiddleware: Middleware {
 
-    func respond(to request: Request, chainingTo chain: Responder) throws -> Response {
+    public init() {}
+
+    public func respond(to request: Request, chainingTo chain: Responder) throws -> Response {
         do {
             return try chain.respond(to: request)
         } catch let error as ValidationErrorProtocol {
