@@ -39,8 +39,12 @@ extension Node {
 extension FileManager {
     fileprivate func isDirectory(path: String) -> Bool {
         var isDirectory: ObjCBool = false
-        fileExists(atPath: path, isDirectory: &isDirectory)
-        return isDirectory.boolValue
+        _ = fileExists(atPath: path, isDirectory: &isDirectory)
+        #if os(Linux)
+            return isDirectory
+        #else
+            return isDirectory.boolValue
+        #endif
     }
 
     fileprivate func files(path: String) throws -> [String] {
