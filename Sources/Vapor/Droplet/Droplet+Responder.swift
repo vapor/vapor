@@ -58,7 +58,7 @@ extension Droplet: Responder {
             }
         } catch {
             var error = "Server Error: \(error)"
-            if config.environment == .production {
+            if environment == .production {
                 error = "Something went wrong"
             }
             response = Response(status: .internalServerError, body: error.bytes)

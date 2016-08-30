@@ -4,7 +4,7 @@ import Transport
 
 extension Droplet {
     func bootServers() throws {
-        if let servers = config["servers"].object {
+        if let servers = config["servers"]?.object {
             var bootedServers = 0
             for (key, server) in servers {
                 guard let _ = server.object else {
@@ -18,12 +18,12 @@ extension Droplet {
         } else {
             console.output("No servers.json configuration found.", style: .warning, newLine: true)
 
-            let host = config["servers", "default", "host"].string
+            let host = config["servers", "default", "host"]?.string
                 ?? "0.0.0.0"
-            let port = config["servers", "default", "port"].int
+            let port = config["servers", "default", "port"]?.int
                 ?? 8080
-            let security = config["servers", "default", "securityLayer"].string
-                ?? config["app", "securityLayer"].string
+            let security = config["servers", "default", "securityLayer"]?.string
+                ?? config["app", "securityLayer"]?.string
                 ?? "none"
             let securityLayer: SecurityLayer = security.securityLayer
 
@@ -44,10 +44,10 @@ extension Droplet {
     }
 
     func bootServer(name: String, isLastServer: Bool) throws {
-        let securityLayer: SecurityLayer = config["servers", name, "securityLayer"].string == "tls" ? .tls : .none
+        let securityLayer: SecurityLayer = config["servers", name, "securityLayer"]?.string == "tls" ? .tls : .none
 
-        let host = config["servers", name, "host"].string ?? "0.0.0.0"
-        let port = config["servers", name, "port"].int ?? 8080
+        let host = config["servers", name, "host"]?.string ?? "0.0.0.0"
+        let port = config["servers", name, "port"]?.int ?? 8080
 
         let runInBackground = !isLastServer
 
