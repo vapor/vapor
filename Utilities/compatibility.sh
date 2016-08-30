@@ -2,7 +2,7 @@
 
 SWIFTC=`which swift`
 
-VALID="Swift 395e967875"
+VALID="Swift 31bbb2c208"
 
 help() {
 	echo "📖  Visit our docs for step-by-step instructions on installing Swift correctly."
@@ -75,7 +75,7 @@ else
 	echo $SWIFTV
 	echo ""
 	echo "You must have Swiftenv installed with"
-	echo "swift-DEVELOPMENT-SNAPSHOT-2016-07-25-a"
+	echo "swift-DEVELOPMENT-SNAPSHOT-2016-08-18-a"
 	echo ""
 	help
 	exit 1;
