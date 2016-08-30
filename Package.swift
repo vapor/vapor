@@ -10,6 +10,7 @@ let package = Package(
             "TypeSafeRouting",
             "Auth",
             "Cache",
+            "Config",
             "Cookies"
         ]),
 

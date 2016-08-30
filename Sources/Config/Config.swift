@@ -16,7 +16,7 @@ extension Source {
         switch self {
         case let .memory(name: name, config: config):
             return .object([name: config])
-        case .commandline:
+        case .commandLine:
             return Node.makeCLIConfig()
         case let .directory(root: root):
             return try Node.makeConfig(directory: root)

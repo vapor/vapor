@@ -1,3 +1,4 @@
+/*
 import Foundation
 
 extension Config {
@@ -91,3 +92,4 @@ extension Config {
         return ("app", path.map { $0 as PathIndex })
     }
 }
+*/

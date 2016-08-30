@@ -43,7 +43,7 @@ class ConfigTests: XCTestCase {
         let config = try Node.makeConfig(
             prioritized: [
                 .memory(name: "app", config: ["port": 8080]),
-                .commandline
+                .commandLine
             ]
         )
 

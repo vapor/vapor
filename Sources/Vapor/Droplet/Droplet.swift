@@ -5,6 +5,7 @@ import Console
 import Fluent
 import Transport
 import Cache
+import Config
 
 public let VERSION = "0.16.0"
 
@@ -33,7 +34,7 @@ public class Droplet {
     /**
         Provides access to config settings.
     */
-    public let config: Config
+    public let config: Node
     
     /**
         Storage to add/manage dependencies, identified by a string
@@ -129,13 +130,19 @@ public class Droplet {
     public let providers: [Provider]
 
     /**
+        The current droplet environment
+    */
+    public let environment: Environment
+
+    /**
         Initialize the Droplet.
     */
     public init(
         // non-providable
         arguments: [String]? = nil,
         workDir workDirProvided: String? = nil,
-        config configProvided: Config? = nil,
+        environment environmentProvided: Environment? = nil,
+        config configProvided: Node? = nil,
         localization localizationProvided: Localization? = nil,
 
         // providable
@@ -176,18 +183,35 @@ public class Droplet {
         }
         self.workDir = workDir
 
+        // the current droplet environment
+        let environment: Environment
+        if let provided = environmentProvided {
+            environment = provided
+        } else {
+            environment = CommandLine.environment ?? .development
+        }
+        self.environment = environment
+
         // use the config item provided or
         // attempt to create a config from
         // the working directory and arguments
-        let config: Config
+        let config: Node
         if let provided = configProvided {
             config = provided
         } else {
             do {
-                config = try Config(workingDirectory: workDir, arguments: arguments)
+                let configDirectory = workDir.finished(with: "/") + "Config/"
+                config = try Node.makeConfig(
+                    prioritized: [
+                        .commandLine,
+                        .directory(root: configDirectory + "secrets"),
+                        .directory(root: configDirectory + environment.description),
+                        .directory(root: configDirectory)
+                    ]
+                )
             } catch {
                 logs.append((.error, "Could not load configuration files: \(error)"))
-                config = Config()
+                config = [:]
             }
         }
         self.config = config
@@ -346,7 +370,7 @@ public class Droplet {
         commands.append(version)
 
         // prepare for production mode
-        if config.environment == .production {
+        if environment == .production {
             console.output("Production mode enabled, disabling informational logs.", style: .info)
             log.enabled = [.error, .fatal]
         }

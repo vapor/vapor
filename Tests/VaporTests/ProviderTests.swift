@@ -35,8 +35,8 @@ class ProviderTests: XCTestCase {
     func testInitialized() throws {
         let dc = DebugConsole()
 
-        let fast = try FastServerProvider(config: Config())
-        let slow = try SlowServerProvider(config: Config())
+        let fast = try FastServerProvider(config: [:])
+        let slow = try SlowServerProvider(config: [:])
 
         let drop = Droplet(arguments: ["vapor", "serve"], console: dc, initializedProviders: [fast, slow])
 
@@ -80,7 +80,7 @@ private final class FastServerProvider: Provider {
     var afterInitFlag = false
     var beforeServeFlag = false
 
-    init(config: Config) throws {
+    init(config: Node) throws {
         provided = Providable(server: FastServer.self)
     }
 
@@ -116,7 +116,7 @@ private final class SlowServerProvider: Provider {
     var afterInitFlag = false
     var beforeServeFlag = false
 
-    init(config: Config) throws {
+    init(config: Node) throws {
         provided = Providable(server: SlowServer.self)
     }
 

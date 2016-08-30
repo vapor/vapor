@@ -45,6 +45,7 @@ extension FileManager {
 
     fileprivate func files(path: String) throws -> [String] {
         let path = path.finished(with: "/")
+        guard isDirectory(path: path) else { return [] }
         let subPaths = try subpathsOfDirectory(atPath: path)
         return subPaths.filter { !$0.contains("/") && !isDirectory(path: path + $0) && $0 != ".DS_Store" }
     }

@@ -8,5 +8,5 @@
     the Config directories instead of the source code.
 */
 public protocol ConfigInitializable {
-    init(config: Config) throws
+    init(config: Node) throws
 }

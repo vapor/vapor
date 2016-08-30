@@ -1,5 +1,5 @@
 public enum Source {
     case memory(name: String, config: Node)
-    case commandline
+    case commandLine
     case directory(root: String)
 }

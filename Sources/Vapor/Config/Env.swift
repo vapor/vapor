@@ -1,4 +1,6 @@
+
 /*
+ /*
     The MIT License (MIT)
 
     Copyright (c) 2016 Honza Dvorsky
@@ -40,3 +42,4 @@ public struct Env {
         setenv(name, value, replace ? 1 : 0)
     }
 }
+*/
