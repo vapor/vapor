@@ -27,15 +27,8 @@ public class AuthMiddleware<U: User>: Middleware {
     }*/
 
     public func respond(to request: Request, chainingTo next: Responder) throws -> Response {
-
-        if
-            let sessionIdentifier = request.cookies["TurnstileSession"],
-            let subject = try? turnstile.sessionManager.getSubject(identifier: sessionIdentifier)
-        {
-            request.storage["subject"] = subject
-        } else {
-            request.storage["subject"] = Subject(turnstile: turnstile)
-        }
+        
+        request.storage["subject"] = Subject(turnstile: turnstile, sessionID: request.cookies["TurnstileSession"])
 
         let response = try next.respond(to: request)
 
