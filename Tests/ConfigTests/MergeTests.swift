@@ -2,15 +2,54 @@ import XCTest
 import Node
 @testable import Config
 
-class MergeTests: XCTestCase {
-    var configDir: String {
-        let parent = #file.characters.split(separator: "/").map(String.init).dropLast().joined(separator: "/")
-        let path = "/\(parent)/../../Sources/Config/TestFiles"
-        return path
+var configDir: String {
+    let parent = #file.characters.split(separator: "/").map(String.init).dropLast().joined(separator: "/")
+    let path = "/\(parent)/../../Sources/Config/TestFiles"
+    return path
+}
+
+class EnvTests: XCTestCase {
+    func testBasicEnv() {
+        Env.set("TEST_ENV_KEY", value: "name")
+        Env.set("TEST_ENV_VALUE", value: "World")
+        defer {
+            Env.remove("TEST_ENV_KEY")
+            Env.remove("TEST_ENV_VALUE")
+        }
+
+        let node: Node = [
+            "$TEST_ENV_KEY": "$TEST_ENV_VALUE"
+        ]
+        let expectation: Node = [
+            "name": "World"
+        ]
+
+        XCTAssertEqual(node.loadEnv(), expectation)
     }
 
-    func testFile() {
-        Node.make(configDirectory: configDir)
+    func testDefaults() {
+        let node: Node = [
+            "port": "$NO_EXIST:8080"
+        ]
+        let expectation: Node = [
+            "port": "8080"
+        ]
+
+        XCTAssertEqual(node.loadEnv(), expectation)
+    }
+}
+
+class MergeTests: XCTestCase {
+
+    func testFile() throws {
+        let node = try Node.makeConfig(directory: configDir)
+        let expectation: Node = [
+            "test": [
+                "name": "a"
+            ],
+            "file.hello": .bytes("Hello!\n".bytes)
+        ]
+        XCTAssertEqual(node, expectation)
     }
 
     func testMerge() throws {

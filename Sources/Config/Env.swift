@@ -25,7 +25,7 @@
 import libc
 
 public struct Env {
-    public init() { }
+    private init() { }
 
     public static func get(_ name: String) -> String? {
         guard let out = getenv(name) else { return nil }

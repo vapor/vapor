@@ -2,6 +2,7 @@ import Foundation
 import JSON
 import PathIndexable
 import Core
+import Node
 
 public protocol KeyAccessible {
     associatedtype Key
@@ -11,8 +12,6 @@ public protocol KeyAccessible {
 
 extension Dictionary: KeyAccessible {}
 
-
-import Node
 extension Node {
     public static func merge(prioritized: [(name: String, node: Node)]) -> Node {
         var result = [String: Node]()
@@ -25,11 +24,9 @@ extension KeyAccessible where Key == String, Value == Node {
     mutating func merge(with sub: [String: Node]) {
         sub.forEach { key, value in
             if let existing = self[key] {
-                // If something exists, and is object, merge. Else leave
-                guard let object = existing.nodeObject, let value = value.nodeObject else { return }
-                var mutable = object
-                mutable.merge(with: value)
-                self[key] = .object(mutable)
+                // If something exists, and is object, merge. Else leave what's there
+                guard let merged = existing.merged(with: value) else { return }
+                self[key] = merged
             } else {
                 self[key] = value
             }
@@ -37,33 +34,42 @@ extension KeyAccessible where Key == String, Value == Node {
     }
 }
 
-public final class ConfigLoader {
-    public enum Source {
-        case memory(name: String, config: Node)
-        case commandline
-        case directory(root: String, environment: String?)
-    }
-
-    public let prioritized: [Source]
-
-    public init(prioritized: [Source] = [.commandline, .directory(root: "./", environment: nil)]) {
-        self.prioritized = prioritized
-    }
-
-    func makeConfig() throws -> Node {
-        return [:]
+extension Node {
+    func merged(with sub: Node) -> Node? {
+        guard let object = self.nodeObject, let value = sub.nodeObject else { return nil }
+        var mutable = object
+        mutable.merge(with: value)
+        return .object(mutable)
     }
 }
 
-extension ConfigLoader.Source {
-    func makeConfig() throws -> Node {
+public enum Source {
+    case memory(name: String, config: Node)
+    case commandline
+    case directory(root: String)
+}
+
+extension Node {
+    public static func makeConfig(prioritized: [Source]) throws -> Node {
+        var config = Node([:])
+        try prioritized.forEach { source in
+            let source = try source.makeConfig()
+            guard let next = config.merged(with: source) else { return }
+            config = next
+        }
+        return config
+    }
+}
+
+extension Source {
+    internal func makeConfig() throws -> Node {
         switch self {
         case let .memory(name: name, config: config):
             return .object([name: config])
-        case let .commandline:
+        case .commandline:
             return Node.makeCLIConfig()
-        case let .directory(root: root, environment: environment):
-            fatalError()
+        case let .directory(root: root):
+            return try Node.makeConfig(directory: root)
         }
     }
 }
@@ -77,28 +83,29 @@ func isDirectory(path: String) -> Bool {
 }
 
 func files(path: String) throws -> [String] {
+    let path = path.finished(with: "/")
     let subPaths = try fileManager.subpathsOfDirectory(atPath: path)
-    return subPaths.filter { !$0.contains("/") && !isDirectory(path: $0) && $0 != ".DS_Store" }
+    return subPaths.filter { !$0.contains("/") && !isDirectory(path: path + $0) && $0 != ".DS_Store" }
 }
 
+let jsonBytes = ".json".bytes
 extension String {
-    func removedTailIfExists(tail: String) -> String {
-        guard hasSuffix(tail) else { return self }
-        return bytes.dropLast(tail.bytes.count).string
+    mutating func removedJSONSuffix() {
+        guard hasSuffix(".json") else { return }
+        self = self.bytes.dropLast(jsonBytes.count).string
     }
 }
 
 extension Node {
-    static func make(directory: String) throws -> Node {
+    static func makeConfig(directory: String) throws -> Node {
         let directory = directory.finished(with: "/")
         var node = Node([:])
-        let names = try files(path: directory).forEach { name in
+
+        try files(path: directory).forEach { name in
+            var name = name
             let contents = try Node.loadContents(path: directory + name)
-            if name.hasSuffix(".json") {
-                name.bytes.dropLast(".json".bytes.count).string
-            }
-            return bytes.dropLast(tail.bytes.count).string
-            return (name, contents)
+            name.removedJSONSuffix()
+            node[name] = contents.loadEnv()
         }
 
         return node
@@ -109,221 +116,46 @@ extension Node {
         guard path.hasSuffix(".json") else { return .bytes(data) }
         return try JSON(bytes: data).converted()
     }
-
-/*
-        guard let directoryName = path.components(separatedBy: "/").last else {
-            return nil
-        }
-
-            guard let contents = try? FileManager.contentsOfDirectory(path) else { return nil }
-
-            var jsonFiles: [JSONFile] = []
-            for file in contents where file.hasSuffix(".json") {
-                guard let name = file.components(separatedBy: "/").last else {
-                    continue
-                }
-
-                let json = try loadJson(file)
-
-                let jsonFile = JSONFile(name: name, json: json)
-                jsonFiles.append(jsonFile)
-            }
-
-            let directory = JSONDirectory(name: directoryName, files: jsonFiles)
-            return directory
-        }
-*/
 }
 
-/*
-private static func loadJson(_ path: String) throws -> JSON {
-    let bytes = try FileManager.readBytesFromFile(path)
-    return try JSON(bytes: bytes)
-}
-}
- */
-
-/**
-
- */
-
-
-/*
-private struct PrioritizedDirectoryQueue {
-    let directories: [JSONDirectory]
-
-    subscript(_ fileName: String, indexes: [PathIndex]) -> JSON? {
-        return directories
-            .lazy
-            .flatMap { directory in return directory[fileName, indexes] }
-            .first
-    }
-}
-
-/*
-public class Config {
-    enum Data {
-        case folder(root: String, prioritizedSubDirectories: [String])
-        case commandLine
-        case memory(Node)
-    }
-
-
-}
-*/
-/**
-    Parses and interprets configuration files
-    included under Config in the working directory.
-
-    Files stored in the Config directory can be accessed
-    via `drop.config["filename", "property"]`.
-
-    For example, a file named `Config/drop.json` containing
-    `{"port": 80}` can be accessed with `drop.config["app" "port"].int`.
-    To override certain configurations for a given environment,
-    create a file with the same name in a subdirectory of the environment.
-    For example, a file named `Config/production/drop.json` would override
-    any properties in `Config/drop.json` when the drop is in production mode.
-
-    Finally, Vapor supports sensitive environment specific information, such
-    as API keys, to be stored in a special configuration folder at `Config/secrets`.
-    This folder should be included in the `.gitignore` by default so that
-    sensitive information does not get added to version control.
-*/
-public class Config {
-
+extension Node {
     /**
-        The environment loaded from `Environment.loader
+        Populate values from environment that lead w/ `$`.
     */
-    public let environment: Environment
-    private let directoryQueue: PrioritizedDirectoryQueue
-
-    /**
-        Creates an instance of `Config` with
-        starting configurations.
-        The droplet is required to detect environment.
-    */
-    public init(
-        seed: JSON = JSON(),
-        workingDirectory: String = "./",
-        environment: Environment? = nil,
-        arguments: [String] = CommandLine.arguments
-    ) throws {
-        let configDirectory = workingDirectory.finished(with: "/") + "Config/"
-        self.environment = environment ?? Environment.loader(arguments)
-
-        let seedFile = JSONFile(name: "app", json: seed)
-        let seedDirectory = JSONDirectory(name: "seed-data", files: [seedFile])
-        var prioritizedDirectories: [JSONDirectory] = [seedDirectory]
-
-        // command line args passed w/ following syntax loaded first after seed
-        // --config:drop.port=9090
-        // --config:passwords.mongo-user=user
-        // --config:passwords.mongo-password=password
-        // --config:<name>.<path>.<to>.<value>=<actual-value>
-        let cliDirectory = Config.makeCLIConfig(arguments: arguments)
-        prioritizedDirectories.insert(cliDirectory, at: 0) // should be most important
-
-        // Json files are loaded in order of priority
-        // it will go like this
-        // paths will be searched for in top down order
-        if let directory = try FileManager.loadDirectory(configDirectory + "secrets") {
-            prioritizedDirectories.append(directory)
-        }
-        if let directory = try FileManager.loadDirectory(configDirectory + self.environment.description) {
-            prioritizedDirectories.append(directory)
-        }
-        if let directory = try FileManager.loadDirectory(configDirectory) {
-            prioritizedDirectories.append(directory)
-        }
-
-        directoryQueue = PrioritizedDirectoryQueue(directories: prioritizedDirectories)
-    }
-
-    public init() {
-        self.environment = Environment.loader(CommandLine.arguments)
-        self.directoryQueue = PrioritizedDirectoryQueue(directories: [])
-    }
-
-    /**
-         Use this to access config keys for specified file.
-         For example, if I have a config file named 'metadata.json'
-         that looks like this:
-
-             {
-                 "info" : {
-                     "port" : 9090
-                 }
-             }
-
-         You would access the port like this:
-
-             let port = drop.config["metadata", "info", "por"].int ?? 8080
-
-         Follows format
-
-             config[<json-file-name>, <path>, <to>, <value>
-
-         - parameter file:  name of json file to look for
-         - parameter paths: path to key
-
-         - returns: value if it exists.
-     */
-    public subscript(_ file: String, _ paths: PathIndex...) -> Polymorphic? {
-        return self[file, paths]
-    }
-
-    /**
-         Splatting so that variadic can pass through here
-
-         - parameter file:  name of json file to look for
-         - parameter paths: path to key
-
-         - returns: value if it exists.
-     */
-    public subscript(_ file: String, _ paths: [PathIndex]) -> Polymorphic? {
-        let value = directoryQueue[file, paths]
-
-        // check if value exists in Env
-        if let string = value?.string, string.characters.first == "$" {
-            let name = String(string.characters.dropFirst())
-            return Env.get(name) // will return nil if env variable not found
-        }
-
-        return value
-    }
-}
-
-extension Environment {
-    /**
-        Used to load Environment automatically. Defaults to looking for `env` command line argument
-     */
-    static var loader: ([String]) -> Environment = { arguments in
-        if let env = arguments.value(for: "env").flatMap(Environment.init(id:)) {
-            return env
-        } else {
-            return .development
-        }
-    }
-}
-
-extension Sequence where Iterator.Element == String {
-    func value(for string: String) -> String? {
-        for item in self {
-            let search = "--\(string)="
-            if item.hasPrefix(search) {
-                return item.components(separatedBy: search).joined(separator: "")
+    func loadEnv() -> Node? {
+        switch self {
+        case .null, .number(_), .bool(_), .bytes(_):
+            return self
+        case let .object(ob):
+            var mapped = [String: Node]()
+            ob.forEach { k, v in
+                guard let k = k.loadEnv(), let v = v.loadEnv() else { return }
+                mapped[k] = v
             }
+            return .object(mapped)
+        case let .array(arr):
+            let mapped = arr.flatMap { $0.loadEnv() }
+            return .array(mapped)
+        case let .string(str):
+            return str.loadEnv().flatMap(Node.string)
         }
-
-        return nil
     }
 }
 
 extension String {
-    private var keyPathComponents: [String] {
-        return components(separatedBy: ".")
-    }
+    /**
+        $PORT:8080
+     
+        Checks first if `PORT` env variable is set, then loads `8080`
+    */
+    func loadEnv() -> String? {
+        guard hasPrefix("$") else { return self }
+        let components = self.bytes
+            .dropFirst()
+            .split(separator: .colon, maxSplits: 1, omittingEmptySubsequences: true)
+            .map({ $0.string })
 
+        return components.first.flatMap(Env.get)
+            ?? components[safe: 1]
+    }
 }
-*/

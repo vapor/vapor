@@ -1,5 +1,41 @@
 import XCTest
+import Node
 @testable import Config
+
+class ConfigLoaderTests: XCTestCase {
+    func testLoad() throws {
+        let config = try Node.makeConfig(
+            prioritized: [
+                .directory(root: configDir.finished(with: "/") + "inner"),
+                .directory(root: configDir)
+            ]
+        )
+        let expectation: Node = [
+            "test": [
+                "name": "inner/test"
+            ],
+            "file.hello": .bytes("Hello!\n".bytes)
+        ]
+        XCTAssertEqual(config, expectation)
+    }
+
+    func testExample() throws {
+        let config = try Node.makeConfig(
+            prioritized: [
+                .memory(name: "app", config: ["port": 8080]),
+                .commandline
+            ]
+        )
+
+        let expectation: Node = [
+            "app": [
+                "port": 8080
+            ]
+        ]
+        XCTAssertEqual(config, expectation)
+    }
+}
+
 
 /*
 
