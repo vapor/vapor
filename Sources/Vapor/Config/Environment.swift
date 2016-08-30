@@ -39,3 +39,22 @@ extension Environment: CustomStringConvertible {
 public func == (lhs: Environment, rhs: Environment) -> Bool {
     return lhs.description == rhs.description
 }
+
+extension CommandLine {
+    static var environment: Environment? {
+        return arguments.value(for: "env").flatMap(Environment.init)
+    }
+}
+
+extension Sequence where Iterator.Element == String {
+    func value(for string: String) -> String? {
+        for item in self {
+            let search = "--\(string)="
+            if item.hasPrefix(search) {
+                return item.components(separatedBy: search).joined(separator: "")
+            }
+        }
+
+        return nil
+    }
+}

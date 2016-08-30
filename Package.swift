@@ -10,6 +10,7 @@ let package = Package(
             "TypeSafeRouting",
             "Auth",
             "Cache",
+            "Config",
             "Cookies"
         ]),
 
@@ -24,6 +25,7 @@ let package = Package(
         // Misc
         Target(name: "Auth", dependencies: ["Middleware", "Cookies"]),
         Target(name: "Cache"),
+        Target(name: "Config"),
         Target(name: "Cookies"),
         Target(name: "Middleware"),
 

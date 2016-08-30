@@ -39,7 +39,7 @@ public struct Prepare: Command {
             throw CommandError.general("Can not run preparations, droplet has no database")
         }
 
-        if arguments.option("revert").bool == true {
+        if arguments.option("revert")?.bool == true {
             guard console.confirm("Are you sure you want to revert the database?", style: .warning) else {
                 console.error("Reversion cancelled")
                 return
