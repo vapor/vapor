@@ -1,7 +1,7 @@
 @_exported import Node
 
-public struct Config {
-    internal var node: Node
+public struct Config: NodeBacked {
+    public var node: Node
 
     public init(_ node: Node) {
         self.node = node
@@ -9,15 +9,6 @@ public struct Config {
 
     public init(prioritized: [Source]) throws {
         self.node = try Node.makeConfig(prioritized: prioritized)
-    }
-}
-
-extension Config: NodeConvertible {
-    public init(node: Node, in context: Context) throws {
-        self.init(node)
-    }
-    public func makeNode() throws -> Node {
-        return node
     }
 }
 
