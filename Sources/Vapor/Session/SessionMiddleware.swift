@@ -9,15 +9,15 @@ import Cookies
     If an active Session is found on the request when the response
     is being made, the Session identifier is returned as a `vapor-session` cookie.
 */
-class SessionMiddleware: Middleware {
+public class SessionMiddleware: Middleware {
 
-    var sessions: Sessions
+    public var sessions: Sessions
 
-    init(sessions: Sessions) {
+    public init(sessions: Sessions) {
         self.sessions = sessions
     }
 
-    func respond(to request: Request, chainingTo chain: Responder) throws -> Response {
+    public func respond(to request: Request, chainingTo chain: Responder) throws -> Response {
         // mutable -- MUST be declared at top of function
         if
             let identifier = request.cookies["vapor-session"],
