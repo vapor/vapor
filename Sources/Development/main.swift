@@ -52,6 +52,97 @@ drop.get("sess") { req in
     return res
 }
 
+import Auth
+import Fluent
+
+final class TestUser: Model, Auth.User {
+    var id: Node?
+    var name: String
+
+    init(name: String) {
+        self.name = name
+    }
+
+    init(node: Node, in context: Context) throws {
+        id = try node.extract("id")
+        name = try node.extract("name")
+    }
+
+    func makeNode() throws -> Node {
+        return try Node(node: [
+            "id": id,
+            "name": name
+        ])
+    }
+
+    static func prepare(_ database: Database) throws {
+
+    }
+
+    static func revert(_ database: Database) throws {
+
+    }
+
+    static func authenticate(credentials: Credentials) throws -> Auth.User {
+        guard
+            let match = try TestUser.find(1)
+        else {
+            throw Abort.custom(status: .forbidden, message: "Invalid credentials.")
+        }
+
+        return match
+    }
+
+    static func register(credentials: Credentials) throws -> Auth.User {
+        guard
+            let match = try TestUser.find(1)
+            else {
+                throw Abort.custom(status: .forbidden, message: "Invalid credentials.")
+        }
+
+        return match
+    }
+}
+
+extension Request {
+    func user() throws -> TestUser {
+        guard let user = try auth.user() as? TestUser else {
+            throw Abort.badRequest
+        }
+
+        return user
+    }
+}
+
+
+let auth = AuthMiddleware(user: TestUser.self)
+drop.middleware.append(auth)
+
+let memory = MemoryDriver()
+TestUser.database = Database(memory)
+var user = TestUser(name: "Vapor")
+try user.save()
+
+drop.post("login") { req in
+    guard let credentials = req.auth.header?.basic else {
+        throw Abort.badRequest
+    }
+
+    try req.auth.login(credentials)
+
+    return try JSON(node: [
+        "message": "Logged in!"
+    ])
+}
+
+let error = Abort.custom(status: .forbidden, message: "Invalid credentials.")
+let protect = ProtectMiddleware(error: error)
+drop.grouped(protect).group("secure") { secure in
+    secure.get("user") { req in
+        let user = try req.user()
+        return user
+    }
+}
 
 drop.get("users", Int.self) { request, userId in
     return "You requested User #\(userId)"
@@ -312,34 +403,6 @@ drop.get("session") { request in
 
     return name
 }
-drop.get("login") { request in
-    guard let id = request.session?["id"] else {
-        throw Abort.badRequest
-    }
-
-    return try JSON([
-        "id": id
-    ])
-}
-
-drop.post("login") { request in
-    guard
-        let email = request.data["email"]?.string,
-        let password = request.data["password"]?.string
-    else {
-        throw Abort.badRequest
-    }
-
-    guard email == "user@qutheory.io" && password == "test123" else {
-        throw Abort.badRequest
-    }
-
-    request.session?["id"] = "123"
-
-    return try JSON([
-        "message": "Logged in"
-    ])
-}
 
 /**
     This example is in the docs. If it changes,
@@ -516,16 +579,6 @@ drop.post("multipart-print") { request in
     return try JSON([
         "message": "Printed details to console"
     ])
-}
-
-//MARK: Middleware
-
-drop.group(AuthMiddleware()) { group in
-    drop.get("protected") { request in
-        return try JSON([
-            "message": "Welcome authorized user"
-        ])
-    }
 }
 
 //MARK: Chunked

@@ -5,9 +5,10 @@ import Console
 import Fluent
 import Transport
 import Cache
+@_exported import Middleware
 import Config
 
-public let VERSION = "0.16.0"
+public let VERSION = "0.17.0"
 
 public class Droplet {
     /**

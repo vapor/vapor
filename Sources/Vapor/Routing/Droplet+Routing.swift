@@ -23,6 +23,14 @@ extension RouteBuilder where Value == Responder {
             }
         }, closure: closure)
     }
+
+    public func grouped(_ middleware: Middleware ...) -> RouteGroup<Value, Self> {
+        return grouped(prefix: [nil, nil], path: [], map: { handler in
+            return Request.Handler { request in
+                return try middleware.chain(to: handler).respond(to: request)
+            }
+        })
+    }
 }
 
 extension RouteBuilder {
