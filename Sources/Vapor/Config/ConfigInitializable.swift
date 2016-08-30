@@ -1,3 +1,5 @@
+@_exported import Config
+
 /**
     Allows types to be instantiated from
     data contained in the Config directories.

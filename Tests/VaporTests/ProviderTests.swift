@@ -35,8 +35,8 @@ class ProviderTests: XCTestCase {
     func testInitialized() throws {
         let dc = DebugConsole()
 
-        let fast = try FastServerProvider(config: Config())
-        let slow = try SlowServerProvider(config: Config())
+        let fast = try FastServerProvider(config: Config([:]))
+        let slow = try SlowServerProvider(config: Config([:]))
 
         let drop = Droplet(arguments: ["vapor", "serve"], console: dc, initializedProviders: [fast, slow])
 

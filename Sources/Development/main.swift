@@ -7,7 +7,7 @@ import Routing
 import Cookies
 
 #if os(Linux)
-let workDir = "./Sources/Development"
+let workDir = "./Sources/Development/"
 #else
 var workDir: String {
     let parent = #file.characters.split(separator: "/").map(String.init).dropLast().joined(separator: "/")
@@ -52,6 +52,97 @@ drop.get("sess") { req in
     return res
 }
 
+import Auth
+import Fluent
+
+final class TestUser: Model, Auth.User {
+    var id: Node?
+    var name: String
+
+    init(name: String) {
+        self.name = name
+    }
+
+    init(node: Node, in context: Context) throws {
+        id = try node.extract("id")
+        name = try node.extract("name")
+    }
+
+    func makeNode() throws -> Node {
+        return try Node(node: [
+            "id": id,
+            "name": name
+        ])
+    }
+
+    static func prepare(_ database: Database) throws {
+
+    }
+
+    static func revert(_ database: Database) throws {
+
+    }
+
+    static func authenticate(credentials: Credentials) throws -> Auth.User {
+        guard
+            let match = try TestUser.find(1)
+        else {
+            throw Abort.custom(status: .forbidden, message: "Invalid credentials.")
+        }
+
+        return match
+    }
+
+    static func register(credentials: Credentials) throws -> Auth.User {
+        guard
+            let match = try TestUser.find(1)
+            else {
+                throw Abort.custom(status: .forbidden, message: "Invalid credentials.")
+        }
+
+        return match
+    }
+}
+
+extension Request {
+    func user() throws -> TestUser {
+        guard let user = try auth.user() as? TestUser else {
+            throw Abort.badRequest
+        }
+
+        return user
+    }
+}
+
+
+let auth = AuthMiddleware(user: TestUser.self)
+drop.middleware.append(auth)
+
+let memory = MemoryDriver()
+TestUser.database = Database(memory)
+var user = TestUser(name: "Vapor")
+try user.save()
+
+drop.post("login") { req in
+    guard let credentials = req.auth.header?.basic else {
+        throw Abort.badRequest
+    }
+
+    try req.auth.login(credentials)
+
+    return try JSON(node: [
+        "message": "Logged in!"
+    ])
+}
+
+let error = Abort.custom(status: .forbidden, message: "Invalid credentials.")
+let protect = ProtectMiddleware(error: error)
+drop.grouped(protect).group("secure") { secure in
+    secure.get("user") { req in
+        let user = try req.user()
+        return user
+    }
+}
 
 drop.get("users", Int.self) { request, userId in
     return "You requested User #\(userId)"
@@ -60,23 +151,25 @@ drop.get("users", Int.self) { request, userId in
 //MARK: Basic
 
 drop.get { request in
-    return try drop.view("welcome.html")
+    return try drop.view.make("welcome", [
+        "name": "World"
+    ])
 }
 
 // MARK: Cache
 
 drop.get("cache") { request in
-    guard let key = request.data["key"].string else {
+    guard let key = request.data["key"]?.string else {
         throw Abort.badRequest
     }
 
-    return try drop.cache.get(key).string ?? "nil"
+    return try drop.cache.get(key)?.string ?? "nil"
 }
 
 drop.post("cache") { request in
     guard
-        let key = request.data["key"].string,
-        let value = request.data["value"].string
+        let key = request.data["key"]?.string,
+        let value = request.data["value"]?.string
     else {
         throw Abort.badRequest
     }
@@ -87,7 +180,7 @@ drop.post("cache") { request in
 }
 
 drop.delete("cache") { request in
-    guard let key = request.data["key"].string else {
+    guard let key = request.data["key"]?.string else {
         throw Abort.badRequest
     }
 
@@ -98,8 +191,8 @@ drop.delete("cache") { request in
 
 drop.get("client-socket") { req in
     // TODO: Find way to support multiple droplets while still having concrete reference to host / port. This will only work on one droplet ...
-    let host = drop.config["servers", 0, "host"].string ?? "localhost"
-    let port = drop.config["servers", 0, "port"].int ?? 80
+    let host = drop.config["servers", 0, "host"]?.string ?? "localhost"
+    let port = drop.config["servers", 0, "port"]?.int ?? 80
     
     _ = try? WebSocket.background(to: "ws://\(host):\(port)/server-socket-responder") { (ws) in
         ws.onText = { ws, text in
@@ -131,11 +224,11 @@ drop.get("ping") { _ in
 }
 
 drop.get("spotify-artists") { req in
-    let name = req.data["name"].string ?? "beyonce"
+    let name = req.data["name"]?.string ?? "beyonce"
     let spotifyResponse = try drop.client.get("https://api.spotify.com/v1/search", query: ["type": "artist", "q": name])
     
     guard
-        let names = spotifyResponse.data["artists", "items", "name"]
+        let names = spotifyResponse.data["artists", "items", "name"]?
             .array?
             .flatMap({ $0.string })
     else {
@@ -146,10 +239,10 @@ drop.get("spotify-artists") { req in
 }
 
 drop.get("pokemon") { req in
-    let limit = req.data["limit"].int ?? 20
-    let offset = req.data["offset"].int ?? 0
+    let limit = req.data["limit"]?.int ?? 20
+    let offset = req.data["offset"]?.int ?? 0
     let pokemonResponse = try drop.client.get("http://pokeapi.co/api/v2/pokemon/", query: ["limit": limit, "offset": offset])
-    guard let names = pokemonResponse.data["results", "name"].array?.flatMap({ $0.string }) else {
+    guard let names = pokemonResponse.data["results", "name"]?.array?.flatMap({ $0.string }) else {
         throw Abort.custom(status: .badRequest, message: "Didn't parse JSON correctly")
     }
 
@@ -165,7 +258,7 @@ drop.get("pokemon-multi") { [weak drop] req in
         for i in 0 ..< 2 {
             let response = try pokemonClient?.get(path: "/api/v2/pokemon/", query: ["limit": 20, "offset": i])
 
-            if let n = response?.data["results", "name"].array?.flatMap({ $0.string }) {
+            if let n = response?.data["results", "name"]?.array?.flatMap({ $0.string }) {
                 try chunker.send(n.joined(separator: "\n"))
             }
         }
@@ -231,7 +324,7 @@ drop.get("test", Int.self, String.self) { request, int, string in
  ]
  */
 drop.get("users-test") { req in
-    let friendName = req.data[0, "name", "friend", "name"].string
+    let friendName = req.data[0, "name", "friend", "name"]?.string
     return "Hello \(friendName)"
 }
 
@@ -248,14 +341,14 @@ drop.get("json") { request in
 
 drop.post("json") { request in
     //parse a key inside the received json
-    guard let count = request.data["unicorns"].int else {
+    guard let count = request.data["unicorns"]?.int else {
         throw Abort.custom(status: .badRequest, message: "No unicorn count provided")
     }
     return "Received \(count) unicorns"
 }
 
 drop.post("form") { request in
-    guard let name = request.data["name"].string else {
+    guard let name = request.data["name"]?.string else {
         throw Abort.custom(status: .badRequest, message: "No name provided")
     }
 
@@ -295,7 +388,7 @@ drop.get("error") { request in
 //MARK: Session
 
 drop.post("session") { request in
-    guard let name = request.data["name"].string else {
+    guard let name = request.data["name"]?.string else {
         throw Abort.badRequest
     }
     request.session?["name"] = name
@@ -309,34 +402,6 @@ drop.get("session") { request in
     }
 
     return name
-}
-drop.get("login") { request in
-    guard let id = request.session?["id"] else {
-        throw Abort.badRequest
-    }
-
-    return try JSON([
-        "id": id
-    ])
-}
-
-drop.post("login") { request in
-    guard
-        let email = request.data["email"]?.string,
-        let password = request.data["password"]?.string
-    else {
-        throw Abort.badRequest
-    }
-
-    guard email == "user@qutheory.io" && password == "test123" else {
-        throw Abort.badRequest
-    }
-
-    request.session?["id"] = "123"
-
-    return try JSON([
-        "message": "Logged in"
-    ])
 }
 
 /**
@@ -506,7 +571,7 @@ drop.post("multipart-print") { request in
     print(request.formURLEncoded)
 
     print(request.data["test"])
-    print(request.data["test"].string)
+    print(request.data["test"]?.string)
 
     print(request.multipart?["test"])
     print(request.multipart?["test"]?.file)
@@ -514,16 +579,6 @@ drop.post("multipart-print") { request in
     return try JSON([
         "message": "Printed details to console"
     ])
-}
-
-//MARK: Middleware
-
-drop.group(AuthMiddleware()) { group in
-    drop.get("protected") { request in
-        return try JSON([
-            "message": "Welcome authorized user"
-        ])
-    }
 }
 
 //MARK: Chunked
@@ -556,7 +611,7 @@ drop.get("async") { request in
             do {
                 let beyonceQuery = "https://api.spotify.com/v1/search/?q=beyonce&type=artist"
                 let response = try drop.client.get(beyonceQuery)
-                let artists = response.data["artists", "items", "name"].array ?? []
+                let artists = response.data["artists", "items", "name"]?.array ?? []
                 let artistsJSON = artists.flatMap { $0.string } .map { JSON.string($0) }
                 let js = JSON.array(artistsJSON)
                 portal.close(with: js)

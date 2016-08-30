@@ -10,6 +10,7 @@ let package = Package(
             "TypeSafeRouting",
             "Auth",
             "Cache",
+            "Config",
             "Cookies"
         ]),
 
@@ -22,9 +23,11 @@ let package = Package(
         Target(name: "TypeSafeGenerator"),
 
         // Misc
-        Target(name: "Auth"),
+        Target(name: "Auth", dependencies: ["Middleware", "Cookies"]),
         Target(name: "Cache"),
+        Target(name: "Config"),
         Target(name: "Cookies"),
+        Target(name: "Middleware"),
 
         // Development and Testing
         Target(name: "Development", dependencies: ["Vapor"]),
@@ -47,7 +50,10 @@ let package = Package(
         .Package(url: "https://github.com/vapor/json.git", majorVersion: 0, minor: 5),
 
         // A security framework for Swift.
-        // .Package(url: "https://github.com/stormpath/Turnstile.git", majorVersion: 0, minor: 1),
+        .Package(url: "https://github.com/stormpath/Turnstile.git", majorVersion: 0, minor: 3),
+
+		// An extensible templating language built for Vapor. 🍃
+		.Package(url: "https://github.com/vapor/leaf.git", majorVersion: 0, minor: 1)
     ],
     exclude: [
         // No excludes currently

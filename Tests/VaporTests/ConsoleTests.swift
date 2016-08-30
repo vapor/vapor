@@ -138,7 +138,7 @@ final class TestTwoCommand: Command {
         let arg1 = try value("arg-1", from: arguments).string ?? ""
         console.print(arg1)
 
-        let opt1 = arguments.option("opt-1").string ?? ""
+        let opt1 = arguments.option("opt-1")?.string ?? ""
         console.print(opt1)
     }
 }

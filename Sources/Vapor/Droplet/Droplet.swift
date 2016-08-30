@@ -5,8 +5,10 @@ import Console
 import Fluent
 import Transport
 import Cache
+@_exported import Middleware
+import Config
 
-public let VERSION = "0.16.0"
+public let VERSION = "0.17.0"
 
 public class Droplet {
     /**
@@ -89,6 +91,11 @@ public class Droplet {
     public let log: Log
 
     /**
+        Render static and templated views.
+    */
+    public let view: ViewRenderer
+
+    /**
         Expose to end users to customize driver
         Make outgoing requests
     */
@@ -124,12 +131,18 @@ public class Droplet {
     public let providers: [Provider]
 
     /**
+        The current droplet environment
+    */
+    public let environment: Environment
+
+    /**
         Initialize the Droplet.
     */
     public init(
         // non-providable
         arguments: [String]? = nil,
         workDir workDirProvided: String? = nil,
+        environment environmentProvided: Environment? = nil,
         config configProvided: Config? = nil,
         localization localizationProvided: Localization? = nil,
 
@@ -139,6 +152,7 @@ public class Droplet {
         hash: Hash? = nil,
         console: ConsoleProtocol? = nil,
         log: Log? = nil,
+        view: ViewRenderer? = nil,
         client: ClientProtocol.Type? = nil,
         database: Database? = nil,
         cache: CacheProtocol? = nil,
@@ -164,11 +178,20 @@ public class Droplet {
         // from the command line arguments or #file.
         let workDir: String
         if let provided = workDirProvided {
-            workDir = provided
+            workDir = provided.finished(with: "/")
         } else {
-            workDir = Droplet.workingDirectory(from: arguments)
+            workDir = Droplet.workingDirectory(from: arguments).finished(with: "/")
         }
-        self.workDir = workDir
+        self.workDir = workDir.finished(with: "/")
+
+        // the current droplet environment
+        let environment: Environment
+        if let provided = environmentProvided {
+            environment = provided
+        } else {
+            environment = CommandLine.environment ?? .development
+        }
+        self.environment = environment
 
         // use the config item provided or
         // attempt to create a config from
@@ -178,10 +201,18 @@ public class Droplet {
             config = provided
         } else {
             do {
-                config = try Config(workingDirectory: workDir, arguments: arguments)
+                let configDirectory = workDir.finished(with: "/") + "Config/"
+                config = try Config(
+                    prioritized: [
+                        .commandLine,
+                        .directory(root: configDirectory + "secrets"),
+                        .directory(root: configDirectory + environment.description),
+                        .directory(root: configDirectory)
+                    ]
+                )
             } catch {
                 logs.append((.error, "Could not load configuration files: \(error)"))
-                config = Config()
+                config = Config([:])
             }
         }
         self.config = config
@@ -209,6 +240,7 @@ public class Droplet {
             hash: hash,
             console: console,
             log: log,
+            view: view,
             client: client,
             database: database,
             cache: cache
@@ -242,6 +274,8 @@ public class Droplet {
             log.log(item.level, message: item.message)
         }
 
+        self.view = provided.view ?? LeafRenderer(viewsDir: workDir + "Resources/Views")
+
         // use the provided localization or 
         // initialize one from the working directory.
         let localization: Localization
@@ -259,7 +293,7 @@ public class Droplet {
 
         // set the hashing key to the key
         // from the configuration files or nothing.
-        let key = config["app", "key"].string
+        let key = config["app", "key"]?.string
         // initialize the hash from one provided
         // or use a default SHA2 hasher
         let hash = provided.hash ?? SHA2Hasher(variant: .sha256, defaultKey: key)
@@ -337,7 +371,7 @@ public class Droplet {
         commands.append(version)
 
         // prepare for production mode
-        if config.environment == .production {
+        if environment == .production {
             console.output("Production mode enabled, disabling informational logs.", style: .info)
             log.enabled = [.error, .fatal]
         }
