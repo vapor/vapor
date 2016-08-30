@@ -54,8 +54,7 @@ extension Node {
         var config = Node([:])
         try prioritized.forEach { source in
             let source = try source.makeConfig()
-            guard let next = config.merged(with: source) else { return }
-            config = next
+            config.merged(with: source).flatMap { config = $0 }
         }
         return config
     }
@@ -105,7 +104,7 @@ extension Node {
             var name = name
             let contents = try Node.loadContents(path: directory + name)
             name.removedJSONSuffix()
-            node[name] = contents.loadEnv()
+            node[name] = contents.hydratedEnv()
         }
 
         return node
@@ -122,22 +121,25 @@ extension Node {
     /**
         Populate values from environment that lead w/ `$`.
     */
-    func loadEnv() -> Node? {
+    internal func hydratedEnv() -> Node? {
         switch self {
         case .null, .number(_), .bool(_), .bytes(_):
             return self
         case let .object(ob):
+            guard !ob.isEmpty else { return self }
+
             var mapped = [String: Node]()
             ob.forEach { k, v in
-                guard let k = k.loadEnv(), let v = v.loadEnv() else { return }
+                guard let k = k.hydratedEnv(), let v = v.hydratedEnv() else { return }
                 mapped[k] = v
             }
+            guard !mapped.isEmpty else { return nil }
             return .object(mapped)
         case let .array(arr):
-            let mapped = arr.flatMap { $0.loadEnv() }
+            let mapped = arr.flatMap { $0.hydratedEnv() }
             return .array(mapped)
         case let .string(str):
-            return str.loadEnv().flatMap(Node.string)
+            return str.hydratedEnv().flatMap(Node.string)
         }
     }
 }
@@ -148,7 +150,7 @@ extension String {
      
         Checks first if `PORT` env variable is set, then loads `8080`
     */
-    func loadEnv() -> String? {
+    internal func hydratedEnv() -> String? {
         guard hasPrefix("$") else { return self }
         let components = self.bytes
             .dropFirst()

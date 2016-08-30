@@ -8,7 +8,7 @@ var configDir: String {
     return path
 }
 
-class EnvTests: XCTestCase {
+class ENVConfigTests: XCTestCase {
     func testBasicEnv() {
         Env.set("TEST_ENV_KEY", value: "name")
         Env.set("TEST_ENV_VALUE", value: "World")
@@ -36,6 +36,70 @@ class EnvTests: XCTestCase {
         ]
 
         XCTAssertEqual(node.loadEnv(), expectation)
+    }
+
+    func testNoEnv() {
+        let node: Node = ["key": "$I_NO_EXIST"]
+        let env = node.loadEnv()
+        XCTAssertNil(env)
+    }
+
+    func testEmpty() {
+        let node: Node = [:]
+        let env = node.loadEnv()
+        XCTAssertEqual(env, [:])
+    }
+
+    func testEnvArray() {
+        let TEST_KEY = "TEST_ENV_KEY"
+        Env.set(TEST_KEY, value: "Hello!")
+        defer { Env.remove(TEST_KEY) }
+        let array: Node = [ Node("$\(TEST_KEY)"), Node("$\(TEST_KEY)")]
+        let env = array.loadEnv()
+        let expectation: Node = ["Hello!", "Hello!"]
+        XCTAssertEqual(env, expectation)
+    }
+}
+
+class CLIConfigTests: XCTestCase {
+    func testCLI() throws {
+        let arguments = [
+            "--config:app.name=a",
+            "--config:app.friend.name=b",
+            "--config:app.friend.age=37",
+            "--config:name=world",
+            "--config:bools.yes"
+        ]
+        let cli = Node.makeCLIConfig(arguments: arguments)
+        let expectation: Node = [
+            "app": [
+                "name": "a",
+                "friend": [
+                    "name": "b",
+                    "age": "37"
+                ]
+            ],
+            "name": "world",
+            "bools": [
+                "yes": "true"
+            ]
+        ]
+        print(cli)
+        XCTAssertEqual(cli, expectation)
+    }
+
+    func testBools() {
+        let arguments = [
+            "--config:bools.yes"
+        ]
+        let cli = Node.makeCLIConfig(arguments: arguments)
+        let expectation: Node = [
+            "bools": [
+                "yes": "true"
+            ]
+        ]
+        print(cli)
+        XCTAssertEqual(cli, expectation)
     }
 }
 
@@ -83,20 +147,5 @@ class MergeTests: XCTestCase {
             ]
         ]
         XCTAssertEqual(merged, expectation)
-    }
-
-    func testCLI() throws {
-        let arguments = ["--config:app.name=a", "--config:app.friend.name=b", "--config:app.friend.age=37"]
-        let cli = Node.makeCLIConfig(arguments: arguments)
-        let expectation: Node = [
-            "app": [
-                "name": "a",
-                "friend": [
-                    "name": "b",
-                    "age": "37"
-                ]
-            ]
-        ]
-        XCTAssertEqual(cli, expectation)
     }
 }

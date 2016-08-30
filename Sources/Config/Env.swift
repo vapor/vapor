@@ -24,9 +24,7 @@
 
 import libc
 
-public struct Env {
-    private init() { }
-
+public enum Env {
     public static func get(_ name: String) -> String? {
         guard let out = getenv(name) else { return nil }
         return String(validatingUTF8: out)

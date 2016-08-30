@@ -2,7 +2,20 @@ import Foundation
 import Node
 
 extension Node {
-    static func makeCLIConfig(arguments: [String] = CommandLine.arguments) -> Node {
+    /**
+        CLI Config expects arguments to have the following syntax:
+     
+            --config: <key-path> = <value>
+     
+        For example
+     
+            --config:database.user=some-user
+     
+        Will be accessible as
+     
+            config["database", "user"] // some-user
+    */
+    internal static func makeCLIConfig(arguments: [String] = CommandLine.arguments) -> Node {
         let configArgs = arguments.filter { $0.hasPrefix("--config") }
 
         // [FileName: Node]
@@ -28,7 +41,7 @@ extension Node {
         return Node(cli)
     }
 
-    static func parseInput(_ arg: String) -> (key: String, value: String)? {
+    private static func parseInput(_ arg: String) -> (key: String, value: String)? {
         let info = arg
             .characters
             .split(separator: "=",
@@ -36,31 +49,29 @@ extension Node {
                    omittingEmptySubsequences: true)
             .map(String.init)
 
-        if info.count == 1, let key = info.first {
+        return info.first.flatMap { key in
             // Keys like --config:release default to `release = true`
-            return (key, "true")
-        } else if info.count == 2, let key = info.first, let value = info.last {
+            let value = info[safe: 1] ?? "true"
             return (key, value)
-        } else {
-            return nil
         }
     }
 
-    static func parseConfigKey(_ key: String) -> (name: String, path: [String])? {
+    private static func parseConfigKey(_ key: String) -> (name: String, path: [String])? {
         // --config:drop.port
         // expect [--config, drop.port]
-        guard
-            let path = key
-                .characters
-                .split(separator: ":",
-                       maxSplits: 1,
-                       omittingEmptySubsequences: true)
-                .map(String.init)
-                .last?
-                .components(separatedBy: "."),
-            !path.isEmpty
-            else { return nil }
+        let path = key
+            .characters
+            .split(separator: ":",
+                   maxSplits: 1,
+                   omittingEmptySubsequences: true)
+            .map(String.init)
+            .last?
+            .components(separatedBy: ".")
 
-        return (path[0], path.dropFirst().array)
+        return path.flatMap { path in
+            return path[safe: 0].flatMap { name in
+                return (name, path.dropFirst().array)
+            }
+        }
     }
 }

@@ -2,7 +2,27 @@ import XCTest
 import Node
 @testable import Config
 
-class ConfigLoaderTests: XCTestCase {
+class EnvTests: XCTestCase {
+    func testEnv() {
+        let TEST_KEY = "TEST_ENV_VALUE"
+        XCTAssertEqual(Env.get(TEST_KEY), nil)
+        defer {
+            Env.remove(TEST_KEY)
+            XCTAssertEqual(Env.get(TEST_KEY), nil)
+        }
+
+        Env.set(TEST_KEY, value: "Hello!")
+        XCTAssertEqual(Env.get(TEST_KEY), "Hello!")
+
+        Env.set(TEST_KEY, value:"Aloha!")
+        XCTAssertEqual(Env.get(TEST_KEY), "Aloha!")
+
+        Env.set(TEST_KEY, value: "Hola!", replace: false)
+        XCTAssertEqual(Env.get(TEST_KEY), "Aloha!")
+    }
+}
+
+class ConfigTests: XCTestCase {
     func testLoad() throws {
         let config = try Node.makeConfig(
             prioritized: [
