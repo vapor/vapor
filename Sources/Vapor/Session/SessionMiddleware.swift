@@ -11,7 +11,7 @@ import Cookies
 */
 public class SessionMiddleware: Middleware {
 
-    public var sessions: Sessions
+    var sessions: Sessions
 
     public init(sessions: Sessions) {
         self.sessions = sessions
