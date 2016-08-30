@@ -7,7 +7,7 @@ import Routing
 import Cookies
 
 #if os(Linux)
-let workDir = "./Sources/Development"
+let workDir = "./Sources/Development/"
 #else
 var workDir: String {
     let parent = #file.characters.split(separator: "/").map(String.init).dropLast().joined(separator: "/")
