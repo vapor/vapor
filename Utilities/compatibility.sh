@@ -75,7 +75,7 @@ else
 	echo $SWIFTV
 	echo ""
 	echo "You must have Swiftenv installed with"
-	echo "swift-DEVELOPMENT-SNAPSHOT-2016-07-25-a"
+	echo "swift-DEVELOPMENT-SNAPSHOT-2016-08-18-a"
 	echo ""
 	help
 	exit 1;
