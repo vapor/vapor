@@ -177,11 +177,11 @@ public class Droplet {
         // from the command line arguments or #file.
         let workDir: String
         if let provided = workDirProvided {
-            workDir = provided
+            workDir = provided.finished(with: "/")
         } else {
-            workDir = Droplet.workingDirectory(from: arguments)
+            workDir = Droplet.workingDirectory(from: arguments).finished(with: "/")
         }
-        self.workDir = workDir
+        self.workDir = workDir.finished(with: "/")
 
         // the current droplet environment
         let environment: Environment
