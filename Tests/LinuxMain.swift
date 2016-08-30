@@ -2,6 +2,7 @@
 
 import XCTest
 @testable import CacheTests
+@testable import ConfigTests
 @testable import CookiesTests
 @testable import VaporTests
 @testable import RoutingTests
@@ -12,6 +13,12 @@ XCTMain([
     testCase(FluentCacheTests.allTests),
     testCase(MemoryCacheTests.allTests),
 
+    // Config
+    testCase(ConfigTests.allTests),
+    testCase(MergeTests.allTests),
+    testCase(EnvTests.allTests),
+    testCase(CLIConfigTests.allTests),
+
     // Cookies
     testCase(CookiesTests.allTests),
     testCase(CookieTests.allTests),
@@ -20,7 +27,7 @@ XCTMain([
     testCase(SerializingTests.allTests),
 
     // Vapor
-    testCase(ConfigTests.allTests),
+    testCase(ConfigIntegrationTests.allTests),
     testCase(ConsoleTests.allTests),
     testCase(ContentTests.allTests),
     testCase(CookieTests.allTests),

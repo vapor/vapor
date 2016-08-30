@@ -44,3 +44,8 @@ extension Source {
         }
     }
 }
+
+extension Config: Equatable {}
+public func == (lhs: Config, rhs: Config) -> Bool {
+    return lhs.node == rhs.node
+}
