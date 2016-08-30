@@ -11,7 +11,7 @@ var configDir: String {
 class MergeTests: XCTestCase {
     static let allTests = [
         ("testFile", testFile),
-        ("testMerge", testMerge).
+        ("testMerge", testMerge)
     ]
     
     func testFile() throws {
