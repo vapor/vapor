@@ -32,7 +32,7 @@ public final class CacheSessionManager: SessionManager {
         let identifier = CryptoRandom.bytes(16).base64String
 
         // FIXME: authDetails not available yet
-        if let id = user.authDetails?.account.accountID {
+        if let id = user.authDetails?.account.uniqueID {
             try? cache.set(identifier, id)
         }
 

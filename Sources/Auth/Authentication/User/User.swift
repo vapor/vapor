@@ -4,7 +4,7 @@ import Turnstile
 public protocol User: Entity, Account, Authenticator { }
 
 extension User {
-    public var accountID: String {
+    public var uniqueID: String {
         return id?.string ?? ""
     }
 
