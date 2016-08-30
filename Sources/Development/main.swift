@@ -92,6 +92,16 @@ final class TestUser: Model, Auth.User {
 
         return match
     }
+
+    static func register(credentials: Credentials) throws -> Auth.User {
+        guard
+            let match = try TestUser.find(1)
+            else {
+                throw Abort.custom(status: .forbidden, message: "Invalid credentials.")
+        }
+
+        return match
+    }
 }
 
 extension Request {

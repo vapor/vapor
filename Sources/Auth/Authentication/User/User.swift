@@ -7,8 +7,4 @@ extension User {
     public var uniqueID: String {
         return id?.string ?? ""
     }
-
-    public var realm: Realm.Type {
-        return AuthenticatorRealm<Self>.self
-    }
 }

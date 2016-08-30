@@ -2,6 +2,8 @@ import Turnstile
 import Foundation
 import Core
 
+@_exported import class Turnstile.APIKey
+
 extension Authorization {
     public var basic: APIKey? {
         guard let range = header.range(of: "Basic ") else {

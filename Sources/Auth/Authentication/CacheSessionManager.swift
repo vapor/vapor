@@ -4,38 +4,30 @@ import Cache
 
 public final class CacheSessionManager: SessionManager {
     private let cache: CacheProtocol
-    var turnstile: Turnstile! // FIXME
+    private let realm: Realm
 
-    public init(cache: CacheProtocol, turnstile: Turnstile?) {
+    public init(cache: CacheProtocol, realm: Realm) {
         self.cache = cache
-        self.turnstile = turnstile
+        self.realm = realm
     }
 
     /**
         Gets the user for the current session identifier.
     */
-    public func getSubject(identifier: String) throws -> Subject {
+    public func restoreAccount(fromSessionID identifier: String) throws -> Account {
         guard let id = try cache.get(identifier) else {
             throw AuthError.invalidIdentifier
         }
 
-        let subject = Subject(turnstile: turnstile)
-        try subject.login(credentials: Identifier(id: id))
-
-        return subject
+        return try realm.authenticate(credentials: Identifier(id: id))
     }
 
     /**
         Creates a session for a given Subject object and returns the identifier.
     */
-    public func createSession(user: Subject) -> String {
+    public func createSession(account: Account) -> String {
         let identifier = CryptoRandom.bytes(16).base64String
-
-        // FIXME: authDetails not available yet
-        if let id = user.authDetails?.account.uniqueID {
-            try? cache.set(identifier, id)
-        }
-
+        try? cache.set(identifier, account.uniqueID)
         return identifier
     }
 
@@ -43,6 +35,6 @@ public final class CacheSessionManager: SessionManager {
         Destroys the session for a session identifier.
     */
     public func destroySession(identifier: String) {
-        try! cache.delete(identifier)
+        try? cache.delete(identifier)
     }
 }
