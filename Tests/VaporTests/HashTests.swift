@@ -14,7 +14,7 @@ class HashTests: XCTestCase {
         let defaultKey = "123"
 
         //test drop facade
-        let drop = Droplet(config: ["app": ["key": .string(defaultKey)]])
+        let drop = Droplet(config: Config(["app": ["key": .string(defaultKey)]]))
         let result = try drop.hash.make(string)
         XCTAssert(defaultExpected == result, "Hash did not match")
 

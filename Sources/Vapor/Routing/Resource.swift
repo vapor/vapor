@@ -62,7 +62,7 @@ extension RouteBuilder where Value == Responder {
             itemMethods += method
 
             self.add(method, path, ":id") { request in
-                guard let id = request.parameters["id"].string else {
+                guard let id = request.parameters["id"]?.string else {
                     throw Abort.notFound
                 }
 

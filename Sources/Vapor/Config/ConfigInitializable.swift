@@ -1,3 +1,5 @@
+@_exported import Config
+
 /**
     Allows types to be instantiated from
     data contained in the Config directories.
@@ -8,5 +10,5 @@
     the Config directories instead of the source code.
 */
 public protocol ConfigInitializable {
-    init(config: Node) throws
+    init(config: Config) throws
 }

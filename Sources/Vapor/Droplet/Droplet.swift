@@ -34,7 +34,7 @@ public class Droplet {
     /**
         Provides access to config settings.
     */
-    public let config: Node
+    public let config: Config
     
     /**
         Storage to add/manage dependencies, identified by a string
@@ -142,7 +142,7 @@ public class Droplet {
         arguments: [String]? = nil,
         workDir workDirProvided: String? = nil,
         environment environmentProvided: Environment? = nil,
-        config configProvided: Node? = nil,
+        config configProvided: Config? = nil,
         localization localizationProvided: Localization? = nil,
 
         // providable
@@ -195,13 +195,13 @@ public class Droplet {
         // use the config item provided or
         // attempt to create a config from
         // the working directory and arguments
-        let config: Node
+        let config: Config
         if let provided = configProvided {
             config = provided
         } else {
             do {
                 let configDirectory = workDir.finished(with: "/") + "Config/"
-                config = try Node.makeConfig(
+                config = try Config(
                     prioritized: [
                         .commandLine,
                         .directory(root: configDirectory + "secrets"),
@@ -211,7 +211,7 @@ public class Droplet {
                 )
             } catch {
                 logs.append((.error, "Could not load configuration files: \(error)"))
-                config = [:]
+                config = Config([:])
             }
         }
         self.config = config
@@ -292,7 +292,7 @@ public class Droplet {
 
         // set the hashing key to the key
         // from the configuration files or nothing.
-        let key = config["app", "key"].string
+        let key = config["app", "key"]?.string
         // initialize the hash from one provided
         // or use a default SHA2 hasher
         let hash = provided.hash ?? SHA2Hasher(variant: .sha256, defaultKey: key)

@@ -1,7 +1,28 @@
 @_exported import Node
 
+public struct Config {
+    internal var node: Node
+
+    public init(_ node: Node) {
+        self.node = node
+    }
+
+    public init(prioritized: [Source]) throws {
+        self.node = try Node.makeConfig(prioritized: prioritized)
+    }
+}
+
+extension Config: NodeConvertible {
+    public init(node: Node, in context: Context) throws {
+        self.init(node)
+    }
+    public func makeNode() throws -> Node {
+        return node
+    }
+}
+
 extension Node {
-    public static func makeConfig(prioritized: [Source]) throws -> Node {
+    internal static func makeConfig(prioritized: [Source]) throws -> Node {
         var config = Node([:])
         try prioritized.forEach { source in
             let source = try source.makeConfig()
