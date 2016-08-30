@@ -8,59 +8,6 @@ var configDir: String {
     return path
 }
 
-class ENVConfigTests: XCTestCase {
-    func testBasicEnv() {
-        Env.set("TEST_ENV_KEY", value: "name")
-        Env.set("TEST_ENV_VALUE", value: "World")
-        defer {
-            Env.remove("TEST_ENV_KEY")
-            Env.remove("TEST_ENV_VALUE")
-        }
-
-        let node: Node = [
-            "$TEST_ENV_KEY": "$TEST_ENV_VALUE"
-        ]
-        let expectation: Node = [
-            "name": "World"
-        ]
-
-        XCTAssertEqual(node.hydratedEnv(), expectation)
-    }
-
-    func testDefaults() {
-        let node: Node = [
-            "port": "$NO_EXIST:8080"
-        ]
-        let expectation: Node = [
-            "port": "8080"
-        ]
-
-        XCTAssertEqual(node.hydratedEnv(), expectation)
-    }
-
-    func testNoEnv() {
-        let node: Node = ["key": "$I_NO_EXIST"]
-        let env = node.hydratedEnv()
-        XCTAssertNil(env)
-    }
-
-    func testEmpty() {
-        let node: Node = [:]
-        let env = node.hydratedEnv()
-        XCTAssertEqual(env, [:])
-    }
-
-    func testEnvArray() {
-        let TEST_KEY = "TEST_ENV_KEY"
-        Env.set(TEST_KEY, value: "Hello!")
-        defer { Env.remove(TEST_KEY) }
-        let array: Node = [ Node("$\(TEST_KEY)"), Node("$\(TEST_KEY)")]
-        let env = array.hydratedEnv()
-        let expectation: Node = ["Hello!", "Hello!"]
-        XCTAssertEqual(env, expectation)
-    }
-}
-
 class CLIConfigTests: XCTestCase {
     func testCLI() throws {
         let arguments = [
@@ -104,7 +51,6 @@ class CLIConfigTests: XCTestCase {
 }
 
 class MergeTests: XCTestCase {
-
     func testFile() throws {
         let node = try Node.makeConfig(directory: configDir)
         let expectation: Node = [
