@@ -2,7 +2,7 @@
 
 SWIFTC=`which swift`
 
-VALID="Swift 395e967875"
+VALID="Swift 31bbb2c208"
 
 help() {
 	echo "📖  Visit our docs for step-by-step instructions on installing Swift correctly."
