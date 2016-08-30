@@ -1,5 +1,4 @@
 import Foundation
-import Node
 
 extension Node {
     /**

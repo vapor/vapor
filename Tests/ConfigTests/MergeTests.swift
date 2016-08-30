@@ -24,7 +24,7 @@ class ENVConfigTests: XCTestCase {
             "name": "World"
         ]
 
-        XCTAssertEqual(node.loadEnv(), expectation)
+        XCTAssertEqual(node.hydratedEnv(), expectation)
     }
 
     func testDefaults() {
@@ -35,18 +35,18 @@ class ENVConfigTests: XCTestCase {
             "port": "8080"
         ]
 
-        XCTAssertEqual(node.loadEnv(), expectation)
+        XCTAssertEqual(node.hydratedEnv(), expectation)
     }
 
     func testNoEnv() {
         let node: Node = ["key": "$I_NO_EXIST"]
-        let env = node.loadEnv()
+        let env = node.hydratedEnv()
         XCTAssertNil(env)
     }
 
     func testEmpty() {
         let node: Node = [:]
-        let env = node.loadEnv()
+        let env = node.hydratedEnv()
         XCTAssertEqual(env, [:])
     }
 
@@ -55,7 +55,7 @@ class ENVConfigTests: XCTestCase {
         Env.set(TEST_KEY, value: "Hello!")
         defer { Env.remove(TEST_KEY) }
         let array: Node = [ Node("$\(TEST_KEY)"), Node("$\(TEST_KEY)")]
-        let env = array.loadEnv()
+        let env = array.hydratedEnv()
         let expectation: Node = ["Hello!", "Hello!"]
         XCTAssertEqual(env, expectation)
     }
@@ -136,7 +136,13 @@ class MergeTests: XCTestCase {
             ]
         ]
 
-        let merged = Node.merge(prioritized: [("app", a), ("app", b), ("app", c)])
+        let node = try Node.makeConfig(
+            prioritized: [
+                .memory(name: "app", config: a),
+                .memory(name: "app", config: b),
+                .memory(name: "app", config: c)
+            ]
+        )
         let expectation: Node = [
             "app": [
                 "name": "a",
@@ -146,6 +152,6 @@ class MergeTests: XCTestCase {
                 ]
             ]
         ]
-        XCTAssertEqual(merged, expectation)
+        XCTAssertEqual(node, expectation)
     }
 }
