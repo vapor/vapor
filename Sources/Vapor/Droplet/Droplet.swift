@@ -5,11 +5,8 @@ import Console
 import Fluent
 import Transport
 import Cache
-<<<<<<< HEAD
 @_exported import Middleware
-=======
 import Config
->>>>>>> master
 
 public let VERSION = "0.17.0"
 
