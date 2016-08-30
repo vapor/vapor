@@ -19,7 +19,7 @@ class MiddlewareTests: XCTestCase {
         ]
 
         for middleware in bundledMiddleware {
-            drop.middleware = drop.middleware.filter() { !($0.dynamicType == middleware.dynamicType) }
+            drop.middleware = drop.middleware.filter() { (type(of: $0) != type(of: middleware) }
         }
 
         XCTAssert(drop.middleware.count == 0, "Bundled middleware not all removed")
