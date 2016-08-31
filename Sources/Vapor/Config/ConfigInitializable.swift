@@ -1,4 +1,4 @@
-@_exported import Config
+@_exported import Settings
 
 /**
     Allows types to be instantiated from
@@ -10,5 +10,5 @@
     the Config directories instead of the source code.
 */
 public protocol ConfigInitializable {
-    init(config: Config) throws
+    init(config: Settings.Config) throws
 }

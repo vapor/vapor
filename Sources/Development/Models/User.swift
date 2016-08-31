@@ -1,20 +1,32 @@
 import Node
 import JSON
 import Vapor
+import Fluent
 
-final class User {
+final class User: Model {
+    var id: Node?
     var name: String
 
     init(name: String) {
         self.name = name
     }
-}
 
-extension User: JSONRepresentable {
-    public func makeJSON() throws -> JSON {
-        return try JSON([
+    init(node: Node, in context: Context) throws {
+        self.name = try node.extract("name")
+    }
+
+    func makeNode() throws -> Node {
+        return try Node(node: [
             "name": name
         ])
+    }
+
+    static func prepare(_ database: Database) throws {
+
+    }
+
+    static func revert(_ database: Database) throws {
+
     }
 }
 

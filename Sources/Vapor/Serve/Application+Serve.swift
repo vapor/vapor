@@ -28,7 +28,7 @@ extension Droplet {
             let securityLayer: SecurityLayer = security.securityLayer
 
             var message = "Starting server at \(host):\(port)"
-            if securityLayer == .tls {
+            if securityLayer.isSecure {
                 message += " 🔒"
             }
 
@@ -44,7 +44,7 @@ extension Droplet {
     }
 
     func bootServer(name: String, isLastServer: Bool) throws {
-        let securityLayer: SecurityLayer = config["servers", name, "securityLayer"]?.string == "tls" ? .tls : .none
+        let securityLayer: SecurityLayer = config["servers", name, "securityLayer"]?.string == "tls" ? .tls(nil) : .none
 
         let host = config["servers", name, "host"]?.string ?? "0.0.0.0"
         let port = config["servers", name, "port"]?.int ?? 8080
@@ -57,7 +57,7 @@ extension Droplet {
             message += "in background"
         }
         message += "at \(host):\(port)"
-        if securityLayer == .tls {
+        if securityLayer.isSecure {
             message += "🔒"
         }
         let info = message.joined(separator: " ")

@@ -1,4 +1,3 @@
-import Node
 import JSON
 import Vapor
 import HTTP
@@ -12,7 +11,7 @@ final class UserController: ResourceRepresentable {
         Display many instances
      */
     func index(request: Request) throws -> ResponseRepresentable {
-        return try JSON([
+        return try JSON(node: [
             "controller": "MyController.index"
         ])
     }
@@ -22,7 +21,7 @@ final class UserController: ResourceRepresentable {
         Create a new instance.
      */
     func store(request: Request) throws -> ResponseRepresentable {
-        return try JSON([
+        return try JSON(node: [
             "controller": "MyController.store"
         ])
     }
@@ -33,7 +32,7 @@ final class UserController: ResourceRepresentable {
      */
     func show(request: Request, item user: User) throws -> ResponseRepresentable {
         //User can be used like JSON with JsonRepresentable
-        return try JSON([
+        return try JSON(node: [
             "controller": "MyController.show",
             "user": user
         ])
@@ -44,7 +43,7 @@ final class UserController: ResourceRepresentable {
      */
     func update(request: Request, item user: User) throws -> ResponseRepresentable {
         //Testing JsonRepresentable
-        return try user.makeJSON()
+        return user.makeJSON()
     }
 
     /**
@@ -52,7 +51,7 @@ final class UserController: ResourceRepresentable {
      */
     func modify(request: Request, item user: User) throws -> ResponseRepresentable {
         //Testing JsonRepresentable
-        return try user.makeJSON()
+        return user.makeJSON()
     }
 
     /**
@@ -60,21 +59,21 @@ final class UserController: ResourceRepresentable {
      */
     func destroy(request: Request, item user: User) throws -> ResponseRepresentable {
         //User is ResponseRepresentable by proxy of JsonRepresentable
-        return try user.makeJSON()
+        return user.makeJSON()
     }
 
     /**
         Delete all instances.
      */
     func destroy(request: Request) throws -> ResponseRepresentable {
-        return try JSON([
+        return try JSON(node: [
             "controller": "MyController.destroyAll"
         ])
     }
 
 
     func options(request: Request) throws -> ResponseRepresentable {
-        return try JSON([
+        return try JSON(node: [
             "info": "This is the Users resource"
         ])
     }
