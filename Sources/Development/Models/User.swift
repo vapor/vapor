@@ -1,7 +1,4 @@
-import Node
-import JSON
 import Vapor
-import Fluent
 
 final class User: Model {
     var id: Node?
