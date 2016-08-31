@@ -1,6 +1,6 @@
 import XCTest
 import Node
-@testable import Config
+@testable import Settings
 
 var configDir: String {
     let parent = #file.characters.split(separator: "/").map(String.init).dropLast().joined(separator: "/")
