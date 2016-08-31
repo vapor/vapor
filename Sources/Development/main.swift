@@ -235,7 +235,8 @@ drop.get("spotify-artists") { req in
         throw Abort.custom(status: .badRequest, message: "Could not parse response")
     }
 
-    return JSON.array(names.map({ $0.makeJSON() }))
+
+    return try JSON(node: names)
 }
 
 drop.get("pokemon") { req in
@@ -308,7 +309,7 @@ drop.post("jsondata") { request in
 // MARK: Type safe routing
 
 drop.get("test", Int.self, String.self) { request, int, string in
-    return try JSON([
+    return try JSON(node: [
         "message": "Int \(int) String \(string)"
     ])
 }
@@ -331,11 +332,11 @@ drop.get("users-test") { req in
 //MARK: Json
 
 drop.get("json") { request in
-    return try JSON([
+    return try JSON(node: [
         "number": 123,
         "text": "unicorns",
         "bool": false,
-        "nested": try JSON(["one", 2, false])
+        "nested": try JSON(node: ["one", 2, false])
     ])
 }
 
@@ -417,10 +418,9 @@ drop.get("cookie") { request in
 
 
 drop.get("cookies") { request in
-    var response = try JSON([
+    var response = try JSON(node: [
         "cookies": "\(request.cookies)"
-        ])
-        .makeResponse()
+    ]).makeResponse()
 
     response.cookies["cookie-1"] = "value-1"
     response.cookies["hello"] = "world"
@@ -450,7 +450,7 @@ class Employee {
 
 extension Employee: JSONRepresentable {
     func makeJSON() throws -> JSON {
-        return try JSON([
+        return try JSON(node: [
             "name": name.value,
             "email": email.value
         ])
@@ -576,7 +576,7 @@ drop.post("multipart-print") { request in
     print(request.multipart?["test"])
     print(request.multipart?["test"]?.file)
 
-    return try JSON([
+    return try JSON(node: [
         "message": "Printed details to console"
     ])
 }
@@ -612,8 +612,8 @@ drop.get("async") { request in
                 let beyonceQuery = "https://api.spotify.com/v1/search/?q=beyonce&type=artist"
                 let response = try drop.client.get(beyonceQuery)
                 let artists = response.data["artists", "items", "name"]?.array ?? []
-                let artistsJSON = artists.flatMap { $0.string } .map { JSON.string($0) }
-                let js = JSON.array(artistsJSON)
+                let artistsJSON = artists.flatMap { $0.string }
+                let js = try! JSON(node: artistsJSON)
                 portal.close(with: js)
             } catch {
                 portal.close(with: error)

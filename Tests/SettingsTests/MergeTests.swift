@@ -1,10 +1,10 @@
 import XCTest
 import Node
-@testable import Config
+@testable import Settings
 
 var configDir: String {
     let parent = #file.characters.split(separator: "/").map(String.init).dropLast().joined(separator: "/")
-    let path = "/\(parent)/../../Sources/Config/TestFiles"
+    let path = "/\(parent)/../../Sources/Settings/TestFiles"
     return path
 }
 

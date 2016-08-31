@@ -6,7 +6,7 @@ import Fluent
 import Transport
 import Cache
 @_exported import Middleware
-import Config
+import Settings
 
 public let VERSION = "0.17.0"
 
@@ -35,7 +35,7 @@ public class Droplet {
     /**
         Provides access to config settings.
     */
-    public let config: Config
+    public let config: Settings.Config
     
     /**
         Storage to add/manage dependencies, identified by a string
@@ -143,7 +143,7 @@ public class Droplet {
         arguments: [String]? = nil,
         workDir workDirProvided: String? = nil,
         environment environmentProvided: Environment? = nil,
-        config configProvided: Config? = nil,
+        config configProvided: Settings.Config? = nil,
         localization localizationProvided: Localization? = nil,
 
         // providable
@@ -196,13 +196,13 @@ public class Droplet {
         // use the config item provided or
         // attempt to create a config from
         // the working directory and arguments
-        let config: Config
+        let config: Settings.Config
         if let provided = configProvided {
             config = provided
         } else {
             do {
                 let configDirectory = workDir.finished(with: "/") + "Config/"
-                config = try Config(
+                config = try Settings.Config(
                     prioritized: [
                         .commandLine,
                         .directory(root: configDirectory + "secrets"),

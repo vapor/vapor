@@ -2,7 +2,7 @@
 
 import XCTest
 @testable import CacheTests
-@testable import ConfigTests
+@testable import SettingsTests
 @testable import CookiesTests
 @testable import VaporTests
 @testable import RoutingTests

@@ -3,6 +3,8 @@ import Fluent
 import TypeSafeRouting
 import HTTP
 
+@_exported import class Fluent.Database
+
 public protocol Model: Entity, JSONRepresentable, StringInitializable, ResponseRepresentable { }
 
 extension Model {

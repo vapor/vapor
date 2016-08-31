@@ -80,7 +80,7 @@ private final class FastServerProvider: Provider {
     var afterInitFlag = false
     var beforeServeFlag = false
 
-    init(config: Config) throws {
+    init(config: Settings.Config) throws {
         provided = Providable(server: FastServer.self)
     }
 
@@ -116,7 +116,7 @@ private final class SlowServerProvider: Provider {
     var afterInitFlag = false
     var beforeServeFlag = false
 
-    init(config: Config) throws {
+    init(config: Settings.Config) throws {
         provided = Providable(server: SlowServer.self)
     }
 
