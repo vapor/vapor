@@ -135,3 +135,15 @@ An up to date example repository showing some of Vapor's features
 ### GitHub
 
 [Vapor Example](https://github.com/qutheory/vapor-example).
+
+# SwiftyBeaver Website
+
+The website of SwiftyBeaver, the logging platform for Swift, is powered by Vapor with Leaf as template engine. Check out the source code on Github for a better understanding how easy it is to create websites with Vapor.
+
+### GitHub
+
+[https://github.com/SwiftyBeaver/SBWebsite](https://github.com/SwiftyBeaver/SBWebsite)
+
+### Site
+
+[swiftybeaver.com](https://github.com/qutheory/vapor-example)
