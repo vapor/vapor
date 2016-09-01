@@ -4,6 +4,7 @@ It's always awesome when people take the time to share their knowledge back with
 
 If you find a downed link, or make a contribution of our own, let us know and we'll make sure it gets added.
 
+* 📖 [Build your First Website with Swift and Vapor!](http://martinlasek.com/en/serversiteswift/tutorial-first-swift-website-with-vapor.html)
 * 📹📖 [Super Spectacular Server Side Swift - Build a Web App](https://realm.io/news/slug-edward-jiang-server-side-swift/)
 * 📖 [Full Stack Swift - Deploying a Vapor App](https://medium.com/@xcadaverx/full-stack-swift-deploying-a-vapor-app-4a190bc0a8d#.p93acu7xp)
 * 📹 [Let's Build a Web App in Swift](https://www.youtube.com/watch?v=OuPT2FFKCos)
