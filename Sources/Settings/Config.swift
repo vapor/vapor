@@ -4,7 +4,7 @@ public struct Config: NodeBacked {
     public var node: Node
 
     public init(_ node: Node) {
-        self.node = node
+        self.node = node.hydratedEnv() ?? node
     }
 
     public init(prioritized: [Source]) throws {
