@@ -1,0 +1,17 @@
+{
+  "name": "vapor",
+  "scripts": {
+  },
+  "env": {
+  },
+  "formation": {
+  },
+  "addons": [
+
+  ],
+  "buildpacks": [
+    {
+      "url": "https://github.com/kylef/heroku-buildpack-swift"
+    }
+  ]
+}

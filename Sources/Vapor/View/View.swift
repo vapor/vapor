@@ -1,74 +1,37 @@
+import Core
+import HTTP
+
 /**
-    Loads and renders a file from the `Resources` folder
-    in the Application's work directory.
+    Represents a rendered view. 
 */
-public class View {
-    ///Currently applied RenderDrivers
-    public static var renderers: [String: RenderDriver] = [:]
+public final class View {
+    public let data: Bytes
 
-    var data: Data
+    public init(data: Bytes) {
+        self.data = data
+    }
+}
 
-    enum Error: ErrorProtocol {
-        case InvalidPath
+/**
+    Allow views to easily convert to
+    and from bytes for interfacing
+    with other byte based processes.
+*/
+extension View: BytesConvertible {
+    public func makeBytes() throws -> Bytes {
+        return data
     }
 
-    /**
-        Attempt to load and render a file
-        from the supplied path using the contextual
-        information supplied.
-        - context Passed to RenderDrivers
-    */
-    public init(application: Application, path: String, context: [String: Any] = [:]) throws {
-        let filesPath = application.workDir + "Resources/Views/" + path
-
-        guard let fileBody = try? FileManager.readBytesFromFile(filesPath) else {
-            self.data = Data()
-            Log.error("No view found in path: \(filesPath)")
-            throw Error.InvalidPath
-        }
-        self.data = Data(fileBody)
-
-        for (suffix, renderer) in View.renderers {
-            if path.hasSuffix(suffix) {
-                let template = try String(data: data)
-                let rendered = try renderer.render(template: template, context: context)
-                self.data = rendered.data
-            }
-        }
-
+    public convenience init(bytes: Bytes) throws {
+        self.init(data: bytes)
     }
-
 }
 
 ///Allows Views to be returned in Vapor closures
 extension View: ResponseRepresentable {
     public func makeResponse() -> Response {
         return Response(status: .ok, headers: [
-            "Content-Type": "text/html"
-        ], body: data)
+            "Content-Type": "text/html; charset=utf-8"
+        ], body: .data(data))
     }
-}
-
-///Adds convenience method to Application to create a view
-extension Application {
-
-    /**
-        Views directory relative to Application.resourcesDir
-    */
-    public var viewsDir: String {
-        return resourcesDir + "Views/"
-    }
-
-    /**
-     Loads a view with a given context
-
-     - parameter path: the path to the view
-     - parameter context: the context to use when loading the view
-
-     - throws: an error if loading fails
-     */
-    public func view(_ path: String, context: [String: Any] = [:]) throws -> View {
-        return try View(application: self, path: path, context: context)
-    }
-
 }

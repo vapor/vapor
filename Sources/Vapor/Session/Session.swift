@@ -1,24 +1,24 @@
 /**
     Use the Session class to store sensitive
-    information for individual users of your application
+    information for individual users of your droplet
     such as API keys or login tokens.
 
-    Access the current Application's Session using
-    `app.session`.
+    Access the current Droplet's Sessions using
+    `drop.sessions`.
 */
 public class Session {
 
     public var identifier: String?
-    var driver: SessionDriver
     public var enabled: Bool
 
-    public init(driver: SessionDriver) {
-        self.driver = driver
+    private var sessions: Sessions
+    public init(sessions: Sessions) {
+        self.sessions = sessions
         enabled = false
     }
 
-    init(identifier: String, driver: SessionDriver) {
-        self.driver = driver
+    init(identifier: String, sessions: Sessions) {
+        self.sessions = sessions
         self.identifier = identifier
         enabled = true
     }
@@ -26,7 +26,7 @@ public class Session {
     public func destroy() {
         if let i = identifier {
             identifier = nil
-            driver.destroy(i)
+            sessions.destroy(i)
         }
     }
 
@@ -36,7 +36,7 @@ public class Session {
                 return nil
             }
 
-            return driver.valueFor(key: key, identifier: i)
+            return sessions.value(for: key, identifier: i)
         }
         set {
             let i: String
@@ -44,11 +44,11 @@ public class Session {
             if let existingIdentifier = identifier {
                 i = existingIdentifier
             } else {
-                i = driver.makeSessionIdentifier()
+                i = sessions.makeIdentifier()
                 identifier = i
             }
 
-            driver.set(newValue, forKey: key, identifier: i)
+            sessions.set(newValue, for: key, identifier: i)
         }
     }
 }

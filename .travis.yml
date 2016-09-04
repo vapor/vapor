@@ -4,13 +4,7 @@ os:
 language: generic
 sudo: required
 dist: trusty
-osx_image: xcode7.3
-install:
-  - eval "$(curl -sL https://gist.githubusercontent.com/kylef/5c0475ff02b7c7671d2a/raw/02090c7ede5a637b76e6df1710e83cd0bbe7dcdf/swiftenv-install.sh)"
+osx_image: xcode8
 script:
-  # Build Vapor
-  - swift build
-  # temporarily disable due to Swift bug (SR-1533)
-  # - swift build --configuration release
-  # Test Vapor
-  - swift test
+  - eval "$(curl -sL swift.qutheory.io/ci)"
+  - eval "$(curl -sL swift.qutheory.io/codecov)"

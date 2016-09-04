@@ -9,7 +9,7 @@
     - equals: validate input == associated value
     - containedIn: validate low <= input && input <= high
 */
-public enum Compare<ComparableType where ComparableType: Comparable, ComparableType: Validatable>: Validator {
+public enum Compare<ComparableType>: Validator where ComparableType: Comparable, ComparableType: Validatable {
     public typealias InputType = ComparableType
     case greaterThan(ComparableType)
     case greaterThanOrEqual(ComparableType)

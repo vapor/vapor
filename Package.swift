@@ -2,56 +2,60 @@ import PackageDescription
 
 let package = Package(
     name: "Vapor",
+    targets: [
+        // Framework
+        Target(name: "Vapor", dependencies: [
+            "Routing",
+            "HTTPRouting",
+            "TypeSafeRouting",
+            "Auth",
+            "Cache",
+            "Cookies",
+            "Settings"
+        ]),
+
+        // Routing
+        Target(name: "Routing"),
+        Target(name: "HTTPRouting", dependencies: ["Routing"]),
+
+        // Type Safe
+        Target(name: "TypeSafeRouting", dependencies: ["Routing", "HTTPRouting"]),
+        Target(name: "TypeSafeGenerator"),
+
+        // Misc
+        Target(name: "Auth", dependencies: ["Middleware", "Cookies"]),
+        Target(name: "Cache"),
+        Target(name: "Cookies"),
+        Target(name: "Middleware"),
+        Target(name: "Settings"),
+
+        // Development and Testing
+        Target(name: "Development", dependencies: ["Vapor"]),
+        Target(name: "Performance", dependencies: ["Vapor"]),
+    ],
     dependencies: [
-        //Standards package. Contains protocols for cross-project compatability.
-        .Package(url: "https://github.com/open-swift/S4.git", majorVersion: 0, minor: 8),
+        // SHA2 + HMAC hashing. Used by the core to create session identifiers.
+        .Package(url: "https://github.com/vapor/crypto.git", majorVersion: 0, minor: 2),
 
-        //Provides critical String functions Foundation is missing on Linux
-        .Package(url: "https://github.com/Zewo/String.git", majorVersion: 0, minor: 7),
+        // ORM for interacting with databases
+        .Package(url: "https://github.com/vapor/fluent.git", majorVersion: 0, minor: 10),
 
-        //Parses and serializes JSON - using fork until update core library
-        .Package(url: "https://github.com/qutheory/pure-json.git", majorVersion: 2, minor: 3),
+        // Core vapor transport layer
+        .Package(url: "https://github.com/vapor/engine.git", majorVersion: 0, minor: 7),
 
-        //Swift wrapper around Sockets, used for built-in HTTP server
-        .Package(url: "https://github.com/ketzusaka/Hummingbird.git", majorVersion: 1, minor: 9),
+        // Console protocol and implementation for powering command line interface.
+        .Package(url: "https://github.com/vapor/console.git", majorVersion: 0, minor: 6),
 
-        //SHA2 + HMAC hashing. Used by the core to create session identifiers.
-        .Package(url: "https://github.com/CryptoKitten/HMAC.git", majorVersion: 0, minor: 7),
-        .Package(url: "https://github.com/CryptoKitten/SHA2.git", majorVersion: 0, minor: 7),
+        // JSON enum wrapper around Foundation JSON
+        .Package(url: "https://github.com/vapor/json.git", majorVersion: 0, minor: 6),
 
-        //Determines Content-Type for file extensions
-        .Package(url: "https://github.com/Zewo/MediaType.git", majorVersion: 0, minor: 7),
+        // A security framework for Swift.
+        .Package(url: "https://github.com/stormpath/Turnstile.git", majorVersion: 0, minor: 3),
 
-        //ORM for interacting with databases
-        .Package(url: "https://github.com/qutheory/fluent.git", majorVersion: 0, minor: 3),
-        
-        // Allows complex key path subscripts
-        .Package(url: "https://github.com/qutheory/path-indexable.git", majorVersion: 0, minor: 2)
+		// An extensible templating language built for Vapor. 🍃
+		.Package(url: "https://github.com/vapor/leaf.git", majorVersion: 0, minor: 1)
     ],
     exclude: [
-        "XcodeProject"
-    ],
-    targets: [
-        Target(
-            name: "Vapor",
-            dependencies: [
-                .Target(name: "libc")
-            ]
-        ),
-        Target(
-            name: "Development",
-            dependencies: [
-                .Target(name: "Vapor")
-            ]
-        ),
-        Target(
-            name: "Performance",
-            dependencies: [
-                .Target(name: "Vapor")
-            ]
-        ),
-        Target(
-            name: "Generator"
-        )
+        // No excludes currently
     ]
 )

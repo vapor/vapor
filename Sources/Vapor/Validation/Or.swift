@@ -1,21 +1,21 @@
 /*
- The MIT License (MIT) Copyright (c) 2016 Benjamin Encz
+    The MIT License (MIT) Copyright (c) 2016 Benjamin Encz
 
- Permission is hereby granted, free of charge, to any person obtaining a copy of this 
- software and associated documentation files (the "Software"), to deal in the Software 
- without restriction, including without limitation the rights to use, copy, modify, merge, 
- publish, distribute, sublicense, and/or sell copies of the Software, and to permit 
- persons to whom the Software is furnished to do so, subject to the following conditions:
+    Permission is hereby granted, free of charge, to any person obtaining a copy of this 
+    software and associated documentation files (the "Software"), to deal in the Software 
+    without restriction, including without limitation the rights to use, copy, modify, merge, 
+    publish, distribute, sublicense, and/or sell copies of the Software, and to permit 
+    persons to whom the Software is furnished to do so, subject to the following conditions:
 
- The above copyright notice and this permission notice shall be included in all copies or 
- substantial portions of the Software.
+    The above copyright notice and this permission notice shall be included in all copies or 
+    substantial portions of the Software.
 
- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
- INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE 
- AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, 
- DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+    INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE 
+    AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, 
+    DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+*/
 
 /**
     This struct is used to encompass multiple Validators into one entity
@@ -33,21 +33,23 @@
 */
 public struct Either<
     V: Validator,
-    U: Validator where V.InputType == U.InputType> {
-    private typealias Validator = (input: V.InputType) throws -> Void
-    private let validator: Validator
+    U: Validator
+> where V.InputType == U.InputType {
+    fileprivate typealias Validator = (V.InputType) throws -> Void
+    
+    fileprivate let validator: Validator
 
     /**
         Convenience only.
 
         Must stay private.
     */
-    private init(_ lhs: Validator, _ rhs: Validator) {
+    fileprivate init(_ lhs: @escaping Validator, _ rhs: @escaping Validator) {
         validator = { value in
             do {
-                try lhs(input: value)
+                try lhs(value)
             } catch {
-                try rhs(input: value)
+                try rhs(value)
             }
         }
     }
@@ -63,7 +65,7 @@ extension Either: Validator {
         - throws: an error on failed validation
     */
     public func validate(input value: V.InputType) throws {
-        try validator(input: value)
+        try validator(value)
     }
 }
 

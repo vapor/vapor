@@ -1,15 +1,17 @@
+import JSON
 import Vapor
+import HTTP
 
-class UserController: Controller {
-    required init(application: Application) {
-        Log.info("User controller created")
+final class UserController: ResourceRepresentable {
+    init() {
+
     }
 
     /**
         Display many instances
      */
-    func index(_ request: Request) throws -> ResponseRepresentable {
-        return JSON([
+    func index(request: Request) throws -> ResponseRepresentable {
+        return try JSON(node: [
             "controller": "MyController.index"
         ])
     }
@@ -18,8 +20,8 @@ class UserController: Controller {
     /**
         Create a new instance.
      */
-    func store(_ request: Request) throws -> ResponseRepresentable {
-        return JSON([
+    func store(request: Request) throws -> ResponseRepresentable {
+        return try JSON(node: [
             "controller": "MyController.store"
         ])
     }
@@ -28,9 +30,9 @@ class UserController: Controller {
     /**
         Show an instance.
      */
-    func show(_ request: Request, item user: User) throws -> ResponseRepresentable {
+    func show(request: Request, item user: User) throws -> ResponseRepresentable {
         //User can be used like JSON with JsonRepresentable
-        return JSON([
+        return try JSON(node: [
             "controller": "MyController.show",
             "user": user
         ])
@@ -39,18 +41,46 @@ class UserController: Controller {
     /** 
         Update an instance.
      */
-    func update(_ request: Request, item user: User) throws -> ResponseRepresentable {
+    func update(request: Request, item user: User) throws -> ResponseRepresentable {
         //Testing JsonRepresentable
-        return user.makeJson()
+        return user.makeJSON()
     }
 
+    /**
+        Modify an instance (only the fields that are present in the request)
+     */
+    func modify(request: Request, item user: User) throws -> ResponseRepresentable {
+        //Testing JsonRepresentable
+        return user.makeJSON()
+    }
 
     /**
         Delete an instance.
      */
-    func destroy(_ request: Request, item user: User) throws -> ResponseRepresentable {
+    func destroy(request: Request, item user: User) throws -> ResponseRepresentable {
         //User is ResponseRepresentable by proxy of JsonRepresentable
-        return user
+        return user.makeJSON()
     }
 
+    /**
+        Delete all instances.
+     */
+    func destroy(request: Request) throws -> ResponseRepresentable {
+        return try JSON(node: [
+            "controller": "MyController.destroyAll"
+        ])
+    }
+
+
+    func options(request: Request) throws -> ResponseRepresentable {
+        return try JSON(node: [
+            "info": "This is the Users resource"
+        ])
+    }
+
+    func makeResource() -> Resource<User> {
+        return Resource(
+            index: index
+        )
+    }
 }

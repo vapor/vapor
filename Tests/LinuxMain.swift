@@ -1,31 +1,67 @@
 #if os(Linux)
 
 import XCTest
-@testable import VaporTestSuite
+@testable import CacheTests
+@testable import SettingsTests
+@testable import CookiesTests
+@testable import VaporTests
+@testable import RoutingTests
+@testable import HTTPRoutingTests
 
 XCTMain([
-    testCase(ApplicationTests.allTests),
+    // Cache
+    testCase(FluentCacheTests.allTests),
+    testCase(MemoryCacheTests.allTests),
+
+    // Config
     testCase(ConfigTests.allTests),
-    testCase(ControllerTests.allTests),
+    testCase(MergeTests.allTests),
+    testCase(EnvTests.allTests),
+    testCase(CLIConfigTests.allTests),
+
+    // Cookies
+    testCase(CookiesTests.allTests),
+    testCase(CookieTests.allTests),
+    testCase(HTTPTests.allTests),
+    testCase(ParsingTests.allTests),
+    testCase(SerializingTests.allTests),
+
+    // Vapor
+    testCase(ConfigIntegrationTests.allTests),
+    testCase(ConsoleTests.allTests),
+    testCase(ContentTests.allTests),
+    testCase(CookieTests.allTests),
+    testCase(DataSplitTests.allTests),
+    testCase(DropletTests.allTests),
     testCase(EnvironmentTests.allTests),
     testCase(EventTests.allTests),
+    testCase(FileManagerTests.allTests),
     testCase(HashTests.allTests),
-    testCase(HTTPStreamTests.allTests),
     testCase(LocalizationTests.allTests),
     testCase(LogTests.allTests),
+    testCase(MiddlewareTests.allTests),
     testCase(MemorySessionDriverTests.allTests),
-    testCase(PerformanceTests.allTests),
     testCase(ProcessTests.allTests),
-    testCase(ResponseTests.allTests),
-    testCase(RequestTests.allTests),
-    testCase(RouterTests.allTests),
-    testCase(RouteTests.allTests),
+    testCase(ProviderTests.allTests),
+    testCase(ResourceTests.allTests),
+    testCase(RoutingTests.allTests),
     testCase(SessionTests.allTests),
-    testCase(TypedRouteTests.allTests),
     testCase(ValidationConvenienceTests.allTests),
     testCase(ValidationCountTests.allTests),
     testCase(ValidationTests.allTests),
     testCase(ValidationUniqueTests.allTests),
+
+    // Routing
+    testCase(BranchTests.allTests),
+    testCase(RouteBuilderTests.allTests),
+    testCase(RouteCollectionTests.allTests),
+    testCase(RouterTests.allTests),
+    testCase(RouteTests.allTests),
+
+    // HTTPRouting
+    testCase(AddTests.allTests),
+    testCase(GroupedTests.allTests),
+    testCase(GroupTests.allTests),
 ])
 
 #endif

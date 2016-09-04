@@ -5,14 +5,14 @@
  
     Will be caught automatically by ValidationMiddleware
 */
-public protocol ValidationErrorProtocol: ErrorProtocol {
+public protocol ValidationErrorProtocol: Swift.Error, CustomStringConvertible, CustomDebugStringConvertible {
     /**
         Description of what went wrong
     */
     var message: String { get }
 
     /**
-        Description of what went wrong
+        Description of Validator that failed
     */
     var validatorDescription: String { get }
 
@@ -20,6 +20,16 @@ public protocol ValidationErrorProtocol: ErrorProtocol {
         Description of failed input
     */
     var inputDescription: String { get }
+}
+
+extension ValidationErrorProtocol {
+    public var description: String {
+        return "[\(inputDescription)] \(validatorDescription) - \(message)"
+    }
+
+    public var debugDescription: String {
+        return description
+    }
 }
 
 /**
@@ -104,7 +114,7 @@ extension Validator {
 
         - returns: a ValidationFailure object to throw
     */
-    public static func error(with input: InputType, message: String? = nil) -> ErrorProtocol {
+    public static func error(with input: InputType, message: String? = nil) -> Swift.Error {
         return ValidationError(self, input: input, message: message)
     }
 
@@ -116,7 +126,7 @@ extension Validator {
 
         - returns: a ValidationFailure object to throw
     */
-    public func error(with input: InputType, message: String? = nil) -> ErrorProtocol {
+    public func error(with input: InputType, message: String? = nil) -> Swift.Error {
         return ValidationError(self, input: input, message: message)
     }
 }

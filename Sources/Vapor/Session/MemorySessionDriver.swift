@@ -1,11 +1,12 @@
 import libc
+import class Core.Lock
 
 /**
     The `MemorySessionDriver` stores session data
     in a Swift `Dictionary`. This means all session
     data will be purged if the server is restarted.
 */
-public class MemorySessionDriver: SessionDriver {
+public class MemorySessions: Sessions {
     var sessions = [String: [String: String]]()
     private var sessionsLock = Lock()
 
@@ -17,7 +18,7 @@ public class MemorySessionDriver: SessionDriver {
     /**
         Loads value for session id at given key
     */
-    public func valueFor(key: String, identifier: String) -> String? {
+    public func value(for key: String, identifier: String) -> String? {
         var value: String?
         sessionsLock.locked {
             value = sessions[identifier]?[key]
@@ -29,7 +30,7 @@ public class MemorySessionDriver: SessionDriver {
     /**
         Sets value for session id at given key
     */
-    public func set(_ value: String?, forKey key: String, identifier: String) {
+    public func set(_ value: String?, for key: String, identifier: String) {
         sessionsLock.locked {
             if sessions[identifier] == nil {
                 sessions[identifier] = [String: String]()
@@ -49,15 +50,20 @@ public class MemorySessionDriver: SessionDriver {
     /**
         Create new unique session id
     */
-    public func makeSessionIdentifier() -> String {
-        var identifier = String(time(nil))
+    public func makeIdentifier() -> String {
+        var identifier = time(nil).description
         identifier += "v@p0r"
-        identifier += String(Int.random(min: 0, max: 9999))
+        identifier += Int.random(min: 0, max: 9999).description
         identifier += "s3sS10n"
-        identifier += String(Int.random(min: 0, max: 9999))
+        identifier += Int.random(min: 0, max: 9999).description
         identifier += "k3y"
-        identifier += String(Int.random(min: 0, max: 9999))
-        return hash.make(identifier)
+        identifier += Int.random(min: 0, max: 9999).description
+        // FIXME:
+        if let properHash = try? hash.make(identifier) {
+            return properHash
+        } else {
+            return ""
+        }
     }
 
     /**

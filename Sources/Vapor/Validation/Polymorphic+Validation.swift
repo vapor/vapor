@@ -1,3 +1,5 @@
+import protocol Core.Extractable
+
 extension Polymorphic {
     /**
         Transform and validate a node
@@ -9,9 +11,9 @@ extension Polymorphic {
         - returns: a validated object
     */
     public func validated<
-        T: ValidationSuite
-        where T.InputType: PolymorphicInitializable>(by suite: T.Type = T.self
-    ) throws -> Valid<T> {
+        T: ValidationSuite>(by suite: T.Type = T.self
+        ) throws -> Valid<T>
+        where T.InputType: PolymorphicInitializable {
         let value = try T.InputType.init(polymorphic: self)
         return try value.validated(by: suite)
     }
@@ -26,33 +28,12 @@ extension Polymorphic {
         - returns: a validated object
     */
     public func validated<
-        T: Validator
-        where T.InputType: PolymorphicInitializable>(by validator: T
-    ) throws -> Valid<T> {
+        T: Validator>(by validator: T
+        ) throws -> Valid<T>
+        where T.InputType: PolymorphicInitializable {
         let value = try T.InputType.init(polymorphic: self)
         return try value.validated(by: validator)
     }
-}
-
-/**
-    We can't generically extend optionals based on their contents being protocols concretely,
-    ie: where Wrapped == SomeProtocol
- 
-    This allows us to do so because extending protocol can use concrete generic constraints
-*/
-public protocol Extractable {
-
-    /**
-        The underlying type
-    */
-    associatedtype Wrapped
-
-    /**
-        Access the underlying value
-
-        - returns: the underlying value if exists
-    */
-    func extract() -> Wrapped?
 }
 
 extension Extractable where Wrapped == Polymorphic {
@@ -67,9 +48,9 @@ extension Extractable where Wrapped == Polymorphic {
         - returns: a validated object
      */
     public func validated<
-        V: ValidationSuite
-        where V.InputType: PolymorphicInitializable>(by suite: V.Type = V.self
-    ) throws -> Valid<V> {
+        V: ValidationSuite>(by suite: V.Type = V.self
+        ) throws -> Valid<V>
+        where V.InputType: PolymorphicInitializable {
         guard let wrapped = extract() else {
             throw ValidationError(suite, input: nil)
         }
@@ -88,9 +69,9 @@ extension Extractable where Wrapped == Polymorphic {
         - returns: a validated object
      */
     public func validated<
-        V: Validator
-        where V.InputType: PolymorphicInitializable>(by validator: V
-    ) throws -> Valid<V> {
+        V: Validator>(by validator: V
+        ) throws -> Valid<V>
+        where V.InputType: PolymorphicInitializable {
         guard let wrapped = extract() else {
             throw ValidationError(validator, input: nil)
         }
@@ -113,9 +94,9 @@ extension Extractable where Wrapped == [Polymorphic] {
      */
     public func validated<
         V: ValidationSuite,
-        I: PolymorphicInitializable
-        where V.InputType == [I]>(by suite: V.Type = V.self
-    ) throws -> Valid<V> {
+        I: PolymorphicInitializable>(by suite: V.Type = V.self
+        ) throws -> Valid<V>
+        where V.InputType == [I] {
         guard let wrapped = extract() else {
             throw ValidationError(suite, input: nil)
         }
@@ -136,9 +117,9 @@ extension Extractable where Wrapped == [Polymorphic] {
      */
     public func validated<
         V: Validator,
-        I: PolymorphicInitializable
-        where V.InputType == [I]>(by validator: V
-    ) throws -> Valid<V> {
+        I: PolymorphicInitializable>(by validator: V
+        ) throws -> Valid<V>
+        where V.InputType == [I] {
         guard let wrapped = extract() else {
             throw ValidationError(validator, input: nil)
         }
@@ -162,9 +143,9 @@ extension Extractable where Wrapped == [String : Polymorphic] {
      */
     public func validated<
         V: ValidationSuite,
-        I: PolymorphicInitializable
-        where V.InputType == [String : I]>(by suite: V.Type = V.self
-    ) throws -> Valid<V> {
+        I: PolymorphicInitializable>(by suite: V.Type = V.self
+        ) throws -> Valid<V>
+        where V.InputType == [String : I] {
         guard let wrapped = extract() else {
             throw ValidationError(suite, input: nil)
         }
@@ -189,9 +170,9 @@ extension Extractable where Wrapped == [String : Polymorphic] {
      */
     public func validated<
         V: Validator,
-        I: PolymorphicInitializable
-        where V.InputType == [String : I]>(by validator: V
-    ) throws -> Valid<V> {
+        I: PolymorphicInitializable>(by validator: V
+        ) throws -> Valid<V>
+        where V.InputType == [String : I] {
         guard let wrapped = extract() else {
             throw ValidationError(validator, input: nil)
         }
@@ -203,16 +184,5 @@ extension Extractable where Wrapped == [String : Polymorphic] {
         }
 
         return try mapped.validated(by: validator)
-    }
-}
-
-extension Optional: Extractable {
-    /**
-        Extract the underlying value if possible
-
-        - returns: a value if possible
-     */
-    public func extract() -> Wrapped? {
-        return self
     }
 }
