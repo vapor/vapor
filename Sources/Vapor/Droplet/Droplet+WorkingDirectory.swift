@@ -1,5 +1,5 @@
 extension Droplet {
-    static func workingDirectory(from arguments: [String]) -> String {
+    public static func workingDirectory(from arguments: [String]) -> String {
         func fileWorkDirectory() -> String? {
             let parts = #file.components(separatedBy: "/Packages/Vapor-")
             guard parts.count == 2 else {
