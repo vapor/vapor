@@ -271,7 +271,7 @@ public class Droplet {
         // iterate through any logs that were emitted
         // before the instance of Log was created.
         for item in logs {
-            log.log(item.level, message: item.message)
+            log.log(item.level, message: item.message, path: #file, function: #function, line: #line)
         }
 
         self.view = provided.view ?? LeafRenderer(viewsDir: workDir + "Resources/Views")
