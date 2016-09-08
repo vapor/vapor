@@ -14,9 +14,9 @@ private class DummyLogger: Log {
         enabled = LogLevel.all
     }
     
-    func log(_ level: LogLevel, message: String, path: String, function: String, line: Int) {
+    func log(_ level: LogLevel, message: String, file: String, function: String, line: Int) {
         output = "level: \(level.description), message: '\(message)', "
-        output += "path: \(path), function: \(function), line: \(line)"
+        output += "file: \(file), function: \(function), line: \(line)"
     }
 }
 
@@ -31,7 +31,7 @@ class LogTests: XCTestCase {
         
         // is the file, function and source code line of the logging call automatically detected?
         var expectedString = "level: VERBOSE, message: 'Hello', "
-        expectedString += "path: \(#file), function: \(#function), line: \((#line - 4))"
+        expectedString += "file: \(#file), function: \(#function), line: \((#line - 4))"
         
         XCTAssertEqual(log.output, expectedString)
     }

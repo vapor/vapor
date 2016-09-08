@@ -26,12 +26,12 @@ public class ConsoleLogger: Log {
 
         - parameter level: the level with which to filter
         - parameter message: the message to log to console
-        - parameter path: String where logging happens, is automatically set on default
+        - parameter file: String where logging happens, is automatically set on default
         - parameter function: String where logging happens, is automatically set on default
         - parameter line: String where logging happens, is automatically set on default
      */
     public func log(_ level: LogLevel, message: String,
-                    path: String = #file, function: String = #function, line: Int = #line) {
+                    file: String = #file, function: String = #function, line: Int = #line) {
         if enabled.contains(level) {
             console.output(message, style: level.consoleStyle)
         }
