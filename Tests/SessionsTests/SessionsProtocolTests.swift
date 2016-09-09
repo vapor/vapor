@@ -4,7 +4,7 @@ import Core
 import Node
 import Cache
 
-class SessionsTests: XCTestCase {
+class SessionsProtocolTests: XCTestCase {
     static let allTests = [
         ("testMemory", testMemory),
         ("testCache", testCache),
