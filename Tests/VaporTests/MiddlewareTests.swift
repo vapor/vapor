@@ -1,5 +1,6 @@
 import Vapor // not @testable to ensure Middleware classes are public 
 import XCTest
+import HTTP
 
 class MiddlewareTests: XCTestCase {
     static let allTests = [

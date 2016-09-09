@@ -5,7 +5,6 @@ import Console
 import Fluent
 import Transport
 import Cache
-@_exported import Middleware
 import Settings
 
 public let VERSION = "0.17.0"

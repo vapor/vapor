@@ -63,10 +63,12 @@ private final class FastServer: ServerProtocol {
     var host: String
     var port: Int
     var securityLayer: SecurityLayer
-    init(host: String, port: Int, securityLayer: SecurityLayer) throws {
+    var middleware: [Middleware]
+    init(host: String, port: Int, securityLayer: SecurityLayer, middleware: [Middleware]) throws {
         self.host = host
         self.port = port
         self.securityLayer = securityLayer
+        self.middleware = middleware
     }
 
     func start(responder: Responder, errors: @escaping ServerErrorHandler) throws {
@@ -99,10 +101,13 @@ private final class SlowServer: ServerProtocol {
     var host: String
     var port: Int
     var securityLayer: SecurityLayer
-    init(host: String, port: Int, securityLayer: SecurityLayer) throws {
+    var middleware: [Middleware]
+
+    init(host: String, port: Int, securityLayer: SecurityLayer, middleware: [Middleware]) throws {
         self.host = host
         self.port = port
         self.securityLayer = securityLayer
+        self.middleware = middleware
     }
 
     func start(responder: Responder, errors: @escaping ServerErrorHandler) throws {
