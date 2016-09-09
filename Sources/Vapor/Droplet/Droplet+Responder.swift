@@ -47,7 +47,7 @@ extension Droplet: Responder {
         }
 
         // Loop through middlewares in order
-        responder = enabledMiddleware.reversed().chain(to: responder)
+        responder = enabledMiddleware.chain(to: responder)
 
         var response: Response
         do {
@@ -57,19 +57,29 @@ extension Droplet: Responder {
                 log.warning("Response had no 'Content-Type' header.")
             }
         } catch {
-            var error = "Server Error: \(error)"
+            let message: String
+
             if environment == .production {
-                error = "Something went wrong"
+                message = "Something went wrong"
+            } else {
+                message = "Uncaught Error: \(type(of: error)).\(error). Use middleware to catch this error and provide a better response. Otherwise, a generic error page will be returned in the production environment."
             }
-            response = Response(status: .internalServerError, body: error.bytes)
+
+            response = Response(
+                status: .internalServerError,
+                headers: [
+                    "Content-Type": "plaintext"
+                ],
+                body: message.bytes
+            )
         }
 
         response.headers["Server"] = "Vapor \(Vapor.VERSION)"
 
         /**
-         The server MUST NOT return a message-body in the response for HEAD.
+            The server MUST NOT return a message-body in the response for HEAD.
 
-         https://tools.ietf.org/html/rfc2616#section-9.4
+            https://tools.ietf.org/html/rfc2616#section-9.4
          */
         if case .head = originalMethod {
             // TODO: What if body is set to chunked¿?

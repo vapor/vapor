@@ -24,7 +24,7 @@ class ResourceTests: XCTestCase {
 
         XCTAssertEqual(try drop.responseBody(for: .get, "users"), "index")
         XCTAssertEqual(try drop.responseBody(for: .get, "users/bob"), "user bob")
-        XCTAssertEqual(try drop.responseBody(for: .get, "users/ERROR"), "Server Error: notFound")
+        XCTAssert(try drop.responseBody(for: .get, "users/ERROR").contains("Abort.notFound"))
     }
 
     func testOptions() throws {

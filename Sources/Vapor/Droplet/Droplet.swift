@@ -352,7 +352,7 @@ public class Droplet {
             em = Array(middleware.values)
         }
 
-        self.enabledMiddleware = em
+        self.enabledMiddleware = em.reversed()
 
         // set the router, server, and client
         // from provided or defaults.
