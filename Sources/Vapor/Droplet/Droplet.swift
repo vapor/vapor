@@ -6,6 +6,7 @@ import Fluent
 import Transport
 import Cache
 import Settings
+import Sessions
 
 public let VERSION = "0.17.0"
 
@@ -23,13 +24,6 @@ public class Droplet {
         response.
     */
     public let server: ServerProtocol.Type
-
-    /**
-        The session driver is responsible for
-        storing and reading values written to the
-        users session.
-    */
-    public let sessions: Sessions
 
     /**
         Provides access to config settings.
@@ -68,7 +62,7 @@ public class Droplet {
         Make sure to append your custom `Middleware`
         if you don't want to overwrite default behavior.
      */
-    public var middleware: [Middleware]
+    public let middleware: [Middleware]
 
     /**
         Available Commands to use when starting
@@ -147,7 +141,6 @@ public class Droplet {
 
         // providable
         server: ServerProtocol.Type? = nil,
-        sessions: Sessions? = nil,
         hash: Hash? = nil,
         console: ConsoleProtocol? = nil,
         log: Log? = nil,
@@ -155,6 +148,7 @@ public class Droplet {
         client: ClientProtocol.Type? = nil,
         database: Database? = nil,
         cache: CacheProtocol? = nil,
+        middleware: [String: Middleware]? = nil,
 
         // database preparations
         preparations: [Preparation.Type] = [],
@@ -235,14 +229,21 @@ public class Droplet {
         // to the droplet's init method
         var provided = Providable(
             server: server,
-            sessions: sessions,
             hash: hash,
             console: console,
             log: log,
             view: view,
             client: client,
             database: database,
-            cache: cache
+            cache: cache,
+            middleware: middleware ?? [
+                "file": FileMiddleware(workDir: workDir),
+                "validation": ValidationMiddleware(),
+                "date": DateMiddleware(),
+                "type-safe": TypeSafeErrorMiddleware(),
+                "abort": AbortMiddleware(),
+                "sessions": SessionsMiddleware(sessions: MemorySessions())
+            ]
         )
 
         // extract a single providable struct
@@ -298,22 +299,32 @@ public class Droplet {
         let hash = provided.hash ?? SHA2Hasher(variant: .sha256, defaultKey: key)
         self.hash = hash
 
-        // use provided sessions or MemorySessions by default
-        let sessions = provided.sessions ?? MemorySessions(hash: hash)
-        self.sessions = sessions
-
         // add the following middleware by default
         // this can be overridden by doing
         //      droplet.globalMiddleware = p[
         // or removing middleware individually
-        self.middleware = [
-            FileMiddleware(workDir: workDir),
-            SessionMiddleware(sessions: sessions),
-            ValidationMiddleware(),
-            DateMiddleware(),
-            TypeSafeErrorMiddleware(),
-            AbortMiddleware()
-        ]
+        let middleware = provided.middleware ?? [:]
+
+        var ms: [Middleware] = []
+
+        // add all middleware specified by
+        // config files
+        if let array = config["middleware"]?.array {
+            for item in array {
+                if let name = item.string {
+                    if let m = middleware[name] {
+                        ms.append(m)
+                    }
+                }
+            }
+        } else {
+            // if not config was supplied,
+            // use whatever middlewares were
+            // provided
+            ms = Array(middleware.values)
+        }
+
+        self.middleware = ms
 
         // set the router, server, and client
         // from provided or defaults.

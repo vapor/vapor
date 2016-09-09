@@ -4,31 +4,58 @@ import HTTP
 
 class MiddlewareTests: XCTestCase {
     static let allTests = [
-        ("testBundledMiddleware", testBundledMiddleware)
+        ("testConfigDate", testConfigDate),
+        ("testConfigDateMissing", testConfigDateMissing),
+        ("testConfigDateProvided", testConfigDateProvided),
     ]
 
-    func testBundledMiddleware() throws {
-        let drop = Droplet()
+    func testConfigDate() throws {
+        let config = Config([
+            "middleware": [
+                "date"
+            ]
+        ])
 
-        let bundledMiddleware: [Middleware] = [
-            FileMiddleware(workDir: drop.workDir),
-            SessionMiddleware(sessions: drop.sessions),
-            ValidationMiddleware(),
-            DateMiddleware(),
-            TypeSafeErrorMiddleware(),
-            AbortMiddleware()
-        ]
-
-        for middleware in bundledMiddleware {
-            drop.middleware = drop.middleware.filter() { type(of: $0) != type(of: middleware) }
+        let drop = Droplet(config: config)
+        drop.get { _ in
+            return "Hello, world"
         }
 
-        XCTAssert(drop.middleware.count == 0, "Bundled middleware not all removed")
+        let req = Request(method: .get, path: "/")
+        let response = try drop.respond(to: req)
 
-        for middleware in bundledMiddleware {
-            drop.middleware += middleware
+        XCTAssert(response.headers["Date"] != nil)
+    }
+
+    func testConfigDateMissing() throws {
+        let config = Config([
+            "middleware": [
+                "abort"
+            ]
+        ])
+
+        let drop = Droplet(config: config)
+        drop.get { _ in
+            return "Hello, world"
         }
 
-        XCTAssert(drop.middleware.count == bundledMiddleware.count, "Bundled middleware not all added")
+        let req = Request(method: .get, path: "/")
+        let response = try drop.respond(to: req)
+
+        XCTAssert(response.headers["Date"] == nil)
+    }
+
+    func testConfigDateProvided() throws {
+        let drop = Droplet(middleware: [
+            "foo": DateMiddleware()
+        ])
+        drop.get { _ in
+            return "Hello, world"
+        }
+
+        let req = Request(method: .get, path: "/")
+        let response = try drop.respond(to: req)
+
+        XCTAssert(response.headers["Date"] != nil)
     }
 }

@@ -10,7 +10,7 @@ class ResourceTests: XCTestCase {
     ]
 
     func testBasic() throws {
-        let drop = Droplet()
+        let drop = Droplet(middleware: [:])
 
         drop.resource("users", User.self) { users in
             users.index = { req in
@@ -21,8 +21,6 @@ class ResourceTests: XCTestCase {
                 return "user \(user.name)"
             }
         }
-
-        drop.middleware = []
 
         XCTAssertEqual(try drop.responseBody(for: .get, "users"), "index")
         XCTAssertEqual(try drop.responseBody(for: .get, "users/bob"), "user bob")

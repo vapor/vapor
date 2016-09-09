@@ -15,16 +15,9 @@ public struct Providable {
     public var server: ServerProtocol.Type?
 
     /**
-        An optional `Sessions` to provide
-        to the droplet.
-    */
-    public var sessions: Sessions?
-
-
-    /**
         An optional `HashDriver` to provide
         to the droplet.
-     */
+    */
     public var hash: Hash?
 
     /**
@@ -62,19 +55,25 @@ public struct Providable {
     */
     public var cache: CacheProtocol?
 
+    /**
+        An optional `Middleware` that can be applied
+        to the droplet if it's name exists in the middleware
+        config.
+    */
+    public var middleware: [String: Middleware]?
+
     public init(
         server: ServerProtocol.Type? = nil,
-        sessions: Sessions? = nil,
         hash: Hash? = nil,
         console: ConsoleProtocol? = nil,
         log: Log? = nil,
         view: ViewRenderer? = nil,
         client: ClientProtocol.Type? = nil,
         database: Database? = nil,
-        cache: CacheProtocol? = nil
+        cache: CacheProtocol? = nil,
+        middleware: [String: Middleware]? = nil
     ) {
         self.server = server
-        self.sessions = sessions
         self.hash = hash
         self.console = console
         self.log = log
@@ -82,5 +81,6 @@ public struct Providable {
         self.client = client
         self.database = database
         self.cache = cache
+        self.middleware = middleware
     }
 }
