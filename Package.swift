@@ -23,7 +23,7 @@ let package = Package(
         // Target(name: "TypeSafeGenerator"),
 
         // Misc
-        Target(name: "Auth", dependencies: ["Cookies"]),
+        Target(name: "Auth", dependencies: ["Cookies", "Cache"]),
         Target(name: "Cache"),
         Target(name: "Cookies"),
         Target(name: "Settings"),
