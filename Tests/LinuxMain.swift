@@ -26,6 +26,10 @@ XCTMain([
     testCase(ParsingTests.allTests),
     testCase(SerializingTests.allTests),
 
+    // Sessions
+    testCase(SessionsTests.allTests),
+    testCase(SessionTests.allTests),
+
     // Vapor
     testCase(ConfigIntegrationTests.allTests),
     testCase(ConsoleTests.allTests),
@@ -44,6 +48,7 @@ XCTMain([
     testCase(ProviderTests.allTests),
     testCase(ResourceTests.allTests),
     testCase(RoutingTests.allTests),
+    testCase(SessionsTests.allTests),
     testCase(ValidationConvenienceTests.allTests),
     testCase(ValidationCountTests.allTests),
     testCase(ValidationTests.allTests),
