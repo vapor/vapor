@@ -1,5 +1,4 @@
 import HTTP
-import Middleware
 
 public class ProtectMiddleware: Middleware {
     public let error: Error
