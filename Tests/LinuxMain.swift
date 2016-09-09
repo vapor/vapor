@@ -2,6 +2,7 @@
 
 import XCTest
 @testable import CacheTests
+@testable import SessionsTests
 @testable import SettingsTests
 @testable import CookiesTests
 @testable import VaporTests
@@ -27,7 +28,7 @@ XCTMain([
     testCase(SerializingTests.allTests),
 
     // Sessions
-    testCase(SessionsTests.allTests),
+    testCase(SessionsTests.SessionsTests.allTests),
     testCase(SessionTests.allTests),
 
     // Vapor
@@ -48,7 +49,7 @@ XCTMain([
     testCase(ProviderTests.allTests),
     testCase(ResourceTests.allTests),
     testCase(RoutingTests.allTests),
-    testCase(SessionsTests.allTests),
+    testCase(VaporTests.SessionsTests.allTests),
     testCase(ValidationConvenienceTests.allTests),
     testCase(ValidationCountTests.allTests),
     testCase(ValidationTests.allTests),
