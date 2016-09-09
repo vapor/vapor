@@ -24,6 +24,7 @@ This repository is the framework's source code. To view some sample projects, ch
 
 |Vapor|Xcode|Swift|
 |:-:|:-:|:-:|
+|0.18.x|8.0 GM|DEVELOPMENT-SNAPSHOT-2016-09-06-a|
 |0.17.x|8.0 Beta **6**|DEVELOPMENT-SNAPSHOT-2016-08-18-a|
 |0.16.x|8.0 Beta **3**|DEVELOPMENT-SNAPSHOT-2016-07-25-a|
 |0.15.x|8.0 Beta **3**|DEVELOPMENT-SNAPSHOT-2016-07-25-a|
