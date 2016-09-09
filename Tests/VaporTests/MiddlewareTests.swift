@@ -1,4 +1,4 @@
-import Vapor // not @testable to ensure Middleware classes are public 
+import Vapor // not @testable to ensure Middleware classes are public
 import XCTest
 import HTTP
 
@@ -46,7 +46,7 @@ class MiddlewareTests: XCTestCase {
     }
 
     func testConfigDateProvided() throws {
-        let drop = Droplet(middleware: [
+        let drop = Droplet(availableMiddleware: [
             "foo": DateMiddleware()
         ])
         drop.get { _ in

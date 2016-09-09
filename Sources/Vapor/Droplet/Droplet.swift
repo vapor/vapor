@@ -62,7 +62,14 @@ public class Droplet {
         Make sure to append your custom `Middleware`
         if you don't want to overwrite default behavior.
      */
-    public let middleware: [Middleware]
+    public let enabledMiddleware: [Middleware]
+
+
+    /**
+        Middleware that is available to this Droplet,
+        but may not be enabled by configuration.
+    */
+    public let availableMiddleware: [String: Middleware]
 
     /**
         Available Commands to use when starting
@@ -148,7 +155,9 @@ public class Droplet {
         client: ClientProtocol.Type? = nil,
         database: Database? = nil,
         cache: CacheProtocol? = nil,
-        middleware: [String: Middleware]? = nil,
+
+        availableMiddleware: [String: Middleware]? = nil,
+        enabledMiddleware: [String]? = nil,
 
         // database preparations
         preparations: [Preparation.Type] = [],
@@ -225,6 +234,24 @@ public class Droplet {
         }
         self.providers = providers
 
+        // default available middleware
+        var am: [String: Middleware] = [
+            "file": FileMiddleware(workDir: workDir),
+            "validation": ValidationMiddleware(),
+            "date": DateMiddleware(),
+            "type-safe": TypeSafeErrorMiddleware(),
+            "abort": AbortMiddleware(),
+            "sessions": SessionsMiddleware(sessions: MemorySessions())
+        ]
+
+        // combine with the supplied available
+        // middleware from the init
+        if let avail = availableMiddleware {
+            for (name, m) in avail {
+                am[name] = m
+            }
+        }
+
         // account for all types provided
         // to the droplet's init method
         var provided = Providable(
@@ -236,14 +263,7 @@ public class Droplet {
             client: client,
             database: database,
             cache: cache,
-            middleware: middleware ?? [
-                "file": FileMiddleware(workDir: workDir),
-                "validation": ValidationMiddleware(),
-                "date": DateMiddleware(),
-                "type-safe": TypeSafeErrorMiddleware(),
-                "abort": AbortMiddleware(),
-                "sessions": SessionsMiddleware(sessions: MemorySessions())
-            ]
+            middleware: am
         )
 
         // extract a single providable struct
@@ -299,21 +319,29 @@ public class Droplet {
         let hash = provided.hash ?? SHA2Hasher(variant: .sha256, defaultKey: key)
         self.hash = hash
 
-        // add the following middleware by default
-        // this can be overridden by doing
-        //      droplet.globalMiddleware = p[
-        // or removing middleware individually
+        // middleware contains all avail middleware
+        // supplied from defaults, init, or providers
         let middleware = provided.middleware ?? [:]
+        self.availableMiddleware = middleware
 
-        var ms: [Middleware] = []
+        // create array of enabled middleware
+        var em: [Middleware] = []
 
-        // add all middleware specified by
-        // config files
-        if let array = config["middleware"]?.array {
+        if let enabled = enabledMiddleware {
+            // add all middleware specified
+            // by enabledMiddleware init arg
+            for name in enabled {
+                if let m = middleware[name] {
+                    em.append(m)
+                }
+            }
+        } else if let array = config["middleware"]?.array {
+            // add all middleware specified by
+            // config files
             for item in array {
                 if let name = item.string {
                     if let m = middleware[name] {
-                        ms.append(m)
+                        em.append(m)
                     }
                 }
             }
@@ -321,10 +349,10 @@ public class Droplet {
             // if not config was supplied,
             // use whatever middlewares were
             // provided
-            ms = Array(middleware.values)
+            em = Array(middleware.values)
         }
 
-        self.middleware = ms
+        self.enabledMiddleware = em
 
         // set the router, server, and client
         // from provided or defaults.

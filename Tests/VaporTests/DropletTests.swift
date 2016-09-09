@@ -19,7 +19,7 @@ class DropletTests: XCTestCase {
         headers returned.
     */
     func testMediaType() throws {
-        let drop = Droplet(workDir: workDir)
+        let drop = Droplet(workDir: workDir, enabledMiddleware: ["file"])
 
         let request = try Request(method: .get, uri: "/styles/app.css")
 
