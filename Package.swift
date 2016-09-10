@@ -11,8 +11,9 @@ let package = Package(
             "Auth",
             "Cache",
             "Cookies",
+            "Sessions",
             "Settings"
-            ]),
+        ]),
 
         // Routing
         Target(name: "Routing"),
@@ -26,6 +27,7 @@ let package = Package(
         Target(name: "Auth", dependencies: ["Cookies", "Cache"]),
         Target(name: "Cache"),
         Target(name: "Cookies"),
+        Target(name: "Sessions", dependencies: ["Cookies"]),
         Target(name: "Settings"),
 
         // Development and Testing
