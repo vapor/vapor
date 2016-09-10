@@ -15,23 +15,25 @@ class LocalizationTests: XCTestCase {
     lazy var localization: Localization = try! Localization(workingDirectory: self.workDir)
 
     func testSimple() {
-        let english = localization["en", "welcome-text"]
-        XCTAssert(english == "Welcome to Vapor")
+        // Basic language tests
+        XCTAssert(localization["en", "welcome", "title"] == "Welcome to Vapor!")
+        XCTAssert(localization["es", "welcome", "title"] == "¡Bienvenidos a Vapor!")
+        
+        // Test default locale when unsupported elsewhere
+        XCTAssert(localization["en", "other-key"] == "☁️")
 
-        let spanish = localization["es", "welcome-text"]
-        XCTAssert(spanish == "Bienvenidos a Vapor")
-
+        // Test non-existent langauges
         let languagesThatDontExist = ["da", "de", "fr", "th"]
 
         let transformations = languagesThatDontExist
             .map { languageCode in
-                return localization[languageCode, "welcome-text"]
+                return localization[languageCode, "welcome", "title"]
             }
-            .filter { $0 != "Welcome to Defaults" }
+            .filter { $0 != "Default Welcome Message" }
 
         XCTAssert(transformations.count == 0, "localization defaults not working properly")
 
-        let notExist = localization["en", "unknown key"]
-        XCTAssert(notExist == "unknown key")
+        let notExist = localization["en", "unknown", "key"]
+        XCTAssert(notExist == "unknown.key")
 	}
 }
