@@ -2,14 +2,12 @@
 
 SWIFTC=`which swift`
 
-VALID="Swift 31bbb2c208"
-
 help() {
 	echo "📖  Visit our docs for step-by-step instructions on installing Swift correctly."
-	echo "http://docs.qutheory.io"
+	echo "http://docs.vapor.codes"
 	echo ""
 	echo "👋  or Join our Slack and we'll help you get setup."
-	echo "http://slack.qutheory.io"
+	echo "http://vapor.team"
 }
 
 if [[ $SWIFTC == "" ]];
@@ -23,29 +21,7 @@ then
 	exit 1;
 fi
 
-SWIFTV=`swift -version`;
-
 OS=`uname`
-
-SWIFTLOC=`which swift`
-SWIFTDESIRED=".swiftenv/shims/swift" 
-if [[ $SWIFTLOC != *$SWIFTDESIRED* ]];
-then
-	echo "⚠️  It looks like you don't have Swiftenv installed."
-	echo ""
-	echo "Current Swift location: $SWIFTLOC"
-	echo "Should contain: $SWIFTDESIRED"
-	echo ""
-	echo "To install: (https://swiftenv.fuller.li/en/latest/)"
-	echo "    git clone https://github.com/kylef/swiftenv.git ~/.swiftenv"
-	echo ""
-	echo "Then add these lines to your Bash Profile:"
-	echo "    export SWIFTENV_ROOT=\"\$HOME/.swiftenv\""
-	echo "    export PATH=\"\$SWIFTENV_ROOT/bin:\$PATH\""
-	echo "    eval \"\$(swiftenv init -)\""
-	echo ""
-fi
-
 if [[ $OS == "Darwin" ]]; # macOS
 then
 	XCBVERSION=`xcodebuild -version`
@@ -59,24 +35,11 @@ then
 		echo "Correct: Xcode 8.0 (Any Build Number)"
 		echo "Current: $XCBVERSION"
 		echo ""
+		help
+		exit 1;
 	fi
 fi
 
-if [[ $SWIFTV == *$VALID* ]];
-then
-	echo "✅  Compatible"
-	exit 0;
-else
-	echo "❌  Incompatible"
-	echo "Reason: Invalid Swift version" 
-	echo ""
-	echo "Output must contain '$VALID'"
-	echo "Current 'swift -version' output:"
-	echo $SWIFTV
-	echo ""
-	echo "You must have Swiftenv installed with"
-	echo "swift-DEVELOPMENT-SNAPSHOT-2016-08-18-a"
-	echo ""
-	help
-	exit 1;
-fi
+echo "✅  Compatible"
+exit 0;
+

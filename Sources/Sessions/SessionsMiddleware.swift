@@ -1,6 +1,8 @@
 import HTTP
 import Cookies
 
+private let cookieName = "vapor-sessions"
+
 /**
     Looks for the `vapor-session` cookie on incoming
     requests and attempts to initialize a Session based on the
@@ -9,32 +11,33 @@ import Cookies
     If an active Session is found on the request when the response
     is being made, the Session identifier is returned as a `vapor-session` cookie.
 */
-public class SessionMiddleware: Middleware {
+public final class SessionsMiddleware: Middleware {
 
-    var sessions: Sessions
+    var sessions: SessionsProtocol
 
-    public init(sessions: Sessions) {
+    public init(sessions: SessionsProtocol) {
         self.sessions = sessions
     }
 
     public func respond(to request: Request, chainingTo chain: Responder) throws -> Response {
-        // mutable -- MUST be declared at top of function
+
+        let session = Session(sessions: sessions)
         if
-            let identifier = request.cookies["vapor-session"],
-            sessions.contains(identifier: identifier)
+            let identifier = request.cookies[cookieName],
+            try sessions.contains(identifier)
         {
-            request.session = Session(identifier: identifier, sessions: sessions)
-        } else {
-            request.session = Session(sessions: sessions)
+            session.identifier = identifier
         }
+
+        request.storage["session"] = session
 
         let response = try chain.respond(to: request)
 
-        if let identifier = request.session?.identifier {
-            response.cookies["vapor-session"] = identifier
+        if let identifier = session.identifier {
+            response.cookies[cookieName] = identifier
         }
 
         return response
     }
-
+    
 }

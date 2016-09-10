@@ -10,7 +10,7 @@ class ResourceTests: XCTestCase {
     ]
 
     func testBasic() throws {
-        let drop = Droplet()
+        let drop = Droplet(serverMiddleware: [])
 
         drop.resource("users", User.self) { users in
             users.index = { req in
@@ -22,11 +22,9 @@ class ResourceTests: XCTestCase {
             }
         }
 
-        drop.middleware = []
-
         XCTAssertEqual(try drop.responseBody(for: .get, "users"), "index")
         XCTAssertEqual(try drop.responseBody(for: .get, "users/bob"), "user bob")
-        XCTAssertEqual(try drop.responseBody(for: .get, "users/ERROR"), "Server Error: notFound")
+        XCTAssert(try drop.responseBody(for: .get, "users/ERROR").contains("Abort.notFound"))
     }
 
     func testOptions() throws {

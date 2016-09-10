@@ -1,6 +1,5 @@
 import Turnstile
 import HTTP
-import Middleware
 import Cookies
 import Foundation
 import Cache

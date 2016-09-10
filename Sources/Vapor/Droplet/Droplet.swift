@@ -5,8 +5,8 @@ import Console
 import Fluent
 import Transport
 import Cache
-@_exported import Middleware
 import Settings
+import Sessions
 
 public let VERSION = "0.17.0"
 
@@ -24,13 +24,6 @@ public class Droplet {
         response.
     */
     public let server: ServerProtocol.Type
-
-    /**
-        The session driver is responsible for
-        storing and reading values written to the
-        users session.
-    */
-    public let sessions: Sessions
 
     /**
         Provides access to config settings.
@@ -69,7 +62,14 @@ public class Droplet {
         Make sure to append your custom `Middleware`
         if you don't want to overwrite default behavior.
      */
-    public var middleware: [Middleware]
+    public let enabledMiddleware: [Middleware]
+
+
+    /**
+        Middleware that is available to this Droplet,
+        but may not be enabled by configuration.
+    */
+    public let availableMiddleware: [String: Middleware]
 
     /**
         Available Commands to use when starting
@@ -148,7 +148,6 @@ public class Droplet {
 
         // providable
         server: ServerProtocol.Type? = nil,
-        sessions: Sessions? = nil,
         hash: Hash? = nil,
         console: ConsoleProtocol? = nil,
         log: Log? = nil,
@@ -156,6 +155,11 @@ public class Droplet {
         client: ClientProtocol.Type? = nil,
         database: Database? = nil,
         cache: CacheProtocol? = nil,
+
+        // middleware
+        availableMiddleware: [String: Middleware]? = nil,
+        serverMiddleware: [String]? = nil,
+        clientMiddleware: [String]? = nil,
 
         // database preparations
         preparations: [Preparation.Type] = [],
@@ -232,18 +236,36 @@ public class Droplet {
         }
         self.providers = providers
 
+        // default available middleware
+        var am: [String: Middleware] = [
+            "file": FileMiddleware(workDir: workDir),
+            "validation": ValidationMiddleware(),
+            "date": DateMiddleware(),
+            "type-safe": TypeSafeErrorMiddleware(),
+            "abort": AbortMiddleware(),
+            "sessions": SessionsMiddleware(sessions: MemorySessions())
+        ]
+
+        // combine with the supplied available
+        // middleware from the init
+        if let avail = availableMiddleware {
+            for (name, m) in avail {
+                am[name] = m
+            }
+        }
+
         // account for all types provided
         // to the droplet's init method
         var provided = Providable(
             server: server,
-            sessions: sessions,
             hash: hash,
             console: console,
             log: log,
             view: view,
             client: client,
             database: database,
-            cache: cache
+            cache: cache,
+            middleware: am
         )
 
         // extract a single providable struct
@@ -271,7 +293,7 @@ public class Droplet {
         // iterate through any logs that were emitted
         // before the instance of Log was created.
         for item in logs {
-            log.log(item.level, message: item.message)
+            log.log(item.level, message: item.message, file: #file, function: #function, line: #line)
         }
 
         self.view = provided.view ?? LeafRenderer(viewsDir: workDir + "Resources/Views")
@@ -299,29 +321,68 @@ public class Droplet {
         let hash = provided.hash ?? SHA2Hasher(variant: .sha256, defaultKey: key)
         self.hash = hash
 
-        // use provided sessions or MemorySessions by default
-        let sessions = provided.sessions ?? MemorySessions(hash: hash)
-        self.sessions = sessions
+        // middleware contains all avail middleware
+        // supplied from defaults, init, or providers
+        let middleware = provided.middleware ?? [:]
+        self.availableMiddleware = middleware
 
-        // add the following middleware by default
-        // this can be overridden by doing
-        //      droplet.globalMiddleware = p[
-        // or removing middleware individually
-        self.middleware = [
-            FileMiddleware(workDir: workDir),
-            SessionMiddleware(sessions: sessions),
-            ValidationMiddleware(),
-            DateMiddleware(),
-            TypeSafeErrorMiddleware(),
-            AbortMiddleware()
-        ]
+        // create array of enabled middleware
+        var serverEnabledMiddleware: [Middleware] = []
+
+        if let enabled = serverMiddleware {
+            // add all middleware specified
+            // by enabledMiddleware init arg
+            for name in enabled {
+                if let m = middleware[name] {
+                    serverEnabledMiddleware.append(m)
+                }
+            }
+        } else if let array = config["middleware", "server"]?.array {
+            // add all middleware specified by
+            // config files
+            for item in array {
+                if let name = item.string, let m = middleware[name] {
+                    serverEnabledMiddleware.append(m)
+                }
+            }
+        } else {
+            // if not config was supplied,
+            // use whatever middlewares were
+            // provided
+            serverEnabledMiddleware = Array(middleware.values)
+        }
+
+        self.enabledMiddleware = serverEnabledMiddleware.reversed()
+
+
+
+        var clientEnabledMiddleware: [Middleware] = []
+
+        if let enabled = clientMiddleware {
+            for name in enabled {
+                if let m = middleware[name] {
+                    clientEnabledMiddleware.append(m)
+                }
+            }
+        } else if let array = config["middleware", "client"]?.array {
+            for item in array {
+                if let name = item.string, let m = middleware[name] {
+                    clientEnabledMiddleware.append(m)
+                }
+            }
+        } else {
+            clientEnabledMiddleware = []
+        }
+
+        let client = provided.client ?? Client<TCPClientStream, Serializer<Request>, Parser<Response>>.self
+        self.client = client
+
+        client.defaultMiddleware = clientEnabledMiddleware
 
         // set the router, server, and client
         // from provided or defaults.
         self.router = Router()
         self.server = provided.server ?? Server<TCPServerStream, Parser<Request>, Serializer<Response>>.self
-        let client = provided.client ?? Client<TCPClientStream, Serializer<Request>, Parser<Response>>.self
-        self.client = client
 
         // misc arrays and other stored properties
         storage = [:]
