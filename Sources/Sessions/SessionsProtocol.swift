@@ -30,19 +30,27 @@ public protocol SessionsProtocol {
         - parameter identifier: identifier of the session
     */
     func set(_ value: Node?, for identifier: String) throws
-}
 
-extension SessionsProtocol {
     /**
         Destroy the session associated with given identifier
 
         - parameter identifier: id of session
-     */
-    func destroy(_ identifier: String) throws {
+    */
+    func destroy(_ identifier: String) throws
+
+    /**
+        Returns true if the Sessions contains
+        an entry for the supplied identifier.
+    */
+    func contains(_ identifier: String) throws -> Bool
+}
+
+extension SessionsProtocol {
+    public func destroy(_ identifier: String) throws {
         try set(nil, for: identifier)
     }
 
-    func contains(_ identifier: String) throws -> Bool {
+    public func contains(_ identifier: String) throws -> Bool {
         return try get(for: identifier) != nil
     }
 }

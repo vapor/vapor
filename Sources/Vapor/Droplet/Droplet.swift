@@ -157,7 +157,8 @@ public class Droplet {
         cache: CacheProtocol? = nil,
 
         availableMiddleware: [String: Middleware]? = nil,
-        enabledMiddleware: [String]? = nil,
+        serverMiddleware: [String]? = nil,
+        clientMiddleware: [String]? = nil,
 
         // database preparations
         preparations: [Preparation.Type] = [],
@@ -325,41 +326,62 @@ public class Droplet {
         self.availableMiddleware = middleware
 
         // create array of enabled middleware
-        var em: [Middleware] = []
+        var serverEnabledMiddleware: [Middleware] = []
 
-        if let enabled = enabledMiddleware {
+        if let enabled = serverMiddleware {
             // add all middleware specified
             // by enabledMiddleware init arg
             for name in enabled {
                 if let m = middleware[name] {
-                    em.append(m)
+                    serverEnabledMiddleware.append(m)
                 }
             }
-        } else if let array = config["middleware"]?.array {
+        } else if let array = config["middleware", "server"]?.array {
             // add all middleware specified by
             // config files
             for item in array {
-                if let name = item.string {
-                    if let m = middleware[name] {
-                        em.append(m)
-                    }
+                if let name = item.string, let m = middleware[name] {
+                    serverEnabledMiddleware.append(m)
                 }
             }
         } else {
             // if not config was supplied,
             // use whatever middlewares were
             // provided
-            em = Array(middleware.values)
+            serverEnabledMiddleware = Array(middleware.values)
         }
 
-        self.enabledMiddleware = em.reversed()
+        self.enabledMiddleware = serverEnabledMiddleware.reversed()
+
+
+
+        var clientEnabledMiddleware: [Middleware] = []
+
+        if let enabled = clientMiddleware {
+            for name in enabled {
+                if let m = middleware[name] {
+                    clientEnabledMiddleware.append(m)
+                }
+            }
+        } else if let array = config["middleware", "client"]?.array {
+            for item in array {
+                if let name = item.string, let m = middleware[name] {
+                    clientEnabledMiddleware.append(m)
+                }
+            }
+        } else {
+            clientEnabledMiddleware = []
+        }
+
+        let client = provided.client ?? Client<TCPClientStream, Serializer<Request>, Parser<Response>>.self
+        self.client = client
+
+        client.defaultMiddleware = clientEnabledMiddleware
 
         // set the router, server, and client
         // from provided or defaults.
         self.router = Router()
         self.server = provided.server ?? Server<TCPServerStream, Parser<Request>, Serializer<Response>>.self
-        let client = provided.client ?? Client<TCPClientStream, Serializer<Request>, Parser<Response>>.self
-        self.client = client
 
         // misc arrays and other stored properties
         storage = [:]

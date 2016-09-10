@@ -10,7 +10,7 @@ class ResourceTests: XCTestCase {
     ]
 
     func testBasic() throws {
-        let drop = Droplet(enabledMiddleware: [])
+        let drop = Droplet(serverMiddleware: [])
 
         drop.resource("users", User.self) { users in
             users.index = { req in
