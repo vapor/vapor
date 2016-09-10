@@ -156,6 +156,7 @@ public class Droplet {
         database: Database? = nil,
         cache: CacheProtocol? = nil,
 
+        // middleware
         availableMiddleware: [String: Middleware]? = nil,
         serverMiddleware: [String]? = nil,
         clientMiddleware: [String]? = nil,
