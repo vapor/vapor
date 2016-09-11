@@ -1,9 +1,33 @@
 import Foundation
 
+/**
+    Objects conforming to this protocol can be
+    used as ciphers for encrypting and decrypting information.
+*/
 public protocol CipherProtocol {
+    /**
+        The default key will be used
+        if not encryption or decryption
+        key is specified (for protocol extensions).
+    */
     var defaultKey: Bytes { get }
+
+    /**
+        The default initialization (iv) vector
+        will be used if not other iv is specified.
+    */
     var defaultIV: Bytes? { get }
+
+    /**
+        Encrypts bytes with a required key and
+        optional initialization vector.
+    */
     func encrypt(_ bytes: Bytes, key: Bytes, iv: Bytes?) throws -> Bytes
+
+    /**
+        Decrypts bytes with a required key and
+        optional initialization vector.
+    */
     func decrypt(_ bytes: Bytes, key: Bytes, iv: Bytes?) throws -> Bytes
 }
 
