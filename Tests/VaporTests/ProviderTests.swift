@@ -17,7 +17,7 @@ class ProviderTests: XCTestCase {
         let dc = DebugConsole()
         let drop = Droplet(server: SlowServer.self, console: dc, providers: [FastServerProvider.self])
 
-        XCTAssertEqual(dc.outputBuffer, "FastServerProvider attempted to overwrite ServerProtocol.Type.\n")
+        XCTAssert(dc.outputBuffer.contains("FastServerProvider attempted to overwrite ServerProtocol.Type.\n"))
         XCTAssert(drop.server is SlowServer.Type)
     }
 
@@ -28,7 +28,7 @@ class ProviderTests: XCTestCase {
             SlowServerProvider.self
         ])
 
-        XCTAssertEqual(dc.outputBuffer, "SlowServerProvider attempted to overwrite ServerProtocol.Type.\n")
+        XCTAssert(dc.outputBuffer.contains("SlowServerProvider attempted to overwrite ServerProtocol.Type.\n"))
         XCTAssert(drop.server is FastServer.Type)
     }
 
@@ -40,7 +40,7 @@ class ProviderTests: XCTestCase {
 
         let drop = Droplet(arguments: ["vapor", "serve"], console: dc, initializedProviders: [fast, slow])
 
-        XCTAssertEqual(dc.outputBuffer, "SlowServerProvider attempted to overwrite ServerProtocol.Type.\n")
+        XCTAssert(dc.outputBuffer.contains("SlowServerProvider attempted to overwrite ServerProtocol.Type.\n"))
         XCTAssert(drop.server is FastServer.Type)
 
         XCTAssertEqual(fast.afterInitFlag, true)
