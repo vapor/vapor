@@ -1,3 +1,7 @@
 {
-    "welcome-text": "Welcome to Defaults"
+    "welcome": {
+        "title": "Default Welcome Message",
+        "body": "Default welcome body."
+    },
+    "other-key": "☁️"
 }
