@@ -1,6 +1,7 @@
-import Core
 import Foundation
+import Core
 import JSON
+
 
 extension Node {
     /**
@@ -15,7 +16,13 @@ extension Node {
 
         try FileManager.default.files(path: directory).forEach { name in
             var name = name
-            let contents = try Node(path: directory + name)
+            let path = directory + name
+            
+            // Read the JSON into a Node
+            let data = try DataFile().load(path: path)
+            let contents = try JSON(bytes: data).makeNode()
+            
+            // Remove the suffix and save it
             name.removedJSONSuffix()
             node[name] = contents.hydratedEnv()
         }
