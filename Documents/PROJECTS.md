@@ -11,6 +11,8 @@ People have built some awesome things with Vapor, and we can't wait to see what 
 * [Emergency Numbers](#emergency-numbers-api) - an api providing the emergency number for various locations
 * [Slack Bot](#slack-bot) - a basic realtime slackbot
 * [Vapor Example](#vapor-example) - an up to date example project
+* [SwiftyBeaver](#vapor-example) - the website of SwiftyBeaver
+* [Loyalty Backend](#loyalty-backend-sample) - simple loyalty backend system
 
 # PDX Cocoaheads
 
@@ -146,4 +148,14 @@ The website of SwiftyBeaver, the logging platform for Swift, is powered by Vapor
 
 ### Site
 
-[swiftybeaver.com](https://github.com/qutheory/vapor-example)
+[swiftybeaver.com](https://swiftybeaver.com)
+
+# Loyalty Backend Sample
+
+Swift Vapor backend solution which won the 1st [appculture](https://github.com/appculture) hackathon (goal was to make a simple Loyalty backend with admin frontend + client mobile app).
+
+### GitHub
+[Source](https://github.com/appculture/LoyaltyBackend-SwiftVapor)
+
+### Site
+[Demo](https://royalty-loyalty.herokuapp.com)
