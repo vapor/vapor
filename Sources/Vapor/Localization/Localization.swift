@@ -1,5 +1,6 @@
-import PathIndexable
 import Foundation
+import Core
+import PathIndexable
 
 public class Localization {
     private let localizations: [String: Node]
@@ -11,20 +12,24 @@ public class Localization {
     }
     
     public convenience init(path: String) throws {
-        // List the files in the directory
-        let contents = try FileManager.contentsOfDirectory(path)
+        // List the files in the directory or have no localizations if could not find files
+        guard let contents = try? FileManager.contentsOfDirectory(path) else {
+            self.init()
+            return
+        }
         
         // Read the files into nodes mapped to their appropriate language
         var localizations = [String: Node]()
-        for file in contents where file.hasSuffix(".json") {
+        for path in contents where path.hasSuffix(".json") {
             // Get the name
-            guard let nameRaw = file.components(separatedBy: "/").last?.characters.split(separator: ".").first else {
+            guard let nameRaw = path.components(separatedBy: "/").last?.characters.split(separator: ".").first else {
                 continue
             }
             let name = String(nameRaw)
             
-            // Set the locale
-            localizations[name] = try Node(path: file)
+            // Read the
+            let data = try DataFile().load(path: path)
+            localizations[name] = try JSON(bytes: data).makeNode()
         }
         
         self.init(localizations: localizations)
