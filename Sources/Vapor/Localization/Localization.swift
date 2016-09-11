@@ -10,12 +10,8 @@ public class Localization {
         // Finish path with "/"
         let localizationDirectory = localizationDirectory.finished(with: "/")
         
-        // List the files in the directory or have no localizations
-        // if could not find files (i.e. if the project does not include include `Localization/` folder)
-        guard let contents = try? FileManager.contentsOfDirectory(localizationDirectory) else {
-            self.init()
-            return
-        }
+        // List the files in the directory
+        let contents = try FileManager.contentsOfDirectory(localizationDirectory)
         
         // Read the files into nodes mapped to their appropriate language
         var localizations = [String: Node]()
