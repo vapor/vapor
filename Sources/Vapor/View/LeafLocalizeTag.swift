@@ -20,8 +20,9 @@ public final class LocalizeTag: Tag {
         context: LeafContext,
         tagTemplate: TagTemplate,
         arguments: [Argument]) throws -> Node? {
+        
         // Validate the argument count
-        guard arguments.count < 1 else { throw Error.expectedAtLeasOneArgument }
+        guard arguments.count > 0 else { throw Error.expectedAtLeasOneArgument }
         
         // Get the laguage
         guard let language = arguments[0].value?.string else {

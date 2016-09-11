@@ -1,4 +1,5 @@
 import XCTest
+import Leaf
 @testable import Vapor
 
 class ViewTests: XCTestCase {
@@ -21,6 +22,17 @@ class ViewTests: XCTestCase {
     func testViewBytes() throws {
         let view = try View(bytes: "42".bytes)
         XCTAssertEqual(try view.makeBytes(), "42".bytes)
+    }
+    
+    func testLeafLocalization() throws {
+        // Get the localization
+        let localization = LocalizationTests().localization
+        
+        // Create a localized Leaf renderer and check its value
+        let r = LeafRenderer(viewsDir: "ferret", localization: localization)
+        let leaf = try r.stem.spawnLeaf(raw: "#localize(\"en\", \"welcome\", \"title\")")
+        let rendered = try r.stem.render(leaf, with: LeafContext(Node.null)).string
+        XCTAssert(rendered == "Welcome to Vapor!")
     }
 
 
