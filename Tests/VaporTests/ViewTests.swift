@@ -26,8 +26,9 @@ class ViewTests: XCTestCase {
     
     func testLeafLocalization() throws {
         // Get the localization
+        
         #if os(Linux)
-            let localization = LocalizationTests(name: "LocalizationTests").localization
+            let localization = LocalizationTests(name: "LocalizationTests", testClosure: { _ in }).localization
         #else
             let localization = LocalizationTests().localization
         #endif
