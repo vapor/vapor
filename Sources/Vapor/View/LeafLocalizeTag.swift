@@ -1,17 +1,42 @@
 import Leaf
 
 public final class LocalizeTag: Tag {
+    public enum Error: Swift.Error {
+        case expectedAtLeasOneArgument
+        case invalidLanguage
+        case invalidPath
+    }
+    
     public let name = "localize"
+    
+    private let localization: Localization
+    
+    public init(localization: Localization) {
+        self.localization = localization
+    }
     
     public func run(
         stem: Stem,
-        context: Context,
+        context: LeafContext,
         tagTemplate: TagTemplate,
         arguments: [Argument]) throws -> Node? {
-        // temporary escaping mechanism.
-        // ALL tags are interpreted, use `*()` to have an empty `*` rendered
-        if arguments.isEmpty { return .string([TOKEN].string) }
-        guard arguments.count == 1 else { throw Error.expectedOneArgument }
-        return arguments[0].value
+        // Validate the argument count
+        guard arguments.count < 1 else { throw Error.expectedAtLeasOneArgument }
+        
+        // Get the laguage
+        guard let language = arguments[0].value?.string else {
+            throw Error.invalidLanguage
+        }
+        
+        // Convert the path to an array of strings
+        let path = try arguments.dropFirst().map { e -> String in
+            guard let component = e.value?.string else {
+                throw Error.invalidPath
+            }
+            return component
+        }
+        
+        // Return the localization
+        return localization[language, path].makeNode()
     }
 }

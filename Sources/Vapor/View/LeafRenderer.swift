@@ -2,10 +2,14 @@ import Leaf
 
 public final class LeafRenderer: ViewRenderer {
     public let stem: Stem
-
+    
+    public convenience init(viewsDir: String, localization: Localization) {
+        self.init(viewsDir: viewsDir)
+        stem.register(LocalizeTag(localization: localization))
+    }
+    
     public init(viewsDir: String) {
         stem = Stem(workingDirectory: viewsDir)
-        stem.tags["localize"] = LocalizeTag()
     }
 
     public func make(_ path: String, _ context: Node) throws -> View {
