@@ -5,6 +5,7 @@ public final class LeafRenderer: ViewRenderer {
 
     public init(viewsDir: String) {
         stem = Stem(workingDirectory: viewsDir)
+        stem.tags["localize"] = LocalizeTag()
     }
 
     public func make(_ path: String, _ context: Node) throws -> View {
