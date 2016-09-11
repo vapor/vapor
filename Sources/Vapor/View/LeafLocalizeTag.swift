@@ -30,8 +30,8 @@ public final class LocalizeTag: Tag {
         }
         
         // Convert the path to an array of strings
-        let path = try arguments.dropFirst().map { e -> String in
-            guard let component = e.value?.string else {
+        let path = try arguments.dropFirst().map { componentNode -> String in
+            guard let component = componentNode.value?.string else {
                 throw Error.invalidPath
             }
             return component

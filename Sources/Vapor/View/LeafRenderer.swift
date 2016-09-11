@@ -3,9 +3,11 @@ import Leaf
 public final class LeafRenderer: ViewRenderer {
     public let stem: Stem
     
-    public convenience init(viewsDir: String, localization: Localization) {
+    public convenience init(viewsDir: String, localization: Localization? = nil) {
         self.init(viewsDir: viewsDir)
-        stem.register(LocalizeTag(localization: localization))
+        localization.flatMap {
+            stem.register(LocalizeTag(localization: $0))
+        }
     }
     
     public init(viewsDir: String) {

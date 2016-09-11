@@ -303,7 +303,7 @@ public class Droplet {
             localization = provided
         } else {
             do {
-                localization = try Localization(workingDirectory: workDir)
+                localization = try Localization(localizationDirectory: workDir + "Localization/")
             } catch {
                 log.error("Could not load localization files: \(error)")
                 localization = Localization()
