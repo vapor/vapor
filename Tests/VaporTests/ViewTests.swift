@@ -26,7 +26,11 @@ class ViewTests: XCTestCase {
     
     func testLeafLocalization() throws {
         // Get the localization
-        let localization = LocalizationTests().localization
+        #if os(Linux)
+            let localization = LocalizationTests(name: "LocalizationTests").localization
+        #else
+            let localization = LocalizationTests().localization
+        #endif
         
         // Create a localized Leaf renderer and check its value
         let r = LeafRenderer(viewsDir: "ferret", localization: localization)
