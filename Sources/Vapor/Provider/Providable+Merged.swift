@@ -38,7 +38,8 @@ extension Providable {
         }
 
         var server: ServerProtocol.Type?
-        var hash: Hash?
+        var hash: HashProtocol?
+        var cipher: CipherProtocol?
         var console: ConsoleProtocol?
         var log: Log?
         var view: ViewRenderer?
@@ -49,6 +50,7 @@ extension Providable {
 
         server = try attempt(self.server, other.server)
         hash = try attempt(self.hash, other.hash)
+        cipher = try attempt(self.cipher, other.cipher)
         console = try attempt(self.console, other.console)
         log = try attempt(self.log, other.log)
         view = try attempt(self.view, other.view)
@@ -60,6 +62,7 @@ extension Providable {
         return Providable(
             server: server,
             hash: hash,
+            cipher: cipher,
             console: console,
             log: log,
             view: view,

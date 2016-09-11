@@ -18,7 +18,13 @@ public struct Providable {
         An optional `HashDriver` to provide
         to the droplet.
     */
-    public var hash: Hash?
+    public var hash: HashProtocol?
+
+    /**
+        An optional `CipherProtocol` to provide
+        to the droplet.
+    */
+    public var cipher: CipherProtocol?
 
     /**
         An optional `ConsoleProtocol` to provide
@@ -64,7 +70,8 @@ public struct Providable {
 
     public init(
         server: ServerProtocol.Type? = nil,
-        hash: Hash? = nil,
+        hash: HashProtocol? = nil,
+        cipher: CipherProtocol? = nil,
         console: ConsoleProtocol? = nil,
         log: Log? = nil,
         view: ViewRenderer? = nil,
@@ -75,6 +82,7 @@ public struct Providable {
     ) {
         self.server = server
         self.hash = hash
+        self.cipher = cipher
         self.console = console
         self.log = log
         self.view = view
