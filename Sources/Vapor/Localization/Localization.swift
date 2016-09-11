@@ -13,10 +13,7 @@ public class Localization {
     
     public convenience init(path: String) throws {
         // List the files in the directory or have no localizations if could not find files
-        guard let contents = try? FileManager.contentsOfDirectory(path) else {
-            self.init()
-            return
-        }
+        let contents = try FileManager.contentsOfDirectory(path)
         
         // Read the files into nodes mapped to their appropriate language
         var localizations = [String: Node]()

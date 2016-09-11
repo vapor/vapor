@@ -21,7 +21,7 @@ class ConsoleTests: XCTestCase {
 
         do {
             try drop.runCommands()
-            XCTAssertEqual(console.input(), "Test 1 Ran", "Command 1 did not run")
+            XCTAssert(console.input().contains("Test 1 Ran"), "Command 1 did not run")
         } catch {
             XCTFail("Command 1 failed: \(error)")
         }
@@ -55,7 +55,7 @@ class ConsoleTests: XCTestCase {
 
         do {
             try drop.runCommands()
-            XCTAssertEqual(console.input(), "123", "Did not print 123")
+            XCTAssert(console.input().contains("123"), "Did not print 123")
         } catch {
             XCTFail("Command 2 failed to run: \(error)")
         }
@@ -73,7 +73,7 @@ class ConsoleTests: XCTestCase {
 
         do {
             try drop.runCommands()
-            XCTAssert(console.input() == "123abc", "Did not print 123abc")
+            XCTAssert(console.input().contains("123abc"), "Did not print 123abc")
         } catch {
             XCTFail("Command 2 failed to run: \(error)")
         }
