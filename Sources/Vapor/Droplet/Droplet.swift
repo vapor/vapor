@@ -144,6 +144,28 @@ public class Droplet {
     */
     public let environment: Environment
 
+    internal private(set) lazy var routerResponder: Request.Handler = Request.Handler { [weak self] request in
+        // Routed handler
+        if let handler = self?.router.route(request, with: request) {
+            return try handler.respond(to: request)
+        } else {
+            // Default not found handler
+            let normal: [HTTP.Method] = [.get, .post, .put, .patch, .delete]
+
+            if normal.contains(request.method) {
+                throw Abort.notFound
+            } else if case .options = request.method {
+                return Response(status: .ok, headers: [
+                    "Allow": "OPTIONS"
+                    ])
+            } else {
+                return Response(status: .notImplemented)
+            }
+        }
+    }
+
+
+
     /**
         Initialize the Droplet.
     */
