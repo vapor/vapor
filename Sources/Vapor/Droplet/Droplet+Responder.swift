@@ -25,29 +25,8 @@ extension Droplet: Responder {
             request.method = .get
         }
 
-
-        // Check in routes
-        if let handler = router.route(request, with: request) {
-            responder = handler
-        } else {
-            // Default not found handler
-            responder = Request.Handler { _ in
-                let normal: [Method] = [.get, .post, .put, .patch, .delete]
-
-                if normal.contains(request.method) {
-                    throw Abort.notFound
-                } else if case .options = request.method {
-                    return Response(status: .ok, headers: [
-                        "Allow": "OPTIONS"
-                    ])
-                } else {
-                    return Response(status: .notImplemented)
-                }
-            }
-        }
-
-        // Loop through middlewares in order
-        responder = enabledMiddleware.chain(to: responder)
+        // Loop through middlewares in order, then pass result to router responder
+        responder = enabledMiddleware.chain(to: routerResponder)
 
         var response: Response
         do {
