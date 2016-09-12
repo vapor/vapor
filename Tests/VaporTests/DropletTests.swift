@@ -37,4 +37,22 @@ class DropletTests: XCTestCase {
 
         XCTAssert(found, "CSS Content Type not found")
     }
+
+    func testTLSConfig() throws {
+        let config = Config([
+            "servers": [
+                "secure": [
+                    "host": "vapor.codes",
+                    "port": 443,
+                    "securityLayer": "tls",
+                    "tls": [
+                        "certificates": "ca",
+                        "signature": "selfSigned"
+                    ]
+                ]
+            ]
+        ])
+
+        _ = Droplet(config: config)
+    }
 }

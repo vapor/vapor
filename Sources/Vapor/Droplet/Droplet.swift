@@ -144,6 +144,7 @@ public class Droplet {
     */
     public let environment: Environment
 
+
     internal private(set) lazy var routerResponder: Request.Handler = Request.Handler { [weak self] request in
         // Routed handler
         if let handler = self?.router.route(request, with: request) {
@@ -163,8 +164,6 @@ public class Droplet {
             }
         }
     }
-
-
 
     /**
         Initialize the Droplet.
