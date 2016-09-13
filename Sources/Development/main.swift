@@ -16,13 +16,75 @@ var workDir: String {
 }
 #endif
 
-let sha512 = SHA2Hasher(variant: .sha512, defaultKey: "")
+import Auth
+import Fluent
 
-let drop = Droplet(workDir: workDir, hash: sha512)
+final class TestUser: Model, Auth.User {
+    var id: Node?
+    var name: String
+
+    init(name: String) {
+        self.name = name
+    }
+
+    init(node: Node, in context: Context) throws {
+        id = try node.extract("id")
+        name = try node.extract("name")
+    }
+
+    func makeNode() throws -> Node {
+        return try Node(node: [
+            "id": id,
+            "name": name
+            ])
+    }
+
+    static func prepare(_ database: Database) throws {
+
+    }
+
+    static func revert(_ database: Database) throws {
+
+    }
+
+    static func authenticate(credentials: Credentials) throws -> Auth.User {
+        guard
+            let match = try TestUser.find(1)
+            else {
+                throw Abort.custom(status: .forbidden, message: "Invalid credentials.")
+        }
+
+        return match
+    }
+
+    static func register(credentials: Credentials) throws -> Auth.User {
+        guard
+            let match = try TestUser.find(1)
+            else {
+                throw Abort.custom(status: .forbidden, message: "Invalid credentials.")
+        }
+        
+        return match
+    }
+}
+
+let sha512 = CryptoHasher(method: .sha512, defaultKey: [])
+
+let auth = AuthMiddleware(user: TestUser.self)
+
+let drop = Droplet(workDir: workDir, hash: sha512, availableMiddleware: ["auth": auth])
 let 😀 = Response(status: .ok)
 
 let hashed = try drop.hash.make("test")
 
+
+enum FakeError: Error {
+    case fake
+}
+
+drop.get("500") { req in
+    throw FakeError.fake
+}
 
 enum FooError: Error {
     case fooServiceUnavailable
@@ -52,58 +114,6 @@ drop.get("sess") { req in
     return res
 }
 
-import Auth
-import Fluent
-
-final class TestUser: Model, Auth.User {
-    var id: Node?
-    var name: String
-
-    init(name: String) {
-        self.name = name
-    }
-
-    init(node: Node, in context: Context) throws {
-        id = try node.extract("id")
-        name = try node.extract("name")
-    }
-
-    func makeNode() throws -> Node {
-        return try Node(node: [
-            "id": id,
-            "name": name
-        ])
-    }
-
-    static func prepare(_ database: Database) throws {
-
-    }
-
-    static func revert(_ database: Database) throws {
-
-    }
-
-    static func authenticate(credentials: Credentials) throws -> Auth.User {
-        guard
-            let match = try TestUser.find(1)
-        else {
-            throw Abort.custom(status: .forbidden, message: "Invalid credentials.")
-        }
-
-        return match
-    }
-
-    static func register(credentials: Credentials) throws -> Auth.User {
-        guard
-            let match = try TestUser.find(1)
-            else {
-                throw Abort.custom(status: .forbidden, message: "Invalid credentials.")
-        }
-
-        return match
-    }
-}
-
 extension Request {
     func user() throws -> TestUser {
         guard let user = try auth.user() as? TestUser else {
@@ -113,10 +123,6 @@ extension Request {
         return user
     }
 }
-
-
-let auth = AuthMiddleware(user: TestUser.self)
-drop.middleware.append(auth)
 
 let memory = MemoryDriver()
 TestUser.database = Database(memory)
@@ -392,13 +398,13 @@ drop.post("session") { request in
     guard let name = request.data["name"]?.string else {
         throw Abort.badRequest
     }
-    request.session?["name"] = name
+    try request.session().data["name"] = Node.string(name)
 
     return "Session set"
 }
 
 drop.get("session") { request in
-    guard let name = request.session?["name"] else {
+    guard let name = try request.session().data["name"]?.string else {
         return "No session data"
     }
 
