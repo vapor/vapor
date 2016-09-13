@@ -2,9 +2,9 @@ import Core
 import HTTP
 
 final class ErrorView {
-    let one: Bytes
-    let two: Bytes
-    let three: Bytes
+    let head: Bytes
+    let middle: Bytes
+    let tail: Bytes
 
     init() {
         var path = #file.characters.split(separator: "/").dropLast().map({ String($0) })
@@ -15,24 +15,24 @@ final class ErrorView {
             let string = try DataFile().load(path: file).string
 
             let comps = string.components(separatedBy: "#(code)")
-            one = comps.first?.bytes ?? []
+            head = comps.first?.bytes ?? []
 
             if let compsTwo = comps.last?.components(separatedBy: "#(message)") {
-                two = compsTwo.first?.bytes ?? []
-                three = compsTwo.last?.bytes ?? []
+                middle = compsTwo.first?.bytes ?? []
+                tail = compsTwo.last?.bytes ?? []
             } else {
-                two = []
-                three = []
+                middle = []
+                tail = []
             }
         } catch {
-            one = "<h1>".bytes
-            two = "</h1><p>".bytes
-            three = "</p>".bytes
+            head = "<h1>".bytes
+            middle = "</h1><p>".bytes
+            tail = "</p>".bytes
         }
     }
 
     func render(code: Int, message: String) -> Bytes {
-        return one + code.description.bytes + two + message.bytes + three
+        return head + code.description.bytes + middle + message.bytes + tail
     }
 
     func makeResponse(_ status: Status, _ message: String) -> Response {

@@ -1,8 +1,6 @@
 import HTTP
 import HTTPRouting
 
-private let errorView = ErrorView()
-
 extension Droplet: Responder {
     /**
         Returns a response to the given request
