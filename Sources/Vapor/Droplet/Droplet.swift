@@ -344,7 +344,7 @@ public class Droplet {
         self.localization = localization
         
         // set the view renderer
-        self.view = provided.view ?? LeafRenderer(viewsDir: workDir + "Resources/Views", localization: localization)
+        self.view = provided.view ?? LeafRenderer(viewsDir: workDir + "Resources/Views")
 
         // set the hashing key to the key
         // from the configuration files or nothing.
