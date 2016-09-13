@@ -1,9 +1,12 @@
 import XCTest
+import Leaf
 @testable import Vapor
 
 class ViewTests: XCTestCase {
     static let allTests = [
-        ("testBasic", testBasic)
+        ("testBasic", testBasic),
+        ("testViewBytes", testViewBytes),
+        ("testViewResponse", testViewResponse),
     ]
 
     func testBasic() throws {

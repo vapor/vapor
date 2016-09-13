@@ -328,8 +328,6 @@ public class Droplet {
             log.log(item.level, message: item.message, file: #file, function: #function, line: #line)
         }
 
-        self.view = provided.view ?? LeafRenderer(viewsDir: workDir + "Resources/Views")
-
         // use the provided localization or 
         // initialize one from the working directory.
         let localization: Localization
@@ -337,13 +335,16 @@ public class Droplet {
             localization = provided
         } else {
             do {
-                localization = try Localization(workingDirectory: workDir)
+                localization = try Localization(localizationDirectory: workDir + "Localization/")
             } catch {
                 log.error("Could not load localization files: \(error)")
                 localization = Localization()
             }
         }
         self.localization = localization
+        
+        // set the view renderer
+        self.view = provided.view ?? LeafRenderer(viewsDir: workDir + "Resources/Views")
 
         // set the hashing key to the key
         // from the configuration files or nothing.

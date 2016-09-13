@@ -4,16 +4,14 @@ import PathIndexable
 
 public class Localization {
     private let localizations: [String: Node]
-    private let defaultLocale: String
-
-    public convenience init(workingDirectory: String, path: String? = nil) throws {
-        let localizationDirectory = workingDirectory.finished(with: "/") +  (path ?? "Localization/")
-        try self.init(path: localizationDirectory)
-    }
+    private let defaultDialect: String
     
-    public convenience init(path: String) throws {
-        // List the files in the directory or have no localizations if could not find files
-        let contents = try FileManager.contentsOfDirectory(path)
+    public convenience init(localizationDirectory: String) throws {
+        // Finish path with "/"
+        let localizationDirectory = localizationDirectory.finished(with: "/")
+        
+        // List the files in the directory
+        let contents = try FileManager.contentsOfDirectory(localizationDirectory)
         
         // Read the files into nodes mapped to their appropriate language
         var localizations = [String: Node]()
@@ -32,9 +30,9 @@ public class Localization {
         self.init(localizations: localizations)
     }
 
-    init(localizations: [String: Node]? = nil, defaultLocale: String? = nil) {
+    public init(localizations: [String: Node]? = nil, defaultLocale: String? = nil) {
         self.localizations = localizations ?? [:]
-        self.defaultLocale = defaultLocale ?? localizations?.keys.first ?? "default"
+        self.defaultDialect = defaultLocale ?? localizations?.keys.first ?? "default"
     }
 
     public subscript(_ languageCode: String, _ paths: PathIndex...) -> String {
@@ -43,7 +41,7 @@ public class Localization {
 
     public subscript(_ languageCode: String, _ paths: [PathIndex]) -> String {
         return localizations[languageCode]?[paths]?.string  // Index by language
-            ?? localizations[defaultLocale]?[paths]?.string // Index the default language
+            ?? localizations[defaultDialect]?[paths]?.string // Index the default language
             ?? paths.map { "\($0)" }.joined(separator: ".") // Return the literal path indexed if no translation
     }
 }

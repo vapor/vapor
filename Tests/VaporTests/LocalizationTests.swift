@@ -12,7 +12,7 @@ class LocalizationTests: XCTestCase {
         return path
     }
 
-    lazy var localization: Localization = try! Localization(workingDirectory: self.workDir)
+    lazy var localization: Localization = try! Localization(localizationDirectory: self.workDir + "Localization/")
 
     func testSimple() {
         // Basic language tests
