@@ -25,7 +25,8 @@ extension Droplet {
             let security = config["servers", "default", "securityLayer"]?.string
                 ?? config["app", "securityLayer"]?.string
                 ?? "none"
-            let securityLayer: SecurityLayer = security.securityLayer
+
+            let securityLayer = try parseSecurityLayer(security, name: "default")
 
             var message = "Starting server at \(host):\(port)"
             if securityLayer.isSecure {
@@ -44,7 +45,8 @@ extension Droplet {
     }
 
     func bootServer(name: String, isLastServer: Bool) throws {
-        let securityLayer: SecurityLayer = config["servers", name, "securityLayer"]?.string == "tls" ? .tls(nil) : .none
+        let security = config["servers", name, "securityLayer"]?.string ?? "none"
+        let securityLayer = try parseSecurityLayer(security, name: name)
 
         let host = config["servers", name, "host"]?.string ?? "0.0.0.0"
         let port = config["servers", name, "port"]?.int ?? 8080
@@ -79,4 +81,27 @@ extension Droplet {
             try self.server.start(host: host, port: port, securityLayer: securityLayer, responder: self, errors: serverErrors)
         }
     }
+
+    func parseSecurityLayer(_ security: String, name: String) throws -> SecurityLayer {
+        let securityLayer: SecurityLayer
+
+        switch security {
+        case "tls":
+            if let tlsConfig = config["servers", name, "tls"]?.object {
+                let config = try parseTLSConfig(tlsConfig)
+                securityLayer = .tls(config)
+            } else {
+                log.warning("No TLS configuration supplied, using default.")
+                securityLayer = .tls(nil)
+            }
+        case "none":
+            securityLayer = .none
+        default:
+            securityLayer = .none
+            log.error("Invalid security layer: \(security), defaulting to none.")
+        }
+
+        return securityLayer
+    }
 }
+

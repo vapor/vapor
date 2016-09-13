@@ -7,8 +7,10 @@ import Transport
 import Cache
 import Settings
 import Sessions
+import Cipher
+import HMAC
 
-public let VERSION = "0.17.0"
+public let VERSION = "0.19.0"
 
 public class Droplet {
     /**
@@ -43,9 +45,16 @@ public class Droplet {
 
     /**
         Provides access to the underlying
-        `HashDriver`.
+        `HashProtocol` for hashing data.
     */
-    public let hash: Hash
+    public let hash: HashProtocol
+
+    /**
+        Provides access to the underlying
+        `CipherProtocol` for encrypting and
+        decrypting data.
+    */
+    public let cipher: CipherProtocol
 
     /**
         The work directory of your droplet is
@@ -135,6 +144,27 @@ public class Droplet {
     */
     public let environment: Environment
 
+
+    internal private(set) lazy var routerResponder: Request.Handler = Request.Handler { [weak self] request in
+        // Routed handler
+        if let handler = self?.router.route(request, with: request) {
+            return try handler.respond(to: request)
+        } else {
+            // Default not found handler
+            let normal: [HTTP.Method] = [.get, .post, .put, .patch, .delete]
+
+            if normal.contains(request.method) {
+                throw Abort.notFound
+            } else if case .options = request.method {
+                return Response(status: .ok, headers: [
+                    "Allow": "OPTIONS"
+                    ])
+            } else {
+                return Response(status: .notImplemented)
+            }
+        }
+    }
+
     /**
         Initialize the Droplet.
     */
@@ -148,7 +178,8 @@ public class Droplet {
 
         // providable
         server: ServerProtocol.Type? = nil,
-        hash: Hash? = nil,
+        hash: HashProtocol? = nil,
+        cipher: CipherProtocol? = nil,
         console: ConsoleProtocol? = nil,
         log: Log? = nil,
         view: ViewRenderer? = nil,
@@ -259,6 +290,7 @@ public class Droplet {
         var provided = Providable(
             server: server,
             hash: hash,
+            cipher: cipher,
             console: console,
             log: log,
             view: view,
@@ -316,11 +348,119 @@ public class Droplet {
 
         // set the hashing key to the key
         // from the configuration files or nothing.
-        let key = config["app", "key"]?.string
+        let hashKey = config["crypto", "hash", "key"]?.string?.bytes
         // initialize the hash from one provided
         // or use a default SHA2 hasher
-        let hash = provided.hash ?? SHA2Hasher(variant: .sha256, defaultKey: key)
+
+        let chosenHash: HashProtocol?
+
+        if let method = config["crypto", "cipher", "method"]?.string {
+            let m: HMAC.Method?
+            switch method {
+            case "sha1":
+                m = .sha1
+            case "sha224":
+                m = .sha224
+            case "sha256":
+                m = .sha256
+            case "sha384":
+                m = .sha384
+            case "sha512":
+                m = .sha512
+            case "md4":
+                m = .md4
+            case "md5":
+                m = .md5
+            case "ripemd160":
+                m = .ripemd160
+            case "provided":
+                m = nil
+            default:
+                log.error("Unsupported hash method: \(method)")
+                m = nil
+            }
+
+            if let m = m {
+                chosenHash = CryptoHasher(method: m, defaultKey: hashKey)
+            } else {
+                chosenHash = nil
+            }
+        } else {
+            chosenHash = nil
+        }
+
+        let hash = chosenHash
+            ?? provided.hash
+            ?? CryptoHasher(method: .sha256, defaultKey: hashKey)
         self.hash = hash
+
+        let cipherKey: Bytes
+        if let k = config["crypto", "cipher", "key"]?.string {
+            cipherKey = k.bytes
+        } else {
+            log.error("No cipher key was set, using blank key.")
+            cipherKey = Bytes(repeating: 0, count: 32)
+        }
+
+        let cipherIV = config["crypto", "cipher", "iv"]?.string?.bytes
+
+        let chosenCipher: CipherProtocol?
+        if let method = config["crypto", "cipher", "method"]?.string {
+            let m: Cipher.Method?
+            switch method {
+            case "chacha20":
+                m = .chacha20
+            case "aes128":
+                m = .aes128(.cbc)
+            case "aes256":
+                m = .aes256(.cbc)
+            case "provided":
+                m = nil
+            default:
+                log.error("Unsupported cipher method: \(method)")
+                m = nil
+            }
+
+            if let m = m {
+                chosenCipher = CryptoCipher(method: m, defaultKey: cipherKey, defaultIV: cipherIV)
+            } else {
+                chosenCipher = nil
+            }
+        } else {
+            // default to provided
+            chosenCipher = nil
+        }
+
+        let cipher = chosenCipher
+            ?? provided.cipher
+            ?? CryptoCipher(method: .chacha20, defaultKey: cipherKey, defaultIV: cipherIV)
+
+        if let c = cipher as? CryptoCipher {
+            switch c.method {
+            case .chacha20:
+                if cipherKey.count != 32 {
+                    log.error("Chacha20 cipher key must be 32 bytes.")
+                }
+                if cipherIV == nil {
+                    log.error("Chacha20 cipher requires an initialization vector (iv).")
+                } else if cipherIV?.count != 8 {
+                    log.error("Chacha20 initialization vector (iv) must be 8 bytes.")
+                }
+            case .aes128:
+                if cipherKey.count != 16 {
+                    log.error("AES-128 cipher key must be 16 bytes.")
+                }
+            case .aes256:
+                if cipherKey.count != 16 {
+                    log.error("AES-256 cipher key must be 16 bytes.")
+                }
+            default:
+                log.warning("Using unofficial cipher, ensure key and possibly initialization vector (iv) are set properly.")
+                break
+            }
+        }
+
+        self.cipher = cipher
 
         // middleware contains all avail middleware
         // supplied from defaults, init, or providers
@@ -344,6 +484,8 @@ public class Droplet {
             for item in array {
                 if let name = item.string, let m = middleware[name] {
                     serverEnabledMiddleware.append(m)
+                } else {
+                    log.error("Invalid server middleware: \(item.string ?? "unknown")")
                 }
             }
         } else {
@@ -369,6 +511,8 @@ public class Droplet {
             for item in array {
                 if let name = item.string, let m = middleware[name] {
                     clientEnabledMiddleware.append(m)
+                } else {
+                    log.error("Invalid client middleware: \(item.string ?? "unknown")")
                 }
             }
         } else {
