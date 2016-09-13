@@ -36,21 +36,18 @@ extension Droplet: Responder {
                 log.warning("Response had no 'Content-Type' header.")
             }
         } catch {
-            let message: String
-
             if environment == .production {
-                message = "Something went wrong"
+                return ErrorView.shared.makeResponse(.internalServerError, "Something went wrong.")
             } else {
-                message = "Uncaught Error: \(type(of: error)).\(error). Use middleware to catch this error and provide a better response. Otherwise, a generic error page will be returned in the production environment."
+                let message = "Uncaught Error: \(type(of: error)).\(error). Use middleware to catch this error and provide a better response. Otherwise, a 500 error page will be returned in the production environment."
+                response = Response(
+                    status: .internalServerError,
+                    headers: [
+                        "Content-Type": "plaintext"
+                    ],
+                    body: message.bytes
+                )
             }
-
-            response = Response(
-                status: .internalServerError,
-                headers: [
-                    "Content-Type": "plaintext"
-                ],
-                body: message.bytes
-            )
         }
 
         response.headers["Server"] = "Vapor \(Vapor.VERSION)"
