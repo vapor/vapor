@@ -9,7 +9,7 @@ extension Droplet {
     /**
         Runs the Droplet's commands, defaulting to serve.
     */
-    public func serve(_ closure: Serve.ServeFunction? = nil) -> Never  {
+    public func run(_ closure: Serve.ServeFunction? = nil) -> Never  {
         do {
             try runCommands()
             exit(0)
