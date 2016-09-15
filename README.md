@@ -28,6 +28,15 @@ This package has been tested on macOS and Ubuntu.
 
 ## 🦄 Deploy
 
+Vapor can be deployed wherever Swift can.
+
+- Digital Ocean
+- Docker
+- Heroku
+- AWS
+- Bluemix
+- More ...
+
 [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/vapor/example/tree/master)
 
 ## 🚀 Contributing

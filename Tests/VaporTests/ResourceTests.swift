@@ -12,6 +12,10 @@ class ResourceTests: XCTestCase {
     func testBasic() throws {
         let drop = Droplet(serverMiddleware: [])
 
+        let user = try User(from: "Hi")
+        let node = user?.makeNode()
+        XCTAssertEqual(node, .null)
+
         drop.resource("users", User.self) { users in
             users.index = { req in
                 return "index"
