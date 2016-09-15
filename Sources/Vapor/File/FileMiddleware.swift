@@ -18,21 +18,16 @@ public class FileMiddleware: Middleware {
             // Check in file system
             let filePath = publicDir + request.uri.path
 
-            let fileAttributes = FileManager.fileAtPath(filePath)
+            guard
+                let attributes = try? Foundation.FileManager.default.attributesOfItem(atPath: filePath),
+                let modifiedAt = attributes[.modificationDate] as? Date,
+                let fileSize = attributes[.size] as? Int
+                else { throw Abort.notFound }
 
-            guard fileAttributes.exists else {
-                throw Abort.notFound
-            }
-            
             var headers: [HeaderKey: String] = [:]
 
             // Generate ETag value, "HEX value of last modified date" + "-" + "file size"
-            #if os(Linux)
-                let fileETag = String(format: "%x-%x", fileAttributes.status.st_mtim.tv_sec, fileAttributes.status.st_size)
-            #else
-                let fileETag = String(format: "%x-%x", fileAttributes.status.st_mtimespec.tv_sec, fileAttributes.status.st_size)
-            #endif
-            
+            let fileETag = "\(modifiedAt.timeIntervalSince1970)-\(fileSize)"
             headers["ETag"] = fileETag
             
             // Check if file has been cached already and return NotModified response if the etags match
