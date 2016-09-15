@@ -163,6 +163,30 @@ class MiddlewareTests: XCTestCase {
         let result = try drop.respond(to: request)
         XCTAssertEqual(result.body.bytes?.string.contains("Custom Message"), true)
     }
+
+
+    func testValidationMiddleware() throws {
+        let drop = Droplet(preEnabledMiddleware: [ValidationMiddleware()])
+        drop.get("*") { req in
+            let validPath = try req.uri.path.validated(by: Count.max(10))
+            return validPath.value
+        }
+
+        // only added validation, abort won't be caught.
+        drop.get("uncaught") { _ in throw Abort.notFound }
+
+        let request = Request(method: .get, path: "12345678910")
+        let response = try drop.respond(to: request)
+        let json = try response.body.bytes.flatMap(JSON.init)
+        XCTAssertEqual(json?["error"]?.bool, true)
+        XCTAssertEqual(json?["message"]?.string, "Validating max(10) failed for input '12345678910'")
+
+        do {
+            let fail = Request(method: .get, path: "uncaught")
+            let response = try drop.respond(to: fail)
+            XCTFail("Should throw, got \(response)")
+        } catch { }
+    }
 }
 
 class FooMiddleware: Middleware {
