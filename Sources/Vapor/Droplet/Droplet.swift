@@ -191,6 +191,7 @@ public class Droplet {
         availableMiddleware: [String: Middleware]? = nil,
         serverMiddleware: [String]? = nil,
         clientMiddleware: [String]? = nil,
+        preEnabledMiddleware: [Middleware]? = nil,
 
         // database preparations
         preparations: [Preparation.Type] = [],
@@ -468,7 +469,7 @@ public class Droplet {
         self.availableMiddleware = middleware
 
         // create array of enabled middleware
-        var serverEnabledMiddleware: [Middleware] = []
+        var serverEnabledMiddleware: [Middleware] = preEnabledMiddleware ?? []
 
         if let enabled = serverMiddleware {
             // add all middleware specified

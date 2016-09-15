@@ -24,29 +24,29 @@ public class AbortMiddleware: Middleware {
         do {
             return try chain.respond(to: request)
         } catch Abort.badRequest {
-            return try errorResponse(request, .badRequest, "Invalid request")
+            return try AbortMiddleware.errorResponse(request, .badRequest, "Invalid request")
         } catch Abort.notFound {
-            return try errorResponse(request, .notFound, "Page not found")
+            return try AbortMiddleware.errorResponse(request, .notFound, "Page not found")
         } catch Abort.serverError {
-            return try errorResponse(request, .internalServerError, "Something went wrong")
+            return try AbortMiddleware.errorResponse(request, .internalServerError, "Something went wrong")
         } catch Abort.custom(let status, let message) {
-            return try errorResponse(request, status, message)
+            return try AbortMiddleware.errorResponse(request, status, message)
         }
     }
 
-    func errorResponse(_ request: Request, _ status: Status, _ message: String) throws -> Response {
+    static func errorResponse(_ request: Request, _ status: Status, _ message: String) throws -> Response {
         if request.accept.prefers("html") {
             return ErrorView.shared.makeResponse(status, message)
-        } else {
-            let json = try JSON(node: [
-                "error": true,
-                "message": "\(message)"
-            ])
-            let data = try json.makeBytes()
-            let response = Response(status: status, body: .data(data))
-            response.headers["Content-Type"] = "application/json; charset=utf-8"
-            return response
         }
+
+        let json = try JSON(node: [
+            "error": true,
+            "message": "\(message)"
+            ])
+        let data = try json.makeBytes()
+        let response = Response(status: status, body: .data(data))
+        response.headers["Content-Type"] = "application/json; charset=utf-8"
+        return response
     }
 
 }

@@ -1,6 +1,8 @@
-import Vapor // not @testable to ensure Middleware classes are public
+@testable import Vapor // not @testable to ensure Middleware classes are public
 import XCTest
 import HTTP
+
+extension String: Swift.Error {}
 
 class MiddlewareTests: XCTestCase {
     static let allTests = [
@@ -123,6 +125,43 @@ class MiddlewareTests: XCTestCase {
 
         let res = try drop.client.get("http://httpbin.org/headers")
         XCTAssert(res.headers["bar"] != nil)
+    }
+
+    func testAbortMiddleware() throws {
+        let drop = Droplet(preEnabledMiddleware: [AbortMiddleware()])
+        drop.get("*") { req in
+            let path = req.uri.path
+            print(path)
+            switch path {
+            case "bad":
+                throw Abort.badRequest
+            case "notFound":
+                throw Abort.notFound
+            case "server":
+                throw Abort.serverError
+            default:
+                throw Abort.custom(status: Status(statusCode: 42), message: path)
+            }
+        }
+
+        let expectations: [(path: String, expectation: Status)] = [
+            ("bad", .badRequest),
+            ("notFound", .notFound),
+            ("server", .internalServerError),
+            ("custom", Status(statusCode: 42))
+        ]
+
+        try expectations.forEach { path, expectation in
+            let request = Request(method: .get, path: path)
+            let result = try drop.respond(to: request)
+            XCTAssertEqual(result.status, expectation)
+        }
+
+
+        let request = Request(method: .get, path: "Custom Message")
+        request.headers["Accept"] = "html"
+        let result = try drop.respond(to: request)
+        XCTAssertEqual(result.body.bytes?.string.contains("Custom Message"), true)
     }
 }
 
