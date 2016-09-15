@@ -271,7 +271,7 @@ public class Droplet {
 
         // default available middleware
         var am: [String: Middleware] = [
-            "file": FileMiddleware(publicDir: workDir + "Public"),
+            "file": FileMiddleware(publicDir: workDir + "Public/"),
             "validation": ValidationMiddleware(),
             "date": DateMiddleware(),
             "type-safe": TypeSafeErrorMiddleware(),

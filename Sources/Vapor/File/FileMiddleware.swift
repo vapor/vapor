@@ -8,7 +8,7 @@ public class FileMiddleware: Middleware {
 
     public init(publicDir: String) {
         // Remove last "/" from the publicDir if present, so we can directly append uri path from the request.
-        self.publicDir  = publicDir.hasSuffix("/") ? String(publicDir.characters.dropLast()) : publicDir
+        self.publicDir = publicDir.finished(with: "/")
     }
     
     public func respond(to request: Request, chainingTo next: Responder) throws -> Response {
@@ -16,6 +16,10 @@ public class FileMiddleware: Middleware {
             return try next.respond(to: request)
         } catch Abort.notFound {
             // Check in file system
+            var path = request.uri.path
+            if path.hasPrefix("/") {
+                path = String(path.characters.dropFirst())
+            }
             let filePath = publicDir + request.uri.path
 
             guard
