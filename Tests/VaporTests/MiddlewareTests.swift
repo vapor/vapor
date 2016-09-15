@@ -128,7 +128,7 @@ class MiddlewareTests: XCTestCase {
     }
 
     func testAbortMiddleware() throws {
-        let drop = Droplet(preEnabledMiddleware: [AbortMiddleware()])
+        let drop = Droplet(staticServerMiddleware: [AbortMiddleware()])
         drop.get("*") { req in
             let path = req.uri.path
             print(path)
@@ -166,7 +166,7 @@ class MiddlewareTests: XCTestCase {
 
 
     func testValidationMiddleware() throws {
-        let drop = Droplet(preEnabledMiddleware: [ValidationMiddleware()])
+        let drop = Droplet(staticServerMiddleware: [ValidationMiddleware()])
         drop.get("*") { req in
             let validPath = try req.uri.path.validated(by: Count.max(10))
             return validPath.value
