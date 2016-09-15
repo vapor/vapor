@@ -90,4 +90,39 @@ class ContentTests: XCTestCase {
         let val = input.components(separatedBy: "boundary=")
         print("succeeded w/ \(val) because didn't crash")
     }
+
+    func testContent() throws {
+        let content = Content()
+        let json = try JSON(node: ["a": "a"])
+        content.append(json)
+        XCTAssertEqual(content["a"]?.string, "a")
+    }
+
+    func testContentLazyLoad() throws {
+        let content = Content()
+        var json: JSON? = nil
+        content.append { () -> JSON in
+            let js = JSON(["a": .string("a")])
+            json = js
+            return js
+        }
+        XCTAssertNil(json)
+        // access lazy loads
+        XCTAssertEqual(content["a"]?.string, "a")
+        XCTAssertNotNil(json)
+    }
+
+    func testContentCustomLoad() throws {
+        let content = Content()
+        content.append { indexes in
+            guard indexes.count == 1, let string = indexes.first as? String, string == "b" else { return nil }
+            return "custom"
+        }
+
+        let json = try JSON(node: ["a": "a", "b": "b"])
+        content.append(json)
+
+        XCTAssertEqual(content["a"]?.string, "a")
+        XCTAssertEqual(content["b"]?.string, "custom")
+    }
 }

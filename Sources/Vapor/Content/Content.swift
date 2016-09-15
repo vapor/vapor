@@ -39,19 +39,11 @@ public final class Content {
 
     // MARK: Subscripting
 
-    public subscript(index: Int) -> Polymorphic? {
-        return self[[index]] ?? self [["\(index)"]]
-    }
-
-    public subscript(key: String) -> Polymorphic? {
-        return self[[key]]
-    }
-
     public subscript(indexes: PathIndex...) -> Polymorphic? {
         return self[indexes]
     }
 
     public subscript(indexes: [PathIndex]) -> Polymorphic? {
-        return content.lazy.flatMap { finder in finder(indexes) } .first
+        return content.lazy.flatMap { loader in loader(indexes) } .first
     }
 }

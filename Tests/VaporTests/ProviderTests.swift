@@ -44,14 +44,14 @@ class ProviderTests: XCTestCase {
         XCTAssert(drop.server is FastServer.Type)
 
         XCTAssertEqual(fast.afterInitFlag, true)
-        XCTAssertEqual(fast.beforeServeFlag, false)
+        XCTAssertEqual(fast.beforeRunFlag, false)
         XCTAssertEqual(slow.afterInitFlag, true)
-        XCTAssertEqual(slow.beforeServeFlag, false)
+        XCTAssertEqual(slow.beforeRunFlag, false)
 
         try drop.runCommands()
 
-        XCTAssertEqual(slow.beforeServeFlag, true)
-        XCTAssertEqual(fast.beforeServeFlag, true)
+        XCTAssertEqual(slow.beforeRunFlag, true)
+        XCTAssertEqual(fast.beforeRunFlag, true)
     }
 }
 
@@ -80,7 +80,7 @@ private final class FastServerProvider: Provider {
     var provided: Providable
 
     var afterInitFlag = false
-    var beforeServeFlag = false
+    var beforeRunFlag = false
 
     init(config: Settings.Config) throws {
         provided = Providable(server: FastServer.self)
@@ -90,8 +90,8 @@ private final class FastServerProvider: Provider {
         afterInitFlag = true
     }
 
-    func beforeServe(_ drop: Droplet) {
-        beforeServeFlag = true
+    func beforeRun(_ drop: Droplet) {
+        beforeRunFlag = true
     }
 }
 
@@ -119,7 +119,7 @@ private final class SlowServerProvider: Provider {
     var provided: Providable
 
     var afterInitFlag = false
-    var beforeServeFlag = false
+    var beforeRunFlag = false
 
     init(config: Settings.Config) throws {
         provided = Providable(server: SlowServer.self)
@@ -129,7 +129,7 @@ private final class SlowServerProvider: Provider {
         afterInitFlag = true
     }
 
-    func beforeServe(_ drop: Droplet) {
-        beforeServeFlag = true
+    func beforeRun(_ drop: Droplet) {
+        beforeRunFlag = true
     }
 }

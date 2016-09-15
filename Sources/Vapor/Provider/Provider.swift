@@ -24,7 +24,7 @@ public protocol Provider: ConfigInitializable {
         Called before the Droplet begins serving
         which is @noreturn.
     */
-    func beforeServe(_: Droplet)
+    func beforeRun(_: Droplet)
 }
 
 extension Provider {

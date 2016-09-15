@@ -1,5 +1,6 @@
 import XCTest
 import Leaf
+import Core
 @testable import Vapor
 
 class ViewTests: XCTestCase {
@@ -33,5 +34,13 @@ class ViewTests: XCTestCase {
 
         XCTAssertEqual(response.headers["content-type"], "text/html; charset=utf-8")
         XCTAssertEqual(try response.bodyString(), "42 🚀")
+    }
+
+    func testLeafRenderer() throws {
+        var directory = #file.components(separatedBy: "/")
+        let file = directory.removeLast()
+        let renderer = LeafRenderer(viewsDir: directory.joined(separator: "/"))
+        let result = try renderer.make(file, [])
+        XCTAssert(result.data.string.contains("meta string"))
     }
 }

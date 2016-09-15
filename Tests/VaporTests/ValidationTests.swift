@@ -35,6 +35,8 @@ class ValidationTests: XCTestCase {
 
         let failed: Valid<Name>? = try? "a*cd".validated()
         XCTAssert(failed == nil)
+
+        try Name().validate(input: "fancyUser")
     }
 
     func testPassword() throws {
