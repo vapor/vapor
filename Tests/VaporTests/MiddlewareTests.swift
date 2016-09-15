@@ -52,9 +52,7 @@ class MiddlewareTests: XCTestCase {
     }
 
     func testConfigDateProvided() throws {
-        let drop = Droplet(availableMiddleware: [
-            "foo": FooMiddleware()
-        ])
+        let drop = Droplet(staticServerMiddleware: [FooMiddleware()])
         drop.get { _ in
             return "Hello, world"
         }

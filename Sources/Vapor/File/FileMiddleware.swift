@@ -4,7 +4,8 @@ import HTTP
 public class FileMiddleware: Middleware {
     
     private var publicDir: String
-    
+    private let loader = DataFile()
+
     public init(publicDir: String) {
         // Remove last "/" from the publicDir if present, so we can directly append uri path from the request.
         self.publicDir  = publicDir.hasSuffix("/") ? String(publicDir.characters.dropLast()) : publicDir
@@ -24,8 +25,7 @@ public class FileMiddleware: Middleware {
             }
             
             var headers: [HeaderKey: String] = [:]
-            
-            st_mtim
+
             // Generate ETag value, "HEX value of last modified date" + "-" + "file size"
             #if os(Linux)
                 let fileETag = String(format: "%x-%x", fileAttributes.status.st_mtim.tv_sec, fileAttributes.status.st_size)
@@ -41,7 +41,7 @@ public class FileMiddleware: Middleware {
             }
 
             // File exists and was not cached, returning content of file.
-            if let fileBody = try? FileManager.readBytesFromFile(filePath) {
+            if let fileBody = try? loader.load(path:filePath) {
                 
                 if
                     let fileExtension = filePath.components(separatedBy: ".").last,

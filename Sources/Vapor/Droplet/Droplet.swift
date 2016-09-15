@@ -472,32 +472,43 @@ public class Droplet {
         // create array of enabled middleware
         var serverEnabledMiddleware: [Middleware] = staticServerMiddleware ?? []
 
-        if let enabled = serverMiddleware {
-            // add all middleware specified
-            // by enabledMiddleware init arg
-            for name in enabled {
-                if let m = middleware[name] {
-                    serverEnabledMiddleware.append(m)
-                }
+        let serverEnabled = serverMiddleware
+            ?? config["middleware", "server"]?.array?.flatMap { $0.string }
+            ?? ["abort", "file", "validation", "typesafe", "date", "sessions"]
+        for item in serverEnabled {
+            if let m = middleware[item] {
+                serverEnabledMiddleware.append(m)
+            } else {
+                log.error("Invalid server middleware: \(item)")
             }
-        } else if let array = config["middleware", "server"]?.array {
-            // add all middleware specified by
-            // config files
-            for item in array {
-                if let name = item.string, let m = middleware[name] {
-                    serverEnabledMiddleware.append(m)
-                } else {
-                    log.error("Invalid server middleware: \(item.string ?? "unknown")")
-                }
-            }
-        } else {
-            // if not config was supplied,
-            // use whatever middlewares were
-            // provided
-            serverEnabledMiddleware = Array(middleware.values)
         }
 
-        self.enabledMiddleware = serverEnabledMiddleware.reversed()
+//        if let enabled = serverMiddleware {
+//            // add all middleware specified
+//            // by enabledMiddleware init arg
+//            for name in enabled {
+//                if let m = middleware[name] {
+//                    serverEnabledMiddleware.append(m)
+//                }
+//            }
+//        } else if let array = config["middleware", "server"]?.array {
+//            // add all middleware specified by
+//            // config files
+//            for item in array {
+//                if let name = item.string, let m = middleware[name] {
+//                    serverEnabledMiddleware.append(m)
+//                } else {
+//                    log.error("Invalid server middleware: \(item.string ?? "unknown")")
+//                }
+//            }
+//        } else {
+//            // if not config was supplied,
+//            // use whatever middlewares were
+//            // provided
+//            serverEnabledMiddleware = Array(middleware.values)
+//        }
+//
+        self.enabledMiddleware = serverEnabledMiddleware
 
 
 
