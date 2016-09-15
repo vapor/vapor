@@ -38,8 +38,11 @@ class CompareValidationTests: ValidationConvenienceTests {
     override func testTrue() throws {
         let comparable = 2.3
         let _ = try comparable.tested(by: Compare.lessThan(5.0))
-        let _ = try comparable.tested(by: Compare.equals(2.3))
+        let _ = try comparable.tested(by: Compare.lessThanOrEqual(5.0))
         let _ = try comparable.tested(by: Compare.greaterThan(1.0))
+        let _ = try comparable.tested(by: Compare.greaterThanOrEqual(2.3))
+        let _ = try comparable.tested(by: Compare.equals(2.3))
+        let _ = try comparable.tested(by: Compare.containedIn(low: 0.0, high: 5.0))
 
         let a = "a"
         let _ = try a.tested(by: Compare.lessThan("z") && Count.equals(1) && OnlyAlphanumeric.self)
@@ -59,18 +62,24 @@ class CompareValidationTests: ValidationConvenienceTests {
     }
 }
 
+class MatchesValidationTests: ValidationConvenienceTests {
+    override func testTrue() throws {
+        let collection = 1
+        let _ = try collection.tested(by: Matches(1))
+    }
+
+    override func testFalse() throws {
+        let collection = 1
+        let result = collection.passes(Matches(999))
+        XCTAssertFalse(result)
+    }
+}
+
 class ContainsValidationTests: ValidationConvenienceTests {
     override func testTrue() throws {
         let collection = [1, 2, 3, 4, 5]
         let _ = try collection.tested(by: Contains(1))
         let _ = try collection.tested(by: Contains(2))
         let _ = try collection.tested(by: Contains(3))
-    }
-
-    override func testFalse() throws {
-        let collection = ["a", "b", "c", "d"]
-        let _ = try collection.tested(by: Contains("a"))
-        let _ = try collection.tested(by: Contains("b"))
-        let _ = try collection.tested(by: Contains("c"))
     }
 }

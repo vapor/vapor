@@ -6,6 +6,7 @@ class ConsoleTests: XCTestCase {
     static let allTests = [
         ("testCommandRun", testCommandRun),
         ("testCommandInsufficientArgs", testCommandInsufficientArgs),
+        ("testVersionCommand", testVersionCommand),
         ("testCommandFetchArgs", testCommandFetchArgs),
         ("testCommandFetchOptions", testCommandFetchOptions),
         ("testDefaultServe", testDefaultServe),
@@ -42,6 +43,18 @@ class ConsoleTests: XCTestCase {
         } catch {
             XCTAssert(console.input().contains("Usage: /path/to/exe test-2 <arg-1> [--opt-1] [--opt-2]"), "Did not print signature")
         }
+    }
+
+    func testVersionCommand() throws {
+        let console = TestConsoleDriver()
+        let drop = Droplet(arguments: ["run", "version"], console: console)
+
+        let command = VersionCommand(console: console)
+        drop.commands = [
+            command
+        ]
+        try drop.runCommands()
+        XCTAssert(console.input().contains("Vapor Framework v0.19.0"))
     }
 
     func testCommandFetchArgs() {

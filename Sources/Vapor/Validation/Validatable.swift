@@ -90,48 +90,6 @@ extension Validatable {
     }
 }
 
-extension Optional where Wrapped: Validatable {
-    /**
-        Test whether or not the caller passes the given Validator
-        Fails if `== .None`
-
-        - parameter validator: the validator to validate with
-
-        - throws: an error if test fails
-
-        - returns: self if passed validator
-    */
-    public func tested<
-        V: Validator>(by validator: V)
-        throws -> Wrapped
-        where V.InputType == Wrapped {
-            guard case .some(let value) = self else {
-                throw ValidationError(validator, input: nil)
-            }
-            return try value.tested(by: validator)
-    }
-
-    /**
-        Test whether or not the caller passes the given ValidationSuite
-        Fails if `== .None`
-
-        - parameter suite: the suite to validate with
-
-        - throws: an error if test fails
-
-        - returns: self if passed suite
-    */
-    public func tested<
-        S: ValidationSuite>(by suite: S.Type)
-        throws -> Wrapped
-        where S.InputType == Wrapped {
-            guard case .some(let value) = self else {
-                throw ValidationError(suite, input: nil)
-            }
-            return try value.tested(by: suite)
-    }
-}
-
 // MARK: Passing
 
 extension Validatable {
@@ -174,45 +132,6 @@ extension Validatable {
     }
 }
 
-extension Optional where Wrapped: Validatable {
-    /**
-        Test whether or not the caller passes the given tester
-        Fails if `== .None`
-
-        - parameter tester: the tester to evaluate with
-
-        - returns: whether or not the caller passed
-    */
-    public func passes(_ tester: (Wrapped) throws -> Void) -> Bool {
-        guard case .some(let value) = self else { return false }
-        return value.passes(tester)
-    }
-
-    /**
-        Test whether or not the caller passes the given Validator
-        Fails if `== .None`
-
-        - parameter validator: the validator to evaluate with
-
-        - returns: whether or not the caller passed
-    */
-    public func passes<V: Validator>(_ validator: V) -> Bool where V.InputType == Wrapped {
-        return passes(validator.validate)
-    }
-
-    /**
-        Test whether or not the caller passes the given ValidationSuite
-        Fails if `== .None`
-
-        - parameter suite: the validation suite to evaluate with
-
-        - returns: whether or not the caller passed
-    */
-    public func passes<S: ValidationSuite>(_ suite: S.Type) -> Bool where S.InputType == Wrapped {
-        return passes(suite.validate)
-    }
-}
-
 // MARK: Validation
 
 extension Validatable {
@@ -246,47 +165,5 @@ extension Validatable {
         throws -> Valid<S>
         where S.InputType == Self {
             return try Valid<S>(self, by: suite)
-    }
-}
-
-extension Optional where Wrapped: Validatable {
-    /**
-        Validates a given value if possible
-        Fails if `== .None`
-
-        - parameter validator: the validator to use in evaluating the value
-
-        - throws: an error if validation fails
-
-        - returns: a Valid<V> protecting a successfully validated value
-    */
-    public func validated<
-        V: Validator>(by validator: V)
-        throws -> Valid<V>
-        where V.InputType == Wrapped {
-            guard case .some(let value) = self else {
-                throw ValidationError(validator, input: nil)
-            }
-            return try Valid<V>(value, by: validator)
-    }
-
-    /**
-        Validates a given value if possible
-        Fails if `== .None`
-
-        - parameter suite: the validation suite to use in evaluating the value
-
-        - throws: an error if validation fails
-
-        - returns: a Valid<V> protecting a successfully validated value
-    */
-    public func validated<
-        S: ValidationSuite>(by suite: S.Type = S.self)
-        throws -> Valid<S>
-        where S.InputType == Wrapped {
-            guard case .some(let value) = self else {
-                throw ValidationError(suite, input: nil)
-            }
-            return try Valid<S>(value, by: suite)
     }
 }

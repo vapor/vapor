@@ -20,8 +20,6 @@ public struct Matches<T>: Validator where T: Validatable, T: Equatable {
         validate
     */
     public func validate(input value: T) throws {
-        guard value == expecting else {
-            throw error(with: value)
-        }
+        guard value == expecting else { throw error(with: value) }
     }
 }
