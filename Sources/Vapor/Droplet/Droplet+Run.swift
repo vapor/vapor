@@ -33,7 +33,7 @@ extension Droplet {
 
     public func runCommands() throws {
         for provider in providers {
-            provider.beforeServe(self)
+            provider.beforeRun(self)
         }
 
         var iterator = arguments.makeIterator()
