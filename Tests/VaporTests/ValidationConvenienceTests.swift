@@ -62,18 +62,24 @@ class CompareValidationTests: ValidationConvenienceTests {
     }
 }
 
+class MatchesValidationTests: ValidationConvenienceTests {
+    override func testTrue() throws {
+        let collection = 1
+        let _ = try collection.tested(by: Matches(1))
+    }
+
+    override func testFalse() throws {
+        let collection = 1
+        let result = collection.passes(Matches(999))
+        XCTAssertFalse(result)
+    }
+}
+
 class ContainsValidationTests: ValidationConvenienceTests {
     override func testTrue() throws {
         let collection = [1, 2, 3, 4, 5]
         let _ = try collection.tested(by: Contains(1))
         let _ = try collection.tested(by: Contains(2))
         let _ = try collection.tested(by: Contains(3))
-    }
-
-    override func testFalse() throws {
-        let collection = ["a", "b", "c", "d"]
-        let _ = try collection.tested(by: Contains("a"))
-        let _ = try collection.tested(by: Contains("b"))
-        let _ = try collection.tested(by: Contains("c"))
     }
 }
