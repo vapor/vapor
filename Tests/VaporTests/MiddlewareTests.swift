@@ -181,11 +181,9 @@ class MiddlewareTests: XCTestCase {
         XCTAssertEqual(json?["error"]?.bool, true)
         XCTAssertEqual(json?["message"]?.string, "Validating max(10) failed for input '12345678910'")
 
-        do {
-            let fail = Request(method: .get, path: "uncaught")
-            let response = try drop.respond(to: fail)
-            XCTFail("Should throw, got \(response)")
-        } catch { }
+        let fail = Request(method: .get, path: "uncaught")
+        let failResponse = try drop.respond(to: fail)
+        XCTAssertEqual(failResponse.status, .notFound)
     }
 }
 
