@@ -38,8 +38,11 @@ class CompareValidationTests: ValidationConvenienceTests {
     override func testTrue() throws {
         let comparable = 2.3
         let _ = try comparable.tested(by: Compare.lessThan(5.0))
-        let _ = try comparable.tested(by: Compare.equals(2.3))
+        let _ = try comparable.tested(by: Compare.lessThanOrEqual(5.0))
         let _ = try comparable.tested(by: Compare.greaterThan(1.0))
+        let _ = try comparable.tested(by: Compare.greaterThanOrEqual(2.3))
+        let _ = try comparable.tested(by: Compare.equals(2.3))
+        let _ = try comparable.tested(by: Compare.containedIn(low: 0.0, high: 5.0))
 
         let a = "a"
         let _ = try a.tested(by: Compare.lessThan("z") && Count.equals(1) && OnlyAlphanumeric.self)
