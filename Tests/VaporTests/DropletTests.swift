@@ -21,7 +21,7 @@ class DropletTests: XCTestCase {
     func testMediaType() throws {
         let drop = Droplet(workDir: workDir, serverMiddleware: ["file"])
 
-        let request = try Request(method: .get, uri: "styles/app.css")
+        let request = try Request(method: .get, path: "styles/app.css")
 
         guard let response = try? drop.respond(to: request) else {
             XCTFail("drop could not respond")
