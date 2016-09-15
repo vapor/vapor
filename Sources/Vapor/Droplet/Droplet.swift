@@ -356,7 +356,7 @@ public class Droplet {
 
         let chosenHash: HashProtocol?
 
-        if let method = config["crypto", "cipher", "method"]?.string {
+        if let method = config["crypto", "hash", "method"]?.string {
             let m: HMAC.Method?
             switch method {
             case "sha1":
