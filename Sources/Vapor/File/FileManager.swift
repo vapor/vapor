@@ -17,33 +17,33 @@ class FileManager {
     }
 
     // TODO: Try FileManager
-    static func fileAtPath(_ path: String) -> (exists: Bool, isDirectory: Bool) {
+    static func fileAtPath(_ path: String) -> (exists: Bool, isDirectory: Bool, status: stat) {
         var isDirectory = false
-        var s = stat()
-        if lstat(path, &s) >= 0 {
-            if (s.st_mode & S_IFMT) == S_IFLNK {
-                if stat(path, &s) >= 0 {
-                    isDirectory = (s.st_mode & S_IFMT) == S_IFDIR
+        var status = stat()
+        if lstat(path, &status) >= 0 {
+            if (status.st_mode & S_IFMT) == S_IFLNK {
+                if stat(path, &status) >= 0 {
+                    isDirectory = (status.st_mode & S_IFMT) == S_IFDIR
                 } else {
-                    return (false, isDirectory)
+                    return (false, isDirectory, status)
                 }
             } else {
-                isDirectory = (s.st_mode & S_IFMT) == S_IFDIR
+                isDirectory = (status.st_mode & S_IFMT) == S_IFDIR
             }
 
             // don't chase the link for this magic case -- we might be /Net/foo
             // which is a symlink to /private/Net/foo which is not yet mounted...
-            if (s.st_mode & S_IFMT) == S_IFLNK {
-                if (s.st_mode & S_ISVTX) == S_ISVTX {
-                    return (true, isDirectory)
+            if (status.st_mode & S_IFMT) == S_IFLNK {
+                if (status.st_mode & S_ISVTX) == S_ISVTX {
+                    return (true, isDirectory, status)
                 }
                 // chase the link; too bad if it is a slink to /Net/foo
-                let _ = stat(path, &s) >= 0
+                let _ = stat(path, &status) >= 0
             }
         } else {
-            return (false, isDirectory)
+            return (false, isDirectory, status)
         }
-        return (true, isDirectory)
+        return (true, isDirectory, status)
     }
 
     static func expandPath(_ path: String) throws -> String {
