@@ -35,7 +35,7 @@ class DropletTests: XCTestCase {
             found = true
         }
 
-        XCTAssert(found, "CSS Content Type not found")
+        XCTAssert(found, "CSS Content Type not found: \(response.headers)")
     }
 
     func testTLSConfig() throws {
