@@ -25,11 +25,12 @@ public class FileMiddleware: Middleware {
             
             var headers: [HeaderKey: String] = [:]
             
+            st_mtim
             // Generate ETag value, "HEX value of last modified date" + "-" + "file size"
-            #if !_POSIX_C_SOURCE || _DARWIN_C_SOURCE
-                let fileETag = String(format: "%x-%x", fileAttributes.status.st_mtimespec.tv_sec, fileAttributes.status.st_size)
+            #if os(Linux)
+                let fileETag = String(format: "%x-%x", fileAttributes.status.st_mtim.tv_sec, fileAttributes.status.st_size)
             #else
-                let fileETag = String(format: "%x-%x", fileAttributes.status.st_mtime, fileAttributes.status.st_size)
+                let fileETag = String(format: "%x-%x", fileAttributes.status.st_mtimespec.tv_sec, fileAttributes.status.st_size)
             #endif
             
             headers["ETag"] = fileETag
