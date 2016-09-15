@@ -18,7 +18,7 @@ final class User: Model {
         self.name = try node.extract("name")
     }
 
-    func makeNode() throws -> Node {
+    func makeNode(context: Context = EmptyNode) -> Node {
         return .null
     }
 

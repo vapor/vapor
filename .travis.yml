@@ -6,5 +6,5 @@ sudo: required
 dist: trusty
 osx_image: xcode8
 script:
-  - eval "$(curl -sL swift.qutheory.io/ci)"
-  - eval "$(curl -sL swift.qutheory.io/codecov)"
+  - eval "$(curl -sL https://swift.vapor.sh/ci)"
+  - eval "$(curl -sL https://swift.vapor.sh/codecov)"
