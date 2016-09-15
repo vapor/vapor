@@ -26,7 +26,12 @@ public class FileMiddleware: Middleware {
             var headers: [HeaderKey: String] = [:]
             
             // Generate ETag value, "HEX value of last modified date" + "-" + "file size"
-            let fileETag = String(format: "%x-%x", fileAttributes.status.st_mtimespec.tv_sec, fileAttributes.status.st_size)
+            #if !_POSIX_C_SOURCE || _DARWIN_C_SOURCE
+                let fileETag = String(format: "%x-%x", fileAttributes.status.st_mtimespec.tv_sec, fileAttributes.status.st_size)
+            #else
+                let fileETag = String(format: "%x-%x", fileAttributes.status.st_mtime, fileAttributes.status.st_size)
+            #endif
+            
             headers["ETag"] = fileETag
             
             // Check if file has been cached already and return NotModified response if the etags match
