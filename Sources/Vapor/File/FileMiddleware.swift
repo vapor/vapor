@@ -20,7 +20,7 @@ public class FileMiddleware: Middleware {
             if path.hasPrefix("/") {
                 path = String(path.characters.dropFirst())
             }
-            let filePath = publicDir + request.uri.path
+            let filePath = publicDir + path
 
             guard
                 let attributes = try? Foundation.FileManager.default.attributesOfItem(atPath: filePath),
