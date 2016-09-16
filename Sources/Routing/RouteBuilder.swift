@@ -2,8 +2,8 @@ import Foundation
 
 /**
     Conforming to RouteBuilder allows
-    and object to gain all of the available
-    route building extensions. 
+    an object to gain all of the available
+    route building extensions.
  
     This is useful for a class that has 
     a reference to a Router or another RouteBuilder
