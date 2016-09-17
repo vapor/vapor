@@ -65,16 +65,14 @@ public class Branch<Output> { // TODO: Rename Context
         The leading path that corresponds to this given branch.
     */
     public private(set) lazy var path: [String] = {
-        guard let parent = self.parent else { return [] }
-        return parent.path + [self.name]
+        return self.parent.map { $0.path + [self.name] } ?? []
     }()
 
     /**
         The current depth of a given tree branch. If tip of branch, returns `0`
     */
     public private(set) lazy var depth: Int = {
-        guard let parent = self.parent else { return 0 }
-        return 1 + parent.depth
+        return self.parent.map { $0.depth + 1 } ?? 0
     }()
 
     /**
@@ -114,8 +112,7 @@ public class Branch<Output> { // TODO: Rename Context
         Some branches are links in a chain, some are a destination that has output.
     */
     private var hasValidOutput: Bool {
-        guard let _ = value ?? fallback else { return false }
-        return true
+        return output != nil
     }
 
     /**
@@ -162,8 +159,6 @@ public class Branch<Output> { // TODO: Rename Context
     public func fetch(_ path: [String]) -> BranchResult<Output>? {
         return fetch(path.makeIterator())
     }
-
-
 
     /**
          This function will recursively traverse the branch
