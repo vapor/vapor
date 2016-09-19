@@ -494,7 +494,7 @@ public class Droplet {
             // if not config was supplied,
             // use whatever middlewares were
             // provided
-            serverEnabledMiddleware = Array(middleware.values)
+            serverEnabledMiddleware += Array(middleware.values)
         }
 
         self.enabledMiddleware = serverEnabledMiddleware.reversed()
