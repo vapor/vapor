@@ -76,7 +76,7 @@ https://bytefish.herokuapp.com
 
 # Emergency Numbers API
 
-An API that serves the emergency phone numbers for a given API.
+An API that serves the emergency phone numbers for a given country.
 
 ### Author
 
