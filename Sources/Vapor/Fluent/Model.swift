@@ -16,9 +16,9 @@ extension Model {
 // MARK: JSONRepresentable
 
 extension Model {
-    public func makeJSON() -> JSON {
-        let node = try! makeNode()
-        return try! JSON(node: node)
+    public func makeJSON() throws -> JSON {
+        let node = try makeNode()
+        return try JSON(node: node)
     }
 }
 
