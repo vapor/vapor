@@ -19,6 +19,23 @@ var workDir: String {
 import Auth
 import Fluent
 
+
+
+import Settings
+
+/*extension Droplet {
+    func addConfigurable<C: CipherProtocol & ConfigInitializable>(cipher: C.Type, name: String) throws {
+        let c = try cipher.init(config: config)
+        try addConfigurable(cipher: c, name: name)
+    }
+
+    func addConfigurable(cipher: CipherProtocol, name: String) throws {
+        if config["droplet", "cipher"]?.string == name {
+            self.cipher = cipher
+        }
+    }
+}*/
+
 final class TestUser: Model, Auth.User {
     var id: Node?
     var name: String
@@ -32,11 +49,11 @@ final class TestUser: Model, Auth.User {
         name = try node.extract("name")
     }
 
-    func makeNode() throws -> Node {
+    func makeNode(context: Context) throws -> Node {
         return try Node(node: [
             "id": id,
             "name": name
-            ])
+        ])
     }
 
     static func prepare(_ database: Database) throws {
@@ -68,12 +85,61 @@ final class TestUser: Model, Auth.User {
     }
 }
 
+
+let drop = Droplet(workDir: workDir)
 let sha512 = CryptoHasher(method: .sha512, defaultKey: [])
+drop.addConfigurable(hash: sha512, name: "mysha512")
 
 let auth = AuthMiddleware(user: TestUser.self)
+drop.addConfigurable(middleware: auth, name: "auth")
 
-let drop = Droplet(workDir: workDir, hash: sha512, availableMiddleware: ["auth": auth])
+
 let 😀 = Response(status: .ok)
+
+import Sessions
+import Node
+
+let sessions = MemorySessions()
+let s = SessionsMiddleware(sessions: sessions)
+
+
+drop.post("remember") { req in
+    guard let name = req.data["name"]?.string else {
+        throw Abort.badRequest
+    }
+
+    try req.session().data["name"] = Node.string(name)
+
+    return "Remebered name."
+}
+
+drop.get("remember") { req in
+    guard let name = try req.session().data["name"]?.string else {
+        return "Please submit your name first."
+    }
+
+    return name
+}
+
+final class UserzController: ResourceRepresentable {
+    func index(_ request: Request) throws -> ResponseRepresentable {
+        return try User.all().makeNode().converted(to: JSON.self)
+    }
+
+    func show(_ req: Request, _ user: User) throws -> ResponseRepresentable {
+        return user
+    }
+
+    func makeResource() -> Resource<User> {
+        return Resource(
+            index: index,
+            show: show
+        )
+    }
+}
+
+let users = UserzController()
+drop.resource("users", users)
 
 let hashed = try drop.hash.make("test")
 
@@ -130,7 +196,7 @@ var user = TestUser(name: "Vapor")
 try user.save()
 
 drop.post("login") { req in
-    guard let credentials = req.auth.header?.basic else {
+    guard let credentials = req.auth.header?.bearer else {
         throw Abort.badRequest
     }
 
@@ -628,4 +694,4 @@ drop.get("async") { request in
     }
 }
 
-drop.serve()
+drop.run()

@@ -10,6 +10,24 @@ extension Droplet {
         Runs the Droplet's commands, defaulting to serve.
     */
     public func run(_ closure: Serve.ServeFunction? = nil) -> Never  {
+        // the prepare command will run all
+        // of the supplied preparations on the database.
+        let prepare = Prepare(console: console, preparations: self.preparations, database: self.database)
+
+        // the serve command will boot the servers
+        // and always runs the prepare command
+        let serve = Serve(console: console, prepare: prepare) {
+            try self.bootServers()
+        }
+
+        // the version command prints the frameworks version.
+        let version = VersionCommand(console: console)
+
+        // adds the commands
+        commands.append(serve)
+        commands.append(prepare)
+        commands.append(version)
+
         do {
             try runCommands()
             exit(0)

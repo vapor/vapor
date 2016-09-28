@@ -26,7 +26,7 @@ extension Droplet: Responder {
         }
 
         // Loop through middlewares in order, then pass result to router responder
-        responder = enabledMiddleware.chain(to: routerResponder)
+        responder = middleware.chain(to: routerResponder)
 
         var response: Response
         do {
