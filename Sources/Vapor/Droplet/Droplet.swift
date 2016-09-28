@@ -283,28 +283,26 @@ public class Droplet {
             addConfigurable(hash: hash, name: name)
         }
 
-
-        // add in middleware depending on config
-        let configurableMiddleware: [String: Middleware] = [
-            "file": FileMiddleware(workDir: workDir),
-            "validation": ValidationMiddleware(),
-            "date": DateMiddleware(),
-            "type-safe": TypeSafeErrorMiddleware(),
-            "abort": AbortMiddleware(),
-            "sessions": SessionsMiddleware(sessions: MemorySessions())
-        ]
-
-        // if no configuration has been supplied
-        // apply all middleware
         if config["middleware", "server"]?.array == nil && config["droplet", "middleware", "server"]?.array == nil {
-            middleware = Array(configurableMiddleware.values)
+            // if no configuration has been supplied
+            // apply all middleware
+            middleware = [
+                SessionsMiddleware(sessions: MemorySessions()),
+                AbortMiddleware(),
+                DateMiddleware(),
+                TypeSafeErrorMiddleware(),
+                ValidationMiddleware(),
+                FileMiddleware(workDir: workDir),
+            ]
+        } else {
+            // add all configurable middleware
+            addConfigurable(middleware: SessionsMiddleware(sessions: MemorySessions()), name: "sessions")
+            addConfigurable(middleware: AbortMiddleware(), name: "abort")
+            addConfigurable(middleware: DateMiddleware(), name: "date")
+            addConfigurable(middleware: TypeSafeErrorMiddleware(), name: "type-safe")
+            addConfigurable(middleware: ValidationMiddleware(), name: "validation")
+            addConfigurable(middleware: FileMiddleware(workDir: workDir), name: "file")
         }
-
-        // add all middleware through configurable
-        for (name, middleware) in configurableMiddleware {
-            addConfigurable(middleware: middleware, name: name)
-        }
-
 
         // prepare for production mode
         if environment == .production {
