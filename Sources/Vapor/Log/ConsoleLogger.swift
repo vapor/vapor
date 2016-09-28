@@ -7,7 +7,7 @@ import Console
     - parameter level: LogLevel enum
     - parameter message: String to log
 */
-public class ConsoleLogger: Log {
+public class ConsoleLogger: LogProtocol {
     let console: ConsoleProtocol
 
     public var enabled: [LogLevel]

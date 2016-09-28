@@ -35,7 +35,7 @@ public struct Providable {
     /**
         An optional `Log` to provide to the droplet.
     */
-    public var log: Log?
+    public var log: LogProtocol?
 
     /**
         An optional `ViewRenderer` to provide to
@@ -73,7 +73,7 @@ public struct Providable {
         hash: HashProtocol? = nil,
         cipher: CipherProtocol? = nil,
         console: ConsoleProtocol? = nil,
-        log: Log? = nil,
+        log: LogProtocol? = nil,
         view: ViewRenderer? = nil,
         client: ClientProtocol.Type? = nil,
         database: Database? = nil,

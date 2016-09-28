@@ -89,7 +89,7 @@ public class Droplet {
         Send informational and error logs.
         Defaults to the console.
      */
-    public var log: Log
+    public var log: LogProtocol
 
     /**
         Provides access to the underlying
@@ -243,50 +243,10 @@ public class Droplet {
         providers = []
 
         // hash
-        let hashMethod: HMAC.Method
-        if let method = config["crypto", "hash", "method"]?.string {
-            switch method {
-            case "sha1":
-                hashMethod = .sha1
-            case "sha224":
-                hashMethod = .sha224
-            case "sha256":
-                hashMethod = .sha256
-            case "sha384":
-                hashMethod = .sha384
-            case "sha512":
-                hashMethod = .sha512
-            case "md4":
-                hashMethod = .md4
-            case "md5":
-                hashMethod = .md5
-            case "ripemd160":
-                hashMethod = .ripemd160
-            default:
-                hashMethod = .sha256
-            }
-        } else {
-            hashMethod = .sha256
-        }
         let hashKey = config["crypto", "hash", "key"]?.string?.bytes
-        hash = CryptoHasher(method: hashMethod, defaultKey: hashKey)
+        hash = CryptoHasher(method: .sha1, defaultKey: hashKey)
 
         // cipher
-        let cipherMethod: Cipher.Method
-        if let method = config["crypto", "cipher", "method"]?.string {
-            switch method {
-            case "chacha20":
-                cipherMethod = .chacha20
-            case "aes128":
-                cipherMethod = .aes128(.cbc)
-            case "aes256":
-                cipherMethod = .aes256(.cbc)
-            default:
-                cipherMethod = .chacha20
-            }
-        } else {
-            cipherMethod = .chacha20
-        }
         let cipherKey: Bytes
         if let k = config["crypto", "cipher", "key"]?.string {
             cipherKey = k.bytes
@@ -294,11 +254,38 @@ public class Droplet {
             cipherKey = Bytes(repeating: 0, count: 32)
         }
         let cipherIV = config["crypto", "cipher", "iv"]?.string?.bytes
-        cipher = CryptoCipher(method: cipherMethod, defaultKey: cipherKey, defaultIV: cipherIV)
+        cipher = CryptoCipher(method: .chacha20, defaultKey: cipherKey, defaultIV: cipherIV)
+
+        // add configurable ciphers
+        let ciphers: [String: Cipher.Method] = [
+            "chacha20": .chacha20,
+            "aes128": .aes128(.cbc),
+            "aes256": .aes256(.cbc)
+        ]
+        for (name, method) in ciphers {
+            let cipher = CryptoCipher(method: method, defaultKey: cipherKey, defaultIV: cipherIV)
+            addConfigurable(cipher: cipher, name: name)
+        }
+
+        // add configurable hashes
+        let hashes: [String: HMAC.Method] = [
+            "sha1": .sha1,
+            "sha224": .sha224,
+            "sha256": .sha256,
+            "sha384": .sha384,
+            "sha512": .sha512,
+            "md4": .md4,
+            "md5": .md5,
+            "ripemd160": .ripemd160
+        ]
+        for (name, method) in hashes {
+            let hash = CryptoHasher(method: method, defaultKey: hashKey)
+            addConfigurable(hash: hash, name: name)
+        }
 
 
         // add in middleware depending on config
-        var configurableMiddleware: [String: Middleware] = [
+        let configurableMiddleware: [String: Middleware] = [
             "file": FileMiddleware(workDir: workDir),
             "validation": ValidationMiddleware(),
             "date": DateMiddleware(),
@@ -307,31 +294,17 @@ public class Droplet {
             "sessions": SessionsMiddleware(sessions: MemorySessions())
         ]
 
-        if let array = config["middleware", "server"]?.array?.flatMap({ $0.string }) {
-            // add all middleware specified by
-            // config files
-            for name in array {
-                if let m = configurableMiddleware[name] {
-                    middleware.append(m)
-                }
-            }
-        } else {
-            // if not config was supplied,
-            // use whatever middlewares were
-            // provided
-            middleware += Array(configurableMiddleware.values)
+        // if no configuration has been supplied
+        // apply all middleware
+        if config["middleware", "server"]?.array == nil && config["droplet", "middleware", "server"]?.array == nil {
+            middleware = Array(configurableMiddleware.values)
         }
 
-        if let array = config["middleware", "client"]?.array?.flatMap({ $0.string }) {
-            // add all middleware specified by
-            // config files
-            for name in array {
-                if let m = configurableMiddleware[name] {
-                    let cm = client.defaultMiddleware
-                    client.defaultMiddleware = cm + [m]
-                }
-            }
+        // add all middleware through configurable
+        for (name, middleware) in configurableMiddleware {
+            addConfigurable(middleware: middleware, name: name)
         }
+
 
         // prepare for production mode
         if environment == .production {

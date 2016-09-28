@@ -2,7 +2,7 @@
     Logger protocol. Custom loggers must conform
     to this protocol
 */
-public protocol Log: class {
+public protocol LogProtocol {
     /**
         Enabled log levels. Only levels in this
         array should be logged.
@@ -16,3 +16,6 @@ public protocol Log: class {
     */
     func log(_ level: LogLevel, message: String, file: String, function: String, line: Int)
 }
+
+@available(*, deprecated: 1.0, message: "Use `LogProtocol` instead.")
+public typealias Log = LogProtocol

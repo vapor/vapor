@@ -76,6 +76,10 @@ extension Provider {
         }
     }
 
+    public func afterInit(_ drop: Droplet) {
+        //
+    }
+
     public var provided: Providable {
         return Providable()
     }

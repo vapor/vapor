@@ -58,6 +58,7 @@ extension Droplet: Responder {
         } catch {
             if environment == .production {
                 return ErrorView.shared.makeResponse(.internalServerError, "Something went wrong.")
+                log.error("Uncaught Error: \(type(of: error)).\(error)")
             } else {
                 let message = "Uncaught Error: \(type(of: error)).\(error). Use middleware to catch this error and provide a better response. Otherwise, a 500 error page will be returned in the production environment."
                 response = Response(

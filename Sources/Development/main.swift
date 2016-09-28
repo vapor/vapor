@@ -19,23 +19,6 @@ var workDir: String {
 import Auth
 import Fluent
 
-
-
-import Settings
-
-/*extension Droplet {
-    func addConfigurable<C: CipherProtocol & ConfigInitializable>(cipher: C.Type, name: String) throws {
-        let c = try cipher.init(config: config)
-        try addConfigurable(cipher: c, name: name)
-    }
-
-    func addConfigurable(cipher: CipherProtocol, name: String) throws {
-        if config["droplet", "cipher"]?.string == name {
-            self.cipher = cipher
-        }
-    }
-}*/
-
 final class TestUser: Model, Auth.User {
     var id: Node?
     var name: String

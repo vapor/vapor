@@ -31,7 +31,7 @@ let package = Package(
         Target(name: "Settings"),
 
         // Development and Testing
-        Target(name: "Development", dependencies: ["Vapor"]),
+        // Target(name: "Development", dependencies: ["Vapor"]),
         // Target(name: "Performance", dependencies: ["Vapor"]),
     ],
     dependencies: [
@@ -57,7 +57,7 @@ let package = Package(
         .Package(url: "https://github.com/vapor/leaf.git", majorVersion: 1),
     ],
     exclude: [
-        //"Sources/Development",
+        "Sources/Development",
         "Sources/Performance",
         "Sources/TypeSafeGenerator"
     ]

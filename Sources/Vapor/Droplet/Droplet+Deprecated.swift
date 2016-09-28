@@ -8,7 +8,7 @@ import Cipher
 import Transport
 
 extension Droplet {
-    @available(*, deprecated: 1.0, message: "This init method will be removed in a future update. Use `add` and `addConfigurable` methods instead.")
+    @available(*, deprecated: 1.0, message: "Use `add` and `addConfigurable` methods instead.")
     public convenience init(
         // non-providable
         arguments: [String]? = nil,
@@ -22,7 +22,7 @@ extension Droplet {
         hash: HashProtocol? = nil,
         cipher: CipherProtocol? = nil,
         console: ConsoleProtocol? = nil,
-        log: Log? = nil,
+        log: LogProtocol? = nil,
         view: ViewRenderer? = nil,
         client: ClientProtocol.Type? = nil,
         database: Database? = nil,
