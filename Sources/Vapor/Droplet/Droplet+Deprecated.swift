@@ -99,19 +99,53 @@ extension Droplet {
             self.cache = cache
         }
 
-        if let middleware = availableMiddleware {
+        self.client.defaultMiddleware = []
+
+        var middleware: [String: Middleware] = [
+            "file": FileMiddleware(workDir: workDir),
+            "validation": ValidationMiddleware(),
+            "date": DateMiddleware(),
+            "type-safe": TypeSafeErrorMiddleware(),
+            "abort": AbortMiddleware(),
+            "sessions": SessionsMiddleware(sessions: MemorySessions())
+        ]
+
+        for (name, m) in (availableMiddleware ?? [:]) {
+            middleware[name] = m
+        }
+
+
+        if let clients = clientMiddleware {
             for (name, middleware) in middleware {
-                if serverMiddleware?.contains(name) == true || clientMiddleware?.contains(name) == true {
-                    if serverMiddleware?.contains(name) == true {
-                        self.middleware.append(middleware)
-                    }
-                    if clientMiddleware?.contains(name) == true {
-                        self.client.defaultMiddleware.append(middleware)
-                    }
-                } else {
-                    addConfigurable(middleware: middleware, name: name)
+                if clients.contains(name) {
+                    let cm = self.client.defaultMiddleware
+                    self.client.defaultMiddleware = cm + [middleware]
                 }
             }
+        } else if let clients = config["middleware", "client"]?.array?.flatMap({ $0.string }) {
+            for (name, middleware) in middleware {
+                if clients.contains(name) {
+                    let cm = self.client.defaultMiddleware
+                    self.client.defaultMiddleware = cm + [middleware]
+                }
+            }
+        }
+
+        if let servers = serverMiddleware {
+            self.middleware = []
+            for (name, middleware) in middleware {
+                if servers.contains(name) {
+                    self.middleware.append(middleware)
+                }
+            }
+        } else if let servers = config["middleware", "server"]?.array?.flatMap({ $0.string }) {
+            for (name, middleware) in middleware {
+                if servers.contains(name) {
+                    self.middleware.append(middleware)
+                }
+            }
+        } else {
+            self.middleware += Array(middleware.values)
         }
 
         if let middleware = staticServerMiddleware {

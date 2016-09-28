@@ -7,7 +7,7 @@ import Core
 class SessionsTests: XCTestCase {
     static let allTests = [
         ("testExample", testExample),
-        ]
+    ]
 
     func testExample() throws {
         let s = MemorySessions()
@@ -35,7 +35,7 @@ class SessionsTests: XCTestCase {
         XCTAssertEqual(s.sessions[c], Node([
             "foo": "bar",
             "bar": "baz"
-            ]))
+        ]))
 
         let req2 = Request(method: .get, path: "get")
         req2.cookies["vapor-sessions"] = c

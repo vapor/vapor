@@ -5,6 +5,7 @@ import Sessions
 import HMAC
 import Cipher
 import Fluent
+import Transport
 
 public let VERSION = "1.0.2"
 
@@ -245,8 +246,8 @@ public class Droplet {
         self.localization = localization
 
         router = Router()
-        server = BasicServer.self
-        client = BasicClient.self
+        server = Server<TCPServerStream, Parser<Request>, Serializer<Response>>.self
+        client = Client<TCPClientStream, Serializer<Request>, Parser<Response>>.self
         middleware = []
         self.log = log
         self.console = console

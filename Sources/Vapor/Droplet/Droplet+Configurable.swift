@@ -41,7 +41,8 @@ extension Droplet {
         }
 
         if config["middleware", "client"]?.array?.flatMap({ $0.string }).contains(name) == true {
-            self.client.defaultMiddleware.append(middleware)
+            let cm = self.client.defaultMiddleware // FIXME: Weird Swift 3 BAD_ACCESS crash if not like this
+            self.client.defaultMiddleware = cm + [middleware]
         }
     }
 }

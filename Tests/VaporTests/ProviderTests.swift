@@ -16,19 +16,16 @@ class ProviderTests: XCTestCase {
     func testPrecedence() {
         let dc = DebugConsole()
         let drop = Droplet(server: SlowServer.self, console: dc, providers: [FastServerProvider.self])
-
-        XCTAssert(dc.outputBuffer.contains("FastServerProvider attempted to overwrite ServerProtocol.Type.\n"))
         XCTAssert(drop.server is SlowServer.Type)
     }
 
     func testOverride() {
         let dc = DebugConsole()
         let drop = Droplet(console: dc, providers: [
+            SlowServerProvider.self,
             FastServerProvider.self,
-            SlowServerProvider.self
         ])
 
-        XCTAssert(dc.outputBuffer.contains("SlowServerProvider attempted to overwrite ServerProtocol.Type.\n"))
         XCTAssert(drop.server is FastServer.Type)
     }
 
@@ -40,8 +37,7 @@ class ProviderTests: XCTestCase {
 
         let drop = Droplet(arguments: ["vapor", "serve"], console: dc, initializedProviders: [fast, slow])
 
-        XCTAssert(dc.outputBuffer.contains("SlowServerProvider attempted to overwrite ServerProtocol.Type.\n"))
-        XCTAssert(drop.server is FastServer.Type)
+        XCTAssert(drop.server is SlowServer.Type)
 
         XCTAssertEqual(fast.afterInitFlag, true)
         XCTAssertEqual(fast.beforeRunFlag, false)
