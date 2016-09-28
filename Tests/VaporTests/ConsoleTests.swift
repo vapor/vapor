@@ -14,7 +14,9 @@ class ConsoleTests: XCTestCase {
 
     func testCommandRun() {
         let console = TestConsoleDriver()
-        let drop = Droplet(arguments: ["/path/to/exe", "test-1"], console: console)
+        let drop = Droplet(arguments: ["/path/to/exe", "test-1"])
+
+        drop.console = console
 
         drop.commands = [
             TestOneCommand(console: console)
@@ -30,7 +32,9 @@ class ConsoleTests: XCTestCase {
 
     func testCommandInsufficientArgs() {
         let console = TestConsoleDriver()
-        let drop = Droplet(arguments: ["/path/to/exe", "test-2"], console: console)
+        let drop = Droplet(arguments: ["/path/to/exe", "test-2"])
+
+        drop.console = console
 
         let command = TestTwoCommand(console: console)
         drop.commands = [
@@ -47,7 +51,9 @@ class ConsoleTests: XCTestCase {
 
     func testVersionCommand() throws {
         let console = TestConsoleDriver()
-        let drop = Droplet(arguments: ["run", "version"], console: console)
+        let drop = Droplet(arguments: ["run", "version"])
+
+        drop.console = console
 
         let command = VersionCommand(console: console)
         drop.commands = [
@@ -59,7 +65,9 @@ class ConsoleTests: XCTestCase {
 
     func testCommandFetchArgs() {
         let console = TestConsoleDriver()
-        let drop = Droplet(arguments: ["/path/to/ext", "test-2", "123"], console: console)
+        let drop = Droplet(arguments: ["/path/to/ext", "test-2", "123"])
+
+        drop.console = console
 
         let command = TestTwoCommand(console: console)
         drop.commands = [
@@ -77,7 +85,9 @@ class ConsoleTests: XCTestCase {
 
     func testCommandFetchOptions() {
         let console = TestConsoleDriver()
-        let drop = Droplet(arguments: ["/path/to/ext", "test-2", "123", "--opt-1=abc"], console: console)
+        let drop = Droplet(arguments: ["/path/to/ext", "test-2", "123", "--opt-1=abc"])
+
+        drop.console = console
 
         let command = TestTwoCommand(console: console)
         drop.commands = [

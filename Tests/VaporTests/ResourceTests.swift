@@ -10,7 +10,9 @@ class ResourceTests: XCTestCase {
     ]
 
     func testBasic() throws {
-        let drop = Droplet(serverMiddleware: [])
+        let drop = Droplet()
+
+        drop.middleware = []
 
         let user = try User(from: "Hi")
         let node = user?.makeNode()

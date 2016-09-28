@@ -8,34 +8,42 @@ class ProviderTests: XCTestCase {
         ("testBasic", testBasic),
     ]
 
-    func testBasic() {
-        let drop = Droplet(providers: [FastServerProvider.self])
+    func testBasic() throws {
+        let drop = Droplet()
+
+        try drop.add(FastServerProvider.self)
+
         XCTAssert(drop.server is FastServer.Type)
     }
 
-    func testPrecedence() {
-        let dc = DebugConsole()
-        let drop = Droplet(server: SlowServer.self, console: dc, providers: [FastServerProvider.self])
+    func testPrecedence() throws {
+        let drop = Droplet()
+
+        drop.console = DebugConsole()
+        try drop.add(FastServerProvider.self)
+        drop.server = SlowServer.self
+
         XCTAssert(drop.server is SlowServer.Type)
     }
 
-    func testOverride() {
-        let dc = DebugConsole()
-        let drop = Droplet(console: dc, providers: [
-            SlowServerProvider.self,
-            FastServerProvider.self,
-        ])
+    func testOverride() throws {
+        let drop = Droplet()
+
+        drop.console = DebugConsole()
+        try drop.add(SlowServerProvider.self)
+        try drop.add(FastServerProvider.self)
 
         XCTAssert(drop.server is FastServer.Type)
     }
 
     func testInitialized() throws {
-        let dc = DebugConsole()
-
         let fast = try FastServerProvider(config: Config([:]))
         let slow = try SlowServerProvider(config: Config([:]))
 
-        let drop = Droplet(arguments: ["vapor", "serve"], console: dc, initializedProviders: [fast, slow])
+        let drop = Droplet(arguments: ["vapor", "serve"]) // , console: dc, initializedProviders: [fast, slow]
+        drop.console = DebugConsole()
+        drop.add(fast)
+        drop.add(slow)
 
         XCTAssert(drop.server is SlowServer.Type)
 

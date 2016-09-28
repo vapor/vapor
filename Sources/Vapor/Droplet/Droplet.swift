@@ -30,6 +30,10 @@ public class Droplet {
         return workDir + "Resources/"
     }
 
+    /**
+        Views directory relative to the
+        resources directory.
+    */
     public var viewsDir: String {
         return resourcesDir + "Views/"
     }
@@ -49,7 +53,6 @@ public class Droplet {
         strings and defaults.
     */
     public let localization: Localization
-
 
 
     /**
@@ -145,26 +148,6 @@ public class Droplet {
         The providers that have been added.
     */
     public internal(set) var providers: [Provider]
-
-    internal private(set) lazy var routerResponder: Request.Handler = Request.Handler { [weak self] request in
-        // Routed handler
-        if let handler = self?.router.route(request, with: request) {
-            return try handler.respond(to: request)
-        } else {
-            // Default not found handler
-            let normal: [HTTP.Method] = [.get, .post, .put, .patch, .delete]
-
-            if normal.contains(request.method) {
-                throw Abort.notFound
-            } else if case .options = request.method {
-                return Response(status: .ok, headers: [
-                    "Allow": "OPTIONS"
-                    ])
-            } else {
-                return Response(status: .notImplemented)
-            }
-        }
-    }
 
     /**
         Initialize the Droplet.
@@ -280,7 +263,6 @@ public class Droplet {
             case "ripemd160":
                 hashMethod = .ripemd160
             default:
-                log.error("Unsupported hash method: \(method), using SHA-256.")
                 hashMethod = .sha256
             }
         } else {
@@ -300,7 +282,6 @@ public class Droplet {
             case "aes256":
                 cipherMethod = .aes256(.cbc)
             default:
-                log.error("Unsupported cipher method: \(method), using Chacha20.")
                 cipherMethod = .chacha20
             }
         } else {
@@ -310,37 +291,10 @@ public class Droplet {
         if let k = config["crypto", "cipher", "key"]?.string {
             cipherKey = k.bytes
         } else {
-            log.error("No cipher key was set, using blank key.")
             cipherKey = Bytes(repeating: 0, count: 32)
         }
         let cipherIV = config["crypto", "cipher", "iv"]?.string?.bytes
         cipher = CryptoCipher(method: cipherMethod, defaultKey: cipherKey, defaultIV: cipherIV)
-
-        // verify cipher
-        if let c = cipher as? CryptoCipher {
-            switch c.method {
-            case .chacha20:
-                if cipherKey.count != 32 {
-                    log.error("Chacha20 cipher key must be 32 bytes.")
-                }
-                if cipherIV == nil {
-                    log.error("Chacha20 cipher requires an initialization vector (iv).")
-                } else if cipherIV?.count != 8 {
-                    log.error("Chacha20 initialization vector (iv) must be 8 bytes.")
-                }
-            case .aes128:
-                if cipherKey.count != 16 {
-                    log.error("AES-128 cipher key must be 16 bytes.")
-                }
-            case .aes256:
-                if cipherKey.count != 16 {
-                    log.error("AES-256 cipher key must be 16 bytes.")
-                }
-            default:
-                log.warning("Using unofficial cipher, ensure key and possibly initialization vector (iv) are set properly.")
-                break
-            }
-        }
 
 
         // add in middleware depending on config
@@ -353,14 +307,12 @@ public class Droplet {
             "sessions": SessionsMiddleware(sessions: MemorySessions())
         ]
 
-        if let array = config["middleware", "server"]?.array {
+        if let array = config["middleware", "server"]?.array?.flatMap({ $0.string }) {
             // add all middleware specified by
             // config files
-            for item in array {
-                if let name = item.string, let m = configurableMiddleware[name] {
+            for name in array {
+                if let m = configurableMiddleware[name] {
                     middleware.append(m)
-                } else {
-                    log.error("Invalid server middleware: \(item.string ?? "unknown")")
                 }
             }
         } else {
@@ -368,6 +320,17 @@ public class Droplet {
             // use whatever middlewares were
             // provided
             middleware += Array(configurableMiddleware.values)
+        }
+
+        if let array = config["middleware", "client"]?.array?.flatMap({ $0.string }) {
+            // add all middleware specified by
+            // config files
+            for name in array {
+                if let m = configurableMiddleware[name] {
+                    let cm = client.defaultMiddleware
+                    client.defaultMiddleware = cm + [m]
+                }
+            }
         }
 
         // prepare for production mode

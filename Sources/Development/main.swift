@@ -39,6 +39,7 @@ import Settings
 final class TestUser: Model, Auth.User {
     var id: Node?
     var name: String
+    var exists: Bool = false
 
     init(name: String) {
         self.name = name
@@ -87,8 +88,11 @@ final class TestUser: Model, Auth.User {
 
 
 let drop = Droplet(workDir: workDir)
-let sha512 = CryptoHasher(method: .sha512, defaultKey: [])
-drop.addConfigurable(hash: sha512, name: "mysha512")
+
+drop.hash = CryptoHasher(method: .sha512, defaultKey: [])
+drop.cipher = CryptoCipher(method: .aes128(.cbc), defaultKey: "asdfasdfasdfasdf".bytes, defaultIV: nil)
+
+
 
 let auth = AuthMiddleware(user: TestUser.self)
 drop.addConfigurable(middleware: auth, name: "auth")
