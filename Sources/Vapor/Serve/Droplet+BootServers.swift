@@ -2,83 +2,96 @@ import Core
 import HTTP
 import Transport
 
+public enum ServerConfig {
+    case http(name: String, host: String, port: Int, securityLayer: SecurityLayer)
+}
+
+// MARK: Booting
+
 extension Droplet {
-    func bootServers() throws {
-        if let servers = config["servers"]?.object {
-            var bootedServers = 0
-            for (key, server) in servers {
-                guard let _ = server.object else {
-                    console.output("Invalid server configuration for \(key).", style: .error, newLine: true)
-                    continue
-                }
-
-                try bootServer(name: key, isLastServer: bootedServers == servers.keys.count - 1)
-                bootedServers += 1
-            }
+    func bootServers(_ s: [ServerConfig]? = nil) throws {
+        let servers: [ServerConfig]
+        if let s = s {
+            servers = s
         } else {
-            log.debug("No 'servers.json' configuration found, using defaults.")
+            servers = parseServersConfig()
+        }
 
-            let host = config["servers", "default", "host"]?.string
-                ?? "0.0.0.0"
-            let port = config["servers", "default", "port"]?.int
-                ?? 8080
-            let security = config["servers", "default", "securityLayer"]?.string
-                ?? config["app", "securityLayer"]?.string
-                ?? "none"
-
-            let securityLayer = try parseSecurityLayer(security, name: "default")
-
-            var message = "Starting server at \(host):\(port)"
-            if securityLayer.isSecure {
-                message += " 🔒"
-            }
-
-            console.output(message, style: .info)
-            try server.start(
-                host: host, port: port,
-                securityLayer: securityLayer,
-                responder: self,
-                errors: self.serverErrors
-            )
-
+        var bootedServers = 0
+        for server in servers {
+            try bootServer(server, isLastServer: bootedServers == servers.count - 1)
+            bootedServers += 1
         }
     }
 
-    func bootServer(name: String, isLastServer: Bool) throws {
-        let security = config["servers", name, "securityLayer"]?.string ?? "none"
-        let securityLayer = try parseSecurityLayer(security, name: name)
+    func bootServer(_ server: ServerConfig, isLastServer: Bool) throws {
+        switch server {
+        case .http(name: let name, host: let host, port: let port, securityLayer: let securityLayer):
+            let runInBackground = !isLastServer
 
-        let host = config["servers", name, "host"]?.string ?? "0.0.0.0"
-        let port = config["servers", name, "port"]?.int ?? 8080
-
-        let runInBackground = !isLastServer
-
-        var message: [String] = []
-        message += "Server '\(name)' starting"
-        if runInBackground {
-            message += "in background"
-        }
-        message += "at \(host):\(port)"
-        if securityLayer.isSecure {
-            message += "🔒"
-        }
-        let info = message.joined(separator: " ")
-
-        if runInBackground {
-            _ = try background { [weak self] in
-                guard let welf = self else {
-                    return
-                }
-                do {
-                    welf.console.output(info, style: .info)
-                    try welf.server.start(host: host, port: port, securityLayer: securityLayer, responder: welf, errors: welf.serverErrors)
-                } catch {
-                    welf.console.output("Background server start error: \(error)", style: .error)
-                }
+            var message: [String] = []
+            message += "Server '\(name)' starting"
+            if runInBackground {
+                message += "in background"
             }
+            message += "at \(host):\(port)"
+            if securityLayer.isSecure {
+                message += "🔒"
+            }
+            let info = message.joined(separator: " ")
+
+            if runInBackground {
+                _ = try background { [weak self] in
+                    guard let welf = self else {
+                        return
+                    }
+                    do {
+                        welf.console.output(info, style: .info)
+                        try welf.server.start(host: host, port: port, securityLayer: securityLayer, responder: welf, errors: welf.serverErrors)
+                    } catch {
+                        welf.console.output("Background server start error: \(error)", style: .error)
+                    }
+                }
+            } else {
+                console.output(info, style: .info)
+                try self.server.start(host: host, port: port, securityLayer: securityLayer, responder: self, errors: serverErrors)
+            }
+        }
+    }
+
+}
+
+// MARK: Parsing
+
+extension Droplet {
+
+    func parseServersConfig() -> [ServerConfig] {
+        if let s = config["servers"]?.object {
+            var servers: [ServerConfig] = []
+            for (name, server) in s {
+                guard let _ = server.object else {
+                    log.warning("Invalid server configuration for '\(name)'.")
+                    continue
+                }
+
+                let security = config["servers", name, "securityLayer"]?.string ?? "none"
+                let securityLayer: SecurityLayer
+                do {
+                    securityLayer = try parseSecurityLayer(security, name: name)
+                } catch {
+                    log.warning("Invalid security layer for '\(name)'.")
+                    continue
+                }
+
+                let host = config["servers", name, "host"]?.string ?? "0.0.0.0"
+                let port = config["servers", name, "port"]?.int ?? 8080
+
+                servers.append(.http(name: name, host: host, port: port, securityLayer: securityLayer))
+            }
+            return servers
         } else {
-            console.output(info, style: .info)
-            try self.server.start(host: host, port: port, securityLayer: securityLayer, responder: self, errors: serverErrors)
+            log.debug("No 'servers.json' configuration found, using defaults.")
+            return [.http(name: "default", host: "0.0.0.0", port: 8080, securityLayer: .none)]
         }
     }
 

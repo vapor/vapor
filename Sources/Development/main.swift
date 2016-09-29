@@ -681,4 +681,13 @@ drop.get("async") { request in
     }
 }
 
-drop.run()
+let config = try TLS.Config(
+    mode: .server,
+    certificates: .files(certificateFile: "/Users/tanner/Desktop/certs/cert.pem", privateKeyFile: "/Users/tanner/Desktop/certs/key.pem", signature: .selfSigned),
+    verifyHost: true,
+    verifyCertificates: true
+)
+
+drop.run(servers: [
+    .http(name: "secure", host: "gertrude.codes", port: 8005, securityLayer: .tls(config)),
+])
