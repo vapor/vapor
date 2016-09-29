@@ -32,8 +32,6 @@ extension Droplet {
     }
 
     public func runCommands() throws {
-        verifyCipher()
-
         // the prepare command will run all
         // of the supplied preparations on the database.
         let prepare = Prepare(console: console, preparations: self.preparations, database: self.database)

@@ -1,15 +1,53 @@
+// MARK: Server
+
+extension Droplet {
+    public func addConfigurable(server: ServerProtocol.Type, name: String) {
+        if config["droplet", "server"]?.string == name {
+            self.server = server
+            log.debug("Using server '\(name)'.")
+        } else {
+            log.debug("Not using server '\(name)'.")
+        }
+    }
+}
+
+// MARK: Client
+
+extension Droplet {
+    public func addConfigurable(client: ClientProtocol.Type, name: String) {
+        if config["droplet", "client"]?.string == name {
+            self.client = client
+            log.debug("Using client '\(name)'.")
+        } else {
+            log.debug("Not using client '\(name)'.")
+        }
+    }
+}
+
+
+
 // MARK: Log
 
 extension Droplet {
     public func addConfigurable(log: LogProtocol, name: String) {
         if config["droplet", "log"]?.string == name {
             self.log = log
+            self.log.debug("Using log '\(name)'.")
+        } else {
+            self.log.debug("Not using log '\(name)'.")
         }
     }
 
     public func addConfigurable<L: LogProtocol & ConfigInitializable>(log: L.Type, name: String) throws {
-        if config["droplet", "log"]?.string == name {
-            self.log = try log.init(config: config)
+        do {
+            if config["droplet", "log"]?.string == name {
+                self.log = try log.init(config: config)
+                self.log.debug("Using log '\(name)'.")
+            } else {
+                self.log.debug("Not using log '\(name)'.")
+            }
+        } catch {
+            self.log.warning("Could not configure log '\(name)': \(error)")
         }
     }
 }
@@ -18,22 +56,24 @@ extension Droplet {
 
 extension Droplet {
     public func addConfigurable(hash: HashProtocol, name: String) {
-        if config["crypto", "hash", "method"]?.string == name {
-            log.warning("[DEPRECATED] Key `hash.method` in `crypto.json` will be removed in a future update. Use key `hash` in `droplet.json`.")
-            self.hash = hash
-        }
         if config["droplet", "hash"]?.string == name {
             self.hash = hash
+            log.debug("Using hash '\(name).")
+        } else {
+            log.debug("Not using hash '\(name)'.")
         }
     }
 
-    public func addConfigurable<H: HashProtocol & ConfigInitializable>(hash: H.Type, name: String) throws {
-        if config["crypto", "hash", "method"]?.string == name {
-            log.warning("[DEPRECATED] `hash.method` in `crypto.json` will be removed in a future update. Use key `hash` in `droplet.json`.")
-            self.hash = try hash.init(config: config)
-        }
-        if config["droplet", "hash"]?.string == name {
-            self.hash = try hash.init(config: config)
+    public func addConfigurable<H: HashProtocol & ConfigInitializable>(hash: H.Type, name: String) {
+        do {
+            if config["droplet", "hash"]?.string == name {
+                self.hash = try hash.init(config: config)
+                log.debug("Using hash '\(name).")
+            } else {
+                log.debug("Not using hash '\(name)'.")
+            }
+        } catch {
+            log.warning("Could not configure hash '\(name)': \(error)")
         }
     }
 }
@@ -42,23 +82,24 @@ extension Droplet {
 
 extension Droplet {
     public func addConfigurable(cipher: CipherProtocol, name: String) {
-        if config["crypto", "cipher", "method"]?.string == name {
-            log.warning("[DEPRECATED] Key `cipher.method` in `crypto.json` will be removed in a future update. Use key `cipher` in `droplet.json`.")
-            self.cipher = cipher
-        }
         if config["droplet", "cipher"]?.string == name {
             self.cipher = cipher
+            log.debug("Using cipher '\(name).")
+        } else {
+            log.debug("Not using cipher '\(name)'.")
         }
     }
 
-    public func addConfigurable<C: CipherProtocol & ConfigInitializable>(cipher: C.Type, name: String) throws {
-        if config["crypto", "cipher", "method"]?.string == name {
-            log.warning("[DEPRECATED] Key `cipher.method` in `crypto.json` will be removed in a future update. Use key `cipher` in `droplet.json`.")
-            self.cipher = try cipher.init(config: config)
-        }
-
-        if config["droplet", "cipher"]?.string == name {
-            self.cipher = try cipher.init(config: config)
+    public func addConfigurable<C: CipherProtocol & ConfigInitializable>(cipher: C.Type, name: String) {
+        do {
+            if config["droplet", "cipher"]?.string == name {
+                self.cipher = try cipher.init(config: config)
+                log.debug("Using cipher '\(name).")
+            } else {
+                log.debug("Not using cipher '\(name)'.")
+            }
+        } catch {
+            log.warning("Could not configure cipher '\(name)': \(error)")
         }
     }
 }
@@ -69,22 +110,32 @@ import HTTP
 
 extension Droplet {
     public func addConfigurable(middleware: Middleware, name: String) {
-        if config["middleware", "server"]?.array?.flatMap({ $0.string }).contains(name) == true {
-            log.warning("[DEPRECATED] Key `server` in `middleware.json` will be removed in a future update. Use key `middleware.server` in `droplet.json`.")
-            self.middleware.append(middleware)
-        }
         if config["droplet", "middleware", "server"]?.array?.flatMap({ $0.string }).contains(name) == true {
             self.middleware.append(middleware)
+
+            log.debug("Adding server middleware '\(name).")
+        } else if config["middleware", "server"]?.array?.flatMap({ $0.string }).contains(name) == true {
+            self.middleware.append(middleware)
+
+            log.warning("[DEPRECATED] Key `server` in `middleware.json` will be removed in a future update. Use key `middleware.server` in `droplet.json`.")
+            log.debug("Adding server middleware '\(name).")
+        } else {
+            log.debug("Not adding server middleware '\(name)'.")
         }
 
-        if config["middleware", "client"]?.array?.flatMap({ $0.string }).contains(name) == true {
-            log.warning("[DEPRECATED] Key `client` in `middleware.json` will be removed in a future update. Use key `middleware.client` in `droplet.json`.")
-            let cm = self.client.defaultMiddleware // FIXME: Weird Swift 3 BAD_ACCESS crash if not like this
-            self.client.defaultMiddleware = cm + [middleware]
-        }
         if config["droplet", "middleware", "client"]?.array?.flatMap({ $0.string }).contains(name) == true {
             let cm = self.client.defaultMiddleware
             self.client.defaultMiddleware = cm + [middleware]
+
+            log.debug("Adding client middleware '\(name)'.")
+        } else if config["middleware", "client"]?.array?.flatMap({ $0.string }).contains(name) == true {
+            let cm = self.client.defaultMiddleware // FIXME: Weird Swift 3 BAD_ACCESS crash if not like this
+            self.client.defaultMiddleware = cm + [middleware]
+
+            log.warning("[DEPRECATED] Key `client` in `middleware.json` will be removed in a future update. Use key `middleware.client` in `droplet.json`.")
+            log.debug("Adding client middleware '\(name)'.")
+        } else {
+            log.debug("Not adding client middleware '\(name)'.")
         }
     }
 }
@@ -97,12 +148,22 @@ extension Droplet {
     public func addConfigurable(console: ConsoleProtocol, name: String) {
         if config["droplet", "console"]?.string == name {
             self.console = console
+            log.debug("Using console '\(name)'.")
+        } else {
+            log.debug("Not using console '\(name)'.")
         }
     }
 
-    public func addConfigurable<C: ConsoleProtocol & ConfigInitializable>(console: C.Type, name: String) throws {
-        if config["droplet", "console"]?.string == name {
-            self.console = try console.init(config: config)
+    public func addConfigurable<C: ConsoleProtocol & ConfigInitializable>(console: C.Type, name: String) {
+        do {
+            if config["droplet", "console"]?.string == name {
+                self.console = try console.init(config: config)
+                log.debug("Using console '\(name)'.")
+            } else {
+                log.debug("Not using console '\(name)'.")
+            }
+        } catch {
+            log.warning("Could not configure console  '\(name)': \(error)")
         }
     }
 }

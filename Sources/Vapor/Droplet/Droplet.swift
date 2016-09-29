@@ -207,7 +207,7 @@ public class Droplet {
                     ]
                 )
             } catch {
-                log.error("Could not load configuration files: \(error)")
+                log.debug("Could not load configuration files: \(error)")
                 config = Config([:])
             }
         }
@@ -222,11 +222,13 @@ public class Droplet {
             do {
                 localization = try Localization(localizationDirectory: workDir + "Localization/")
             } catch {
-                log.error("Could not load localization files: \(error)")
+                log.debug("Could not load localization files: \(error)")
                 localization = Localization()
             }
         }
         self.localization = localization
+
+        // DEFAULTS
 
         router = Router()
         server = Server<TCPServerStream, Parser<Request>, Serializer<Response>>.self
@@ -242,46 +244,28 @@ public class Droplet {
         preparations = []
         providers = []
 
-        // hash
-        let hashKey = config["crypto", "hash", "key"]?.string?.bytes
-        hash = CryptoHasher(method: .sha1, defaultKey: hashKey)
-
-        // cipher
-        let cipherKey: Bytes
-        if let k = config["crypto", "cipher", "key"]?.string {
-            cipherKey = k.bytes
-        } else {
-            cipherKey = Bytes(repeating: 0, count: 32)
-        }
-        let cipherIV = config["crypto", "cipher", "iv"]?.string?.bytes
-        cipher = CryptoCipher(method: .chacha20, defaultKey: cipherKey, defaultIV: cipherIV)
-
-        // add configurable ciphers
-        let ciphers: [String: Cipher.Method] = [
-            "chacha20": .chacha20,
-            "aes128": .aes128(.cbc),
-            "aes256": .aes256(.cbc)
-        ]
-        for (name, method) in ciphers {
-            let cipher = CryptoCipher(method: method, defaultKey: cipherKey, defaultIV: cipherIV)
-            addConfigurable(cipher: cipher, name: name)
+        do {
+            hash = try CryptoHasher(config: config)
+        } catch {
+            hash = CryptoHasher(method: .sha1, defaultKey: [])
+            log.debug("Could not configure hash, using default: \(error)")
         }
 
-        // add configurable hashes
-        let hashes: [String: HMAC.Method] = [
-            "sha1": .sha1,
-            "sha224": .sha224,
-            "sha256": .sha256,
-            "sha384": .sha384,
-            "sha512": .sha512,
-            "md4": .md4,
-            "md5": .md5,
-            "ripemd160": .ripemd160
-        ]
-        for (name, method) in hashes {
-            let hash = CryptoHasher(method: method, defaultKey: hashKey)
-            addConfigurable(hash: hash, name: name)
+        do {
+            cipher = try CryptoCipher(config: config)
+        } catch {
+            cipher = CryptoCipher(
+                method: .chacha20,
+                defaultKey: Bytes(repeating: 0, count: 32),
+                defaultIV: Bytes(repeating: 0, count: 8)
+            )
+            log.debug("Could not configure cipher, using default: \(error)")
         }
+
+        // CONFIGURABLE
+
+        addConfigurable(hash: CryptoHasher.self, name: "crypto")
+        addConfigurable(cipher: CryptoCipher.self, name: "crypto")
 
         if config["middleware", "server"]?.array == nil && config["droplet", "middleware", "server"]?.array == nil {
             // if no configuration has been supplied
@@ -294,6 +278,7 @@ public class Droplet {
                 ValidationMiddleware(),
                 FileMiddleware(workDir: workDir),
             ]
+            log.debug("No `middleware.json` file found, using default middleware.")
         } else {
             // add all configurable middleware
             addConfigurable(middleware: SessionsMiddleware(sessions: MemorySessions()), name: "sessions")
@@ -304,10 +289,17 @@ public class Droplet {
             addConfigurable(middleware: FileMiddleware(workDir: workDir), name: "file")
         }
 
-        // prepare for production mode
-        if environment == .production {
+        // MISC
+
+        // change logging based on env
+        switch environment {
+        case .production:
             console.output("Production mode enabled, disabling informational logs.", style: .info)
             log.enabled = [.error, .fatal]
+        case .development:
+            log.enabled = [.info, .warning, .error, .fatal]
+        default:
+            log.enabled = LogLevel.all
         }
 
         // hook into all providers after init

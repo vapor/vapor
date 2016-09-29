@@ -52,12 +52,12 @@ extension Droplet {
 
         // create an array of all providers
         for provider in initializedProviders {
-            add(provider)
+            addProvider(provider)
         }
 
         for providerType in providerTypes {
             do {
-                try add(providerType)
+                try addProvider(providerType)
             } catch {
                 self.log.error("Could not initialize provider \(providerType): \(error)")
             }

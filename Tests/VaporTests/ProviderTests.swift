@@ -11,7 +11,7 @@ class ProviderTests: XCTestCase {
     func testBasic() throws {
         let drop = Droplet()
 
-        try drop.add(FastServerProvider.self)
+        try drop.addProvider(FastServerProvider.self)
 
         XCTAssert(drop.server is FastServer.Type)
     }
@@ -20,7 +20,7 @@ class ProviderTests: XCTestCase {
         let drop = Droplet()
 
         drop.console = DebugConsole()
-        try drop.add(FastServerProvider.self)
+        try drop.addProvider(FastServerProvider.self)
         drop.server = SlowServer.self
 
         XCTAssert(drop.server is SlowServer.Type)
@@ -30,8 +30,8 @@ class ProviderTests: XCTestCase {
         let drop = Droplet()
 
         drop.console = DebugConsole()
-        try drop.add(SlowServerProvider.self)
-        try drop.add(FastServerProvider.self)
+        try drop.addProvider(SlowServerProvider.self)
+        try drop.addProvider(FastServerProvider.self)
 
         XCTAssert(drop.server is FastServer.Type)
     }
@@ -42,8 +42,8 @@ class ProviderTests: XCTestCase {
 
         let drop = Droplet(arguments: ["vapor", "serve"]) // , console: dc, initializedProviders: [fast, slow]
         drop.console = DebugConsole()
-        drop.add(fast)
-        drop.add(slow)
+        drop.addProvider(fast)
+        drop.addProvider(slow)
 
         XCTAssert(drop.server is SlowServer.Type)
 
