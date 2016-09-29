@@ -277,8 +277,8 @@ public class Droplet {
 
         addConfigurable(server: Server<TCPServerStream, Parser<Request>, Serializer<Response>>.self, name: "engine")
         addConfigurable(client: Client<TCPClientStream, Serializer<Request>, Parser<Response>>.self, name: "engine")
-        addConfigurable(log: log, name: "console")
         addConfigurable(console: terminal, name: "terminal")
+        addConfigurable(log: log, name: "console")
         addConfigurable(hash: CryptoHasher.self, name: "crypto")
         addConfigurable(cipher: CryptoCipher.self, name: "crypto")
 
@@ -293,7 +293,7 @@ public class Droplet {
                 ValidationMiddleware(),
                 FileMiddleware(workDir: workDir),
             ]
-            log.debug("No `middleware.json` file found, using default middleware.")
+            log.debug("No `middleware.server` key in `droplet.json` found, using default middleware.")
         } else {
             // add all configurable middleware
             addConfigurable(middleware: SessionsMiddleware(sessions: MemorySessions()), name: "sessions")

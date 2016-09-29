@@ -16,7 +16,7 @@ extension Droplet {
                 bootedServers += 1
             }
         } else {
-            console.output("No servers.json configuration found.", style: .warning, newLine: true)
+            log.debug("No 'servers.json' configuration found, using defaults.")
 
             let host = config["servers", "default", "host"]?.string
                 ?? "0.0.0.0"
