@@ -689,5 +689,6 @@ let config = try TLS.Config(
 )
 
 drop.run(servers: [
-    .http(name: "secure", host: "gertrude.codes", port: 8005, securityLayer: .tls(config)),
+    "test": ("gertrude.codes", 8080, .none),
+    "secure": ("gertrude.codes", 8443, .tls(config)),
 ])
