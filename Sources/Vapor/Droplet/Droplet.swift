@@ -166,8 +166,28 @@ public class Droplet {
         self.arguments = arguments
 
         // logging is needed for emitting errors
-        let console = Terminal(arguments: arguments)
-        let log = ConsoleLogger(console: console)
+        let terminal = Terminal(arguments: arguments)
+        let log = ConsoleLogger(console: terminal)
+
+        // the current droplet environment
+        let environment: Environment
+        if let provided = environmentProvided {
+            environment = provided
+        } else {
+            environment = CommandLine.environment ?? .development
+        }
+        self.environment = environment
+
+        // change logging based on env
+        switch environment {
+        case .production:
+            terminal.output("Production mode enabled, disabling informational logs.", style: .info)
+            log.enabled = [.error, .fatal]
+        case .development:
+            log.enabled = [.info, .warning, .error, .fatal]
+        default:
+            log.enabled = LogLevel.all
+        }
 
         // use the working directory provided
         // or attempt to find a working directory
@@ -179,15 +199,6 @@ public class Droplet {
             workDir = Droplet.workingDirectory(from: arguments).finished(with: "/")
         }
         self.workDir = workDir.finished(with: "/")
-
-        // the current droplet environment
-        let environment: Environment
-        if let provided = environmentProvided {
-            environment = provided
-        } else {
-            environment = CommandLine.environment ?? .development
-        }
-        self.environment = environment
 
         // use the config item provided or
         // attempt to create a config from
@@ -235,7 +246,7 @@ public class Droplet {
         client = Client<TCPClientStream, Serializer<Request>, Parser<Response>>.self
         middleware = []
         self.log = log
-        self.console = console
+        console = terminal
         commands = []
         view = LeafRenderer(viewsDir: workDir + "Resources/Views")
         cache = MemoryCache()
@@ -264,6 +275,10 @@ public class Droplet {
 
         // CONFIGURABLE
 
+        addConfigurable(server: Server<TCPServerStream, Parser<Request>, Serializer<Response>>.self, name: "engine")
+        addConfigurable(client: Client<TCPClientStream, Serializer<Request>, Parser<Response>>.self, name: "engine")
+        addConfigurable(log: log, name: "console")
+        addConfigurable(console: terminal, name: "terminal")
         addConfigurable(hash: CryptoHasher.self, name: "crypto")
         addConfigurable(cipher: CryptoCipher.self, name: "crypto")
 
@@ -287,19 +302,6 @@ public class Droplet {
             addConfigurable(middleware: TypeSafeErrorMiddleware(), name: "type-safe")
             addConfigurable(middleware: ValidationMiddleware(), name: "validation")
             addConfigurable(middleware: FileMiddleware(workDir: workDir), name: "file")
-        }
-
-        // MISC
-
-        // change logging based on env
-        switch environment {
-        case .production:
-            console.output("Production mode enabled, disabling informational logs.", style: .info)
-            log.enabled = [.error, .fatal]
-        case .development:
-            log.enabled = [.info, .warning, .error, .fatal]
-        default:
-            log.enabled = LogLevel.all
         }
 
         // hook into all providers after init

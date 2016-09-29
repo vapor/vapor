@@ -58,7 +58,7 @@ extension Droplet {
     public func addConfigurable(hash: HashProtocol, name: String) {
         if config["droplet", "hash"]?.string == name {
             self.hash = hash
-            log.debug("Using hash '\(name).")
+            log.debug("Using hash '\(name)'.")
         } else {
             log.debug("Not using hash '\(name)'.")
         }
@@ -68,7 +68,7 @@ extension Droplet {
         do {
             if config["droplet", "hash"]?.string == name {
                 self.hash = try hash.init(config: config)
-                log.debug("Using hash '\(name).")
+                log.debug("Using hash '\(name)'.")
             } else {
                 log.debug("Not using hash '\(name)'.")
             }
@@ -84,7 +84,7 @@ extension Droplet {
     public func addConfigurable(cipher: CipherProtocol, name: String) {
         if config["droplet", "cipher"]?.string == name {
             self.cipher = cipher
-            log.debug("Using cipher '\(name).")
+            log.debug("Using cipher '\(name)'.")
         } else {
             log.debug("Not using cipher '\(name)'.")
         }
@@ -94,7 +94,7 @@ extension Droplet {
         do {
             if config["droplet", "cipher"]?.string == name {
                 self.cipher = try cipher.init(config: config)
-                log.debug("Using cipher '\(name).")
+                log.debug("Using cipher '\(name)'.")
             } else {
                 log.debug("Not using cipher '\(name)'.")
             }
@@ -113,12 +113,12 @@ extension Droplet {
         if config["droplet", "middleware", "server"]?.array?.flatMap({ $0.string }).contains(name) == true {
             self.middleware.append(middleware)
 
-            log.debug("Adding server middleware '\(name).")
+            log.debug("Adding server middleware '\(name)'.")
         } else if config["middleware", "server"]?.array?.flatMap({ $0.string }).contains(name) == true {
             self.middleware.append(middleware)
 
             log.warning("[DEPRECATED] Key `server` in `middleware.json` will be removed in a future update. Use key `middleware.server` in `droplet.json`.")
-            log.debug("Adding server middleware '\(name).")
+            log.debug("Adding server middleware '\(name)'.")
         } else {
             log.debug("Not adding server middleware '\(name)'.")
         }
