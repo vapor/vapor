@@ -23,15 +23,15 @@ extension Droplet {
             switch certsConfig {
             case "none":
                 certs = .none
-            case "files":
+            case "chain":
                 if let chain = tlsConfig["chainFile"]?.string {
                     let sig = parseTLSSignature(tlsConfig)
                     certs = .chain(chainFile: chain, signature: sig)
                 } else {
-                    log.error("No TLS chainFile supplied, defaulting to none.")
+                    log.error("No TLS `chainFile` supplied, defaulting to none.")
                     certs = .none
                 }
-            case "chain":
+            case "files":
                 if
                     let cert = tlsConfig["certificateFile"]?.string,
                     let key = tlsConfig["privateKeyFile"]?.string
@@ -39,7 +39,7 @@ extension Droplet {
                     let sig = parseTLSSignature(tlsConfig)
                     certs = .files(certificateFile: cert, privateKeyFile: key, signature: sig)
                 } else {
-                    log.error("No TLS certificateFile or privateKeyFile supplied, defaulting to none.")
+                    log.error("No TLS `certificateFile` or `privateKeyFile` supplied, defaulting to none.")
                     certs = .none
                 }
             case "ca":
