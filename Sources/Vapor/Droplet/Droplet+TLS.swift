@@ -1,13 +1,13 @@
 import TLS
 
 extension Droplet {
-    func parseTLSConfig(_ tlsConfig: [String: Polymorphic]) throws -> TLS.Config {
+    func parseTLSConfig(_ tlsConfig: [String: Polymorphic], mode: TLS.Mode) throws -> TLS.Config {
         let verifyHost = tlsConfig["verifyHost"]?.bool ?? true
         let verifyCertificates = tlsConfig["verifyCertificates"]?.bool ?? true
 
         let certs = parseTLSCertificates(tlsConfig)
         let config = try TLS.Config(
-            mode: .server,
+            mode: mode,
             certificates: certs,
             verifyHost: verifyHost,
             verifyCertificates: verifyCertificates
@@ -45,6 +45,8 @@ extension Droplet {
             case "ca":
                 let sig = parseTLSSignature(tlsConfig)
                 certs = .certificateAuthority(signature: sig)
+            case "mozilla":
+                certs = .mozilla
             default:
                 log.error("Unsupported TLS certificates \(certsConfig), defaulting to none.")
                 certs = .none

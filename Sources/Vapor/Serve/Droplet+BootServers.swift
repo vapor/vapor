@@ -111,7 +111,7 @@ extension Droplet {
         switch security {
         case "tls":
             if let tlsConfig = config["servers", name, "tls"]?.object {
-                let config = try parseTLSConfig(tlsConfig)
+                let config = try parseTLSConfig(tlsConfig, mode: .server)
                 securityLayer = .tls(config)
             } else {
                 log.warning("No TLS configuration supplied, using default.")

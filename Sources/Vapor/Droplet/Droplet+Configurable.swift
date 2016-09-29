@@ -13,11 +13,19 @@ extension Droplet {
 
 // MARK: Client
 
+import Transport
+
 extension Droplet {
     public func addConfigurable(client: ClientProtocol.Type, name: String) {
         if config["droplet", "client"]?.string == name {
             self.client = client
             log.debug("Using client '\(name)'.")
+
+            if let tls = config["clients", "tls"]?.object {
+                defaultClientConfig = {
+                    return try self.parseTLSConfig(tls, mode: .client)
+                }
+            }
         } else {
             log.debug("Not using client '\(name)'.")
         }
