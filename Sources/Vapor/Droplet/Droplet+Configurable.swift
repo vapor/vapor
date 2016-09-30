@@ -46,7 +46,7 @@ extension Droplet {
         }
     }
 
-    public func addConfigurable<L: LogProtocol & ConfigInitializable>(log: L.Type, name: String) throws {
+    public func addConfigurable<L: LogProtocol & ConfigInitializable>(log: L.Type, name: String) {
         do {
             if config["droplet", "log"]?.string == name {
                 self.log = try log.init(config: config)

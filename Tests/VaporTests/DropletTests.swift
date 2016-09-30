@@ -73,6 +73,8 @@ class DropletTests: XCTestCase {
             drop.run()
         }
 
+        sleep(2)
+
         let res = try drop.client.get("http://0.0.0.0:8080/foo")
         XCTAssertEqual(try res.bodyString(), "bar")
     }
@@ -97,6 +99,8 @@ class DropletTests: XCTestCase {
             drop.run()
         }
 
+        sleep(2)
+
         let res = try drop.client.get("http://0.0.0.0:8337/foo")
         XCTAssertEqual(try res.bodyString(), "bar")
     }
@@ -113,6 +117,8 @@ class DropletTests: XCTestCase {
                 "my-server": ("0.0.0.0", 8424, .none)
             ])
         }
+
+        sleep(2)
 
         let res = try drop.client.get("http://0.0.0.0:8424/foo")
         XCTAssertEqual(try res.bodyString(), "bar")
