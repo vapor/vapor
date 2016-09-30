@@ -2,6 +2,7 @@ import Essentials
 import HMAC
 import Hash
 import Core
+import libc
 
 /**
     Create SHA + HMAC hashes with the
