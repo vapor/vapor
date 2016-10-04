@@ -52,9 +52,10 @@ class MiddlewareTests: XCTestCase {
     }
 
     func testConfigDateProvided() throws {
-        let drop = Droplet(availableMiddleware: [
-            "foo": FooMiddleware()
-        ])
+        let drop = Droplet()
+
+        drop.middleware.append(FooMiddleware())
+
         drop.get { _ in
             return "Hello, world"
         }
@@ -66,9 +67,12 @@ class MiddlewareTests: XCTestCase {
     }
 
     func testMultiple() throws {
-        let drop = Droplet(availableMiddleware: [
-            "foo": FooMiddleware()
-        ], serverMiddleware: ["foo", "date"])
+        let drop = Droplet()
+
+        drop.middleware = [
+            FooMiddleware(),
+            DateMiddleware()
+        ]
 
         drop.get { _ in
             return "Hello, world"
@@ -90,9 +94,8 @@ class MiddlewareTests: XCTestCase {
             ]
         ])
 
-        let drop = Droplet(config: config, availableMiddleware: [
-            "foo": FooMiddleware()
-        ])
+        let drop = Droplet(config: config)
+        drop.addConfigurable(middleware: FooMiddleware(), name: "foo")
 
         let res = try drop.client.get("http://httpbin.org/headers")
 
@@ -107,9 +110,10 @@ class MiddlewareTests: XCTestCase {
     }
 
     func testConfigClientNotEnabled() throws {
-        let drop = Droplet(availableMiddleware: [
-            "foo": FooMiddleware()
-        ])
+        let drop = Droplet()
+
+        drop.client.defaultMiddleware = []
+        drop.middleware.append(FooMiddleware())
 
         let res = try drop.client.get("http://httpbin.org/headers")
 
@@ -119,16 +123,19 @@ class MiddlewareTests: XCTestCase {
     }
 
     func testConfigClientManual() throws {
-        let drop = Droplet(availableMiddleware: [
-            "foo": FooMiddleware()
-        ], clientMiddleware: ["foo"])
+        let drop = Droplet()
+        drop.client.defaultMiddleware = [FooMiddleware()]
+
 
         let res = try drop.client.get("http://httpbin.org/headers")
         XCTAssert(res.headers["bar"] != nil)
     }
 
     func testAbortMiddleware() throws {
-        let drop = Droplet(staticServerMiddleware: [AbortMiddleware()])
+        let drop = Droplet()
+
+        drop.middleware = [AbortMiddleware()]
+
         drop.get("*") { req in
             let path = req.uri.path
             print(path)
@@ -166,7 +173,10 @@ class MiddlewareTests: XCTestCase {
 
 
     func testValidationMiddleware() throws {
-        let drop = Droplet(staticServerMiddleware: [ValidationMiddleware()])
+        let drop = Droplet()
+
+        drop.middleware.append(ValidationMiddleware())
+        
         drop.get("*") { req in
             let validPath = try req.uri.path.validated(by: Count.max(10))
             return validPath.value
