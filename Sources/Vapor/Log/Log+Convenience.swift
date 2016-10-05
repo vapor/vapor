@@ -1,4 +1,4 @@
-extension Log {
+extension LogProtocol {
     /**
      Logs verbose messages if .Verbose is enabled
      

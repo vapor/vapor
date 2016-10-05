@@ -2,12 +2,13 @@ import Essentials
 import HMAC
 import Hash
 import Core
+import libc
 
 /**
     Create SHA + HMAC hashes with the
     Hash class by applying this driver.
 */
-public class CryptoHasher: HashProtocol {
+public final class CryptoHasher: HashProtocol {
     public let method: HMAC.Method
 
     /**
@@ -47,6 +48,7 @@ public class CryptoHasher: HashProtocol {
 
     public enum Error: Swift.Error {
         case hashWithoutKeyUnsupported
+        case config(String)
     }
 }
 
@@ -72,5 +74,41 @@ extension HMAC.Method {
         default:
             throw CryptoHasher.Error.hashWithoutKeyUnsupported
         }
+    }
+}
+
+extension CryptoHasher: ConfigInitializable {
+    public convenience init(config: Settings.Config) throws {
+        guard let methodString = config["crypto", "hash", "method"]?.string else {
+            throw Error.config("No `hash.method` found in `crypto.json` config.")
+        }
+
+        let method: HMAC.Method
+        switch methodString {
+        case "sha1":
+            method = .sha1
+        case "sha224":
+            method = .sha224
+        case "sha256":
+            method = .sha256
+        case "sha384":
+            method = .sha384
+        case "sha512":
+            method = .sha512
+        case "md4":
+            method = .md4
+        case "md5":
+            method = .md5
+        case "ripemd160":
+            method = .ripemd160
+        default:
+            throw Error.config("Unknown hash method '\(methodString)'.")
+        }
+
+        guard let key = config["crypto", "hash", "key"]?.string?.bytes else {
+            throw Error.config("No `hash.key` found in `crypto.json` config.")
+        }
+
+        self.init(method: method, defaultKey: key)
     }
 }
