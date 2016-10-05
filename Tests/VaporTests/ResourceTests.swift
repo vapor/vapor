@@ -16,7 +16,7 @@ class ResourceTests: XCTestCase {
 
         let user = try User(from: "Hi")
         let node = try user?.makeNode()
-        XCTAssertEqual(node, .null)
+        XCTAssertEqual(node, .object(["name":"Hi"]))
 
         drop.resource("users", User.self) { users in
             users.index = { req in

@@ -24,10 +24,7 @@ final class User: Model {
     }
 
     func makeNode(context: Context) throws -> Node {
-        return try  Node(node:[
-            "id": id,
-            "name": name
-            ])
+        return try  Node(node:["name": name])
     }
 
     static func prepare(_ db: Database) throws { }

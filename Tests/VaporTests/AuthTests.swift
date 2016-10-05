@@ -6,7 +6,7 @@ import XCTest
 
 class AuthTests: XCTestCase {
     static let allTests = [
-        ("testUserLogin", testUserLogin)
+        ("testUserLoginAndOut", testUserLoginAndOut),
     ]
     
     var memory:Database!
@@ -22,11 +22,11 @@ class AuthTests: XCTestCase {
         
         droplet.database = self.memory
         droplet.middleware.append(authMiddleware)
-        droplet.preparations.append(User.self) // REMOVE ?
         
         //creates dummy user
+        User.database = self.memory
+
         do {
-            User.database = self.memory
             var user = User(name:"John")
             try user.save()
             
@@ -36,7 +36,7 @@ class AuthTests: XCTestCase {
         
     }
     
-    func testUserLogin() throws {
+    func testUserLoginAndOut() throws {
         
         let request = Request(method: .get, path: "login")
         
