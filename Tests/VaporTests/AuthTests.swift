@@ -9,22 +9,23 @@ class AuthTests: XCTestCase {
         ("testUserLoginAndOut", testUserLoginAndOut),
     ]
     
-    var memory:Database!
+    var database:Database!
     var droplet:Droplet!
     
     
     override func setUp() {
         
         //setup droplet
-        let authMiddleware = AuthMiddleware(user: User.self)
-        self.memory = Database(MemoryDriver())
-        self.droplet = Droplet()
+        database = Database(MemoryDriver())
+        droplet = Droplet()
         
-        droplet.database = self.memory
+        droplet.database = database
+        
+        let authMiddleware = AuthMiddleware(user: User.self)
         droplet.middleware.append(authMiddleware)
         
         //creates dummy user
-        User.database = self.memory
+        User.database = database
 
         do {
             var user = User(name:"John")
@@ -68,6 +69,7 @@ class AuthTests: XCTestCase {
         
         let res = try droplet.respond(to: request)
         XCTAssertEqual(res.status, .ok)
+        XCTAssertNil(res.cookies["vapor-auth"])
         XCTAssertEqual(res.data["message"]?.string, "User logged out")
     }
 
@@ -83,7 +85,7 @@ extension User: Auth.User {
     }
     
     public static func register(credentials: Credentials) throws -> Auth.User {
-        //not mandatory
+        //required but not used
         return User(name: "Dummy user")
     }
     
