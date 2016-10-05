@@ -38,10 +38,10 @@ class AuthTests: XCTestCase {
     }
     
     func testUserLoginAndOut() throws {
-        
         let request = Request(method: .get, path: "login")
         
         droplet.get("login") { req in
+            
             try req.auth.login(Identifier(id:1)) // id of first item inserted
             return try req.auth.user().converted(to: JSON.self)
         }
@@ -52,18 +52,22 @@ class AuthTests: XCTestCase {
         XCTAssertEqual(res.data["name"]?.string, "John")
         XCTAssertNotNil(res.cookies["vapor-auth"])
         
-        try testUserLogout(with: res)
+        try testUserLogout(with: res) //try to logout with content of response (w/ cookies etc.)
         
     }
     
     func testUserLogout(with response:Response) throws {
         let request = Request(method: .get, path: "logout")
         request.cookies = response.cookies
+        
         droplet.get("logout") { req in
+            
             guard let user = try req.auth.user() as? User, user.id == 1 else {
                 throw User.Error.userNotLoggedIn
             }
+            
             try req.auth.logout()
+            
             return JSON(["message": "User logged out"])
         }
         
@@ -74,6 +78,11 @@ class AuthTests: XCTestCase {
     }
 
 }
+
+/**
+    Utilities/User.swift conforms to Auth.User
+    in order to log it in & out.
+ */
 
 extension User: Auth.User {
     
