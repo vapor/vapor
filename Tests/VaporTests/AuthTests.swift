@@ -6,7 +6,9 @@ import XCTest
 
 class AuthTests: XCTestCase {
     static let allTests = [
-        ("testUserLoginAndOut", testUserLoginAndOut),
+        ("testUserLogin", testUserLogin),
+        ("testProtectedRoute", testProtectedRoute),
+        ("testUserLogout", testUserLogout)
     ]
     
     var database:Database!
@@ -24,52 +26,91 @@ class AuthTests: XCTestCase {
         let authMiddleware = AuthMiddleware(user: User.self)
         droplet.middleware.append(authMiddleware)
         
-        //creates dummy user
-        User.database = database
-
-        do {
-            var user = User(name:"John")
-            try user.save()
-            
-        } catch {
-            XCTFail("Could not create User")
-        }
-        
     }
     
-    func testUserLoginAndOut() throws {
-        let request = Request(method: .get, path: "login")
+    /**
+        Logs in a basic user with provided credentials.
+        Can be used in any tests requiring auth.
+        Will provide a response with an auth cookie only
+        with an Identifier with an id of 1.
+    */
+    
+    func login(credentials:Identifier) throws -> Response {
         
+        //First : creates a dummy user with an Id of 1 if not exists
+        User.database = self.database
+        var user = try User.find(1)
+        if user == nil {
+            user = User(name: "John")
+            try user!.save()
+        }
+        
+        //Second : Bind the login request to a registered "login" route
+        let login = Request(method: .get, path: "login")
         droplet.get("login") { req in
             
-            try req.auth.login(Identifier(id:1)) // id of first item inserted
+            try req.auth.login(credentials) // id of first item inserted
             return try req.auth.user().converted(to: JSON.self)
         }
         
-        let res = try droplet.respond(to: request)
+        //Third : If successful, returns a response containing the user logged in as JSON and vapor-auth cookie
         
-        XCTAssertEqual(res.status, .ok)
-        XCTAssertEqual(res.data["name"]?.string, "John")
-        XCTAssertNotNil(res.cookies["vapor-auth"])
+        return try droplet.respond(to: login)
+    }
+    
+    func testUserLogin() throws {
         
-        try testUserLogout(with: res) //try to logout with content of response (w/ cookies etc.)
+        let authenticated = try login(credentials:Identifier(id:1))
+        XCTAssertEqual(authenticated.status, .ok)
+        XCTAssertEqual(authenticated.data["name"]?.string, "John")
+        XCTAssertNotNil(authenticated.cookies["vapor-auth"])
+        
+        let notAuthenticated = try login(credentials:Identifier(id:2)) // user with id of 2 does not exist in the database
+        XCTAssertNotEqual(notAuthenticated.status, .ok)
+        XCTAssertNil(notAuthenticated.cookies["vapor-auth"])
         
     }
     
-    func testUserLogout(with response:Response) throws {
-        let request = Request(method: .get, path: "logout")
-        request.cookies = response.cookies
+    func testProtectedRoute() throws {
+        
+        let protectMiddleware = ProtectMiddleware(error: Abort.custom(status: .methodNotAllowed, message: ""))
+        
+        droplet.group(protectMiddleware) { secure in
+            secure.get("secure") { req in
+                return try req.auth.user().converted(to: JSON.self)
+            }
+        }
+        
+        let secure = Request(method: .get, path:"secure")
+
+        var protected = try droplet.respond(to: secure)
+        XCTAssertEqual(protected.status, .methodNotAllowed) // thrown from ProtectMiddleware
+        
+        let authenticated = try login(credentials:Identifier(id:1))
+        secure.cookies = authenticated.cookies //set appropriate login cookie
+        
+        protected = try droplet.respond(to: secure)
+        XCTAssertEqual(protected.status, .ok)
+        XCTAssertEqual(protected.data["name"]?.string, "John")
+
+    }
+    
+    func testUserLogout() throws {
         
         droplet.get("logout") { req in
             
-            guard let user = try req.auth.user() as? User, user.id == 1 else {
-                throw User.Error.userNotLoggedIn
-            }
-            
+            let user = try req.auth.user() as? User
+            XCTAssertNotNil(user)
+            XCTAssertEqual(user?.id, 1)
             try req.auth.logout()
             
             return JSON(["message": "User logged out"])
         }
+        
+        let request = Request(method: .get, path: "logout")
+        
+        let authenticated = try login(credentials: Identifier(id:1))
+        request.cookies = authenticated.cookies //set appropriate login cookie
         
         let res = try droplet.respond(to: request)
         XCTAssertEqual(res.status, .ok)
@@ -86,13 +127,6 @@ class AuthTests: XCTestCase {
 
 extension User: Auth.User {
     
-    enum Error:Swift.Error {
-        case invalidCredentialType
-        case userNotFound
-        case userNotLoggedIn
-        case notAllowed
-    }
-    
     public static func register(credentials: Credentials) throws -> Auth.User {
         //required but not used
         return User(name: "Dummy user")
@@ -100,18 +134,14 @@ extension User: Auth.User {
     
     public static func authenticate(credentials: Credentials) throws -> Auth.User {
         
-        guard let id = credentials as? Identifier else {
-            throw Error.invalidCredentialType
+        let id = credentials as? Identifier
+        XCTAssertNotNil(id)
+        
+        guard let user = try User.find(id!.id) else {
+            throw Abort.custom(status: .methodNotAllowed, message: "")
         }
         
-        let user = try User.find(id.id)
-        
-        guard let u = user else {
-            throw Error.userNotFound
-        }
-        
-        return u
-        
+        return user
     }
 
 }
