@@ -12,16 +12,21 @@ final class User: Model {
         
         self.name = string
     }
+    
+    init(name: String) {
+        self.id = nil
+        self.name = name
+    }
 
     init(node: Node, in context: Context) throws {
-        self.id = nil
+        self.id = try node.extract("id")
         self.name = try node.extract("name")
     }
 
-    func makeNode(context: Context = EmptyNode) -> Node {
-        return .null
+    func makeNode(context: Context) throws -> Node {
+        return try  Node(node:["name": name])
     }
 
-    static func prepare(_ db: Database) {}
-    static func revert(_ db: Database) {}
+    static func prepare(_ db: Database) throws { }
+    static func revert(_ db: Database) throws { }
 }
