@@ -34,15 +34,13 @@ class AuthTests: XCTestCase {
         Will provide a response with an auth cookie only
         with an Identifier with an id of 1.
     */
-    
     func login(credentials:Identifier) throws -> Response {
         
         //First : creates a dummy user with an Id of 1 if not exists
         User.database = self.database
-        var user = try User.find(1)
-        if user == nil {
-            user = User(name: "John")
-            try user!.save()
+        if try User.find(1) == nil {
+            var user = User(name: "John")
+            try user.save()
         }
         
         //Second : Bind the login request to a registered "login" route
@@ -54,18 +52,17 @@ class AuthTests: XCTestCase {
         }
         
         //Third : If successful, returns a response containing the user logged in as JSON and vapor-auth cookie
-        
         return try droplet.respond(to: login)
     }
     
     func testUserLogin() throws {
         
-        let authenticated = try login(credentials:Identifier(id:1))
+        let authenticated = try login(credentials: Identifier(id:1))
         XCTAssertEqual(authenticated.status, .ok)
         XCTAssertEqual(authenticated.data["name"]?.string, "John")
         XCTAssertNotNil(authenticated.cookies["vapor-auth"])
         
-        let notAuthenticated = try login(credentials:Identifier(id:2)) // user with id of 2 does not exist in the database
+        let notAuthenticated = try login(credentials: Identifier(id:2)) // user with id of 2 does not exist in the database
         XCTAssertNotEqual(notAuthenticated.status, .ok)
         XCTAssertNil(notAuthenticated.cookies["vapor-auth"])
         
@@ -134,10 +131,10 @@ extension User: Auth.User {
     
     public static func authenticate(credentials: Credentials) throws -> Auth.User {
         
-        let id = credentials as? Identifier
-        XCTAssertNotNil(id)
+        let identifier = credentials as? Identifier
+        XCTAssertNotNil(identifier)
         
-        guard let user = try User.find(id!.id) else {
+        guard let id = identifier?.id, let user = try User.find(id) else {
             throw Abort.custom(status: .methodNotAllowed, message: "")
         }
         
