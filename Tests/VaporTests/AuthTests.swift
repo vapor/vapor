@@ -57,12 +57,12 @@ class AuthTests: XCTestCase {
     
     func testUserLogin() throws {
         
-        let authenticated = try login(credentials: Identifier(id:1))
+        let authenticated = try login(credentials: Identifier(id: 1))
         XCTAssertEqual(authenticated.status, .ok)
         XCTAssertEqual(authenticated.data["name"]?.string, "John")
         XCTAssertNotNil(authenticated.cookies["vapor-auth"])
         
-        let notAuthenticated = try login(credentials: Identifier(id:2)) // user with id of 2 does not exist in the database
+        let notAuthenticated = try login(credentials: Identifier(id: 2)) // user with id of 2 does not exist in the database
         XCTAssertNotEqual(notAuthenticated.status, .ok)
         XCTAssertNil(notAuthenticated.cookies["vapor-auth"])
         
@@ -83,7 +83,7 @@ class AuthTests: XCTestCase {
         var protected = try droplet.respond(to: secure)
         XCTAssertEqual(protected.status, .methodNotAllowed) // thrown from ProtectMiddleware
         
-        let authenticated = try login(credentials:Identifier(id:1))
+        let authenticated = try login(credentials:Identifier(id: 1))
         secure.cookies = authenticated.cookies //set appropriate login cookie
         
         protected = try droplet.respond(to: secure)
@@ -106,7 +106,7 @@ class AuthTests: XCTestCase {
         
         let request = Request(method: .get, path: "logout")
         
-        let authenticated = try login(credentials: Identifier(id:1))
+        let authenticated = try login(credentials: Identifier(id: 1))
         request.cookies = authenticated.cookies //set appropriate login cookie
         
         let res = try droplet.respond(to: request)
