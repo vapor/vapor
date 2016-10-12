@@ -7,7 +7,7 @@ import Console
     - parameter level: LogLevel enum
     - parameter message: String to log
 */
-public class ConsoleLogger: Log {
+public class ConsoleLogger: LogProtocol {
     let console: ConsoleProtocol
 
     public var enabled: [LogLevel]
@@ -30,8 +30,13 @@ public class ConsoleLogger: Log {
         - parameter function: String where logging happens, is automatically set on default
         - parameter line: String where logging happens, is automatically set on default
      */
-    public func log(_ level: LogLevel, message: String,
-                    file: String = #file, function: String = #function, line: Int = #line) {
+    public func log(
+        _ level: LogLevel,
+        message: String,
+        file: String = #file,
+        function: String = #function,
+        line: Int = #line
+    ) {
         if enabled.contains(level) {
             console.output(message, style: level.consoleStyle)
         }

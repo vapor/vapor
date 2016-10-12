@@ -12,7 +12,7 @@ final class User: Model {
         self.name = try node.extract("name")
     }
 
-    func makeNode() throws -> Node {
+    func makeNode(context: Context) throws -> Node {
         return try Node(node: [
             "name": name
         ])
