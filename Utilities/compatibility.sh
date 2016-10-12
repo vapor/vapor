@@ -25,14 +25,14 @@ OS=`uname`
 if [[ $OS == "Darwin" ]]; # macOS
 then
     XCBVERSION=`xcodebuild -version`
-    if [[ $XCBVERSION != *"Xcode 8.0"* ]];
+    if [[ $XCBVERSION != *"Xcode 8"* ]];
     then
         echo "⚠️  It looks like your Command Line Tools version is incorrect."
         echo ""
         echo "Open Xcode and make sure the correct SDK is selected:"
         echo "👀  Xcode > Preferences > Locations > Command Line Tools"
         echo ""
-        echo "Correct: Xcode 8.0 (Any Build Number)"
+        echo "Correct: Xcode 8.x (Any Build Number)"
         echo "Current: $XCBVERSION"
         echo ""
         help

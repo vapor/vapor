@@ -18,11 +18,7 @@ extension RouteGroup: RouteBuilder {
         // any nil values encountered should be pulled
         // from the incoming path
         for (i, p) in self.prefix.enumerated() {
-            if let p = p {
-                start.append(p)
-            } else {
-                start.append(incomingPath[i])
-            }
+            start.append(p ?? incomingPath[i])
         }
 
         // create the resulting path by combining the

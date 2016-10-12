@@ -7,12 +7,14 @@ import Core
 class SessionsTests: XCTestCase {
     static let allTests = [
         ("testExample", testExample),
-        ]
+    ]
 
     func testExample() throws {
+        let drop = Droplet()
+
         let s = MemorySessions()
         let m = SessionsMiddleware(sessions: s)
-        let drop = Droplet(availableMiddleware: ["sessions": m])
+        drop.middleware = [m]
 
         drop.get("set") { req in
             try req.session().data["foo"] = "bar"
@@ -35,7 +37,7 @@ class SessionsTests: XCTestCase {
         XCTAssertEqual(s.sessions[c], Node([
             "foo": "bar",
             "bar": "baz"
-            ]))
+        ]))
 
         let req2 = Request(method: .get, path: "get")
         req2.cookies["vapor-sessions"] = c

@@ -18,6 +18,10 @@ public final class Helper {
     public func login(_ credentials: Credentials, persist: Bool = true) throws {
         return try request.subject().login(credentials: credentials, persist: persist)
     }
+    
+    public func logout() throws {
+        return try request.subject().logout()
+    }
 
     public func user() throws -> User {
         let subject = try request.subject()

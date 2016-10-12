@@ -1,17 +1,16 @@
 import XCTest
 @testable import Vapor
 import HTTP
+import Core
 
 class DropletTests: XCTestCase {
     static let allTests = [
-        ("testMediaType", testMediaType)
+        ("testMediaType", testMediaType),
+        ("testTLSConfig", testTLSConfig),
+        ("testRunDefaults", testRunDefaults),
+        ("testRunConfig", testRunConfig),
+        ("testRunManual", testRunManual),
     ]
-
-    var workDir: String {
-        let parent = #file.characters.split(separator: "/").map(String.init).dropLast().joined(separator: "/")
-        let path = "/\(parent)/../../Sources/Development/"
-        return path
-    }
 
     /**
         Ensures requests to files like CSS
@@ -19,7 +18,14 @@ class DropletTests: XCTestCase {
         headers returned.
     */
     func testMediaType() throws {
-        let drop = Droplet(workDir: workDir, serverMiddleware: ["file"])
+        let parent = #file.characters.split(separator: "/").map(String.init).dropLast().joined(separator: "/")
+        let workDir = "/\(parent)/../../Sources/Development/"
+
+        let drop = Droplet(workDir: workDir)
+
+        drop.middleware = [
+            FileMiddleware(publicDir: drop.workDir + "Public/")
+        ]
 
         let request = Request(method: .get, path: "styles/app.css")
 
@@ -54,5 +60,67 @@ class DropletTests: XCTestCase {
         ])
 
         _ = Droplet(config: config)
+    }
+
+    func testRunDefaults() throws {
+        let drop = Droplet(arguments: ["vapor", "serve"])
+
+        drop.get("foo") { req in
+            return "bar"
+        }
+
+        try background {
+            drop.run()
+        }
+
+        drop.console.wait(seconds: 2)
+
+        let res = try drop.client.get("http://0.0.0.0:8080/foo")
+        XCTAssertEqual(try res.bodyString(), "bar")
+    }
+
+    func testRunConfig() throws {
+        let config = Config([
+            "servers": [
+                "my-server": [
+                    "host": "0.0.0.0",
+                    "port": 8337,
+                    "securityLayer": "none"
+                ]
+            ]
+        ])
+        let drop = Droplet(arguments: ["vapor", "serve"], config: config)
+
+        drop.get("foo") { req in
+            return "bar"
+        }
+
+        try background {
+            drop.run()
+        }
+
+        drop.console.wait(seconds: 2)
+
+        let res = try drop.client.get("http://0.0.0.0:8337/foo")
+        XCTAssertEqual(try res.bodyString(), "bar")
+    }
+
+    func testRunManual() throws {
+        let drop = Droplet(arguments: ["vapor", "serve"])
+
+        drop.get("foo") { req in
+            return "bar"
+        }
+
+        try background {
+            drop.run(servers: [
+                "my-server": ("0.0.0.0", 8424, .none)
+            ])
+        }
+
+        drop.console.wait(seconds: 2)
+
+        let res = try drop.client.get("http://0.0.0.0:8424/foo")
+        XCTAssertEqual(try res.bodyString(), "bar")
     }
 }

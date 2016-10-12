@@ -8,40 +8,44 @@ class ProviderTests: XCTestCase {
         ("testBasic", testBasic),
     ]
 
-    func testBasic() {
-        let drop = Droplet(providers: [FastServerProvider.self])
+    func testBasic() throws {
+        let drop = Droplet()
+
+        try drop.addProvider(FastServerProvider.self)
+
         XCTAssert(drop.server is FastServer.Type)
     }
 
-    func testPrecedence() {
-        let dc = DebugConsole()
-        let drop = Droplet(server: SlowServer.self, console: dc, providers: [FastServerProvider.self])
+    func testPrecedence() throws {
+        let drop = Droplet()
 
-        XCTAssert(dc.outputBuffer.contains("FastServerProvider attempted to overwrite ServerProtocol.Type.\n"))
+        drop.console = DebugConsole()
+        try drop.addProvider(FastServerProvider.self)
+        drop.server = SlowServer.self
+
         XCTAssert(drop.server is SlowServer.Type)
     }
 
-    func testOverride() {
-        let dc = DebugConsole()
-        let drop = Droplet(console: dc, providers: [
-            FastServerProvider.self,
-            SlowServerProvider.self
-        ])
+    func testOverride() throws {
+        let drop = Droplet()
 
-        XCTAssert(dc.outputBuffer.contains("SlowServerProvider attempted to overwrite ServerProtocol.Type.\n"))
+        drop.console = DebugConsole()
+        try drop.addProvider(SlowServerProvider.self)
+        try drop.addProvider(FastServerProvider.self)
+
         XCTAssert(drop.server is FastServer.Type)
     }
 
     func testInitialized() throws {
-        let dc = DebugConsole()
-
         let fast = try FastServerProvider(config: Config([:]))
         let slow = try SlowServerProvider(config: Config([:]))
 
-        let drop = Droplet(arguments: ["vapor", "serve"], console: dc, initializedProviders: [fast, slow])
+        let drop = Droplet(arguments: ["vapor", "serve"]) // , console: dc, initializedProviders: [fast, slow]
+        drop.console = DebugConsole()
+        drop.addProvider(fast)
+        drop.addProvider(slow)
 
-        XCTAssert(dc.outputBuffer.contains("SlowServerProvider attempted to overwrite ServerProtocol.Type.\n"))
-        XCTAssert(drop.server is FastServer.Type)
+        XCTAssert(drop.server is SlowServer.Type)
 
         XCTAssertEqual(fast.afterInitFlag, true)
         XCTAssertEqual(fast.beforeRunFlag, false)

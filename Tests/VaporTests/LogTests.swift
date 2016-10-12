@@ -4,7 +4,7 @@ import XCTest
 /**
  File level to prevent issues w/ linux testing on 04-12 snapshot
  */
-private class DummyLogger: Log {
+private class DummyLogger: LogProtocol {
 
     var output: String
     var enabled: [LogLevel]
