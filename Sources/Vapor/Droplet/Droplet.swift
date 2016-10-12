@@ -10,7 +10,7 @@ import Sessions
 import Cipher
 import HMAC
 
-public let VERSION = "1.0.2"
+public let VERSION = "1.1.0"
 
 public class Droplet {
     /**
