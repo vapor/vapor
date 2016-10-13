@@ -291,7 +291,7 @@ public class Droplet {
                 DateMiddleware(),
                 TypeSafeErrorMiddleware(),
                 ValidationMiddleware(),
-                FileMiddleware(workDir: workDir),
+                FileMiddleware(publicDir: workDir + "Public/"),
             ]
             log.debug("No `middleware.server` key in `droplet.json` found, using default middleware.")
         } else {
@@ -301,7 +301,7 @@ public class Droplet {
             addConfigurable(middleware: DateMiddleware(), name: "date")
             addConfigurable(middleware: TypeSafeErrorMiddleware(), name: "type-safe")
             addConfigurable(middleware: ValidationMiddleware(), name: "validation")
-            addConfigurable(middleware: FileMiddleware(workDir: workDir), name: "file")
+            addConfigurable(middleware: FileMiddleware(publicDir: workDir + "Public/"), name: "file")
         }
 
         // hook into all providers after init
