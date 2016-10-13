@@ -31,12 +31,14 @@ public final class FileMiddleware: Middleware {
                 print("Missing attributes")
                 throw Abort.notFound
             }
-            print("Got attributes: \(attributes)")
+            print("Got attributes")
+            print("Attributes: \(attributes)")
 
             guard let _modifiedAt = attributes[.modificationDate] else {
                 print("Missing modifiedAt")
                 throw Abort.notFound
             }
+            print("Got modified at")
             print("ModifiedAt: \(_modifiedAt) Type: \(type(of: _modifiedAt))")
 
             guard let _fileSize = attributes[.size] else {
