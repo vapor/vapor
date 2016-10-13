@@ -40,7 +40,9 @@ public final class FileMiddleware: Middleware {
             }
             print("Got modified at")
             print("ModifiedAtType: \(type(of: _modifiedAt))")
+            print("Will print date")
             print("ModifiedAt: \(_modifiedAt)")
+            print("Did print date")
 
             guard let _fileSize = attributes[.size] else {
                 print("No file size")
