@@ -41,6 +41,7 @@ XCTMain([
     testCase(EnvironmentTests.allTests),
     testCase(EventTests.allTests),
     testCase(FileManagerTests.allTests),
+    testCase(FileMiddlewareTests.allTests),
     testCase(HashTests.allTests),
     testCase(LocalizationTests.allTests),
     testCase(LogTests.allTests),
