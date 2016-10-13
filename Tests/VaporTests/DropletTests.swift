@@ -12,6 +12,15 @@ class DropletTests: XCTestCase {
         ("testRunManual", testRunManual),
     ]
 
+    func testData() {
+        do {
+            let file = try DataFile().load(path: #file)
+            XCTAssert(file.string.contains("meta"))
+        } catch {
+            print("File load failed: \(error)")
+        }
+    }
+
     /**
         Ensures requests to files like CSS
         files have appropriate "Content-Type"

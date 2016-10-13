@@ -26,7 +26,7 @@ public final class FileMiddleware: Middleware {
                 path = String(path.characters.dropFirst())
             }
             let filePath = publicDir + path
-
+            print(filePath)
             guard
                 let attributes = try? Foundation.FileManager.default.attributesOfItem(atPath: filePath),
                 let modifiedAt = attributes[.modificationDate] as? Date,
