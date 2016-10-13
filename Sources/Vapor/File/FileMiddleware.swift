@@ -31,7 +31,10 @@ public final class FileMiddleware: Middleware {
                 let attributes = try? Foundation.FileManager.default.attributesOfItem(atPath: filePath),
                 let modifiedAt = attributes[.modificationDate] as? Date,
                 let fileSize = attributes[.size] as? Int
-                else { throw Abort.notFound }
+                else {
+                    print("Unable to get attributes")
+                    throw Abort.notFound
+                }
 
             var headers: [HeaderKey: String] = [:]
 
@@ -56,6 +59,7 @@ public final class FileMiddleware: Middleware {
 
                 return Response(status: .ok, headers: headers, body: .data(fileBody))
             } else {
+                print("unable to load path")
                 throw Abort.notFound
             }
         }
