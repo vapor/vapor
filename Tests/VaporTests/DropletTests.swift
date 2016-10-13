@@ -30,7 +30,6 @@ class DropletTests: XCTestCase {
         // drop /Tests/VaporTests/DropletTests.swift to reach top level directory
         let parent = #file.characters.split(separator: "/").map(String.init).dropLast(3).joined(separator: "/")
         let workDir = "/\(parent)/Sources/Development/"
-        // let workDir = "/\(parent)/../../Sources/Development/"
 
         let drop = Droplet(workDir: workDir)
 

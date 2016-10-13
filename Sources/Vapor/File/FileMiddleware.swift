@@ -26,19 +26,18 @@ public final class FileMiddleware: Middleware {
                 path = String(path.characters.dropFirst())
             }
             let filePath = publicDir + path
-            print(filePath)
+
             let _attributes = try? Foundation.FileManager.default.attributesOfItem(atPath: filePath)
-            print("Attributes: \(_attributes)")
-            let _modifiedAt = _attributes?[.modificationDate]
-            print("ModifiedAt: \(_modifiedAt)")
-            let _fileSize = _attributes?[.size]
-            print("FileSize: \(_fileSize)")
-            
+            if let modDate = _attributes?[.modificationDate] {
+                print("Mod date: \(modDate)")
+                print("Type: \(type(of: modDate))")
+            } else {
+                print("no mod date")
+            }
             guard let attributes = _attributes,
-                let modifiedAt = attributes[.modificationDate] as? Date,
+                let modifiedAt = attributes[.modificationDate] as? NSDate,
                 let fileSize = attributes[.size] as? Int
                 else {
-                    print("Unable to get attributes")
                     throw Abort.notFound
                 }
 
