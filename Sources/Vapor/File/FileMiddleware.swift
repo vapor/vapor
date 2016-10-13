@@ -27,8 +27,9 @@ public final class FileMiddleware: Middleware {
             }
             let filePath = publicDir + path
             print(filePath)
-            guard
-                let attributes = try? Foundation.FileManager.default.attributesOfItem(atPath: filePath),
+            let atts = try? Foundation.FileManager.default.attributesOfItem(atPath: filePath)
+            print("Attributes: \(atts)")
+            guard let attributes = atts,
                 let modifiedAt = attributes[.modificationDate] as? Date,
                 let fileSize = attributes[.size] as? Int
                 else {
