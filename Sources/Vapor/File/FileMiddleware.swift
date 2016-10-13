@@ -34,7 +34,7 @@ public final class FileMiddleware: Middleware {
             print("Got attributes")
             print("Attributes: \(attributes)")
 
-            guard let _modifiedAt = attributes[.modificationDate] else {
+            guard let _modifiedAt = attributes[.modificationDate] as? Date else {
                 print("Missing modifiedAt")
                 throw Abort.notFound
             }
@@ -57,8 +57,8 @@ public final class FileMiddleware: Middleware {
 //                    throw Abort.notFound
 //                }
 
+            let modifiedAt = _modifiedAt // as? Date
             guard
-                let modifiedAt = _modifiedAt as? Date,
                 let fileSize = _fileSize as? NSNumber
                 else {
                     throw Abort.notFound
