@@ -39,7 +39,8 @@ public final class FileMiddleware: Middleware {
                 throw Abort.notFound
             }
             print("Got modified at")
-            print("ModifiedAt: \(_modifiedAt) Type: \(type(of: _modifiedAt))")
+            print("ModifiedAtType: \(type(of: _modifiedAt))")
+            print("ModifiedAt: \(_modifiedAt)")
 
             guard let _fileSize = attributes[.size] else {
                 print("No file size")
