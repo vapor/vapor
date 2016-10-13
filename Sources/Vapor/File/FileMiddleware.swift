@@ -27,39 +27,10 @@ public final class FileMiddleware: Middleware {
             }
             let filePath = publicDir + path
 
-            guard let attributes = try? Foundation.FileManager.default.attributesOfItem(atPath: filePath) else {
-                print("Missing attributes")
-                throw Abort.notFound
-            }
-            print("Got attributes")
-            print("Attributes: \(attributes)")
-
-            guard let _modifiedAt = attributes[.modificationDate] as? Date else {
-                print("Missing modifiedAt")
-                throw Abort.notFound
-            }
-            print("Got modified at")
-            print("ModifiedAtType: \(type(of: _modifiedAt))")
-            print("Will print date")
-            print("ModifiedAt: \(_modifiedAt.timeIntervalSince1970)")
-            print("Did print date")
-
-            guard let _fileSize = attributes[.size] else {
-                print("No file size")
-                throw Abort.notFound
-            }
-            print("FileSize: \(_fileSize) Type: \(type(of: _fileSize))")
-//
-//            guard let attributes = _attributes,
-//                let modifiedAt = attributes[.modificationDate] as? NSDate,
-//                let fileSize = attributes[.size] as? Int
-//                else {
-//                    throw Abort.notFound
-//                }
-
-            let modifiedAt = _modifiedAt // as? Date
             guard
-                let fileSize = _fileSize as? NSNumber
+                let attributes = try? Foundation.FileManager.default.attributesOfItem(atPath: filePath),
+                let modifiedAt = attributes[.modificationDate] as? Date,
+                let fileSize = attributes[.size] as? NSNumber
                 else {
                     throw Abort.notFound
             }
