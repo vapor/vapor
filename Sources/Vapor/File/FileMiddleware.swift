@@ -27,24 +27,42 @@ public final class FileMiddleware: Middleware {
             }
             let filePath = publicDir + path
 
-            let _attributes = try? Foundation.FileManager.default.attributesOfItem(atPath: filePath)
-            if let modDate = _attributes?[.modificationDate] {
-                print("Mod date: \(modDate)")
-                print("Type: \(type(of: modDate))")
-            } else {
-                print("no mod date")
+            guard let attributes = try? Foundation.FileManager.default.attributesOfItem(atPath: filePath) else {
+                print("Missing attributes")
+                throw Abort.notFound
             }
-            guard let attributes = _attributes,
-                let modifiedAt = attributes[.modificationDate] as? NSDate,
-                let fileSize = attributes[.size] as? Int
+            print("Got attributes: \(attributes)")
+
+            guard let _modifiedAt = attributes[.modificationDate] else {
+                print("Missing modifiedAt")
+                throw Abort.notFound
+            }
+            print("ModifiedAt: \(_modifiedAt) Type: \(type(of: _modifiedAt))")
+
+            guard let _fileSize = attributes[.size] else {
+                print("No file size")
+                throw Abort.notFound
+            }
+            print("FileSize: \(_fileSize) Type: \(type(of: _fileSize))")
+//
+//            guard let attributes = _attributes,
+//                let modifiedAt = attributes[.modificationDate] as? NSDate,
+//                let fileSize = attributes[.size] as? Int
+//                else {
+//                    throw Abort.notFound
+//                }
+
+            guard
+                let modifiedAt = _modifiedAt as? Date,
+                let fileSize = _fileSize as? NSNumber
                 else {
                     throw Abort.notFound
-                }
+            }
 
             var headers: [HeaderKey: String] = [:]
 
             // Generate ETag value, "HEX value of last modified date" + "-" + "file size"
-            let fileETag = "\(modifiedAt.timeIntervalSince1970)-\(fileSize)"
+            let fileETag = "\(modifiedAt.timeIntervalSince1970)-\(fileSize.intValue)"
             headers["ETag"] = fileETag
             
             // Check if file has been cached already and return NotModified response if the etags match
