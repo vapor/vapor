@@ -102,7 +102,7 @@ extension Droplet {
         self.client.defaultMiddleware = []
 
         var middleware: [String: Middleware] = [
-            "file": FileMiddleware(workDir: workDir),
+            "file": FileMiddleware(publicDir: workDir + "Public/"),
             "validation": ValidationMiddleware(),
             "date": DateMiddleware(),
             "type-safe": TypeSafeErrorMiddleware(),

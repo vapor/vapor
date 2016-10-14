@@ -53,7 +53,6 @@ class MiddlewareTests: XCTestCase {
 
     func testConfigDateProvided() throws {
         let drop = Droplet()
-
         drop.middleware.append(FooMiddleware())
 
         drop.get { _ in

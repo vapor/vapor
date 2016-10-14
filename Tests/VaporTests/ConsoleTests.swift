@@ -60,7 +60,7 @@ class ConsoleTests: XCTestCase {
             command
         ]
         try drop.runCommands()
-        XCTAssert(console.input().contains("Vapor Framework v1.0.2"))
+        XCTAssert(console.input().contains("Vapor Framework v1.1.0"))
     }
 
     func testCommandFetchArgs() {
