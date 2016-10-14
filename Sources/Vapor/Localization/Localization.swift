@@ -24,7 +24,7 @@ public class Localization {
             
             // Read the
             let data = try DataFile().load(path: path)
-            localizations[name] = try JSON(bytes: data).makeNode()
+            localizations[name.lowercased()] = try JSON(bytes: data).makeNode()
         }
         
         self.init(localizations: localizations)
@@ -40,7 +40,7 @@ public class Localization {
     }
 
     public subscript(_ languageCode: String, _ paths: [PathIndex]) -> String {
-        return localizations[languageCode]?[paths]?.string  // Index by language
+        return localizations[languageCode.lowercased()]?[paths]?.string  // Index by language
             ?? localizations[defaultDialect]?[paths]?.string // Index the default language
             ?? paths.map { "\($0)" }.joined(separator: ".") // Return the literal path indexed if no translation
     }

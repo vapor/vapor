@@ -25,8 +25,28 @@ extension Droplet: Responder {
             request.method = .get
         }
 
+        let routerResponder: Request.Handler = Request.Handler { [weak self] request in
+            // Routed handler
+            if let handler = self?.router.route(request, with: request) {
+                return try handler.respond(to: request)
+            } else {
+                // Default not found handler
+                let normal: [HTTP.Method] = [.get, .post, .put, .patch, .delete]
+
+                if normal.contains(request.method) {
+                    throw Abort.notFound
+                } else if case .options = request.method {
+                    return Response(status: .ok, headers: [
+                        "Allow": "OPTIONS"
+                        ])
+                } else {
+                    return Response(status: .notImplemented)
+                }
+            }
+        }
+
         // Loop through middlewares in order, then pass result to router responder
-        responder = enabledMiddleware.chain(to: routerResponder)
+        responder = middleware.chain(to: routerResponder)
 
         var response: Response
         do {
@@ -38,6 +58,7 @@ extension Droplet: Responder {
         } catch {
             if environment == .production {
                 return ErrorView.shared.makeResponse(.internalServerError, "Something went wrong.")
+                log.error("Uncaught Error: \(type(of: error)).\(error)")
             } else {
                 let message = "Uncaught Error: \(type(of: error)).\(error). Use middleware to catch this error and provide a better response. Otherwise, a 500 error page will be returned in the production environment."
                 response = Response(

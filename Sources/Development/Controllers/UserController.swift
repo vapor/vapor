@@ -43,7 +43,7 @@ final class UserController: ResourceRepresentable {
      */
     func update(request: Request, item user: User) throws -> ResponseRepresentable {
         //Testing JsonRepresentable
-        return user.makeJSON()
+        return try user.makeJSON()
     }
 
     /**
@@ -51,7 +51,7 @@ final class UserController: ResourceRepresentable {
      */
     func modify(request: Request, item user: User) throws -> ResponseRepresentable {
         //Testing JsonRepresentable
-        return user.makeJSON()
+        return try user.makeJSON()
     }
 
     /**
@@ -59,7 +59,7 @@ final class UserController: ResourceRepresentable {
      */
     func destroy(request: Request, item user: User) throws -> ResponseRepresentable {
         //User is ResponseRepresentable by proxy of JsonRepresentable
-        return user.makeJSON()
+        return try user.makeJSON()
     }
 
     /**

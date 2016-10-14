@@ -9,9 +9,9 @@ extension Droplet {
     /**
         Runs the Droplet's commands, defaulting to serve.
     */
-    public func run(_ closure: Serve.ServeFunction? = nil) -> Never  {
+    public func run(servers: [String: ServerConfig]? = nil) -> Never  {
         do {
-            try runCommands()
+            try runCommands(servers: servers)
             exit(0)
         } catch CommandError.general(let error) {
             console.output(error, style: .error)
@@ -31,7 +31,25 @@ extension Droplet {
         }
     }
 
-    public func runCommands() throws {
+    func runCommands(servers: [String: ServerConfig]? = nil) throws {
+        // the prepare command will run all
+        // of the supplied preparations on the database.
+        let prepare = Prepare(console: console, preparations: self.preparations, database: self.database)
+
+        // the serve command will boot the servers
+        // and always runs the prepare command
+        let serve = Serve(console: console, prepare: prepare) {
+            try self.bootServers(servers)
+        }
+
+        // the version command prints the frameworks version.
+        let version = VersionCommand(console: console)
+
+        // adds the commands
+        commands.append(serve)
+        commands.append(prepare)
+        commands.append(version)
+        
         for provider in providers {
             provider.beforeRun(self)
         }
