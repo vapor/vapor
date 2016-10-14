@@ -489,7 +489,8 @@ let mediaTypes = [
     "g3": "image/g3fax", // G3 Fax Image Wikipedia: G3 Fax Image
     "gif": "image/gif", // Graphics Interchange Format Wikipedia: Graphics Interchange Format
     "ief": "image/ief", // Image Exchange Format RFC 1314
-    "jpeg, .jpg": "image/jpeg", // JPEG Image RFC 1314
+    "jpeg": "image/jpeg", // JPEG Image RFC 1314
+    "jpg": "image/jpeg", // JPEG Image RFC 1314
     "ktx": "image/ktx", // OpenGL Textures (KTX) KTX File Format
     "png": "image/png", // Portable Network Graphics (PNG) RFC 2083
     "btif": "image/prs.btif", // BTIF IANA: BTIF
