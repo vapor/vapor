@@ -16,36 +16,6 @@ class FileManager {
         return try DataFile().load(path: path)
     }
 
-    // TODO: Try FileManager
-    static func fileAtPath(_ path: String) -> (exists: Bool, isDirectory: Bool) {
-        var isDirectory = false
-        var s = stat()
-        if lstat(path, &s) >= 0 {
-            if (s.st_mode & S_IFMT) == S_IFLNK {
-                if stat(path, &s) >= 0 {
-                    isDirectory = (s.st_mode & S_IFMT) == S_IFDIR
-                } else {
-                    return (false, isDirectory)
-                }
-            } else {
-                isDirectory = (s.st_mode & S_IFMT) == S_IFDIR
-            }
-
-            // don't chase the link for this magic case -- we might be /Net/foo
-            // which is a symlink to /private/Net/foo which is not yet mounted...
-            if (s.st_mode & S_IFMT) == S_IFLNK {
-                if (s.st_mode & S_ISVTX) == S_ISVTX {
-                    return (true, isDirectory)
-                }
-                // chase the link; too bad if it is a slink to /Net/foo
-                let _ = stat(path, &s) >= 0
-            }
-        } else {
-            return (false, isDirectory)
-        }
-        return (true, isDirectory)
-    }
-
     static func expandPath(_ path: String) throws -> String {
         let maybeResult = realpath(path, nil)
 

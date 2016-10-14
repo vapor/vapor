@@ -12,22 +12,32 @@ class DropletTests: XCTestCase {
         ("testRunManual", testRunManual),
     ]
 
+    func testData() {
+        do {
+            let file = try DataFile().load(path: #file)
+            XCTAssert(file.string.contains("meta"))
+        } catch {
+            print("File load failed: \(error)")
+        }
+    }
+
     /**
         Ensures requests to files like CSS
         files have appropriate "Content-Type"
         headers returned.
     */
     func testMediaType() throws {
-        let parent = #file.characters.split(separator: "/").map(String.init).dropLast().joined(separator: "/")
-        let workDir = "/\(parent)/../../Sources/Development/"
+        // drop /Tests/VaporTests/DropletTests.swift to reach top level directory
+        let parent = #file.characters.split(separator: "/").map(String.init).dropLast(3).joined(separator: "/")
+        let workDir = "/\(parent)/Sources/Development/"
 
         let drop = Droplet(workDir: workDir)
 
         drop.middleware = [
-            FileMiddleware(workDir: drop.workDir)
+            FileMiddleware(publicDir: drop.workDir + "Public/")
         ]
 
-        let request = try Request(method: .get, uri: "/styles/app.css")
+        let request = Request(method: .get, path: "styles/app.css")
 
         guard let response = try? drop.respond(to: request) else {
             XCTFail("drop could not respond")
@@ -41,7 +51,7 @@ class DropletTests: XCTestCase {
             found = true
         }
 
-        XCTAssert(found, "CSS Content Type not found")
+        XCTAssert(found, "CSS Content Type not found: \(response)")
     }
 
     func testTLSConfig() throws {

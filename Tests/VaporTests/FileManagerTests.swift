@@ -31,5 +31,4 @@ class FileManagerTests: XCTestCase {
             // We're happy here
         }
     }
-    
 }
