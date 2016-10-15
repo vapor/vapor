@@ -33,12 +33,9 @@ extension HTTPRequest {
             return []
         }
 
-        var accept: [HTTPAccept] = []
-
-        for acceptSlice in acceptString.characters.split(separator: ",") {
+        return acceptString.characters.split(separator: ",").flatMap { acceptSlice in
             let pieces = acceptSlice.split(separator: ";")
-            guard let mediaType = pieces.first.flatMap({ String($0) }) else { continue }
-
+            guard let mediaType = pieces.first.flatMap({ String($0) }) else { return nil }
 
             let preference: Double
             if pieces.count == 2 {
@@ -53,9 +50,7 @@ extension HTTPRequest {
                 preference = 1.0
             }
 
-            accept.append(HTTPAccept(mediaType: mediaType, preference: preference))
+            return HTTPAccept(mediaType: mediaType, preference: preference)
         }
-
-        return accept
     }
 }
