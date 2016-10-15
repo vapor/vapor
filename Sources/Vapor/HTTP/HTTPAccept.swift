@@ -13,9 +13,8 @@ public struct HTTPAccept {
 extension Sequence where Iterator.Element == HTTPAccept {
     public func prefers(_ mediaType: String) -> Bool {
         guard
-            let preference = self.lazy
-                .filter({ accept in accept.mediaType.contains(mediaType) })
-                .first?
+            let preference = self
+                .first(where: { accept in accept.mediaType.contains(mediaType) })?
                 .preference
             else { return false }
 
