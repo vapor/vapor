@@ -13,6 +13,7 @@ People have built some awesome things with Vapor, and we can't wait to see what 
 * [Vapor Example](#vapor-example) - an up to date example project
 * [SwiftyBeaver](#vapor-example) - the website of SwiftyBeaver
 * [Loyalty Backend](#loyalty-backend-sample) - simple loyalty backend system
+* [SwiftyBot](#swiftybot) - a simple Telegram bot
 
 # PDX Cocoaheads
 
@@ -159,3 +160,13 @@ Swift Vapor backend solution which won the 1st [appculture](https://github.com/a
 
 ### Site
 [Demo](https://royalty-loyalty.herokuapp.com)
+
+# SwiftyBot
+
+A simple Telegram bot powered by Vapor.
+
+### GitHub
+[Source](https://github.com/FabrizioBrancati/SwiftyBot)
+
+### Site
+[Demo](https://telegram.me/SwiftyBot)
