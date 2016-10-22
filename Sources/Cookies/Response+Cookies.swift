@@ -23,7 +23,14 @@ extension Response {
         }
         set(cookie) {
             storage["Set-Cookie"] = cookie
-            headers["Set-Cookie"] = cookie.serialize(for: .response)
+            
+            let cookieHeader = cookie.serialize(for: .response)
+            if !cookieHeader.isEmpty {
+                headers["Set-Cookie"] = cookieHeader
+            }
+            else {
+                headers["Set-Cookie"] = nil
+            }
         }
     }
 }
