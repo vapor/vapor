@@ -16,7 +16,7 @@ public class AuthMiddleware<U: User>: Middleware {
 
     public init(
         turnstile: Turnstile,
-        cookieName: String,
+        cookieName: String = defaultCookieName,
         makeCookie cookieFactory: CookieFactory?
     ) {
         self.turnstile = turnstile
@@ -31,13 +31,6 @@ public class AuthMiddleware<U: User>: Middleware {
                 httpOnly: true
             )
         }
-    }
-    
-    public convenience init(
-        turnstile: Turnstile,
-        makeCookie cookieFactory: CookieFactory?
-        ) {
-        self.init(turnstile: turnstile, cookieName: defaultCookieName, makeCookie: cookieFactory)
     }
 
     public convenience init(
