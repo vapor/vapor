@@ -50,7 +50,7 @@ extension Request {
                 preference = 1.0
             }
 
-            return HTTPAccept(mediaType: mediaType, preference: preference)
+            return Accept(mediaType: mediaType, preference: preference)
         }
     }
 }
