@@ -27,8 +27,7 @@ extension Response {
             let cookieHeader = cookie.serialize(for: .response)
             if !cookieHeader.isEmpty {
                 headers["Set-Cookie"] = cookieHeader
-            }
-            else {
+            } else {
                 headers["Set-Cookie"] = nil
             }
         }
