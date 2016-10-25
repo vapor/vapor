@@ -37,6 +37,14 @@ public final class FileMiddleware: Middleware {
 
             var headers: [HeaderKey: String] = [:]
 
+            // Set Content-Type header based on the media type
+            if
+                let fileExtension = filePath.components(separatedBy: ".").last,
+                let type = mediaTypes[fileExtension]
+            {
+                headers["Content-Type"] = type
+            }
+            
             // Generate ETag value, "HEX value of last modified date" + "-" + "file size"
             let fileETag = "\(modifiedAt.timeIntervalSince1970)-\(fileSize.intValue)"
             headers["ETag"] = fileETag
@@ -48,14 +56,6 @@ public final class FileMiddleware: Middleware {
 
             // File exists and was not cached, returning content of file.
             if let fileBody = try? loader.load(path:filePath) {
-                
-                if
-                    let fileExtension = filePath.components(separatedBy: ".").last,
-                    let type = mediaTypes[fileExtension]
-                {
-                    headers["Content-Type"] = type
-                }
-
                 return Response(status: .ok, headers: headers, body: .data(fileBody))
             } else {
                 print("unable to load path")
