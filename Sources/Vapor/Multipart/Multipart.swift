@@ -34,11 +34,14 @@ extension Multipart {
     }
 
     public var files: [File]? {
-        if case .files(let files) = self {
+        switch self {
+        case .files(let files):
             return files
+        case .file(let file):
+            return [file]
+        default:
+            return nil
         }
-
-        return nil
     }
 
     public var input: String? {
@@ -50,10 +53,23 @@ extension Multipart {
     }
 
     public var inputArray: [String]? {
-        if case .inputArray(let array) = self {
-            return array
+        switch self {
+        case .inputArray(let inputs):
+            return inputs
+        case .input(let input):
+            return [input]
+        default:
+            return nil
         }
-        
-        return nil
+    }
+}
+
+extension Multipart {
+    public func serialized(boundary: String) throws -> String {
+        var serialized = "--\(boundary)\r\n"
+
+
+        serialized += "--\(boundary)--\r\n"
+        return serialized
     }
 }
