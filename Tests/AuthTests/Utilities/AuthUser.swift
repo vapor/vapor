@@ -1,7 +1,8 @@
-import Vapor
 import Auth
+import Node
+import Fluent
 
-final class AuthUser: Model, User {
+final class AuthUser: User {
     var id: Node?
     var name: String
     var exists: Bool = false
@@ -36,6 +37,6 @@ final class AuthUser: Model, User {
     
     
     static func register(credentials: Credentials) throws -> Auth.User {
-        throw Abort.custom(status: .badRequest, message: "Register not supported.")
+        fatalError("\(#function) not supported")
     }
 }
