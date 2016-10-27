@@ -52,7 +52,12 @@ extension Multipart {
         return nil
     }
 
+    @available(*, deprecated: 1.0, message: "Use `inputs` instead.")
     public var inputArray: [String]? {
+        return inputs
+    }
+
+    public var inputs: [String]? {
         switch self {
         case .inputArray(let inputs):
             return inputs
@@ -65,11 +70,29 @@ extension Multipart {
 }
 
 extension Multipart {
-    public func serialized(boundary: String) throws -> String {
-        var serialized = "--\(boundary)\r\n"
+    public func serialized(boundary: String, keyName: String) throws -> Bytes {
+        var serialized = Bytes()
 
+        inputs?.forEach { input in
+            serialized += "--\(boundary)\r\n".bytes
+            serialized += "Content-Disposition: form-data; name=\"\(keyName)\"\r\n\r\n".bytes
+            serialized += input.bytes
+            serialized += "\r\n".bytes
+        }
 
-        serialized += "--\(boundary)--\r\n"
+        files?.forEach { file in
+            let fileName = file.name ?? ""
+            let type = file.type ?? ""
+
+            serialized += "--\(boundary)\r\n".bytes
+            serialized += "Content-Disposition: form-data; name=\"\(keyName)\"; filename=\"\(fileName)\"\r\n".bytes
+            serialized += "Content-Type: \(type)\r\n\r\n".bytes
+            serialized += file.data
+            serialized += "\r\n".bytes
+        }
+
+        // close
+        serialized += "--\(boundary)--\r\n".bytes
         return serialized
     }
 }
