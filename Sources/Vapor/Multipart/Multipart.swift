@@ -34,11 +34,14 @@ extension Multipart {
     }
 
     public var files: [File]? {
-        if case .files(let files) = self {
+        switch self {
+        case .files(let files):
             return files
+        case .file(let file):
+            return [file]
+        default:
+            return nil
         }
-
-        return nil
     }
 
     public var input: String? {
@@ -49,11 +52,53 @@ extension Multipart {
         return nil
     }
 
+    @available(*, deprecated: 1.0, message: "Use `inputs` instead.")
     public var inputArray: [String]? {
-        if case .inputArray(let array) = self {
-            return array
+        return inputs
+    }
+
+    public var inputs: [String]? {
+        switch self {
+        case .inputArray(let inputs):
+            return inputs
+        case .input(let input):
+            return [input]
+        default:
+            return nil
         }
-        
-        return nil
+    }
+}
+
+
+public enum MultipartSerializationError: Swift.Error {
+    case missingFileType
+}
+
+extension Multipart {
+
+    public func serialized(boundary: String, keyName: String) throws -> Bytes {
+        var serialized = Bytes()
+
+        inputs?.forEach { input in
+            serialized += "--\(boundary)\r\n".bytes
+            serialized += "Content-Disposition: form-data; name=\"\(keyName)\"\r\n\r\n".bytes
+            serialized += input.bytes
+            serialized += "\r\n".bytes
+        }
+
+        try files?.forEach { file in
+            let fileName = file.name ?? ""
+            guard let type = file.type else { throw MultipartSerializationError.missingFileType }
+
+            serialized += "--\(boundary)\r\n".bytes
+            serialized += "Content-Disposition: form-data; name=\"\(keyName)\"; filename=\"\(fileName)\"\r\n".bytes
+            serialized += "Content-Type: \(type)\r\n\r\n".bytes
+            serialized += file.data
+            serialized += "\r\n".bytes
+        }
+
+        // close
+        serialized += "--\(boundary)--\r\n".bytes
+        return serialized
     }
 }
