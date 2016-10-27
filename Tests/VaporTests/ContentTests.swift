@@ -21,7 +21,10 @@ class ContentTests: XCTestCase {
         ("testMultipartFile", testMultipartFile),
         ("testFormURLEncoded", testFormURLEncoded),
         ("testFormURLEncodedEdge", testFormURLEncodedEdge),
-        ("testSplitString", testSplitString)
+        ("testSplitString", testSplitString),
+        ("testMultipartSerialization", testMultipartSerialization),
+        ("testMultipartSerializationNoFileName", testMultipartSerializationNoFileName),
+        ("testMultipartSerializationNoFileType", testMultipartSerializationNoFileType)
     ]
 
     func testParse() {
@@ -124,5 +127,42 @@ class ContentTests: XCTestCase {
 
         XCTAssertEqual(content["a"]?.string, "a")
         XCTAssertEqual(content["b"]?.string, "custom")
+    }
+
+    func testMultipartSerialization() throws {
+        let file = Multipart.File(name: "profile", type: "jpg", data: "pretend real data".bytes)
+        let multi = Multipart.file(file)
+        let serialized = try multi.serialized(boundary: "~foo~", keyName: "image")
+
+        var expectation = ""
+        expectation += "--~foo~\r\n"
+        expectation += "Content-Disposition: form-data; name=\"image\"; filename=\"profile\"\r\n"
+        expectation += "Content-Type: jpg\r\n\r\n"
+        expectation += "pretend real data\r\n"
+        expectation += "--~foo~--\r\n"
+        XCTAssertEqual(serialized.string, expectation)
+    }
+
+    func testMultipartSerializationNoFileName() throws {
+        let file = Multipart.File(name: nil, type: "jpg", data: "pretend real data".bytes)
+        let multi = Multipart.file(file)
+        let serialized = try multi.serialized(boundary: "~foo~", keyName: "image")
+
+        var expectation = ""
+        expectation += "--~foo~\r\n"
+        expectation += "Content-Disposition: form-data; name=\"image\"; filename=\"\"\r\n"
+        expectation += "Content-Type: jpg\r\n\r\n"
+        expectation += "pretend real data\r\n"
+        expectation += "--~foo~--\r\n"
+        XCTAssertEqual(serialized.string, expectation)
+    }
+
+    func testMultipartSerializationNoFileType() throws {
+        let file = Multipart.File(name: nil, type: nil, data: "pretend real data".bytes)
+        let multi = Multipart.file(file)
+        do {
+            let _ = try multi.serialized(boundary: "~foo~", keyName: "image")
+            XCTFail("Expected to throw, no file type")
+        } catch is MultipartSerializationError {}
     }
 }

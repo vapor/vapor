@@ -69,7 +69,13 @@ extension Multipart {
     }
 }
 
+
+public enum MultipartSerializationError: Swift.Error {
+    case missingFileType
+}
+
 extension Multipart {
+
     public func serialized(boundary: String, keyName: String) throws -> Bytes {
         var serialized = Bytes()
 
@@ -80,9 +86,9 @@ extension Multipart {
             serialized += "\r\n".bytes
         }
 
-        files?.forEach { file in
+        try files?.forEach { file in
             let fileName = file.name ?? ""
-            let type = file.type ?? ""
+            guard let type = file.type else { throw MultipartSerializationError.missingFileType }
 
             serialized += "--\(boundary)\r\n".bytes
             serialized += "Content-Disposition: form-data; name=\"\(keyName)\"; filename=\"\(fileName)\"\r\n".bytes
