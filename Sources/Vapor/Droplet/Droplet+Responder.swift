@@ -71,8 +71,6 @@ extension Droplet: Responder {
             }
         }
 
-        response.headers["Server"] = "Vapor \(Vapor.VERSION)"
-
         /**
             The server MUST NOT return a message-body in the response for HEAD.
 
