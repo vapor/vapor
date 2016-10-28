@@ -18,6 +18,12 @@ extension Multipart {
         public var name: String?
         public var type: String?
         public var data: Bytes
+
+        public init(name: String?, type: String?, data: Bytes) {
+            self.name = name
+            self.type = type
+            self.data = data
+        }
     }
 }
 
