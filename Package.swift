@@ -5,23 +5,12 @@ let package = Package(
     targets: [
         // Framework
         Target(name: "Vapor", dependencies: [
-            "Routing",
-            "HTTPRouting",
-            "TypeSafeRouting",
             "Auth",
             "Cache",
             "Cookies",
             "Sessions",
             "Settings"
         ]),
-
-        // Routing
-        Target(name: "Routing"),
-        Target(name: "HTTPRouting", dependencies: ["Routing"]),
-
-        // Type Safe
-        Target(name: "TypeSafeRouting", dependencies: ["Routing", "HTTPRouting"]),
-        // Target(name: "TypeSafeGenerator"),
 
         // Misc
         Target(name: "Auth", dependencies: ["Cookies", "Cache"]),
@@ -55,6 +44,9 @@ let package = Package(
 
         // An extensible templating language built for Vapor. 🍃
         .Package(url: "https://github.com/vapor/leaf.git", majorVersion: 1),
+
+        // A type safe routing package including HTTP and TypeSafe routers.
+        .Package(url: "https://github.com/vapor/routing.git", majorVersion: 1),
     ],
     exclude: [
         "Sources/Development",
