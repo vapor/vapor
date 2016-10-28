@@ -6,8 +6,6 @@ import XCTest
 @testable import SettingsTests
 @testable import CookiesTests
 @testable import VaporTests
-@testable import RoutingTests
-@testable import HTTPRoutingTests
 
 XCTMain([
     // Cache
@@ -55,18 +53,6 @@ XCTMain([
     testCase(ValidationCountTests.allTests),
     testCase(ValidationTests.allTests),
     testCase(ValidationUniqueTests.allTests),
-
-    // Routing
-    testCase(BranchTests.allTests),
-    testCase(RouteBuilderTests.allTests),
-    testCase(RouteCollectionTests.allTests),
-    testCase(RouterTests.allTests),
-    testCase(RouteTests.allTests),
-
-    // HTTPRouting
-    testCase(AddTests.allTests),
-    testCase(GroupedTests.allTests),
-    testCase(GroupTests.allTests),
 ])
 
 #endif
