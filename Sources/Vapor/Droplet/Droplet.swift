@@ -248,7 +248,12 @@ public class Droplet {
         self.log = log
         console = terminal
         commands = []
-        view = LeafRenderer(viewsDir: workDir + "Resources/Views")
+        let renderer = LeafRenderer(viewsDir: workDir + "Resources/Views")
+        if environment == .development {
+            // disable cache by default in development
+            renderer.stem.cache = nil
+        }
+        view = renderer
         cache = MemoryCache()
         database = nil
         storage = [:]
