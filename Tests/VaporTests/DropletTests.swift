@@ -73,18 +73,13 @@ class DropletTests: XCTestCase {
     }
 
     func testRunDefaults() throws {
-        let drop = Droplet(arguments: ["vapor", "serve"])
+        let drop = Droplet(arguments: ["vapor", "prepare"])
 
         drop.get("foo") { req in
             return "bar"
         }
 
-        try background {
-            drop.run()
-        }
-
-        drop.console.wait(seconds: 2)
-
+        try drop.runCommands()
         let res = try drop.client.get("http://0.0.0.0:8080/foo")
         XCTAssertEqual(try res.bodyString(), "bar")
     }
