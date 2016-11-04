@@ -46,7 +46,12 @@ extension Droplet {
                 let sig = parseTLSSignature(tlsConfig)
                 certs = .certificateAuthority(signature: sig)
             case "mozilla":
+                print("[deprecated] Mozilla certificates have been deprecated and will be removed in future releases. Using 'defaults' instead.")
+                certs = .defaults
+            case "openbsd":
                 certs = .openbsd
+            case "defaults", "default":
+                certs = .defaults
             default:
                 log.error("Unsupported TLS certificates \(certsConfig), defaulting to none.")
                 certs = .none
