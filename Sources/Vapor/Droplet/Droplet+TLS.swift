@@ -46,7 +46,7 @@ extension Droplet {
                 let sig = parseTLSSignature(tlsConfig)
                 certs = .certificateAuthority(signature: sig)
             case "mozilla":
-                certs = .mozilla
+                certs = .openbsd
             default:
                 log.error("Unsupported TLS certificates \(certsConfig), defaulting to none.")
                 certs = .none
