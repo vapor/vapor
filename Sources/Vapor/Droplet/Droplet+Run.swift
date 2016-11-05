@@ -13,7 +13,9 @@ extension Droplet {
     public func run(servers: [String: ServerConfig]? = nil) -> Never  {
         do {
             try runCommands(servers: servers)
-            RunLoop.current.run()
+            DispatchQueue.main.sync {
+                RunLoop.current.run()
+            }
             exit(0)
         } catch CommandError.general(let error) {
             console.output(error, style: .error)
