@@ -7,63 +7,36 @@ public typealias ServerConfig = (host: String, port: Int, securityLayer: Securit
 // MARK: Booting
 
 extension Droplet {
-    func bootServers(_ s: [String: ServerConfig]? = nil) throws {
-        let servers: [String: ServerConfig]
+    public func bootServers(_ s: [String: ServerConfig]? = nil) throws {
+        let configs: [String: ServerConfig]
         if let s = s {
-            servers = s
+            configs = s
         } else {
-            servers = parseServersConfig()
+            configs = parseServersConfig()
         }
 
-        var bootedServers = 0
-        for (name, server) in servers {
-            try bootServer(server, name: name, isLastServer: bootedServers == servers.count - 1)
-            bootedServers += 1
+        for (name, config) in configs {
+            bootedServers += try bootServer(config, name: name)
         }
     }
 
-    func bootServer(_ server: ServerConfig, name: String, isLastServer: Bool) throws {
-        let runInBackground = !isLastServer
-
+    public func bootServer(_ config: ServerConfig, name: String) throws -> ServerProtocol {
         var message: [String] = []
         message += "Server '\(name)' starting"
-        if runInBackground {
-            message += "in background"
-        }
-        message += "at \(server.host):\(server.port)"
-        if server.securityLayer.isSecure {
+        message += "at \(config.host):\(config.port)"
+        if config.securityLayer.isSecure {
             message += "🔒"
         }
         let info = message.joined(separator: " ")
 
-        if runInBackground {
-            _ = try background { [weak self] in
-                guard let welf = self else {
-                    return
-                }
-                do {
-                    welf.console.output(info, style: .info)
-                    try welf.server.start(
-                        host: server.host,
-                        port: server.port,
-                        securityLayer: server.securityLayer,
-                        responder: welf, errors:
-                        welf.serverErrors
-                    )
-                } catch {
-                    welf.console.output("Background server start error: \(error)", style: .error)
-                }
-            }
-        } else {
-            console.output(info, style: .info)
-            try self.server.start(
-                host: server.host,
-                port: server.port,
-                securityLayer: server.securityLayer,
-                responder: self,
-                errors: serverErrors
-            )
-        }
+        console.output(info, style: .info)
+        return try self.server.start(
+            host: config.host,
+            port: config.port,
+            securityLayer: config.securityLayer,
+            responder: self,
+            errors: serverErrors
+        )
     }
 
 }

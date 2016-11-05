@@ -1,5 +1,6 @@
 import libc
 import Console
+import Foundation
 
 extension Droplet {
     enum ExecutionError: Swift.Error {
@@ -12,6 +13,7 @@ extension Droplet {
     public func run(servers: [String: ServerConfig]? = nil) -> Never  {
         do {
             try runCommands(servers: servers)
+            RunLoop.current.run()
             exit(0)
         } catch CommandError.general(let error) {
             console.output(error, style: .error)
