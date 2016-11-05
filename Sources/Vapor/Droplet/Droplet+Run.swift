@@ -1,6 +1,7 @@
 import libc
 import Console
 import Foundation
+import Dispatch
 
 extension Droplet {
     enum ExecutionError: Swift.Error {
