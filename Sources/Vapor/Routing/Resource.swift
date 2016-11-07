@@ -45,12 +45,12 @@ public protocol ResourceRepresentable {
 }
 
 extension RouteBuilder where Value == Responder {
-    public func resource<Resource: ResourceRepresentable>(_ path: String, slugName: String = "id", _ resource: Resource) {
+    public func resource<Resource: ResourceRepresentable>(_ path: String, _ resource: Resource) {
         let resource = resource.makeResource()
         self.resource(path, resource)
     }
 
-    public func resource<Model: StringInitializable>(_ path: String, slugName: String = "id", _ resource: Resource<Model>) {
+    public func resource<Model: StringInitializable>(_ path: String, _ resource: Resource<Model>) {
         var itemMethods: [Method] = []
         var multipleMethods: [Method] = []
 
@@ -61,8 +61,8 @@ extension RouteBuilder where Value == Responder {
 
             itemMethods += method
 
-            self.add(method, path, ":\(slugName)") { request in
-                guard let id = request.parameters[slugName]?.string else {
+            self.add(method, path, ":\(path)_id") { request in
+                guard let id = request.parameters["\(path)_id"]?.string else {
                     throw Abort.notFound
                 }
 
@@ -101,7 +101,7 @@ extension RouteBuilder where Value == Responder {
         } else {
             item(.options) { request in
                 return try JSON(node: [
-                    "resource": "\(path)/:\(slugName)",
+                    "resource": "\(path)/:\(path)_id",
                     "methods": try JSON(node: itemMethods.map { $0.description })
                 ])
             }
@@ -109,7 +109,7 @@ extension RouteBuilder where Value == Responder {
 
         if let about = resource.aboutMultiple {
             multiple(.options, about)
-        }else {
+        } else {
             multiple(.options) { request in
                 let methods: [String] = multipleMethods.map { $0.description }
                 return try JSON(node: [
