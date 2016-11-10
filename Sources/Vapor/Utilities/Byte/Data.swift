@@ -43,7 +43,7 @@ extension Collection where Iterator.Element == Byte, IndexDistance == Int, Index
                 let nextRange = ranges[pos + 1]
                 // Skip if there is no content
                 if range.to > nextRange.from {
-                  continue
+                    break
                 }
                 parts.append(self[range.to..<nextRange.from].array)
 
