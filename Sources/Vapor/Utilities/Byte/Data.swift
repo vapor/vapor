@@ -41,7 +41,10 @@ extension Collection where Iterator.Element == Byte, IndexDistance == Int, Index
             if pos < ranges.count - 1 {
                 // Take the data inbetween this and the next boundry
                 let nextRange = ranges[pos + 1]
-
+                // Skip if there is no content
+                if range.to > nextRange.from {
+                  continue
+                }
                 parts.append(self[range.to..<nextRange.from].array)
 
             // If this is after the last separator and shouldn't be thrown away
