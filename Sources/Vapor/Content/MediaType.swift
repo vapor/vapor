@@ -606,9 +606,9 @@ let mediaTypes = [
 ]
 
 public struct MediaType {
-    let fileExtension:String
-    let mediaType:String
-    init?(_ fileExtension: String) {
+    public let fileExtension:String
+    public let mediaType:String
+    public init?(_ fileExtension: String) {
         if let type = mediaTypes[fileExtension.lowercased()] {
             self.fileExtension = fileExtension
             self.mediaType = type
