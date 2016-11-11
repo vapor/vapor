@@ -604,3 +604,16 @@ let mediaTypes = [
     "ice": "x-conference/x-cooltalk", // CoolTalk Wikipedia: CoolTalk
     "par": "text/plain-bas" // BAS Partitur Format Phonetik BAS
 ]
+
+public struct MediaType {
+    let fileExtension:String
+    let mediaType:String
+    init?(_ fileExtension: String) {
+        if let type = mediaTypes[fileExtension.lowercased()] {
+            self.fileExtension = fileExtension
+            self.mediaType = type
+        } else {
+            return nil
+        }
+    }
+}
