@@ -1,8 +1,8 @@
 import HTTP
 
 public struct AcceptLanguage {
-    let languageRange: String
-    let quality: Double
+    public let languageRange: String
+    public let quality: Double
 }
 
 extension Request {
