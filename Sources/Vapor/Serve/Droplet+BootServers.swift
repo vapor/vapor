@@ -43,24 +43,24 @@ extension Droplet {
 // MARK: Booting
 
 extension Droplet {
-    public func bootServers(_ s: [String: ServerConfig]? = nil) throws {
+    func bootServers(_ s: [String: ServerConfig]? = nil) throws {
         let servers: [String: ServerConfig]
         if let s = s {
             servers = s
         } else {
             servers = parseServersConfig()
         }
-        
+
         var bootedServers = 0
         for (name, server) in servers {
             try bootServer(server, name: name, isLastServer: bootedServers == servers.count - 1)
             bootedServers += 1
         }
     }
-    
+
     func bootServer(_ server: ServerConfig, name: String, isLastServer: Bool) throws {
         let runInBackground = !isLastServer
-        
+
         var message: [String] = []
         message += "Server '\(name)' starting"
         if runInBackground {
@@ -71,7 +71,7 @@ extension Droplet {
             message += "🔒"
         }
         let info = message.joined(separator: " ")
-        
+
         if runInBackground {
             _ = try background { [weak self] in
                 guard let welf = self else {
