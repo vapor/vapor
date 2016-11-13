@@ -1,6 +1,5 @@
 import libc
 import Console
-import Foundation
 import Dispatch
 
 extension Droplet {
