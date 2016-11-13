@@ -148,7 +148,7 @@ public class Droplet {
     /**
         The currently running servers
      */
-    public var bootedServers: [ServerProtocol] = []
+    public var startedServers: [ServerProtocol] = []
 
     /**
         The providers that have been added.

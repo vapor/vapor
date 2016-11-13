@@ -4,23 +4,23 @@ import Transport
 
 public typealias ServerConfig = (host: String, port: Int, securityLayer: SecurityLayer)
 
-// MARK: Booting
+// MARK: Starting (async booting)
 
 extension Droplet {
-    public func bootServers(_ s: [String: ServerConfig]? = nil) throws {
+    public func startServers(_ s: [String: ServerConfig]? = nil) throws {
         let configs: [String: ServerConfig]
         if let s = s {
             configs = s
         } else {
             configs = parseServersConfig()
         }
-
+        
         for (name, config) in configs {
-            bootedServers += try bootServer(config, name: name)
+            startedServers += try startServer(config, name: name)
         }
     }
-
-    public func bootServer(_ config: ServerConfig, name: String) throws -> ServerProtocol {
+    
+    public func startServer(_ config: ServerConfig, name: String) throws -> ServerProtocol {
         var message: [String] = []
         message += "Server '\(name)' starting"
         message += "at \(config.host):\(config.port)"
@@ -28,9 +28,9 @@ extension Droplet {
             message += "🔒"
         }
         let info = message.joined(separator: " ")
-
+        
         console.output(info, style: .info)
-        return try self.server.start(
+        return try self.server.startAsync(
             host: config.host,
             port: config.port,
             securityLayer: config.securityLayer,
@@ -38,7 +38,69 @@ extension Droplet {
             errors: serverErrors
         )
     }
+}
 
+// MARK: Booting
+
+extension Droplet {
+    public func bootServers(_ s: [String: ServerConfig]? = nil) throws {
+        let servers: [String: ServerConfig]
+        if let s = s {
+            servers = s
+        } else {
+            servers = parseServersConfig()
+        }
+        
+        var bootedServers = 0
+        for (name, server) in servers {
+            try bootServer(server, name: name, isLastServer: bootedServers == servers.count - 1)
+            bootedServers += 1
+        }
+    }
+    
+    func bootServer(_ server: ServerConfig, name: String, isLastServer: Bool) throws {
+        let runInBackground = !isLastServer
+        
+        var message: [String] = []
+        message += "Server '\(name)' starting"
+        if runInBackground {
+            message += "in background"
+        }
+        message += "at \(server.host):\(server.port)"
+        if server.securityLayer.isSecure {
+            message += "🔒"
+        }
+        let info = message.joined(separator: " ")
+        
+        if runInBackground {
+            _ = try background { [weak self] in
+                guard let welf = self else {
+                    return
+                }
+                do {
+                    welf.console.output(info, style: .info)
+                    try welf.server.start(
+                        host: server.host,
+                        port: server.port,
+                        securityLayer: server.securityLayer,
+                        responder: welf, errors:
+                        welf.serverErrors
+                    )
+                } catch {
+                    welf.console.output("Background server start error: \(error)", style: .error)
+                }
+            }
+        } else {
+            console.output(info, style: .info)
+            try self.server.start(
+                host: server.host,
+                port: server.port,
+                securityLayer: server.securityLayer,
+                responder: self,
+                errors: serverErrors
+            )
+        }
+    }
 }
 
 // MARK: Parsing
