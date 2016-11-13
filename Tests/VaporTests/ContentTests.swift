@@ -16,6 +16,7 @@ class TestResponder: Responder {
 
 class ContentTests: XCTestCase {
     static var allTests = [
+        ("testSetJSON", testSetJSON),
         ("testParse", testParse),
         ("testMultipart", testMultipart),
         ("testMultipartFile", testMultipartFile),
@@ -26,6 +27,13 @@ class ContentTests: XCTestCase {
         ("testMultipartSerializationNoFileName", testMultipartSerializationNoFileName),
         ("testMultipartSerializationNoFileType", testMultipartSerializationNoFileType)
     ]
+
+    func testSetJSON() throws {
+        let request = try Request(method: .get, path: "/")
+        let json = JSON(["hello": "world"])
+        request.json = json
+        XCTAssertEqual(json, request.json)
+    }
 
     func testParse() {
         let string = "value=123"

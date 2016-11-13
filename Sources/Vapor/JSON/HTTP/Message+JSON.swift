@@ -14,13 +14,14 @@ extension Message {
                 return nil
             }
         }
-        set(data) {
-            if let data = data {
+        set(json) {
+            if let data = json {
                 if let body = try? Body(data) {
                     self.body = body
                     headers["Content-Type"] = "application/json; charset=utf-8"
                 }
             }
+            storage["json"] = json
         }
     }
 }

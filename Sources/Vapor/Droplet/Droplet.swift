@@ -6,6 +6,7 @@ import HMAC
 import Cipher
 import Fluent
 import Transport
+import SocksCore
 
 public let VERSION = "1.1.0"
 
@@ -321,6 +322,18 @@ public class Droplet {
     }
 
     func serverErrors(error: ServerError) {
+        /*
+            This error is thrown on read timeouts and is providing excess logging of expected behavior.
+         
+            We will continue to work to resolve the underlying issue associated with this error.
+         
+            https://github.com/vapor/vapor/issues/678
+        */
+        if
+            case let .dispatch(dispatchError) = error,
+            case let StreamError.receive(_, recError as SocksError) = dispatchError,
+            recError.number == 35  { return }
+
         log.error("Server error: \(error)")
     }
 }

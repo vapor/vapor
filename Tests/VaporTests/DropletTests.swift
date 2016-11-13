@@ -82,11 +82,12 @@ class DropletTests: XCTestCase {
         try background {
             drop.run()
         }
+        try background {
+            drop.console.wait(seconds: 2)
 
-        drop.console.wait(seconds: 2)
-
-        let res = try drop.client.get("http://0.0.0.0:8080/foo")
-        XCTAssertEqual(try res.bodyString(), "bar")
+            let res = try! drop.client.get("http://0.0.0.0:8080/foo")
+            XCTAssertEqual(try! res.bodyString(), "bar")
+        }
     }
 
     func testRunConfig() throws {
