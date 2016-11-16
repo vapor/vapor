@@ -42,7 +42,7 @@ extension Droplet {
     }
 
     public func stopServers() {
-        // release all servers, which closes the listening socket(s)
+        // release all servers, which should close the listening socket(s)
         startedServers.removeAll()
     }
     
