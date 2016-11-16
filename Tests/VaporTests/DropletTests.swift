@@ -118,7 +118,7 @@ class DropletTests: XCTestCase {
             return "bar"
         }
 
-        try drop.startServer(("0.0.0.0", 8424, .none), name: "my-server")
+        _ = try drop.startServer(("0.0.0.0", 8424, .none), name: "my-server")
 
         drop.console.wait(seconds: 2)
 

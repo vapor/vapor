@@ -16,7 +16,7 @@ extension Droplet {
         }
         
         for (name, config) in configs {
-            try startServer(config, name: name)
+            _ = try startServer(config, name: name)
         }
     }
     
