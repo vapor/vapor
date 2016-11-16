@@ -16,7 +16,7 @@ extension Droplet {
         }
         
         for (name, config) in configs {
-            startedServers += try startServer(config, name: name)
+            startedServers[name] = try startServer(config, name: name)
         }
     }
     
@@ -37,6 +37,25 @@ extension Droplet {
             responder: self,
             errors: serverErrors
         )
+    }
+
+    public func stopServers() {
+        // release all servers, which closes the listening socket(s)
+        startedServers.removeAll()
+    }
+    
+    public func stopServer(name: String) {
+        guard let server = startedServers[name] else { return }
+        startedServers.removeValue(forKey: name)
+        var message: [String] = []
+        message += "Stopping server '\(name)'"
+        message += "at \(server.host):\(server.port)"
+        if server.securityLayer.isSecure {
+            message += "🔒"
+        }
+        let info = message.joined(separator: " ")
+        
+        console.output(info, style: .info)
     }
 }
 
