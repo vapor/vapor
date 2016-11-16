@@ -16,7 +16,7 @@ extension Droplet {
         }
         
         for (name, config) in configs {
-            startedServers[name] = try startServer(config, name: name)
+            try startServer(config, name: name)
         }
     }
     
@@ -30,13 +30,15 @@ extension Droplet {
         let info = message.joined(separator: " ")
         
         console.output(info, style: .info)
-        return try self.server.startAsync(
+        let server = try self.server.startAsync(
             host: config.host,
             port: config.port,
             securityLayer: config.securityLayer,
             responder: self,
             errors: serverErrors
         )
+        startedServers[name] = server
+        return server
     }
 
     public func stopServers() {
