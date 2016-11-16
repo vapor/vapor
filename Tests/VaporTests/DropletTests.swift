@@ -79,15 +79,12 @@ class DropletTests: XCTestCase {
             return "bar"
         }
 
-        try background {
-            drop.run()
-        }
-        try background {
-            drop.console.wait(seconds: 2)
+        try drop.startServers()
 
-            let res = try! drop.client.get("http://0.0.0.0:8080/foo")
-            XCTAssertEqual(try! res.bodyString(), "bar")
-        }
+        drop.console.wait(seconds: 2)
+        
+        let res = try! drop.client.get("http://0.0.0.0:8080/foo")
+        XCTAssertEqual(try! res.bodyString(), "bar")
     }
 
     func testRunConfig() throws {
@@ -106,9 +103,7 @@ class DropletTests: XCTestCase {
             return "bar"
         }
 
-        try background {
-            drop.run()
-        }
+        try drop.startServers()
 
         drop.console.wait(seconds: 2)
 
@@ -123,11 +118,7 @@ class DropletTests: XCTestCase {
             return "bar"
         }
 
-        try background {
-            drop.run(servers: [
-                "my-server": ("0.0.0.0", 8424, .none)
-            ])
-        }
+        try drop.startServer(("0.0.0.0", 8424, .none), name: "my-server")
 
         drop.console.wait(seconds: 2)
 
