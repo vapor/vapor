@@ -11,4 +11,5 @@ public enum Abort: Swift.Error {
     case notFound
     case serverError
     case custom(status: Status, message: String)
+    case customWithCode(status: Status, message: String, code: Int)
 }
