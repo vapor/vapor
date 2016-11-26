@@ -29,19 +29,20 @@ public class AbortMiddleware: Middleware {
             return try AbortMiddleware.errorResponse(request, .notFound, "Page not found")
         } catch Abort.serverError {
             return try AbortMiddleware.errorResponse(request, .internalServerError, "Something went wrong")
-        } catch Abort.custom(let status, let message) {
-            return try AbortMiddleware.errorResponse(request, status, message)
+        } catch Abort.customWithCode(let status, let message, let code) {
+            return try AbortMiddleware.errorResponse(request, status, message, code)
         }
     }
 
-    static func errorResponse(_ request: Request, _ status: Status, _ message: String) throws -> Response {
+    static func errorResponse(_ request: Request, _ status: Status, _ message: String, _ code: Int = 0) throws -> Response {
         if request.accept.prefers("html") {
             return ErrorView.shared.makeResponse(status, message)
         }
 
         let json = try JSON(node: [
             "error": true,
-            "message": "\(message)"
+            "message": "\(message)",
+            "code": code
             ])
         let data = try json.makeBytes()
         let response = Response(status: status, body: .data(data))
