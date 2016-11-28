@@ -2,6 +2,10 @@ import Core
 import Foundation
 import JSON
 
+private enum Error: Swift.Error {
+    case jsonError(String)
+}
+
 extension Node {
     /**
         Load all files in a given directory as config files.
@@ -29,7 +33,11 @@ extension Node {
     private static func loadContents(path: String) throws -> Node {
         let data = try DataFile().load(path: path)
         guard path.hasSuffix(".json") else { return .bytes(data) }
-        return try JSON(bytes: data).converted()
+        do {
+            return try JSON(bytes: data).converted()
+        } catch {
+            throw Error.jsonError(path)
+        }
     }
 }
 

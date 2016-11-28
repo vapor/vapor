@@ -219,7 +219,7 @@ public class Droplet {
                     ]
                 )
             } catch {
-                log.debug("Could not load configuration files: \(error)")
+                log.error("Could not load configuration files: \(error)")
                 config = Config([:])
             }
         }
