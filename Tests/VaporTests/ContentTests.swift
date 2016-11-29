@@ -19,7 +19,9 @@ class ContentTests: XCTestCase {
         ("testSetJSON", testSetJSON),
         ("testParse", testParse),
         ("testMultipart", testMultipart),
+        ("testMultipartEmptyContent", testMultipartEmptyContent),
         ("testMultipartFile", testMultipartFile),
+        ("testMultipartFileEmptyContent", testMultipartFileEmptyContent),
         ("testFormURLEncoded", testFormURLEncoded),
         ("testFormURLEncodedEdge", testFormURLEncodedEdge),
         ("testSplitString", testSplitString),
@@ -59,6 +61,29 @@ class ContentTests: XCTestCase {
         XCTAssertEqual(data["value"]?.int, 123, "Request did not parse correctly")
     }
 
+    func testMultipartEmptyContent() throws {
+        let boundary = "~~vapor~~"
+
+        var body = "--" + boundary + "\r\n"
+        body += "Content-Disposition: form-data; name=\"value\"\r\n"
+        body += "\r\n"
+        body += "\r\n"
+        body += "--" + boundary + "\r\n"
+        body += "Content-Disposition: form-data; name=\"value2\"\r\n"
+        body += "Content-Type: image/gif\r\n"
+        body += "\r\n"
+        body += "123"
+        body += "--" + boundary + "\r\n"
+        print("Body: \(body)")
+
+        let parsedBoundary = try Multipart.parseBoundary(contentType: "multipart/form-data; charset=utf-8; boundary=\(boundary)")
+        print("Parsed boundary: \(parsedBoundary)")
+        let data = Multipart.parse(body.bytes, boundary: parsedBoundary)
+        print("Data: \(data)")
+        XCTAssertNil(data["value"], "Request did not parse correctly")
+        XCTAssertEqual(data["value2"]?.file?.data ?? [1,2,3], "123".bytes, "Request did not parse correctly")
+    }
+
     func testMultipartFile() {
         let boundary = "~~vapor~~"
 
@@ -74,6 +99,23 @@ class ContentTests: XCTestCase {
         let data = Multipart.parse(body.bytes, boundary: parsedBoundary)
 
         XCTAssertEqual(data["value"]?.file?.data ?? [1,2,3], "123".bytes, "Request did not parse correctly")
+    }
+
+    func testMultipartFileEmptyContent() throws {
+        let boundary = "~~vapor~~"
+
+        var body = "--" + boundary + "\r\n"
+        body += "Content-Disposition: form-data; name=\"value\"; filename=\"filename\"\r\n"
+        body += "Content-Type: application/octet-stream\r\n"
+        body += "\r\n"
+        body += "\r\n"
+        body += "--" + boundary + "\r\n"
+
+        let parsedBoundary = try! Multipart.parseBoundary(contentType: "multipart/form-data; charset=utf-8; boundary=\(boundary)")
+        print("Got parsed boundary: \(parsedBoundary)")
+        let data = Multipart.parse(body.bytes, boundary: parsedBoundary)
+
+        XCTAssertNil(data["value"], "Request did not parse correctly")
     }
 
     func testFormURLEncoded() {
