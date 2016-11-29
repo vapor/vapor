@@ -222,6 +222,9 @@ public class Droplet {
                 log.error("Could not load configuration file at \(path). Check the syntax and try again.")
                 log.verbose("\(error.localizedDescription) \(error)")
                 config = Config([:])
+            } catch {
+                log.debug("Could not load configuration files: \(error)")
+                config = Config([:])
             }
         }
         self.config = config
