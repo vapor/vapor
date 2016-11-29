@@ -31,7 +31,7 @@ class ContentTests: XCTestCase {
     ]
 
     func testSetJSON() throws {
-        let request = try Request(method: .get, path: "/")
+        let request = Request(method: .get, path: "/")
         let json = JSON(["hello": "world"])
         request.json = json
         XCTAssertEqual(json, request.json)
