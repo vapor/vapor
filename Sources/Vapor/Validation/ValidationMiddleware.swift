@@ -17,7 +17,9 @@ public class ValidationMiddleware: Middleware {
                 "message": error.message
             ])
             let data = try json.makeBytes()
-            return Response(status: .badRequest, body: .data(data))
+            let response = Response(status: .badRequest, body: .data(data))
+            response.headers["Content-Type"] = "application/json; charset=utf-8"
+            return response
         }
     }
     
