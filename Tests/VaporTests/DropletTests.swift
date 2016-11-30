@@ -2,6 +2,7 @@ import XCTest
 @testable import Vapor
 import HTTP
 import Core
+import SocksCore
 
 class DropletTests: XCTestCase {
     static let allTests = [
@@ -79,15 +80,32 @@ class DropletTests: XCTestCase {
             return "bar"
         }
 
-        try background {
-            drop.run()
-        }
-        try background {
-            drop.console.wait(seconds: 2)
+        try drop.startServers()
 
-            let res = try! drop.client.get("http://0.0.0.0:8080/foo")
-            XCTAssertEqual(try! res.bodyString(), "bar")
-        }
+        drop.console.wait(seconds: 2)
+        
+        let res = try! drop.client.get("http://0.0.0.0:8080/foo")
+        XCTAssertEqual(try! res.bodyString(), "bar")
+        
+        drop.stopServers()
+
+        XCTAssert(drop.startedServers.count == 0)
+
+        drop.console.wait(seconds: 0.5)
+
+        // TODO: Enable when a new version of vapor/engine is released with this PR:
+        // https://github.com/vapor/engine/pull/78
+        // Currently, listening sockets aren't closed properly, resulting in wrong errors
+
+//        do {
+//            _ = try drop.client.get("http://0.0.0.0:8080/foo")
+//            XCTFail("Expected to throw")
+//        } catch let error as SocksError {
+//            guard case ErrorReason.connectFailed = error.type else {
+//                XCTFail("Unexpected SocksError: \(error)")
+//                return
+//            }
+//        }
     }
 
     func testRunConfig() throws {
@@ -106,9 +124,7 @@ class DropletTests: XCTestCase {
             return "bar"
         }
 
-        try background {
-            drop.run()
-        }
+        try drop.startServers()
 
         drop.console.wait(seconds: 2)
 
@@ -123,15 +139,31 @@ class DropletTests: XCTestCase {
             return "bar"
         }
 
-        try background {
-            drop.run(servers: [
-                "my-server": ("0.0.0.0", 8424, .none)
-            ])
-        }
+        _ = try drop.startServer(("0.0.0.0", 8424, .none), name: "my-server")
 
         drop.console.wait(seconds: 2)
 
         let res = try drop.client.get("http://0.0.0.0:8424/foo")
         XCTAssertEqual(try res.bodyString(), "bar")
+
+        drop.stopServer(name: "my-server")
+        
+        XCTAssert(drop.startedServers.count == 0)
+        
+        drop.console.wait(seconds: 0.5)
+        
+        // TODO: Enable when a new version of vapor/engine is released with this PR:
+        // https://github.com/vapor/engine/pull/78
+        // Currently, listening sockets aren't closed properly, resulting in wrong errors
+        
+//        do {
+//            _ = try drop.client.get("http://0.0.0.0:8424/foo")
+//            XCTFail("Expected to throw")
+//        } catch let error as SocksError {
+//            guard case ErrorReason.connectFailed = error.type else {
+//                XCTFail("Unexpected SocksError: \(error)")
+//                return
+//            }
+//        }
     }
 }
