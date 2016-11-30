@@ -3,39 +3,42 @@ import HTTP
 import TypeSafeRouting
 
 public final class Resource<Model: StringInitializable> {
-    public typealias Multiple = (Request) throws -> ResponseRepresentable
-    public typealias Item = (Request, Model) throws -> ResponseRepresentable
+    public typealias SimpleRequest = (Request) throws -> ResponseRepresentable
+    public typealias ItemRequest = (Request, Model) throws -> ResponseRepresentable
 
-    public var index: Multiple?
-    public var store: Multiple?
-    public var show: Item?
-    public var replace: Item?
-    public var modify: Item?
-    public var destroy: Item?
-    public var clear: Multiple?
-    public var aboutItem: Item?
-    public var aboutMultiple: Multiple?
+    public var index: SimpleRequest?
+    public var new: SimpleRequest?
+    public var create: SimpleRequest?
+    public var show: ItemRequest?
+    public var update: ItemRequest?
+    public var replace: ItemRequest?
+    public var destroy: ItemRequest?
+    public var clear: SimpleRequest?
+    public var aboutItem: ItemRequest?
+    public var aboutSimple: SimpleRequest?
 
     public init(
-        index: Multiple? = nil,
-        store: Multiple? = nil,
-        show: Item? = nil,
-        replace: Item? = nil,
-        modify: Item? = nil,
-        destroy: Item? = nil,
-        clear: Multiple? = nil,
-        aboutItem: Item? = nil,
-        aboutMultiple: Multiple? = nil
-    ) {
+        index: SimpleRequest? = nil,
+        new: SimpleRequest? = nil,
+        create: SimpleRequest? = nil,
+        show: ItemRequest? = nil,
+        replace: ItemRequest? = nil,
+        update: ItemRequest? = nil,
+        destroy: ItemRequest? = nil,
+        clear: SimpleRequest? = nil,
+        aboutItem: ItemRequest? = nil,
+        aboutSimple: SimpleRequest? = nil
+        ) {
         self.index = index
-        self.store = store
+        self.new = new
+        self.create = create
         self.show = show
         self.replace = replace
-        self.modify = modify
+        self.update = update
         self.destroy = destroy
         self.clear = clear
         self.aboutItem = aboutItem
-        self.aboutMultiple = aboutMultiple
+        self.aboutSimple = aboutSimple
     }
 }
 
@@ -52,9 +55,9 @@ extension RouteBuilder where Value == Responder {
 
     public func resource<Model: StringInitializable>(_ path: String, _ resource: Resource<Model>) {
         var itemMethods: [Method] = []
-        var multipleMethods: [Method] = []
+        var simpleMethods: [Method] = []
 
-        func item(_ method: Method, _ item: Resource<Model>.Item?) {
+        func item(_ method: Method, _ item: Resource<Model>.ItemRequest?) {
             guard let item = item else {
                 return
             }
@@ -74,27 +77,32 @@ extension RouteBuilder where Value == Responder {
             }
         }
 
-        func multiple(_ method: Method, _ multiple: Resource<Model>.Multiple?) {
-            guard let multiple = multiple else {
+        func simple(_ method: Method, subpath: String? = nil, _ simple: Resource<Model>.SimpleRequest?) {
+            guard let simple = simple else {
                 return
             }
 
-            multipleMethods += method
+            simpleMethods += method
 
-            self.add(method, path) { request in
-                return try multiple(request).makeResponse()
+            if let subpath = subpath {
+                self.add(method, path, subpath) { request in
+                    return try simple(request).makeResponse()
+                }
+            } else {
+                self.add(method, path) { request in
+                    return try simple(request).makeResponse()
+                }
             }
-
         }
 
-
-        multiple(.get, resource.index)
-        multiple(.post, resource.store)
+        simple(.get, resource.index)
+        simple(.get, subpath: "new", resource.new)
+        simple(.post, resource.create)
         item(.get, resource.show)
         item(.put, resource.replace)
-        item(.patch, resource.modify)
+        item(.patch, resource.update)
         item(.delete, resource.destroy)
-        multiple(.delete, resource.clear)
+        simple(.delete, resource.clear)
 
         if let about = resource.aboutItem {
             item(.options, about)
@@ -103,19 +111,19 @@ extension RouteBuilder where Value == Responder {
                 return try JSON(node: [
                     "resource": "\(path)/:id",
                     "methods": try JSON(node: itemMethods.map { $0.description })
-                ])
+                    ])
             }
         }
 
-        if let about = resource.aboutMultiple {
-            multiple(.options, about)
-        }else {
-            multiple(.options) { request in
-                let methods: [String] = multipleMethods.map { $0.description }
+        if let about = resource.aboutSimple {
+            simple(.options, about)
+        } else {
+            simple(.options) { request in
+                let methods: [String] = simpleMethods.map { $0.description }
                 return try JSON(node: [
                     "resource": path,
                     "methods": try JSON(node: methods)
-                ])
+                    ])
             }
         }
     }
@@ -124,7 +132,7 @@ extension RouteBuilder where Value == Responder {
         _ path: String,
         _ type: Model.Type = Model.self,
         closure: (Resource<Model>) -> ()
-    ) {
+        ) {
         let resource = Resource<Model>()
         closure(resource)
         self.resource(path, resource)
