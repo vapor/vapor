@@ -47,7 +47,7 @@ public class Localization {
                 continue
             }
             if let result = localizations[langCode.lowercased()]?[paths]?.string {
-                return result
+                return result    //First localization which matches will be returned
             }
         }
         return localizations[defaultDialect]?[paths]?.string // Index the default language
