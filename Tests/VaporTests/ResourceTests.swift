@@ -22,12 +22,17 @@ class ResourceTests: XCTestCase {
                 return "index"
             }
 
+            users.new = { req in
+                return "new"
+            }
+
             users.show = { req, user in
                 return "user \(user.name)"
             }
         }
 
         XCTAssertEqual(try drop.responseBody(for: .get, "users"), "index")
+        XCTAssertEqual(try drop.responseBody(for: .get, "users/new"), "new")
         XCTAssertEqual(try drop.responseBody(for: .get, "users/bob"), "user bob")
         XCTAssert(try drop.responseBody(for: .get, "users/ERROR").contains("Vapor.Abort.notFound"))
     }
@@ -39,8 +44,8 @@ class ResourceTests: XCTestCase {
             users.index = { req in
                 return "index"
             }
-            users.store = { req in
-                return "store"
+            users.create = { req in
+                return "create"
             }
         }
 
