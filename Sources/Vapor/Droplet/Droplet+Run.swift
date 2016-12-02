@@ -13,9 +13,12 @@ extension Droplet {
     public func run(servers: [String: ServerConfig]? = nil) -> Never  {
         do {
             try runCommands(servers: servers)
-            let group = DispatchGroup()
-            group.enter()
-            group.wait()
+            if (self.startedServers.count > 0) {
+                // if servers were started, wait (forever) on a DispatchGroup to prevent the process from exiting
+                let group = DispatchGroup()
+                group.enter()
+                group.wait()
+            }
             exit(0)
         } catch CommandError.general(let error) {
             console.output(error, style: .error)
