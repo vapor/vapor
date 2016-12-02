@@ -23,15 +23,21 @@ class ResourceTests: XCTestCase {
                 return "index"
             }
 
+            users.new = { req in
+                return "new"
+            }
+
             users.show = { req, user in
                 return "user \(user.name)"
             }
         }
 
         XCTAssertEqual(try drop.responseBody(for: .get, "users"), "index")
+        XCTAssertEqual(try drop.responseBody(for: .get, "users/new"), "new")
         XCTAssertEqual(try drop.responseBody(for: .get, "users/bob"), "user bob")
-        print(try drop.responseBody(for: .get, "users/ERROR"))
-        XCTAssert(try drop.responseBody(for: .get, "users/ERROR").contains("Abort.notFound"))
+        let errorResponse = try drop.responseBody(for: .get, "users/ERROR")
+        print(errorResponse)
+        XCTAssert(errorResponse.contains("Abort.notFound"))
     }
 
     func testOptions() throws {
@@ -41,8 +47,8 @@ class ResourceTests: XCTestCase {
             users.index = { req in
                 return "index"
             }
-            users.store = { req in
-                return "store"
+            users.create = { req in
+                return "create"
             }
         }
 
