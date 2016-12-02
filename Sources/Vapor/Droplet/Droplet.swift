@@ -146,6 +146,11 @@ public class Droplet {
     public var storage: [String: Any]
 
     /**
+        The currently running servers
+     */
+    public internal(set) var startedServers: [String:ServerProtocol] = [:]
+
+    /**
         The providers that have been added.
     */
     public internal(set) var providers: [Provider]

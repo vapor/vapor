@@ -4,6 +4,63 @@ import Transport
 
 public typealias ServerConfig = (host: String, port: Int, securityLayer: SecurityLayer)
 
+// MARK: Starting (async booting)
+
+extension Droplet {
+    public func startServers(_ s: [String: ServerConfig]? = nil) throws {
+        let configs: [String: ServerConfig]
+        if let s = s {
+            configs = s
+        } else {
+            configs = parseServersConfig()
+        }
+        
+        for (name, config) in configs {
+            _ = try startServer(config, name: name)
+        }
+    }
+    
+    public func startServer(_ config: ServerConfig, name: String) throws -> ServerProtocol {
+        var message: [String] = []
+        message += "Server '\(name)' starting"
+        message += "at \(config.host):\(config.port)"
+        if config.securityLayer.isSecure {
+            message += "🔒"
+        }
+        let info = message.joined(separator: " ")
+        
+        console.output(info, style: .info)
+        let server = try self.server.startAsync(
+            host: config.host,
+            port: config.port,
+            securityLayer: config.securityLayer,
+            responder: self,
+            errors: serverErrors
+        )
+        startedServers[name] = server
+        return server
+    }
+
+    public func stopServers() {
+        // release all servers, which should close the listening socket(s)
+        startedServers.removeAll()
+    }
+    
+    public func stopServer(name: String) {
+        guard let server = startedServers[name] else { return }
+        startedServers.removeValue(forKey: name)
+        var message: [String] = []
+        message += "Stopping server '\(name)'"
+        message += "at \(server.host):\(server.port)"
+        if server.securityLayer.isSecure {
+            message += "🔒"
+        }
+        let info = message.joined(separator: " ")
+        
+        console.output(info, style: .info)
+    }
+}
+
 // MARK: Booting
 
 extension Droplet {
@@ -65,7 +122,6 @@ extension Droplet {
             )
         }
     }
-
 }
 
 // MARK: Parsing
