@@ -138,7 +138,7 @@ extension RouteBuilder where Value == Responder {
                 return try JSON(node: [
                     "resource": "\(path)/:id",
                     "methods": try JSON(node: itemMethods.map { $0.description })
-                    ])
+                ])
             }
         }
 
@@ -150,7 +150,7 @@ extension RouteBuilder where Value == Responder {
                 return try JSON(node: [
                     "resource": path,
                     "methods": try JSON(node: methods)
-                    ])
+                ])
             }
         }
     }
