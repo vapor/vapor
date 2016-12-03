@@ -5,7 +5,8 @@ import HTTP
 class ResourceTests: XCTestCase {
     static let allTests = [
         ("testBasic", testBasic),
-        ("testOptions", testOptions)
+        ("testOptions", testOptions),
+        ("testBackwardsCompatibility", testBackwardsCompatibility),
     ]
 
     func testBasic() throws {
@@ -44,13 +45,45 @@ class ResourceTests: XCTestCase {
             users.index = { req in
                 return "index"
             }
-            users.create = { req in
-                return "create"
+
+            users.show = { req, user in
+                return "user \(user.name)"
             }
         }
 
         XCTAssert(try drop.responseBody(for: .options, "users").contains("methods"))
         XCTAssert(try drop.responseBody(for: .options, "users/5").contains("methods"))
+    }
+
+    func testBackwardsCompatibility() {
+        func simple(request: Request) throws -> ResponseRepresentable {
+            throw Abort.notFound
+        }
+
+        func item(request: Request, user: User) throws -> ResponseRepresentable {
+            throw Abort.notFound
+        }
+
+        let resource = Resource(index: simple,
+                                store: simple,
+                                show: item,
+                                replace: item,
+                                modify: item,
+                                destroy: item,
+                                clear: simple,
+                                aboutItem: item,
+                                aboutMultiple: simple)
+
+        XCTAssertNotNil(resource.index)
+        XCTAssertNotNil(resource.create)
+        XCTAssertNotNil(resource.show)
+        XCTAssertNotNil(resource.replace)
+        XCTAssertNotNil(resource.update)
+        XCTAssertNotNil(resource.update)
+        XCTAssertNotNil(resource.destroy)
+        XCTAssertNotNil(resource.clear)
+        XCTAssertNotNil(resource.aboutItem)
+        XCTAssertNotNil(resource.aboutMultiple)
     }
 
 }
