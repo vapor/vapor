@@ -10,6 +10,7 @@ public final class Resource<Model: StringInitializable> {
     public var new: SimpleRequest?
     public var create: SimpleRequest?
     public var show: ItemRequest?
+    public var edit: ItemRequest?
     public var update: ItemRequest?
     public var replace: ItemRequest?
     public var destroy: ItemRequest?
@@ -22,8 +23,9 @@ public final class Resource<Model: StringInitializable> {
         new: SimpleRequest? = nil,
         create: SimpleRequest? = nil,
         show: ItemRequest? = nil,
-        replace: ItemRequest? = nil,
+        edit: ItemRequest? = nil,
         update: ItemRequest? = nil,
+        replace: ItemRequest? = nil,
         destroy: ItemRequest? = nil,
         clear: SimpleRequest? = nil,
         aboutItem: ItemRequest? = nil,
@@ -33,8 +35,9 @@ public final class Resource<Model: StringInitializable> {
         self.new = new
         self.create = create
         self.show = show
-        self.replace = replace
+        self.edit = edit
         self.update = update
+        self.replace = replace
         self.destroy = destroy
         self.clear = clear
         self.aboutItem = aboutItem
@@ -59,8 +62,8 @@ public extension Resource {
         self.init(index: index,
                   create: store,
                   show: show,
-                  replace: replace,
                   update: modify,
+                  replace: replace,
                   destroy: destroy,
                   clear: clear,
                   aboutItem: aboutItem,
@@ -84,14 +87,14 @@ extension RouteBuilder where Value == Responder {
         var itemMethods: [Method] = []
         var simpleMethods: [Method] = []
 
-        func item(_ method: Method, _ item: Resource<Model>.ItemRequest?) {
+        func item(_ method: Method, subpath: String? = nil, _ item: Resource<Model>.ItemRequest?) {
             guard let item = item else {
                 return
             }
 
             itemMethods += method
 
-            self.add(method, path, ":id") { request in
+            let closure: (HTTP.Request) throws -> HTTP.ResponseRepresentable = { request in
                 guard let id = request.parameters["id"]?.string else {
                     throw Abort.notFound
                 }
@@ -101,6 +104,16 @@ extension RouteBuilder where Value == Responder {
                 }
 
                 return try item(request, model).makeResponse()
+            }
+
+            if let subpath = subpath {
+                self.add(method, path, ":id", subpath) { request in
+                    return try closure(request)
+                }
+            } else {
+                self.add(method, path, ":id") { request in
+                    return try closure(request)
+                }
             }
         }
 
@@ -124,6 +137,7 @@ extension RouteBuilder where Value == Responder {
 
         simple(.get, resource.index)
         simple(.get, subpath: "new", resource.new)
+        item(.get, subpath: "edit", resource.edit)
         simple(.post, resource.create)
         item(.get, resource.show)
         item(.put, resource.replace)

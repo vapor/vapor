@@ -31,11 +31,16 @@ class ResourceTests: XCTestCase {
             users.show = { req, user in
                 return "user \(user.name)"
             }
+
+            users.edit = { req, user in
+                return "edit \(user.name)"
+            }
         }
 
         XCTAssertEqual(try drop.responseBody(for: .get, "users"), "index")
         XCTAssertEqual(try drop.responseBody(for: .get, "users/new"), "new")
         XCTAssertEqual(try drop.responseBody(for: .get, "users/bob"), "user bob")
+        XCTAssertEqual(try drop.responseBody(for: .get, "users/bob/edit"), "edit bob")
         let errorResponse = try drop.responseBody(for: .get, "users/ERROR")
         print(errorResponse)
         XCTAssert(errorResponse.contains("Abort.notFound"))
