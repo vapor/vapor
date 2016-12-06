@@ -35,7 +35,9 @@ extension Droplet {
             port: config.port,
             securityLayer: config.securityLayer,
             responder: self,
-            errors: serverErrors
+            errors: { e in
+                self.serverErrors(error: e)
+            }
         )
         startedServers[name] = server
         return server
