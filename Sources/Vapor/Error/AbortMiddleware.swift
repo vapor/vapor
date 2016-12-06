@@ -34,7 +34,7 @@ public class AbortMiddleware: Middleware {
         }
     }
 
-    static func errorResponse(_ request: Request, _ status: Status, _ message: String) throws -> Response {
+    public static func errorResponse(_ request: Request, _ status: Status, _ message: String) throws -> Response {
         if request.accept.prefers("html") {
             return ErrorView.shared.makeResponse(status, message)
         }
