@@ -41,7 +41,10 @@ extension Request {
         }
         
         return try Node(node: [
-            "session": try session().data,
+            "session": Node(node: [
+                "data": try session().data,
+                "identifier": try session().identifier
+            ]),
             "storage": Node.object(nodeStorage),
             "method": method.description,
             "uri": Node(node: [
