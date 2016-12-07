@@ -4,7 +4,7 @@ People have built some awesome things with Vapor, and we can't wait to see what 
 
 * [PDX Cocoaheads Website](#pdx-cocoaheads) - The pdx cocoaheads.com site
 * [Vapor Chat](#vapor-chat) - realtime chat site / iOS app
-* [Qutheory.io](#qutheory.io) - the official Vapor site
+* [Qutheory.io](#qutheoryio) - the official Vapor site
 * [Byte Fish](#byte-fish) - url shortener
 * [Vapor Dashboard](#vapor-dashboard) - realtime Vapor stats
 * [Starred Search](#starred-search) - search the readme files of starred github repos
