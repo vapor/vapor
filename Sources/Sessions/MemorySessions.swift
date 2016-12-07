@@ -8,7 +8,7 @@ import Node
     data will be purged if the server is restarted.
 */
 public class MemorySessions: SessionsProtocol {
-    var sessions: [String: Node]
+    var sessions: [String: Session]
     private var sessionsLock = Lock()
 
     public init() {
@@ -18,22 +18,22 @@ public class MemorySessions: SessionsProtocol {
     /**
         Loads value for session id at given key
     */
-    public func get(for identifier: String) -> Node? {
-        var value: Node?
+    public func get(for identifier: String) -> Session? {
+        var session: Session?
 
         sessionsLock.locked {
-            value = sessions[identifier]
+            session = sessions[identifier]
         }
 
-        return value
+        return session
     }
 
     /**
         Sets value for session id at given key
     */
-    public func set(_ value: Node?, for identifier: String) {
+    public func set(_ session: Session?, for identifier: String) {
         sessionsLock.locked {
-            sessions[identifier] = value
+            sessions[identifier] = session
         }
     }
 

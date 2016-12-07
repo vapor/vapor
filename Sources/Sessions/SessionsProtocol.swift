@@ -20,7 +20,7 @@ public protocol SessionsProtocol {
 
         - returns: the value for given key, if exists
     */
-    func get(for identifier: String) throws -> Node?
+    func get(for identifier: String) throws -> Session?
 
     /**
         Set a alue for the given key associated with a session of the given identifier
@@ -29,7 +29,7 @@ public protocol SessionsProtocol {
         - parameter key: key to set
         - parameter identifier: identifier of the session
     */
-    func set(_ value: Node?, for identifier: String) throws
+    func set(_ session: Session?, for identifier: String) throws
 
     /**
         Destroy the session associated with given identifier

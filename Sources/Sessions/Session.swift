@@ -9,60 +9,16 @@ import Node
     `drop.sessions`.
 */
 public final class Session {
-    public var identifier: String?
-
-    private var sessions: SessionsProtocol
-
-    init(sessions: SessionsProtocol) {
-        self.sessions = sessions
+    public let identifier: String
+    public var data: Node
+    internal var shouldDestroy = false
+    
+    public init(identifier: String, data: Node = .null) {
+        self.identifier = identifier
+        self.data = data
     }
-
-    public func destroy() throws {
-        if let i = identifier {
-            identifier = nil
-            try sessions.destroy(i)
-        }
-    }
-
-    public var data: Node {
-        get {
-            let i: String
-
-            if let existingIdentifier = identifier {
-                i = existingIdentifier
-            } else {
-                i = sessions.makeIdentifier()
-                identifier = i
-            }
-
-            do {
-                if let data = try sessions.get(for: i) {
-                    return data
-                } else {
-                    let new = Node([:])
-                    try sessions.set(new, for: i)
-                    return new
-                }
-            } catch {
-                print("[Sessions] Error getting data: \(error)")
-                return nil
-            }
-        }
-        set {
-            let i: String
-
-            if let existingIdentifier = identifier {
-                i = existingIdentifier
-            } else {
-                i = sessions.makeIdentifier()
-                identifier = i
-            }
-
-            do {
-                try sessions.set(newValue, for: i)
-            } catch {
-                print("[Sessions] Error setting data: \(error)")
-            }
-        }
+    
+    public func destroy() {
+        shouldDestroy = true
     }
 }
