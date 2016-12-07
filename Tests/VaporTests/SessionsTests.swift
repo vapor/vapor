@@ -34,6 +34,11 @@ class SessionsTests: XCTestCase {
             return
         }
 
+        for s in s.sessions {
+            print(s.key)
+            print(s.value.data)
+        }
+        
         XCTAssertEqual(s.sessions[c]?.data, Node([
             "foo": "bar",
             "bar": "baz"

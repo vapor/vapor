@@ -18,7 +18,7 @@ public class MemorySessions: SessionsProtocol {
     /**
         Loads value for session id at given key
     */
-    public func get(for identifier: String) -> Session? {
+    public func get(identifier: String) -> Session? {
         var session: Session?
 
         sessionsLock.locked {
@@ -31,9 +31,18 @@ public class MemorySessions: SessionsProtocol {
     /**
         Sets value for session id at given key
     */
-    public func set(_ session: Session?, for identifier: String) {
+    public func set(_ session: Session) {
         sessionsLock.locked {
-            sessions[identifier] = session
+            sessions[session.identifier] = session
+        }
+    }
+    
+    /**
+         Destroys session with associated identifier
+    */
+    public func destroy(identifier: String) throws {
+        sessionsLock.locked {
+            sessions[identifier] = nil
         }
     }
 
@@ -42,14 +51,5 @@ public class MemorySessions: SessionsProtocol {
     */
     public func makeIdentifier() -> String {
         return CryptoRandom.bytes(16).base64String
-    }
-
-    /**
-        Destroys session with associated identifier
-    */
-    public func destroy(_ identifier: String) {
-        sessionsLock.locked {
-            sessions[identifier] = nil
-        }
     }
 }

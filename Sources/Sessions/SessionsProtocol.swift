@@ -20,7 +20,7 @@ public protocol SessionsProtocol {
 
         - returns: the value for given key, if exists
     */
-    func get(for identifier: String) throws -> Session?
+    func get(identifier: String) throws -> Session?
 
     /**
         Set a alue for the given key associated with a session of the given identifier
@@ -29,29 +29,25 @@ public protocol SessionsProtocol {
         - parameter key: key to set
         - parameter identifier: identifier of the session
     */
-    func set(_ session: Session?, for identifier: String) throws
+    func set(_ session: Session) throws
 
     /**
         Destroy the session associated with given identifier
 
         - parameter identifier: id of session
     */
-    func destroy(_ identifier: String) throws
+    func destroy(identifier: String) throws
 
     /**
         Returns true if the Sessions contains
         an entry for the supplied identifier.
     */
-    func contains(_ identifier: String) throws -> Bool
+    func contains(identifier: String) throws -> Bool
 }
 
 extension SessionsProtocol {
-    public func destroy(_ identifier: String) throws {
-        try set(nil, for: identifier)
-    }
-
-    public func contains(_ identifier: String) throws -> Bool {
-        return try get(for: identifier) != nil
+    public func contains(identifier: String) throws -> Bool {
+        return try get(identifier: identifier) != nil
     }
 }
 

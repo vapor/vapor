@@ -8,17 +8,21 @@ public final class CacheSessions: SessionsProtocol {
         self.cache = cache
     }
 
-    public func get(for identifier: String) throws -> Session? {
-        let data = try cache.get(identifier)
-        return Session(identifier: identifier, data: data ?? .null)
+    public func get(identifier: String) throws -> Session? {
+        if let data = try cache.get(identifier) {
+            return Session(identifier: identifier, data: data)
+        } else {
+            return nil
+        }
     }
 
-    public func set(_ session: Session?, for identifier: String) throws {
-        if let session = session {
-            try cache.set(identifier, session.data)
-        } else {
-            try cache.delete(identifier)
-        }
+    public func set(_ session: Session) throws {
+        try cache.set(session.identifier, session.data)
+    }
+    
+    public func destroy(identifier: String) throws{
+        try cache.delete(identifier)
+        
     }
 
     public func makeIdentifier() -> String {

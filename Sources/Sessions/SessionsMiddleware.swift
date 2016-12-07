@@ -25,7 +25,7 @@ public final class SessionsMiddleware: Middleware {
         
         if
             let identifier = request.cookies[cookieName],
-            let session = try sessions.get(for: identifier)
+            let session = try sessions.get(identifier: identifier)
         {
             s = session
         } else {
@@ -38,10 +38,10 @@ public final class SessionsMiddleware: Middleware {
         let response = try chain.respond(to: request)
 
         if s.shouldDestroy {
-            try sessions.destroy(s.identifier)
+            try sessions.destroy(identifier: s.identifier)
         } else {
             response.cookies[cookieName] = s.identifier
-            try sessions.set(s, for: s.identifier)
+            try sessions.set(s)
         }
 
         return response

@@ -13,7 +13,7 @@ public final class Session {
     public var data: Node
     internal var shouldDestroy = false
     
-    public init(identifier: String, data: Node = .null) {
+    public init(identifier: String, data: Node = [:]) {
         self.identifier = identifier
         self.data = data
     }
