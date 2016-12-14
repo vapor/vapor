@@ -38,7 +38,7 @@ public enum AllowOriginSetting {
 /// Configuration used for populating headers in response for CORS requests.
 public struct CORSConfiguration {
 
-    /// Default CORS configuration. 
+    /// Default CORS configuration.
     ///
     /// - Allow Origin: Based on request's `Origin` value.
     /// - Allow Methods: `GET`, `POST`, `PUT`, `OPTIONS`, `DELETE`, `PATCH`
@@ -67,18 +67,51 @@ public struct CORSConfiguration {
 
     /// Headers exposed in the response fo pre-flight request.
     public let exposedHeaders: String?
-    
-    init(allowedOrigin: AllowOriginSetting,
-         allowedMethods: [Method],
-         allowedHeaders: [String],
-         allowCredentials: Bool = false,
-         cacheExpiration: Int? = 600,
-         exposedHeaders: [String]? = nil) {
+
+    public init(allowedOrigin: AllowOriginSetting,
+                allowedMethods: [Method],
+                allowedHeaders: [String],
+                allowCredentials: Bool = false,
+                cacheExpiration: Int? = 600,
+                exposedHeaders: [String]? = nil) {
         self.allowedOrigin = allowedOrigin
         self.allowedMethods = allowedMethods.map({ $0.description }).joined(separator: ", ")
         self.allowedHeaders = allowedHeaders.joined(separator: ", ")
         self.allowCredentials = allowCredentials
         self.cacheExpiration = cacheExpiration
         self.exposedHeaders = exposedHeaders?.joined(separator: ", ")
+    }
+}
+
+extension CORSConfiguration: ConfigInitializable {
+    public init(config: Settings.Config) throws {
+        let cors: Node = try config.extract("cors") ?? config.extract("CORS")
+
+        // Allowed origin
+        let originString = try cors.extract("allowedOrigin").string
+        switch originString {
+        case "all", "*": self.allowedOrigin = .all
+        case "none", "": self.allowedOrigin = .none
+        case "origin", "Origin": self.allowedOrigin = .originBased
+        default: self.allowedOrigin = .custom(originString)
+        }
+
+        // Get methods
+        let methodArray: [String] = try cors.extract("allowedMethods")
+        self.allowedMethods = methodArray.joined(separator: ", ")
+
+        // Get allowed headers
+        let headersArray: [String] = try cors.extract("allowedHeaders")
+        self.allowedHeaders = headersArray.joined(separator: ", ")
+
+        // Allow credentials
+        let allowCredentials: Bool? = try cors.extract("allowCredentials")
+        self.allowCredentials = allowCredentials ?? false
+
+        // Cache expiration
+        self.cacheExpiration = try cors.extract("cacheExpiration") ?? 600
+
+        // Exposed headers
+        self.exposedHeaders = try cors.extract("exposedHeaders")
     }
 }

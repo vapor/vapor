@@ -3,7 +3,20 @@ import HTTP
 public class CORSMiddleware: Middleware {
 
     /// Configuration used for populating headers in response for CORS requests.
-    public var configuration = CORSConfiguration.default
+    public let configuration: CORSConfiguration
+
+    /// Creates a CORS middleware with the specified configuration.
+    ///
+    /// - Parameter configuration: Configuration used for populating headers in 
+    ///                            response for CORS requests.
+    public init(configuration: CORSConfiguration = .default) {
+        self.configuration = configuration
+    }
+
+    public convenience init(settings: Settings.Config) throws {
+        let configuration = try CORSConfiguration(config: settings)
+        self.init(configuration: configuration)
+    }
 
     public func respond(to request: Request, chainingTo chain: Responder) throws -> Response {
         // Check if it's valid CORS request
