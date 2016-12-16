@@ -681,14 +681,41 @@ drop.get("async") { request in
     }
 }
 
-let config = try TLS.Config(
+/*let config = try TLS.Config(
     mode: .server,
     certificates: .files(certificateFile: "/Users/tanner/Desktop/certs/cert.pem", privateKeyFile: "/Users/tanner/Desktop/certs/key.pem", signature: .selfSigned),
     verifyHost: true,
     verifyCertificates: true
-)
+)*/
+
+drop.socket("ws") { req, ws in
+    print("New WebSocket connected: \(ws)")
+    
+    // ping the socket to keep it open
+    try background {
+        while ws.state == .open {
+            try? ws.ping()
+            drop.console.wait(seconds: 10) // every 10 seconds
+        }
+    }
+    
+    ws.onText = { ws, text in
+        print("Text received: \(text)")
+        
+        // reverse the characters and send back
+        let rev = String(text.characters.reversed())
+        try ws.send(rev)
+    }
+    
+    ws.onClose = { ws, code, reason, clean in
+        print("Closed.")
+    }
+}
+
 
 drop.run(servers: [
-    "test": ("gertrude.codes", 8080, .none),
-    "secure": ("gertrude.codes", 8443, .tls(config)),
+    "test": ("0.0.0.0", 8080, .none),
+    "test1": ("0.0.0.0", 8085, .none),
+    "test2": ("0.0.0.0", 8088, .none),
+    //"secure": ("gertrude.codes", 8443, .tls(config)),
 ])

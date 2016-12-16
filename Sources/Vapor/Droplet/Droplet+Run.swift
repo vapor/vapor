@@ -46,7 +46,11 @@ extension Droplet {
         // the serve command will boot the servers
         // and always runs the prepare command
         let serve = Serve(console: console, prepare: prepare) {
-            try self.startServers(servers)
+            // nonblocking
+            // try self.startServers(servers)()
+            
+            // blocking
+            try self.bootServers(servers)
         }
 
         // the version command prints the frameworks version.
