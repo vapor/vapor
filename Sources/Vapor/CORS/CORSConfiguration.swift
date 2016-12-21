@@ -84,6 +84,12 @@ public struct CORSConfiguration {
 }
 
 extension CORSConfiguration: ConfigInitializable {
+
+    /// Creates the CORS configuration of the the Vapor's settings config dictionary.
+    /// This enables setting up CORS using a .json configuration file in the project.
+    ///
+    /// - Parameter config: The settings config dictionary that should be used to extract settings.
+    /// - Throws: Node extraction errors, if extraction fails.
     public init(config: Settings.Config) throws {
         let cors: Node = try config.extract("cors") ?? config.extract("CORS")
 
