@@ -4,7 +4,6 @@ import HTTP
 
 class CORSMiddlewareTests: XCTestCase {
     static let allTests = [
-        ("testCORSMiddleware", testCORSMiddleware),
         ("testCorsSameOrigin", testCorsSameOrigin),
         ("testCorsAnyOrigin", testCorsAnyOrigin),
         ("testCorsNoOrigin", testCorsNoOrigin),
