@@ -1,5 +1,10 @@
 import HTTP
 
+/// Middleware that adds support for CORS settings in request responses.
+/// For configuration of this middleware please use the `CORSConfiguration` object.
+///
+/// - Note: Make sure this middleware is inserted before all your error/abort middlewares,
+///         so that even the failed request responses contain proper CORS information.
 public class CORSMiddleware: Middleware {
 
     /// Configuration used for populating headers in response for CORS requests.
