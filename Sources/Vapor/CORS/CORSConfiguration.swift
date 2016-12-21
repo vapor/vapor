@@ -88,7 +88,7 @@ extension CORSConfiguration: ConfigInitializable {
         let cors: Node = try config.extract("cors") ?? config.extract("CORS")
 
         // Allowed origin
-        let originString = try cors.extract("allowedOrigin").string ?? ""
+        let originString = try cors.extract("allowedOrigin").string 
         switch originString {
         case "all", "*": self.allowedOrigin = .all
         case "none", "": self.allowedOrigin = .none
