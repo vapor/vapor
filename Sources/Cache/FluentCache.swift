@@ -33,7 +33,7 @@ public final class FluentCache: CacheProtocol {
     }
 
     private func _find(_ key: String) throws -> Entity? {
-        return try Query<Entity>(database).filter("name", key).first()
+        return try Query<Entity>(database).filter("key", key).first()
     }
 }
 
