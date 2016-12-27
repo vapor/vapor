@@ -1,5 +1,6 @@
 import libc
 import Console
+import Dispatch
 
 extension Droplet {
     enum ExecutionError: Swift.Error {
@@ -12,6 +13,12 @@ extension Droplet {
     public func run(servers: [String: ServerConfig]? = nil) -> Never  {
         do {
             try runCommands(servers: servers)
+            if (self.startedServers.count > 0) {
+                // if servers were started, wait (forever) on a DispatchGroup to prevent the process from exiting
+                let group = DispatchGroup()
+                group.enter()
+                group.wait()
+            }
             exit(0)
         } catch CommandError.general(let error) {
             console.output(error, style: .error)
@@ -39,6 +46,10 @@ extension Droplet {
         // the serve command will boot the servers
         // and always runs the prepare command
         let serve = Serve(console: console, prepare: prepare) {
+            // nonblocking
+            // try self.startServers(servers)()
+            
+            // blocking
             try self.bootServers(servers)
         }
 

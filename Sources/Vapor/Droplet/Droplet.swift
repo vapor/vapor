@@ -146,6 +146,11 @@ public class Droplet {
     public var storage: [String: Any]
 
     /**
+        The currently running servers
+     */
+    public internal(set) var startedServers: [String:ServerProtocol] = [:]
+
+    /**
         The providers that have been added.
     */
     public internal(set) var providers: [Provider]
@@ -218,6 +223,10 @@ public class Droplet {
                         .directory(root: configDirectory)
                     ]
                 )
+            } catch JSONError.parse(let path, let error) {
+                log.error("Could not load configuration file at \(path). Check the syntax and try again.")
+                log.verbose("\(error.localizedDescription) \(error)")
+                config = Config([:])
             } catch {
                 log.debug("Could not load configuration files: \(error)")
                 config = Config([:])
