@@ -52,7 +52,7 @@ extension Droplet: Responder {
         do {
             response = try responder.respond(to: request)
 
-            if response.headers["Content-Type"] == nil {
+            if response.headers["Content-Type"] == nil && response.status != .notModified {
                 log.warning("Response had no 'Content-Type' header.")
             }
         } catch {
