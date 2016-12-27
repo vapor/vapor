@@ -44,6 +44,8 @@ extension FluentCache {
         public var id: Node?
         public var key: String
         public var value: Node
+	    
+	public var exists = false
 
         init(key: String, value: Node) {
             self.key = key
