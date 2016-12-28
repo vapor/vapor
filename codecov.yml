@@ -1,0 +1,5 @@
+coverage:
+  status:
+    patch: false
+  ignore:
+    - "Tests/.*"
