@@ -23,14 +23,8 @@ public class AbortMiddleware: Middleware {
     public func respond(to request: Request, chainingTo chain: Responder) throws -> Response {
         do {
             return try chain.respond(to: request)
-        } catch Abort.badRequest {
-            return try AbortMiddleware.errorResponse(request, .badRequest, "Invalid request")
-        } catch Abort.notFound {
-            return try AbortMiddleware.errorResponse(request, .notFound, "Page not found")
-        } catch Abort.serverError {
-            return try AbortMiddleware.errorResponse(request, .internalServerError, "Something went wrong")
-        } catch Abort.custom(let status, let message) {
-            return try AbortMiddleware.errorResponse(request, status, message)
+        } catch let error as AbortError {
+            return try AbortMiddleware.errorResponse(request, error.status, error.message)
         }
     }
 
@@ -48,6 +42,5 @@ public class AbortMiddleware: Middleware {
         response.headers["Content-Type"] = "application/json; charset=utf-8"
         return response
     }
-
 }
 
