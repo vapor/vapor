@@ -34,6 +34,7 @@ XCTMain([
     testCase(ConsoleTests.allTests),
     testCase(ContentTests.allTests),
     testCase(CookieTests.allTests),
+    testCase(CORSMiddlewareTests.allTests),
     testCase(DataSplitTests.allTests),
     testCase(DropletTests.allTests),
     testCase(EnvironmentTests.allTests),
