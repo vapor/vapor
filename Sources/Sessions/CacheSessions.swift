@@ -9,14 +9,23 @@ public final class CacheSessions: SessionsProtocol {
     }
 
     public func get(for identifier: String) throws -> Node? {
-        return try cache.get(identifier)
+        do {
+           return try cache.get(identifier)
+        } catch {
+            print("[CacheSessions] Error getting data: \(error)")
+            return nil
+        }
     }
 
     public func set(_ value: Node?, for identifier: String) throws {
-        if let value = value {
-            try cache.set(identifier, value)
-        } else {
-            try cache.delete(identifier)
+        do {
+            if let value = value {
+                try cache.set(identifier, value)
+            } else {
+                try cache.delete(identifier)
+            }
+        } catch {
+            print("[CacheSessions] Error setting data: \(error)")
         }
     }
 
