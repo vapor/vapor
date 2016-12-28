@@ -8,7 +8,7 @@ public final class CacheSessions: SessionsProtocol {
         self.cache = cache
     }
 
-    public func get(for identifier: String) -> Node? {
+    public func get(for identifier: String) throws -> Node? {
         do {
            return try cache.get(identifier)
         } catch {
@@ -17,7 +17,7 @@ public final class CacheSessions: SessionsProtocol {
         }
     }
 
-    public func set(_ value: Node?, for identifier: String) {
+    public func set(_ value: Node?, for identifier: String) throws {
         do {
             if let value = value {
                 try cache.set(identifier, value)
