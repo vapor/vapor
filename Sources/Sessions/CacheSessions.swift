@@ -8,15 +8,24 @@ public final class CacheSessions: SessionsProtocol {
         self.cache = cache
     }
 
-    public func get(for identifier: String) throws -> Node? {
-        return try cache.get(identifier)
+    public func get(for identifier: String) -> Node? {
+        do {
+           return try cache.get(identifier)
+        } catch {
+            print("[CacheSessions] Error getting data: \(error)")
+            return nil
+        }
     }
 
-    public func set(_ value: Node?, for identifier: String) throws {
-        if let value = value {
-            try cache.set(identifier, value)
-        } else {
-            try cache.delete(identifier)
+    public func set(_ value: Node?, for identifier: String) {
+        do {
+            if let value = value {
+                try cache.set(identifier, value)
+            } else {
+                try cache.delete(identifier)
+            }
+        } catch {
+            print("[CacheSessions] Error setting data: \(error)")
         }
     }
 
