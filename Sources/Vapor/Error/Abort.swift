@@ -39,7 +39,7 @@ extension Abort: AbortError {
         case .badRequest:
             return "Invalid request"
         case .notFound:
-            return "Page not Found"
+            return "Page not found"
         case .serverError:
             return "Something went wrong"
         case .custom(status: _, message: let message):

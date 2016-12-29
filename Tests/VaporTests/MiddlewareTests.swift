@@ -150,17 +150,31 @@ class MiddlewareTests: XCTestCase {
             }
         }
 
-        let expectations: [(path: String, expectation: Status)] = [
-            ("bad", .badRequest),
-            ("notFound", .notFound),
-            ("server", .internalServerError),
-            ("custom", Status(statusCode: 42))
+        let expectations: [(path: String, message: String, code: Int, status: Status)] = [
+            ("bad", "Invalid request", 400, .badRequest),
+            ("notFound", "Page not found", 404, .notFound),
+            ("server", "Something went wrong", 500, .internalServerError),
+            ("custom", "custom", 42, Status(statusCode: 42))
         ]
 
-        try expectations.forEach { path, expectation in
+        try expectations.forEach { path, expectedMessage, expectedCode, expectedStatus in
             let request = Request(method: .get, path: path)
             let result = try drop.respond(to: request)
-            XCTAssertEqual(result.status, expectation)
+            
+            guard let message = result.data["message"]?.string else {
+                XCTFail("Message should not be nil")
+                return
+            }
+            
+            guard let code = result.data["code"]?.int else {
+                XCTFail("Code shoult not be nil")
+                return
+            }
+            
+            XCTAssertEqual(message, expectedMessage)
+            XCTAssertEqual(code, expectedCode)
+            XCTAssertEqual(result.status, expectedStatus)
+            XCTAssertNil(result.data["metadata"]?.object)
         }
 
 
