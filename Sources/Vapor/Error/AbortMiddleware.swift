@@ -28,33 +28,24 @@ public class AbortMiddleware: Middleware {
         }
     }
     
-    public static func errorResponse(_ request: Request, _ error: AbortError) throws -> Response {
-        return try errorResponse(request, error.status, error.message, error.code, error.metadata)
-    }
-    
     public static func errorResponse(_ request: Request, _ status: Status, _ message: String) throws -> Response {
-        return try errorResponse(request, status, message, status.statusCode)
+        let error = Abort.custom(status: status, message: message)
+        return try errorResponse(request, error)
     }
     
-    public static func errorResponse(
-        _ request: Request,
-        _ status: Status,
-        _ message: String,
-        _ code: Int,
-        _ metadata: Node? = nil
-    ) throws -> Response {
+    public static func errorResponse(_ request: Request, _ error: AbortError) throws -> Response {
         if request.accept.prefers("html") {
-            return ErrorView.shared.makeResponse(status, message)
+            return ErrorView.shared.makeResponse(error.status, error.message)
         }
 
         let json = try JSON(node: [
             "error": true,
-            "message": "\(message)",
-            "code": code,
-            "metadata": metadata
+            "message": "\(error.message)",
+            "code": error.code,
+            "metadata": error.metadata
             ])
         let data = try json.makeBytes()
-        let response = Response(status: status, body: .data(data))
+        let response = Response(status: error.status, body: .data(data))
         response.headers["Content-Type"] = "application/json; charset=utf-8"
         return response
     }
