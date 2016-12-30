@@ -23,31 +23,31 @@ public class AbortMiddleware: Middleware {
     public func respond(to request: Request, chainingTo chain: Responder) throws -> Response {
         do {
             return try chain.respond(to: request)
-        } catch Abort.badRequest {
-            return try AbortMiddleware.errorResponse(request, .badRequest, "Invalid request")
-        } catch Abort.notFound {
-            return try AbortMiddleware.errorResponse(request, .notFound, "Page not found")
-        } catch Abort.serverError {
-            return try AbortMiddleware.errorResponse(request, .internalServerError, "Something went wrong")
-        } catch Abort.custom(let status, let message) {
-            return try AbortMiddleware.errorResponse(request, status, message)
+        } catch let error as AbortError {
+            return try AbortMiddleware.errorResponse(request, error)
         }
     }
-
+    
     public static func errorResponse(_ request: Request, _ status: Status, _ message: String) throws -> Response {
+        let error = Abort.custom(status: status, message: message)
+        return try errorResponse(request, error)
+    }
+    
+    public static func errorResponse(_ request: Request, _ error: AbortError) throws -> Response {
         if request.accept.prefers("html") {
-            return ErrorView.shared.makeResponse(status, message)
+            return ErrorView.shared.makeResponse(error.status, error.message)
         }
 
         let json = try JSON(node: [
             "error": true,
-            "message": "\(message)"
+            "message": "\(error.message)",
+            "code": error.code,
+            "metadata": error.metadata
             ])
         let data = try json.makeBytes()
-        let response = Response(status: status, body: .data(data))
+        let response = Response(status: error.status, body: .data(data))
         response.headers["Content-Type"] = "application/json; charset=utf-8"
         return response
     }
-
 }
 
