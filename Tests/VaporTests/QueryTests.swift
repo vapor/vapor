@@ -1,0 +1,19 @@
+import XCTest
+@testable import HTTP
+@testable import Vapor
+
+class QueryTests: XCTestCase {
+    static let allTests = [
+        ("testPercentEncodedValues", testPercentEncodedValues)
+    ]
+    
+    func testPercentEncodedValues() {
+        let request = try! Request(method: .get, uri: "http://example.com?fizz=bu%3Dzz%2Bzz&aaa=bb%2Bccc%26dd")
+        let query = request.query?.object
+        
+        XCTAssertNotNil(query)
+        XCTAssertEqual(2, query?.count)
+        XCTAssertEqual("bu=zz+zz", query?["fizz"]?.string)
+        XCTAssertEqual("bb+ccc&dd", query?["aaa"]?.string)
+    }
+}
