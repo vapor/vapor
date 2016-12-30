@@ -2,13 +2,13 @@ import HTTP
 import Turnstile
 
 public final class Helper {
-    public let request: Request
+    public weak var request: Request?
     public init(request: Request) {
         self.request = request
     }
 
     public var header: Authorization? {
-        guard let authorization = request.headers["Authorization"] else {
+        guard let authorization = request?.headers["Authorization"] else {
             return nil
         }
 
@@ -16,17 +16,17 @@ public final class Helper {
     }
 
     public func login(_ credentials: Credentials, persist: Bool = true) throws {
-        return try request.subject().login(credentials: credentials, persist: persist)
+        try request?.subject().login(credentials: credentials, persist: persist)
     }
     
     public func logout() throws {
-        return try request.subject().logout()
+        try request?.subject().logout()
     }
 
     public func user() throws -> User {
-        let subject = try request.subject()
+        let subject = try request?.subject()
 
-        guard let details = subject.authDetails else {
+        guard let details = subject?.authDetails else {
             throw AuthError.notAuthenticated
         }
 
