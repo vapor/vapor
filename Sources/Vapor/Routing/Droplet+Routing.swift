@@ -17,17 +17,25 @@ extension Droplet: RouteBuilder {
 
 extension RouteBuilder where Value == Responder {
     public func group(_ middleware: Middleware ..., closure: (RouteGroup<Value, Self>) ->()) {
+        group(collection: middleware, closure: closure)
+    }
+
+    public func grouped(_ middleware: Middleware ...) -> RouteGroup<Value, Self> {
+        return grouped(collection: middleware)
+    }
+    
+    public func group(collection middlewares: [Middleware], closure: (RouteGroup<Value, Self>) ->()) {
         group(prefix: [nil, nil], path: [], map: { handler in
             return Request.Handler { request in
-                return try middleware.chain(to: handler).respond(to: request)
+                return try middlewares.chain(to: handler).respond(to: request)
             }
         }, closure: closure)
     }
 
-    public func grouped(_ middleware: Middleware ...) -> RouteGroup<Value, Self> {
+    public func grouped(collection middlewares: [Middleware]) -> RouteGroup<Value, Self> {
         return grouped(prefix: [nil, nil], path: [], map: { handler in
             return Request.Handler { request in
-                return try middleware.chain(to: handler).respond(to: request)
+                return try middlewares.chain(to: handler).respond(to: request)
             }
         })
     }
