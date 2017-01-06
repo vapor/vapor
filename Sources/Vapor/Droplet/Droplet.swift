@@ -178,7 +178,6 @@ public class Droplet {
         } else {
             // logging is needed for emitting errors
             self.log = ConsoleLogger(console: terminal)
-            self.log.enabled = LogLevel.all
         }
 
         // the current droplet environment
