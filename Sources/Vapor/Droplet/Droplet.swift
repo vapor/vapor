@@ -163,7 +163,8 @@ public class Droplet {
         workDir workDirProvided: String? = nil,
         environment environmentProvided: Environment? = nil,
         config configProvided: Settings.Config? = nil,
-        localization localizationProvided: Localization? = nil
+        localization localizationProvided: Localization? = nil,
+        log logProvided: LogProtocol? = nil
     ) {
         // use arguments provided in init or
         // default to the arguments provided
@@ -171,9 +172,14 @@ public class Droplet {
         let arguments = arguments ?? CommandLine.arguments
         self.arguments = arguments
 
-        // logging is needed for emitting errors
         let terminal = Terminal(arguments: arguments)
-        let log = ConsoleLogger(console: terminal)
+        if let provided = logProvided  {
+            self.log = provided
+        } else {
+            // logging is needed for emitting errors
+            self.log = ConsoleLogger(console: terminal)
+            self.log.enabled = LogLevel.all
+        }
 
         // the current droplet environment
         let environment: Environment
@@ -187,7 +193,7 @@ public class Droplet {
         // change logging based on env
         switch environment {
         case .production:
-            terminal.output("Production mode enabled, disabling informational logs.", style: .info)
+            log.info("Production mode enabled, disabling informational logs.")
             log.enabled = [.error, .fatal]
         case .development:
             log.enabled = [.info, .warning, .error, .fatal]
@@ -255,7 +261,6 @@ public class Droplet {
         server = Server<TCPServerStream, Parser<Request>, Serializer<Response>>.self
         client = Client<TCPClientStream, Serializer<Request>, Parser<Response>>.self
         middleware = []
-        self.log = log
         console = terminal
         commands = []
         let renderer = LeafRenderer(viewsDir: workDir + "Resources/Views")
