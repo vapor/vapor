@@ -32,15 +32,15 @@ extension RouteBuilder where Value == Responder {
         })
     }
     
-    public func group(_ middlewares: [Middleware], closure: (RouteGroup<Value, Self>) ->()) {
+    public func group(collection middlewares: [Middleware], closure: (RouteGroup<Value, Self>) ->()) {
         group(prefix: [nil, nil], path: [], map: { handler in
             return Request.Handler { request in
                 return try middlewares.chain(to: handler).respond(to: request)
             }
         }, closure: closure)
     }
-    
-    public func grouped(_ middlewares: [Middleware]) -> RouteGroup<Value, Self> {
+
+    public func grouped(collection middlewares: [Middleware]) -> RouteGroup<Value, Self> {
         return grouped(prefix: [nil, nil], path: [], map: { handler in
             return Request.Handler { request in
                 return try middlewares.chain(to: handler).respond(to: request)
