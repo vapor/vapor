@@ -5,6 +5,7 @@ import HTTP
 class AuthMiddlewareTests: XCTestCase {
     static let allTests = [
         ("testCustomCookieName", testCustomCookieName),
+        ("testAuthHelperPersistence", testAuthHelperPersistence),
     ]
 
     func testCustomCookieName() throws {
@@ -18,5 +19,16 @@ class AuthMiddlewareTests: XCTestCase {
         
         let cookie = response.cookies[cookieName]
         XCTAssertNotNil(cookie)
+    }
+
+    func testAuthHelperPersistence() throws {
+        let request = try Request(method: .get, uri: "test")
+        let one = request.auth
+        let two = request.auth
+        let three = request.auth
+
+        XCTAssert(one === two)
+        XCTAssert(one === three)
+        XCTAssert(two === three)
     }
 }

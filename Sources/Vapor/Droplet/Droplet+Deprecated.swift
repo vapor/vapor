@@ -16,13 +16,13 @@ extension Droplet {
         environment environmentProvided: Environment? = nil,
         config configProvided: Settings.Config? = nil,
         localization localizationProvided: Localization? = nil,
+        log: LogProtocol? = nil,
 
         // providable
         server: ServerProtocol.Type? = nil,
         hash: HashProtocol? = nil,
         cipher: CipherProtocol? = nil,
         console: ConsoleProtocol? = nil,
-        log: LogProtocol? = nil,
         view: ViewRenderer? = nil,
         client: ClientProtocol.Type? = nil,
         database: Database? = nil,
@@ -47,7 +47,8 @@ extension Droplet {
             workDir: workDirProvided,
             environment: environmentProvided,
             config: configProvided,
-            localization: localizationProvided
+            localization: localizationProvided,
+            log: log
         )
 
         // create an array of all providers
@@ -77,10 +78,6 @@ extension Droplet {
 
         if let console = console {
             self.console = console
-        }
-
-        if let log = log {
-            self.log = log
         }
 
         if let view = view {
