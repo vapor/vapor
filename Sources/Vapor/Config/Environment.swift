@@ -9,7 +9,7 @@ public enum Environment: Equatable {
     case development
     case custom(String)
 
-    init(id string: String) {
+    public init(id string: String) {
         switch string.lowercased() {
         case "production", "prod":
             self = .production
@@ -41,7 +41,7 @@ public func == (lhs: Environment, rhs: Environment) -> Bool {
 }
 
 extension CommandLine {
-    static var environment: Environment? {
+    public static var environment: Environment? {
         return arguments.value(for: "env").flatMap(Environment.init)
     }
 }
