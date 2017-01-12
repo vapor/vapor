@@ -4,15 +4,26 @@ import HTTP
 extension Request {
     /// form url encoded encoded request data
     public var formURLEncoded: Node? {
-        if let existing = storage["form-urlencoded"] as? Node {
-            return existing
-        } else if let type = headers["Content-Type"], type.contains("application/x-www-form-urlencoded") {
-            guard case let .data(body) = body else { return nil }
-            let formURLEncoded = Node(formURLEncoded: body)
-            storage["form-urlencoded"] = formURLEncoded
-            return formURLEncoded
-        } else {
-            return nil
+        get {
+            if let existing = storage["form-urlencoded"] as? Node {
+                return existing
+            } else if let type = headers["Content-Type"], type.contains("application/x-www-form-urlencoded") {
+                guard case let .data(body) = body else { return nil }
+                let formURLEncoded = Node(formURLEncoded: body)
+                storage["form-urlencoded"] = formURLEncoded
+                return formURLEncoded
+            } else {
+                return nil
+            }
+        }
+        
+        set(data) {
+            if let data = data, let bytes = try? data.formURLEncoded() {
+                body = .data(bytes)
+                headers["Content-Type"] = "application/x-www-form-urlencoded"
+            }
+            
+            storage["form-urlencoded"] = data
         }
     }
 }
