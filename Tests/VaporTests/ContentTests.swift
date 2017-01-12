@@ -17,6 +17,7 @@ class TestResponder: Responder {
 class ContentTests: XCTestCase {
     static var allTests = [
         ("testSetJSON", testSetJSON),
+        ("testSetFormURLEncodedBody", testSetFormURLEncodedBody),
         ("testParse", testParse),
         ("testMultipart", testMultipart),
         ("testMultipartEmptyContent", testMultipartEmptyContent),
@@ -35,6 +36,17 @@ class ContentTests: XCTestCase {
         let json = JSON(["hello": "world"])
         request.json = json
         XCTAssertEqual(json, request.json)
+    }
+
+    func testSetFormURLEncodedBody() throws {
+        let request = Request(method: .post, path: "/")
+        let data = Node(["hello": "world"])
+        request.formURLEncoded = data
+        XCTAssertEqual(data, request.formURLEncoded)
+        XCTAssertEqual("application/x-www-form-urlencoded", request.headers["Content-Type"])
+        XCTAssertNotNil(request.body.bytes)
+        let bodyString = try request.body.bytes!.string().removingPercentEncoding
+        XCTAssertEqual("hello=world", bodyString)
     }
 
     func testParse() {
