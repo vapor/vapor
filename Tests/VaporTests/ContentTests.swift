@@ -16,8 +16,10 @@ class TestResponder: Responder {
 
 class ContentTests: XCTestCase {
     static var allTests = [
-        ("testSetJSON", testSetJSON),
-        ("testSetFormURLEncodedBody", testSetFormURLEncodedBody),
+        ("testRequestSetJSONBody", testRequestSetJSONBody),
+        ("testRequestSetFormURLEncodedBody", testRequestSetFormURLEncodedBody),
+        ("testRequestGetFormURLEncodedBody", testRequestGetFormURLEncodedBody),
+        ("testRequestGetFormURLEncodedBodyInvalidHeader", testRequestGetFormURLEncodedBodyInvalidHeader),
         ("testParse", testParse),
         ("testMultipart", testMultipart),
         ("testMultipartEmptyContent", testMultipartEmptyContent),
@@ -31,14 +33,14 @@ class ContentTests: XCTestCase {
         ("testMultipartSerializationNoFileType", testMultipartSerializationNoFileType)
     ]
 
-    func testSetJSON() throws {
+    func testRequestSetJSONBody() throws {
         let request = Request(method: .get, path: "/")
         let json = JSON(["hello": "world"])
         request.json = json
         XCTAssertEqual(json, request.json)
     }
 
-    func testSetFormURLEncodedBody() throws {
+    func testRequestSetFormURLEncodedBody() throws {
         let request = Request(method: .post, path: "/")
         let data = Node(["hello": "world"])
         request.formURLEncoded = data
@@ -47,6 +49,32 @@ class ContentTests: XCTestCase {
         XCTAssertNotNil(request.body.bytes)
         let bodyString = try request.body.bytes!.string().removingPercentEncoding
         XCTAssertEqual("hello=world", bodyString)
+    }
+
+    func testRequestGetFormURLEncodedBody() throws {
+        let request = Request(method: .post, path: "/")
+        request.headers["Content-Type"] = "application/x-www-form-urlencoded"
+        request.body = Body("hello=world")
+        let data = request.formURLEncoded
+        
+        XCTAssertNotNil(data)
+        XCTAssertEqual(["hello": "world"], data)
+        
+        let cached = request.storage["form-urlencoded"] as? Node
+        XCTAssertNotNil(cached)
+        
+        if let cached = cached {
+            XCTAssertEqual(["hello": "world"], cached)
+        }
+    }
+
+    func testRequestGetFormURLEncodedBodyInvalidHeader() throws {
+        let request = Request(method: .post, path: "/")
+        request.headers["Content-Type"] = "application/json"
+        request.body = Body("hello=world")
+        let data = request.formURLEncoded
+        
+        XCTAssertNil(data)
     }
 
     func testParse() {
