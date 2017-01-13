@@ -14,7 +14,7 @@ private class DummyLogger: LogProtocol {
         enabled = LogLevel.all
     }
     
-    func log(_ level: LogLevel, message: String, file: String, function: String, line: Int) {
+    func log(_ level: LogLevel, message: String, file: StaticString, function: StaticString, line: Int) {
         output = "level: \(level.description), message: '\(message)', "
         output += "file: \(file), function: \(function), line: \(line)"
     }
