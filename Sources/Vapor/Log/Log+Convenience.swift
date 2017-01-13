@@ -8,7 +8,7 @@ extension LogProtocol {
      - parameter line: String where logging happens, is automatically set on default
      */
     public func verbose(_ message: String,
-        file: String = #file, function: String = #function, line: Int = #line) {
+        file: StaticString = #file, function: StaticString = #function, line: Int = #line) {
         log(.verbose, message: message, file: file, function: function, line: line)
     }
     
@@ -21,7 +21,7 @@ extension LogProtocol {
      - parameter line: String where logging happens, is automatically set on default
      */
     public func debug(_ message: String,
-        file: String = #file, function: String = #function, line: Int = #line) {
+        file: StaticString = #file, function: StaticString = #function, line: Int = #line) {
         log(.debug, message: message, file: file, function: function, line: line)
     }
     
@@ -34,7 +34,7 @@ extension LogProtocol {
      - parameter line: String where logging happens, is automatically set on default
      */
     public func info(_ message: String,
-        file: String = #file, function: String = #function, line: Int = #line) {
+        file: StaticString = #file, function: StaticString = #function, line: Int = #line) {
         log(.info, message: message, file: file, function: function, line: line)
     }
     
@@ -47,7 +47,7 @@ extension LogProtocol {
      - parameter line: String where logging happens, is automatically set on default
      */
     public func warning(_ message: String,
-        file: String = #file, function: String = #function, line: Int = #line) {
+        file: StaticString = #file, function: StaticString = #function, line: Int = #line) {
         log(.warning, message: message, file: file, function: function, line: line)
     }
     
@@ -60,7 +60,7 @@ extension LogProtocol {
      - parameter line: String where logging happens, is automatically set on default
      */
     public func error(_ message: String,
-        file: String = #file, function: String = #function, line: Int = #line) {
+        file: StaticString = #file, function: StaticString = #function, line: Int = #line) {
         log(.error, message: message, file: file, function: function, line: line)
     }
     
@@ -73,7 +73,7 @@ extension LogProtocol {
      - parameter line: String where logging happens, is automatically set on default
      */
     public func fatal(_ message: String,
-        file: String = #file, function: String = #function, line: Int = #line) {
+        file: StaticString = #file, function: StaticString = #function, line: Int = #line) {
         log(.fatal, message: message, file: file, function: function, line: line)
     }
     
@@ -87,7 +87,7 @@ extension LogProtocol {
      - parameter label: String of a custom logging level
      */
     public func custom(_ message: String,
-        file: String = #file, function: String = #function, line: Int = #line, label: String) {
+        file: StaticString = #file, function: StaticString = #function, line: Int = #line, label: String) {
         log(.custom(label), message: message, file: file, function: function, line: line)
     }
 }

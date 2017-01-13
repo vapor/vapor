@@ -33,8 +33,8 @@ public class ConsoleLogger: LogProtocol {
     public func log(
         _ level: LogLevel,
         message: String,
-        file: String = #file,
-        function: String = #function,
+        file: StaticString = #file,
+        function: StaticString = #function,
         line: Int = #line
     ) {
         if enabled.contains(level) {
