@@ -20,7 +20,7 @@ let package = Package(
         Target(name: "Settings"),
 
         // Development and Testing
-        // Target(name: "Development", dependencies: ["Vapor"]),
+        Target(name: "Development", dependencies: ["Vapor"]),
         // Target(name: "Performance", dependencies: ["Vapor"]),
     ],
     dependencies: [
@@ -47,9 +47,12 @@ let package = Package(
 
         // A type safe routing package including HTTP and TypeSafe routers.
         .Package(url: "https://github.com/vapor/routing.git", majorVersion: 1),
+
+        // Parses `Content-Type: multipart` as defined in RFC 2046.
+        .Package(url: "https://github.com/vapor/multipart.git", majorVersion: 0),
     ],
     exclude: [
-        "Sources/Development",
+        // "Sources/Development",
         "Sources/Performance",
         "Sources/TypeSafeGenerator"
     ]

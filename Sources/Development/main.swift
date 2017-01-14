@@ -1,4 +1,27 @@
-import JSON
+import Vapor
+import HTTP
+
+let drop = Droplet()
+
+drop.get { req in
+    return Response(headers: [
+        "Content-Type": "text/html"
+    ], body: "<form action=/ method=post enctype=multipart/form-data><input name=name><input type=file name=file><button type=submit>Go</button></form>")
+}
+
+drop.post { req in
+    // print(req.data["name"]?.string ?? "")
+    // print(req.data["file"]?.string ?? "")
+    print(req.formData?.count ?? 0)
+    // print(req.multipart?.count ?? 0)
+    return "Done"
+}
+
+drop.run()
+
+
+
+/*import JSON
 import Vapor
 import libc
 import HTTP
@@ -692,3 +715,4 @@ drop.run(servers: [
     "test": ("gertrude.codes", 8080, .none),
     "secure": ("gertrude.codes", 8443, .tls(config)),
 ])
+*/*/
