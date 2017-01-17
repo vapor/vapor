@@ -55,7 +55,19 @@ extension Request {
             if let fields = newValue {
                 var serialized: Bytes = []
                 
-                let boundary: Bytes = "vaporboundary".bytes + URandom.bytes(10)
+                var random: Bytes = []
+                
+                // generate safe boundary letters
+                // in between A-z in the ascii table
+                for _ in 0 ..< 10 {
+                    let r = Int.random(
+                        min: Int(Byte.A),
+                        max: Int(Byte.z)
+                    )
+                    random += Byte(r)
+                }
+                
+                let boundary: Bytes = "vaporboundary".bytes + random
                 
                 let multipart = Serializer(boundary: boundary)
                 
@@ -72,7 +84,7 @@ extension Request {
                 try? serializer.multipart.finish()
                 
                 body = .data(serialized)
-                headers[.contentType] = "multipart/form-data; boundary=\(boundary)"
+                headers[.contentType] = "multipart/form-data; boundary=" + boundary.string
             } else {
                 if headers[.contentType]?.contains("multipart/form-data") == true {
                     body = .data([])
