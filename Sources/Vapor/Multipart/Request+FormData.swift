@@ -16,19 +16,12 @@ extension Request {
                 return existing
             }
             
-            guard let type = headers["Content-Type"], type.contains("multipart/form-data") else {
-                return nil
-            }
-            
-            guard case let .data(bytes) = self.body else {
-                return nil
-            }
-            
-            guard let boundary = try? Multipart.parseBoundary(contentType: type) else {
-                return nil
-            }
-            
-            guard let multipart = try? Parser(boundary: boundary) else {
+            guard
+                let type = headers[.contentType], type.contains("multipart/form-data"),
+                case let .data(bytes) = self.body,
+                let boundary = try? Multipart.parseBoundary(contentType: type),
+                let multipart = try? Parser(boundary: boundary)
+            else {
                 return nil
             }
             
@@ -60,11 +53,7 @@ extension Request {
                 // generate safe boundary letters
                 // in between A-z in the ascii table
                 for _ in 0 ..< 10 {
-                    let r = Int.random(
-                        min: Int(Byte.A),
-                        max: Int(Byte.z)
-                    )
-                    random += Byte(r)
+                    random += Byte.random(min: .A, max: .z)
                 }
                 
                 let boundary: Bytes = "vaporboundary".bytes + random
@@ -88,49 +77,21 @@ extension Request {
             } else {
                 if headers[.contentType]?.contains("multipart/form-data") == true {
                     body = .data([])
-                    headers.removeValue(forKey: "Content-Type")
+                    headers.removeValue(forKey: .contentType)
                 }
             }
         }
     }
 }
 
-import Polymorphic
-
-extension FormData.Field: Polymorphic {
-    public var isNull: Bool {
-        return part.body.string.isNull
-    }
-    
-    public var bool: Bool? {
-        return part.body.string.bool
-    }
-    
-    public var double: Double? {
-        return part.body.string.double
-    }
-    
-    public var int: Int? {
-        return part.body.string.int
-    }
-    
-    public var string: String? {
-        return part.body.string
-    }
-    
-    public var array: [Polymorphic]? {
-        return part.body.string.array
-    }
-    
-    public var object: [String : Polymorphic]? {
-        return part.body.string.object
-    }
-    
-    public var float: Float? {
-        return part.body.string.float
-    }
-    
-    public var uint: UInt? {
-        return part.body.string.uint
+extension Byte {
+    /// Generate a random byte in the supplied range
+    static func random(min: Byte, max: Byte) -> Byte {
+        let r = Int.random(
+            min: Int(min),
+            max: Int(max)
+        )
+        
+        return Byte(r)
     }
 }
