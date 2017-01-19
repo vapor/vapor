@@ -3,7 +3,7 @@ import FormData
 import Multipart
 import Random
 
-extension Request {
+extension HTTP.Message {
     /**
         Multipart encoded request data sent using
         the `multipart/form-data...` header.
@@ -75,7 +75,10 @@ extension Request {
                 body = .data(serialized)
                 headers[.contentType] = "multipart/form-data; boundary=" + boundary.string
             } else {
-                if headers[.contentType]?.contains("multipart/form-data") == true {
+                if
+                    let contentType = headers[.contentType],
+                    contentType.contains("multipart/form-data")
+                {
                     body = .data([])
                     headers.removeValue(forKey: .contentType)
                 }
