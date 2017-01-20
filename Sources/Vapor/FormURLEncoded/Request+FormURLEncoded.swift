@@ -7,7 +7,7 @@ extension Message {
         get {
             if let existing = storage["form-urlencoded"] as? Node {
                 return existing
-            } else if let type = headers["Content-Type"], type.contains("application/x-www-form-urlencoded") {
+            } else if let type = headers[.contentType], type.contains("application/x-www-form-urlencoded") {
                 guard case let .data(body) = body else { return nil }
                 let formURLEncoded = Node(formURLEncoded: body)
                 storage["form-urlencoded"] = formURLEncoded
@@ -22,7 +22,7 @@ extension Message {
 
             if let data = data, let bytes = try? data.formURLEncoded() {
                 body = .data(bytes)
-                headers["Content-Type"] = "application/x-www-form-urlencoded"
+                headers[.contentType] = "application/x-www-form-urlencoded"
             } else if let type = headers[.contentType], type.contains("application/x-www-form-urlencoded") {
                 body = .data([])
                 headers.removeValue(forKey: .contentType)
