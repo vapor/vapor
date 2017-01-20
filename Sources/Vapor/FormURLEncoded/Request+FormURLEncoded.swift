@@ -1,7 +1,7 @@
 import Node
 import HTTP
 
-extension Request {
+extension Message {
     /// form url encoded encoded request data
     public var formURLEncoded: Node? {
         get {
