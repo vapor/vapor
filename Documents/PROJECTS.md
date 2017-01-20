@@ -14,6 +14,7 @@ People have built some awesome things with Vapor, and we can't wait to see what 
 * [SwiftyBeaver](#vapor-example) - the website of SwiftyBeaver
 * [Loyalty Backend](#loyalty-backend-sample) - simple loyalty backend system
 * [SwiftyBot](#swiftybot) - a simple Telegram bot
+* [TinyFaces](#tinyfaces) - an api with random avatars that can be used by designers in their designs
 
 # PDX Cocoaheads
 
@@ -170,3 +171,13 @@ A simple Telegram bot powered by Vapor.
 
 ### Site
 [Demo](https://telegram.me/SwiftyBot)
+
+# TinyFaces
+
+An api with random avatars that can be used by designers in their designs.
+
+### GitHub
+[Source](https://github.com/maximedegreve/TinyFaces)
+
+### Site
+[Demo](https://tinyfac.es)
