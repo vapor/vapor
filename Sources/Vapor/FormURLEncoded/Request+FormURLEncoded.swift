@@ -18,12 +18,15 @@ extension Message {
         }
         
         set(data) {
+            storage["form-urlencoded"] = data
+
             if let data = data, let bytes = try? data.formURLEncoded() {
                 body = .data(bytes)
                 headers["Content-Type"] = "application/x-www-form-urlencoded"
+            } else if let type = headers[.contentType], type.contains("application/x-www-form-urlencoded") {
+                body = .data([])
+                headers.removeValue(forKey: .contentType)
             }
-            
-            storage["form-urlencoded"] = data
         }
     }
 }
