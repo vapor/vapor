@@ -4,11 +4,7 @@ If you've never contributed to an OSS project before, here's a <a href="https://
 
 # Building Vapor
 
-The Vapor master branch is often ahead of our release, so the tooling can be a bit different.
-
-## Swift Version
-
-Check the `.swift-version` file for the version being used for current development
+The Vapor master branch is occasionally ahead of our release, so the tooling can be a bit different.
 
 ## Xcode
 
@@ -28,10 +24,6 @@ cd path/to/my/project
 swift package generate-xcodeproj
 open *.xcodeproj
 ```
-
-## Development
-
-We have a `Development` target inside of the project that can be used for live testing.
 
 ## Tests
 
