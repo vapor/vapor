@@ -12,7 +12,8 @@ extension Multipart {
         }
         return boundaryPieces[1]
     }
-
+    
+    @available(*, deprecated: 1.4, message: "Use `FormData.Parser` instead.")
     static func parse(_ body: Bytes, boundary: String) -> [String: Multipart] {
         let boundary: Bytes = [.hyphen, .hyphen] + boundary.bytes
 
