@@ -47,6 +47,9 @@ let package = Package(
 
         // A type safe routing package including HTTP and TypeSafe routers.
         .Package(url: "https://github.com/vapor/routing.git", majorVersion: 1),
+
+        // Parses `Content-Type: multipart` as defined in RFC 2046.
+        .Package(url: "https://github.com/vapor/multipart.git", majorVersion: 1),
     ],
     exclude: [
         "Sources/Development",

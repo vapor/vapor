@@ -4,9 +4,10 @@ extension Request {
     /**
         Multipart encoded request data sent using
         the `multipart/form-data...` header.
-
+     
         Used by web browsers to send files.
-    */
+     */
+    @available(*, deprecated: 1.4, message: "Use `request.formData` instead.")
     public var multipart: [String: Multipart]? {
         if let existing = storage["multipart"] as? [String: Multipart] {
             return existing
