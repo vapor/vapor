@@ -15,6 +15,7 @@ People have built some awesome things with Vapor, and we can't wait to see what 
 * [Loyalty Backend](#loyalty-backend-sample) - simple loyalty backend system
 * [SwiftyBot](#swiftybot) - a simple Telegram bot
 * [TinyFaces](#tinyfaces) - an api with random avatars that can be used by designers in their designs
+* [Geobot](#geobot) - a simple chat bot built using Wit.ai and Vapor
 
 # PDX Cocoaheads
 
@@ -181,3 +182,13 @@ An api with random avatars that can be used by designers in their designs.
 
 ### Site
 [Demo](https://tinyfac.es)
+
+# Geobot
+
+A simple [Wit.ai](https://wit.ai) chat bot powered by Vapor.
+
+### GitHub
+[Source](https://github.com/vadymmarkov/geobot)
+
+### Site
+[Demo](https://geobot-swift.herokuapp.com)
