@@ -1,6 +1,3 @@
-import Turnstile
-import HTTP
-
 public enum AuthError: Swift.Error {
     case noSubject
     case invalidAccountType
