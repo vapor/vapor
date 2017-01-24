@@ -1,6 +1,5 @@
 import Cipher
 import Core
-import Essentials
 import Foundation
 
 public final class CryptoCipher: CipherProtocol {
