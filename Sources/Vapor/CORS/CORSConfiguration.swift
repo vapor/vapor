@@ -1,5 +1,15 @@
 import HTTP
 
+/// Error thrown during instantiation of the `CORSConfiguration`.
+public enum CORSConfigurationError: Error {
+
+    /// Configuration file could not be found.
+    case configurationFileNotFound
+
+    /// A required key is missing in the configuration file. The associated value is the key name.
+    case missingRequiredConfigurationKey(String)
+}
+
 /// Option for the allow origin header in responses for CORS requests.
 ///
 /// - none: Disallows any origin.
@@ -19,7 +29,6 @@ public enum AllowOriginSetting {
 
     /// Uses custom string provided as an associated value.
     case custom(String)
-
 
     /// Creates the header string depending on the case of self.
     ///
@@ -65,9 +74,19 @@ public struct CORSConfiguration {
     /// Optionally sets expiration of the cached pre-flight request. Value is in seconds.
     public let cacheExpiration: Int?
 
-    /// Headers exposed in the response fo pre-flight request.
+    /// Headers exposed in the response of pre-flight request.
     public let exposedHeaders: String?
 
+    /// Instantiate a CORSConfiguration struct that can be used to create a `CORSConfiguration`
+    /// middleware for adding support for CORS in your responses.
+    ///
+    /// - Parameters:
+    ///   - allowedOrigin: Setting that controls which origin values are allowed.
+    ///   - allowedMethods: Methods that are allowed for a CORS request response.
+    ///   - allowedHeaders: Headers that are allowed in a response for CORS request.
+    ///   - allowCredentials: If cookies and other credentials will be sent in the response.
+    ///   - cacheExpiration: Optionally sets expiration of the cached pre-flight request in seconds.
+    ///   - exposedHeaders: Headers exposed in the response of pre-flight request.
     public init(allowedOrigin: AllowOriginSetting,
                 allowedMethods: [Method],
                 allowedHeaders: [String],
@@ -91,24 +110,41 @@ extension CORSConfiguration: ConfigInitializable {
     /// - Parameter config: The settings config dictionary that should be used to extract settings.
     /// - Throws: Node extraction errors, if extraction fails.
     public init(config: Settings.Config) throws {
-        let cors: Node = try config.extract("cors") ?? config.extract("CORS")
+        let cors: Node
+        do {
+            cors = try config.extract("cors") ?? config.extract("CORS")
+        } catch {
+            throw CORSConfigurationError.configurationFileNotFound
+        }
 
         // Allowed origin
-        let originString = try cors.extract("allowedOrigin").string 
-        switch originString {
-        case "all", "*": self.allowedOrigin = .all
-        case "none", "": self.allowedOrigin = .none
-        case "origin", "Origin": self.allowedOrigin = .originBased
-        default: self.allowedOrigin = .custom(originString)
+        do {
+            let originString: String = try cors.extract("allowedOrigin")
+            switch originString {
+            case "all", "*": self.allowedOrigin = .all
+            case "none", "": self.allowedOrigin = .none
+            case "origin", "Origin": self.allowedOrigin = .originBased
+            default: self.allowedOrigin = .custom(originString)
+            }
+        } catch {
+            throw CORSConfigurationError.missingRequiredConfigurationKey("allowedOrigin")
         }
 
         // Get methods
-        let methodArray: [String] = try cors.extract("allowedMethods")
-        self.allowedMethods = methodArray.joined(separator: ", ")
+        do {
+            let methodArray: [String] = try cors.extract("allowedMethods")
+            self.allowedMethods = methodArray.joined(separator: ", ").uppercased()
+        } catch {
+            throw CORSConfigurationError.missingRequiredConfigurationKey("allowedMethods")
+        }
 
         // Get allowed headers
-        let headersArray: [String] = try cors.extract("allowedHeaders")
-        self.allowedHeaders = headersArray.joined(separator: ", ")
+        do {
+            let headersArray: [String] = try cors.extract("allowedHeaders")
+            self.allowedHeaders = headersArray.joined(separator: ", ")
+        } catch {
+            throw CORSConfigurationError.missingRequiredConfigurationKey("allowedHeaders")
+        }
 
         // Allow credentials
         let allowCredentials: Bool? = try cors.extract("allowCredentials")
@@ -116,7 +152,7 @@ extension CORSConfiguration: ConfigInitializable {
 
         // Cache expiration
         self.cacheExpiration = try cors.extract("cacheExpiration") ?? 600
-
+        
         // Exposed headers
         self.exposedHeaders = try cors.extract("exposedHeaders")
     }

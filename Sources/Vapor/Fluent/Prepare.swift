@@ -45,7 +45,7 @@ public struct Prepare: Command {
                 return
             }
 
-            for preparation in preparations {
+            for preparation in preparations.reversed() {
                 let name = preparation.name
                 let hasPrepared: Bool
 

@@ -1,5 +1,3 @@
-import Core
-
 public struct Cookies {
     public var cookies: Set<Cookie>
 

@@ -81,7 +81,7 @@ public enum MultipartSerializationError: Swift.Error {
 }
 
 extension Multipart {
-
+    @available(*, deprecated: 1.4, message: "Use `FormData.Serializer` instead.")
     public func serialized(boundary: String, keyName: String) throws -> Bytes {
         var serialized = Bytes()
 
