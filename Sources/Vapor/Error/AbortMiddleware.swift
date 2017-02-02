@@ -25,6 +25,8 @@ public class AbortMiddleware: Middleware {
             return try chain.respond(to: request)
         } catch let error as AbortError {
             return try AbortMiddleware.errorResponse(request, error)
+        } catch {
+            return try AbortMiddleware.errorResponse(request, .internalServerError, error.localizedDescription)
         }
     }
     

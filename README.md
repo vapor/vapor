@@ -101,7 +101,7 @@ Support us with a monthly donation and help us continue our activities. [[Become
 
 Proudly sponsored by Nodes
 
-[![Nodes](http://vapor.codes/images/nodes.png)](http://nodesagency.com)
+[![Nodes](https://cloud.githubusercontent.com/assets/5750489/21993104/2e0db68a-dbe7-11e6-9402-35f9f04743a7.png)](http://nodesagency.com)
 
 Become a sponsor and get your logo on our README on Github with a link to your site. [[Become a sponsor](https://opencollective.com/vapor#sponsor)]
 
