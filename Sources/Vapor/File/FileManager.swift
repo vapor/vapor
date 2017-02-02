@@ -40,6 +40,7 @@ class FileManager {
 
         let path = try self.expandPath(path).finished(with: "/")
         let pattern = strdup(path + "{*,.*}")
+        defer { free(pattern) }
 
         switch glob(pattern, GLOB_MARK | GLOB_NOSORT | GLOB_BRACE, nil, &gt) {
         case GLOB_NOMATCH:
