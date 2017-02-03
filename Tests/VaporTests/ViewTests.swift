@@ -9,7 +9,8 @@ class ViewTests: XCTestCase {
         ("testBasic", testBasic),
         ("testViewBytes", testViewBytes),
         ("testViewResponse", testViewResponse),
-        ("testViewRequest", testViewRequest)
+        ("testViewRequest", testViewRequest),
+        ("testMethodOverride", testMethodOverride),
     ]
 
     func testBasic() throws {
@@ -28,7 +29,6 @@ class ViewTests: XCTestCase {
         let view = try View(bytes: "42".makeBytes())
         XCTAssertEqual(try view.makeBytes(), "42".makeBytes())
     }
-
 
     func testViewResponse() throws {
         let view = try View(bytes: "42 🚀".makeBytes())
@@ -71,5 +71,21 @@ class ViewTests: XCTestCase {
         XCTAssert(string.contains("Vapor"))
         XCTAssert(string.contains("foopath"))
         XCTAssert(string.contains("foobar"))
+    }
+
+    func testMethodOverride() throws {
+        let drop = try Droplet()
+
+        drop.patch { req in
+            return "yes"
+        }
+
+        let req = Request(method: .get, path: "")
+        req.json = try JSON(node: [
+            "_method": "patch"
+        ])
+
+        let res = drop.respond(to: req)
+        XCTAssertEqual(try res.bodyString(), "yes")
     }
 }

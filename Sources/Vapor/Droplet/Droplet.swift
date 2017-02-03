@@ -249,17 +249,22 @@ public class Droplet {
             }
         }
         addConfigurable(middleware: contentTypeLogger, name: "content-type-log")
+        addConfigurable(middleware: MethodSwap(), name: "method-swap")
 
         if config["droplet", "middleware", "server"]?.array == nil {
             // if no configuration has been supplied
             // apply all middleware
             middleware = [
+                // Should run 1st, ensure method 
+                // appropriate for subsequent middleware
+                MethodSwap(),
+                // Should run 2nd incase swapped to `.head` request
+                HeadMiddleware(),
                 SessionsMiddleware(MemorySessions()),
                 DateMiddleware(),
                 TypeSafeErrorMiddleware(),
                 ValidationMiddleware(),
                 FileMiddleware(publicDir: workDir + "Public/"),
-                HeadMiddleware(),
                 contentTypeLogger,
             ]
             log.debug("No `middleware.server` key in `droplet.json` found, using default middleware.")
