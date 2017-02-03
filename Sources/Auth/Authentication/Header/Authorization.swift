@@ -1,5 +1,3 @@
-import Turnstile
-
 public struct Authorization {
     public let header: String
 

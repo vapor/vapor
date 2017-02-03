@@ -3,9 +3,7 @@ import Fluent
 import Cache
 import Console
 import Sessions
-import HMAC
 import Cipher
-import Transport
 
 extension Droplet {
     @available(*, deprecated: 1.0, message: "Use `add` and `addConfigurable` methods instead.")

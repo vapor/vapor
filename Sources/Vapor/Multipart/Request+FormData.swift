@@ -1,7 +1,6 @@
 import HTTP
 import FormData
 import Multipart
-import Random
 
 extension HTTP.Message {
     /**

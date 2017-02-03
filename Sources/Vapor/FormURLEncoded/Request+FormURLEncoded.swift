@@ -1,18 +1,32 @@
 import Node
 import HTTP
 
-extension Request {
+extension Message {
     /// form url encoded encoded request data
     public var formURLEncoded: Node? {
-        if let existing = storage["form-urlencoded"] as? Node {
-            return existing
-        } else if let type = headers["Content-Type"], type.contains("application/x-www-form-urlencoded") {
-            guard case let .data(body) = body else { return nil }
-            let formURLEncoded = Node(formURLEncoded: body)
-            storage["form-urlencoded"] = formURLEncoded
-            return formURLEncoded
-        } else {
-            return nil
+        get {
+            if let existing = storage["form-urlencoded"] as? Node {
+                return existing
+            } else if let type = headers[.contentType], type.contains("application/x-www-form-urlencoded") {
+                guard case let .data(body) = body else { return nil }
+                let formURLEncoded = Node(formURLEncoded: body)
+                storage["form-urlencoded"] = formURLEncoded
+                return formURLEncoded
+            } else {
+                return nil
+            }
+        }
+        
+        set(data) {
+            storage["form-urlencoded"] = data
+
+            if let data = data, let bytes = try? data.formURLEncoded() {
+                body = .data(bytes)
+                headers[.contentType] = "application/x-www-form-urlencoded"
+            } else if let type = headers[.contentType], type.contains("application/x-www-form-urlencoded") {
+                body = .data([])
+                headers.removeValue(forKey: .contentType)
+            }
         }
     }
 }
@@ -23,7 +37,7 @@ extension Request {
         get {
             if let existing = storage["query"] {
                 return existing as? Node
-            } else if let queryRaw = uri.query {
+            } else if let queryRaw = uri.rawQuery {
                 let query = Node(formURLEncoded: queryRaw.bytes)
                 storage["query"] = query
                 return query
