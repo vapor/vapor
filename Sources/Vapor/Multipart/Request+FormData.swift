@@ -2,6 +2,8 @@ import HTTP
 import FormData
 import Multipart
 
+private let formDataKey = "formData"
+
 extension HTTP.Message {
     /**
         Multipart encoded request data sent using
@@ -11,7 +13,7 @@ extension HTTP.Message {
     */
     public var formData: [String: Field]? {
         get {
-            if let existing = storage["formdata"] as? [String: Field] {
+            if let existing = storage[formDataKey] as? [String: Field] {
                 return existing
             }
             
@@ -38,11 +40,13 @@ extension HTTP.Message {
             } catch {
                 return nil
             }
+
+            storage[formDataKey] = fields
             
             return fields
         }
         set {
-            storage["formdata"] = newValue
+            storage[formDataKey] = newValue
             
             if let fields = newValue {
                 var serialized: Bytes = []
