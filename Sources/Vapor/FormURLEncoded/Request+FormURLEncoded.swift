@@ -37,7 +37,7 @@ extension Request {
         get {
             if let existing = storage["query"] {
                 return existing as? Node
-            } else if let queryRaw = uri.query {
+            } else if let queryRaw = uri.rawQuery {
                 let query = Node(formURLEncoded: queryRaw.bytes)
                 storage["query"] = query
                 return query
