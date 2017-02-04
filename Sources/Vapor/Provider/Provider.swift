@@ -30,6 +30,7 @@ public protocol Provider: ConfigInitializable {
 }
 
 extension Provider {
+    @available(*, deprecated: 1.0, message: "The default implimentation will no longer be available in subsequent versions")
     public func boot(_ drop: Droplet) {
         print("[DEPRECATED] Providers should implement the `boot(_: Droplet)` method to register dependencies. The `provided` property will be removed in a future update.")
 

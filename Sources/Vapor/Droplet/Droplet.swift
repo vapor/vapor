@@ -324,9 +324,7 @@ public class Droplet {
         }
 
         // hook into all providers after init
-        for provider in providers {
-            provider.afterInit(self)
-        }
+        providers.forEach(addProvider)
     }
 
     func serverErrors(error: ServerError) {
