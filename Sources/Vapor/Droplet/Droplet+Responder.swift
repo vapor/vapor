@@ -38,7 +38,7 @@ extension Droplet: Responder {
                 } else if case .options = request.method {
                     return Response(status: .ok, headers: [
                         "Allow": "OPTIONS"
-                        ])
+                    ])
                 } else {
                     return Response(status: .notImplemented)
                 }
@@ -57,8 +57,18 @@ extension Droplet: Responder {
             }
         } catch {
             if environment == .production {
-                return ErrorView.shared.makeResponse(.internalServerError, "Something went wrong.")
                 log.error("Uncaught Error: \(type(of: error)).\(error)")
+                if request.accept.prefers("html") {
+                    return ErrorView.shared.makeResponse(.internalServerError, "Something went wrong.")
+                }
+
+                let response = Response(status: .internalServerError)
+                response.json = try JSON(node: [
+                    "error": true,
+                    "message": "Something went wrong.",
+                    "code": 500
+                ])
+                return response
             } else {
                 let message = "Uncaught Error: \(type(of: error)).\(error). Use middleware to catch this error and provide a better response. Otherwise, a 500 error page will be returned in the production environment."
                 response = Response(

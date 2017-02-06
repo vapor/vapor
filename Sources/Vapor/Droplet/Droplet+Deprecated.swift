@@ -101,7 +101,7 @@ extension Droplet {
             "validation": ValidationMiddleware(),
             "date": DateMiddleware(),
             "type-safe": TypeSafeErrorMiddleware(),
-            "abort": AbortMiddleware(),
+            "abort": AbortMiddleware(environment: environment),
             "sessions": SessionsMiddleware(sessions: MemorySessions())
         ]
 
