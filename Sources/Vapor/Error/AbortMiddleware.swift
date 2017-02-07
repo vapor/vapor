@@ -29,7 +29,9 @@ public class AbortMiddleware: Middleware {
         } catch let error as AbortError {
             return try errorResponse(request, error)
         } catch {
-            return try errorResponse(request, .internalServerError, error.localizedDescription)
+            let errorType = type(of: error)
+            let message = "\(errorType): \(error)"
+            return try errorResponse(request, .internalServerError, message)
         }
     }
 
