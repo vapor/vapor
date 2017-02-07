@@ -133,7 +133,7 @@ class MiddlewareTests: XCTestCase {
     func testAbortMiddleware() throws {
         let drop = Droplet()
 
-        drop.middleware = [AbortMiddleware()]
+        drop.middleware = [AbortMiddleware(environment: .development)]
 
         drop.get("*") { req in
             let path = req.uri.path

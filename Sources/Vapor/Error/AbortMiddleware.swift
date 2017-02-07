@@ -8,7 +8,10 @@ import HTTP
     AbortMiddleware for the Droplet's `middleware` array.
 */
 public class AbortMiddleware: Middleware {
-    public init() { }
+    let environment: Environment
+    public init(environment: Environment = .production) {
+        self.environment = environment
+    }
 
     /**
         Respond to a given request chaining to the next
@@ -24,32 +27,62 @@ public class AbortMiddleware: Middleware {
         do {
             return try chain.respond(to: request)
         } catch let error as AbortError {
-            return try AbortMiddleware.errorResponse(request, error)
+            return try errorResponse(request, error)
         } catch {
-            return try AbortMiddleware.errorResponse(request, .internalServerError, error.localizedDescription)
+            let errorType = type(of: error)
+            let message = "\(errorType): \(error)"
+            return try errorResponse(request, .internalServerError, message)
         }
     }
+
+    // MARK: Private
     
-    public static func errorResponse(_ request: Request, _ status: Status, _ message: String) throws -> Response {
+    private func errorResponse(_ request: Request, _ status: Status, _ message: String) throws -> Response {
         let error = Abort.custom(status: status, message: message)
         return try errorResponse(request, error)
     }
     
-    public static func errorResponse(_ request: Request, _ error: AbortError) throws -> Response {
-        if request.accept.prefers("html") {
-            return ErrorView.shared.makeResponse(error.status, error.message)
-        }
+    private func errorResponse(_ request: Request, _ error: AbortError) throws -> Response {
+        if environment == .production {
+            let message = error.code < 500 ? error.message : "Something went wrong"
 
-        let json = try JSON(node: [
-            "error": true,
-            "message": "\(error.message)",
-            "code": error.code,
-            "metadata": error.metadata
+            if request.accept.prefers("html") {
+                return ErrorView.shared.makeResponse(error.status, message)
+            }
+
+            let response = Response(status: error.status)
+            response.json = try JSON(node: [
+                "error": true,
+                "message": message,
+                "code": error.code
             ])
-        let data = try json.makeBytes()
-        let response = Response(status: error.status, body: .data(data))
-        response.headers["Content-Type"] = "application/json; charset=utf-8"
-        return response
+            return response
+        } else {
+            if request.accept.prefers("html") {
+                return ErrorView.shared.makeResponse(error.status, error.message)
+            }
+
+            let response = Response(status: error.status)
+            response.json = try JSON(node: [
+                "error": true,
+                "message": error.message,
+                "code": error.code,
+                "metadata": error.metadata
+            ])
+            return response
+        }
+    }
+
+    // MARK: Deprecated
+
+    @available(*, deprecated: 1.5, message: "This method will be removed in a future version.")
+    public static func errorResponse(_ request: Request, _ status: Status, _ message: String) throws -> Response {
+        return try AbortMiddleware().errorResponse(request, status, message)
+    }
+
+    @available(*, deprecated: 1.5, message: "This method will be removed in a future version.")
+    public static func errorResponse(_ request: Request, _ error: AbortError) throws -> Response {
+        return try AbortMiddleware().errorResponse(request, error)
     }
 }
 
