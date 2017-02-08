@@ -18,3 +18,4 @@ If you find a downed link, or make a contribution of our own, let us know and we
 * 📖 [Vapor + MongoKitten](https://medium.com/@joannis.orlandos/using-mongokitten-vapor-for-your-applications-24dbac2f5dd9#.4wv6a5kzm)
 * 📖 [How to create a Telegram bot with Swift using Vapor on Ubuntu / macOS](https://www.fabriziobrancati.com/SwiftyBot)
 * 📹 [Ray Wenderlich Server Side Swift with Vapor ](https://videos.raywenderlich.com/screencasts/server-side-swift-with-vapor-getting-started)
+* 📖 [How to create a Facebook Messenger bot with Swift](https://www.fabriziobrancati.com/SwiftyBot-2)
