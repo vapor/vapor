@@ -26,7 +26,7 @@ public final class CacheSessionManager: SessionManager {
         Creates a session for a given Subject object and returns the identifier.
     */
     public func createSession(account: Account) -> String {
-        let identifier = CryptoRandom.bytes(16).base64String
+        let identifier = CryptoRandom.bytes(16).base64Encoded.string
         try? cache.set(identifier, account.uniqueID)
         return identifier
     }

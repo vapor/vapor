@@ -13,7 +13,7 @@ extension Authorization {
         let token = header.substring(from: range.upperBound)
 
 
-        let decodedToken = token.base64DecodedString
+        let decodedToken = token.bytes.base64Decoded.string
         guard let separatorRange = decodedToken.range(of: ":") else {
             return nil
         }
