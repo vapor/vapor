@@ -41,7 +41,7 @@ public class MemorySessions: SessionsProtocol {
         Create new unique session id
     */
     public func makeIdentifier() -> String {
-        return CryptoRandom.bytes(16).base64String
+        return CryptoRandom.bytes(16).base64Encoded.string
     }
 
     /**

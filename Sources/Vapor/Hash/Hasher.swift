@@ -29,7 +29,7 @@ extension HashProtocol {
         case .hex:
             return hash.hexString
         case .base64:
-            return hash.base64String
+            return hash.base64Encoded.string
         }
     }
 

@@ -47,7 +47,7 @@ extension CipherProtocol {
         case .hex:
             return m.hexString
         case .base64:
-            return m.base64String
+            return m.base64Encoded.string
         }
     }
 }
