@@ -165,13 +165,14 @@ Swift Vapor backend solution which won the 1st [appculture](https://github.com/a
 
 # SwiftyBot
 
-A simple Telegram bot powered by Vapor.
+A simple Telegram & Facebook Messenger bot powered by Vapor.
 
 ### GitHub
 [Source](https://github.com/FabrizioBrancati/SwiftyBot)
 
 ### Site
-[Demo](https://telegram.me/SwiftyBot)
+[Telegram Demo](https://telegram.me/SwiftyBot)
+[Facebook Messenger Demo](http://m.me/SwiftyBotMessenger)
 
 # TinyFaces
 
