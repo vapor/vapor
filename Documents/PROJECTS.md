@@ -171,7 +171,8 @@ A simple Telegram & Facebook Messenger bot powered by Vapor.
 [Source](https://github.com/FabrizioBrancati/SwiftyBot)
 
 ### Site
-[Telegram Demo](https://telegram.me/SwiftyBot)<br>
+[Telegram Demo](https://telegram.me/SwiftyBot)
+
 [Facebook Messenger Demo](http://m.me/SwiftyBotMessenger)
 
 # TinyFaces
