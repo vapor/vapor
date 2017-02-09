@@ -23,7 +23,7 @@ public struct Cookie {
         domain: String? = nil,
         path: String? = "/",
         secure: Bool = false,
-        httpOnly: Bool = false
+        httpOnly: Bool = true
     ) {
         self.name = name
         self.value = value
