@@ -5,7 +5,7 @@ import BCrypt
 public final class BCryptHasher: HashProtocol {
     /// The work factor increases the amount
     /// of work required to create the hash,
-    /// increasing its security.
+    /// increasing its resistance to brute force.
     public let workFactor: Int
 
     /// Create a BCryptHasher using the
@@ -17,17 +17,13 @@ public final class BCryptHasher: HashProtocol {
     }
 
     /// @see HashProtocol.make
-    public func make(_ message: Bytes, key: Bytes?) throws -> Bytes {
-        guard key == nil else {
-            throw Error.keyNotAllowed
-        }
-
+    public func make(_ message: Bytes) throws -> Bytes {
         let salt = BCryptSalt(cost: workFactor)
         return BCrypt.hash(password: message.string, salt: salt).bytes
     }
 
     /// @see HashProtocol.check
-    public func check(_ message: Bytes, matches digest: Bytes, key: Bytes?) throws -> Bool {
+    public func check(_ message: Bytes, matchesHash digest: Bytes) throws -> Bool {
         return try BCrypt.verify(
             password: message.string,
             matchesHash: digest.string

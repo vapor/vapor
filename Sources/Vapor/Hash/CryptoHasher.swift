@@ -16,15 +16,26 @@ public final class CryptoHasher: HashProtocol {
     /// is a String
     public let encoding: Encoding
 
+    /// An optional key can be passed to
+    /// implementations that support it
+    /// generating a keyed hash.
+    public let key: Bytes?
+
     /// Creates a CryptoHasher with the desired
     /// HMAC method and HashEncoding
-    public init(method: HMAC.Method, encoding: Encoding) {
+    public init(method: HMAC.Method, encoding: Encoding, key: Bytes?) {
         self.method = method
         self.encoding = encoding
+        self.key = key
+    }
+
+    /// @see CryptoHasher.init(..., key: Bytes?)
+    public convenience init(method: HMAC.Method, encoding: Encoding, key: BytesConvertible) throws {
+        self.init(method: method, encoding: encoding, key: try key.makeBytes())
     }
 
     /// @see HashProtocol.make
-    public func make(_ message: Bytes, key: Bytes?) throws -> Bytes {
+    public func make(_ message: Bytes) throws -> Bytes {
         let hash: Bytes
 
         if let key = key {
@@ -44,8 +55,8 @@ public final class CryptoHasher: HashProtocol {
     }
 
     /// @see HashProtocol.check
-    public func check(_ message: Bytes, matches digest: Bytes, key: Bytes?) throws -> Bool {
-        return try make(message, key: key) == digest
+    public func check(_ message: Bytes, matchesHash digest: Bytes) throws -> Bool {
+        return try make(message) == digest
     }
 
     /// @see HashProtocol.configuration
@@ -155,7 +166,10 @@ extension CryptoHasher: ConfigInitializable {
             )
         }
 
-        self.init(method: method, encoding: encoding)
+        // Key
+        let key = config["crypto", "hash", "key"]?.string?.bytes
+
+        self.init(method: method, encoding: encoding, key: key)
     }
 }
 
