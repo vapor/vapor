@@ -17,7 +17,7 @@ class HashTests: XCTestCase {
         let key = "123"
 
         //test Hash by itself
-        let hash = try CryptoHasher(method: .sha256, encoding: .hex, key: key)
+        let hash = CryptoHasher(hmac: .sha256, encoding: .hex, key: key.bytes)
         XCTAssertEqual(defaultExpected, try hash.make(string).string, "Hash did not match")
 
         //test all variants of manually
@@ -27,7 +27,7 @@ class HashTests: XCTestCase {
         expected[.sha512] = "9215c98b5ea5826961395de57f8e4cd2baf3d08c429d4db0f4e2d83feb12e989ffbc7dbf8611ed65ef13e6e8d5f370a803065708f38fd73a349f0869b7891bc6"
 
         for (variant, expect) in expected {
-            let hasher = try CryptoHasher(method: variant, encoding: .hex, key: key)
+            let hasher = CryptoHasher(hmac: variant, encoding: .hex, key: key.bytes)
             let result = try hasher.make(string).string
             XCTAssert(result == expect, "Hash for \(variant) did not match")
         }
@@ -63,14 +63,9 @@ class HashTests: XCTestCase {
 
         XCTAssert(digest1.contains("$0\(workFactor)$"))
         XCTAssert(digest1 != digest2)
-        XCTAssert(try hash.check(password, matchesDigest: digest1))
-        XCTAssert(try hash.check(password, matchesDigest: digest2))
-        XCTAssert(try hash.check(password, matchesDigest: digest3))
-
-        // assert work factor appears in
-        // configuration details
-        let json = try JSON(node: hash.configuration).makeBytes()
-        XCTAssert(json.string.contains(workFactor.description))
+        XCTAssert(try hash.check(password, matchesHash: digest1))
+        XCTAssert(try hash.check(password, matchesHash: digest2))
+        XCTAssert(try hash.check(password, matchesHash: digest3))
     }
 
     func testDropletBCrypt() throws {
@@ -90,7 +85,7 @@ class HashTests: XCTestCase {
 
         let other = BCryptHasher(workFactor: 7)
         XCTAssertTrue(
-            try other.check(string, matchesDigest: result),
+            try other.check(string, matchesHash: result),
             "Droplet hash did not match BCrypt with workFactor 7"
         )
     }

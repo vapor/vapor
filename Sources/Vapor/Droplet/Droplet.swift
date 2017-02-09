@@ -277,7 +277,7 @@ public class Droplet {
         do {
             hash = try CryptoHasher(config: config)
         } catch {
-            hash = CryptoHasher(method: .sha1, encoding: .hex, key: nil)
+            hash = CryptoHasher(hash: .sha1, encoding: .hex)
             log.debug("Could not configure hash, using default: \(error)")
         }
 

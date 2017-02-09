@@ -29,20 +29,6 @@ public final class BCryptHasher: HashProtocol {
             matchesHash: digest.string
         )
     }
-
-    /// See HashProtocol.configuration
-    public var configuration: Node {
-        return Node.object([
-            "workFactor": Node.number(.int(workFactor))
-        ])
-    }
-
-    /// Errors that may arise when 
-    /// using or configuring this hasher.
-    public enum Error: Swift.Error {
-        case keyNotAllowed
-        case unknown(Swift.Error)
-    }
 }
 
 // MARK: Configuration

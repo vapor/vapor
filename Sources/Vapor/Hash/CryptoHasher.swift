@@ -6,40 +6,49 @@ import Core
 /// using the available HMAC methods from
 /// the vapor/crypto package.
 public final class CryptoHasher: HashProtocol {
-    /// The specified HMAC method will be
-    /// used for creating keyed hashes and the
-    /// HMAC method's hash method for all other hashes
-    public let method: HMAC.Method
+    /// The specified method, either keyed
+    /// HMAC or normal hashing.
+    public let method: Method
 
     /// The encoding used to format
     /// hashed bytes.
     public let encoding: Encoding
 
-    /// An optional key can be passed to
-    /// generate keyed hashes with HMAC.
-    public let key: Bytes?
-
     /// Creates a CryptoHasher with the desired
     /// HMAC method and HashEncoding
-    public init(method: HMAC.Method, encoding: Encoding, key: Bytes?) {
+    public init(method: Method, encoding: Encoding) {
         self.method = method
         self.encoding = encoding
-        self.key = key
     }
 
-    /// See CryptoHasher.init(..., key: Bytes?)
-    public convenience init(method: HMAC.Method, encoding: Encoding, key: BytesConvertible) throws {
-        self.init(method: method, encoding: encoding, key: try key.makeBytes())
+    /// Creates a CryptoHasher using a
+    /// keyed HMAC algorithm.
+    public convenience init(hmac: HMAC.Method, encoding: Encoding, key: Bytes) {
+        self.init(method: .keyed(hmac, key: key), encoding: encoding)
+    }
+
+    /// Creates a CryptoHasher using a
+    /// normal Hash algorithm.
+    public convenience init(hash: Hash.Method, encoding: Encoding) {
+        self.init(method: .normal(hash), encoding: encoding)
+    }
+
+    /// An exhaustive list of ways
+    /// the hasher can hash data.
+    public enum Method {
+        case keyed(HMAC.Method, key: Bytes)
+        case normal(Hash.Method)
     }
 
     /// See HashProtocol.make
     public func make(_ message: Bytes) throws -> Bytes {
         let hash: Bytes
 
-        if let key = key {
+        switch method {
+        case .keyed(let method, let key):
             hash = try HMAC.make(method, message, key: key)
-        } else {
-            hash = try Hash.make(try method.hashMethod(), message)
+        case .normal(let method):
+            hash = try Hash.make(method, message)
         }
 
         switch encoding {
@@ -57,53 +66,12 @@ public final class CryptoHasher: HashProtocol {
         return try make(message) == digest
     }
 
-    /// See HashProtocol.configuration
-    public var configuration: Node {
-        return Node.object([
-            "method": Node.string("\(method)")
-        ])
-    }
-
-    /// Errors that may arise when
-    /// using or configuring this hasher.
-    public enum Error: Swift.Error {
-        case unsupportedHashMethod
-        case unknown(Swift.Error)
-    }
-
     /// Exhaustive list of methods
     /// by which a hash can be encoded.
     public enum Encoding {
         case hex
         case base64
         case plain
-    }
-}
-
-// MARK: HMAC -> Hash
-
-extension HMAC.Method {
-    func hashMethod() throws -> Hash.Method {
-        switch self {
-        case .sha1:
-            return .sha1
-        case .sha224:
-            return .sha224
-        case .sha256:
-            return .sha256
-        case .sha384:
-            return .sha384
-        case .sha512:
-            return .sha512
-        case .md4:
-            return .md4
-        case .md5:
-            return .md5
-        case .ripemd160:
-            return .ripemd160
-        default:
-            throw CryptoHasher.Error.unsupportedHashMethod
-        }
     }
 }
 
@@ -118,32 +86,6 @@ extension CryptoHasher: ConfigInitializable {
                 key: ["hash", "method"],
                 file: "crypto",
                 desiredType: String.self
-            )
-        }
-
-        let method: HMAC.Method
-        switch methodString {
-        case "sha1":
-            method = .sha1
-        case "sha224":
-            method = .sha224
-        case "sha256":
-            method = .sha256
-        case "sha384":
-            method = .sha384
-        case "sha512":
-            method = .sha512
-        case "md4":
-            method = .md4
-        case "md5":
-            method = .md5
-        case "ripemd160":
-            method = .ripemd160
-        default:
-            throw ConfigError.unsupported(
-                value: methodString,
-                key: ["hash", "method"],
-                file: "crypto"
             )
         }
 
@@ -164,10 +106,92 @@ extension CryptoHasher: ConfigInitializable {
             )
         }
 
-        // Key
-        let key = config["crypto", "hash", "key"]?.string?.bytes
+        let method: Method
 
-        self.init(method: method, encoding: encoding, key: key)
+        // Key
+        if let key = config["crypto", "hash", "key"]?.string {
+            guard let hmac = try HMAC.Method(from: methodString) else {
+                throw ConfigError.unsupported(
+                    value: methodString,
+                    key: ["hash", "method"],
+                    file: "crypto"
+                )
+            }
+
+            method = .keyed(hmac, key: key.bytes)
+        } else {
+            guard let hash = try Hash.Method(from: methodString) else {
+                throw ConfigError.unsupported(
+                    value: methodString,
+                    key: ["hash", "method"],
+                    file: "crypto"
+                )
+            }
+
+            method = .normal(hash)
+        }
+
+        self.init(method: method, encoding: encoding)
+    }
+}
+
+// MARK: String Initializable
+
+extension HMAC.Method: StringInitializable {
+    public init?(from string: String) throws {
+        switch string {
+        case "sha1":
+            self = .sha1
+        case "sha224":
+            self = .sha224
+        case "sha256":
+            self = .sha256
+        case "sha384":
+            self = .sha384
+        case "sha512":
+            self = .sha512
+        case "md4":
+            self = .md4
+        case "md5":
+            self = .md5
+        case "ripemd160":
+            self = .ripemd160
+        case "whirlpool":
+            self = .whirlpool
+        case "streebog256":
+            self = .streebog256
+        case "streebog512":
+            self = .streebog512
+        case "gostr341194":
+            self = .gostr341194
+        default:
+            return nil
+        }
+    }
+}
+
+extension Hash.Method: StringInitializable {
+    public init?(from string: String) throws {
+        switch string {
+        case "sha1":
+            self = .sha1
+        case "sha224":
+            self = .sha224
+        case "sha256":
+            self = .sha256
+        case "sha384":
+            self = .sha384
+        case "sha512":
+            self = .sha512
+        case "md4":
+            self = .md4
+        case "md5":
+            self = .md5
+        case "ripemd160":
+            self = .ripemd160
+        default:
+            return nil
+        }
     }
 }
 
