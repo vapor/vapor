@@ -60,7 +60,14 @@ class AuthTests: XCTestCase {
         let authenticated = try login(credentials: Identifier(id: 1))
         XCTAssertEqual(authenticated.status, .ok)
         XCTAssertEqual(authenticated.data["name"]?.string, "John")
-        XCTAssertNotNil(authenticated.cookies["vapor-auth"])
+        
+        let cookie = authenticated.cookies.cookies.first!
+        XCTAssertEqual(cookie.name, "vapor-auth")
+        XCTAssertNotNil(cookie.value)
+        XCTAssertNotNil(cookie.expires)
+        XCTAssertFalse(cookie.secure)
+        XCTAssertFalse(cookie.httpOnly)
+        
         
         let notAuthenticated = try login(credentials: Identifier(id: 2)) // user with id of 2 does not exist in the database
         XCTAssertNotEqual(notAuthenticated.status, .ok)
