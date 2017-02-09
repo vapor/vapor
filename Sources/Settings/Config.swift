@@ -12,6 +12,31 @@ public struct Config: NodeBacked {
     }
 }
 
+public enum ConfigError: Error {
+    case unsupported(value: String, key: [String], file: String)
+    case missing(key: [String], file: String, desiredType: Any.Type)
+    case unknown(Error)
+}
+
+extension ConfigError: CustomStringConvertible {
+    public var description: String {
+        let reason: String
+
+        switch self {
+        case .unsupported(let value, let key, let file):
+            let keyPath = key.joined(separator: ".")
+            reason = "Unsupported value `\(value)` for key `\(keyPath)` in `Config/\(file).json`"
+        case .missing(let key, let file, let desiredType):
+            let keyPath = key.joined(separator: ".")
+            reason = "Key `\(keyPath)` in `Config/\(file).json` of type \(desiredType) required."
+        case .unknown(let error):
+            reason = "\(error)"
+        }
+
+        return "Configuration error: \(reason)"
+    }
+}
+
 extension Node {
     internal static func makeConfig(prioritized: [Source]) throws -> Node {
         var config = Node([:])

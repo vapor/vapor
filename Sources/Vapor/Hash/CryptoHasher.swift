@@ -1,38 +1,29 @@
 import HMAC
 import Hash
 import Core
-import libc
 
-/**
-    Create SHA + HMAC hashes with the
-    Hash class by applying this driver.
-*/
+/// Create normal and keyed hashes
+/// using the available HMAC methods from
+/// the vapor/crypto package.
 public final class CryptoHasher: HashProtocol {
+    /// The specified HMAC method will be
+    /// used for creating keyed hashes and the
+    /// HMAC method's hash method for all other hashes
     public let method: HMAC.Method
 
-    /**
-        HMAC key.
-    */
-    public let defaultKey: Bytes?
+    /// The default encoding that will be
+    /// used when the hash destination
+    /// is a String
+    public let encoding: Encoding
 
-    /**
-        Create a CryptoHasher with the 
-        given method and defaultKey.
-    */
-    public init(method: HMAC.Method, defaultKey: Bytes?) {
+    /// Creates a CryptoHasher with the desired
+    /// HMAC method and HashEncoding
+    public init(method: HMAC.Method, encoding: Encoding) {
         self.method = method
-        self.defaultKey = defaultKey
+        self.encoding = encoding
     }
 
-    /**
-        Hash given string with key
-
-        - parameter message: message to hash
-        - parameter key: key to hash with
-        - parameter encoding: string encoding for resulting hash
-
-        - returns: a hashed string
-     */
+    /// @see HashProtocol.make
     public func make(_ message: Bytes, key: Bytes?) throws -> Bytes {
         let hash: Bytes
 
@@ -42,14 +33,45 @@ public final class CryptoHasher: HashProtocol {
             hash = try Hash.make(try method.hashMethod(), message)
         }
 
-        return hash
+        switch encoding {
+        case .base64:
+            return hash.base64Encoded
+        case .hex:
+            return hash.hexString.bytes
+        case .plain:
+            return hash
+        }
     }
 
+    /// @see HashProtocol.check
+    public func check(_ message: Bytes, matches digest: Bytes, key: Bytes?) throws -> Bool {
+        return try make(message, key: key) == digest
+    }
+
+    /// @see HashProtocol.configuration
+    public var configuration: Node {
+        return Node.object([
+            "method": Node.string("\(method)")
+        ])
+    }
+
+    /// Errors that may arise when
+    /// using or configuring this hasher.
     public enum Error: Swift.Error {
-        case hashWithoutKeyUnsupported
-        case config(String)
+        case unsupportedHashMethod
+        case unknown(Swift.Error)
+    }
+
+    /// Exhaustive list of methods
+    /// by which a hash can be encoded.
+    public enum Encoding {
+        case hex
+        case base64
+        case plain
     }
 }
+
+// MARK: HMAC -> Hash
 
 extension HMAC.Method {
     func hashMethod() throws -> Hash.Method {
@@ -71,15 +93,23 @@ extension HMAC.Method {
         case .ripemd160:
             return .ripemd160
         default:
-            throw CryptoHasher.Error.hashWithoutKeyUnsupported
+            throw CryptoHasher.Error.unsupportedHashMethod
         }
     }
 }
 
+// MARK: Config
+
 extension CryptoHasher: ConfigInitializable {
+    /// Creates a crypto hasher from a Config object
     public convenience init(config: Settings.Config) throws {
+        // Method
         guard let methodString = config["crypto", "hash", "method"]?.string else {
-            throw Error.config("No `hash.method` found in `crypto.json` config.")
+            throw ConfigError.missing(
+                key: ["hash", "method"],
+                file: "crypto",
+                desiredType: String.self
+            )
         }
 
         let method: HMAC.Method
@@ -101,13 +131,43 @@ extension CryptoHasher: ConfigInitializable {
         case "ripemd160":
             method = .ripemd160
         default:
-            throw Error.config("Unknown hash method '\(methodString)'.")
+            throw ConfigError.unsupported(
+                value: methodString,
+                key: ["hash", "method"],
+                file: "crypto"
+            )
         }
 
-        guard let key = config["crypto", "hash", "key"]?.string?.bytes else {
-            throw Error.config("No `hash.key` found in `crypto.json` config.")
+        // Encoding
+        guard let encodingString = config["crypto", "hash", "encoding"]?.string else {
+            throw ConfigError.missing(
+                key: ["hash", "encoding"],
+                file: "crypto",
+                desiredType: String.self
+            )
         }
 
-        self.init(method: method, defaultKey: key)
+        guard let encoding = try Encoding(from: encodingString) else {
+            throw ConfigError.unsupported(
+                value: encodingString,
+                key: ["hash", "encoding"],
+                file: "crypto"
+            )
+        }
+
+        self.init(method: method, encoding: encoding)
+    }
+}
+
+extension CryptoHasher.Encoding: StringInitializable {
+    public init?(from string: String) throws {
+        switch string {
+        case "hex":
+            self = .hex
+        case "base64":
+            self = .base64
+        default:
+            return nil
+        }
     }
 }

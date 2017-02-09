@@ -277,7 +277,7 @@ public class Droplet {
         do {
             hash = try CryptoHasher(config: config)
         } catch {
-            hash = CryptoHasher(method: .sha1, defaultKey: [])
+            hash = CryptoHasher(method: .sha1, encoding: .hex)
             log.debug("Could not configure hash, using default: \(error)")
         }
 
@@ -299,6 +299,7 @@ public class Droplet {
         addConfigurable(console: terminal, name: "terminal")
         addConfigurable(log: log, name: "console")
         addConfigurable(hash: CryptoHasher.self, name: "crypto")
+        addConfigurable(hash: BCryptHasher.self, name: "bcrypt")
         addConfigurable(cipher: CryptoCipher.self, name: "crypto")
 
         if config["middleware", "server"]?.array == nil && config["droplet", "middleware", "server"]?.array == nil {
