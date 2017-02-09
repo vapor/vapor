@@ -17,8 +17,12 @@ class AuthMiddlewareTests: XCTestCase {
         let responder = AuthMiddlewareResponser()
         let response = try authMiddleware.respond(to: request, chainingTo: responder)
         
-        let cookie = response.cookies[cookieName]
-        XCTAssertNotNil(cookie)
+        let cookie = response.cookies.cookies.first!
+        XCTAssertEqual(cookie.name, cookieName)
+        XCTAssertNotNil(cookie.value)
+        XCTAssertNotNil(cookie.expires)
+        XCTAssertFalse(cookie.secure)
+        XCTAssertFalse(cookie.httpOnly)
     }
 
     func testAuthHelperPersistence() throws {
