@@ -11,18 +11,18 @@ public final class BCryptHasher: HashProtocol {
     /// Create a BCryptHasher using the
     /// specified work factor.
     ///
-    /// @see BCryptHasher.workFactor
+    /// See BCryptHasher.workFactor
     public init(workFactor: Int = 10) {
         self.workFactor = workFactor
     }
 
-    /// @see HashProtocol.make
+    /// See HashProtocol.make
     public func make(_ message: Bytes) throws -> Bytes {
         let salt = BCryptSalt(cost: workFactor)
         return BCrypt.hash(password: message.string, salt: salt).bytes
     }
 
-    /// @see HashProtocol.check
+    /// See HashProtocol.check
     public func check(_ message: Bytes, matchesHash digest: Bytes) throws -> Bool {
         return try BCrypt.verify(
             password: message.string,
@@ -30,7 +30,7 @@ public final class BCryptHasher: HashProtocol {
         )
     }
 
-    /// @see HashProtocol.configuration
+    /// See HashProtocol.configuration
     public var configuration: Node {
         return Node.object([
             "workFactor": Node.number(.int(workFactor))

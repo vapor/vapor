@@ -29,12 +29,12 @@ public enum HashError: Error {
 import Core
 
 extension HashProtocol {
-    /// @see HashProtocol.make
+    /// See HashProtocol.make
     public func make(_ string: BytesConvertible) throws -> Bytes {
         return try make(string.makeBytes())
     }
 
-    /// @see HashProtocol.check
+    /// See HashProtocol.check
     public func check(_ message: BytesConvertible, matchesDigest digest: BytesConvertible) throws -> Bool {
         let message = try message.makeBytes()
         let digest = try digest.makeBytes()

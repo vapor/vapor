@@ -27,12 +27,12 @@ public final class CryptoHasher: HashProtocol {
         self.key = key
     }
 
-    /// @see CryptoHasher.init(..., key: Bytes?)
+    /// See CryptoHasher.init(..., key: Bytes?)
     public convenience init(method: HMAC.Method, encoding: Encoding, key: BytesConvertible) throws {
         self.init(method: method, encoding: encoding, key: try key.makeBytes())
     }
 
-    /// @see HashProtocol.make
+    /// See HashProtocol.make
     public func make(_ message: Bytes) throws -> Bytes {
         let hash: Bytes
 
@@ -52,12 +52,12 @@ public final class CryptoHasher: HashProtocol {
         }
     }
 
-    /// @see HashProtocol.check
+    /// See HashProtocol.check
     public func check(_ message: Bytes, matchesHash digest: Bytes) throws -> Bool {
         return try make(message) == digest
     }
 
-    /// @see HashProtocol.configuration
+    /// See HashProtocol.configuration
     public var configuration: Node {
         return Node.object([
             "method": Node.string("\(method)")
