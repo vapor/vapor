@@ -11,14 +11,12 @@ public final class CryptoHasher: HashProtocol {
     /// HMAC method's hash method for all other hashes
     public let method: HMAC.Method
 
-    /// The default encoding that will be
-    /// used when the hash destination
-    /// is a String
+    /// The encoding used to format
+    /// hashed bytes.
     public let encoding: Encoding
 
     /// An optional key can be passed to
-    /// implementations that support it
-    /// generating a keyed hash.
+    /// generate keyed hashes with HMAC.
     public let key: Bytes?
 
     /// Creates a CryptoHasher with the desired

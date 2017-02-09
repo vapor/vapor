@@ -13,14 +13,12 @@ public protocol HashProtocol {
 
     /// Represents the current configuration
     /// of the hasher in case these values
-    /// need to be stored alongside the hashes
+    /// need to be stored alongside the hashes.
     var configuration: Node { get }
 }
 
 /// Generic errors that can
-/// occur during hashing. Especially,
-/// those related to supporting or 
-/// requiring keys.
+/// occur during hashing.
 public enum HashError: Error {
     case config(String)
     case unknown(Error)
