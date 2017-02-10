@@ -16,6 +16,3 @@ public protocol LogProtocol {
     */
     func log(_ level: LogLevel, message: String, file: String, function: String, line: Int)
 }
-
-@available(*, deprecated: 1.0, message: "Use `LogProtocol` instead.")
-public typealias Log = LogProtocol

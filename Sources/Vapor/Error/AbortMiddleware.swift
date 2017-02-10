@@ -72,17 +72,5 @@ public class AbortMiddleware: Middleware {
             return response
         }
     }
-
-    // MARK: Deprecated
-
-    @available(*, deprecated: 1.5, message: "This method will be removed in a future version.")
-    public static func errorResponse(_ request: Request, _ status: Status, _ message: String) throws -> Response {
-        return try AbortMiddleware().errorResponse(request, status, message)
-    }
-
-    @available(*, deprecated: 1.5, message: "This method will be removed in a future version.")
-    public static func errorResponse(_ request: Request, _ error: AbortError) throws -> Response {
-        return try AbortMiddleware().errorResponse(request, error)
-    }
 }
 
