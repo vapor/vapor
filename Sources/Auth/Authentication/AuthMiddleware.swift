@@ -28,7 +28,7 @@ public class AuthMiddleware<U: User>: Middleware {
                 value: value,
                 expires: Date().addingTimeInterval(cookieTimeout),
                 secure: false,
-                httpOnly: true
+                httpOnly: false
             )
         }
     }
