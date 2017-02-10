@@ -19,13 +19,11 @@ extension HTTP.Message {
             
             guard
                 let type = headers[.contentType], type.contains("multipart/form-data"),
-                case let .data(bytes) = self.body,
-                let boundary = try? Multipart.parseBoundary(contentType: type),
-                let multipart = try? Parser(boundary: boundary)
-            else {
-                return nil
-            }
-            
+                let bytes = body.bytes,
+                let boundary = try? Parser.extractBoundary(contentType: type)
+                else { return nil }
+
+            let multipart = Parser(boundary: boundary)
             let parser = FormData.Parser(multipart: multipart)
             
             var fields: [String: Field] = [:]
