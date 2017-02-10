@@ -12,7 +12,7 @@ public class AuthMiddleware<U: User>: Middleware {
     private let cookieName: String
     private let cookieFactory: CookieFactory
 
-    public typealias CookieFactory = (String) -> Cookie
+    public typealias CookieFactory = (String, String) -> Cookie
 
     public init(
         turnstile: Turnstile,
@@ -22,9 +22,9 @@ public class AuthMiddleware<U: User>: Middleware {
         self.turnstile = turnstile
         
         self.cookieName = cookieName
-        self.cookieFactory = cookieFactory ?? { value in
+        self.cookieFactory = cookieFactory ?? { name, value in
             return Cookie(
-                name: cookieName,
+                name: name,
                 value: value,
                 expires: Date().addingTimeInterval(cookieTimeout),
                 secure: false,
@@ -58,8 +58,7 @@ public class AuthMiddleware<U: User>: Middleware {
             let sid = try request.subject().sessionIdentifier,
             request.cookies[cookieName] != sid
         {
-            var cookie = cookieFactory(sid)
-            cookie.name = cookieName
+            let cookie = cookieFactory(cookieName, sid)
             response.cookies.insert(cookie)
         } else if
             try request.subject().sessionIdentifier == nil,

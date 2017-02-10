@@ -1,5 +1,6 @@
 import XCTest
 import HTTP
+import Cookies
 @testable import Auth
 
 class AuthMiddlewareTests: XCTestCase {
@@ -22,6 +23,32 @@ class AuthMiddlewareTests: XCTestCase {
         XCTAssertNotNil(cookie.value)
         XCTAssertNotNil(cookie.expires)
         XCTAssertFalse(cookie.secure)
+        XCTAssertTrue(cookie.httpOnly)
+    }
+    
+    func testCustomCookie() throws {
+        let expires = Date()
+        let cookieName = "custom-auth-cookie-name"
+        let authMiddleware = AuthMiddleware(user: AuthUser.self, cookieName: cookieName) { name, value in
+            return Cookie(
+                name: name,
+                value: value,
+                expires: expires,
+                secure: true,
+                httpOnly: true
+            )
+        }
+        
+        let request = try Request(method: .get, uri: "test")
+        
+        let responder = AuthMiddlewareResponser()
+        let response = try authMiddleware.respond(to: request, chainingTo: responder)
+        
+        let cookie = response.cookies.cookies.first!
+        XCTAssertEqual(cookie.name, cookieName)
+        XCTAssertNotNil(cookie.value)
+        XCTAssertEqual(cookie.expires, expires)
+        XCTAssertTrue(cookie.secure)
         XCTAssertTrue(cookie.httpOnly)
     }
 
