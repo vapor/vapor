@@ -202,6 +202,8 @@ extension CryptoHasher.Encoding: StringInitializable {
             self = .hex
         case "base64":
             self = .base64
+        case "plain":
+            self = .plain
         default:
             return nil
         }

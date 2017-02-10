@@ -12,10 +12,13 @@ public struct Config: NodeBacked {
     }
 }
 
+/// Typical errors that may happen
+/// during the parsing of Vapor json
+/// configuration files.
 public enum ConfigError: Error {
     case unsupported(value: String, key: [String], file: String)
     case missing(key: [String], file: String, desiredType: Any.Type)
-    case unknown(Error)
+    case unspecified(Error)
 }
 
 extension ConfigError: CustomStringConvertible {
@@ -29,7 +32,7 @@ extension ConfigError: CustomStringConvertible {
         case .missing(let key, let file, let desiredType):
             let keyPath = key.joined(separator: ".")
             reason = "Key `\(keyPath)` in `Config/\(file).json` of type \(desiredType) required."
-        case .unknown(let error):
+        case .unspecified(let error):
             reason = "\(error)"
         }
 
