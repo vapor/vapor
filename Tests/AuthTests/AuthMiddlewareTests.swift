@@ -22,7 +22,7 @@ class AuthMiddlewareTests: XCTestCase {
         XCTAssertNotNil(cookie.value)
         XCTAssertNotNil(cookie.expires)
         XCTAssertFalse(cookie.secure)
-        XCTAssertFalse(cookie.httpOnly)
+        XCTAssertTrue(cookie.httpOnly)
     }
 
     func testAuthHelperPersistence() throws {
