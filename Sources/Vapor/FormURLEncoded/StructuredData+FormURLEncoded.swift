@@ -3,7 +3,7 @@ import Core
 import Node
 
 extension Node {
-    public init(formURLEncoded data: Bytes) {
+    public init(formURLEncoded data: Bytes, allowEmptyValues: Bool = false) {
         var urlEncoded: [String: Node] = [:]
 
         for pair in data.split(separator: .ampersand) {
@@ -26,7 +26,7 @@ extension Node {
                 let valueData = percentDecoded(token[1], nonEncodedTransform: replacePlus) ?? []
 
                 value = .string(valueData.string)
-            } else if token.count == 1 {
+            } else if token.count == 1 && allowEmptyValues {
                 keyData = percentDecoded(token[0], nonEncodedTransform: replacePlus) ?? []
             }
 
