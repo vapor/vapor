@@ -16,4 +16,15 @@ class QueryTests: XCTestCase {
         XCTAssertEqual("bu=zz+zz", query?["fizz"]?.string)
         XCTAssertEqual("bb+ccc&dd", query?["aaa"]?.string)
     }
+    
+    func testQueryWithoutParameter() {
+        let request = try! Request(method: .get, uri: "http://example.com?fizz&buzz")
+        let query = request.query?.object
+        
+        XCTAssertNotNil(query)
+        XCTAssertEqual(2, query?.count)
+        XCTAssertNotNil(query?["fizz"])
+        XCTAssertNotNil(query?["buzz"])
+        XCTAssertEqual("", query?["fizz"]?.string)
+    }
 }

@@ -7,22 +7,30 @@ extension Node {
         var urlEncoded: [String: Node] = [:]
 
         for pair in data.split(separator: .ampersand) {
+            
+            let replacePlus: (Byte) -> (Byte) = { byte in
+                if byte == .plus {
+                    return .space
+                } else {
+                    return byte
+                }
+            }
+            
+            var key = ""
+            var value:Node = .string("")
+            var keyData: Bytes?
+            
             let token = pair.split(separator: .equals)
             if token.count == 2 {
-
-                let replacePlus: (Byte) -> (Byte) = { byte in
-                    if byte == .plus {
-                        return .space
-                    } else {
-                        return byte
-                    }
-                }
-
-                var keyData = percentDecoded(token[0], nonEncodedTransform: replacePlus) ?? []
+                keyData = percentDecoded(token[0], nonEncodedTransform: replacePlus) ?? []
                 let valueData = percentDecoded(token[1], nonEncodedTransform: replacePlus) ?? []
 
-                var value: Node = .string(valueData.string)
+                value = .string(valueData.string)
+            } else if token.count == 1 {
+                keyData = percentDecoded(token[0], nonEncodedTransform: replacePlus) ?? []
+            }
 
+            if var keyData = keyData {
                 var keyIndicatedArray = false
 
                 // check if the key has `key[]` or `key[5]`
@@ -37,7 +45,7 @@ extension Node {
                     keyIndicatedArray = true
                 }
 
-                let key: String = keyData.string
+                key = keyData.string
 
                 if let existing = urlEncoded[key] {
                     // if a key already exists, create an
@@ -56,11 +64,12 @@ extension Node {
 
                 urlEncoded[key] = value
             }
+
         }
         
         self = .object(urlEncoded)
     }
-
+    
     public func formURLEncoded() throws -> Bytes {
         guard case .object(let dict) = self else {
             return []

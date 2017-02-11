@@ -66,7 +66,7 @@ class AuthTests: XCTestCase {
         XCTAssertNotNil(cookie.value)
         XCTAssertNotNil(cookie.expires)
         XCTAssertFalse(cookie.secure)
-        XCTAssertFalse(cookie.httpOnly)
+        XCTAssertTrue(cookie.httpOnly)
         
         
         let notAuthenticated = try login(credentials: Identifier(id: 2)) // user with id of 2 does not exist in the database
