@@ -13,6 +13,20 @@ extension Droplet {
             storage["fluent-preparations"] = newValue
         }
     }
+
+
+    /**
+     The Database for this Droplet
+     to run preparations on, if supplied.
+     */
+    public var database: Database?{
+        get {
+            return storage["fluent-database"] as? Database
+        }
+        set {
+            storage["fluent-database"] = newValue
+        }
+    }
 }
 
 fileprivate final class FluentVaporProvider: Provider {

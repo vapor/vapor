@@ -130,12 +130,6 @@ public class Droplet {
     public var cache: CacheProtocol
 
     /**
-        The Database for this Droplet
-        to run preparations on, if supplied.
-    */
-    public var database: Database?
-
-    /**
         Preparations for using the database.
     */
     // public var preparations: [Preparation.Type]
@@ -269,7 +263,6 @@ public class Droplet {
         }
         view = renderer
         cache = MemoryCache()
-        database = nil
         storage = [:]
         providers = []
 
