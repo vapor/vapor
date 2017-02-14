@@ -66,7 +66,8 @@ class AuthTests: XCTestCase {
         XCTAssertNotNil(cookie.value)
         XCTAssertNotNil(cookie.expires)
         XCTAssertFalse(cookie.secure)
-        XCTAssertFalse(cookie.httpOnly)
+        // FIXME: SHould this be true? We're initializing w/ true -- double check w/ Tanner and David Keegan who's tagged in commits on these lines
+        XCTAssertTrue(cookie.httpOnly)
         
         
         let notAuthenticated = try login(credentials: Identifier(id: 2)) // user with id of 2 does not exist in the database
