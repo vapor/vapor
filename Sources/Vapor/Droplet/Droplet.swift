@@ -4,7 +4,7 @@ import Cache
 import Sessions
 import HMAC
 import Cipher
-import Fluent
+//import Fluent
 import Transport
 import SocksCore
 
@@ -138,7 +138,7 @@ public class Droplet {
     /**
         Preparations for using the database.
     */
-    public var preparations: [Preparation.Type]
+    // public var preparations: [Preparation.Type]
 
     /**
         Storage to add/manage dependencies, identified by a string
@@ -271,7 +271,6 @@ public class Droplet {
         cache = MemoryCache()
         database = nil
         storage = [:]
-        preparations = []
         providers = []
 
         do {
