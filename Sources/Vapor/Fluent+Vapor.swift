@@ -13,7 +13,57 @@ extension Droplet {
             storage["fluent-preparations"] = newValue
         }
     }
+
+
+    /**
+     The Database for this Droplet
+     to run preparations on, if supplied.
+     */
+    public var database: Database?{
+        get {
+            return storage["fluent-database"] as? Database
+        }
+        set {
+            storage["fluent-database"] = newValue
+        }
+    }
 }
+
+//import JSON
+//import Fluent
+//import TypeSafeRouting
+//import HTTP
+//
+//@_exported import class Fluent.Database
+//
+//public protocol Modelz: Entity, JSONRepresentable, StringInitializable, ResponseRepresentable { }
+//
+//extension Modelz {
+//    public func makeResponse() throws -> Response {
+//        return try makeJSON().makeResponse()
+//    }
+//}
+//
+//// MARK: JSONRepresentable
+//
+//extension Modelz {
+//    public func makeJSON() throws -> JSON {
+//        let node = try makeNode()
+//        return try JSON(node: node)
+//    }
+//}
+//
+//// MARK: StringInitializable
+//
+//extension Modelz {
+//    public init?(from string: String) throws {
+//        if let model = try Self.find(string) {
+//            self = model
+//        } else {
+//            return nil
+//        }
+//    }
+//}
 
 fileprivate final class FluentVaporProvider: Provider {
 
@@ -102,6 +152,111 @@ public class FluentVaporServe: Command {
             console.error("Could not bind to \(host):\(port), it may be in use or require sudo.")
         } catch {
             console.error("Serve error: \(error)")
+        }
+    }
+}
+
+
+///////////////////////////
+
+import Console
+import Fluent
+
+/**
+ Runs the droplet's `Preparation`s.
+ */
+public struct Prepare: Command {
+    public let id: String = "prepare"
+
+    public let signature: [Argument] = [
+        Option(name: "revert"),
+        ]
+
+    public let help: [String] = [
+        "runs the droplet's preparations"
+    ]
+
+    public let console: ConsoleProtocol
+    public let preparations: [Preparation.Type]
+    public let database: Database?
+
+    public init(
+        console: ConsoleProtocol,
+        preparations: [Preparation.Type],
+        database: Database?
+        ) {
+        self.console = console
+        self.preparations = preparations
+        self.database = database
+    }
+
+    public func run(arguments: [String]) throws {
+        guard preparations.count > 0 else {
+            console.info("No preparations.")
+            return
+        }
+
+        guard let database = database else {
+            throw CommandError.general("Can not run preparations, droplet has no database")
+        }
+
+        if arguments.option("revert")?.bool == true {
+            guard console.confirm("Are you sure you want to revert the database?", style: .warning) else {
+                console.error("Reversion cancelled")
+                return
+            }
+
+            for preparation in preparations.reversed() {
+                let name = preparation.name
+                let hasPrepared: Bool
+
+                do {
+                    hasPrepared = try database.hasPrepared(preparation)
+                } catch {
+                    console.error("Failed to start preparation")
+                    throw CommandError.general("\(error)")
+                }
+
+                if hasPrepared {
+                    print("Reverting \(name)")
+                    try preparation.revert(database)
+                    console.success("Reverted \(name)")
+                }
+            }
+
+            console.print("Removing metadata")
+            let schema = Schema.delete(entity: "fluent")
+            try database.driver.schema(schema)
+            console.success("Reversion complete")
+        } else {
+            for preparation in preparations {
+                let name = preparation.name
+
+                let hasPrepared: Bool
+
+                do {
+                    hasPrepared = try database.hasPrepared(preparation)
+                } catch {
+                    console.error("Failed to start preparation")
+                    throw CommandError.general("\(error)")
+                }
+
+                if !hasPrepared {
+                    print("Preparing \(name)")
+                    do {
+                        try database.prepare(preparation)
+                        console.success("Prepared \(name)")
+                    } catch PreparationError.automationFailed(let string) {
+                        console.error("Automatic preparation for \(name) failed.")
+                        throw CommandError.general("\(string)")
+                    } catch {
+                        console.error("Failed to prepare \(name)")
+                        throw CommandError.general("\(error)")
+                    }
+                }
+            }
+            
+            console.info("Database prepared")
         }
     }
 }

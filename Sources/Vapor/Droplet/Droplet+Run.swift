@@ -12,7 +12,7 @@ extension Droplet {
     */
     public func run(servers: [String: ServerConfig]? = nil) -> Never  {
         // FIxME: Discuss
-        assert(servers == nil, "we can't support this cuz of fluent prepare stuff")
+        // assert(servers == nil, "we can't support this cuz of fluent prepare stuff")
 
         do {
             try runCommands(servers: servers)
