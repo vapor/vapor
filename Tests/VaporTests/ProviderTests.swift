@@ -121,13 +121,10 @@ private final class SlowServer: ServerProtocol {
 }
 
 private final class SlowServerProvider: Provider {
-    var provided: Providable
-
     var afterInitFlag = false
     var beforeRunFlag = false
 
     init(config: Settings.Config) throws {
-        provided = Providable(server: SlowServer.self)
     }
 
     func afterInit(_ drop: Droplet) {
@@ -138,7 +135,7 @@ private final class SlowServerProvider: Provider {
         beforeRunFlag = true
     }
 
-    func boot(_: Droplet) {
-        //
+    func boot(_ drop: Droplet) {
+        drop.server = SlowServer.self
     }
 }
