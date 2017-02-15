@@ -4,7 +4,6 @@ import XCTest
 @testable import CacheTests
 @testable import SessionsTests
 @testable import SettingsTests
-@testable import CookiesTests
 @testable import VaporTests
 
 XCTMain([
@@ -17,13 +16,6 @@ XCTMain([
     testCase(MergeTests.allTests),
     testCase(EnvTests.allTests),
     testCase(CLIConfigTests.allTests),
-
-    // Cookies
-    testCase(CookiesTests.allTests),
-    testCase(CookieTests.allTests),
-    testCase(HTTPTests.allTests),
-    testCase(ParsingTests.allTests),
-    testCase(SerializingTests.allTests),
 
     // Sessions
     testCase(SessionsProtocolTests.allTests),
