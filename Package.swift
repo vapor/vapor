@@ -21,7 +21,7 @@ let package = Package(
     ],
     dependencies: [
         // Core vapor transport layer
-        .Package(url: "https://github.com/vapor/engine.git", Version(0,0,0)),
+        .Package(url: "https://github.com/vapor/engine.git", Version(2,0,0, prereleaseIdentifiers: ["alpha"])),
 
         // Console protocol and implementation for powering command line interface.
         .Package(url: "https://github.com/vapor/console.git", majorVersion: 1),
