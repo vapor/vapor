@@ -129,11 +129,6 @@ public class Droplet {
     public var cache: CacheProtocol
 
     /**
-        Preparations for using the database.
-    */
-    // public var preparations: [Preparation.Type]
-
-    /**
         Storage to add/manage dependencies, identified by a string
     */
     public var storage: [String: Any]
