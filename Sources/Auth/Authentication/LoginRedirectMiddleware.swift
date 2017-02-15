@@ -9,68 +9,53 @@ import URI
 
  Generally used to redirect to the site's login page. Optionally can redirect the user back to the page they were trying to access before they logged in.
  */
-public class LoginRedirectMiddleware : Middleware {
-    public let loginRoute: String
-    public let cameFromRedirect: Bool
-    public let defaultRedirectRoute: String
-    public let ignoredCameFromRoutes: [HTTP.Method : [String]]
+public class LoginRedirectMiddleware: Middleware {
+    public let loginPath: String
+    public let redirectOrigin: Bool
+    public let defaultRedirectPath: String
+    public let ignoredOriginPaths: [String]
 
     /**
      Designated LoginRedirectMiddleware initializer
 
-     - Parameters:
-     - loginRoute: The absolute URI path to where users will be redirected if they are unauthenticated
-     - cameFromRedirect: Whether or not to redirect users back to the page they came from before authenticating (default = false)
-     - defaultRedirectRoute: The default absolute URI path to return users to after authenticating when the cameFrom value is removed since the route is a part of the ignoredCameFromRoutes array (default = "/")
-     - ignoredCameFromRoutes: Routes to avoid redirecting to after the user authenticates, such as the logout page. (default = [])
-     */
-    public init(loginRoute: String, cameFromRedirect: Bool = false, defaultRedirectRoute: String = "/", ignoredCameFromRoutes: [HTTP.Method : [String]] = [:]) {
-        self.loginRoute = loginRoute
-        self.cameFromRedirect = cameFromRedirect
-        self.defaultRedirectRoute = defaultRedirectRoute
-        self.ignoredCameFromRoutes = ignoredCameFromRoutes
+     - Parameter loginPath: The absolute URI path to where users will be redirected if they are unauthenticated
+     - Parameter redirectOrigin: Whether or not to redirect users back to the page they came from before authenticating (default = false)
+     - Parameter defaultRedirectPath: The default absolute URI path to return users to after authenticating when the origin value is removed since the route is a part of the ignoredOriginPaths array (default = "/")
+     - Parameter ignoredOriginPaths: Paths to avoid redirecting to after the user authenticates, such as the logout page. (default = [])
+    */
+    public init(loginPath: String, redirectOrigin: Bool = false, defaultRedirectPath: String = "/", ignoredOriginPaths: [String] = []) {
+        self.loginPath = loginPath
+        self.redirectOrigin = redirectOrigin
+        self.defaultRedirectPath = defaultRedirectPath
+        self.ignoredOriginPaths = ignoredOriginPaths
     }
 
     public func respond(to request: Request, chainingTo next: Responder) throws -> Response {
-        // Make sure we aren't going to the loginRoute
-        if (request.uri.path != loginRoute) {
-            // Test to see if we're authenticated
-            guard try request.subject().authenticated else {
-                // Not authenticated, so build the redirect
-                let redirect = try Request(method: .get, uri: loginRoute)
-                if (cameFromRedirect) {
-                    // Add the cameFrom query to the redirect URI
-                    redirect.uri.addQuery(withKey: "cameFrom", value: request.uri.description)
-                    // Remove the cameFrom query if it happens to be one of the ignored routes
-                    for (method, routes) in ignoredCameFromRoutes {
-                        for route in routes {
-                            if (request.method == method && request.uri.path == route) {
-                                redirect.uri.removeQuery(forKey: "cameFrom")
-                                break
-                            }
-                        }
-                    }
-                    // If we have no cameFrom query, use the defaultRedirectRoute
-                    if (redirect.uri.getQueryValue(forKey: "cameFrom") == nil) {
-                        redirect.uri.addQuery(withKey: "cameFrom", value: defaultRedirectRoute)
-                    }
-                }
-                // Redirect to the loginRoute
-                return Response(redirect: redirect.uri.description)
-            }
+        // Make sure we aren't going to the loginPath and are not already authenticated
+        guard request.uri.path != loginPath, try !request.subject().authenticated else {
+            return try next.respond(to: request)
         }
 
-        // We are authenticated, so continue on to the next middleware
-        return try next.respond(to: request)
+        // Not authenticated, so build the redirect uri
+        var redirect = URI(scheme: request.uri.scheme, host: request.uri.host, port: request.uri.port, path: self.loginPath)
+
+        // If we need to preserve the origin before the redirect, add it to the redirect's query
+        if redirectOrigin {
+            // Check if the origin request is one of the ignoredOriginPaths and use the default redirect path if it is
+            if ignoredOriginPaths.contains(request.uri.path) {
+                redirect.addQuery(withKey: "origin", value: defaultRedirectPath)
+            } else {
+                // Otherwise use the request's full uri as the origin
+                redirect.addQuery(withKey: "origin", value: request.uri.description)
+            }
+        }
+        // Redirect to the loginPath
+        return Response(redirect: redirect.description)
     }
 }
 
 extension Request {
-    public func cameFrom() throws -> Request? {
-        if let cameFrom = self.uri.getQueryValue(forKey: "cameFrom") {
-            self.uri = try URI(cameFrom)
-        }
-        return self
-    }
+	public var origin: String? {
+		return self.uri.getQueryValue(forKey: "origin")
+	}
 }
-
