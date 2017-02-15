@@ -44,6 +44,39 @@ public protocol ResourceRepresentable {
     func makeResource() -> Resource<Model>
 }
 
+/// Maintains the desired mapping for resource endpoints and their HTTP methods.
+/// - Note: Setting the values with set() will define the behavior for all resources.
+public final class ResourceMethodMap {
+    private(set) static var index: Method = .get
+    private(set) static var store: Method = .post
+    private(set) static var show: Method = .get
+    private(set) static var replace: Method = .put
+    private(set) static var modify: Method = .patch
+    private(set) static var destroy: Method = .delete
+    private(set) static var clear: Method = .delete
+
+    private init() { }
+
+    /// Updates each endpoint mapping if a value is provided.
+    public static func set(
+        index: Method? = nil,
+        store: Method? = nil,
+        show: Method? = nil,
+        replace: Method? = nil,
+        modify: Method? = nil,
+        destroy: Method? = nil,
+        clear: Method? = nil
+        ) {
+        if let index = index { ResourceMethodMap.index = index }
+        if let store = store { ResourceMethodMap.store = store }
+        if let show = show { ResourceMethodMap.show = show }
+        if let replace = replace { ResourceMethodMap.replace = replace }
+        if let modify = modify { ResourceMethodMap.modify = modify }
+        if let destroy = destroy { ResourceMethodMap.destroy = destroy }
+        if let clear = clear { ResourceMethodMap.clear = clear }
+    }
+}
+
 extension RouteBuilder where Value == Responder {
     public func resource<Resource: ResourceRepresentable>(_ path: String, _ resource: Resource) {
         let resource = resource.makeResource()
@@ -88,13 +121,13 @@ extension RouteBuilder where Value == Responder {
         }
 
 
-        multiple(.get, resource.index)
-        multiple(.post, resource.store)
-        item(.get, resource.show)
-        item(.put, resource.replace)
-        item(.patch, resource.modify)
-        item(.delete, resource.destroy)
-        multiple(.delete, resource.clear)
+        multiple(ResourceMethodMap.index, resource.index)
+        multiple(ResourceMethodMap.store, resource.store)
+        item(ResourceMethodMap.show, resource.show)
+        item(ResourceMethodMap.replace, resource.replace)
+        item(ResourceMethodMap.modify, resource.modify)
+        item(ResourceMethodMap.destroy, resource.destroy)
+        multiple(ResourceMethodMap.clear, resource.clear)
 
         if let about = resource.aboutItem {
             item(.options, about)
