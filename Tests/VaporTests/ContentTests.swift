@@ -21,16 +21,9 @@ class ContentTests: XCTestCase {
         ("testRequestGetFormURLEncodedBody", testRequestGetFormURLEncodedBody),
         ("testRequestGetFormURLEncodedBodyInvalidHeader", testRequestGetFormURLEncodedBodyInvalidHeader),
         ("testParse", testParse),
-        ("testMultipart", testMultipart),
-        ("testMultipartEmptyContent", testMultipartEmptyContent),
-        ("testMultipartFile", testMultipartFile),
-        ("testMultipartFileEmptyContent", testMultipartFileEmptyContent),
         ("testFormURLEncoded", testFormURLEncoded),
         ("testFormURLEncodedEdge", testFormURLEncodedEdge),
         ("testSplitString", testSplitString),
-        ("testMultipartSerialization", testMultipartSerialization),
-        ("testMultipartSerializationNoFileName", testMultipartSerializationNoFileName),
-        ("testMultipartSerializationNoFileType", testMultipartSerializationNoFileType)
     ]
 
     func testRequestSetJSONBody() throws {
@@ -80,88 +73,14 @@ class ContentTests: XCTestCase {
     func testParse() {
         let string = "value=123"
 
-        let data = Node(formURLEncoded: string.bytes)
+        let data = Node(formURLEncoded: string.makeBytes())
         XCTAssertEqual(data["value"]?.int, 123, "Request did not parse correctly")
-    }
-
-    func testMultipart() throws {
-        let boundary = "~~vapor~~"
-
-        var body = "--" + boundary + "\r\n"
-        body += "Content-Disposition: form-data; name=\"value\"\r\n"
-        body += "\r\n"
-        body += "123\r\n"
-        body += "--" + boundary + "\r\n"
-        print("Body: \(body)")
-        
-        let parsedBoundary = try Multipart.parseBoundary(contentType: "multipart/form-data; charset=utf-8; boundary=\(boundary)")
-        print("Parsed boundary: \(parsedBoundary)")
-        let data = Multipart.parse(body.bytes, boundary: parsedBoundary)
-        print("Data: \(data)")
-        XCTAssertEqual(data["value"]?.int, 123, "Request did not parse correctly")
-    }
-
-    func testMultipartEmptyContent() throws {
-        let boundary = "~~vapor~~"
-
-        var body = "--" + boundary + "\r\n"
-        body += "Content-Disposition: form-data; name=\"value\"\r\n"
-        body += "\r\n"
-        body += "\r\n"
-        body += "--" + boundary + "\r\n"
-        body += "Content-Disposition: form-data; name=\"value2\"\r\n"
-        body += "Content-Type: image/gif\r\n"
-        body += "\r\n"
-        body += "123"
-        body += "--" + boundary + "\r\n"
-        print("Body: \(body)")
-
-        let parsedBoundary = try Multipart.parseBoundary(contentType: "multipart/form-data; charset=utf-8; boundary=\(boundary)")
-        print("Parsed boundary: \(parsedBoundary)")
-        let data = Multipart.parse(body.bytes, boundary: parsedBoundary)
-        print("Data: \(data)")
-        XCTAssertNil(data["value"], "Request did not parse correctly")
-        XCTAssertEqual(data["value2"]?.file?.data ?? [1,2,3], "123".bytes, "Request did not parse correctly")
-    }
-
-    func testMultipartFile() {
-        let boundary = "~~vapor~~"
-
-        var body = "--" + boundary + "\r\n"
-        body += "Content-Disposition: form-data; name=\"value\"\r\n"
-        body += "Content-Type: image/gif\r\n"
-        body += "\r\n"
-        body += "123"
-        body += "--" + boundary + "\r\n"
-
-        let parsedBoundary = try! Multipart.parseBoundary(contentType: "multipart/form-data; charset=utf-8; boundary=\(boundary)")
-        print("Got parsed boundary: \(parsedBoundary)")
-        let data = Multipart.parse(body.bytes, boundary: parsedBoundary)
-
-        XCTAssertEqual(data["value"]?.file?.data ?? [1,2,3], "123".bytes, "Request did not parse correctly")
-    }
-
-    func testMultipartFileEmptyContent() throws {
-        let boundary = "~~vapor~~"
-
-        var body = "--" + boundary + "\r\n"
-        body += "Content-Disposition: form-data; name=\"value\"; filename=\"filename\"\r\n"
-        body += "Content-Type: application/octet-stream\r\n"
-        body += "\r\n"
-        body += "\r\n"
-        body += "--" + boundary + "\r\n"
-
-        let parsedBoundary = try! Multipart.parseBoundary(contentType: "multipart/form-data; charset=utf-8; boundary=\(boundary)")
-        print("Got parsed boundary: \(parsedBoundary)")
-        let data = Multipart.parse(body.bytes, boundary: parsedBoundary)
-
-        XCTAssertNil(data["value"], "Request did not parse correctly")
     }
 
     func testFormURLEncoded() {
         let body = "first=value&arr[]=foo+bar&arr[]=b%3Daz"
 
-        let data = Node(formURLEncoded: body.bytes)
+        let data = Node(formURLEncoded: body.makeBytes())
 
         XCTAssert(data["first"]?.string == "value", "Request key first did not parse correctly")
         XCTAssert(data["arr", 0]?.string == "foo bar", "Request key arr did not parse correctly")
@@ -171,7 +90,7 @@ class ContentTests: XCTestCase {
     func testFormURLEncodedEdge() {
         let body = "singleKeyArray[]=value&implicitArray=1&implicitArray=2"
 
-        let data = Node(formURLEncoded: body.bytes)
+        let data = Node(formURLEncoded: body.makeBytes())
 
         XCTAssert(data["singleKeyArray", 0]?.string == "value", "singleKeyArray did not parse correctly")
         XCTAssert(data["implicitArray", 0]?.string == "1", "implicitArray did not parse correctly")
@@ -217,42 +136,5 @@ class ContentTests: XCTestCase {
 
         XCTAssertEqual(content["a"]?.string, "a")
         XCTAssertEqual(content["b"]?.string, "custom")
-    }
-
-    func testMultipartSerialization() throws {
-        let file = Multipart.File(name: "profile", type: "jpg", data: "pretend real data".bytes)
-        let multi = Multipart.file(file)
-        let serialized = try multi.serialized(boundary: "~foo~", keyName: "image")
-
-        var expectation = ""
-        expectation += "--~foo~\r\n"
-        expectation += "Content-Disposition: form-data; name=\"image\"; filename=\"profile\"\r\n"
-        expectation += "Content-Type: jpg\r\n\r\n"
-        expectation += "pretend real data\r\n"
-        expectation += "--~foo~--\r\n"
-        XCTAssertEqual(serialized.string, expectation)
-    }
-
-    func testMultipartSerializationNoFileName() throws {
-        let file = Multipart.File(name: nil, type: "jpg", data: "pretend real data".bytes)
-        let multi = Multipart.file(file)
-        let serialized = try multi.serialized(boundary: "~foo~", keyName: "image")
-
-        var expectation = ""
-        expectation += "--~foo~\r\n"
-        expectation += "Content-Disposition: form-data; name=\"image\"; filename=\"\"\r\n"
-        expectation += "Content-Type: jpg\r\n\r\n"
-        expectation += "pretend real data\r\n"
-        expectation += "--~foo~--\r\n"
-        XCTAssertEqual(serialized.string, expectation)
-    }
-
-    func testMultipartSerializationNoFileType() throws {
-        let file = Multipart.File(name: nil, type: nil, data: "pretend real data".bytes)
-        let multi = Multipart.file(file)
-        do {
-            let _ = try multi.serialized(boundary: "~foo~", keyName: "image")
-            XCTFail("Expected to throw, no file type")
-        } catch is MultipartSerializationError {}
     }
 }

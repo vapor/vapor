@@ -21,7 +21,7 @@ class ConfigTests: XCTestCase {
             "test": [
                 "name": "inner/test"
             ],
-            "file.hello": .bytes("Hello!\n".bytes)
+            "file.hello": .bytes("Hello!\n".makeBytes())
         ]
         XCTAssertEqual(config, Config(expectation))
     }

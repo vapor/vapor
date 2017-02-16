@@ -33,10 +33,10 @@ let package = Package(
         .Package(url: "https://github.com/vapor/leaf.git", Version(2,0,0, prereleaseIdentifiers: ["alpha"])),
 
         // A type safe routing package including HTTP and TypeSafe routers.
-        .Package(url: "https://github.com/vapor/routing.git", majorVersion: 1),
+        .Package(url: "https://github.com/vapor/routing.git", Version(2,0,0, prereleaseIdentifiers: ["alpha"])),
 
         // Parses `Content-Type: multipart` as defined in RFC 2046.
-        .Package(url: "https://github.com/vapor/multipart.git", majorVersion: 1),
+        .Package(url: "https://github.com/vapor/multipart.git", Version(2,0,0, prereleaseIdentifiers: ["alpha"])),
     ],
     exclude: [
         "Sources/Development",

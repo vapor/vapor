@@ -10,7 +10,7 @@ extension String {
     */
     internal func hydratedEnv() -> String? {
         guard hasPrefix("$") else { return self }
-        let components = self.bytes
+        let components = self.makeBytes()
             .dropFirst()
             .split(separator: .colon, maxSplits: 1, omittingEmptySubsequences: true)
             .map({ $0.string })
