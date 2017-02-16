@@ -1,6 +1,5 @@
 import XCTest
 @testable import Vapor
-import Fluent
 import HTTP
 
 class ResourceTests: XCTestCase {

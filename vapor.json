@@ -1,0 +1,23 @@
+{
+    "meta": {
+        "a config file for toolbox :)"
+    },
+    "flags": {
+        "build": {
+            "macos": [
+                "-DVAPOR_INCLUDED"
+            ],
+            "linux": [
+                "-DVAPOR_INCLUDED"
+            ]
+        },
+        "test": {
+            "macos": [
+                "-DVAPOR_INCLUDED"
+            ],
+            "linux": [
+                "-DVAPOR_INCLUDED"
+            ]
+        }
+    }
+}
