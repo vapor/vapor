@@ -25,14 +25,14 @@ final class ErrorView {
                 tail = []
             }
         } catch {
-            head = "<h1>".bytes
-            middle = "</h1><p>".bytes
-            tail = "</p>".bytes
+            head = "<h1>".makeBytes()
+            middle = "</h1><p>".makeBytes()
+            tail = "</p>".makeBytes()
         }
     }
 
     func render(code: Int, message: String) -> Bytes {
-        return head + code.description.bytes + middle + message.bytes + tail
+        return head + code.description.makeBytes() + middle + message.makeBytes() + tail
     }
 
     func makeResponse(_ status: Status, _ message: String) -> Response {

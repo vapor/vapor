@@ -1,6 +1,7 @@
 import Core
 import Random
 import Node
+import Foundation
 
 /**
     The `MemorySessionDriver` stores session data
@@ -9,7 +10,7 @@ import Node
 */
 public class MemorySessions: SessionsProtocol {
     var sessions: [String: Node]
-    private var sessionsLock = Lock()
+    private var sessionsLock = NSLock()
 
     public init() {
         sessions = [:]

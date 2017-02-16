@@ -70,9 +70,9 @@ extension Node {
 
         for (key, val) in dict {
             var subbytes: [Byte] = []
-            subbytes += try percentEncoded(key.bytes)
+            subbytes += try percentEncoded(key.makeBytes())
             subbytes += Byte.equals
-            subbytes += try percentEncoded(val.string?.bytes ?? [])
+            subbytes += try percentEncoded(val.string?.makeBytes() ?? [])
             bytes.append(subbytes)
         }
 

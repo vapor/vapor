@@ -4,7 +4,6 @@ import Cache
 import Sessions
 import HMAC
 import Cipher
-import Fluent
 import Transport
 import SocksCore
 
@@ -130,17 +129,6 @@ public class Droplet {
     public var cache: CacheProtocol
 
     /**
-        The Database for this Droplet
-        to run preparations on, if supplied.
-    */
-    public var database: Database?
-
-    /**
-        Preparations for using the database.
-    */
-    public var preparations: [Preparation.Type]
-
-    /**
         Storage to add/manage dependencies, identified by a string
     */
     public var storage: [String: Any]
@@ -262,16 +250,14 @@ public class Droplet {
         middleware = []
         console = terminal
         commands = []
-        let renderer = LeafRenderer(viewsDir: workDir + "Resources/Views")
+        let renderer = StaticViewRenderer(viewsDir: workDir + "Resources/Views")
         if environment == .development {
             // disable cache by default in development
-            renderer.stem.cache = nil
+            renderer.cache = nil
         }
         view = renderer
         cache = MemoryCache()
-        database = nil
         storage = [:]
-        preparations = []
         providers = []
 
         do {

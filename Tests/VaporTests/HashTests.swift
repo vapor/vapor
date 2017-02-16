@@ -17,7 +17,7 @@ class HashTests: XCTestCase {
         let key = "123"
 
         //test Hash by itself
-        let hash = CryptoHasher(hmac: .sha256, encoding: .hex, key: key.bytes)
+        let hash = CryptoHasher(hmac: .sha256, encoding: .hex, key: key.makeBytes())
         XCTAssertEqual(defaultExpected, try hash.make(string).string, "Hash did not match")
 
         //test all variants of manually
@@ -27,7 +27,7 @@ class HashTests: XCTestCase {
         expected[.sha512] = "9215c98b5ea5826961395de57f8e4cd2baf3d08c429d4db0f4e2d83feb12e989ffbc7dbf8611ed65ef13e6e8d5f370a803065708f38fd73a349f0869b7891bc6"
 
         for (variant, expect) in expected {
-            let hasher = CryptoHasher(hmac: variant, encoding: .hex, key: key.bytes)
+            let hasher = CryptoHasher(hmac: variant, encoding: .hex, key: key.makeBytes())
             let result = try hasher.make(string).string
             XCTAssert(result == expect, "Hash for \(variant) did not match")
         }

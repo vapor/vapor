@@ -8,8 +8,8 @@ class CipherTests: XCTestCase {
     ]
 
     func testCipher() throws {
-        let key = "passwordpasswordpasswordpassword".bytes
-        let cipher = CryptoCipher(method: .chacha20, defaultKey: key, defaultIV: "password".bytes)
+        let key = "passwordpasswordpasswordpassword".makeBytes()
+        let cipher = CryptoCipher(method: .chacha20, defaultKey: key, defaultIV: "password".makeBytes())
 
         let secret = "vapor"
 

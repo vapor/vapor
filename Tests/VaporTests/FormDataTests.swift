@@ -19,13 +19,13 @@ class FormDataTests: XCTestCase {
         let html = "<hello>"
         let htmlPart = Part(headers: [
             "foo": "bar"
-        ], body: html.bytes)
+        ], body: html.makeBytes())
         let htmlField = Field(name: "html", filename: "hello.html", part: htmlPart)
         
         let text = "If you're reading this, you've been in a coma for almost 20 years now. We're trying a new technique. We don't know where this message will end up in your dream, but we hope it works. Please wake up, we miss you."
         let textPart = Part(headers: [
             "vapor": "☁️"
-        ], body: text.bytes)
+        ], body: text.makeBytes())
         let textField = Field(name: "text", filename: nil, part: textPart)
         
         let garbageSize = 10_000_000
@@ -74,7 +74,7 @@ class FormDataTests: XCTestCase {
             return "👍"
         }
         
-        try background {
+        background {
             drop.run(servers: [
                 "test": (host: "0.0.0.0", port: 8932, securityLayer: .none)
             ])

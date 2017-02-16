@@ -5,18 +5,14 @@ let package = Package(
     targets: [
         // Framework
         Target(name: "Vapor", dependencies: [
-            "Auth",
             "Cache",
-            "Cookies",
             "Sessions",
             "Settings"
         ]),
 
         // Misc
-        Target(name: "Auth", dependencies: ["Cookies", "Cache"]),
         Target(name: "Cache"),
-        Target(name: "Cookies"),
-        Target(name: "Sessions", dependencies: ["Cookies"]),
+        Target(name: "Sessions", dependencies: ["Cache"]),
         Target(name: "Settings"),
 
         // Development and Testing
@@ -24,32 +20,20 @@ let package = Package(
         // Target(name: "Performance", dependencies: ["Vapor"]),
     ],
     dependencies: [
-        // SHA2 + HMAC hashing. Used by the core to create session identifiers.
-        .Package(url: "https://github.com/vapor/crypto.git", majorVersion: 1),
-
-        // ORM for interacting with databases
-        .Package(url: "https://github.com/vapor/fluent.git", majorVersion: 1),
-
         // Core vapor transport layer
-        .Package(url: "https://github.com/vapor/engine.git", majorVersion: 1),
+        .Package(url: "https://github.com/vapor/engine.git", Version(2,0,0, prereleaseIdentifiers: ["alpha"])),
 
         // Console protocol and implementation for powering command line interface.
-        .Package(url: "https://github.com/vapor/console.git", majorVersion: 1),
+        .Package(url: "https://github.com/vapor/console.git", Version(2,0,0, prereleaseIdentifiers: ["alpha"])),
 
         // JSON enum wrapper around Foundation JSON
-        .Package(url: "https://github.com/vapor/json.git", majorVersion: 1),
-
-        // A security framework for Swift.
-        .Package(url: "https://github.com/stormpath/Turnstile.git", majorVersion: 1),
-
-        // An extensible templating language built for Vapor. 🍃
-        .Package(url: "https://github.com/vapor/leaf.git", majorVersion: 1),
+        .Package(url: "https://github.com/vapor/json.git", Version(2,0,0, prereleaseIdentifiers: ["alpha"])),
 
         // A type safe routing package including HTTP and TypeSafe routers.
-        .Package(url: "https://github.com/vapor/routing.git", majorVersion: 1),
+        .Package(url: "https://github.com/vapor/routing.git", Version(2,0,0, prereleaseIdentifiers: ["alpha"])),
 
         // Parses `Content-Type: multipart` as defined in RFC 2046.
-        .Package(url: "https://github.com/vapor/multipart.git", majorVersion: 1),
+        .Package(url: "https://github.com/vapor/multipart.git", Version(2,0,0, prereleaseIdentifiers: ["alpha"])),
     ],
     exclude: [
         "Sources/Development",

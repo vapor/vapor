@@ -96,7 +96,7 @@ extension Droplet {
         let info = message.joined(separator: " ")
 
         if runInBackground {
-            _ = try background { [weak self] in
+            background { [weak self] in
                 guard let welf = self else {
                     return
                 }
