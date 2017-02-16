@@ -5,18 +5,18 @@
     "flags": {
         "build": {
             "macos": [
-                "-DVAPOR_INCLUDED"
+                "-DVAPOR"
             ],
             "linux": [
-                "-DVAPOR_INCLUDED"
+                "-DVAPOR"
             ]
         },
         "test": {
             "macos": [
-                "-DVAPOR_INCLUDED"
+                "-DVAPOR"
             ],
             "linux": [
-                "-DVAPOR_INCLUDED"
+                "-DVAPOR"
             ]
         }
     }

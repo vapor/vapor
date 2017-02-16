@@ -1,5 +1,4 @@
 import XCTest
-import Leaf
 import Core
 @testable import Vapor
 import HTTP
@@ -70,13 +69,5 @@ class ViewTests: XCTestCase {
         XCTAssert(string.contains("Vapor"))
         XCTAssert(string.contains("foopath"))
         XCTAssert(string.contains("foobar"))
-    }
-
-    func testLeafRenderer() throws {
-        var directory = #file.components(separatedBy: "/")
-        let file = directory.removeLast()
-        let renderer = LeafRenderer(viewsDir: directory.joined(separator: "/"))
-        let result = try renderer.make(file, [])
-        XCTAssert(result.data.string.contains("meta string"))
     }
 }

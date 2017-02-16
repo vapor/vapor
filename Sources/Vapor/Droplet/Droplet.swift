@@ -250,10 +250,10 @@ public class Droplet {
         middleware = []
         console = terminal
         commands = []
-        let renderer = LeafRenderer(viewsDir: workDir + "Resources/Views")
+        let renderer = StaticViewRenderer(viewsDir: workDir + "Resources/Views")
         if environment == .development {
             // disable cache by default in development
-            renderer.stem.cache = nil
+            renderer.cache = nil
         }
         view = renderer
         cache = MemoryCache()
