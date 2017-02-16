@@ -29,9 +29,6 @@ let package = Package(
         // JSON enum wrapper around Foundation JSON
         .Package(url: "https://github.com/vapor/json.git", Version(2,0,0, prereleaseIdentifiers: ["alpha"])),
 
-        // An extensible templating language built for Vapor. 🍃
-        .Package(url: "https://github.com/vapor/leaf.git", Version(2,0,0, prereleaseIdentifiers: ["alpha"])),
-
         // A type safe routing package including HTTP and TypeSafe routers.
         .Package(url: "https://github.com/vapor/routing.git", Version(2,0,0, prereleaseIdentifiers: ["alpha"])),
 
