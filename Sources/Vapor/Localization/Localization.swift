@@ -39,9 +39,18 @@ public class Localization {
         return self[languageCode, paths]
     }
 
-    public subscript(_ languageCode: String, _ paths: [PathIndex]) -> String {
-        return localizations[languageCode.lowercased()]?[paths]?.string  // Index by language
-            ?? localizations[defaultDialect]?[paths]?.string // Index the default language
+    public subscript(_ languageCodes: String, _ paths: [PathIndex]) -> String {
+        let codeComponents = languageCodes.components(separatedBy: ",")  // Separate language components by ,
+        for code in codeComponents {
+            let langCode = code.components(separatedBy: ";").first!.string!
+            if langCode.isEmpty {
+                continue
+            }
+            if let result = localizations[langCode.lowercased()]?[paths]?.string {
+                return result    //First localization which matches will be returned
+            }
+        }
+        return localizations[defaultDialect]?[paths]?.string // Index the default language
             ?? paths.map { "\($0)" }.joined(separator: ".") // Return the literal path indexed if no translation
     }
 }
