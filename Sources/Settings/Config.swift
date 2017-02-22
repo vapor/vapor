@@ -18,6 +18,7 @@ public struct Config: NodeBacked {
 public enum ConfigError: Error {
     case unsupported(value: String, key: [String], file: String)
     case missing(key: [String], file: String, desiredType: Any.Type)
+    case missingFile(String)
     case unspecified(Error)
 }
 
@@ -32,6 +33,8 @@ extension ConfigError: CustomStringConvertible {
         case .missing(let key, let file, let desiredType):
             let keyPath = key.joined(separator: ".")
             reason = "Key `\(keyPath)` in `Config/\(file).json` of type \(desiredType) required."
+        case .missingFile(let file):
+            reason = "`Config/\(file).json` required."
         case .unspecified(let error):
             reason = "\(error)"
         }
