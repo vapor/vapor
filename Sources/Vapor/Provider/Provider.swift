@@ -1,37 +1,20 @@
 import Core
 
-/**
-    Providers allow external projects to be easily
-    integrated into a Vapor droplet.
-
-    Simply append a dependencies provider to the Droplet's
-    `providers` array.
-
-    The Provider should take care of setting up any
-    necessary configurations on itself and the Droplet.
-*/
+/// Providers allow external projects to be easily
+/// integrated into a Vapor droplet.
+///
+/// Simply add the provider using drop.addProvider(...)
+///
+///The Provider should take care of setting up any
+///necessary configurations on itself and the Droplet.
 public protocol Provider: ConfigInitializable {
+    /// Called after the provider has initialized
+    /// in the `addProvider` call.
+    func boot(_: Droplet) throws
 
-    func boot(_: Droplet)
-
-    /**
-        Called after the Droplet has completed
-        initialization and all provided items
-        have been accepted.
-    */
-    func afterInit(_: Droplet)
-
-    /**
-        Called before the Droplet begins serving
-        which is @noreturn.
-    */
-    func beforeRun(_: Droplet)
-}
-
-extension Provider {
-    public func afterInit(_ drop: Droplet) {
-        //
-    }
+    /// Called before the Droplet begins serving
+    /// which is @noreturn.
+    func beforeRun(_: Droplet) throws
 }
 
 extension Provider {

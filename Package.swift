@@ -14,6 +14,7 @@ let package = Package(
         Target(name: "Cache"),
         Target(name: "Sessions", dependencies: ["Cache"]),
         Target(name: "Settings"),
+        Target(name: "Testing")
 
         // Development and Testing
         // Target(name: "Development", dependencies: ["Vapor"]),
