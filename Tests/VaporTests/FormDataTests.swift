@@ -28,7 +28,7 @@ class FormDataTests: XCTestCase {
         ], body: text.makeBytes())
         let textField = Field(name: "text", filename: nil, part: textPart)
         
-        let garbageSize = 10_000_000
+        let garbageSize = 10_000
         
         var garbage = Bytes(repeating: Byte(0), count: garbageSize)
         
