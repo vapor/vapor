@@ -93,19 +93,15 @@ class DropletTests: XCTestCase {
 
         drop.console.wait(seconds: 0.5)
 
-        // TODO: Enable when a new version of vapor/engine is released with this PR:
-        // https://github.com/vapor/engine/pull/78
-        // Currently, listening sockets aren't closed properly, resulting in wrong errors
-
-//        do {
-//            _ = try drop.client.get("http://0.0.0.0:8080/foo")
-//            XCTFail("Expected to throw")
-//        } catch let error as SocksError {
-//            guard case ErrorReason.connectFailed = error.type else {
-//                XCTFail("Unexpected SocksError: \(error)")
-//                return
-//            }
-//        }
+        do {
+            _ = try drop.client.get("http://0.0.0.0:8080/foo")
+            XCTFail("Expected to throw")
+        } catch let error as SocksError {
+            guard case ErrorReason.connectFailed = error.type else {
+                XCTFail("Unexpected SocksError: \(error)")
+                return
+            }
+        }
     }
 
     func testRunConfig() throws {

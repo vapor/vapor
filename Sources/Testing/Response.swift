@@ -11,13 +11,13 @@ extension Response {
         _ message: String? = nil,
         file: StaticString = #file,
         line: UInt = #line
-        ) throws -> Response {
-        let bytes = try b.testMakeBytes(file: file, line: line)
+    ) throws -> Response {
+        let desired = try b.testMakeBytes(file: file, line: line)
         let body = try testBody(file: file, line: line)
 
         XCTAssert(
-            body.string.contains(bytes.string),
-            message ?? "Body assertion failed. '\(body.string)' does not contain '\(bytes.string)'",
+            body.contains(desired),
+            message ?? "Body assertion failed. '\(body.string)' does not contain '\(desired.string)'",
             file: file,
             line: line
         )
@@ -33,7 +33,7 @@ extension Response {
         _ message: String? = nil,
         file: StaticString = #file,
         line: UInt = #line
-        ) -> Response {
+    ) -> Response {
         XCTAssert(
             status.statusCode == desired.statusCode,
             message ?? "Status assertion failed. '\(status.statusCode)' does not equal '\(desired.statusCode)'",
@@ -53,7 +53,7 @@ extension Response {
         _ message: String? = nil,
         file: StaticString = #file,
         line: UInt = #line
-        ) -> Response {
+    ) -> Response {
         let header = headers[key]
         XCTAssert(
             header?.contains(desired) == true,
@@ -73,7 +73,7 @@ extension Response {
     public func testBody(
         file: StaticString = #file,
         line: UInt = #line
-        ) throws -> Bytes {
+    ) throws -> Bytes {
         guard let bytes = body.bytes else {
             XCTFail(
                 "Failed to convert response body to bytes.",
@@ -84,5 +84,21 @@ extension Response {
         }
 
         return bytes
+    }
+}
+
+// http://stackoverflow.com/questions/37410649/array-contains-a-complete-subarray
+extension Array where Element: Equatable {
+    func contains(_ subarray: [Element]) -> Bool {
+        var found = 0
+        for element in self where found < subarray.count {
+            if element == subarray[found] {
+                found += 1
+            } else {
+                found = element == subarray[0] ? 1 : 0
+            }
+        }
+
+        return found == subarray.count
     }
 }

@@ -42,14 +42,12 @@ class ProviderTests: XCTestCase {
 
         let drop = Droplet(arguments: ["vapor", "serve"]) // , console: dc, initializedProviders: [fast, slow]
         drop.console = DebugConsole()
-        drop.addProvider(fast)
-        drop.addProvider(slow)
+        try drop.addProvider(fast)
+        try drop.addProvider(slow)
 
         XCTAssert(drop.server is SlowServer.Type)
 
-        XCTAssertEqual(fast.afterInitFlag, true)
         XCTAssertEqual(fast.beforeRunFlag, false)
-        XCTAssertEqual(slow.afterInitFlag, true)
         XCTAssertEqual(slow.beforeRunFlag, false)
 
         try drop.runCommands()
@@ -81,14 +79,9 @@ private final class FastServer: ServerProtocol {
 }
 
 private final class FastServerProvider: Provider {
-    var afterInitFlag = false
     var beforeRunFlag = false
 
     init(config: Settings.Config) throws {
-    }
-
-    func afterInit(_ drop: Droplet) {
-        afterInitFlag = true
     }
 
     func beforeRun(_ drop: Droplet) {

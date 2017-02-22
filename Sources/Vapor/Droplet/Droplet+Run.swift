@@ -50,7 +50,7 @@ extension Droplet {
         commands.append(version)
         
         for provider in providers {
-            provider.beforeRun(self)
+            try provider.beforeRun(self)
         }
 
         var iterator = arguments.makeIterator()

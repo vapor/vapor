@@ -2,7 +2,7 @@ import HTTP
 import URI
 
 extension Request {
-    public convenience init(
+    public static func makeTest(
         // request
         method: HTTP.Method,
         version: Version = Version(major: 1, minor: 1),
@@ -21,7 +21,7 @@ extension Request {
         // xctest
         file: StaticString = #file,
         line: UInt = #line
-        ) throws {
+    ) throws -> Request {
         let uri = URI(
             scheme: scheme,
             userInfo: userInfo,
@@ -33,7 +33,7 @@ extension Request {
             fragment: fragment
         )
         do {
-            try self.init(
+            return try Request(
                 method: method,
                 uri: uri,
                 version: version,

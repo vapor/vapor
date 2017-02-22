@@ -309,11 +309,6 @@ public class Droplet {
             addConfigurable(middleware: ValidationMiddleware(), name: "validation")
             addConfigurable(middleware: FileMiddleware(publicDir: workDir + "Public/"), name: "file")
         }
-
-        // hook into all providers after init
-        for provider in providers {
-            provider.afterInit(self)
-        }
     }
 
     func serverErrors(error: ServerError) {
