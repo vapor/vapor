@@ -39,7 +39,7 @@ class ViewTests: XCTestCase {
     }
     
     func testViewRequest() throws {
-        let drop = Droplet()
+        let drop = try Droplet()
         
         let request = Request(method: .get, path: "/foopath")
         

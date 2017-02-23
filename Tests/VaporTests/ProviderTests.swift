@@ -9,7 +9,7 @@ class ProviderTests: XCTestCase {
     ]
 
     func testBasic() throws {
-        let drop = Droplet()
+        let drop = try Droplet()
 
         try drop.addProvider(FastServerProvider.self)
 
@@ -17,7 +17,7 @@ class ProviderTests: XCTestCase {
     }
 
     func testPrecedence() throws {
-        let drop = Droplet()
+        let drop = try Droplet()
 
         drop.console = DebugConsole()
         try drop.addProvider(FastServerProvider.self)
@@ -27,7 +27,7 @@ class ProviderTests: XCTestCase {
     }
 
     func testOverride() throws {
-        let drop = Droplet()
+        let drop = try Droplet()
 
         drop.console = DebugConsole()
         try drop.addProvider(SlowServerProvider.self)
@@ -40,7 +40,7 @@ class ProviderTests: XCTestCase {
         let fast = try FastServerProvider(config: Config([:]))
         let slow = try SlowServerProvider(config: Config([:]))
 
-        let drop = Droplet(arguments: ["vapor", "serve"]) // , console: dc, initializedProviders: [fast, slow]
+        let drop = try Droplet(arguments: ["vapor", "serve"]) // , console: dc, initializedProviders: [fast, slow]
         drop.console = DebugConsole()
         try drop.addProvider(fast)
         try drop.addProvider(slow)

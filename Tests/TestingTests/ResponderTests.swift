@@ -4,7 +4,7 @@ import Testing
 
 class ResponderTests: XCTestCase {
     func testSee() throws {
-        let drop = Droplet()
+        let drop = try Droplet()
         drop.get("foo") { req in
             return "bar"
         }

@@ -20,7 +20,7 @@ class MiddlewareTests: XCTestCase {
             ]
         ])
 
-        let drop = Droplet(config: config)
+        let drop = try Droplet(config: config)
         drop.get { _ in
             return "Hello, world"
         }
@@ -40,7 +40,7 @@ class MiddlewareTests: XCTestCase {
             ]
         ])
 
-        let drop = Droplet(config: config)
+        let drop = try Droplet(config: config)
         drop.get { _ in
             return "Hello, world"
         }
@@ -52,7 +52,7 @@ class MiddlewareTests: XCTestCase {
     }
 
     func testConfigDateProvided() throws {
-        let drop = Droplet()
+        let drop = try Droplet()
         drop.middleware.append(FooMiddleware())
 
         drop.get { _ in
@@ -66,7 +66,7 @@ class MiddlewareTests: XCTestCase {
     }
 
     func testMultiple() throws {
-        let drop = Droplet()
+        let drop = try Droplet()
 
         drop.middleware = [
             FooMiddleware(),
@@ -93,7 +93,7 @@ class MiddlewareTests: XCTestCase {
             ]
         ])
 
-        let drop = Droplet(config: config)
+        let drop = try Droplet(config: config)
         drop.addConfigurable(middleware: FooMiddleware(), name: "foo")
 
         let res = try drop.client.get("http://httpbin.org/headers")
@@ -109,7 +109,7 @@ class MiddlewareTests: XCTestCase {
     }
 
     func testConfigClientNotEnabled() throws {
-        let drop = Droplet()
+        let drop = try Droplet()
 
         drop.client.defaultMiddleware = []
         drop.middleware.append(FooMiddleware())
@@ -122,7 +122,7 @@ class MiddlewareTests: XCTestCase {
     }
 
     func testConfigClientManual() throws {
-        let drop = Droplet()
+        let drop = try Droplet()
         drop.client.defaultMiddleware = [FooMiddleware()]
 
 
@@ -131,7 +131,7 @@ class MiddlewareTests: XCTestCase {
     }
 
     func testAbortMiddleware() throws {
-        let drop = Droplet()
+        let drop = try Droplet()
 
         drop.middleware = [AbortMiddleware(environment: .development)]
 
@@ -186,7 +186,7 @@ class MiddlewareTests: XCTestCase {
 
 
     func testValidationMiddleware() throws {
-        let drop = Droplet()
+        let drop = try Droplet()
 
         drop.middleware.append(ValidationMiddleware())
         

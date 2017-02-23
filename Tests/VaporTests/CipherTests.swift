@@ -30,10 +30,13 @@ class CipherTests: XCTestCase {
                     "key": "passwordpassword",
                     "method": "aes128"
                 ]
+            ],
+            "droplet": [
+                "cipher": "crypto"
             ]
         ])
 
-        let drop = Droplet(config: config)
+        let drop = try Droplet(config: config)
 
         let secret = "vapor"
         let e = try drop.cipher.encrypt(secret)

@@ -32,7 +32,7 @@ class DropletTests: XCTestCase {
         let parent = #file.characters.split(separator: "/").map(String.init).dropLast(3).joined(separator: "/")
         let workDir = "/\(parent)/Sources/Development/"
 
-        let drop = Droplet(workDir: workDir)
+        let drop = try Droplet(workDir: workDir)
 
         drop.middleware = [
             FileMiddleware(publicDir: drop.workDir + "Public/")
@@ -70,11 +70,11 @@ class DropletTests: XCTestCase {
             ]
         ])
 
-        _ = Droplet(config: config)
+        _ = try Droplet(config: config)
     }
 
     func testRunDefaults() throws {
-        let drop = Droplet(arguments: ["vapor", "serve"])
+        let drop = try Droplet(arguments: ["vapor", "serve"])
 
         drop.get("foo") { req in
             return "bar"
@@ -114,7 +114,7 @@ class DropletTests: XCTestCase {
                 ]
             ]
         ])
-        let drop = Droplet(arguments: ["vapor", "serve"], config: config)
+        let drop = try Droplet(arguments: ["vapor", "serve"], config: config)
 
         drop.get("foo") { req in
             return "bar"
@@ -129,7 +129,7 @@ class DropletTests: XCTestCase {
     }
 
     func testRunManual() throws {
-        let drop = Droplet(arguments: ["vapor", "serve"])
+        let drop = try Droplet(arguments: ["vapor", "serve"])
 
         drop.get("foo") { req in
             return "bar"
