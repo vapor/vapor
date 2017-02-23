@@ -18,7 +18,7 @@ extension Request {
         query: String? = nil,
         rawQuery: String? = nil,
         fragment: String? = nil,
-        // xctest
+        // onfail
         file: StaticString = #file,
         line: UInt = #line
     ) throws -> Request {
@@ -42,7 +42,7 @@ extension Request {
                 peerAddress: peerAddress
             )
         } catch {
-            XCTFail("Failed to initialize request", file: file, line: line)
+            onFail("Failed to initialize request", file, line)
             throw TestingError.initRequestFailed
         }
     }

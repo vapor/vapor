@@ -7,7 +7,7 @@ extension Responder {
         at path: String,
         file: StaticString = #file,
         line: UInt = #line
-        ) throws -> Response {
+    ) throws -> Response {
         let req = try Request.makeTest(method: .get, path: "foo")
         return try testResponse(
             to: req,
@@ -21,16 +21,16 @@ extension Responder {
         to req: Request,
         file: StaticString = #file,
         line: UInt = #line
-        ) throws -> Response {
+    ) throws -> Response {
         let res: Response
 
         do {
             res = try respond(to: req)
         } catch {
-            XCTFail(
+            onFail(
                 "Failed to create response: \(error)",
-                file: file,
-                line: line
+                file,
+                line
             )
             throw TestingError.respondFailed
         }

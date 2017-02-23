@@ -32,7 +32,7 @@ class DropletTests: XCTestCase {
         let parent = #file.characters.split(separator: "/").map(String.init).dropLast(3).joined(separator: "/")
         let workDir = "/\(parent)/Sources/Development/"
 
-        let drop = Droplet(workDir: workDir)
+        let drop = try Droplet(workDir: workDir)
 
         drop.middleware = [
             FileMiddleware(publicDir: drop.workDir + "Public/")
@@ -70,11 +70,11 @@ class DropletTests: XCTestCase {
             ]
         ])
 
-        _ = Droplet(config: config)
+        _ = try Droplet(config: config)
     }
 
     func testRunDefaults() throws {
-        let drop = Droplet(arguments: ["vapor", "serve"])
+        let drop = try Droplet(arguments: ["vapor", "serve", "--port=8523"])
 
         drop.get("foo") { req in
             return "bar"
@@ -84,7 +84,7 @@ class DropletTests: XCTestCase {
 
         drop.console.wait(seconds: 2)
         
-        let res = try! drop.client.get("http://0.0.0.0:8080/foo")
+        let res = try! drop.client.get("http://0.0.0.0:8523/foo")
         XCTAssertEqual(try! res.bodyString(), "bar")
         
         drop.stopServers()
@@ -94,7 +94,7 @@ class DropletTests: XCTestCase {
         drop.console.wait(seconds: 0.5)
 
         do {
-            _ = try drop.client.get("http://0.0.0.0:8080/foo")
+            _ = try drop.client.get("http://0.0.0.0:8523/foo")
             XCTFail("Expected to throw")
         } catch let error as SocksError {
             guard case ErrorReason.connectFailed = error.type else {
@@ -114,7 +114,7 @@ class DropletTests: XCTestCase {
                 ]
             ]
         ])
-        let drop = Droplet(arguments: ["vapor", "serve"], config: config)
+        let drop = try Droplet(arguments: ["vapor", "serve"], config: config)
 
         drop.get("foo") { req in
             return "bar"
@@ -129,7 +129,7 @@ class DropletTests: XCTestCase {
     }
 
     func testRunManual() throws {
-        let drop = Droplet(arguments: ["vapor", "serve"])
+        let drop = try Droplet(arguments: ["vapor", "serve"])
 
         drop.get("foo") { req in
             return "bar"

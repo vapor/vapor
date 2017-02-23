@@ -9,10 +9,10 @@ extension BytesConvertible {
         do {
             bytes = try makeBytes()
         } catch {
-            XCTFail(
+            onFail(
                 "Failed to convert desired result to bytes: \(error)",
-                file: file,
-                line: line
+                file,
+                line
             )
             throw TestingError.byteConversionFailed
         }

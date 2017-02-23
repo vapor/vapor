@@ -45,7 +45,7 @@ class FormDataTests: XCTestCase {
             "garbage": garbageField
         ]
         
-        let drop = Droplet(arguments: ["vapor", "serve"])
+        let drop = try Droplet(arguments: ["vapor", "serve"])
         
         drop.get("form-data") { req in
             guard let formData = req.formData else {

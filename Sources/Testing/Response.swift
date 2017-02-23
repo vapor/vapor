@@ -15,13 +15,13 @@ extension Response {
         let desired = try b.testMakeBytes(file: file, line: line)
         let body = try testBody(file: file, line: line)
 
-        XCTAssert(
-            body.contains(desired),
-            message ?? "Body assertion failed. '\(body.string)' does not contain '\(desired.string)'",
-            file: file,
-            line: line
-        )
-
+        if !body.contains(desired) {
+            onFail(
+                message ?? "Body assertion failed. '\(body.string)' does not contain '\(desired.string)'",
+                file,
+                line
+            )
+        }
         return self
     }
 
@@ -34,12 +34,13 @@ extension Response {
         file: StaticString = #file,
         line: UInt = #line
     ) -> Response {
-        XCTAssert(
-            status.statusCode == desired.statusCode,
-            message ?? "Status assertion failed. '\(status.statusCode)' does not equal '\(desired.statusCode)'",
-            file: file,
-            line: line
-        )
+        if status.statusCode != desired.statusCode {
+            onFail(
+                message ?? "Status assertion failed. '\(status.statusCode)' does not equal '\(desired.statusCode)'",
+                file,
+                line
+            )
+        }
 
         return self
     }
@@ -55,12 +56,14 @@ extension Response {
         line: UInt = #line
     ) -> Response {
         let header = headers[key]
-        XCTAssert(
-            header?.contains(desired) == true,
-            message ?? "\(key) header assertion failed. '\(header ?? "nil")' does not contain '\(desired)'",
-            file: file,
-            line: line
-        )
+
+        if header?.contains(desired) != true {
+            onFail(
+                message ?? "\(key) header assertion failed. '\(header ?? "nil")' does not contain '\(desired)'",
+                file,
+                line
+            )
+        }
         
         return self
     }
@@ -75,10 +78,10 @@ extension Response {
         line: UInt = #line
     ) throws -> Bytes {
         guard let bytes = body.bytes else {
-            XCTFail(
+            onFail(
                 "Failed to convert response body to bytes.",
-                file: file,
-                line: line
+                file,
+                line
             )
             throw TestingError.noBodyBytes
         }
