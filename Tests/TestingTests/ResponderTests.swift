@@ -6,7 +6,7 @@ import XCTest
 
 class ResponderTests: XCTestCase {
     override func setUp() {
-        Testing.onFail = XCTFail
+        //Testing.onFail = XCTFail
     }
 
     func testSee() throws {

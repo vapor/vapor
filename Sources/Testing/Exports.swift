@@ -1,10 +1,8 @@
 public typealias OnFail = (String, StaticString, UInt) -> ()
 
 public var onFail: OnFail = { message, file, line in
-    print("⚠️ Test failed: \(message)")
-    print("File: \(file)")
-    print("Line: \(line)")
-    print("ℹ️ Set `Testing.onFail = XCTFail` in the setUp method to cause this error to fail Xcode and SPM tests.")
+    print()
+    print("❌ Set `Testing.onFail = XCTFail` to enable vapor testing errors to fail Xcode and SPM tests.")
     print()
     print("    import Testing")
     print("    import XCTest")
@@ -15,4 +13,5 @@ public var onFail: OnFail = { message, file, line in
     print("        }")
     print("    }")
     print()
+    fatalError("`Testing.onFail` must be set.")
 }
