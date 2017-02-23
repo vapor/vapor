@@ -223,7 +223,6 @@ public class Droplet {
         )
 
         // CONFIGURABLE
-
         addConfigurable(server: Server<TCPServerStream, Parser<Request>, Serializer<Response>>.self, name: "engine")
         addConfigurable(client: Client<TCPClientStream, Serializer<Request>, Parser<Response>>.self, name: "engine")
         addConfigurable(console: terminal, name: "terminal")
@@ -232,8 +231,14 @@ public class Droplet {
         try addConfigurable(hash: BCryptHasher.self, name: "bcrypt")
         try addConfigurable(cipher: CryptoCipher.self, name: "crypto")
         addConfigurable(cache: MemoryCache(), name: "memory")
+        addConfigurable(middleware: SessionsMiddleware(sessions: MemorySessions()), name: "sessions")
+        addConfigurable(middleware: AbortMiddleware(environment: environment), name: "abort")
+        addConfigurable(middleware: DateMiddleware(), name: "date")
+        addConfigurable(middleware: TypeSafeErrorMiddleware(), name: "type-safe")
+        addConfigurable(middleware: ValidationMiddleware(), name: "validation")
+        addConfigurable(middleware: FileMiddleware(publicDir: workDir + "Public/"), name: "file")
 
-        if config["middleware", "server"]?.array == nil && config["droplet", "middleware", "server"]?.array == nil {
+        if config["droplet", "middleware", "server"]?.array == nil {
             // if no configuration has been supplied
             // apply all middleware
             middleware = [
@@ -245,14 +250,6 @@ public class Droplet {
                 FileMiddleware(publicDir: workDir + "Public/"),
             ]
             log.debug("No `middleware.server` key in `droplet.json` found, using default middleware.")
-        } else {
-            // add all configurable middleware
-            addConfigurable(middleware: SessionsMiddleware(sessions: MemorySessions()), name: "sessions")
-            addConfigurable(middleware: AbortMiddleware(environment: environment), name: "abort")
-            addConfigurable(middleware: DateMiddleware(), name: "date")
-            addConfigurable(middleware: TypeSafeErrorMiddleware(), name: "type-safe")
-            addConfigurable(middleware: ValidationMiddleware(), name: "validation")
-            addConfigurable(middleware: FileMiddleware(publicDir: workDir + "Public/"), name: "file")
         }
     }
 

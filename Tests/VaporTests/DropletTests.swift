@@ -74,7 +74,7 @@ class DropletTests: XCTestCase {
     }
 
     func testRunDefaults() throws {
-        let drop = try Droplet(arguments: ["vapor", "serve"])
+        let drop = try Droplet(arguments: ["vapor", "serve", "--port=8523"])
 
         drop.get("foo") { req in
             return "bar"
@@ -84,7 +84,7 @@ class DropletTests: XCTestCase {
 
         drop.console.wait(seconds: 2)
         
-        let res = try! drop.client.get("http://0.0.0.0:8080/foo")
+        let res = try! drop.client.get("http://0.0.0.0:8523/foo")
         XCTAssertEqual(try! res.bodyString(), "bar")
         
         drop.stopServers()
@@ -94,7 +94,7 @@ class DropletTests: XCTestCase {
         drop.console.wait(seconds: 0.5)
 
         do {
-            _ = try drop.client.get("http://0.0.0.0:8080/foo")
+            _ = try drop.client.get("http://0.0.0.0:8523/foo")
             XCTFail("Expected to throw")
         } catch let error as SocksError {
             guard case ErrorReason.connectFailed = error.type else {

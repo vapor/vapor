@@ -108,12 +108,6 @@ extension Droplet {
     public func addConfigurable(middleware: Middleware, name: String) {
         if config["droplet", "middleware", "server"]?.array?.flatMap({ $0.string }).contains(name) == true {
             self.middleware.append(middleware)
-
-            log.debug("Using server middleware '\(name)'.")
-        } else if config["middleware", "server"]?.array?.flatMap({ $0.string }).contains(name) == true {
-            self.middleware.append(middleware)
-
-            log.warning("[DEPRECATED] Key `server` in `middleware.json` will be removed in a future update. Use key `middleware.server` in `droplet.json`.")
             log.debug("Using server middleware '\(name)'.")
         } else {
             log.debug("Not using server middleware '\(name)'.")
@@ -122,13 +116,6 @@ extension Droplet {
         if config["droplet", "middleware", "client"]?.array?.flatMap({ $0.string }).contains(name) == true {
             let cm = self.client.defaultMiddleware
             self.client.defaultMiddleware = cm + [middleware]
-
-            log.debug("Using client middleware '\(name)'.")
-        } else if config["middleware", "client"]?.array?.flatMap({ $0.string }).contains(name) == true {
-            let cm = self.client.defaultMiddleware // FIXME: Weird Swift 3 BAD_ACCESS crash if not like this
-            self.client.defaultMiddleware = cm + [middleware]
-
-            log.warning("[DEPRECATED] Key `client` in `middleware.json` will be removed in a future update. Use key `middleware.client` in `droplet.json`.")
             log.debug("Using client middleware '\(name)'.")
         } else {
             log.debug("Not using client middleware '\(name)'.")

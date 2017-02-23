@@ -32,13 +32,8 @@ class MiddlewareTests: XCTestCase {
     }
 
     func testConfigDateMissing() throws {
-        let config = Config([
-            "middleware": [
-                "server": [
-                    "abort"
-                ]
-            ]
-        ])
+        var config = Config([:])
+        try config.set("droplet.middleware.server", ["abort"])
 
         let drop = try Droplet(config: config)
         drop.get { _ in
@@ -85,13 +80,8 @@ class MiddlewareTests: XCTestCase {
     }
 
     func testConfigClient() throws {
-        let config = Config([
-            "middleware": [
-                "client": [
-                    "foo"
-                ]
-            ]
-        ])
+        var config = Config([:])
+        try config.set("droplet.middleware.client", ["foo"])
 
         let drop = try Droplet(config: config)
         drop.addConfigurable(middleware: FooMiddleware(), name: "foo")
