@@ -6,19 +6,17 @@ extension Node {
     public init(formURLEncoded data: Bytes, allowEmptyValues: Bool = false) {
         var urlEncoded: [String: Node] = [:]
 
-        for pair in data.split(separator: .ampersand) {
-            
-            let replacePlus: (Byte) -> (Byte) = { byte in
-                if byte == .plus {
-                    return .space
-                } else {
-                    return byte
-                }
+        let replacePlus: (Byte) -> (Byte) = { byte in
+            if byte == .plus {
+                return .space
+            } else {
+                return byte
             }
-            
-            var key = ""
-            var value:Node = .string("")
-            var keyData: Bytes?
+        }
+        
+        for pair in data.split(separator: .ampersand) {
+            var value: Node = .string("")
+            var keyData: Bytes
             
             let token = pair.split(separator: .equals)
             if token.count == 2 {
@@ -28,42 +26,43 @@ extension Node {
                 value = .string(valueData.string)
             } else if token.count == 1 && allowEmptyValues {
                 keyData = percentDecoded(token[0], nonEncodedTransform: replacePlus) ?? []
+            } else {
+                self = .object(urlEncoded)
+                return
             }
 
-            if var keyData = keyData {
-                var keyIndicatedArray = false
+            var keyIndicatedArray = false
 
-                // check if the key has `key[]` or `key[5]`
-                if keyData.contains(.rightSquareBracket) && keyData.contains(.leftSquareBracket) {
-                    // get the key without the `[]`
-                    if let keySlice = keyData
-                        .split(separator: .leftSquareBracket, maxSplits: 1)
-                        .first {
-                        keyData = keySlice.array
-                    }
-
-                    keyIndicatedArray = true
+            // check if the key has `key[]` or `key[5]`
+            if keyData.contains(.rightSquareBracket) && keyData.contains(.leftSquareBracket) {
+                // get the key without the `[]`
+                if let keySlice = keyData
+                    .split(separator: .leftSquareBracket, maxSplits: 1)
+                    .first {
+                    keyData = keySlice.array
                 }
 
-                key = keyData.string
-
-                if let existing = urlEncoded[key] {
-                    // if a key already exists, create an
-                    // array and append the new value
-                    if case .array(var array) = existing {
-                        array.append(value)
-                        value = .array(array)
-                    } else {
-                        value = .array([existing, value])
-                    }
-                } else if keyIndicatedArray {
-                    // turn the value into an array
-                    // if the key had `[]`
-                    value = .array([value])
-                }
-
-                urlEncoded[key] = value
+                keyIndicatedArray = true
             }
+
+            let key = keyData.string
+
+            if let existing = urlEncoded[key] {
+                // if a key already exists, create an
+                // array and append the new value
+                if case .array(var array) = existing {
+                    array.append(value)
+                    value = .array(array)
+                } else {
+                    value = .array([existing, value])
+                }
+            } else if keyIndicatedArray {
+                // turn the value into an array
+                // if the key had `[]`
+                value = .array([value])
+            }
+
+            urlEncoded[key] = value
 
         }
         
