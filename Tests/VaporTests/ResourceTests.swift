@@ -1,6 +1,5 @@
 import XCTest
 @testable import Vapor
-import Fluent
 import HTTP
 
 class ResourceTests: XCTestCase {
@@ -10,7 +9,7 @@ class ResourceTests: XCTestCase {
     ]
 
     func testBasic() throws {
-        let drop = Droplet()
+        let drop = try Droplet()
 
         drop.middleware = []
 
@@ -35,7 +34,7 @@ class ResourceTests: XCTestCase {
     }
 
     func testOptions() throws {
-        let drop = Droplet()
+        let drop = try Droplet()
 
         drop.resource("users", User.self) { users in
             users.index = { req in

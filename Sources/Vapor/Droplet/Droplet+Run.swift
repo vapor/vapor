@@ -11,6 +11,9 @@ extension Droplet {
         Runs the Droplet's commands, defaulting to serve.
     */
     public func run(servers: [String: ServerConfig]? = nil) -> Never  {
+        // FIxME: Discuss
+        // assert(servers == nil, "we can't support this cuz of fluent prepare stuff")
+
         do {
             try runCommands(servers: servers)
             if (self.startedServers.count > 0) {
@@ -39,30 +42,15 @@ extension Droplet {
     }
 
     func runCommands(servers: [String: ServerConfig]? = nil) throws {
-        // the prepare command will run all
-        // of the supplied preparations on the database.
-        let prepare = Prepare(console: console, preparations: self.preparations, database: self.database)
-
-        // the serve command will boot the servers
-        // and always runs the prepare command
-        let serve = Serve(console: console, prepare: prepare) {
-            // nonblocking
-            // try self.startServers(servers)()
-            
-            // blocking
-            try self.bootServers(servers)
-        }
+        addServeCommandIfNecessary(servers: servers)
 
         // the version command prints the frameworks version.
         let version = VersionCommand(console: console)
-
         // adds the commands
-        commands.append(serve)
-        commands.append(prepare)
         commands.append(version)
         
         for provider in providers {
-            provider.beforeRun(self)
+            try provider.beforeRun(self)
         }
 
         var iterator = arguments.makeIterator()
@@ -88,5 +76,22 @@ extension Droplet {
                 "Use --help on individual commands to learn more."
             ]
         )
+    }
+
+    /// adds a serve command if it hasn't been overridden
+    // FIXME: Should probably add this first off if possible in future so that users can override w/o 
+    // a check like this
+    private func addServeCommandIfNecessary(servers: [String: ServerConfig]? = nil) {
+        guard !commands.map({ $0.id }).contains("serve") else { return }
+        // the serve command will boot the servers
+        // and always runs the prepare command
+        let serve = Serve(console: console) {
+            // nonblocking
+            // try self.startServers(servers)()
+
+            // blocking
+            try self.bootServers(servers)
+        }
+        commands.append(serve)
     }
 }

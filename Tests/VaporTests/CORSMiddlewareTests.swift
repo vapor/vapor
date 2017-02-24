@@ -16,14 +16,14 @@ class CORSMiddlewareTests: XCTestCase {
 
 
     func dropWithCors(config: CORSConfiguration = .default) -> Droplet {
-        let drop = Droplet()
+        let drop = try! Droplet()
         drop.middleware.insert(CORSMiddleware(configuration: config), at: 0)
         drop.get("*") { _ in return "" }
         return drop
     }
 
     func dropWithCors(settings: Settings.Config) -> Droplet {
-        let drop = Droplet()
+        let drop = try! Droplet()
         drop.middleware.insert(try! CORSMiddleware(configuration: settings), at: 0)
         drop.get("*") { _ in return "" }
         return drop

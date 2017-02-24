@@ -55,7 +55,7 @@ public final class CryptoHasher: HashProtocol {
         case .base64:
             return hash.base64Encoded
         case .hex:
-            return hash.hexString.bytes
+            return hash.hexString.makeBytes()
         case .plain:
             return hash
         }
@@ -118,7 +118,7 @@ extension CryptoHasher: ConfigInitializable {
                 )
             }
 
-            method = .keyed(hmac, key: key.bytes)
+            method = .keyed(hmac, key: key.makeBytes())
         } else {
             guard let hash = try Hash.Method(from: methodString) else {
                 throw ConfigError.unsupported(

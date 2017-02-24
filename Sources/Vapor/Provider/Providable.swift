@@ -1,5 +1,4 @@
 import HTTP
-import Fluent
 import Console
 import Cache
 
@@ -50,12 +49,6 @@ public struct Providable {
     public var client: ClientProtocol.Type?
 
     /**
-        An optional `Database` that will be used
-        by the droplet for all Fluent queries.
-    */
-    public var database: Database?
-
-    /**
         An optional `CacheProtocol` that will be used
         by the droplet for key:value pair storage.
     */
@@ -76,7 +69,6 @@ public struct Providable {
         log: LogProtocol? = nil,
         view: ViewRenderer? = nil,
         client: ClientProtocol.Type? = nil,
-        database: Database? = nil,
         cache: CacheProtocol? = nil,
         middleware: [String: Middleware]? = nil
     ) {
@@ -87,7 +79,6 @@ public struct Providable {
         self.log = log
         self.view = view
         self.client = client
-        self.database = database
         self.cache = cache
         self.middleware = middleware
     }

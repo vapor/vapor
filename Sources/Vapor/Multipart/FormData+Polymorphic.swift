@@ -37,4 +37,8 @@ extension FormData.Field: Polymorphic {
     public var uint: UInt? {
         return part.body.string.uint
     }
+
+    public var bytes: [UInt8]? {
+        return part.body
+    }
 }

@@ -12,9 +12,9 @@ class ConsoleTests: XCTestCase {
         ("testDefaultServe", testDefaultServe),
     ]
 
-    func testCommandRun() {
+    func testCommandRun() throws {
         let console = TestConsoleDriver()
-        let drop = Droplet(arguments: ["/path/to/exe", "test-1"])
+        let drop = try Droplet(arguments: ["/path/to/exe", "test-1"])
 
         drop.console = console
 
@@ -30,9 +30,9 @@ class ConsoleTests: XCTestCase {
         }
     }
 
-    func testCommandInsufficientArgs() {
+    func testCommandInsufficientArgs() throws {
         let console = TestConsoleDriver()
-        let drop = Droplet(arguments: ["/path/to/exe", "test-2"])
+        let drop = try Droplet(arguments: ["/path/to/exe", "test-2"])
 
         drop.console = console
 
@@ -51,7 +51,7 @@ class ConsoleTests: XCTestCase {
 
     func testVersionCommand() throws {
         let console = TestConsoleDriver()
-        let drop = Droplet(arguments: ["run", "version"])
+        let drop = try Droplet(arguments: ["run", "version"])
 
         drop.console = console
 
@@ -60,12 +60,12 @@ class ConsoleTests: XCTestCase {
             command
         ]
         try drop.runCommands()
-        XCTAssert(console.input().contains("Vapor Framework v1.1.0"))
+        XCTAssert(console.input().contains("Vapor Framework v2."))
     }
 
-    func testCommandFetchArgs() {
+    func testCommandFetchArgs() throws {
         let console = TestConsoleDriver()
-        let drop = Droplet(arguments: ["/path/to/ext", "test-2", "123"])
+        let drop = try Droplet(arguments: ["/path/to/ext", "test-2", "123"])
 
         drop.console = console
 
@@ -83,9 +83,9 @@ class ConsoleTests: XCTestCase {
     }
 
 
-    func testCommandFetchOptions() {
+    func testCommandFetchOptions() throws {
         let console = TestConsoleDriver()
-        let drop = Droplet(arguments: ["/path/to/ext", "test-2", "123", "--opt-1=abc"])
+        let drop = try Droplet(arguments: ["/path/to/ext", "test-2", "123", "--opt-1=abc"])
 
         drop.console = console
 
@@ -102,7 +102,7 @@ class ConsoleTests: XCTestCase {
         }
     }
 
-    func testDefaultServe() {
+    func testDefaultServe() throws {
         final class TestServe: Command {
             let id: String = "serve"
             let console: ConsoleProtocol
@@ -117,7 +117,7 @@ class ConsoleTests: XCTestCase {
             }
         }
 
-        let drop = Droplet(arguments: ["/path/to/exec"])
+        let drop = try Droplet(arguments: ["/path/to/exec"])
         drop.commands = [TestServe(console: drop.console)]
 
         do {
@@ -174,7 +174,7 @@ class TestConsoleDriver: ConsoleProtocol {
     }
 
     func output(_ string: String, style: ConsoleStyle, newLine: Bool) {
-        buffer += string.bytes
+        buffer += string.makeBytes()
     }
 
     func input() -> String {

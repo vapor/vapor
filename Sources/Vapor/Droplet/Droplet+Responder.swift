@@ -76,7 +76,7 @@ extension Droplet: Responder {
                     headers: [
                         "Content-Type": "plaintext"
                     ],
-                    body: message.bytes
+                    body: message
                 )
             }
         }

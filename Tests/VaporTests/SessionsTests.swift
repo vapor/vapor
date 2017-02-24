@@ -10,7 +10,7 @@ class SessionsTests: XCTestCase {
     ]
 
     func testExample() throws {
-        let drop = Droplet()
+        let drop = try Droplet()
 
         let s = MemorySessions()
         let m = SessionsMiddleware(sessions: s)

@@ -16,11 +16,11 @@ class FileMiddlewareTests: XCTestCase {
         ("testNonExistingFile", testNonExistingFile)
     ]
     
-    func testETag() {
+    func testETag() throws {
         
         let file = #file
         let fileMiddleWare = FileMiddleware(publicDir: "")
-        let drop = Droplet()
+        let drop = try Droplet()
         drop.middleware.append(fileMiddleWare)
         
         var headers: [HeaderKey: String] = [:]
@@ -57,10 +57,10 @@ class FileMiddlewareTests: XCTestCase {
     }
     
     
-    func testNonExistingFile() {
+    func testNonExistingFile() throws {
         let file = "/nonsense/file.notexists"
         let fileMiddleWare = FileMiddleware(publicDir: "/")
-        let drop = Droplet()
+        let drop = try Droplet()
         drop.middleware.append(fileMiddleWare)
         
         do {

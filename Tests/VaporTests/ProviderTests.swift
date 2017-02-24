@@ -9,7 +9,7 @@ class ProviderTests: XCTestCase {
     ]
 
     func testBasic() throws {
-        let drop = Droplet()
+        let drop = try Droplet()
 
         try drop.addProvider(FastServerProvider.self)
 
@@ -17,7 +17,7 @@ class ProviderTests: XCTestCase {
     }
 
     func testPrecedence() throws {
-        let drop = Droplet()
+        let drop = try Droplet()
 
         drop.console = DebugConsole()
         try drop.addProvider(FastServerProvider.self)
@@ -27,7 +27,7 @@ class ProviderTests: XCTestCase {
     }
 
     func testOverride() throws {
-        let drop = Droplet()
+        let drop = try Droplet()
 
         drop.console = DebugConsole()
         try drop.addProvider(SlowServerProvider.self)
@@ -40,16 +40,14 @@ class ProviderTests: XCTestCase {
         let fast = try FastServerProvider(config: Config([:]))
         let slow = try SlowServerProvider(config: Config([:]))
 
-        let drop = Droplet(arguments: ["vapor", "serve"]) // , console: dc, initializedProviders: [fast, slow]
+        let drop = try Droplet(arguments: ["vapor", "serve"]) // , console: dc, initializedProviders: [fast, slow]
         drop.console = DebugConsole()
-        drop.addProvider(fast)
-        drop.addProvider(slow)
+        try drop.addProvider(fast)
+        try drop.addProvider(slow)
 
         XCTAssert(drop.server is SlowServer.Type)
 
-        XCTAssertEqual(fast.afterInitFlag, true)
         XCTAssertEqual(fast.beforeRunFlag, false)
-        XCTAssertEqual(slow.afterInitFlag, true)
         XCTAssertEqual(slow.beforeRunFlag, false)
 
         try drop.runCommands()
@@ -81,21 +79,17 @@ private final class FastServer: ServerProtocol {
 }
 
 private final class FastServerProvider: Provider {
-    var provided: Providable
-
-    var afterInitFlag = false
     var beforeRunFlag = false
 
     init(config: Settings.Config) throws {
-        provided = Providable(server: FastServer.self)
-    }
-
-    func afterInit(_ drop: Droplet) {
-        afterInitFlag = true
     }
 
     func beforeRun(_ drop: Droplet) {
         beforeRunFlag = true
+    }
+
+    func boot(_ drop: Droplet) {
+        drop.server = FastServer.self
     }
 }
 
@@ -120,13 +114,10 @@ private final class SlowServer: ServerProtocol {
 }
 
 private final class SlowServerProvider: Provider {
-    var provided: Providable
-
     var afterInitFlag = false
     var beforeRunFlag = false
 
     init(config: Settings.Config) throws {
-        provided = Providable(server: SlowServer.self)
     }
 
     func afterInit(_ drop: Droplet) {
@@ -135,5 +126,9 @@ private final class SlowServerProvider: Provider {
 
     func beforeRun(_ drop: Droplet) {
         beforeRunFlag = true
+    }
+
+    func boot(_ drop: Droplet) {
+        drop.server = SlowServer.self
     }
 }

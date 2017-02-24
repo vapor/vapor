@@ -20,12 +20,10 @@ extension HTTP.Message {
             guard
                 let type = headers[.contentType], type.contains("multipart/form-data"),
                 case let .data(bytes) = self.body,
-                let boundary = try? Multipart.parseBoundary(contentType: type),
-                let multipart = try? Parser(boundary: boundary)
-            else {
-                return nil
-            }
-            
+                let boundary = try? Parser.extractBoundary(contentType: type)
+                else { return nil }
+
+            let multipart = Parser(boundary: boundary)
             let parser = FormData.Parser(multipart: multipart)
             
             var fields: [String: Field] = [:]
@@ -59,7 +57,7 @@ extension HTTP.Message {
                     random += Byte.random(min: .A, max: .z)
                 }
                 
-                let boundary: Bytes = "vaporboundary".bytes + random
+                let boundary: Bytes = "vaporboundary".makeBytes() + random
                 
                 let multipart = Serializer(boundary: boundary)
                 

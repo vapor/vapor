@@ -54,6 +54,8 @@ extension RouteBuilder where Value == Responder {
         var itemMethods: [Method] = []
         var multipleMethods: [Method] = []
 
+        let pathId = path.makeBytes().split(separator: .forwardSlash).joined(separator: [.hyphen]).split(separator: .colon).joined().string + "_id"
+
         func item(_ method: Method, _ item: Resource<Model>.Item?) {
             guard let item = item else {
                 return
@@ -61,8 +63,8 @@ extension RouteBuilder where Value == Responder {
 
             itemMethods += method
 
-            self.add(method, path, ":\(path)_id") { request in
-                guard let id = request.parameters["\(path)_id"]?.string else {
+            self.add(method, path, ":\(pathId)") { request in
+                guard let id = request.parameters["\(pathId)"]?.string else {
                     throw Abort.notFound
                 }
 
@@ -101,7 +103,7 @@ extension RouteBuilder where Value == Responder {
         } else {
             item(.options) { request in
                 return try JSON(node: [
-                    "resource": "\(path)/:\(path)_id",
+                    "resource": "\(path)/:\(pathId)",
                     "methods": try JSON(node: itemMethods.map { $0.description })
                 ])
             }
