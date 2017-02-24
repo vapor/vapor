@@ -112,14 +112,14 @@ extension CORSConfiguration: ConfigInitializable {
     public init(config: Settings.Config) throws {
         let cors: Node
         do {
-            cors = try config.extract("cors") ?? config.extract("CORS")
+            cors = try config.get("cors") ?? config.get("CORS")
         } catch {
             throw CORSConfigurationError.configurationFileNotFound
         }
 
         // Allowed origin
         do {
-            let originString: String = try cors.extract("allowedOrigin")
+            let originString: String = try cors.get("allowedOrigin")
             switch originString {
             case "all", "*": self.allowedOrigin = .all
             case "none", "": self.allowedOrigin = .none
@@ -132,7 +132,7 @@ extension CORSConfiguration: ConfigInitializable {
 
         // Get methods
         do {
-            let methodArray: [String] = try cors.extract("allowedMethods")
+            let methodArray: [String] = try cors.get("allowedMethods")
             self.allowedMethods = methodArray.joined(separator: ", ").uppercased()
         } catch {
             throw CORSConfigurationError.missingRequiredConfigurationKey("allowedMethods")
@@ -140,20 +140,20 @@ extension CORSConfiguration: ConfigInitializable {
 
         // Get allowed headers
         do {
-            let headersArray: [String] = try cors.extract("allowedHeaders")
+            let headersArray: [String] = try cors.get("allowedHeaders")
             self.allowedHeaders = headersArray.joined(separator: ", ")
         } catch {
             throw CORSConfigurationError.missingRequiredConfigurationKey("allowedHeaders")
         }
 
         // Allow credentials
-        let allowCredentials: Bool? = try cors.extract("allowCredentials")
+        let allowCredentials: Bool? = try cors.get("allowCredentials")
         self.allowCredentials = allowCredentials ?? false
 
         // Cache expiration
-        self.cacheExpiration = try cors.extract("cacheExpiration") ?? 600
+        self.cacheExpiration = try cors.get("cacheExpiration") ?? 600
         
         // Exposed headers
-        self.exposedHeaders = try cors.extract("exposedHeaders")
+        self.exposedHeaders = try cors.get("exposedHeaders")
     }
 }

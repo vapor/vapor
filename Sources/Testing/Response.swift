@@ -1,4 +1,5 @@
 import HTTP
+import Foundation
 
 // MARK: Assertions
 

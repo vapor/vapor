@@ -35,11 +35,11 @@ public class Localization {
         self.defaultDialect = defaultLocale ?? localizations?.keys.first ?? "default"
     }
 
-    public subscript(_ languageCode: String, _ paths: PathIndex...) -> String {
+    public subscript(_ languageCode: String, _ paths: PathIndexer...) -> String {
         return self[languageCode, paths]
     }
 
-    public subscript(_ languageCode: String, _ paths: [PathIndex]) -> String {
+    public subscript(_ languageCode: String, _ paths: [PathIndexer]) -> String {
         return localizations[languageCode.lowercased()]?[paths]?.string  // Index by language
             ?? localizations[defaultDialect]?[paths]?.string // Index the default language
             ?? paths.map { "\($0)" }.joined(separator: ".") // Return the literal path indexed if no translation
