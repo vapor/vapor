@@ -20,7 +20,7 @@ class MergeTests: XCTestCase {
             "test": [
                 "name": "a"
             ],
-            "file.hello": .bytes("Hello!\n".makeBytes())
+            "file": ["hello": .bytes("Hello!\n".makeBytes())]
         ]
         XCTAssertEqual(node, expectation)
     }
