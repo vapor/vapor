@@ -18,8 +18,8 @@ final class User: StringInitializable, NodeConvertible {
     }
 
     init(node: Node, in context: Context) throws {
-        self.id = try node.extract("id")
-        self.name = try node.extract("name")
+        self.id = try node.get("id")
+        self.name = try node.get("name")
     }
 
     func makeNode(context: Context) throws -> Node {
