@@ -35,7 +35,7 @@ public struct Abort: AbortError, Debuggable {
     public let gitHubIssues: [String]
 
 
-    init(
+    public init(
         _ status: Status,
         metadata: Node? = nil,
         // Debuggable
