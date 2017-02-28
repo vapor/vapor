@@ -29,8 +29,7 @@ class ResourceTests: XCTestCase {
 
         XCTAssertEqual(try drop.responseBody(for: .get, "users"), "index")
         XCTAssertEqual(try drop.responseBody(for: .get, "users/bob"), "user bob")
-        print(try drop.responseBody(for: .get, "users/ERROR"))
-        XCTAssert(try drop.responseBody(for: .get, "users/ERROR").contains("Abort.notFound"))
+        XCTAssert(try drop.responseBody(for: .get, "users/ERROR").contains("Vapor.Abort.notFound"))
     }
 
     func testOptions() throws {
