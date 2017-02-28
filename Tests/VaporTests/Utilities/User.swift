@@ -22,7 +22,7 @@ final class User: StringInitializable, NodeConvertible {
         self.name = try node.get("name")
     }
 
-    func makeNode(context: Context) throws -> Node {
+    func makeNode(in context: Context) throws -> Node {
         return try  Node(node:["name": name])
     }
 }
