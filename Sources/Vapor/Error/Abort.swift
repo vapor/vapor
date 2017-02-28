@@ -1,79 +1,66 @@
 import HTTP
 import Node
+import Debugging
 
-/**
-    Represents errors that can be thrown in any Vapor closure.
-    Then, these errors can be caught in `Middleware` to give a
-    desired response.
- */
-public protocol AbortError: Error {
-    /// Textual representation on the error.
-    var message: String { get }
-    
-    /// An integer representation of the error.
-    var code: Int { get }
-    
-    /// The HTTP status code to return.
-    var status: Status { get }
-    
-    /// `Optional` metadata.
-    var metadata: Node? { get }
-}
+/// A basic conformance to `AbortError` for
+/// convenient error throwing
+public struct Abort: AbortError, Debuggable {
+    public let status: Status
+    public let metadata: Node?
 
-/**
-    A handful of standard errors that can be thrown
-    in any Vapor closure by calling `throw Abort.<case>`.
-    These errors can be caught in Middleware to give
-    a desired response.
-*/
-public enum Abort: Swift.Error {
-    case badRequest
-    case notFound
-    case serverError
-    case custom(status: Status, message: String)
-}
+    // MARK: Debuggable
 
-extension Abort: AbortError {
-    public var message: String {
-        switch self {
-        case .badRequest:
-            return "Invalid request"
-        case .notFound:
-            return "Page not found"
-        case .serverError:
-            return "Something went wrong"
-        case .custom(status: _, message: let message):
-            return message
-        }
+    /// See Debuggable.readableName
+    public static let readableName = "Abort request error"
+
+    /// See Debuggable.reason
+    public let reason: String
+
+    /// See Debuggable.identifier
+    public let identifier: String
+
+    /// See Debuggable.possibleCauses
+    public let possibleCauses: [String]
+
+    /// See Debuggable.possibleCauses
+    public let suggestedFixes: [String]
+
+    /// See Debuggable.documentationLinks
+    public let documentationLinks: [String]
+
+    /// See Debuggable.stackOverflowQuestions
+    public let stackOverflowQuestions: [String]
+
+    /// See Debuggable.gitHubIssues
+    public let gitHubIssues: [String]
+
+
+    init(
+        _ status: Status,
+        metadata: Node? = nil,
+        // Debuggable
+        reason: String? = nil,
+        identifier: String? = nil,
+        possibleCauses: [String]? = nil,
+        suggestedFixes: [String]? = nil,
+        documentationLinks: [String]? = nil,
+        stackOverflowQuestions: [String]? = nil,
+        gitHubIssues: [String]? = nil
+    ) {
+        self.status = status
+        self.metadata = metadata
+        self.reason = reason ?? status.reasonPhrase
+        self.identifier = identifier ?? "\(status)"
+        self.possibleCauses = possibleCauses ?? []
+        self.suggestedFixes = suggestedFixes ?? []
+        self.documentationLinks = documentationLinks ?? []
+        self.stackOverflowQuestions = stackOverflowQuestions ?? []
+        self.gitHubIssues = gitHubIssues ?? []
     }
-    
-    public var code: Int {
-        switch self {
-        case .badRequest:
-            return 400
-        case .notFound:
-            return 404
-        case .serverError:
-            return 500
-        case .custom(status: let status, message: _):
-            return status.statusCode
-        }
-    }
-    
-    public var status: Status {
-        switch self {
-        case .badRequest:
-            return .badRequest
-        case .notFound:
-            return .notFound
-        case .serverError:
-            return .internalServerError
-        case .custom(status: let status, message: _):
-            return status
-        }
-    }
-    
-    public var metadata: Node? {
-        return nil
-    }
+
+    // most common
+    public static let badRequest = Abort(.badRequest)
+    public static let unauthorized = Abort(.unauthorized)
+    public static let notFound = Abort(.notFound)
+    public static let serverError = Abort(.internalServerError)
 }

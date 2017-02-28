@@ -232,7 +232,6 @@ public class Droplet {
         try addConfigurable(cipher: CryptoCipher.self, name: "crypto")
         addConfigurable(cache: MemoryCache(), name: "memory")
         addConfigurable(middleware: SessionsMiddleware(sessions: MemorySessions()), name: "sessions")
-        addConfigurable(middleware: AbortMiddleware(environment: environment), name: "abort")
         addConfigurable(middleware: DateMiddleware(), name: "date")
         addConfigurable(middleware: TypeSafeErrorMiddleware(), name: "type-safe")
         addConfigurable(middleware: ValidationMiddleware(), name: "validation")
@@ -243,7 +242,6 @@ public class Droplet {
             // apply all middleware
             middleware = [
                 SessionsMiddleware(sessions: MemorySessions()),
-                AbortMiddleware(environment: environment),
                 DateMiddleware(),
                 TypeSafeErrorMiddleware(),
                 ValidationMiddleware(),

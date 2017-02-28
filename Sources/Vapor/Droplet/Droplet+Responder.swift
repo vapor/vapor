@@ -2,24 +2,20 @@ import HTTP
 import HTTPRouting
 
 extension Droplet: Responder {
-    /**
-        Returns a response to the given request
-
-        - parameter request: received request
-        - throws: error if something fails in finding response
-        - returns: response if possible
-    */
+    /// Returns a response to the given request
+    ///
+    /// - parameter request: received request
+    /// - throws: error if something fails in finding response
+    /// - returns: response if possible
     public func respond(to request: Request) throws -> Response {
         log.info("\(request.method) \(request.uri.path)")
 
         var responder: Responder
         let request = request
 
-        /*
-            The HEAD method is identical to GET.
-
-            https://tools.ietf.org/html/rfc2616#section-9.4
-        */
+        /// The HEAD method is identical to GET.
+        ///
+        /// https://tools.ietf.org/html/rfc2616#section-9.4
         let originalMethod = request.method
         if case .head = request.method {
             request.method = .get
@@ -56,41 +52,106 @@ extension Droplet: Responder {
                 log.warning("Response had no 'Content-Type' header.")
             }
         } catch {
-            if environment == .production {
-                log.error("Uncaught Error: \(type(of: error)).\(error)")
-                if request.accept.prefers("html") {
-                    return ErrorView.shared.makeResponse(.internalServerError, "Something went wrong.")
-                }
+            // get status
+            let status: Status
 
-                let response = Response(status: .internalServerError)
-                response.json = try JSON(node: [
-                    "error": true,
-                    "message": "Something went wrong.",
-                    "code": 500
-                ])
-                return response
+            if let abort = error as? AbortError {
+                status = abort.status
             } else {
-                let message = "Uncaught Error: \(type(of: error)).\(error). Use middleware to catch this error and provide a better response. Otherwise, a 500 error page will be returned in the production environment."
-                response = Response(
-                    status: .internalServerError,
-                    headers: [
-                        "Content-Type": "plaintext"
-                    ],
-                    body: message
-                )
+                status = .internalServerError
+            }
+
+            if let debuggable = error as? Debuggable {
+                log.error(debuggable.loggable)
+            } else {
+                let type = String(reflecting: type(of: error))
+                log.error("[\(type): \(error)]")
+                log.info("Conform '\(type)' to Debugging.Debuggable to provide more debug information.")
+            }
+
+            if request.accept.prefers("html") {
+                return ErrorView.shared.makeResponse(status, status.reasonPhrase)
+            } else {
+                var json = JSON([:])
+                try json.set("error", true)
+                if environment == .production {
+                    try json.set("reason", status.reasonPhrase)
+                } else {
+                    if let abort = error as? AbortError {
+                        try json.set("reason", abort.status.reasonPhrase)
+                        try json.set("metadata", abort.metadata)
+                    }
+                    if let debug = error as? Debuggable {
+                        try json.set("reason", debug.reason)
+                        try json.set("identifier", debug.fullIdentifier)
+                        if !debug.possibleCauses.isEmpty {
+                            try json.set("possibleCauses", debug.possibleCauses)
+                        }
+                        if !debug.suggestedFixes.isEmpty {
+                            try json.set("suggestedFixes", debug.suggestedFixes)
+                        }
+                        if !debug.documentationLinks.isEmpty {
+                            try json.set("documentationLinks", debug.documentationLinks)
+                        }
+                        if !debug.stackOverflowQuestions.isEmpty {
+                            try json.set("stackOverflowQuestions", debug.stackOverflowQuestions)
+                        }
+                        if !debug.gitHubIssues.isEmpty {
+                            try json.set("gitHubIssues", debug.gitHubIssues)
+                        }
+                    }
+                }
+                let response = Response(status: status)
+                response.json = json
+                return response
             }
         }
 
-        /**
-            The server MUST NOT return a message-body in the response for HEAD.
-
-            https://tools.ietf.org/html/rfc2616#section-9.4
-         */
+        /// The server MUST NOT return a message-body in the response for HEAD.
+        ///
+        /// https://tools.ietf.org/html/rfc2616#section-9.4
         if case .head = originalMethod {
             // TODO: What if body is set to chunked¿?
             response.body = .data([])
         }
         
         return response
+    }
+}
+
+extension Debuggable {
+    var loggable: String {
+        var print: [String] = []
+
+        print.append("\(Self.readableName): \(reason)")
+        print.append("Identifier: \(fullIdentifier)")
+
+        if !possibleCauses.isEmpty {
+            print.append("Possible Causes: \(possibleCauses.commaSeparated)")
+        }
+
+        if !suggestedFixes.isEmpty {
+            print.append("Suggested Fixes: \(suggestedFixes.commaSeparated)")
+        }
+
+        if !documentationLinks.isEmpty {
+            print.append("Documentation Links: \(documentationLinks.commaSeparated)")
+        }
+
+        if !stackOverflowQuestions.isEmpty {
+            print.append("Stack Overflow Questions: \(stackOverflowQuestions.commaSeparated)")
+        }
+
+        if !gitHubIssues.isEmpty {
+            print.append("GitHub Issues: \(gitHubIssues.commaSeparated)")
+        }
+
+        return print.map { "[\($0)]" }.joined(separator: " ")
+    }
+}
+
+extension Sequence where Iterator.Element == String {
+    var commaSeparated: String {
+        return joined(separator: ", ")
     }
 }

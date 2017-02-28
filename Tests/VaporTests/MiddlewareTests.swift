@@ -120,61 +120,6 @@ class MiddlewareTests: XCTestCase {
         XCTAssert(res.headers["bar"] != nil)
     }
 
-    func testAbortMiddleware() throws {
-        let drop = try Droplet()
-
-        drop.middleware = [AbortMiddleware(environment: .development)]
-
-        drop.get("*") { req in
-            let path = req.uri.path
-            print(path)
-            switch path {
-            case "bad":
-                throw Abort.badRequest
-            case "notFound":
-                throw Abort.notFound
-            case "server":
-                throw Abort.serverError
-            default:
-                throw Abort.custom(status: Status(statusCode: 42), message: path)
-            }
-        }
-
-        let expectations: [(path: String, message: String, code: Int, status: Status)] = [
-            ("bad", "Invalid request", 400, .badRequest),
-            ("notFound", "Page not found", 404, .notFound),
-            ("server", "Something went wrong", 500, .internalServerError),
-            ("custom", "custom", 42, Status(statusCode: 42))
-        ]
-
-        try expectations.forEach { path, expectedMessage, expectedCode, expectedStatus in
-            let request = Request(method: .get, path: path)
-            let result = try drop.respond(to: request)
-            
-            guard let message = result.data["message"]?.string else {
-                XCTFail("Message should not be nil")
-                return
-            }
-            
-            guard let code = result.data["code"]?.int else {
-                XCTFail("Code shoult not be nil")
-                return
-            }
-            
-            XCTAssertEqual(message, expectedMessage)
-            XCTAssertEqual(code, expectedCode)
-            XCTAssertEqual(result.status, expectedStatus)
-            XCTAssertNil(result.data["metadata"]?.object)
-        }
-
-
-        let request = Request(method: .get, path: "Custom Message")
-        request.headers["Accept"] = "html"
-        let result = try drop.respond(to: request)
-        XCTAssertEqual(result.body.bytes?.string.contains("Custom Message"), true)
-    }
-
-
     func testValidationMiddleware() throws {
         let drop = try Droplet()
 
