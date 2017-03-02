@@ -3,11 +3,9 @@ import Random
 import Node
 import Foundation
 
-/**
-    The `MemorySessionDriver` stores session data
-    in a Swift `Dictionary`. This means all session
-    data will be purged if the server is restarted.
-*/
+/// The `MemorySessionDriver` stores session data
+/// in a Swift `Dictionary`. This means all session
+/// data will be purged if the server is restarted.
 public class MemorySessions: SessionsProtocol {
     var sessions: [String: Session]
     private var sessionsLock = NSLock()
@@ -16,9 +14,7 @@ public class MemorySessions: SessionsProtocol {
         sessions = [:]
     }
 
-    /**
-        Loads value for session id at given key
-    */
+    /// Loads value for session id at given key
     public func get(identifier: String) -> Session? {
         var session: Session?
 
@@ -29,28 +25,22 @@ public class MemorySessions: SessionsProtocol {
         return session
     }
 
-    /**
-        Sets value for session id at given key
-    */
+    /// Sets value for session id at given key
     public func set(_ session: Session) {
         sessionsLock.locked {
             sessions[session.identifier] = session
         }
     }
     
-    /**
-         Destroys session with associated identifier
-    */
+    /// Destroys session with associated identifier
     public func destroy(identifier: String) throws {
         sessionsLock.locked {
             sessions[identifier] = nil
         }
     }
 
-    /**
-        Create new unique session id
-    */
+    /// Create new unique session id
     public func makeIdentifier() throws -> String {
-        return try CryptoRandom.bytes(count: 16).base64Encoded.string
+        return CryptoRandom.bytes(16).base64Encoded.string
     }
 }

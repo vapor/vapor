@@ -231,7 +231,7 @@ public class Droplet {
         try addConfigurable(hash: BCryptHasher.self, name: "bcrypt")
         try addConfigurable(cipher: CryptoCipher.self, name: "crypto")
         addConfigurable(cache: MemoryCache(), name: "memory")
-        addConfigurable(middleware: SessionsMiddleware(sessions: MemorySessions()), name: "sessions")
+        addConfigurable(middleware: SessionsMiddleware(MemorySessions()), name: "sessions")
         addConfigurable(middleware: DateMiddleware(), name: "date")
         addConfigurable(middleware: TypeSafeErrorMiddleware(), name: "type-safe")
         addConfigurable(middleware: ValidationMiddleware(), name: "validation")
@@ -241,7 +241,7 @@ public class Droplet {
             // if no configuration has been supplied
             // apply all middleware
             middleware = [
-                SessionsMiddleware(sessions: MemorySessions()),
+                SessionsMiddleware(MemorySessions()),
                 DateMiddleware(),
                 TypeSafeErrorMiddleware(),
                 ValidationMiddleware(),

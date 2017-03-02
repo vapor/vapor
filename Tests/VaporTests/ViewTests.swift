@@ -39,7 +39,7 @@ class ViewTests: XCTestCase {
     }
     
     func testViewRequest() throws {
-        let drop = Droplet()
+        let drop = try Droplet()
         
         let request = Request(method: .get, path: "/foopath")
         
@@ -58,7 +58,7 @@ class ViewTests: XCTestCase {
             }
             
             func make(_ path: String, _ context: Node) throws -> View {
-                return View(data: "\(context)".bytes)
+                return View(data: "\(context)".makeBytes())
               
             }
         }
@@ -71,13 +71,5 @@ class ViewTests: XCTestCase {
         XCTAssert(string.contains("Vapor"))
         XCTAssert(string.contains("foopath"))
         XCTAssert(string.contains("foobar"))
-    }
-
-    func testLeafRenderer() throws {
-        var directory = #file.components(separatedBy: "/")
-        let file = directory.removeLast()
-        let renderer = LeafRenderer(viewsDir: directory.joined(separator: "/"))
-        let result = try renderer.make(file, [])
-        XCTAssert(result.data.string.contains("meta string"))
     }
 }

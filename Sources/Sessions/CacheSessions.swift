@@ -4,7 +4,7 @@ import Node
 
 public final class CacheSessions: SessionsProtocol {
     public let cache: CacheProtocol
-    public init(cache: CacheProtocol) {
+    public init(_ cache: CacheProtocol) {
         self.cache = cache
     }
 
@@ -25,7 +25,7 @@ public final class CacheSessions: SessionsProtocol {
         
     }
 
-    public func makeIdentifier() -> String {
+    public func makeIdentifier() throws -> String {
         return CryptoRandom.bytes(16).base64Encoded.string
     }
 }
