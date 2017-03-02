@@ -63,9 +63,9 @@ extension FileManager {
     Drop JSON suffix for names
 */
 extension String {
-    private static let jsonSuffixCount = ".json".bytes.count
+    private static let jsonSuffixCount = ".json".makeBytes().count
     fileprivate mutating func removedJSONSuffix() {
         guard hasSuffix(".json") else { return }
-        self = self.bytes.dropLast(String.jsonSuffixCount).string
+        self = self.makeBytes().dropLast(String.jsonSuffixCount).string
     }
 }

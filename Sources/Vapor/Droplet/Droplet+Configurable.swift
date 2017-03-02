@@ -46,16 +46,12 @@ extension Droplet {
         }
     }
 
-    public func addConfigurable<L: LogProtocol & ConfigInitializable>(log: L.Type, name: String) {
-        do {
-            if config["droplet", "log"]?.string == name {
-                self.log = try log.init(config: config)
-                self.log.debug("Using log '\(name)'.")
-            } else {
-                self.log.debug("Not using log '\(name)'.")
-            }
-        } catch {
-            self.log.warning("Could not configure log '\(name)': \(error)")
+    public func addConfigurable<L: LogProtocol & ConfigInitializable>(log: L.Type, name: String) throws {
+        if config["droplet", "log"]?.string == name {
+            self.log = try log.init(config: config)
+            self.log.debug("Using log '\(name)'.")
+        } else {
+            self.log.debug("Not using log '\(name)'.")
         }
     }
 }
@@ -72,16 +68,12 @@ extension Droplet {
         }
     }
 
-    public func addConfigurable<H: HashProtocol & ConfigInitializable>(hash: H.Type, name: String) {
-        do {
-            if config["droplet", "hash"]?.string == name {
-                self.hash = try hash.init(config: config)
-                log.debug("Using hash '\(name)'.")
-            } else {
-                log.debug("Not using hash '\(name)'.")
-            }
-        } catch {
-            log.warning("Could not configure hash '\(name)': \(error)")
+    public func addConfigurable<H: HashProtocol & ConfigInitializable>(hash: H.Type, name: String) throws {
+        if config["droplet", "hash"]?.string == name {
+            self.hash = try hash.init(config: config)
+            log.debug("Using hash '\(name)'.")
+        } else {
+            log.debug("Not using hash '\(name)'.")
         }
     }
 }
@@ -98,16 +90,12 @@ extension Droplet {
         }
     }
 
-    public func addConfigurable<C: CipherProtocol & ConfigInitializable>(cipher: C.Type, name: String) {
-        do {
-            if config["droplet", "cipher"]?.string == name {
-                self.cipher = try cipher.init(config: config)
-                log.debug("Using cipher '\(name)'.")
-            } else {
-                log.debug("Not using cipher '\(name)'.")
-            }
-        } catch {
-            log.warning("Could not configure cipher '\(name)': \(error)")
+    public func addConfigurable<C: CipherProtocol & ConfigInitializable>(cipher: C.Type, name: String) throws {
+        if config["droplet", "cipher"]?.string == name {
+            self.cipher = try cipher.init(config: config)
+            log.debug("Using cipher '\(name)'.")
+        } else {
+            log.debug("Not using cipher '\(name)'.")
         }
     }
 }
@@ -120,12 +108,6 @@ extension Droplet {
     public func addConfigurable(middleware: Middleware, name: String) {
         if config["droplet", "middleware", "server"]?.array?.flatMap({ $0.string }).contains(name) == true {
             self.middleware.append(middleware)
-
-            log.debug("Using server middleware '\(name)'.")
-        } else if config["middleware", "server"]?.array?.flatMap({ $0.string }).contains(name) == true {
-            self.middleware.append(middleware)
-
-            log.warning("[DEPRECATED] Key `server` in `middleware.json` will be removed in a future update. Use key `middleware.server` in `droplet.json`.")
             log.debug("Using server middleware '\(name)'.")
         } else {
             log.debug("Not using server middleware '\(name)'.")
@@ -134,13 +116,6 @@ extension Droplet {
         if config["droplet", "middleware", "client"]?.array?.flatMap({ $0.string }).contains(name) == true {
             let cm = self.client.defaultMiddleware
             self.client.defaultMiddleware = cm + [middleware]
-
-            log.debug("Using client middleware '\(name)'.")
-        } else if config["middleware", "client"]?.array?.flatMap({ $0.string }).contains(name) == true {
-            let cm = self.client.defaultMiddleware // FIXME: Weird Swift 3 BAD_ACCESS crash if not like this
-            self.client.defaultMiddleware = cm + [middleware]
-
-            log.warning("[DEPRECATED] Key `client` in `middleware.json` will be removed in a future update. Use key `middleware.client` in `droplet.json`.")
             log.debug("Using client middleware '\(name)'.")
         } else {
             log.debug("Not using client middleware '\(name)'.")
@@ -162,16 +137,36 @@ extension Droplet {
         }
     }
 
-    public func addConfigurable<C: ConsoleProtocol & ConfigInitializable>(console: C.Type, name: String) {
-        do {
-            if config["droplet", "console"]?.string == name {
-                self.console = try console.init(config: config)
-                log.debug("Using console '\(name)'.")
-            } else {
-                log.debug("Not using console '\(name)'.")
-            }
-        } catch {
-            log.warning("Could not configure console  '\(name)': \(error)")
+    public func addConfigurable<C: ConsoleProtocol & ConfigInitializable>(console: C.Type, name: String) throws {
+        if config["droplet", "console"]?.string == name {
+            self.console = try console.init(config: config)
+            log.debug("Using console '\(name)'.")
+        } else {
+            log.debug("Not using console '\(name)'.")
+        }
+    }
+}
+
+// MARK: Cache
+
+import Cache
+
+extension Droplet {
+    public func addConfigurable(cache: CacheProtocol, name: String) {
+        if config["droplet", "cache"]?.string == name {
+            self.cache = cache
+            log.debug("Using cache '\(name)'.")
+        } else {
+            log.debug("Not using cache '\(name)'.")
+        }
+    }
+
+    public func addConfigurable<C: CacheProtocol & ConfigInitializable>(cache: C.Type, name: String) throws {
+        if config["droplet", "cache"]?.string == name {
+            self.cache = try cache.init(config: config)
+            log.debug("Using cache '\(name)'.")
+        } else {
+            log.debug("Not using cache '\(name)'.")
         }
     }
 }

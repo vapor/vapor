@@ -1,7 +1,6 @@
 import Vapor
-import Fluent
 
-final class User: Model {
+final class User: StringInitializable, NodeConvertible {
     var id: Node?
     var name: String
 
@@ -19,14 +18,11 @@ final class User: Model {
     }
 
     init(node: Node, in context: Context) throws {
-        self.id = try node.extract("id")
-        self.name = try node.extract("name")
+        self.id = try node.get("id")
+        self.name = try node.get("name")
     }
 
-    func makeNode(context: Context) throws -> Node {
+    func makeNode(in context: Context) throws -> Node {
         return try  Node(node:["name": name])
     }
-
-    static func prepare(_ db: Database) throws { }
-    static func revert(_ db: Database) throws { }
 }

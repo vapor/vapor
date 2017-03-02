@@ -42,12 +42,12 @@ extension CipherProtocol {
     }
 
     public func encrypt(_ string: String, key: Bytes? = nil, encoding: CipherEncoding = .base64) throws -> String {
-        let m = try encrypt(string.bytes, key: key)
+        let m = try encrypt(string.makeBytes(), key: key)
         switch encoding {
         case .hex:
             return m.hexString
         case .base64:
-            return m.base64String
+            return m.base64Encoded.string
         }
     }
 }

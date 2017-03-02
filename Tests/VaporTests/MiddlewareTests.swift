@@ -20,7 +20,7 @@ class MiddlewareTests: XCTestCase {
             ]
         ])
 
-        let drop = Droplet(config: config)
+        let drop = try Droplet(config: config)
         drop.get { _ in
             return "Hello, world"
         }
@@ -32,15 +32,10 @@ class MiddlewareTests: XCTestCase {
     }
 
     func testConfigDateMissing() throws {
-        let config = Config([
-            "middleware": [
-                "server": [
-                    "abort"
-                ]
-            ]
-        ])
+        var config = Config([:])
+        try config.set("droplet.middleware.server", ["abort"])
 
-        let drop = Droplet(config: config)
+        let drop = try Droplet(config: config)
         drop.get { _ in
             return "Hello, world"
         }
@@ -52,7 +47,7 @@ class MiddlewareTests: XCTestCase {
     }
 
     func testConfigDateProvided() throws {
-        let drop = Droplet()
+        let drop = try Droplet()
         drop.middleware.append(FooMiddleware())
 
         drop.get { _ in
@@ -66,7 +61,7 @@ class MiddlewareTests: XCTestCase {
     }
 
     func testMultiple() throws {
-        let drop = Droplet()
+        let drop = try Droplet()
 
         drop.middleware = [
             FooMiddleware(),
@@ -85,15 +80,10 @@ class MiddlewareTests: XCTestCase {
     }
 
     func testConfigClient() throws {
-        let config = Config([
-            "middleware": [
-                "client": [
-                    "foo"
-                ]
-            ]
-        ])
+        var config = Config([:])
+        try config.set("droplet.middleware.client", ["foo"])
 
-        let drop = Droplet(config: config)
+        let drop = try Droplet(config: config)
         drop.addConfigurable(middleware: FooMiddleware(), name: "foo")
 
         let res = try drop.client.get("http://httpbin.org/headers")
@@ -109,7 +99,7 @@ class MiddlewareTests: XCTestCase {
     }
 
     func testConfigClientNotEnabled() throws {
-        let drop = Droplet()
+        let drop = try Droplet()
 
         drop.client.defaultMiddleware = []
         drop.middleware.append(FooMiddleware())
@@ -122,7 +112,7 @@ class MiddlewareTests: XCTestCase {
     }
 
     func testConfigClientManual() throws {
-        let drop = Droplet()
+        let drop = try Droplet()
         drop.client.defaultMiddleware = [FooMiddleware()]
 
 
@@ -130,49 +120,8 @@ class MiddlewareTests: XCTestCase {
         XCTAssert(res.headers["bar"] != nil)
     }
 
-    func testAbortMiddleware() throws {
-        let drop = Droplet()
-
-        drop.middleware = [AbortMiddleware()]
-
-        drop.get("*") { req in
-            let path = req.uri.path
-            print(path)
-            switch path {
-            case "bad":
-                throw Abort.badRequest
-            case "notFound":
-                throw Abort.notFound
-            case "server":
-                throw Abort.serverError
-            default:
-                throw Abort.custom(status: Status(statusCode: 42), message: path)
-            }
-        }
-
-        let expectations: [(path: String, expectation: Status)] = [
-            ("bad", .badRequest),
-            ("notFound", .notFound),
-            ("server", .internalServerError),
-            ("custom", Status(statusCode: 42))
-        ]
-
-        try expectations.forEach { path, expectation in
-            let request = Request(method: .get, path: path)
-            let result = try drop.respond(to: request)
-            XCTAssertEqual(result.status, expectation)
-        }
-
-
-        let request = Request(method: .get, path: "Custom Message")
-        request.headers["Accept"] = "html"
-        let result = try drop.respond(to: request)
-        XCTAssertEqual(result.body.bytes?.string.contains("Custom Message"), true)
-    }
-
-
     func testValidationMiddleware() throws {
-        let drop = Droplet()
+        let drop = try Droplet()
 
         drop.middleware.append(ValidationMiddleware())
         

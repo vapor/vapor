@@ -8,6 +8,7 @@ class SessionsProtocolTests: XCTestCase {
     static let allTests = [
         ("testMemory", testMemory),
         ("testCache", testCache),
+        ("testCacheObject", testCacheObject),
     ]
 
     func testMemory() throws {
@@ -37,4 +38,17 @@ class SessionsProtocolTests: XCTestCase {
         XCTAssertNil(try s.get(identifier: id))
     }
     
+    func testCacheObject() throws {
+        let m = MemoryCache()
+        let s = CacheSessions(cache: m)
+        let id = s.makeIdentifier()
+        
+        XCTAssertNil(try s.get(for: id))
+        
+        try s.set(Node(["foo": "bar"]), for: id)
+        XCTAssertEqual(try s.get(for: id)?.node["foo"]?.string, "bar")
+        
+        try s.destroy(id)
+        XCTAssertNil(try s.get(for: id))
+    }
 }

@@ -8,8 +8,8 @@ class CipherTests: XCTestCase {
     ]
 
     func testCipher() throws {
-        let key = "passwordpasswordpasswordpassword".bytes
-        let cipher = CryptoCipher(method: .chacha20, defaultKey: key, defaultIV: "password".bytes)
+        let key = "passwordpasswordpasswordpassword".makeBytes()
+        let cipher = CryptoCipher(method: .chacha20, defaultKey: key, defaultIV: "password".makeBytes())
 
         let secret = "vapor"
 
@@ -30,10 +30,13 @@ class CipherTests: XCTestCase {
                     "key": "passwordpassword",
                     "method": "aes128"
                 ]
+            ],
+            "droplet": [
+                "cipher": "crypto"
             ]
         ])
 
-        let drop = Droplet(config: config)
+        let drop = try Droplet(config: config)
 
         let secret = "vapor"
         let e = try drop.cipher.encrypt(secret)

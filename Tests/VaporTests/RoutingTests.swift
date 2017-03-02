@@ -9,7 +9,7 @@ class RoutingTests: XCTestCase {
     ]
 
     func testMiddlewareMethod() throws {
-        let drop = Droplet()
+        let drop = try Droplet()
         drop.group(TestMiddleware()) { test in
             test.get("foo") { req in
                 return "get"

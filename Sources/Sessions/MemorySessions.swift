@@ -1,6 +1,7 @@
 import Core
 import Random
 import Node
+import Foundation
 
 /**
     The `MemorySessionDriver` stores session data
@@ -9,7 +10,7 @@ import Node
 */
 public class MemorySessions: SessionsProtocol {
     var sessions: [String: Session]
-    private var sessionsLock = Lock()
+    private var sessionsLock = NSLock()
 
     public init() {
         sessions = [:]
@@ -49,7 +50,7 @@ public class MemorySessions: SessionsProtocol {
     /**
         Create new unique session id
     */
-    public func makeIdentifier() -> String {
-        return CryptoRandom.bytes(16).base64String
+    public func makeIdentifier() throws -> String {
+        return try CryptoRandom.bytes(count: 16).base64Encoded.string
     }
 }

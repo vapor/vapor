@@ -1,5 +1,4 @@
 import XCTest
-import Leaf
 import Core
 @testable import Vapor
 import HTTP
@@ -10,11 +9,12 @@ class ViewTests: XCTestCase {
         ("testBasic", testBasic),
         ("testViewBytes", testViewBytes),
         ("testViewResponse", testViewResponse),
+        ("testViewRequest", testViewRequest)
     ]
 
     func testBasic() throws {
         let r = TestRenderer(viewsDir: "ferret")
-        r.views["foo"] = "42".bytes
+        r.views["foo"] = "42".makeBytes()
 
         let view = try r.make("foo")
         XCTAssertEqual(view.data.string, "42")
@@ -25,13 +25,13 @@ class ViewTests: XCTestCase {
     }
 
     func testViewBytes() throws {
-        let view = try View(bytes: "42".bytes)
-        XCTAssertEqual(try view.makeBytes(), "42".bytes)
+        let view = try View(bytes: "42".makeBytes())
+        XCTAssertEqual(try view.makeBytes(), "42".makeBytes())
     }
 
 
     func testViewResponse() throws {
-        let view = try View(bytes: "42 🚀".bytes)
+        let view = try View(bytes: "42 🚀".makeBytes())
         let response = view.makeResponse()
 
         XCTAssertEqual(response.headers["content-type"], "text/html; charset=utf-8")
@@ -59,9 +59,10 @@ class ViewTests: XCTestCase {
             
             func make(_ path: String, _ context: Node) throws -> View {
                 return View(data: "\(context)".bytes)
+              
             }
         }
-        
+
         drop.view = TestRenderer(viewsDir: "")
         
         let view = try drop.view.make("test-template", for: request)

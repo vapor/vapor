@@ -12,7 +12,7 @@ extension Int: RequestContentSubscript {}
 */
 public final class Content {
 
-    public typealias ContentLoader = ([PathIndex]) -> Polymorphic?
+    public typealias ContentLoader = ([PathIndexer]) -> Polymorphic?
 
     // MARK: Initialization
 
@@ -39,11 +39,11 @@ public final class Content {
 
     // MARK: Subscripting
 
-    public subscript(indexes: PathIndex...) -> Polymorphic? {
+    public subscript(indexes: PathIndexer...) -> Polymorphic? {
         return self[indexes]
     }
 
-    public subscript(indexes: [PathIndex]) -> Polymorphic? {
+    public subscript(indexes: [PathIndexer]) -> Polymorphic? {
         return content.lazy.flatMap { loader in loader(indexes) } .first
     }
 }

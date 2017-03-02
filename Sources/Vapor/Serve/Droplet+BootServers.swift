@@ -96,7 +96,7 @@ extension Droplet {
         let info = message.joined(separator: " ")
 
         if runInBackground {
-            _ = try background { [weak self] in
+            background { [weak self] in
                 guard let welf = self else {
                     return
                 }
@@ -149,7 +149,7 @@ extension Droplet {
                 }
 
                 let host = config["servers", name, "host"]?.string ?? "0.0.0.0"
-                let port = config["servers", name, "port"]?.int ?? 8080
+                let port = config["servers", name, "port"]?.int ?? cliPort(arguments: arguments) ?? 8080
 
                 servers[name] = (host, port, securityLayer)
             }
@@ -157,8 +157,9 @@ extension Droplet {
             return servers
         } else {
             log.debug("No 'servers.json' configuration found, using defaults.")
+            let port = cliPort(arguments: arguments) ?? 8080
             return [
-                "default": ("0.0.0.0", 8080, .none)
+                "default": ("0.0.0.0", port, .none)
             ]
         }
     }
@@ -186,3 +187,10 @@ extension Droplet {
     }
 }
 
+
+/**
+    To support old form quick port setting through config.
+*/
+func cliPort(arguments: [String]) -> Int? {
+    return arguments.value(for: "port")?.int
+}

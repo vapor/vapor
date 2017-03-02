@@ -4,7 +4,7 @@ People have built some awesome things with Vapor, and we can't wait to see what 
 
 * [PDX Cocoaheads Website](#pdx-cocoaheads) - The pdx cocoaheads.com site
 * [Vapor Chat](#vapor-chat) - realtime chat site / iOS app
-* [Qutheory.io](#qutheory.io) - the official Vapor site
+* [Qutheory.io](#qutheoryio) - the official Vapor site
 * [Byte Fish](#byte-fish) - url shortener
 * [Vapor Dashboard](#vapor-dashboard) - realtime Vapor stats
 * [Starred Search](#starred-search) - search the readme files of starred github repos
@@ -14,6 +14,8 @@ People have built some awesome things with Vapor, and we can't wait to see what 
 * [SwiftyBeaver](#vapor-example) - the website of SwiftyBeaver
 * [Loyalty Backend](#loyalty-backend-sample) - simple loyalty backend system
 * [SwiftyBot](#swiftybot) - a simple Telegram bot
+* [TinyFaces](#tinyfaces) - an api with random avatars that can be used by designers in their designs
+* [Geobot](#geobot) - a simple chat bot built using Wit.ai and Vapor
 
 # PDX Cocoaheads
 
@@ -163,10 +165,32 @@ Swift Vapor backend solution which won the 1st [appculture](https://github.com/a
 
 # SwiftyBot
 
-A simple Telegram bot powered by Vapor.
+A simple Telegram & Facebook Messenger bot powered by Vapor.
 
 ### GitHub
 [Source](https://github.com/FabrizioBrancati/SwiftyBot)
 
 ### Site
-[Demo](https://telegram.me/SwiftyBot)
+[Telegram Demo](https://telegram.me/SwiftyBot)
+
+[Facebook Messenger Demo](http://m.me/SwiftyBotMessenger)
+
+# TinyFaces
+
+An api with random avatars that can be used by designers in their designs.
+
+### GitHub
+[Source](https://github.com/maximedegreve/TinyFaces)
+
+### Site
+[Demo](https://tinyfac.es)
+
+# Geobot
+
+A simple [Wit.ai](https://wit.ai) chat bot powered by Vapor.
+
+### GitHub
+[Source](https://github.com/vadymmarkov/geobot)
+
+### Site
+[Demo](https://geobot-swift.herokuapp.com)
