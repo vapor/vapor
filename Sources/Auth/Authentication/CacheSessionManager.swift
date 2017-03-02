@@ -26,6 +26,7 @@ public final class CacheSessionManager: SessionManager {
         Creates a session for a given Subject object and returns the identifier.
     */
     public func createSession(account: Account) -> String {
+        // FIXME: version 2.0 will throw
         let identifier = try! CryptoRandom.bytes(count: 16).base64Encoded.string
         try? cache.set(identifier, account.uniqueID)
         return identifier
