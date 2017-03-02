@@ -15,13 +15,13 @@ class SessionsProtocolTests: XCTestCase {
         let s = MemorySessions()
         let id = s.makeIdentifier()
 
-        XCTAssertNil(s.get(for: id))
+        XCTAssertNil(s.get(identifier: id))
 
-        s.set(Node("bar"), for: id)
-        XCTAssertEqual(s.get(for: id)?.string, "bar")
+        s.set(Session(identifier: id, data: Node("bar")))
+        XCTAssertEqual(s.get(identifier: id)?.data.string, "bar")
 
-        s.destroy(id)
-        XCTAssertNil(s.get(for: id))
+        try s.destroy(identifier: id)
+        XCTAssertNil(s.get(identifier: id))
     }
 
     func testCache() throws {
@@ -29,13 +29,13 @@ class SessionsProtocolTests: XCTestCase {
         let s = CacheSessions(cache: m)
         let id = s.makeIdentifier()
 
-        XCTAssertNil(try s.get(for: id))
+        XCTAssertNil(try s.get(identifier: id))
 
-        try s.set(Node("bar"), for: id)
-        XCTAssertEqual(try s.get(for: id)?.string, "bar")
+        try s.set(Session(identifier: id, data: Node("bar")))
+        XCTAssertEqual(try s.get(identifier: id)?.data.string, "bar")
 
-        try s.destroy(id)
-        XCTAssertNil(try s.get(for: id))
+        try s.destroy(identifier: id)
+        XCTAssertNil(try s.get(identifier: id))
     }
     
     func testCacheObject() throws {
