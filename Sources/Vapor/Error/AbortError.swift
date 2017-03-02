@@ -11,3 +11,19 @@ public protocol AbortError: Swift.Error {
     /// `Optional` metadata.
     var metadata: Node? { get }
 }
+
+// MARK: Optional
+
+extension AbortError {
+    public var metadata: Node? {
+        return nil
+    }
+}
+
+// MARK: Conformances
+
+extension HTTP.Status: AbortError {
+    public var status: Status {
+        return self
+    }
+}
