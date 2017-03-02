@@ -41,6 +41,7 @@ public class MemorySessions: SessionsProtocol {
         Create new unique session id
     */
     public func makeIdentifier() -> String {
+        // FIXME: version 2.0 will throw
         return try! CryptoRandom.bytes(count: 16).base64Encoded.string
     }
 
