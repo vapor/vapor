@@ -74,15 +74,18 @@ extension Droplet: Responder {
             } else {
                 var json = JSON([:])
                 try json.set("error", true)
-                if environment == .production {
-                    try json.set("reason", status.reasonPhrase)
+                if let abort = error as? AbortError {
+                    try json.set("reason", abort.reason)
                 } else {
+                    try json.set("reason", status.reasonPhrase)
+                }
+
+                if environment != .production {
                     if let abort = error as? AbortError {
-                        try json.set("reason", abort.status.reasonPhrase)
                         try json.set("metadata", abort.metadata)
                     }
                     if let debug = error as? Debuggable {
-                        try json.set("reason", debug.reason)
+                        try json.set("debugReason", debug.reason)
                         try json.set("identifier", debug.fullIdentifier)
                         if !debug.possibleCauses.isEmpty {
                             try json.set("possibleCauses", debug.possibleCauses)
@@ -101,6 +104,7 @@ extension Droplet: Responder {
                         }
                     }
                 }
+
                 let response = Response(status: status)
                 response.json = json
                 return response

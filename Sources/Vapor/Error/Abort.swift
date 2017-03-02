@@ -13,12 +13,8 @@ public struct Abort: AbortError, Debuggable {
     /// See Debuggable.readableName
     public static let readableName = "Abort request error"
 
-    /// See Debuggable.reason
-    /// - Warning: This string will be
-    /// displayed in production mode.
-    public var reason: String {
-        return status.reasonPhrase
-    }
+    /// See AbortError.reason
+    public var reason: String
 
     /// See Debuggable.identifier
     public let identifier: String
@@ -51,15 +47,9 @@ public struct Abort: AbortError, Debuggable {
         stackOverflowQuestions: [String]? = nil,
         gitHubIssues: [String]? = nil
     ) {
-        if let reason = reason {
-            self.status = Status.other(
-                statusCode: status.statusCode,
-                reasonPhrase: reason
-            )
-        } else {
-            self.status = status
-        }
+        self.status = status
         self.metadata = metadata
+        self.reason = reason ?? status.reasonPhrase
         self.identifier = identifier ?? "\(status)"
         self.possibleCauses = possibleCauses ?? []
         self.suggestedFixes = suggestedFixes ?? []
