@@ -13,7 +13,7 @@ public struct Abort: AbortError, Debuggable {
     /// See Debuggable.readableName
     public static let readableName = "Abort request error"
 
-    /// See Debuggable.reason
+    /// See AbortError.reason
     public let reason: String
 
     /// See Debuggable.identifier
