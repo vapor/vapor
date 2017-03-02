@@ -9,7 +9,7 @@ import Foundation
     data will be purged if the server is restarted.
 */
 public class MemorySessions: SessionsProtocol {
-    var sessions: [String: Node]
+    var sessions: [String: Session]
     private var sessionsLock = NSLock()
 
     public init() {
@@ -19,38 +19,38 @@ public class MemorySessions: SessionsProtocol {
     /**
         Loads value for session id at given key
     */
-    public func get(for identifier: String) -> Node? {
-        var value: Node?
+    public func get(identifier: String) -> Session? {
+        var session: Session?
 
         sessionsLock.locked {
-            value = sessions[identifier]
+            session = sessions[identifier]
         }
 
-        return value
+        return session
     }
 
     /**
         Sets value for session id at given key
     */
-    public func set(_ value: Node?, for identifier: String) {
+    public func set(_ session: Session) {
         sessionsLock.locked {
-            sessions[identifier] = value
+            sessions[session.identifier] = session
+        }
+    }
+    
+    /**
+         Destroys session with associated identifier
+    */
+    public func destroy(identifier: String) throws {
+        sessionsLock.locked {
+            sessions[identifier] = nil
         }
     }
 
     /**
         Create new unique session id
     */
-    public func makeIdentifier() -> String {
-        return CryptoRandom.bytes(16).base64Encoded.string
-    }
-
-    /**
-        Destroys session with associated identifier
-    */
-    public func destroy(_ identifier: String) {
-        sessionsLock.locked {
-            sessions[identifier] = nil
-        }
+    public func makeIdentifier() throws -> String {
+        return try CryptoRandom.bytes(count: 16).base64Encoded.string
     }
 }

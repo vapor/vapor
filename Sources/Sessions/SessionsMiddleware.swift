@@ -21,20 +21,27 @@ public final class SessionsMiddleware: Middleware {
 
     public func respond(to request: Request, chainingTo chain: Responder) throws -> Response {
 
-        let session = Session(sessions: sessions)
+        let s: Session
+        
         if
             let identifier = request.cookies[cookieName],
-            try sessions.contains(identifier)
+            let session = try sessions.get(identifier: identifier)
         {
-            session.identifier = identifier
+            s = session
+        } else {
+            s = Session(identifier: sessions.makeIdentifier())
         }
+        
+        request.storage["session"] = s
 
-        request.storage["session"] = session
 
         let response = try chain.respond(to: request)
 
-        if let identifier = session.identifier {
-            response.cookies[cookieName] = identifier
+        if s.shouldDestroy {
+            try sessions.destroy(identifier: s.identifier)
+        } else {
+            response.cookies[cookieName] = s.identifier
+            try sessions.set(s)
         }
 
         return response
