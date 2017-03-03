@@ -6,7 +6,7 @@ public struct Config: StructuredDataWrapper {
 
     public init(_ wrapped: StructuredData, in context: Context?) {
         self.wrapped = wrapped.hydratedEnv() ?? StructuredData([:])
-        self.context = context ?? [String:Int]()
+        self.context = context ?? emptyContext
     }
 
     public init(prioritized: [Source]) throws {

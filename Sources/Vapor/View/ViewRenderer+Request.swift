@@ -51,8 +51,8 @@ extension ViewRenderer {
     public func make(_ path: String, _ context: [String: NodeRepresentable], for request: Request) throws -> View {
         var context = context
         
-        context["request"] = try request.makeNode(in: context)
+        context["request"] = try request.makeNode(in: nil)
         
-        return try make(path, try context.makeNode(in: context))
+        return try make(path, try context.makeNode(in: nil))
     }
 }
