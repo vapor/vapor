@@ -24,7 +24,7 @@ public class Localization {
             
             // Read the
             let data = try DataFile().load(path: path)
-            localizations[name.lowercased()] = try JSON(bytes: data).makeNode()
+            localizations[name.lowercased()] = try JSON(bytes: data).converted()
         }
         
         self.init(localizations: localizations)

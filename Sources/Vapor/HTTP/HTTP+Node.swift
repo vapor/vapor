@@ -14,7 +14,7 @@ extension Request: NodeRepresentable {
             - Version
             - URI
     */
-    public func makeNode(in context: Context) throws -> Node {
+    public func makeNode(in context: Context?) throws -> Node {
         var nodeStorage: [String: Node] = [:]
         
         for (key, val) in storage {
@@ -22,14 +22,14 @@ extension Request: NodeRepresentable {
                 nodeStorage[key] = try node.makeNode(in: context)
             }
         }
-        
-        return try Node(node: [
-            "session": try session().makeNode(in: context),
-            "storage": Node.object(nodeStorage),
-            "method": method.description,
-            "version": version.makeNode(in: context),
-            "uri": uri.makeNode(in: context)
-        ])
+
+        var node = Node(context)
+        try node.set("session", try session())
+        try node.set("storage", nodeStorage)
+        try node.set("method", method.description)
+        try node.set("version", version)
+        try node.set("uri", uri)
+        return node
     }
 }
 
@@ -41,11 +41,11 @@ extension Session: NodeRepresentable {
             - Data
             - Identifier
     */
-    public func makeNode(in context: Context) throws -> Node {
-        return try Node(node: [
-            "data": data,
-            "identifier": identifier
-        ])
+    public func makeNode(in context: Context? = nil) throws -> Node {
+        var node = Node(context)
+        try node.set("data", data)
+        try node.set("identifier", identifier)
+        return node
     }
 }
 
@@ -58,12 +58,12 @@ extension Version: NodeRepresentable {
             - Minor
             - Patch
     */
-    public func makeNode(in context: Context) throws -> Node {
-        return try Node(node: [
-            "major": major,
-            "minor": minor,
-            "patch": patch
-        ])
+    public func makeNode(in context: Context?) throws -> Node {
+        var node = Node(context)
+        try node.set("major", major)
+        try node.set("minor", minor)
+        try node.set("patch", patch)
+        return node
     }
 }
 
@@ -76,11 +76,11 @@ extension URI: NodeRepresentable {
             - Host
             - Scheme
     */
-    public func makeNode(in context: Context) throws -> Node {
-        return try Node(node: [
-            "path": path,
-            "host": host,
-            "scheme": scheme
-        ])
+    public func makeNode(in context: Context?) throws -> Node {
+        var node = Node(context)
+        try node.set("path", path)
+        try node.set("host", host)
+        try node.set("scheme", scheme)
+        return node
     }
 }

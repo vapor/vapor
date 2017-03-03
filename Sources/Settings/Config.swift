@@ -1,14 +1,17 @@
 @_exported import Node
 
-public struct Config: NodeBacked {
-    public var node: Node
+public struct Config: StructuredDataWrapper {
+    public var wrapped: StructuredData
+    public let context: Context
 
-    public init(_ node: Node) {
-        self.node = node.hydratedEnv() ?? node
+    public init(_ wrapped: StructuredData, in context: Context?) {
+        self.wrapped = wrapped.hydratedEnv() ?? StructuredData([:])
+        self.context = context ?? [String:Int]()
     }
 
     public init(prioritized: [Source]) throws {
-        self.node = try Node.makeConfig(prioritized: prioritized)
+        let node = try Node.makeConfig(prioritized: prioritized)
+        self.init(node: node)
     }
 }
 
@@ -65,9 +68,4 @@ extension Source {
             return try Node.makeConfig(directory: root)
         }
     }
-}
-
-extension Config: Equatable {}
-public func == (lhs: Config, rhs: Config) -> Bool {
-    return lhs.node == rhs.node
 }

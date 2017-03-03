@@ -46,7 +46,7 @@ class SessionsProtocolTests: XCTestCase {
         XCTAssertNil(try s.get(for: id))
         
         try s.set(Node(["foo": "bar"]), for: id)
-        XCTAssertEqual(try s.get(for: id)?.node["foo"]?.string, "bar")
+        XCTAssertEqual(try s.get(for: id)?.wrapped["foo"]?.string, "bar")
         
         try s.destroy(id)
         XCTAssertNil(try s.get(for: id))
