@@ -30,6 +30,7 @@ public final class CacheSessions: SessionsProtocol {
     }
 
     public func makeIdentifier() -> String {
-        return CryptoRandom.bytes(16).base64Encoded.string
+        // FIXME: version 2.0 will throw
+        return try! CryptoRandom.bytes(count: 16).base64Encoded.string
     }
 }
