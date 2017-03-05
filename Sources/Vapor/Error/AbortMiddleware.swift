@@ -44,6 +44,8 @@ public class AbortMiddleware: Middleware {
     
     private func errorResponse(_ request: Request, _ error: AbortError) throws -> Response {
         if environment == .production {
+			log.error("Uncaught Error: \(type(of: error)).\(error)")
+			
             let message = error.code < 500 ? error.message : "Something went wrong"
 
             if request.accept.prefers("html") {
