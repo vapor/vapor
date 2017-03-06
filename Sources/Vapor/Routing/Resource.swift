@@ -15,7 +15,7 @@ public final class Resource<Model: StringInitializable> {
     public var destroy: ItemRequest?
     public var clear: SimpleRequest?
     public var aboutItem: ItemRequest?
-    public var aboutSimple: SimpleRequest?
+    public var aboutMultiple: SimpleRequest?
 
     public init(
         index: SimpleRequest? = nil,
@@ -27,7 +27,7 @@ public final class Resource<Model: StringInitializable> {
         destroy: ItemRequest? = nil,
         clear: SimpleRequest? = nil,
         aboutItem: ItemRequest? = nil,
-        aboutSimple: SimpleRequest? = nil
+        aboutMultiple: SimpleRequest? = nil
         ) {
         self.index = index
         self.new = new
@@ -38,8 +38,35 @@ public final class Resource<Model: StringInitializable> {
         self.destroy = destroy
         self.clear = clear
         self.aboutItem = aboutItem
-        self.aboutSimple = aboutSimple
+        self.aboutMultiple = aboutMultiple
     }
+}
+
+public extension Resource {
+
+    @available(*, deprecated: 2.0, message: "Use init(index:new:create:show:replace:update:destroy:clear:aboutItem:aboutMultiple:)")
+    convenience public init(
+        index: SimpleRequest? = nil,
+        store: SimpleRequest?, // default removed to avoid ambiguity
+        show: ItemRequest? = nil,
+        replace: ItemRequest? = nil,
+        modify: ItemRequest? = nil,
+        destroy: ItemRequest? = nil,
+        clear: SimpleRequest? = nil,
+        aboutItem: ItemRequest? = nil,
+        aboutMultiple: SimpleRequest? = nil
+        ){
+        self.init(index: index,
+                  create: store,
+                  show: show,
+                  replace: replace,
+                  update: modify,
+                  destroy: destroy,
+                  clear: clear,
+                  aboutItem: aboutItem,
+                  aboutMultiple: aboutMultiple)
+    }
+
 }
 
 public protocol ResourceRepresentable {
@@ -57,7 +84,7 @@ extension RouteBuilder where Value == Responder {
         var itemMethods: [Method] = []
         var simpleMethods: [Method] = []
 
-		let pathId = path.makeBytes().split(separator: .forwardSlash).joined(separator: [.hyphen]).split(separator: .colon).joined().string + "_id"
+        let pathId = path.makeBytes().split(separator: .forwardSlash).joined(separator: [.hyphen]).split(separator: .colon).joined().string + "_id"
 
         func item(_ method: Method, _ item: Resource<Model>.ItemRequest?) {
             guard let item = item else {
@@ -117,7 +144,7 @@ extension RouteBuilder where Value == Responder {
             }
         }
 
-        if let about = resource.aboutSimple {
+        if let about = resource.aboutMultiple {
             simple(.options, about)
         } else {
             simple(.options) { request in
@@ -135,7 +162,7 @@ extension RouteBuilder where Value == Responder {
         _ type: Model.Type = Model.self,
         closure: (Resource<Model>) -> ()
         ) {
-        let resource = Resource<Model>()
+        let resource = Resource<Model>(new: nil)
         closure(resource)
         self.resource(path, resource)
     }
