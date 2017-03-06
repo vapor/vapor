@@ -30,11 +30,11 @@ extension ViewRenderer {
     }
 
     public func make(_ path: String, _ context: NodeRepresentable) throws -> View {
-        return try make(path, try context.makeNode())
+        return try make(path, try context.makeNode(in: nil))
     }
 
     public func make(_ path: String, _ context: [String: NodeRepresentable]) throws -> View {
-        return try make(path, try context.makeNode())
+        return try make(path, try context.makeNode(in: nil))
     }
 }
 

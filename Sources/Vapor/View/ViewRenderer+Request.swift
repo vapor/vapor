@@ -10,7 +10,7 @@ extension ViewRenderer {
     /// view under the key "request".
     public func make(_ path: String, for request: Request) throws -> View {
         let context = try Node(node: [
-            "request": request.makeNode()
+            "request": request.makeNode(in: nil)
         ])
         return try make(path, context)
     }
@@ -25,11 +25,11 @@ extension ViewRenderer {
     public func make(_ path: String, _ context: NodeRepresentable, for request: Request) throws -> View {
         let node: Node
         
-        if case .object(var nodeObject) = try context.makeNode() {
-            nodeObject["request"] = try request.makeNode()
+        if var nodeObject = try context.makeNode(in: nil).typeObject {
+            nodeObject["request"] = try request.makeNode(in: nil)
             node = Node.object(nodeObject)
         } else {
-            node = try context.makeNode()
+            node = try context.makeNode(in: nil)
         }
         
         return try make(path, node)
@@ -45,9 +45,9 @@ extension ViewRenderer {
     public func make(_ path: String, _ context: [String: NodeRepresentable], for request: Request) throws -> View {
         var context = context
         
-        context["request"] = try request.makeNode()
+        context["request"] = try request.makeNode(in: nil)
         
-        return try make(path, try context.makeNode())
+        return try make(path, try context.makeNode(in: nil))
     }
 }
 
