@@ -43,24 +43,26 @@ class ViewTests: XCTestCase {
         
         let request = Request(method: .get, path: "/foopath")
         
-        let memory = MemorySessions()
-        let sessions = SessionsMiddleware(sessions: memory)
-        drop.middleware.append(sessions)
-        
-        // sets up a session on the request
-        let _ = try drop.respond(to: request)
+        let session = Session(identifier: "abc")
+        request.storage["session"] = session
         
         request.storage["test"] = "foobar"
-        try request.session().data["name"] = "Vapor"
+        
+        session.data = Node.object([
+            "name": "Vapor"
+        ])
         
         final class TestRenderer: ViewRenderer {
-            init(viewsDir: String) { }
+            init(viewsDir: String) {
+                
+            }
             
             func make(_ path: String, _ context: Node) throws -> View {
                 return View(data: "\(context)".makeBytes())
+              
             }
         }
-        
+
         drop.view = TestRenderer(viewsDir: "")
         
         let view = try drop.view.make("test-template", for: request)
