@@ -8,6 +8,7 @@ public class Localization {
 
     /// - localizationDirectory: The directory to load localizations from, usually `workDir + "Localization/"
     /// - default locale, when a default locale is not found, what key should be used to fall back.
+    /// will use `"default"` or `"en"` as default
     public convenience init(localizationDirectory: String, defaultLocale: String? = nil) throws {
         // Finish path with "/"
         let localizationDirectory = localizationDirectory.finished(with: "/")
@@ -29,7 +30,7 @@ public class Localization {
             localizations[name.lowercased()] = try JSON(bytes: data).converted()
         }
         
-        self.init(localizations: localizations)
+        self.init(localizations: localizations, defaultLocale: defaultLocale)
     }
 
     public init(localizations: [String: Node]? = nil, defaultLocale: String? = nil) {
@@ -40,8 +41,10 @@ public class Localization {
             self.defaultDialect = defaultLocale
         } else if localizations.keys.contains("default") {
             self.defaultDialect = "default"
-        } else {
+        } else if localizations.keys.contains("en") {
             self.defaultDialect = "en"
+        } else {
+            self.defaultDialect = localizations.keys.first ?? ""
         }
     }
 
