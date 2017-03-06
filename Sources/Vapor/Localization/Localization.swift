@@ -3,8 +3,8 @@ import Core
 import PathIndexable
 
 public class Localization {
-    private let localizations: [String: Node]
-    private let defaultDialect: String
+    fileprivate let localizations: [String: Node]
+    fileprivate let defaultDialect: String
     
     public convenience init(localizationDirectory: String) throws {
         // Finish path with "/"
@@ -43,5 +43,15 @@ public class Localization {
         return localizations[languageCode.lowercased()]?[paths]?.string  // Index by language
             ?? localizations[defaultDialect]?[paths]?.string // Index the default language
             ?? paths.map { "\($0)" }.joined(separator: ".") // Return the literal path indexed if no translation
+    }
+}
+
+extension Localization: CustomDebugStringConvertible {
+    public var debugDescription: String {
+        var d = ""
+        d += "Localization:\n"
+        d += "Default Dialect: '\(defaultDialect)'\n"
+        d += "Content:\n\(localizations)\n\n"
+        return d
     }
 }

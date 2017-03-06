@@ -15,6 +15,7 @@ class LocalizationTests: XCTestCase {
     lazy var localization: Localization = try! Localization(localizationDirectory: self.workDir + "Localization/")
 
     func testSimple() {
+        print("Localization: \(localization)")
         // Basic language tests
         XCTAssertEqual(localization["en", "welcome", "title"], "Welcome to Vapor!")
         XCTAssertEqual(localization["es", "welcome", "title"], "¡Bienvenidos a Vapor!")
