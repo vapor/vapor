@@ -17,12 +17,12 @@ final class User: StringInitializable, NodeConvertible {
         self.name = name
     }
 
-    init(node: Node, in context: Context) throws {
+    init(node: Node) throws {
         self.id = try node.get("id")
         self.name = try node.get("name")
     }
 
-    func makeNode(in context: Context) throws -> Node {
+    func makeNode(in context: Context?) throws -> Node {
         return try  Node(node:["name": name])
     }
 }

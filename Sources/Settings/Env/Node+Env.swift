@@ -1,4 +1,4 @@
-extension Node {
+extension StructuredData {
     /**
          Anywhere we find a key or value that is a string w/ a leading `$`,
          we will look for it in environment, or treat as `nil`.
@@ -19,14 +19,14 @@ extension Node {
          If `MY_KEY` has value, the node will be `["key": "<value of key>"]
          If `PORT` has NO value, the node will be nil
     */
-    internal func hydratedEnv() -> Node? {
+    internal func hydratedEnv() -> StructuredData? {
         switch self {
         case .null, .number(_), .bool(_), .bytes(_), .date(_):
             return self
         case let .object(ob):
             guard !ob.isEmpty else { return self }
 
-            var mapped = [String: Node]()
+            var mapped = [String: StructuredData]()
             ob.forEach { k, v in
                 guard let k = k.hydratedEnv(), let v = v.hydratedEnv() else { return }
                 mapped[k] = v
@@ -37,7 +37,13 @@ extension Node {
             let mapped = arr.flatMap { $0.hydratedEnv() }
             return .array(mapped)
         case let .string(str):
-            return str.hydratedEnv().flatMap(Node.string)
+            return str.hydratedEnv().flatMap(StructuredData.string)
         }
+    }
+}
+
+extension Node {
+    internal func hydratedEnv() -> Node? {
+        return wrapped.hydratedEnv().flatMap { Node($0, in: context) }
     }
 }

@@ -14,7 +14,7 @@ class ResourceTests: XCTestCase {
         drop.middleware = []
 
         let user = try User(from: "Hi")
-        let node = try user?.makeNode()
+        let node = try user?.makeNode(in: nil)
         XCTAssertEqual(node, .object(["name":"Hi"]))
 
         drop.resource("users", User.self) { users in

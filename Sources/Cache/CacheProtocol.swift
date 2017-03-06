@@ -8,6 +8,6 @@ public protocol CacheProtocol {
 
 extension CacheProtocol {
     public func set(_ key: String, _ value: NodeRepresentable) throws {
-        return try set(key, try value.makeNode())
+        return try set(key, try value.makeNode(in: nil))
     }
 }

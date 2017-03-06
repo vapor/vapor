@@ -75,12 +75,12 @@ class HashTests: XCTestCase {
         let workFactor = 7
         let string = "vapor"
 
-        let config = Config([
+        let config = try Config(node: [
             "droplet": [
                 "hash": "bcrypt"
             ],
             "bcrypt": [
-                "workFactor": Node(workFactor)
+                "workFactor": workFactor
             ]
         ])
         let drop = try Droplet(config: config)

@@ -56,8 +56,8 @@ class ConfigTests: XCTestCase {
             "name": "World"
         ]
 
-        let config: Config = try node.converted()
-        let back: Node = try config.converted()
+        let config: Config = node.converted()
+        let back: Node = config.converted()
         XCTAssertEqual(node, back)
     }
 }
