@@ -5,8 +5,10 @@ import PathIndexable
 public class Localization {
     fileprivate let localizations: [String: Node]
     fileprivate let defaultDialect: String
-    
-    public convenience init(localizationDirectory: String) throws {
+
+    /// - localizationDirectory: The directory to load localizations from, usually `workDir + "Localization/"
+    /// - default locale, when a default locale is not found, what key should be used to fall back.
+    public convenience init(localizationDirectory: String, defaultLocale: String? = nil) throws {
         // Finish path with "/"
         let localizationDirectory = localizationDirectory.finished(with: "/")
         
@@ -31,8 +33,16 @@ public class Localization {
     }
 
     public init(localizations: [String: Node]? = nil, defaultLocale: String? = nil) {
-        self.localizations = localizations ?? [:]
-        self.defaultDialect = defaultLocale ?? localizations?.keys.first ?? "default"
+        let localizations = localizations ?? [:]
+        self.localizations = localizations
+
+        if let defaultLocale = defaultLocale {
+            self.defaultDialect = defaultLocale
+        } else if localizations.keys.contains("default") {
+            self.defaultDialect = "default"
+        } else {
+            self.defaultDialect = "en"
+        }
     }
 
     public subscript(_ languageCode: String, _ paths: PathIndexer...) -> String {
