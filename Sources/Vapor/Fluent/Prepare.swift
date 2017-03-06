@@ -9,6 +9,7 @@ public struct Prepare: Command {
 
     public let signature: [Argument] = [
         Option(name: "revert"),
+        Option(name: "force"),
     ]
 
     public let help: [String] = [
@@ -40,7 +41,7 @@ public struct Prepare: Command {
         }
 
         if arguments.option("revert")?.bool == true {
-            guard console.confirm("Are you sure you want to revert the database?", style: .warning) else {
+            guard arguments.option("force")?.bool == true || console.confirm("Are you sure you want to revert the database?", style: .warning) else {
                 console.error("Reversion cancelled")
                 return
             }
