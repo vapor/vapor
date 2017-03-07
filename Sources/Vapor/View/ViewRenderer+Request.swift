@@ -57,7 +57,7 @@ extension Request {
         
         for (key, val) in storage {
             if let node = val as? NodeRepresentable {
-                nodeStorage[key] = try node.makeNode()
+                nodeStorage[key] = try node.makeNode(in: nil)
             }
         }
         
