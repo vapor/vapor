@@ -3,30 +3,30 @@ import BCrypt
 /// Create BCrypt hashes using the 
 /// vapor/crypto package.
 public final class BCryptHasher: HashProtocol {
-    /// The work factor increases the amount
+    /// The cost factor increases the amount
     /// of work required to create the hash,
     /// increasing its resistance to brute force.
-    public let workFactor: Int
+    public let cost: UInt
 
     /// Create a BCryptHasher using the
     /// specified work factor.
     ///
     /// See BCryptHasher.workFactor
-    public init(workFactor: Int = 10) {
-        self.workFactor = workFactor
+    public init(cost: UInt = Salt.defaultCost) {
+        self.cost = cost
     }
 
     /// See HashProtocol.make
     public func make(_ message: Bytes) throws -> Bytes {
-        let salt = BCryptSalt(cost: workFactor)
-        return BCrypt.hash(password: message.string, salt: salt).makeBytes()
+        let salt = try BCrypt.Salt(cost: cost)
+        return try BCrypt.Hash.make(message: message.string, with: salt)
     }
 
     /// See HashProtocol.check
     public func check(_ message: Bytes, matchesHash digest: Bytes) throws -> Bool {
-        return try BCrypt.verify(
-            password: message.string,
-            matchesHash: digest.string
+        return try BCrypt.Hash.verify(
+            message: message,
+            matches: digest
         )
     }
 }
@@ -36,14 +36,14 @@ public final class BCryptHasher: HashProtocol {
 extension BCryptHasher: ConfigInitializable {
     /// Creates a bcrypt hasher from a Config object
     public convenience init(config: Settings.Config) throws {
-        guard let workFactor = config["bcrypt", "workFactor"]?.int else {
+        guard let cost = config["bcrypt", "cost"]?.uint else {
             throw ConfigError.missing(
-                key: ["workFactor"],
+                key: ["cost"],
                 file: "bcrypt",
-                desiredType: Int.self
+                desiredType: UInt.self
             )
         }
 
-        self.init(workFactor: workFactor)
+        self.init(cost: cost)
     }
 }

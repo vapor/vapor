@@ -1,6 +1,4 @@
-import HMAC
-import Hash
-import Core
+import Crypto
 
 /// Create normal and keyed hashes
 /// using the available HMAC methods from
