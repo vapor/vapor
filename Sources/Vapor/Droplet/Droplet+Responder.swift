@@ -1,5 +1,5 @@
 import HTTP
-import HTTPRouting
+import Routing
 
 extension Droplet: Responder {
     /// Returns a response to the given request
@@ -23,7 +23,8 @@ extension Droplet: Responder {
 
         let routerResponder: Request.Handler = Request.Handler { [weak self] request in
             // Routed handler
-            if let handler = self?.router.route(request, with: request) {
+            // TODO: Should router just respond?
+            if let handler = self?.router.route(request) {
                 return try handler.respond(to: request)
             } else {
                 // Default not found handler
