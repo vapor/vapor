@@ -50,8 +50,11 @@ class ProviderTests: XCTestCase {
         XCTAssertEqual(fast.beforeRunFlag, false)
         XCTAssertEqual(slow.beforeRunFlag, false)
 
-        try drop.runCommands()
+        background {
+            try! drop.runCommands()
+        }
 
+        drop.console.wait(seconds: 1)
         XCTAssertEqual(slow.beforeRunFlag, true)
         XCTAssertEqual(fast.beforeRunFlag, true)
     }
@@ -73,8 +76,8 @@ private final class FastServer: ServerProtocol {
         self.middleware = middleware
     }
 
-    func start(responder: Responder, errors: @escaping ServerErrorHandler) throws {
-
+    func start(responder: Responder, errors: @escaping ServerErrorHandler) throws -> Never {
+        exit(0)
     }
 }
 
@@ -108,8 +111,8 @@ private final class SlowServer: ServerProtocol {
         self.middleware = middleware
     }
 
-    func start(responder: Responder, errors: @escaping ServerErrorHandler) throws {
-
+    func start(responder: Responder, errors: @escaping ServerErrorHandler) throws -> Never {
+        while true {}
     }
 }
 

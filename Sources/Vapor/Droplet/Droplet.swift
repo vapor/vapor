@@ -4,7 +4,7 @@ import Cache
 import Sessions
 import Crypto
 import Transport
-import SocksCore
+import Socks
 
 public let VERSION = "2.0.0-alpha"
 
@@ -91,14 +91,11 @@ public class Droplet {
     /// pair information.
     public var cache: CacheProtocol
 
-    /// Storage to add/manage dependencies, identified by a string
-    public var storage: [String: Any]
-
-    /// The currently running servers
-    public internal(set) var startedServers: [String:ServerProtocol] = [:]
-
     /// The providers that have been added.
     public internal(set) var providers: [Provider]
+
+    /// Storage to add/manage dependencies, identified by a string
+    public var storage: [String: Any]
 
     /// Initialize the Droplet.
     public init(
