@@ -9,8 +9,11 @@ import HTTP
 */
 public class AbortMiddleware: Middleware {
     let environment: Environment
-    public init(environment: Environment = .production) {
+	var log: LogProtocol?
+	
+    public init(environment: Environment = .production, log: LogProtocol? = nil) {
         self.environment = environment
+		self.log = log
     }
 
     /**
