@@ -1,5 +1,4 @@
-import Cipher
-import Core
+import Crypto
 import Foundation
 
 public final class CryptoCipher: CipherProtocol {

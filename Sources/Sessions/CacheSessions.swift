@@ -1,4 +1,4 @@
-import Random
+import Crypto
 import Cache
 import Node
 
@@ -26,6 +26,6 @@ public final class CacheSessions: SessionsProtocol {
     }
 
     public func makeIdentifier() throws -> String {
-        return CryptoRandom.bytes(16).base64Encoded.string
+        return try Crypto.Random.bytes(count: 16).base64Encoded.string
     }
 }

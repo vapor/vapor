@@ -2,8 +2,7 @@ import HTTP
 import Console
 import Cache
 import Sessions
-import HMAC
-import Cipher
+import Crypto
 import Transport
 import SocksCore
 
