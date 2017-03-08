@@ -18,12 +18,9 @@ extension Droplet: Responder {
 
     private func errorResponse(with request: Request, and error: Error) -> Response {
         logError(error)
+        guard !request.accept.prefers("html") else { return view.make(error).makeResponse() }
+
         let status = Status(error)
-
-        if request.accept.prefers("html") {
-            return ErrorView.shared.makeResponse(status, status.reasonPhrase)
-        }
-
         let response = Response(status: status)
         if let json = try? JSON(error, env: environment) {
             response.json = json
@@ -48,7 +45,7 @@ extension Droplet: Responder {
 }
 
 extension Status {
-    fileprivate init(_ error: Error) {
+    internal init(_ error: Error) {
         if let abort = error as? AbortError {
             self = abort.status
         } else {

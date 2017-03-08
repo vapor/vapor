@@ -25,13 +25,13 @@ class ViewTests: XCTestCase {
     }
 
     func testViewBytes() throws {
-        let view = try View(bytes: "42".makeBytes())
-        XCTAssertEqual(try view.makeBytes(), "42".makeBytes())
+        let view = View(bytes: "42".makeBytes())
+        XCTAssertEqual(view.makeBytes(), "42".makeBytes())
     }
 
 
     func testViewResponse() throws {
-        let view = try View(bytes: "42 🚀".makeBytes())
+        let view = View(bytes: "42 🚀".makeBytes())
         let response = view.makeResponse()
 
         XCTAssertEqual(response.headers["content-type"], "text/html; charset=utf-8")
