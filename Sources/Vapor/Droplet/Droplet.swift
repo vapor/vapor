@@ -306,7 +306,7 @@ public class Droplet {
             // apply all middleware
             middleware = [
                 SessionsMiddleware(sessions: MemorySessions()),
-                AbortMiddleware(environment: environment),
+                AbortMiddleware(environment: environment, log: log),
                 DateMiddleware(),
                 TypeSafeErrorMiddleware(),
                 ValidationMiddleware(),
@@ -316,7 +316,7 @@ public class Droplet {
         } else {
             // add all configurable middleware
             addConfigurable(middleware: SessionsMiddleware(sessions: MemorySessions()), name: "sessions")
-            addConfigurable(middleware: AbortMiddleware(environment: environment), name: "abort")
+			addConfigurable(middleware: AbortMiddleware(environment: environment, log: log), name: "abort")
             addConfigurable(middleware: DateMiddleware(), name: "date")
             addConfigurable(middleware: TypeSafeErrorMiddleware(), name: "type-safe")
             addConfigurable(middleware: ValidationMiddleware(), name: "validation")
