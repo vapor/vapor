@@ -4,7 +4,8 @@ import XCTest
 
 class QueryTests: XCTestCase {
     static let allTests = [
-        ("testPercentEncodedValues", testPercentEncodedValues)
+        ("testPercentEncodedValues", testPercentEncodedValues),
+        ("testQueryWithoutParameter", testQueryWithoutParameter),
     ]
     
     func testPercentEncodedValues() {
