@@ -19,7 +19,7 @@ public final class FileMiddleware: Middleware {
     public func respond(to request: Request, chainingTo next: Responder) throws -> Response {
         do {
             return try next.respond(to: request)
-        } catch Abort.notFound {
+        } catch let error as AbortError where error.status == .notFound {
             // Check in file system
             var path = request.uri.path
             if path.hasPrefix("/") {

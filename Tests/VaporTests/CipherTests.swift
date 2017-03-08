@@ -9,17 +9,21 @@ class CipherTests: XCTestCase {
 
     func testCipher() throws {
         let key = "passwordpasswordpasswordpassword".makeBytes()
-        let cipher = CryptoCipher(method: .chacha20, defaultKey: key, defaultIV: "password".makeBytes())
+        let cipher = CryptoCipher(
+            method: .aes256(.cbc), 
+            defaultKey: key, 
+            defaultIV: nil
+        )
 
         let secret = "vapor"
 
         let e = try cipher.encrypt(secret)
-        XCTAssertEqual(e, "huImqu0=")
+        XCTAssertEqual(e, "jrYw6IVVtC7tA5shwPqc4Q==")
         XCTAssertEqual(try cipher.decrypt(e), secret)
 
 
         let eh = try cipher.encrypt(secret, encoding: .hex)
-        XCTAssertEqual(eh, "86e226aaed")
+        XCTAssertEqual(eh, "8eb630e88555b42eed039b21c0fa9ce1")
         XCTAssertEqual(try cipher.decrypt(eh, encoding: .hex), secret)
     }
 

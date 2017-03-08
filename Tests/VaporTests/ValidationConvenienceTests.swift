@@ -25,12 +25,12 @@ class ValidationConvenienceTests: XCTestCase {
 class AlphanumericValidationTests: ValidationConvenienceTests {
     override func testTrue() throws {
         let alphanumeric = "Analphanumericstring"
-        let _ = try alphanumeric.tested(by: OnlyAlphanumeric.self)
+        let _ = try alphanumeric.tested(by: OnlyAlphanumeric())
     }
 
     override func testFalse() throws {
         let not = "I've got all types of characters!"
-        XCTAssertFalse(not.passes(OnlyAlphanumeric.self))
+        XCTAssertFalse(not.passes(OnlyAlphanumeric()))
     }
 }
 
@@ -45,7 +45,7 @@ class CompareValidationTests: ValidationConvenienceTests {
         let _ = try comparable.tested(by: Compare.containedIn(low: 0.0, high: 5.0))
 
         let a = "a"
-        let _ = try a.tested(by: Compare.lessThan("z") && Count.equals(1) && OnlyAlphanumeric.self)
+        let _ = try a.tested(by: Compare.lessThan("z") && Count.equals(1) && OnlyAlphanumeric())
     }
 
     override func testFalse() throws {
@@ -58,19 +58,19 @@ class CompareValidationTests: ValidationConvenienceTests {
         let a = "z"
         XCTAssertFalse(a.passes(Compare.lessThan("d")))
         XCTAssertFalse(a.passes(Count.equals(10)))
-        XCTAssertFalse(a.passes(!OnlyAlphanumeric.self))
+        XCTAssertFalse(a.passes(!OnlyAlphanumeric()))
     }
 }
 
 class MatchesValidationTests: ValidationConvenienceTests {
     override func testTrue() throws {
         let collection = 1
-        let _ = try collection.tested(by: Matches(1))
+        let _ = try collection.tested(by: Equals(1))
     }
 
     override func testFalse() throws {
         let collection = 1
-        let result = collection.passes(Matches(999))
+        let result = collection.passes(Equals(999))
         XCTAssertFalse(result)
     }
 }

@@ -2,15 +2,18 @@ import XCTest
 @testable import Vapor
 import HTTP
 import Core
-import SocksCore
+import Socks
 
 class DropletTests: XCTestCase {
     static let allTests = [
+        ("testData", testData),
         ("testMediaType", testMediaType),
         ("testTLSConfig", testTLSConfig),
         ("testRunDefaults", testRunDefaults),
         ("testRunConfig", testRunConfig),
         ("testRunManual", testRunManual),
+        ("testHeadRequest", testHeadRequest),
+        ("testMiddlewareOrder", testMiddlewareOrder),
     ]
 
     func testData() {
@@ -40,10 +43,7 @@ class DropletTests: XCTestCase {
 
         let request = Request(method: .get, path: "styles/app.css")
 
-        guard let response = try? drop.respond(to: request) else {
-            XCTFail("drop could not respond")
-            return
-        }
+        let response = drop.respond(to: request)
 
         var found = false
         for header in response.headers {
@@ -80,38 +80,22 @@ class DropletTests: XCTestCase {
             return "bar"
         }
 
-        try drop.startServers()
-
-        drop.console.wait(seconds: 2)
-        
-        let res = try! drop.client.get("http://0.0.0.0:8523/foo")
-        XCTAssertEqual(try! res.bodyString(), "bar")
-        
-        drop.stopServers()
-
-        XCTAssert(drop.startedServers.count == 0)
-
-        drop.console.wait(seconds: 0.5)
-
-        do {
-            _ = try drop.client.get("http://0.0.0.0:8523/foo")
-            XCTFail("Expected to throw")
-        } catch let error as SocksError {
-            guard case ErrorReason.connectFailed = error.type else {
-                XCTFail("Unexpected SocksError: \(error)")
-                return
-            }
+        background {
+            try! drop.run()
         }
+
+        drop.console.wait(seconds: 1)
+
+        let res = try drop.client.get("http://0.0.0.0:8523/foo")
+        XCTAssertEqual(try res.bodyString(), "bar")
     }
 
     func testRunConfig() throws {
         let config = Config([
-            "servers": [
-                "my-server": [
-                    "host": "0.0.0.0",
-                    "port": 8337,
-                    "securityLayer": "none"
-                ]
+            "server": [
+                "host": "0.0.0.0",
+                "port": 8337,
+                "securityLayer": "none"
             ]
         ])
         let drop = try Droplet(arguments: ["vapor", "serve"], config: config)
@@ -120,7 +104,9 @@ class DropletTests: XCTestCase {
             return "bar"
         }
 
-        try drop.startServers()
+        background {
+            try! drop.run()
+        }
 
         drop.console.wait(seconds: 2)
 
@@ -135,31 +121,61 @@ class DropletTests: XCTestCase {
             return "bar"
         }
 
-        _ = try drop.startServer(("0.0.0.0", 8424, .none), name: "my-server")
+        background {
+            let config = ServerConfig(port: 8424)
+            try! drop.serve(config)
+        }
 
-        drop.console.wait(seconds: 2)
-
+        drop.console.wait(seconds: 1)
         let res = try drop.client.get("http://0.0.0.0:8424/foo")
         XCTAssertEqual(try res.bodyString(), "bar")
+    }
 
-        drop.stopServer(name: "my-server")
-        
-        XCTAssert(drop.startedServers.count == 0)
-        
-        drop.console.wait(seconds: 0.5)
-        
-        // TODO: Enable when a new version of vapor/engine is released with this PR:
-        // https://github.com/vapor/engine/pull/78
-        // Currently, listening sockets aren't closed properly, resulting in wrong errors
-        
-//        do {
-//            _ = try drop.client.get("http://0.0.0.0:8424/foo")
-//            XCTFail("Expected to throw")
-//        } catch let error as SocksError {
-//            guard case ErrorReason.connectFailed = error.type else {
-//                XCTFail("Unexpected SocksError: \(error)")
-//                return
-//            }
-//        }
+    func testHeadRequest() throws {
+        let drop = try Droplet(arguments: ["vapor", "serve"])
+        drop.get("foo") { req in
+            return "Hi, I'm a body"
+        }
+
+        background {
+            let config = ServerConfig(port: 9222)
+            try! drop.serve(config)
+        }
+
+        drop.console.wait(seconds: 1)
+
+        let getResp = try drop.client.get("http://0.0.0.0:9222/foo")
+        XCTAssertEqual(try getResp.bodyString(), "Hi, I'm a body")
+
+        let head = try Request(method: .head, uri: "http://0.0.0.0:9222/foo")
+        let headResp = try drop.client.respond(to: head)
+        XCTAssertEqual(try headResp.bodyString(), "")
+    }
+
+    func testMiddlewareOrder() throws {
+        struct Mid: Middleware {
+            let handler: () -> Void
+
+            func respond(to request: Request, chainingTo next: Responder) throws -> Response {
+                handler()
+                return try next.respond(to: request)
+            }
+        }
+
+        var middleware: [String] = []
+
+        let drop = try Droplet()
+        drop.middleware = [
+            Mid(handler: { middleware.append("one") }),
+            Mid(handler: { middleware.append("two") })
+        ]
+
+        drop.get { req in return "foo" }
+
+        let req = Request(method: .get, path: "")
+        let response = drop.respond(to: req)
+        XCTAssertEqual(try response.bodyString(), "foo")
+
+        XCTAssertEqual(middleware, ["one", "two"])
     }
 }

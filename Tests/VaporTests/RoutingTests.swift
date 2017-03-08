@@ -1,7 +1,7 @@
 import XCTest
 @testable import Vapor
 import HTTP
-import HTTPRouting
+import Routing
 
 class RoutingTests: XCTestCase {
     static let allTests = [

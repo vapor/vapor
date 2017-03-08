@@ -1,30 +1,28 @@
 import Foundation
 
-public class Email: ValidationSuite {
-    public static func validate(input value: String) throws {
-        guard
-            let localName = value.components(separatedBy: "@").first,
-            isValidLocalName(localName)
-            else {
-                throw error(with: value)
-            }
+/// Validate a string input represents a valid Email address
+public class Email: Validator {
+    public init() {}
 
-        // Thanks Ben Wu :)
-        let range = value.range(of: ".@.+\\..",
-                                options: .regularExpression)
-        guard let _ = range else {
-            throw error(with: value)
-        }
+    public func validate(_ input: String) throws {
+        guard
+            let localName = input.components(separatedBy: "@").first,
+            isValidLocalName(localName),
+            // Thanks Ben Wu :)
+            let _ = input.range(of: ".@.+\\..", options: .regularExpression)
+            else {
+                throw error("\(input) is not a valid email")
+            }
     }
 
-    private static func isValidLocalName(_ string: String) -> Bool {
+    private func isValidLocalName(_ string: String) -> Bool {
         let original = string.characters
         let valid = original.filter(isValid)
         return valid.count == original.count
     }
 
     // Based on http://stackoverflow.com/a/2049510/2611971
-    private static func isValid(_ character: Character) -> Bool {
+    private func isValid(_ character: Character) -> Bool {
         switch character {
         case "a"..."z", "A"..."Z", "0"..."9":
             return true
@@ -36,6 +34,3 @@ public class Email: ValidationSuite {
         }
     }
 }
-
-
-

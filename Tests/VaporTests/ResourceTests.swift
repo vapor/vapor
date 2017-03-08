@@ -14,7 +14,7 @@ class ResourceTests: XCTestCase {
         drop.middleware = []
 
         let user = try User(from: "Hi")
-        let node = try user?.makeNode()
+        let node = try user?.makeNode(in: nil)
         XCTAssertEqual(node, .object(["name":"Hi"]))
 
         drop.resource("users", User.self) { users in
@@ -29,8 +29,7 @@ class ResourceTests: XCTestCase {
 
         XCTAssertEqual(try drop.responseBody(for: .get, "users"), "index")
         XCTAssertEqual(try drop.responseBody(for: .get, "users/bob"), "user bob")
-        print(try drop.responseBody(for: .get, "users/ERROR"))
-        XCTAssert(try drop.responseBody(for: .get, "users/ERROR").contains("Abort.notFound"))
+        XCTAssert(try drop.responseBody(for: .get, "users/ERROR").contains("Vapor.Abort.notFound"))
     }
 
     func testOptions() throws {

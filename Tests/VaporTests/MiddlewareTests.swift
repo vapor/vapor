@@ -9,6 +9,11 @@ class MiddlewareTests: XCTestCase {
         ("testConfigDate", testConfigDate),
         ("testConfigDateMissing", testConfigDateMissing),
         ("testConfigDateProvided", testConfigDateProvided),
+        ("testMultiple", testMultiple),
+        ("testConfigClient", testConfigClient),
+        ("testConfigClientNotEnabled", testConfigClientNotEnabled),
+        ("testConfigClientManual", testConfigClientManual),
+        ("testValidationMiddleware", testValidationMiddleware),
     ]
 
     func testConfigDate() throws {
@@ -26,7 +31,7 @@ class MiddlewareTests: XCTestCase {
         }
 
         let req = Request(method: .get, path: "/")
-        let res = try drop.respond(to: req)
+        let res = drop.respond(to: req)
 
         XCTAssert(res.headers["Date"] != nil)
     }
@@ -41,7 +46,7 @@ class MiddlewareTests: XCTestCase {
         }
 
         let req = Request(method: .get, path: "/")
-        let res = try drop.respond(to: req)
+        let res = drop.respond(to: req)
 
         XCTAssert(res.headers["Date"] == nil)
     }
@@ -55,7 +60,7 @@ class MiddlewareTests: XCTestCase {
         }
 
         let req = Request(method: .get, path: "/")
-        let res = try drop.respond(to: req)
+        let res = drop.respond(to: req)
 
         XCTAssertEqual(res.headers["bar"], "baz")
     }
@@ -73,7 +78,7 @@ class MiddlewareTests: XCTestCase {
         }
 
         let req = Request(method: .get, path: "/")
-        let res = try drop.respond(to: req)
+        let res = drop.respond(to: req)
 
         XCTAssert(res.headers["bar"] != nil)
         XCTAssert(res.headers["date"] != nil)
@@ -120,82 +125,27 @@ class MiddlewareTests: XCTestCase {
         XCTAssert(res.headers["bar"] != nil)
     }
 
-    func testAbortMiddleware() throws {
-        let drop = try Droplet()
-
-        drop.middleware = [AbortMiddleware(environment: .development)]
-
-        drop.get("*") { req in
-            let path = req.uri.path
-            print(path)
-            switch path {
-            case "bad":
-                throw Abort.badRequest
-            case "notFound":
-                throw Abort.notFound
-            case "server":
-                throw Abort.serverError
-            default:
-                throw Abort.custom(status: Status(statusCode: 42), message: path)
-            }
-        }
-
-        let expectations: [(path: String, message: String, code: Int, status: Status)] = [
-            ("bad", "Invalid request", 400, .badRequest),
-            ("notFound", "Page not found", 404, .notFound),
-            ("server", "Something went wrong", 500, .internalServerError),
-            ("custom", "custom", 42, Status(statusCode: 42))
-        ]
-
-        try expectations.forEach { path, expectedMessage, expectedCode, expectedStatus in
-            let request = Request(method: .get, path: path)
-            let result = try drop.respond(to: request)
-            
-            guard let message = result.data["message"]?.string else {
-                XCTFail("Message should not be nil")
-                return
-            }
-            
-            guard let code = result.data["code"]?.int else {
-                XCTFail("Code shoult not be nil")
-                return
-            }
-            
-            XCTAssertEqual(message, expectedMessage)
-            XCTAssertEqual(code, expectedCode)
-            XCTAssertEqual(result.status, expectedStatus)
-            XCTAssertNil(result.data["metadata"]?.object)
-        }
-
-
-        let request = Request(method: .get, path: "Custom Message")
-        request.headers["Accept"] = "html"
-        let result = try drop.respond(to: request)
-        XCTAssertEqual(result.body.bytes?.string.contains("Custom Message"), true)
-    }
-
-
     func testValidationMiddleware() throws {
         let drop = try Droplet()
 
         drop.middleware.append(ValidationMiddleware())
         
         drop.get("*") { req in
-            let validPath = try req.uri.path.validated(by: Count.max(10))
-            return validPath.value
+            let path = req.uri.path
+            try path.validated(by: Count.max(10))
+            return path
         }
 
         // only added validation, abort won't be caught.
         drop.get("uncaught") { _ in throw Abort.notFound }
 
-        let request = Request(method: .get, path: "12345678910")
-        let response = try drop.respond(to: request)
-        let json = try response.body.bytes.flatMap(JSON.init)
+        let request = Request(method: .get, path: "thisPathIsWayTooLong")
+        let response = drop.respond(to: request)
+        let json = response.json
         XCTAssertEqual(json?["error"]?.bool, true)
-        XCTAssertEqual(json?["message"]?.string, "Validating max(10) failed for input '12345678910'")
-
+        XCTAssertEqual(json?["message"]?.string, "Validation failed with the following errors: \'Validator Error: Count<String> failed validation: thisPathIsWayTooLong count 20 is greater than maximum 10\n\nIdentifier: Vapor.ValidatorError.failure\'")
         let fail = Request(method: .get, path: "uncaught")
-        let failResponse = try drop.respond(to: fail)
+        let failResponse = drop.respond(to: fail)
         XCTAssertEqual(failResponse.status, .notFound)
     }
 }

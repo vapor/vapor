@@ -14,7 +14,7 @@ let package = Package(
         Target(name: "Cache"),
         Target(name: "Sessions", dependencies: ["Cache"]),
         Target(name: "Settings"),
-        Target(name: "Testing")
+        Target(name: "Testing", dependencies: ["Vapor"])
 
         // Development and Testing
         // Target(name: "Development", dependencies: ["Vapor"]),
@@ -35,6 +35,9 @@ let package = Package(
 
         // Parses `Content-Type: multipart` as defined in RFC 2046.
         .Package(url: "https://github.com/vapor/multipart.git", Version(2,0,0, prereleaseIdentifiers: ["alpha"])),
+
+        // Swift implementation of the BCrypt password hashing function
+        .Package(url: "https://github.com/vapor/bcrypt.git", majorVersion: 0)
     ],
     exclude: [
         "Sources/Development",

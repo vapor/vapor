@@ -1,7 +1,7 @@
 import Foundation
 import XCTest
 @testable import Vapor
-import HMAC
+import Crypto
 
 class HashTests: XCTestCase {
     static let allTests = [
@@ -55,10 +55,10 @@ class HashTests: XCTestCase {
     }
 
     func testBCrypt() throws {
-        let workFactor = 5
+        let workFactor: UInt = 5
         let password = "foo"
 
-        let hash: HashProtocol = BCryptHasher(workFactor: workFactor)
+        let hash: HashProtocol = BCryptHasher(cost: workFactor)
 
         let digest1 = try hash.make(password).string
         let digest2 = try hash.make(password).string
@@ -72,21 +72,21 @@ class HashTests: XCTestCase {
     }
 
     func testDropletBCrypt() throws {
-        let workFactor = 7
+        let workFactor: UInt = 7
         let string = "vapor"
 
-        let config = Config([
+        let config = try Config(node: [
             "droplet": [
                 "hash": "bcrypt"
             ],
             "bcrypt": [
-                "workFactor": Node(workFactor)
+                "cost": workFactor
             ]
         ])
         let drop = try Droplet(config: config)
         let result = try drop.hash.make(string).string
 
-        let other = BCryptHasher(workFactor: 7)
+        let other = BCryptHasher(cost: workFactor)
         XCTAssertTrue(
             try other.check(string, matchesHash: result),
             "Droplet hash did not match BCrypt with workFactor 7"

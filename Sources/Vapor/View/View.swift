@@ -18,11 +18,11 @@ public final class View {
     with other byte based processes.
 */
 extension View: BytesConvertible {
-    public func makeBytes() throws -> Bytes {
+    public func makeBytes() -> Bytes {
         return data
     }
 
-    public convenience init(bytes: Bytes) throws {
+    public convenience init(bytes: Bytes) {
         self.init(data: bytes)
     }
 }

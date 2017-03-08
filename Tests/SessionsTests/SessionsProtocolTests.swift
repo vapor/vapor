@@ -13,42 +13,46 @@ class SessionsProtocolTests: XCTestCase {
 
     func testMemory() throws {
         let s = MemorySessions()
-        let id = s.makeIdentifier()
+        let id = try s.makeIdentifier()
 
-        XCTAssertNil(s.get(for: id))
+        XCTAssertNil(s.get(identifier: id))
 
-        s.set(Node("bar"), for: id)
-        XCTAssertEqual(s.get(for: id)?.string, "bar")
+        s.set(Session(identifier: id, data: Node("bar")))
+        XCTAssertEqual(s.get(identifier: id)?.data.string, "bar")
 
-        s.destroy(id)
-        XCTAssertNil(s.get(for: id))
+        try s.destroy(identifier: id)
+        XCTAssertNil(s.get(identifier: id))
     }
 
     func testCache() throws {
         let m = MemoryCache()
-        let s = CacheSessions(cache: m)
-        let id = s.makeIdentifier()
+        let s = CacheSessions(m)
+        let id = try s.makeIdentifier()
 
-        XCTAssertNil(try s.get(for: id))
+        XCTAssertNil(try s.get(identifier: id))
 
-        try s.set(Node("bar"), for: id)
-        XCTAssertEqual(try s.get(for: id)?.string, "bar")
+        try s.set(Session(identifier: id, data: Node("bar")))
+        XCTAssertEqual(try s.get(identifier: id)?.data.string, "bar")
 
-        try s.destroy(id)
-        XCTAssertNil(try s.get(for: id))
+        try s.destroy(identifier: id)
+        XCTAssertNil(try s.get(identifier: id))
     }
     
     func testCacheObject() throws {
-        let m = MemoryCache()
-        let s = CacheSessions(cache: m)
-        let id = s.makeIdentifier()
+        let memory = MemoryCache()
+        let sessions = CacheSessions(memory)
+        let id = try sessions.makeIdentifier()
         
-        XCTAssertNil(try s.get(for: id))
-        
-        try s.set(Node(["foo": "bar"]), for: id)
-        XCTAssertEqual(try s.get(for: id)?.node["foo"]?.string, "bar")
-        
-        try s.destroy(id)
-        XCTAssertNil(try s.get(for: id))
+        XCTAssert(try sessions.contains(identifier: id) == false)
+
+        let session = Session(identifier: id)
+        try session.data.set("foo", "bar")
+        try sessions.set(session)
+
+        let fetched = try sessions.get(identifier: id)
+        XCTAssertEqual(try fetched?.data.get("foo"), "bar")
+
+        try sessions.destroy(identifier: id)
+        XCTAssert(try sessions.get(identifier: id) == nil)
     }
 }

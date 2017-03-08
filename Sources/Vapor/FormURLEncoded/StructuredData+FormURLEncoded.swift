@@ -46,16 +46,16 @@ extension Node {
             }
 
             let key = keyData.string
-
             if let existing = urlEncoded[key] {
                 // if a key already exists, create an
                 // array and append the new value
-                if case .array(var array) = existing {
+                if var array = existing.typeArray {
                     array.append(value)
                     value = .array(array)
                 } else {
                     value = .array([existing, value])
                 }
+
             } else if keyIndicatedArray {
                 // turn the value into an array
                 // if the key had `[]`
@@ -70,9 +70,7 @@ extension Node {
     }
     
     public func formURLEncoded() throws -> Bytes {
-        guard case .object(let dict) = self else {
-            return []
-        }
+        guard let dict = self.typeObject else { return [] }
 
         var bytes: [[Byte]] = []
 

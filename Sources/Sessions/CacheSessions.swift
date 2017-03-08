@@ -1,35 +1,31 @@
-import Random
+import Crypto
 import Cache
 import Node
 
 public final class CacheSessions: SessionsProtocol {
     public let cache: CacheProtocol
-    public init(cache: CacheProtocol) {
+    public init(_ cache: CacheProtocol) {
         self.cache = cache
     }
 
-    public func get(for identifier: String) throws -> Node? {
-        do {
-           return try cache.get(identifier)
-        } catch {
-            print("[CacheSessions] Error getting data: \(error)")
+    public func get(identifier: String) throws -> Session? {
+        if let data = try cache.get(identifier) {
+            return Session(identifier: identifier, data: data)
+        } else {
             return nil
         }
     }
 
-    public func set(_ value: Node?, for identifier: String) throws {
-        do {
-            if let value = value {
-                try cache.set(identifier, value)
-            } else {
-                try cache.delete(identifier)
-            }
-        } catch {
-            print("[CacheSessions] Error setting data: \(error)")
-        }
+    public func set(_ session: Session) throws {
+        try cache.set(session.identifier, session.data)
+    }
+    
+    public func destroy(identifier: String) throws{
+        try cache.delete(identifier)
+        
     }
 
-    public func makeIdentifier() -> String {
-        return CryptoRandom.bytes(16).base64Encoded.string
+    public func makeIdentifier() throws -> String {
+        return try Crypto.Random.bytes(count: 16).base64Encoded.string
     }
 }

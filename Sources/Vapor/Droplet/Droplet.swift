@@ -2,10 +2,9 @@ import HTTP
 import Console
 import Cache
 import Sessions
-import HMAC
-import Cipher
+import Crypto
 import Transport
-import SocksCore
+import Socks
 
 public let VERSION = "2.0.0-alpha"
 
@@ -92,14 +91,19 @@ public class Droplet {
     /// pair information.
     public var cache: CacheProtocol
 
+    /// The providers that have been added.
+    public internal(set) var providers: [Provider]
+
     /// Storage to add/manage dependencies, identified by a string
     public var storage: [String: Any]
 
-    /// The currently running servers
-    public internal(set) var startedServers: [String:ServerProtocol] = [:]
 
-    /// The providers that have been added.
-    public internal(set) var providers: [Provider]
+    /// The responder will be loaded the first time the droplet is asked
+    /// to respond to a request, this prevents having to construct it
+    /// for each request
+    ///
+    /// Loop through middlewares in order, then pass result to router responder
+    internal private(set) lazy var responder: Responder = self.middleware.chain(to: self.router)
 
     /// Initialize the Droplet.
     public init(
@@ -217,9 +221,9 @@ public class Droplet {
         providers = []
         hash = CryptoHasher(hash: .sha1, encoding: .hex)
         cipher = CryptoCipher(
-            method: .chacha20,
-            defaultKey: Bytes(repeating: 0, count: 32),
-            defaultIV: Bytes(repeating: 0, count: 8)
+            method: .aes256(.cbc),
+            defaultKey: Bytes(repeating: 0, count: 16),
+            defaultIV: nil
         )
 
         // CONFIGURABLE
@@ -231,23 +235,32 @@ public class Droplet {
         try addConfigurable(hash: BCryptHasher.self, name: "bcrypt")
         try addConfigurable(cipher: CryptoCipher.self, name: "crypto")
         addConfigurable(cache: MemoryCache(), name: "memory")
-        addConfigurable(middleware: SessionsMiddleware(sessions: MemorySessions()), name: "sessions")
-        addConfigurable(middleware: AbortMiddleware(environment: environment), name: "abort")
+        addConfigurable(middleware: SessionsMiddleware(MemorySessions()), name: "sessions")
         addConfigurable(middleware: DateMiddleware(), name: "date")
         addConfigurable(middleware: TypeSafeErrorMiddleware(), name: "type-safe")
         addConfigurable(middleware: ValidationMiddleware(), name: "validation")
         addConfigurable(middleware: FileMiddleware(publicDir: workDir + "Public/"), name: "file")
+        addConfigurable(middleware: HeadMiddleware(), name: "head")
+        let contentTypeLogger = ContentTypeLogger { [weak self] log in
+            if let welf = self {
+                welf.log.info(log)
+            } else {
+                print(log)
+            }
+        }
+        addConfigurable(middleware: contentTypeLogger, name: "content-type-log")
 
         if config["droplet", "middleware", "server"]?.array == nil {
             // if no configuration has been supplied
             // apply all middleware
             middleware = [
-                SessionsMiddleware(sessions: MemorySessions()),
-                AbortMiddleware(environment: environment),
+                SessionsMiddleware(MemorySessions()),
                 DateMiddleware(),
                 TypeSafeErrorMiddleware(),
                 ValidationMiddleware(),
                 FileMiddleware(publicDir: workDir + "Public/"),
+                HeadMiddleware(),
+                contentTypeLogger,
             ]
             log.debug("No `middleware.server` key in `droplet.json` found, using default middleware.")
         }
