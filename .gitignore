@@ -2,5 +2,4 @@ Packages
 .build
 .DS_Store
 *.xcodeproj
-DerivedData/
 Package.pins
