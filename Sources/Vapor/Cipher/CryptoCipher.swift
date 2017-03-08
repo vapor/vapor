@@ -29,7 +29,6 @@ public final class CryptoCipher: CipherProtocol {
 }
 
 extension CryptoCipher: ConfigInitializable {
-
     public convenience init(config: Settings.Config) throws {
         guard let methodString = config["crypto", "cipher", "method"]?.string else {
             throw Error.config("No `cipher.method` found in `crypto.json` config.")
@@ -42,6 +41,9 @@ extension CryptoCipher: ConfigInitializable {
         case "aes256":
             method = .aes256(.cbc)
         default:
+            if methodString == "chacha20" {
+                print("Warning: chacha20 cipher is no longer available. Please use aes256 instead.")
+            }
             throw Error.config("Unknown cipher method '\(methodString)'.")
         }
 
