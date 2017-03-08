@@ -71,10 +71,13 @@ class ContentTests: XCTestCase {
     }
 
     func testParse() {
-        let string = "value=123"
+        let string = "value=123&emptyString=&isTrue"
 
         let data = Node(formURLEncoded: string.makeBytes())
+        print(data)
         XCTAssertEqual(data["value"]?.int, 123, "Request did not parse correctly")
+        XCTAssertEqual(data["emptyString"]?.string, "")
+        XCTAssertEqual(data["isTrue"]?.bool, true)
     }
 
     func testFormURLEncoded() {
