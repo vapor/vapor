@@ -7,120 +7,96 @@ extension Droplet: Responder {
     /// - parameter request: received request
     /// - throws: error if something fails in finding response
     /// - returns: response if possible
-    public func respond(to request: Request) throws -> Response {
+    public func respond(to request: Request) -> Response {
         log.info("\(request.method) \(request.uri.path)")
-
-        var responder: Responder
-        let request = request
-
-        /// The HEAD method is identical to GET.
-        ///
-        /// https://tools.ietf.org/html/rfc2616#section-9.4
-        let originalMethod = request.method
-        if case .head = request.method {
-            request.method = .get
-        }
-
-        let routerResponder: Request.Handler = Request.Handler { [weak self] request in
-            // Routed handler
-            // TODO: Should router just respond?
-            if let handler = self?.router.route(request) {
-                return try handler.respond(to: request)
-            } else {
-                // Default not found handler
-                let normal: [HTTP.Method] = [.get, .post, .put, .patch, .delete]
-
-                if normal.contains(request.method) {
-                    throw Abort.notFound
-                } else if case .options = request.method {
-                    return Response(status: .ok, headers: [
-                        "Allow": "OPTIONS"
-                    ])
-                } else {
-                    return Response(status: .notImplemented)
-                }
-            }
-        }
-
-        // Loop through middlewares in order, then pass result to router responder
-        responder = middleware.chain(to: routerResponder)
-
-        var response: Response
         do {
-            response = try responder.respond(to: request)
-
-            if response.headers["Content-Type"] == nil && response.status != .notModified {
-                log.warning("Response had no 'Content-Type' header.")
-            }
+            return try responder.respond(to: request)
         } catch {
-            // get status
-            let status: Status
+            return errorResponse(with: request, and: error)
+        }
+    }
 
-            if let abort = error as? AbortError {
-                status = abort.status
-            } else {
-                status = .internalServerError
-            }
+    private func errorResponse(with request: Request, and error: Error) -> Response {
+        logError(error)
+        let status = Status(error)
 
-            if let debuggable = error as? Debuggable {
-                log.error(debuggable.loggable)
-            } else {
-                let type = String(reflecting: type(of: error))
-                log.error("[\(type): \(error)]")
-                log.info("Conform '\(type)' to Debugging.Debuggable to provide more debug information.")
-            }
-
-            if request.accept.prefers("html") {
-                return ErrorView.shared.makeResponse(status, status.reasonPhrase)
-            } else {
-                var json = JSON([:])
-                try json.set("error", true)
-                if let abort = error as? AbortError {
-                    try json.set("reason", abort.reason)
-                } else {
-                    try json.set("reason", status.reasonPhrase)
-                }
-
-                if environment != .production {
-                    if let abort = error as? AbortError {
-                        try json.set("metadata", abort.metadata)
-                    }
-                    if let debug = error as? Debuggable {
-                        try json.set("debugReason", debug.reason)
-                        try json.set("identifier", debug.fullIdentifier)
-                        if !debug.possibleCauses.isEmpty {
-                            try json.set("possibleCauses", debug.possibleCauses)
-                        }
-                        if !debug.suggestedFixes.isEmpty {
-                            try json.set("suggestedFixes", debug.suggestedFixes)
-                        }
-                        if !debug.documentationLinks.isEmpty {
-                            try json.set("documentationLinks", debug.documentationLinks)
-                        }
-                        if !debug.stackOverflowQuestions.isEmpty {
-                            try json.set("stackOverflowQuestions", debug.stackOverflowQuestions)
-                        }
-                        if !debug.gitHubIssues.isEmpty {
-                            try json.set("gitHubIssues", debug.gitHubIssues)
-                        }
-                    }
-                }
-
-                let response = Response(status: status)
-                response.json = json
-                return response
-            }
+        if request.accept.prefers("html") {
+            return ErrorView.shared.makeResponse(status, status.reasonPhrase)
         }
 
-        /// The server MUST NOT return a message-body in the response for HEAD.
-        ///
-        /// https://tools.ietf.org/html/rfc2616#section-9.4
-        if case .head = originalMethod {
-            // TODO: What if body is set to chunked¿?
-            response.body = .data([])
+        let response = Response(status: status)
+        if let json = try? JSON(error, env: environment) {
+            response.json = json
+        } else {
+            response.json = [
+                "error": true,
+                "reason": "unknown"
+            ]
         }
-        
         return response
+    }
+
+    private func logError(_ error: Error) {
+        if let debuggable = error as? Debuggable {
+            log.error(debuggable.loggable)
+        } else {
+            let type = String(reflecting: type(of: error))
+            log.error("[\(type): \(error)]")
+            log.info("Conform '\(type)' to Debugging.Debuggable to provide more debug information.")
+        }
+    }
+}
+
+extension Status {
+    fileprivate init(_ error: Error) {
+        if let abort = error as? AbortError {
+            self = abort.status
+        } else {
+            self = .internalServerError
+        }
+    }
+}
+
+extension JSON {
+    fileprivate init(_ error: Error, env: Environment) throws {
+        let status = Status(error)
+
+        var json = JSON([:])
+        try json.set("error", true)
+
+        if let abort = error as? AbortError {
+            try json.set("reason", abort.reason)
+        } else {
+            try json.set("reason", status.reasonPhrase)
+        }
+
+        if env != .production {
+            if let abort = error as? AbortError {
+                try json.set("metadata", abort.metadata)
+            }
+
+            if let debug = error as? Debuggable {
+                try json.set("debugReason", debug.reason)
+                try json.set("identifier", debug.fullIdentifier)
+                if !debug.possibleCauses.isEmpty {
+                    try json.set("possibleCauses", debug.possibleCauses)
+                }
+                if !debug.suggestedFixes.isEmpty {
+                    try json.set("suggestedFixes", debug.suggestedFixes)
+                }
+                if !debug.documentationLinks.isEmpty {
+                    try json.set("documentationLinks", debug.documentationLinks)
+                }
+                if !debug.stackOverflowQuestions.isEmpty {
+                    try json.set("stackOverflowQuestions", debug.stackOverflowQuestions)
+                }
+                if !debug.gitHubIssues.isEmpty {
+                    try json.set("gitHubIssues", debug.gitHubIssues)
+                }
+            }
+        }
+
+        self = json
     }
 }
 
@@ -159,4 +135,11 @@ extension Sequence where Iterator.Element == String {
     var commaSeparated: String {
         return joined(separator: ", ")
     }
+}
+
+
+extension RouterError: AbortError {
+    public var status: Status { return Abort.notFound.status }
+    public var reason: String { return Abort.notFound.reason }
+    public var metadata: Node? { return Abort.notFound.metadata }
 }

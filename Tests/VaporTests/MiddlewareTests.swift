@@ -26,7 +26,7 @@ class MiddlewareTests: XCTestCase {
         }
 
         let req = Request(method: .get, path: "/")
-        let res = try drop.respond(to: req)
+        let res = drop.respond(to: req)
 
         XCTAssert(res.headers["Date"] != nil)
     }
@@ -41,7 +41,7 @@ class MiddlewareTests: XCTestCase {
         }
 
         let req = Request(method: .get, path: "/")
-        let res = try drop.respond(to: req)
+        let res = drop.respond(to: req)
 
         XCTAssert(res.headers["Date"] == nil)
     }
@@ -55,7 +55,7 @@ class MiddlewareTests: XCTestCase {
         }
 
         let req = Request(method: .get, path: "/")
-        let res = try drop.respond(to: req)
+        let res = drop.respond(to: req)
 
         XCTAssertEqual(res.headers["bar"], "baz")
     }
@@ -73,7 +73,7 @@ class MiddlewareTests: XCTestCase {
         }
 
         let req = Request(method: .get, path: "/")
-        let res = try drop.respond(to: req)
+        let res = drop.respond(to: req)
 
         XCTAssert(res.headers["bar"] != nil)
         XCTAssert(res.headers["date"] != nil)
@@ -134,13 +134,13 @@ class MiddlewareTests: XCTestCase {
         drop.get("uncaught") { _ in throw Abort.notFound }
 
         let request = Request(method: .get, path: "12345678910")
-        let response = try drop.respond(to: request)
+        let response = drop.respond(to: request)
         let json = try response.body.bytes.flatMap(JSON.init)
         XCTAssertEqual(json?["error"]?.bool, true)
         XCTAssertEqual(json?["message"]?.string, "Validating max(10) failed for input '12345678910'")
 
         let fail = Request(method: .get, path: "uncaught")
-        let failResponse = try drop.respond(to: fail)
+        let failResponse = drop.respond(to: fail)
         XCTAssertEqual(failResponse.status, .notFound)
     }
 }

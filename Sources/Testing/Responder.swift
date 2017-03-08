@@ -8,7 +8,7 @@ extension Responder {
         file: StaticString = #file,
         line: UInt = #line
     ) throws -> Response {
-        let req = try Request.makeTest(method: .get, path: "foo")
+        let req = Request.makeTest(method: .get, path: "foo")
         return try testResponse(
             to: req,
             file: file,

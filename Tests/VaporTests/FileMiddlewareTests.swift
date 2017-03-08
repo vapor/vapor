@@ -26,34 +26,26 @@ class FileMiddlewareTests: XCTestCase {
         var headers: [HeaderKey: String] = [:]
         
         // First make sure it returns data with 200
-        do {
-            let response = try drop.respond(to: Request(method: .get, path: file))
-            XCTAssertTrue(response.status == .ok, "Status code is not OK ( 200 ) for existing file.")
-            XCTAssertTrue(response.body.bytes!.count > 0, "File content body IS NOT provided for existing file.")
-            
-            if let ETag = response.headers["ETag"] {
-                headers["If-None-Match"] = ETag
-            } else {
-                XCTFail("File MiddleWare not return ETag header")
-            }
-        } catch {
-            XCTFail("Droplet did break on existing file request.")
+        let response = drop.respond(to: Request(method: .get, path: file))
+        XCTAssertEqual(response.status, .ok, "Status code is not OK ( 200 ) for existing file.")
+        XCTAssertTrue(response.body.bytes!.count > 0, "File content body IS NOT provided for existing file.")
+
+        if let ETag = response.headers["ETag"] {
+            headers["If-None-Match"] = ETag
+        } else {
+            XCTFail("File MiddleWare not return ETag header")
         }
-        
+
         // Now check that returns 304
-        do {
-            let request = Request(method: .get, path: file)
-            request.headers = headers
-            
-            let response = try drop.respond(to: request)
-            XCTAssertTrue(response.status == .notModified, "Status code is not 304 for existing cached file.")
-            XCTAssertTrue(response.body.bytes!.count == 0, "File content body IS provided for existing file.")
-            
-            // Make sure ETag did not change
-            XCTAssertTrue(headers["If-None-Match"] == response.headers["ETag"], "Generated ETag for cached file does not match old one.")
-        } catch {
-            XCTFail("Droplet did break on existing file request.")
-        }
+        let request304 = Request(method: .get, path: file)
+        request304.headers = headers
+
+        let response304 = drop.respond(to: request304)
+        XCTAssertTrue(response304.status == .notModified, "Status code is not 304 for existing cached file.")
+        XCTAssertTrue(response304.body.bytes!.count == 0, "File content body IS provided for existing file.")
+
+        // Make sure ETag did not change
+        XCTAssertTrue(headers["If-None-Match"] == response304.headers["ETag"], "Generated ETag for cached file does not match old one.")
     }
     
     
@@ -63,11 +55,7 @@ class FileMiddlewareTests: XCTestCase {
         let drop = try Droplet()
         drop.middleware.append(fileMiddleWare)
         
-        do {
-            let response = try drop.respond(to: Request(method: .get, path: file))
-            XCTAssertTrue(response.status == .notFound, "Status code is not 404 for nonexisting file.")
-        } catch {
-            XCTFail("Droplet did break on existing file request.")
-        }
+        let response = drop.respond(to: Request(method: .get, path: file))
+        XCTAssertTrue(response.status == .notFound, "Status code is not 404 for nonexisting file.")
     }
 }
