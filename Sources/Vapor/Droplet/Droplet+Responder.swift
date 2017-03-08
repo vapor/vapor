@@ -1,110 +1,102 @@
 import HTTP
 import Routing
 
-extension RouterError: AbortError {
-    public var status: Status { return Abort.notFound.status }
-    public var reason: String { return Abort.notFound.reason }
-    public var metadata: Node? { return Abort.notFound.metadata }
-}
-
-// TODO: Own File
-public final class HeadMiddleware: Middleware {
-    public func respond(to request: Request, chainingTo next: Responder) throws -> Response {
-        guard request.method == .head else { return try next.respond(to: request) }
-        /// The HEAD method is identical to GET.
-        ///
-        /// https://tools.ietf.org/html/rfc2616#section-9.4
-        request.method = .get
-        let response = try next.respond(to: request)
-
-        /// The server MUST NOT return a message-body in the response for HEAD.
-        ///
-        /// https://tools.ietf.org/html/rfc2616#section-9.4
-        response.body = .data([])
-        return response
-    }
-}
-
 extension Droplet: Responder {
     /// Returns a response to the given request
     ///
     /// - parameter request: received request
     /// - throws: error if something fails in finding response
     /// - returns: response if possible
-    public func respond(to request: Request) throws -> Response {
+    public func respond(to request: Request) -> Response {
         log.info("\(request.method) \(request.uri.path)")
-
-        // Loop through middlewares in order, then pass result to router responder
-        let responder = middleware.chain(to: router)
-
-        let response: Response
         do {
-            response = try responder.respond(to: request)
-
-            if response.headers["Content-Type"] == nil && response.status != .notModified {
-                log.warning("Response had no 'Content-Type' header.")
-            }
+            return try responder.respond(to: request)
         } catch {
-            // get status
-            let status: Status
+            return errorResponse(with: request, and: error)
+        }
+    }
 
+    private func errorResponse(with request: Request, and error: Error) -> Response {
+        logError(error)
+        let status = Status(error)
+
+        if request.accept.prefers("html") {
+            return ErrorView.shared.makeResponse(status, status.reasonPhrase)
+        }
+
+        let response = Response(status: status)
+        if let json = try? JSON(error, env: environment) {
+            response.json = json
+        } else {
+            response.json = [
+                "error": true,
+                "reason": "unknown"
+            ]
+        }
+        return response
+    }
+
+    private func logError(_ error: Error) {
+        if let debuggable = error as? Debuggable {
+            log.error(debuggable.loggable)
+        } else {
+            let type = String(reflecting: type(of: error))
+            log.error("[\(type): \(error)]")
+            log.info("Conform '\(type)' to Debugging.Debuggable to provide more debug information.")
+        }
+    }
+}
+
+extension Status {
+    fileprivate init(_ error: Error) {
+        if let abort = error as? AbortError {
+            self = abort.status
+        } else {
+            self = .internalServerError
+        }
+    }
+}
+
+extension JSON {
+    fileprivate init(_ error: Error, env: Environment) throws {
+        let status = Status(error)
+
+        var json = JSON([:])
+        try json.set("error", true)
+
+        if let abort = error as? AbortError {
+            try json.set("reason", abort.reason)
+        } else {
+            try json.set("reason", status.reasonPhrase)
+        }
+
+        if env != .production {
             if let abort = error as? AbortError {
-                status = abort.status
-            } else {
-                status = .internalServerError
+                try json.set("metadata", abort.metadata)
             }
 
-            if let debuggable = error as? Debuggable {
-                log.error(debuggable.loggable)
-            } else {
-                let type = String(reflecting: type(of: error))
-                log.error("[\(type): \(error)]")
-                log.info("Conform '\(type)' to Debugging.Debuggable to provide more debug information.")
-            }
-
-            if request.accept.prefers("html") {
-                return ErrorView.shared.makeResponse(status, status.reasonPhrase)
-            } else {
-                var json = JSON([:])
-                try json.set("error", true)
-                if let abort = error as? AbortError {
-                    try json.set("reason", abort.reason)
-                } else {
-                    try json.set("reason", status.reasonPhrase)
+            if let debug = error as? Debuggable {
+                try json.set("debugReason", debug.reason)
+                try json.set("identifier", debug.fullIdentifier)
+                if !debug.possibleCauses.isEmpty {
+                    try json.set("possibleCauses", debug.possibleCauses)
                 }
-
-                if environment != .production {
-                    if let abort = error as? AbortError {
-                        try json.set("metadata", abort.metadata)
-                    }
-                    if let debug = error as? Debuggable {
-                        try json.set("debugReason", debug.reason)
-                        try json.set("identifier", debug.fullIdentifier)
-                        if !debug.possibleCauses.isEmpty {
-                            try json.set("possibleCauses", debug.possibleCauses)
-                        }
-                        if !debug.suggestedFixes.isEmpty {
-                            try json.set("suggestedFixes", debug.suggestedFixes)
-                        }
-                        if !debug.documentationLinks.isEmpty {
-                            try json.set("documentationLinks", debug.documentationLinks)
-                        }
-                        if !debug.stackOverflowQuestions.isEmpty {
-                            try json.set("stackOverflowQuestions", debug.stackOverflowQuestions)
-                        }
-                        if !debug.gitHubIssues.isEmpty {
-                            try json.set("gitHubIssues", debug.gitHubIssues)
-                        }
-                    }
+                if !debug.suggestedFixes.isEmpty {
+                    try json.set("suggestedFixes", debug.suggestedFixes)
                 }
-
-                let response = Response(status: status)
-                response.json = json
-                return response
+                if !debug.documentationLinks.isEmpty {
+                    try json.set("documentationLinks", debug.documentationLinks)
+                }
+                if !debug.stackOverflowQuestions.isEmpty {
+                    try json.set("stackOverflowQuestions", debug.stackOverflowQuestions)
+                }
+                if !debug.gitHubIssues.isEmpty {
+                    try json.set("gitHubIssues", debug.gitHubIssues)
+                }
             }
         }
 
-        return response
+        self = json
     }
 }
 
@@ -143,4 +135,11 @@ extension Sequence where Iterator.Element == String {
     var commaSeparated: String {
         return joined(separator: ", ")
     }
+}
+
+
+extension RouterError: AbortError {
+    public var status: Status { return Abort.notFound.status }
+    public var reason: String { return Abort.notFound.reason }
+    public var metadata: Node? { return Abort.notFound.metadata }
 }

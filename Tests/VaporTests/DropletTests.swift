@@ -6,11 +6,14 @@ import Socks
 
 class DropletTests: XCTestCase {
     static let allTests = [
+        ("testData", testData),
         ("testMediaType", testMediaType),
         ("testTLSConfig", testTLSConfig),
         ("testRunDefaults", testRunDefaults),
         ("testRunConfig", testRunConfig),
-//        ("testRunManual", testRunManual),
+        ("testRunManual", testRunManual),
+        ("testHeadRequest", testHeadRequest),
+        ("testMiddlewareOrder", testMiddlewareOrder),
     ]
 
     func testData() {
@@ -40,10 +43,7 @@ class DropletTests: XCTestCase {
 
         let request = Request(method: .get, path: "styles/app.css")
 
-        guard let response = try? drop.respond(to: request) else {
-            XCTFail("drop could not respond")
-            return
-        }
+        let response = drop.respond(to: request)
 
         var found = false
         for header in response.headers {
@@ -173,7 +173,7 @@ class DropletTests: XCTestCase {
         drop.get { req in return "foo" }
 
         let req = Request(method: .get, path: "")
-        let response = try drop.respond(to: req)
+        let response = drop.respond(to: req)
         XCTAssertEqual(try response.bodyString(), "foo")
 
         XCTAssertEqual(middleware, ["one", "two"])

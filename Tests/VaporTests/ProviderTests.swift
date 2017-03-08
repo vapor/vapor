@@ -6,6 +6,9 @@ import Transport
 class ProviderTests: XCTestCase {
     static let allTests = [
         ("testBasic", testBasic),
+        ("testPrecedence", testPrecedence),
+        ("testOverride", testOverride),
+        ("testInitialized", testInitialized),
     ]
 
     func testBasic() throws {

@@ -27,7 +27,7 @@ class SessionsTests: XCTestCase {
         }
 
         let req = Request(method: .get, path: "set")
-        let res = try drop.respond(to: req)
+        let res = drop.respond(to: req)
 
         guard let c = res.cookies["vapor-session"] else {
             XCTFail("No cookie")
@@ -46,7 +46,7 @@ class SessionsTests: XCTestCase {
 
         let req2 = Request(method: .get, path: "get")
         req2.cookies["vapor-session"] = c
-        let res2 = try drop.respond(to: req2)
+        let res2 = drop.respond(to: req2)
 
         XCTAssertEqual(res2.body.bytes?.string, "bar")
     }
