@@ -37,8 +37,6 @@ extension CryptoCipher: ConfigInitializable {
 
         let method: Cipher.Method
         switch methodString {
-        case "chacha20":
-            method = .chacha20
         case "aes128":
             method = .aes128(.cbc)
         case "aes256":
@@ -54,22 +52,13 @@ extension CryptoCipher: ConfigInitializable {
         let iv = config["crypto", "cipher", "iv"]?.string?.bytes
 
         switch method {
-        case .chacha20:
-            if key.count != 32 {
-                throw Error.config("Chacha20 cipher key must be 32 bytes.")
-            }
-            if iv == nil {
-                throw Error.config("Chacha20 cipher requires an initialization vector (iv).")
-            } else if iv?.count != 8 {
-                throw Error.config("Chacha20 initialization vector (iv) must be 8 bytes.")
-            }
         case .aes128:
             if key.count != 16 {
                 throw Error.config("AES-128 cipher key must be 16 bytes.")
             }
         case .aes256:
-            if key.count != 16 {
-                throw Error.config("AES-256 cipher key must be 16 bytes.")
+            if key.count != 32 {
+                throw Error.config("AES-256 cipher key must be 32 bytes.")
             }
         default:
             break

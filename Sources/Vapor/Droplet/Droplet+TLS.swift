@@ -33,14 +33,14 @@ extension Droplet {
         return securityLayer
     }
 
-    func parseTLSConfig(_ tlsConfig: [String: Polymorphic], mode: TLS.Mode) throws -> TLS.Config {
+    func parseTLSConfig(_ tlsConfig: [String: Polymorphic], mode: TLS.Mode) throws -> TLS.Context {
         let verifyHost = tlsConfig["verifyHost"]?.bool ?? true
         let verifyCertificates = tlsConfig["verifyCertificates"]?.bool ?? true
 
         let certs = parseTLSCertificates(tlsConfig)
-        let config = try TLS.Config(
-            mode: mode,
-            certificates: certs,
+        let config = try TLS.Context(
+            mode,
+            certs,
             verifyHost: verifyHost,
             verifyCertificates: verifyCertificates
         )

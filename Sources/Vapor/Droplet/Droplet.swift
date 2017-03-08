@@ -221,9 +221,9 @@ public class Droplet {
         providers = []
         hash = CryptoHasher(hash: .sha1, encoding: .hex)
         cipher = CryptoCipher(
-            method: .chacha20,
-            defaultKey: Bytes(repeating: 0, count: 32),
-            defaultIV: Bytes(repeating: 0, count: 8)
+            method: .aes256(.cbc),
+            defaultKey: Bytes(repeating: 0, count: 16),
+            defaultIV: nil
         )
 
         // CONFIGURABLE
