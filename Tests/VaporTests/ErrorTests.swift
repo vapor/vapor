@@ -8,8 +8,9 @@ class ErrorTests: XCTestCase {
 
     func testFixes() throws {
         let drop = try Droplet()
-        let view = try drop.view.make(Abort(.notFound))
+        let view = drop.view.make(Abort(.notFound))
+        print(view.data.string)
         XCTAssert(view.data.string.contains("404"))
-        XCTAssert(view.data.string.contains("Not found!"))
+        XCTAssert(view.data.string.contains("Not found"))
     }
 }
