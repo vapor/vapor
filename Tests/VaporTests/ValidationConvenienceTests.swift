@@ -65,12 +65,12 @@ class CompareValidationTests: ValidationConvenienceTests {
 class MatchesValidationTests: ValidationConvenienceTests {
     override func testTrue() throws {
         let collection = 1
-        let _ = try collection.tested(by: Matches(1))
+        let _ = try collection.tested(by: Equals(1))
     }
 
     override func testFalse() throws {
         let collection = 1
-        let result = collection.passes(Matches(999))
+        let result = collection.passes(Equals(999))
         XCTAssertFalse(result)
     }
 }

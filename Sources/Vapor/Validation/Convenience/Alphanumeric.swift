@@ -3,7 +3,7 @@ private let validCharacters = alphanumeric.characters
 
 /// A validator that can be used to check that a
 /// given string contains only alphanumeric characters
-public struct OnlyAlphanumeric: _Validator {
+public struct OnlyAlphanumeric: Validator {
     public init() {}
     /**
         Validate whether or not an input string contains only

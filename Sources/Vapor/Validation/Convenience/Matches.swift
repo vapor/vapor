@@ -1,24 +1,13 @@
-/**
-    Validates that matches a given input
-*/
-public struct Matches<T>: _Validator where T: _Validatable, T: Equatable {
-    /**
-        The value expected to be in sequence
-    */
+/// Validates that matches a given input
+public struct Equals<T>: Validator where T: Validatable, T: Equatable {
+    /// The value expected to be in sequence
     public let expectation: T
 
-    /**
-        Create a validator to check that a sequence contains the given value
-
-        - parameter expecting: the value expected to be in sequence
-    */
+    /// Initialize a validator with the expected value
     public init(_ expectation: T) {
         self.expectation = expectation
     }
 
-    /**
-        validate
-    */
     public func validate(_ input: T) throws {
         guard input == expectation else {
             throw error("\(input) does not equal expectation \(expectation)")

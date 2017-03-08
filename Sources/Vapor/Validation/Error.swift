@@ -26,11 +26,11 @@ extension ErrorList {
 
 // MARK: ValidatorError
 
-public enum _ValidatorError: ValidationError {
+public enum ValidatorError: ValidationError {
     case failure(type: String, reason: String)
 }
 
-extension _ValidatorError {
+extension ValidatorError {
     public var reason: String {
         switch self {
         case .failure(type: let type, reason: let reason):

@@ -17,34 +17,13 @@
 //    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 
-public enum EitherError: ValidationError {
-    case neitherPassed(left: Error, right: Error)
-}
-
-extension EitherError {
-    public var identifier: String {
-        switch self {
-        case .neitherPassed:
-            return "neitherPassed"
-        }
-    }
-
-    public var reason: String {
-        switch self {
-        case .neitherPassed(left: let l, right: let r):
-            return "neither validator passed '\(l)' --- '\(r)'"
-        }
-    }
-
-    public var possibleCauses: [String] { return [] }
-    public var suggestedFixes: [String] { return [] }
-}
-
-public final class EitherValidator<Input: _Validatable>: _Validator {
+/// A combination of two validators in which either one of them
+/// can pass to be considered a successful validation
+public final class Either<Input: Validatable>: Validator {
     let left: (Input) throws -> ()
     let right: (Input) throws -> ()
 
-    internal init<L: _Validator, R: _Validator>(_ l: L, _ r: R) where L.Input == Input, R.Input == Input {
+    internal init<L: Validator, R: Validator>(_ l: L, _ r: R) where L.Input == Input, R.Input == Input {
         left = l.validate
         right = r.validate
     }
@@ -52,8 +31,6 @@ public final class EitherValidator<Input: _Validatable>: _Validator {
     public func validate(_ input: Input) throws {
         guard let leftError = validate(input, with: left) else { return }
         guard let rightError = validate(input, with: right) else { return }
-        
-        // neither passed, throw
-        throw EitherError.neitherPassed(left: leftError, right: rightError)
+        throw error("neither validator passed '\(leftError)' and '\(rightError)'")
     }
 }

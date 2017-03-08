@@ -1,15 +1,12 @@
-/**
-    Validate a comparable
-
-
-    - greaterThan: validate input is > associated value
-    - greaterThanOrEqual: validate input is >= associated value
-    - lessThan: validate input is < associated value
-    - lessThanOrEqual: validate input is <= associated value
-    - equals: validate input == associated value
-    - containedIn: validate low <= input && input <= high
-*/
-public enum Compare<Input>: _Validator where Input: Comparable, Input: _Validatable {
+/// Validate a comparable
+///
+/// - greaterThan: validate input is > associated value
+/// - greaterThanOrEqual: validate input is >= associated value
+/// - lessThan: validate input is < associated value
+/// - lessThanOrEqual: validate input is <= associated value
+/// - equals: validate input == associated value
+/// - containedIn: validate low <= input && input <= high
+public enum Compare<Input>: Validator where Input: Comparable, Input: Validatable {
     case greaterThan(Input)
     case greaterThanOrEqual(Input)
     case lessThan(Input)
@@ -17,13 +14,11 @@ public enum Compare<Input>: _Validator where Input: Comparable, Input: _Validata
     case equals(Input)
     case containedIn(low: Input, high: Input)
 
-    /**
-     Validate that a string passes associated compare evaluation
-
-     - parameter value: input string to validate
-
-     - throws: an error if validation fails
-     */
+    /// Validate that a string passes associated compare evaluation
+    ///
+    /// - parameter value: input string to validate
+    ///
+    /// - throws: an error if validation fails
     public func validate(_ input: Input) throws {
         switch self {
         case .greaterThan(let c) where input > c:

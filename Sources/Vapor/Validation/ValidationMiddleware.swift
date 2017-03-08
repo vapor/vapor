@@ -3,7 +3,6 @@ import HTTP
 /// Catches validation errors and prints
 /// out a more readable JSON response.
 public class ValidationMiddleware: Middleware {
-
     public init() {}
 
     public func respond(to request: Request, chainingTo next: Responder) throws -> Response {

@@ -17,19 +17,15 @@
 //    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 
-
-public final class _Not<Input: _Validatable>: _Validator {
-    public enum NotError: Error {
-        case expectedAnError
-    }
-
+/// Used to invert the logic of a wrapped validator
+public final class Not<Input: Validatable>: Validator {
     let validate: (Input) throws -> ()
 
-    init<V: _Validator>(_ validator: V) where V.Input == Input {
+    init<V: Validator>(_ validator: V) where V.Input == Input {
         self.validate = validator.validate
     }
 
     public func validate(_ input: Input) throws {
-        guard let _ = validate(input, with: validate) else { throw NotError.expectedAnError }
+        guard let _ = validate(input, with: validate) else { throw error("expected failure for \(input)") }
     }
 }

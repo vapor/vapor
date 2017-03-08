@@ -1,13 +1,13 @@
-public final class _ValidatorList<Input: _Validatable>: _Validator {
+public final class ValidatorList<Input: Validatable>: Validator {
     public private(set) var validators: [(Input) throws -> Void] = []
 
     internal init() {}
 
-    internal init<V: _Validator>(_ validator: V) where V.Input == Input {
+    internal init<V: Validator>(_ validator: V) where V.Input == Input {
         extend(validator)
     }
 
-    internal func extend<V: _Validator>(_ v: V) where V.Input == Input {
+    internal func extend<V: Validator>(_ v: V) where V.Input == Input {
         validators.append(v.validate)
     }
 
@@ -21,6 +21,8 @@ public final class _ValidatorList<Input: _Validatable>: _Validator {
         validators.forEach { validator in
             do {
                 try validator(input)
+            } catch let error as ErrorList {
+                failures += error.errors
             } catch {
                 failures.append(error)
             }

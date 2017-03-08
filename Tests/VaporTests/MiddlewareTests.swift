@@ -138,7 +138,7 @@ class MiddlewareTests: XCTestCase {
         let response = drop.respond(to: request)
         let json = response.json
         XCTAssertEqual(json?["error"]?.bool, true)
-        XCTAssertEqual(json?["message"]?.string, "Validation failed with the following errors:\n_ Validator Error: Count<String> failed validation: thisPathIsWayTooLong count 20 is greater than maximum 10\n\nIdentifier: Vapor._ValidatorError.failure")
+        XCTAssertEqual(json?["message"]?.string, "Validation failed with the following errors:\nValidator Error: Count<String> failed validation: thisPathIsWayTooLong count 20 is greater than maximum 10\n\nIdentifier: Vapor.ValidatorError.failure")
         let fail = Request(method: .get, path: "uncaught")
         let failResponse = drop.respond(to: fail)
         XCTAssertEqual(failResponse.status, .notFound)

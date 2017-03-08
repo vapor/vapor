@@ -1,10 +1,5 @@
-// TODO: Evaluate Countable name, also considered Length. W/ count,
-// sequenceType gets free conformance
-
-/**
-    Indicates that a particular type can be validated by count or length
-*/
-public protocol Countable: _Validatable {
+/// Indicates that a particular type can be validated by count or length
+public protocol Countable: Validatable {
     // The type that will be used to evaluate the count
     associatedtype CountType: Comparable, Equatable
 
@@ -12,32 +7,26 @@ public protocol Countable: _Validatable {
     var count: CountType { get }
 }
 
-// MARK: Count
-
-/**
-    Use this to validate the count of a given countable type
-
-     "someString".validated(by: Count.min(3) + OnlyAlphanumeric.self)
-
-    - min:         validate count is >= associated value
-    - max:         validate count <= associated value
-    - equals:      validate count == associated value
-    - containedIn: validate low is <= count and count is <= max
-*/
-public enum Count<Input: Countable>: _Validator {
+/// Use this to validate the count of a given countable type
+///
+/// "someString".validated(by: Count.min(3) + OnlyAlphanumeric.self)
+///
+/// - min:         validate count is >= associated value
+/// - max:         validate count <= associated value
+/// - equals:      validate count == associated value
+/// - containedIn: validate low is <= count and count is <= max
+public enum Count<Input: Countable>: Validator {
     public typealias CountType = Input.CountType
     case min(CountType)
     case max(CountType)
     case equals(CountType)
     case containedIn(low: CountType, high: CountType)
 
-    /**
-        Validate that a string passes associated length evaluation
-
-        - parameter value: input string to validate
-
-        - throws: an error if validation fails
-    */
+    /// Validate that a string passes associated length evaluation
+    ///
+    /// - parameter value: input string to validate
+    ///
+    ///     - throws: an error if validation fails
     public func validate(_ input: Input) throws {
         let count = input.count
         switch self {

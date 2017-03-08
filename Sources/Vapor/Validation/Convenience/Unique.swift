@@ -1,18 +1,11 @@
-/**
-    Validates a given sequence is unique
-*/
-public struct Unique<
-    T>: _Validator where
+    /// Validates a given sequence is unique
+public struct Unique<T>: Validator
+    where
     T: Sequence,
-    T: _Validatable,
+    T: Validatable,
     T.Iterator.Element: Equatable
 {
-
     public init() {}
-
-    /**
-        validate
-    */
     public func validate(_ sequence: T) throws {
         var uniqueValues: [T.Iterator.Element] = []
         for value in sequence {

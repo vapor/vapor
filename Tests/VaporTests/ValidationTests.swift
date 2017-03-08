@@ -9,7 +9,7 @@
 import XCTest
 @testable import Vapor
 
-class Name: _Validator {
+class Name: Validator {
     func validate(_ input: String) throws {
         let evaluation = OnlyAlphanumeric()
             && Count.min(5)
