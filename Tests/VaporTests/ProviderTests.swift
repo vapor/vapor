@@ -76,8 +76,8 @@ private final class FastServer: ServerProtocol {
         self.middleware = middleware
     }
 
-    func start(responder: Responder, errors: @escaping ServerErrorHandler) throws -> Never {
-        exit(0)
+    func start(responder: Responder, errors: @escaping ServerErrorHandler) throws {
+        while true {}
     }
 }
 
@@ -111,7 +111,7 @@ private final class SlowServer: ServerProtocol {
         self.middleware = middleware
     }
 
-    func start(responder: Responder, errors: @escaping ServerErrorHandler) throws -> Never {
+    func start(responder: Responder, errors: @escaping ServerErrorHandler) throws {
         while true {}
     }
 }

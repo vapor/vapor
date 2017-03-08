@@ -21,7 +21,7 @@ extension Request {
         // onfail
         file: StaticString = #file,
         line: UInt = #line
-    ) throws -> Request {
+    ) -> Request {
         let uri = URI(
             scheme: scheme,
             userInfo: userInfo,
@@ -32,18 +32,13 @@ extension Request {
             rawQuery: rawQuery,
             fragment: fragment
         )
-        do {
-            return try Request(
-                method: method,
-                uri: uri,
-                version: version,
-                headers: headers,
-                body: body,
-                peerAddress: peerAddress
-            )
-        } catch {
-            onFail("Failed to initialize request", file, line)
-            throw TestingError.initRequestFailed
-        }
+        return Request(
+            method: method,
+            uri: uri,
+            version: version,
+            headers: headers,
+            body: body,
+            peerAddress: peerAddress
+        )
     }
 }

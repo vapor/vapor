@@ -232,6 +232,7 @@ public class Droplet {
         addConfigurable(middleware: TypeSafeErrorMiddleware(), name: "type-safe")
         addConfigurable(middleware: ValidationMiddleware(), name: "validation")
         addConfigurable(middleware: FileMiddleware(publicDir: workDir + "Public/"), name: "file")
+        addConfigurable(middleware: HeadMiddleware(), name: "head")
 
         if config["droplet", "middleware", "server"]?.array == nil {
             // if no configuration has been supplied
@@ -242,6 +243,7 @@ public class Droplet {
                 TypeSafeErrorMiddleware(),
                 ValidationMiddleware(),
                 FileMiddleware(publicDir: workDir + "Public/"),
+                HeadMiddleware(),
             ]
             log.debug("No `middleware.server` key in `droplet.json` found, using default middleware.")
         }

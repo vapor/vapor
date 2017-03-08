@@ -21,6 +21,9 @@ extension Droplet {
         let config = try config ?? makeServerConfig()
         let server = try self.server.make(host: config.host, port: config.port, securityLayer: config.securityLayer)
         try server.start(responder: self, errors: serverErrors)
+        // don't enforce -> Never on protocol because of Swift warnings
+        log.error("server did not block execution")
+        exit(1)
     }
 }
 

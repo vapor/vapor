@@ -1,6 +1,30 @@
 import HTTP
 import Routing
 
+extension RouterError: AbortError {
+    public var status: Status { return Abort.notFound.status }
+    public var reason: String { return Abort.notFound.reason }
+    public var metadata: Node? { return Abort.notFound.metadata }
+}
+
+// TODO: Own File
+public final class HeadMiddleware: Middleware {
+    public func respond(to request: Request, chainingTo next: Responder) throws -> Response {
+        guard request.method == .head else { return try next.respond(to: request) }
+        /// The HEAD method is identical to GET.
+        ///
+        /// https://tools.ietf.org/html/rfc2616#section-9.4
+        request.method = .get
+        let response = try next.respond(to: request)
+
+        /// The server MUST NOT return a message-body in the response for HEAD.
+        ///
+        /// https://tools.ietf.org/html/rfc2616#section-9.4
+        response.body = .data([])
+        return response
+    }
+}
+
 extension Droplet: Responder {
     /// Returns a response to the given request
     ///
@@ -10,42 +34,10 @@ extension Droplet: Responder {
     public func respond(to request: Request) throws -> Response {
         log.info("\(request.method) \(request.uri.path)")
 
-        var responder: Responder
-        let request = request
-
-        /// The HEAD method is identical to GET.
-        ///
-        /// https://tools.ietf.org/html/rfc2616#section-9.4
-        let originalMethod = request.method
-        if case .head = request.method {
-            request.method = .get
-        }
-
-        let routerResponder: Request.Handler = Request.Handler { [weak self] request in
-            // Routed handler
-            // TODO: Should router just respond?
-            if let handler = self?.router.route(request) {
-                return try handler.respond(to: request)
-            } else {
-                // Default not found handler
-                let normal: [HTTP.Method] = [.get, .post, .put, .patch, .delete]
-
-                if normal.contains(request.method) {
-                    throw Abort.notFound
-                } else if case .options = request.method {
-                    return Response(status: .ok, headers: [
-                        "Allow": "OPTIONS"
-                    ])
-                } else {
-                    return Response(status: .notImplemented)
-                }
-            }
-        }
-
         // Loop through middlewares in order, then pass result to router responder
-        responder = middleware.chain(to: routerResponder)
+        let responder = middleware.chain(to: router)
 
-        var response: Response
+        let response: Response
         do {
             response = try responder.respond(to: request)
 
@@ -112,14 +104,6 @@ extension Droplet: Responder {
             }
         }
 
-        /// The server MUST NOT return a message-body in the response for HEAD.
-        ///
-        /// https://tools.ietf.org/html/rfc2616#section-9.4
-        if case .head = originalMethod {
-            // TODO: What if body is set to chunked¿?
-            response.body = .data([])
-        }
-        
         return response
     }
 }

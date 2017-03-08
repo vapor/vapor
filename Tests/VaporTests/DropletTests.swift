@@ -81,7 +81,7 @@ class DropletTests: XCTestCase {
         }
 
         background {
-            drop.run()
+            try! drop.run()
         }
 
         drop.console.wait(seconds: 1)
@@ -105,7 +105,7 @@ class DropletTests: XCTestCase {
         }
 
         background {
-            drop.run()
+            try! drop.run()
         }
 
         drop.console.wait(seconds: 2)
@@ -129,5 +129,53 @@ class DropletTests: XCTestCase {
         drop.console.wait(seconds: 1)
         let res = try drop.client.get("http://0.0.0.0:8424/foo")
         XCTAssertEqual(try res.bodyString(), "bar")
+    }
+
+    func testHeadRequest() throws {
+        let drop = try Droplet(arguments: ["vapor", "serve"])
+        drop.get("foo") { req in
+            return "Hi, I'm a body"
+        }
+
+        background {
+            let config = ServerConfig(port: 9222)
+            try! drop.serve(config)
+        }
+
+        drop.console.wait(seconds: 1)
+
+        let getResp = try drop.client.get("http://0.0.0.0:9222/foo")
+        XCTAssertEqual(try getResp.bodyString(), "Hi, I'm a body")
+
+        let head = try Request(method: .head, uri: "http://0.0.0.0:9222/foo")
+        let headResp = try drop.client.respond(to: head)
+        XCTAssertEqual(try headResp.bodyString(), "")
+    }
+
+    func testMiddlewareOrder() throws {
+        struct Mid: Middleware {
+            let handler: () -> Void
+
+            func respond(to request: Request, chainingTo next: Responder) throws -> Response {
+                handler()
+                return try next.respond(to: request)
+            }
+        }
+
+        var middleware: [String] = []
+
+        let drop = try Droplet()
+        drop.middleware = [
+            Mid(handler: { middleware.append("one") }),
+            Mid(handler: { middleware.append("two") })
+        ]
+
+        drop.get { req in return "foo" }
+
+        let req = Request(method: .get, path: "")
+        let response = try drop.respond(to: req)
+        XCTAssertEqual(try response.bodyString(), "foo")
+
+        XCTAssertEqual(middleware, ["one", "two"])
     }
 }

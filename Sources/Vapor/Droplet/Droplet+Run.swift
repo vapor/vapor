@@ -10,26 +10,10 @@ extension Droplet {
     /**
         Runs the Droplet's commands, defaulting to serve.
     */
-    public func run(server: ServerConfig? = nil) -> Never  {
-        do {
-            try runCommands(server: server)
-            exit(0)
-        } catch CommandError.general(let error) {
-            console.output(error, style: .error)
-            exit(1)
-        } catch ConsoleError.help {
-            exit(0)
-        } catch ConsoleError.cancelled {
-            exit(2)
-        } catch ConsoleError.commandNotFound(let command) {
-            console.error("Error: ", newLine: false)
-            console.print("Command \"\(command)\" not found.")
-            exit(1)
-        } catch {
-            console.error("Error: ", newLine: false)
-            console.print("\(error)")
-            exit(1)
-        }
+    public func run(server: ServerConfig? = nil) throws -> Never  {
+        try runCommands(server: server)
+        log.info("Bye for now!")
+        exit(0)
     }
 
     func runCommands(server: ServerConfig? = nil) throws {
