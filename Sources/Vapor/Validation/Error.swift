@@ -16,8 +16,8 @@ extension ErrorList {
     }
 
     public var reason: String {
-        let collected = errors.map { "\($0)" } .joined(separator: ",\n")
-        return "Validation failed with the following errors:\n\(collected)"
+        let collected = errors.map { "'\($0)'" } .joined(separator: ",")
+        return "Validation failed with the following errors: \(collected)"
     }
 
     public var possibleCauses: [String] { return [] }
