@@ -18,6 +18,7 @@
 */
 
 public protocol _Validatable {}
+
 public protocol _Validator {
     associatedtype Input: _Validatable
     func validate(_ input: Input) throws
@@ -98,6 +99,63 @@ func && <I: _Validatable>(lhs: _ValidatorList<I>, rhs: _ValidatorList<I>) -> _Va
     return list
 }
 
+
+public final class _OrValidator<Input: _Validatable>: _Validator {
+    public enum OrError: Error {
+        case failure(left: Error, right: Error)
+    }
+
+    let left: (Input) throws -> ()
+    let right: (Input) throws -> ()
+
+    internal init<L: _Validator, R: _Validator>(_ l: L, _ r: R) where L.Input == Input, R.Input == Input {
+        left = l.validate
+        right = r.validate
+    }
+
+    public func validate(_ input: Input) throws {
+        guard let leftError = validate(input, with: left) else { return }
+        // got left error, try right
+        guard let rightError = validate(input, with: right) else { return }
+        // neither passed, throw
+        throw OrError.failure(left: leftError, right: rightError)
+    }
+}
+
+extension _Validator {
+    fileprivate func validate(_ input: Input, with validator: (Input) throws -> ()) -> Error? {
+        do {
+            try validator(input)
+            return nil
+        } catch {
+            return error
+        }
+    }
+}
+
+public func || <L: _Validator, R: _Validator> (lhs: L, rhs: R) -> _OrValidator<L.Input> where L.Input == R.Input {
+    return _OrValidator(lhs, rhs)
+}
+
+public final class _Not<Input: _Validatable>: _Validator {
+    public enum NotError: Error {
+        case expectedAnError
+    }
+
+    let validate: (Input) throws -> ()
+
+    init<V: _Validator>(_ validator: V) where V.Input == Input {
+        self.validate = validator.validate
+    }
+
+    public func validate(_ input: Input) throws {
+        guard let _ = validate(input, with: validate) else { throw NotError.expectedAnError }
+    }
+}
+
+public prefix func ! <V: _Validator>(validator: V) -> _Not<V.Input> {
+    return _Not(validator)
+}
 
 /**
     The core validator, used for validations that require
