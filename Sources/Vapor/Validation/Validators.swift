@@ -24,8 +24,39 @@ public protocol _Validator {
     func validate(_ input: Input) throws
 }
 
-public enum _ValidationError: Error {
-    case failures([Error])
+public enum _ValidatorError: Error {
+    case failure(type: String, reason: String)
+}
+
+extension _Validator {
+    public func error(_ reason: String) -> Error {
+        let type = String(describing: type(of: self))
+        return _ValidatorError.failure(type: type, reason: reason)
+    }
+}
+
+extension _Validatable {
+    public func tested<V: _Validator>(by v: V) throws -> Self where V.Input == Self {
+        try v.validate(self)
+        return self
+    }
+
+    public func passes<V: _Validator>(_ v: V) -> Bool where V.Input == Self {
+        do {
+            try validated(by: v)
+            return true
+        } catch {
+            return false
+        }
+    }
+}
+
+public struct ErrorList: Error {
+    public let errors: [Error]
+
+    public init(_ errors: [Error]) {
+        self.errors = errors
+    }
 }
 
 public final class _ValidatorList<Input: _Validatable>: _Validator {
@@ -56,7 +87,7 @@ public final class _ValidatorList<Input: _Validatable>: _Validator {
             }
         }
 
-        if !failures.isEmpty { throw _ValidationError.failures(failures) }
+        if !failures.isEmpty { throw ErrorList(failures) }
     }
 }
 
@@ -100,9 +131,9 @@ func && <I: _Validatable>(lhs: _ValidatorList<I>, rhs: _ValidatorList<I>) -> _Va
 }
 
 
-public final class _OrValidator<Input: _Validatable>: _Validator {
-    public enum OrError: Error {
-        case failure(left: Error, right: Error)
+public final class EitherValidator<Input: _Validatable>: _Validator {
+    public enum EitherError: Error {
+        case neitherPassed(left: Error, right: Error)
     }
 
     let left: (Input) throws -> ()
@@ -118,7 +149,7 @@ public final class _OrValidator<Input: _Validatable>: _Validator {
         // got left error, try right
         guard let rightError = validate(input, with: right) else { return }
         // neither passed, throw
-        throw OrError.failure(left: leftError, right: rightError)
+        throw EitherError.neitherPassed(left: leftError, right: rightError)
     }
 }
 
@@ -133,8 +164,8 @@ extension _Validator {
     }
 }
 
-public func || <L: _Validator, R: _Validator> (lhs: L, rhs: R) -> _OrValidator<L.Input> where L.Input == R.Input {
-    return _OrValidator(lhs, rhs)
+public func || <L: _Validator, R: _Validator> (lhs: L, rhs: R) -> EitherValidator<L.Input> where L.Input == R.Input {
+    return EitherValidator(lhs, rhs)
 }
 
 public final class _Not<Input: _Validatable>: _Validator {
@@ -187,52 +218,52 @@ public prefix func ! <V: _Validator>(validator: V) -> _Not<V.Input> {
         let validated = try "string".validated(by: StringLength.min(4))
 
 */
-public protocol Validator {
-    /**
-        The type of value that this validator is capable
-        of evaluating
-    */
-    associatedtype InputType: Validatable
+//public protocol Validator {
+//    /**
+//        The type of value that this validator is capable
+//        of evaluating
+//    */
+//    associatedtype InputType: Validatable
+//
+//    /**
+//        Used to validate a given input. Should throw
+//        error if validation fails using:
+//
+//         throw error(with: value)
+//
+//        A function that does not throw will be considered a pass.
+//    */
+//    func validate(input value: InputType) throws
+//}
 
-    /**
-        Used to validate a given input. Should throw
-        error if validation fails using:
-
-         throw error(with: value)
-
-        A function that does not throw will be considered a pass.
-    */
-    func validate(input value: InputType) throws
-}
-
-public protocol ValidationSuite: Validator {
-    /**
-        The type of value that this validator is capable
-        of evaluating
-    */
-    associatedtype InputType: Validatable
-
-    /**
-        Used to validate a given input. Should throw
-        error if validation fails using:
-
-         throw error(with: value)
-
-        A function that does not throw will be considered a pass.
-    */
-    static func validate(input value: InputType) throws
-}
-
-extension ValidationSuite {
-    /**
-        ValidationSuite objects automatically conform to Validator
-        by invoking the static validation
-
-        - parameter value: input value to validate
-
-        - throws: an error if validation fails
-    */
-    public func validate(input value: InputType) throws {
-        try type(of: self).validate(input: value)
-    }
-}
+//public protocol ValidationSuite: Validator {
+//    /**
+//        The type of value that this validator is capable
+//        of evaluating
+//    */
+//    associatedtype InputType: Validatable
+//
+//    /**
+//        Used to validate a given input. Should throw
+//        error if validation fails using:
+//
+//         throw error(with: value)
+//
+//        A function that does not throw will be considered a pass.
+//    */
+//    static func validate(input value: InputType) throws
+//}
+//
+//extension ValidationSuite {
+//    /**
+//        ValidationSuite objects automatically conform to Validator
+//        by invoking the static validation
+//
+//        - parameter value: input value to validate
+//
+//        - throws: an error if validation fails
+//    */
+//    public func validate(input value: InputType) throws {
+//        try type(of: self).validate(input: value)
+//    }
+//}

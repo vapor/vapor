@@ -2,20 +2,22 @@
     Validates a given sequence is unique
 */
 public struct Unique<
-    T>: ValidationSuite where
+    T>: _Validator where
     T: Sequence,
-    T: Validatable,
+    T: _Validatable,
     T.Iterator.Element: Equatable
 {
+
+    public init() {}
 
     /**
         validate
     */
-    public static func validate(input sequence: T) throws {
+    public func validate(_ sequence: T) throws {
         var uniqueValues: [T.Iterator.Element] = []
         for value in sequence {
             if uniqueValues.contains(value) {
-                throw error(with: sequence)
+                throw error("\(sequence) is not unique)")
             } else {
                 uniqueValues.append(value)
             }

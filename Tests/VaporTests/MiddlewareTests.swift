@@ -126,8 +126,9 @@ class MiddlewareTests: XCTestCase {
         drop.middleware.append(ValidationMiddleware())
         
         drop.get("*") { req in
-            let validPath = try req.uri.path.validated(by: Count.max(10))
-            return validPath.value
+            let path = req.uri.path
+            try path.validated(by: Count.max(10))
+            return path
         }
 
         // only added validation, abort won't be caught.

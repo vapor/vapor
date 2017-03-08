@@ -9,14 +9,13 @@
     - equals: validate input == associated value
     - containedIn: validate low <= input && input <= high
 */
-public enum Compare<ComparableType>: Validator where ComparableType: Comparable, ComparableType: Validatable {
-    public typealias InputType = ComparableType
-    case greaterThan(ComparableType)
-    case greaterThanOrEqual(ComparableType)
-    case lessThan(ComparableType)
-    case lessThanOrEqual(ComparableType)
-    case equals(ComparableType)
-    case containedIn(low: ComparableType, high: ComparableType)
+public enum Compare<Input>: _Validator where Input: Comparable, Input: _Validatable {
+    case greaterThan(Input)
+    case greaterThanOrEqual(Input)
+    case lessThan(Input)
+    case lessThanOrEqual(Input)
+    case equals(Input)
+    case containedIn(low: Input, high: Input)
 
     /**
      Validate that a string passes associated compare evaluation
@@ -25,22 +24,44 @@ public enum Compare<ComparableType>: Validator where ComparableType: Comparable,
 
      - throws: an error if validation fails
      */
-    public func validate(input value: InputType) throws {
+    public func validate(_ input: Input) throws {
         switch self {
-        case .greaterThan(let c) where value > c:
+        case .greaterThan(let c) where input > c:
             break
-        case .greaterThanOrEqual(let c) where value >= c:
+        case .greaterThanOrEqual(let c) where input >= c:
             break
-        case .lessThan(let c) where value < c:
+        case .lessThan(let c) where input < c:
             break
-        case .lessThanOrEqual(let c) where value <= c:
+        case .lessThanOrEqual(let c) where input <= c:
             break
-        case .equals(let e) where value == e:
+        case .equals(let e) where input == e:
             break
-        case .containedIn(low: let l, high: let h) where l <= value && value <= h:
+        case .containedIn(low: let l, high: let h) where l <= input && input <= h:
             break
         default:
-            throw error(with: value)
+            let reason = errorReason(with: input)
+            throw error(reason)
         }
+    }
+
+    private func errorReason(with input: Input) -> String {
+        var reason = "\(input) is not "
+
+        switch self {
+        case .greaterThan(let c):
+            reason += "greater than \(c)"
+        case .greaterThanOrEqual(let c):
+            reason += "greater than or equal to \(c)"
+        case .lessThan(let c):
+            reason += "less than \(c)"
+        case .lessThanOrEqual(let c):
+            reason += "less than or equal to \(c)"
+        case .equals(let e):
+            reason += "equal to \(e)"
+        case .containedIn(low: let l, high: let h):
+            reason += "not contained in \(l...h)"
+        }
+
+        return reason
     }
 }

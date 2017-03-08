@@ -2,12 +2,12 @@
     Validate that is in given collection
 */
 public struct In<
-    T>: Validator where
-    T: Validatable,
+    T>: _Validator where
+    T: _Validatable,
     T: Equatable
 {
 
-    private let iteratorFactory: (Void) -> AnyIterator<T>
+    private let collection: [T]
 
     /**
      Create in validation against passed iterator
@@ -15,21 +15,17 @@ public struct In<
      - parameter sequence: the sequence to check if contains
     */
     public init<S: Sequence>(_ sequence: S) where S.Iterator.Element == T {
-        iteratorFactory = {
-            var iterator = sequence.makeIterator()
-            return AnyIterator { iterator.next() }
-        }
+        collection = Array(sequence)
     }
 
 
     /**
         validate
     */
-    public func validate(input value: T) throws {
-        let iterator = iteratorFactory()
-        for next in iterator where next == value {
+    public func validate(_ input: T) throws {
+        for next in collection where next == input {
             return
         }
-        throw error(with: value)
+        throw error("\(collection) does not contain \(input)")
     }
 }

@@ -1,12 +1,7 @@
 /**
     Validate that a sequence contains a given value
 */
-public struct Contains<
-    T>: Validator where
-    T: Sequence,
-    T: Validatable,
-T.Iterator.Element: Equatable {
-
+public struct Contains<T>: _Validator where T: Sequence, T: _Validatable, T.Iterator.Element: Equatable {
     /**
         The value expected to be in sequence
     */
@@ -24,11 +19,8 @@ T.Iterator.Element: Equatable {
     /**
         validate
     */
-    public func validate(input sequence: T) throws {
-        for element in sequence where element == expecting {
-            return
-        }
-
-        throw error(with: sequence)
+    public func validate(_ input: T) throws {
+        if input.contains(expecting) { return }
+        throw error("\(input) does not contain \(expecting)")
     }
 }
