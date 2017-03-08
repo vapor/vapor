@@ -9,7 +9,7 @@ extension Message {
                 return existing
             } else if let type = headers[.contentType], type.contains("application/x-www-form-urlencoded") {
                 guard case let .data(body) = body else { return nil }
-                let formURLEncoded = Node(formURLEncoded: body)
+                let formURLEncoded = Node(formURLEncoded: body, allowEmptyValues: false)
                 storage["form-urlencoded"] = formURLEncoded
                 return formURLEncoded
             } else {
@@ -39,7 +39,7 @@ extension Request {
                 return existing as? Node
             } else if let queryRaw = uri.rawQuery {
                 let queryBytes = queryRaw.makeBytes()
-                let query = Node(formURLEncoded: queryBytes)
+                let query = Node(formURLEncoded: queryBytes, allowEmptyValues: true)
                 storage["query"] = query
                 return query
             } else {

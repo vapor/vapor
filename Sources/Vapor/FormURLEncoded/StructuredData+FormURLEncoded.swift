@@ -3,15 +3,14 @@ import Core
 import Node
 
 extension Node {
-    public init(formURLEncoded data: Bytes) {
+    /// Queries allow empty values
+    /// FormURLEncoded does not
+    public init(formURLEncoded data: Bytes, allowEmptyValues: Bool) {
         var urlEncoded: [String: Node] = [:]
 
         let replacePlus: (Byte) -> (Byte) = { byte in
-            if byte == .plus {
-                return .space
-            } else {
-                return byte
-            }
+            guard byte == .plus else { return byte }
+            return .space
         }
         
         for pair in data.split(separator: .ampersand) {
@@ -21,17 +20,21 @@ extension Node {
             /// Allow empty subsequences
             /// value= => "value": ""
             /// value => "value": true
-            let token = pair.split(separator: .equals, omittingEmptySubsequences: false)
+            let token = pair.split(
+                separator: .equals,
+                maxSplits: 1, // max 1, `foo=a=b` should be `"foo": "a=b"`
+                omittingEmptySubsequences: !allowEmptyValues
+            )
             if token.count == 2 {
                 keyData = percentDecoded(token[0], nonEncodedTransform: replacePlus) ?? []
                 let valueData = percentDecoded(token[1], nonEncodedTransform: replacePlus) ?? []
                 value = .string(valueData.string)
-            } else if token.count == 1 {
+            } else if allowEmptyValues && token.count == 1 {
                 keyData = percentDecoded(token[0], nonEncodedTransform: replacePlus) ?? []
                 value = .bool(true)
             } else {
-                self = .object(urlEncoded)
-                return
+                print("Found bad encoded pair \(pair.string) ... continuing")
+                continue
             }
 
             var keyIndicatedArray = false
