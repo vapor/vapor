@@ -3,7 +3,7 @@ import Core
 import Node
 
 extension Node {
-    public init(formURLEncoded data: Bytes, allowEmptyValues: Bool = false) {
+    public init(formURLEncoded data: Bytes) {
         var urlEncoded: [String: Node] = [:]
 
         let replacePlus: (Byte) -> (Byte) = { byte in
@@ -17,15 +17,18 @@ extension Node {
         for pair in data.split(separator: .ampersand) {
             var value: Node = .string("")
             var keyData: Bytes
-            
-            let token = pair.split(separator: .equals)
+
+            /// Allow empty subsequences
+            /// value= => "value": ""
+            /// value => "value": true
+            let token = pair.split(separator: .equals, omittingEmptySubsequences: false)
             if token.count == 2 {
                 keyData = percentDecoded(token[0], nonEncodedTransform: replacePlus) ?? []
                 let valueData = percentDecoded(token[1], nonEncodedTransform: replacePlus) ?? []
-
                 value = .string(valueData.string)
-            } else if token.count == 1 && allowEmptyValues {
+            } else if token.count == 1 {
                 keyData = percentDecoded(token[0], nonEncodedTransform: replacePlus) ?? []
+                value = .bool(true)
             } else {
                 self = .object(urlEncoded)
                 return

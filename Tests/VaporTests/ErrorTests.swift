@@ -11,6 +11,6 @@ class ErrorTests: XCTestCase {
         let view = drop.view.make(Abort(.notFound))
         print(view.data.string)
         XCTAssert(view.data.string.contains("404"))
-        XCTAssert(view.data.string.contains("Not found"))
+        XCTAssert(view.data.string.contains("Not Found"))
     }
 }

@@ -25,6 +25,6 @@ class QueryTests: XCTestCase {
         XCTAssertEqual(2, query?.count)
         XCTAssertNotNil(query?["fizz"])
         XCTAssertNotNil(query?["buzz"])
-        XCTAssertEqual("", query?["fizz"]?.string)
+        XCTAssertEqual(query?["fizz"]?.bool, true)
     }
 }
