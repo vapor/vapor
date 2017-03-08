@@ -17,6 +17,88 @@
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+public protocol _Validatable {}
+public protocol _Validator {
+    associatedtype Input: _Validatable
+    func validate(_ input: Input) throws
+}
+
+public enum _ValidationError: Error {
+    case failures([Error])
+}
+
+public final class _ValidatorList<Input: _Validatable>: _Validator {
+    public private(set) var validators: [(Input) throws -> Void] = []
+
+    internal init() {}
+
+    internal init<V: _Validator>(_ validator: V) where V.Input == Input {
+        extend(validator)
+    }
+
+    internal func extend<V: _Validator>(_ v: V) where V.Input == Input {
+        validators.append(v.validate)
+    }
+
+    internal func extend(_ v: @escaping (Input) throws -> Void) {
+        validators.append(v)
+    }
+
+    public func validate(_ input: Input) throws {
+        var failures = [Error]()
+
+        validators.forEach { validator in
+            do {
+                try validator(input)
+            } catch {
+                failures.append(error)
+            }
+        }
+
+        if !failures.isEmpty { throw _ValidationError.failures(failures) }
+    }
+}
+
+extension _Validatable {
+    public func validated<V: _Validator>(by validator: V) throws where V.Input == Self {
+        let list = _ValidatorList(validator)
+        try validated(by: list)
+    }
+
+    public func validated(by list: _ValidatorList<Self>) throws {
+        try list.validate(self)
+    }
+}
+
+func && <L: _Validator, R: _Validator>(lhs: L, rhs: R) -> _ValidatorList<L.Input> where L.Input == R.Input {
+    let list = _ValidatorList<L.Input>()
+    list.extend(lhs)
+    list.extend(rhs)
+    return list
+}
+
+func && <R: _Validator>(lhs: _ValidatorList<R.Input>, rhs: R) -> _ValidatorList<R.Input> {
+    let list = _ValidatorList<R.Input>()
+    lhs.validators.forEach(list.extend)
+    list.extend(rhs)
+    return list
+}
+
+func && <L: _Validator>(lhs: L, rhs: _ValidatorList<L.Input>) -> _ValidatorList<L.Input> {
+    let list = _ValidatorList<L.Input>()
+    rhs.validators.forEach(list.extend)
+    list.extend(lhs)
+    return list
+}
+
+func && <I: _Validatable>(lhs: _ValidatorList<I>, rhs: _ValidatorList<I>) -> _ValidatorList<I> {
+    let list = _ValidatorList<I>()
+    lhs.validators.forEach(list.extend)
+    rhs.validators.forEach(list.extend)
+    return list
+}
+
+
 /**
     The core validator, used for validations that require
     parameters. For example, a string length validator that
