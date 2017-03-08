@@ -134,12 +134,11 @@ class MiddlewareTests: XCTestCase {
         // only added validation, abort won't be caught.
         drop.get("uncaught") { _ in throw Abort.notFound }
 
-        let request = Request(method: .get, path: "12345678910")
+        let request = Request(method: .get, path: "thisPathIsWayTooLong")
         let response = drop.respond(to: request)
-        let json = try response.body.bytes.flatMap(JSON.init)
+        let json = response.json
         XCTAssertEqual(json?["error"]?.bool, true)
-        XCTAssertEqual(json?["message"]?.string, "Validating max(10) failed for input '12345678910'")
-
+        XCTAssertEqual(json?["message"]?.string, "Validation failed with the following errors:\n_ Validator Error: Count<String> failed validation: thisPathIsWayTooLong count 20 is greater than maximum 10\n\nIdentifier: Vapor._ValidatorError.failure")
         let fail = Request(method: .get, path: "uncaught")
         let failResponse = drop.respond(to: fail)
         XCTAssertEqual(failResponse.status, .notFound)

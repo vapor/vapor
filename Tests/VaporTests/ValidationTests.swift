@@ -56,17 +56,15 @@ class ValidationTests: XCTestCase {
     }
 
     func testDetailedFailure() throws {
-        XCTFail("fixme")
-//        let fail = Count<Int>.min(10)
-//        let pass = Count<Int>.max(30)
-//        let combo = pass && fail
-//        do {
-//            let _ = try 2.tested(by: combo)
-//            XCTFail("should throw error")
-//        } catch let e as ValidationError<Count<Int>> {
-//            XCTAssertNotNil(e.validator)
-//            XCTAssertNotNil(e.input == 2)
-//        }
+        let fail = Count<Int>.min(10)
+        let pass = Count<Int>.max(30)
+        let combo = pass && fail
+        do {
+            let _ = try 2.tested(by: combo)
+            XCTFail("should throw error")
+        } catch let e as ErrorList {
+            XCTAssertEqual(e.errors.count, 1)
+        }
     }
 
     func testValidEmail() {

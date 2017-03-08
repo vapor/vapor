@@ -1,4 +1,4 @@
-///*
+//
 //    The MIT License (MIT) Copyright (c) 2016 Benjamin Encz
 //
 //    Permission is hereby granted, free of charge, to any person obtaining a copy of this
@@ -15,76 +15,21 @@
 //    AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
 //    DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-//*/
 //
-///**
-//    Use this to invert the logic of a Validator.
-//    This type can be created two ways
-//
-//    1. Not.init(_:)
-//
-//     Not(validatorToInvert)
-//
-//    2. The `!` operator can be used to invert a validator
-//
-//     !validatorToInvert
-//*/
-//public struct Not<V: Validator> {
-//    fileprivate typealias Validator = (V.InputType) throws -> Void
-//    fileprivate let validator: Validator
-//
-//    /**
-//        Convenience only.
-//
-//        Must stay private.
-//    */
-//    fileprivate init(_ validator: @escaping Validator) {
-//        self.validator = { value in
-//            do {
-//                try validator(value)
-//            } catch {
-//                return
-//            }
-//            /**
-//                We only arrive here if we passed validation.
-//                We can't throw in the `do` or it moves to catch.
-//            */
-//            throw Not<V>.error(with: value)
-//        }
-//    }
-//}
-//
-//extension Not: Validator {
-//    /**
-//        Use this to validate with a `Not<T>` type.
-//
-//        - parameter value: value to validate
-//    */
-//    public func validate(input value: V.InputType) throws {
-//        try validator(value)
-//    }
-//}
-//
-//extension Not {
-//
-//    /**
-//        Use this to invert a Validator
-//
-//        - parameter lhs: the validator to invert
-//    */
-//    public init(_ lhs: V) {
-//        self.init(lhs.validate)
-//    }
-//}
-//
-//extension Not where V: ValidationSuite {
-//
-//    /**
-//        Use this to initialize with a ValidationSuite.
-//
-//        - parameter lhs: validationSuite to initialize with. Can be inferred
-//    */
-//    public init(_ lhs: V.Type = V.self) {
-//        self.init(lhs.validate)
-//    }
-//}
+
+
+public final class _Not<Input: _Validatable>: _Validator {
+    public enum NotError: Error {
+        case expectedAnError
+    }
+
+    let validate: (Input) throws -> ()
+
+    init<V: _Validator>(_ validator: V) where V.Input == Input {
+        self.validate = validator.validate
+    }
+
+    public func validate(_ input: Input) throws {
+        guard let _ = validate(input, with: validate) else { throw NotError.expectedAnError }
+    }
+}
