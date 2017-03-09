@@ -97,6 +97,8 @@ public class Droplet {
     /// Storage to add/manage dependencies, identified by a string
     public var storage: [String: Any]
 
+    /// Implemented by your email client
+    public var mail: MailProtocol
 
     /// The responder will be loaded the first time the droplet is asked
     /// to respond to a request, this prevents having to construct it
@@ -225,6 +227,7 @@ public class Droplet {
             defaultKey: Bytes(repeating: 0, count: 16),
             defaultIV: nil
         )
+        mail = UnimplementedMailer()
 
         // CONFIGURABLE
         addConfigurable(server: Server<TCPServerStream, Parser<Request>, Serializer<Response>>.self, name: "engine")
