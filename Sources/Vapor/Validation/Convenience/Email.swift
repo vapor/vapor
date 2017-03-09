@@ -1,7 +1,7 @@
 import Foundation
 
 /// Validate a string input represents a valid Email address
-public class Email: Validator {
+public class EmailValidator: Validator {
     public init() {}
 
     public func validate(_ input: String) throws {
