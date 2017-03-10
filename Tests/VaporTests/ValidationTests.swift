@@ -9,13 +9,13 @@
 import XCTest
 @testable import Vapor
 
-class Name: ValidationSuite {
-    static func validate(input value: String) throws {
-        let evaluation = OnlyAlphanumeric.self
+class Name: Validator {
+    func validate(_ input: String) throws {
+        let evaluation = OnlyAlphanumeric()
             && Count.min(5)
             && Count.max(20)
 
-        try evaluation.validate(input: value)
+        try evaluation.validate(input)
     }
 }
 
@@ -26,44 +26,33 @@ class ValidationTests: XCTestCase {
         ("testPassword", testPassword),
         ("testNot", testNot),
         ("testComposition", testComposition),
-        ("testAlternateSyntax", testAlternateSyntax)
     ]
 
     func testName() throws {
-        let validName = try "fancyUser".validated(by: Name.self)
-        XCTAssert(validName.value == "fancyUser")
-
-        let failed: Valid<Name>? = try? "a*cd".validated()
-        XCTAssert(failed == nil)
-
-        try Name().validate(input: "fancyUser")
+        try "fancyUser".validated(by: Name())
+        try Name().validate("fancyUser")
     }
 
     func testPassword() throws {
-        let no = try? "no".validated(by: !OnlyAlphanumeric.self && Count.min(5))
-        XCTAssert(no == nil)
+        do {
+            try "no".validated(by: !OnlyAlphanumeric() && Count.min(5))
+            XCTFail("Should error")
+        } catch {}
 
-        let yes = try? "yes*/pass".validated(by: !OnlyAlphanumeric.self && Count.min(5))
-        XCTAssert(yes != nil)
+        try "yes*/pass".validated(by: !OnlyAlphanumeric() && Count.min(5))
     }
 
-    func testNot() throws {
-        let a = try? "a".validated(by: !OnlyAlphanumeric.self)
-        XCTAssertNil(a)
+    func testNot() {
+        XCTAssertFalse("a".passes(!OnlyAlphanumeric()))
     }
 
     func testComposition() throws {
         let contrived = Count.max(9)
             || Count.min(11)
-            && Name.self
-            && OnlyAlphanumeric.self
+            && Name()
+            && OnlyAlphanumeric()
 
-        let pass = try "contrive".validated(by: contrived)
-        XCTAssert(pass.value == "contrive")
-    }
-
-    func testAlternateSyntax() throws {
-        let _ = try Valid<Name>("Vapor")
+        try "contrive".validated(by: contrived)
     }
 
     func testDetailedFailure() throws {
@@ -73,23 +62,22 @@ class ValidationTests: XCTestCase {
         do {
             let _ = try 2.tested(by: combo)
             XCTFail("should throw error")
-        } catch let e as ValidationError<Count<Int>> {
-            XCTAssertNotNil(e.validator)
-            XCTAssertNotNil(e.input == 2)
+        } catch let e as ErrorList {
+            XCTAssertEqual(e.errors.count, 1)
         }
     }
 
     func testValidEmail() {
         // Thanks again Ben Wu :)
-        XCTAssertFalse("".passes(Email.self))
-        XCTAssertFalse("@".passes(Email.self))
-        XCTAssertFalse("@.".passes(Email.self))
-        XCTAssertFalse("@.com".passes(Email.self))
-        XCTAssertFalse("foo@.com".passes(Email.self))
-        XCTAssertFalse("@foo.com".passes(Email.self))
-        XCTAssertTrue("f@b.c".passes(Email.self))
-        XCTAssertTrue("foo@bar.com".passes(Email.self))
-        XCTAssertFalse("f@b.".passes(Email.self))
-        XCTAssertFalse("æøå@gmail.com".passes(Email.self))
+        XCTAssertFalse("".passes(EmailValidator()))
+        XCTAssertFalse("@".passes(EmailValidator()))
+        XCTAssertFalse("@.".passes(EmailValidator()))
+        XCTAssertFalse("@.com".passes(EmailValidator()))
+        XCTAssertFalse("foo@.com".passes(EmailValidator()))
+        XCTAssertFalse("@foo.com".passes(EmailValidator()))
+        XCTAssertTrue("f@b.c".passes(EmailValidator()))
+        XCTAssertTrue("foo@bar.com".passes(EmailValidator()))
+        XCTAssertFalse("f@b.".passes(EmailValidator()))
+        XCTAssertFalse("æøå@gmail.com".passes(EmailValidator()))
     }
 }

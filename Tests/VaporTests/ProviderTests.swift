@@ -6,6 +6,9 @@ import Transport
 class ProviderTests: XCTestCase {
     static let allTests = [
         ("testBasic", testBasic),
+        ("testPrecedence", testPrecedence),
+        ("testOverride", testOverride),
+        ("testInitialized", testInitialized),
     ]
 
     func testBasic() throws {
@@ -50,8 +53,11 @@ class ProviderTests: XCTestCase {
         XCTAssertEqual(fast.beforeRunFlag, false)
         XCTAssertEqual(slow.beforeRunFlag, false)
 
-        try drop.runCommands()
+        background {
+            try! drop.runCommands()
+        }
 
+        drop.console.wait(seconds: 1)
         XCTAssertEqual(slow.beforeRunFlag, true)
         XCTAssertEqual(fast.beforeRunFlag, true)
     }
@@ -74,7 +80,7 @@ private final class FastServer: ServerProtocol {
     }
 
     func start(responder: Responder, errors: @escaping ServerErrorHandler) throws {
-
+        while true {}
     }
 }
 
@@ -109,7 +115,7 @@ private final class SlowServer: ServerProtocol {
     }
 
     func start(responder: Responder, errors: @escaping ServerErrorHandler) throws {
-
+        while true {}
     }
 }
 

@@ -55,7 +55,7 @@ public final class StaticViewRenderer: ViewRenderer {
 
         let path = path.hasPrefix("/") ? path.makeBytes().dropFirst().string : path
         let bytes = try loader.load(path: viewsDir + path)
-        let view = try View(bytes: bytes)
+        let view = View(bytes: bytes)
         cache?[path] = view
         return view
     }

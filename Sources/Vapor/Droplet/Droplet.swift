@@ -2,10 +2,9 @@ import HTTP
 import Console
 import Cache
 import Sessions
-import HMAC
-import Cipher
+import Crypto
 import Transport
-import SocksCore
+import Socks
 
 public let VERSION = "2.0.0-alpha"
 
@@ -92,14 +91,21 @@ public class Droplet {
     /// pair information.
     public var cache: CacheProtocol
 
+    /// The providers that have been added.
+    public internal(set) var providers: [Provider]
+
     /// Storage to add/manage dependencies, identified by a string
     public var storage: [String: Any]
 
-    /// The currently running servers
-    public internal(set) var startedServers: [String:ServerProtocol] = [:]
+    /// Implemented by your email client
+    public var mail: MailProtocol
 
-    /// The providers that have been added.
-    public internal(set) var providers: [Provider]
+    /// The responder will be loaded the first time the droplet is asked
+    /// to respond to a request, this prevents having to construct it
+    /// for each request
+    ///
+    /// Loop through middlewares in order, then pass result to router responder
+    internal private(set) lazy var responder: Responder = self.middleware.chain(to: self.router)
 
     /// Initialize the Droplet.
     public init(
@@ -217,10 +223,11 @@ public class Droplet {
         providers = []
         hash = CryptoHasher(hash: .sha1, encoding: .hex)
         cipher = CryptoCipher(
-            method: .chacha20,
-            defaultKey: Bytes(repeating: 0, count: 32),
-            defaultIV: Bytes(repeating: 0, count: 8)
+            method: .aes256(.cbc),
+            defaultKey: Bytes(repeating: 0, count: 16),
+            defaultIV: nil
         )
+        mail = UnimplementedMailer()
 
         // CONFIGURABLE
         addConfigurable(server: Server<TCPServerStream, Parser<Request>, Serializer<Response>>.self, name: "engine")
@@ -236,6 +243,15 @@ public class Droplet {
         addConfigurable(middleware: TypeSafeErrorMiddleware(), name: "type-safe")
         addConfigurable(middleware: ValidationMiddleware(), name: "validation")
         addConfigurable(middleware: FileMiddleware(publicDir: workDir + "Public/"), name: "file")
+        addConfigurable(middleware: HeadMiddleware(), name: "head")
+        let contentTypeLogger = ContentTypeLogger { [weak self] log in
+            if let welf = self {
+                welf.log.info(log)
+            } else {
+                print(log)
+            }
+        }
+        addConfigurable(middleware: contentTypeLogger, name: "content-type-log")
 
         if config["droplet", "middleware", "server"]?.array == nil {
             // if no configuration has been supplied
@@ -246,9 +262,14 @@ public class Droplet {
                 TypeSafeErrorMiddleware(),
                 ValidationMiddleware(),
                 FileMiddleware(publicDir: workDir + "Public/"),
+                HeadMiddleware(),
+                contentTypeLogger,
             ]
             log.debug("No `middleware.server` key in `droplet.json` found, using default middleware.")
         }
+
+        // Post Init Defaults
+        commands.append(RouteList(self))
     }
 
     func serverErrors(error: ServerError) {

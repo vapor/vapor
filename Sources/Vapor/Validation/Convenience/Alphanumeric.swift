@@ -1,11 +1,10 @@
-/**
-    A validator that can be used to check that a
-    given string contains only alphanumeric characters
-*/
-public struct OnlyAlphanumeric: ValidationSuite {
-    private static let alphanumeric = "abcdefghijklmnopqrstuvwxyz0123456789"
-    private static let validCharacters = alphanumeric.characters
+private let alphanumeric = "abcdefghijklmnopqrstuvwxyz0123456789"
+private let validCharacters = alphanumeric.characters
 
+/// A validator that can be used to check that a
+/// given string contains only alphanumeric characters
+public struct OnlyAlphanumeric: Validator {
+    public init() {}
     /**
         Validate whether or not an input string contains only
         alphanumeric characters. a...z0...9
@@ -14,15 +13,15 @@ public struct OnlyAlphanumeric: ValidationSuite {
 
         - throws: an error if validation fails
     */
-    public static func validate(input value: String) throws {
-        let passed = value
+    public func validate(_ input: String) throws {
+        let passed = input
             .lowercased()
             .characters
             .filter(validCharacters.contains)
             .count
 
-        if passed != value.characters.count {
-            throw error(with: value)
+        if passed != input.characters.count {
+            throw error("\(input) is not alphanumeric")
         }
     }
 }

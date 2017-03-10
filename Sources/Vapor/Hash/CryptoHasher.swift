@@ -1,6 +1,4 @@
-import HMAC
-import Hash
-import Core
+import Crypto
 
 /// Create normal and keyed hashes
 /// using the available HMAC methods from
@@ -158,12 +156,6 @@ extension HMAC.Method: StringInitializable {
             self = .ripemd160
         case "whirlpool":
             self = .whirlpool
-        case "streebog256":
-            self = .streebog256
-        case "streebog512":
-            self = .streebog512
-        case "gostr341194":
-            self = .gostr341194
         default:
             return nil
         }

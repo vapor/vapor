@@ -1,14 +1,46 @@
 import TLS
+import Transport
 
 extension Droplet {
-    func parseTLSConfig(_ tlsConfig: [String: Polymorphic], mode: TLS.Mode) throws -> TLS.Config {
+    internal func makeServerConfig() throws -> ServerConfig {
+        let serverConfig = config["server"]
+        let port = serverConfig?["port"]?.int ?? cliPort(arguments: arguments) ?? 8080
+        let host = serverConfig?["host"]?.string ?? "0.0.0.0"
+        let securityLayer = try makeSecurityLayer(serverConfig: serverConfig)
+        return ServerConfig(host: host, port: port, securityLayer: securityLayer)
+    }
+
+    private func makeSecurityLayer(serverConfig: Settings.Config?) throws -> SecurityLayer {
+        let security = serverConfig?["securityLayer"]?.string ?? "none"
+        let securityLayer: SecurityLayer
+
+        switch security {
+        case "tls":
+            if let tlsConfig = serverConfig?["tls"]?.object {
+                let config = try parseTLSConfig(tlsConfig, mode: .server)
+                securityLayer = .tls(config)
+            } else {
+                log.warning("No TLS configuration supplied, using default.")
+                securityLayer = .tls(nil)
+            }
+        case "none":
+            securityLayer = .none
+        default:
+            securityLayer = .none
+            log.error("Invalid security layer: \(security), defaulting to none.")
+        }
+
+        return securityLayer
+    }
+
+    func parseTLSConfig(_ tlsConfig: [String: Polymorphic], mode: TLS.Mode) throws -> TLS.Context {
         let verifyHost = tlsConfig["verifyHost"]?.bool ?? true
         let verifyCertificates = tlsConfig["verifyCertificates"]?.bool ?? true
 
         let certs = parseTLSCertificates(tlsConfig)
-        let config = try TLS.Config(
-            mode: mode,
-            certificates: certs,
+        let config = try TLS.Context(
+            mode,
+            certs,
             verifyHost: verifyHost,
             verifyCertificates: verifyCertificates
         )

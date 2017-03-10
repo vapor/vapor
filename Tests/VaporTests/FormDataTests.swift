@@ -75,9 +75,8 @@ class FormDataTests: XCTestCase {
         }
         
         background {
-            drop.run(servers: [
-                "test": (host: "0.0.0.0", port: 8932, securityLayer: .none)
-            ])
+            let server = ServerConfig(port: 8932)
+            try! drop.run(server: server)
         }
         
         drop.console.wait(seconds: 1)

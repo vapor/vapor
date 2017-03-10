@@ -1,137 +1,41 @@
+// MARK: && - Combine Validators
 
-// MARK: Not
-
-/**
-    Inverts the logic of a Validator
-
-     !validatorToInvert
-
-    - parameter rhs: validator to invert
-
-    - returns: Not<V> representing an inversion of the input Validator
-*/
-public prefix func ! <V: Validator> (rhs: V) -> Not<V> {
-    return Not(rhs)
+func && <L: Validator, R: Validator>(lhs: L, rhs: R) -> ValidatorList<L.Input> where L.Input == R.Input {
+    let list = ValidatorList<L.Input>()
+    list.extend(lhs)
+    list.extend(rhs)
+    return list
 }
 
-
-/**
-    Inverts the logic of a ValidationSuite
-
-     !ValidationSuiteToInvert.self
-
-    - parameter rhs: validation suite to invert
-
-    - returns: Not<V> representing an inversion of the input ValidationSuite
-*/
-public prefix func ! <V: ValidationSuite> (rhs: V.Type) -> Not<V> {
-    return Not(rhs)
+func && <R: Validator>(lhs: ValidatorList<R.Input>, rhs: R) -> ValidatorList<R.Input> {
+    let list = ValidatorList<R.Input>()
+    lhs.validators.forEach(list.extend)
+    list.extend(rhs)
+    return list
 }
 
-// MARK: Or
-
-/**
-    Combine two validators using a logical ||
-    If either succeeds, the validation will pass
-
-    - parameter lhs: left validator will be run first
-    - parameter rhs: right validator, will be used if left fails
-
-    - returns: Either<V,U> representing the || combination of the two validators
-*/
-public func || <V: Validator, U: Validator> (lhs: V, rhs: U) -> Either<V, U> where V.InputType == U.InputType {
-    return  Either(lhs, rhs)
+func && <L: Validator>(lhs: L, rhs: ValidatorList<L.Input>) -> ValidatorList<L.Input> {
+    let list = ValidatorList<L.Input>()
+    rhs.validators.forEach(list.extend)
+    list.extend(lhs)
+    return list
 }
 
-/**
-    Combine two validators using a logical ||
-    If either succeeds, the validation will pass
-
-    - parameter lhs: left validator. will be run first
-    - parameter rhs: right validation suite. will be used if lhs fails
-
-    - returns: Either<V,U> representing the || combination of the two validators
-*/
-public func || <V: Validator, U: ValidationSuite> (lhs: V, rhs: U.Type) -> Either<V, U> where V.InputType == U.InputType {
-    return  Either(lhs, rhs)
+func && <I: Validatable>(lhs: ValidatorList<I>, rhs: ValidatorList<I>) -> ValidatorList<I> {
+    let list = ValidatorList<I>()
+    lhs.validators.forEach(list.extend)
+    rhs.validators.forEach(list.extend)
+    return list
 }
 
-/**
-    Combine two validators using a logical ||.
-    If either succeeds, the validation will pass
+// MARK: || - Combine OR validators
 
-    - parameter lhs: left validation suite. will be run first
-    - parameter rhs: right validator. will be used if lhs fails
-
-    - returns: Either<V,U> representing the || combination of the two validators
-*/
-public func || <V: ValidationSuite, U: Validator> (lhs: V.Type, rhs: U) -> Either<V, U> where V.InputType == U.InputType {
-    return  Either(lhs, rhs)
+public func || <L: Validator, R: Validator> (lhs: L, rhs: R) -> Either<L.Input> where L.Input == R.Input {
+    return Either(lhs, rhs)
 }
 
-/**
-    Combine two validators using a logical ||
-    If either succeeds, the validation will pass
+// MARK: ! - Invert Validator
 
-    - parameter lhs: left validation suite. will be run first
-    - parameter rhs: right validation suite. will be used if lhs fails
-
-    - returns: Either<V,U> representing the || combination of the two validators
-*/
-public func || <V: ValidationSuite, U: ValidationSuite> (lhs: V.Type, rhs: U.Type) -> Either<V, U> where V.InputType == U.InputType {
-    return  Either(lhs, rhs)
-}
-
-// MARK: And
-
-/**
-    Combine two validators using a logical &&
-    Both must succeed for validation to pass
-
-    - parameter lhs: left validator. will run first
-    - parameter rhs: right validator. will run if lhs succeeds
-
-    - returns: an Both<V,U> object representing the concatination of the two validators
-*/
-public func && <V: Validator, U: Validator> (lhs: V, rhs: U) -> Both<V, U> where V.InputType == U.InputType {
-    return Both(lhs, rhs)
-}
-
-/**
-    Combine two validators using a logical &&
-    Both must succeed for validation to pass
-
-    - parameter lhs: left validator. will run first
-    - parameter rhs: right validation suite. will run if lhs succeeds
-
-    - returns: an Both<V,U> object representing the concatination of the two validators
-*/
-public func && <V: Validator, U: ValidationSuite> (lhs: V, rhs: U.Type) -> Both<V, U> where V.InputType == U.InputType {
-    return Both(lhs, rhs)
-}
-
-/**
-    Combine two validators using a logical &&
-    Both must succeed for validation to pass
-
-    - parameter lhs: left validation suite. will run first
-    - parameter rhs: right validator. will run if lhs succeeds
-
-    - returns: an Both<V,U> object representing the concatination of the two validators
-*/
-public func && <V: ValidationSuite, U: Validator> (lhs: V.Type, rhs: U) -> Both<V, U> where V.InputType == U.InputType {
-    return Both(lhs, rhs)
-}
-
-/**
-    Combine two validators using a logical &&
-    Both must succeed for validation to pass
-
-    - parameter lhs: left validation suite. will run first
-    - parameter rhs: right validation suite. will run if lhs succeeds
-
-    - returns: an Both<V,U> object representing the concatination of the two validators
-*/
-public func && <V: ValidationSuite, U: ValidationSuite> (lhs: V.Type, rhs: U.Type) -> Both<V, U> where V.InputType == U.InputType {
-    return Both(lhs, rhs)
+public prefix func ! <V: Validator>(validator: V) -> Not<V.Input> {
+    return Not(validator)
 }

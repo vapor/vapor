@@ -1,196 +1,32 @@
 import Core
 import HTTP
 import Transport
+import TLS
 
-public typealias ServerConfig = (host: String, port: Int, securityLayer: SecurityLayer)
-
-// MARK: Starting (async booting)
-
-extension Droplet {
-    public func startServers(_ s: [String: ServerConfig]? = nil) throws {
-        let configs: [String: ServerConfig]
-        if let s = s {
-            configs = s
-        } else {
-            configs = parseServersConfig()
-        }
-        
-        for (name, config) in configs {
-            _ = try startServer(config, name: name)
-        }
-    }
-    
-    public func startServer(_ config: ServerConfig, name: String) throws -> ServerProtocol {
-        var message: [String] = []
-        message += "Server '\(name)' starting"
-        message += "at \(config.host):\(config.port)"
-        if config.securityLayer.isSecure {
-            message += "🔒"
-        }
-        let info = message.joined(separator: " ")
-        
-        console.output(info, style: .info)
-        let server = try self.server.startAsync(
-            host: config.host,
-            port: config.port,
-            securityLayer: config.securityLayer,
-            responder: self,
-            errors: { e in
-                self.serverErrors(error: e)
-            }
-        )
-        startedServers[name] = server
-        return server
-    }
-
-    public func stopServers() {
-        // release all servers, which should close the listening socket(s)
-        startedServers.removeAll()
-    }
-    
-    public func stopServer(name: String) {
-        guard let server = startedServers[name] else { return }
-        startedServers.removeValue(forKey: name)
-        var message: [String] = []
-        message += "Stopping server '\(name)'"
-        message += "at \(server.host):\(server.port)"
-        if server.securityLayer.isSecure {
-            message += "🔒"
-        }
-        let info = message.joined(separator: " ")
-        
-        console.output(info, style: .info)
+public struct ServerConfig {
+    public let host: String
+    public let port: Int
+    public let securityLayer: SecurityLayer
+    public init(host: String = "0.0.0.0", port: Int = 8080, securityLayer: SecurityLayer = .none) {
+        self.host = host
+        self.port = port
+        self.securityLayer = securityLayer
     }
 }
 
 // MARK: Booting
 
 extension Droplet {
-    func bootServers(_ s: [String: ServerConfig]? = nil) throws {
-        let servers: [String: ServerConfig]
-        if let s = s {
-            servers = s
-        } else {
-            servers = parseServersConfig()
-        }
-
-        var bootedServers = 0
-        for (name, server) in servers {
-            try bootServer(server, name: name, isLastServer: bootedServers == servers.count - 1)
-            bootedServers += 1
-        }
-    }
-
-    func bootServer(_ server: ServerConfig, name: String, isLastServer: Bool) throws {
-        let runInBackground = !isLastServer
-
-        var message: [String] = []
-        message += "Server '\(name)' starting"
-        if runInBackground {
-            message += "in background"
-        }
-        message += "at \(server.host):\(server.port)"
-        if server.securityLayer.isSecure {
-            message += "🔒"
-        }
-        let info = message.joined(separator: " ")
-
-        if runInBackground {
-            background { [weak self] in
-                guard let welf = self else {
-                    return
-                }
-                do {
-                    welf.console.output(info, style: .info)
-                    try welf.server.start(
-                        host: server.host,
-                        port: server.port,
-                        securityLayer: server.securityLayer,
-                        responder: welf, errors:
-                        welf.serverErrors
-                    )
-                } catch {
-                    welf.console.output("Background server start error: \(error)", style: .error)
-                }
-            }
-        } else {
-            console.output(info, style: .info)
-            try self.server.start(
-                host: server.host,
-                port: server.port,
-                securityLayer: server.securityLayer,
-                responder: self,
-                errors: serverErrors
-            )
-        }
+    public func serve(_ config: ServerConfig? = nil) throws -> Never {
+        let config = try config ?? makeServerConfig()
+        let server = try self.server.make(host: config.host, port: config.port, securityLayer: config.securityLayer)
+        try server.start(responder: self, errors: serverErrors)
+        // don't enforce -> Never on protocol because of Swift warnings
+        log.error("server did not block execution")
+        exit(1)
     }
 }
 
-// MARK: Parsing
-
-extension Droplet {
-
-    func parseServersConfig() -> [String: ServerConfig] {
-        if let s = config["servers"]?.object {
-            var servers: [String: ServerConfig] = [:]
-            for (name, server) in s {
-                guard let _ = server.object else {
-                    log.warning("Invalid server configuration for '\(name)'.")
-                    continue
-                }
-
-                let security = config["servers", name, "securityLayer"]?.string ?? "none"
-                let securityLayer: SecurityLayer
-                do {
-                    securityLayer = try parseSecurityLayer(security, name: name)
-                } catch {
-                    log.warning("Invalid security layer for '\(name)'.")
-                    continue
-                }
-
-                let host = config["servers", name, "host"]?.string ?? "0.0.0.0"
-                let port = config["servers", name, "port"]?.int ?? cliPort(arguments: arguments) ?? 8080
-
-                servers[name] = (host, port, securityLayer)
-            }
-
-            return servers
-        } else {
-            log.debug("No 'servers.json' configuration found, using defaults.")
-            let port = cliPort(arguments: arguments) ?? 8080
-            return [
-                "default": ("0.0.0.0", port, .none)
-            ]
-        }
-    }
-
-    func parseSecurityLayer(_ security: String, name: String) throws -> SecurityLayer {
-        let securityLayer: SecurityLayer
-
-        switch security {
-        case "tls":
-            if let tlsConfig = config["servers", name, "tls"]?.object {
-                let config = try parseTLSConfig(tlsConfig, mode: .server)
-                securityLayer = .tls(config)
-            } else {
-                log.warning("No TLS configuration supplied, using default.")
-                securityLayer = .tls(nil)
-            }
-        case "none":
-            securityLayer = .none
-        default:
-            securityLayer = .none
-            log.error("Invalid security layer: \(security), defaulting to none.")
-        }
-
-        return securityLayer
-    }
-}
-
-
-/**
-    To support old form quick port setting through config.
-*/
 func cliPort(arguments: [String]) -> Int? {
     return arguments.value(for: "port")?.int
 }

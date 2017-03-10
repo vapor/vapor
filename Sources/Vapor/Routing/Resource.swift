@@ -77,7 +77,7 @@ public protocol ResourceRepresentable {
     func makeResource() -> Resource<Model>
 }
 
-extension RouteBuilder where Value == Responder {
+extension RouteBuilder {
     public func resource<Resource: ResourceRepresentable>(_ path: String, _ resource: Resource) {
         let resource = resource.makeResource()
         self.resource(path, resource)

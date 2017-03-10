@@ -10,39 +10,14 @@ extension Droplet {
     /**
         Runs the Droplet's commands, defaulting to serve.
     */
-    public func run(servers: [String: ServerConfig]? = nil) -> Never  {
-        // FIxME: Discuss
-        // assert(servers == nil, "we can't support this cuz of fluent prepare stuff")
-
-        do {
-            try runCommands(servers: servers)
-            if (self.startedServers.count > 0) {
-                // if servers were started, wait (forever) on a DispatchGroup to prevent the process from exiting
-                let group = DispatchGroup()
-                group.enter()
-                group.wait()
-            }
-            exit(0)
-        } catch CommandError.general(let error) {
-            console.output(error, style: .error)
-            exit(1)
-        } catch ConsoleError.help {
-            exit(0)
-        } catch ConsoleError.cancelled {
-            exit(2)
-        } catch ConsoleError.commandNotFound(let command) {
-            console.error("Error: ", newLine: false)
-            console.print("Command \"\(command)\" not found.")
-            exit(1)
-        } catch {
-            console.error("Error: ", newLine: false)
-            console.print("\(error)")
-            exit(1)
-        }
+    public func run(server: ServerConfig? = nil) throws -> Never  {
+        try runCommands(server: server)
+        log.info("Bye for now!")
+        exit(0)
     }
 
-    func runCommands(servers: [String: ServerConfig]? = nil) throws {
-        addServeCommandIfNecessary(servers: servers)
+    func runCommands(server: ServerConfig? = nil) throws {
+        addServeCommandIfNecessary(server: server)
 
         // the version command prints the frameworks version.
         let version = VersionCommand(console: console)
@@ -81,16 +56,13 @@ extension Droplet {
     /// adds a serve command if it hasn't been overridden
     // FIXME: Should probably add this first off if possible in future so that users can override w/o 
     // a check like this
-    private func addServeCommandIfNecessary(servers: [String: ServerConfig]? = nil) {
+    private func addServeCommandIfNecessary(server: ServerConfig?) {
         guard !commands.map({ $0.id }).contains("serve") else { return }
         // the serve command will boot the servers
         // and always runs the prepare command
         let serve = Serve(console: console) {
-            // nonblocking
-            // try self.startServers(servers)()
-
             // blocking
-            try self.bootServers(servers)
+            try self.serve(server)
         }
         commands.append(serve)
     }

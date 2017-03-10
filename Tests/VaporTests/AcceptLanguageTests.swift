@@ -15,9 +15,9 @@ class AcceptLanguageTests: XCTestCase {
         ("testSimple", testSimple)
     ]
     
-    func testSimple() {
+    func testSimple() throws {
         //Test case from: https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.4
-        let request = try! Request(method: .get, uri: "https://www.w3.org")
+        let request = try Request(method: .get, uri: "https://www.w3.org")
         request.headers["Accept-Language"] = "da, en-gb;q=0.8, en;q=0.7"
         
         let array = request.acceptLanguage
