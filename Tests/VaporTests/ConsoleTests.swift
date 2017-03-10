@@ -174,6 +174,7 @@ class TestConsoleDriver: ConsoleProtocol {
     }
 
     func output(_ string: String, style: ConsoleStyle, newLine: Bool) {
+        let string = newLine ? string + "\n" : string
         buffer += string.makeBytes()
     }
 
