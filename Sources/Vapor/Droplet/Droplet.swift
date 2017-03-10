@@ -267,6 +267,9 @@ public class Droplet {
             ]
             log.debug("No `middleware.server` key in `droplet.json` found, using default middleware.")
         }
+
+        // Post Init Defaults
+        commands.append(RouteList(self))
     }
 
     func serverErrors(error: ServerError) {
