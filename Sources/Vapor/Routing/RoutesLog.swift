@@ -2,6 +2,14 @@ import Console
 import HTTP
 import Foundation
 
+/// A command that can be used to log all routes for 
+/// an application. 
+///
+/// Use from CLI with:
+/// vapor run routes
+///
+/// Use in Xcode with:
+/// Droplet(arguments: ["vapor", "routes"])
 public class RouteList: Command {
     public let help: [String] = [
         "Logs the routes of your application"
@@ -11,6 +19,10 @@ public class RouteList: Command {
     public var console: ConsoleProtocol { return drop.console }
     public unowned let drop: Droplet
 
+    /// Initialize a route list command with droplet
+    /// requires Droplet reference so that if user updates
+    /// console _after_ initializing RouteList
+    /// we access latest console.
     public required init(_ drop: Droplet) {
         self.drop = drop
     }
