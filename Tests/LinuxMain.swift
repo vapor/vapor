@@ -40,6 +40,7 @@ XCTMain([
     testCase(ProviderTests.allTests),
     testCase(ResourceTests.allTests),
     testCase(RoutingTests.allTests),
+    testCase(RouteListTests.allTests),
     testCase(SessionsTests.allTests),
     testCase(ValidationConvenienceTests.allTests),
     testCase(ValidationCountTests.allTests),
