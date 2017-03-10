@@ -10,13 +10,13 @@ public let VERSION = "2.0.0-alpha"
 
 public class Droplet {
     /// The arguments passed to the droplet.
-    public let arguments: [String]
+    public var arguments: [String]
 
     /// The work directory of your droplet is
     /// the directory in which your Resources, Public, etc
     /// folders are stored. This is normally `./` if
     /// you are running Vapor using `.build/xxx/app`
-    public let workDir: String
+    public var workDir: String
 
     /// Resources directory relative to workDir
     public var resourcesDir: String {
@@ -30,14 +30,14 @@ public class Droplet {
     }
 
     /// The current droplet environment
-    public let environment: Environment
+    public var environment: Environment
 
     /// Provides access to config settings.
-    public let config: Settings.Config
+    public var config: Settings.Config
 
     /// Provides access to language specific
     /// strings and defaults.
-    public let localization: Localization
+    public var localization: Localization
 
 
     /// The router driver is responsible

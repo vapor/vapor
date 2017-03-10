@@ -1,6 +1,214 @@
 // MARK: Server
 
+import Settings
+
+typealias Runner = (Droplet) throws -> Void
+
+//struct Option {
+//    // config path
+//    let path: String
+//    // name match
+//    let name: String
+//    // type metadata for debugging
+//    let type: String
+//    // if enabled, configuration run
+//    let enable: Runner
+//    // if disabled, remove self
+//    let disable: Runner
+//}
+
+struct Up: Error {
+    let message: String
+    init(_ message: String) {
+        self.message = message
+    }
+}
+
+func up(f: String = #function, l: Int = #line) -> Up {
+    return Up("function: \(f) - line: \(l)")
+}
+
+extension Settings.Config {
+    func changes(comparedTo new: Settings.Config) throws -> (additions: [String], updates: [String], subtractions: [String]) {
+        var additions = [String]()
+        var updates = [String]()
+        var subtractions = [String]()
+
+        let original = try self.explode()
+        let new = try new.explode()
+
+        original.forEach { path, value in
+            if let includedInNew = new[path] {
+                guard includedInNew != value else { return }
+                updates.append(path)
+            } else {
+                subtractions.append(path)
+            }
+        }
+
+        new.forEach { path, value in
+            guard original[path] == nil else { return }
+            additions.append(path)
+        }
+
+        return (additions, updates, subtractions)
+    }
+
+    public func explode() throws -> [String: Settings.Config] {
+        guard let object = typeObject else { throw up() }
+        var exploded: [String: Config] = [:]
+        try object.forEach { key, value in
+            guard !key.contains(".") else {
+                throw Up("you can't use `.` keys in explosion, maybe I can support later ...")
+            }
+
+            if value.isObject {
+                try value.explode().forEach { path, value in
+                    let path = key + "." + path
+                    exploded[path] = value
+                }
+
+            } else {
+                exploded[key] = value
+            }
+        }
+
+        return exploded
+    }
+}
+
 extension Droplet {
+    func update(options: [ConfigOption], original: Config, new: Config) throws {
+        let (additions, updates, subtractions) = try original.changes(comparedTo: new)
+
+        // Do subtractions first to prevent unexpected removals later
+        try options.filter { subtractions.contains($0.path) } .forEach { lostOption in
+            try lostOption.disable(self)
+        }
+
+        // Second, do updates disable old, enable new
+        try updates.forEach { updatedPath in
+            guard
+                let originalOption = original[updatedPath],
+                let newOption = new[updatedPath]
+                else { throw Up("these should both exist if changes func works properly") }
+
+            let remove = options.lazy.filter { $0.path == updatedPath && $0.matchesFor(originalOption) } .first
+            try remove?.disable(self)
+
+            let add = options.lazy.filter { $0.path == updatedPath && $0.matchesFor(newOption) } .first
+            try add?.enable(self)
+        }
+
+        try options.filter { additions.contains($0.path) } .forEach { enabled in
+            try enabled.enable(self)
+        }
+
+    }
+}
+
+extension StructuredDataWrapper {
+    var isObject: Bool {
+        return typeObject != nil
+    }
+}
+
+struct ConfigOption {
+    /// config path
+    let path: String
+    /// type metadata for debugging
+    let type: String
+    /// a look into the name
+    let name: String
+    /// the value found at the path will be passed here to
+    /// see if it matches
+    let matchesFor: (Config) -> Bool
+    /// if enabled, configuration run
+    let enable: Runner
+    /// if disabled, configuration run
+    let disable: Runner
+}
+
+final class ConfigurationOptions {
+    struct Option {
+        // config path
+        let path: String
+        // name match
+        let name: String
+        // type metadata for debugging
+        let type: String
+        // if enabled, configuration run
+        let runner: Runner
+    }
+
+    var options: [Option] = []
+    unowned let drop: Droplet
+
+    init(_ drop: Droplet) {
+        self.drop = drop
+    }
+
+    func add(path: String, name: String, type: String, runner: @escaping Runner) {
+        let option = Option(path: path, name: name, type: type, runner: runner)
+        options.append(option)
+//        evaluateNewOption(option)
+    }
+
+    func setup(with drop: Droplet) throws {
+        try options.forEach { configurable in
+            guard let existing = drop.config[configurable.path]?.string else {
+                drop.log.debug("Not using \(configurable.type) - \(configurable.name)")
+                return
+            }
+            guard existing == configurable.name else { return }
+            drop.log.debug("Using \(configurable.type) - \(configurable.name)")
+            try configurable.runner(drop)
+        }
+    }
+
+    func evaluateNewOption(_ option: ConfigOption) throws {
+        guard let value = drop.config[option.path] else {
+            drop.log.debug("Not using \(option.type) - \(option.name). No configuration set.")
+            return
+        }
+        guard option.matchesFor(value) else {
+            drop.log.debug("Not using \(option.type) - \(option.name). Failed to match configuration value \(value).")
+            return
+        }
+
+        drop.log.debug("Using \(option.type) - \(option.name)")
+        try option.enable(drop)
+    }
+}
+
+extension Droplet {
+    var configurables: ConfigurationOptions {
+        get {
+            if let existing = storage["vapor:configurables"] as? ConfigurationOptions {
+                return existing
+            }
+
+            let configurable = ConfigurationOptions(self)
+            storage["vapor:configurables"] = configurable
+            return configurable
+        }
+        set {
+            storage["vapor:configurables"] = newValue
+        }
+    }
+
+    public func _addConfigurable(server: ServerProtocol.Type, name: String) {
+        configurables.add(
+            path: "droplet.server",
+            name: name,
+            type: "server",
+            runner: { drop in
+                drop.server = server
+                drop.log.debug("Using server '\(name)'.")
+            }
+        )
+    }
+
     public func addConfigurable(server: ServerProtocol.Type, name: String) {
         if config["droplet", "server"]?.string == name {
             self.server = server
