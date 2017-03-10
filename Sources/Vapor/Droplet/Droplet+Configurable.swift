@@ -78,12 +78,18 @@ extension Settings.Config {
 }
 
 extension Droplet {
+    var configOptions: [ConfigOption] { return [] }
+
+    func updateConfig(original: Config, new: Config) throws {
+
+    }
+
     func update(options: [ConfigOption], original: Config, new: Config) throws {
         let (additions, updates, subtractions) = try original.changes(comparedTo: new)
 
         // Do subtractions first to prevent unexpected removals later
         try options.filter { subtractions.contains($0.path) } .forEach { lostOption in
-            try lostOption.disable(self)
+            try lostOption.disable(with: self)
         }
 
         // Second, do updates disable old, enable new
@@ -94,16 +100,15 @@ extension Droplet {
                 else { throw Up("these should both exist if changes func works properly") }
 
             let remove = options.lazy.filter { $0.path == updatedPath && $0.matchesFor(originalOption) } .first
-            try remove?.disable(self)
+            try remove?.disable(with: self)
 
             let add = options.lazy.filter { $0.path == updatedPath && $0.matchesFor(newOption) } .first
-            try add?.enable(self)
+            try add?.enable(with: self)
         }
 
         try options.filter { additions.contains($0.path) } .forEach { enabled in
-            try enabled.enable(self)
+            try enabled.enable(with: self)
         }
-
     }
 }
 
@@ -113,7 +118,7 @@ extension StructuredDataWrapper {
     }
 }
 
-struct ConfigOption {
+final class ConfigOption {
     /// config path
     let path: String
     /// type metadata for debugging
@@ -124,9 +129,39 @@ struct ConfigOption {
     /// see if it matches
     let matchesFor: (Config) -> Bool
     /// if enabled, configuration run
-    let enable: Runner
+    private let enableRunner: Runner
     /// if disabled, configuration run
-    let disable: Runner
+    private let disableRunner: Runner
+
+    fileprivate var enabled = false
+
+    init(
+        path: String,
+        type: String,
+        name: String,
+        matchesFor: @escaping (Config) -> Bool,
+        enable: @escaping Runner,
+        disable: @escaping Runner
+    ) {
+        self.path = path
+        self.type = type
+        self.name = name
+        self.matchesFor = matchesFor
+        self.enableRunner = enable
+        self.disableRunner = disable
+    }
+
+    func enable(with drop: Droplet) throws {
+        guard !enabled else { return }
+        try enableRunner(drop)
+        enabled = true
+    }
+
+    func disable(with drop: Droplet) throws {
+        guard enabled else { return }
+        try disableRunner(drop)
+        enabled = false
+    }
 }
 
 final class ConfigurationOptions {
@@ -177,7 +212,7 @@ final class ConfigurationOptions {
         }
 
         drop.log.debug("Using \(option.type) - \(option.name)")
-        try option.enable(drop)
+        try option.enable(with: drop)
     }
 }
 
