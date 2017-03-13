@@ -65,13 +65,18 @@ extension Settings.Config {
 }
 
 extension Droplet {
-    var configOptions: [ConfigOption] { return [] }
-
-    func updateConfig(original: Config, new: Config) throws {
-
+    var configOptions: [ConfigOption] {
+        get {
+            return storage["configOptions"] as? [ConfigOption]
+                ?? []
+        }
+        set {
+            storage["configOptions"] = newValue
+        }
     }
 
-    func update(options: [ConfigOption], original: Config, new: Config) throws {
+    func updateConfiguration(original: Config, new: Config) throws {
+        let options = configOptions
         let (additions, updates, subtractions) = try original.changes(comparedTo: new)
 
         // Do subtractions first to prevent unexpected removals later
@@ -81,15 +86,10 @@ extension Droplet {
 
         // Second, do updates disable old, enable new
         try updates.forEach { updatedPath in
-            guard
-                let originalOption = original[updatedPath],
-                let newOption = new[updatedPath]
-                else { throw Up("these should both exist if changes func works properly") }
-
-            let remove = options.lazy.filter { $0.path == updatedPath && $0.matchesFor(originalOption) } .first
+            let remove = options.lazy.filter { updatedPath.hasPrefix($0.path) } .first
             try remove?.disable(with: self)
 
-            let add = options.lazy.filter { $0.path == updatedPath && $0.matchesFor(newOption) } .first
+            let add = options.lazy.filter { updatedPath.hasPrefix($0.path) } .first
             try add?.enable(with: self)
         }
 
@@ -105,6 +105,33 @@ extension StructuredDataWrapper {
     }
 }
 
+//public protocol Configurable {
+//    var path: String { get }
+//    var type: String { get }
+//    var name: String { get }
+//    func shouldEnable(forValueAtPath value: Config) -> Bool
+//    func enable(for drop: Droplet)
+//    func disable(for drop: Droplet)
+//}
+//
+//extension Configurable {
+//    public func shouldEnable(forValueAtPath value: Config) -> Bool {
+//        return value.string == name
+//    }
+//}
+//
+//extension Server: Configurable {
+//    public var path: String { return "droplet.server" }
+//    public var type: String { return "server" }
+//    public var name: String { return "engine" }
+//
+//    public func enable(for drop: Droplet) {
+//        drop.server = type(of: self)
+//    }
+//
+//    public func disable(for drop: Droplet) {}
+//}
+
 final class ConfigOption {
     /// config path
     let path: String
@@ -112,9 +139,9 @@ final class ConfigOption {
     let type: String
     /// a look into the name
     let name: String
-    /// the value found at the path will be passed here to
-    /// see if it matches
-    let matchesFor: (Config) -> Bool
+
+    fileprivate var shouldEnable: (Config) -> Bool
+
     /// if enabled, configuration run
     private let enableRunner: Runner
     /// if disabled, configuration run
@@ -126,28 +153,54 @@ final class ConfigOption {
         path: String,
         type: String,
         name: String,
-        matchesFor: @escaping (Config) -> Bool,
+        shouldEnable: @escaping (Config) -> Bool,
         enable: @escaping Runner,
         disable: @escaping Runner
     ) {
         self.path = path
         self.type = type
         self.name = name
-        self.matchesFor = matchesFor
         self.enableRunner = enable
         self.disableRunner = disable
+        self.shouldEnable = { value in
+            return value.string == name
+        }
     }
 
     func enable(with drop: Droplet) throws {
         guard !enabled else { return }
+        guard let value = drop.config[path] else { return }
+        guard shouldEnable(value) else { return }
+        drop.log.debug("Enabling \(type) '\(name)'.")
         try enableRunner(drop)
         enabled = true
     }
 
     func disable(with drop: Droplet) throws {
         guard enabled else { return }
+        drop.log.debug("Disabling \(type) '\(name)'.")
         try disableRunner(drop)
         enabled = false
+    }
+}
+
+final class Configurable {
+    let runner: (Droplet) throws -> Void
+
+    init(_ runner: @escaping (Droplet) throws -> Void) {
+        self.runner = runner
+    }
+}
+
+extension Droplet {
+    var configurables: [(Droplet) throws -> Void] {
+        get {
+            return storage["configurables"] as? [(Droplet) throws -> Void]
+                ?? []
+        }
+        set {
+            storage["configurables"] = newValue
+        }
     }
 }
 
@@ -220,15 +273,14 @@ extension Droplet {
 //    }
 
     public func _addConfigurable(server: ServerProtocol.Type, name: String) {
-//        configurables.add(
-//            path: "droplet.server",
-//            name: name,
-//            type: "server",
-//            runner: { drop in
-//                drop.server = server
-//                drop.log.debug("Using server '\(name)'.")
-//            }
-//        )
+        configurables.append { drop in
+            if drop.config["droplet", "server"]?.string == name {
+                drop.server = server
+                drop.log.debug("Using server '\(name)'.")
+            } else {
+                drop.log.debug("Not using server '\(name)'.")
+            }
+        }
     }
 
     public func addConfigurable(forPath path: String, name: String, type: String, matcher: @escaping (Config) -> Bool, enabler: @escaping (Droplet) throws -> Void, disabler: @escaping (Droplet) throws -> Void) {
