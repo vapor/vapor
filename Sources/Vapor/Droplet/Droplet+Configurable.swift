@@ -184,34 +184,71 @@ final class ConfigOption {
     }
 }
 
-final class Configurable {
-    let runner: (Droplet) throws -> Void
+//final class Configurable {
+//    let runner: (Droplet) throws -> Void
+//
+//    init(_ runner: @escaping (Droplet) throws -> Void) {
+//        self.runner = runner
+//    }
+//}
 
-    init(_ runner: @escaping (Droplet) throws -> Void) {
-        self.runner = runner
-    }
-}
+typealias Configurable = (Droplet) throws -> Void
 
 extension Droplet {
-    var configurables: [(Droplet) throws -> Void] {
+    // [relevantPath: Runner]
+    /*
+        when adding new configurable, if path already in config
+        On path updates, we trigger the runner again,
+        could pass 'updated', 'added', 'removed' possibly
+     
+        on addConfigurable, if path exists, trigger runner,
+        on configuration updates, trigger appropriate runners
+    */
+    private var configurables: [String: Configurable] {
         get {
-            return storage["configurables"] as? [(Droplet) throws -> Void]
-                ?? []
+            return storage["_configurables"] as? [String: Configurable]
+                ?? [:]
         }
         set {
-            storage["configurables"] = newValue
+            storage["_configurables"] = newValue
         }
     }
 
-    func setupConfiguration() throws {
-        try configurables.forEach { option in try option(self) }
+    func _addConfigurable(path: String, configurable: @escaping (Droplet) -> Void) {
+        // If the path already exists in config, configure now
+        if let _ = config[path] {
+            configurable(self)
+        }
+
+        configurables[path] = configurable
     }
+
+    func _addConfigurable(path: String, configurable: @escaping Configurable) throws {
+        // If the path already exists in config, configure now
+        if let _ = config[path] {
+            try configurable(self)
+        }
+
+        configurables[path] = configurable
+    }
+
+//    var configurables: [(Droplet) throws -> Void] {
+//        get {
+//            return storage["configurables"] as? [(Droplet) throws -> Void]
+//                ?? []
+//        }
+//        set {
+//            storage["configurables"] = newValue
+//        }
+//    }
 }
+
+
 
 extension Droplet {
 
     public func addConfigurable(server: ServerProtocol.Type, name: String) {
-        configurables.append { drop in
+        _addConfigurable(path: "droplet.server") { drop in
             if drop.config["droplet", "server"]?.string == name {
                 drop.server = server
                 drop.log.debug("Using server '\(name)'.")
@@ -237,7 +274,7 @@ import Transport
 
 extension Droplet {
     public func addConfigurable(client: ClientProtocol.Type, name: String) {
-        configurables.append { drop in
+        _addConfigurable(path: "droplet.client") { drop in
             if drop.config["droplet", "client"]?.string == name {
                 drop.client = client
                 drop.log.debug("Using client '\(name)'.")
@@ -275,7 +312,7 @@ extension Droplet {
 
 extension Droplet {
     public func addConfigurable(log: LogProtocol, name: String) {
-        configurables.append { drop in
+        _addConfigurable(path: "droplet.log") { drop in
             if drop.config["droplet", "log"]?.string == name {
                 drop.log = log
                 drop.log.debug("Using log '\(name)'.")
@@ -285,8 +322,8 @@ extension Droplet {
         }
     }
 
-    public func addConfigurable<L: LogProtocol & ConfigInitializable>(log: L.Type, name: String) {
-        configurables.append { drop in
+    public func addConfigurable<L: LogProtocol & ConfigInitializable>(log: L.Type, name: String) throws {
+        try _addConfigurable(path: "droplet.log") { drop in
             if drop.config["droplet", "log"]?.string == name {
                 drop.log = try log.init(config: drop.config)
                 drop.log.debug("Using log '\(name)'.")
@@ -319,7 +356,7 @@ extension Droplet {
 
 extension Droplet {
     public func addConfigurable(hash: HashProtocol, name: String) {
-        configurables.append { drop in
+        _addConfigurable(path: "droplet.hash") { drop in
             if drop.config["droplet", "hash"]?.string == name {
                 drop.hash = hash
                 drop.log.debug("Using hash '\(name)'.")
@@ -330,7 +367,7 @@ extension Droplet {
     }
 
     public func addConfigurable<H: HashProtocol & ConfigInitializable>(hash: H.Type, name: String) throws {
-        configurables.append { drop in
+        try _addConfigurable(path: "droplet.hash") { drop in
             if drop.config["droplet", "hash"]?.string == name {
                 drop.hash = try hash.init(config: drop.config)
                 drop.log.debug("Using hash '\(name)'.")
@@ -362,7 +399,7 @@ extension Droplet {
 
 extension Droplet {
     public func addConfigurable(cipher: CipherProtocol, name: String) {
-        configurables.append { drop in
+        _addConfigurable(path: "droplet.cipher") { drop in
             if drop.config["droplet", "cipher"]?.string == name {
                 drop.cipher = cipher
                 drop.log.debug("Using cipher '\(name)'.")
@@ -373,7 +410,7 @@ extension Droplet {
     }
 
     public func addConfigurable<C: CipherProtocol & ConfigInitializable>(cipher: C.Type, name: String) throws {
-        configurables.append { drop in
+        try _addConfigurable(path: "droplet.cipher") { drop in
             if drop.config["droplet", "cipher"]?.string == name {
                 drop.cipher = try cipher.init(config: drop.config)
                 drop.log.debug("Using cipher '\(name)'.")
@@ -408,7 +445,7 @@ import HTTP
 
 extension Droplet {
     public func addConfigurable(middleware: Middleware, name: String) {
-        configurables.append { drop in
+        _addConfigurable(path: "droplet.middleware") { drop in
             if drop.config["droplet", "middleware", "server"]?.array?.flatMap({ $0.string }).contains(name) == true {
                 drop.middleware.append(middleware)
                 drop.log.debug("Using server middleware '\(name)'.")
@@ -450,7 +487,7 @@ import Console
 
 extension Droplet {
     public func addConfigurable(console: ConsoleProtocol, name: String) {
-        configurables.append { drop in
+        _addConfigurable(path: "droplet.console") { drop in
             if drop.config["droplet", "console"]?.string == name {
                 drop.console = console
                 drop.log.debug("Using console '\(name)'.")
@@ -460,8 +497,8 @@ extension Droplet {
         }
     }
 
-    public func addConfigurable<C: ConsoleProtocol & ConfigInitializable>(console: C.Type, name: String) {
-        configurables.append { drop in
+    public func addConfigurable<C: ConsoleProtocol & ConfigInitializable>(console: C.Type, name: String) throws {
+        try _addConfigurable(path: "droplet.console") { drop in
             if drop.config["droplet", "console"]?.string == name {
                 drop.console = try console.init(config: drop.config)
                 drop.log.debug("Using console '\(name)'.")
@@ -495,7 +532,7 @@ import Cache
 
 extension Droplet {
     public func addConfigurable(cache: CacheProtocol, name: String) {
-        configurables.append { drop in
+        _addConfigurable(path: "droplet.cache") { drop in
             if drop.config["droplet", "cache"]?.string == name {
                 drop.cache = cache
                 drop.log.debug("Using cache '\(name)'.")
@@ -506,7 +543,7 @@ extension Droplet {
     }
 
     public func addConfigurable<C: CacheProtocol & ConfigInitializable>(cache: C.Type, name: String) throws {
-        configurables.append { drop in
+        try _addConfigurable(path: "droplet.cache") { drop in
             if drop.config["droplet", "cache"]?.string == name {
                 drop.cache = try cache.init(config: drop.config)
                 drop.log.debug("Using cache '\(name)'.")

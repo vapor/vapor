@@ -270,8 +270,6 @@ public class Droplet {
 
         // Post Init Defaults
         commands.append(RouteList(self))
-
-        try setupConfiguration()
     }
 
     func serverErrors(error: ServerError) {

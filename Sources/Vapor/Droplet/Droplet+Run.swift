@@ -17,7 +17,6 @@ extension Droplet {
     }
 
     func runCommands(server: ServerConfig? = nil) throws {
-        try setupConfiguration()
         addServeCommandIfNecessary(server: server)
 
         // the version command prints the frameworks version.
