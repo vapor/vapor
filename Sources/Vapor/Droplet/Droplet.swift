@@ -16,7 +16,7 @@ public class Droplet {
     /// the directory in which your Resources, Public, etc
     /// folders are stored. This is normally `./` if
     /// you are running Vapor using `.build/xxx/app`
-    public var workDir: String
+    public let workDir: String
 
     /// Resources directory relative to workDir
     public var resourcesDir: String {
@@ -30,7 +30,7 @@ public class Droplet {
     }
 
     /// The current droplet environment
-    public var environment: Environment
+    public let environment: Environment
 
     /// Provides access to config settings.
     public var config: Settings.Config {
@@ -45,7 +45,7 @@ public class Droplet {
 
     /// Provides access to language specific
     /// strings and defaults.
-    public var localization: Localization
+    public let localization: Localization
 
 
     /// The router driver is responsible
