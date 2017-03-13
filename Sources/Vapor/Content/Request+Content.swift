@@ -14,9 +14,9 @@ extension Request {
             data.append { [weak self] indexes in
                 guard let first = indexes.first else { return nil }
                 if let string = first as? String {
-                    return self?.formData?[string]
+                    return self?.formData?[string]?.makeNode(in: nil)
                 } else if let int = first as? Int {
-                    return self?.formData?["\(int)"]
+                    return self?.formData?["\(int)"]?.makeNode(in: nil)
                 } else {
                     return nil
                 }
