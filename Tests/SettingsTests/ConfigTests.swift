@@ -63,19 +63,25 @@ class ConfigTests: XCTestCase {
     }
 
     func testExplosion() throws {
+        // ob
         var config = Config([:])
         try config.set("bool", true)
         try config.set("array", [1,2,3,4,5])
-
+        // sub
         var sub = Config([:])
         try sub.set("bool", false)
         try sub.set("array", ["a", "b", "c"])
-
+        // add sub to ob
         try config.set("sub", sub)
 
+        var expectation = [String: Config]()
+        expectation["bool"] = true
+        expectation["array"] = [1,2,3,4,5]
+        expectation["sub.bool"] = false
+        expectation["sub.array"] = ["a", "b", "c"]
+
         let exploded = try config.explode()
-        print(exploded)
-        print("")
+        XCTAssertEqual(exploded, expectation)
     }
 
     func testConfigDiffing() throws {
@@ -90,7 +96,8 @@ class ConfigTests: XCTestCase {
         try new.set("do.a.path", ["hello": "mars"])
         
         let updates = try original.changes(comparedTo: new)
-        print(updates)
-        print("")
+        XCTAssertEqual(updates.additions, ["addition"])
+        XCTAssertEqual(updates.updates, ["do.a.path.hello", "update"])
+        XCTAssertEqual(updates.subtractions, ["lost"])
     }
 }

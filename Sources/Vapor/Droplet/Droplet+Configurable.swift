@@ -4,19 +4,6 @@ import Settings
 
 typealias Runner = (Droplet) throws -> Void
 
-//struct Option {
-//    // config path
-//    let path: String
-//    // name match
-//    let name: String
-//    // type metadata for debugging
-//    let type: String
-//    // if enabled, configuration run
-//    let enable: Runner
-//    // if disabled, remove self
-//    let disable: Runner
-//}
-
 struct Up: Error {
     let message: String
     init(_ message: String) {
@@ -164,84 +151,88 @@ final class ConfigOption {
     }
 }
 
-final class ConfigurationOptions {
-    struct Option {
-        // config path
-        let path: String
-        // name match
-        let name: String
-        // type metadata for debugging
-        let type: String
-        // if enabled, configuration run
-        let runner: Runner
-    }
-
-    var options: [Option] = []
-    unowned let drop: Droplet
-
-    init(_ drop: Droplet) {
-        self.drop = drop
-    }
-
-    func add(path: String, name: String, type: String, runner: @escaping Runner) {
-        let option = Option(path: path, name: name, type: type, runner: runner)
-        options.append(option)
-//        evaluateNewOption(option)
-    }
-
-    func setup(with drop: Droplet) throws {
-        try options.forEach { configurable in
-            guard let existing = drop.config[configurable.path]?.string else {
-                drop.log.debug("Not using \(configurable.type) - \(configurable.name)")
-                return
-            }
-            guard existing == configurable.name else { return }
-            drop.log.debug("Using \(configurable.type) - \(configurable.name)")
-            try configurable.runner(drop)
-        }
-    }
-
-    func evaluateNewOption(_ option: ConfigOption) throws {
-        guard let value = drop.config[option.path] else {
-            drop.log.debug("Not using \(option.type) - \(option.name). No configuration set.")
-            return
-        }
-        guard option.matchesFor(value) else {
-            drop.log.debug("Not using \(option.type) - \(option.name). Failed to match configuration value \(value).")
-            return
-        }
-
-        drop.log.debug("Using \(option.type) - \(option.name)")
-        try option.enable(with: drop)
-    }
-}
+//final class ConfigurationOptions {
+//    struct Option {
+//        // config path
+//        let path: String
+//        // name match
+//        let name: String
+//        // type metadata for debugging
+//        let type: String
+//        // if enabled, configuration run
+//        let runner: Runner
+//    }
+//
+//    var options: [Option] = []
+//    unowned let drop: Droplet
+//
+//    init(_ drop: Droplet) {
+//        self.drop = drop
+//    }
+//
+//    func add(path: String, name: String, type: String, runner: @escaping Runner) {
+//        let option = Option(path: path, name: name, type: type, runner: runner)
+//        options.append(option)
+////        evaluateNewOption(option)
+//    }
+//
+//    func setup(with drop: Droplet) throws {
+//        try options.forEach { configurable in
+//            guard let existing = drop.config[configurable.path]?.string else {
+//                drop.log.debug("Not using \(configurable.type) - \(configurable.name)")
+//                return
+//            }
+//            guard existing == configurable.name else { return }
+//            drop.log.debug("Using \(configurable.type) - \(configurable.name)")
+//            try configurable.runner(drop)
+//        }
+//    }
+//
+//    func evaluateNewOption(_ option: ConfigOption) throws {
+//        guard let value = drop.config[option.path] else {
+//            drop.log.debug("Not using \(option.type) - \(option.name). No configuration set.")
+//            return
+//        }
+//        guard option.matchesFor(value) else {
+//            drop.log.debug("Not using \(option.type) - \(option.name). Failed to match configuration value \(value).")
+//            return
+//        }
+//
+//        drop.log.debug("Using \(option.type) - \(option.name)")
+//        try option.enable(with: drop)
+//    }
+//}
 
 extension Droplet {
-    var configurables: ConfigurationOptions {
-        get {
-            if let existing = storage["vapor:configurables"] as? ConfigurationOptions {
-                return existing
-            }
-
-            let configurable = ConfigurationOptions(self)
-            storage["vapor:configurables"] = configurable
-            return configurable
-        }
-        set {
-            storage["vapor:configurables"] = newValue
-        }
-    }
+//    var configurables: ConfigurationOptions {
+//        get {
+//            if let existing = storage["vapor:configurables"] as? ConfigurationOptions {
+//                return existing
+//            }
+//
+//            let configurable = ConfigurationOptions(self)
+//            storage["vapor:configurables"] = configurable
+//            return configurable
+//        }
+//        set {
+//            storage["vapor:configurables"] = newValue
+//        }
+//    }
 
     public func _addConfigurable(server: ServerProtocol.Type, name: String) {
-        configurables.add(
-            path: "droplet.server",
-            name: name,
-            type: "server",
-            runner: { drop in
-                drop.server = server
-                drop.log.debug("Using server '\(name)'.")
-            }
-        )
+//        configurables.add(
+//            path: "droplet.server",
+//            name: name,
+//            type: "server",
+//            runner: { drop in
+//                drop.server = server
+//                drop.log.debug("Using server '\(name)'.")
+//            }
+//        )
+    }
+
+    public func addConfigurable(forPath path: String, name: String, type: String, matcher: @escaping (Config) -> Bool, enabler: @escaping (Droplet) throws -> Void, disabler: @escaping (Droplet) throws -> Void) {
+
     }
 
     public func addConfigurable(server: ServerProtocol.Type, name: String) {
