@@ -84,41 +84,27 @@ extension Droplet {
     }
 
     func configDidUpdate(original: Config, new: Config) throws {
+        let configurables = self.configurables
+
         let (additions, updates, subtractions) = try original.changes(comparedTo: new)
 
         var errors = [Error]()
-        subtractions.flatMap { configurables[$0] } .forEach {
-            do { try $0(self) }
+
+        let handler: (Configurable) -> Void = { configurable in
+            do { try configurable(self) }
             catch { errors.append(error) }
         }
-        updates.flatMap { configurables[$0] } .forEach {
-            do { try $0(self) }
-            catch { errors.append(error) }
+
+        let flatMap: (String) -> [Configurable] = { modification in
+            return configurables.filter { path, _ in modification.hasPrefix(path) }
+                .map { _, configurable in return configurable }
         }
-        additions.flatMap { configurables[$0] } .forEach {
-            do { try $0(self) }
-            catch { errors.append(error) }
-        }
+
+        subtractions.flatMap(flatMap).forEach(handler)
+        updates.flatMap(flatMap).forEach(handler)
+        additions.flatMap(flatMap).forEach(handler)
 
         if !errors.isEmpty { throw ConfigErrorList(errors) }
-
-        // Do subtractions first to prevent unexpected removals later
-//        try options.filter { subtractions.contains($0.path) } .forEach { lostOption in
-//            try lostOption.disable(with: self)
-//        }
-//
-//        // Second, do updates disable old, enable new
-//        try updates.forEach { updatedPath in
-//            let remove = options.lazy.filter { updatedPath.hasPrefix($0.path) } .first
-//            try remove?.disable(with: self)
-//
-//            let add = options.lazy.filter { updatedPath.hasPrefix($0.path) } .first
-//            try add?.enable(with: self)
-//        }
-//
-//        try options.filter { additions.contains($0.path) } .forEach { enabled in
-//            try enabled.enable(with: self)
-//        }
     }
 }
 
@@ -228,10 +214,10 @@ extension Droplet {
         on addConfigurable, if path exists, trigger runner,
         on configuration updates, trigger appropriate runners
     */
-    private(set) var configurables: [String: Configurable] {
+    private(set) var configurables: [(String, Configurable)] {
         get {
-            return storage["_configurables"] as? [String: Configurable]
-                ?? [:]
+            return storage["_configurables"] as? [(String, Configurable)]
+                ?? []
         }
         set {
             storage["_configurables"] = newValue
@@ -244,7 +230,7 @@ extension Droplet {
             configurable(self)
         }
 
-        configurables[path] = configurable
+        configurables.append((path, configurable))
     }
 
     func _addConfigurable(path: String, configurable: @escaping Configurable) throws {
@@ -253,7 +239,7 @@ extension Droplet {
             try configurable(self)
         }
 
-        configurables[path] = configurable
+        configurables.append((path, configurable))
     }
 
 //    var configurables: [(Droplet) throws -> Void] {
