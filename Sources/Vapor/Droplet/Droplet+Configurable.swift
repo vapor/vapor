@@ -64,6 +64,14 @@ extension Settings.Config {
     }
 }
 
+public struct ConfigErrorList: Error {
+    public let errors: [Error]
+
+    public init(_ errors: [Error]) {
+        self.errors = errors
+    }
+}
+
 extension Droplet {
     var configOptions: [ConfigOption] {
         get {
@@ -75,29 +83,45 @@ extension Droplet {
         }
     }
 
-    func updateConfiguration(original: Config, new: Config) throws {
-        let options = configOptions
+    func configDidUpdate(original: Config, new: Config) throws {
         let (additions, updates, subtractions) = try original.changes(comparedTo: new)
 
+        var errors = [Error]()
+        subtractions.flatMap { configurables[$0] } .forEach {
+            do { try $0(self) }
+            catch { errors.append(error) }
+        }
+        updates.flatMap { configurables[$0] } .forEach {
+            do { try $0(self) }
+            catch { errors.append(error) }
+        }
+        additions.flatMap { configurables[$0] } .forEach {
+            do { try $0(self) }
+            catch { errors.append(error) }
+        }
+
+        if !errors.isEmpty { throw ConfigErrorList(errors) }
+
         // Do subtractions first to prevent unexpected removals later
-        try options.filter { subtractions.contains($0.path) } .forEach { lostOption in
-            try lostOption.disable(with: self)
-        }
-
-        // Second, do updates disable old, enable new
-        try updates.forEach { updatedPath in
-            let remove = options.lazy.filter { updatedPath.hasPrefix($0.path) } .first
-            try remove?.disable(with: self)
-
-            let add = options.lazy.filter { updatedPath.hasPrefix($0.path) } .first
-            try add?.enable(with: self)
-        }
-
-        try options.filter { additions.contains($0.path) } .forEach { enabled in
-            try enabled.enable(with: self)
-        }
+//        try options.filter { subtractions.contains($0.path) } .forEach { lostOption in
+//            try lostOption.disable(with: self)
+//        }
+//
+//        // Second, do updates disable old, enable new
+//        try updates.forEach { updatedPath in
+//            let remove = options.lazy.filter { updatedPath.hasPrefix($0.path) } .first
+//            try remove?.disable(with: self)
+//
+//            let add = options.lazy.filter { updatedPath.hasPrefix($0.path) } .first
+//            try add?.enable(with: self)
+//        }
+//
+//        try options.filter { additions.contains($0.path) } .forEach { enabled in
+//            try enabled.enable(with: self)
+//        }
     }
 }
+
 
 extension StructuredDataWrapper {
     var isObject: Bool {
@@ -204,7 +228,7 @@ extension Droplet {
         on addConfigurable, if path exists, trigger runner,
         on configuration updates, trigger appropriate runners
     */
-    private var configurables: [String: Configurable] {
+    private(set) var configurables: [String: Configurable] {
         get {
             return storage["_configurables"] as? [String: Configurable]
                 ?? [:]
@@ -507,6 +531,7 @@ extension Droplet {
             }
         }
     }
+
 //    public func addConfigurable(console: ConsoleProtocol, name: String) {
 //        if config["droplet", "console"]?.string == name {
 //            self.console = console

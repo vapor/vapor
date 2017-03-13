@@ -33,7 +33,15 @@ public class Droplet {
     public var environment: Environment
 
     /// Provides access to config settings.
-    public var config: Settings.Config
+    public var config: Settings.Config {
+        didSet {
+            do {
+                try configDidUpdate(original: oldValue, new: config)
+            } catch {
+                log.error("Failed to properly update config with errors '\(error)'.")
+            }
+        }
+    }
 
     /// Provides access to language specific
     /// strings and defaults.
