@@ -42,3 +42,9 @@ extension FormData.Field: Polymorphic {
         return part.body
     }
 }
+
+extension FormData.Field: NodeRepresentable {
+    public func makeNode(in context: Context?) -> Node {
+        return Node.bytes(part.body)
+    }
+}
