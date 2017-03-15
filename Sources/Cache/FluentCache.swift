@@ -24,6 +24,11 @@ public final class FluentCache: CacheProtocol {
         }
     }
 
+    public func set(_ key: String, _ value: Node, expiration: Double?) throws {
+        // TODO: timestamp support should be added as a column to the cache entity
+        try set(key, value)
+    }
+
     public func delete(_ key: String) throws {
         guard let entity = try _find(key) else {
             return
