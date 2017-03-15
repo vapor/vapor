@@ -17,6 +17,7 @@ public final class FluentCache: CacheProtocol {
 
     public func set(_ key: String, _ value: Node) throws {
         if var entity = try _find(key) {
+            entity.value = value
             try entity.save()
         } else {
             var entity = Entity(key: key, value: value)
