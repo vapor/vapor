@@ -3,16 +3,19 @@ import Core
 import PathIndexable
 
 public class Localization {
-    private let localizations: [String: Node]
-    private let defaultDialect: String
-    
-    public convenience init(localizationDirectory: String) throws {
+    fileprivate let localizations: [String: Node]
+    fileprivate let defaultDialect: String
+
+    /// - localizationDirectory: The directory to load localizations from, usually `workDir + "Localization/"
+    /// - default locale, when a default locale is not found, what key should be used to fall back.
+    /// will use `"default"` or `"en"` as default
+    public convenience init(localizationDirectory: String, defaultLocale: String? = nil) throws {
         // Finish path with "/"
         let localizationDirectory = localizationDirectory.finished(with: "/")
-        
+
         // List the files in the directory
         let contents = try FileManager.contentsOfDirectory(localizationDirectory)
-        
+
         // Read the files into nodes mapped to their appropriate language
         var localizations = [String: Node]()
         for path in contents where path.hasSuffix(".json") {
@@ -21,18 +24,28 @@ public class Localization {
                 continue
             }
             let name = String(nameRaw)
-            
+
             // Read the
             let data = try DataFile().load(path: path)
             localizations[name.lowercased()] = try JSON(bytes: data).makeNode()
         }
-        
-        self.init(localizations: localizations)
+
+        self.init(localizations: localizations, defaultLocale: defaultLocale)
     }
 
     public init(localizations: [String: Node]? = nil, defaultLocale: String? = nil) {
-        self.localizations = localizations ?? [:]
-        self.defaultDialect = defaultLocale ?? localizations?.keys.first ?? "default"
+        let localizations = localizations ?? [:]
+        self.localizations = localizations
+
+        if let defaultLocale = defaultLocale {
+            self.defaultDialect = defaultLocale
+        } else if localizations.keys.contains("default") {
+            self.defaultDialect = "default"
+        } else if localizations.keys.contains("en") {
+            self.defaultDialect = "en"
+        } else {
+            self.defaultDialect = localizations.keys.sorted().first ?? ""
+        }
     }
 
     public subscript(_ languageCode: String, _ paths: PathIndex...) -> String {
@@ -43,5 +56,15 @@ public class Localization {
         return localizations[languageCode.lowercased()]?[paths]?.string  // Index by language
             ?? localizations[defaultDialect]?[paths]?.string // Index the default language
             ?? paths.map { "\($0)" }.joined(separator: ".") // Return the literal path indexed if no translation
+    }
+}
+
+extension Localization: CustomDebugStringConvertible {
+    public var debugDescription: String {
+        var d = ""
+        d += "Localization:\n"
+        d += "Default Dialect: '\(defaultDialect)'\n"
+        d += "Content:\n\(localizations)\n\n"
+        return d
     }
 }
