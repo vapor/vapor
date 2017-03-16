@@ -110,7 +110,8 @@ class ContentTests: XCTestCase {
         let content = Content()
         let json = try JSON(node: ["a": "a"])
         content.append(json)
-        XCTAssertEqual(content["a"]?.string, "a")
+        let string = try content.get("a") as String
+        XCTAssertEqual(string, "a")
     }
 
     func testContentLazyLoad() throws {
