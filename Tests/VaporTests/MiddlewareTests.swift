@@ -103,6 +103,29 @@ class MiddlewareTests: XCTestCase {
         XCTAssertEqual(res.headers["bar"], "baz")
     }
 
+    func testDynamicConfigClient() throws {
+        let drop = try Droplet(config: [:])
+        func compare(expectation: Bool) throws {
+            let res = try drop.client.get("http://httpbin.org/headers")
+
+            // test to make sure basic server saw the
+            // header the middleware added
+            XCTAssert(try res.bodyString().contains("Foo") == expectation)
+            XCTAssert(try res.bodyString().contains("bar") == expectation)
+
+            // test to make sure the middleware
+            // added headers to the response
+            let headerCheck = res.headers["bar"] == "baz"
+            XCTAssert(headerCheck == expectation)
+        }
+
+        try compare(expectation: false)
+        drop.addConfigurable(middleware: FooMiddleware(), name: "foo")
+        try compare(expectation: false)
+        drop.config["droplet.middleware.client"] = ["foo"]
+        try compare(expectation: true)
+    }
+
     func testConfigClientNotEnabled() throws {
         let drop = try Droplet()
 

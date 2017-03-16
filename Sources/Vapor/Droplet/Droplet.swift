@@ -10,7 +10,7 @@ public let VERSION = "2.0.0-alpha"
 
 public class Droplet {
     /// The arguments passed to the droplet.
-    public let arguments: [String]
+    public var arguments: [String]
 
     /// The work directory of your droplet is
     /// the directory in which your Resources, Public, etc
@@ -33,7 +33,15 @@ public class Droplet {
     public let environment: Environment
 
     /// Provides access to config settings.
-    public let config: Settings.Config
+    public var config: Settings.Config {
+        didSet {
+            do {
+                try configDidUpdate(original: oldValue, new: config)
+            } catch {
+                log.error("Failed to properly update config with errors '\(error)'.")
+            }
+        }
+    }
 
     /// Provides access to language specific
     /// strings and defaults.
