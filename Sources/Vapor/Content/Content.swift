@@ -53,3 +53,18 @@ public final class Content {
         return content.lazy.flatMap { loader in loader(indexes) } .first
     }
 }
+
+extension Content {
+    public func get<T : NodeInitializable>(
+        _ indexers: PathIndexer...)
+        throws -> T {
+            return try get(indexers)
+    }
+
+    public func get<T : NodeInitializable>(
+        _ indexers: [PathIndexer])
+        throws -> T {
+            let value = self[indexers] ?? .null
+            return try T(node: value)
+    }
+}
