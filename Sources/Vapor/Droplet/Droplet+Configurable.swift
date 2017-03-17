@@ -17,6 +17,8 @@ import Transport
 
 extension Droplet {
     public func addConfigurable(client: ClientProtocol.Type, name: String) {
+        let config = self.config.converted(to: Node.self)
+
         if config["droplet", "client"]?.string == name {
             self.client = client
             log.debug("Using client '\(name)'.")

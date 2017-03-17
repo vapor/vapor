@@ -1,7 +1,6 @@
-import Polymorphic
 import FormData
 
-extension FormData.Field: Polymorphic {
+extension FormData.Field {
     public var isNull: Bool {
         return part.body.makeString().isNull
     }
@@ -22,12 +21,8 @@ extension FormData.Field: Polymorphic {
         return part.body.makeString()
     }
     
-    public var array: [Polymorphic]? {
+    public var array: [String]? {
         return part.body.makeString().array
-    }
-    
-    public var object: [String : Polymorphic]? {
-        return part.body.makeString().object
     }
     
     public var float: Float? {
