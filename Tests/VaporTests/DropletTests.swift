@@ -2,7 +2,7 @@ import XCTest
 @testable import Vapor
 import HTTP
 import Core
-import Socks
+import Sockets
 
 class DropletTests: XCTestCase {
     static let allTests = [
@@ -86,7 +86,7 @@ class DropletTests: XCTestCase {
 
         drop.console.wait(seconds: 1)
 
-        let res = try drop.client.get("http://0.0.0.0:8523/foo")
+        let res = try drop.client.request(.get, "http://0.0.0.0:8523/foo")
         XCTAssertEqual(try res.bodyString(), "bar")
     }
 
@@ -110,7 +110,7 @@ class DropletTests: XCTestCase {
 
         drop.console.wait(seconds: 2)
 
-        let res = try drop.client.get("http://0.0.0.0:8337/foo")
+        let res = try drop.client.request(.get, "http://0.0.0.0:8337/foo")
         XCTAssertEqual(try res.bodyString(), "bar")
     }
 
@@ -127,7 +127,7 @@ class DropletTests: XCTestCase {
         }
 
         drop.console.wait(seconds: 1)
-        let res = try drop.client.get("http://0.0.0.0:8424/foo")
+        let res = try drop.client.request(.get, "http://0.0.0.0:8424/foo")
         XCTAssertEqual(try res.bodyString(), "bar")
     }
 
@@ -144,7 +144,7 @@ class DropletTests: XCTestCase {
 
         drop.console.wait(seconds: 1)
 
-        let getResp = try drop.client.get("http://0.0.0.0:9222/foo")
+        let getResp = try drop.client.request(.get, "http://0.0.0.0:9222/foo")
         XCTAssertEqual(try getResp.bodyString(), "Hi, I'm a body")
 
         let head = try Request(method: .head, uri: "http://0.0.0.0:9222/foo")

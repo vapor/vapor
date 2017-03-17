@@ -81,7 +81,7 @@ class FormDataTests: XCTestCase {
         
         drop.console.wait(seconds: 1)
         
-        let client = try drop.client.init(host: "0.0.0.0", port: 8932, securityLayer: .none, middleware: [])
+        let client = try drop.client.init(hostname: "0.0.0.0", port: 8932, .none)
         let response = try client.respond(to: request)
         
         XCTAssertEqual(try response.bodyString(), "👍")

@@ -24,7 +24,7 @@ extension Droplet {
             log.debug("Using client '\(name)'.")
 
             if let tls = config["clients", "tls"]?.object {
-                defaultClientConfig = {
+                EngineClient.defaultTLSContext = {
                     return try self.parseTLSConfig(tls, mode: .client)
                 }
             }
@@ -116,8 +116,9 @@ extension Droplet {
         }
 
         if config["droplet", "middleware", "client"]?.array?.flatMap({ $0.string }).contains(name) == true {
-            let cm = self.client.defaultMiddleware
-            self.client.defaultMiddleware = cm + [middleware]
+            // FIXME
+//            let cm = self.client.defaultMiddleware
+//            self.client.defaultMiddleware = cm + [middleware]
             log.debug("Using client middleware '\(name)'.")
         } else {
             log.debug("Not using client middleware '\(name)'.")

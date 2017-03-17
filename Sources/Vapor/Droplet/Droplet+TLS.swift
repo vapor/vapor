@@ -5,9 +5,9 @@ extension Droplet {
     internal func makeServerConfig() throws -> ServerConfig {
         let serverConfig = config["server"]
         let port = serverConfig?["port"]?.int ?? cliPort(arguments: arguments) ?? 8080
-        let host = serverConfig?["host"]?.string ?? "0.0.0.0"
+        let hostname = serverConfig?["host"]?.string ?? "0.0.0.0"
         let securityLayer = try makeSecurityLayer(serverConfig: serverConfig)
-        return ServerConfig(host: host, port: port, securityLayer: securityLayer)
+        return ServerConfig(hostname: hostname, port: port.port, securityLayer)
     }
 
     private func makeSecurityLayer(serverConfig: Settings.Config?) throws -> SecurityLayer {
@@ -22,7 +22,7 @@ extension Droplet {
                 securityLayer = .tls(config)
             } else {
                 log.warning("No TLS configuration supplied, using default.")
-                securityLayer = .tls(nil)
+                securityLayer = .tls(try server.defaultTLSContext())
             }
         case "none":
             securityLayer = .none

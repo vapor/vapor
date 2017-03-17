@@ -4,7 +4,7 @@ import Cache
 import Sessions
 import Crypto
 import Transport
-import Socks
+import Sockets
 
 public let VERSION = "2.0.0-alpha"
 
@@ -203,8 +203,10 @@ public class Droplet {
         // DEFAULTS
 
         router = Router()
-        server = Server<TCPServerStream, Parser<Request>, Serializer<Response>>.self
-        client = Client<TCPClientStream, Serializer<Request>, Parser<Response>>.self
+        // server = Server<TCPServerStream, Parser<Request>, Serializer<Response>>.self
+        // client = Client<TCPClientStream, Serializer<Request>, Parser<Response>>.self
+        client = EngineClient.self
+        server = EngineServer.self
         middleware = []
         console = terminal
         commands = []
@@ -226,8 +228,8 @@ public class Droplet {
         mail = UnimplementedMailer()
 
         // CONFIGURABLE
-        addConfigurable(server: Server<TCPServerStream, Parser<Request>, Serializer<Response>>.self, name: "engine")
-        addConfigurable(client: Client<TCPClientStream, Serializer<Request>, Parser<Response>>.self, name: "engine")
+        // addConfigurable(server: Server<TCPServerStream, Parser<Request>, Serializer<Response>>.self, name: "engine")
+        // addConfigurable(client: Client<TCPClientStream, Serializer<Request>, Parser<Response>>.self, name: "engine")
         addConfigurable(console: terminal, name: "terminal")
         addConfigurable(log: log, name: "console")
         try addConfigurable(hash: CryptoHasher.self, name: "crypto")
@@ -274,7 +276,7 @@ public class Droplet {
         ///https://github.com/vapor/vapor/issues/678
         if
             case let .dispatch(dispatchError) = error,
-            case let StreamError.receive(_, recError as SocksError) = dispatchError,
+            case let StreamError.receive(_, recError as SocketsError) = dispatchError,
             recError.number == 35  { return }
 
         log.error("Server error: \(error)")

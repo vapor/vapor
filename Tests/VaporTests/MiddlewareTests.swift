@@ -91,7 +91,7 @@ class MiddlewareTests: XCTestCase {
         let drop = try Droplet(config: config)
         drop.addConfigurable(middleware: FooMiddleware(), name: "foo")
 
-        let res = try drop.client.get("http://httpbin.org/headers")
+        let res = try drop.client.request(.get, "http://httpbin.org/headers")
 
         // test to make sure basic server saw the
         // header the middleware added
@@ -106,10 +106,10 @@ class MiddlewareTests: XCTestCase {
     func testConfigClientNotEnabled() throws {
         let drop = try Droplet()
 
-        drop.client.defaultMiddleware = []
+        //drop.client.defaultMiddleware = []
         drop.middleware.append(FooMiddleware())
 
-        let res = try drop.client.get("http://httpbin.org/headers")
+        let res = try drop.client.request(.get, "http://httpbin.org/headers")
 
         XCTAssert(try res.bodyString().contains("Foo") != true)
         XCTAssert(try res.bodyString().contains("bar") != true)
@@ -118,10 +118,10 @@ class MiddlewareTests: XCTestCase {
 
     func testConfigClientManual() throws {
         let drop = try Droplet()
-        drop.client.defaultMiddleware = [FooMiddleware()]
+        // drop.client.defaultMiddleware = [FooMiddleware()]
 
 
-        let res = try drop.client.get("http://httpbin.org/headers")
+        let res = try drop.client.request(.get, "http://httpbin.org/headers")
         XCTAssert(res.headers["bar"] != nil)
     }
 

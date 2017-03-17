@@ -4,11 +4,16 @@ import Transport
 import TLS
 
 public struct ServerConfig {
-    public let host: String
-    public let port: Int
+    public let hostname: String
+    public let port: Port
     public let securityLayer: SecurityLayer
-    public init(host: String = "0.0.0.0", port: Int = 8080, securityLayer: SecurityLayer = .none) {
-        self.host = host
+
+    public init(
+        hostname: String = "0.0.0.0",
+        port: Port = 8080,
+        _ securityLayer: SecurityLayer = .none
+    ) {
+        self.hostname = hostname
         self.port = port
         self.securityLayer = securityLayer
     }
@@ -19,8 +24,13 @@ public struct ServerConfig {
 extension Droplet {
     public func serve(_ config: ServerConfig? = nil) throws -> Never {
         let config = try config ?? makeServerConfig()
-        let server = try self.server.make(host: config.host, port: config.port, securityLayer: config.securityLayer)
-        try server.start(responder: self, errors: serverErrors)
+        let server = try self.server.init(
+            hostname: config.hostname,
+            port: config.port,
+            config.securityLayer
+        )
+        // FIXME errors
+        try server.start(self) //, errors: serverErrors)
         // don't enforce -> Never on protocol because of Swift warnings
         log.error("server did not block execution")
         exit(1)
