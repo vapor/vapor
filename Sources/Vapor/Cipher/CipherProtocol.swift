@@ -47,7 +47,7 @@ extension CipherProtocol {
         case .hex:
             return m.hexString
         case .base64:
-            return m.base64Encoded.string
+            return m.base64Encoded.makeString()
         }
     }
 }
@@ -80,7 +80,7 @@ extension CipherProtocol {
         }
 
         let d = try decrypt(bytes, key: key)
-        return d.string
+        return d.makeString()
     }
 }
 

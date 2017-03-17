@@ -30,9 +30,12 @@ extension Node {
         let data = try DataFile().load(path: path)
         guard path.hasSuffix(".json") else { return .bytes(data) }
         do {
-            return try JSON(bytes: data).converted()
+            let json = try JSON(bytes: data, allowFragments: true)
+            return json.converted()
         } catch {
-            throw JSONError.parse(path: path, error: error)
+            print("Failed to load json at path \(path)")
+            print("ensure there's no syntax errors in JSON")
+            throw error
         }
     }
 }
