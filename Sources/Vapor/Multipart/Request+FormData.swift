@@ -74,7 +74,7 @@ extension HTTP.Message {
                 try? serializer.multipart.finish()
                 
                 body = .data(serialized)
-                headers[.contentType] = "multipart/form-data; boundary=" + boundary.string
+                headers[.contentType] = "multipart/form-data; boundary=" + boundary.makeString()
             } else {
                 if
                     let contentType = headers[.contentType],

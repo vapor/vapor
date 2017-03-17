@@ -48,7 +48,7 @@ class SessionsTests: XCTestCase {
         req2.cookies["vapor-session"] = c
         let res2 = drop.respond(to: req2)
 
-        XCTAssertEqual(res2.body.bytes?.string, "bar")
+        XCTAssertEqual(res2.body.bytes?.makeString(), "bar")
     }
     
 }

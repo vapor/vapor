@@ -28,12 +28,12 @@ extension Node {
             if token.count == 2 {
                 keyData = percentDecoded(token[0], nonEncodedTransform: replacePlus) ?? []
                 let valueData = percentDecoded(token[1], nonEncodedTransform: replacePlus) ?? []
-                value = .string(valueData.string)
+                value = .string(valueData.makeString())
             } else if allowEmptyValues && token.count == 1 {
                 keyData = percentDecoded(token[0], nonEncodedTransform: replacePlus) ?? []
                 value = .bool(true)
             } else {
-                print("Found bad encoded pair \(pair.string) ... continuing")
+                print("Found bad encoded pair \(pair.makeString()) ... continuing")
                 continue
             }
 
@@ -51,7 +51,7 @@ extension Node {
                 keyIndicatedArray = true
             }
 
-            let key = keyData.string
+            let key = keyData.makeString()
             if let existing = urlEncoded[key] {
                 // if a key already exists, create an
                 // array and append the new value

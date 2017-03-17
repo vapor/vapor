@@ -179,7 +179,7 @@ class TestConsoleDriver: ConsoleProtocol {
     }
 
     func input() -> String {
-        let string = buffer.string
+        let string = buffer.makeString()
         buffer = []
         return string
     }

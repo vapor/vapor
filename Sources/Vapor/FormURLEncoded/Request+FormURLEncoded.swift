@@ -49,7 +49,7 @@ extension Request {
         set(data) {
             if let data = data {
                 do {
-                    uri.query = try data.formURLEncoded().string
+                    uri.query = try data.formURLEncoded().makeString()
                     storage["query"] = data
                 } catch {
                     // make no changes

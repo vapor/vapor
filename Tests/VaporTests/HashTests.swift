@@ -18,7 +18,7 @@ class HashTests: XCTestCase {
 
         //test Hash by itself
         let hash = CryptoHasher(hmac: .sha256, encoding: .hex, key: key.makeBytes())
-        XCTAssertEqual(defaultExpected, try hash.make(string).string, "Hash did not match")
+        XCTAssertEqual(defaultExpected, try hash.make(string).makeString(), "Hash did not match")
 
         //test all variants of manually
         var expected: [HMAC.Method: String] = [:]
@@ -28,7 +28,7 @@ class HashTests: XCTestCase {
 
         for (variant, expect) in expected {
             let hasher = CryptoHasher(hmac: variant, encoding: .hex, key: key.makeBytes())
-            let result = try hasher.make(string).string
+            let result = try hasher.make(string).makeString()
             XCTAssert(result == expect, "Hash for \(variant) did not match")
         }
     }
@@ -50,7 +50,7 @@ class HashTests: XCTestCase {
             ]
         ])
         let drop = try Droplet(config: config)
-        let result = try drop.hash.make(string).string
+        let result = try drop.hash.make(string).makeString()
         XCTAssert(defaultExpected == result, "Hash did not match")
     }
 
@@ -60,8 +60,8 @@ class HashTests: XCTestCase {
 
         let hash: HashProtocol = BCryptHasher(cost: workFactor)
 
-        let digest1 = try hash.make(password).string
-        let digest2 = try hash.make(password).string
+        let digest1 = try hash.make(password).makeString()
+        let digest2 = try hash.make(password).makeString()
         let digest3 = "$2a$05$LCgyKIaj2Mv1uDZZB6DMT.zruhilEevoFkyToS8CIwpSecp/2dg3u" // foo from online
 
         XCTAssert(digest1.contains("$0\(workFactor)$"))
@@ -84,7 +84,7 @@ class HashTests: XCTestCase {
             ]
         ])
         let drop = try Droplet(config: config)
-        let result = try drop.hash.make(string).string
+        let result = try drop.hash.make(string).makeString()
 
         let other = BCryptHasher(cost: workFactor)
         XCTAssertTrue(

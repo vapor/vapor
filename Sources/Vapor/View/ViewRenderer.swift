@@ -53,7 +53,7 @@ public final class StaticViewRenderer: ViewRenderer {
     public func make(_ path: String, _ context: Node) throws -> View {
         if let cached = cache?[path] { return cached }
 
-        let path = path.hasPrefix("/") ? path.makeBytes().dropFirst().string : path
+        let path = path.hasPrefix("/") ? path.makeBytes().dropFirst().makeString() : path
         let bytes = try loader.load(path: viewsDir + path)
         let view = View(bytes: bytes)
         cache?[path] = view

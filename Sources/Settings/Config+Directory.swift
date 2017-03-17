@@ -69,6 +69,6 @@ extension String {
     private static let jsonSuffixCount = ".json".makeBytes().count
     fileprivate mutating func removedJSONSuffix() {
         guard hasSuffix(".json") else { return }
-        self = self.makeBytes().dropLast(String.jsonSuffixCount).string
+        self = self.makeBytes().dropLast(String.jsonSuffixCount).makeString()
     }
 }

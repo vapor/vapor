@@ -18,7 +18,7 @@ extension Response {
 
         if !body.contains(desired) {
             onFail(
-                message ?? "Body assertion failed. '\(body.string)' does not contain '\(desired.string)'",
+                message ?? "Body assertion failed. '\(body.makeString())' does not contain '\(desired.makeString())'",
                 file,
                 line
             )

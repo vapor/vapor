@@ -54,7 +54,7 @@ extension RouteBuilder {
         var itemMethods: [Method] = []
         var multipleMethods: [Method] = []
 
-        let pathId = path.makeBytes().split(separator: .forwardSlash).joined(separator: [.hyphen]).split(separator: .colon).joined().string + "_id"
+        let pathId = path.makeBytes().split(separator: .forwardSlash).joined(separator: [.hyphen]).split(separator: .colon).joined().makeString() + "_id"
 
         func item(_ method: Method, _ item: Resource<Model>.Item?) {
             guard let item = item else {
