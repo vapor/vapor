@@ -12,10 +12,10 @@ fileprivate final class ErrorView {
 
         let file = "/" + path.joined(separator: "/")
         do {
-            let string = try DataFile().load(path: file).string
+            let string = try DataFile().load(path: file).makeString()
 
             let comps = string.components(separatedBy: "#(code)")
-            head = comps.first?.bytes ?? []
+            head = comps.first?.makeBytes() ?? []
 
             if let compsTwo = comps.last?.components(separatedBy: "#(message)") {
                 middle = compsTwo.first?.bytes ?? []

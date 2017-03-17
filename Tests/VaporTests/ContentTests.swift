@@ -40,7 +40,7 @@ class ContentTests: XCTestCase {
         XCTAssertEqual(data, request.formURLEncoded)
         XCTAssertEqual("application/x-www-form-urlencoded", request.headers["Content-Type"])
         XCTAssertNotNil(request.body.bytes)
-        let bodyString = try request.body.bytes!.string().removingPercentEncoding
+        let bodyString = request.body.bytes!.makeString().removingPercentEncoding
         XCTAssertEqual("hello=world", bodyString)
     }
 

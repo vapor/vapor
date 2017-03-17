@@ -18,7 +18,7 @@ extension Response {
             throw TestHTTPError.noBodyBytes
         }
 
-        return bytes.string
+        return bytes.makeString()
     }
 }
 

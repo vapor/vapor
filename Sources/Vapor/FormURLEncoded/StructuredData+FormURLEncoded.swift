@@ -26,14 +26,14 @@ extension Node {
                 omittingEmptySubsequences: !allowEmptyValues
             )
             if token.count == 2 {
-                keyData = percentDecoded(token[0], nonEncodedTransform: replacePlus) ?? []
-                let valueData = percentDecoded(token[1], nonEncodedTransform: replacePlus) ?? []
-                value = .string(valueData.string)
+                keyData = token[0].percentDecoded(nonEncodedTransform: replacePlus) ?? []
+                let valueData = token[1].percentDecoded(nonEncodedTransform: replacePlus) ?? []
+                value = .string(valueData.makeString())
             } else if allowEmptyValues && token.count == 1 {
-                keyData = percentDecoded(token[0], nonEncodedTransform: replacePlus) ?? []
+                keyData = token[0].percentDecoded(nonEncodedTransform: replacePlus) ?? []
                 value = .bool(true)
             } else {
-                print("Found bad encoded pair \(pair.string) ... continuing")
+                print("Found bad encoded pair \(pair.makeString()) ... continuing")
                 continue
             }
 
@@ -51,11 +51,11 @@ extension Node {
                 keyIndicatedArray = true
             }
 
-            let key = keyData.string
+            let key = keyData.makeString()
             if let existing = urlEncoded[key] {
                 // if a key already exists, create an
                 // array and append the new value
-                if var array = existing.typeArray {
+                if var array = existing.array {
                     array.append(value)
                     value = .array(array)
                 } else {
@@ -76,15 +76,15 @@ extension Node {
     }
     
     public func formURLEncoded() throws -> Bytes {
-        guard let dict = self.typeObject else { return [] }
+        guard let dict = self.object else { return [] }
 
         var bytes: [[Byte]] = []
 
         for (key, val) in dict {
             var subbytes: [Byte] = []
-            subbytes += try percentEncoded(key.makeBytes())
+            subbytes += try key.makeBytes().percentEncoded()
             subbytes += Byte.equals
-            subbytes += try percentEncoded(val.string?.makeBytes() ?? [])
+            subbytes += try val.string?.makeBytes().percentEncoded() ?? []
             bytes.append(subbytes)
         }
 

@@ -25,7 +25,7 @@ extension ViewRenderer {
     public func make(_ path: String, _ context: NodeRepresentable, for request: Request) throws -> View {
         let node: Node
         
-        if var nodeObject = try context.makeNode(in: nil).typeObject {
+        if var nodeObject = try context.makeNode(in: nil).object {
             nodeObject["request"] = try request.makeNode(in: nil)
             node = Node.object(nodeObject)
         } else {

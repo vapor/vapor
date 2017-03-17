@@ -19,7 +19,7 @@ class DropletTests: XCTestCase {
     func testData() {
         do {
             let file = try DataFile().load(path: #file)
-            XCTAssert(file.string.contains("meta"))
+            XCTAssert(file.makeString().contains("meta"))
         } catch {
             print("File load failed: \(error)")
         }
