@@ -26,6 +26,6 @@ public final class CacheSessions: SessionsProtocol {
     }
 
     public func makeIdentifier() throws -> String {
-        return try Crypto.Random.bytes(count: 16).base64Encoded.string
+        return try Crypto.Random.bytes(count: 16).base64Encoded.makeString()
     }
 }
