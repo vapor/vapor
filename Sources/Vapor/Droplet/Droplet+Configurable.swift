@@ -108,20 +108,11 @@ import HTTP
 
 extension Droplet {
     public func addConfigurable(middleware: Middleware, name: String) {
-        if config["droplet", "middleware", "server"]?.array?.flatMap({ $0.string }).contains(name) == true {
+        if config["droplet", "middleware"]?.array?.flatMap({ $0.string }).contains(name) == true {
             self.middleware.append(middleware)
-            log.debug("Using server middleware '\(name)'.")
+            log.debug("Using middleware '\(name)'.")
         } else {
-            log.debug("Not using server middleware '\(name)'.")
-        }
-
-        if config["droplet", "middleware", "client"]?.array?.flatMap({ $0.string }).contains(name) == true {
-            // FIXME
-//            let cm = self.client.defaultMiddleware
-//            self.client.defaultMiddleware = cm + [middleware]
-            log.debug("Using client middleware '\(name)'.")
-        } else {
-            log.debug("Not using client middleware '\(name)'.")
+            log.debug("Not using middleware '\(name)'.")
         }
     }
 }

@@ -79,7 +79,10 @@ private final class FastServer: ServerProtocol {
         self.securityLayer = securityLayer
     }
 
-    func start(_ responder: Responder) throws {
+    func start(
+        _ responder: Responder,
+        errors: @escaping ServerErrorHandler
+    ) throws {
         while true { }
     }
 }
@@ -113,7 +116,10 @@ private final class SlowServer: ServerProtocol {
         self.securityLayer = securityLayer
     }
 
-    func start(_ responder: Responder) throws {
+    func start(
+        _ responder: Responder,
+        errors: @escaping ServerErrorHandler
+    ) throws {
         while true { }
     }
 }

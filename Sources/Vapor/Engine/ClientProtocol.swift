@@ -3,8 +3,14 @@ import Transport
 import URI
 import TLS
 
+/// types conforming to this protocol can be 
+/// set as the Droplet's `.client`
 public protocol ClientProtocol: Responder {
-    init(hostname: String, port: Port, _ securityLayer: SecurityLayer) throws
+    init(
+        hostname: String,
+        port: Port,
+        _ securityLayer: SecurityLayer
+    ) throws
 }
 
 // MARK: Convenience

@@ -3,10 +3,17 @@ import Transport
 import Sockets
 import TLS
 
+/// TCP and TLS servers from engine
+/// wrappe dto conform to the Server Protocol
 public final class EngineServer: ServerProtocol {
-    let server: Server
+    public let server: Server
 
-    public init(hostname: String, port: Port, _ securityLayer: SecurityLayer) throws {
+    /// Create a new EngineServer
+    public init(
+        hostname: String,
+        port: Port,
+        _ securityLayer: SecurityLayer
+    ) throws {
         switch securityLayer {
         case .none:
             let socket = try TCPInternetSocket(
@@ -21,12 +28,18 @@ public final class EngineServer: ServerProtocol {
                 hostname: hostname,
                 port: port
             )
-            let tlsSocket = TLS.ServerSocket(socket, context)
+            let tlsSocket = TLS.InternetSocket(socket, context)
             server = try TLSTCPServer(tlsSocket)
         }
     }
 
-    public func start(_ responder: Responder) throws {
-        try server.start(responder)
+    /// Starts the server. 
+    /// The supplied Responder will be called
+    /// when the server accepts a connection
+    public func start(
+        _ responder: Responder,
+        errors: @escaping ServerErrorHandler
+    ) throws {
+        try server.start(responder, errors: errors)
     }
 }

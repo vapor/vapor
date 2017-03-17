@@ -29,8 +29,9 @@ extension Droplet {
             port: config.port,
             config.securityLayer
         )
-        // FIXME errors
-        try server.start(self) //, errors: serverErrors)
+
+        try server.start(self, errors: serverErrors)
+
         // don't enforce -> Never on protocol because of Swift warnings
         log.error("server did not block execution")
         exit(1)

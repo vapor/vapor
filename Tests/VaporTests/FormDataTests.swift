@@ -3,18 +3,18 @@ import XCTest
 import HTTP
 import FormData
 import Multipart
+import URI
 
 class FormDataTests: XCTestCase {
     static let allTests = [
         ("testHolistic", testHolistic),
     ]
     
-    /**
-        Test form data serialization and parsing
-        for a text, html, and blob field.
-    */
+    /// Test form data serialization and parsing
+    /// for a text, html, and blob field.
     func testHolistic() throws {
-        let request = Request(method: .get, path: "form-data")
+        let uri = try URI("http://0.0.0.0:8932/form-data")
+        let request = Request(method: .get, uri: uri)
         
         let html = "<hello>"
         let htmlPart = Part(headers: [
@@ -73,17 +73,20 @@ class FormDataTests: XCTestCase {
             
             return "👍"
         }
-        
+
+        let group = DispatchGroup()
+        group.enter()
+
         background {
             let server = ServerConfig(port: 8932)
+            group.leave()
             try! drop.run(server: server)
         }
-        
-        drop.console.wait(seconds: 1)
-        
-        let client = try drop.client.init(hostname: "0.0.0.0", port: 8932, .none)
-        let response = try client.respond(to: request)
-        
+
+        group.wait()
+        usleep(500)
+
+        let response = try drop.client.respond(to: request)
         XCTAssertEqual(try response.bodyString(), "👍")
     }
 }
