@@ -26,11 +26,11 @@ extension Node {
                 omittingEmptySubsequences: !allowEmptyValues
             )
             if token.count == 2 {
-                keyData = token[0].percentDecoded(nonEncodedTransform: replacePlus) ?? []
-                let valueData = token[1].percentDecoded(nonEncodedTransform: replacePlus) ?? []
-                value = .string(valueData.makeString())
+                keyData = token[0].map(replacePlus).makeString().removingPercentEncoding?.makeBytes() ?? []
+                let valueData = token[1].map(replacePlus).makeString().removingPercentEncoding ?? ""
+                value = .string(valueData)
             } else if allowEmptyValues && token.count == 1 {
-                keyData = token[0].percentDecoded(nonEncodedTransform: replacePlus) ?? []
+                keyData = token[0].map(replacePlus).makeString().removingPercentEncoding?.makeBytes() ?? []
                 value = .bool(true)
             } else {
                 print("Found bad encoded pair \(pair.makeString()) ... continuing")
@@ -82,9 +82,9 @@ extension Node {
 
         for (key, val) in dict {
             var subbytes: [Byte] = []
-            subbytes += try key.makeBytes().percentEncoded()
+            subbytes += key.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)?.makeBytes() ?? []
             subbytes += Byte.equals
-            subbytes += try val.string?.makeBytes().percentEncoded() ?? []
+            subbytes += val.string?.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)?.makeBytes() ?? []
             bytes.append(subbytes)
         }
 
