@@ -84,7 +84,7 @@ class ContentTests: XCTestCase {
         let body = "first=value&arr[]=foo+bar&arr[]=b%3Daz"
 
         let data = Node(formURLEncoded: body.makeBytes(), allowEmptyValues: true)
-
+        print(data)
         XCTAssert(data["first"]?.string == "value", "Request key first did not parse correctly")
         XCTAssert(data["arr", 0]?.string == "foo bar", "Request key arr did not parse correctly")
         XCTAssert(data["arr", 1]?.string == "b=az", "Request key arr did not parse correctly")
