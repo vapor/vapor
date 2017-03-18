@@ -8,7 +8,7 @@ function help() {
     echo "http://vapor.team"
 }
 
-function run() {
+function check_vapor() {
     SWIFTC=`which swift`;
 
     if [[ $SWIFTC == "" ]];
@@ -59,4 +59,4 @@ function run() {
     fi
 }
 
-run;
+check_vapor;

@@ -8,7 +8,7 @@ function help() {
     echo "http://vapor.team"
 }
 
-function run() {
+function check_openssl() {
     OS=`uname`
     if [[ $OS != "Darwin" ]]; # macOS
     then
@@ -134,6 +134,6 @@ function run() {
 eval "$(curl -sL check2.vapor.sh)";
 if [[ $? == 0 ]]; 
 then 
-    run;
+    check_openssl;
 fi
 
