@@ -12,10 +12,9 @@ help() {
 
 if [[ $SWIFTC == "" ]];
 then
-    echo "❌  Incompatible"
-    echo "Reason: Cannot find Swift."
+    echo "❌  Cannot find Swift."
     echo ""
-    echo "'which swift' is empty."
+    echo "ℹ️  'which swift' is empty."
     echo ""
     help
     exit 1;
@@ -42,18 +41,17 @@ fi
 
 SWIFTV=`swift --version`
 
-if [[ $SWIFTV == *"3.0"* ]];
+if [[ $SWIFTV == *"3.1"* ]];
 then
     echo "✅  Compatible"
     exit 0;
 else    
-    echo "❌  Incompatible"
-    echo "Reason: Swift 3.0 is required."
+    echo "❌  Swift 3.1 is required."
     echo ""
     echo "'swift --version' output:"
     echo $SWIFTV
     echo ""
-    echo "Output does not contain '3.0'."
+    echo "Output does not contain '3.1'."
     echo ""
     help
     exit 1;
