@@ -30,6 +30,7 @@ extension Droplet {
             config.securityLayer
         )
 
+        log.info("Starting server on \(config.hostname):\(config.port)")
         try server.start(self, errors: serverErrors)
 
         // don't enforce -> Never on protocol because of Swift warnings
