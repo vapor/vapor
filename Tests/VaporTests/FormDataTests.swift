@@ -4,6 +4,7 @@ import HTTP
 import FormData
 import Multipart
 import URI
+import Dispatch
 
 class FormDataTests: XCTestCase {
     static let allTests = [

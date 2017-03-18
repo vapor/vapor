@@ -46,12 +46,8 @@ extension ClientProtocol {
             securityLayer
         )
         
-        let handler = Request.Handler { request in
-            return try client.respond(to: req)
-        }
-        
         return try middleware
-            .chain(to: handler)
+            .chain(to: client)
             .respond(to: req)
     }
 
