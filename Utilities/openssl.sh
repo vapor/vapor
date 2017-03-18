@@ -69,7 +69,7 @@ function check_openssl() {
         return 1; 
     fi
 
-    PKG_CONFIG_PATH="/usr/local/share/vapor/pkg-config";
+    PKG_CONFIG_PATH="/usr/local/share/vapor/pkgconfig";
     mkdir -p $PKG_CONFIG_PATH;
 
     OPENSSL_PKG_CONFIG="$PKG_CONFIG_PATH/openssl.pc";
