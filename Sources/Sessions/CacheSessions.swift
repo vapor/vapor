@@ -5,11 +5,11 @@ import Foundation
 
 public final class CacheSessions: SessionsProtocol {
     public let cache: CacheProtocol
-    private let timeToLive: TimeInterval?
+    private let defaultExpiration: TimeInterval?
     
-    public init(cache: CacheProtocol, timeToLive: TimeInterval? = nil) {
+    public init(cache: CacheProtocol, defaultExpiration: TimeInterval? = nil) {
         self.cache = cache
-        self.timeToLive = timeToLive
+        self.defaultExpiration = defaultExpiration
     }
 
     public func get(for identifier: String) throws -> Node? {
@@ -24,7 +24,7 @@ public final class CacheSessions: SessionsProtocol {
     public func set(_ value: Node?, for identifier: String) throws {
         do {
             if let value = value {
-                let expiration = timeToLive.map { Date(timeIntervalSinceNow: $0) }
+                let expiration = defaultExpiration.map { Date(timeIntervalSinceNow: $0) }
                 try cache.set(identifier, value, expiration: expiration)
             } else {
                 try cache.delete(identifier)
