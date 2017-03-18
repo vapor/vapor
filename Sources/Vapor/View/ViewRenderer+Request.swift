@@ -70,7 +70,7 @@ extension Request {
             "method": method.description,
             "uri": Node(node: [
                 "path": uri.path,
-                "host": uri.host,
+                "host": uri.hostname,
                 "scheme": uri.scheme
             ])
         ])

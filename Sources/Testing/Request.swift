@@ -1,5 +1,6 @@
 import HTTP
 import URI
+import Transport
 
 extension Request {
     public static func makeTest(
@@ -12,8 +13,8 @@ extension Request {
         // uri
         scheme: String = "",
         userInfo: URI.UserInfo? = nil,
-        host: String = "0.0.0.0",
-        port: Int? = nil,
+        hostname: String = "0.0.0.0",
+        port: Port? = nil,
         path: String = "",
         query: String? = nil,
         rawQuery: String? = nil,
@@ -25,7 +26,7 @@ extension Request {
         let uri = URI(
             scheme: scheme,
             userInfo: userInfo,
-            host: host,
+            hostname: hostname,
             port: port,
             path: path,
             query: query,

@@ -30,7 +30,7 @@ extension Node {
         let data = try DataFile().load(path: path)
         guard path.hasSuffix(".json") else { return .bytes(data) }
         do {
-            let json = try JSON(bytes: data, allowFragments: true)
+            let json = try JSON(bytes: data)
             return json.converted()
         } catch {
             print("Failed to load json at path \(path)")

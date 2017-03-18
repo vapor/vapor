@@ -41,6 +41,6 @@ public class MemorySessions: SessionsProtocol {
 
     /// Create new unique session id
     public func makeIdentifier() throws -> String {
-        return try Crypto.Random.bytes(count: 16).base64Encoded.string
+        return try Crypto.Random.bytes(count: 16).base64Encoded.makeString()
     }
 }
