@@ -131,10 +131,9 @@ function run() {
 }
 
 # Run the compatibility script first
-# eval "$(curl -sL check2.vapor.sh)";
-./compatibility.sh
+eval "$(curl -sL check2.vapor.sh)";
 if [[ $? == 0 ]]; 
 then 
-    run
+    run;
 fi
 
