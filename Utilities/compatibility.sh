@@ -43,7 +43,7 @@ SWIFTV=`swift --version`
 
 if [[ $SWIFTV == *"3.1"* ]];
 then
-    echo "✅  Compatible with Vapor 2."
+    echo "✅  Compatible with Vapor 2"
     exit 0;
 else    
     echo "❌  Swift 3.1 is required."
