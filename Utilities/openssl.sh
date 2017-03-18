@@ -69,24 +69,24 @@ function check_openssl() {
         return 1; 
     fi
 
-    PKG_CONFIG_PATH="/usr/local/share/vapor/pkgconfig";
+    PKG_CONFIG_PATH="/usr/local/share/vapor/pkg-config";
     mkdir -p $PKG_CONFIG_PATH;
 
     OPENSSL_PKG_CONFIG="$PKG_CONFIG_PATH/openssl.pc";
 
     echo "prefix=/usr/local/Cellar/openssl/$OPENSSL_VERSION" > $OPENSSL_PKG_CONFIG;
-    echo "exec_prefix=${prefix}" >> $OPENSSL_PKG_CONFIG;
-    echo "libdir=${exec_prefix}/lib" >> $OPENSSL_PKG_CONFIG;
-    echo "includedir=${prefix}/include" >> $OPENSSL_PKG_CONFIG;
+    echo "exec_prefix=\${prefix}" >> $OPENSSL_PKG_CONFIG;
+    echo "libdir=\${exec_prefix}/lib" >> $OPENSSL_PKG_CONFIG;
+    echo "includedir=\${prefix}/include" >> $OPENSSL_PKG_CONFIG;
     echo "Name: OpenSSL" >> $OPENSSL_PKG_CONFIG;
     echo "Description: Secure Sockets Layer and cryptography libraries and tools" >> $OPENSSL_PKG_CONFIG;
     echo "Version: $OPENSSL_VERSION" >> $OPENSSL_PKG_CONFIG;
     echo "Requires: libssl libcrypto" >> $OPENSSL_PKG_CONFIG;
-    echo "Cflags: -I${includedir}" >> $OPENSSL_PKG_CONFIG;
-    echo "Libs: -L${libdir} -lssl" >>  $OPENSSL_PKG_CONFIG;
+    echo "Cflags: -I\${includedir}" >> $OPENSSL_PKG_CONFIG;
+    echo "Libs: -L\${libdir} -lssl" >>  $OPENSSL_PKG_CONFIG;
 
     PROFILE="$HOME/.bash_profile"
-    PKG_CONFIG_EXPORT="export PKG_CONFIG_PATH=/usr/local/share/vapor/pkgconfig"
+    PKG_CONFIG_EXPORT="export PKG_CONFIG_PATH=$PKG_CONFIG_PATH"
 
     if [[ `tail $PROFILE` != *"$PKG_CONFIG_EXPORT"* ]];
     then
@@ -100,14 +100,14 @@ function check_openssl() {
             echo "🛠  Adding PKG_CONFIG_PATH to $PROFILE";
             echo "" >> $PROFILE;
             echo "# Vapor Package Config" >> $PROFILE;
-            echo "export PKG_CONFIG_PATH=/usr/local/share/vapor/pkgconfig;" >> $PROFILE;
+            echo "$PKG_CONFIG_EXPORT;" >> $PROFILE;
             echo "";
             echo "✅  OpenSSL will be available once the terminal is restarted (Run this script again to verify)"
             return;
         else
             echo "";
             echo "🛠  Add this to your bash profile:"
-            echo "export PKG_CONFIG_PATH=/usr/local/share/vapor/pkgconfig;"
+            echo "$PKG_CONFIG_EXPORT;"
             echo "";
             echo "⚠️  OpenSSL will be available once bash profile is configured."
             return 1;
