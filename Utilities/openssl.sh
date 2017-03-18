@@ -74,7 +74,9 @@ function check_openssl() {
 
     OPENSSL_PKG_CONFIG="$PKG_CONFIG_PATH/openssl.pc";
 
-    echo "prefix=/usr/local/Cellar/openssl/$OPENSSL_VERSION" > $OPENSSL_PKG_CONFIG;
+    OPENSSL_PREFIX="/usr/local/opt/openssl"
+
+    echo "prefix=$OPENSSL_PREFIX" > $OPENSSL_PKG_CONFIG;
     echo "exec_prefix=\${prefix}" >> $OPENSSL_PKG_CONFIG;
     echo "libdir=\${exec_prefix}/lib" >> $OPENSSL_PKG_CONFIG;
     echo "includedir=\${prefix}/include" >> $OPENSSL_PKG_CONFIG;
@@ -115,7 +117,7 @@ function check_openssl() {
     fi
 
     PKG_CONFIG_ALL=`pkg-config openssl --cflags`;
-    if [[ $PKG_CONFIG_ALL != *"-I"* ]];
+    if [[ $PKG_CONFIG_ALL != *"-I$OPENSSL_PREFIX"* ]];
     then
         echo "";
         echo "❌  OpenSSL not found in pkg-config.";
