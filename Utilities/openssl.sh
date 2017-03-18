@@ -13,7 +13,7 @@ function run() {
     if [[ $OS != "Darwin" ]]; # macOS
     then
         echo "❌  This script is for macOS only."
-        exit 1;
+        return 1;
     fi
 
     # Check to make sure Homebrew is installed
@@ -28,7 +28,7 @@ function run() {
         echo "/usr/bin/ruby -e \"\$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)\"";
         echo "";
         help;
-        exit 1; 
+        return 1; 
     fi
 
     # Check to make sure OpenSSL is installed
@@ -41,7 +41,7 @@ function run() {
         echo "brew install openssl";
         echo "";
         help;
-        exit 1; 
+        return 1; 
     fi
     if [[ $BREW_PACKAGES != *"pkg-config"* ]];
     then
@@ -51,7 +51,7 @@ function run() {
         echo "brew install pkg-config";
         echo "";
         help;
-        exit 1; 
+        return 1; 
     fi
 
     OPENSSL_VERSION=`ls /usr/local/Cellar/openssl/`;
@@ -66,7 +66,7 @@ function run() {
         echo "brew upgrade openssl";
         echo "";
         help;
-        exit 1; 
+        return 1; 
     fi
 
     PKG_CONFIG_PATH="/usr/local/share/vapor/pkgconfig";
@@ -110,7 +110,7 @@ function run() {
             echo "export PKG_CONFIG_PATH=/usr/local/share/vapor/pkgconfig;"
             echo "";
             echo "⚠️  OpenSSL will be available once bash profile is configured."
-            exit 1;
+            return 1;
         fi
     fi
 
@@ -124,7 +124,7 @@ function run() {
         echo "This error is unexpected. Try restarting your terminal."
         echo "";
         help;
-        exit 1;
+        return 1;
     fi
 
     echo "✅  OpenSSL available"

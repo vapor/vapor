@@ -18,7 +18,7 @@ function run() {
         echo "ℹ️  'which swift' is empty."
         echo ""
         help
-        exit 1;
+        return 1;
     fi
 
     OS=`uname`
@@ -36,7 +36,7 @@ function run() {
             echo "Current: $XCBVERSION"
             echo ""
             help
-            exit 1;
+            return 1;
         fi
     fi
 
@@ -45,7 +45,7 @@ function run() {
     if [[ $SWIFTV == *"3.1"* ]];
     then
         echo "✅  Compatible with Vapor 2"
-        exit 0;
+        return 0;
     else    
         echo "❌  Swift 3.1 is required."
         echo ""
@@ -55,9 +55,8 @@ function run() {
         echo "Output does not contain '3.1'."
         echo ""
         help
-        exit 1;
+        return 1;
     fi
 }
 
 run;
-
