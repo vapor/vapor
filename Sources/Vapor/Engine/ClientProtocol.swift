@@ -15,27 +15,44 @@ public protocol ClientProtocol: Responder {
 
 // MARK: Convenience
 
+extension String {
+    var port: Port {
+        return isSecure ? 443 : 80
+    }
+}
+
 extension ClientProtocol {
     /// Creates a new client from the information in the 
     /// Request URI and uses it to respond to the request.
     public static func respond(
         to req: Request,
-        _ s: SecurityLayer? = nil
+        _ s: SecurityLayer? = nil,
+        through middleware: [Middleware] = []
     ) throws -> Response {
         // use security layer from input or
         // determine based on req uri scheme
-        let securityLayer = try s ??
-            ((req.uri.scheme ==  "https")
-                ? .tls(try EngineClient.defaultTLSContext())
-                : .none)
+        let securityLayer: SecurityLayer
+        if let s = s {
+            securityLayer = s
+        } else if req.uri.scheme.isSecure {
+            securityLayer = .tls(try EngineClient.defaultTLSContext())
+        } else {
+            securityLayer = .none
+        }
 
         let client = try Self.init(
             hostname: req.uri.hostname,
-            port: req.uri.port ?? 80,
+            port: req.uri.port ?? req.uri.scheme.port,
             securityLayer
         )
-
-        return try client.respond(to: req)
+        
+        let handler = Request.Handler { request in
+            return try client.respond(to: req)
+        }
+        
+        return try middleware
+            .chain(to: handler)
+            .respond(to: req)
     }
 
     /// Creates a new client and calls `.respond()`
@@ -45,7 +62,8 @@ extension ClientProtocol {
         _ uri: String,
         query: [String: NodeRepresentable] = [:],
         _ headers: [HeaderKey: String] = [:],
-        _ body: BodyRepresentable? = nil
+        _ body: BodyRepresentable? = nil,
+        through middleware: [Middleware] = []
     ) throws  -> Response {
         var uri = try URI(uri)
 
@@ -62,7 +80,7 @@ extension ClientProtocol {
         if let body = body {
             req.body = body.makeBody()
         }
-        return try respond(to: req)
+        return try respond(to: req, through: middleware)
     }
 }
 

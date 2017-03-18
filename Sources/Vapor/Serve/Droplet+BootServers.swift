@@ -39,6 +39,6 @@ extension Droplet {
     }
 }
 
-func cliPort(arguments: [String]) -> Int? {
-    return arguments.value(for: "port")?.int
+func cliPort(arguments: [String]) -> Port? {
+    return arguments.value(for: "port")?.int?.port
 }

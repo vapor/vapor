@@ -4,10 +4,10 @@ import Transport
 extension Droplet {
     internal func makeServerConfig() throws -> ServerConfig {
         let serverConfig = config["server"]
-        let port = serverConfig?["port"]?.int ?? cliPort(arguments: arguments) ?? 8080
+        let port = serverConfig?["port"]?.int?.port ?? cliPort(arguments: arguments) ?? 8080
         let hostname = serverConfig?["host"]?.string ?? "0.0.0.0"
         let securityLayer = try makeSecurityLayer(serverConfig: serverConfig)
-        return ServerConfig(hostname: hostname, port: port.port, securityLayer)
+        return ServerConfig(hostname: hostname, port: port, securityLayer)
     }
 
     private func makeSecurityLayer(serverConfig: Settings.Config?) throws -> SecurityLayer {

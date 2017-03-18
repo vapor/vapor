@@ -29,7 +29,7 @@ public final class EngineServer: ServerProtocol {
                 port: port
             )
             let tlsSocket = TLS.InternetSocket(socket, context)
-            server = try TLSTCPServer(tlsSocket)
+            server = try TLSServer(tlsSocket)
         }
     }
 
