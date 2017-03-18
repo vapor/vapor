@@ -1,11 +1,15 @@
 import Random
 import Cache
 import Node
+import Foundation
 
 public final class CacheSessions: SessionsProtocol {
     public let cache: CacheProtocol
-    public init(cache: CacheProtocol) {
+    private let defaultExpiration: TimeInterval?
+    
+    public init(cache: CacheProtocol, defaultExpiration: TimeInterval? = nil) {
         self.cache = cache
+        self.defaultExpiration = defaultExpiration
     }
 
     public func get(for identifier: String) throws -> Node? {
@@ -20,7 +24,8 @@ public final class CacheSessions: SessionsProtocol {
     public func set(_ value: Node?, for identifier: String) throws {
         do {
             if let value = value {
-                try cache.set(identifier, value)
+                let expiration = defaultExpiration.map { Date(timeIntervalSinceNow: $0) }
+                try cache.set(identifier, value, expiration: expiration)
             } else {
                 try cache.delete(identifier)
             }

@@ -1,5 +1,6 @@
 import Fluent
 import Node
+import Foundation
 
 public final class FluentCache: CacheProtocol {
 	public let database: Database
@@ -22,6 +23,11 @@ public final class FluentCache: CacheProtocol {
             var entity = Entity(key: key, value: value)
             try entity.save()
         }
+    }
+
+    public func set(_ key: String, _ value: Node, expiration: Date?) throws {
+        // TODO: timestamp support should be added via a column to the cache entity
+        try set(key, value)
     }
 
     public func delete(_ key: String) throws {
