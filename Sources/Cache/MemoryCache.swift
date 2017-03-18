@@ -20,16 +20,8 @@ public final class MemoryCache: CacheProtocol {
         return value
     }
 
-    public func set(_ key: String, _ value: Node, expiration: Double?) throws {
-        let expirationDate: Date?
-        
-        if let expiration = expiration {
-            expirationDate = Date(timeIntervalSinceNow: expiration)
-        } else {
-            expirationDate = nil
-        }
-        
-        _storage[key] = (expirationDate, value)
+    public func set(_ key: String, _ value: Node, expiration: Date?) throws {
+        _storage[key] = (expiration, value)
     }
 
     public func delete(_ key: String) throws {

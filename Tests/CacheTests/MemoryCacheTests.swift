@@ -27,7 +27,7 @@ class MemoryCacheTests: XCTestCase {
     }
     
     func testExpiration() throws {
-        try cache.set("ephemeral", 42, expiration: 0.5)
+        try cache.set("ephemeral", 42, expiration: Date(timeIntervalSinceNow: 0.5))
         XCTAssertEqual(try cache.get("ephemeral")?.string, "42")
         sleep(1)
         XCTAssertTrue(try cache.get("ephemeral")?.isNull ?? false)
