@@ -18,7 +18,7 @@ let package = Package(
 
         // Development and Testing
         // Target(name: "Development", dependencies: ["Vapor"]),
-        Target(name: "Performance", dependencies: ["Vapor"]),
+        // Target(name: "Performance", dependencies: ["Vapor"]),
     ],
     dependencies: [
         // Core vapor transport layer
