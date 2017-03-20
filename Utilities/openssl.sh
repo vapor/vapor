@@ -82,7 +82,7 @@ function check_openssl() {
     echo "includedir=\${prefix}/include" >> $OPENSSL_PKG_CONFIG;
     echo "Name: OpenSSL" >> $OPENSSL_PKG_CONFIG;
     echo "Description: Secure Sockets Layer and cryptography libraries and tools" >> $OPENSSL_PKG_CONFIG;
-    echo "Version: $OPENSSL_VERSION" >> $OPENSSL_PKG_CONFIG;
+    echo "Version: 1.0" >> $OPENSSL_PKG_CONFIG;
     echo "Requires: libssl libcrypto" >> $OPENSSL_PKG_CONFIG;
     echo "Cflags: -I\${includedir}" >> $OPENSSL_PKG_CONFIG;
     echo "Libs: -L\${libdir} -lssl" >>  $OPENSSL_PKG_CONFIG;

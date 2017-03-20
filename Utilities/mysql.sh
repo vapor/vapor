@@ -82,7 +82,7 @@ function check_mysql() {
     echo "includedir=\${prefix}/include/mysql" >> $MYSQL_PACKAGE_CONFIG;
     echo "Name: MySQL" >> $MYSQL_PACKAGE_CONFIG;
     echo "Description: MySQL client library" >> $MYSQL_PACKAGE_CONFIG;
-    echo "Version: $MYSQL_VERSION" >> $MYSQL_PACKAGE_CONFIG;
+    echo "Version: 5.7" >> $MYSQL_PACKAGE_CONFIG;
     echo "Cflags: -I\${includedir}" >> $MYSQL_PACKAGE_CONFIG;
     echo "Libs: -L\${libdir} -lmysqlclient" >>  $MYSQL_PACKAGE_CONFIG;
 
