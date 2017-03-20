@@ -41,7 +41,7 @@ let package = Package(
     ],
     exclude: [
         "Sources/Development",
-        // "Sources/Performance",
+        "Sources/Performance",
         "Sources/TypeSafeGenerator"
     ]
 )
