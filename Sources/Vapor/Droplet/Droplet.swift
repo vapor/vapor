@@ -237,7 +237,6 @@ public class Droplet {
         addConfigurable(middleware: SessionsMiddleware(MemorySessions()), name: "sessions")
         addConfigurable(middleware: DateMiddleware(), name: "date")
         addConfigurable(middleware: TypeSafeErrorMiddleware(), name: "type-safe")
-        addConfigurable(middleware: ValidationMiddleware(), name: "validation")
         addConfigurable(middleware: FileMiddleware(publicDir: workDir + "Public/"), name: "file")
         addConfigurable(middleware: HeadMiddleware(), name: "head")
         let contentTypeLogger = ContentTypeLogger { [weak self] log in
@@ -256,7 +255,6 @@ public class Droplet {
                 SessionsMiddleware(MemorySessions()),
                 DateMiddleware(),
                 TypeSafeErrorMiddleware(),
-                ValidationMiddleware(),
                 FileMiddleware(publicDir: workDir + "Public/"),
                 HeadMiddleware(),
                 contentTypeLogger,

@@ -12,7 +12,6 @@ class MiddlewareTests: XCTestCase {
         ("testMultiple", testMultiple),
         ("testConfigClient", testConfigClient),
         ("testConfigClientNotEnabled", testConfigClientNotEnabled),
-        ("testValidationMiddleware", testValidationMiddleware),
     ]
 
     func testConfigDate() throws {
@@ -107,30 +106,6 @@ class MiddlewareTests: XCTestCase {
         XCTAssert(try res.bodyString().contains("Foo") != true)
         XCTAssert(try res.bodyString().contains("bar") != true)
         XCTAssertNil(res.headers["bar"])
-    }
-
-    func testValidationMiddleware() throws {
-        let drop = try Droplet()
-
-        drop.middleware.append(ValidationMiddleware())
-        
-        drop.get("*") { req in
-            let path = req.uri.path
-            try path.validated(by: Count.max(10))
-            return path
-        }
-
-        // only added validation, abort won't be caught.
-        drop.get("uncaught") { _ in throw Abort.notFound }
-
-        let request = Request(method: .get, path: "thisPathIsWayTooLong")
-        let response = drop.respond(to: request)
-        let json = response.json
-        XCTAssertEqual(json?["error"]?.bool, true)
-        XCTAssertEqual(json?["message"]?.string, "Validation failed with the following errors: \'Validator Error: Count<String> failed validation: thisPathIsWayTooLong count 20 is greater than maximum 10\n\nIdentifier: Vapor.ValidatorError.failure\'")
-        let fail = Request(method: .get, path: "uncaught")
-        let failResponse = drop.respond(to: fail)
-        XCTAssertEqual(failResponse.status, .notFound)
     }
 }
 

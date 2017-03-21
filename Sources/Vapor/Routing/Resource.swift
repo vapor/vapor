@@ -61,7 +61,7 @@ extension RouteBuilder {
                 return
             }
 
-            itemMethods += method
+            itemMethods.append(method)
 
             self.add(method, path, ":\(pathId)") { request in
                 guard let id = request.parameters["\(pathId)"]?.string else {
@@ -81,7 +81,7 @@ extension RouteBuilder {
                 return
             }
 
-            multipleMethods += method
+            multipleMethods.append(method)
 
             self.add(method, path) { request in
                 return try multiple(request).makeResponse()
