@@ -42,10 +42,6 @@ XCTMain([
     testCase(RoutingTests.allTests),
     testCase(RouteListTests.allTests),
     testCase(SessionsTests.allTests),
-    testCase(ValidationConvenienceTests.allTests),
-    testCase(ValidationCountTests.allTests),
-    testCase(ValidationTests.allTests),
-    testCase(ValidationUniqueTests.allTests),
 ])
 
 #endif
