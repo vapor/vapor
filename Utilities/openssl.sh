@@ -69,10 +69,10 @@ function check_openssl() {
         return 1; 
     fi
 
-    PKG_CONFIG_PATH="/usr/local/share/vapor/pkgconfig";
-    mkdir -p $PKG_CONFIG_PATH;
+    VAPOR_PKG_CONFIG_PATH="/usr/local/share/vapor/pkgconfig";
+    mkdir -p $VAPOR_PKG_CONFIG_PATH;
 
-    OPENSSL_PKG_CONFIG="$PKG_CONFIG_PATH/openssl.pc";
+    OPENSSL_PKG_CONFIG="$VAPOR_PKG_CONFIG_PATH/openssl.pc";
 
     OPENSSL_PREFIX="/usr/local/opt/openssl"
 
@@ -88,13 +88,13 @@ function check_openssl() {
     echo "Libs: -L\${libdir} -lssl" >>  $OPENSSL_PKG_CONFIG;
 
     PROFILE="$HOME/.bash_profile"
-    PKG_CONFIG_EXPORT="export PKG_CONFIG_PATH=$PKG_CONFIG_PATH"
+    PKG_CONFIG_EXPORT="export PKG_CONFIG_PATH=$VAPOR_PKG_CONFIG_PATH:\$PKG_CONFIG_PATH"
 
-    if [[ `tail $PROFILE` != *"$PKG_CONFIG_EXPORT"* ]];
+    if [[ $PKG_CONFIG_PATH != *"$VAPOR_PKG_CONFIG_PATH"* ]];
     then
         echo "";
-        echo "⚠️  Vapor pkg-config path not found in $PROFILE";
-        read -p "Would you like to add it? [y/n] " -n 1 -r
+        echo "⚠️  Vapor pkg-config path not found in environment";
+        read -p "Would you like to add it to $PROFILE? [y/n] " -n 1 -r
         echo ""   # (optional) move to a new line
         if [[ $REPLY =~ ^[Yy]$ ]]
         then
