@@ -16,7 +16,7 @@ public struct Config: StructuredDataWrapper {
 }
 
 extension Config {
-    static func `default`(withEnv env: String? = nil) throws -> Config {
+    public static func `default`(withEnv env: String? = nil) throws -> Config {
         let configDirectory = workingDirectory() + "Config/"
         var sources = [Source]()
         sources.append(.commandLine)
