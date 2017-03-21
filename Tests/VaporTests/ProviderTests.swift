@@ -9,6 +9,8 @@ class ProviderTests: XCTestCase {
         ("testPrecedence", testPrecedence),
         ("testOverride", testOverride),
         ("testInitialized", testInitialized),
+        ("testProviderRepository", testProviderRepository),
+        ("testCheckoutsDirectory", testCheckoutsDirectory),
     ]
 
     func testBasic() throws {
@@ -60,6 +62,15 @@ class ProviderTests: XCTestCase {
         drop.console.wait(seconds: 1)
         XCTAssertEqual(slow.beforeRunFlag, true)
         XCTAssertEqual(fast.beforeRunFlag, true)
+    }
+
+    func testProviderRepository() {
+        XCTAssertEqual(FastServerProvider.repositoryName, "tests-provider")
+    }
+
+    func testCheckoutsDirectory() {
+        XCTAssertNil(FastServerProvider.resourcesDir)
+        XCTAssertNil(FastServerProvider.viewsDir)
     }
 }
 
