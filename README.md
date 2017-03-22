@@ -35,6 +35,7 @@ Vapor can be deployed wherever Swift can.
 - Heroku
 - AWS
 - Bluemix
+- [Skyliner](https://www.skyliner.io/deploy/swift)
 - More ...
 
 [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/vapor/example/tree/master)
