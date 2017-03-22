@@ -57,7 +57,7 @@ class ViewTests: XCTestCase {
                 
             }
             
-            func make(_ path: String, _ context: Node) throws -> View {
+            func make(_ path: String, _ context: Node, for provider: Provider.Type?) throws -> View {
                 return View(data: "\(context)".makeBytes())
               
             }

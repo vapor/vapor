@@ -2,6 +2,7 @@ import SMTP
 import Foundation
 import Transport
 import Settings
+import Sockets
 
 /// Defines objects capable of transmitting emails
 public protocol MailProtocol {
@@ -24,15 +25,15 @@ extension MailProtocol {
 
 /// SMTP Mailer to use basic SMTP Protocols
 public final class SMTPMailer: MailProtocol {
-    let host: String
-    let port: Int
-    let securityLayer: SecurityLayer
+    let scheme: String
+    let hostname: String
+    let port: Transport.Port
     let credentials: SMTPCredentials
 
-    public init(host: String, port: Int, securityLayer: SecurityLayer, credentials: SMTPCredentials) {
-        self.host = host
+    public init(scheme: String, hostname: String, port: Transport.Port, credentials: SMTPCredentials) {
+        self.scheme = scheme
+        self.hostname = hostname
         self.port = port
-        self.securityLayer = securityLayer
         self.credentials = credentials
     }
 
@@ -46,8 +47,9 @@ public final class SMTPMailer: MailProtocol {
         try client.send(batch, using: credentials)
     }
 
-    private func makeClient() throws -> SMTPClient<TCPClientStream> {
-        return try SMTPClient(host: host, port: port, securityLayer: securityLayer)
+    private func makeClient() throws -> SMTPClient<TCPInternetSocket> {
+        let socket = try TCPInternetSocket(scheme: scheme, hostname: hostname, port: port)
+        return try SMTPClient(socket)
     }
 }
 
@@ -58,9 +60,9 @@ extension SMTPMailer {
     /// https://app.sendgrid.com/settings/credentials
     public static func makeSendGrid(with credentials: SMTPCredentials) -> SMTPMailer {
         return SMTPMailer(
-            host: "smtp.sendgrid.net",
+            scheme: "stmps",
+            hostname: "smtp.sendgrid.net",
             port: 465,
-            securityLayer: .tls(nil),
             credentials: credentials
         )
     }
@@ -72,9 +74,9 @@ extension SMTPMailer {
     /// pass: Your Gmail or Google Apps email password
     public static func makeGmail(with credentials: SMTPCredentials) -> SMTPMailer {
         return SMTPMailer(
-            host: "smtp.gmail.com",
+            scheme: "smtps",
+            hostname: "smtp.gmail.com",
             port: 465,
-            securityLayer: .tls(nil),
             credentials: credentials
         )
     }
@@ -85,9 +87,9 @@ extension SMTPMailer {
     /// https://mailgun.com/app/domains
     public static func makeMailgun(with credentials: SMTPCredentials) -> SMTPMailer {
         return SMTPMailer(
-            host: "smtp.mailgun.org",
+            scheme: "smtps",
+            hostname: "smtp.mailgun.org",
             port: 465,
-            securityLayer: .tls(nil),
             credentials: credentials
         )
     }

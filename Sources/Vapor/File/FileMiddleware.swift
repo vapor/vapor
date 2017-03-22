@@ -31,8 +31,8 @@ public final class FileMiddleware: Middleware {
                 let attributes = try? Foundation.FileManager.default.attributesOfItem(atPath: filePath),
                 let modifiedAt = attributes[.modificationDate] as? Date,
                 let fileSize = attributes[.size] as? NSNumber
-                else {
-                    throw Abort.notFound
+            else {
+                throw Abort.notFound
             }
 
             var headers: [HeaderKey: String] = [:]

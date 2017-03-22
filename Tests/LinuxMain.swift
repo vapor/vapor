@@ -25,7 +25,6 @@ XCTMain([
     testCase(ConsoleTests.allTests),
     testCase(ContentTests.allTests),
     testCase(CORSMiddlewareTests.allTests),
-    testCase(DataSplitTests.allTests),
     testCase(DropletTests.allTests),
     testCase(EnvironmentTests.allTests),
     testCase(EventTests.allTests),
@@ -42,10 +41,6 @@ XCTMain([
     testCase(RoutingTests.allTests),
     testCase(RouteListTests.allTests),
     testCase(SessionsTests.allTests),
-    testCase(ValidationConvenienceTests.allTests),
-    testCase(ValidationCountTests.allTests),
-    testCase(ValidationTests.allTests),
-    testCase(ValidationUniqueTests.allTests),
 ])
 
 #endif

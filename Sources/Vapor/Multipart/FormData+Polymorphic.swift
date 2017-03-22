@@ -21,10 +21,6 @@ extension FormData.Field {
         return part.body.makeString()
     }
     
-    public var array: [String]? {
-        return part.body.makeString().array
-    }
-    
     public var float: Float? {
         return part.body.makeString().float
     }

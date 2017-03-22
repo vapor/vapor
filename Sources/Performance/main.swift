@@ -1,7 +1,6 @@
 import Vapor
-import HTTP
 
-let drop = Droplet()
+let drop = try Droplet()
 
 drop.get("plaintext") { request in
     return "Hello, world"
@@ -9,4 +8,4 @@ drop.get("plaintext") { request in
 
 drop.middleware = []
 
-drop.serve()
+try drop.run()
