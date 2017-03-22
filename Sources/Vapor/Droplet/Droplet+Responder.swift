@@ -22,14 +22,7 @@ extension Droplet: Responder {
 
         let status = Status(error)
         let response = Response(status: status)
-        if let json = try? JSON(error, env: environment) {
-            response.json = json
-        } else {
-            response.json = [
-                "error": true,
-                "reason": "unknown"
-            ]
-        }
+        response.json = JSON(error, env: environment)
         return response
     }
 
@@ -55,45 +48,67 @@ extension Status {
 }
 
 extension JSON {
-    fileprivate init(_ error: Error, env: Environment) throws {
+    fileprivate init(_ error: Error, env: Environment) {
         let status = Status(error)
 
-        var json = JSON([:])
-        try json.set("error", true)
-
+        var json = JSON(["error": true])
         if let abort = error as? AbortError {
-            try json.set("reason", abort.reason)
+            json.set("reason", abort.reason)
         } else {
-            try json.set("reason", status.reasonPhrase)
+            json.set("reason", status.reasonPhrase)
+        }
+
+        guard env != .production else {
+            self = json
+            return
         }
 
         if env != .production {
             if let abort = error as? AbortError {
-                try json.set("metadata", abort.metadata)
+                json.set("metadata", abort.metadata)
             }
 
             if let debug = error as? Debuggable {
-                try json.set("debugReason", debug.reason)
-                try json.set("identifier", debug.fullIdentifier)
-                if !debug.possibleCauses.isEmpty {
-                    try json.set("possibleCauses", debug.possibleCauses)
-                }
-                if !debug.suggestedFixes.isEmpty {
-                    try json.set("suggestedFixes", debug.suggestedFixes)
-                }
-                if !debug.documentationLinks.isEmpty {
-                    try json.set("documentationLinks", debug.documentationLinks)
-                }
-                if !debug.stackOverflowQuestions.isEmpty {
-                    try json.set("stackOverflowQuestions", debug.stackOverflowQuestions)
-                }
-                if !debug.gitHubIssues.isEmpty {
-                    try json.set("gitHubIssues", debug.gitHubIssues)
-                }
+                json.set("debugReason", debug.reason)
+                json.set("identifier", debug.fullIdentifier)
+                json.set("possibleCauses", debug.possibleCauses)
+                json.set("suggestedFixes", debug.suggestedFixes)
+                json.set("documentationLinks", debug.documentationLinks)
+                json.set("stackOverflowQuestions", debug.stackOverflowQuestions)
+                json.set("gitHubIssues", debug.gitHubIssues)
             }
         }
 
         self = json
+    }
+}
+
+extension StructuredDataWrapper {
+    fileprivate mutating func set(_ key: String, _ closure: (Context?) throws -> Node) rethrows {
+        let node = try closure(context)
+        set(key, node)
+    }
+
+    fileprivate mutating func set(_ key: String, _ value: String?) {
+        guard let value = value, !value.isEmpty else { return }
+        set(key, value.makeNode)
+    }
+
+    fileprivate mutating func set(_ key: String, _ node: Node?) {
+        guard let node = node else { return }
+        self[key] = Self(node, context)
+    }
+
+    fileprivate mutating func set(_ key: String, _ array: [String]?) {
+        guard let array = array?.map(StructuredData.string).map(Self.init), !array.isEmpty else { return }
+        self[key] = .array(array)
+    }
+}
+
+extension StructuredDataWrapper {
+    // TODO: I expected this, maybe put in node
+    init(_ node: Node, _ context: Context) {
+        self.init(node: node.wrapped, in: context)
     }
 }
 
