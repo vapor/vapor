@@ -47,7 +47,7 @@ extension Body: CustomStringConvertible {
 
     var stringInitializeTrys: String {
         return signature.wildcards.map { wildcard in
-            return "let e\(wildcard.name) = try \(wildcard.generic)(from: v\(wildcard.name))\n"
+            return "let e\(wildcard.name) = try \(wildcard.name)(v\(wildcard.name))\n"
         }.joined(separator: "\n")
     }
 
