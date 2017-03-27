@@ -158,7 +158,7 @@ final class TestTwoCommand: Command {
     }
 
     func run(arguments: [String]) throws {
-        let arg1 = try value("arg-1", from: arguments).string ?? ""
+        let arg1 = try value("arg-1", from: arguments).string 
         console.print(arg1, newLine: false)
 
         let opt1 = arguments.option("opt-1")?.string ?? ""
