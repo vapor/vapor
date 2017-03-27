@@ -1,6 +1,6 @@
 // Scraped from http://www.freeformatter.com/mime-types-list.html
 
-let mediaTypes: [String: String] = [
+public let mediaTypes: [String: String] = [
     "aw": "application/applixware", // Applixware Vistasource
     "atom": "application/atom+xml", // Atom Syndication Format RFC 4287
     "atomcat": "application/atomcat+xml", // Atom Publishing Protocol RFC 5023
