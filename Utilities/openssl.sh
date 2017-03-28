@@ -31,7 +31,39 @@ function check_openssl() {
         return 1; 
     fi
 
-    # Check to make sure OpenSSL is installed
+    echo "Checking compatibility with Package Config..."
+    eval "$(curl -sL pkgconfig.vapor.sh)";
+    if [[ $? != 0 ]]; 
+    then 
+        echo "Run this script again to continue OpenSSL quickstart.";
+        return 1;
+    fi
+
+    VAPOR_PKG_CONFIG_PATH="/usr/local/share/vapor/pkgconfig";
+    mkdir -p $VAPOR_PKG_CONFIG_PATH;
+
+    OPENSSL_PKG_CONFIG="$VAPOR_PKG_CONFIG_PATH/ctls.pc";
+
+    OPENSSL_PREFIX="/usr/local/opt/openssl"
+
+    echo "prefix=$OPENSSL_PREFIX" > $OPENSSL_PKG_CONFIG;
+    echo "exec_prefix=\${prefix}" >> $OPENSSL_PKG_CONFIG;
+    echo "libdir=\${exec_prefix}/lib" >> $OPENSSL_PKG_CONFIG;
+    echo "includedir=\${prefix}/include" >> $OPENSSL_PKG_CONFIG;
+    echo "Name: CTLS" >> $OPENSSL_PKG_CONFIG;
+    echo "Description: LibreSSL / OpenSSL module map for Swift" >> $OPENSSL_PKG_CONFIG;
+    echo "Version: 1.0" >> $OPENSSL_PKG_CONFIG;
+    echo "Requires: libssl libcrypto" >> $OPENSSL_PKG_CONFIG;
+    echo "Cflags: -I\${includedir}" >> $OPENSSL_PKG_CONFIG;
+    echo "Libs: -L\${libdir} -lssl" >>  $OPENSSL_PKG_CONFIG;
+
+    PROFILE="$HOME/.bash_profile"
+    PKG_CONFIG_EXPORT="export PKG_CONFIG_PATH=$VAPOR_PKG_CONFIG_PATH:\$PKG_CONFIG_PATH"
+
+
+    echo "Checking compatibility with OpenSSL..."
+
+        # Check to make sure OpenSSL is installed
     BREW_PACKAGES=`brew list`;
     if [[ $BREW_PACKAGES != *"openssl"* ]];
     then
@@ -59,68 +91,13 @@ function check_openssl() {
         return 1; 
     fi
 
-    echo "Checking compatibility with Package Config..."
-    eval "$(curl -sL pkgconfig.vapor.sh)";
-    if [[ $? != 0 ]]; 
-    then 
-        echo "Run this script again to continue OpenSSL quickstart.";
-        return 1;
-    fi
-
-    VAPOR_PKG_CONFIG_PATH="/usr/local/share/vapor/pkgconfig";
-    mkdir -p $VAPOR_PKG_CONFIG_PATH;
-
-    OPENSSL_PKG_CONFIG="$VAPOR_PKG_CONFIG_PATH/openssl.pc";
-
-    OPENSSL_PREFIX="/usr/local/opt/openssl"
-
-    echo "prefix=$OPENSSL_PREFIX" > $OPENSSL_PKG_CONFIG;
-    echo "exec_prefix=\${prefix}" >> $OPENSSL_PKG_CONFIG;
-    echo "libdir=\${exec_prefix}/lib" >> $OPENSSL_PKG_CONFIG;
-    echo "includedir=\${prefix}/include" >> $OPENSSL_PKG_CONFIG;
-    echo "Name: OpenSSL" >> $OPENSSL_PKG_CONFIG;
-    echo "Description: Secure Sockets Layer and cryptography libraries and tools" >> $OPENSSL_PKG_CONFIG;
-    echo "Version: 1.0" >> $OPENSSL_PKG_CONFIG;
-    echo "Requires: libssl libcrypto" >> $OPENSSL_PKG_CONFIG;
-    echo "Cflags: -I\${includedir}" >> $OPENSSL_PKG_CONFIG;
-    echo "Libs: -L\${libdir} -lssl" >>  $OPENSSL_PKG_CONFIG;
-
-    PROFILE="$HOME/.bash_profile"
-    PKG_CONFIG_EXPORT="export PKG_CONFIG_PATH=$VAPOR_PKG_CONFIG_PATH:\$PKG_CONFIG_PATH"
-
-    if [[ $PKG_CONFIG_PATH != *"$VAPOR_PKG_CONFIG_PATH"* ]];
-    then
-        echo "";
-        echo "⚠️  Vapor pkg-config path not found in environment";
-        read -p "Would you like to add it to $PROFILE? [y/n] " -n 1 -r
-        echo ""   # (optional) move to a new line
-        if [[ $REPLY =~ ^[Yy]$ ]]
-        then
-            echo "";
-            echo "🛠  Adding PKG_CONFIG_PATH to $PROFILE";
-            echo "" >> $PROFILE;
-            echo "# Vapor Package Config" >> $PROFILE;
-            echo "$PKG_CONFIG_EXPORT;" >> $PROFILE;
-            echo "";
-            echo "✅  OpenSSL will be available once the terminal is restarted (Run this script again to verify)"
-            return;
-        else
-            echo "";
-            echo "🛠  Add this to your bash profile:"
-            echo "$PKG_CONFIG_EXPORT;"
-            echo "";
-            echo "⚠️  OpenSSL will be available once bash profile is configured."
-            return 1;
-        fi
-    fi
-
-    PKG_CONFIG_ALL=`pkg-config openssl --cflags`;
+    PKG_CONFIG_ALL=`pkg-config ctls --cflags`;
     if [[ $PKG_CONFIG_ALL != *"-I$OPENSSL_PREFIX"* ]];
     then
         echo "";
         echo "❌  OpenSSL not found in pkg-config.";
         echo ""
-        echo "ℹ️  'pkg-config openssl --cflags' did not contain any include flags";
+        echo "ℹ️  'pkg-config ctls --cflags' did not contain any include flags";
         echo "This error is unexpected. Try restarting your terminal."
         echo "";
         help;
