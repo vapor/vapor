@@ -43,16 +43,6 @@ function check_openssl() {
         help;
         return 1; 
     fi
-    if [[ $BREW_PACKAGES != *"pkg-config"* ]];
-    then
-        echo "❌  pkg-config not installed.";
-        echo "";
-        echo "📦  Run to install:";
-        echo "brew install pkg-config";
-        echo "";
-        help;
-        return 1; 
-    fi
 
     OPENSSL_VERSION=`ls /usr/local/Cellar/openssl/`;
     OPENSSL_VERSION_DESIRED="1.0"
@@ -67,6 +57,14 @@ function check_openssl() {
         echo "";
         help;
         return 1; 
+    fi
+
+    echo "Checking compatibility with Package Config..."
+    eval "$(curl -sL pkgconfig.vapor.sh)";
+    if [[ $? != 0 ]]; 
+    then 
+        echo "Run this script again to continue OpenSSL quickstart.";
+        return 1;
     fi
 
     VAPOR_PKG_CONFIG_PATH="/usr/local/share/vapor/pkgconfig";
