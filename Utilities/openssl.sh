@@ -32,7 +32,7 @@ function check_openssl() {
     fi
 
     echo "Checking compatibility with Package Config..."
-    eval "$(curl -sL pkgconfig.vapor.sh)";
+    eval "$(curl -sL https://pkgconfig.vapor.sh)";
     if [[ $? != 0 ]]; 
     then 
         echo "Run this script again to continue OpenSSL quickstart.";
