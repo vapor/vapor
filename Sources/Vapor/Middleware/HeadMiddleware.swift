@@ -1,6 +1,8 @@
 import HTTP
 
 public final class HeadMiddleware: Middleware {
+    public init() {}
+    
     public func respond(to request: Request, chainingTo next: Responder) throws -> Response {
         guard request.method == .head else { return try next.respond(to: request) }
         /// The HEAD method is identical to GET.
