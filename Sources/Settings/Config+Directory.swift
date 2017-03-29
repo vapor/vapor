@@ -30,9 +30,12 @@ extension Node {
         let data = try DataFile().load(path: path)
         guard path.hasSuffix(".json") else { return .bytes(data) }
         do {
-            return try JSON(bytes: data).converted()
+            let json = try JSON(bytes: data)
+            return json.converted()
         } catch {
-            throw JSONError.parse(path: path, error: error)
+            print("Failed to load json at path \(path)")
+            print("ensure there's no syntax errors in JSON")
+            throw error
         }
     }
 }
@@ -66,6 +69,6 @@ extension String {
     private static let jsonSuffixCount = ".json".makeBytes().count
     fileprivate mutating func removedJSONSuffix() {
         guard hasSuffix(".json") else { return }
-        self = self.makeBytes().dropLast(String.jsonSuffixCount).string
+        self = self.makeBytes().dropLast(String.jsonSuffixCount).makeString()
     }
 }

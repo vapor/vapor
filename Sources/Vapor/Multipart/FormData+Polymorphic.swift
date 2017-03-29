@@ -1,44 +1,41 @@
-import Polymorphic
 import FormData
 
-extension FormData.Field: Polymorphic {
+extension FormData.Field {
     public var isNull: Bool {
-        return part.body.string.isNull
+        return part.body.makeString().isNull
     }
     
     public var bool: Bool? {
-        return part.body.string.bool
+        return part.body.makeString().bool
     }
     
     public var double: Double? {
-        return part.body.string.double
+        return part.body.makeString().double
     }
     
     public var int: Int? {
-        return part.body.string.int
+        return part.body.makeString().int
     }
     
     public var string: String? {
-        return part.body.string
-    }
-    
-    public var array: [Polymorphic]? {
-        return part.body.string.array
-    }
-    
-    public var object: [String : Polymorphic]? {
-        return part.body.string.object
+        return part.body.makeString()
     }
     
     public var float: Float? {
-        return part.body.string.float
+        return part.body.makeString().float
     }
     
     public var uint: UInt? {
-        return part.body.string.uint
+        return part.body.makeString().uint
     }
 
     public var bytes: [UInt8]? {
         return part.body
+    }
+}
+
+extension FormData.Field: NodeRepresentable {
+    public func makeNode(in context: Context?) -> Node {
+        return Node.bytes(part.body)
     }
 }

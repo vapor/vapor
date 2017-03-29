@@ -12,7 +12,7 @@ extension Int: RequestContentSubscript {}
 */
 public final class Content {
 
-    public typealias ContentLoader = ([PathIndexer]) -> Polymorphic?
+    public typealias ContentLoader = ([PathIndexer]) -> Node?
 
     // MARK: Initialization
 
@@ -22,8 +22,11 @@ public final class Content {
 
     // Some closure weirdness to allow more complex capturing or lazy loading internally
 
-    public func append<E>(_ element: @escaping (Void) -> E?) where E: PathIndexable, E: Polymorphic {
-        let finder: ContentLoader = { indexes in return element()?[indexes] }
+    public func append<W: StructuredDataWrapper>(_ element: @escaping (Void) -> W?) {
+        let finder: ContentLoader = { indexes in
+            guard let w = element()?[indexes] else { return nil }
+            return Node(w)
+        }
         content.append(finder)
     }
 
@@ -31,19 +34,37 @@ public final class Content {
         content.append(element)
     }
 
-    public func append<E>(_ element: E?) where E: PathIndexable, E: Polymorphic {
+    public func append<W: StructuredDataWrapper>(_ element: W?) {
         guard let element = element else { return }
-        let finder: ContentLoader = { indexes in return element[indexes] }
+        let finder: ContentLoader = { indexes in
+            guard let w = element[indexes] else { return nil }
+            return Node(w)
+        }
         content.append(finder)
     }
 
     // MARK: Subscripting
 
-    public subscript(indexes: PathIndexer...) -> Polymorphic? {
+    public subscript(indexes: PathIndexer...) -> Node? {
         return self[indexes]
     }
 
-    public subscript(indexes: [PathIndexer]) -> Polymorphic? {
+    public subscript(indexes: [PathIndexer]) -> Node? {
         return content.lazy.flatMap { loader in loader(indexes) } .first
+    }
+}
+
+extension Content {
+    public func get<T : NodeInitializable>(
+        _ indexers: PathIndexer...)
+        throws -> T {
+            return try get(indexers)
+    }
+
+    public func get<T : NodeInitializable>(
+        _ indexers: [PathIndexer])
+        throws -> T {
+            let value = self[indexers] ?? .null
+            return try T(node: value)
     }
 }

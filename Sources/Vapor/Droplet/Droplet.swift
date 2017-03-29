@@ -4,7 +4,7 @@ import Cache
 import Sessions
 import Crypto
 import Transport
-import Socks
+import Sockets
 
 public let VERSION = "2.0.0-alpha"
 
@@ -178,10 +178,6 @@ public class Droplet {
                         .directory(root: configDirectory)
                     ]
                 )
-            } catch JSONError.parse(let path, let error) {
-                log.error("Could not load configuration file at \(path). Check the syntax and try again.")
-                log.verbose("\(error.localizedDescription) \(error)")
-                config = Config([:])
             } catch {
                 log.debug("Could not load configuration files: \(error)")
                 config = Config([:])
@@ -207,8 +203,8 @@ public class Droplet {
         // DEFAULTS
 
         router = Router()
-        server = Server<TCPServerStream, Parser<Request>, Serializer<Response>>.self
-        client = Client<TCPClientStream, Serializer<Request>, Parser<Response>>.self
+        client = EngineClient.self
+        server = EngineServer.self
         middleware = []
         console = terminal
         commands = []
@@ -230,8 +226,8 @@ public class Droplet {
         mail = UnimplementedMailer()
 
         // CONFIGURABLE
-        addConfigurable(server: Server<TCPServerStream, Parser<Request>, Serializer<Response>>.self, name: "engine")
-        addConfigurable(client: Client<TCPClientStream, Serializer<Request>, Parser<Response>>.self, name: "engine")
+        addConfigurable(server: EngineServer.self, name: "engine")
+        addConfigurable(client: EngineClient.self, name: "engine")
         addConfigurable(console: terminal, name: "terminal")
         addConfigurable(log: log, name: "console")
         try addConfigurable(hash: CryptoHasher.self, name: "crypto")
@@ -241,7 +237,6 @@ public class Droplet {
         addConfigurable(middleware: SessionsMiddleware(MemorySessions()), name: "sessions")
         addConfigurable(middleware: DateMiddleware(), name: "date")
         addConfigurable(middleware: TypeSafeErrorMiddleware(), name: "type-safe")
-        addConfigurable(middleware: ValidationMiddleware(), name: "validation")
         addConfigurable(middleware: FileMiddleware(publicDir: workDir + "Public/"), name: "file")
         addConfigurable(middleware: HeadMiddleware(), name: "head")
         let contentTypeLogger = ContentTypeLogger { [weak self] log in
@@ -253,19 +248,18 @@ public class Droplet {
         }
         addConfigurable(middleware: contentTypeLogger, name: "content-type-log")
 
-        if config["droplet", "middleware", "server"]?.array == nil {
+        if config["droplet", "middleware"]?.array == nil {
             // if no configuration has been supplied
             // apply all middleware
             middleware = [
                 SessionsMiddleware(MemorySessions()),
                 DateMiddleware(),
                 TypeSafeErrorMiddleware(),
-                ValidationMiddleware(),
                 FileMiddleware(publicDir: workDir + "Public/"),
                 HeadMiddleware(),
                 contentTypeLogger,
             ]
-            log.debug("No `middleware.server` key in `droplet.json` found, using default middleware.")
+            log.debug("No `middleware` key in `droplet.json` found, using default middleware.")
         }
 
         // Post Init Defaults
@@ -277,9 +271,12 @@ public class Droplet {
         /// We will continue to work to resolve the underlying issue associated with this error.
         ///https://github.com/vapor/vapor/issues/678
         if
-            case let .dispatch(dispatchError) = error,
-            case let StreamError.receive(_, recError as SocksError) = dispatchError,
-            recError.number == 35  { return }
+            case .dispatch(let dispatch) = error,
+            let sockets = dispatch as? SocketsError,
+            sockets.number == 35
+        {
+            return
+        }
 
         log.error("Server error: \(error)")
     }

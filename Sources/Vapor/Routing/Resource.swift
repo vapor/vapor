@@ -86,14 +86,14 @@ extension RouteBuilder {
         var itemMethods: [Method] = []
         var multipleMethods: [Method] = []
 
-        let pathId = path.makeBytes().split(separator: .forwardSlash).joined(separator: [.hyphen]).split(separator: .colon).joined().string + "_id"
+        let pathId = path.makeBytes().split(separator: .forwardSlash).joined(separator: [.hyphen]).split(separator: .colon).joined().makeString() + "_id"
 
         func item(_ method: Method, subpath: String? = nil, _ item: Resource<Model>.Item?) {
             guard let item = item else {
                 return
             }
 
-            itemMethods += method
+            itemMethods.append(method)
 
             let closure: (HTTP.Request) throws -> HTTP.ResponseRepresentable = { request in
                 guard let id = request.parameters["\(pathId)"]?.string else {
@@ -123,7 +123,7 @@ extension RouteBuilder {
                 return
             }
 
-            multipleMethods += method
+            multipleMethods.append(method)
 
             if let subpath = subpath {
                 self.add(method, path, subpath) { request in

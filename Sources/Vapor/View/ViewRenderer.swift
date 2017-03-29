@@ -21,7 +21,7 @@ public protocol ViewRenderer {
         using a Node that is made optional
         by various protocol extensions.
     */
-    func make(_ path: String, _ context: Node) throws -> View
+    func make(_ path: String, _ context: Node, for provider: Provider.Type?) throws -> View
 }
 
 extension ViewRenderer {
@@ -30,11 +30,7 @@ extension ViewRenderer {
     }
 
     public func make(_ path: String, _ context: NodeRepresentable) throws -> View {
-        return try make(path, try context.makeNode(in: nil))
-    }
-
-    public func make(_ path: String, _ context: [String: NodeRepresentable]) throws -> View {
-        return try make(path, try context.makeNode(in: nil))
+        return try make(path, try context.makeNode(in: nil), for: nil)
     }
 }
 
@@ -50,10 +46,10 @@ public final class StaticViewRenderer: ViewRenderer {
         self.viewsDir = viewsDir.finished(with: "/")
     }
 
-    public func make(_ path: String, _ context: Node) throws -> View {
+    public func make(_ path: String, _ context: Node, for provider: Provider.Type?) throws -> View {
         if let cached = cache?[path] { return cached }
-
-        let path = path.hasPrefix("/") ? path.makeBytes().dropFirst().string : path
+        let viewsDir = provider?.viewsDir ?? self.viewsDir
+        let path = path.hasPrefix("/") ? path.makeBytes().dropFirst().makeString() : path
         let bytes = try loader.load(path: viewsDir + path)
         let view = View(bytes: bytes)
         cache?[path] = view

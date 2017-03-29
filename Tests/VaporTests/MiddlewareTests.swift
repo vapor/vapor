@@ -12,16 +12,12 @@ class MiddlewareTests: XCTestCase {
         ("testMultiple", testMultiple),
         ("testConfigClient", testConfigClient),
         ("testConfigClientNotEnabled", testConfigClientNotEnabled),
-        ("testConfigClientManual", testConfigClientManual),
-        ("testValidationMiddleware", testValidationMiddleware),
     ]
 
     func testConfigDate() throws {
         let config = Config([
             "middleware": [
-                "server": [
-                    "date"
-                ]
+                "date"
             ]
         ])
 
@@ -38,7 +34,7 @@ class MiddlewareTests: XCTestCase {
 
     func testConfigDateMissing() throws {
         var config = Config([:])
-        try config.set("droplet.middleware.server", ["abort"])
+        try config.set("droplet.middleware", ["abort"])
 
         let drop = try Droplet(config: config)
         drop.get { _ in
@@ -85,13 +81,9 @@ class MiddlewareTests: XCTestCase {
     }
 
     func testConfigClient() throws {
-        var config = Config([:])
-        try config.set("droplet.middleware.client", ["foo"])
+        let foo = FooMiddleware()
 
-        let drop = try Droplet(config: config)
-        drop.addConfigurable(middleware: FooMiddleware(), name: "foo")
-
-        let res = try drop.client.get("http://httpbin.org/headers")
+        let res = try EngineClient.get("http://httpbin.org/headers", through: [foo])
 
         // test to make sure basic server saw the
         // header the middleware added
@@ -106,47 +98,14 @@ class MiddlewareTests: XCTestCase {
     func testConfigClientNotEnabled() throws {
         let drop = try Droplet()
 
-        drop.client.defaultMiddleware = []
+        //drop.client.defaultMiddleware = []
         drop.middleware.append(FooMiddleware())
 
-        let res = try drop.client.get("http://httpbin.org/headers")
+        let res = try drop.client.request(.get, "http://httpbin.org/headers")
 
         XCTAssert(try res.bodyString().contains("Foo") != true)
         XCTAssert(try res.bodyString().contains("bar") != true)
         XCTAssertNil(res.headers["bar"])
-    }
-
-    func testConfigClientManual() throws {
-        let drop = try Droplet()
-        drop.client.defaultMiddleware = [FooMiddleware()]
-
-
-        let res = try drop.client.get("http://httpbin.org/headers")
-        XCTAssert(res.headers["bar"] != nil)
-    }
-
-    func testValidationMiddleware() throws {
-        let drop = try Droplet()
-
-        drop.middleware.append(ValidationMiddleware())
-        
-        drop.get("*") { req in
-            let path = req.uri.path
-            try path.validated(by: Count.max(10))
-            return path
-        }
-
-        // only added validation, abort won't be caught.
-        drop.get("uncaught") { _ in throw Abort.notFound }
-
-        let request = Request(method: .get, path: "thisPathIsWayTooLong")
-        let response = drop.respond(to: request)
-        let json = response.json
-        XCTAssertEqual(json?["error"]?.bool, true)
-        XCTAssertEqual(json?["message"]?.string, "Validation failed with the following errors: \'Validator Error: Count<String> failed validation: thisPathIsWayTooLong count 20 is greater than maximum 10\n\nIdentifier: Vapor.ValidatorError.failure\'")
-        let fail = Request(method: .get, path: "uncaught")
-        let failResponse = drop.respond(to: fail)
-        XCTAssertEqual(failResponse.status, .notFound)
     }
 }
 

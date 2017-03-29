@@ -40,7 +40,7 @@ class ContentTests: XCTestCase {
         XCTAssertEqual(data, request.formURLEncoded)
         XCTAssertEqual("application/x-www-form-urlencoded", request.headers["Content-Type"])
         XCTAssertNotNil(request.body.bytes)
-        let bodyString = try request.body.bytes!.string().removingPercentEncoding
+        let bodyString = request.body.bytes!.makeString().removingPercentEncoding
         XCTAssertEqual("hello=world", bodyString)
     }
 
@@ -84,7 +84,7 @@ class ContentTests: XCTestCase {
         let body = "first=value&arr[]=foo+bar&arr[]=b%3Daz"
 
         let data = Node(formURLEncoded: body.makeBytes(), allowEmptyValues: true)
-
+        print(data)
         XCTAssert(data["first"]?.string == "value", "Request key first did not parse correctly")
         XCTAssert(data["arr", 0]?.string == "foo bar", "Request key arr did not parse correctly")
         XCTAssert(data["arr", 1]?.string == "b=az", "Request key arr did not parse correctly")
@@ -110,7 +110,8 @@ class ContentTests: XCTestCase {
         let content = Content()
         let json = try JSON(node: ["a": "a"])
         content.append(json)
-        XCTAssertEqual(content["a"]?.string, "a")
+        let string = try content.get("a") as String
+        XCTAssertEqual(string, "a")
     }
 
     func testContentLazyLoad() throws {

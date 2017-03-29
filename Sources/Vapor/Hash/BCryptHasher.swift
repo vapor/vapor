@@ -19,7 +19,7 @@ public final class BCryptHasher: HashProtocol {
     /// See HashProtocol.make
     public func make(_ message: Bytes) throws -> Bytes {
         let salt = try BCrypt.Salt(cost: cost)
-        return try BCrypt.Hash.make(message: message.string, with: salt)
+        return try BCrypt.Hash.make(message: message.makeString(), with: salt)
     }
 
     /// See HashProtocol.check

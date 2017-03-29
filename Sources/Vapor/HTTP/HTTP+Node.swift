@@ -79,7 +79,7 @@ extension URI: NodeRepresentable {
     public func makeNode(in context: Context?) throws -> Node {
         var node = Node(context)
         try node.set("path", path)
-        try node.set("host", host)
+        try node.set("host", hostname)
         try node.set("scheme", scheme)
         return node
     }

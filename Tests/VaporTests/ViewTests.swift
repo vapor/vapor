@@ -17,11 +17,11 @@ class ViewTests: XCTestCase {
         r.views["foo"] = "42".makeBytes()
 
         let view = try r.make("foo")
-        XCTAssertEqual(view.data.string, "42")
+        XCTAssertEqual(view.data.makeString(), "42")
 
 
         let view2 = try r.make("foo", "context")
-        XCTAssertEqual(view2.data.string, "42")
+        XCTAssertEqual(view2.data.makeString(), "42")
     }
 
     func testViewBytes() throws {
@@ -57,7 +57,7 @@ class ViewTests: XCTestCase {
                 
             }
             
-            func make(_ path: String, _ context: Node) throws -> View {
+            func make(_ path: String, _ context: Node, for provider: Provider.Type?) throws -> View {
                 return View(data: "\(context)".makeBytes())
               
             }
@@ -66,7 +66,7 @@ class ViewTests: XCTestCase {
         drop.view = TestRenderer(viewsDir: "")
         
         let view = try drop.view.make("test-template", for: request)
-        let string = try view.data.string()
+        let string = view.data.makeString()
         
         XCTAssert(string.contains("Vapor"))
         XCTAssert(string.contains("foopath"))

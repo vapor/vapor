@@ -4,13 +4,14 @@ import Transport
 extension Droplet {
     internal func makeServerConfig() throws -> ServerConfig {
         let serverConfig = config["server"]
-        let port = serverConfig?["port"]?.int ?? cliPort(arguments: arguments) ?? 8080
-        let host = serverConfig?["host"]?.string ?? "0.0.0.0"
+        let port = serverConfig?["port"]?.int?.port ?? cliPort(arguments: arguments) ?? 8080
+        let hostname = serverConfig?["host"]?.string ?? "0.0.0.0"
         let securityLayer = try makeSecurityLayer(serverConfig: serverConfig)
-        return ServerConfig(host: host, port: port, securityLayer: securityLayer)
+        return ServerConfig(hostname: hostname, port: port, securityLayer)
     }
 
     private func makeSecurityLayer(serverConfig: Settings.Config?) throws -> SecurityLayer {
+        let serverConfig = serverConfig?.converted(to: Node.self)
         let security = serverConfig?["securityLayer"]?.string ?? "none"
         let securityLayer: SecurityLayer
 
@@ -21,7 +22,7 @@ extension Droplet {
                 securityLayer = .tls(config)
             } else {
                 log.warning("No TLS configuration supplied, using default.")
-                securityLayer = .tls(nil)
+                securityLayer = .tls(try server.defaultTLSContext())
             }
         case "none":
             securityLayer = .none
@@ -33,7 +34,7 @@ extension Droplet {
         return securityLayer
     }
 
-    func parseTLSConfig(_ tlsConfig: [String: Polymorphic], mode: TLS.Mode) throws -> TLS.Context {
+    func parseTLSConfig(_ tlsConfig: [String: Node], mode: TLS.Mode) throws -> TLS.Context {
         let verifyHost = tlsConfig["verifyHost"]?.bool ?? true
         let verifyCertificates = tlsConfig["verifyCertificates"]?.bool ?? true
 
@@ -48,7 +49,7 @@ extension Droplet {
         return config
     }
 
-    func parseTLSCertificates(_ tlsConfig: [String: Polymorphic]) -> TLS.Certificates {
+    func parseTLSCertificates(_ tlsConfig: [String: Node]) -> TLS.Certificates {
         let certs: TLS.Certificates
 
         if let certsConfig = tlsConfig["certificates"]?.string {
@@ -96,7 +97,7 @@ extension Droplet {
         return certs
     }
 
-    func parseTLSSignature(_ tlsConfig: [String: Polymorphic]) -> TLS.Certificates.Signature {
+    func parseTLSSignature(_ tlsConfig: [String: Node]) -> TLS.Certificates.Signature {
         let signature: TLS.Certificates.Signature
 
         if let sigConfig = tlsConfig["signature"]?.string {

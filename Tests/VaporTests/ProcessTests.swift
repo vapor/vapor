@@ -23,7 +23,7 @@ class ProcessTests: XCTestCase {
 
     func testFixes() {
         let bytes: [UInt8] = [64, 64, 64]
-        let string = bytes.string
+        let string = bytes.makeString()
         XCTAssert(string == "@@@")
     }
 }

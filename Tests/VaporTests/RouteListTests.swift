@@ -31,7 +31,7 @@ class RouteListTests: XCTestCase {
         try drop.runCommands()
 
         // Verify
-        let logged = console.buffer.string
+        let logged = console.buffer.makeString()
         var expectation = ""
         expectation += "+------+--------+--------------+\n"
         expectation += "| Host | Method | Path         | \n"

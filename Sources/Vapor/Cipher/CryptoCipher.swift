@@ -47,11 +47,11 @@ extension CryptoCipher: ConfigInitializable {
             throw Error.config("Unknown cipher method '\(methodString)'.")
         }
 
-        guard let key = config["crypto", "cipher", "key"]?.string?.bytes else {
+        guard let key = config["crypto", "cipher", "key"]?.string?.makeBytes() else {
             throw Error.config("No `cipher.key` found in `crypto.json` config.")
         }
 
-        let iv = config["crypto", "cipher", "iv"]?.string?.bytes
+        let iv = config["crypto", "cipher", "iv"]?.string?.makeBytes()
 
         switch method {
         case .aes128:

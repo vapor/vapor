@@ -15,6 +15,30 @@ public struct Config: StructuredDataWrapper {
     }
 }
 
+extension Config {
+    public static func `default`(withEnv env: String? = nil) throws -> Config {
+        let configDirectory = workingDirectory() + "Config/"
+        var sources = [Source]()
+        sources.append(.commandLine)
+        sources.append(.directory(root: configDirectory + "secrets"))
+        if let env = env {
+            sources.append(.directory(root: configDirectory + env))
+        }
+        sources.append(.directory(root: configDirectory))
+
+        return try Config(prioritized: sources)
+    }
+
+    static func workingDirectory() -> String {
+        #if swift(>=3.1)
+            let parts = #file.components(separatedBy: "/.build")
+        #else
+            let parts = #file.components(separatedBy: "/Packages/")
+        #endif
+        return parts.first?.finished(with: "/") ?? "./"
+    }
+}
+
 /// Typical errors that may happen
 /// during the parsing of Vapor json
 /// configuration files.

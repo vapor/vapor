@@ -13,7 +13,7 @@ extension String {
         let components = self.makeBytes()
             .dropFirst()
             .split(separator: .colon, maxSplits: 1, omittingEmptySubsequences: true)
-            .map({ $0.string })
+            .map({ $0.makeString() })
 
         return components.first.flatMap(Env.get)
             ?? components[safe: 1]
