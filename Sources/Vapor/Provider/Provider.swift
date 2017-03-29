@@ -23,11 +23,11 @@ public protocol Provider: ConfigInitializable {
 
     /// Called after the provider has initialized
     /// in the `addProvider` call.
-    func boot(_: Droplet) throws
+    func boot(_ droplet: Droplet) throws
 
     /// Called before the Droplet begins serving
     /// which is @noreturn.
-    func beforeRun(_: Droplet) throws
+    func beforeRun(_ droplet: Droplet) throws
 }
 
 extension Provider {
