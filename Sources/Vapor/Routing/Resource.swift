@@ -30,7 +30,7 @@ public final class Resource<Model: StringInitializable> {
         clear: Multiple? = nil,
         aboutItem: Item? = nil,
         aboutMultiple: Multiple? = nil
-        ) {
+    ) {
         self.index = index
         self.new = new
         self.create = create
@@ -57,7 +57,7 @@ public extension Resource {
         clear: Multiple? = nil,
         aboutItem: Item? = nil,
         aboutMultiple: Multiple? = nil
-        ){
+    ){
         self.init(index: index,
                   create: store,
                   show: show,
@@ -174,8 +174,8 @@ extension RouteBuilder {
         _ path: String,
         _ type: Model.Type = Model.self,
         closure: (Resource<Model>) -> ()
-        ) {
-        let resource = Resource<Model>(new: nil)
+    ) {
+        let resource = Resource<Model>()
         closure(resource)
         self.resource(path, resource)
     }
