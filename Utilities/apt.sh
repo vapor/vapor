@@ -8,11 +8,15 @@ function add_vapor_apt() {
         exit 1;
     fi
 
-    sudo apt-get update
-    sudo apt-get install wget software-properties-common python-software-properties apt-transport-https
+    export DEBIAN_FRONTEND=noninteractive
+
+    sudo apt-get -q update
+    sudo apt-get -q install -y wget software-properties-common python-software-properties apt-transport-https
     wget -q https://repo.vapor.codes/apt/keyring.gpg -O- | sudo apt-key add -
     echo "deb https://repo.vapor.codes/apt $DISTRIB_CODENAME main" | sudo tee /etc/apt/sources.list.d/vapor.list
-    sudo apt-get update
+    sudo apt-get -q update
+
+    unset DEBIAN_FRONTEND
 }
 
 add_vapor_apt;
