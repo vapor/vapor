@@ -11,17 +11,19 @@ public class AuthMiddleware<U: User>: Middleware {
     private let turnstile: Turnstile
     private let cookieName: String
     private let cookieFactory: CookieFactory
+    private let refreshCookieEveryRequest: Bool
 
     public typealias CookieFactory = (String) -> Cookie
 
     public init(
         turnstile: Turnstile,
         cookieName: String = defaultCookieName,
+        refreshCookieEveryRequest: Bool = false,
         makeCookie cookieFactory: CookieFactory?
     ) {
         self.turnstile = turnstile
-        
         self.cookieName = cookieName
+        self.refreshCookieEveryRequest = refreshCookieEveryRequest
         self.cookieFactory = cookieFactory ?? { value in
             return Cookie(
                 name: cookieName,
@@ -38,11 +40,12 @@ public class AuthMiddleware<U: User>: Middleware {
         realm: Realm = AuthenticatorRealm(U.self),
         cache: CacheProtocol = MemoryCache(),
         cookieName: String = defaultCookieName,
+        refreshCookieEveryRequest: Bool = false,
         makeCookie cookieFactory: CookieFactory? = nil
     ) {
         let session = CacheSessionManager(cache: cache, realm: realm)
         let turnstile = Turnstile(sessionManager: session, realm: realm)
-        self.init(turnstile: turnstile, cookieName: cookieName, makeCookie: cookieFactory)
+        self.init(turnstile: turnstile, cookieName: cookieName, refreshCookieEveryRequest: refreshCookieEveryRequest, makeCookie: cookieFactory)
     }
 
     public func respond(to request: Request, chainingTo next: Responder) throws -> Response {
@@ -56,7 +59,8 @@ public class AuthMiddleware<U: User>: Middleware {
         // If we have a new session, set a new cookie
         if
             let sid = try request.subject().sessionIdentifier,
-            request.cookies[cookieName] != sid
+            request.cookies[cookieName] != sid ||
+            self.refreshCookieEveryRequest
         {
             var cookie = cookieFactory(sid)
             cookie.name = cookieName
