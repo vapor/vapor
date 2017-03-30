@@ -12,6 +12,7 @@ function add_vapor_apt() {
     sudo apt-get install wget software-properties-common python-software-properties apt-transport-https
     wget -q https://repo.vapor.codes/apt/keyring.gpg -O- | sudo apt-key add -
     echo "deb https://repo.vapor.codes/apt $DISTRIB_CODENAME main" | sudo tee /etc/apt/sources.list.d/vapor.list
+    sudo apt-get update
 }
 
 add_vapor_apt;
