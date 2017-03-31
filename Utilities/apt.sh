@@ -5,7 +5,7 @@ function add_vapor_apt() {
     then
         echo "Only Ubuntu 14.04, 16.04, and 16.10 are supported."
         echo "You are running $DISTRIB_RELEASE ($DISTRIB_CODENAME) [`uname`]"
-        exit 1;
+        return 1;
     fi
 
     export DEBIAN_FRONTEND=noninteractive
