@@ -6,7 +6,7 @@ import Crypto
 import Transport
 import Sockets
 
-public let VERSION = "2.0.0-alpha"
+public let VERSION = "2.0.0-beta"
 
 public class Droplet {
     /// The arguments passed to the droplet.
