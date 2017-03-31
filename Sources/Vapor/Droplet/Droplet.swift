@@ -236,28 +236,14 @@ public class Droplet {
         addConfigurable(cache: MemoryCache(), name: "memory")
         addConfigurable(middleware: SessionsMiddleware(MemorySessions()), name: "sessions")
         addConfigurable(middleware: DateMiddleware(), name: "date")
-        addConfigurable(middleware: TypeSafeErrorMiddleware(), name: "type-safe")
         addConfigurable(middleware: FileMiddleware(publicDir: workDir + "Public/"), name: "file")
-        addConfigurable(middleware: HeadMiddleware(), name: "head")
-        let contentTypeLogger = ContentTypeLogger { [weak self] log in
-            if let welf = self {
-                welf.log.info(log)
-            } else {
-                print(log)
-            }
-        }
-        addConfigurable(middleware: contentTypeLogger, name: "content-type-log")
 
         if config["droplet", "middleware"]?.array == nil {
             // if no configuration has been supplied
             // apply all middleware
             middleware = [
-                SessionsMiddleware(MemorySessions()),
                 DateMiddleware(),
-                TypeSafeErrorMiddleware(),
-                FileMiddleware(publicDir: workDir + "Public/"),
-                HeadMiddleware(),
-                contentTypeLogger,
+                FileMiddleware(publicDir: workDir + "Public/")
             ]
             log.debug("No `middleware` key in `droplet.json` found, using default middleware.")
         }
