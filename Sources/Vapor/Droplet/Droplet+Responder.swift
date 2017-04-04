@@ -9,11 +9,30 @@ extension Droplet: Responder {
     /// - returns: response if possible
     public func respond(to request: Request) -> Response {
         log.info("\(request.method) \(request.uri.path)")
-        do {
-            return try responder.respond(to: request)
-        } catch {
-            return errorResponse(with: request, and: error)
+        
+        let isHead = request.method == .head
+        if isHead {
+            /// The HEAD method is identical to GET.
+            ///
+            /// https://tools.ietf.org/html/rfc2616#section-9.4
+            request.method = .get
         }
+        
+        let response: Response
+        do {
+            response = try responder.respond(to: request)
+        } catch {
+            response = errorResponse(with: request, and: error)
+        }
+        
+        if isHead {
+            /// The server MUST NOT return a message-body in the response for HEAD.
+            ///
+            /// https://tools.ietf.org/html/rfc2616#section-9.4
+            response.body = .data([])
+        }
+        
+        return response
     }
 
     private func errorResponse(with request: Request, and error: Error) -> Response {
