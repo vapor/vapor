@@ -50,7 +50,7 @@ public final class FileMiddleware: Middleware {
             // Only set Content-Type if file not modified and returned above.
             if
                 let fileExtension = filePath.components(separatedBy: ".").last,
-                let type = mediaTypes[fileExtension]
+                let type = Request.mediaTypes[fileExtension]
             {
                 headers["Content-Type"] = type
             }
