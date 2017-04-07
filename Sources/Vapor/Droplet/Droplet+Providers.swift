@@ -1,5 +1,8 @@
 extension Droplet {
     public func addProvider(_ provider: Provider) throws {
+        guard !providers.contains(where: { $0.name == provider.name }) else {
+            return
+        }
         try provider.boot(self)
         providers.append(provider)
     }
