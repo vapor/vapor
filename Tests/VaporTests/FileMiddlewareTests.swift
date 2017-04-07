@@ -47,8 +47,7 @@ class FileMiddlewareTests: XCTestCase {
         // Make sure ETag did not change
         XCTAssertTrue(headers["If-None-Match"] == response304.headers["ETag"], "Generated ETag for cached file does not match old one.")
     }
-    
-    
+
     func testNonExistingFile() throws {
         let file = "/nonsense/file.notexists"
         let fileMiddleWare = FileMiddleware(publicDir: "/")
@@ -57,5 +56,15 @@ class FileMiddlewareTests: XCTestCase {
         
         let response = drop.respond(to: Request(method: .get, path: file))
         XCTAssertTrue(response.status == .notFound, "Status code is not 404 for nonexisting file.")
+    }
+
+    func testThrowsOnRelativePath() throws {
+        let file = "/../foo/bar/"
+        let fileMiddleWare = FileMiddleware(publicDir: "/")
+        let drop = try Droplet()
+        drop.middleware.append(fileMiddleWare)
+
+        let response = drop.respond(to: Request(method: .get, path: file))
+        XCTAssertEqual(response.status, HTTP.Status.forbidden)
     }
 }
