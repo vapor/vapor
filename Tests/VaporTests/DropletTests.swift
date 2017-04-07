@@ -105,13 +105,19 @@ class DropletTests: XCTestCase {
         }
 
         background {
+            print("before run")
             try! drop.run()
         }
-
+        
+        print("before wait")
         drop.console.wait(seconds: 2)
+        print("after wait")
 
+        print("before request")
         let res = try drop.client.request(.get, "http://0.0.0.0:8337/foo")
+        print("before assert")
         XCTAssertEqual(try res.bodyString(), "bar")
+        print("done")
     }
 
     func testRunManual() throws {
