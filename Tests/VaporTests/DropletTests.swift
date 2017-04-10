@@ -58,14 +58,12 @@ class DropletTests: XCTestCase {
     func testTLSConfig() throws {
         let config = Config([
             "servers": [
-                "secure": [
-                    "host": "vapor.codes",
-                    "port": 443,
-                    "securityLayer": "tls",
-                    "tls": [
-                        "certificates": "ca",
-                        "signature": "selfSigned"
-                    ]
+                "hostname": "vapor.codes",
+                "port": 443,
+                "securityLayer": "tls",
+                "tls": [
+                    "certificates": "ca",
+                    "signature": "selfSigned"
                 ]
             ]
         ])
@@ -93,8 +91,8 @@ class DropletTests: XCTestCase {
     func testRunConfig() throws {
         let config = Config([
             "server": [
-                "host": "0.0.0.0",
-                "port": 8337,
+                "hostname": "0.0.0.0",
+                "port": 8524,
                 "securityLayer": "none"
             ]
         ])
@@ -114,7 +112,7 @@ class DropletTests: XCTestCase {
         print("after wait")
 
         print("before request")
-        let res = try drop.client.request(.get, "http://0.0.0.0:8337/foo")
+        let res = try drop.client.request(.get, "http://0.0.0.0:8524/foo")
         print("before assert")
         XCTAssertEqual(try res.bodyString(), "bar")
         print("done")
@@ -183,5 +181,17 @@ class DropletTests: XCTestCase {
         XCTAssertEqual(try response.bodyString(), "foo")
 
         XCTAssertEqual(middleware, ["one", "two"])
+    }
+    
+    func testDumpConfig() throws {
+        let config = Config([
+            "server": [
+                "hostname": "0.0.0.0",
+                "port": 8524,
+                "securityLayer": "none"
+            ]
+        ])
+        let drop = try Droplet(arguments: ["vapor", "dump-config", "server.port"], config: config)
+        try drop.runCommands()
     }
 }

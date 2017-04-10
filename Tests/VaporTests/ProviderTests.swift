@@ -75,9 +75,11 @@ class ProviderTests: XCTestCase {
     
     func testDoubleBoot() throws {
         let drop = try Droplet()
+        try drop.addProvider(SlowServerProvider.self)
         try drop.addProvider(FastServerProvider.self)
         try drop.addProvider(FastServerProvider.self)
-        XCTAssertEqual(drop.providers.count, 1)
+        XCTAssertEqual(drop.providers.count, 2)
+        XCTAssert(drop.server == FastServer.self)
     }
 }
 
