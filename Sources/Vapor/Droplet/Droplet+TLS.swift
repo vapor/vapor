@@ -5,7 +5,7 @@ extension Droplet {
     internal func makeServerConfig() throws -> ServerConfig {
         let serverConfig = config["server"]
         let port = serverConfig?["port"]?.int?.port ?? cliPort(arguments: arguments) ?? 8080
-        let hostname = serverConfig?["host"]?.string ?? "0.0.0.0"
+        let hostname = serverConfig?["hostname"]?.string ?? "0.0.0.0"
         let securityLayer = try makeSecurityLayer(serverConfig: serverConfig)
         return ServerConfig(hostname: hostname, port: port, securityLayer)
     }
@@ -78,9 +78,6 @@ extension Droplet {
             case "ca":
                 let sig = parseTLSSignature(tlsConfig)
                 certs = .certificateAuthority(signature: sig)
-            case "mozilla":
-                print("[deprecated] Mozilla certificates have been deprecated and will be removed in future releases. Using 'defaults' instead.")
-                certs = .defaults
             case "openbsd":
                 certs = .openbsd
             case "defaults", "default":

@@ -58,14 +58,12 @@ class DropletTests: XCTestCase {
     func testTLSConfig() throws {
         let config = Config([
             "servers": [
-                "secure": [
-                    "host": "vapor.codes",
-                    "port": 443,
-                    "securityLayer": "tls",
-                    "tls": [
-                        "certificates": "ca",
-                        "signature": "selfSigned"
-                    ]
+                "hostname": "vapor.codes",
+                "port": 443,
+                "securityLayer": "tls",
+                "tls": [
+                    "certificates": "ca",
+                    "signature": "selfSigned"
                 ]
             ]
         ])
@@ -93,7 +91,7 @@ class DropletTests: XCTestCase {
     func testRunConfig() throws {
         let config = Config([
             "server": [
-                "host": "0.0.0.0",
+                "hostname": "0.0.0.0",
                 "port": 8524,
                 "securityLayer": "none"
             ]
