@@ -182,4 +182,19 @@ class DropletTests: XCTestCase {
 
         XCTAssertEqual(middleware, ["one", "two"])
     }
+    
+    func testDumpConfig() throws {
+        let config = Config([
+            "server": [
+                "hostname": "0.0.0.0",
+                "port": 8524,
+                "securityLayer": "none"
+            ]
+        ])
+        let drop = try Droplet(arguments: ["vapor", "dump-config", "server.port"], config: config)
+        background {
+            try! drop.run()
+        }
+        drop.console.wait(seconds: 1)
+    }
 }
