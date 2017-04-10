@@ -12,7 +12,6 @@ extension Droplet {
     */
     public func run(server: ServerConfig? = nil) throws -> Never  {
         try runCommands(server: server)
-        log.info("Bye for now!")
         exit(0)
     }
 
