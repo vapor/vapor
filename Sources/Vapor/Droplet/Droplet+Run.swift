@@ -11,7 +11,13 @@ extension Droplet {
         Runs the Droplet's commands, defaulting to serve.
     */
     public func run(server: ServerConfig? = nil) throws -> Never  {
-        try runCommands(server: server)
+        do {
+            try runCommands(server: server)
+        } catch CommandError.general(let error) {
+            console.error("Error: ", newLine: false)
+            console.print("\(error)")
+            exit(1)
+        }
         exit(0)
     }
 
@@ -40,16 +46,22 @@ extension Droplet {
             args.insert("serve", at: 0)
         }
 
-        try console.run(
-            executable: executable,
-            commands: commands.map { $0 as Runnable },
-            arguments: args,
-            help: [
-                "This command line interface is used to serve your droplet, prepare the database, and more.",
-                "Custom commands can be added by appending them to the Droplet's commands array.",
-                "Use --help on individual commands to learn more."
-            ]
-        )
+        do {
+            try console.run(
+                executable: executable,
+                commands: commands.map { $0 as Runnable },
+                arguments: args,
+                help: [
+                    "This command line interface is used to serve your droplet, prepare the database, and more.",
+                    "Custom commands can be added by appending them to the Droplet's commands array.",
+                    "Use --help on individual commands to learn more."
+                ]
+            )
+        } catch ConsoleError.help {
+            // nothing
+        } catch {
+            throw CommandError.general("\(error)")
+        }
     }
 
     /// adds a serve command if it hasn't been overridden
