@@ -52,7 +52,7 @@ public class Droplet {
 
     /// Expose to end users to customize driver
     /// Make outgoing requests
-    public var client: ClientProtocol.Type
+    public var client: ClientFactory
 
     /// `Middleware` will be applied in the order
     /// it is set in this array.
@@ -203,7 +203,7 @@ public class Droplet {
         // DEFAULTS
 
         router = Router()
-        client = EngineClient.self
+        client = EngineClientFactory()
         server = EngineServer.self
         middleware = []
         console = terminal
@@ -227,7 +227,7 @@ public class Droplet {
 
         // CONFIGURABLE
         addConfigurable(server: EngineServer.self, name: "engine")
-        addConfigurable(client: EngineClient.self, name: "engine")
+        addConfigurable(client: client, name: "engine")
         addConfigurable(console: terminal, name: "terminal")
         addConfigurable(log: log, name: "console")
         try addConfigurable(hash: CryptoHasher.self, name: "crypto")
