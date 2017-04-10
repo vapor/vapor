@@ -192,9 +192,6 @@ class DropletTests: XCTestCase {
             ]
         ])
         let drop = try Droplet(arguments: ["vapor", "dump-config", "server.port"], config: config)
-        background {
-            try! drop.run()
-        }
-        drop.console.wait(seconds: 1)
+        try drop.runCommands()
     }
 }
