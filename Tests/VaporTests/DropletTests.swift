@@ -94,7 +94,7 @@ class DropletTests: XCTestCase {
         let config = Config([
             "server": [
                 "host": "0.0.0.0",
-                "port": 8337,
+                "port": 8524,
                 "securityLayer": "none"
             ]
         ])
@@ -114,7 +114,7 @@ class DropletTests: XCTestCase {
         print("after wait")
 
         print("before request")
-        let res = try drop.client.request(.get, "http://0.0.0.0:8337/foo")
+        let res = try drop.client.request(.get, "http://0.0.0.0:8524/foo")
         print("before assert")
         XCTAssertEqual(try res.bodyString(), "bar")
         print("done")
