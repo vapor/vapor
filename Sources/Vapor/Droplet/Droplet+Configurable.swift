@@ -141,6 +141,50 @@ extension Droplet {
     }
 }
 
+// MARK: View
+
+extension Droplet {
+    public func addConfigurable(view: ViewRenderer, name: String) {
+        if config["droplet", "view"]?.string == name {
+            self.view = view
+            log.debug("Using view renderer '\(name)'.")
+        } else {
+            log.debug("Not using view renderer '\(name)'.")
+        }
+    }
+    
+    public func addConfigurable<V: ViewRenderer & ConfigInitializable>(view: V.Type, name: String) throws {
+        if config["droplet", "view"]?.string == name {
+            self.view = try view.init(config: config)
+            log.debug("Using view renderer '\(name)'.")
+        } else {
+            log.debug("Not using view renderer '\(name)'.")
+        }
+    }
+}
+
+// MARK: Error
+
+extension Droplet {
+    public func addConfigurable(errorRenderer: ErrorRenderer, name: String) {
+        if config["droplet", "errorRenderer"]?.string == name {
+            self.errorRenderer = errorRenderer
+            log.debug("Using error renderer '\(name)'.")
+        } else {
+            log.debug("Not using error renderer '\(name)'.")
+        }
+    }
+    
+    public func addConfigurable<E: ErrorRenderer & ConfigInitializable>(view: E.Type, name: String) throws {
+        if config["droplet", "errorRenderer"]?.string == name {
+            self.errorRenderer = try view.init(config: config)
+            log.debug("Using error renderer '\(name)'.")
+        } else {
+            log.debug("Not using error renderer '\(name)'.")
+        }
+    }
+}
+
 // MARK: Cache
 
 import Cache
