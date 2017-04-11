@@ -15,8 +15,8 @@ public final class Session {
         }
     }
     
-    internal var shouldDestroy = false
-    internal var shouldCreate = false
+    internal private(set) var shouldDestroy = false
+    internal private(set) var shouldCreate = false
     
     public init(identifier: String, data: Node = [:]) {
         self.identifier = identifier

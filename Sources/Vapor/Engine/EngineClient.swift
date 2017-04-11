@@ -6,6 +6,8 @@ import TLS
 /// TCP and TLS clients from engine
 /// wrapped to conform to ClientProtocol.
 public final class EngineClientFactory: ClientFactory {
+    public static let shared = EngineClientFactory()
+    
     /// Create a new EngineClient
     public func makeClient(
         hostname: String,
