@@ -1,17 +1,15 @@
 import Node
 import Foundation
 
-public typealias DateFactory = () -> Date
-
 public protocol CacheProtocol {
     func get(_ key: String) throws -> Node?
     func set(_ key: String, _ value: Node, expiration: Date?) throws
     func delete(_ key: String) throws
-    var defaultExpiration: DateFactory? { get }
+    func makeDefaultExpiration() -> Date?
 }
 
 extension CacheProtocol {
-    public var defaultExpiration: DateFactory? {
+    public func makeDefaultExpiration() -> Date? {
         return nil
     }
 }
@@ -22,7 +20,7 @@ extension CacheProtocol {
     }
     
     public func set(_ key: String, _ value: NodeRepresentable) throws {
-        return try set(key, try value.makeNode(in: nil), expiration: defaultExpiration?())
+        return try set(key, try value.makeNode(in: nil), expiration: makeDefaultExpiration())
     }
     
     public func set(_ key: String, _ value: NodeRepresentable, expiration: Date?) throws {
