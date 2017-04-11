@@ -41,6 +41,7 @@ XCTMain([
     testCase(RoutingTests.allTests),
     testCase(RouteListTests.allTests),
     testCase(SessionsTests.allTests),
+    testCase(MethodMapMiddlewareTests.allTests),
 ])
 
 #endif
