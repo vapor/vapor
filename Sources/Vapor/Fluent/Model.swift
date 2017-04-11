@@ -17,7 +17,7 @@ extension Model {
 
 extension Model {
     public func makeJSON() throws -> JSON {
-        let node = try makeNode()
+        let node = try makeNode(context: JSONContext())
         return try JSON(node: node)
     }
 }
