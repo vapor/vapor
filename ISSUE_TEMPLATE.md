@@ -2,11 +2,13 @@
 
 ** Please delete** whichever sections of the template you do not need.
 
-## Bug
+------------------------------------------------------------------------------------------------------
+                                                                              Bug
+------------------------------------------------------------------------------------------------------
 
-* Vapor Version:
-* OS:
-* OS Version:
+* Vapor Version: 
+* OS: 
+* OS Version: 
 
 ### Expected Behavior
 
@@ -20,13 +22,17 @@ Describe what is actually happening (the incorrect behavior).
 
 Imagine someone is explaining the bug to you: what information do you need to be able to re-create it?
 
-## Security Issue
+------------------------------------------------------------------------------------------------------
+                                                                      Security Issue
+------------------------------------------------------------------------------------------------------
 
-If you find a security vulnerability, please contact [security@vapor.codes](security@vapor.codes) as soon as possible. We take these matters seriously.
+If you find a security vulnerability, please contact [security@vapor.codes](security@vapor.codes) as soon as possible. Please do not report the vulnerability here as it is a public forum
 
-## Feature, Enhancement, or Optimization
+------------------------------------------------------------------------------------------------------
+                                                  Feature, Enhancement, or Optimization
+------------------------------------------------------------------------------------------------------
 
-### Name of Feature
+## Name of Feature
 
 * Author(s): [Developer](https://github.com/<your-username>)
 
