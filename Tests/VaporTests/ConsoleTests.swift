@@ -184,6 +184,10 @@ class TestConsoleDriver: ConsoleProtocol {
         buffer = []
         return string
     }
+    
+    func secureInput() -> String {
+        return input()
+    }
 
     func clear(_ clear: ConsoleClear) {
 
