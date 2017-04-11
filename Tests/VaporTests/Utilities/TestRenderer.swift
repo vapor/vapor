@@ -13,7 +13,7 @@ final class TestRenderer: ViewRenderer {
         case viewNotFound
     }
 
-    func make(_ path: String, _ context: Node, for provider: Provider.Type?) throws -> View {
+    func make(_ path: String, _ context: Node) throws -> View {
         guard let bytes = self.views[path] else {
             throw Error.viewNotFound
         }

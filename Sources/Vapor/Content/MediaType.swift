@@ -1,6 +1,14 @@
+import HTTP
+
+extension Message {
+    public static var mediaTypes: [String: String] {
+        return Vapor.mediaTypes
+    }
+}
+
 // Scraped from http://www.freeformatter.com/mime-types-list.html
 
-let mediaTypes: [String: String] = [
+private let mediaTypes = [
     "aw": "application/applixware", // Applixware Vistasource
     "atom": "application/atom+xml", // Atom Syndication Format RFC 4287
     "atomcat": "application/atomcat+xml", // Atom Publishing Protocol RFC 5023
@@ -604,16 +612,3 @@ let mediaTypes: [String: String] = [
     "ice": "x-conference/x-cooltalk", // CoolTalk Wikipedia: CoolTalk
     "par": "text/plain-bas" // BAS Partitur Format Phonetik BAS
 ]
-
-public struct MediaType {
-    public let fileExtension:String
-    public let mediaType:String
-    public init?(_ fileExtension: String) {
-        if let type = mediaTypes[fileExtension.lowercased()] {
-            self.fileExtension = fileExtension
-            self.mediaType = type
-        } else {
-            return nil
-        }
-    }
-}

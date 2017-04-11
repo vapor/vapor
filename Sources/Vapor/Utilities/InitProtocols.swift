@@ -3,5 +3,5 @@ public protocol EmptyInitializable {
 }
 
 public protocol DropletInitializable {
-    init(_: Droplet)
+    init(_ droplet: Droplet)
 }

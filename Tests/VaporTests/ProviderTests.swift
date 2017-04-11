@@ -72,6 +72,15 @@ class ProviderTests: XCTestCase {
         XCTAssertNil(FastServerProvider.resourcesDir)
         XCTAssertNil(FastServerProvider.viewsDir)
     }
+    
+    func testDoubleBoot() throws {
+        let drop = try Droplet()
+        try drop.addProvider(SlowServerProvider.self)
+        try drop.addProvider(FastServerProvider.self)
+        try drop.addProvider(FastServerProvider.self)
+        XCTAssertEqual(drop.providers.count, 2)
+        XCTAssert(drop.server == FastServer.self)
+    }
 }
 
 // MARK: Utility

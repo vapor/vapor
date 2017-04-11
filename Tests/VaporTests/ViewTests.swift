@@ -53,11 +53,12 @@ class ViewTests: XCTestCase {
         ])
         
         final class TestRenderer: ViewRenderer {
+            let viewsDir: String
             init(viewsDir: String) {
-                
+                self.viewsDir = viewsDir
             }
             
-            func make(_ path: String, _ context: Node, for provider: Provider.Type?) throws -> View {
+            func make(_ path: String, _ context: Node) throws -> View {
                 return View(data: "\(context)".makeBytes())
               
             }

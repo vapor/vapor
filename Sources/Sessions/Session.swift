@@ -8,8 +8,15 @@ import Node
 /// `drop.sessions`.
 public final class Session {
     public let identifier: String
-    public var data: Node
-    internal var shouldDestroy = false
+    
+    public var data: Node {
+        didSet {
+            shouldCreate = true
+        }
+    }
+    
+    internal private(set) var shouldDestroy = false
+    internal private(set) var shouldCreate = false
     
     public init(identifier: String, data: Node = [:]) {
         self.identifier = identifier

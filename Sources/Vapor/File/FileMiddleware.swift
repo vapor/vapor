@@ -6,11 +6,6 @@ public final class FileMiddleware: Middleware {
     private var publicDir: String
     private let loader = DataFile()
 
-    @available(*, deprecated: 1.2, message: "This has been renamed to publicDir: and now represents the absolute path. Use `workDir.finished(\"/\") + \"Public/\"` to reproduce existing behavior.")
-    public init(workDir: String) {
-        self.publicDir = workDir.finished(with: "/") + "Public/"
-    }
-
     public init(publicDir: String) {
         // Remove last "/" from the publicDir if present, so we can directly append uri path from the request.
         self.publicDir = publicDir.finished(with: "/")
@@ -22,6 +17,7 @@ public final class FileMiddleware: Middleware {
         } catch let error as AbortError where error.status == .notFound {
             // Check in file system
             var path = request.uri.path
+            guard !path.contains("../") else { throw HTTP.Status.forbidden }
             if path.hasPrefix("/") {
                 path = String(path.characters.dropFirst())
             }
@@ -50,7 +46,7 @@ public final class FileMiddleware: Middleware {
             // Only set Content-Type if file not modified and returned above.
             if
                 let fileExtension = filePath.components(separatedBy: ".").last,
-                let type = mediaTypes[fileExtension]
+                let type = Request.mediaTypes[fileExtension]
             {
                 headers["Content-Type"] = type
             }

@@ -16,7 +16,7 @@ extension Droplet {
 import Transport
 
 extension Droplet {
-    public func addConfigurable(client: ClientProtocol.Type, name: String) {
+    public func addConfigurable(client: ClientFactory, name: String) {
         let config = self.config.converted(to: Node.self)
 
         if config["droplet", "client"]?.string == name {
@@ -24,7 +24,7 @@ extension Droplet {
             log.debug("Using client '\(name)'.")
 
             if let tls = config["clients", "tls"]?.object {
-                EngineClient.defaultTLSContext = {
+                EngineClientFactory.defaultTLSContext = {
                     return try self.parseTLSConfig(tls, mode: .client)
                 }
             }
@@ -137,6 +137,50 @@ extension Droplet {
             log.debug("Using console '\(name)'.")
         } else {
             log.debug("Not using console '\(name)'.")
+        }
+    }
+}
+
+// MARK: View
+
+extension Droplet {
+    public func addConfigurable(view: ViewRenderer, name: String) {
+        if config["droplet", "view"]?.string == name {
+            self.view = view
+            log.debug("Using view renderer '\(name)'.")
+        } else {
+            log.debug("Not using view renderer '\(name)'.")
+        }
+    }
+    
+    public func addConfigurable<V: ViewRenderer & ConfigInitializable>(view: V.Type, name: String) throws {
+        if config["droplet", "view"]?.string == name {
+            self.view = try view.init(config: config)
+            log.debug("Using view renderer '\(name)'.")
+        } else {
+            log.debug("Not using view renderer '\(name)'.")
+        }
+    }
+}
+
+// MARK: Error
+
+extension Droplet {
+    public func addConfigurable(errorRenderer: ErrorRenderer, name: String) {
+        if config["droplet", "errorRenderer"]?.string == name {
+            self.errorRenderer = errorRenderer
+            log.debug("Using error renderer '\(name)'.")
+        } else {
+            log.debug("Not using error renderer '\(name)'.")
+        }
+    }
+    
+    public func addConfigurable<E: ErrorRenderer & ConfigInitializable>(view: E.Type, name: String) throws {
+        if config["droplet", "errorRenderer"]?.string == name {
+            self.errorRenderer = try view.init(config: config)
+            log.debug("Using error renderer '\(name)'.")
+        } else {
+            log.debug("Not using error renderer '\(name)'.")
         }
     }
 }

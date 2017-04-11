@@ -1,7 +1,6 @@
 import Console
 
 class DebugConsole: ConsoleProtocol {
-
     let size: (width: Int, height: Int)
     init() {
         size = (0, 0)
@@ -17,6 +16,10 @@ class DebugConsole: ConsoleProtocol {
         inputBuffer = ""
         return temp
     }
+  
+    func secureInput() -> String {
+        return input()
+    }
 
     func output(_ string: String, style: ConsoleStyle, newLine: Bool) {
         outputBuffer += string
@@ -28,4 +31,6 @@ class DebugConsole: ConsoleProtocol {
     func clear(_ clear: ConsoleClear) { }
     public func execute(program: String, arguments: [String], input: Int32?, output: Int32?, error: Int32?) throws {}
     func subexecute(_ command: String, input: String) throws -> String { return "" }
+
+    func registerKillListener(_ listener: @escaping (Int32) -> Void) {}
 }
