@@ -6,7 +6,7 @@ import Crypto
 import Transport
 import Sockets
 
-public let VERSION = "2.0.0-alpha"
+public let VERSION = "2.0.0-beta"
 
 public class Droplet {
     /// The arguments passed to the droplet.
@@ -52,7 +52,7 @@ public class Droplet {
 
     /// Expose to end users to customize driver
     /// Make outgoing requests
-    public var client: ClientProtocol.Type
+    public var client: ClientFactory
 
     /// `Middleware` will be applied in the order
     /// it is set in this array.
@@ -86,6 +86,9 @@ public class Droplet {
 
     /// Render static and templated views.
     public var view: ViewRenderer
+    
+    /// Render error responses from requests and errors
+    public var errorRenderer: ErrorRenderer
 
     /// Store and retreive key:value
     /// pair information.
@@ -203,7 +206,7 @@ public class Droplet {
         // DEFAULTS
 
         router = Router()
-        client = EngineClient.self
+        client = EngineClientFactory()
         server = EngineServer.self
         middleware = []
         console = terminal
@@ -214,6 +217,7 @@ public class Droplet {
             renderer.cache = nil
         }
         view = renderer
+        errorRenderer = DefaultErrorRenderer(environment)
         cache = MemoryCache()
         storage = [:]
         providers = []
@@ -227,8 +231,10 @@ public class Droplet {
 
         // CONFIGURABLE
         addConfigurable(server: EngineServer.self, name: "engine")
-        addConfigurable(client: EngineClient.self, name: "engine")
+        addConfigurable(client: client, name: "engine")
         addConfigurable(console: terminal, name: "terminal")
+        addConfigurable(view: renderer, name: "static")
+        addConfigurable(errorRenderer: errorRenderer, name: "default")
         addConfigurable(log: log, name: "console")
         try addConfigurable(hash: CryptoHasher.self, name: "crypto")
         try addConfigurable(hash: BCryptHasher.self, name: "bcrypt")
@@ -236,34 +242,21 @@ public class Droplet {
         addConfigurable(cache: MemoryCache(), name: "memory")
         addConfigurable(middleware: SessionsMiddleware(MemorySessions()), name: "sessions")
         addConfigurable(middleware: DateMiddleware(), name: "date")
-        addConfigurable(middleware: TypeSafeErrorMiddleware(), name: "type-safe")
         addConfigurable(middleware: FileMiddleware(publicDir: workDir + "Public/"), name: "file")
-        addConfigurable(middleware: HeadMiddleware(), name: "head")
-        let contentTypeLogger = ContentTypeLogger { [weak self] log in
-            if let welf = self {
-                welf.log.info(log)
-            } else {
-                print(log)
-            }
-        }
-        addConfigurable(middleware: contentTypeLogger, name: "content-type-log")
 
         if config["droplet", "middleware"]?.array == nil {
             // if no configuration has been supplied
             // apply all middleware
             middleware = [
-                SessionsMiddleware(MemorySessions()),
                 DateMiddleware(),
-                TypeSafeErrorMiddleware(),
-                FileMiddleware(publicDir: workDir + "Public/"),
-                HeadMiddleware(),
-                contentTypeLogger,
+                FileMiddleware(publicDir: workDir + "Public/")
             ]
             log.debug("No `middleware` key in `droplet.json` found, using default middleware.")
         }
 
         // Post Init Defaults
         commands.append(RouteList(self))
+        commands.append(DumpConfig(self))
     }
 
     func serverErrors(error: ServerError) {

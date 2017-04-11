@@ -168,6 +168,7 @@ final class TestTwoCommand: Command {
 
 class TestConsoleDriver: ConsoleProtocol {
     var buffer: Bytes
+    let size: (width: Int, height: Int) = (0,0)
 
     init() {
         buffer = []
@@ -183,6 +184,10 @@ class TestConsoleDriver: ConsoleProtocol {
         buffer = []
         return string
     }
+    
+    func secureInput() -> String {
+        return input()
+    }
 
     func clear(_ clear: ConsoleClear) {
 
@@ -195,6 +200,6 @@ class TestConsoleDriver: ConsoleProtocol {
         return ""
     }
 
-
-    let size: (width: Int, height: Int) = (0,0)
+    func registerKillListener(_ listener: @escaping (Int32) -> Void) {
+    }
 }

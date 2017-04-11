@@ -5,10 +5,19 @@ extension Responder {
     public func testResponse(
         to method: HTTP.Method,
         at path: String,
+        hostname: String = "0.0.0.0",
+        headers: [HeaderKey: String] = [:],
+        body: BodyRepresentable? = nil,
         file: StaticString = #file,
         line: UInt = #line
     ) throws -> Response {
-        let req = Request.makeTest(method: .get, path: "foo")
+        let req = Request.makeTest(
+            method: .get,
+            headers: headers,
+            body: body?.makeBody() ?? .data([]),
+            hostname: hostname,
+            path: path
+        )
         return try testResponse(
             to: req,
             file: file,
