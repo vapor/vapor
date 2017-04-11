@@ -1,8 +1,8 @@
 import HTTP
 
-extension ClientProtocol {
+extension Responder {
     /// Calls `.request(.get, ...)`
-    public static func get(
+    public func get(
         _ uri: String,
         query: [String: NodeRepresentable] = [:],
         _ headers: [HeaderKey: String] = [:],
@@ -13,7 +13,7 @@ extension ClientProtocol {
     }
     
     /// Calls `.request(.post, ...)`
-    public static func post(
+    public func post(
         _ uri: String,
         query: [String: NodeRepresentable] = [:],
         _ headers: [HeaderKey: String] = [:],
@@ -24,7 +24,7 @@ extension ClientProtocol {
     }
     
     /// Calls `.request(.patch, ...)`
-    public static func patch(
+    public func patch(
         _ uri: String,
         query: [String: NodeRepresentable] = [:],
         _ headers: [HeaderKey: String] = [:],
@@ -35,7 +35,7 @@ extension ClientProtocol {
     }
     
     /// Calls `.request(.put, ...)`
-    public static func put(
+    public func put(
         _ uri: String,
         query: [String: NodeRepresentable] = [:],
         _ headers: [HeaderKey: String] = [:],
@@ -47,7 +47,7 @@ extension ClientProtocol {
     
     
     /// Calls `.request(.delete, ...)`
-    public static func delete(
+    public func delete(
         _ uri: String,
         query: [String: NodeRepresentable] = [:],
         _ headers: [HeaderKey: String] = [:],

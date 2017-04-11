@@ -16,12 +16,10 @@ class DebugConsole: ConsoleProtocol {
         inputBuffer = ""
         return temp
     }
-    
-    
+  
     func secureInput() -> String {
         return input()
     }
-
 
     func output(_ string: String, style: ConsoleStyle, newLine: Bool) {
         outputBuffer += string

@@ -11,7 +11,6 @@ class DropletTests: XCTestCase {
         ("testTLSConfig", testTLSConfig),
         ("testRunDefaults", testRunDefaults),
         ("testRunConfig", testRunConfig),
-        ("testRunManual", testRunManual),
         ("testHeadRequest", testHeadRequest),
         ("testMiddlewareOrder", testMiddlewareOrder),
     ]
@@ -77,15 +76,8 @@ class DropletTests: XCTestCase {
         drop.get("foo") { req in
             return "bar"
         }
-
-        background {
-            try! drop.run()
-        }
-
-        drop.console.wait(seconds: 1)
-
-        let res = try drop.client.request(.get, "http://0.0.0.0:8523/foo")
-        XCTAssertEqual(try res.bodyString(), "bar")
+        
+        XCTAssertEqual(try drop.makeServerConfig().port, 8523)
     }
 
     func testRunConfig() throws {
@@ -97,42 +89,7 @@ class DropletTests: XCTestCase {
             ]
         ])
         let drop = try Droplet(arguments: ["vapor", "serve"], config: config)
-
-        drop.get("foo") { req in
-            return "bar"
-        }
-
-        background {
-            print("before run")
-            try! drop.run()
-        }
-        
-        print("before wait")
-        drop.console.wait(seconds: 2)
-        print("after wait")
-
-        print("before request")
-        let res = try drop.client.request(.get, "http://0.0.0.0:8524/foo")
-        print("before assert")
-        XCTAssertEqual(try res.bodyString(), "bar")
-        print("done")
-    }
-
-    func testRunManual() throws {
-        let drop = try Droplet(arguments: ["vapor", "serve"])
-
-        drop.get("foo") { req in
-            return "bar"
-        }
-
-        background {
-            let config = ServerConfig(port: 8424)
-            try! drop.serve(config)
-        }
-
-        drop.console.wait(seconds: 1)
-        let res = try drop.client.request(.get, "http://0.0.0.0:8424/foo")
-        XCTAssertEqual(try res.bodyString(), "bar")
+        XCTAssertEqual(try drop.makeServerConfig().port, 8524)
     }
 
     func testHeadRequest() throws {
@@ -141,18 +98,11 @@ class DropletTests: XCTestCase {
             return "Hi, I'm a body"
         }
 
-        background {
-            let config = ServerConfig(port: 9222)
-            try! drop.serve(config)
-        }
-
-        drop.console.wait(seconds: 1)
-
-        let getResp = try drop.client.request(.get, "http://0.0.0.0:9222/foo")
+        let getResp = try drop.request(.get, "http://0.0.0.0:9222/foo")
         XCTAssertEqual(try getResp.bodyString(), "Hi, I'm a body")
 
         let head = try Request(method: .head, uri: "http://0.0.0.0:9222/foo")
-        let headResp = try drop.client.respond(to: head)
+        let headResp = drop.respond(to: head)
         XCTAssertEqual(try headResp.bodyString(), "")
     }
 
