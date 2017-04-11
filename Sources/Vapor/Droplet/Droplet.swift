@@ -86,9 +86,6 @@ public class Droplet {
 
     /// Render static and templated views.
     public var view: ViewRenderer
-    
-    /// Render error responses from requests and errors
-    public var errorRenderer: ErrorRenderer
 
     /// Store and retreive key:value
     /// pair information.
@@ -217,7 +214,6 @@ public class Droplet {
             renderer.cache = nil
         }
         view = renderer
-        errorRenderer = DefaultErrorRenderer(environment)
         cache = MemoryCache()
         storage = [:]
         providers = []
@@ -234,7 +230,6 @@ public class Droplet {
         addConfigurable(client: client, name: "engine")
         addConfigurable(console: terminal, name: "terminal")
         addConfigurable(view: renderer, name: "static")
-        addConfigurable(errorRenderer: errorRenderer, name: "default")
         addConfigurable(log: log, name: "console")
         try addConfigurable(hash: CryptoHasher.self, name: "crypto")
         try addConfigurable(hash: BCryptHasher.self, name: "bcrypt")
@@ -243,11 +238,13 @@ public class Droplet {
         addConfigurable(middleware: SessionsMiddleware(MemorySessions()), name: "sessions")
         addConfigurable(middleware: DateMiddleware(), name: "date")
         addConfigurable(middleware: FileMiddleware(publicDir: workDir + "Public/"), name: "file")
+        addConfigurable(middleware: ErrorMiddleware(self), name: "error")
 
         if config["droplet", "middleware"]?.array == nil {
             // if no configuration has been supplied
             // apply all middleware
             middleware = [
+                ErrorMiddleware(self),
                 DateMiddleware(),
                 FileMiddleware(publicDir: workDir + "Public/")
             ]

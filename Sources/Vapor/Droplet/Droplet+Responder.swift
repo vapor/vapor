@@ -22,8 +22,10 @@ extension Droplet: Responder {
         do {
             response = try responder.respond(to: request)
         } catch {
-            logError(error)
-            response = errorRenderer.make(with: request, for: error)
+            log.error("Uncaught error: \(type(of: error))")
+            log.error(error)
+            log.info("Use `ErrorMiddleware` or catch \(type(of: error)) to provide a better error response.")
+            response = Response(status: .internalServerError)
         }
         
         if isHead {

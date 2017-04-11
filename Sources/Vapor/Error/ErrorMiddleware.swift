@@ -2,10 +2,19 @@ import HTTP
 
 fileprivate let errorView = ErrorView()
 
-public final class DefaultErrorRenderer: ErrorRenderer {
-    public let environment: Environment
-    public init(_ environment: Environment) {
-        self.environment = environment
+public final class ErrorMiddleware: Middleware {
+    unowned let drop: Droplet
+    public init(_ drop: Droplet) {
+        self.drop = drop
+    }
+    
+    public func respond(to req: Request, chainingTo next: Responder) throws -> Response {
+        do {
+            return try next.respond(to: req)
+        } catch {
+            drop.log.error(error)
+            return make(with: req, for: error)
+        }
     }
     
     public func make(with req: Request, for error: Error) -> Response {
@@ -20,7 +29,7 @@ public final class DefaultErrorRenderer: ErrorRenderer {
         
         let status = Status(error)
         let response = Response(status: status)
-        response.json = JSON(error, env: environment)
+        response.json = JSON(error, env: drop.environment)
         return response
     }
 }
@@ -143,4 +152,16 @@ extension RouterError: AbortError {
     public var status: Status { return Abort.notFound.status }
     public var reason: String { return Abort.notFound.reason }
     public var metadata: Node? { return Abort.notFound.metadata }
+}
+
+extension LogProtocol {
+    public func error(_ error: Error) {
+        if let debuggable = error as? Debuggable {
+            self.error(debuggable.loggable)
+        } else {
+            let type = String(reflecting: type(of: error))
+            self.error("[\(type): \(error)]")
+            info("Conform '\(type)' to Debugging.Debuggable to provide more debug information.")
+        }
+    }
 }

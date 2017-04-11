@@ -163,28 +163,6 @@ extension Droplet {
     }
 }
 
-// MARK: Error
-
-extension Droplet {
-    public func addConfigurable(errorRenderer: ErrorRenderer, name: String) {
-        if config["droplet", "errorRenderer"]?.string == name {
-            self.errorRenderer = errorRenderer
-            log.debug("Using error renderer '\(name)'.")
-        } else {
-            log.debug("Not using error renderer '\(name)'.")
-        }
-    }
-    
-    public func addConfigurable<E: ErrorRenderer & ConfigInitializable>(view: E.Type, name: String) throws {
-        if config["droplet", "errorRenderer"]?.string == name {
-            self.errorRenderer = try view.init(config: config)
-            log.debug("Using error renderer '\(name)'.")
-        } else {
-            log.debug("Not using error renderer '\(name)'.")
-        }
-    }
-}
-
 // MARK: Cache
 
 import Cache
