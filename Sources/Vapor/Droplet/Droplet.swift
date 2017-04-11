@@ -86,6 +86,9 @@ public class Droplet {
 
     /// Render static and templated views.
     public var view: ViewRenderer
+    
+    /// Render error responses from requests and errors
+    public var errorRenderer: ErrorRenderer
 
     /// Store and retreive key:value
     /// pair information.
@@ -214,6 +217,7 @@ public class Droplet {
             renderer.cache = nil
         }
         view = renderer
+        errorRenderer = DefaultErrorRenderer(environment)
         cache = MemoryCache()
         storage = [:]
         providers = []
@@ -229,6 +233,8 @@ public class Droplet {
         addConfigurable(server: EngineServer.self, name: "engine")
         addConfigurable(client: client, name: "engine")
         addConfigurable(console: terminal, name: "terminal")
+        addConfigurable(view: renderer, name: "static")
+        addConfigurable(errorRenderer: errorRenderer, name: "default")
         addConfigurable(log: log, name: "console")
         try addConfigurable(hash: CryptoHasher.self, name: "crypto")
         try addConfigurable(hash: BCryptHasher.self, name: "bcrypt")

@@ -16,7 +16,7 @@ class DebugConsole: ConsoleProtocol {
         inputBuffer = ""
         return temp
     }
-    
+  
     func secureInput() -> String {
         return input()
     }
