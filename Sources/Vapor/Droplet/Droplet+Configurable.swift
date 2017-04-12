@@ -16,7 +16,7 @@ extension Droplet {
 import Transport
 
 extension Droplet {
-    public func addConfigurable(client: ClientFactory, name: String) {
+    public func addConfigurable(client: ClientFactoryProtocol, name: String) {
         let config = self.config.converted(to: Node.self)
 
         if config["droplet", "client"]?.string == name {
@@ -24,7 +24,7 @@ extension Droplet {
             log.debug("Using client '\(name)'.")
 
             if let tls = config["clients", "tls"]?.object {
-                EngineClientFactory.defaultTLSContext = {
+                EngineClient.defaultTLSContext = {
                     return try self.parseTLSConfig(tls, mode: .client)
                 }
             }

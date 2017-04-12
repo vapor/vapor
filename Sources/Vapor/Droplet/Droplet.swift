@@ -52,7 +52,7 @@ public class Droplet {
 
     /// Expose to end users to customize driver
     /// Make outgoing requests
-    public var client: ClientFactory
+    public var client: ClientFactoryProtocol
 
     /// `Middleware` will be applied in the order
     /// it is set in this array.
@@ -203,7 +203,7 @@ public class Droplet {
         // DEFAULTS
 
         router = Router()
-        client = EngineClientFactory()
+        client = ClientFactory<EngineClient>()
         server = EngineServer.self
         middleware = []
         console = terminal

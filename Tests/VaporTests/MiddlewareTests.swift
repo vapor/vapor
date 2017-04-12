@@ -83,7 +83,7 @@ class MiddlewareTests: XCTestCase {
     func testConfigClient() throws {
         let foo = FooMiddleware()
 
-        let res = try EngineClientFactory.shared.get("http://httpbin.org/headers", through: [foo])
+        let res = try EngineClient.factory.get("http://httpbin.org/headers", through: [foo])
 
         // test to make sure basic server saw the
         // header the middleware added
