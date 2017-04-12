@@ -6,7 +6,10 @@ import TLS
 /// TCP and TLS clients from engine
 /// wrapped to conform to ClientProtocol.
 public final class ClientFactory<C: ClientProtocol>: ClientFactoryProtocol {
-    /// Create a new EngineClient
+    /// Create a new ClientFactory
+    public init() {}
+    
+    /// Creates a new client with the supplied connection info
     public func makeClient(
         hostname: String,
         port: Port,
