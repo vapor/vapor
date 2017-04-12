@@ -1,58 +1,26 @@
 import HTTP
 import Transport
-import URI
+import Sockets
 import TLS
 
-/// types conforming to this protocol can be
-/// set as the Droplet's `.client`
-public protocol ClientFactory: Responder {
-    func makeClient(
+/// TCP and TLS clients from engine
+/// wrapped to conform to ClientProtocol.
+public final class ClientFactory<C: ClientProtocol>: ClientFactoryProtocol {
+    /// Create a new EngineClient
+    public func makeClient(
         hostname: String,
         port: Port,
         _ securityLayer: SecurityLayer
-    ) throws -> ClientProtocol
-}
-
-
-// MARK: Convenience
-
-extension ClientFactory {
-    /// Creates a client connected to the server specified
-    /// by the supplied request.
-    func makeClient(for req: Request, using s: SecurityLayer? = nil) throws -> Responder {
-        // use security layer from input or
-        // determine based on req uri scheme
-        let securityLayer: SecurityLayer
-        if let s = s {
-            securityLayer = s
-        } else if req.uri.scheme.isSecure {
-            securityLayer = .tls(try EngineClientFactory.defaultTLSContext())
-        } else {
-            securityLayer = .none
-        }
-        
-        return try makeClient(
-            hostname: req.uri.hostname,
-            port: req.uri.port ?? req.uri.scheme.port,
+    ) throws -> ClientProtocol {
+        return try C(
+            hostname: hostname,
+            port: port,
             securityLayer
         )
     }
-}
-
-// MARK: TLS
-
-private var _defaultTLSClientContext: () throws -> (TLS.Context) = {
-    return try Context(.client)
-}
-
-extension ClientFactory {
-    public static var defaultTLSContext: () throws -> (TLS.Context) {
-        get {
-            return _defaultTLSClientContext
-        }
-        set {
-            _defaultTLSClientContext = newValue
-        }
-        
+    
+    /// Responds to the request
+    public func respond(to request: Request) throws -> Response {
+        return try makeClient(for: request).respond(to: request)
     }
 }

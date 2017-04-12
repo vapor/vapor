@@ -5,9 +5,9 @@ import TLS
 
 /// TCP and TLS client from Engine package.
 public final class EngineClient: ClientProtocol {
-    public static let factory = EngineClientFactory.shared
+    public static let factory = EngineClientFactory()
     
-    let client: HTTP.Client
+    public let client: HTTP.Client
     
     /// Creates a new Engine client
     public init(hostname: String, port: Port, _ securityLayer: SecurityLayer) throws {
@@ -34,3 +34,5 @@ public final class EngineClient: ClientProtocol {
         return try client.respond(to: request)
     }
 }
+
+public typealias EngineClientFactory = ClientFactory<EngineClient>
