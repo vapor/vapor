@@ -13,7 +13,7 @@ public final class EngineClientFactory: ClientFactory {
         hostname: String,
         port: Port,
         _ securityLayer: SecurityLayer
-        ) throws -> ClientProtocol {
+    ) throws -> ClientProtocol {
         return try EngineClient(
             hostname: hostname,
             port: port,

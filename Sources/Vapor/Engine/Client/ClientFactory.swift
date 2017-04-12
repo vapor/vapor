@@ -10,7 +10,7 @@ public protocol ClientFactory: Responder {
         hostname: String,
         port: Port,
         _ securityLayer: SecurityLayer
-        ) throws -> ClientProtocol
+    ) throws -> ClientProtocol
 }
 
 

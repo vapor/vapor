@@ -24,7 +24,7 @@ extension Responder {
         _ headers: [HeaderKey: String] = [:],
         _ body: BodyRepresentable? = nil,
         through middleware: [Middleware] = []
-        ) throws  -> Response {
+    ) throws  -> Response {
         var uri = try URI(uri)
         
         var q: [String: CustomStringConvertible] = [:]
