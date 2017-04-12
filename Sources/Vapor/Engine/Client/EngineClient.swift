@@ -3,19 +3,14 @@ import Transport
 import Sockets
 import TLS
 
-/// TCP and TLS clients from engine
-/// wrapped to conform to ClientProtocol.
-public final class EngineClientFactory: ClientFactory {
-    public static let shared = EngineClientFactory()
+/// TCP and TLS client from Engine package.
+public final class EngineClient: ClientProtocol {
+    public static let factory = EngineClientFactory.shared
     
-    /// Create a new EngineClient
-    public func makeClient(
-        hostname: String,
-        port: Port,
-        _ securityLayer: SecurityLayer
-    ) throws -> Responder {
-        let client: Responder
-        
+    let client: HTTP.Client
+    
+    /// Creates a new Engine client
+    public init(hostname: String, port: Port, _ securityLayer: SecurityLayer) throws {
         switch securityLayer {
         case .none:
             let socket = try TCPInternetSocket(
@@ -33,12 +28,9 @@ public final class EngineClientFactory: ClientFactory {
             let tlsSocket = TLS.InternetSocket(socket, context)
             client = try TLSClient(tlsSocket)
         }
-        
-        return client
     }
-
-    /// Responds to the request
+    
     public func respond(to request: Request) throws -> Response {
-        return try makeClient(for: request).respond(to: request)
+        return try client.respond(to: request)
     }
 }
