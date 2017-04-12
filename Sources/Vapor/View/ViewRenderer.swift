@@ -13,13 +13,20 @@ public protocol ViewRenderer {
     func make(_ path: String, _ context: Node) throws -> View
 }
 
-extension ViewRenderer {
-    public func make(_ path: String) throws -> View {
-        return try make(path, Node.null)
-    }
+// MARK: Convenience
 
-    public func make(_ path: String, _ context: Node, for provider: Provider.Type) throws -> View {
-        let viewsDir = provider.viewsDir ?? ""
+extension ViewRenderer {
+    public func make(
+        _ path: String,
+        _ context: NodeRepresentable? = nil,
+        from provider: Provider.Type? = nil
+    ) throws -> View {
+        let context = try context?.makeNode(in: ViewContext.shared) ?? Node.null
+        let viewsDir = provider?.viewsDir ?? ""
         return try make(viewsDir + path, context)
     }
+}
+
+public struct ViewContext: Context {
+    public static let shared = ViewContext()
 }
