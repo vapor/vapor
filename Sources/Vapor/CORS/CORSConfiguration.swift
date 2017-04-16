@@ -39,7 +39,11 @@ public enum AllowOriginSetting {
         case .none: return ""
         case .originBased: return request.headers["Origin"] ?? ""
         case .all: return "*"
-        case .custom(let string): return string
+        case .custom(let string):
+            guard let origin = request.headers["Origin"] else {
+                return string
+            }
+            return string.contains(origin) ? origin : string
         }
     }
 }
@@ -152,7 +156,7 @@ extension CORSConfiguration: ConfigInitializable {
 
         // Cache expiration
         self.cacheExpiration = try cors.get("cacheExpiration") ?? 600
-        
+
         // Exposed headers
         self.exposedHeaders = try cors.get("exposedHeaders")
     }
