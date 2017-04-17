@@ -24,7 +24,7 @@ extension Request: NodeRepresentable {
         }
 
         var node = Node(context)
-        try node.set("session", try session())
+        try node.set("session", session)
         try node.set("storage", nodeStorage)
         try node.set("method", method.description)
         try node.set("version", version)
