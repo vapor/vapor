@@ -8,12 +8,12 @@ public protocol RouteCollection {
 
 extension RouteBuilder {
     /// Adds the collection of routes
-    func collection<C: RouteCollection>(_ c: C) throws {
+    public func collection<C: RouteCollection>(_ c: C) throws {
         try c.build(self)
     }
     
     /// Adds the collection of routes
-    func collection<C: RouteCollection & EmptyInitializable>(_ c: C.Type) throws {
+    public func collection<C: RouteCollection & EmptyInitializable>(_ c: C.Type) throws {
         let c = C()
         try c.build(self)
     }
