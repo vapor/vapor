@@ -34,14 +34,6 @@ public protocol Provider: ConfigInitializable {
     func beforeRun(_ droplet: Droplet) throws
 }
 
-// MARK: Optional
-
-extension Provider {
-    public func boot(_ config: Config) throws {
-        
-    }
-}
-
 // MARK: Name
 
 extension Provider {

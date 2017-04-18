@@ -53,9 +53,12 @@ class ViewTests: XCTestCase {
         ])
         
         final class TestRenderer: ViewRenderer {
+            var shouldCache: Bool
+
             let viewsDir: String
             init(viewsDir: String) {
                 self.viewsDir = viewsDir
+                shouldCache = false
             }
             
             func make(_ path: String, _ context: Node) throws -> View {

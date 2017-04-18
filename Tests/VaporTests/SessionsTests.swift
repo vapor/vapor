@@ -10,11 +10,10 @@ class SessionsTests: XCTestCase {
     ]
 
     func testExample() throws {
-        let drop = try Droplet()
-
         let s = MemorySessions()
         let m = SessionsMiddleware(s)
-        drop.middleware = [m]
+        
+        let drop = try Droplet(middleware: [m])
 
         drop.get("set") { req in
             try req.assertSession().data["foo"] = "bar"

@@ -11,7 +11,7 @@ public final class CryptoCipher: CipherProtocol {
         case config(String)
     }
 
-    public init(method: Cipher.Method, defaultKey: Bytes, defaultIV: Bytes?) {
+    public init(method: Cipher.Method, defaultKey: Bytes, defaultIV: Bytes? = nil) {
         self.method = method
         self.defaultKey = defaultKey
         self.defaultIV = defaultIV

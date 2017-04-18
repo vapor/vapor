@@ -1,12 +1,15 @@
 import Vapor
 
 final class TestRenderer: ViewRenderer {
+    var shouldCache: Bool
+
     let viewsDir: String
     var views: [String: Bytes]
 
     init(viewsDir: String) {
         self.viewsDir = viewsDir
         self.views = [:]
+        self.shouldCache = false
     }
 
     enum Error: Swift.Error {

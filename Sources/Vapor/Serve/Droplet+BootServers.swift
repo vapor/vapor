@@ -24,7 +24,7 @@ public struct ServerConfig {
 extension Droplet {
     public func serve(_ config: ServerConfig? = nil) throws -> Never {
         let config = try config ?? makeServerConfig()
-        let server = try self.server.init(
+        let server = try self.server.makeServer(
             hostname: config.hostname,
             port: config.port,
             config.securityLayer
@@ -37,8 +37,4 @@ extension Droplet {
         log.error("server did not block execution")
         exit(1)
     }
-}
-
-func cliPort(arguments: [String]) -> Port? {
-    return arguments.value(for: "port")?.int?.port
 }

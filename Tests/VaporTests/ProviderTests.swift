@@ -26,7 +26,7 @@ class ProviderTests: XCTestCase {
 
         drop.console = DebugConsole()
         try drop.addProvider(FastServerProvider.self)
-        drop.server = SlowServer.self
+        drop.server = ServerFactory<SlowServer>()
 
         XCTAssert(drop.server is SlowServer.Type)
     }
@@ -45,10 +45,11 @@ class ProviderTests: XCTestCase {
         let fast = try FastServerProvider(config: Config([:]))
         let slow = try SlowServerProvider(config: Config([:]))
 
-        let drop = try Droplet(arguments: ["vapor", "serve"]) // , console: dc, initializedProviders: [fast, slow]
-        drop.console = DebugConsole()
-        try drop.addProvider(fast)
-        try drop.addProvider(slow)
+        var config = Config([:])
+        config.arguments = ["vapor", "serve"]
+        try config.addProvider(fast)
+        try config.addProvider(slow)
+        let drop = try Droplet(config, console: DebugConsole())
 
         XCTAssert(drop.server is SlowServer.Type)
 
@@ -79,7 +80,7 @@ class ProviderTests: XCTestCase {
         try drop.addProvider(FastServerProvider.self)
         try drop.addProvider(FastServerProvider.self)
         XCTAssertEqual(drop.providers.count, 2)
-        XCTAssert(drop.server == FastServer.self)
+        XCTAssert(drop.server is ServerFactory<FastServer>)
     }
 }
 
@@ -112,13 +113,17 @@ private final class FastServerProvider: Provider {
 
     init(config: Configs.Config) throws {
     }
+    
+    func boot(_ config: inout Config) throws {
+        
+    }
 
     func beforeRun(_ drop: Droplet) {
         beforeRunFlag = true
     }
 
     func boot(_ drop: Droplet) {
-        drop.server = FastServer.self
+        drop.server = ServerFactory<FastServer>()
     }
 }
 
@@ -145,6 +150,10 @@ private final class SlowServer: ServerProtocol {
 }
 
 private final class SlowServerProvider: Provider {
+    func boot(_ config: inout Config) throws {
+        
+    }
+
     var afterInitFlag = false
     var beforeRunFlag = false
 
@@ -160,6 +169,6 @@ private final class SlowServerProvider: Provider {
     }
 
     func boot(_ drop: Droplet) {
-        drop.server = SlowServer.self
+        drop.server = ServerFactory<SlowServer>()
     }
 }

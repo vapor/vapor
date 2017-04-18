@@ -9,36 +9,12 @@ import Sockets
 public let VERSION = "2.0.0-beta"
 
 public class Droplet {
-    /// The arguments passed to the droplet.
-    public let arguments: [String]
-
-    /// The work directory of your droplet is
-    /// the directory in which your Resources, Public, etc
-    /// folders are stored. This is normally `./` if
-    /// you are running Vapor using `.build/xxx/app`
-    public let workDir: String
-
-    /// Resources directory relative to workDir
-    public var resourcesDir: String {
-        return workDir + "Resources/"
-    }
-
-    /// Views directory relative to the
-    /// resources directory.
-    public var viewsDir: String {
-        return resourcesDir + "Views/"
-    }
-
-    /// The current droplet environment
-    public let environment: Environment
-
     /// Provides access to config settings.
     public let config: Configs.Config
 
     /// Provides access to language specific
     /// strings and defaults.
     public let localization: Localization
-
 
     /// The router driver is responsible
     /// for returning registered `Route` handlers
@@ -48,7 +24,7 @@ public class Droplet {
     /// The server that will accept requesting
     /// connections and return the desired
     /// response.
-    public var server: ServerProtocol.Type
+    public var server: ServerFactoryProtocol
 
     /// Expose to end users to customize driver
     /// Make outgoing requests
@@ -61,6 +37,9 @@ public class Droplet {
     /// if you don't want to overwrite default behavior.
     public var middleware: [Middleware]
 
+    /// Send output and receive input from the console
+    /// using the underlying `ConsoleDriver`.
+    public var console: ConsoleProtocol
 
     /// Send informational and error logs.
     /// Defaults to the console.
@@ -79,181 +58,138 @@ public class Droplet {
     /// the droplet.
     public var commands: [Command]
 
-    /// Send output and receive input from the console
-    /// using the underlying `ConsoleDriver`.
-    public var console: ConsoleProtocol
-
     /// Render static and templated views.
     public var view: ViewRenderer
 
     /// Store and retreive key:value
     /// pair information.
     public var cache: CacheProtocol
-
-    /// The providers that have been added.
-    public internal(set) var providers: [Provider]
-
-    /// Storage to add/manage dependencies, identified by a string
-    public var storage: [String: Any]
-
+    
     /// Implemented by your email client
     public var mail: MailProtocol
 
-    /// The responder will be loaded the first time the droplet is asked
-    /// to respond to a request, this prevents having to construct it
-    /// for each request
-    ///
-    /// Loop through middlewares in order, then pass result to router responder
-    internal private(set) lazy var responder: Responder = self.middleware.chain(to: self.router)
-    
-    /// Initialize the Droplet.
-    public init(
-        arguments: [String]? = nil,
-        workDir workDirProvided: String? = nil,
-        environment environmentProvided: Environment? = nil,
-        config configProvided: Configs.Config? = nil,
-        localization localizationProvided: Localization? = nil,
-        log logProvided: LogProtocol? = nil
-    ) throws {
-        // use arguments provided in init or
-        // default to the arguments provided
-        // via the command line interface
-        let arguments = arguments ?? CommandLine.arguments
-        self.arguments = arguments
+    /// The providers that have been added.
+    public var providers: [Provider]
 
-        let terminal = Terminal(arguments: arguments)
+    /// The responder includes chained middleware
+    internal let responder: Responder
+    
+    /// Storage to add/manage dependencies, identified by a string
+    public var storage: [String: Any]
+    
+    public init(
+        _ config: Configs.Config? = nil,
+        localization localizationProvided: Localization? = nil,
+        router: Router? = nil,
+        server: ServerFactoryProtocol? = nil,
+        client: ClientFactoryProtocol? = nil,
+        middleware: [Middleware]? = nil,
+        console: ConsoleProtocol? = nil,
+        log: LogProtocol? = nil,
+        hash: HashProtocol? = nil,
+        cipher: CipherProtocol? = nil,
+        commands: [Command]? = nil,
+        view: ViewRenderer? = nil,
+        cache: CacheProtocol? = nil,
+        mail: MailProtocol? = nil,
+        providers: [Provider]? = nil
+    ) throws {
+        var config = try config ?? Config()
         
-        // the current droplet environment
-        let environment: Environment
-        if let provided = environmentProvided {
-            environment = provided
-        } else {
-            environment = CommandLine.environment ?? .development
+        // port override
+        if let port = config.arguments.value(for: "port")?.int {
+            try config.set("server.port", port)
         }
-        self.environment = environment
         
-        // use the working directory provided
-        // or attempt to find a working directory
-        // from the command line arguments or #file.
-        let workDir: String
-        if let provided = workDirProvided {
-            workDir = provided.finished(with: "/")
-        } else {
-            workDir = Droplet.workingDirectory(from: arguments).finished(with: "/")
-        }
-        self.workDir = workDir.finished(with: "/")
+        // configurable
+        try config.addConfigurable(ServerFactory<EngineServer>(), name: "engine")
+        try config.addConfigurable(ClientFactory<EngineClient>(), name: "engine")
+        try config.addConfigurable(Terminal(arguments: []), name: "terminal")
+        try config.addConfigurable({ config in
+            return try ConsoleLogger(config.resolve(ConsoleProtocol.self))
+        }, name: "console")
+        try config.addConfigurable({ config in
+            return StaticViewRenderer(viewsDir: config.viewsDir)
+        }, name: "static")
+        try config.addConfigurable(CryptoHasher.self, name: "crypto")
+        try config.addConfigurable(BCryptHasher.self, name: "bcrypt")
+        try config.addConfigurable(CryptoCipher.self, name: "crypto")
+        try config.addConfigurable(MemoryCache(), name: "memory")
+        try config.addConfigurable({ config in
+            return try ErrorMiddleware(config.environment, config.resolve(LogProtocol.self))
+        }, name: "error")
+        try config.addConfigurable(SessionsMiddleware(MemorySessions()), name: "sessions")
+        try config.addConfigurable(DateMiddleware(), name: "date")
+        try config.addConfigurable({ config in
+            return FileMiddleware(publicDir: config.workDir + "Public/")
+        }, name: "file")
         
-        // use the config item provided or
-        // attempt to create a config from
-        // the working directory and arguments
-        let config: Configs.Config
-        if let provided = configProvided {
-            config = provided
-        } else {
-            do {
-                let configDirectory = workDir.finished(with: "/") + "Config/"
-                config = try Configs.Config(
-                    prioritized: [
-                        .commandLine,
-                        .directory(root: configDirectory + "secrets"),
-                        .directory(root: configDirectory + environment.description),
-                        .directory(root: configDirectory)
-                    ]
-                )
-            } catch {
-                print("Could not load configuration files: \(error)")
-                config = Config([:])
-            }
+        // settings
+        let environment = config.environment
+        let localization: Localization
+        do {
+            localization = try localizationProvided
+                ?? Localization(localizationDirectory: config.localizationDir)
+        } catch {
+            print("Could not load localization files: \(error)")
+            localization = Localization()
         }
+        
+        // services
+        let router = router ?? Router()
+        let server = try server ?? config.resolve(ServerFactoryProtocol.self)
+        let client = try client ?? config.resolve(ClientFactoryProtocol.self)
+        let console = try console ?? config.resolve(ConsoleProtocol.self)
+        let log = try log ?? config.resolve(LogProtocol.self)
+        let hash = try hash ?? config.resolve(HashProtocol.self)
+        let cipher = try cipher ?? config.resolve(CipherProtocol.self)
+        let view = try view ?? config.resolve(ViewRenderer.self)
+        let cache = try cache ?? config.resolve(CacheProtocol.self)
+        let mail = try mail ?? config.resolve(MailProtocol.self)
+        let providers = providers ?? config.providers
+        
+        // service users
+        let commands = commands ?? [
+            VersionCommand(console),
+            RouteList(console, router),
+            DumpConfig(console, config)
+        ]
+        let middleware = try middleware ?? config.resolveArray(Middleware.self)
+        
+        // set
+        self.localization = localization
+        self.router = router
+        self.server = server
+        self.client = client
+        self.middleware = middleware
+        self.console = console
+        self.log = log
+        self.hash = hash
+        self.cipher = cipher
+        self.commands = commands
+        self.view = view
+        self.cache = cache
+        self.mail = mail
+        self.providers = providers
+        self.responder = middleware.chain(to: router)
+        self.storage = [:]
+        
+        // clear storage
+        config.storage = [:]
         self.config = config
         
-        self.log = try config.resolve(LogProtocol.self) ?? ConsoleLogger(console: terminal)
-        
-        // change logging based on env
-        switch environment {
-        case .production:
-            log.info("Production mode enabled, disabling informational logs.")
-            log.enabled = [.error, .fatal]
-        case .development:
-            log.enabled = [.info, .warning, .error, .fatal]
-        default:
-            log.enabled = LogLevel.all
-        }
-
-        // use the provided localization or
-        // initialize one from the working directory.
-        let localization: Localization
-        if let provided = localizationProvided {
-            localization = provided
-        } else {
-            do {
-                localization = try Localization(localizationDirectory: workDir + "Localization/")
-            } catch {
-                log.debug("Could not load localization files: \(error)")
-                localization = Localization()
-            }
-        }
-        self.localization = localization
-
-        // DEFAULTS
-
-        router = Router()
-        client = ClientFactory<EngineClient>()
-        server = EngineServer.self
-        middleware = []
-        console = terminal
-        commands = []
-        let renderer = StaticViewRenderer(viewsDir: workDir + "Resources/Views")
+        // post init
         if environment == .development {
             // disable cache by default in development
-            renderer.cache = nil
+            self.view.shouldCache = false
         }
-        view = renderer
-        cache = MemoryCache()
-        storage = [:]
-        providers = []
-        hash = CryptoHasher(hash: .sha1, encoding: .hex)
-        cipher = CryptoCipher(
-            method: .aes256(.cbc),
-            defaultKey: Bytes(repeating: 0, count: 16),
-            defaultIV: nil
-        )
-        mail = UnimplementedMailer()
-
-        // CONFIGURABLE
-        addConfigurable(server: EngineServer.self, name: "engine")
-        addConfigurable(client: client, name: "engine")
-        addConfigurable(console: terminal, name: "terminal")
-        addConfigurable(view: renderer, name: "static")
-        try addConfigurable(hash: CryptoHasher.self, name: "crypto")
-        try addConfigurable(hash: BCryptHasher.self, name: "bcrypt")
-        try addConfigurable(cipher: CryptoCipher.self, name: "crypto")
-        addConfigurable(cache: MemoryCache(), name: "memory")
-        addConfigurable(middleware: ErrorMiddleware(self), name: "error")
-        addConfigurable(middleware: SessionsMiddleware(MemorySessions()), name: "sessions")
-        addConfigurable(middleware: DateMiddleware(), name: "date")
-        addConfigurable(middleware: FileMiddleware(publicDir: workDir + "Public/"), name: "file")
-
-        if config["droplet", "middleware"]?.array == nil {
-            // if no configuration has been supplied
-            // apply all middleware
-            middleware = [
-                ErrorMiddleware(self),
-                DateMiddleware(),
-                FileMiddleware(publicDir: workDir + "Public/")
-            ]
-            log.debug("No `middleware` key in `droplet.json` found, using default middleware.")
-        }
-
-        // Post Init Defaults
-        commands.append(RouteList(self))
-        commands.append(DumpConfig(self))
         
+        // boot providers
         for provider in config.providers {
             try provider.boot(self)
         }
     }
-
+    
     func serverErrors(error: ServerError) {
         /// This error is thrown on read timeouts and is providing excess logging of expected behavior.
         /// We will continue to work to resolve the underlying issue associated with this error.

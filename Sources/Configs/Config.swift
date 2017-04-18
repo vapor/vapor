@@ -2,87 +2,85 @@
 
 public struct Config: StructuredDataWrapper {
     public var wrapped: StructuredData
-    public let context: Context
+    public var context: Context
+    
+    /// The arguments passed to theConfig
+    public var arguments: [String]
+    
+    /// The current droplet environment
+    public var environment: Environment
+    
+    /// For building onto the Config object
     public var storage: [String: Any]
 
     public init(_ wrapped: StructuredData, in context: Context?) {
         self.wrapped = wrapped.hydratedEnv() ?? StructuredData([:])
         self.context = context ?? emptyContext
+        self.arguments = []
+        self.environment = .development
         self.storage = [:]
     }
 
-    public init(prioritized: [Source]) throws {
+    public init(
+        prioritized: [Source],
+        arguments: [String] = CommandLine.arguments,
+        environment: Environment = .development
+    ) throws {
         let node = try Node.makeConfig(prioritized: prioritized)
-        self.init(node: node)
+        self.wrapped = node.wrapped
+        self.context = emptyContext
+        self.arguments = arguments
+        self.environment = environment
+        self.storage = [:]
+    }
+    
+    public init(arguments: [String] = CommandLine.arguments) throws {
+        self = try Config.default(arguments: arguments)
     }
 }
 
 extension Config {
-    public static func `default`(withEnv env: String? = nil) throws -> Config {
+    public static func `default`(
+        arguments: [String] = CommandLine.arguments
+    ) throws -> Config {
+        let env = arguments.environment ?? .development
+        
         let configDirectory = workingDirectory() + "Config/"
         var sources = [Source]()
         sources.append(.commandLine)
         sources.append(.directory(root: configDirectory + "secrets"))
-        if let env = env {
-            sources.append(.directory(root: configDirectory + env))
-        }
+        sources.append(.directory(root: configDirectory + env.description))
         sources.append(.directory(root: configDirectory))
 
-        return try Config(prioritized: sources)
+        return try Config(
+            prioritized: sources,
+            arguments: arguments,
+            environment: env
+        )
     }
 
-    static func workingDirectory() -> String {
-        #if swift(>=3.1)
-            let parts = #file.components(separatedBy: "/.build")
-        #else
-            let parts = #file.components(separatedBy: "/Packages/")
-        #endif
-        return parts.first?.finished(with: "/") ?? "./"
-    }
-}
-
-/// Typical errors that may happen
-/// during the parsing of Vapor json
-/// configuration files.
-public enum ConfigError: Error {
-    case unavailable(
-        value: String,
-        key: [String],
-        file: String,
-        available: [String],
-        type: Any.Type
-    )
-    case unsupported(value: String, key: [String], file: String)
-    case missing(key: [String], file: String, desiredType: Any.Type)
-    case missingFile(String)
-    case unspecified(Error)
-    case unsupportedType(Any.Type)
-}
-
-extension ConfigError: CustomStringConvertible {
-    public var description: String {
-        let reason: String
-
-        switch self {
-        case .unsupported(let value, let key, let file):
-            let keyPath = key.joined(separator: ".")
-            reason = "Unsupported value \(value) for key \(keyPath) in Config/\(file).json"
-        case .missing(let key, let file, let desiredType):
-            let keyPath = key.joined(separator: ".")
-            reason = "Key \(keyPath) in Config/\(file).json of type \(desiredType) required."
-        case .missingFile(let file):
-            reason = "Config/\(file).json required."
-        case .unavailable(let value, let key, let file, let available, let type):
-            let list = available.joined(separator: ", ")
-            let keyPath = key.joined(separator: ".")
-            reason = "A \(type) named \(value) (chosen at \(keyPath) in Config/\(file).json) was not found (available: \(list))."
-        case .unsupportedType(let type):
-            reason = "Type \(type) not supported"
-        case .unspecified(let error):
-            reason = "\(error)"
+    public static func workingDirectory(
+        from arguments: [String] = CommandLine.arguments
+    ) -> String {
+        func fileWorkDirectory() -> String? {
+            #if swift(>=3.1)
+                let parts = #file.components(separatedBy: "/.build")
+            #else
+                let parts = #file.components(separatedBy: "/Packages/Vapor-")
+            #endif
+            guard parts.count == 2 else {
+                return nil
+            }
+            
+            return parts.first
         }
-
-        return "Configuration error: \(reason)"
+        
+        let workDir = arguments.value(for: "workdir")
+            ?? arguments.value(for: "workDir")
+            ?? fileWorkDirectory()
+            ?? "./"
+        
+        return workDir.finished(with: "/")
     }
 }
 

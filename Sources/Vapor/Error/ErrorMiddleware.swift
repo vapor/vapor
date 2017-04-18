@@ -3,16 +3,18 @@ import HTTP
 fileprivate let errorView = ErrorView()
 
 public final class ErrorMiddleware: Middleware {
-    unowned let drop: Droplet
-    public init(_ drop: Droplet) {
-        self.drop = drop
+    let log: LogProtocol
+    let environment: Environment
+    public init(_ environment: Environment, _ log: LogProtocol) {
+        self.log = log
+        self.environment = environment
     }
     
     public func respond(to req: Request, chainingTo next: Responder) throws -> Response {
         do {
             return try next.respond(to: req)
         } catch {
-            drop.log.error(error)
+            log.error(error)
             return make(with: req, for: error)
         }
     }
@@ -29,7 +31,7 @@ public final class ErrorMiddleware: Middleware {
         
         let status = Status(error)
         let response = Response(status: status)
-        response.json = JSON(error, env: drop.environment)
+        response.json = JSON(error, env: environment)
         return response
     }
 }

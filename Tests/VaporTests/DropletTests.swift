@@ -34,10 +34,13 @@ class DropletTests: XCTestCase {
         let parent = #file.characters.split(separator: "/").map(String.init).dropLast(3).joined(separator: "/")
         let workDir = "/\(parent)/Sources/Development/"
 
-        let drop = try Droplet(workDir: workDir)
+        let config = try Config(node: [
+            "droplet": ["workDir": workDir]
+        ])
+        let drop = try Droplet(config)
 
         drop.middleware = [
-            FileMiddleware(publicDir: drop.workDir + "Public/")
+            FileMiddleware(publicDir: drop.config.workDir + "Public/")
         ]
 
         let request = Request(method: .get, path: "styles/app.css")
@@ -67,11 +70,13 @@ class DropletTests: XCTestCase {
             ]
         ])
 
-        _ = try Droplet(config: config)
+        _ = try Droplet(config)
     }
 
     func testRunDefaults() throws {
-        let drop = try Droplet(arguments: ["vapor", "serve", "--port=8523"])
+        var config = Config([:])
+        config.arguments = ["vapor", "serve", "--port=8523"]
+        let drop = try Droplet(config)
 
         drop.get("foo") { req in
             return "bar"
@@ -88,12 +93,12 @@ class DropletTests: XCTestCase {
                 "securityLayer": "none"
             ]
         ])
-        let drop = try Droplet(arguments: ["vapor", "serve"], config: config)
+        let drop = try Droplet(config)
         XCTAssertEqual(try drop.makeServerConfig().port, 8524)
     }
 
     func testHeadRequest() throws {
-        let drop = try Droplet(arguments: ["vapor", "serve"])
+        let drop = try Droplet()
         drop.get("foo") { req in
             return "Hi, I'm a body"
         }
@@ -134,14 +139,15 @@ class DropletTests: XCTestCase {
     }
     
     func testDumpConfig() throws {
-        let config = Config([
+        var config = Config([
             "server": [
                 "hostname": "0.0.0.0",
                 "port": 8524,
                 "securityLayer": "none"
             ]
         ])
-        let drop = try Droplet(arguments: ["vapor", "dump-config", "server.port"], config: config)
+        config.arguments = ["vapor", "dump-config", "server.port"]
+        let drop = try Droplet(config)
         try drop.runCommands()
     }
 }

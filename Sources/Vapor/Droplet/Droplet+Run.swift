@@ -25,7 +25,7 @@ extension Droplet {
         addServeCommandIfNecessary(server: server)
 
         // the version command prints the frameworks version.
-        let version = VersionCommand(console: console)
+        let version = VersionCommand(console)
         // adds the commands
         commands.append(version)
         
@@ -33,7 +33,7 @@ extension Droplet {
             try provider.beforeRun(self)
         }
 
-        var iterator = arguments.makeIterator()
+        var iterator = config.arguments.makeIterator()
 
         guard let executable = iterator.next() else {
             throw CommandError.general("No executable.")

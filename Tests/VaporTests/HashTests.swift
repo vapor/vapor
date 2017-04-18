@@ -49,7 +49,7 @@ class HashTests: XCTestCase {
                 "hash": "crypto"
             ]
         ])
-        let drop = try Droplet(config: config)
+        let drop = try Droplet(config)
         let result = try drop.hash.make(string).makeString()
         XCTAssert(defaultExpected == result, "Hash did not match")
     }
@@ -83,7 +83,7 @@ class HashTests: XCTestCase {
                 "cost": workFactor
             ]
         ])
-        let drop = try Droplet(config: config)
+        let drop = try Droplet(config)
         let result = try drop.hash.make(string).makeString()
 
         let other = BCryptHasher(cost: workFactor)

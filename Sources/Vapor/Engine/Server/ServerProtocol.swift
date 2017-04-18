@@ -19,21 +19,3 @@ public protocol ServerProtocol {
         errors: @escaping ServerErrorHandler
     ) throws
 }
-
-// MARK: TLS
-
-private var _defaultTLSServerContext: () throws -> (TLS.Context) = {
-    return try Context(.server)
-}
-
-extension ServerProtocol {
-    public static var defaultTLSContext: () throws -> (TLS.Context) {
-        get {
-            return _defaultTLSServerContext
-        }
-        set {
-            _defaultTLSServerContext = newValue
-        }
-
-    }
-}

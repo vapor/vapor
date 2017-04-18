@@ -21,7 +21,7 @@ class MiddlewareTests: XCTestCase {
             ]
         ])
 
-        let drop = try Droplet(config: config)
+        let drop = try Droplet(config)
         drop.get { _ in
             return "Hello, world"
         }
@@ -36,7 +36,7 @@ class MiddlewareTests: XCTestCase {
         var config = Config([:])
         try config.set("droplet.middleware", ["abort"])
 
-        let drop = try Droplet(config: config)
+        let drop = try Droplet(config)
         drop.get { _ in
             return "Hello, world"
         }

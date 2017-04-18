@@ -16,7 +16,7 @@ public class ConsoleLogger: LogProtocol {
         Creates an instance of `ConsoleLogger`
         with the desired `Console`.
     */
-    public init(console: ConsoleProtocol) {
+    public init(_ console: ConsoleProtocol) {
         self.console = console
         enabled = LogLevel.all
     }
