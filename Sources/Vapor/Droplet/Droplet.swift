@@ -235,8 +235,8 @@ public class Droplet {
         try addConfigurable(hash: BCryptHasher.self, name: "bcrypt")
         try addConfigurable(cipher: CryptoCipher.self, name: "crypto")
         addConfigurable(cache: MemoryCache(), name: "memory")
-        addConfigurable(middleware: SessionsMiddleware(MemorySessions()), name: "sessions")
         addConfigurable(middleware: ErrorMiddleware(self), name: "error")
+        addConfigurable(middleware: SessionsMiddleware(MemorySessions()), name: "sessions")
         addConfigurable(middleware: DateMiddleware(), name: "date")
         addConfigurable(middleware: FileMiddleware(publicDir: workDir + "Public/"), name: "file")
 
