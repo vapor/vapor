@@ -19,27 +19,27 @@ public class Droplet {
     /// The router driver is responsible
     /// for returning registered `Route` handlers
     /// for a given request.
-    public var router: Router
+    public let router: Router
 
     /// The server that will accept requesting
     /// connections and return the desired
     /// response.
-    public var server: ServerFactoryProtocol
+    public let server: ServerFactoryProtocol
 
     /// Expose to end users to customize driver
     /// Make outgoing requests
-    public var client: ClientFactoryProtocol
+    public let client: ClientFactoryProtocol
 
     /// `Middleware` will be applied in the order
     /// it is set in this array.
     /// 
     /// Make sure to append your custom `Middleware`
     /// if you don't want to overwrite default behavior.
-    public var middleware: [Middleware]
+    public let middleware: [Middleware]
 
     /// Send output and receive input from the console
     /// using the underlying `ConsoleDriver`.
-    public var console: ConsoleProtocol
+    public let console: ConsoleProtocol
 
     /// Send informational and error logs.
     /// Defaults to the console.
@@ -47,29 +47,26 @@ public class Droplet {
 
     /// Provides access to the underlying
     /// `HashProtocol` for hashing data.
-    public var hash: HashProtocol
+    public let hash: HashProtocol
 
     /// Provides access to the underlying
     /// `CipherProtocol` for encrypting and
     /// decrypting data.
-    public var cipher: CipherProtocol
+    public let cipher: CipherProtocol
 
     /// Available Commands to use when starting
     /// the droplet.
     public var commands: [Command]
 
     /// Render static and templated views.
-    public var view: ViewRenderer
+    public let view: ViewRenderer
 
     /// Store and retreive key:value
     /// pair information.
-    public var cache: CacheProtocol
+    public let cache: CacheProtocol
     
     /// Implemented by your email client
-    public var mail: MailProtocol
-
-    /// The providers that have been added.
-    public var providers: [Provider]
+    public let mail: MailProtocol
 
     /// The responder includes chained middleware
     internal let responder: Responder
@@ -80,19 +77,7 @@ public class Droplet {
     public init(
         _ config: Configs.Config? = nil,
         localization localizationProvided: Localization? = nil,
-        router: Router? = nil,
-        server: ServerFactoryProtocol? = nil,
-        client: ClientFactoryProtocol? = nil,
-        middleware: [Middleware]? = nil,
-        console: ConsoleProtocol? = nil,
-        log: LogProtocol? = nil,
-        hash: HashProtocol? = nil,
-        cipher: CipherProtocol? = nil,
-        commands: [Command]? = nil,
-        view: ViewRenderer? = nil,
-        cache: CacheProtocol? = nil,
-        mail: MailProtocol? = nil,
-        providers: [Provider]? = nil
+        commands: [Command]? = nil
     ) throws {
         var config = try config ?? Config()
         
@@ -124,6 +109,18 @@ public class Droplet {
             return FileMiddleware(publicDir: config.workDir + "Public/")
         }, name: "file")
         
+        // services
+        let router = Router()
+        let server = try config.resolve(ServerFactoryProtocol.self)
+        let client = try config.resolve(ClientFactoryProtocol.self)
+        let console = try config.resolve(ConsoleProtocol.self)
+        let log = try config.resolve(LogProtocol.self)
+        let hash = try config.resolve(HashProtocol.self)
+        let cipher = try config.resolve(CipherProtocol.self)
+        let view = try config.resolve(ViewRenderer.self)
+        let cache = try config.resolve(CacheProtocol.self)
+        let mail = try config.resolve(MailProtocol.self)
+        
         // settings
         let environment = config.environment
         let localization: Localization
@@ -131,30 +128,52 @@ public class Droplet {
             localization = try localizationProvided
                 ?? Localization(localizationDirectory: config.localizationDir)
         } catch {
-            print("Could not load localization files: \(error)")
+            log.debug("Could not load localization files: \(error)")
             localization = Localization()
         }
         
-        // services
-        let router = router ?? Router()
-        let server = try server ?? config.resolve(ServerFactoryProtocol.self)
-        let client = try client ?? config.resolve(ClientFactoryProtocol.self)
-        let console = try console ?? config.resolve(ConsoleProtocol.self)
-        let log = try log ?? config.resolve(LogProtocol.self)
-        let hash = try hash ?? config.resolve(HashProtocol.self)
-        let cipher = try cipher ?? config.resolve(CipherProtocol.self)
-        let view = try view ?? config.resolve(ViewRenderer.self)
-        let cache = try cache ?? config.resolve(CacheProtocol.self)
-        let mail = try mail ?? config.resolve(MailProtocol.self)
-        let providers = providers ?? config.providers
+        let middleware = try config.resolveArray(Middleware.self)
         
-        // service users
-        let commands = commands ?? [
+        
+        let chain = middleware.chain(to: router)
+        let responder = Request.Handler { request in
+            log.info("\(request.method) \(request.uri.path)")
+            
+            let isHead = request.method == .head
+            if isHead {
+                /// The HEAD method is identical to GET.
+                ///
+                /// https://tools.ietf.org/html/rfc2616#section-9.4
+                request.method = .get
+            }
+            
+            let response: Response
+            do {
+                response = try chain.respond(to: request)
+            } catch {
+                log.error("Uncaught error: \(type(of: error))")
+                log.error(error)
+                log.info("Use `ErrorMiddleware` or catch \(type(of: error)) to provide a better error response.")
+                response = Response(status: .internalServerError)
+            }
+            
+            if isHead {
+                /// The server MUST NOT return a message-body in the response for HEAD.
+                ///
+                /// https://tools.ietf.org/html/rfc2616#section-9.4
+                response.body = .data([])
+            }
+            
+            return response
+        }
+        
+        // commands
+        let commands = try commands ?? [
             VersionCommand(console),
             RouteList(console, router),
-            DumpConfig(console, config)
+            DumpConfig(console, config),
+            Serve(console, server, responder, log, config.makeServerConfig())
         ]
-        let middleware = try middleware ?? config.resolveArray(Middleware.self)
         
         // set
         self.localization = localization
@@ -170,12 +189,10 @@ public class Droplet {
         self.view = view
         self.cache = cache
         self.mail = mail
-        self.providers = providers
-        self.responder = middleware.chain(to: router)
+        self.responder = responder
         self.storage = [:]
         
-        // clear storage
-        config.storage = [:]
+        // set config
         self.config = config
         
         // post init
@@ -191,17 +208,6 @@ public class Droplet {
     }
     
     func serverErrors(error: ServerError) {
-        /// This error is thrown on read timeouts and is providing excess logging of expected behavior.
-        /// We will continue to work to resolve the underlying issue associated with this error.
-        ///https://github.com/vapor/vapor/issues/678
-        if
-            case .dispatch(let dispatch) = error,
-            let sockets = dispatch as? SocketsError,
-            sockets.number == 35
-        {
-            return
-        }
 
-        log.error("Server error: \(error)")
     }
 }

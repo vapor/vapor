@@ -31,10 +31,32 @@ extension Config {
         configurable[key] = C.lazy()
     }
     
+    // MARK: Override
+    
+    internal var override: [String: Any] {
+        get { return storage[overrideKey] as? [String: Any] ?? [:] }
+        set { storage[overrideKey] = newValue }
+    }
+    
+    public mutating func addOverride<C>(_ item: C) throws {
+        let key = try self.key(for: C.self)
+        override[key] = item
+    }
+    
+    public mutating func addOverride(middleware: [Middleware]) throws {
+        let key = try self.key(for: Middleware.self)
+        // middleware array needs to be casted to pure [Middleware]
+        override[key] = middleware
+    }
+    
     // MARK: Resolve
     
     public func resolve<C>(_ c: C.Type) throws -> C {
         let key = try self.key(for: C.self)
+        
+        if let override = self.override[key] as? C {
+            return override
+        }
 
         guard let chosen = self["droplet", key]?.string else {
             return try defaultItem(for: C.self)
@@ -60,6 +82,10 @@ extension Config {
     
     public func resolveArray<C>(_ c: C.Type) throws -> [C] {
         let key = try self.key(for: C.self)
+        
+        if let override = self.override[key] as? [C] {
+            return override
+        }
         
         guard let chosen = self["droplet", key]?.array?.flatMap({ $0.string }) else {
             return try defaultItem(for: [C].self)
@@ -190,7 +216,7 @@ extension Config {
         resourcesDir = resourcesDir.finished(with: "/")
         return resourcesDir
     }
-   Z
+
     /// Views directory relative to the
     /// resources directory.
     public var viewsDir: String {

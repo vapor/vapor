@@ -11,8 +11,7 @@ class DropletTests: XCTestCase {
         ("testTLSConfig", testTLSConfig),
         ("testRunDefaults", testRunDefaults),
         ("testRunConfig", testRunConfig),
-        ("testHeadRequest", testHeadRequest),
-        ("testMiddlewareOrder", testMiddlewareOrder),
+        ("testHeadRequest", testHeadRequest)
     ]
 
     func testData() {
@@ -39,13 +38,9 @@ class DropletTests: XCTestCase {
         ])
         let drop = try Droplet(config)
 
-        drop.middleware = [
-            FileMiddleware(publicDir: drop.config.workDir + "Public/")
-        ]
-
         let request = Request(method: .get, path: "styles/app.css")
 
-        let response = drop.respond(to: request)
+        let response = try drop.respond(to: request)
 
         var found = false
         for header in response.headers {
@@ -82,7 +77,7 @@ class DropletTests: XCTestCase {
             return "bar"
         }
         
-        XCTAssertEqual(try drop.makeServerConfig().port, 8523)
+        XCTAssertEqual(try drop.config.makeServerConfig().port, 8523)
     }
 
     func testRunConfig() throws {
@@ -93,8 +88,7 @@ class DropletTests: XCTestCase {
                 "securityLayer": "none"
             ]
         ])
-        let drop = try Droplet(config)
-        XCTAssertEqual(try drop.makeServerConfig().port, 8524)
+        XCTAssertEqual(try config.makeServerConfig().port, 8524)
     }
 
     func testHeadRequest() throws {
@@ -107,35 +101,8 @@ class DropletTests: XCTestCase {
         XCTAssertEqual(try getResp.bodyString(), "Hi, I'm a body")
 
         let head = try Request(method: .head, uri: "http://0.0.0.0:9222/foo")
-        let headResp = drop.respond(to: head)
+        let headResp = try drop.respond(to: head)
         XCTAssertEqual(try headResp.bodyString(), "")
-    }
-
-    func testMiddlewareOrder() throws {
-        struct Mid: Middleware {
-            let handler: () -> Void
-
-            func respond(to request: Request, chainingTo next: Responder) throws -> Response {
-                handler()
-                return try next.respond(to: request)
-            }
-        }
-
-        var middleware: [String] = []
-
-        let drop = try Droplet()
-        drop.middleware = [
-            Mid(handler: { middleware.append("one") }),
-            Mid(handler: { middleware.append("two") })
-        ]
-
-        drop.get { req in return "foo" }
-
-        let req = Request(method: .get, path: "")
-        let response = drop.respond(to: req)
-        XCTAssertEqual(try response.bodyString(), "foo")
-
-        XCTAssertEqual(middleware, ["one", "two"])
     }
     
     func testDumpConfig() throws {

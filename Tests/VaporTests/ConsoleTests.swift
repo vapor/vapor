@@ -16,7 +16,8 @@ class ConsoleTests: XCTestCase {
         let console = TestConsoleDriver()
         var config = Config([:])
         config.arguments = ["/path/to/exe", "test-1"]
-        let drop = try Droplet(config, console: console)
+        try config.addOverride(console)
+        let drop = try Droplet(config)
 
         drop.commands = [
             TestOneCommand(console: console)
@@ -35,7 +36,8 @@ class ConsoleTests: XCTestCase {
         
         var config = Config([:])
         config.arguments = ["/path/to/exe", "test-2"]
-        let drop = try Droplet(config, console: console)
+        try config.addOverride(console)
+        let drop = try Droplet(config)
 
         let command = TestTwoCommand(console: console)
         drop.commands = [
@@ -54,9 +56,8 @@ class ConsoleTests: XCTestCase {
         let console = TestConsoleDriver()
         var config = Config([:])
         config.arguments = ["run", "version"]
+        try config.addOverride(console)
         let drop = try Droplet(config)
-
-        drop.console = console
 
         let command = VersionCommand(console)
         drop.commands = [
@@ -70,9 +71,8 @@ class ConsoleTests: XCTestCase {
         let console = TestConsoleDriver()
         var config = Config([:])
         config.arguments = ["/path/to/ext", "test-2", "123"]
+        try config.addOverride(console)
         let drop = try Droplet(config)
-
-        drop.console = console
 
         let command = TestTwoCommand(console: console)
         drop.commands = [
@@ -93,9 +93,8 @@ class ConsoleTests: XCTestCase {
         
         var config = Config([:])
         config.arguments = ["/path/to/ext", "test-2", "123", "--opt-1=abc"]
+        try config.addOverride(console)
         let drop = try Droplet(config)
-
-        drop.console = console
 
         let command = TestTwoCommand(console: console)
         drop.commands = [
@@ -125,7 +124,9 @@ class ConsoleTests: XCTestCase {
             }
         }
 
-        let drop = try Droplet()
+        var config = Config([:])
+        config.arguments = ["vapor"]
+        let drop = try Droplet(config)
         drop.commands = [TestServe(console: drop.console)]
 
         do {

@@ -18,23 +18,3 @@ public struct ServerConfig {
         self.securityLayer = securityLayer
     }
 }
-
-// MARK: Booting
-
-extension Droplet {
-    public func serve(_ config: ServerConfig? = nil) throws -> Never {
-        let config = try config ?? makeServerConfig()
-        let server = try self.server.makeServer(
-            hostname: config.hostname,
-            port: config.port,
-            config.securityLayer
-        )
-
-        console.info("Starting server on \(config.hostname):\(config.port)")
-        try server.start(self, errors: serverErrors)
-
-        // don't enforce -> Never on protocol because of Swift warnings
-        log.error("server did not block execution")
-        exit(1)
-    }
-}

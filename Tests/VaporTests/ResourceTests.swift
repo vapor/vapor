@@ -11,8 +11,6 @@ class ResourceTests: XCTestCase {
     func testBasic() throws {
         let drop = try Droplet()
 
-        drop.middleware = []
-
         let user = try User(from: "Hi")
         let node = try user?.makeNode(in: nil)
         XCTAssertEqual(node, .object(["name":"Hi"]))

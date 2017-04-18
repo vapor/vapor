@@ -22,11 +22,10 @@ public protocol Provider: ConfigInitializable {
     static var repositoryName: String { get }
     
     /// Called after the provider has initialized
-    // in the `Config.addProvider` call
+    // in the `Config.addProvider` call.
     func boot(_ config: inout Config) throws
 
-    /// Called after the provider has initialized
-    /// in the `addProvider` call.
+    /// Called after the Droplet has initialized.
     func boot(_ droplet: Droplet) throws
 
     /// Called before the Droplet begins serving

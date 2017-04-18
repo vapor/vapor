@@ -22,10 +22,13 @@ class RouteListTests: XCTestCase {
         // Setup drop routes
         var config = Config([:])
         config.arguments = ["vapor", "routes"]
-        let drop = try Droplet(config, console: console)
+        try config.addOverride(console)
+        let drop = try Droplet(config)
         drop.get("foo") { _ in return "" }
         drop.put("foo/bar/:id") { _ in return "" }
 
+        console.buffer = []
+        
         // Run command
         try drop.runCommands()
 

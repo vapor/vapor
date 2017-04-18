@@ -12,8 +12,9 @@ class SessionsTests: XCTestCase {
     func testExample() throws {
         let s = MemorySessions()
         let m = SessionsMiddleware(s)
-        
-        let drop = try Droplet(middleware: [m])
+        var config = Config([:])
+        try config.addOverride(middleware: [m])
+        let drop = try Droplet(config)
 
         drop.get("set") { req in
             try req.assertSession().data["foo"] = "bar"
@@ -26,7 +27,7 @@ class SessionsTests: XCTestCase {
         }
 
         let req = Request(method: .get, path: "set")
-        let res = drop.respond(to: req)
+        let res = try drop.respond(to: req)
 
         guard let c = res.cookies["vapor-session"] else {
             XCTFail("No cookie")
@@ -45,7 +46,7 @@ class SessionsTests: XCTestCase {
 
         let req2 = Request(method: .get, path: "get")
         req2.cookies["vapor-session"] = c
-        let res2 = drop.respond(to: req2)
+        let res2 = try drop.respond(to: req2)
 
         XCTAssertEqual(res2.body.bytes?.makeString(), "bar")
     }

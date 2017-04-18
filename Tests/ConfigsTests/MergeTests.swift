@@ -4,7 +4,7 @@ import Node
 
 var configDir: String {
     let parent = #file.characters.split(separator: "/").map(String.init).dropLast().joined(separator: "/")
-    let path = "/\(parent)/../../Sources/Settings/TestFiles"
+    let path = "/\(parent)/../../Sources/Configs/TestFiles"
     return path
 }
 
