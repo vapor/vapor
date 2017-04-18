@@ -33,7 +33,7 @@ public class Droplet {
     public let environment: Environment
 
     /// Provides access to config settings.
-    public let config: Settings.Config
+    public let config: Configs.Config
 
     /// Provides access to language specific
     /// strings and defaults.
@@ -64,7 +64,7 @@ public class Droplet {
 
     /// Send informational and error logs.
     /// Defaults to the console.
-    public var log: LogProtocol
+    public let log: LogProtocol
 
     /// Provides access to the underlying
     /// `HashProtocol` for hashing data.
@@ -74,7 +74,6 @@ public class Droplet {
     /// `CipherProtocol` for encrypting and
     /// decrypting data.
     public var cipher: CipherProtocol
-
 
     /// Available Commands to use when starting
     /// the droplet.
@@ -106,13 +105,13 @@ public class Droplet {
     ///
     /// Loop through middlewares in order, then pass result to router responder
     internal private(set) lazy var responder: Responder = self.middleware.chain(to: self.router)
-
+    
     /// Initialize the Droplet.
     public init(
         arguments: [String]? = nil,
         workDir workDirProvided: String? = nil,
         environment environmentProvided: Environment? = nil,
-        config configProvided: Settings.Config? = nil,
+        config configProvided: Configs.Config? = nil,
         localization localizationProvided: Localization? = nil,
         log logProvided: LogProtocol? = nil
     ) throws {
@@ -123,13 +122,7 @@ public class Droplet {
         self.arguments = arguments
 
         let terminal = Terminal(arguments: arguments)
-        if let provided = logProvided  {
-            self.log = provided
-        } else {
-            // logging is needed for emitting errors
-            self.log = ConsoleLogger(console: terminal)
-        }
-
+        
         // the current droplet environment
         let environment: Environment
         if let provided = environmentProvided {
@@ -138,18 +131,7 @@ public class Droplet {
             environment = CommandLine.environment ?? .development
         }
         self.environment = environment
-
-        // change logging based on env
-        switch environment {
-        case .production:
-            log.info("Production mode enabled, disabling informational logs.")
-            log.enabled = [.error, .fatal]
-        case .development:
-            log.enabled = [.info, .warning, .error, .fatal]
-        default:
-            log.enabled = LogLevel.all
-        }
-
+        
         // use the working directory provided
         // or attempt to find a working directory
         // from the command line arguments or #file.
@@ -160,17 +142,17 @@ public class Droplet {
             workDir = Droplet.workingDirectory(from: arguments).finished(with: "/")
         }
         self.workDir = workDir.finished(with: "/")
-
+        
         // use the config item provided or
         // attempt to create a config from
         // the working directory and arguments
-        let config: Settings.Config
+        let config: Configs.Config
         if let provided = configProvided {
             config = provided
         } else {
             do {
                 let configDirectory = workDir.finished(with: "/") + "Config/"
-                config = try Settings.Config(
+                config = try Configs.Config(
                     prioritized: [
                         .commandLine,
                         .directory(root: configDirectory + "secrets"),
@@ -179,11 +161,24 @@ public class Droplet {
                     ]
                 )
             } catch {
-                log.debug("Could not load configuration files: \(error)")
+                print("Could not load configuration files: \(error)")
                 config = Config([:])
             }
         }
         self.config = config
+        
+        self.log = try config.resolve(LogProtocol.self) ?? ConsoleLogger(console: terminal)
+        
+        // change logging based on env
+        switch environment {
+        case .production:
+            log.info("Production mode enabled, disabling informational logs.")
+            log.enabled = [.error, .fatal]
+        case .development:
+            log.enabled = [.info, .warning, .error, .fatal]
+        default:
+            log.enabled = LogLevel.all
+        }
 
         // use the provided localization or
         // initialize one from the working directory.
@@ -230,7 +225,6 @@ public class Droplet {
         addConfigurable(client: client, name: "engine")
         addConfigurable(console: terminal, name: "terminal")
         addConfigurable(view: renderer, name: "static")
-        addConfigurable(log: log, name: "console")
         try addConfigurable(hash: CryptoHasher.self, name: "crypto")
         try addConfigurable(hash: BCryptHasher.self, name: "bcrypt")
         try addConfigurable(cipher: CryptoCipher.self, name: "crypto")
@@ -254,6 +248,10 @@ public class Droplet {
         // Post Init Defaults
         commands.append(RouteList(self))
         commands.append(DumpConfig(self))
+        
+        for provider in config.providers {
+            try provider.boot(self)
+        }
     }
 
     func serverErrors(error: ServerError) {

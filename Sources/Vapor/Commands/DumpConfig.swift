@@ -1,5 +1,5 @@
 import Console
-import Settings
+import Configs
 
 public final class DumpConfig: Command {
     public let id = "dump-config"

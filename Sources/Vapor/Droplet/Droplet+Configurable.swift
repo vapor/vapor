@@ -34,30 +34,6 @@ extension Droplet {
     }
 }
 
-
-
-// MARK: Log
-
-extension Droplet {
-    public func addConfigurable(log: LogProtocol, name: String) {
-        if config["droplet", "log"]?.string == name {
-            self.log = log
-            self.log.debug("Using log '\(name)'.")
-        } else {
-            self.log.debug("Not using log '\(name)'.")
-        }
-    }
-
-    public func addConfigurable<L: LogProtocol & ConfigInitializable>(log: L.Type, name: String) throws {
-        if config["droplet", "log"]?.string == name {
-            self.log = try log.init(config: config)
-            self.log.debug("Using log '\(name)'.")
-        } else {
-            self.log.debug("Not using log '\(name)'.")
-        }
-    }
-}
-
 // MARK: Hash
 
 extension Droplet {

@@ -21,8 +21,8 @@ public class CORSMiddleware: Middleware {
     /// Creates the CORS middleware from the values contained in the settings config json file.
     ///
     /// - Parameter configuration: The settings configuration.
-    /// - Throws: Exception if the `CORSConfiugration` couldn't be parsed out of `Settings.Config`.
-    public convenience init(configuration: Settings.Config) throws {
+    /// - Throws: Exception if the `CORSConfiugration` couldn't be parsed out of `Configs.Config`.
+    public convenience init(configuration: Configs.Config) throws {
         let configuration = try CORSConfiguration(config: configuration)
         self.init(configuration: configuration)
     }

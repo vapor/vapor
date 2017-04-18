@@ -20,6 +20,10 @@ public protocol Provider: ConfigInitializable {
     /// it is HIGHLY recommended to provide a static let
     /// for performance considerations
     static var repositoryName: String { get }
+    
+    /// Called after the provider has initialized
+    // in the `Config.addProvider` call
+    func boot(_ config: inout Config) throws
 
     /// Called after the provider has initialized
     /// in the `addProvider` call.
@@ -29,6 +33,16 @@ public protocol Provider: ConfigInitializable {
     /// which is @noreturn.
     func beforeRun(_ droplet: Droplet) throws
 }
+
+// MARK: Optional
+
+extension Provider {
+    public func boot(_ config: Config) throws {
+        
+    }
+}
+
+// MARK: Name
 
 extension Provider {
     public static var name: String {
@@ -46,6 +60,8 @@ extension Provider {
         return type(of: self).name
     }
 }
+
+// MARK: Repo name
 
 extension Provider {
     public static var repositoryName: String {

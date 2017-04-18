@@ -110,7 +110,7 @@ private final class FastServer: ServerProtocol {
 private final class FastServerProvider: Provider {
     var beforeRunFlag = false
 
-    init(config: Settings.Config) throws {
+    init(config: Configs.Config) throws {
     }
 
     func beforeRun(_ drop: Droplet) {
@@ -148,7 +148,7 @@ private final class SlowServerProvider: Provider {
     var afterInitFlag = false
     var beforeRunFlag = false
 
-    init(config: Settings.Config) throws {
+    init(config: Configs.Config) throws {
     }
 
     func afterInit(_ drop: Droplet) {

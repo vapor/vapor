@@ -10,7 +10,7 @@ extension Droplet {
         return ServerConfig(hostname: hostname, port: port, securityLayer)
     }
 
-    private func makeSecurityLayer(serverConfig: Settings.Config?) throws -> SecurityLayer {
+    private func makeSecurityLayer(serverConfig: Configs.Config?) throws -> SecurityLayer {
         let serverConfig = serverConfig?.converted(to: Node.self)
         let security = serverConfig?["securityLayer"]?.string ?? "none"
         let securityLayer: SecurityLayer

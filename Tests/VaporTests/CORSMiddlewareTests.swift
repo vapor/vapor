@@ -22,7 +22,7 @@ class CORSMiddlewareTests: XCTestCase {
         return drop
     }
 
-    func dropWithCors(settings: Settings.Config) -> Droplet {
+    func dropWithCors(settings: Configs.Config) -> Droplet {
         let drop = try! Droplet()
         drop.middleware.insert(try! CORSMiddleware(configuration: settings), at: 0)
         drop.get("*") { _ in return "" }
