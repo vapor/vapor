@@ -17,13 +17,13 @@ class SessionsTests: XCTestCase {
         drop.middleware = [m]
 
         drop.get("set") { req in
-            try req.session().data["foo"] = "bar"
-            try req.session().data["bar"] = "baz"
+            try req.assertSession().data["foo"] = "bar"
+            try req.assertSession().data["bar"] = "baz"
             return "set"
         }
 
         drop.get("get") { req in
-            return try req.session().data["foo"]?.string ?? "fail"
+            return try req.assertSession().data["foo"]?.string ?? "fail"
         }
 
         let req = Request(method: .get, path: "set")
