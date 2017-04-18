@@ -76,8 +76,7 @@ public class Droplet {
     
     public init(
         _ config: Configs.Config? = nil,
-        localization localizationProvided: Localization? = nil,
-        commands: [Command]? = nil
+        localization localizationProvided: Localization? = nil
     ) throws {
         var config = try config ?? Config()
         
@@ -168,12 +167,13 @@ public class Droplet {
         }
         
         // commands
-        let commands = try commands ?? [
+        let requiredCommands: [Command] = try [
             VersionCommand(console),
             RouteList(console, router),
             DumpConfig(console, config),
             Serve(console, server, responder, log, config.makeServerConfig())
         ]
+        let commands = try config.resolveArray(Command.self) + requiredCommands
         
         // set
         self.localization = localization
