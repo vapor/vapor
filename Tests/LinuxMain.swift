@@ -3,7 +3,7 @@
 import XCTest
 @testable import CacheTests
 @testable import SessionsTests
-@testable import SettingsTests
+@testable import ConfigsTests
 @testable import VaporTests
 
 XCTMain([
