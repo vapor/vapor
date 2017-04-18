@@ -22,3 +22,9 @@ public final class ServerFactory<S: ServerProtocol>: ServerFactoryProtocol {
         )
     }
 }
+
+extension ServerFactory: ConfigInitializable {
+    public convenience init(config: Configs.Config) throws {
+        self.init()
+    }
+}

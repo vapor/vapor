@@ -1,6 +1,9 @@
+import Configs
+import Console
+
 /// Logger protocol. Custom loggers must conform
 /// to this protocol
-public protocol LogProtocol: class {
+public protocol LogProtocol {
     /// Enabled log levels. Only levels in this
     /// array should be logged.
     var enabled: [LogLevel] { get set }

@@ -7,7 +7,7 @@ class ConfigTests: XCTestCase {
     func testConfigAvailableType() throws {
         var config = Config([:])
         try config.set("droplet.log", "test")
-        try config.addConfigurable(TestLogger.self, name: "test")
+        config.addConfigurable(log: TestLogger.self, name: "test")
     
         let drop = try Droplet(config)
         XCTAssert(type(of: drop.log) == TestLogger.self)
@@ -59,7 +59,7 @@ class ConfigTests: XCTestCase {
         var config = Config([:])
         try config.set("droplet.log", "test")
         try config.set("droplet.middleware", ["logger"])
-        try config.addConfigurable(TestLogger.self, name: "test")
+        config.addConfigurable(log: TestLogger.self, name: "test")
         try config.addConfigurable(NeedsLoggerMiddleware.self, name: "logger")
         
         let drop = try Droplet(config)
@@ -94,7 +94,7 @@ final class NeedsLoggerMiddleware: Middleware, ConfigInitializable {
     let log: LogProtocol
     
     init(config: Config) throws {
-        self.log = try config.resolve(LogProtocol.self)
+        self.log = try config.resolveLog()
     }
     
     init(_ log: LogProtocol) {

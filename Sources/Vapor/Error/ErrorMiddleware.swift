@@ -36,6 +36,13 @@ public final class ErrorMiddleware: Middleware {
     }
 }
 
+extension ErrorMiddleware: ConfigInitializable {
+    public convenience init(config: Config) throws {
+        let log = try config.resolveLog()
+        self.init(config.environment, log)
+    }
+}
+
 extension Status {
     internal init(_ error: Error) {
         if let abort = error as? AbortError {

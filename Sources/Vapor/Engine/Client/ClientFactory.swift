@@ -27,3 +27,9 @@ public final class ClientFactory<C: ClientProtocol>: ClientFactoryProtocol {
         return try makeClient(for: request).respond(to: request)
     }
 }
+
+extension ClientFactory: ConfigInitializable {
+    public convenience init(config: Configs.Config) throws {
+        self.init()
+    }
+}

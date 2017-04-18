@@ -86,23 +86,16 @@ public class Droplet {
         }
         
         // configurable
-        try config.addConfigurable(ServerFactory<EngineServer>(), name: "engine")
-        try config.addConfigurable(ClientFactory<EngineClient>(), name: "engine")
-        try config.addConfigurable(Terminal(arguments: []), name: "terminal")
-        try config.addConfigurable({ config in
-            return try ConsoleLogger(config.resolve(ConsoleProtocol.self))
-        }, name: "console")
-        try config.addConfigurable({ config in
-            return StaticViewRenderer(viewsDir: config.viewsDir)
-        }, name: "static")
-        try config.addConfigurable(CryptoHasher.self, name: "crypto")
-        try config.addConfigurable(BCryptHasher.self, name: "bcrypt")
-        try config.addConfigurable(CryptoCipher.self, name: "crypto")
-        try config.addConfigurable(MemoryCache(), name: "memory")
-        try config.addConfigurable({ config in
-            return try ErrorMiddleware(config.environment, config.resolve(LogProtocol.self))
-        }, name: "error")
-        try config.addConfigurable(SessionsMiddleware(MemorySessions()), name: "sessions")
+        config.addConfigurable(server: EngineServer.self, name: "engine")
+        config.addConfigurable(client: EngineClient.self, name: "engine")
+        config.addConfigurable(console: Terminal.self, name: "terminal")
+        config.addConfigurable(view: StaticViewRenderer.self, name: "static")
+        config.addConfigurable(hash: CryptoHasher.self, name: "crypto")
+        config.addConfigurable(hash: BCryptHasher.self, name: "bcrypt")
+        config.addConfigurable(cipher: CryptoCipher.self, name: "crypto")
+        config.addConfigurable(cache: MemoryCache.self, name: "memory")
+        config.addConfigurable(middleware: ErrorMiddleware.self, name: "error")
+        config.addConfigurable(middleware: SessionsMiddleware(MemorySessions()), name: "sessions")
         try config.addConfigurable(DateMiddleware(), name: "date")
         try config.addConfigurable(CORSMiddleware.self, name: "cors")
         try config.addConfigurable({ config in
@@ -114,7 +107,7 @@ public class Droplet {
         let server = try config.resolve(ServerFactoryProtocol.self)
         let client = try config.resolve(ClientFactoryProtocol.self)
         let console = try config.resolve(ConsoleProtocol.self)
-        let log = try config.resolve(LogProtocol.self)
+        let log = try config.resolveLog()
         let hash = try config.resolve(HashProtocol.self)
         let cipher = try config.resolve(CipherProtocol.self)
         let view = try config.resolve(ViewRenderer.self)
