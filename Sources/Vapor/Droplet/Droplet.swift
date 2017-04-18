@@ -236,9 +236,9 @@ public class Droplet {
         try addConfigurable(cipher: CryptoCipher.self, name: "crypto")
         addConfigurable(cache: MemoryCache(), name: "memory")
         addConfigurable(middleware: SessionsMiddleware(MemorySessions()), name: "sessions")
+        addConfigurable(middleware: ErrorMiddleware(self), name: "error")
         addConfigurable(middleware: DateMiddleware(), name: "date")
         addConfigurable(middleware: FileMiddleware(publicDir: workDir + "Public/"), name: "file")
-        addConfigurable(middleware: ErrorMiddleware(self), name: "error")
 
         if config["droplet", "middleware"]?.array == nil {
             // if no configuration has been supplied
