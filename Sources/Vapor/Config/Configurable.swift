@@ -7,6 +7,22 @@ import Sessions
 private let configurableKey = "vapor:configurable"
 private let overrideKey = "vapor:override"
 
+public typealias KeyResolver = (Any.Type, Config) -> (String?)
+public typealias DefaultResolver = (Any.Type, Config) -> (Any?)
+
+private var keyResolvers: [KeyResolver] = []
+private var defaultResolvers: [DefaultResolver] = []
+
+extension Config {
+    public static func registerConfigurable(
+        _ keyResolver: @escaping KeyResolver,
+        _ defaultResolver: @escaping DefaultResolver
+    ) {
+        keyResolvers.append(keyResolver)
+        defaultResolvers.append(defaultResolver)
+    }
+}
+
 extension Config {
     
     // MARK: Configurable
@@ -141,7 +157,7 @@ extension Config {
             item = MemoryCache()
         case is MailProtocol.Type, MailProtocol.self:
             item = UnimplementedMailer()
-        case is Array<Middleware>.Type, Array<Middleware>.self:
+        case is Middleware.Type, Middleware.self, is Array<Middleware>.Type, Array<Middleware>.self:
             let log = try resolve(LogProtocol.self)
             item = [
                 ErrorMiddleware(environment, log),
@@ -151,7 +167,18 @@ extension Config {
         case is Array<Command>.Type, Array<Command>.self:
             item = [Command]()
         default:
-            throw ConfigError.unsupportedType(C.self)
+            var resolvedItem: Any?
+            for defaultResolver in defaultResolvers {
+                if let i = defaultResolver(type, self) {
+                    resolvedItem = i
+                }
+            }
+            
+            guard let i = resolvedItem as? C else {
+                throw ConfigError.unsupportedType(C.self)
+            }
+            
+            item = i
         }
         
         guard let c = item as? C else {
@@ -190,7 +217,18 @@ extension Config {
         case is Command.Type, Command.self, is Array<Command>.Type, Array<Command>.self:
             key = "command"
         default:
-            throw ConfigError.unsupportedType(C.self)
+            var resolvedKey: String?
+            for keyResolver in keyResolvers {
+                if let k = keyResolver(type, self) {
+                    resolvedKey = k
+                }
+            }
+            
+            guard let k = resolvedKey else {
+                throw ConfigError.unsupportedType(C.self)
+            }
+            
+            key = k
         }
         
         if let name = name {

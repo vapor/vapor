@@ -1,11 +1,12 @@
 import HTTP
+import Configs
 
 /// Middleware that adds support for CORS settings in request responses.
 /// For configuration of this middleware please use the `CORSConfiguration` object.
 ///
 /// - Note: Make sure this middleware is inserted before all your error/abort middlewares,
 ///         so that even the failed request responses contain proper CORS information.
-public class CORSMiddleware: Middleware {
+public final class CORSMiddleware: Middleware, ConfigInitializable {
 
     /// Configuration used for populating headers in response for CORS requests.
     public let configuration: CORSConfiguration
@@ -22,8 +23,8 @@ public class CORSMiddleware: Middleware {
     ///
     /// - Parameter configuration: The settings configuration.
     /// - Throws: Exception if the `CORSConfiugration` couldn't be parsed out of `Configs.Config`.
-    public convenience init(configuration: Configs.Config) throws {
-        let configuration = try CORSConfiguration(config: configuration)
+    public convenience init(config: Configs.Config) throws {
+        let configuration = try CORSConfiguration(config: config)
         self.init(configuration: configuration)
     }
 

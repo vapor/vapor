@@ -28,7 +28,7 @@ class CORSMiddlewareTests: XCTestCase {
     func dropWithCors(settings: Configs.Config) -> Droplet {
         var c = Config([:])
         try! c.addOverride(middleware: [
-            CORSMiddleware(configuration: settings)
+            CORSMiddleware(config: settings)
         ])
         let drop = try! Droplet(c)
         drop.get("*") { _ in return "" }

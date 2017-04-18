@@ -104,6 +104,7 @@ public class Droplet {
         }, name: "error")
         try config.addConfigurable(SessionsMiddleware(MemorySessions()), name: "sessions")
         try config.addConfigurable(DateMiddleware(), name: "date")
+        try config.addConfigurable(CORSMiddleware.self, name: "cors")
         try config.addConfigurable({ config in
             return FileMiddleware(publicDir: config.workDir + "Public/")
         }, name: "file")
