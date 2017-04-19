@@ -1,5 +1,5 @@
 extension Droplet {
-    static func workingDirectory(from arguments: [String]) -> String {
+    public static func workingDirectory(from arguments: [String]) -> String {
         func fileWorkDirectory() -> String? {
             #if swift(>=3.1)
                 let parts = #file.components(separatedBy: "/.build")
