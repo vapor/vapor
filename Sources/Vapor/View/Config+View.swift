@@ -3,19 +3,26 @@ extension Config {
     public mutating func addConfigurable<
         View: ViewRenderer
     >(view: View, name: String) {
-        addConfigurable(instance: view, unique: "view", name: name)
+        customAddConfigurable(instance: view, unique: "view", name: name)
     }
     
     /// Adds a configurable View class.
     public mutating func addConfigurable<
         View: ViewRenderer & ConfigInitializable
     >(view: View.Type, name: String) {
-        addConfigurable(class: View.self, unique: "view", name: name)
+        customAddConfigurable(class: View.self, unique: "view", name: name)
+    }
+    
+    /// Overrides the configurable View with this instance.
+    public mutating func override<
+        View: ViewRenderer
+    >(view: View) {
+        customOverride(instance: view, unique: "view")
     }
     
     /// Resolves the configured View.
-    public func resolveView() throws -> ViewRenderer {
-        return try resolve(
+    public mutating func resolveView() throws -> ViewRenderer {
+        return try customResolve(
             unique: "view",
             file: "droplet",
             keyPath: ["view"],
@@ -26,7 +33,7 @@ extension Config {
 }
 
 extension StaticViewRenderer: ConfigInitializable {
-    public convenience init(config: Config) throws {
+    public convenience init(config: inout Config) throws {
         self.init(viewsDir: config.viewsDir)
     }
 }

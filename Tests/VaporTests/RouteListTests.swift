@@ -22,7 +22,7 @@ class RouteListTests: XCTestCase {
         // Setup drop routes
         var config = Config([:])
         config.arguments = ["vapor", "routes"]
-        try config.addOverride(console)
+        config.override(console: console)
         let drop = try Droplet(config)
         drop.get("foo") { _ in return "" }
         drop.put("foo/bar/:id") { _ in return "" }

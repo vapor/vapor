@@ -7,9 +7,7 @@ extension Droplet {
         case insufficientArguments, noCommandFound
     }
 
-    /**
-        Runs the Droplet's commands, defaulting to serve.
-    */
+    /// Runs the Droplet's commands, defaulting to serve.
     public func run() throws -> Never  {
         do {
             try runCommands()

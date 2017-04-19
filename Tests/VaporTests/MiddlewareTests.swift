@@ -1,4 +1,4 @@
-@testable import Vapor // not @testable to ensure Middleware classes are public
+import Vapor
 import XCTest
 import HTTP
 
@@ -49,7 +49,7 @@ class MiddlewareTests: XCTestCase {
 
     func testConfigDateProvided() throws {
         var config = Config([:])
-        try config.addOverride(middleware: [
+        config.override(middleware: [
             FooMiddleware()
         ])
         let drop = try Droplet(config)
@@ -66,7 +66,7 @@ class MiddlewareTests: XCTestCase {
 
     func testMultiple() throws {
         var config = Config([:])
-        try config.addOverride(middleware: [
+        config.override(middleware: [
             FooMiddleware(),
             DateMiddleware()
         ])
@@ -106,7 +106,7 @@ class MiddlewareTests: XCTestCase {
 
     func testConfigClientNotEnabled() throws {
         var config = Config([:])
-        try config.addOverride(middleware: [FooMiddleware()])
+        config.override(middleware: [FooMiddleware()])
         let drop = try Droplet()
 
         let res = try drop.client.request(.get, "http://httpbin.org/headers")

@@ -2,8 +2,7 @@ import HTTP
 import TLS
 import Transport
 
-/// types conforming to this protocol can
-/// be set as the Droplet's `.server`
+/// Represents an HTTP server.
 public protocol ServerProtocol {
     /// creates a new server
     init(

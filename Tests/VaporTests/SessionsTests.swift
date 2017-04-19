@@ -13,7 +13,7 @@ class SessionsTests: XCTestCase {
         let s = MemorySessions()
         let m = SessionsMiddleware(s)
         var config = Config([:])
-        try config.addOverride(middleware: [m])
+        config.override(middleware: [m])
         let drop = try Droplet(config)
 
         drop.get("set") { req in

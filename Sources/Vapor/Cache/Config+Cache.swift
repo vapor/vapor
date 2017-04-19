@@ -5,19 +5,19 @@ extension Config {
     public mutating func addConfigurable<
         Cache: CacheProtocol
     >(cache: Cache, name: String) {
-        addConfigurable(instance: cache, unique: "cache", name: name)
+        customAddConfigurable(instance: cache, unique: "cache", name: name)
     }
     
     /// Adds a configurable Cache class.
     public mutating func addConfigurable<
         Cache: CacheProtocol & ConfigInitializable
     >(cache: Cache.Type, name: String) {
-        addConfigurable(class: Cache.self, unique: "cache", name: name)
+        customAddConfigurable(class: Cache.self, unique: "cache", name: name)
     }
     
     /// Resolves the configured Cache.
-    public func resolveCache() throws -> CacheProtocol {
-        return try resolve(
+    public mutating func resolveCache() throws -> CacheProtocol {
+        return try customResolve(
             unique: "cache",
             file: "droplet",
             keyPath: ["cache"],
@@ -28,7 +28,7 @@ extension Config {
 }
 
 extension MemoryCache: ConfigInitializable {
-    public convenience init(config: Config) throws {
+    public convenience init(config: inout Config) throws {
         self.init()
     }
 }

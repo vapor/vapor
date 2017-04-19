@@ -35,7 +35,7 @@ public final class BCryptHasher: HashProtocol {
 
 extension BCryptHasher: ConfigInitializable {
     /// Creates a bcrypt hasher from a Config object
-    public convenience init(config: Configs.Config) throws {
+    public convenience init(config: inout Configs.Config) throws {
         guard let cost = config["bcrypt", "cost"]?.uint else {
             throw ConfigError.missing(
                 key: ["cost"],

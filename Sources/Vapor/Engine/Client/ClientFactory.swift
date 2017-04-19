@@ -29,7 +29,7 @@ public final class ClientFactory<C: ClientProtocol>: ClientFactoryProtocol {
 }
 
 extension ClientFactory: ConfigInitializable {
-    public convenience init(config: Configs.Config) throws {
+    public convenience init(config: inout Configs.Config) throws {
         self.init()
     }
 }

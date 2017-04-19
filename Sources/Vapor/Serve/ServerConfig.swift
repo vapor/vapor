@@ -1,13 +1,10 @@
-import Core
-import HTTP
 import Transport
-import TLS
 
 public struct ServerConfig {
     public let hostname: String
     public let port: Port
     public let securityLayer: SecurityLayer
-
+    
     public init(
         hostname: String = "0.0.0.0",
         port: Port = 8080,

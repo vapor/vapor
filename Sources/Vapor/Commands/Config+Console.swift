@@ -5,19 +5,26 @@ extension Config {
     public mutating func addConfigurable<
         Console: ConsoleProtocol
     >(console: Console, name: String) {
-        addConfigurable(instance: console, unique: "console", name: name)
+        customAddConfigurable(instance: console, unique: "console", name: name)
     }
     
     /// Adds a configurable Console class.
     public mutating func addConfigurable<
         Console: ConsoleProtocol & ConfigInitializable
     >(console: Console.Type, name: String) {
-        addConfigurable(class: Console.self, unique: "console", name: name)
+        customAddConfigurable(class: Console.self, unique: "console", name: name)
+    }
+    
+    /// Overrides the configurable Console with this instance.
+    public mutating func override<
+        Console: ConsoleProtocol
+    >(console: Console) {
+        customOverride(instance: console, unique: "console")
     }
     
     /// Resolves the configured Console.
-    public func resolveConsole() throws -> ConsoleProtocol {
-        return try resolve(
+    public mutating func resolveConsole() throws -> ConsoleProtocol {
+        return try customResolve(
             unique: "console",
             file: "droplet",
             keyPath: ["console"],
@@ -28,7 +35,7 @@ extension Config {
 }
 
 extension Terminal: ConfigInitializable {
-    public convenience init(config: Config) throws {
+    public convenience init(config: inout Config) throws {
         self.init(arguments: config.arguments)
     }
 }

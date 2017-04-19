@@ -2,15 +2,13 @@ import HTTP
 import FormData
 import Multipart
 
-private let formDataKey = "formData"
+private let formDataKey = "vapor:formData"
 
 extension HTTP.Message {
-    /**
-        Multipart encoded request data sent using
-        the `multipart/form-data...` header.
-
-        Used by web browsers to send files.
-    */
+    /// Multipart encoded request data sent using
+    /// the `multipart/form-data...` header.
+    ///
+    /// Used by web browsers to send files.
     public var formData: [String: Field]? {
         get {
             if let existing = storage[formDataKey] as? [String: Field] {

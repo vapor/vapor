@@ -3,24 +3,25 @@ extension Config {
     public mutating func addConfigurable<
         Hash: HashProtocol
     >(hash: Hash, name: String) {
-        addConfigurable(instance: hash, unique: "hash", name: name)
+        customAddConfigurable(instance: hash, unique: "hash", name: name)
     }
     
     /// Adds a configurable Hash class.
     public mutating func addConfigurable<
         Hash: HashProtocol & ConfigInitializable
     >(hash: Hash.Type, name: String) {
-        addConfigurable(class: Hash.self, unique: "hash", name: name)
+        customAddConfigurable(class: Hash.self, unique: "hash", name: name)
     }
     
     /// Resolves the configured Hash.
-    public func resolveHash() throws -> HashProtocol {
-        return try resolve(
+    public mutating func resolveHash() throws -> HashProtocol {
+        return try customResolve(
             unique: "hash",
             file: "droplet",
             keyPath: ["hash"],
-            as: HashProtocol.self,
-            default: CryptoHasher.init
-        )
+            as: HashProtocol.self
+        ) { config in
+            return CryptoHasher(hash: .sha1, encoding: .hex)
+        }
     }
 }

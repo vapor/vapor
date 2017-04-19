@@ -14,6 +14,7 @@ public enum ConfigError: Error {
     case missing(key: [String], file: String, desiredType: Any.Type)
     case missingFile(String)
     case unspecified(Error)
+    case maxResolve
     case unsupportedType(Any.Type)
 }
 
@@ -36,6 +37,8 @@ extension ConfigError: CustomStringConvertible {
             reason = "A \(type) named '\(value)' (chosen at '\(keyPath)' in Config/\(file).json) was not found (available: \(list))."
         case .unsupportedType(let type):
             reason = "Type \(type) not supported"
+        case .maxResolve:
+            reason = "Too many config resolution calls have been made. Check your dependencies for an infinite loop."
         case .unspecified(let error):
             reason = "\(error)"
         }

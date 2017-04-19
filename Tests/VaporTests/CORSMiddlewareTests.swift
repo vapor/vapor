@@ -1,6 +1,6 @@
 import XCTest
 import HTTP
-@testable import Vapor
+import Vapor
 
 class CORSMiddlewareTests: XCTestCase {
     static let allTests = [
@@ -12,12 +12,12 @@ class CORSMiddlewareTests: XCTestCase {
         ("testCorsCredentials", testCorsCredentials),
         ("testCorsCaching", testCorsCaching),
         ("testCorsMethods", testCorsMethods),
-        ]
+    ]
 
 
     func dropWithCors(config: CORSConfiguration = .default) -> Droplet {
         var c = Config([:])
-        try! c.addOverride(middleware: [
+        c.override(middleware: [
             CORSMiddleware(configuration: config)
         ])
         let drop = try! Droplet(c)
@@ -25,10 +25,10 @@ class CORSMiddlewareTests: XCTestCase {
         return drop
     }
 
-    func dropWithCors(settings: Configs.Config) -> Droplet {
+    func dropWithCors(settings: inout Configs.Config) -> Droplet {
         var c = Config([:])
-        try! c.addOverride(middleware: [
-            CORSMiddleware(config: settings)
+        try! c.override(middleware: [
+            CORSMiddleware(config: &settings)
         ])
         let drop = try! Droplet(c)
         drop.get("*") { _ in return "" }

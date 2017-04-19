@@ -2,6 +2,8 @@ import HTTP
 
 fileprivate let errorView = ErrorView()
 
+/// Catches errors and converts them into responses
+/// which a description of the error.
 public final class ErrorMiddleware: Middleware {
     let log: LogProtocol
     let environment: Environment
@@ -37,7 +39,7 @@ public final class ErrorMiddleware: Middleware {
 }
 
 extension ErrorMiddleware: ConfigInitializable {
-    public convenience init(config: Config) throws {
+    public convenience init(config: inout Config) throws {
         let log = try config.resolveLog()
         self.init(config.environment, log)
     }

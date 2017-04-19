@@ -3,7 +3,7 @@ import Console
 import Sockets
 
 /// Serves the droplet.
-public class Serve: Command {
+public final class Serve: Command {
     public let signature: [Argument] = [
         Option(name: "port", help: ["Overrides the default serving port."]),
         Option(name: "workdir", help: ["Overrides the working directory to a custom path."])
@@ -21,7 +21,7 @@ public class Serve: Command {
     public let log: LogProtocol
     public let config: ServerConfig
 
-    public required init(
+    public init(
         _ console: ConsoleProtocol,
         _ server: ServerFactoryProtocol,
         _ responder: Responder,

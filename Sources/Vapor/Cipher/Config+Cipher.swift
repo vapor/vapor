@@ -3,24 +3,28 @@ extension Config {
     public mutating func addConfigurable<
         Cipher: CipherProtocol
     >(cipher: Cipher, name: String) {
-        addConfigurable(instance: cipher, unique: "cipher", name: name)
+        customAddConfigurable(instance: cipher, unique: "cipher", name: name)
     }
     
     /// Adds a configurable Cipher class.
     public mutating func addConfigurable<
         Cipher: CipherProtocol & ConfigInitializable
     >(cipher: Cipher.Type, name: String) {
-        addConfigurable(class: Cipher.self, unique: "cipher", name: name)
+        customAddConfigurable(class: Cipher.self, unique: "cipher", name: name)
     }
     
     /// Resolves the configured Cipher.
-    public func resolveCipher() throws -> CipherProtocol {
-        return try resolve(
+    public mutating func resolveCipher() throws -> CipherProtocol {
+        return try customResolve(
             unique: "cipher",
             file: "droplet",
             keyPath: ["cipher"],
-            as: CipherProtocol.self,
-            default: CryptoCipher.init
-        )
+            as: CipherProtocol.self
+        ) { config in
+            return CryptoCipher(
+                method: .aes256(.cbc),
+                defaultKey: Bytes(repeating: 0, count: 16)
+            )
+        }
     }
 }

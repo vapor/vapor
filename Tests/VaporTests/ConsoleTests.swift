@@ -16,7 +16,7 @@ class ConsoleTests: XCTestCase {
         let console = TestConsoleDriver()
         var config = Config([:])
         config.arguments = ["/path/to/exe", "test-1"]
-        try config.addOverride(console)
+        config.override(console: console)
         let drop = try Droplet(config)
 
         drop.commands = [
@@ -36,7 +36,7 @@ class ConsoleTests: XCTestCase {
         
         var config = Config([:])
         config.arguments = ["/path/to/exe", "test-2"]
-        try config.addOverride(console)
+        config.override(console: console)
         let drop = try Droplet(config)
 
         let command = TestTwoCommand(console: console)
@@ -56,7 +56,7 @@ class ConsoleTests: XCTestCase {
         let console = TestConsoleDriver()
         var config = Config([:])
         config.arguments = ["run", "version"]
-        try config.addOverride(console)
+        config.override(console: console)
         let drop = try Droplet(config)
 
         let command = VersionCommand(console)
@@ -71,7 +71,7 @@ class ConsoleTests: XCTestCase {
         let console = TestConsoleDriver()
         var config = Config([:])
         config.arguments = ["/path/to/ext", "test-2", "123"]
-        try config.addOverride(console)
+        config.override(console: console)
         let drop = try Droplet(config)
 
         let command = TestTwoCommand(console: console)
@@ -93,7 +93,7 @@ class ConsoleTests: XCTestCase {
         
         var config = Config([:])
         config.arguments = ["/path/to/ext", "test-2", "123", "--opt-1=abc"]
-        try config.addOverride(console)
+        config.override(console: console)
         let drop = try Droplet(config)
 
         let command = TestTwoCommand(console: console)

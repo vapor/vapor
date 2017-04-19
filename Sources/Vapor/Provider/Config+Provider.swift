@@ -1,13 +1,13 @@
 import Configs
 
-private let providersKey = "vapor:providers"
-
 extension Config {
+    // Storage of all providers added.
     var providers: [Provider] {
-        get { return storage[providersKey] as? [Provider] ?? [] }
-        set { storage[providersKey] = newValue }
+        get { return storage["vapor:providers"] as? [Provider] ?? [] }
+        set { storage["vapor:providers"] = newValue }
     }
     
+    // Adds a provider, booting it with the current config.
     public mutating func addProvider<P: Provider>(_ provider: P) throws {
         guard !providers.contains(where: { type(of: $0) == P.self }) else {
             return
@@ -16,8 +16,9 @@ extension Config {
         providers.append(provider)
     }
     
+    /// Adds a provider type, initializing it first.
     public mutating func addProvider<P: Provider>(_ provider: P.Type) throws {
-        let p = try provider.init(config: self)
+        let p = try provider.init(config: &self)
         try addProvider(p)
     }
 }

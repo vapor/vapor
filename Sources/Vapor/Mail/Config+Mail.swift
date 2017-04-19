@@ -3,19 +3,19 @@ extension Config {
     public mutating func addConfigurable<
         Mail: MailProtocol
     >(mail: Mail, name: String) {
-        addConfigurable(instance: mail, unique: "mail", name: name)
+        customAddConfigurable(instance: mail, unique: "mail", name: name)
     }
     
     /// Adds a configurable Mail class.
     public mutating func addConfigurable<
         Mail: MailProtocol & ConfigInitializable
     >(mail: Mail.Type, name: String) {
-        addConfigurable(class: Mail.self, unique: "mail", name: name)
+        customAddConfigurable(class: Mail.self, unique: "mail", name: name)
     }
     
     /// Resolves the configured Mail.
-    public func resolveMail() throws -> MailProtocol {
-        return try resolve(
+    public mutating func resolveMail() throws -> MailProtocol {
+        return try customResolve(
             unique: "mail",
             file: "droplet",
             keyPath: ["mail"],
@@ -26,7 +26,7 @@ extension Config {
 }
 
 extension UnimplementedMailer: ConfigInitializable {
-    public convenience init(config: Config) throws {
+    public convenience init(config: inout Config) throws {
         self.init()
     }
 }

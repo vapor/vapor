@@ -3,19 +3,19 @@ extension Config {
     public mutating func addConfigurable<
         Log: LogProtocol
     >(log: Log, name: String) {
-        addConfigurable(instance: log, unique: "log", name: name)
+        customAddConfigurable(instance: log, unique: "log", name: name)
     }
     
     /// Adds a configurable Log class.
     public mutating func addConfigurable<
         Log: LogProtocol & ConfigInitializable
     >(log: Log.Type, name: String) {
-        addConfigurable(class: Log.self, unique: "log", name: name)
+        customAddConfigurable(class: Log.self, unique: "log", name: name)
     }
     
     /// Resolves the configured Log.
-    public func resolveLog() throws -> LogProtocol {
-        return try resolve(
+    public mutating func resolveLog() throws -> LogProtocol {
+        return try customResolve(
             unique: "log",
             file: "droplet",
             keyPath: ["log"],

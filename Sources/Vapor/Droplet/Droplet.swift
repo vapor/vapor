@@ -88,6 +88,7 @@ public class Droplet {
         // configurable
         config.addConfigurable(server: EngineServer.self, name: "engine")
         config.addConfigurable(client: EngineClient.self, name: "engine")
+        config.addConfigurable(log: ConsoleLogger.self, name: "console")
         config.addConfigurable(console: Terminal.self, name: "terminal")
         config.addConfigurable(view: StaticViewRenderer.self, name: "static")
         config.addConfigurable(hash: CryptoHasher.self, name: "crypto")
@@ -124,7 +125,7 @@ public class Droplet {
             localization = Localization()
         }
         
-        let middleware = try config.resolveArray(Middleware.self)
+        let middleware = try config.resolveMiddleware()
         
         
         let chain = middleware.chain(to: router)
@@ -166,7 +167,7 @@ public class Droplet {
             DumpConfig(console, config),
             Serve(console, server, responder, log, config.makeServerConfig())
         ]
-        let commands = try config.resolveArray(Command.self) + requiredCommands
+        let commands = try config.resolveCommands() + requiredCommands
         
         // set
         self.localization = localization

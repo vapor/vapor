@@ -23,8 +23,8 @@ public final class CORSMiddleware: Middleware, ConfigInitializable {
     ///
     /// - Parameter configuration: The settings configuration.
     /// - Throws: Exception if the `CORSConfiugration` couldn't be parsed out of `Configs.Config`.
-    public convenience init(config: Configs.Config) throws {
-        let configuration = try CORSConfiguration(config: config)
+    public convenience init(config: inout Configs.Config) throws {
+        let configuration = try CORSConfiguration(config: &config)
         self.init(configuration: configuration)
     }
 

@@ -1,6 +1,7 @@
 import Core
 import HTTP
 
+/// Internal error view used to create error HTML pages.
 internal final class ErrorView {
     let head: Bytes
     let middle: Bytes

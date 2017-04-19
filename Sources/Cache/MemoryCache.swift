@@ -14,6 +14,7 @@ public final class MemoryCache: CacheProtocol {
         }
 
         if let expiration = expiration {
+            print(expiration.timeIntervalSinceNow)
             return expiration.timeIntervalSinceNow > 0 ? value : nil
         }
 

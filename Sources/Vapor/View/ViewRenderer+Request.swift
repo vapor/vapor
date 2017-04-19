@@ -1,7 +1,6 @@
 import HTTP
 
 extension ViewRenderer {
-    /// 
     /// Creates a view at the given path
     /// using a Request as the data that will
     /// be supplied to the view.

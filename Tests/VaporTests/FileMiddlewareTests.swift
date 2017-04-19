@@ -20,7 +20,7 @@ class FileMiddlewareTests: XCTestCase {
         var config = Config([:])
         let file = #file
         let fileMiddleWare = FileMiddleware(publicDir: "")
-        try config.addOverride(middleware: [fileMiddleWare])
+        config.override(middleware: [fileMiddleWare])
         let drop = try Droplet(config)
         
         var headers: [HeaderKey: String] = [:]
