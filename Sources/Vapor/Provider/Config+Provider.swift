@@ -2,7 +2,7 @@ import Configs
 
 extension Config {
     // Storage of all providers added.
-    var providers: [Provider] {
+    public internal(set) var providers: [Provider] {
         get { return storage["vapor:providers"] as? [Provider] ?? [] }
         set { storage["vapor:providers"] = newValue }
     }
