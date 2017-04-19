@@ -17,7 +17,7 @@ class FileMiddlewareTests: XCTestCase {
     ]
     
     func testETag() throws {
-        var config = Config([:])
+        let config = Config([:])
         let file = #file
         let fileMiddleWare = FileMiddleware(publicDir: "")
         config.override(middleware: [fileMiddleWare])

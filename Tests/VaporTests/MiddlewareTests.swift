@@ -48,7 +48,7 @@ class MiddlewareTests: XCTestCase {
     }
 
     func testConfigDateProvided() throws {
-        var config = Config([:])
+        let config = Config([:])
         config.override(middleware: [
             FooMiddleware()
         ])
@@ -65,7 +65,7 @@ class MiddlewareTests: XCTestCase {
     }
 
     func testMultiple() throws {
-        var config = Config([:])
+        let config = Config([:])
         config.override(middleware: [
             FooMiddleware(),
             DateMiddleware()
@@ -105,7 +105,7 @@ class MiddlewareTests: XCTestCase {
     }
 
     func testConfigClientNotEnabled() throws {
-        var config = Config([:])
+        let config = Config([:])
         config.override(middleware: [FooMiddleware()])
         let drop = try Droplet()
 

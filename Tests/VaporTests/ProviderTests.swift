@@ -14,7 +14,7 @@ class ProviderTests: XCTestCase {
     ]
 
     func testBasic() throws {
-        var config = Config([:])
+        let config = Config([:])
         try config.addProvider(FastServerProvider.self)
         let drop = try Droplet(config)
 
@@ -22,7 +22,7 @@ class ProviderTests: XCTestCase {
     }
 
     func testPrecedence() throws {
-        var config = Config([:])
+        let config = Config([:])
         config.override(console: DebugConsole())
         try config.addProvider(FastServerProvider.self)
         
@@ -31,7 +31,7 @@ class ProviderTests: XCTestCase {
     }
 
     func testOverride() throws {
-        var config = Config([:])
+        let config = Config([:])
         config.override(console: DebugConsole())
         try config.addProvider(SlowServerProvider.self)
         try config.addProvider(FastServerProvider.self)
@@ -41,9 +41,9 @@ class ProviderTests: XCTestCase {
     }
 
     func testInitialized() throws {
-        var config = Config([:])
-        let fast = try FastServerProvider(config: &config)
-        let slow = try SlowServerProvider(config: &config)
+        let config = Config([:])
+        let fast = try FastServerProvider(config: config)
+        let slow = try SlowServerProvider(config: config)
 
         config.arguments = ["vapor", "serve"]
         try config.addProvider(fast)
@@ -75,7 +75,7 @@ class ProviderTests: XCTestCase {
     }
     
     func testDoubleBoot() throws {
-        var config = Config([:])
+        let config = Config([:])
         try config.addProvider(SlowServerProvider.self)
         try config.addProvider(FastServerProvider.self)
         try config.addProvider(FastServerProvider.self)
@@ -113,10 +113,10 @@ private final class FastServer: ServerProtocol {
 private final class FastServerProvider: Provider {
     var beforeRunFlag = false
 
-    init(config: inout Configs.Config) throws {
+    init(config: Configs.Config) throws {
     }
     
-    func boot(_ config: inout Config) throws {
+    func boot(_ config: Config) throws {
         config.override(server: ServerFactory<FastServer>())
     }
 
@@ -155,7 +155,7 @@ private final class SlowServerProvider: Provider {
     var afterInitFlag = false
     var beforeRunFlag = false
 
-    init(config: inout Configs.Config) throws {
+    init(config: Configs.Config) throws {
         
     }
 
@@ -167,7 +167,7 @@ private final class SlowServerProvider: Provider {
         beforeRunFlag = true
     }
     
-    func boot(_ config: inout Config) throws {
+    func boot(_ config: Config) throws {
         config.override(server: ServerFactory<SlowServer>())
     }
 

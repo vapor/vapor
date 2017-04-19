@@ -69,7 +69,7 @@ class DropletTests: XCTestCase {
     }
 
     func testRunDefaults() throws {
-        var config = Config([:])
+        let config = Config([:])
         config.arguments = ["vapor", "serve", "--port=8523"]
         let drop = try Droplet(config)
 
@@ -106,7 +106,7 @@ class DropletTests: XCTestCase {
     }
     
     func testDumpConfig() throws {
-        var config = Config([
+        let config = Config([
             "server": [
                 "hostname": "0.0.0.0",
                 "port": 8524,

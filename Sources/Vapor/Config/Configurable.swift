@@ -8,7 +8,7 @@ extension Config {
     }
     
     /// Adds a configurable instance according to the information supplied.
-    public mutating func customAddConfigurable<C>(
+    public func customAddConfigurable<C>(
         instance: C,
         unique: String,
         name: String
@@ -18,7 +18,7 @@ extension Config {
     }
     
     /// Adds a configurable class according to the information supplied.
-    public mutating func customAddConfigurable<C: ConfigInitializable>(
+    public func customAddConfigurable<C: ConfigInitializable>(
         class: C.Type,
         unique: String,
         name: String
@@ -31,11 +31,11 @@ extension Config {
 // MARK: Lazy
 
 extension Config {
-    internal typealias Lazy<E> = (inout Config) throws -> (E)
+    internal typealias Lazy<E> = (Config) throws -> (E)
 }
 
 extension ConfigInitializable {
     internal static func lazy() -> Config.Lazy<Self> {
-        return { c in try Self.init(config: &c) }
+        return { c in try Self.init(config: c) }
     }
 }

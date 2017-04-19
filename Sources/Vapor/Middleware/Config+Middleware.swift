@@ -2,26 +2,26 @@ import HTTP
 
 extension Config {
     /// Adds a configurable M instance.
-    public mutating func addConfigurable<
+    public func addConfigurable<
         M: Middleware
     >(middleware: M, name: String) {
         customAddConfigurable(instance: middleware, unique: "middleware", name: name)
     }
     
     /// Adds a configurable M class.
-    public mutating func addConfigurable<
+    public func addConfigurable<
         M: Middleware & ConfigInitializable
     >(middleware: M.Type, name: String) {
         customAddConfigurable(class: M.self, unique: "middleware", name: name)
     }
     
     /// Overrides the configurable Console with this instance.
-    public mutating func override(middleware: [Middleware]) {
+    public func override(middleware: [Middleware]) {
         customOverride(instance: middleware, unique: "middleware")
     }
     
     /// Resolves the configured M.
-    public mutating func resolveMiddleware() throws -> [Middleware] {
+    public func resolveMiddleware() throws -> [Middleware] {
         return try customResolveArray(
             unique: "middleware",
             file: "droplet",
@@ -39,13 +39,13 @@ extension Config {
 }
 
 extension DateMiddleware: ConfigInitializable {
-    public convenience init(config: inout Config) throws {
+    public convenience init(config: Config) throws {
         self.init()
     }
 }
 
 extension FileMiddleware: ConfigInitializable {
-    public convenience init(config: inout Config) throws {
+    public convenience init(config: Config) throws {
         self.init(publicDir: config.publicDir)
     }
 }

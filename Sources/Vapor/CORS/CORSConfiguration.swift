@@ -109,7 +109,7 @@ extension CORSConfiguration: ConfigInitializable {
     ///
     /// - Parameter config: The settings config dictionary that should be used to extract settings.
     /// - Throws: Node extraction errors, if extraction fails.
-    public init(config: inout Configs.Config) throws {
+    public init(config: Configs.Config) throws {
         guard let cors = config["cors"] else {
             throw ConfigError.missingFile("cors")
         }

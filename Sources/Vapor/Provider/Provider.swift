@@ -23,7 +23,7 @@ public protocol Provider: ConfigInitializable {
     
     /// Called after the provider has initialized
     /// in the `Config.addProvider` call.
-    func boot(_ config: inout Config) throws
+    func boot(_ config: Config) throws
 
     /// Called after the Droplet has initialized.
     func boot(_ droplet: Droplet) throws

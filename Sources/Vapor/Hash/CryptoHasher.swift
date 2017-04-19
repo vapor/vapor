@@ -77,7 +77,7 @@ public final class CryptoHasher: HashProtocol {
 
 extension CryptoHasher: ConfigInitializable {
     /// Creates a crypto hasher from a Config object
-    public convenience init(config: inout Configs.Config) throws {
+    public convenience init(config: Configs.Config) throws {
         // Method
         guard let methodString = config["crypto", "hash", "method"]?.string else {
             throw ConfigError.missing(

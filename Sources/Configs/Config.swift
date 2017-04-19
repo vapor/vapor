@@ -1,7 +1,7 @@
 @_exported import Node
 import Core
 
-public struct Config: StructuredDataWrapper {
+public final class Config: StructuredDataWrapper {
     public var wrapped: StructuredData
     public var context: Context
     
@@ -34,16 +34,10 @@ public struct Config: StructuredDataWrapper {
         self.environment = environment
         self.storage = [:]
     }
-    
-    public init(arguments: [String] = CommandLine.arguments) throws {
-        self = try Config.default(arguments: arguments)
-    }
 }
 
 extension Config {
-    public static func `default`(
-        arguments: [String] = CommandLine.arguments
-    ) throws -> Config {
+    public convenience init(arguments: [String] = CommandLine.arguments) throws {
         let env = arguments.environment ?? .development
         
         let configDirectory = workingDirectory() + "Config/"
@@ -52,14 +46,16 @@ extension Config {
         sources.append(.directory(root: configDirectory + "secrets"))
         sources.append(.directory(root: configDirectory + env.description))
         sources.append(.directory(root: configDirectory))
-
-        return try Config(
+        
+        try self.init(
             prioritized: sources,
             arguments: arguments,
             environment: env
         )
     }
+}
 
+extension Config {
     public static func workingDirectory(
         from arguments: [String] = CommandLine.arguments
     ) -> String {

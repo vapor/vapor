@@ -6,6 +6,6 @@
 /// initialize. These values can be stored in
 /// the Config directories instead of the source code.
 public protocol ConfigInitializable {
-    init(config: inout Config) throws
+    init(config: Config) throws
 }
 

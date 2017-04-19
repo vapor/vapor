@@ -8,12 +8,12 @@ extension Config {
     
     /// Resolves a single instance with the supplied information
     /// from the configurable items.
-    public mutating func customResolve<C>(
+    public func customResolve<C>(
         unique: String,
         file: String,
         keyPath: [String],
         as type: C.Type,
-        default d: (inout Config) throws -> C
+        default d: (Config) throws -> C
     ) throws -> C {
         try checkResolutionsCount()
         
@@ -31,7 +31,7 @@ extension Config {
         // path to see which item was chosen by the user.
         let path = [file] + keyPath
         guard let chosen = self[path]?.string else {
-            return try d(&self)
+            return try d(self)
         }
         
         // construct the key
@@ -41,7 +41,7 @@ extension Config {
         // retreive the chosen one or fail.
         guard
             let configurable = self.configurable[chosenKey],
-            let c = try configurable(&self) as? C
+            let c = try configurable(self) as? C
         else {
             throw ConfigError.unavailable(
                 value: chosen,
@@ -61,12 +61,12 @@ extension Config {
     
     /// Resolves an array of instances with the supplied information
     /// from the configurable items.
-    public mutating func customResolveArray<C>(
+    public func customResolveArray<C>(
         unique: String,
         file: String,
         keyPath: [String],
         as type: C.Type,
-        default d: (inout Config) throws -> [C]
+        default d: (Config) throws -> [C]
     ) throws -> [C] {
         try checkResolutionsCount()
         
@@ -84,7 +84,7 @@ extension Config {
         // path to see which items were chosen by the user.
         let path = [file] + keyPath
         guard let chosen = self[path]?.array?.flatMap({ $0.string }) else {
-            return try d(&self)
+            return try d(self)
         }
         
         // iterator over the array of chosen items
@@ -96,7 +96,7 @@ extension Config {
             // or throw an error
             guard
                 let configurable = self.configurable[chosenKey],
-                let c = try configurable(&self) as? C
+                let c = try configurable(self) as? C
             else {
                 throw ConfigError.unavailable(
                     value: name,
@@ -128,7 +128,7 @@ extension Config {
         set { storage["vapor:resolutions"] = newValue }
     }
     
-    internal mutating func checkResolutionsCount() throws {
+    internal func checkResolutionsCount() throws {
         guard resolutionsCount < 256 else {
             throw ConfigError.maxResolve
         }

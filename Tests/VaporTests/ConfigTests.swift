@@ -82,7 +82,7 @@ class ConfigTests: XCTestCase {
 
 final class TestLogger: LogProtocol, ConfigInitializable {
     var enabled: [LogLevel]
-    init(config: inout Config) throws {
+    init(config: Config) throws {
         enabled = []
     }
     func log(_ level: LogLevel, message: String, file: String, function: String, line: Int) {
@@ -93,7 +93,7 @@ final class TestLogger: LogProtocol, ConfigInitializable {
 final class NeedsLoggerMiddleware: Middleware, ConfigInitializable {
     let log: LogProtocol
     
-    init(config: inout Config) throws {
+    init(config: Config) throws {
         self.log = try config.resolveLog()
     }
     

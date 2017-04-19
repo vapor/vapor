@@ -20,7 +20,7 @@ class RouteListTests: XCTestCase {
     func testLogTable() throws {
         let console = TestConsoleDriver()
         // Setup drop routes
-        var config = Config([:])
+        let config = Config([:])
         config.arguments = ["vapor", "routes"]
         config.override(console: console)
         let drop = try Droplet(config)

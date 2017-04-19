@@ -8,7 +8,7 @@ import Sockets
 
 public let VERSION = "2.0.0-beta"
 
-public class Droplet {
+public final class Droplet {
     /// Provides access to config settings.
     public let config: Configs.Config
 
@@ -75,8 +75,8 @@ public class Droplet {
     public var storage: [String: Any]
     
     public init(
-        _ config: Configs.Config? = nil,
-        localization localizationProvided: Localization? = nil
+        config: Configs.Config?,
+        localization localizationProvided: Localization?
     ) throws {
         var config = try config ?? Config()
         
@@ -200,8 +200,20 @@ public class Droplet {
             try provider.boot(self)
         }
     }
-    
-    func serverErrors(error: ServerError) {
+}
 
+// MARK: Inits
+
+extension Droplet: ConfigInitializable {
+    public convenience init(config: Configs.Config) throws {
+        try self.init(config: config, localization: nil)
+    }
+    
+    public convenience init(_ config: Configs.Config) throws {
+        try self.init(config: config, localization: nil)
+    }
+    
+    public convenience init() throws {
+        try self.init(config: nil, localization: nil)
     }
 }

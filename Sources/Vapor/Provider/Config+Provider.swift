@@ -8,17 +8,17 @@ extension Config {
     }
     
     // Adds a provider, booting it with the current config.
-    public mutating func addProvider<P: Provider>(_ provider: P) throws {
+    public func addProvider<P: Provider>(_ provider: P) throws {
         guard !providers.contains(where: { type(of: $0) == P.self }) else {
             return
         }
-        try provider.boot(&self)
+        try provider.boot(self)
         providers.append(provider)
     }
     
     /// Adds a provider type, initializing it first.
-    public mutating func addProvider<P: Provider>(_ provider: P.Type) throws {
-        let p = try provider.init(config: &self)
+    public func addProvider<P: Provider>(_ provider: P.Type) throws {
+        let p = try provider.init(config: self)
         try addProvider(p)
     }
 }

@@ -39,7 +39,7 @@ public final class ErrorMiddleware: Middleware {
 }
 
 extension ErrorMiddleware: ConfigInitializable {
-    public convenience init(config: inout Config) throws {
+    public convenience init(config: Config) throws {
         let log = try config.resolveLog()
         self.init(config.environment, log)
     }

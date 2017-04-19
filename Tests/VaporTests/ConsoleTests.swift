@@ -14,7 +14,7 @@ class ConsoleTests: XCTestCase {
 
     func testCommandRun() throws {
         let console = TestConsoleDriver()
-        var config = Config([:])
+        let config = Config([:])
         config.arguments = ["/path/to/exe", "test-1"]
         config.override(console: console)
         let drop = try Droplet(config)
@@ -34,7 +34,7 @@ class ConsoleTests: XCTestCase {
     func testCommandInsufficientArgs() throws {
         let console = TestConsoleDriver()
         
-        var config = Config([:])
+        let config = Config([:])
         config.arguments = ["/path/to/exe", "test-2"]
         config.override(console: console)
         let drop = try Droplet(config)
@@ -54,7 +54,7 @@ class ConsoleTests: XCTestCase {
 
     func testVersionCommand() throws {
         let console = TestConsoleDriver()
-        var config = Config([:])
+        let config = Config([:])
         config.arguments = ["run", "version"]
         config.override(console: console)
         let drop = try Droplet(config)
@@ -69,7 +69,7 @@ class ConsoleTests: XCTestCase {
 
     func testCommandFetchArgs() throws {
         let console = TestConsoleDriver()
-        var config = Config([:])
+        let config = Config([:])
         config.arguments = ["/path/to/ext", "test-2", "123"]
         config.override(console: console)
         let drop = try Droplet(config)
@@ -91,7 +91,7 @@ class ConsoleTests: XCTestCase {
     func testCommandFetchOptions() throws {
         let console = TestConsoleDriver()
         
-        var config = Config([:])
+        let config = Config([:])
         config.arguments = ["/path/to/ext", "test-2", "123", "--opt-1=abc"]
         config.override(console: console)
         let drop = try Droplet(config)
@@ -124,7 +124,7 @@ class ConsoleTests: XCTestCase {
             }
         }
 
-        var config = Config([:])
+        let config = Config([:])
         config.arguments = ["vapor"]
         let drop = try Droplet(config)
         drop.commands = [TestServe(console: drop.console)]

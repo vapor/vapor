@@ -6,7 +6,7 @@ extension Config {
     
     /// Overrides an instance with the supplied information
     /// for this config.
-    public mutating func customOverride<C>(instance: C, unique: String) {
+    public func customOverride<C>(instance: C, unique: String) {
         override[unique] = instance
     }
 }

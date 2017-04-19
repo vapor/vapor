@@ -54,7 +54,7 @@ class ViewTests: XCTestCase {
             }
         }
         
-        var config = Config([:])
+        let config = Config([:])
         config.override(view: TestRenderer(viewsDir: ""))
         let drop = try Droplet(config)
         

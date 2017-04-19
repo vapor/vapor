@@ -29,7 +29,7 @@ public final class ConsoleLogger: LogProtocol {
 }
 
 extension ConsoleLogger: ConfigInitializable {
-    public convenience init(config: inout Config) throws {
+    public convenience init(config: Config) throws {
         let console = try config.resolveConsole()
         self.init(console)
     }
