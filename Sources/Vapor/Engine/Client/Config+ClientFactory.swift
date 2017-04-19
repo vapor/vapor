@@ -21,7 +21,7 @@ extension Config {
     }
     
     /// Resolves the configured ClientFactory.
-    public func resolveClientFactory() throws -> ClientFactoryProtocol {
+    public func resolveClient() throws -> ClientFactoryProtocol {
         return try resolve(
             unique: "client",
             file: "droplet",

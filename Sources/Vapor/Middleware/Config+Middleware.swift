@@ -32,3 +32,15 @@ extension Config {
         }
     }
 }
+
+extension DateMiddleware: ConfigInitializable {
+    public convenience init(config: Config) throws {
+        self.init()
+    }
+}
+
+extension FileMiddleware: ConfigInitializable {
+    public convenience init(config: Config) throws {
+        self.init(publicDir: config.publicDir)
+    }
+}

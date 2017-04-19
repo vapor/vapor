@@ -21,7 +21,7 @@ extension Config {
     }
     
     /// Resolves the configured ServerFactory.
-    public func resolveServerFactory() throws -> ServerFactoryProtocol {
+    public func resolveServer() throws -> ServerFactoryProtocol {
         return try resolve(
             unique: "server",
             file: "droplet",

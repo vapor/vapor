@@ -95,24 +95,23 @@ public class Droplet {
         config.addConfigurable(cipher: CryptoCipher.self, name: "crypto")
         config.addConfigurable(cache: MemoryCache.self, name: "memory")
         config.addConfigurable(middleware: ErrorMiddleware.self, name: "error")
-        config.addConfigurable(middleware: SessionsMiddleware(MemorySessions()), name: "sessions")
-        try config.addConfigurable(DateMiddleware(), name: "date")
-        try config.addConfigurable(CORSMiddleware.self, name: "cors")
-        try config.addConfigurable({ config in
-            return FileMiddleware(publicDir: config.workDir + "Public/")
-        }, name: "file")
+        config.addConfigurable(sessions: MemorySessions.self, name: "memory")
+        config.addConfigurable(sessions: CacheSessions.self, name: "cache")
+        config.addConfigurable(middleware: SessionsMiddleware.self, name: "sessions")
+        config.addConfigurable(middleware: DateMiddleware.self, name: "date")
+        config.addConfigurable(middleware: FileMiddleware.self, name: "file")
         
         // services
         let router = Router()
-        let server = try config.resolve(ServerFactoryProtocol.self)
-        let client = try config.resolve(ClientFactoryProtocol.self)
-        let console = try config.resolve(ConsoleProtocol.self)
+        let server = try config.resolveServer()
+        let client = try config.resolveClient()
+        let console = try config.resolveConsole()
         let log = try config.resolveLog()
-        let hash = try config.resolve(HashProtocol.self)
-        let cipher = try config.resolve(CipherProtocol.self)
-        let view = try config.resolve(ViewRenderer.self)
-        let cache = try config.resolve(CacheProtocol.self)
-        let mail = try config.resolve(MailProtocol.self)
+        let hash = try config.resolveHash()
+        let cipher = try config.resolveCipher()
+        let view = try config.resolveView()
+        let cache = try config.resolveCache()
+        let mail = try config.resolveMail()
         
         // settings
         let environment = config.environment
