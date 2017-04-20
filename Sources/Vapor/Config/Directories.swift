@@ -22,7 +22,7 @@ extension Config {
     /// resources directory.
     public var viewsDir: String {
         let viewsDir = self["droplet", "viewsDir"]?.string
-            ?? workDir + "Views"
+            ?? resourcesDir + "Views"
         return viewsDir.finished(with: "/")
     }
     
