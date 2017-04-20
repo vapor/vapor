@@ -1,16 +1,9 @@
 extension Config {
-    /// Adds a configurable Mail instance.
+    /// Adds a configurable Mail.
     public func addConfigurable<
         Mail: MailProtocol
-    >(mail: Mail, name: String) {
-        customAddConfigurable(instance: mail, unique: "mail", name: name)
-    }
-    
-    /// Adds a configurable Mail class.
-    public func addConfigurable<
-        Mail: MailProtocol & ConfigInitializable
-    >(mail: Mail.Type, name: String) {
-        customAddConfigurable(class: Mail.self, unique: "mail", name: name)
+    >(mail: @escaping Config.Lazy<Mail>, name: String) {
+        customAddConfigurable(closure: mail, unique: "mail", name: name)
     }
     
     /// Resolves the configured Mail.

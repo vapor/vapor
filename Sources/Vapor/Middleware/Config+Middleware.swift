@@ -4,18 +4,11 @@ extension Config {
     /// Adds a configurable M instance.
     public func addConfigurable<
         M: Middleware
-    >(middleware: M, name: String) {
-        customAddConfigurable(instance: middleware, unique: "middleware", name: name)
+    >(middleware: @escaping Config.Lazy<M>, name: String) {
+        customAddConfigurable(closure: middleware, unique: "middleware", name: name)
     }
     
-    /// Adds a configurable M class.
-    public func addConfigurable<
-        M: Middleware & ConfigInitializable
-    >(middleware: M.Type, name: String) {
-        customAddConfigurable(class: M.self, unique: "middleware", name: name)
-    }
-    
-    /// Overrides the configurable Console with this instance.
+    /// Overrides the configurable Middleware with this array.
     public func override(middleware: [Middleware]) {
         customOverride(instance: middleware, unique: "middleware")
     }

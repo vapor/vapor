@@ -7,31 +7,21 @@ extension Config {
         set { storage["vapor:configurable"] = newValue }
     }
     
-    /// Adds a configurable instance according to the information supplied.
-    public func customAddConfigurable<C>(
-        instance: C,
-        unique: String,
-        name: String
-    ) {
-        let key = "\(unique)-\(name)"
-        configurable[key] = { _ in instance }
-    }
-    
     /// Adds a configurable class according to the information supplied.
-    public func customAddConfigurable<C: ConfigInitializable>(
-        class: C.Type,
+    public func customAddConfigurable<C>(
+        closure: @escaping Config.Lazy<C>,
         unique: String,
         name: String
     ) {
         let key = "\(unique)-\(name)"
-        configurable[key] = C.lazy()
+        configurable[key] = closure
     }
 }
 
 // MARK: Lazy
 
 extension Config {
-    internal typealias Lazy<E> = (Config) throws -> (E)
+    public typealias Lazy<E> = (Config) throws -> (E)
 }
 
 extension ConfigInitializable {

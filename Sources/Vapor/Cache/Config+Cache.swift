@@ -1,18 +1,11 @@
 import Cache
 
 extension Config {
-    /// Adds a configurable Cache instance.
+    /// Adds a configurable Cache.
     public func addConfigurable<
         Cache: CacheProtocol
-    >(cache: Cache, name: String) {
-        customAddConfigurable(instance: cache, unique: "cache", name: name)
-    }
-    
-    /// Adds a configurable Cache class.
-    public func addConfigurable<
-        Cache: CacheProtocol & ConfigInitializable
-    >(cache: Cache.Type, name: String) {
-        customAddConfigurable(class: Cache.self, unique: "cache", name: name)
+    >(cache: @escaping Config.Lazy<Cache>, name: String) {
+        customAddConfigurable(closure: cache, unique: "cache", name: name)
     }
     
     /// Resolves the configured Cache.

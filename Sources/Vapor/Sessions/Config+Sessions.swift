@@ -1,18 +1,11 @@
 import Sessions
 
 extension Config {
-    /// Adds a configurable Sessions instance.
+    /// Adds a configurable Sessions.
     public func addConfigurable<
         Sessions: SessionsProtocol
-    >(sessions: Sessions, name: String) {
-        customAddConfigurable(instance: sessions, unique: "sessions", name: name)
-    }
-    
-    /// Adds a configurable Sessions class.
-    public func addConfigurable<
-        Sessions: SessionsProtocol & ConfigInitializable
-    >(sessions: Sessions.Type, name: String) {
-        customAddConfigurable(class: Sessions.self, unique: "sessions", name: name)
+    >(sessions: @escaping Config.Lazy<Sessions>, name: String) {
+        customAddConfigurable(closure: sessions, unique: "sessions", name: name)
     }
     
     /// Resolves the configured Sessions.
