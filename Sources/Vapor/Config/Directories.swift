@@ -26,9 +26,9 @@ extension Config {
         // special case for views since it is a subset
         // of the resources dir instead of workdir
         if viewsDir.hasPrefix("/") {
-            return viewsDir
+            return viewsDir.finished(with: "/")
         } else {
-            return resourcesDir + "Views"
+            return resourcesDir + viewsDir.finished(with: "/")
         }
     }
     
