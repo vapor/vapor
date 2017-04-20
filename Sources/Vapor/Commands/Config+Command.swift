@@ -2,18 +2,16 @@ import HTTP
 import Console
 
 extension Config {
-    /// Adds a configurable Command instance.
+    /// Adds a configurable Command.
     public func addConfigurable<
         C: Command
-    >(command: C, name: String) {
-        customAddConfigurable(instance: command, unique: "command", name: name)
+    >(command: @escaping Config.Lazy<C>, name: String) {
+        customAddConfigurable(closure: command, unique: "commands", name: name)
     }
     
-    /// Adds a configurable Command class.
-    public func addConfigurable<
-        C: Command & ConfigInitializable
-    >(command: C.Type, name: String) {
-        customAddConfigurable(class: C.self, unique: "command", name: name)
+    /// Overrides the configurable Commands with this array.
+    public func override(commands: [Command]) {
+        customOverride(instance: commands, unique: "commands")
     }
     
     /// Resolves the configured Command.

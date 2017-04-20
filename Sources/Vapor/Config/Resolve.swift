@@ -13,7 +13,7 @@ extension Config {
         file: String,
         keyPath: [String],
         as type: C.Type,
-        default d: (Config) throws -> C
+        default d: Config.Lazy<C>
     ) throws -> C {
         try checkResolutionsCount()
         

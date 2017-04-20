@@ -1,16 +1,9 @@
 extension Config {
-    /// Adds a configurable Cipher instance.
+    /// Adds a configurable Cipher.
     public func addConfigurable<
         Cipher: CipherProtocol
-    >(cipher: Cipher, name: String) {
-        customAddConfigurable(instance: cipher, unique: "cipher", name: name)
-    }
-    
-    /// Adds a configurable Cipher class.
-    public func addConfigurable<
-        Cipher: CipherProtocol & ConfigInitializable
-    >(cipher: Cipher.Type, name: String) {
-        customAddConfigurable(class: Cipher.self, unique: "cipher", name: name)
+    >(cipher: @escaping Config.Lazy<Cipher>, name: String) {
+        customAddConfigurable(closure: cipher, unique: "cipher", name: name)
     }
     
     /// Resolves the configured Cipher.

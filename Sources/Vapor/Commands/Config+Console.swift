@@ -1,24 +1,15 @@
 import Console
 
 extension Config {
-    /// Adds a configurable Console instance.
+    /// Adds a configurable Console.
     public func addConfigurable<
         Console: ConsoleProtocol
-    >(console: Console, name: String) {
-        customAddConfigurable(instance: console, unique: "console", name: name)
-    }
-    
-    /// Adds a configurable Console class.
-    public func addConfigurable<
-        Console: ConsoleProtocol & ConfigInitializable
-    >(console: Console.Type, name: String) {
-        customAddConfigurable(class: Console.self, unique: "console", name: name)
+    >(console: @escaping Config.Lazy<Console>, name: String) {
+        customAddConfigurable(closure: console, unique: "console", name: name)
     }
     
     /// Overrides the configurable Console with this instance.
-    public func override<
-        Console: ConsoleProtocol
-    >(console: Console) {
+    public func override<Console: ConsoleProtocol>(console: Console) {
         customOverride(instance: console, unique: "console")
     }
     

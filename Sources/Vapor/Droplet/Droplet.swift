@@ -56,7 +56,7 @@ public final class Droplet {
 
     /// Available Commands to use when starting
     /// the droplet.
-    public var commands: [Command]
+    public let commands: [Command]
 
     /// Render static and templated views.
     public let view: ViewRenderer
@@ -88,19 +88,19 @@ public final class Droplet {
         // configurable
         config.addConfigurable(server: EngineServer.self, name: "engine")
         config.addConfigurable(client: EngineClient.self, name: "engine")
-        config.addConfigurable(log: ConsoleLogger.self, name: "console")
-        config.addConfigurable(console: Terminal.self, name: "terminal")
-        config.addConfigurable(view: StaticViewRenderer.self, name: "static")
-        config.addConfigurable(hash: CryptoHasher.self, name: "crypto")
-        config.addConfigurable(hash: BCryptHasher.self, name: "bcrypt")
-        config.addConfigurable(cipher: CryptoCipher.self, name: "crypto")
-        config.addConfigurable(cache: MemoryCache.self, name: "memory")
-        config.addConfigurable(middleware: ErrorMiddleware.self, name: "error")
-        config.addConfigurable(sessions: MemorySessions.self, name: "memory")
-        config.addConfigurable(sessions: CacheSessions.self, name: "cache")
-        config.addConfigurable(middleware: SessionsMiddleware.self, name: "sessions")
-        config.addConfigurable(middleware: DateMiddleware.self, name: "date")
-        config.addConfigurable(middleware: FileMiddleware.self, name: "file")
+        config.addConfigurable(log: ConsoleLogger.init, name: "console")
+        config.addConfigurable(console: Terminal.init, name: "terminal")
+        config.addConfigurable(view: StaticViewRenderer.init, name: "static")
+        config.addConfigurable(hash: CryptoHasher.init, name: "crypto")
+        config.addConfigurable(hash: BCryptHasher.init, name: "bcrypt")
+        config.addConfigurable(cipher: CryptoCipher.init, name: "crypto")
+        config.addConfigurable(cache: MemoryCache.init, name: "memory")
+        config.addConfigurable(middleware: ErrorMiddleware.init, name: "error")
+        config.addConfigurable(sessions: MemorySessions.init, name: "memory")
+        config.addConfigurable(sessions: CacheSessions.init, name: "cache")
+        config.addConfigurable(middleware: SessionsMiddleware.init, name: "sessions")
+        config.addConfigurable(middleware: DateMiddleware.init, name: "date")
+        config.addConfigurable(middleware: FileMiddleware.init, name: "file")
         
         // services
         let router = Router()

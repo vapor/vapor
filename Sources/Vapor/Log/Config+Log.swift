@@ -1,16 +1,9 @@
 extension Config {
-    /// Adds a configurable Log instance.
+    /// Adds a configurable Log.
     public func addConfigurable<
         Log: LogProtocol
-    >(log: Log, name: String) {
-        customAddConfigurable(instance: log, unique: "log", name: name)
-    }
-    
-    /// Adds a configurable Log class.
-    public func addConfigurable<
-        Log: LogProtocol & ConfigInitializable
-    >(log: Log.Type, name: String) {
-        customAddConfigurable(class: Log.self, unique: "log", name: name)
+    >(log: @escaping Config.Lazy<Log>, name: String) {
+        customAddConfigurable(closure: log, unique: "log", name: name)
     }
     
     /// Resolves the configured Log.

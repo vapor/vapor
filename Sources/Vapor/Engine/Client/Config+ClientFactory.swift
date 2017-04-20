@@ -3,21 +3,14 @@ extension Config {
     public func addConfigurable<
         Client: ClientProtocol
     >(client: Client.Type, name: String) {
-        customAddConfigurable(class: ClientFactory<Client>.self, unique: "client", name: name)
+        addConfigurable(client: ClientFactory<Client>.init, name: name)
     }
     
-    /// Adds a configurable Client Factory instance.
+    /// Adds a configurable Client Factory.
     public func addConfigurable<
         ClientFactory: ClientFactoryProtocol
-    >(client: ClientFactory, name: String) {
-        customAddConfigurable(instance: client, unique: "client", name: name)
-    }
-    
-    /// Adds a configurable Client Factory class.
-    public func addConfigurable<
-        ClientFactory: ClientFactoryProtocol & ConfigInitializable
-    >(client: ClientFactory.Type, name: String) {
-        customAddConfigurable(class: ClientFactory.self, unique: "client", name: name)
+    >(client: @escaping Config.Lazy<ClientFactory>, name: String) {
+        customAddConfigurable(closure: client, unique: "client", name: name)
     }
     
     /// Resolves the configured ClientFactory.

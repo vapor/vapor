@@ -3,21 +3,14 @@ extension Config {
     public func addConfigurable<
         Server: ServerProtocol
     >(server: Server.Type, name: String) {
-        customAddConfigurable(class: ServerFactory<Server>.self, unique: "server", name: name)
+        addConfigurable(server: ServerFactory<Server>.init, name: name)
     }
     
-    /// Adds a configurable Server Factory instance.
+    /// Adds a configurable Server Factory.
     public func addConfigurable<
         ServerFactory: ServerFactoryProtocol
-    >(server: ServerFactory, name: String) {
-        customAddConfigurable(instance: server, unique: "server", name: name)
-    }
-    
-    /// Adds a configurable Server Factory class.
-    public func addConfigurable<
-        ServerFactory: ServerFactoryProtocol & ConfigInitializable
-    >(server: ServerFactory.Type, name: String) {
-        customAddConfigurable(class: ServerFactory.self, unique: "server", name: name)
+    >(server: @escaping Config.Lazy<ServerFactory>, name: String) {
+        customAddConfigurable(closure: server, unique: "server", name: name)
     }
     
     /// Overrides the configurable Server Factory with this instance.

@@ -1,16 +1,9 @@
 extension Config {
-    /// Adds a configurable View instance.
+    /// Adds a configurable View.
     public func addConfigurable<
         View: ViewRenderer
-    >(view: View, name: String) {
-        customAddConfigurable(instance: view, unique: "view", name: name)
-    }
-    
-    /// Adds a configurable View class.
-    public func addConfigurable<
-        View: ViewRenderer & ConfigInitializable
-    >(view: View.Type, name: String) {
-        customAddConfigurable(class: View.self, unique: "view", name: name)
+    >(view: @escaping Config.Lazy<View>, name: String) {
+        customAddConfigurable(closure: view, unique: "view", name: name)
     }
     
     /// Overrides the configurable View with this instance.
