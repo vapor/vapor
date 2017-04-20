@@ -50,7 +50,7 @@ extension Config {
     
     private func makeAbsolute(path: String) -> String {
         if path.hasPrefix("/") {
-            return path
+            return path.finished(with: "/")
         } else {
             return workDir + path.finished(with: "/")
         }
