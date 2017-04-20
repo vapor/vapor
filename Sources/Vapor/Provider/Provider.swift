@@ -21,6 +21,14 @@ public protocol Provider: ConfigInitializable {
     /// for performance considerations
     static var repositoryName: String { get }
     
+    /// The location of the public directory
+    /// _relative_ to the root of the provider package.
+    static var publicDir: String { get }
+    
+    /// The location of the views directory
+    /// _relative_ to the root of the provider package.
+    static var viewsDir: String { get }
+    
     /// Called after the provider has initialized
     /// in the `Config.addProvider` call.
     func boot(_ config: Config) throws
@@ -33,56 +41,14 @@ public protocol Provider: ConfigInitializable {
     func beforeRun(_ droplet: Droplet) throws
 }
 
-// MARK: Name
+// MARK: Optional
 
 extension Provider {
-    public static var name: String {
-        let type = "\(self)"
-        guard let characters = type.characters.split(separator: " ").first else {
-            return "Provider"
-        }
-
-        let trimmed = Array(characters).trimmed(["("])
-
-        return String(Array(trimmed))
+    public static var publicDir: String {
+        return "Public"
     }
-
-    public var name: String {
-        return type(of: self).name
-    }
-}
-
-// MARK: Repo name
-
-extension Provider {
-    public static var repositoryName: String {
-        var module = String(reflecting: self)
-            .makeBytes()
-            .split(separator: .period)
-            .first
-            ?? []
-
-        if module[0...4] == [.V, .a, .p, .o, .r] {
-            module = module.dropFirst(5)
-            module += [.hyphen, .p, .r, .o, .v, .i, .d, .e, .r]
-        }
-
-        return module.removingCamelCasing().makeString()
-    }
-}
-
-extension Sequence where Iterator.Element == Byte {
-    fileprivate func removingCamelCasing() -> Bytes {
-        var result = Bytes()
-        enumerated().forEach { idx, byte in
-            switch byte {
-            case .A ... .Z where idx != 0:
-                result.append(.hyphen)
-            default:
-                break
-            }
-            result.append(byte)
-        }
-        return result.lowercased
+    
+    public static var viewsDir: String {
+        return "Resources/Views"
     }
 }

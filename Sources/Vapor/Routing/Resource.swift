@@ -68,7 +68,7 @@ extension RouteBuilder {
                     throw Abort.notFound
                 }
 
-                guard let model = try Model(from: id) else {
+                guard let model = try Model(id) else {
                     throw Abort.notFound
                 }
 

@@ -165,7 +165,13 @@ public final class Droplet {
             VersionCommand(console),
             RouteList(console, router),
             DumpConfig(console, config),
-            Serve(console, server, responder, log, config.makeServerConfig())
+            Serve(console, server, responder, log, config.makeServerConfig()),
+            ProviderInstall(
+                console,
+                config.providers,
+                publicDir: config.publicDir,
+                viewsDir: config.viewsDir
+            )
         ]
         let commands = try config.resolveCommands() + requiredCommands
         

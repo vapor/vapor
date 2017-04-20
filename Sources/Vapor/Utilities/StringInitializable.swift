@@ -1,3 +1,6 @@
 public protocol StringInitializable {
-    init?(from string: String) throws
+    init?(_ string: String) throws
 }
+
+extension String: StringInitializable { }
+extension Int: StringInitializable { }

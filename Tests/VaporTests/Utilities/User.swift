@@ -4,7 +4,7 @@ final class User: StringInitializable, NodeConvertible {
     var id: Node?
     var name: String
 
-    init?(from string: String) throws {
+    init?(_ string: String) throws {
         if string == "ERROR" {
             return nil
         }

@@ -11,7 +11,7 @@ class ResourceTests: XCTestCase {
     func testBasic() throws {
         let drop = try Droplet()
 
-        let user = try User(from: "Hi")
+        let user = try User("Hi")
         let node = try user?.makeNode(in: nil)
         XCTAssertEqual(node, .object(["name":"Hi"]))
 

@@ -66,12 +66,11 @@ class ProviderTests: XCTestCase {
     }
 
     func testProviderRepository() {
-        XCTAssertEqual(FastServerProvider.repositoryName, "tests-provider")
+        XCTAssertEqual(FastServerProvider.repositoryName, "fast-server")
     }
 
     func testCheckoutsDirectory() {
-        XCTAssertNil(FastServerProvider.resourcesDir)
-        XCTAssertNil(FastServerProvider.viewsDir)
+        XCTAssertNil(FastServerProvider.providedDirectory)
     }
     
     func testDoubleBoot() throws {
@@ -111,6 +110,7 @@ private final class FastServer: ServerProtocol {
 }
 
 private final class FastServerProvider: Provider {
+    static let repositoryName = "fast-server"
     var beforeRunFlag = false
 
     init(config: Configs.Config) throws {
@@ -152,6 +152,7 @@ private final class SlowServer: ServerProtocol {
 }
 
 private final class SlowServerProvider: Provider {
+    static let repositoryName = "slow-server"
     var afterInitFlag = false
     var beforeRunFlag = false
 
