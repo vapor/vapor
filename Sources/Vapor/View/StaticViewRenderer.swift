@@ -13,7 +13,7 @@ public final class StaticViewRenderer: ViewRenderer {
     public func make(_ path: String, _ context: Node) throws -> View {
         let path = path.hasPrefix("/") ? path : viewsDir + path
         if let cached = cache?[path] { return cached }
-        let bytes = try loader.load(path: path)
+        let bytes = try loader.read(at: path)
         let view = View(bytes: bytes)
         cache?[path] = view
         return view

@@ -12,7 +12,7 @@ internal final class ErrorView {
 
         let file = "/" + path.joined(separator: "/")
         do {
-            let string = try DataFile().load(path: file).makeString()
+            let string = try DataFile.read(at: file).makeString()
 
             let comps = string.components(separatedBy: "#(code)")
             head = comps.first?.makeBytes() ?? []

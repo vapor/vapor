@@ -13,7 +13,7 @@ class FileManager {
     }
 
     static func readBytesFromFile(_ path: String) throws -> [UInt8] {
-        return try DataFile().load(path: path)
+        return try DataFile.read(at: path)
     }
 
     static func expandPath(_ path: String) throws -> String {
