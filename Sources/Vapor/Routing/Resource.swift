@@ -45,6 +45,11 @@ public protocol ResourceRepresentable {
 }
 
 extension RouteBuilder {
+    public func resource<Resource: ResourceRepresentable & EmptyInitializable>(_ path: String, _ resource: Resource.Type) throws {
+        let resource = try Resource().makeResource()
+        self.resource(path, resource)
+    }
+    
     public func resource<Resource: ResourceRepresentable>(_ path: String, _ resource: Resource) {
         let resource = resource.makeResource()
         self.resource(path, resource)
