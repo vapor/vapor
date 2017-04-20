@@ -54,7 +54,7 @@ public final class FileMiddleware: Middleware {
             }
 
             // File exists and was not cached, returning content of file.
-            if let fileBody = try? loader.load(path:filePath) {
+            if let fileBody = try? loader.read(at:filePath) {
                 return Response(status: .ok, headers: headers, body: .data(fileBody))
             } else {
                 print("unable to load path")

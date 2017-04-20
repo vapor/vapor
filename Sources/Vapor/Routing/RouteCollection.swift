@@ -1,4 +1,5 @@
 import Routing
+import Core
 
 /// Objects conforming to this protocol can be used
 /// to add collections of rotues to a route builder.
@@ -14,7 +15,7 @@ extension RouteBuilder {
     
     /// Adds the collection of routes
     public func collection<C: RouteCollection & EmptyInitializable>(_ c: C.Type) throws {
-        let c = C()
+        let c = try C()
         try c.build(self)
     }
 }
