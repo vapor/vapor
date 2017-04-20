@@ -1,9 +1,7 @@
 import Core
 import HTTP
 
-/**
-    Represents a rendered view. 
-*/
+/// Represents a rendered view.
 public final class View {
     public let data: Bytes
 
@@ -12,11 +10,9 @@ public final class View {
     }
 }
 
-/**
-    Allow views to easily convert to
-    and from bytes for interfacing
-    with other byte based processes.
-*/
+/// Allow views to easily convert to
+/// and from bytes for interfacing
+/// with other byte based processes.
 extension View: BytesConvertible {
     public func makeBytes() -> Bytes {
         return data

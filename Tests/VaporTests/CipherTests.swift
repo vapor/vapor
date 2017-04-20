@@ -40,7 +40,7 @@ class CipherTests: XCTestCase {
             ]
         ])
 
-        let drop = try Droplet(config: config)
+        let drop = try Droplet(config)
 
         let secret = "vapor"
         let e = try drop.cipher.encrypt(secret)

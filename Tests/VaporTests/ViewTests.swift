@@ -39,7 +39,24 @@ class ViewTests: XCTestCase {
     }
     
     func testViewRequest() throws {
-        let drop = try Droplet()
+        final class TestRenderer: ViewRenderer {
+            var shouldCache: Bool
+            
+            let viewsDir: String
+            init(viewsDir: String) {
+                self.viewsDir = viewsDir
+                shouldCache = false
+            }
+            
+            func make(_ path: String, _ context: Node) throws -> View {
+                return View(data: "\(context)".makeBytes())
+                
+            }
+        }
+        
+        let config = Config([:])
+        config.override(view: TestRenderer(viewsDir: ""))
+        let drop = try Droplet(config)
         
         let request = Request(method: .get, path: "/foopath")
         
@@ -52,19 +69,7 @@ class ViewTests: XCTestCase {
             "name": "Vapor"
         ])
         
-        final class TestRenderer: ViewRenderer {
-            let viewsDir: String
-            init(viewsDir: String) {
-                self.viewsDir = viewsDir
-            }
-            
-            func make(_ path: String, _ context: Node) throws -> View {
-                return View(data: "\(context)".makeBytes())
-              
-            }
-        }
 
-        drop.view = TestRenderer(viewsDir: "")
         
         let view = try drop.view.make("test-template", for: request)
         let string = view.data.makeString()

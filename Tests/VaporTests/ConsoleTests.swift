@@ -14,9 +14,10 @@ class ConsoleTests: XCTestCase {
 
     func testCommandRun() throws {
         let console = TestConsoleDriver()
-        let drop = try Droplet(arguments: ["/path/to/exe", "test-1"])
-
-        drop.console = console
+        let config = Config([:])
+        config.arguments = ["/path/to/exe", "test-1"]
+        config.override(console: console)
+        let drop = try Droplet(config)
 
         drop.commands = [
             TestOneCommand(console: console)
@@ -32,9 +33,11 @@ class ConsoleTests: XCTestCase {
 
     func testCommandInsufficientArgs() throws {
         let console = TestConsoleDriver()
-        let drop = try Droplet(arguments: ["/path/to/exe", "test-2"])
-
-        drop.console = console
+        
+        let config = Config([:])
+        config.arguments = ["/path/to/exe", "test-2"]
+        config.override(console: console)
+        let drop = try Droplet(config)
 
         let command = TestTwoCommand(console: console)
         drop.commands = [
@@ -51,11 +54,12 @@ class ConsoleTests: XCTestCase {
 
     func testVersionCommand() throws {
         let console = TestConsoleDriver()
-        let drop = try Droplet(arguments: ["run", "version"])
+        let config = Config([:])
+        config.arguments = ["run", "version"]
+        config.override(console: console)
+        let drop = try Droplet(config)
 
-        drop.console = console
-
-        let command = VersionCommand(console: console)
+        let command = VersionCommand(console)
         drop.commands = [
             command
         ]
@@ -65,9 +69,10 @@ class ConsoleTests: XCTestCase {
 
     func testCommandFetchArgs() throws {
         let console = TestConsoleDriver()
-        let drop = try Droplet(arguments: ["/path/to/ext", "test-2", "123"])
-
-        drop.console = console
+        let config = Config([:])
+        config.arguments = ["/path/to/ext", "test-2", "123"]
+        config.override(console: console)
+        let drop = try Droplet(config)
 
         let command = TestTwoCommand(console: console)
         drop.commands = [
@@ -85,9 +90,11 @@ class ConsoleTests: XCTestCase {
 
     func testCommandFetchOptions() throws {
         let console = TestConsoleDriver()
-        let drop = try Droplet(arguments: ["/path/to/ext", "test-2", "123", "--opt-1=abc"])
-
-        drop.console = console
+        
+        let config = Config([:])
+        config.arguments = ["/path/to/ext", "test-2", "123", "--opt-1=abc"]
+        config.override(console: console)
+        let drop = try Droplet(config)
 
         let command = TestTwoCommand(console: console)
         drop.commands = [
@@ -117,7 +124,9 @@ class ConsoleTests: XCTestCase {
             }
         }
 
-        let drop = try Droplet(arguments: ["/path/to/exec"])
+        let config = Config([:])
+        config.arguments = ["vapor"]
+        let drop = try Droplet(config)
         drop.commands = [TestServe(console: drop.console)]
 
         do {

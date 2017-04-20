@@ -16,10 +16,10 @@ public protocol ClientFactoryProtocol: Responder {
 
 // MARK: Convenience
 
-extension ClientFactory {
+extension ClientFactoryProtocol {
     /// Creates a client connected to the server specified
     /// by the supplied request.
-    func makeClient(for req: Request, using s: SecurityLayer? = nil) throws -> Responder {
+    func makeClient(for req: Request, using s: SecurityLayer? = nil) throws -> ClientProtocol {
         // use security layer from input or
         // determine based on req uri scheme
         let securityLayer: SecurityLayer

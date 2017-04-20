@@ -9,13 +9,13 @@ let package = Package(
         Target(name: "Vapor", dependencies: [
             "Cache",
             "Sessions",
-            "Settings"
+            "Configs"
         ]),
 
         // Misc
         Target(name: "Cache"),
         Target(name: "Sessions", dependencies: ["Cache"]),
-        Target(name: "Settings"),
+        Target(name: "Configs"),
         Target(name: "Testing", dependencies: ["Vapor"]),
 
         // Development and Testing

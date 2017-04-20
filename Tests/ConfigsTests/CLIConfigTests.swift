@@ -1,6 +1,6 @@
 import XCTest
 import Node
-@testable import Settings
+@testable import Configs
 
 class CLIConfigTests: XCTestCase {
     static let allTests = [

@@ -6,7 +6,8 @@
 ///
 /// View renderers are also responsible for
 /// accepting a Node for templated responses.
-public protocol ViewRenderer {
+public protocol ViewRenderer: class {
+    var shouldCache: Bool { get set }
     /// Creates a view at the supplied path
     /// using a Node that is made optional
     /// by various protocol extensions.

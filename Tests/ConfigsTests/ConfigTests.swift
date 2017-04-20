@@ -1,6 +1,6 @@
 import XCTest
 import Node
-@testable import Settings
+@testable import Configs
 
 class ConfigTests: XCTestCase {
     static let allTests = [

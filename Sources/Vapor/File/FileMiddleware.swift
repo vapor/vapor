@@ -1,6 +1,8 @@
 import Foundation
 import HTTP
 
+/// Servers files from the supplied public directory
+/// on not found errors.
 public final class FileMiddleware: Middleware {
     
     private var publicDir: String

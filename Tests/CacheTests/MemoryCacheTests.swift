@@ -1,6 +1,7 @@
 import XCTest
 import Foundation
-@testable import Cache
+import Cache
+import Dispatch
 
 class MemoryCacheTests: XCTestCase {
     static let allTests = [
@@ -30,7 +31,13 @@ class MemoryCacheTests: XCTestCase {
     func testExpiration() throws {
         try cache.set("ephemeral", 42, expiration: Date(timeIntervalSinceNow: 0.5))
         XCTAssertEqual(try cache.get("ephemeral")?.string, "42")
-        sleep(1)
-        XCTAssertTrue(try cache.get("ephemeral")?.isNull ?? false)
+        
+        let exp = expectation(description: "cache")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            XCTAssertTrue(try! self.cache.get("ephemeral")?.isNull ?? false)
+            exp.fulfill()
+        }
+        
+        waitForExpectations(timeout: 2.0)
     }
 }

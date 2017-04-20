@@ -2,8 +2,7 @@ import HTTP
 import TLS
 import Transport
 
-/// types conforming to this protocol can
-/// be set as the Droplet's `.server`
+/// Represents an HTTP server.
 public protocol ServerProtocol {
     /// creates a new server
     init(
@@ -18,22 +17,4 @@ public protocol ServerProtocol {
         _ responder: Responder,
         errors: @escaping ServerErrorHandler
     ) throws
-}
-
-// MARK: TLS
-
-private var _defaultTLSServerContext: () throws -> (TLS.Context) = {
-    return try Context(.server)
-}
-
-extension ServerProtocol {
-    public static var defaultTLSContext: () throws -> (TLS.Context) {
-        get {
-            return _defaultTLSServerContext
-        }
-        set {
-            _defaultTLSServerContext = newValue
-        }
-
-    }
 }
