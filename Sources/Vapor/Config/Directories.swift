@@ -14,31 +14,45 @@ extension Config {
     /// Resources directory relative to workDir
     public var resourcesDir: String {
         let resourcesDir = self["droplet", "resourcesDir"]?.string
-            ?? workDir + "Resources"
-        return resourcesDir.finished(with: "/")
+            ?? "Resources"
+        return makeAbsolute(path: resourcesDir)
     }
     
     /// Views directory relative to the
     /// resources directory.
     public var viewsDir: String {
         let viewsDir = self["droplet", "viewsDir"]?.string
-            ?? resourcesDir + "Views"
-        return viewsDir.finished(with: "/")
+            ?? "Views"
+        // special case for views since it is a subset
+        // of the resources dir instead of workdir
+        if viewsDir.hasPrefix("/") {
+            return viewsDir
+        } else {
+            return resourcesDir + "Views"
+        }
     }
     
     /// Localization directory relative to the
     /// working directory
     public var localizationDir: String {
         let localizationDir = self["droplet", "localizationDir"]?.string
-            ?? workDir + "Localization"
-        return localizationDir.finished(with: "/")
+            ?? "Localization"
+        return makeAbsolute(path: localizationDir)
     }
     
     /// Public directory relative to the
     /// working directory
     public var publicDir: String {
         let publicDir = self["droplet", "publicDir"]?.string
-            ?? workDir + "Public"
-        return publicDir.finished(with: "/")
+            ?? "Public"
+        return makeAbsolute(path: publicDir)
+    }
+    
+    private func makeAbsolute(path: String) -> String {
+        if path.hasPrefix("/") {
+            return path
+        } else {
+            return workDir + path.finished(with: "/")
+        }
     }
 }
