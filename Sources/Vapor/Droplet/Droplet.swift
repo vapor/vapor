@@ -101,6 +101,7 @@ public final class Droplet {
         config.addConfigurable(middleware: SessionsMiddleware.init, name: "sessions")
         config.addConfigurable(middleware: DateMiddleware.init, name: "date")
         config.addConfigurable(middleware: FileMiddleware.init, name: "file")
+        config.addConfigurable(middleware: CORSMiddleware.init, name: "cors")
         
         // services
         let router = Router()
