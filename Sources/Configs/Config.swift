@@ -37,10 +37,13 @@ public final class Config: StructuredDataWrapper {
 }
 
 extension Config {
-    public convenience init(arguments: [String] = CommandLine.arguments) throws {
+    public convenience init(
+        arguments: [String] = CommandLine.arguments
+    ) throws {
         let env = arguments.environment ?? .development
+
+        let configDirectory = Config.workingDirectory(for: arguments) + "Config/"
         
-        let configDirectory = workingDirectory() + "Config/"
         var sources = [Source]()
         sources.append(.commandLine)
         sources.append(.directory(root: configDirectory + "secrets"))
@@ -57,10 +60,12 @@ extension Config {
 
 extension Config {
     public static func workingDirectory(
-        from arguments: [String] = CommandLine.arguments
+        for arguments: [String] = CommandLine.arguments
     ) -> String {
         let workDir = arguments.value(for: "workdir")
             ?? arguments.value(for: "workDir")
+            ?? arguments.value(for: "configDir")
+            ?? arguments.value(for: "configdir")
             ?? Core.workingDirectory()
         
         return workDir.finished(with: "/")

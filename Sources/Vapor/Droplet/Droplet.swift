@@ -10,11 +10,7 @@ public let VERSION = "2.0.0-beta"
 
 public final class Droplet {
     /// Provides access to config settings.
-    public let config: Configs.Config
-
-    /// Provides access to language specific
-    /// strings and defaults.
-    public let localization: Localization
+    public let config: Config
 
     /// The router driver is responsible
     /// for returning registered `Route` handlers
@@ -73,19 +69,25 @@ public final class Droplet {
     
     /// Storage to add/manage dependencies, identified by a string
     public var storage: [String: Any]
-    
+
+    /// Creates a Droplet.
     public init(
-        config: Configs.Config?,
-        localization localizationProvided: Localization?
+        custom: Config? = nil,
+        router: Router? = nil,
+        server: ServerFactoryProtocol? = nil,
+        client: ClientFactoryProtocol? = nil,
+        middleware: [Middleware]? = nil,
+        console: ConsoleProtocol? = nil,
+        log: LogProtocol? = nil,
+        hash: HashProtocol? = nil,
+        cipher: CipherProtocol? = nil,
+        commands: [Command]? = nil,
+        view: ViewRenderer? = nil,
+        cache: CacheProtocol? = nil,
+        mail: MailProtocol? = nil
     ) throws {
-        var config = try config ?? Config()
-        
-        // port override
-        if let port = config.arguments.value(for: "port")?.int {
-            try config.set("server.port", port)
-        }
-        
-        // configurable
+        var config = try custom ?? Config()
+
         config.addConfigurable(server: EngineServer.self, name: "engine")
         config.addConfigurable(client: EngineClient.self, name: "engine")
         config.addConfigurable(log: ConsoleLogger.init, name: "console")
@@ -102,37 +104,31 @@ public final class Droplet {
         config.addConfigurable(middleware: DateMiddleware.init, name: "date")
         config.addConfigurable(middleware: FileMiddleware.init, name: "file")
         config.addConfigurable(middleware: CORSMiddleware.init, name: "cors")
-        
-        // services
-        let router = Router()
-        let server = try config.resolveServer()
-        let client = try config.resolveClient()
-        let console = try config.resolveConsole()
-        let log = try config.resolveLog()
-        let hash = try config.resolveHash()
-        let cipher = try config.resolveCipher()
-        let view = try config.resolveView()
-        let cache = try config.resolveCache()
-        let mail = try config.resolveMail()
-        
+
+        // port override
+        if let port = config.arguments.value(for: "port")?.int {
+            try config.set("server.port", port)
+        }
+
+        let router = router ?? Router()
+        let server = try server ?? config.resolveServer()
+        let client = try client ?? config.resolveClient()
+        let console = try console ?? config.resolveConsole()
+        let log = try log ?? config.resolveLog()
+        let hash = try hash ?? config.resolveHash()
+        let cipher = try cipher ?? config.resolveCipher()
+        let view = try view ?? config.resolveView()
+        let cache = try cache ?? config.resolveCache()
+        let mail = try mail ?? config.resolveMail()
+
         // settings
         let environment = config.environment
-        let localization: Localization
-        do {
-            localization = try localizationProvided
-                ?? Localization(localizationDirectory: config.localizationDir)
-        } catch {
-            log.debug("Could not load localization files: \(error)")
-            localization = Localization()
-        }
-        
-        let middleware = try config.resolveMiddleware()
-        
-        
+        let middleware = try middleware ?? config.resolveMiddleware()
+
         let chain = middleware.chain(to: router)
         let responder = Request.Handler { request in
             log.info("\(request.method) \(request.uri.path)")
-            
+
             let isHead = request.method == .head
             if isHead {
                 /// The HEAD method is identical to GET.
@@ -140,7 +136,7 @@ public final class Droplet {
                 /// https://tools.ietf.org/html/rfc2616#section-9.4
                 request.method = .get
             }
-            
+
             let response: Response
             do {
                 response = try chain.respond(to: request)
@@ -150,17 +146,17 @@ public final class Droplet {
                 log.info("Use `ErrorMiddleware` or catch \(type(of: error)) to provide a better error response.")
                 response = Response(status: .internalServerError)
             }
-            
+
             if isHead {
                 /// The server MUST NOT return a message-body in the response for HEAD.
                 ///
                 /// https://tools.ietf.org/html/rfc2616#section-9.4
                 response.body = .data([])
             }
-            
+
             return response
         }
-        
+
         // commands
         let requiredCommands: [Command] = try [
             VersionCommand(console),
@@ -174,10 +170,10 @@ public final class Droplet {
                 viewsDir: config.viewsDir
             )
         ]
-        let commands = try config.resolveCommands() + requiredCommands
-        
+        let commands = try (commands ?? config.resolveCommands())
+            + requiredCommands
+
         // set
-        self.localization = localization
         self.router = router
         self.server = server
         self.client = client
@@ -192,16 +188,16 @@ public final class Droplet {
         self.mail = mail
         self.responder = responder
         self.storage = [:]
-        
+
         // set config
         self.config = config
-        
+
         // post init
         if environment == .development {
             // disable cache by default in development
             self.view.shouldCache = false
         }
-        
+
         // boot providers
         for provider in config.providers {
             try provider.boot(self)
@@ -209,18 +205,11 @@ public final class Droplet {
     }
 }
 
-// MARK: Inits
+// MARK: Convenience
 
-extension Droplet: ConfigInitializable {
-    public convenience init(config: Configs.Config) throws {
-        try self.init(config: config, localization: nil)
-    }
-    
-    public convenience init(_ config: Configs.Config) throws {
-        try self.init(config: config, localization: nil)
-    }
-    
-    public convenience init() throws {
-        try self.init(config: nil, localization: nil)
+extension Droplet {
+    /// Creates a Droplet using the supplied Config.
+    public convenience init(_ config: Config) throws {
+        try self.init(custom: config)
     }
 }

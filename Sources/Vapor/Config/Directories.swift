@@ -7,7 +7,7 @@ extension Config {
     /// you are running Vapor using `.build/xxx/app`
     public var workDir: String {
         let workDir = self["droplet", "workDir"]?.string
-            ?? Config.workingDirectory(from: arguments)
+            ?? Config.workingDirectory(for: arguments)
         return workDir.finished(with: "/")
     }
     
@@ -30,14 +30,6 @@ extension Config {
         } else {
             return resourcesDir + viewsDir.finished(with: "/")
         }
-    }
-    
-    /// Localization directory relative to the
-    /// working directory
-    public var localizationDir: String {
-        let localizationDir = self["droplet", "localizationDir"]?.string
-            ?? "Localization"
-        return makeAbsolute(path: localizationDir)
     }
     
     /// Public directory relative to the

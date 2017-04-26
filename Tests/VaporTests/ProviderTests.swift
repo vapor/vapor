@@ -14,7 +14,8 @@ class ProviderTests: XCTestCase {
     ]
 
     func testBasic() throws {
-        let config = Config([:])
+        var config = Config([:])
+        try config.set("droplet.server", "fast")
         try config.addProvider(FastServerProvider.self)
         let drop = try Droplet(config)
 
@@ -22,34 +23,45 @@ class ProviderTests: XCTestCase {
     }
 
     func testPrecedence() throws {
-        let config = Config([:])
-        config.override(console: DebugConsole())
+        var config = Config([:])
+        try config.set("droplet.server", "fast")
         try config.addProvider(FastServerProvider.self)
         
-        let drop = try Droplet(config)
+        let drop = try Droplet(
+            custom: config,
+            console: DebugConsole()
+        )
+
         XCTAssert(type(of: drop.server) is ServerFactory<FastServer>.Type)
     }
 
     func testOverride() throws {
-        let config = Config([:])
-        config.override(console: DebugConsole())
+        var config = Config([:])
         try config.addProvider(SlowServerProvider.self)
         try config.addProvider(FastServerProvider.self)
+        try config.set("droplet.server", "fast")
         
-        let drop = try Droplet(config)
+        let drop = try Droplet(
+            custom: config,
+            console: DebugConsole()
+        )
         XCTAssert(type(of: drop.server) is ServerFactory<FastServer>.Type)
     }
 
     func testInitialized() throws {
-        let config = Config([:])
+        var config = Config([:])
+        try config.set("droplet.server", "slow")
         let fast = try FastServerProvider(config: config)
         let slow = try SlowServerProvider(config: config)
 
         config.arguments = ["vapor", "serve"]
         try config.addProvider(fast)
         try config.addProvider(slow)
-        config.override(console: DebugConsole())
-        let drop = try Droplet(config)
+
+        let drop = try Droplet(
+            custom: config,
+            console: DebugConsole()
+        )
         
         XCTAssert(type(of: drop.server) is ServerFactory<SlowServer>.Type)
 
@@ -74,10 +86,11 @@ class ProviderTests: XCTestCase {
     }
     
     func testDoubleBoot() throws {
-        let config = Config([:])
+        var config = Config([:])
         try config.addProvider(SlowServerProvider.self)
         try config.addProvider(FastServerProvider.self)
         try config.addProvider(FastServerProvider.self)
+        try config.set("droplet.server", "fast")
         
         let drop = try Droplet(config)
         XCTAssertEqual(drop.config.providers.count, 2)
@@ -117,7 +130,7 @@ private final class FastServerProvider: Provider {
     }
     
     func boot(_ config: Config) throws {
-        config.override(server: ServerFactory<FastServer>())
+        config.addConfigurable(server: { _ in return ServerFactory<FastServer>() }, name: "fast")
     }
 
     func beforeRun(_ drop: Droplet) {
@@ -169,7 +182,7 @@ private final class SlowServerProvider: Provider {
     }
     
     func boot(_ config: Config) throws {
-        config.override(server: ServerFactory<SlowServer>())
+        config.addConfigurable(server: { _ in return ServerFactory<SlowServer>() }, name: "slow")
     }
 
     func boot(_ drop: Droplet) {

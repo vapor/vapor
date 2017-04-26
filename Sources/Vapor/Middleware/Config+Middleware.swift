@@ -8,11 +8,6 @@ extension Config {
         customAddConfigurable(closure: middleware, unique: "middleware", name: name)
     }
     
-    /// Overrides the configurable Middleware with this array.
-    public func override(middleware: [Middleware]) {
-        customOverride(instance: middleware, unique: "middleware")
-    }
-    
     /// Resolves the configured M.
     public func resolveMiddleware() throws -> [Middleware] {
         return try customResolveArray(

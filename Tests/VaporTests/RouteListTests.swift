@@ -21,8 +21,7 @@ class RouteListTests: XCTestCase {
         // Setup drop routes
         let config = Config([:])
         config.arguments = ["vapor", "routes"]
-        config.override(console: console)
-        let drop = try Droplet(config)
+        let drop = try Droplet(custom: config, console: console)
         drop.get("foo") { _ in return "" }
         drop.put("foo/bar/:id") { _ in return "" }
 

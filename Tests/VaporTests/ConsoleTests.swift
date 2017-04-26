@@ -16,9 +16,11 @@ class ConsoleTests: XCTestCase {
         let console = TestConsoleDriver()
         let config = Config([:])
         config.arguments = ["/path/to/exe", "test-1"]
-        config.override(console: console)
-        config.override(commands: [TestOneCommand(console: console)])
-        let drop = try Droplet(config)
+        let drop = try Droplet(
+            custom: config,
+            console: console,
+            commands: [TestOneCommand(console: console)]
+        )
 
         do {
             try drop.runCommands()
@@ -33,9 +35,11 @@ class ConsoleTests: XCTestCase {
         
         let config = Config([:])
         config.arguments = ["/path/to/exe", "test-2"]
-        config.override(console: console)
-        config.override(commands: [TestTwoCommand(console: console)])
-        let drop = try Droplet(config)
+        let drop = try Droplet(
+            custom: config,
+            console: console,
+            commands: [TestTwoCommand(console: console)]
+        )
 
         do {
             try drop.runCommands()
@@ -49,8 +53,7 @@ class ConsoleTests: XCTestCase {
         let console = TestConsoleDriver()
         let config = Config([:])
         config.arguments = ["run", "version"]
-        config.override(console: console)
-        let drop = try Droplet(config)
+        let drop = try Droplet(custom: config, console: console)
         
         try drop.runCommands()
         XCTAssert(console.input().contains("Vapor Framework v2."))
@@ -60,9 +63,11 @@ class ConsoleTests: XCTestCase {
         let console = TestConsoleDriver()
         let config = Config([:])
         config.arguments = ["/path/to/ext", "test-2", "123"]
-        config.override(console: console)
-        config.override(commands: [TestTwoCommand(console: console)])
-        let drop = try Droplet(config)
+        let drop = try Droplet(
+            custom: config,
+            console: console,
+            commands: [TestTwoCommand(console: console)]
+        )
 
         do {
             try drop.runCommands()
@@ -75,13 +80,14 @@ class ConsoleTests: XCTestCase {
 
     func testCommandFetchOptions() throws {
         let console = TestConsoleDriver()
-        
         let config = Config([:])
         config.arguments = ["/path/to/ext", "test-2", "123", "--opt-1=abc"]
-        config.override(console: console)
         let command = TestTwoCommand(console: console)
-        config.override(commands: [command])
-        let drop = try Droplet(config)
+        let drop = try Droplet(
+            custom: config,
+            console: console,
+            commands: [command]
+        )
         do {
             try drop.runCommands()
             XCTAssert(console.input().contains("123abc"), "Did not print 123abc")
@@ -107,8 +113,11 @@ class ConsoleTests: XCTestCase {
 
         let config = Config([:])
         config.arguments = ["vapor"]
-        try config.override(commands: [TestServe(console: config.resolveConsole())])
-        let drop = try Droplet(config)
+        
+        let drop = try Droplet(
+            custom: config,
+            commands: [TestServe(console: config.resolveConsole())]
+        )
 
         do {
             try drop.runCommands()
