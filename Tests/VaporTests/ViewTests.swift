@@ -57,7 +57,7 @@ class ViewTests: XCTestCase {
         let config = Config([:])
         
         let drop = try Droplet(
-            custom: config,
+            config: config,
             view: TestRenderer(viewsDir: "")
         )
         

@@ -72,7 +72,7 @@ public final class Droplet {
 
     /// Creates a Droplet.
     public init(
-        custom: Config? = nil,
+        config: Config? = nil,
         router: Router? = nil,
         server: ServerFactoryProtocol? = nil,
         client: ClientFactoryProtocol? = nil,
@@ -86,7 +86,8 @@ public final class Droplet {
         cache: CacheProtocol? = nil,
         mail: MailProtocol? = nil
     ) throws {
-        var config = try custom ?? Config()
+        var config = try config ?? Config()
+        
 
         config.addConfigurable(server: EngineServer.self, name: "engine")
         config.addConfigurable(client: EngineClient.self, name: "engine")
@@ -210,6 +211,6 @@ public final class Droplet {
 extension Droplet {
     /// Creates a Droplet using the supplied Config.
     public convenience init(_ config: Config) throws {
-        try self.init(custom: config)
+        try self.init(config: config)
     }
 }

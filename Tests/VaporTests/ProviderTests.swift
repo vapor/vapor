@@ -28,7 +28,7 @@ class ProviderTests: XCTestCase {
         try config.addProvider(FastServerProvider.self)
         
         let drop = try Droplet(
-            custom: config,
+            config: config,
             console: DebugConsole()
         )
 
@@ -42,7 +42,7 @@ class ProviderTests: XCTestCase {
         try config.set("droplet.server", "fast")
         
         let drop = try Droplet(
-            custom: config,
+            config: config,
             console: DebugConsole()
         )
         XCTAssert(type(of: drop.server) is ServerFactory<FastServer>.Type)
@@ -59,7 +59,7 @@ class ProviderTests: XCTestCase {
         try config.addProvider(slow)
 
         let drop = try Droplet(
-            custom: config,
+            config: config,
             console: DebugConsole()
         )
         

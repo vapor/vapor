@@ -17,7 +17,7 @@ class ConsoleTests: XCTestCase {
         let config = Config([:])
         config.arguments = ["/path/to/exe", "test-1"]
         let drop = try Droplet(
-            custom: config,
+            config: config,
             console: console,
             commands: [TestOneCommand(console: console)]
         )
@@ -36,7 +36,7 @@ class ConsoleTests: XCTestCase {
         let config = Config([:])
         config.arguments = ["/path/to/exe", "test-2"]
         let drop = try Droplet(
-            custom: config,
+            config: config,
             console: console,
             commands: [TestTwoCommand(console: console)]
         )
@@ -53,7 +53,7 @@ class ConsoleTests: XCTestCase {
         let console = TestConsoleDriver()
         let config = Config([:])
         config.arguments = ["run", "version"]
-        let drop = try Droplet(custom: config, console: console)
+        let drop = try Droplet(config: config, console: console)
         
         try drop.runCommands()
         XCTAssert(console.input().contains("Vapor Framework v2."))
@@ -64,7 +64,7 @@ class ConsoleTests: XCTestCase {
         let config = Config([:])
         config.arguments = ["/path/to/ext", "test-2", "123"]
         let drop = try Droplet(
-            custom: config,
+            config: config,
             console: console,
             commands: [TestTwoCommand(console: console)]
         )
@@ -84,7 +84,7 @@ class ConsoleTests: XCTestCase {
         config.arguments = ["/path/to/ext", "test-2", "123", "--opt-1=abc"]
         let command = TestTwoCommand(console: console)
         let drop = try Droplet(
-            custom: config,
+            config: config,
             console: console,
             commands: [command]
         )
@@ -115,7 +115,7 @@ class ConsoleTests: XCTestCase {
         config.arguments = ["vapor"]
         
         let drop = try Droplet(
-            custom: config,
+            config: config,
             commands: [TestServe(console: config.resolveConsole())]
         )
 

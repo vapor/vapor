@@ -1,5 +1,6 @@
 @_exported import Node
 import Core
+import Foundation
 
 public final class Config: StructuredDataWrapper {
     public var wrapped: StructuredData
@@ -43,6 +44,12 @@ extension Config {
         let env = arguments.environment ?? .development
 
         let configDirectory = Config.workingDirectory(for: arguments) + "Config/"
+
+        if !FileManager.default.fileExists(atPath: configDirectory) {
+            print("Could not load config files from: \(configDirectory)")
+            print("Try using the configDir flag")
+            print("ex: .build/debug/Run --configDir=/absolute/path/to/configs")
+        }
         
         var sources = [Source]()
         sources.append(.commandLine)
