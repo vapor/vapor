@@ -16,6 +16,8 @@ class CipherTests: XCTestCase {
             encoding: .base64
         )
 
+        
+        
         let secret = "vapor"
 
         let e = try cipher1.encrypt(secret).makeString()
@@ -34,11 +36,11 @@ class CipherTests: XCTestCase {
         XCTAssertEqual(try cipher2.decrypt(eh).makeString(), secret)
     }
 
-    func testDroplet() throws {
+    func testDroplet() throws {        
         let config = Config([
             "crypto": [
                 "cipher": [
-                    "key": "passwordpassword",
+                    "key": "ufEQmM8rsGYM3Nuol4xZuQ==",
                     "method": "aes128",
                     "encoding": "base64"
                 ]
@@ -52,7 +54,7 @@ class CipherTests: XCTestCase {
 
         let secret = "vapor"
         let e = try drop.cipher.encrypt(secret).makeString()
-        XCTAssertEqual(e, "b7cMwL66ysKz7+vmKxoJLg==")
+        XCTAssertEqual(e, "cxVfJ0NqJpDHdtSYaYrSmw==")
         XCTAssertEqual(try drop.cipher.decrypt(e).makeString(), secret)
     }
     

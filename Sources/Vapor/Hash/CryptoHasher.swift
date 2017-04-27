@@ -96,7 +96,7 @@ extension CryptoHasher: ConfigInitializable {
         let method: Method
 
         // Key
-        if let key = crypto["hash", "key"]?.bytes {
+        if let encodedKey = crypto["hash", "key"]?.bytes {
             guard let hmac = try HMAC.Method(methodString) else {
                 throw ConfigError.unsupported(
                     value: methodString,
@@ -104,11 +104,11 @@ extension CryptoHasher: ConfigInitializable {
                     file: "crypto"
                 )
             }
-
-            let keyString = key.makeString()
-            if keyString.contains("password") {
+            
+            let key = encoding.decode(encodedKey)
+            if key.allZeroes {
                 let log = try config.resolveLog()
-                log.warning("The current hash key \"\(keyString)\" is not secure.")
+                log.warning("The current hash key \"\(encodedKey.makeString())\" is not secure.")
                 log.warning("Update hash.key in Config/crypto.json before using in production.")
                 log.info("Use `openssl rand -base64 <length>` to generate a random string.")
             }
