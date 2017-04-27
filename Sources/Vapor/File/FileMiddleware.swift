@@ -1,6 +1,8 @@
 import Foundation
 import HTTP
 
+/// Servers files from the supplied public directory
+/// on not found errors.
 public final class FileMiddleware: Middleware {
     
     private var publicDir: String
@@ -52,7 +54,7 @@ public final class FileMiddleware: Middleware {
             }
 
             // File exists and was not cached, returning content of file.
-            if let fileBody = try? loader.load(path:filePath) {
+            if let fileBody = try? loader.read(at:filePath) {
                 return Response(status: .ok, headers: headers, body: .data(fileBody))
             } else {
                 print("unable to load path")

@@ -1,6 +1,7 @@
 import XCTest
 @testable import Vapor
 import HTTP
+import Console
 
 class ErrorTests: XCTestCase {
     static let allTests = [
@@ -8,9 +9,10 @@ class ErrorTests: XCTestCase {
     ]
 
     func testFixes() throws {
-        let drop = try Droplet()
+        let log = ConsoleLogger(Terminal(arguments: []))
         let req = try Request(method: .get, uri: "foo", headers: ["Accept": "html"])
-        let view = drop.errorRenderer.make(with: req, for: Abort(.notFound))
+        let view = ErrorMiddleware(.development, log).make(with: req, for: Abort(.notFound))
+        
         XCTAssert(try view.bodyString().contains("404"))
         XCTAssert(try view.bodyString().contains("Not Found"))
     }

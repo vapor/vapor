@@ -10,21 +10,22 @@ import Foundation
 ///
 /// Use in Xcode with:
 /// Droplet(arguments: ["vapor", "routes"])
-public class RouteList: Command {
+public final class RouteList: Command {
     public let help: [String] = [
         "Logs the routes of your application"
     ]
 
     public let id: String = "routes"
-    public var console: ConsoleProtocol { return drop.console }
-    public unowned let drop: Droplet
+    public let console: ConsoleProtocol
+    public let router: Router
 
     /// Initialize a route list command with droplet
     /// requires Droplet reference so that if user updates
     /// console _after_ initializing RouteList
     /// we access latest console.
-    public required init(_ drop: Droplet) {
-        self.drop = drop
+    public init(_ console: ConsoleProtocol, _ router: Router) {
+        self.console = console
+        self.router = router
     }
 
     public func run(arguments: [String] = []) {
@@ -32,7 +33,7 @@ public class RouteList: Command {
             console.kill("invalid arguments \(arguments) expected no arguments")
         }
         let titles = ["Host", "Method", "Path"]
-        var table = makeTable(routes: drop.router.routes)
+        var table = makeTable(routes: router.routes)
         table.insert(titles, at: 0)
         log(table: table, with: console)
     }

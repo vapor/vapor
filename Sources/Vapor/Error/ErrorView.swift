@@ -1,6 +1,7 @@
 import Core
 import HTTP
 
+/// Internal error view used to create error HTML pages.
 internal final class ErrorView {
     let head: Bytes
     let middle: Bytes
@@ -12,7 +13,7 @@ internal final class ErrorView {
 
         let file = "/" + path.joined(separator: "/")
         do {
-            let string = try DataFile().load(path: file).makeString()
+            let string = try DataFile.read(at: file).makeString()
 
             let comps = string.components(separatedBy: "#(code)")
             head = comps.first?.makeBytes() ?? []

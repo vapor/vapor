@@ -77,7 +77,7 @@ public final class CryptoHasher: HashProtocol {
 
 extension CryptoHasher: ConfigInitializable {
     /// Creates a crypto hasher from a Config object
-    public convenience init(config: Settings.Config) throws {
+    public convenience init(config: Configs.Config) throws {
         // Method
         guard let methodString = config["crypto", "hash", "method"]?.string else {
             throw ConfigError.missing(
@@ -96,7 +96,7 @@ extension CryptoHasher: ConfigInitializable {
             )
         }
 
-        guard let encoding = try Encoding(from: encodingString) else {
+        guard let encoding = try Encoding(encodingString) else {
             throw ConfigError.unsupported(
                 value: encodingString,
                 key: ["hash", "encoding"],
@@ -108,7 +108,7 @@ extension CryptoHasher: ConfigInitializable {
 
         // Key
         if let key = config["crypto", "hash", "key"]?.string {
-            guard let hmac = try HMAC.Method(from: methodString) else {
+            guard let hmac = try HMAC.Method(methodString) else {
                 throw ConfigError.unsupported(
                     value: methodString,
                     key: ["hash", "method"],
@@ -118,7 +118,7 @@ extension CryptoHasher: ConfigInitializable {
 
             method = .keyed(hmac, key: key.makeBytes())
         } else {
-            guard let hash = try Hash.Method(from: methodString) else {
+            guard let hash = try Hash.Method(methodString) else {
                 throw ConfigError.unsupported(
                     value: methodString,
                     key: ["hash", "method"],
@@ -136,7 +136,7 @@ extension CryptoHasher: ConfigInitializable {
 // MARK: String Initializable
 
 extension HMAC.Method: StringInitializable {
-    public init?(from string: String) throws {
+    public init?(_ string: String) throws {
         switch string {
         case "sha1":
             self = .sha1
@@ -163,7 +163,7 @@ extension HMAC.Method: StringInitializable {
 }
 
 extension Hash.Method: StringInitializable {
-    public init?(from string: String) throws {
+    public init?(_ string: String) throws {
         switch string {
         case "sha1":
             self = .sha1
@@ -188,7 +188,7 @@ extension Hash.Method: StringInitializable {
 }
 
 extension CryptoHasher.Encoding: StringInitializable {
-    public init?(from string: String) throws {
+    public init?(_ string: String) throws {
         switch string {
         case "hex":
             self = .hex

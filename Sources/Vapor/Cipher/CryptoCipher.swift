@@ -11,7 +11,7 @@ public final class CryptoCipher: CipherProtocol {
         case config(String)
     }
 
-    public init(method: Cipher.Method, defaultKey: Bytes, defaultIV: Bytes?) {
+    public init(method: Cipher.Method, defaultKey: Bytes, defaultIV: Bytes? = nil) {
         self.method = method
         self.defaultKey = defaultKey
         self.defaultIV = defaultIV
@@ -29,7 +29,7 @@ public final class CryptoCipher: CipherProtocol {
 }
 
 extension CryptoCipher: ConfigInitializable {
-    public convenience init(config: Settings.Config) throws {
+    public convenience init(config: Configs.Config) throws {
         guard let methodString = config["crypto", "cipher", "method"]?.string else {
             throw Error.config("No `cipher.method` found in `crypto.json` config.")
         }

@@ -26,7 +26,7 @@ public class Localization {
             let name = String(nameRaw)
             
             // Read the
-            let data = try DataFile().load(path: path)
+            let data = try DataFile.read(at: path)
             localizations[name.lowercased()] = try JSON(bytes: data).converted()
         }
         

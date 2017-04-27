@@ -45,8 +45,10 @@ class FormDataTests: XCTestCase {
             "text": textField,
             "garbage": garbageField
         ]
-        
-        let drop = try Droplet(arguments: ["vapor", "serve"])
+        var config = Config([:])
+        try config.set("server.port", 8932)
+        config.arguments = ["vapor", "serve"]
+        let drop = try Droplet(config)
         
         drop.get("form-data") { req in
             guard let formData = req.formData else {
@@ -79,9 +81,8 @@ class FormDataTests: XCTestCase {
         group.enter()
 
         background {
-            let server = ServerConfig(port: 8932)
             group.leave()
-            try! drop.run(server: server)
+            try! drop.run()
         }
 
         group.wait()

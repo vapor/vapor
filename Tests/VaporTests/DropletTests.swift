@@ -11,13 +11,12 @@ class DropletTests: XCTestCase {
         ("testTLSConfig", testTLSConfig),
         ("testRunDefaults", testRunDefaults),
         ("testRunConfig", testRunConfig),
-        ("testHeadRequest", testHeadRequest),
-        ("testMiddlewareOrder", testMiddlewareOrder),
+        ("testHeadRequest", testHeadRequest)
     ]
 
     func testData() {
         do {
-            let file = try DataFile().load(path: #file)
+            let file = try DataFile.read(at: #file)
             XCTAssert(file.makeString().contains("meta"))
         } catch {
             print("File load failed: \(error)")
@@ -34,15 +33,14 @@ class DropletTests: XCTestCase {
         let parent = #file.characters.split(separator: "/").map(String.init).dropLast(3).joined(separator: "/")
         let workDir = "/\(parent)/Sources/Development/"
 
-        let drop = try Droplet(workDir: workDir)
-
-        drop.middleware = [
-            FileMiddleware(publicDir: drop.workDir + "Public/")
-        ]
+        let config = try Config(node: [
+            "droplet": ["workDir": workDir]
+        ])
+        let drop = try Droplet(config)
 
         let request = Request(method: .get, path: "styles/app.css")
 
-        let response = drop.respond(to: request)
+        let response = try drop.respond(to: request)
 
         var found = false
         for header in response.headers {
@@ -67,17 +65,19 @@ class DropletTests: XCTestCase {
             ]
         ])
 
-        _ = try Droplet(config: config)
+        _ = try Droplet(config)
     }
 
     func testRunDefaults() throws {
-        let drop = try Droplet(arguments: ["vapor", "serve", "--port=8523"])
+        let config = Config([:])
+        config.arguments = ["vapor", "serve", "--port=8523"]
+        let drop = try Droplet(config)
 
         drop.get("foo") { req in
             return "bar"
         }
         
-        XCTAssertEqual(try drop.makeServerConfig().port, 8523)
+        XCTAssertEqual(try drop.config.makeServerConfig().port, 8523)
     }
 
     func testRunConfig() throws {
@@ -88,12 +88,11 @@ class DropletTests: XCTestCase {
                 "securityLayer": "none"
             ]
         ])
-        let drop = try Droplet(arguments: ["vapor", "serve"], config: config)
-        XCTAssertEqual(try drop.makeServerConfig().port, 8524)
+        XCTAssertEqual(try config.makeServerConfig().port, 8524)
     }
 
     func testHeadRequest() throws {
-        let drop = try Droplet(arguments: ["vapor", "serve"])
+        let drop = try Droplet()
         drop.get("foo") { req in
             return "Hi, I'm a body"
         }
@@ -102,35 +101,8 @@ class DropletTests: XCTestCase {
         XCTAssertEqual(try getResp.bodyString(), "Hi, I'm a body")
 
         let head = try Request(method: .head, uri: "http://0.0.0.0:9222/foo")
-        let headResp = drop.respond(to: head)
+        let headResp = try drop.respond(to: head)
         XCTAssertEqual(try headResp.bodyString(), "")
-    }
-
-    func testMiddlewareOrder() throws {
-        struct Mid: Middleware {
-            let handler: () -> Void
-
-            func respond(to request: Request, chainingTo next: Responder) throws -> Response {
-                handler()
-                return try next.respond(to: request)
-            }
-        }
-
-        var middleware: [String] = []
-
-        let drop = try Droplet()
-        drop.middleware = [
-            Mid(handler: { middleware.append("one") }),
-            Mid(handler: { middleware.append("two") })
-        ]
-
-        drop.get { req in return "foo" }
-
-        let req = Request(method: .get, path: "")
-        let response = drop.respond(to: req)
-        XCTAssertEqual(try response.bodyString(), "foo")
-
-        XCTAssertEqual(middleware, ["one", "two"])
     }
     
     func testDumpConfig() throws {
@@ -141,7 +113,8 @@ class DropletTests: XCTestCase {
                 "securityLayer": "none"
             ]
         ])
-        let drop = try Droplet(arguments: ["vapor", "dump-config", "server.port"], config: config)
+        config.arguments = ["vapor", "dump-config", "server.port"]
+        let drop = try Droplet(config)
         try drop.runCommands()
     }
 }

@@ -6,7 +6,7 @@ import Foundation
 /// The `MemorySessionDriver` stores session data
 /// in a Swift `Dictionary`. This means all session
 /// data will be purged if the server is restarted.
-public class MemorySessions: SessionsProtocol {
+public final class MemorySessions: SessionsProtocol {
     var sessions: [String: Session]
     private var sessionsLock = NSLock()
 

@@ -9,3 +9,11 @@ extension Droplet: RouteBuilder {
     }
 }
 
+extension Int {
+    public init?(_ string: String) {
+        guard let int = string.int else {
+            return nil
+        }
+        self = int
+    }
+}
