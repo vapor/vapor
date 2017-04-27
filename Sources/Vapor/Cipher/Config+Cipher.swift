@@ -14,9 +14,19 @@ extension Config {
             keyPath: ["cipher"],
             as: CipherProtocol.self
         ) { config in
-            return CryptoCipher(
+            let log = try config.resolveLog()
+
+            let message = "The default cipher should be replaced before using in production."
+            if config.environment == .production {
+                log.error(message)
+            } else {
+                log.warning(message)
+            }
+
+            return try CryptoCipher(
                 method: .aes256(.cbc),
-                defaultKey: Bytes(repeating: 0, count: 16)
+                key: Bytes(repeating: 0, count: 32),
+                encoding: .base64
             )
         }
     }

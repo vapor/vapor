@@ -9,11 +9,6 @@ extension Config {
         customAddConfigurable(closure: command, unique: "commands", name: name)
     }
     
-    /// Overrides the configurable Commands with this array.
-    public func override(commands: [Command]) {
-        customOverride(instance: commands, unique: "commands")
-    }
-    
     /// Resolves the configured Command.
     public func resolveCommands() throws -> [Command] {
         return try customResolveArray(

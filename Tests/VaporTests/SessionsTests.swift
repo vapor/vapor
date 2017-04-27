@@ -12,9 +12,7 @@ class SessionsTests: XCTestCase {
     func testExample() throws {
         let s = MemorySessions()
         let m = SessionsMiddleware(s)
-        let config = Config([:])
-        config.override(middleware: [m])
-        let drop = try Droplet(config)
+        let drop = try Droplet(middleware: [m])
 
         drop.get("set") { req in
             try req.assertSession().data["foo"] = "bar"

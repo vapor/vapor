@@ -8,11 +8,6 @@ extension Config {
         customAddConfigurable(closure: console, unique: "console", name: name)
     }
     
-    /// Overrides the configurable Console with this instance.
-    public func override<Console: ConsoleProtocol>(console: Console) {
-        customOverride(instance: console, unique: "console")
-    }
-    
     /// Resolves the configured Console.
     public func resolveConsole() throws -> ConsoleProtocol {
         return try customResolve(

@@ -6,9 +6,17 @@ extension Config {
     /// folders are stored. This is normally `./` if
     /// you are running Vapor using `.build/xxx/app`
     public var workDir: String {
-        let workDir = self["droplet", "workDir"]?.string
-            ?? Config.workingDirectory(from: arguments)
-        return workDir.finished(with: "/")
+        guard let workDir = storage["vapor:workDir"] as? String else {
+            // compute and cache the workdir
+            var workDir = self["droplet", "workDir"]?.string
+                ?? Config.workingDirectory(for: arguments)
+            workDir = workDir.finished(with: "/")
+
+            storage["vapor:workDir"] = workDir
+            return workDir
+        }
+
+        return workDir
     }
     
     /// Resources directory relative to workDir
@@ -30,14 +38,6 @@ extension Config {
         } else {
             return resourcesDir + viewsDir.finished(with: "/")
         }
-    }
-    
-    /// Localization directory relative to the
-    /// working directory
-    public var localizationDir: String {
-        let localizationDir = self["droplet", "localizationDir"]?.string
-            ?? "Localization"
-        return makeAbsolute(path: localizationDir)
     }
     
     /// Public directory relative to the
