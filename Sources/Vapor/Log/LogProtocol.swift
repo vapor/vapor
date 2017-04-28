@@ -3,7 +3,7 @@ import Console
 
 /// Logger protocol. Custom loggers must conform
 /// to this protocol
-public protocol LogProtocol {
+public protocol LogProtocol: class {
     /// Enabled log levels. Only levels in this
     /// array should be logged.
     var enabled: [LogLevel] { get set }

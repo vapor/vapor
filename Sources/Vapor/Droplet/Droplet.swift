@@ -194,10 +194,19 @@ public final class Droplet {
         self.config = config
 
         // post init
-        if environment == .development {
-            // disable cache by default in development
-            self.view.shouldCache = false
+        // change logging based on env
+        switch environment {
+        case .production:
+            log.info("Production mode enabled, disabling informational logs.")
+            log.enabled = [.error, .fatal]
+        case .development:
+            log.enabled = [.info, .warning, .error, .fatal]
+        default:
+            log.enabled = LogLevel.all
         }
+        
+        // disable cache by default during development
+        self.view.shouldCache = environment == .production
 
         // boot providers
         for provider in config.providers {
