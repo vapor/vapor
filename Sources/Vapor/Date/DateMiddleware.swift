@@ -4,11 +4,17 @@ import Core
 
 /// Adds the RFC 1123 date to the response.
 public final class DateMiddleware: Middleware {
-    public init() {}
+    private let lock: NSLock
+    
+    public init() {
+        self.lock = NSLock()
+    }
 
     public func respond(to request: Request, chainingTo next: Responder) throws -> Response {
         let response = try next.respond(to: request)
+        lock.lock()
         response.headers["Date"] = Date().rfc1123
+        lock.unlock()
         return response
     }
 }
