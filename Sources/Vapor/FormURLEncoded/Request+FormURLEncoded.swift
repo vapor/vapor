@@ -37,9 +37,13 @@ extension Request {
         get {
             if let existing = storage["query"] {
                 return existing as? Node
-            } else if let queryRaw = uri.rawQuery {
-                let queryBytes = queryRaw.makeBytes()
-                let query = Node(formURLEncoded: queryBytes, allowEmptyValues: true)
+            } else if let queryRaw = uri.query {
+                let queryBytes = queryRaw
+                    .makeBytes()
+                let query = Node(
+                    formURLEncoded: queryBytes,
+                    allowEmptyValues: true
+                )
                 storage["query"] = query
                 return query
             } else {
@@ -49,12 +53,15 @@ extension Request {
         set(data) {
             if let data = data {
                 do {
-                    uri.query = try data.formURLEncoded().makeString()
+                    uri.query = try data
+                        .formURLEncoded()
+                        .makeString()
                     storage["query"] = data
                 } catch {
                     // make no changes
                 }
             } else {
+                storage["query"] = nil
                 uri.query = nil
             }
         }

@@ -100,7 +100,7 @@ class DropletTests: XCTestCase {
         let getResp = try drop.request(.get, "http://0.0.0.0:9222/foo")
         XCTAssertEqual(try getResp.bodyString(), "Hi, I'm a body")
 
-        let head = try Request(method: .head, uri: "http://0.0.0.0:9222/foo")
+        let head = Request(method: .head, uri: "http://0.0.0.0:9222/foo")
         let headResp = try drop.respond(to: head)
         XCTAssertEqual(try headResp.bodyString(), "")
     }
