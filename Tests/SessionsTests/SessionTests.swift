@@ -12,7 +12,7 @@ class SessionTests: XCTestCase {
     func testRequest() throws {
         let s = Session(identifier: "")
 
-        let request = try Request(method: .get, uri: "http://vapor.codes")
+        let request = Request(method: .get, uri: "http://vapor.codes")
 
         do {
             _ = try request.assertSession()

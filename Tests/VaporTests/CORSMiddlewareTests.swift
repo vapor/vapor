@@ -40,7 +40,7 @@ class CORSMiddlewareTests: XCTestCase {
         let drop = dropWithCors(config: config)
 
         do {
-            let req = try Request(method: .get, uri: "*", headers: ["Origin" : "http://test.com"])
+            let req = Request(method: .get, uri: "*", headers: ["Origin" : "http://test.com"])
             let response = try drop.respond(to: req)
             XCTAssertEqual(response.headers["Access-Control-Allow-Origin"], "http://test.com")
         } catch {
@@ -55,7 +55,7 @@ class CORSMiddlewareTests: XCTestCase {
         let drop = dropWithCors(config: config)
 
         do {
-            let req = try Request(method: .get, uri: "*", headers: ["Origin" : "http://test.com"])
+            let req = Request(method: .get, uri: "*", headers: ["Origin" : "http://test.com"])
             let response = try drop.respond(to: req)
             XCTAssertEqual(response.headers["Access-Control-Allow-Origin"], "*")
         } catch {
@@ -71,7 +71,7 @@ class CORSMiddlewareTests: XCTestCase {
 
         // Test we get empty origin back
         do {
-            let req = try Request(method: .get, uri: "*", headers: ["Origin" : "http://test.com"])
+            let req = Request(method: .get, uri: "*", headers: ["Origin" : "http://test.com"])
             let response = try drop.respond(to: req)
             XCTAssertEqual(response.headers["Access-Control-Allow-Origin"], "")
         } catch {
@@ -80,7 +80,7 @@ class CORSMiddlewareTests: XCTestCase {
 
         // Test we don't get any cors headers if no origin specified
         do {
-            let req = try Request(method: .get, uri: "*")
+            let req = Request(method: .get, uri: "*")
             let response = try drop.respond(to: req)
             XCTAssertFalse(response.headers.contains(where: { $0.0 == "Access-Control-Allow-Origin" }), "")
         } catch {
@@ -95,7 +95,7 @@ class CORSMiddlewareTests: XCTestCase {
         let drop = dropWithCors(config: config)
 
         do {
-            let req = try Request(method: .get, uri: "*", headers: ["Origin" : "http://vapor.codes"])
+            let req = Request(method: .get, uri: "*", headers: ["Origin" : "http://vapor.codes"])
             let response = try drop.respond(to: req)
             XCTAssertEqual(response.headers["Access-Control-Allow-Origin"], "http://vapor.codes")
         } catch {
@@ -110,7 +110,7 @@ class CORSMiddlewareTests: XCTestCase {
         let drop = dropWithCors(config: config)
 
         do {
-            let req = try Request(method: .get, uri: "*", headers: ["Origin" : "http://google.com"])
+            let req = Request(method: .get, uri: "*", headers: ["Origin" : "http://google.com"])
             let response = try drop.respond(to: req)
             XCTAssertEqual(response.headers["Access-Control-Allow-Origin"], "http://vapor.codes")
         } catch {
@@ -126,7 +126,7 @@ class CORSMiddlewareTests: XCTestCase {
         let drop = dropWithCors(config: config)
 
         do {
-            let req = try Request(method: .get, uri: "*", headers: ["Origin" : "http:/google.com"])
+            let req = Request(method: .get, uri: "*", headers: ["Origin" : "http:/google.com"])
             let response = try drop.respond(to: req)
             XCTAssertEqual(response.headers["Access-Control-Allow-Credentials"], "true")
         } catch {
@@ -136,7 +136,7 @@ class CORSMiddlewareTests: XCTestCase {
 
     func testCorsCaching() {
         do {
-            let req = try Request(method: .get, uri: "*", headers: ["Origin" : "http://vapor.codes"])
+            let req = Request(method: .get, uri: "*", headers: ["Origin" : "http://vapor.codes"])
 
             // Test default value
             var config = CORSConfiguration(allowedOrigin: .custom("http://vapor.codes"),
@@ -166,7 +166,7 @@ class CORSMiddlewareTests: XCTestCase {
         let drop = dropWithCors(config: config)
 
         do {
-            let req = try Request(method: .options, uri: "*", headers: ["Origin" : "http://vapor.codes"])
+            let req = Request(method: .options, uri: "*", headers: ["Origin" : "http://vapor.codes"])
             let response = try drop.respond(to: req)
             XCTAssertEqual(response.headers["Access-Control-Allow-Methods"], "GET, PUT, DELETE")
         } catch {

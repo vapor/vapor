@@ -1,11 +1,9 @@
 import Vapor
 
-let drop = try Droplet()
+let drop = try Droplet(middleware: [])
 
 drop.get("plaintext") { request in
-    return "Hello, world"
+    return "Hello, world!"
 }
-
-drop.middleware = []
 
 try drop.run()
