@@ -35,15 +35,6 @@ public final class FileMiddleware: Middleware {
 
             var headers: [HeaderKey: String] = [:]
             
-            // Generate ETag value, "HEX value of last modified date" + "-" + "file size"
-            let fileETag = "\(modifiedAt.timeIntervalSince1970)-\(fileSize.intValue)"
-            headers["ETag"] = fileETag
-
-            // Check if file has been cached already and return NotModified response if the etags match
-            if fileETag == request.headers["If-None-Match"] {
-                return Response(status: .notModified, headers: headers, body: .data([]))
-            }
-
             // Set Content-Type header based on the media type
             // Only set Content-Type if file not modified and returned above.
             if
@@ -51,6 +42,15 @@ public final class FileMiddleware: Middleware {
                 let type = Request.mediaTypes[fileExtension]
             {
                 headers["Content-Type"] = type
+            }
+            
+            // Generate ETag value, "HEX value of last modified date" + "-" + "file size"
+            let fileETag = "\(modifiedAt.timeIntervalSince1970)-\(fileSize.intValue)"
+            headers["ETag"] = fileETag
+
+            // Check if file has been cached already and return NotModified response if the etags match
+            if fileETag == request.headers["If-None-Match"] {
+                return Response(status: .notModified, headers: headers, body: .data([]))
             }
 
             // File exists and was not cached, returning content of file.
