@@ -1,6 +1,5 @@
 import Routing
 import HTTP
-import TypeSafeRouting
 
 public final class Resource<Model: StringInitializable> {
     public typealias Multiple = (Request) throws -> ResponseRepresentable
