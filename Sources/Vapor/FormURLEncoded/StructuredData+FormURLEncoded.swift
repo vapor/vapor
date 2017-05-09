@@ -49,33 +49,54 @@ extension Node {
 
             var keyIndicatedArray = false
 
+            var subKey = ""
+            var keyIndicatedObject = false
+
             // check if the key has `key[]` or `key[5]`
             if keyData.contains(.rightSquareBracket) && keyData.contains(.leftSquareBracket) {
                 // get the key without the `[]`
-                if let keySlice = keyData
+                let slices = keyData
                     .split(separator: .leftSquareBracket, maxSplits: 1)
-                    .first {
-                    keyData = keySlice.array
+                guard slices.count == 2 else {
+                    print("Found bad encoded pair \(pair.makeString()) ... continuing")
+                    continue
                 }
 
-                keyIndicatedArray = true
+                keyData = slices[0].array
+
+                let contents = slices[1].array
+                if contents[0] == .rightSquareBracket {
+                    keyIndicatedArray = true
+                } else {
+                    subKey = contents.dropLast().makeString()
+                    keyIndicatedObject = true
+                }
             }
 
             let key = keyData.makeString()
+
             if let existing = urlEncoded[key] {
-                // if a key already exists, create an
-                // array and append the new value
-                if var array = existing.array {
+                if keyIndicatedArray {
+                    var array = existing.array ?? [existing]
                     array.append(value)
                     value = .array(array)
+                } else if keyIndicatedObject {
+                    var obj = existing.object ?? [:]
+                    obj[subKey] = value
+                    value = .object(obj)
                 } else {
-                    value = .array([existing, value])
+                    // if we don't have `[]` on this pair, but it was previously assigned
+                    // an array, then it is implicit and should be appended.
+                    // OR if we found a subsequent value w/ same identifier, it should
+                    // become an array
+                    var array = existing.array ?? [existing]
+                    array.append(value)
+                    value = .array(array)
                 }
-
             } else if keyIndicatedArray {
-                // turn the value into an array
-                // if the key had `[]`
                 value = .array([value])
+            } else if keyIndicatedObject {
+                value = .object([subKey: value])
             }
 
             urlEncoded[key] = value
