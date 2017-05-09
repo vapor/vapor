@@ -125,11 +125,3 @@ extension Node {
         return bytes.joined(separator: [Byte.ampersand]).array
     }
 }
-
-fileprivate final class QueryParser {
-    private var result: [String: Node] = [:]
-    private let allowEmptyValues: Bool
-    fileprivate init(allowEmptyValues: Bool = true) {
-        self.allowEmptyValues = allowEmptyValues
-    }
-}
