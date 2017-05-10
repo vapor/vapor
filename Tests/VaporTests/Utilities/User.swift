@@ -1,15 +1,19 @@
 import Vapor
 
-final class User: StringInitializable, NodeConvertible {
+final class User: Parameterizable, NodeConvertible {
     var id: Node?
     var name: String
 
-    init?(_ string: String) throws {
+    static func make(for string: String) throws -> User {
         if string == "ERROR" {
-            return nil
+            throw Abort.notFound
         }
         
-        self.name = string
+        return User(name: string)
+    }
+    
+    static var uniqueSlug: String {
+        return "user"
     }
     
     init(name: String) {
