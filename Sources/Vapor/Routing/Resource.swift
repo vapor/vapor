@@ -6,10 +6,12 @@ public final class Resource<Model: StringInitializable> {
     public typealias Item = (Request, Model) throws -> ResponseRepresentable
 
     public var index: Multiple?
-    public var store: Multiple?
+    public var new: Multiple?
+    public var create: Multiple?
     public var show: Item?
+    public var edit: Item?
+    public var update: Item?
     public var replace: Item?
-    public var modify: Item?
     public var destroy: Item?
     public var clear: Multiple?
     public var aboutItem: Item?
@@ -17,7 +19,36 @@ public final class Resource<Model: StringInitializable> {
 
     public init(
         index: Multiple? = nil,
-        store: Multiple? = nil,
+        new: Multiple? = nil,
+        create: Multiple? = nil,
+        show: Item? = nil,
+        edit: Item? = nil,
+        update: Item? = nil,
+        replace: Item? = nil,
+        destroy: Item? = nil,
+        clear: Multiple? = nil,
+        aboutItem: Item? = nil,
+        aboutMultiple: Multiple? = nil
+    ) {
+        self.index = index
+        self.new = new
+        self.create = create
+        self.show = show
+        self.edit = edit
+        self.update = update
+        self.replace = replace
+        self.destroy = destroy
+        self.clear = clear
+        self.aboutItem = aboutItem
+        self.aboutMultiple = aboutMultiple
+    }
+}
+
+public extension Resource {
+
+    convenience public init(
+        index: Multiple? = nil,
+        store: Multiple?, // default removed to avoid ambiguity
         show: Item? = nil,
         replace: Item? = nil,
         modify: Item? = nil,
@@ -25,17 +56,18 @@ public final class Resource<Model: StringInitializable> {
         clear: Multiple? = nil,
         aboutItem: Item? = nil,
         aboutMultiple: Multiple? = nil
-    ) {
-        self.index = index
-        self.store = store
-        self.show = show
-        self.replace = replace
-        self.modify = modify
-        self.destroy = destroy
-        self.clear = clear
-        self.aboutItem = aboutItem
-        self.aboutMultiple = aboutMultiple
+    ){
+        self.init(index: index,
+                  create: store,
+                  show: show,
+                  update: modify,
+                  replace: replace,
+                  destroy: destroy,
+                  clear: clear,
+                  aboutItem: aboutItem,
+                  aboutMultiple: aboutMultiple)
     }
+
 }
 
 public protocol ResourceRepresentable {
@@ -60,14 +92,14 @@ extension RouteBuilder {
 
         let pathId = path.makeBytes().split(separator: .forwardSlash).joined(separator: [.hyphen]).split(separator: .colon).joined().makeString() + "_id"
 
-        func item(_ method: Method, _ item: Resource<Model>.Item?) {
+        func item(_ method: Method, subpath: String? = nil, _ item: Resource<Model>.Item?) {
             guard let item = item else {
                 return
             }
 
             itemMethods.append(method)
 
-            self.add(method, path, ":\(pathId)") { request in
+            let closure: (HTTP.Request) throws -> HTTP.ResponseRepresentable = { request in
                 guard let id = request.parameters["\(pathId)"]?.string else {
                     throw Abort.notFound
                 }
@@ -78,27 +110,43 @@ extension RouteBuilder {
 
                 return try item(request, model).makeResponse()
             }
+
+            if let subpath = subpath {
+                self.add(method, path, ":\(pathId)", subpath) { request in
+                    return try closure(request)
+                }
+            } else {
+                self.add(method, path, ":\(pathId)") { request in
+                    return try closure(request)
+                }
+            }
         }
 
-        func multiple(_ method: Method, _ multiple: Resource<Model>.Multiple?) {
+        func multiple(_ method: Method, subpath: String? = nil, _ multiple: Resource<Model>.Multiple?) {
             guard let multiple = multiple else {
                 return
             }
 
             multipleMethods.append(method)
 
-            self.add(method, path) { request in
-                return try multiple(request).makeResponse()
+            if let subpath = subpath {
+                self.add(method, path, subpath) { request in
+                    return try multiple(request).makeResponse()
+                }
+            } else {
+                self.add(method, path) { request in
+                    return try multiple(request).makeResponse()
+                }
             }
-
         }
 
-
         multiple(.get, resource.index)
-        multiple(.post, resource.store)
+        multiple(.get, subpath: "new", resource.new)
+        item(.get, subpath: "edit", resource.edit)
+        multiple(.post, resource.create)
         item(.get, resource.show)
         item(.put, resource.replace)
-        item(.patch, resource.modify)
+        item(.patch, resource.update)
         item(.delete, resource.destroy)
         multiple(.delete, resource.clear)
 
