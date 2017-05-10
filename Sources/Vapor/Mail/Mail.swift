@@ -1,7 +1,7 @@
 import SMTP
 import Foundation
 import Transport
-import Settings
+import Configs
 import Sockets
 
 /// Defines objects capable of transmitting emails

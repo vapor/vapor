@@ -10,24 +10,24 @@ public final class CryptoHasher: HashProtocol {
 
     /// The encoding used to format
     /// hashed bytes.
-    public let encoding: Encoding
+    public let encoding: CryptoEncoding
 
     /// Creates a CryptoHasher with the desired
     /// HMAC method and HashEncoding
-    public init(method: Method, encoding: Encoding) {
+    public init(method: Method, encoding: CryptoEncoding) {
         self.method = method
         self.encoding = encoding
     }
 
     /// Creates a CryptoHasher using a
     /// keyed HMAC algorithm.
-    public convenience init(hmac: HMAC.Method, encoding: Encoding, key: Bytes) {
+    public convenience init(hmac: HMAC.Method, encoding: CryptoEncoding, key: Bytes) {
         self.init(method: .keyed(hmac, key: key), encoding: encoding)
     }
 
     /// Creates a CryptoHasher using a
     /// normal Hash algorithm.
-    public convenience init(hash: Hash.Method, encoding: Encoding) {
+    public convenience init(hash: Hash.Method, encoding: CryptoEncoding) {
         self.init(method: .normal(hash), encoding: encoding)
     }
 
@@ -49,27 +49,12 @@ public final class CryptoHasher: HashProtocol {
             hash = try Hash.make(method, message)
         }
 
-        switch encoding {
-        case .base64:
-            return hash.base64Encoded
-        case .hex:
-            return hash.hexString.makeBytes()
-        case .plain:
-            return hash
-        }
+        return encoding.encode(hash)
     }
 
     /// See HashProtocol.check
     public func check(_ message: Bytes, matchesHash digest: Bytes) throws -> Bool {
         return try make(message) == digest
-    }
-
-    /// Exhaustive list of methods
-    /// by which a hash can be encoded.
-    public enum Encoding {
-        case hex
-        case base64
-        case plain
     }
 }
 
@@ -77,9 +62,13 @@ public final class CryptoHasher: HashProtocol {
 
 extension CryptoHasher: ConfigInitializable {
     /// Creates a crypto hasher from a Config object
-    public convenience init(config: Settings.Config) throws {
+    public convenience init(config: Configs.Config) throws {
+        guard let crypto = config["crypto"] else {
+            throw ConfigError.missingFile("crypto")
+        }
+
         // Method
-        guard let methodString = config["crypto", "hash", "method"]?.string else {
+        guard let methodString = crypto["hash", "method"]?.string else {
             throw ConfigError.missing(
                 key: ["hash", "method"],
                 file: "crypto",
@@ -88,7 +77,7 @@ extension CryptoHasher: ConfigInitializable {
         }
 
         // Encoding
-        guard let encodingString = config["crypto", "hash", "encoding"]?.string else {
+        guard let encodingString = crypto["hash", "encoding"]?.string else {
             throw ConfigError.missing(
                 key: ["hash", "encoding"],
                 file: "crypto",
@@ -96,7 +85,7 @@ extension CryptoHasher: ConfigInitializable {
             )
         }
 
-        guard let encoding = try Encoding(from: encodingString) else {
+        guard let encoding = try CryptoEncoding(encodingString) else {
             throw ConfigError.unsupported(
                 value: encodingString,
                 key: ["hash", "encoding"],
@@ -107,18 +96,26 @@ extension CryptoHasher: ConfigInitializable {
         let method: Method
 
         // Key
-        if let key = config["crypto", "hash", "key"]?.string {
-            guard let hmac = try HMAC.Method(from: methodString) else {
+        if let encodedKey = crypto["hash", "key"]?.bytes {
+            guard let hmac = try HMAC.Method(methodString) else {
                 throw ConfigError.unsupported(
                     value: methodString,
                     key: ["hash", "method"],
                     file: "crypto"
                 )
             }
+            
+            let key = encoding.decode(encodedKey)
+            if key.allZeroes {
+                let log = try config.resolveLog()
+                log.warning("The current hash key \"\(encodedKey.makeString())\" is not secure.")
+                log.warning("Update hash.key in Config/crypto.json before using in production.")
+                log.info("Use `openssl rand -base64 <length>` to generate a random string.")
+            }
 
-            method = .keyed(hmac, key: key.makeBytes())
+            method = .keyed(hmac, key: key)
         } else {
-            guard let hash = try Hash.Method(from: methodString) else {
+            guard let hash = try Hash.Method(methodString) else {
                 throw ConfigError.unsupported(
                     value: methodString,
                     key: ["hash", "method"],
@@ -136,7 +133,7 @@ extension CryptoHasher: ConfigInitializable {
 // MARK: String Initializable
 
 extension HMAC.Method: StringInitializable {
-    public init?(from string: String) throws {
+    public init?(_ string: String) throws {
         switch string {
         case "sha1":
             self = .sha1
@@ -163,7 +160,7 @@ extension HMAC.Method: StringInitializable {
 }
 
 extension Hash.Method: StringInitializable {
-    public init?(from string: String) throws {
+    public init?(_ string: String) throws {
         switch string {
         case "sha1":
             self = .sha1
@@ -181,21 +178,6 @@ extension Hash.Method: StringInitializable {
             self = .md5
         case "ripemd160":
             self = .ripemd160
-        default:
-            return nil
-        }
-    }
-}
-
-extension CryptoHasher.Encoding: StringInitializable {
-    public init?(from string: String) throws {
-        switch string {
-        case "hex":
-            self = .hex
-        case "base64":
-            self = .base64
-        case "plain":
-            self = .plain
         default:
             return nil
         }

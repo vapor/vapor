@@ -5,7 +5,7 @@ public final class VersionCommand: Command {
     public let help = ["Prints out the version of the Vapor framework being used."]
     public let console: ConsoleProtocol
 
-    public init(console: ConsoleProtocol) {
+    public init(_ console: ConsoleProtocol) {
         self.console = console
     }
 

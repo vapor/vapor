@@ -1,18 +1,19 @@
 import HTTP
 
-private let sessionKey = "session"
+private let sessionKey = "sessions:session"
 
 extension Request {
     /// Server stored information related from session cookie.
-    public func session() throws -> Session {
-        guard let session = storage[sessionKey] as? Session else {
+    public func assertSession() throws -> Session {
+        guard let session = self.session else {
             throw SessionsError.notConfigured
         }
 
         return session
     }
-
-    internal func set(_ session: Session) {
-        storage[sessionKey] = session
+    
+    public var session: Session? {
+        get { return storage[sessionKey] as? Session }
+        set { storage[sessionKey] = newValue }
     }
 }

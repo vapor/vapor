@@ -31,14 +31,14 @@ public final class SessionsMiddleware: Middleware {
             session = Session(identifier: try sessions.makeIdentifier())
         }
         
-        request.set(session)
+        request.session = session
 
 
         let response = try chain.respond(to: request)
 
         if session.shouldDestroy {
             try sessions.destroy(identifier: session.identifier)
-        } else {
+        } else if session.shouldCreate {
             response.cookies[cookieName] = session.identifier
             try sessions.set(session)
         }

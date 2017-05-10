@@ -23,6 +23,7 @@ class ContentTests: XCTestCase {
         ("testParse", testParse),
         ("testFormURLEncoded", testFormURLEncoded),
         ("testFormURLEncodedEdge", testFormURLEncodedEdge),
+        ("testFormURLEncodedDict", testFormURLEncodedDict),
         ("testSplitString", testSplitString),
     ]
 
@@ -98,6 +99,15 @@ class ContentTests: XCTestCase {
         XCTAssert(data["singleKeyArray", 0]?.string == "value", "singleKeyArray did not parse correctly")
         XCTAssert(data["implicitArray", 0]?.string == "1", "implicitArray did not parse correctly")
         XCTAssert(data["implicitArray", 1]?.string == "2", "implicitArray did not parse correctly")
+    }
+
+    func testFormURLEncodedDict() {
+        let body = "obj[foo]=bar&obj[soo]=car"
+        let data = Node(formURLEncoded: body.makeBytes(), allowEmptyValues: true)
+        let foo = try! data.converted(to: JSON.self).makeBytes().makeString()
+        print(foo)
+        XCTAssertEqual(data["obj.foo"], "bar")
+        XCTAssertEqual(data["obj.foo"], "bar")
     }
 
     func testSplitString() {

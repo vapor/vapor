@@ -12,10 +12,10 @@ class SessionTests: XCTestCase {
     func testRequest() throws {
         let s = Session(identifier: "")
 
-        let request = try Request(method: .get, uri: "http://vapor.codes")
+        let request = Request(method: .get, uri: "http://vapor.codes")
 
         do {
-            _ = try request.session()
+            _ = try request.assertSession()
             XCTFail("Should have errored.")
         } catch SessionsError.notConfigured {
             //
@@ -23,9 +23,9 @@ class SessionTests: XCTestCase {
             XCTFail("Wrong error: \(error)")
         }
 
-        request.storage["session"] = s
+        request.session = s
 
-        let rs = try request.session()
+        let rs = try request.assertSession()
         XCTAssert(s === rs)
     }
 

@@ -4,16 +4,14 @@ import HTTP
 import Sessions
 
 extension Request: NodeRepresentable {
-    /**
-        Converts the Request into a Node.
-     
-        Contains the following information:
-            - Session
-            - Storage
-            - Method
-            - Version
-            - URI
-    */
+    /// Converts the Request into a Node.
+    ///
+    /// Contains the following information:
+    ///     - Session
+    ///     - Storage
+    ///     - Method
+    ///     - Version
+    ///     - URI
     public func makeNode(in context: Context?) throws -> Node {
         var nodeStorage: [String: Node] = [:]
         
@@ -24,7 +22,7 @@ extension Request: NodeRepresentable {
         }
 
         var node = Node(context)
-        try node.set("session", try session())
+        try node.set("session", session)
         try node.set("storage", nodeStorage)
         try node.set("method", method.description)
         try node.set("version", version)
@@ -34,13 +32,11 @@ extension Request: NodeRepresentable {
 }
 
 extension Session: NodeRepresentable {
-    /**
-        Converts the Session in a Node.
-     
-        Contains the following information:
-            - Data
-            - Identifier
-    */
+    /// Converts the Session in a Node.
+    ///
+    /// Contains the following information:
+    ///     - Data
+    ///     - Identifier
     public func makeNode(in context: Context? = nil) throws -> Node {
         var node = Node(context)
         try node.set("data", data)
@@ -50,14 +46,12 @@ extension Session: NodeRepresentable {
 }
 
 extension Version: NodeRepresentable {
-    /**
-        Converts the Version in a Node.
-     
-        Contains the following information:
-            - Major
-            - Minor
-            - Patch
-    */
+    /// Converts the Version in a Node.
+    ///
+    /// Contains the following information:
+    ///     - Major
+    ///     - Minor
+    ///     - Patch
     public func makeNode(in context: Context?) throws -> Node {
         var node = Node(context)
         try node.set("major", major)
@@ -68,14 +62,12 @@ extension Version: NodeRepresentable {
 }
 
 extension URI: NodeRepresentable {
-    /**
-        Converts the URI in a Node.
-     
-        Contains the following information:
-            - Path
-            - Host
-            - Scheme
-    */
+    /// Converts the URI in a Node.
+    ///
+    /// Contains the following information:
+    ///     - Path
+    ///     - Host
+    ///     - Scheme
     public func makeNode(in context: Context?) throws -> Node {
         var node = Node(context)
         try node.set("path", path)

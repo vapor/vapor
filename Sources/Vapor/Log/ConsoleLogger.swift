@@ -1,35 +1,20 @@
 import libc
 import Console
 
-/**
-    Logs to the console
-
-    - parameter level: LogLevel enum
-    - parameter message: String to log
-*/
-public class ConsoleLogger: LogProtocol {
+/// Logs to the console
+public final class ConsoleLogger: LogProtocol {
     let console: ConsoleProtocol
 
     public var enabled: [LogLevel]
 
-    /**
-        Creates an instance of `ConsoleLogger`
-        with the desired `Console`.
-    */
-    public init(console: ConsoleProtocol) {
+    /// Creates an instance of `ConsoleLogger`
+    /// with the desired `Console`.
+    public init(_ console: ConsoleProtocol) {
         self.console = console
         enabled = LogLevel.all
     }
 
-    /**
-        The basic log function of the console.
-
-        - parameter level: the level with which to filter
-        - parameter message: the message to log to console
-        - parameter file: String where logging happens, is automatically set on default
-        - parameter function: String where logging happens, is automatically set on default
-        - parameter line: String where logging happens, is automatically set on default
-     */
+    /// The basic log function of the console.
     public func log(
         _ level: LogLevel,
         message: String,
@@ -40,6 +25,13 @@ public class ConsoleLogger: LogProtocol {
         if enabled.contains(level) {
             console.output(message, style: level.consoleStyle)
         }
+    }
+}
+
+extension ConsoleLogger: ConfigInitializable {
+    public convenience init(config: Config) throws {
+        let console = try config.resolveConsole()
+        self.init(console)
     }
 }
 

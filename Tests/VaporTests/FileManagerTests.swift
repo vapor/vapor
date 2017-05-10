@@ -27,7 +27,7 @@ class FileManagerTests: XCTestCase {
         do {
             let _ = try FileManager.readBytesFromFile(filename)
             XCTFail("Should never reach here")
-        } catch DataFile.Error.load {
+        } catch DataFileError.load {
             // We're happy here
         }
     }

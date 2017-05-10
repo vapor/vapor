@@ -35,6 +35,7 @@ Vapor can be deployed wherever Swift can.
 - Heroku
 - AWS
 - Bluemix
+- [Skyliner](https://www.skyliner.io/deploy/swift)
 - More ...
 
 [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/vapor/example/tree/master)
@@ -47,7 +48,7 @@ To contribute a **feature or idea** to Vapor, submit an issue and fill in the te
 
 If you find a **bug**, please submit a pull request with a failing test case displaying the bug or create an issue.
 
-If you find a **security vulnerability**, please contact [tanner@qutheory.io](mailto:tanner@qutheory.io) as soon as possible. We take these matters seriously.
+If you find a **security vulnerability**, please contact [security@vapor.codes](mailto:security@vapor.codes) as soon as possible. We take these matters seriously.
 
 ## 💙 Code of Conduct
 
@@ -101,10 +102,15 @@ Support us with a monthly donation and help us continue our activities. [[Become
 
 Proudly sponsored by Nodes
 
-[![Nodes](https://cloud.githubusercontent.com/assets/5750489/21993104/2e0db68a-dbe7-11e6-9402-35f9f04743a7.png)](http://nodesagency.com)
+<a href="http://nodesagency.com">
+    <img src="https://cloud.githubusercontent.com/assets/5750489/21993104/2e0db68a-dbe7-11e6-9402-35f9f04743a7.png" width="320" alt="Nodes">
+</a>
 
 Become a sponsor and get your logo on our README on Github with a link to your site. [[Become a sponsor](https://opencollective.com/vapor#sponsor)]
 
+<a href="http://dominickm.com" target="_blank">
+    <img width="64px" src="https://opencollective.com/proxy/images/?src=https%3A%2F%2Fopencollective-production.s3-us-west-1.amazonaws.com%2Fd0eaeb81cc9440518ad8457cfcdba0d0_965d9960-82ca-11e6-a262-73c13d37e1af.jpeg" alt="Michael Dominick">
+</a>
 <a href="https://opencollective.com/vapor/sponsor/0/website" target="_blank"><img src="https://opencollective.com/vapor/sponsor/0/avatar.svg"></a>
 <a href="https://opencollective.com/vapor/sponsor/1/website" target="_blank"><img src="https://opencollective.com/vapor/sponsor/1/avatar.svg"></a>
 <a href="https://opencollective.com/vapor/sponsor/2/website" target="_blank"><img src="https://opencollective.com/vapor/sponsor/2/avatar.svg"></a>

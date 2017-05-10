@@ -2,10 +2,8 @@ import Core
 import Foundation
 import libc
 
-/**
-    A replacement for Foundation's NSFileManager using
-    implementation from Swift's core libraries.
-*/
+/// A replacement for Foundation's NSFileManager using
+/// implementation from Swift's core libraries.
 class FileManager {
     enum Error: Swift.Error {
         case CouldNotOpenFile
@@ -13,7 +11,7 @@ class FileManager {
     }
 
     static func readBytesFromFile(_ path: String) throws -> [UInt8] {
-        return try DataFile().load(path: path)
+        return try DataFile.read(at: path)
     }
 
     static func expandPath(_ path: String) throws -> String {

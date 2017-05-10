@@ -11,14 +11,12 @@ class DropletTests: XCTestCase {
         ("testTLSConfig", testTLSConfig),
         ("testRunDefaults", testRunDefaults),
         ("testRunConfig", testRunConfig),
-        ("testRunManual", testRunManual),
-        ("testHeadRequest", testHeadRequest),
-        ("testMiddlewareOrder", testMiddlewareOrder),
+        ("testHeadRequest", testHeadRequest)
     ]
 
     func testData() {
         do {
-            let file = try DataFile().load(path: #file)
+            let file = try DataFile.read(at: #file)
             XCTAssert(file.makeString().contains("meta"))
         } catch {
             print("File load failed: \(error)")
@@ -35,15 +33,14 @@ class DropletTests: XCTestCase {
         let parent = #file.characters.split(separator: "/").map(String.init).dropLast(3).joined(separator: "/")
         let workDir = "/\(parent)/Sources/Development/"
 
-        let drop = try Droplet(workDir: workDir)
-
-        drop.middleware = [
-            FileMiddleware(publicDir: drop.workDir + "Public/")
-        ]
+        let config = try Config(node: [
+            "droplet": ["workDir": workDir]
+        ])
+        let drop = try Droplet(config)
 
         let request = Request(method: .get, path: "styles/app.css")
 
-        let response = drop.respond(to: request)
+        let response = try drop.respond(to: request)
 
         var found = false
         for header in response.headers {
@@ -58,124 +55,66 @@ class DropletTests: XCTestCase {
     func testTLSConfig() throws {
         let config = Config([
             "servers": [
-                "secure": [
-                    "host": "vapor.codes",
-                    "port": 443,
-                    "securityLayer": "tls",
-                    "tls": [
-                        "certificates": "ca",
-                        "signature": "selfSigned"
-                    ]
+                "hostname": "vapor.codes",
+                "port": 443,
+                "securityLayer": "tls",
+                "tls": [
+                    "certificates": "ca",
+                    "signature": "selfSigned"
                 ]
             ]
         ])
 
-        _ = try Droplet(config: config)
+        _ = try Droplet(config)
     }
 
     func testRunDefaults() throws {
-        let drop = try Droplet(arguments: ["vapor", "serve", "--port=8523"])
+        let config = Config([:])
+        config.arguments = ["vapor", "serve", "--port=8523"]
+        let drop = try Droplet(config)
 
         drop.get("foo") { req in
             return "bar"
         }
-
-        background {
-            try! drop.run()
-        }
-
-        drop.console.wait(seconds: 1)
-
-        let res = try drop.client.request(.get, "http://0.0.0.0:8523/foo")
-        XCTAssertEqual(try res.bodyString(), "bar")
+        
+        XCTAssertEqual(try drop.config.makeServerConfig().port, 8523)
     }
 
     func testRunConfig() throws {
         let config = Config([
             "server": [
-                "host": "0.0.0.0",
-                "port": 8337,
+                "hostname": "0.0.0.0",
+                "port": 8524,
                 "securityLayer": "none"
             ]
         ])
-        let drop = try Droplet(arguments: ["vapor", "serve"], config: config)
-
-        drop.get("foo") { req in
-            return "bar"
-        }
-
-        background {
-            try! drop.run()
-        }
-
-        drop.console.wait(seconds: 2)
-
-        let res = try drop.client.request(.get, "http://0.0.0.0:8337/foo")
-        XCTAssertEqual(try res.bodyString(), "bar")
-    }
-
-    func testRunManual() throws {
-        let drop = try Droplet(arguments: ["vapor", "serve"])
-
-        drop.get("foo") { req in
-            return "bar"
-        }
-
-        background {
-            let config = ServerConfig(port: 8424)
-            try! drop.serve(config)
-        }
-
-        drop.console.wait(seconds: 1)
-        let res = try drop.client.request(.get, "http://0.0.0.0:8424/foo")
-        XCTAssertEqual(try res.bodyString(), "bar")
+        XCTAssertEqual(try config.makeServerConfig().port, 8524)
     }
 
     func testHeadRequest() throws {
-        let drop = try Droplet(arguments: ["vapor", "serve"])
+        let drop = try Droplet()
         drop.get("foo") { req in
             return "Hi, I'm a body"
         }
 
-        background {
-            let config = ServerConfig(port: 9222)
-            try! drop.serve(config)
-        }
-
-        drop.console.wait(seconds: 1)
-
-        let getResp = try drop.client.request(.get, "http://0.0.0.0:9222/foo")
+        let getResp = try drop.request(.get, "http://0.0.0.0:9222/foo")
         XCTAssertEqual(try getResp.bodyString(), "Hi, I'm a body")
 
-        let head = try Request(method: .head, uri: "http://0.0.0.0:9222/foo")
-        let headResp = try drop.client.respond(to: head)
+        let head = Request(method: .head, uri: "http://0.0.0.0:9222/foo")
+        let headResp = try drop.respond(to: head)
         XCTAssertEqual(try headResp.bodyString(), "")
     }
-
-    func testMiddlewareOrder() throws {
-        struct Mid: Middleware {
-            let handler: () -> Void
-
-            func respond(to request: Request, chainingTo next: Responder) throws -> Response {
-                handler()
-                return try next.respond(to: request)
-            }
-        }
-
-        var middleware: [String] = []
-
-        let drop = try Droplet()
-        drop.middleware = [
-            Mid(handler: { middleware.append("one") }),
-            Mid(handler: { middleware.append("two") })
-        ]
-
-        drop.get { req in return "foo" }
-
-        let req = Request(method: .get, path: "")
-        let response = drop.respond(to: req)
-        XCTAssertEqual(try response.bodyString(), "foo")
-
-        XCTAssertEqual(middleware, ["one", "two"])
+    
+    func testDumpConfig() throws {
+        let config = Config([
+            "server": [
+                "hostname": "0.0.0.0",
+                "port": 8524,
+                "securityLayer": "none"
+            ]
+        ])
+        config.arguments = ["vapor", "dump-config", "server.port"]
+        let drop = try Droplet(config)
+        try drop.runCommands()
     }
 }

@@ -9,30 +9,40 @@ class CipherTests: XCTestCase {
 
     func testCipher() throws {
         let key = "passwordpasswordpasswordpassword".makeBytes()
-        let cipher = CryptoCipher(
+        let cipher1 = try CryptoCipher(
             method: .aes256(.cbc), 
-            defaultKey: key, 
-            defaultIV: nil
+            key: key,
+            iv: nil,
+            encoding: .base64
         )
 
+        
+        
         let secret = "vapor"
 
-        let e = try cipher.encrypt(secret)
+        let e = try cipher1.encrypt(secret).makeString()
         XCTAssertEqual(e, "jrYw6IVVtC7tA5shwPqc4Q==")
-        XCTAssertEqual(try cipher.decrypt(e), secret)
+        XCTAssertEqual(try cipher1.decrypt(e).makeString(), secret)
 
+        let cipher2 = try CryptoCipher(
+            method: .aes256(.cbc),
+            key: key,
+            iv: nil,
+            encoding: .hex
+        )
 
-        let eh = try cipher.encrypt(secret, encoding: .hex)
+        let eh = try cipher2.encrypt(secret).makeString()
         XCTAssertEqual(eh, "8eb630e88555b42eed039b21c0fa9ce1")
-        XCTAssertEqual(try cipher.decrypt(eh, encoding: .hex), secret)
+        XCTAssertEqual(try cipher2.decrypt(eh).makeString(), secret)
     }
 
-    func testDroplet() throws {
+    func testDroplet() throws {        
         let config = Config([
             "crypto": [
                 "cipher": [
-                    "key": "passwordpassword",
-                    "method": "aes128"
+                    "key": "ufEQmM8rsGYM3Nuol4xZuQ==",
+                    "method": "aes128",
+                    "encoding": "base64"
                 ]
             ],
             "droplet": [
@@ -40,12 +50,12 @@ class CipherTests: XCTestCase {
             ]
         ])
 
-        let drop = try Droplet(config: config)
+        let drop = try Droplet(config)
 
         let secret = "vapor"
-        let e = try drop.cipher.encrypt(secret)
-        XCTAssertEqual(e, "b7cMwL66ysKz7+vmKxoJLg==")
-        XCTAssertEqual(try drop.cipher.decrypt(e), secret)
+        let e = try drop.cipher.encrypt(secret).makeString()
+        XCTAssertEqual(e, "cxVfJ0NqJpDHdtSYaYrSmw==")
+        XCTAssertEqual(try drop.cipher.decrypt(e).makeString(), secret)
     }
     
 }

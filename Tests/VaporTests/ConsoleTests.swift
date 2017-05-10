@@ -14,13 +14,13 @@ class ConsoleTests: XCTestCase {
 
     func testCommandRun() throws {
         let console = TestConsoleDriver()
-        let drop = try Droplet(arguments: ["/path/to/exe", "test-1"])
-
-        drop.console = console
-
-        drop.commands = [
-            TestOneCommand(console: console)
-        ]
+        let config = Config([:])
+        config.arguments = ["/path/to/exe", "test-1"]
+        let drop = try Droplet(
+            config: config,
+            console: console,
+            commands: [TestOneCommand(console: console)]
+        )
 
         do {
             try drop.runCommands()
@@ -32,14 +32,14 @@ class ConsoleTests: XCTestCase {
 
     func testCommandInsufficientArgs() throws {
         let console = TestConsoleDriver()
-        let drop = try Droplet(arguments: ["/path/to/exe", "test-2"])
-
-        drop.console = console
-
-        let command = TestTwoCommand(console: console)
-        drop.commands = [
-            command
-        ]
+        
+        let config = Config([:])
+        config.arguments = ["/path/to/exe", "test-2"]
+        let drop = try Droplet(
+            config: config,
+            console: console,
+            commands: [TestTwoCommand(console: console)]
+        )
 
         do {
             try drop.runCommands()
@@ -51,28 +51,23 @@ class ConsoleTests: XCTestCase {
 
     func testVersionCommand() throws {
         let console = TestConsoleDriver()
-        let drop = try Droplet(arguments: ["run", "version"])
-
-        drop.console = console
-
-        let command = VersionCommand(console: console)
-        drop.commands = [
-            command
-        ]
+        let config = Config([:])
+        config.arguments = ["run", "version"]
+        let drop = try Droplet(config: config, console: console)
+        
         try drop.runCommands()
         XCTAssert(console.input().contains("Vapor Framework v2."))
     }
 
     func testCommandFetchArgs() throws {
         let console = TestConsoleDriver()
-        let drop = try Droplet(arguments: ["/path/to/ext", "test-2", "123"])
-
-        drop.console = console
-
-        let command = TestTwoCommand(console: console)
-        drop.commands = [
-            command
-        ]
+        let config = Config([:])
+        config.arguments = ["/path/to/ext", "test-2", "123"]
+        let drop = try Droplet(
+            config: config,
+            console: console,
+            commands: [TestTwoCommand(console: console)]
+        )
 
         do {
             try drop.runCommands()
@@ -85,15 +80,14 @@ class ConsoleTests: XCTestCase {
 
     func testCommandFetchOptions() throws {
         let console = TestConsoleDriver()
-        let drop = try Droplet(arguments: ["/path/to/ext", "test-2", "123", "--opt-1=abc"])
-
-        drop.console = console
-
+        let config = Config([:])
+        config.arguments = ["/path/to/ext", "test-2", "123", "--opt-1=abc"]
         let command = TestTwoCommand(console: console)
-        drop.commands = [
-            command
-        ]
-
+        let drop = try Droplet(
+            config: config,
+            console: console,
+            commands: [command]
+        )
         do {
             try drop.runCommands()
             XCTAssert(console.input().contains("123abc"), "Did not print 123abc")
@@ -117,8 +111,13 @@ class ConsoleTests: XCTestCase {
             }
         }
 
-        let drop = try Droplet(arguments: ["/path/to/exec"])
-        drop.commands = [TestServe(console: drop.console)]
+        let config = Config([:])
+        config.arguments = ["vapor"]
+        
+        let drop = try Droplet(
+            config: config,
+            commands: [TestServe(console: config.resolveConsole())]
+        )
 
         do {
             try drop.runCommands()
@@ -168,6 +167,7 @@ final class TestTwoCommand: Command {
 
 class TestConsoleDriver: ConsoleProtocol {
     var buffer: Bytes
+    let size: (width: Int, height: Int) = (0,0)
 
     init() {
         buffer = []
@@ -183,6 +183,10 @@ class TestConsoleDriver: ConsoleProtocol {
         buffer = []
         return string
     }
+    
+    func secureInput() -> String {
+        return input()
+    }
 
     func clear(_ clear: ConsoleClear) {
 
@@ -195,6 +199,6 @@ class TestConsoleDriver: ConsoleProtocol {
         return ""
     }
 
-
-    let size: (width: Int, height: Int) = (0,0)
+    func registerKillListener(_ listener: @escaping (Int32) -> Void) {
+    }
 }

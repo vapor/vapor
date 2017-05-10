@@ -1,4 +1,4 @@
-@testable import Vapor // not @testable to ensure Middleware classes are public
+import Vapor
 import XCTest
 import HTTP
 
@@ -21,60 +21,59 @@ class MiddlewareTests: XCTestCase {
             ]
         ])
 
-        let drop = try Droplet(config: config)
+        let drop = try Droplet(config)
         drop.get { _ in
             return "Hello, world"
         }
 
         let req = Request(method: .get, path: "/")
-        let res = drop.respond(to: req)
+        let res = try drop.respond(to: req)
 
         XCTAssert(res.headers["Date"] != nil)
     }
 
     func testConfigDateMissing() throws {
         var config = Config([:])
-        try config.set("droplet.middleware", ["abort"])
+        try config.set("droplet.middleware", ["error"])
 
-        let drop = try Droplet(config: config)
+        let drop = try Droplet(config)
         drop.get { _ in
             return "Hello, world"
         }
 
         let req = Request(method: .get, path: "/")
-        let res = drop.respond(to: req)
+        let res = try drop.respond(to: req)
 
         XCTAssert(res.headers["Date"] == nil)
     }
 
     func testConfigDateProvided() throws {
-        let drop = try Droplet()
-        drop.middleware.append(FooMiddleware())
+        let drop = try Droplet(middleware: [
+            FooMiddleware()
+        ])
 
         drop.get { _ in
             return "Hello, world"
         }
 
         let req = Request(method: .get, path: "/")
-        let res = drop.respond(to: req)
+        let res = try drop.respond(to: req)
 
         XCTAssertEqual(res.headers["bar"], "baz")
     }
 
     func testMultiple() throws {
-        let drop = try Droplet()
-
-        drop.middleware = [
+        let drop = try Droplet(middleware: [
             FooMiddleware(),
             DateMiddleware()
-        ]
+        ])
 
         drop.get { _ in
             return "Hello, world"
         }
 
         let req = Request(method: .get, path: "/")
-        let res = drop.respond(to: req)
+        let res = try drop.respond(to: req)
 
         XCTAssert(res.headers["bar"] != nil)
         XCTAssert(res.headers["date"] != nil)
@@ -83,7 +82,7 @@ class MiddlewareTests: XCTestCase {
     func testConfigClient() throws {
         let foo = FooMiddleware()
 
-        let res = try EngineClient.get("http://httpbin.org/headers", through: [foo])
+        let res = try EngineClient.factory.get("http://httpbin.org/headers", through: [foo])
 
         // test to make sure basic server saw the
         // header the middleware added
@@ -96,10 +95,7 @@ class MiddlewareTests: XCTestCase {
     }
 
     func testConfigClientNotEnabled() throws {
-        let drop = try Droplet()
-
-        //drop.client.defaultMiddleware = []
-        drop.middleware.append(FooMiddleware())
+        let drop = try Droplet(middleware: [FooMiddleware()])
 
         let res = try drop.client.request(.get, "http://httpbin.org/headers")
 

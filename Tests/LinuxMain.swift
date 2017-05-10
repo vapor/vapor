@@ -3,7 +3,7 @@
 import XCTest
 @testable import CacheTests
 @testable import SessionsTests
-@testable import SettingsTests
+@testable import ConfigsTests
 @testable import VaporTests
 
 XCTMain([
@@ -11,7 +11,7 @@ XCTMain([
     testCase(MemoryCacheTests.allTests),
 
     // Config
-    testCase(ConfigTests.allTests),
+    testCase(ConfigsTests.ConfigTests.allTests),
     testCase(MergeTests.allTests),
     testCase(EnvTests.allTests),
     testCase(CLIConfigTests.allTests),
@@ -22,6 +22,7 @@ XCTMain([
 
     // Vapor
     testCase(ConfigIntegrationTests.allTests),
+    testCase(VaporTests.ConfigTests.allTests),
     testCase(ConsoleTests.allTests),
     testCase(ContentTests.allTests),
     testCase(CORSMiddlewareTests.allTests),
@@ -32,7 +33,6 @@ XCTMain([
     testCase(FileMiddlewareTests.allTests),
     testCase(FormDataTests.allTests),
     testCase(HashTests.allTests),
-    testCase(LocalizationTests.allTests),
     testCase(LogTests.allTests),
     testCase(MiddlewareTests.allTests),
     testCase(ProcessTests.allTests),

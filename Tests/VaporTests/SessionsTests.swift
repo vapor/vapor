@@ -10,24 +10,22 @@ class SessionsTests: XCTestCase {
     ]
 
     func testExample() throws {
-        let drop = try Droplet()
-
         let s = MemorySessions()
         let m = SessionsMiddleware(s)
-        drop.middleware = [m]
+        let drop = try Droplet(middleware: [m])
 
         drop.get("set") { req in
-            try req.session().data["foo"] = "bar"
-            try req.session().data["bar"] = "baz"
+            try req.assertSession().data["foo"] = "bar"
+            try req.assertSession().data["bar"] = "baz"
             return "set"
         }
 
         drop.get("get") { req in
-            return try req.session().data["foo"]?.string ?? "fail"
+            return try req.assertSession().data["foo"]?.string ?? "fail"
         }
 
         let req = Request(method: .get, path: "set")
-        let res = drop.respond(to: req)
+        let res = try drop.respond(to: req)
 
         guard let c = res.cookies["vapor-session"] else {
             XCTFail("No cookie")
@@ -46,7 +44,7 @@ class SessionsTests: XCTestCase {
 
         let req2 = Request(method: .get, path: "get")
         req2.cookies["vapor-session"] = c
-        let res2 = drop.respond(to: req2)
+        let res2 = try drop.respond(to: req2)
 
         XCTAssertEqual(res2.body.bytes?.makeString(), "bar")
     }
