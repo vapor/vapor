@@ -1,13 +1,13 @@
 import Routing
 import HTTP
 
-public final class Resource<Model: StringInitializable> {
+public final class Resource<Model: Parameterizable> {
     public typealias Multiple = (Request) throws -> ResponseRepresentable
     public typealias Item = (Request, Model) throws -> ResponseRepresentable
 
     public var index: Multiple?
-    public var new: Multiple?
     public var create: Multiple?
+    public var store: Multiple?
     public var show: Item?
     public var edit: Item?
     public var update: Item?
@@ -19,8 +19,8 @@ public final class Resource<Model: StringInitializable> {
 
     public init(
         index: Multiple? = nil,
-        new: Multiple? = nil,
         create: Multiple? = nil,
+        store: Multiple? = nil,
         show: Item? = nil,
         edit: Item? = nil,
         update: Item? = nil,
@@ -31,7 +31,6 @@ public final class Resource<Model: StringInitializable> {
         aboutMultiple: Multiple? = nil
     ) {
         self.index = index
-        self.new = new
         self.create = create
         self.show = show
         self.edit = edit
@@ -44,34 +43,8 @@ public final class Resource<Model: StringInitializable> {
     }
 }
 
-public extension Resource {
-
-    convenience public init(
-        index: Multiple? = nil,
-        store: Multiple?, // default removed to avoid ambiguity
-        show: Item? = nil,
-        replace: Item? = nil,
-        modify: Item? = nil,
-        destroy: Item? = nil,
-        clear: Multiple? = nil,
-        aboutItem: Item? = nil,
-        aboutMultiple: Multiple? = nil
-    ){
-        self.init(index: index,
-                  create: store,
-                  show: show,
-                  update: modify,
-                  replace: replace,
-                  destroy: destroy,
-                  clear: clear,
-                  aboutItem: aboutItem,
-                  aboutMultiple: aboutMultiple)
-    }
-
-}
-
 public protocol ResourceRepresentable {
-    associatedtype Model: StringInitializable
+    associatedtype Model: Parameterizable
     func makeResource() -> Resource<Model>
 }
 
@@ -86,7 +59,7 @@ extension RouteBuilder {
         self.resource(path, resource)
     }
 
-    public func resource<Model: StringInitializable>(_ path: String, _ resource: Resource<Model>) {
+    public func resource<Model: Parameterizable>(_ path: String, _ resource: Resource<Model>) {
         var itemMethods: [Method] = []
         var multipleMethods: [Method] = []
 
@@ -100,23 +73,17 @@ extension RouteBuilder {
             itemMethods.append(method)
 
             let closure: (HTTP.Request) throws -> HTTP.ResponseRepresentable = { request in
-                guard let id = request.parameters["\(pathId)"]?.string else {
-                    throw Abort.notFound
-                }
-
-                guard let model = try Model(id) else {
-                    throw Abort.notFound
-                }
+                let model = try request.parameters.next(Model.self)
 
                 return try item(request, model).makeResponse()
             }
 
             if let subpath = subpath {
-                self.add(method, path, ":\(pathId)", subpath) { request in
+                self.add(method, path, Model.parameter, subpath) { request in
                     return try closure(request)
                 }
             } else {
-                self.add(method, path, ":\(pathId)") { request in
+                self.add(method, path, Model.parameter) { request in
                     return try closure(request)
                 }
             }
@@ -141,9 +108,9 @@ extension RouteBuilder {
         }
 
         multiple(.get, resource.index)
-        multiple(.get, subpath: "new", resource.new)
+        multiple(.get, subpath: "create", resource.create)
         item(.get, subpath: "edit", resource.edit)
-        multiple(.post, resource.create)
+        multiple(.post, resource.store)
         item(.get, resource.show)
         item(.put, resource.replace)
         item(.patch, resource.update)
@@ -174,7 +141,7 @@ extension RouteBuilder {
         }
     }
 
-    public func resource<Model: StringInitializable>(
+    public func resource<Model: Parameterizable>(
         _ path: String,
         _ type: Model.Type = Model.self,
         closure: (Resource<Model>) -> ()
