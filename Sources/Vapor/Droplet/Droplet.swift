@@ -105,6 +105,7 @@ public final class Droplet {
         config.addConfigurable(middleware: DateMiddleware.init, name: "date")
         config.addConfigurable(middleware: FileMiddleware.init, name: "file")
         config.addConfigurable(middleware: CORSMiddleware.init, name: "cors")
+        config.addConfigurable(mail: Mailgun.init, name: "mailgun")
 
         // port override
         if let port = config.arguments.value(for: "port")?.int {

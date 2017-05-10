@@ -6,20 +6,14 @@ import Sockets
 
 /// Defines objects capable of transmitting emails
 public protocol MailProtocol {
-    /// Send a single email
-    func send(_ mail: Email) throws
-
-    /// Send a batched email
-    /// by default, this will iterate list
-    /// and send mail individually
-    /// clients that support batch proper should
-    /// override this function
-    func send(batch: [Email]) throws
+    /// Send the supplied emails
+    func send(_ emails: [Email]) throws
 }
 
 extension MailProtocol {
-    public func send(batch: [Email]) throws {
-        try batch.forEach(send)
+    /// Sends a single email
+    public func send(_ email: Email) throws {
+        try send([email])
     }
 }
 
@@ -37,14 +31,9 @@ public final class SMTPMailer: MailProtocol {
         self.credentials = credentials
     }
 
-    public func send(_ mail: Email) throws {
+    public func send(_ emails: [Email]) throws {
         let client = try makeClient()
-        try client.send(mail, using: credentials)
-    }
-
-    public func send(batch: [Email]) throws {
-        let client = try makeClient()
-        try client.send(batch, using: credentials)
+        try client.send(emails, using: credentials)
     }
 
     private func makeClient() throws -> SMTPClient<TCPInternetSocket> {
@@ -100,7 +89,7 @@ extension SMTPMailer {
 /// that simply throws, but provides info on how to setup
 /// a proper mailer in the error
 final class UnimplementedMailer: MailProtocol {
-    func send(_ mail: Email) throws {
+    func send(_ emails: [Email]) throws {
         throw MailerError.unimplemented
     }
 }
