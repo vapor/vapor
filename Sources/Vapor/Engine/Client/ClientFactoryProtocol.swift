@@ -9,7 +9,8 @@ public protocol ClientFactoryProtocol: Responder {
     func makeClient(
         hostname: String,
         port: Port,
-        _ securityLayer: SecurityLayer
+        _ securityLayer: SecurityLayer,
+        proxy: Proxy?
     ) throws -> ClientProtocol
 }
 
@@ -17,6 +18,18 @@ public protocol ClientFactoryProtocol: Responder {
 // MARK: Convenience
 
 extension ClientFactoryProtocol {
+    public func makeClient(
+        hostname: String,
+        port: Port,
+        _ securityLayer: SecurityLayer
+    ) throws -> ClientProtocol {
+        return try makeClient(
+            hostname: hostname,
+            port: port,
+            securityLayer,
+            proxy: nil
+        )
+    }
     /// Creates a client connected to the server specified
     /// by the supplied request.
     func makeClient(for req: Request, using s: SecurityLayer? = nil) throws -> ClientProtocol {
