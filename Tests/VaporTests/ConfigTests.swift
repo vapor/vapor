@@ -4,6 +4,10 @@ import Sessions
 import HTTP
 
 class ConfigTests: XCTestCase {
+    override func setUp() {
+        Node.fuzzy = [JSON.self, Node.self]
+    }
+    
     func testConfigAvailableType() throws {
         var config = Config([:])
         try config.set("droplet.log", "test")
