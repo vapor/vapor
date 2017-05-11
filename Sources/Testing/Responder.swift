@@ -18,6 +18,7 @@ extension Responder {
             hostname: hostname,
             path: path
         )
+        req.headers[.host] = hostname
         return try testResponse(
             to: req,
             file: file,
