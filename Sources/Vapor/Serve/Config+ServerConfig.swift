@@ -6,7 +6,10 @@ extension Configs.Config {
         let serverConfig = self["server"]
         let port = serverConfig?["port"]?.int?.port ?? 8080
         let hostname = serverConfig?["hostname"]?.string ?? "0.0.0.0"
-        let securityLayer = try makeSecurityLayer(serverConfig: serverConfig, file: "server")
+        let securityLayer = try makeSecurityLayer(
+            serverConfig: serverConfig,
+            file: "server"
+        )
         return ServerConfig(hostname: hostname, port: port, securityLayer)
     }
     

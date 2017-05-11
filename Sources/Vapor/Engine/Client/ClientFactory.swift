@@ -17,13 +17,13 @@ public final class ClientFactory<C: ClientProtocol>: ClientFactoryProtocol {
     public func makeClient(
         hostname: String,
         port: Port,
-        _ securityLayer: SecurityLayer,
+        securityLayer: SecurityLayer,
         proxy: Proxy? = nil
     ) throws -> ClientProtocol {
         return try C(
             hostname: hostname,
             port: port,
-            securityLayer,
+            securityLayer: securityLayer,
             proxy: proxy ?? defaultProxy
         )
     }

@@ -21,7 +21,7 @@ public final class EngineClient: ClientProtocol {
     public init(
         hostname: String,
         port: Port,
-        _ securityLayer: SecurityLayer,
+        securityLayer: SecurityLayer,
         proxy: Proxy?
     ) throws {
         self.hostname = hostname

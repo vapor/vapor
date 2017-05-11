@@ -9,7 +9,7 @@ public protocol ClientFactoryProtocol: Responder {
     func makeClient(
         hostname: String,
         port: Port,
-        _ securityLayer: SecurityLayer,
+        securityLayer: SecurityLayer,
         proxy: Proxy?
     ) throws -> ClientProtocol
 }
@@ -21,12 +21,12 @@ extension ClientFactoryProtocol {
     public func makeClient(
         hostname: String,
         port: Port,
-        _ securityLayer: SecurityLayer
+        securityLayer: SecurityLayer
     ) throws -> ClientProtocol {
         return try makeClient(
             hostname: hostname,
             port: port,
-            securityLayer,
+            securityLayer: securityLayer,
             proxy: nil
         )
     }
@@ -47,7 +47,7 @@ extension ClientFactoryProtocol {
         return try makeClient(
             hostname: req.uri.hostname,
             port: req.uri.port ?? req.uri.scheme.port,
-            securityLayer
+            securityLayer: securityLayer
         )
     }
 }

@@ -8,7 +8,7 @@ public protocol ClientProtocol: Responder {
     init(
         hostname: String,
         port: Port,
-        _ securityLayer: SecurityLayer,
+        securityLayer: SecurityLayer,
         proxy: Proxy?
     ) throws
 }
@@ -28,12 +28,12 @@ extension ClientProtocol {
     public init(
         hostname: String,
         port: Port,
-        _ securityLayer: SecurityLayer
+        securityLayer: SecurityLayer
     ) throws {
         try self.init(
             hostname: hostname,
             port: port,
-            securityLayer,
+            securityLayer: securityLayer,
             proxy: nil
         )
     }

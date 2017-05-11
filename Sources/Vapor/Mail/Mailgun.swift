@@ -93,7 +93,7 @@ public final class Mailgun: MailProtocol {
         let client = try clientFactory.makeClient(
             hostname: apiURI.hostname,
             port: apiURI.port ?? 443,
-            .tls(EngineClient.defaultTLSContext())
+            securityLayer: .tls(EngineClient.defaultTLSContext())
         )
         let res = try client.respond(to: req)
         guard res.status.statusCode < 400 else {

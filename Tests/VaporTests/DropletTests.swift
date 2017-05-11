@@ -129,7 +129,7 @@ class DropletTests: XCTestCase {
         let client = try EngineClient(
             hostname: "52.211.86.161",
             port: 80,
-            .none,
+            securityLayer: .none,
             proxy: proxy
         )
         
@@ -146,7 +146,7 @@ class DropletTests: XCTestCase {
         try config.set("client.proxy.port", 8888)
         try config.set("client.proxy.securityLayer", "none")
         
-        let drop = try! Droplet(config)
+        let drop = try Droplet(config)
         
         let res = try drop.client.get("http://52.211.86.161")
         try XCTAssertEqual(res.bodyString(), "It works!!!\n")
