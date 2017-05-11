@@ -100,7 +100,7 @@ extension StructuredDataWrapper {
     
     fileprivate mutating func set(_ key: String, _ value: String?) {
         guard let value = value, !value.isEmpty else { return }
-        set(key, value.makeNode)
+        set(key, .string(value))
     }
     
     fileprivate mutating func set(_ key: String, _ node: Node?) {

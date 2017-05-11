@@ -30,9 +30,7 @@ extension Responder {
         let req = Request(method: method, uri: uri)
         req.headers = headers
         
-        for (key, value) in query {
-            try req.query?.set(key, value)
-        }
+        req.query = try Node(node: query)
         
         if let body = body {
             req.body = body.makeBody()

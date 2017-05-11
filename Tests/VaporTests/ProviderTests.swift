@@ -13,6 +13,10 @@ class ProviderTests: XCTestCase {
         ("testCheckoutsDirectory", testCheckoutsDirectory),
     ]
 
+    override func setUp() {
+        Node.fuzzy = [JSON.self, Node.self]
+    }
+    
     func testBasic() throws {
         var config = Config([:])
         try config.set("droplet.server", "fast")
