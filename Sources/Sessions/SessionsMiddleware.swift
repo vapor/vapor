@@ -9,21 +9,30 @@ import Cookies
 /// is being made, the Session identifier is returned as a `vapor-session` cookie.
 public final class SessionsMiddleware: Middleware {
     let sessions: SessionsProtocol
-    let cookieName: String
+    let cookieFactory: CookieFactory
+    
+    public typealias CookieFactory = () throws -> Cookie
 
     public init(
         _ sessions: SessionsProtocol,
-        cookieName: String? = nil
+        cookieFactory: CookieFactory? = nil
     ) {
         self.sessions = sessions
-        self.cookieName = cookieName ?? "vapor-session"
+        self.cookieFactory = cookieFactory ?? {
+            return Cookie(
+                name: "vapor-session",
+                value: ""
+            )
+        }
     }
 
     public func respond(to request: Request, chainingTo chain: Responder) throws -> Response {
         let session: Session
         
+        var cookie = try cookieFactory()
+        
         if
-            let identifier = request.cookies[cookieName],
+            let identifier = request.cookies[cookie.name],
             let s = try sessions.get(identifier: identifier)
         {
             session = s
@@ -32,14 +41,14 @@ public final class SessionsMiddleware: Middleware {
         }
         
         request.session = session
-
+        cookie.value = session.identifier
 
         let response = try chain.respond(to: request)
 
         if session.shouldDestroy {
             try sessions.destroy(identifier: session.identifier)
         } else if session.shouldCreate {
-            response.cookies[cookieName] = session.identifier
+            response.cookies.insert(cookie)
             try sessions.set(session)
         }
 
