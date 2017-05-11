@@ -12,7 +12,8 @@ import HTTP
 
 class AcceptLanguageTests: XCTestCase {
     static let allTests = [
-        ("testSimple", testSimple)
+        ("testSimple", testSimple),
+        ("testComplex", testComplex)
     ]
     
     func testSimple() throws {
@@ -32,5 +33,13 @@ class AcceptLanguageTests: XCTestCase {
         
         let en = array[2]
         XCTAssert(en.languageRange == "en" && en.quality == 0.7)
+    }
+    
+    func testComplex() throws {
+        let req = Request(method: .get, uri: "https://vapor.codes")
+        req.headers[.acceptLanguage] = "zh-CN,zh;q=0.8,en-US;q=0.6,en;q=0.4"
+        
+        XCTAssertEqual(req.acceptLanguage.count, 4)
+        XCTAssertEqual(req.acceptLanguage.first?.languageRange, "zh-CN")
     }
 }
