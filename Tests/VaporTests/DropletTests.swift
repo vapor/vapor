@@ -158,6 +158,7 @@ class DropletTests: XCTestCase {
         try config.set("droplet.client", "foundation")
         let drop = try Droplet(config)
         let res = try! drop.client.get("https://httpbin.org/get")
+        try print(res.bodyString())
         try XCTAssert(res.bodyString().contains("CFNetwork"))
     }
 }
