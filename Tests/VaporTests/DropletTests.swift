@@ -159,6 +159,10 @@ class DropletTests: XCTestCase {
         let drop = try Droplet(config)
         let res = try! drop.client.get("https://httpbin.org/get")
         try print(res.bodyString())
-        try XCTAssert(res.bodyString().contains("CFNetwork"))
+        #if os(Linux)
+            try XCTAssert(res.bodyString().contains("curl"))
+        #else
+            try XCTAssert(res.bodyString().contains("CFNetwork"))
+        #endif
     }
 }
