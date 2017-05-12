@@ -11,7 +11,10 @@ class DropletTests: XCTestCase {
         ("testTLSConfig", testTLSConfig),
         ("testRunDefaults", testRunDefaults),
         ("testRunConfig", testRunConfig),
-        ("testHeadRequest", testHeadRequest)
+        ("testHeadRequest", testHeadRequest),
+        ("testDumpConfig", testDumpConfig),
+        ("testProxy", testProxy),
+        ("testDropletProxy", testDropletProxy),
     ]
 
     func testData() {
@@ -119,8 +122,6 @@ class DropletTests: XCTestCase {
     }
     
     func testProxy() throws {
-        Node.fuzzy = [Node.self]
-        
         let proxy = Proxy(
             hostname: "52.214.224.81",
             port: 8888,
@@ -139,8 +140,6 @@ class DropletTests: XCTestCase {
     }
     
     func testDropletProxy() throws {
-        Node.fuzzy = [Node.self]
-        
         var config = Config([:])
         try config.set("client.proxy.hostname", "52.214.224.81")
         try config.set("client.proxy.port", 8888)
@@ -150,5 +149,13 @@ class DropletTests: XCTestCase {
         
         let res = try drop.client.get("http://52.211.86.161")
         try XCTAssertEqual(res.bodyString(), "It works!!!\n")
+    }
+    
+    func testFoundationClient() throws {
+        var config = Config([:])
+        try config.set("droplet.client", "foundation")
+        let drop = try Droplet(config)
+        let res = try! drop.client.get("https://httpbin.org/get")
+        try XCTAssert(res.bodyString().contains("CFNetwork"))
     }
 }
