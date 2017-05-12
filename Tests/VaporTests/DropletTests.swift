@@ -151,4 +151,16 @@ class DropletTests: XCTestCase {
         let res = try drop.client.get("http://52.211.86.161")
         try XCTAssertEqual(res.bodyString(), "It works!!!\n")
     }
+    
+    func testWebsockets() throws {
+        let drop = try Droplet()
+        try drop.client.socket.connect(to: "ws://echo.websocket.org") { ws in
+            ws.onText = { ws, text in
+                print(text)
+            }
+            
+            try ws.send("foo")
+        }
+        print("asdfasdf")
+    }
 }
