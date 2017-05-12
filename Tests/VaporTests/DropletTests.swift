@@ -15,6 +15,7 @@ class DropletTests: XCTestCase {
         ("testDumpConfig", testDumpConfig),
         ("testProxy", testProxy),
         ("testDropletProxy", testDropletProxy),
+        ("testFoundationClient", testFoundationClient)
     ]
 
     func testData() {
@@ -141,6 +142,7 @@ class DropletTests: XCTestCase {
     
     func testDropletProxy() throws {
         var config = Config([:])
+        try config.set("droplet.client", "engine")
         try config.set("client.proxy.hostname", "52.214.224.81")
         try config.set("client.proxy.port", 8888)
         try config.set("client.proxy.securityLayer", "none")
