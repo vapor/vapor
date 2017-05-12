@@ -18,13 +18,27 @@ public final class ClientFactory<C: ClientProtocol>: ClientFactoryProtocol {
         hostname: String,
         port: Port,
         securityLayer: SecurityLayer,
-        proxy: Proxy? = nil
+        proxy: Proxy?
     ) throws -> ClientProtocol {
         return try C(
             hostname: hostname,
             port: port,
             securityLayer: securityLayer,
-            proxy: proxy ?? defaultProxy
+            proxy: proxy
+        )
+    }
+    
+    /// Creates a new client with default proxy settings.
+    public func makeClient(
+        hostname: String,
+        port: Port,
+        securityLayer: SecurityLayer
+    ) throws -> ClientProtocol {
+        return try C(
+            hostname: hostname,
+            port: port,
+            securityLayer: securityLayer,
+            proxy: defaultProxy
         )
     }
     
