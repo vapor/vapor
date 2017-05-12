@@ -6,19 +6,25 @@ import TLS
 /// TCP and TLS clients from engine
 /// wrapped to conform to ClientProtocol.
 public final class ClientFactory<C: ClientProtocol>: ClientFactoryProtocol {
+    public let defaultProxy: Proxy?
+    
     /// Create a new ClientFactory
-    public init() {}
+    public init(defaultProxy: Proxy? = nil) {
+        self.defaultProxy = defaultProxy
+    }
     
     /// Creates a new client with the supplied connection info
     public func makeClient(
         hostname: String,
         port: Port,
-        _ securityLayer: SecurityLayer
+        securityLayer: SecurityLayer,
+        proxy: Proxy? = nil
     ) throws -> ClientProtocol {
         return try C(
             hostname: hostname,
             port: port,
-            securityLayer
+            securityLayer: securityLayer,
+            proxy: proxy ?? defaultProxy
         )
     }
     
@@ -30,6 +36,39 @@ public final class ClientFactory<C: ClientProtocol>: ClientFactoryProtocol {
 
 extension ClientFactory: ConfigInitializable {
     public convenience init(config: Configs.Config) throws {
-        self.init()
+        let proxy: Proxy?
+        
+        if let proxyConfig = config["client", "proxy"]?.object {
+            guard let hostname = proxyConfig["hostname"]?.string else {
+                throw ConfigError.missing(
+                    key: ["proxy", "hostname"],
+                    file: "client",
+                    desiredType: String.self
+                )
+            }
+            
+            guard let port = proxyConfig["port"]?.int?.port else {
+                throw ConfigError.missing(
+                    key: ["proxy", "port"],
+                    file: "client",
+                    desiredType: Port.self
+                )
+            }
+            
+            let securityLayer = try config.makeSecurityLayer(
+                serverConfig: Config(proxyConfig),
+                file: "client"
+            )
+            
+            proxy = Proxy(
+                hostname: hostname,
+                port: port,
+                securityLayer: securityLayer
+            )
+        } else {
+            proxy = nil
+        }
+        
+        self.init(defaultProxy: proxy)
     }
 }
