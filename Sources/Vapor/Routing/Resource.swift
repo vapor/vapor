@@ -32,6 +32,7 @@ public final class Resource<Model: Parameterizable> {
     ) {
         self.index = index
         self.create = create
+        self.store = store
         self.show = show
         self.edit = edit
         self.update = update
