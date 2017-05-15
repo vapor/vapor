@@ -91,6 +91,7 @@ public final class Droplet {
 
         config.addConfigurable(server: EngineServer.self, name: "engine")
         config.addConfigurable(client: EngineClient.self, name: "engine")
+        config.addConfigurable(client: FoundationClient.self, name: "foundation")
         config.addConfigurable(log: ConsoleLogger.init, name: "console")
         config.addConfigurable(console: Terminal.init, name: "terminal")
         config.addConfigurable(view: StaticViewRenderer.init, name: "static")
