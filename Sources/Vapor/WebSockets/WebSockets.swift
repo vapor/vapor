@@ -19,13 +19,13 @@ public final class WebSocketFactory {
         onConnect: @escaping (WebSocket) throws -> Void
     ) throws {
         
-        switch SecurityLayer.none {
-        case .none:
-            let stream = try TCPInternetSocket(
-                scheme: "http",
+        if uri.scheme.isSecure {
+            let tcp = try TCPInternetSocket(
+                scheme: "https",
                 hostname: uri.hostname,
-                port: uri.port ?? 80
+                port: uri.port ?? 443
             )
+            let stream = try TLS.InternetSocket(tcp, EngineClient.defaultTLSContext())
             try WebSocket.connect(
                 to: uri,
                 using: stream,
@@ -33,13 +33,12 @@ public final class WebSocketFactory {
                 headers: headers,
                 onConnect: onConnect
             )
-        case .tls(let context):
-            let tcp = try TCPInternetSocket(
-                scheme: "https",
+        } else {
+            let stream = try TCPInternetSocket(
+                scheme: "http",
                 hostname: uri.hostname,
-                port: uri.port ?? 443
+                port: uri.port ?? 80
             )
-            let stream = TLS.InternetSocket(tcp, context)
             try WebSocket.connect(
                 to: uri,
                 using: stream,
@@ -60,7 +59,6 @@ public final class WebSocketFactory {
         try connect(to: uri, protocols: protocols, headers: headers, onConnect: onConnect)
     }
 }
-
 
 extension ClientFactoryProtocol {
     public var socket: WebSocketFactory {

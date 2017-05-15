@@ -3,6 +3,7 @@ import XCTest
 import HTTP
 import Core
 import Sockets
+import Dispatch
 
 class DropletTests: XCTestCase {
     static let allTests = [
@@ -15,6 +16,8 @@ class DropletTests: XCTestCase {
         ("testDumpConfig", testDumpConfig),
         ("testProxy", testProxy),
         ("testDropletProxy", testDropletProxy),
+        ("testWebsockets", testWebsockets),
+        ("testWebsocketsTLS", testWebsocketsTLS),
         ("testFoundationClient", testFoundationClient)
     ]
 
@@ -155,14 +158,48 @@ class DropletTests: XCTestCase {
     
     func testWebsockets() throws {
         let drop = try Droplet()
-        try drop.client.socket.connect(to: "ws://echo.websocket.org") { ws in
-            ws.onText = { ws, text in
-                print(text)
+        
+        let group = DispatchGroup()
+        group.enter()
+        background {
+            do {
+                try drop.client.socket.connect(to: "ws://echo.websocket.org") { ws in
+                    ws.onText = { ws, text in
+                        XCTAssertEqual(text, "foo")
+                        group.leave()
+                        
+                    }
+                    
+                    try ws.send("foo")
+                }
+            } catch {
+                XCTFail("\(error)")
             }
-            
-            try ws.send("foo")
         }
-        print("asdfasdf")
+        group.wait()
+    }
+    
+    func testWebsocketsTLS() throws {
+        let drop = try Droplet()
+        
+        let group = DispatchGroup()
+        group.enter()
+        background {
+            do {
+                try drop.client.socket.connect(to: "wss://echo.websocket.org") { ws in
+                    ws.onText = { ws, text in
+                        XCTAssertEqual(text, "foo")
+                        group.leave()
+                        
+                    }
+                    
+                    try ws.send("foo")
+                }
+            } catch {
+                XCTFail("\(error)")
+            }
+        }
+        group.wait()
     }
   
     func testFoundationClient() throws {
