@@ -49,7 +49,7 @@ extension SMTPMailer {
     /// https://app.sendgrid.com/settings/credentials
     public static func makeSendGrid(with credentials: SMTPCredentials) -> SMTPMailer {
         return SMTPMailer(
-            scheme: "stmps",
+            scheme: "smtps",
             hostname: "smtp.sendgrid.net",
             port: 465,
             credentials: credentials
