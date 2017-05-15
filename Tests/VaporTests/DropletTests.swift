@@ -17,8 +17,7 @@ class DropletTests: XCTestCase {
         ("testProxy", testProxy),
         ("testDropletProxy", testDropletProxy),
         ("testWebsockets", testWebsockets),
-        ("testWebsocketsTLS", testWebsocketsTLS),
-        ("testFoundationClient", testFoundationClient)
+        ("testWebsocketsTLS", testWebsocketsTLS)
     ]
 
     func testData() {
