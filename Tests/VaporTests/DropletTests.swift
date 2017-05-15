@@ -3,6 +3,7 @@ import XCTest
 import HTTP
 import Core
 import Sockets
+import Dispatch
 
 class DropletTests: XCTestCase {
     static let allTests = [
@@ -15,7 +16,8 @@ class DropletTests: XCTestCase {
         ("testDumpConfig", testDumpConfig),
         ("testProxy", testProxy),
         ("testDropletProxy", testDropletProxy),
-        ("testFoundationClient", testFoundationClient)
+        ("testWebsockets", testWebsockets),
+        // ("testWebsocketsTLS", testWebsocketsTLS)
     ]
 
     func testData() {
@@ -153,16 +155,66 @@ class DropletTests: XCTestCase {
         try XCTAssertEqual(res.bodyString(), "It works!!!\n")
     }
     
-    func testFoundationClient() throws {
-        var config = Config([:])
-        try config.set("droplet.client", "foundation")
-        let drop = try Droplet(config)
-        let res = try! drop.client.get("https://httpbin.org/get")
-        try print(res.bodyString())
-        #if os(Linux)
-            try XCTAssert(res.bodyString().contains("curl"))
-        #else
-            try XCTAssert(res.bodyString().contains("CFNetwork"))
-        #endif
+    func testWebsockets() throws {
+        let drop = try Droplet()
+        
+        let group = DispatchGroup()
+        group.enter()
+        background {
+            do {
+                try drop.client.socket.connect(to: "ws://echo.websocket.org") { ws in
+                    ws.onText = { ws, text in
+                        XCTAssertEqual(text, "foo")
+                        group.leave()
+                        
+                    }
+                    
+                    try ws.send("foo")
+                }
+            } catch {
+                XCTFail("\(error)")
+            }
+        }
+        group.wait()
     }
+    
+    func testWebsocketsTLS() throws {
+        let drop = try Droplet()
+        
+        let group = DispatchGroup()
+        group.enter()
+        background {
+            do {
+                try drop.client.socket.connect(to: "wss://echo.websocket.org") { ws in
+                    ws.onText = { ws, text in
+                        XCTAssertEqual(text, "foo")
+                        group.leave()
+                        
+                    }
+                    
+                    try ws.send("foo")
+                }
+            } catch {
+                XCTFail("\(error)")
+            }
+        }
+        group.wait()
+    }
+  
+    // temporary fix for Circle CI
+    #if Xcode
+    
+        func testFoundationClient() throws {
+            var config = Config([:])
+            try config.set("droplet.client", "foundation")
+            let drop = try Droplet(config)
+            let res = try! drop.client.get("https://httpbin.org/get")
+            try print(res.bodyString())
+            #if os(Linux)
+                try XCTAssert(res.bodyString().contains("curl"))
+            #else
+                try XCTAssert(res.bodyString().contains("CFNetwork"))
+            #endif
+        }
+    #endif
 }
