@@ -46,14 +46,7 @@ public final class EngineClient: ClientProtocol {
     
     public func respond(to request: Request) throws -> Response {
         if proxy != nil {
-            let scheme: String
-            switch securityLayer {
-            case .none:
-                scheme = "http"
-            case .tls:
-                scheme = "https"
-            }
-            request.uri.path = "\(scheme)://\(hostname):\(port)" + request.uri.path
+            request.uri.path = "\(securityLayer.scheme)://\(hostname):\(port)" + request.uri.path
         }
         return try client.respond(to: request)
     }
