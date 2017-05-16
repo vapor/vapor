@@ -1,6 +1,5 @@
 import HTTP
 import Cookies
-import Foundation
 
 /// Looks for the `vapor-session` cookie on incoming
 /// requests and attempts to initialize a Session based on the
