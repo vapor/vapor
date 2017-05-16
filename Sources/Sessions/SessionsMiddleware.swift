@@ -10,18 +10,23 @@ import Cookies
 public final class SessionsMiddleware: Middleware {
     let sessions: SessionsProtocol
     let cookieFactory: CookieFactory
+    let cookieName: String
     
-    public typealias CookieFactory = () throws -> Cookie
+    public typealias CookieFactory = (_ request: Request) throws -> Cookie
 
     public init(
         _ sessions: SessionsProtocol,
+        cookieName: String = "vapor-session",
         cookieFactory: CookieFactory? = nil
     ) {
         self.sessions = sessions
-        self.cookieFactory = cookieFactory ?? {
+        self.cookieName = cookieName
+        self.cookieFactory = cookieFactory ?? { req in
+            
             return Cookie(
-                name: "vapor-session",
-                value: ""
+                name: cookieName,
+                value: "",
+                httpOnly: true
             )
         }
     }
@@ -29,10 +34,8 @@ public final class SessionsMiddleware: Middleware {
     public func respond(to request: Request, chainingTo chain: Responder) throws -> Response {
         let session: Session
         
-        var cookie = try cookieFactory()
-        
         if
-            let identifier = request.cookies[cookie.name],
+            let identifier = request.cookies[cookieName],
             let s = try sessions.get(identifier: identifier)
         {
             session = s
@@ -41,9 +44,11 @@ public final class SessionsMiddleware: Middleware {
         }
         
         request.session = session
-        cookie.value = session.identifier
 
         let response = try chain.respond(to: request)
+        
+        var cookie = try cookieFactory(request)
+        cookie.value = session.identifier
 
         if session.shouldDestroy {
             try sessions.destroy(identifier: session.identifier)
