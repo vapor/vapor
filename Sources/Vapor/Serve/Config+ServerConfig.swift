@@ -6,11 +6,17 @@ extension Configs.Config {
         let serverConfig = self["server"]
         let port = serverConfig?["port"]?.int?.port ?? 8080
         let hostname = serverConfig?["hostname"]?.string ?? "0.0.0.0"
-        let securityLayer = try makeSecurityLayer(serverConfig: serverConfig)
+        let securityLayer = try makeSecurityLayer(
+            serverConfig: serverConfig,
+            file: "server"
+        )
         return ServerConfig(hostname: hostname, port: port, securityLayer)
     }
     
-    private func makeSecurityLayer(serverConfig: Configs.Config?) throws -> SecurityLayer {
+    internal func makeSecurityLayer(
+        serverConfig: Configs.Config?,
+        file: String
+    ) throws -> SecurityLayer {
         let serverConfig = serverConfig?.converted(to: Node.self)
         let security = serverConfig?["securityLayer"]?.string ?? "none"
         let securityLayer: SecurityLayer
@@ -29,7 +35,7 @@ extension Configs.Config {
             throw ConfigError.unsupported(
                 value: security,
                 key: ["securityLayer"],
-                file: "server"
+                file: file
             )
         }
         

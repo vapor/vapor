@@ -1,1 +1,0 @@
-web: Development --env=production

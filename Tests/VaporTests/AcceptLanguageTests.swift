@@ -12,12 +12,13 @@ import HTTP
 
 class AcceptLanguageTests: XCTestCase {
     static let allTests = [
-        ("testSimple", testSimple)
+        ("testSimple", testSimple),
+        ("testComplex", testComplex)
     ]
     
     func testSimple() throws {
         //Test case from: https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.4
-        let request = try Request(method: .get, uri: "https://www.w3.org")
+        let request = Request(method: .get, uri: "https://www.w3.org")
         request.headers["Accept-Language"] = "da, en-gb;q=0.8, en;q=0.7"
         
         let array = request.acceptLanguage
@@ -32,5 +33,13 @@ class AcceptLanguageTests: XCTestCase {
         
         let en = array[2]
         XCTAssert(en.languageRange == "en" && en.quality == 0.7)
+    }
+    
+    func testComplex() throws {
+        let req = Request(method: .get, uri: "https://vapor.codes")
+        req.headers[.acceptLanguage] = "zh-CN,zh;q=0.8,en-US;q=0.6,en;q=0.4"
+        
+        XCTAssertEqual(req.acceptLanguage.count, 4)
+        XCTAssertEqual(req.acceptLanguage.first?.languageRange, "zh-CN")
     }
 }

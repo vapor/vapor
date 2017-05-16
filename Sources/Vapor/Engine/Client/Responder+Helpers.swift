@@ -25,17 +25,12 @@ extension Responder {
         _ body: BodyRepresentable? = nil,
         through middleware: [Middleware] = []
     ) throws  -> Response {
-        var uri = try URI(uri)
-        
-        var q: [String: CustomStringConvertible] = [:]
-        try query.forEach { key, value in
-            q[key] = try value.makeNode(in: nil).string ?? ""
-        }
-        uri.append(query: q)
-        
+        let uri = try URI(uri)
+    
         let req = Request(method: method, uri: uri)
         req.headers = headers
         
+        req.query = try Node(node: query)
         
         if let body = body {
             req.body = body.makeBody()

@@ -48,11 +48,9 @@ class MiddlewareTests: XCTestCase {
     }
 
     func testConfigDateProvided() throws {
-        let config = Config([:])
-        config.override(middleware: [
+        let drop = try Droplet(middleware: [
             FooMiddleware()
         ])
-        let drop = try Droplet(config)
 
         drop.get { _ in
             return "Hello, world"
@@ -65,18 +63,10 @@ class MiddlewareTests: XCTestCase {
     }
 
     func testMultiple() throws {
-        let config = Config([:])
-        config.override(middleware: [
+        let drop = try Droplet(middleware: [
             FooMiddleware(),
             DateMiddleware()
         ])
-        let drop: Droplet
-        do {
-            drop = try Droplet(config)
-        } catch {
-            XCTFail("\(error)")
-            return
-        }
 
         drop.get { _ in
             return "Hello, world"
@@ -105,9 +95,7 @@ class MiddlewareTests: XCTestCase {
     }
 
     func testConfigClientNotEnabled() throws {
-        let config = Config([:])
-        config.override(middleware: [FooMiddleware()])
-        let drop = try Droplet()
+        let drop = try Droplet(middleware: [FooMiddleware()])
 
         let res = try drop.client.request(.get, "http://httpbin.org/headers")
 

@@ -9,7 +9,6 @@ extension Request {
         version: Version = Version(major: 1, minor: 1),
         headers: [HeaderKey: String] = [:],
         body: Body = .data([]),
-        peerAddress: PeerAddress? = nil,
         // uri
         scheme: String = "",
         userInfo: URI.UserInfo? = nil,
@@ -30,7 +29,6 @@ extension Request {
             port: port,
             path: path,
             query: query,
-            rawQuery: rawQuery,
             fragment: fragment
         )
         return Request(
@@ -38,8 +36,7 @@ extension Request {
             uri: uri,
             version: version,
             headers: headers,
-            body: body,
-            peerAddress: peerAddress
+            body: body
         )
     }
 }

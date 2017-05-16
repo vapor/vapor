@@ -10,7 +10,7 @@ class ErrorTests: XCTestCase {
 
     func testFixes() throws {
         let log = ConsoleLogger(Terminal(arguments: []))
-        let req = try Request(method: .get, uri: "foo", headers: ["Accept": "html"])
+        let req = Request(method: .get, uri: "foo", headers: ["Accept": "html"])
         let view = ErrorMiddleware(.development, log).make(with: req, for: Abort(.notFound))
         
         XCTAssert(try view.bodyString().contains("404"))

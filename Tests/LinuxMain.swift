@@ -33,7 +33,6 @@ XCTMain([
     testCase(FileMiddlewareTests.allTests),
     testCase(FormDataTests.allTests),
     testCase(HashTests.allTests),
-    testCase(LocalizationTests.allTests),
     testCase(LogTests.allTests),
     testCase(MiddlewareTests.allTests),
     testCase(ProcessTests.allTests),

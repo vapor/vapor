@@ -6,10 +6,13 @@ import TLS
 /// types conforming to this protocol can be
 /// set as the Droplet's `.client`
 public protocol ClientFactoryProtocol: Responder {
+    var defaultProxy: Proxy? { get }
+    
     func makeClient(
         hostname: String,
         port: Port,
-        _ securityLayer: SecurityLayer
+        securityLayer: SecurityLayer,
+        proxy: Proxy?
     ) throws -> ClientProtocol
 }
 
@@ -17,6 +20,21 @@ public protocol ClientFactoryProtocol: Responder {
 // MARK: Convenience
 
 extension ClientFactoryProtocol {
+    
+    /// Creates a new client with default proxy settings.
+    public func makeClient(
+        hostname: String,
+        port: Port,
+        securityLayer: SecurityLayer
+    ) throws -> ClientProtocol {
+        return try makeClient(
+            hostname: hostname,
+            port: port,
+            securityLayer: securityLayer,
+            proxy: defaultProxy
+        )
+    }
+    
     /// Creates a client connected to the server specified
     /// by the supplied request.
     func makeClient(for req: Request, using s: SecurityLayer? = nil) throws -> ClientProtocol {
@@ -34,7 +52,7 @@ extension ClientFactoryProtocol {
         return try makeClient(
             hostname: req.uri.hostname,
             port: req.uri.port ?? req.uri.scheme.port,
-            securityLayer
+            securityLayer: securityLayer
         )
     }
 }

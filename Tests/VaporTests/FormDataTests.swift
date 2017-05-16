@@ -11,6 +11,10 @@ class FormDataTests: XCTestCase {
         ("testHolistic", testHolistic),
     ]
     
+    override func setUp() {
+        Node.fuzzy = [JSON.self, Node.self]
+    }
+    
     /// Test form data serialization and parsing
     /// for a text, html, and blob field.
     func testHolistic() throws {
@@ -77,18 +81,7 @@ class FormDataTests: XCTestCase {
             return "👍"
         }
 
-        let group = DispatchGroup()
-        group.enter()
-
-        background {
-            group.leave()
-            try! drop.run()
-        }
-
-        group.wait()
-        usleep(500)
-
-        let response = try drop.client.respond(to: request)
+        let response = try drop.respond(to: request)
         XCTAssertEqual(try response.bodyString(), "👍")
     }
 }

@@ -13,13 +13,6 @@ extension Config {
         customAddConfigurable(closure: server, unique: "server", name: name)
     }
     
-    /// Overrides the configurable Server Factory with this instance.
-    public func override<
-        ServerFactory: ServerFactoryProtocol
-    >(server: ServerFactory) {
-        customOverride(instance: server, unique: "server")
-    }
-    
     /// Resolves the configured ServerFactory.
     public func resolveServer() throws -> ServerFactoryProtocol {
         return try customResolve(

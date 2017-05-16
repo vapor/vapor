@@ -3,6 +3,7 @@ import XCTest
 import HTTP
 import Core
 import Sockets
+import Dispatch
 
 class DropletTests: XCTestCase {
     static let allTests = [
@@ -11,7 +12,12 @@ class DropletTests: XCTestCase {
         ("testTLSConfig", testTLSConfig),
         ("testRunDefaults", testRunDefaults),
         ("testRunConfig", testRunConfig),
-        ("testHeadRequest", testHeadRequest)
+        ("testHeadRequest", testHeadRequest),
+        ("testDumpConfig", testDumpConfig),
+        ("testProxy", testProxy),
+        ("testDropletProxy", testDropletProxy),
+        ("testWebsockets", testWebsockets),
+        // ("testWebsocketsTLS", testWebsocketsTLS)
     ]
 
     func testData() {
@@ -100,7 +106,7 @@ class DropletTests: XCTestCase {
         let getResp = try drop.request(.get, "http://0.0.0.0:9222/foo")
         XCTAssertEqual(try getResp.bodyString(), "Hi, I'm a body")
 
-        let head = try Request(method: .head, uri: "http://0.0.0.0:9222/foo")
+        let head = Request(method: .head, uri: "http://0.0.0.0:9222/foo")
         let headResp = try drop.respond(to: head)
         XCTAssertEqual(try headResp.bodyString(), "")
     }
@@ -117,4 +123,98 @@ class DropletTests: XCTestCase {
         let drop = try Droplet(config)
         try drop.runCommands()
     }
+    
+    func testProxy() throws {
+        let proxy = Proxy(
+            hostname: "52.214.224.81",
+            port: 8888,
+            securityLayer: .none
+        )
+        let client = try EngineClient(
+            hostname: "52.211.86.161",
+            port: 80,
+            securityLayer: .none,
+            proxy: proxy
+        )
+        
+        let req = Request(method: .get, path: "/")
+        let res = try! client.respond(to: req)
+        try XCTAssertEqual(res.bodyString(), "It works!!!\n")
+    }
+    
+    func testDropletProxy() throws {
+        var config = Config([:])
+        try config.set("droplet.client", "engine")
+        try config.set("client.proxy.hostname", "52.214.224.81")
+        try config.set("client.proxy.port", 8888)
+        try config.set("client.proxy.securityLayer", "none")
+        
+        let drop = try Droplet(config)
+        
+        let res = try drop.client.get("http://52.211.86.161")
+        try XCTAssertEqual(res.bodyString(), "It works!!!\n")
+    }
+    
+    func testWebsockets() throws {
+        let drop = try Droplet()
+        
+        let group = DispatchGroup()
+        group.enter()
+        background {
+            do {
+                try drop.client.socket.connect(to: "ws://echo.websocket.org") { ws in
+                    ws.onText = { ws, text in
+                        XCTAssertEqual(text, "foo")
+                        group.leave()
+                        
+                    }
+                    
+                    try ws.send("foo")
+                }
+            } catch {
+                XCTFail("\(error)")
+            }
+        }
+        group.wait()
+    }
+    
+    func testWebsocketsTLS() throws {
+        let drop = try Droplet()
+        
+        let group = DispatchGroup()
+        group.enter()
+        background {
+            do {
+                try drop.client.socket.connect(to: "wss://echo.websocket.org") { ws in
+                    ws.onText = { ws, text in
+                        XCTAssertEqual(text, "foo")
+                        group.leave()
+                        
+                    }
+                    
+                    try ws.send("foo")
+                }
+            } catch {
+                XCTFail("\(error)")
+            }
+        }
+        group.wait()
+    }
+  
+    // temporary fix for Circle CI
+    #if Xcode
+    
+        func testFoundationClient() throws {
+            var config = Config([:])
+            try config.set("droplet.client", "foundation")
+            let drop = try Droplet(config)
+            let res = try! drop.client.get("https://httpbin.org/get")
+            try print(res.bodyString())
+            #if os(Linux)
+                try XCTAssert(res.bodyString().contains("curl"))
+            #else
+                try XCTAssert(res.bodyString().contains("CFNetwork"))
+            #endif
+        }
+    #endif
 }

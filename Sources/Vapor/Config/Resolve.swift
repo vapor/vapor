@@ -22,11 +22,6 @@ extension Config {
             return resolved
         }
         
-        // if there are any overrides for this type
-        if let override = self.override[unique] as? C {
-            return override
-        }
-        
         // access the config at the suppplied file and 
         // path to see which item was chosen by the user.
         let path = [file] + keyPath
@@ -73,11 +68,6 @@ extension Config {
         // check if this type has already been resolved
         if let resolved = self.resolved[unique] as? [C] {
             return resolved
-        }
-        
-        // if there are any overrides for this type
-        if let override = self.override[unique] as? [C] {
-            return override
         }
         
         // access the config at the suppplied file and

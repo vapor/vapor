@@ -1,5 +1,2 @@
 coverage:
   range: 0...100
-  ignore:
-    - "Sources/TypeSafeRouting/Generated.swift"
-    - "Sources/TypeSafeGenerator"

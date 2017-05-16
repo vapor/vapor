@@ -6,13 +6,6 @@ extension Config {
         customAddConfigurable(closure: view, unique: "view", name: name)
     }
     
-    /// Overrides the configurable View with this instance.
-    public func override<
-        View: ViewRenderer
-    >(view: View) {
-        customOverride(instance: view, unique: "view")
-    }
-    
     /// Resolves the configured View.
     public func resolveView() throws -> ViewRenderer {
         return try customResolve(

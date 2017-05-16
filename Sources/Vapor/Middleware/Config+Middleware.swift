@@ -8,9 +8,11 @@ extension Config {
         customAddConfigurable(closure: middleware, unique: "middleware", name: name)
     }
     
-    /// Overrides the configurable Middleware with this array.
-    public func override(middleware: [Middleware]) {
-        customOverride(instance: middleware, unique: "middleware")
+    /// Adds a configurable M instance.
+    public func addConfigurable<
+        M: Middleware
+    >(middleware: M, name: String) {
+        customAddConfigurable(closure: { _ in middleware }, unique: "middleware", name: name)
     }
     
     /// Resolves the configured M.

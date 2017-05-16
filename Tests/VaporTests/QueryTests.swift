@@ -9,7 +9,7 @@ class QueryTests: XCTestCase {
     ]
     
     func testPercentEncodedValues() {
-        let request = try! Request(method: .get, uri: "http://example.com?fizz=bu%3Dzz%2Bzz&aaa=bb%2Bccc%26dd")
+        let request = Request(method: .get, uri: "http://example.com?fizz=bu%3Dzz%2Bzz&aaa=bb%2Bccc%26dd")
         let query = request.query?.object
         
         XCTAssertNotNil(query)
@@ -19,7 +19,7 @@ class QueryTests: XCTestCase {
     }
     
     func testQueryWithoutParameter() {
-        let request = try! Request(method: .get, uri: "http://example.com?fizz&buzz")
+        let request = Request(method: .get, uri: "http://example.com?fizz&buzz")
         let query = request.query?.object
         
         XCTAssertNotNil(query)

@@ -8,6 +8,34 @@ public protocol ClientProtocol: Responder {
     init(
         hostname: String,
         port: Port,
-        _ securityLayer: SecurityLayer
+        securityLayer: SecurityLayer,
+        proxy: Proxy?
     ) throws
 }
+
+// MARK: Proxy
+
+public struct Proxy {
+    var hostname: String
+    var port: Port
+    var securityLayer: SecurityLayer
+}
+
+
+// MARK: Convenience
+
+extension ClientProtocol {
+    public init(
+        hostname: String,
+        port: Port,
+        securityLayer: SecurityLayer
+    ) throws {
+        try self.init(
+            hostname: hostname,
+            port: port,
+            securityLayer: securityLayer,
+            proxy: nil
+        )
+    }
+}
+

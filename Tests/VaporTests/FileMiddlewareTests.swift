@@ -17,11 +17,9 @@ class FileMiddlewareTests: XCTestCase {
     ]
     
     func testETag() throws {
-        let config = Config([:])
         let file = #file
         let fileMiddleWare = FileMiddleware(publicDir: "")
-        config.override(middleware: [fileMiddleWare])
-        let drop = try Droplet(config)
+        let drop = try Droplet(middleware: [fileMiddleWare])
         
         var headers: [HeaderKey: String] = [:]
         
