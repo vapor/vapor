@@ -1,12 +1,24 @@
 [![Vapor](https://cloud.githubusercontent.com/assets/1342803/26106982/ba0b4466-3a3f-11e7-8749-58ae2dc6c2fd.png)](http://vapor.team)
 
 <p align="center">
-	[![Documentation](http://img.shields.io/badge/read_the-docs-92A8D1.svg)](https://docs.vapor.codes)
-	[![Slack Team](http://vapor.team/badge.svg)](http://vapor.team)
-	[![MIT License](http://img.shields.io/badge/license-MIT-brightgreen.svg)](LICENSE)
-	[![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)](https://circleci.com/gh/vapor/vapor)
-	![Swift](http://img.shields.io/badge/swift-3.0-brightgreen.svg)
-	[![Twitter Follow](https://img.shields.io/badge/twitter-follow-5AA9E7.svg)](https://twitter.com/codevapor)
+	<a href="https://docs.vapor.codes">
+        <img src="http://img.shields.io/badge/read_the-docs-92A8D1.svg" alt="Documentation">
+    </a>
+    <a href="http://vapor.team">
+        <img src="http://vapor.team/badge.svg" alt="Slack Team">
+    </a>
+    <a href="LICENSE">
+        <img src="http://img.shields.io/badge/license-MIT-brightgreen.svg" alt="MIT License">
+    </a>
+    <a href="https://circleci.com/gh/vapor/mysql">
+        <img src="https://img.shields.io/badge/build-passing-brightgreen.svg" alt="Continuous Integration">
+    </a>
+    <a href="https://swift.org">
+        <img src="http://img.shields.io/badge/swift-3.1-brightgreen.svg" alt="Swift 3.1">
+    </a>
+    <a href="https://twitter.com/codevapor">
+        <img src="https://img.shields.io/badge/twitter-codevapor-5AA9E7.svg" alt="Twitter">
+    </a>
 </p>
 
 Vapor is the [most used](https://swiftpkgs.ng.bluemix.net/browse?chart=mostessential) web framework for Swift. It provides a beautifully expressive and easy to use foundation for your next website, API, or cloud project.
