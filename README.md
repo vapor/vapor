@@ -1,14 +1,13 @@
 [![Vapor](https://cloud.githubusercontent.com/assets/1342803/26106982/ba0b4466-3a3f-11e7-8749-58ae2dc6c2fd.png)](http://vapor.team)
 
-# Vapor
-
-![Swift](http://img.shields.io/badge/swift-3.0-brightgreen.svg)
-[![Build Status](https://api.travis-ci.org/vapor/vapor.svg?branch=master)](https://travis-ci.org/vapor/vapor)
-[![CircleCI](https://circleci.com/gh/vapor/vapor.svg?style=shield)](https://circleci.com/gh/vapor/vapor)
-[![Code Coverage](https://codecov.io/gh/vapor/vapor/branch/master/graph/badge.svg)](https://codecov.io/gh/vapor/vapor)
-[![Codebeat](https://codebeat.co/badges/a793ad97-47e3-40d9-82cf-2aafc516ef4e)](https://codebeat.co/projects/github-com-vapor-vapor)
-[![Slack Status](http://vapor.team/badge.svg)](http://slack.qutheory.io)
-[![Twitter Follow](https://img.shields.io/twitter/follow/shields_io.svg?style=social&label=Follow&maxAge=2592000)](https://twitter.com/codevapor)
+<p align="center">
+	[![Documentation](http://img.shields.io/badge/read_the-docs-92A8D1.svg)](https://docs.vapor.codes)
+	[![Slack Team](http://vapor.team/badge.svg)](http://vapor.team)
+	[![MIT License](http://img.shields.io/badge/license-MIT-brightgreen.svg)](LICENSE)
+	[![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)](https://circleci.com/gh/vapor/vapor)
+	![Swift](http://img.shields.io/badge/swift-3.0-brightgreen.svg)
+	[![Twitter Follow](https://img.shields.io/badge/twitter-follow-5AA9E7.svg)](https://twitter.com/codevapor)
+</p>
 
 Vapor is the [most used](https://swiftpkgs.ng.bluemix.net/browse?chart=mostessential) web framework for Swift. It provides a beautifully expressive and easy to use foundation for your next website, API, or cloud project.
 
