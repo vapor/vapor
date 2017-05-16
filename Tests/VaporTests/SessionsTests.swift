@@ -62,7 +62,27 @@ class SessionsTests: XCTestCase {
     }
     
     func testWithExpiryDate() throws {
+        let s = MemorySessions()
+        let m = SessionsMiddleware(s)
+        let drop = try Droplet(middleware: [m])
         
+        drop.get("should-set-expiry") { req in
+            req.storage["session_expiry"] = true
+            try req.assertSession().data["foo"] = "bar"
+            return "should expire"
+        }
+        
+        let req = Request(method: .get, path: "should-set-expiry")
+        let res = try drop.respond(to: req)
+        
+        guard let cookieIndex = res.cookies.index(of: "vapor-session") else {
+            XCTFail("No cookie")
+            return
+        }
+        
+        let cookie = res.cookies.cookies[cookieIndex]
+        
+        XCTAssertNotNil(cookie.expires)
     }
     
 }
