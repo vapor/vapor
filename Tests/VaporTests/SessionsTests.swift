@@ -41,6 +41,8 @@ class SessionsTests: XCTestCase {
         let cookie = res.cookies.cookies[cookieIndex]
         
         XCTAssertTrue(cookie.httpOnly)
+        
+        XCTAssertEqual(cookie.path, "/")
 
         for s in s.sessions {
             print(s.key)
