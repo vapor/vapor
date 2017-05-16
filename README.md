@@ -1,4 +1,4 @@
-[![Vapor](https://cloud.githubusercontent.com/assets/1342803/26106982/ba0b4466-3a3f-11e7-8749-58ae2dc6c2fd.png)](http://vapor.team)
+[![Vapor](https://cloud.githubusercontent.com/assets/1342803/26107544/92f88d0a-3a41-11e7-9022-ad16476d7cf1.png)](http://vapor.team)
 
 <p align="center">
 	<a href="https://docs.vapor.codes">
@@ -10,7 +10,7 @@
     <a href="LICENSE">
         <img src="http://img.shields.io/badge/license-MIT-brightgreen.svg" alt="MIT License">
     </a>
-    <a href="https://circleci.com/gh/vapor/mysql">
+    <a href="https://circleci.com/gh/vapor/vapor">
         <img src="https://img.shields.io/badge/build-passing-brightgreen.svg" alt="Continuous Integration">
     </a>
     <a href="https://swift.org">
