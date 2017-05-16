@@ -7,6 +7,7 @@ import Core
 class SessionsTests: XCTestCase {
     static let allTests = [
         ("testExample", testExample),
+        ("testWithExpiryDate", testWithExpiryDate),
     ]
 
     func testExample() throws {
@@ -31,6 +32,15 @@ class SessionsTests: XCTestCase {
             XCTFail("No cookie")
             return
         }
+        
+        guard let cookieIndex = res.cookies.index(of: "vapor-session") else {
+            XCTFail("No cookie")
+            return
+        }
+        
+        let cookie = res.cookies.cookies[cookieIndex]
+        
+        XCTAssertTrue(cookie.httpOnly)
 
         for s in s.sessions {
             print(s.key)
@@ -47,6 +57,10 @@ class SessionsTests: XCTestCase {
         let res2 = try drop.respond(to: req2)
 
         XCTAssertEqual(res2.body.bytes?.makeString(), "bar")
+    }
+    
+    func testWithExpiryDate() throws {
+        
     }
     
 }

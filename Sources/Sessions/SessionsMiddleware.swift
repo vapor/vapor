@@ -21,7 +21,8 @@ public final class SessionsMiddleware: Middleware {
         self.cookieFactory = cookieFactory ?? {
             return Cookie(
                 name: "vapor-session",
-                value: ""
+                value: "",
+                httpOnly: true
             )
         }
     }
