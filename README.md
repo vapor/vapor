@@ -1,4 +1,4 @@
-[![Vapor](https://cloud.githubusercontent.com/assets/1342803/26107544/92f88d0a-3a41-11e7-9022-ad16476d7cf1.png)](http://vapor.team)
+[![Vapor](https://cloud.githubusercontent.com/assets/1342803/26107881/b59e7e22-3a42-11e7-82b7-fe869cfdb0b9.png)](http://vapor.team)
 
 <p align="center">
 	<a href="https://docs.vapor.codes">
@@ -25,19 +25,19 @@ Vapor is the [most used](https://swiftpkgs.ng.bluemix.net/browse?chart=mostessen
 
 This repository is the framework's source code. To view some sample projects, check out our list [here](/Documents/PROJECTS.md).
 
-## 📖 Documentation
+### 📖 Documentation
 
 Visit the Vapor web framework's [documentation](http://docs.vapor.codes) for instructions on how to use this package.
 
-## 💧 Community
+### 💧 Community
 
 Join the welcoming community of fellow Vapor developers in [slack](http://vapor.team).
 
-## 🔧 Compatibility
+### 🔧 Compatibility
 
 This package has been tested on macOS and Ubuntu.
 
-## 🦄 Deploy
+### 🦄 Deploy
 
 Vapor can be deployed wherever Swift can.
 
@@ -51,7 +51,7 @@ Vapor can be deployed wherever Swift can.
 
 [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/vapor/example/tree/master)
 
-## 🚀 Contributing
+### 🚀 Contributing
 
 All developers should feel welcome and encouraged to contribute to Vapor, see our [getting started](/Documents/CONTRIBUTING.md) document here to get involved.
 
@@ -61,19 +61,19 @@ If you find a **bug**, please submit a pull request with a failing test case dis
 
 If you find a **security vulnerability**, please contact [security@vapor.codes](mailto:security@vapor.codes) as soon as possible. We take these matters seriously.
 
-## 💙 Code of Conduct
+### 💙 Code of Conduct
 
 Our goal is to create a safe and empowering environment for anyone who decides to use or contribute to Vapor. Please help us make the community a better place by abiding to this [Code of Conduct](/Documents/CODE_OF_CONDUCT.md) during your interactions surrounding this project.
 
-## ⭐ Projects
+### ⭐ Projects
 
 Vapor has [several projects](/Documents/PROJECTS.md) that are live now in the cloud. Most are also open source, so check them out for great examples.
 
-## 🏫 Tutorials
+### 🏫 Tutorials
 
 The awesome Vapor community is always adding new tutorials and articles out there, [Vapor University](http://vapor.university) is a great place to get started!
 
-## Backers
+### 👥 Backers
 
 Support us with a monthly donation and help us continue our activities. [[Become a backer](https://opencollective.com/vapor#backer)]
 
@@ -109,7 +109,7 @@ Support us with a monthly donation and help us continue our activities. [[Become
 <a href="https://opencollective.com/vapor/backer/29/website" target="_blank"><img src="https://opencollective.com/vapor/backer/29/avatar.svg"></a>
 
 
-## Sponsors
+### 🥇 Sponsors
 
 Proudly sponsored by Nodes
 
