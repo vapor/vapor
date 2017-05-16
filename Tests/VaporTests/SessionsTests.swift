@@ -3,10 +3,12 @@ import XCTest
 import Vapor
 import HTTP
 import Core
+import Cookies
 
 class SessionsTests: XCTestCase {
     static let allTests = [
         ("testExample", testExample),
+        ("testCustomCookieFactoryWithExpiryDate", testCustomCookieFactoryWithExpiryDate),
     ]
 
     func testExample() throws {
@@ -31,6 +33,17 @@ class SessionsTests: XCTestCase {
             XCTFail("No cookie")
             return
         }
+        
+        guard let cookieIndex = res.cookies.index(of: "vapor-session") else {
+            XCTFail("No cookie")
+            return
+        }
+        
+        let cookie = res.cookies.cookies[cookieIndex]
+        
+        XCTAssertTrue(cookie.httpOnly)
+        
+        XCTAssertEqual(cookie.path, "/")
 
         for s in s.sessions {
             print(s.key)
@@ -47,6 +60,45 @@ class SessionsTests: XCTestCase {
         let res2 = try drop.respond(to: req2)
 
         XCTAssertEqual(res2.body.bytes?.makeString(), "bar")
+    }
+    
+    func testCustomCookieFactoryWithExpiryDate() throws {
+        let s = MemorySessions()
+        let cookieName = "test-name"
+        let cookieFactory: (Request) -> Cookie = { req in
+            var cookie = Cookie(
+                name: cookieName,
+                value: "",
+                httpOnly: true
+            )
+            
+            if req.storage["session_expiry"] as? Bool ?? false {
+                let oneMonthTime: TimeInterval = 30 * 24 * 60 * 60
+                cookie.expires = Date().addingTimeInterval(oneMonthTime)
+            }
+            
+            return cookie
+        }
+        let m = SessionsMiddleware(s, cookieName: cookieName, cookieFactory: cookieFactory)
+        let drop = try Droplet(middleware: [m])
+        
+        drop.get("should-set-expiry") { req in
+            req.storage["session_expiry"] = true
+            try req.assertSession().data["foo"] = "bar"
+            return "should expire"
+        }
+        
+        let req = Request(method: .get, path: "should-set-expiry")
+        let res = try drop.respond(to: req)
+        
+        guard let cookieIndex = res.cookies.index(of: cookieName) else {
+            XCTFail("No cookie")
+            return
+        }
+        
+        let cookie = res.cookies.cookies[cookieIndex]
+        
+        XCTAssertNotNil(cookie.expires)
     }
     
 }
