@@ -21,6 +21,8 @@
     </a>
 </p>
 
+<br>
+
 Vapor is the [most used](https://swiftpkgs.ng.bluemix.net/browse?chart=mostessential) web framework for Swift. It provides a beautifully expressive and easy to use foundation for your next website, API, or cloud project.
 
 This repository is the framework's source code. To view some sample projects, check out our list [here](/Documents/PROJECTS.md).
@@ -33,13 +35,9 @@ Visit the Vapor web framework's [documentation](http://docs.vapor.codes) for ins
 
 Join the welcoming community of fellow Vapor developers in [slack](http://vapor.team).
 
-### 🔧 Compatibility
-
-This package has been tested on macOS and Ubuntu.
-
 ### 🦄 Deploy
 
-Vapor can be deployed wherever Swift can.
+Vapor can be deployed anywhere that supports Ubuntu 14 or 16.
 
 - Digital Ocean
 - Docker
@@ -48,8 +46,6 @@ Vapor can be deployed wherever Swift can.
 - Bluemix
 - [Skyliner](https://www.skyliner.io/deploy/swift)
 - More ...
-
-[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/vapor/example/tree/master)
 
 ### 🚀 Contributing
 
