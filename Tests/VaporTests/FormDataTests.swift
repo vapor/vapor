@@ -81,18 +81,7 @@ class FormDataTests: XCTestCase {
             return "👍"
         }
 
-        let group = DispatchGroup()
-        group.enter()
-
-        background {
-            group.leave()
-            try! drop.run()
-        }
-
-        group.wait()
-        usleep(500)
-
-        let response = try drop.client.respond(to: request)
+        let response = try drop.respond(to: request)
         XCTAssertEqual(try response.bodyString(), "👍")
     }
 }
