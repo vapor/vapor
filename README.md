@@ -1,34 +1,43 @@
-[![Vapor](https://cloud.githubusercontent.com/assets/1342803/15592871/46decfda-2375-11e6-9494-a9bf4e6aaebf.png)](http://vapor.team)
+[![Vapor](https://cloud.githubusercontent.com/assets/1342803/26107881/b59e7e22-3a42-11e7-82b7-fe869cfdb0b9.png)](http://vapor.team)
 
-# Vapor
+<p align="center">
+	<a href="https://docs.vapor.codes">
+        <img src="http://img.shields.io/badge/read_the-docs-92A8D1.svg" alt="Documentation">
+    </a>
+    <a href="http://vapor.team">
+        <img src="http://vapor.team/badge.svg" alt="Slack Team">
+    </a>
+    <a href="LICENSE">
+        <img src="http://img.shields.io/badge/license-MIT-brightgreen.svg" alt="MIT License">
+    </a>
+    <a href="https://circleci.com/gh/vapor/vapor">
+        <img src="https://img.shields.io/badge/build-passing-brightgreen.svg" alt="Continuous Integration">
+    </a>
+    <a href="https://swift.org">
+        <img src="http://img.shields.io/badge/swift-3.1-brightgreen.svg" alt="Swift 3.1">
+    </a>
+    <a href="https://twitter.com/codevapor">
+        <img src="https://img.shields.io/badge/twitter-codevapor-5AA9E7.svg" alt="Twitter">
+    </a>
+</p>
 
-![Swift](http://img.shields.io/badge/swift-3.0-brightgreen.svg)
-[![Build Status](https://api.travis-ci.org/vapor/vapor.svg?branch=master)](https://travis-ci.org/vapor/vapor)
-[![CircleCI](https://circleci.com/gh/vapor/vapor.svg?style=shield)](https://circleci.com/gh/vapor/vapor)
-[![Code Coverage](https://codecov.io/gh/vapor/vapor/branch/master/graph/badge.svg)](https://codecov.io/gh/vapor/vapor)
-[![Codebeat](https://codebeat.co/badges/a793ad97-47e3-40d9-82cf-2aafc516ef4e)](https://codebeat.co/projects/github-com-vapor-vapor)
-[![Slack Status](http://vapor.team/badge.svg)](http://slack.qutheory.io)
-[![Twitter Follow](https://img.shields.io/twitter/follow/shields_io.svg?style=social&label=Follow&maxAge=2592000)](https://twitter.com/codevapor)
+<br>
 
 Vapor is the [most used](https://swiftpkgs.ng.bluemix.net/browse?chart=mostessential) web framework for Swift. It provides a beautifully expressive and easy to use foundation for your next website, API, or cloud project.
 
 This repository is the framework's source code. To view some sample projects, check out our list [here](/Documents/PROJECTS.md).
 
-## 📖 Documentation
+### 📖 Documentation
 
 Visit the Vapor web framework's [documentation](http://docs.vapor.codes) for instructions on how to use this package.
 
-## 💧 Community
+### 💧 Community
 
 Join the welcoming community of fellow Vapor developers in [slack](http://vapor.team).
 
-## 🔧 Compatibility
+### 🦄 Deploy
 
-This package has been tested on macOS and Ubuntu.
-
-## 🦄 Deploy
-
-Vapor can be deployed wherever Swift can.
+Vapor can be deployed anywhere that supports Ubuntu 14 or 16.
 
 - Digital Ocean
 - Docker
@@ -38,9 +47,7 @@ Vapor can be deployed wherever Swift can.
 - [Skyliner](https://www.skyliner.io/deploy/swift)
 - More ...
 
-[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/vapor/example/tree/master)
-
-## 🚀 Contributing
+### 🚀 Contributing
 
 All developers should feel welcome and encouraged to contribute to Vapor, see our [getting started](/Documents/CONTRIBUTING.md) document here to get involved.
 
@@ -50,19 +57,19 @@ If you find a **bug**, please submit a pull request with a failing test case dis
 
 If you find a **security vulnerability**, please contact [security@vapor.codes](mailto:security@vapor.codes) as soon as possible. We take these matters seriously.
 
-## 💙 Code of Conduct
+### 💙 Code of Conduct
 
 Our goal is to create a safe and empowering environment for anyone who decides to use or contribute to Vapor. Please help us make the community a better place by abiding to this [Code of Conduct](/Documents/CODE_OF_CONDUCT.md) during your interactions surrounding this project.
 
-## ⭐ Projects
+### ⭐ Projects
 
 Vapor has [several projects](/Documents/PROJECTS.md) that are live now in the cloud. Most are also open source, so check them out for great examples.
 
-## 🏫 Tutorials
+### 🏫 Tutorials
 
 The awesome Vapor community is always adding new tutorials and articles out there, [Vapor University](http://vapor.university) is a great place to get started!
 
-## Backers
+### 👥 Backers
 
 Support us with a monthly donation and help us continue our activities. [[Become a backer](https://opencollective.com/vapor#backer)]
 
@@ -98,7 +105,7 @@ Support us with a monthly donation and help us continue our activities. [[Become
 <a href="https://opencollective.com/vapor/backer/29/website" target="_blank"><img src="https://opencollective.com/vapor/backer/29/avatar.svg"></a>
 
 
-## Sponsors
+### 🥇 Sponsors
 
 Proudly sponsored by Nodes
 
