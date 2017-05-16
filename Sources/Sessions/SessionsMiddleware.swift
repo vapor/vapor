@@ -24,18 +24,11 @@ public final class SessionsMiddleware: Middleware {
         self.cookieName = cookieName
         self.cookieFactory = cookieFactory ?? { req in
             
-            var cookie = Cookie(
+            return Cookie(
                 name: cookieName,
                 value: "",
                 httpOnly: true
             )
-            
-            if req.storage["session_expiry"] as? Bool ?? false {
-                let oneMonthTime: TimeInterval = 30 * 24 * 60 * 60
-                cookie.expires = Date().addingTimeInterval(oneMonthTime)
-            }
-            
-            return cookie
         }
     }
 
