@@ -42,20 +42,19 @@ fi
 
 SWIFTV=`swift --version`
 
-if [[ $SWIFTV == *"3.0"* ]];
+if [[ $SWIFTV == *"3."* ]];
 then
     echo "✅  Compatible"
     exit 0;
-else    
+else
     echo "❌  Incompatible"
-    echo "Reason: Swift 3.0 is required."
+    echo "Reason: Swift 3.+ is required."
     echo ""
     echo "'swift --version' output:"
     echo $SWIFTV
     echo ""
-    echo "Output does not contain '3.0'."
+    echo "Output does not contain '3.+'."
     echo ""
     help
     exit 1;
 fi
-
