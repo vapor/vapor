@@ -1,7 +1,7 @@
 [![Vapor](https://cloud.githubusercontent.com/assets/1342803/26107881/b59e7e22-3a42-11e7-82b7-fe869cfdb0b9.png)](http://vapor.team)
 
 <p align="center">
-	<a href="https://docs.vapor.codes">
+	<a href="https://docs.vapor.codes/2.0/">
         <img src="http://img.shields.io/badge/read_the-docs-92A8D1.svg" alt="Documentation">
     </a>
     <a href="http://vapor.team">
@@ -25,27 +25,9 @@
 
 Vapor is the [most used](https://swiftpkgs.ng.bluemix.net/browse?chart=mostessential) web framework for Swift. It provides a beautifully expressive and easy to use foundation for your next website, API, or cloud project.
 
-This repository is the framework's source code. To view some sample projects, check out our list [here](/Documents/PROJECTS.md).
-
-### 📖 Documentation
-
-Visit the Vapor web framework's [documentation](http://docs.vapor.codes) for instructions on how to use this package.
-
 ### 💧 Community
 
 Join the welcoming community of fellow Vapor developers in [slack](http://vapor.team).
-
-### 🦄 Deploy
-
-Vapor can be deployed anywhere that supports Ubuntu 14 or 16.
-
-- Digital Ocean
-- Docker
-- Heroku
-- AWS
-- Bluemix
-- [Skyliner](https://www.skyliner.io/deploy/swift)
-- More ...
 
 ### 🚀 Contributing
 
@@ -60,10 +42,6 @@ If you find a **security vulnerability**, please contact [security@vapor.codes](
 ### 💙 Code of Conduct
 
 Our goal is to create a safe and empowering environment for anyone who decides to use or contribute to Vapor. Please help us make the community a better place by abiding to this [Code of Conduct](/Documents/CODE_OF_CONDUCT.md) during your interactions surrounding this project.
-
-### ⭐ Projects
-
-Vapor has [several projects](/Documents/PROJECTS.md) that are live now in the cloud. Most are also open source, so check them out for great examples.
 
 ### 🏫 Tutorials
 
