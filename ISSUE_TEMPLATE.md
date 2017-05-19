@@ -9,6 +9,7 @@
 * Vapor Version: 
 * OS: 
 * OS Version: 
+* Vapor Toolbox Version:
 
 ### Expected Behavior
 
