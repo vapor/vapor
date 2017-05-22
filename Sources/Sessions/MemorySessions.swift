@@ -7,7 +7,11 @@ import Foundation
 /// in a Swift `Dictionary`. This means all session
 /// data will be purged if the server is restarted.
 public final class MemorySessions: SessionsProtocol {
-    var sessions: [String: Session]
+    var sessions: [String: (
+        identifier: String,
+        data: Node
+    )]
+    
     private var sessionsLock = NSLock()
 
     public init() {
@@ -17,18 +21,28 @@ public final class MemorySessions: SessionsProtocol {
     /// Loads value for session id at given key
     public func get(identifier: String) -> Session? {
         var session: Session?
-
+        
         sessionsLock.locked {
-            session = sessions[identifier]
+            if let existing = sessions[identifier] {
+                session = Session(
+                    identifier: existing.identifier,
+                    data: existing.data
+                )
+            } else {
+                session = nil
+            }
         }
-
+        
         return session
     }
 
     /// Sets value for session id at given key
     public func set(_ session: Session) {
         sessionsLock.locked {
-            sessions[session.identifier] = session
+            sessions[session.identifier] = (
+                session.identifier,
+                session.data
+            )
         }
     }
     
