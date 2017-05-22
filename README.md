@@ -126,3 +126,6 @@ Become a sponsor and get your logo on our README on GitHub with a link to your s
 <a href="https://opencollective.com/vapor/sponsor/27/website" target="_blank"><img src="https://opencollective.com/vapor/sponsor/27/avatar.svg"></a>
 <a href="https://opencollective.com/vapor/sponsor/28/website" target="_blank"><img src="https://opencollective.com/vapor/sponsor/28/avatar.svg"></a>
 <a href="https://opencollective.com/vapor/sponsor/29/website" target="_blank"><img src="https://opencollective.com/vapor/sponsor/29/avatar.svg"></a>
+
+[![analytics](http://www.google-analytics.com/collect?v=1&t=pageview&_s=1&dl=https%3A%2F%2Fgithub.com%2Fvapor%2Fvapor&_u=MAC~&cid=1757014354.1393964045&tid=UA-76177358-6)]()
+
