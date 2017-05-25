@@ -25,6 +25,7 @@ class ContentTests: XCTestCase {
         ("testFormURLEncodedEdge", testFormURLEncodedEdge),
         ("testFormURLEncodedDict", testFormURLEncodedDict),
         ("testSplitString", testSplitString),
+        ("testEmptyQuery", testEmptyQuery),
     ]
 
     func testRequestSetJSONBody() throws {
@@ -150,5 +151,11 @@ class ContentTests: XCTestCase {
 
         XCTAssertEqual(content["a"]?.string, "a")
         XCTAssertEqual(content["b"]?.string, "custom")
+    }
+
+    func testEmptyQuery() throws {
+        let req = Request(method: .get, uri: "https://fake.com")
+        req.query = Node([:])
+        XCTAssertNil(req.query)
     }
 }

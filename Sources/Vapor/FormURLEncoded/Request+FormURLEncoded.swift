@@ -51,15 +51,9 @@ extension Request {
             }
         }
         set(data) {
-            if let data = data {
-                do {
-                    uri.query = try data
-                        .formURLEncoded()
-                        .makeString()
-                    storage["query"] = data
-                } catch {
-                    // make no changes
-                }
+            if let data = data, let query = try? data.formURLEncoded(), !query.isEmpty {
+                uri.query = query.makeString()
+                storage["query"] = query
             } else {
                 storage["query"] = nil
                 uri.query = nil
