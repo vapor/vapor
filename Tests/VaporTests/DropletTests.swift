@@ -196,6 +196,7 @@ class DropletTests: XCTestCase {
                 }
             } catch {
                 XCTFail("\(error)")
+                group.leave()
             }
         }
         group.wait()

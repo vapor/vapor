@@ -8,10 +8,12 @@ public final class FileMiddleware: Middleware {
 
     private var publicDir: String
     private let loader = DataFile()
+    private let chunkSize: Int
 
-    public init(publicDir: String) {
+    public init(publicDir: String, chunkSize: Int? = nil) {
         // Remove last "/" from the publicDir if present, so we can directly append uri path from the request.
         self.publicDir = publicDir.finished(with: "/")
+        self.chunkSize = chunkSize ?? 32_768 // 2^15
     }
 
     public func respond(to request: Request, chainingTo next: Responder) throws -> Response {
@@ -59,41 +61,33 @@ public final class FileMiddleware: Middleware {
             guard let file = fopen(filePath, "r") else {
                 throw Abort.notFound
             }
+            defer {
+                fclose(file)
+            }
 
+            // make copy of size for closure
+            let chunkSize = self.chunkSize
+
+            // return chunked response
             return Response(status: .ok, headers: headers, chunked: { stream in
-                let chunkSize = 32768
- 
-                defer {
-                    fclose(file)
-                }
+                var buffer = Array(repeating: 0, count: chunkSize)
 
-                guard let buffer = malloc(chunkSize) else {
-                    try? stream.close()
-                    return
-                }
+                var bytesRead: size_t = 0
+                repeat {
+                    bytesRead = fread(&buffer, 1, chunkSize, file)
+                    if bytesRead > 0 {
+                        // copy the buffer into an array
+                        let chunk = Array(UnsafeRawBufferPointer(
+                            start: buffer,
+                            count: bytesRead
+                        ))
 
-                defer {
-                    free(buffer)
-                }
+                        // write the chunk to the chunk stream
+                        try stream.write(chunk)
+                    }
+                } while bytesRead == chunkSize
 
-                do {
-                    var count: size_t = 0
-
-                    repeat {
-                        count = fread(buffer, 1, chunkSize, file)
-                        if count > 0 {
-                            let chunk = Array(UnsafeRawBufferPointer(start: buffer, count: count))
-                            try stream.write(chunk)
-                        }
-                    } while count == chunkSize
-                }
-                catch {
-                    // In chunked mode, the server has no way to indicate errors inside the body,
-                    // so closing the stream after the first write error is effectively
-                    // the only option to keep the server running.
-                }
-
-                try? stream.close()
+                try stream.close()
             })
         }
     }

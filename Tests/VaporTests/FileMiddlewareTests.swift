@@ -26,7 +26,10 @@ class FileMiddlewareTests: XCTestCase {
         // First make sure it returns data with 200
         let response = try drop.respond(to: Request(method: .get, path: file))
         XCTAssertEqual(response.status, .ok, "Status code is not OK ( 200 ) for existing file.")
-        XCTAssertTrue(response.body.bytes!.count > 0, "File content body IS NOT provided for existing file.")
+        guard case .chunked = response.body else {
+            XCTFail("Not chunked response")
+            return
+        }
 
         if let ETag = response.headers["ETag"] {
             headers["If-None-Match"] = ETag
