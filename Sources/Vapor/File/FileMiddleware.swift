@@ -1,10 +1,11 @@
 import Foundation
 import HTTP
+import libc
 
 /// Servers files from the supplied public directory
 /// on not found errors.
 public final class FileMiddleware: Middleware {
-    
+
     private var publicDir: String
     private let loader = DataFile()
 
@@ -12,7 +13,7 @@ public final class FileMiddleware: Middleware {
         // Remove last "/" from the publicDir if present, so we can directly append uri path from the request.
         self.publicDir = publicDir.finished(with: "/")
     }
-    
+
     public func respond(to request: Request, chainingTo next: Responder) throws -> Response {
         do {
             return try next.respond(to: request)
@@ -34,7 +35,7 @@ public final class FileMiddleware: Middleware {
             }
 
             var headers: [HeaderKey: String] = [:]
-            
+
             // Generate ETag value, "HEX value of last modified date" + "-" + "file size"
             let fileETag = "\(modifiedAt.timeIntervalSince1970)-\(fileSize.intValue)"
             headers["ETag"] = fileETag
@@ -53,13 +54,47 @@ public final class FileMiddleware: Middleware {
                 headers["Content-Type"] = type
             }
 
-            // File exists and was not cached, returning content of file.
-            if let fileBody = try? loader.read(at:filePath) {
-                return Response(status: .ok, headers: headers, body: .data(fileBody))
-            } else {
-                print("unable to load path")
+            // Try to open the file for reading.
+            // This is the last chance to report a Not Found error to the client.
+            guard let file = fopen(filePath, "r") else {
                 throw Abort.notFound
             }
+
+            return Response(status: .ok, headers: headers, chunked: { stream in
+                let chunkSize = 32768
+ 
+                defer {
+                    fclose(file)
+                }
+
+                guard let buffer = malloc(chunkSize) else {
+                    try? stream.close()
+                    return
+                }
+
+                defer {
+                    free(buffer)
+                }
+
+                do {
+                    var count: size_t = 0
+
+                    repeat {
+                        count = fread(buffer, 1, chunkSize, file)
+                        if count > 0 {
+                            let chunk = Array(UnsafeRawBufferPointer(start: buffer, count: count))
+                            try stream.write(chunk)
+                        }
+                    } while count == chunkSize
+                }
+                catch {
+                    // In chunked mode, the server has no way to indicate errors inside the body,
+                    // so closing the stream after the first write error is effectively
+                    // the only option to keep the server running.
+                }
+
+                try? stream.close()
+            })
         }
     }
 }
