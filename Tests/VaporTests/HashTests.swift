@@ -60,15 +60,15 @@ class HashTests: XCTestCase {
 
         let hash: HashProtocol = BCryptHasher(cost: workFactor)
 
-        let digest1 = try hash.make(password).makeString()
-        let digest2 = try hash.make(password).makeString()
+        let digest1 = try! hash.make(password).makeString()
+        let digest2 = try! hash.make(password).makeString()
         let digest3 = "$2a$05$LCgyKIaj2Mv1uDZZB6DMT.zruhilEevoFkyToS8CIwpSecp/2dg3u" // foo from online
 
         XCTAssert(digest1.contains("$0\(workFactor)$"))
         XCTAssert(digest1 != digest2)
-        XCTAssert(try hash.check(password, matchesHash: digest1))
-        XCTAssert(try hash.check(password, matchesHash: digest2))
-        XCTAssert(try hash.check(password, matchesHash: digest3))
+        XCTAssert(try! hash.check(password, matchesHash: digest1))
+        XCTAssert(try! hash.check(password, matchesHash: digest2))
+        XCTAssert(try! hash.check(password, matchesHash: digest3))
     }
 
     func testDropletBCrypt() throws {

@@ -6,7 +6,7 @@ import Crypto
 import Transport
 import Sockets
 
-public let VERSION = "2.0.2"
+public let VERSION = "2.0.3"
 
 public final class Droplet {
     /// Provides access to config settings.
