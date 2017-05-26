@@ -14,6 +14,11 @@ public final class SessionsMiddleware: Middleware {
     
     public typealias CookieFactory = (_ request: Request) throws -> Cookie
 
+    /// Creates a new SessionsMiddleware.
+    /// Note: The `name` and `value` properties of cookies
+    /// created by the optional `cookieFactory` will be overwritten.
+    /// To change the cookie's name, you must set the `cookieName` option
+    /// in this init method. The cookie's value will always be the session id.
     public init(
         _ sessions: SessionsProtocol,
         cookieName: String = "vapor-session",
@@ -22,7 +27,6 @@ public final class SessionsMiddleware: Middleware {
         self.sessions = sessions
         self.cookieName = cookieName
         self.cookieFactory = cookieFactory ?? { req in
-            
             return Cookie(
                 name: cookieName,
                 value: "",
@@ -48,6 +52,10 @@ public final class SessionsMiddleware: Middleware {
         let response = try chain.respond(to: request)
         
         var cookie = try cookieFactory(request)
+        if cookie.name != cookieName {
+            // FIXME: future version of API should disallow this
+            cookie.name = cookieName
+        }
         cookie.value = session.identifier
 
         if session.shouldDestroy {
