@@ -14,6 +14,11 @@ public final class SessionsMiddleware: Middleware {
     
     public typealias CookieFactory = (_ request: Request) throws -> Cookie
 
+    /// Creates a new SessionsMiddleware.
+    /// Note: The `name` and `value` properties of cookies
+    /// created by the optional `cookieFactory` will be overwritten.
+    /// To change the cookie's name, you must set the `cookieName` option
+    /// in this init method. The cookie's value will always be the session id.
     public init(
         _ sessions: SessionsProtocol,
         cookieName: String = "vapor-session",
