@@ -41,6 +41,9 @@ extension DateMiddleware: ConfigInitializable {
 
 extension FileMiddleware: ConfigInitializable {
     public convenience init(config: Config) throws {
-        self.init(publicDir: config.publicDir)
+        try self.init(
+            publicDir: config.publicDir,
+            chunkSize: config.get("file.chunkSize")
+        )
     }
 }
