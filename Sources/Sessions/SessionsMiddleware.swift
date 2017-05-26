@@ -22,7 +22,6 @@ public final class SessionsMiddleware: Middleware {
         self.sessions = sessions
         self.cookieName = cookieName
         self.cookieFactory = cookieFactory ?? { req in
-            
             return Cookie(
                 name: cookieName,
                 value: "",
@@ -48,6 +47,10 @@ public final class SessionsMiddleware: Middleware {
         let response = try chain.respond(to: request)
         
         var cookie = try cookieFactory(request)
+        if cookie.name != cookieName {
+            // FIXME: future version of API should disallow this
+            cookie.name = cookieName
+        }
         cookie.value = session.identifier
 
         if session.shouldDestroy {
