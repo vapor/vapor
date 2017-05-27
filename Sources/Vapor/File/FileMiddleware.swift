@@ -61,18 +61,19 @@ public final class FileMiddleware: Middleware {
             guard let file = fopen(filePath, "r") else {
                 throw Abort.notFound
             }
-            defer {
-                fclose(file)
-            }
 
             // make copy of size for closure
             let chunkSize = self.chunkSize
 
             // return chunked response
             return Response(status: .ok, headers: headers, chunked: { stream in
-                var buffer = Array(repeating: 0, count: chunkSize)
+                defer {
+                    fclose(file)
+                }
 
+                var buffer = Array(repeating: 0, count: chunkSize)
                 var bytesRead: size_t = 0
+
                 repeat {
                     bytesRead = fread(&buffer, 1, chunkSize, file)
                     if bytesRead > 0 {
