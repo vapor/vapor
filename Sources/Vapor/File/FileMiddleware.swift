@@ -56,13 +56,10 @@ public final class FileMiddleware: Middleware {
                 headers["Content-Type"] = type
             }
 
-            // Try to open the file for reading.
+            // Try to open the file for reading, keeping it open until the chunking finishes.
             // This is the last chance to report a Not Found error to the client.
             guard let file = fopen(filePath, "r") else {
                 throw Abort.notFound
-            }
-            defer {
-                fclose(file)
             }
 
             // make copy of size for closure
@@ -70,9 +67,15 @@ public final class FileMiddleware: Middleware {
 
             // return chunked response
             return Response(status: .ok, headers: headers, chunked: { stream in
-                var buffer = Array(repeating: 0, count: chunkSize)
+                // the deferred fclose call must stay inside the chunking closure,
+                // so the file does not get prematurely closed.
+                defer {
+                    fclose(file)
+                }
 
+                var buffer = Array(repeating: 0, count: chunkSize)
                 var bytesRead: size_t = 0
+
                 repeat {
                     bytesRead = fread(&buffer, 1, chunkSize, file)
                     if bytesRead > 0 {
