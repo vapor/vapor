@@ -126,17 +126,18 @@ class DropletTests: XCTestCase {
     
     func testProxy() throws {
         let proxy = Proxy(
-            hostname: "52.214.224.81",
+            hostname: "52.213.26.87",
             port: 8888,
             securityLayer: .none
         )
         let client = try EngineClient(
-            hostname: "52.211.86.161",
+            hostname: "34.248.148.23",
             port: 80,
             securityLayer: .none,
             proxy: proxy
         )
-        
+
+//        let req = Request(method: .get, uri: "34.248.148.23")
         let req = Request(method: .get, path: "/")
         let res = try! client.respond(to: req)
         try XCTAssertEqual(res.bodyString(), "It works!!!\n")
@@ -145,13 +146,13 @@ class DropletTests: XCTestCase {
     func testDropletProxy() throws {
         var config = Config([:])
         try config.set("droplet.client", "engine")
-        try config.set("client.proxy.hostname", "52.214.224.81")
+        try config.set("client.proxy.hostname", "52.213.26.87")
         try config.set("client.proxy.port", 8888)
         try config.set("client.proxy.securityLayer", "none")
         
-        let drop = try Droplet(config)
+        let drop = try! Droplet(config)
         
-        let res = try drop.client.get("http://52.211.86.161")
+        let res = try! drop.client.get("http://34.248.148.23")
         try XCTAssertEqual(res.bodyString(), "It works!!!\n")
     }
     
