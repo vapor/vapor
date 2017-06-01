@@ -6,6 +6,7 @@ class QueryTests: XCTestCase {
     static let allTests = [
         ("testPercentEncodedValues", testPercentEncodedValues),
         ("testQueryWithoutParameter", testQueryWithoutParameter),
+        ("testClientQueryNotNill", testClientQueryNotNill),
     ]
     
     func testPercentEncodedValues() {
