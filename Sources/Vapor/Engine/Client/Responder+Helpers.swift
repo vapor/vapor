@@ -42,7 +42,9 @@ extension Responder {
         let req = Request(method: method, uri: uri)
         req.headers = headers
 
-        req.query = try Node(node: query)
+        if !query.isEmpty {
+            req.query = try Node(node: query)
+        }
 
         if let body = body {
             req.body = body.makeBody()
