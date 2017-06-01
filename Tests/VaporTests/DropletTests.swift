@@ -137,8 +137,7 @@ class DropletTests: XCTestCase {
             proxy: proxy
         )
 
-        let req = Request(method: .get, uri: "34.248.148.23")
-//        let req = Request(method: .get, path: "/")
+        let req = Request(method: .get, path: "/")
         let res = try! client.respond(to: req)
         try XCTAssertEqual(res.bodyString(), "It works!!!\n")
     }
