@@ -25,17 +25,32 @@ extension Responder {
         _ body: BodyRepresentable? = nil,
         through middleware: [Middleware] = []
     ) throws  -> Response {
+        let req = try makeRequest(method, uri, query: query, headers, body)
+        return try respond(to: req, through: middleware)
+    }
+
+    /// for testing
+    internal func makeRequest(
+        _ method: Method,
+        _ uri: String,
+        query: [String: NodeRepresentable] = [:],
+        _ headers: [HeaderKey: String] = [:],
+        _ body: BodyRepresentable? = nil
+    ) throws  -> Request {
         let uri = try URI(uri)
-    
+
         let req = Request(method: method, uri: uri)
         req.headers = headers
-        
-        req.query = try Node(node: query)
-        
+
+        if !query.isEmpty {
+            req.query = try Node(node: query)
+        }
+
         if let body = body {
             req.body = body.makeBody()
         }
-        return try respond(to: req, through: middleware)
+
+        return req
     }
 }
 
