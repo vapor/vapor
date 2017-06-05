@@ -6,8 +6,8 @@ import libc
 /// implementation from Swift's core libraries.
 class FileManager {
     enum Error: Swift.Error {
-        case CouldNotOpenFile
-        case Unreadable
+        case couldNotOpenFile
+        case unreadable
     }
 
     static func readBytesFromFile(_ path: String) throws -> [UInt8] {
@@ -18,7 +18,7 @@ class FileManager {
         let maybeResult = realpath(path, nil)
 
         guard let result = maybeResult else {
-            throw Error.Unreadable
+            throw Error.unreadable
         }
 
         defer { free(result) }
@@ -28,7 +28,7 @@ class FileManager {
         if let expanded = cstring {
             return expanded
         } else {
-            throw Error.Unreadable
+            throw Error.unreadable
         }
     }
 
@@ -44,7 +44,7 @@ class FileManager {
         case GLOB_NOMATCH:
             return [ ]
         case GLOB_ABORTED:
-            throw Error.Unreadable
+            throw Error.unreadable
         default:
             break
         }
