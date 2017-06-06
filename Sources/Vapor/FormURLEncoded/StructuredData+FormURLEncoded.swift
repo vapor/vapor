@@ -116,6 +116,8 @@ extension Node {
 
             if let object = val.object {
                 subbytes += object.formURLEncoded(forKey: key).makeBytes()
+            } else if let array = val.array {
+                subbytes += array.formURLEncoded(forKey: key).makeBytes()
             } else {
                 subbytes += key.urlQueryPercentEncoded.makeBytes()
                 subbytes.append(.equals)
@@ -126,6 +128,16 @@ extension Node {
         }
 
         return bytes.joined(separator: [Byte.ampersand]).array
+    }
+}
+
+extension Array where Element == Node {
+    fileprivate func formURLEncoded(forKey key: String) -> String {
+        let key = key.urlQueryPercentEncoded
+        let collection = map { val in
+            "\(key)[]=" + val.string.formURLEncodedValue()
+        }
+        return collection.joined(separator: "&")
     }
 }
 
