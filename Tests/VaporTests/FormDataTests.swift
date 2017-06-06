@@ -97,7 +97,7 @@ class FormDataTests: XCTestCase {
     func testArray() throws {
         let node = ["key": ["1", "2", "3"]] as Node
         let encoded = try node.formURLEncoded().makeString()
-        XCTAssertEqual("key[]=1,2,3", encoded)
+        XCTAssertEqual("key[]=1&key[]=2&key[]=3", encoded)
     }
 }
 
