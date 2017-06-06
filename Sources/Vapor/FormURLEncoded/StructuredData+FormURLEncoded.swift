@@ -113,15 +113,52 @@ extension Node {
 
         for (key, val) in dict {
             var subbytes: [Byte] = []
-            
-            subbytes += key.urlQueryPercentEncoded.makeBytes()
-            subbytes += Byte.equals
-            subbytes += val.string?
-                .urlQueryPercentEncoded.makeBytes() ?? []
-            
+
+            if let object = val.object {
+                subbytes += object.formURLEncoded(forKey: key).makeBytes()
+            } else if let array = val.array {
+                subbytes += array.formURLEncoded(forKey: key).makeBytes()
+            } else {
+                subbytes += key.urlQueryPercentEncoded.makeBytes()
+                subbytes.append(.equals)
+                subbytes += val.string.formURLEncodedValue().makeBytes()
+            }
+
             bytes.append(subbytes)
         }
 
         return bytes.joined(separator: [Byte.ampersand]).array
+    }
+}
+
+extension Array where Element == Node {
+    fileprivate func formURLEncoded(forKey key: String) -> String {
+        let key = key.urlQueryPercentEncoded
+        let collection = map { val in
+            "\(key)[]=" + val.string.formURLEncodedValue()
+        }
+        return collection.joined(separator: "&")
+    }
+}
+
+extension Dictionary where Key == String, Value == Node {
+    fileprivate func formURLEncoded(forKey key: String) -> String {
+        let key = key.urlQueryPercentEncoded
+        let values = map { subKey, value in
+            var encoded = ""
+            encoded += key
+            encoded += "[\(subKey.urlQueryPercentEncoded)]="
+            encoded += value.string.formURLEncodedValue()
+            return encoded
+        } as [String]
+
+        return values.joined(separator: "&")
+    }
+}
+
+extension Optional where Wrapped == String {
+    fileprivate func formURLEncodedValue() -> String {
+        guard let value = self else { return "" }
+        return value.urlQueryPercentEncoded
     }
 }

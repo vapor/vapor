@@ -9,6 +9,8 @@ import Dispatch
 class FormDataTests: XCTestCase {
     static let allTests = [
         ("testHolistic", testHolistic),
+        ("testNested", testNested),
+        ("testArray", testArray),
     ]
     
     override func setUp() {
@@ -84,4 +86,22 @@ class FormDataTests: XCTestCase {
         let response = try drop.respond(to: request)
         XCTAssertEqual(try response.bodyString(), "👍")
     }
+
+    func testNested() throws {
+        let node = ["key": ["subKey1": "value1", "subKey2": "value2"]] as Node
+        let encoded = try node.formURLEncoded().makeString()
+        // could equal either because dictionaries are unordered
+        XCTAssertEqualsAny(encoded, options: "key[subKey1]=value1&key[subKey2]=value2", "key[subKey2]=value2&key[subKey1]=value1")
+    }
+
+    func testArray() throws {
+        let node = ["key": ["1", "2", "3"]] as Node
+        let encoded = try node.formURLEncoded().makeString()
+        XCTAssertEqual("key[]=1&key[]=2&key[]=3", encoded)
+    }
+}
+
+fileprivate func XCTAssertEqualsAny<T: Equatable>(_ input: T, options: T...) {
+    if options.contains(input) { return }
+    print("\(input) does not equal any of \(options)")
 }
