@@ -116,12 +116,39 @@ extension Node {
             
             subbytes += key.urlQueryPercentEncoded.makeBytes()
             subbytes += Byte.equals
-            subbytes += val.string?
-                .urlQueryPercentEncoded.makeBytes() ?? []
+            subbytes += val.formURLEncodedValue(forKey: key).makeBytes()
             
             bytes.append(subbytes)
         }
 
         return bytes.joined(separator: [Byte.ampersand]).array
+    }
+}
+
+extension Node {
+    fileprivate func formURLEncodedValue(forKey key: String) -> String {
+        guard let object = self.object else { return string.formURLEncodedValue() }
+        return object.formURLEncodedValue(forKey: key)
+    }
+}
+
+extension Dictionary where Key == String, Value == Node {
+    fileprivate func formURLEncodedValue(forKey key: String) -> String {
+        let values = map { subKey, value in
+            var encoded = ""
+            encoded += key.urlQueryPercentEncoded
+            encoded += "[\(subKey.urlQueryPercentEncoded)]="
+            encoded += value.string.formURLEncodedValue()
+            return encoded
+        } as [String]
+
+        return values.joined(separator: "&")
+    }
+}
+
+extension Optional where Wrapped == String {
+    fileprivate func formURLEncodedValue() -> String {
+        guard let value = self else { return "" }
+        return value.urlQueryPercentEncoded
     }
 }
