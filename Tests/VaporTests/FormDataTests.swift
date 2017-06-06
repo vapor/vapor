@@ -84,4 +84,10 @@ class FormDataTests: XCTestCase {
         let response = try drop.respond(to: request)
         XCTAssertEqual(try response.bodyString(), "👍")
     }
+
+    func testNested() throws {
+        let node = ["key": ["subKey1": "value1", "subKey2": "value2"]] as Node
+        let encoded = try node.formURLEncoded().makeString()
+        XCTAssertEqual(encoded, "key[subKey1]=value1&key[subKey2]=value2")
+    }
 }
