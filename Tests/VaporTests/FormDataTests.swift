@@ -10,6 +10,7 @@ class FormDataTests: XCTestCase {
     static let allTests = [
         ("testHolistic", testHolistic),
         ("testNested", testNested),
+        ("testArray", testArray),
     ]
     
     override func setUp() {
@@ -91,6 +92,13 @@ class FormDataTests: XCTestCase {
         let encoded = try node.formURLEncoded().makeString()
         // could equal either because dictionaries are unordered
         XCTAssertEqualsAny(encoded, options: "key[subKey1]=value1&key[subKey2]=value2", "key[subKey2]=value2&key[subKey1]=value1")
+    }
+
+    func testArray() throws {
+        let node = ["key": ["1", "2", "3"]] as Node
+        let encoded = try node.formURLEncoded().makeString()
+        XCTAssertEqual("key[]=1,2,3", encoded)
+
     }
 }
 
