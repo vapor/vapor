@@ -9,6 +9,7 @@ import Dispatch
 class FormDataTests: XCTestCase {
     static let allTests = [
         ("testHolistic", testHolistic),
+        ("testNested", testNested),
     ]
     
     override func setUp() {
