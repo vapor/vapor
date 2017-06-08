@@ -163,7 +163,7 @@ public final class Droplet {
 
         // commands
         let requiredCommands: [Command] = try [
-            VersionCommand(console),
+            _VersionCommand(console),
             RouteList(console, router),
             DumpConfig(console, config),
             Serve(console, server, responder, log, config.makeServerConfig()),
