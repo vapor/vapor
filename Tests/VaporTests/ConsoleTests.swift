@@ -56,7 +56,6 @@ class ConsoleTests: XCTestCase {
         let drop = try! Droplet(config: config, console: console)
         
         try drop.runCommands()
-        print(console.input())
         XCTAssert(console.input().contains("[Deprecated] Use `vapor --version`"))
     }
 
