@@ -53,10 +53,11 @@ class ConsoleTests: XCTestCase {
         let console = TestConsoleDriver()
         let config = Config([:])
         config.arguments = ["run", "version"]
-        let drop = try Droplet(config: config, console: console)
+        let drop = try! Droplet(config: config, console: console)
         
         try drop.runCommands()
-        XCTAssert(console.input().contains("Vapor Framework v2."))
+        print(console.input())
+        XCTAssert(console.input().contains("[Deprecated] Use `vapor --version`"))
     }
 
     func testCommandFetchArgs() throws {
