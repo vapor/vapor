@@ -55,15 +55,15 @@ extension ViewRenderer {
 // MARK: Convenience
 
 extension ViewRenderer {
-    /// Construct a new View
     public func make(
         _ path: String,
         _ data: NodeRepresentable? = nil,
         from provider: Provider.Type? = nil
     ) throws -> View {
-        let context = try data.makeNode(in: ViewData.defaultContext)
+        let viewData = try data.converted(to: ViewData.self, in: ViewData.defaultContext)
         let viewsDir = provider?.viewsDir ?? ""
-        return try make(viewsDir + path, context)
+        return try make(viewsDir + path, viewData)
+
     }
 
     public func make(
@@ -84,69 +84,5 @@ public struct ViewContext: Context {
 extension Context {
     public var isViewContext: Bool {
         return self is ViewContext
-    }
-}
-
-public struct ViewData: StructuredDataWrapper {
-    public static let defaultContext = ViewContext.shared
-
-    public var wrapped: StructuredData
-    public var context: Context
-
-    public init(_ wrapped: StructuredData, in context: Context?) {
-        self.wrapped = wrapped
-        self.context = context ?? emptyContext
-    }
-}
-
-public protocol ViewDataRepresentable {
-    func makeViewData() throws -> ViewData
-}
-
-public protocol ViewDataInitializable {
-    init(viewData: ViewData) throws
-}
-
-public protocol ViewDataConvertible: ViewDataRepresentable, ViewDataInitializable {}
-
-extension ViewData: ViewDataConvertible {
-    public func makeViewData() -> ViewData {
-        return self
-    }
-
-    public init(viewData: ViewData) {
-        self = viewData
-    }
-}
-
-extension ViewData: FuzzyConverter {
-    public static func represent<T>(
-        _ any: T,
-        in context: Context
-    ) throws -> Node? {
-        guard context.isViewContext else {
-            return nil
-        }
-
-        guard let r = any as? ViewDataRepresentable else {
-            return nil
-        }
-
-        return try r.makeViewData().converted()
-    }
-
-    public static func initialize<T>(
-        node: Node
-    ) throws -> T? {
-        guard node.context.isViewContext else {
-            return nil
-        }
-
-        guard let type = T.self as? ViewDataInitializable.Type else {
-            return nil
-        }
-
-        let viewData = node.converted(to: ViewData.self)
-        return try type.init(viewData: viewData) as? T
     }
 }
