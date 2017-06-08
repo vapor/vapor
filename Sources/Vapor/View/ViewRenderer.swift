@@ -61,9 +61,19 @@ extension ViewRenderer {
         _ data: NodeRepresentable? = nil,
         from provider: Provider.Type? = nil
     ) throws -> View {
-        let context = try data?.makeNode(in: ViewData.defaultContext) ?? Node.null
+        let context = try data.makeNode(in: ViewData.defaultContext)
         let viewsDir = provider?.viewsDir ?? ""
         return try make(viewsDir + path, context)
+    }
+
+    public func make(
+        _ path: String,
+        from provider: Provider.Type? = nil,
+        _ data: () throws -> ViewData
+        ) throws -> View {
+        let data = try data()
+        let viewsDir = provider?.viewsDir ?? ""
+        return try make(viewsDir + path, data)
     }
 }
 
