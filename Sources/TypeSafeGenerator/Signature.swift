@@ -41,7 +41,7 @@ extension Signature {
         Blah blah blah ...
     */
 
-    public func get<T: StringInitializable>(_ p0: String, _ w0: T, handler: (Request, T) -> ResponseRepresentable)
+    public func get<T>(_ p0: String, _ w0: ((String) throws -> (T?), handler: (Request, T) -> ResponseRepresentable)
 
                    <----- generic map ---->
                                             <----- list -------->
@@ -85,7 +85,7 @@ extension Signature {
                 case .path(_):
                     string <<< "String"
                 case .wildcard(let wildcard):
-                    string <<< "\(wildcard.generic).Type"
+                    string <<< "@escaping ((String) throws -> (\(wildcard.generic)?))"
                 }
 
                 return string
@@ -127,7 +127,7 @@ extension Signature {
 
     var genericMap: String {
         return wildcards.map { wildcard in
-            return "\(wildcard.generic): StringInitializable"
+            return "\(wildcard.generic)"
         }.joined(separator: ", ")
     }
 
