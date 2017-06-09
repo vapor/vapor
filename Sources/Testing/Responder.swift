@@ -12,7 +12,7 @@ extension Responder {
         line: UInt = #line
     ) throws -> Response {
         let req = Request.makeTest(
-            method: .get,
+            method: method,
             headers: headers,
             body: body?.makeBody() ?? .data([]),
             hostname: hostname,
