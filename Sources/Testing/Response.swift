@@ -86,6 +86,27 @@ extension Response {
     @discardableResult
     public func assertJSON(
         _ key: String,
+        notEquals value: NodeRepresentable?,
+        file: StaticString = #file,
+        line: UInt = #line
+    ) throws -> Response {
+        let desired = try value?.makeNode(in: nil).wrapped ?? StructuredData.null
+        
+        return try assertJSON(
+            key,
+            file: file,
+            line: line,
+            errorReason: "does equal '\(desired)'"
+        ) { json in
+            return json.wrapped != desired
+        }
+    }
+    
+    /// Asserts the response body contains a
+    /// desired byte array.
+    @discardableResult
+    public func assertJSON(
+        _ key: String,
         fuzzyEquals value: NodeRepresentable?,
         file: StaticString = #file,
         line: UInt = #line
