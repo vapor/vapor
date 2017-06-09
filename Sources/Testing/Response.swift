@@ -89,7 +89,7 @@ extension Response {
         notEquals value: NodeRepresentable?,
         file: StaticString = #file,
         line: UInt = #line
-        ) throws -> Response {
+    ) throws -> Response {
         let expectation = try value.makeNode(in: jsonContext).wrapped
         
         return try assertJSON(
