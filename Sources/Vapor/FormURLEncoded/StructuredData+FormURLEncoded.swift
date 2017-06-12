@@ -146,7 +146,6 @@ extension Dictionary where Key == String, Value == Node {
         let key = key.urlQueryPercentEncoded
         let values = map { subKey, value in
             var encoded = key
-//            encoded += "[\(subKey.urlQueryPercentEncoded)]="
             encoded += "%5B\(subKey.urlQueryPercentEncoded)%5D="
             encoded += value.string.formURLEncodedValue()
             return encoded
