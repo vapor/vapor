@@ -91,13 +91,13 @@ class FormDataTests: XCTestCase {
         let node = ["key": ["subKey1": "value1", "subKey2": "value2"]] as Node
         let encoded = try node.formURLEncoded().makeString()
         // could equal either because dictionaries are unordered
-        XCTAssertEqualsAny(encoded, options: "key[subKey1]=value1&key[subKey2]=value2", "key[subKey2]=value2&key[subKey1]=value1")
+        XCTAssertEqualsAny(encoded, options: "key%5BsubKey1%5D=value1&key%5BsubKey2%5D=value2", "key%5BsubKey2%5D=value2&key%5BsubKey1%5D=value1")
     }
 
     func testArray() throws {
         let node = ["key": ["1", "2", "3"]] as Node
         let encoded = try node.formURLEncoded().makeString()
-        XCTAssertEqual("key[]=1&key[]=2&key[]=3", encoded)
+        XCTAssertEqual("key%5B%5D=1&key%5B%5D=2&key%5B%5D=3", encoded)
     }
 }
 
