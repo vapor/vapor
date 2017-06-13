@@ -81,6 +81,27 @@ extension Response {
         }
     }
     
+    /// Asserts the response json for a key
+    /// does not equal the value.
+    @discardableResult
+    public func assertJSON(
+        _ key: String,
+        notEquals value: NodeRepresentable?,
+        file: StaticString = #file,
+        line: UInt = #line
+    ) throws -> Response {
+        let expectation = try value.makeNode(in: jsonContext).wrapped
+        
+        return try assertJSON(
+            key,
+            file: file,
+            line: line,
+            errorReason: "does equal '\(expectation)'"
+        ) { json in
+            return json.wrapped != expectation
+        }
+    }
+    
     /// Asserts the response body contains a
     /// desired byte array.
     @discardableResult
