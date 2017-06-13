@@ -6,7 +6,8 @@ import Crypto
 import Transport
 import Sockets
 
-public let VERSION = "2.0.6"
+@available(*, deprecated: 2.1, message: "This property will be removed in subsequent releases")
+public let VERSION = "[Deprecated] 2.0.6"
 
 public final class Droplet {
     /// Provides access to config settings.
@@ -162,7 +163,7 @@ public final class Droplet {
 
         // commands
         let requiredCommands: [Command] = try [
-            VersionCommand(console),
+            _VersionCommand(console),
             RouteList(console, router),
             DumpConfig(console, config),
             Serve(console, server, responder, log, config.makeServerConfig()),

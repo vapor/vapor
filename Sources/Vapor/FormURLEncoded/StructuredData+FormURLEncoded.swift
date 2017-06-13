@@ -135,7 +135,7 @@ extension Array where Element == Node {
     fileprivate func formURLEncoded(forKey key: String) -> String {
         let key = key.urlQueryPercentEncoded
         let collection = map { val in
-            "\(key)[]=" + val.string.formURLEncodedValue()
+            "\(key)%5B%5D=" + val.string.formURLEncodedValue()
         }
         return collection.joined(separator: "&")
     }
@@ -145,9 +145,8 @@ extension Dictionary where Key == String, Value == Node {
     fileprivate func formURLEncoded(forKey key: String) -> String {
         let key = key.urlQueryPercentEncoded
         let values = map { subKey, value in
-            var encoded = ""
-            encoded += key
-            encoded += "[\(subKey.urlQueryPercentEncoded)]="
+            var encoded = key
+            encoded += "%5B\(subKey.urlQueryPercentEncoded)%5D="
             encoded += value.string.formURLEncodedValue()
             return encoded
         } as [String]
