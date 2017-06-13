@@ -28,6 +28,27 @@ extension Response {
         return self
     }
     
+    /// Asserts the response body equals
+    /// a desired string.
+    @discardableResult
+    public func assertBody(
+        equals expectation: String,
+        _ message: String? = nil,
+        file: StaticString = #file,
+        line: UInt = #line
+    ) throws -> Response {
+        let body = try testBody(file: file, line: line)
+        
+        if body.makeString() != expectation {
+            onFail(
+                message ?? "Body assertion failed. '\(body.makeString())' does not equal '\(expectation)'",
+                file,
+                line
+            )
+        }
+        return self
+    }
+    
     /// Asserts the response body contains a
     /// desired byte array.
     @discardableResult
