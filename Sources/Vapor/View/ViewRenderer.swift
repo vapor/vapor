@@ -26,6 +26,7 @@ public protocol ViewRenderer: class {
     /// Creates a view at the supplied path
     /// using a Node that is made optional
     /// by various protocol extensions.
+    /// DEPRECATED: Now uses ViewData constructor
     func make(_ path: String, _ context: Node) throws -> View
 }
 
@@ -70,7 +71,7 @@ extension ViewRenderer {
         _ path: String,
         from provider: Provider.Type? = nil,
         _ data: () throws -> ViewData
-        ) throws -> View {
+    ) throws -> View {
         let data = try data()
         let viewsDir = provider?.viewsDir ?? ""
         return try make(viewsDir + path, data)

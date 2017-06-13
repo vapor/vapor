@@ -1,6 +1,6 @@
 /// Structured Data Wrapper for view specific operations
 public struct ViewData: StructuredDataWrapper {
-    public static let defaultContext = ViewContext.shared
+    public static let defaultContext: Context? = ViewContext.shared
 
     public var wrapped: StructuredData
     public var context: Context
@@ -19,7 +19,7 @@ public protocol ViewDataInitializable {
     init(viewData: ViewData) throws
 }
 
-public protocol ViewDataConvertible: ViewDataRepresentable, ViewDataInitializable {}
+public typealias ViewDataConvertible = ViewDataRepresentable & ViewDataInitializable
 
 extension ViewData: ViewDataConvertible {
     public func makeViewData() -> ViewData {
@@ -35,7 +35,7 @@ extension ViewData: FuzzyConverter {
     public static func represent<T>(
         _ any: T,
         in context: Context
-        ) throws -> Node? {
+    ) throws -> Node? {
         guard context.isViewContext else {
             return nil
         }
@@ -49,7 +49,7 @@ extension ViewData: FuzzyConverter {
 
     public static func initialize<T>(
         node: Node
-        ) throws -> T? {
+    ) throws -> T? {
         guard node.context.isViewContext else {
             return nil
         }
