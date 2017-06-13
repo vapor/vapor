@@ -32,16 +32,16 @@ extension Response {
     /// a desired string.
     @discardableResult
     public func assertBody(
-        equals desired: String,
+        equals expectation: String,
         _ message: String? = nil,
         file: StaticString = #file,
         line: UInt = #line
     ) throws -> Response {
         let body = try testBody(file: file, line: line)
         
-        if body.makeString() != desired {
+        if body.makeString() != expectation {
             onFail(
-                message ?? "Body assertion failed. '\(body.makeString())' does not equal '\(desired)'",
+                message ?? "Body assertion failed. '\(body.makeString())' does not equal '\(expectation)'",
                 file,
                 line
             )
