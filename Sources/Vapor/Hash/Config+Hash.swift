@@ -16,12 +16,16 @@ extension Config {
         ) { config in
             let log = try config.resolveLog()
 
-            let message = "The default hash should be replaced before using in production."
-            if config.environment == .production {
-                log.error(message)
-            } else {
-                log.warning(message)
+
+            if config.environment != .test {
+                let message = "The default hash should be replaced before using in production."
+                if config.environment == .production {
+                    log.error(message)
+                } else {
+                    log.warning(message)
+                }
             }
+
 
             return CryptoHasher(hash: .sha1, encoding: .hex)
         }
