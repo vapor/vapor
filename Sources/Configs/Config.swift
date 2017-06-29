@@ -39,11 +39,13 @@ public final class Config: StructuredDataWrapper {
 
 extension Config {
     public convenience init(
-        arguments: [String] = CommandLine.arguments
+        arguments: [String] = CommandLine.arguments,
+        absoluteDirectory: String? = nil
     ) throws {
         let env = arguments.environment ?? .development
 
-        let configDirectory = Config.workingDirectory(for: arguments) + "Config/"
+        let configDirectory = absoluteDirectory
+            ?? Config.workingDirectory(for: arguments) + "Config/"
 
         if !FileManager.default.fileExists(atPath: configDirectory) {
             print("Could not load config files from: \(configDirectory)")
