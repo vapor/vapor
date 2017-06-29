@@ -4,6 +4,7 @@ import libc
 extension Int {
     /// Generates a random number between (and inclusive of)
     /// the given minimum and maximum.
+    #if os(Linux)
     static private var randomInitialized: Bool = {
         /// This stylized initializer is used to work around dispatch_once
         /// not existing and still guarantee thread safety
@@ -12,6 +13,7 @@ extension Int {
         libc.srand(UInt32(current + salt))
         return true
     }()
+    #endif
 
     public static func random(min: Int, max: Int) -> Int {
         let top = max - min + 1
