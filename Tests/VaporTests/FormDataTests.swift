@@ -11,10 +11,18 @@ class FormDataTests: XCTestCase {
         ("testHolistic", testHolistic),
         ("testNested", testNested),
         ("testArray", testArray),
+        ("testPlusEncoding", testPlusEncoding),
     ]
     
     override func setUp() {
         Node.fuzzy = [JSON.self, Node.self]
+    }
+
+    /// Ensure form encoding is handled properly
+    func testPlusEncoding() throws {
+        let node = ["aaa": "+bbb ccc"] as Node
+        let encoded = try node.formURLEncoded().makeString()
+        XCTAssertEqual("aaa=%2Bbbb%20ccc", encoded)
     }
     
     /// Test form data serialization and parsing
