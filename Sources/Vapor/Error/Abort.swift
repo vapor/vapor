@@ -45,7 +45,7 @@ public struct Abort: AbortError, Debuggable {
     
     /// The function in which the error was thrown
     /// TODO: waiting on https://bugs.swift.org/browse/SR-5380
-    public let function: String
+    /// public let function: String
 
     public init(
         _ status: Status,
@@ -60,9 +60,9 @@ public struct Abort: AbortError, Debuggable {
         gitHubIssues: [String]? = nil,
         file: String = #file,
         line: Int = #line,
-        column: Int = #column,
+        column: Int = #column
         /// See TODO in property decl
-        function: String = #function
+        /// function: String = #function
     ) {
         self.status = status
         self.metadata = metadata
@@ -76,7 +76,8 @@ public struct Abort: AbortError, Debuggable {
         self.file = file
         self.line = line
         self.column = column
-        self.function = function
+        /// See TODO in property decl
+        /// self.function = function
     }
 
     // most common
