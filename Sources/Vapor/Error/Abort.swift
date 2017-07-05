@@ -33,7 +33,12 @@ public struct Abort: AbortError, Debuggable {
 
     /// See Debuggable.gitHubIssues
     public let gitHubIssues: [String]
-
+    
+    /// File in which the error was thrown
+    public let file: String
+    
+    /// Line number at which the error was thrown
+    public let line: Int
 
     public init(
         _ status: Status,
@@ -45,7 +50,9 @@ public struct Abort: AbortError, Debuggable {
         suggestedFixes: [String]? = nil,
         documentationLinks: [String]? = nil,
         stackOverflowQuestions: [String]? = nil,
-        gitHubIssues: [String]? = nil
+        gitHubIssues: [String]? = nil,
+        file: String = #file,
+        line: Int = #line
     ) {
         self.status = status
         self.metadata = metadata
@@ -56,6 +63,8 @@ public struct Abort: AbortError, Debuggable {
         self.documentationLinks = documentationLinks ?? []
         self.stackOverflowQuestions = stackOverflowQuestions ?? []
         self.gitHubIssues = gitHubIssues ?? []
+        self.file = file
+        self.line = line
     }
 
     // most common
