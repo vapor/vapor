@@ -39,6 +39,12 @@ public struct Abort: AbortError, Debuggable {
     
     /// Line number at which the error was thrown
     public let line: Int
+    
+    /// The column at which the error was thrown
+    public let column: Int
+    
+    /// The function in which the error was thrown
+    public let function: String
 
     public init(
         _ status: Status,
@@ -52,7 +58,9 @@ public struct Abort: AbortError, Debuggable {
         stackOverflowQuestions: [String]? = nil,
         gitHubIssues: [String]? = nil,
         file: String = #file,
-        line: Int = #line
+        line: Int = #line,
+        column: Int = #column,
+        function: String = #function
     ) {
         self.status = status
         self.metadata = metadata
