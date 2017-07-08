@@ -170,15 +170,10 @@ private final class SlowServer: ServerProtocol {
 
 private final class SlowServerProvider: Provider {
     static let repositoryName = "slow-server"
-    var afterInitFlag = false
     var beforeRunFlag = false
 
     init(config: Configs.Config) throws {
         
-    }
-
-    func afterInit(_ drop: Droplet) {
-        afterInitFlag = true
     }
 
     func beforeRun(_ drop: Droplet) {
