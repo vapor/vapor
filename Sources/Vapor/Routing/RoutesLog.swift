@@ -164,3 +164,13 @@ extension ConsoleProtocol {
         exit(1)
     }
 }
+
+extension RouteList: Service {
+    public convenience init?(_ drop: Droplet) throws {
+        try self.init(drop.make(), drop.router)
+    }
+    
+    public static var name: String {
+        return "routes"
+    }
+}

@@ -60,9 +60,11 @@ public final class CryptoHasher: HashProtocol {
 
 // MARK: Config
 
-extension CryptoHasher: ConfigInitializable {
+extension CryptoHasher: Service {
     /// Creates a crypto hasher from a Config object
-    public convenience init(config: Configs.Config) throws {
+    public convenience init?(_ drop: Droplet) throws {
+        let config = drop.config
+        
         guard let crypto = config["crypto"] else {
             throw ConfigError.missingFile("crypto")
         }
@@ -107,7 +109,7 @@ extension CryptoHasher: ConfigInitializable {
             
             let key = encoding.decode(encodedKey)
             if key.allZeroes {
-                let log = try config.resolveLog()
+                let log = try drop.make(LogProtocol.self)
                 log.warning("The current hash key \"\(encodedKey.makeString())\" is not secure.")
                 log.warning("Update hash.key in Config/crypto.json before using in production.")
                 log.info("Use `openssl rand -base64 <length>` to generate a random string.")
@@ -127,6 +129,10 @@ extension CryptoHasher: ConfigInitializable {
         }
 
         self.init(method: method, encoding: encoding)
+    }
+    
+    public static var name: String {
+        return "crypto"
     }
 }
 

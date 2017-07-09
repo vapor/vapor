@@ -87,3 +87,13 @@ public final class DateMiddleware: Middleware {
         return response
     }
 }
+
+extension DateMiddleware: Service {
+    public static var name: String {
+        return "date"
+    }
+    
+    public convenience init?(_ drop: Droplet) throws {
+        self.init()
+    }
+}

@@ -16,7 +16,7 @@ public final class ErrorMiddleware: Middleware {
         do {
             return try next.respond(to: req)
         } catch {
-            log.error(error)
+            log.swiftError(error)
             return make(with: req, for: error)
         }
     }
@@ -38,10 +38,14 @@ public final class ErrorMiddleware: Middleware {
     }
 }
 
-extension ErrorMiddleware: ConfigInitializable {
-    public convenience init(config: Config) throws {
-        let log = try config.resolveLog()
-        self.init(config.environment, log)
+extension ErrorMiddleware: Service {
+    public static var name: String {
+        return "error"
+    }
+    
+    public convenience init?(_ drop: Droplet) throws {
+        let log = try drop.make(LogProtocol.self)
+        self.init(drop.config.environment, log)
     }
 }
 
@@ -166,7 +170,7 @@ extension RouterError: AbortError {
 }
 
 extension LogProtocol {
-    public func error(_ error: Error) {
+    public func swiftError(_ error: Error) {
         if let debuggable = error as? Debuggable {
             self.error(debuggable.loggable)
         } else {

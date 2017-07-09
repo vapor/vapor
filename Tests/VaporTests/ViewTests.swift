@@ -54,12 +54,11 @@ class ViewTests: XCTestCase {
             }
         }
         
-        let config = Config([:])
+        let config = Config.default()
+        var services = Services.default()
+        services.instance(TestRenderer(viewsDir: ""))
         
-        let drop = try Droplet(
-            config: config,
-            view: TestRenderer(viewsDir: "")
-        )
+        let drop = try Droplet(config, services)
         
         let request = Request(method: .get, path: "/foopath")
         
@@ -74,7 +73,7 @@ class ViewTests: XCTestCase {
         
 
         
-        let view = try drop.view.make("test-template", for: request)
+        let view = try drop.view().make("test-template", for: request)
         let string = view.data.makeString()
         
         XCTAssert(string.contains("Vapor"))

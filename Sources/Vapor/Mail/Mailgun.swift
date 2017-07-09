@@ -104,8 +104,9 @@ public final class Mailgun: MailProtocol {
 
 // MARK: Config
 
-extension Mailgun: ConfigInitializable {
-    public convenience init(config: Config) throws {
+extension Mailgun: Service {
+    public convenience init?(_ drop: Droplet) throws {
+        let config = drop.config
         guard let mailgun = config["mailgun"] else {
             throw ConfigError.missingFile("mailgun")
         }
@@ -118,7 +119,7 @@ extension Mailgun: ConfigInitializable {
             throw ConfigError.missing(key: ["key"], file: "mailgun", desiredType: String.self)
         }
         
-        let client = try config.resolveClient()
+        let client = try drop.make(ClientFactoryProtocol.self)
         try self.init(domain: domain, apiKey: apiKey, client)
     }
 }

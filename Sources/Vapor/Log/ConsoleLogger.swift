@@ -3,7 +3,7 @@ import Console
 
 /// Logs to the console
 public final class ConsoleLogger: LogProtocol {
-    let console: ConsoleProtocol
+    public let console: ConsoleProtocol
 
     public var enabled: [LogLevel]
 
@@ -28,9 +28,13 @@ public final class ConsoleLogger: LogProtocol {
     }
 }
 
-extension ConsoleLogger: ConfigInitializable {
-    public convenience init(config: Config) throws {
-        let console = try config.resolveConsole()
+extension ConsoleLogger: Service {
+    public static var name: String {
+        return "console"
+    }
+    
+    public convenience init?(_ drop: Droplet) throws {
+        let console = try drop.make(ConsoleProtocol.self)
         self.init(console)
     }
 }

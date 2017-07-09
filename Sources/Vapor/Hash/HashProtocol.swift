@@ -1,5 +1,5 @@
 /// Creates hash digests
-public protocol HashProtocol {
+public protocol HashProtocol: class {
     /// Given a message, this method
     /// returns a hashed digest of that message.
     func make(_ message: Bytes) throws -> Bytes

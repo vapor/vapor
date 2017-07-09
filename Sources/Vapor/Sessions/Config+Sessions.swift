@@ -1,41 +1,46 @@
 import Sessions
+import Cache
 
-extension Config {
-    /// Adds a configurable Sessions.
-    public func addConfigurable<
-        Sessions: SessionsProtocol
-    >(sessions: @escaping Config.Lazy<Sessions>, name: String) {
-        customAddConfigurable(closure: sessions, unique: "sessions", name: name)
+extension SessionsMiddleware: Service {
+    public convenience init?(_ drop: Droplet) throws {
+        let sessions = try drop.make(SessionsProtocol.self)
+        self.init(sessions)
     }
-    
-    /// Resolves the configured Sessions.
-    public func resolveSessions() throws -> SessionsProtocol {
-        return try customResolve(
-            unique: "sessions",
-            file: "droplet",
-            keyPath: ["sessions"],
-            as: SessionsProtocol.self,
-            default: MemorySessions.init
-        )
+
+    public static var name: String {
+        return "sessions"
     }
 }
 
-extension MemorySessions: ConfigInitializable {
-    public convenience init(config: Config) throws {
+extension MemorySessions: Service {
+    public static var name: String {
+        return "memory"
+    }
+    
+    public convenience init?(_ drop: Droplet) throws {
+        if drop.services.multiple(support: SessionsProtocol.self) {
+            guard drop.config["droplet", "sessions"]?.string == "memory" else {
+                return nil
+            }
+        }
+        
         self.init()
     }
 }
 
-extension CacheSessions: ConfigInitializable {
-    public convenience init(config: Config) throws {
-        let cache = try config.resolveCache()
-        self.init(cache)
+extension CacheSessions: Service {
+    public static var name: String {
+        return "cache"
     }
-}
-
-extension SessionsMiddleware: ConfigInitializable {
-    public convenience init(config: Config) throws {
-        let sessions = try config.resolveSessions()
-        self.init(sessions)
+    
+    public convenience init?(_ drop: Droplet) throws {
+        if drop.services.multiple(support: SessionsProtocol.self) {
+            guard drop.config["droplet", "sessions"]?.string == "cache" else {
+                return nil
+            }
+        }
+        
+        let cache = try drop.make(CacheProtocol.self)
+        self.init(cache)
     }
 }

@@ -2,6 +2,7 @@ import XCTest
 import Vapor
 import Sessions
 import HTTP
+import Console
 
 class ConfigTests: XCTestCase {
     override func setUp() {
@@ -11,11 +12,13 @@ class ConfigTests: XCTestCase {
     func testConfigAvailableType() throws {
         var config = Config([:])
         try config.set("droplet.log", "test")
-        config.addConfigurable(log: TestLogger.init, name: "test")
+        
+        var services = Services.default()
+        services.register(TestLogger.self)
     
-        let drop = try Droplet(config)
-        XCTAssert(type(of: drop.log) == TestLogger.self)
-    }
+        let drop = try Droplet(config, services)
+        try XCTAssert(drop.log() is TestLogger)
+     }
     
     func testConfigUnavailableType() throws {
         do {
@@ -33,10 +36,11 @@ class ConfigTests: XCTestCase {
         } catch {
             XCTFail("\(error)")
         }
-    }
+     }
     
     func testMiddlewareOrder() throws {
         var config = Config([:])
+        try config.set("droplet.sessions", "memory")
         try config.set("droplet.middleware", [
             "date",
             "file",
@@ -45,36 +49,73 @@ class ConfigTests: XCTestCase {
             "sessions"
         ])
         
-        let drop = try Droplet(config)
+        let extra = DateMiddleware()
         
-        guard drop.middleware.count == 5 else {
+        var services = Services.default()
+        services.instance(extra)
+        
+        let drop = try! Droplet(config, services)
+        let middleware = try! drop.middleware()
+        guard middleware.count == 6 else {
             XCTFail("Invalid middleware count")
             return
         }
         
-        XCTAssert(type(of: drop.middleware[0]) == DateMiddleware.self)
-        XCTAssert(type(of: drop.middleware[1]) == FileMiddleware.self)
-        XCTAssert(type(of: drop.middleware[2]) == DateMiddleware.self)
-        XCTAssert(type(of: drop.middleware[3]) == ErrorMiddleware.self)
-        XCTAssert(type(of: drop.middleware[4]) == SessionsMiddleware.self)
+        XCTAssert(type(of: middleware[0]) == DateMiddleware.self)
+        XCTAssert(type(of: middleware[1]) == FileMiddleware.self)
+        XCTAssert(type(of: middleware[2]) == DateMiddleware.self)
+        XCTAssert(type(of: middleware[3]) == ErrorMiddleware.self)
+        XCTAssert(type(of: middleware[4]) == SessionsMiddleware.self)
+        XCTAssert(type(of: middleware[5]) == DateMiddleware.self)
     }
     
     func testDependency() throws {
         var config = Config([:])
         try config.set("droplet.log", "test")
         try config.set("droplet.middleware", ["logger"])
-        config.addConfigurable(log: TestLogger.init, name: "test")
-        config.addConfigurable(middleware: NeedsLoggerMiddleware.init, name: "logger")
         
-        let drop = try Droplet(config)
-        XCTAssert(type(of: drop.log) == TestLogger.self)
-        guard let middleware = drop.middleware.first as? NeedsLoggerMiddleware else {
+        var services = Services()
+        services.register(TestLogger.self)
+        services.register(NeedsLoggerMiddleware.self)
+        
+        let drop = try Droplet(config, services)
+        try XCTAssert(type(of: drop.make(LogProtocol.self)) == TestLogger.self)
+        guard let middleware = try drop.make([Middleware.self]).first as? NeedsLoggerMiddleware else {
             XCTFail("Invalid middleware")
             return
         }
         XCTAssert(type(of: middleware.log) == TestLogger.self)
     }
-
+ 
+    func testServices() throws {
+        var config = Config([:])
+        try config.set("droplet.log", "console")
+        
+        var services = Services()
+        services.register(Terminal.self)
+        services.register(ConsoleLogger.self)
+        services.register(TestLogger.self)
+        
+        let term = Terminal(arguments: ["vapor"])
+        services.instance(term, supportedProtocols: [ConsoleProtocol.self])
+        
+        let drop = try! Droplet(config, services)
+        
+        let console = try! drop.make(ConsoleProtocol.self)
+        console.print("console")
+        let log = try! drop.make(LogProtocol.self)
+        let log2 = try! drop.make(LogProtocol.self)
+        log.warning("hi")
+        print(log === log2)
+        print(console === term)
+        if let cl = log as? ConsoleLogger {
+            print(cl.console === console)
+        }
+        if let cl = log2 as? ConsoleLogger {
+            print(cl.console === console)
+        }
+    }
+    
     static let allTests = [
         ("testConfigAvailableType", testConfigAvailableType),
         ("testConfigUnavailableType", testConfigUnavailableType),
@@ -84,9 +125,19 @@ class ConfigTests: XCTestCase {
 
 // MARK: Test Objects
 
-final class TestLogger: LogProtocol, ConfigInitializable {
+
+final class TestLogger: LogProtocol, Service {
     var enabled: [LogLevel]
-    init(config: Config) throws {
+    
+    static var name: String {
+        return "test"
+    }
+    
+    init?(_ drop: Droplet) throws {
+        guard drop.config["droplet", "log"]?.string == "test" else {
+            return nil
+        }
+        
         enabled = []
     }
     func log(_ level: LogLevel, message: String, file: String, function: String, line: Int) {
@@ -94,11 +145,19 @@ final class TestLogger: LogProtocol, ConfigInitializable {
     }
 }
 
-final class NeedsLoggerMiddleware: Middleware, ConfigInitializable {
+final class NeedsLoggerMiddleware: Middleware, Service {
     let log: LogProtocol
     
-    init(config: Config) throws {
-        self.log = try config.resolveLog()
+    static var name: String {
+        return "logger"
+    }
+    
+    init?(_ drop: Droplet) throws {
+        guard drop.config["droplet", "middleware"]?.array?.flatMap({ $0.string }).contains("logger") == true else {
+            return nil
+        }
+        
+        log = try drop.make()
     }
     
     init(_ log: LogProtocol) {

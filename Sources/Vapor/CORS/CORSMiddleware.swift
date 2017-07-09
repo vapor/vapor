@@ -67,3 +67,14 @@ extension Request {
             && headers["Access-Control-Request-Method"] != nil
     }
 }
+
+extension CORSMiddleware: Service {
+    public convenience init?(_ drop: Droplet) throws {
+        try self.init(config: drop.config)
+    }
+    
+
+    public static var name: String {
+        return "cors"
+    }
+}

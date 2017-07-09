@@ -33,10 +33,10 @@ public final class BCryptHasher: HashProtocol {
 
 // MARK: Configuration
 
-extension BCryptHasher: ConfigInitializable {
+extension BCryptHasher: Service {
     /// Creates a bcrypt hasher from a Config object
-    public convenience init(config: Configs.Config) throws {
-        guard let cost = config["bcrypt", "cost"]?.uint else {
+    public convenience init?(_ drop: Droplet) throws {
+        guard let cost = drop.config["bcrypt", "cost"]?.uint else {
             throw ConfigError.missing(
                 key: ["cost"],
                 file: "bcrypt",
@@ -45,5 +45,9 @@ extension BCryptHasher: ConfigInitializable {
         }
 
         self.init(cost: cost)
+    }
+    
+    public static var name: String {
+        return "bcrypt"
     }
 }

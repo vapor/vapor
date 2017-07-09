@@ -6,7 +6,6 @@ class ConsoleTests: XCTestCase {
     static let allTests = [
         ("testCommandRun", testCommandRun),
         ("testCommandInsufficientArgs", testCommandInsufficientArgs),
-        ("testVersionCommand", testVersionCommand),
         ("testCommandFetchArgs", testCommandFetchArgs),
         ("testCommandFetchOptions", testCommandFetchOptions),
         ("testDefaultServe", testDefaultServe),
@@ -14,86 +13,74 @@ class ConsoleTests: XCTestCase {
 
     func testCommandRun() throws {
         let console = TestConsoleDriver()
-        let config = Config([:])
+        
+        var config = Config([:])
         config.arguments = ["/path/to/exe", "test-1"]
-        let drop = try Droplet(
-            config: config,
-            console: console,
-            commands: [TestOneCommand(console: console)]
-        )
+        
+        var services = Services.default()
+        services.instance(console)
+        services.instance(TestOneCommand(console: console))
+        
+        let drop = try! Droplet(config, services)
 
-        do {
-            try drop.runCommands()
-            XCTAssert(console.input().contains("Test 1 Ran"), "Command 1 did not run")
-        } catch {
-            XCTFail("Command 1 failed: \(error)")
-        }
+        try! drop.runCommands()
+        XCTAssert(console.input().contains("Test 1 Ran"), "Command 1 did not run")
     }
 
     func testCommandInsufficientArgs() throws {
         let console = TestConsoleDriver()
         
-        let config = Config([:])
+        var config = Config([:])
         config.arguments = ["/path/to/exe", "test-2"]
-        let drop = try Droplet(
-            config: config,
-            console: console,
-            commands: [TestTwoCommand(console: console)]
-        )
+        
+        var services = Services.default()
+        services.instance(console)
+        services.instance(TestTwoCommand(console: console))
+        
+        let drop = try! Droplet(config, services)
 
         do {
             try drop.runCommands()
             XCTFail("Command 2 did not fail")
         } catch {
-            XCTAssert(console.input().contains("Usage: /path/to/exe test-2 <arg-1> [--opt-1] [--opt-2]"), "Did not print signature")
+            XCTAssert(
+                console.input().contains("Usage: /path/to/exe test-2 <arg-1> [--opt-1] [--opt-2]"),
+                "Did not print signature"
+            )
         }
-    }
-
-    func testVersionCommand() throws {
-        let console = TestConsoleDriver()
-        let config = Config([:])
-        config.arguments = ["run", "version"]
-        let drop = try! Droplet(config: config, console: console)
-        
-        try drop.runCommands()
-        XCTAssert(console.input().contains("[Deprecated] Use `vapor --version`"))
     }
 
     func testCommandFetchArgs() throws {
         let console = TestConsoleDriver()
-        let config = Config([:])
+        
+        var config = Config([:])
         config.arguments = ["/path/to/ext", "test-2", "123"]
-        let drop = try Droplet(
-            config: config,
-            console: console,
-            commands: [TestTwoCommand(console: console)]
-        )
+        
+        var services = Services.default()
+        services.instance(console)
+        services.instance(TestTwoCommand(console: console))
+        
+        let drop = try! Droplet(config, services)
 
-        do {
-            try drop.runCommands()
-            XCTAssert(console.input().contains("123"), "Did not print 123")
-        } catch {
-            XCTFail("Command 2 failed to run: \(error)")
-        }
+        try! drop.runCommands()
+        XCTAssert(console.input().contains("123"), "Did not print 123")
     }
 
 
     func testCommandFetchOptions() throws {
         let console = TestConsoleDriver()
-        let config = Config([:])
+        
+        var config = Config([:])
         config.arguments = ["/path/to/ext", "test-2", "123", "--opt-1=abc"]
-        let command = TestTwoCommand(console: console)
-        let drop = try Droplet(
-            config: config,
-            console: console,
-            commands: [command]
-        )
-        do {
-            try drop.runCommands()
-            XCTAssert(console.input().contains("123abc"), "Did not print 123abc")
-        } catch {
-            XCTFail("Command 2 failed to run: \(error)")
-        }
+        
+        var services = Services.default()
+        services.instance(console)
+        services.instance(TestTwoCommand(console: console))
+        
+        let drop = try! Droplet(config, services)
+ 
+        try! drop.runCommands()
+        XCTAssert(console.input().contains("123abc"), "Did not print 123abc")
     }
 
     func testDefaultServe() throws {
@@ -110,21 +97,18 @@ class ConsoleTests: XCTestCase {
                 TestServe.ran = true
             }
         }
+        let console = TestConsoleDriver()
 
-        let config = Config([:])
+        var config = Config([:])
         config.arguments = ["vapor"]
         
-        let drop = try Droplet(
-            config: config,
-            commands: [TestServe(console: config.resolveConsole())]
-        )
+        var services = Services.default()
+        services.instance(TestServe(console: console))
+        
+        let drop = try! Droplet(config, services)
 
-        do {
-            try drop.runCommands()
-            XCTAssert(TestServe.ran, "Serve did not default")
-        } catch {
-            XCTFail("Serve did not default: \(error)")
-        }
+        try! drop.runCommands()
+        XCTAssert(TestServe.ran, "Serve did not default")
     }
 }
 

@@ -34,10 +34,11 @@ public final class ClientFactory<C: ClientProtocol>: ClientFactoryProtocol {
     }
 }
 
-extension ClientFactory: ConfigInitializable {
-    public convenience init(config: Configs.Config) throws {
+extension ClientFactory: Service {
+    public convenience init(_ drop: Droplet) throws {
         let proxy: Proxy?
         
+        let config = drop.config
         if let proxyConfig = config["client", "proxy"]?.object {
             guard let hostname = proxyConfig["hostname"]?.string else {
                 throw ConfigError.missing(
@@ -70,5 +71,9 @@ extension ClientFactory: ConfigInitializable {
         }
         
         self.init(defaultProxy: proxy)
+    }
+    
+    public static var name: String {
+        return C.name
     }
 }

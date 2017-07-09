@@ -31,8 +31,8 @@ class QueryTests: XCTestCase {
     }
 
     func testClientQueryNotNill() throws {
-        let drop = try Droplet()
-        let req = try drop.client.makeRequest(.get, "https://api.spotify.com/v1/search?type=artist&q=test")
+        let drop = try! Droplet()
+        let req = try! drop.client().makeRequest(.get, "https://api.spotify.com/v1/search?type=artist&q=test")
         XCTAssertNotNil(req.query)
     }
 }

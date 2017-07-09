@@ -21,3 +21,13 @@ public final class DumpConfig: Command {
         console.print(serialized.makeString())
     }
 }
+
+extension DumpConfig: Service {
+    public convenience init?(_ drop: Droplet) throws {
+        try self.init(drop.make(), drop.config)
+    }
+    
+    public static var name: String {
+        return "dump-config"
+    }
+}

@@ -23,8 +23,12 @@ public final class ServerFactory<S: ServerProtocol>: ServerFactoryProtocol {
     }
 }
 
-extension ServerFactory: ConfigInitializable {
-    public convenience init(config: Configs.Config) throws {
+extension ServerFactory: Service {
+    public convenience init(_ drop: Droplet) throws {
         self.init()
+    }
+    
+    public static var name: String {
+        return S.name
     }
 }

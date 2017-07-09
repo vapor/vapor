@@ -2,7 +2,7 @@ import Node
 
 /// Session storage engines that conform to this
 /// protocol can be used to power the Session class.
-public protocol SessionsProtocol {
+public protocol SessionsProtocol: class {
     /// Creates a new, random identifier
     /// to use for storing a Session
     func makeIdentifier() throws -> String

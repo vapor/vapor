@@ -32,3 +32,13 @@ public final class FileMiddleware: Middleware {
         }
     }
 }
+
+extension FileMiddleware: Service {
+    public static var name: String {
+        return "file"
+    }
+    
+    public convenience init?(_ drop: Droplet) throws {    
+        try self.init(config: drop.config)
+    }
+}

@@ -6,15 +6,14 @@ import Core
 import Cookies
 
 class SessionsTests: XCTestCase {
-    static let allTests = [
-        ("testExample", testExample),
-        ("testCustomCookieFactoryWithExpiryDate", testCustomCookieFactoryWithExpiryDate),
-    ]
-
     func testExample() throws {
         let s = MemorySessions()
         let m = SessionsMiddleware(s)
-        let drop = try Droplet(middleware: [m])
+        
+        var services = Services.default()
+        services.instance(m)
+        
+        let drop = try Droplet(nil, services)
 
         drop.get("set") { req in
             try req.assertSession().data["foo"] = "bar"
@@ -80,7 +79,11 @@ class SessionsTests: XCTestCase {
             return cookie
         }
         let m = SessionsMiddleware(s, cookieName: cookieName, cookieFactory: cookieFactory)
-        let drop = try Droplet(middleware: [m])
+        
+        var services = Services.default()
+        services.instance(m)
+        
+        let drop = try Droplet(nil, services)
         
         drop.get("should-set-expiry") { req in
             req.storage["session_expiry"] = true
@@ -101,4 +104,8 @@ class SessionsTests: XCTestCase {
         XCTAssertNotNil(cookie.expires)
     }
     
+    static let allTests = [
+        ("testExample", testExample),
+        ("testCustomCookieFactoryWithExpiryDate", testCustomCookieFactoryWithExpiryDate),
+    ]
 }

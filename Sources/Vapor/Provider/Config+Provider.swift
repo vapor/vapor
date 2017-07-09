@@ -1,5 +1,6 @@
 import Configs
 
+/*
 extension Config {
     // Storage of all providers added.
     public internal(set) var providers: [Provider] {
@@ -22,3 +23,4 @@ extension Config {
         try addProvider(p)
     }
 }
+*/

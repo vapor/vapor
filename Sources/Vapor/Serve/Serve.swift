@@ -69,3 +69,15 @@ public final class Serve: Command {
         }
     }
 }
+
+extension Serve: Service {
+    public convenience init?(_ drop: Droplet) throws {
+        try self.init(
+            drop.make(),
+            drop.make(),
+            drop.responder,
+            drop.make(),
+            drop.config.makeServerConfig()
+        )
+    }
+}

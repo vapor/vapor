@@ -10,7 +10,7 @@ class RouteListTests: XCTestCase {
 
     func testMakeTable() throws {
         let drop = try Droplet()
-        let list = RouteList(drop.console, drop.router)
+        let list = try RouteList(drop.make(), drop.router)
         let table = list.makeTable(routes: ["* GET foo", "* PATCH not-foo", "* PUT foo/bar/:id"])
         let expectation = [["*", "GET", "/foo"], ["", "PUT", "/foo/bar/:id"], ["", "PATCH", "/not-foo"]]
         XCTAssertEqual(table.description, expectation.description)
@@ -19,16 +19,21 @@ class RouteListTests: XCTestCase {
     func testLogTable() throws {
         let console = TestConsoleDriver()
         // Setup drop routes
-        let config = Config([:])
+        var config = Config.default()
         config.arguments = ["vapor", "routes"]
-        let drop = try Droplet(config: config, console: console)
+        
+        var services = Services.default()
+        services.instance(console)
+        
+        let drop = try! Droplet(config, services)
+        
         drop.get("foo") { _ in return "" }
         drop.put("foo/bar/:id") { _ in return "" }
 
         console.buffer = []
         
         // Run command
-        try drop.runCommands()
+        try! drop.runCommands()
 
         // Verify
         let logged = console.buffer.makeString()

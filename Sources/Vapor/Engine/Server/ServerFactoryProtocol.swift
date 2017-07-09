@@ -5,7 +5,7 @@ import TLS
 
 /// types conforming to this protocol can be
 /// set as the Droplet's `.server`
-public protocol ServerFactoryProtocol {
+public protocol ServerFactoryProtocol: class {
     func makeServer(
         hostname: String,
         port: Port,

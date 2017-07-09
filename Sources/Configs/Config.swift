@@ -2,7 +2,7 @@
 import Core
 import Foundation
 
-public final class Config: StructuredDataWrapper {
+public struct Config: StructuredDataWrapper {
     public var wrapped: StructuredData
     public var context: Context
     
@@ -11,20 +11,16 @@ public final class Config: StructuredDataWrapper {
     
     /// The current droplet environment
     public var environment: Environment
-    
-    /// For building onto the Config object
-    public var storage: [String: Any]
 
     public init(_ wrapped: StructuredData, in context: Context?) {
         self.wrapped = wrapped.hydratedEnv() ?? StructuredData([:])
         self.context = context ?? emptyContext
         self.arguments = []
         self.environment = .development
-        self.storage = [:]
     }
 
     public init(
-        prioritized: [Source],
+        prioritized: [Source] = [],
         arguments: [String] = CommandLine.arguments,
         environment: Environment = .development
     ) throws {
@@ -33,16 +29,18 @@ public final class Config: StructuredDataWrapper {
         self.context = emptyContext
         self.arguments = arguments
         self.environment = environment
-        self.storage = [:]
     }
 }
 
 extension Config {
-    public convenience init(
+    public static func fromFiles(
         arguments: [String] = CommandLine.arguments,
+        environment: Environment? = nil,
         absoluteDirectory: String? = nil
-    ) throws {
-        let env = arguments.environment ?? .development
+    ) throws -> Config {
+        let env = environment
+            ?? arguments.environment
+            ?? .development
 
         let configDirectory = absoluteDirectory
             ?? Config.workingDirectory(for: arguments) + "Config/"
@@ -59,7 +57,7 @@ extension Config {
         sources.append(.directory(root: configDirectory + env.description))
         sources.append(.directory(root: configDirectory))
         
-        try self.init(
+        return try Config(
             prioritized: sources,
             arguments: arguments,
             environment: env

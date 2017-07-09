@@ -17,4 +17,13 @@ public protocol ServerProtocol {
         _ responder: Responder,
         errors: @escaping ServerErrorHandler
     ) throws
+    
+    /// Unique name for this type of server
+    static var name: String { get }
+}
+
+extension ServerProtocol {
+    public static var name: String {
+        return "\(self)".replacingOccurrences(of: "Server", with: "").lowercased()
+    }
 }

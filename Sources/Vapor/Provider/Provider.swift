@@ -29,9 +29,8 @@ public protocol Provider: ConfigInitializable {
     /// _relative_ to the root of the provider package.
     static var viewsDir: String { get }
     
-    /// Called after the provider has initialized
-    /// in the `Config.addProvider` call.
-    func boot(_ config: Config) throws
+    /// Register all services provided by the provider here.
+    func register(_ services: inout Services) throws
 
     /// Called after the Droplet has initialized.
     func boot(_ droplet: Droplet) throws

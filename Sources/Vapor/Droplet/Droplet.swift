@@ -6,18 +6,21 @@ import Crypto
 import Transport
 import Sockets
 
-@available(*, deprecated: 2.1, message: "This property will be removed in subsequent releases")
-public let VERSION = "[Deprecated] 2.0.6"
-
 public final class Droplet {
     /// Provides access to config settings.
     public let config: Config
-
+    
+    /// Services belonging to this service container
+    public let services: Services
+    
     /// The router driver is responsible
     /// for returning registered `Route` handlers
     /// for a given request.
     public let router: Router
 
+
+/*
+ 
     /// The server that will accept requesting
     /// connections and return the desired
     /// response.
@@ -64,32 +67,45 @@ public final class Droplet {
     
     /// Implemented by your email client
     public let mail: MailProtocol
+ 
+ */
 
     /// The responder includes chained middleware
-    internal let responder: Responder
+    internal var responder: Responder!
     
     /// Storage to add/manage dependencies, identified by a string
     public var storage: [String: Any]
+    
+    public let providers: [Provider]
 
     /// Creates a Droplet.
     public init(
-        config: Config? = nil,
-        router: Router? = nil,
-        server: ServerFactoryProtocol? = nil,
-        client: ClientFactoryProtocol? = nil,
-        middleware: [Middleware]? = nil,
-        console: ConsoleProtocol? = nil,
-        log: LogProtocol? = nil,
-        hash: HashProtocol? = nil,
-        cipher: CipherProtocol? = nil,
-        commands: [Command]? = nil,
-        view: ViewRenderer? = nil,
-        cache: CacheProtocol? = nil,
-        mail: MailProtocol? = nil
+        _ config: Config? = nil,
+        _ services: Services? = nil,
+        _ router: Router? = nil
     ) throws {
-        var config = try config ?? Config()
+        var config = config ?? Config.default()
+        // port override
+        if let port = config.arguments.value(for: "port")?.int {
+            try config.set("server.port", port)
+        }
+        self.config = config
         
 
+        var services = services ?? Services.default()
+        
+        let providers = try services.providerTypes.map { providerType in
+            return try providerType.init(config: config)
+        } + services.providers
+        
+        try providers.forEach { provider in
+            try provider.register(&services)
+        }
+        self.services = services
+        
+        self.providers = providers
+        /*
+        
         config.addConfigurable(server: EngineServer.self, name: "engine")
         config.addConfigurable(client: EngineClient.self, name: "engine")
         config.addConfigurable(client: FoundationClient.self, name: "foundation")
@@ -108,13 +124,15 @@ public final class Droplet {
         config.addConfigurable(middleware: FileMiddleware.init, name: "file")
         config.addConfigurable(middleware: CORSMiddleware.init, name: "cors")
         config.addConfigurable(mail: Mailgun.init, name: "mailgun")
+ 
+        */
 
-        // port override
-        if let port = config.arguments.value(for: "port")?.int {
-            try config.set("server.port", port)
-        }
 
         let router = router ?? Router()
+        self.router = router
+        
+        /*
+ 
         let server = try server ?? config.resolveServer()
         let client = try client ?? config.resolveClient()
         let console = try console ?? config.resolveConsole()
@@ -124,12 +142,17 @@ public final class Droplet {
         let view = try view ?? config.resolveView()
         let cache = try cache ?? config.resolveCache()
         let mail = try mail ?? config.resolveMail()
+ 
+        */
+        
+        self.storage = [:]
 
         // settings
         let environment = config.environment
-        let middleware = try middleware ?? config.resolveMiddleware()
-
-        let chain = middleware.chain(to: router)
+        
+        let log = try self.log()
+        
+        let chain = try middleware().chain(to: router)
         let responder = Request.Handler { request in
             log.info("\(request.method) \(request.uri.path)")
 
@@ -146,7 +169,7 @@ public final class Droplet {
                 response = try chain.respond(to: request)
             } catch {
                 log.error("Uncaught error: \(type(of: error))")
-                log.error(error)
+                log.swiftError(error)
                 log.info("Use `ErrorMiddleware` or catch \(type(of: error)) to provide a better error response.")
                 response = Response(status: .internalServerError)
             }
@@ -162,8 +185,8 @@ public final class Droplet {
         }
 
         // commands
+        /*
         let requiredCommands: [Command] = try [
-            _VersionCommand(console),
             RouteList(console, router),
             DumpConfig(console, config),
             Serve(console, server, responder, log, config.makeServerConfig()),
@@ -176,9 +199,10 @@ public final class Droplet {
         ]
         let commands = try (commands ?? config.resolveCommands())
             + requiredCommands
+         */
 
         // set
-        self.router = router
+        /*
         self.server = server
         self.client = client
         self.middleware = middleware
@@ -190,11 +214,8 @@ public final class Droplet {
         self.view = view
         self.cache = cache
         self.mail = mail
+         */
         self.responder = responder
-        self.storage = [:]
-
-        // set config
-        self.config = config
 
         // post init
         // change logging based on env
@@ -209,20 +230,13 @@ public final class Droplet {
         }
         
         // disable cache by default during development
-        self.view.shouldCache = environment == .production
+        // TODO: fixme
+        // self.view.shouldCache = environment == .production
 
         // boot providers
-        for provider in config.providers {
+        // TODO: fixme
+        try providers.forEach { provider in
             try provider.boot(self)
         }
-    }
-}
-
-// MARK: Convenience
-
-extension Droplet {
-    /// Creates a Droplet using the supplied Config.
-    public convenience init(_ config: Config) throws {
-        try self.init(config: config)
     }
 }
