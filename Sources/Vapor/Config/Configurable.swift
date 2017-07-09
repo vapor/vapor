@@ -27,18 +27,22 @@ extension Droplet {
     }
     
     public func make<Type>(_ type: [Type.Type] = [Type.self]) throws -> [Type] {
-        print("make(\(Type.self))")
+        var typeName = makeTypeName(Type.self)
+        if typeName != "middleware" {
+            typeName += "s"
+        }
+        let keyName = "array-\(typeName)"
+        
+        if let existing = serviceCache[keyName] as? [Type] {
+            return existing
+        }
+        
         let instances = services.instances(supporting: Type.self).map { service in
             return service.instance as! Type
         }
         
         let availableServices = services.types(supporting: Type.self)
-        
-        var typeName = makeTypeName(Type.self)
-        if typeName != "middleware" {
-            typeName += "s"
-        }
-        
+               
         guard let chosen = config["droplet", typeName]?.array?.flatMap({ $0.string }) else {
             return instances
         }
@@ -64,15 +68,26 @@ extension Droplet {
         }
         
 
-        return try chosenServices.flatMap { chosenService in
+        let array = try chosenServices.flatMap { chosenService in
             return try chosenService.type.init(self) as! Type?
         } + instances
+        
+        serviceCache[keyName] = array
+        return array
     }
     
     public func make<Type>(_ type: Type.Type = Type.self) throws -> Type {
+        let typeName = makeTypeName(Type.self)
+        let keyName = "single-\(typeName)"
+        
+        if let existing = serviceCache[keyName] as? Type {
+            return existing
+        }
+        
         let instances = services.instances(supporting: Type.self).map { service in
            return service.instance as! Type
         }
+        
         
         if instances.count > 1 {
             throw "Multiple instances available for \(Type.self). Unable to disambiguate"
@@ -116,7 +131,13 @@ extension Droplet {
             chosen = available.first!
         }
         
-        return try chosen.type.init(self) as! Type
+  
+        let item = try chosen.type.init(self) as! Type
+        if chosen.isSingleton {
+            serviceCache[keyName] = item
+        }
+        
+        return item
     }
 }
 

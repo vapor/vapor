@@ -29,9 +29,13 @@ extension Config {
     public static func `default`() -> Config {
         var config = Config([:])
         
+        try! config.set("droplet.console", "terminal")
+        try! config.set("droplet.log", "console")
+        try! config.set("droplet.router", "branch")
         try! config.set("droplet.client", "engine")
         try! config.set("droplet.middleware", ["error", "file", "date"])
-        try! config.set("droplet.commands", ["serve", "routes", "dump-config"])
+        try! config.set("droplet.commands", ["serve", "routes", "dump-config", "provider-install"])
+        try! config.set("droplet.view", "static")
         
         return config
     }
@@ -40,8 +44,15 @@ extension Config {
 extension Services {
     public static func `default`() -> Services {
         var services = Services()
+        
+        // console
         services.register(Terminal.self)
+        
+        // log
         services.register(ConsoleLogger.self)
+        
+        // rotuer
+        services.register(Router.self)
         
         // cache
         services.register(MemoryCache.self)
@@ -70,10 +81,18 @@ extension Services {
         services.register(DumpConfig.self)
         services.register(Serve.self)
         services.register(RouteList.self)
+        services.register(ProviderInstall.self)
         
         // sessions
         services.register(MemorySessions.self)
         services.register(CacheSessions.self)
+        
+        // view
+        services.register(StaticViewRenderer.self)
+        
+        // mail
+        services.register(Mailgun.self)
+        
         return services
     }
 }
@@ -83,6 +102,10 @@ extension Services {
         _ type: S.Type = S.self,
         isSingleton: Bool = true
     ) {
+        guard !types.contains(where: { $0.type == S.self }) else {
+            return
+        }
+        
         let st = ServiceType(type: type, isSingleton: isSingleton)
         types.append(st)
     }

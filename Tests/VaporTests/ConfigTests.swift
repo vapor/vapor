@@ -70,16 +70,16 @@ class ConfigTests: XCTestCase {
     }
     
     func testDependency() throws {
-        var config = Config([:])
+        var config = Config.default()
         try config.set("droplet.log", "test")
         try config.set("droplet.middleware", ["logger"])
         
-        var services = Services()
+        var services = Services.default()
         services.register(TestLogger.self)
         services.register(NeedsLoggerMiddleware.self)
         
-        let drop = try Droplet(config, services)
-        try XCTAssert(type(of: drop.make(LogProtocol.self)) == TestLogger.self)
+        let drop = try! Droplet(config, services)
+        try! XCTAssert(type(of: drop.make(LogProtocol.self)) == TestLogger.self)
         guard let middleware = try drop.make([Middleware.self]).first as? NeedsLoggerMiddleware else {
             XCTFail("Invalid middleware")
             return
@@ -88,10 +88,7 @@ class ConfigTests: XCTestCase {
     }
  
     func testServices() throws {
-        var config = Config([:])
-        try config.set("droplet.log", "console")
-        
-        var services = Services()
+        var services = Services.default()
         services.register(Terminal.self)
         services.register(ConsoleLogger.self)
         services.register(TestLogger.self)
@@ -99,7 +96,7 @@ class ConfigTests: XCTestCase {
         let term = Terminal(arguments: ["vapor"])
         services.instance(term, supportedProtocols: [ConsoleProtocol.self])
         
-        let drop = try! Droplet(config, services)
+        let drop = try! Droplet(nil, services)
         
         let console = try! drop.make(ConsoleProtocol.self)
         console.print("console")

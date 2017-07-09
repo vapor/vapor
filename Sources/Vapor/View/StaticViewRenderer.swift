@@ -23,3 +23,13 @@ public final class StaticViewRenderer: ViewRenderer {
         return view
     }
 }
+
+extension StaticViewRenderer: Service {
+    public convenience init?(_ drop: Droplet) throws {
+        self.init(viewsDir: drop.config.viewsDir)
+    }
+    
+    public static var name: String {
+        return "static"
+    }
+}

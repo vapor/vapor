@@ -14,7 +14,7 @@ public final class ProviderInstall: Command {
         _ providers: [Provider],
         publicDir: String,
         viewsDir: String
-        ) {
+    ) {
         self.console = console
         self.providers = providers
         self.publicDir = publicDir
@@ -68,5 +68,20 @@ public final class ProviderInstall: Command {
                 console.print("Nothing to install")
             }
         }
+    }
+}
+
+extension ProviderInstall: Service {
+    public convenience init?(_ drop: Droplet) throws {
+        try self.init(
+            drop.make(),
+            drop.providers,
+            publicDir: drop.config.publicDir,
+            viewsDir: drop.config.viewsDir
+        )
+    }
+    
+    public static var name: String {
+        return "provider-install"
     }
 }

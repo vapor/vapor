@@ -10,7 +10,7 @@ class RouteListTests: XCTestCase {
 
     func testMakeTable() throws {
         let drop = try Droplet()
-        let list = try RouteList(drop.make(), drop.router)
+        let list = try RouteList(drop.make(), drop.router())
         let table = list.makeTable(routes: ["* GET foo", "* PATCH not-foo", "* PUT foo/bar/:id"])
         let expectation = [["*", "GET", "/foo"], ["", "PUT", "/foo/bar/:id"], ["", "PATCH", "/not-foo"]]
         XCTAssertEqual(table.description, expectation.description)

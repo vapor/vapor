@@ -4,7 +4,7 @@ import HTTP
 
 extension Droplet: RouteBuilder {
     public func register(host: String?, method: Method, path: [String], responder: Responder) {
-        router.register(host: host, method: method, path: path, responder: responder)
+        try! router().register(host: host, method: method, path: path, responder: responder)
     }
 }
 
@@ -14,5 +14,23 @@ extension Int {
             return nil
         }
         self = int
+    }
+}
+
+extension Droplet {
+    public func router() throws -> RouterProtocol {
+        return try make()
+    }
+}
+
+extension Router: RouterProtocol { }
+
+extension Router: Service {
+    public convenience init?(_ drop: Droplet) throws {
+        self.init()
+    }
+    
+    public static var name: String {
+        return "branch"
     }
 }

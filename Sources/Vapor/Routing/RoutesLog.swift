@@ -17,13 +17,13 @@ public final class RouteList: Command {
 
     public let id: String = "routes"
     public let console: ConsoleProtocol
-    public let router: Router
+    public let router: RouterProtocol
 
     /// Initialize a route list command with droplet
     /// requires Droplet reference so that if user updates
     /// console _after_ initializing RouteList
     /// we access latest console.
-    public init(_ console: ConsoleProtocol, _ router: Router) {
+    public init(_ console: ConsoleProtocol, _ router: RouterProtocol) {
         self.console = console
         self.router = router
     }
@@ -167,7 +167,7 @@ extension ConsoleProtocol {
 
 extension RouteList: Service {
     public convenience init?(_ drop: Droplet) throws {
-        try self.init(drop.make(), drop.router)
+        try self.init(drop.make(), drop.router())
     }
     
     public static var name: String {
