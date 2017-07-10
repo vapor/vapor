@@ -20,24 +20,6 @@ class ConfigTests: XCTestCase {
         try XCTAssert(drop.log() is TestLogger)
      }
     
-    func testConfigUnavailableType() throws {
-        do {
-            var config = Config([:])
-            try config.set("droplet.log", "test")
-        
-            let drop = try Droplet(config)
-            print(drop)
-        } catch ConfigError.unavailable(let value, let key, let file, let available, let type) {
-            XCTAssertEqual(value, "test")
-            XCTAssertEqual(key, ["log"])
-            XCTAssertEqual(file, "droplet")
-            XCTAssertEqual(available, ["console"])
-            XCTAssert(type == LogProtocol.self)
-        } catch {
-            XCTFail("\(error)")
-        }
-     }
-    
     func testMiddlewareOrder() throws {
         var config = Config([:])
         try config.set("droplet.sessions", "memory")
@@ -115,8 +97,9 @@ class ConfigTests: XCTestCase {
     
     static let allTests = [
         ("testConfigAvailableType", testConfigAvailableType),
-        ("testConfigUnavailableType", testConfigUnavailableType),
-        ("testConfigUnavailableType", testConfigUnavailableType),
+        ("testServices", testServices),
+        ("testMiddlewareOrder", testMiddlewareOrder),
+        ("testDependency", testDependency)
     ]
 }
 
