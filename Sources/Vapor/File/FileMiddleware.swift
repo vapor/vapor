@@ -33,12 +33,16 @@ public final class FileMiddleware: Middleware {
     }
 }
 
+// MARK: Service
+
 extension FileMiddleware: Service {
+    /// See Service.name
     public static var name: String {
         return "file"
     }
-    
-    public convenience init?(_ drop: Droplet) throws {    
-        try self.init(config: drop.config)
+
+    /// See Service.make
+    public static func make(for drop: Droplet) throws -> FileMiddleware? {
+        return try .init(config: drop.config)
     }
 }

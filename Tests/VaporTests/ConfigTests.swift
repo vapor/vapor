@@ -124,19 +124,16 @@ class ConfigTests: XCTestCase {
 
 
 final class TestLogger: LogProtocol, Service {
-    var enabled: [LogLevel]
+    var enabled: [LogLevel]  = []
     
     static var name: String {
         return "test"
     }
-    
-    init?(_ drop: Droplet) throws {
-        guard drop.config["droplet", "log"]?.string == "test" else {
-            return nil
-        }
-        
-        enabled = []
+
+    static func make(for drop: Droplet) throws -> TestLogger? {
+        return .init()
     }
+
     func log(_ level: LogLevel, message: String, file: String, function: String, line: Int) {
         //
     }
@@ -148,13 +145,9 @@ final class NeedsLoggerMiddleware: Middleware, Service {
     static var name: String {
         return "logger"
     }
-    
-    init?(_ drop: Droplet) throws {
-        guard drop.config["droplet", "middleware"]?.array?.flatMap({ $0.string }).contains("logger") == true else {
-            return nil
-        }
-        
-        log = try drop.make()
+
+    static func make(for drop: Droplet) throws -> NeedsLoggerMiddleware? {
+        return try .init(drop.make(LogProtocol.self))
     }
     
     init(_ log: LogProtocol) {

@@ -59,8 +59,9 @@ public final class CORSMiddleware: Middleware, ConfigInitializable {
     }
 }
 
-extension Request {
+// MARK: HTTP
 
+extension Request {
     /// Returns `true` if the request is a pre-flight CORS request.
     var isPreflight: Bool {
         return method == .options
@@ -68,13 +69,17 @@ extension Request {
     }
 }
 
-extension CORSMiddleware: Service {
-    public convenience init?(_ drop: Droplet) throws {
-        try self.init(config: drop.config)
-    }
-    
 
+// MARK: Service
+
+extension CORSMiddleware: Service {
+    /// See Service.name
     public static var name: String {
         return "cors"
+    }
+
+    /// See Service.make
+    public static func make(for drop: Droplet) throws -> CORSMiddleware? {
+        return try .init(config: drop.config)
     }
 }

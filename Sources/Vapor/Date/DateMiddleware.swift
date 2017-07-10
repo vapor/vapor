@@ -88,12 +88,16 @@ public final class DateMiddleware: Middleware {
     }
 }
 
+// MARK: Service
+
 extension DateMiddleware: Service {
+    /// See Service.name
     public static var name: String {
         return "date"
     }
-    
-    public convenience init?(_ drop: Droplet) throws {
-        self.init()
+
+    /// See Service.make
+    public static func make(for drop: Droplet) throws -> DateMiddleware? {
+        return .init()
     }
 }

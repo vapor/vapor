@@ -25,12 +25,16 @@ extension Droplet {
 
 extension Router: RouterProtocol { }
 
+// MARK: Service
+
 extension Router: Service {
-    public convenience init?(_ drop: Droplet) throws {
-        self.init()
-    }
-    
+    /// See Service.name
     public static var name: String {
         return "branch"
+    }
+
+    /// See Service.make
+    public static func make(for drop: Droplet) throws -> Self? {
+        return .init()
     }
 }

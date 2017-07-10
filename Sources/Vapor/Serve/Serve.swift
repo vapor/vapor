@@ -70,13 +70,16 @@ public final class Serve: Command {
     }
 }
 
+// MARK: Service
+
 extension Serve: Service {
-    public convenience init?(_ drop: Droplet) throws {
-        try self.init(
-            drop.make(),
-            drop.make(),
+    /// See Service.make
+    public static func make(for drop: Droplet) throws -> Serve? {
+        return try .init(
+            drop.make(ConsoleProtocol.self),
+            drop.make(ServerFactoryProtocol.self),
             drop.responder,
-            drop.make(),
+            drop.make(LogProtocol.self),
             drop.config.makeServerConfig()
         )
     }

@@ -166,11 +166,13 @@ extension ConsoleProtocol {
 }
 
 extension RouteList: Service {
-    public convenience init?(_ drop: Droplet) throws {
-        try self.init(drop.make(), drop.router())
-    }
-    
+    /// See Service.name
     public static var name: String {
         return "routes"
+    }
+
+    /// See Service.make
+    public static func make(for drop: Droplet) throws -> Self? {
+        return try .init(drop.make(ConsoleProtocol.self), drop.make(RouterProtocol.self))
     }
 }

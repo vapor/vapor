@@ -58,14 +58,17 @@ public final class CryptoHasher: HashProtocol {
     }
 }
 
-// MARK: Config
+// MARK: Service
 
 extension CryptoHasher: Service {
-    /// Creates a crypto hasher from a Config object
-    public convenience init?(_ drop: Droplet) throws {
-        let config = drop.config
-        
-        guard let crypto = config["crypto"] else {
+    /// See Service.name
+    public static var name: String {
+        return "crypto"
+    }
+
+    /// See Service.make
+    public static func make(for drop: Droplet) throws -> CryptoHasher? {
+        guard let crypto = drop.config["crypto"] else {
             throw ConfigError.missingFile("crypto")
         }
 
@@ -128,11 +131,7 @@ extension CryptoHasher: Service {
             method = .normal(hash)
         }
 
-        self.init(method: method, encoding: encoding)
-    }
-    
-    public static var name: String {
-        return "crypto"
+        return .init(method: method, encoding: encoding)
     }
 }
 

@@ -71,17 +71,15 @@ public final class ProviderInstall: Command {
     }
 }
 
+// MARK: Service
+
 extension ProviderInstall: Service {
-    public convenience init?(_ drop: Droplet) throws {
-        try self.init(
-            drop.make(),
+    public static func make(for drop: Droplet) throws -> ProviderInstall? {
+        return try .init(
+            drop.make(ConsoleProtocol.self),
             drop.providers,
             publicDir: drop.config.publicDir,
             viewsDir: drop.config.viewsDir
         )
-    }
-    
-    public static var name: String {
-        return "provider-install"
     }
 }

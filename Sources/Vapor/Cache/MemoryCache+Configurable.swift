@@ -1,11 +1,13 @@
 import Cache
 
 extension MemoryCache: Service {
-    public convenience init?(_ drop: Droplet) throws {
-        self.init()
-    }
-    
+    /// See Service.name
     public var name: String {
         return "memory"
+    }
+
+    /// See Service.make()
+    public static func make(for drop: Droplet) throws -> MemoryCache? {
+        return .init()
     }
 }

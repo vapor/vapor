@@ -136,7 +136,7 @@ extension Services {
     
     public func types<P>(supporting protocol: P.Type) -> [ServiceType] {
         return types.filter { service in
-            return service.type.supports(protocol: P.self)
+            return _type(service.type, supports: P.self)
         }
     }
     
@@ -145,6 +145,10 @@ extension Services {
             return _instance(service.instance, supports: P.self)
         }
     }
+}
+
+private func _type<P>(_ any: Any.Type, supports protocol: P.Type) -> Bool {
+    return any is P
 }
 
 private func _instance<P>(_ any: Any, supports protocol: P.Type) -> Bool {

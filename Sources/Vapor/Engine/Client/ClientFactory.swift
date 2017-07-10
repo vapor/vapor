@@ -34,8 +34,16 @@ public final class ClientFactory<C: ClientProtocol>: ClientFactoryProtocol {
     }
 }
 
+// MARK: Service
+
 extension ClientFactory: Service {
-    public convenience init(_ drop: Droplet) throws {
+    /// See Service.name
+    public static var name: String {
+        return C.name
+    }
+
+    /// See Service.make
+    public static func make(for drop: Droplet) throws -> ClientFactory? {
         let proxy: Proxy?
         
         let config = drop.config
@@ -70,10 +78,6 @@ extension ClientFactory: Service {
             proxy = nil
         }
         
-        self.init(defaultProxy: proxy)
-    }
-    
-    public static var name: String {
-        return C.name
+        return .init(defaultProxy: proxy)
     }
 }

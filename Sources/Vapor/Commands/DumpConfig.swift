@@ -1,6 +1,7 @@
 import Console
 import Configs
 
+/// Command for dumping compiled config to the console.
 public final class DumpConfig: Command {
     public let id = "dump-config"
     public let help = ["Dumps the configuration for a given key."]
@@ -22,12 +23,16 @@ public final class DumpConfig: Command {
     }
 }
 
+// MARK: Service
+
 extension DumpConfig: Service {
-    public convenience init?(_ drop: Droplet) throws {
-        try self.init(drop.make(), drop.config)
-    }
-    
+    /// See Service.name
     public static var name: String {
         return "dump-config"
+    }
+
+    /// See Service.make
+    public static func make(for drop: Droplet) throws -> DumpConfig? {
+        return try self.init(drop.make(ConsoleProtocol.self), drop.config)
     }
 }

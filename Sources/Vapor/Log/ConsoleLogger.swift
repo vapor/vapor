@@ -28,17 +28,6 @@ public final class ConsoleLogger: LogProtocol {
     }
 }
 
-extension ConsoleLogger: Service {
-    public static var name: String {
-        return "console"
-    }
-    
-    public convenience init?(_ drop: Droplet) throws {
-        let console = try drop.make(ConsoleProtocol.self)
-        self.init(console)
-    }
-}
-
 extension LogLevel {
     var consoleStyle: ConsoleStyle {
         switch self {

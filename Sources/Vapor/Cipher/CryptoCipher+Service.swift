@@ -1,19 +1,16 @@
 import Crypto
 
 extension CryptoCipher: Service {
-    public convenience init?(_ drop: Droplet) throws {
-        if drop.services.types(supporting: CipherProtocol.self).count > 1 {
-            guard drop.config["droplet", "cipher"]?.string == "crypto" else {
-                return nil
-            }
-        }
-        
-        let config = drop.config
-        
-        guard let crypto = config["crypto"] else {
+    /// See Service.name
+    public static var name: String {
+        return "crypto"
+    }
+
+    /// See Service.make()
+    public static func make(for drop: Droplet) throws -> CryptoCipher? {
+        guard let crypto = drop.config["crypto"] else {
             throw ConfigError.missingFile("crypto")
         }
-        
         
         // Encoding
         guard let encodingString = crypto["cipher", "encoding"]?.string else {
@@ -112,7 +109,7 @@ extension CryptoCipher: Service {
             }
         }
         
-        try self.init(
+        return try .init(
             method: method,
             key: key,
             iv: iv,

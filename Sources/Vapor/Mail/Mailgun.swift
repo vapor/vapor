@@ -102,12 +102,12 @@ public final class Mailgun: MailProtocol {
     }
 }
 
-// MARK: Config
+// MARK: Service
 
 extension Mailgun: Service {
-    public convenience init?(_ drop: Droplet) throws {
-        let config = drop.config
-        guard let mailgun = config["mailgun"] else {
+    /// See Service.make
+    public static func make(for drop: Droplet) throws -> Mailgun? {
+        guard let mailgun = drop.config["mailgun"] else {
             throw ConfigError.missingFile("mailgun")
         }
         
@@ -120,6 +120,6 @@ extension Mailgun: Service {
         }
         
         let client = try drop.make(ClientFactoryProtocol.self)
-        try self.init(domain: domain, apiKey: apiKey, client)
+        return try .init(domain: domain, apiKey: apiKey, client)
     }
 }

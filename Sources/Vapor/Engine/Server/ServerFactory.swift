@@ -23,12 +23,15 @@ public final class ServerFactory<S: ServerProtocol>: ServerFactoryProtocol {
     }
 }
 
+// MARK: Service
 extension ServerFactory: Service {
-    public convenience init(_ drop: Droplet) throws {
-        self.init()
-    }
-    
+    /// See Service.name
     public static var name: String {
         return S.name
+    }
+
+    /// See Service.make
+    public static func make(for drop: Droplet) throws -> ServerFactory<S>? {
+        return .init()
     }
 }

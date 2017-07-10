@@ -24,12 +24,16 @@ public final class StaticViewRenderer: ViewRenderer {
     }
 }
 
+// MARK: Service
+
 extension StaticViewRenderer: Service {
-    public convenience init?(_ drop: Droplet) throws {
-        self.init(viewsDir: drop.config.viewsDir)
-    }
-    
+    /// See Service.name
     public static var name: String {
         return "static"
+    }
+
+    /// See Service.make
+    public static func make(for drop: Droplet) throws -> Self? {
+        return .init(viewsDir: drop.config.viewsDir)
     }
 }
