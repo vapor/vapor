@@ -45,15 +45,6 @@ extension Droplet {
             return existing
         }
 
-        // find all service instances that match the requested type
-        /*
- 
- let instances = services.instances(supporting: Type.self).map { service in
-            // force cast should always succeed since type is checked
-            // in the `.instances` call.
-            return service.instance as! Type
-        }*/
-
         // find all available service types
         let availableServices = services.factories(supporting: Type.self)
 
@@ -100,7 +91,7 @@ extension Droplet {
         // initialize all of the requested services type.
         // then append onto that the already intialized service instances.
         let array = try chosenServices.flatMap { chosenService in
-            return try chosenService.makeService(for: self) as! Type?
+            return try _makeServiceFactoryConsultingCache(chosenService, ofType: Type.self)
         }
 
         // cache the result
@@ -132,29 +123,6 @@ extension Droplet {
         // generate a readable name from the type for config
         // ex: `ConsoleProtocol` -> 'console'
         let typeName = makeTypeName(Type.self)
-
-        // create a key for caching results
-        let keyName = "single-\(typeName)"
-
-        // if there is a cached type available, return it
-        if let cached = serviceCache[keyName] as? Type {
-            return cached
-        }
-
-        // check if any service instances match the requested type
-        /*
- let instances = services.instances(supporting: Type.self).map { service in
-            return service.instance as! Type
-        }*/
-
-        /*if instances.count > 1 {
-            // multiple instances match this type.
-            // there is no way to know which one to use.
-            throw ServiceError.multipleInstances(type: Type.self)
-        } else if instances.count == 1 {
-            // an instance matched, use it!
-            return instances[0]
-        }*/
 
         // find all available service types that match the requested type.
         let available = services.factories(supporting: Type.self)
@@ -214,15 +182,34 @@ extension Droplet {
 
         // lazy loading
         // create an instance of this service type.
-        let item = try chosen.makeService(for: self) as! Type
+        let item = try _makeServiceFactoryConsultingCache(chosen, ofType: Type.self)
 
-        // if the service type is a singleton,
-        // cache it so it will be re-used.
-        if chosen.serviceIsSingleton {
-            serviceCache[keyName] = item
+        return item!
+    }
+
+    fileprivate func _makeServiceFactoryConsultingCache<T>(
+        _ serviceFactory: ServiceFactory, ofType: T.Type
+    ) throws -> T? {
+        let key = "\(serviceFactory.serviceType)-\(serviceFactory.serviceName)"
+        if serviceFactory.serviceIsSingleton {
+            if let cached = serviceCache[key] as? T {
+                return cached
+            }
         }
 
-        return item
+        guard let new = try serviceFactory.makeService(for: self) as? T? else {
+            throw ServiceError.incorrectType(
+                name: serviceFactory.serviceName,
+                type: serviceFactory.serviceType,
+                desired: T.self
+            )
+        }
+
+        if serviceFactory.serviceIsSingleton {
+            serviceCache[key] = new
+        }
+
+        return new
     }
 
     fileprivate var serviceCache: [String: Any] {
@@ -270,5 +257,3 @@ private func makeTypeName<T>(_ any: T.Type) -> String {
     typeNameCache[rawTypeString] = formattedTypename
     return formattedTypename
 }
-
-extension String: Error { }

@@ -73,7 +73,7 @@ class ConfigTests: XCTestCase {
     func testServices() throws {
         var config = Config()
         try config.set("droplet.console", "my-terminal")
-        try config.set("droplet.log", "test")
+        try config.set("droplet.log", "console")
 
         var services = Services.default()
         services.register(Terminal.self)

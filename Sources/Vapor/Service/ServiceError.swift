@@ -16,6 +16,11 @@ public enum ServiceError: Error, Debuggable {
         name: String,
         type: Any.Type
     )
+    case incorrectType(
+        name: String,
+        type: Any.Type,
+        desired: Any.Type
+    )
     case noneAvailable(type: Any.Type)
     case unknown(Error)
 }
@@ -33,6 +38,8 @@ extension ServiceError {
             return "No service named \"\(name)\" was found while making a '\(type)'."
         case .duplicateServiceName(let name, let type):
             return "Duplicate service names were resolved for \"\(name)\" while making a '\(type)'"
+        case .incorrectType(let name, let type, let desired):
+            return "Service factory for \(type) named \(name) did not create a service that conforms to \(desired)."
         case .unknown(let error):
             return "Unknown: \(error)"
         }
@@ -50,6 +57,8 @@ extension ServiceError {
             return "unknownService"
         case .duplicateServiceName:
             return "duplicate"
+        case .incorrectType:
+            return "incorrectType"
         case .unknown:
             return "unknown"
         }
@@ -68,6 +77,8 @@ extension ServiceError {
         case .unknownService:
             return []
         case .duplicateServiceName:
+            return []
+        case .incorrectType:
             return []
         case .unknown:
             return []
@@ -94,6 +105,8 @@ extension ServiceError {
             let string = available.joined(separator: ", ")
             return ["Try using one of the available types: \(string)"]
         case .duplicateServiceName:
+            return []
+        case .incorrectType:
             return []
         case .unknown:
             return []
