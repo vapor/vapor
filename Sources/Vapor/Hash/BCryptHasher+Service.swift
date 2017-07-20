@@ -1,11 +1,11 @@
 extension BCryptHasher: Service {
     /// See Service.name
-    public static var name: String {
+    public static var serviceName: String {
         return "bcrypt"
     }
 
     /// See Service.make
-    public static func make(for drop: Droplet) throws -> BCryptHasher? {
+    public static func makeService(for drop: Droplet) throws -> BCryptHasher? {
         guard let cost = drop.config["bcrypt", "cost"]?.uint else {
             throw ConfigError.missing(
                 key: ["cost"],

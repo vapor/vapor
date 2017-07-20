@@ -1,58 +1,65 @@
 /// Services available for a service container.
 public struct Services {
-    var types: [ServiceType]
-    var instances: [ServiceInstance]
-    var providerTypes: [Provider.Type]
-    var providers: [Provider]
+    var factories: [ServiceFactory]
+    var providers: [ProviderFactory]
 
     public init() {
-        self.types = []
-        self.instances = []
-        self.providerTypes = []
+        self.factories = []
         self.providers = []
     }
 }
 
-public struct ServiceType {
-    var type: Service.Type
-    var isSingleton: Bool
-}
-
-public struct ServiceInstance {
-    var instance: Any
-}
+// MARK: Services
 
 extension Services {
     /// Adds a service type to the Services.
-    public mutating func register<S: Service>(
-        _ type: S.Type = S.self,
-        isSingleton: Bool = true
-    ) {
-        guard !types.contains(where: { $0.type == S.self }) else {
-            return
-        }
-
-        let st = ServiceType(type: type, isSingleton: isSingleton)
-        types.append(st)
+    public mutating func register<S: Service>(_ type: S.Type = S.self) {
+        let factory = TypeServiceFactory(S.self)
+        self.factory(factory)
     }
 
     /// Adds an instance of a service to the Services.
-    public mutating func instance<S>(_ instance: S) {
-        let si = ServiceInstance(instance: instance)
-        instances.append(si)
+    public mutating func instance<S>(_ instance: S, name: String, isSingleton: Bool = true) {
+        let factory = BasicServiceFactory(S.self, name: name, isSingleton: isSingleton) { drop in
+            return instance
+        }
+        self.factory(factory)
     }
 
-    /// Adds a Provider type to the Services.
-    public mutating func provider<P: Provider>(_ p: P.Type) {
-        guard !providerTypes.contains(where: { $0 == P.self }) else {
+    /// Adds any type conforming to ServiceFactory
+    public mutating func factory(_ factory: ServiceFactory) {
+        guard !factories.contains(where: {
+            $0.serviceType == factory.serviceType && $0.serviceName == factory.serviceName
+        }) else {
             return
         }
+        
+        factories.append(factory)
+    }
+}
 
-        providerTypes.append(P.self)
+// MARK: Provider
+
+extension Services {
+    /// Adds a Provider type to the Services.
+    public mutating func provider<P: Provider>(_ p: P.Type) {
+        let factory = TypeProviderFactory(P.self)
+        self.provider(factory)
     }
 
     /// Adds a Provider to the Services.
     public mutating func provider<P: Provider>(_ p: P) {
-        providers.append(p)
+        let factory = BasicProviderFactory(P.self) { config in
+            return p
+        }
+        self.provider(factory)
+    }
+
+    public mutating func provider(_ factory: ProviderFactory) {
+        guard !providers.contains(where: { $0.providerType == factory.providerType }) else {
+            return
+        }
+
+        providers.append(factory)
     }
 }

@@ -28,12 +28,12 @@ public final class StaticViewRenderer: ViewRenderer {
 
 extension StaticViewRenderer: Service {
     /// See Service.name
-    public static var name: String {
+    public static var serviceName: String {
         return "static"
     }
 
     /// See Service.make
-    public static func make(for drop: Droplet) throws -> Self? {
+    public static func makeService(for drop: Droplet) throws -> Self? {
         return .init(viewsDir: drop.config.viewsDir)
     }
 }

@@ -14,11 +14,13 @@ class FileMiddlewareTests: XCTestCase {
     func testETag() throws {
         let file = #file
         let fileMiddleware = FileMiddleware(publicDir: "")
-        
+
+        var config = Config()
+        try config.set("droplet.middleware", ["my-file"])
         var services = Services.default()
-        services.instance(fileMiddleware)
+        services.instance(fileMiddleware, name: "my-file")
         
-        let drop = try Droplet(nil, services)
+        let drop = try Droplet(config, services)
         
         var headers: [HeaderKey: String] = [:]
         

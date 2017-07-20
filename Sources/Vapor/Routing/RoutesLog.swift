@@ -167,12 +167,12 @@ extension ConsoleProtocol {
 
 extension RouteList: Service {
     /// See Service.name
-    public static var name: String {
+    public static var serviceName: String {
         return "routes"
     }
 
     /// See Service.make
-    public static func make(for drop: Droplet) throws -> Self? {
+    public static func makeService(for drop: Droplet) throws -> Self? {
         return try .init(drop.make(ConsoleProtocol.self), drop.make(RouterProtocol.self))
     }
 }

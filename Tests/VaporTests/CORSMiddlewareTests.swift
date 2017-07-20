@@ -4,11 +4,12 @@ import Vapor
 
 class CORSMiddlewareTests: XCTestCase {
     func dropWithCors(config settings: CORSConfiguration = .default) -> Droplet {
-        let config = Config([:])
+        var config = Config([:])
+        try! config.set("droplet.middleware", ["my-cors"])
         
         var services = Services.default()
         let cors = CORSMiddleware(configuration: settings)
-        services.instance(cors)
+        services.instance(cors, name: "my-cors")
         
         let drop = try! Droplet(config, services)
         
@@ -20,11 +21,12 @@ class CORSMiddlewareTests: XCTestCase {
     }
 
     func dropWithCors(settings: Configs.Config) -> Droplet {
-        let config = Config([:])
+        var config = Config([:])
+        try! config.set("droplet.middleware", ["my-cors"])
         
         var services = Services.default()
         let cors = try! CORSMiddleware(config: settings)
-        services.instance(cors)
+        services.instance(cors, name: "my-cors")
         
         let drop = try! Droplet(config, services)
         
@@ -38,9 +40,11 @@ class CORSMiddlewareTests: XCTestCase {
     // MARK: - Origin Tests -
 
     func testCorsSameOrigin() {
-        let config = CORSConfiguration(allowedOrigin: .originBased,
-                                       allowedMethods: [.get],
-                                       allowedHeaders: [])
+        let config = CORSConfiguration(
+            allowedOrigin: .originBased,
+            allowedMethods: [.get],
+            allowedHeaders: []
+        )
         let drop = dropWithCors(config: config)
 
         do {

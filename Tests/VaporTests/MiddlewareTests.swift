@@ -34,10 +34,13 @@ class MiddlewareTests: XCTestCase {
     }
 
     func testConfigDateProvided() throws {
+        var config = Config()
+        try config.set("droplet.middleware", ["foo"])
+
         var services = Services.default()
-        services.instance(FooMiddleware())
+        services.instance(FooMiddleware(), name: "foo")
         
-        let drop = try Droplet(nil, services)
+        let drop = try Droplet(config, services)
 
         drop.get { _ in
             return "Hello, world"
@@ -50,11 +53,14 @@ class MiddlewareTests: XCTestCase {
     }
 
     func testMultiple() throws {
+        var config = Config()
+        try config.set("droplet.middleware", ["foo", "my-date"])
+
         var services = Services.default()
-        services.instance(FooMiddleware())
-        services.instance(DateMiddleware())
+        services.instance(FooMiddleware(), name: "foo")
+        services.instance(DateMiddleware(), name: "my-date")
         
-        let drop = try Droplet(nil, services)
+        let drop = try Droplet(config, services)
 
         drop.get { _ in
             return "Hello, world"
@@ -87,7 +93,7 @@ class MiddlewareTests: XCTestCase {
         try config.set("droplet.client", "engine")
         
         var services = Services.default()
-        services.instance(FooMiddleware())
+        services.instance(FooMiddleware(), name: "foo")
         
         let drop = try! Droplet(config, services)
 

@@ -39,7 +39,7 @@ class QueryTests: XCTestCase {
     
     func testQuerySetAndGet() throws {
         let drop = try Droplet()
-        let req = try drop.client.makeRequest(.get, "https://google.com")
+        let req = try drop.client().makeRequest(.get, "https://google.com")
         req.query = Node(["q": "swift vapor"])
         let query = req.query
         XCTAssertNotNil(query)

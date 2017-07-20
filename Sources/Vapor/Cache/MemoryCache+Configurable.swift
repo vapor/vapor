@@ -2,12 +2,12 @@ import Cache
 
 extension MemoryCache: Service {
     /// See Service.name
-    public var name: String {
+    public var serviceName: String {
         return "memory"
     }
 
     /// See Service.make()
-    public static func make(for drop: Droplet) throws -> MemoryCache? {
+    public static func makeService(for drop: Droplet) throws -> MemoryCache? {
         return .init()
     }
 }

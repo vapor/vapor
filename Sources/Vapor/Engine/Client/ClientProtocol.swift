@@ -13,11 +13,11 @@ public protocol ClientProtocol: Responder {
     ) throws
     
     /// Unique name for this type of client
-    static var name: String { get }
+    static var serviceName: String { get }
 }
 
 extension ClientProtocol {
-    public static var name: String {
+    public static var serviceName: String {
         return "\(self)".replacingOccurrences(of: "Client", with: "").lowercased()
     }
 }

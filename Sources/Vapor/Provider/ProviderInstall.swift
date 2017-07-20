@@ -74,7 +74,7 @@ public final class ProviderInstall: Command {
 // MARK: Service
 
 extension ProviderInstall: Service {
-    public static func make(for drop: Droplet) throws -> ProviderInstall? {
+    public static func makeService(for drop: Droplet) throws -> ProviderInstall? {
         return try .init(
             drop.make(ConsoleProtocol.self),
             drop.providers,

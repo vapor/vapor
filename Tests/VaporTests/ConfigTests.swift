@@ -28,13 +28,14 @@ class ConfigTests: XCTestCase {
             "file",
             "date",
             "error",
-            "sessions"
+            "sessions",
+            "date-extra"
         ])
         
         let extra = DateMiddleware()
         
         var services = Services.default()
-        services.instance(extra)
+        services.instance(extra, name: "date-extra")
         
         let drop = try! Droplet(config, services)
         let middleware = try! drop.middleware()
@@ -70,15 +71,18 @@ class ConfigTests: XCTestCase {
     }
  
     func testServices() throws {
+        var config = Config()
+        try config.set("droplet.console", "my-terminal")
+        try config.set("droplet.log", "test")
+
         var services = Services.default()
         services.register(Terminal.self)
-        services.register(ConsoleLogger.self)
         services.register(TestLogger.self)
         
         let term = Terminal(arguments: ["vapor"])
-        services.instance(term, supportedProtocols: [ConsoleProtocol.self])
+        services.instance(term, name: "my-terminal")
         
-        let drop = try! Droplet(nil, services)
+        let drop = try! Droplet(config, services)
         
         let console = try! drop.make(ConsoleProtocol.self)
         console.print("console")
@@ -109,11 +113,11 @@ class ConfigTests: XCTestCase {
 final class TestLogger: LogProtocol, Service {
     var enabled: [LogLevel]  = []
     
-    static var name: String {
+    static var serviceName: String {
         return "test"
     }
 
-    static func make(for drop: Droplet) throws -> TestLogger? {
+    static func makeService(for drop: Droplet) throws -> TestLogger? {
         return .init()
     }
 
@@ -125,11 +129,11 @@ final class TestLogger: LogProtocol, Service {
 final class NeedsLoggerMiddleware: Middleware, Service {
     let log: LogProtocol
     
-    static var name: String {
+    static var serviceName: String {
         return "logger"
     }
 
-    static func make(for drop: Droplet) throws -> NeedsLoggerMiddleware? {
+    static func makeService(for drop: Droplet) throws -> NeedsLoggerMiddleware? {
         return try .init(drop.make(LogProtocol.self))
     }
     

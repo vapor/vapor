@@ -46,28 +46,30 @@ extension Droplet {
         }
 
         // find all service instances that match the requested type
-        let instances = services.instances(supporting: Type.self).map { service in
+        /*
+ 
+ let instances = services.instances(supporting: Type.self).map { service in
             // force cast should always succeed since type is checked
             // in the `.instances` call.
             return service.instance as! Type
-        }
+        }*/
 
         // find all available service types
-        let availableServices = services.types(supporting: Type.self)
+        let availableServices = services.factories(supporting: Type.self)
 
         // get the array of services specified in config
         // for this type.
         // if no services are specified, return only instances.
         guard let chosen = config["droplet", typeName]?.array?.flatMap({ $0.string }) else {
-            return instances
+            return []
         }
 
         // loop over chosen service names from config
         // and convert to ServiceTypes from the Services struct.
-        let chosenServices: [ServiceType] = try chosen.map { chosenName in
+        let chosenServices: [ServiceFactory] = try chosen.map { chosenName in
             // resolve services matching the supplied name
-            let resolvedServices: [ServiceType] = availableServices.flatMap { availableService in
-                guard availableService.type.name == chosenName else {
+            let resolvedServices: [ServiceFactory] = availableServices.flatMap { availableService in
+                guard availableService.serviceName == chosenName else {
                     return nil
                 }
 
@@ -85,7 +87,7 @@ extension Droplet {
                 // no services were found that have this name.
                 throw ServiceError.unknownService(
                     name: chosenName,
-                    available: availableServices.map({ $0.type.name }),
+                    available: availableServices.map({ $0.serviceName }),
                     type: Type.self
                 )
             } else {
@@ -98,8 +100,8 @@ extension Droplet {
         // initialize all of the requested services type.
         // then append onto that the already intialized service instances.
         let array = try chosenServices.flatMap { chosenService in
-            return try chosenService.type.make(for: self) as! Type?
-        } + instances
+            return try chosenService.makeService(for: self) as! Type?
+        }
 
         // cache the result
         serviceCache[keyName] = array
@@ -140,23 +142,24 @@ extension Droplet {
         }
 
         // check if any service instances match the requested type
-        let instances = services.instances(supporting: Type.self).map { service in
+        /*
+ let instances = services.instances(supporting: Type.self).map { service in
             return service.instance as! Type
-        }
+        }*/
 
-        if instances.count > 1 {
+        /*if instances.count > 1 {
             // multiple instances match this type.
             // there is no way to know which one to use.
             throw ServiceError.multipleInstances(type: Type.self)
         } else if instances.count == 1 {
             // an instance matched, use it!
             return instances[0]
-        }
+        }*/
 
         // find all available service types that match the requested type.
-        let available = services.types(supporting: Type.self)
+        let available = services.factories(supporting: Type.self)
 
-        let chosen: ServiceType
+        let chosen: ServiceFactory
 
         if available.count > 1 {
             // multiple services are available,
@@ -166,15 +169,15 @@ extension Droplet {
                 // we are unable to choose which service to use.
                 throw ServiceError.disambiguationRequired(
                     key: typeName,
-                    available: available.flatMap({ $0.type.name }),
+                    available: available.flatMap({ $0.serviceName }),
                     type: Type.self
                 )
             }
 
             // turn the disambiguated type name into a ServiceType
             // from the available service types.
-            let disambiguated: [ServiceType] = available.flatMap { service in
-                guard disambiguation == service.type.name else {
+            let disambiguated: [ServiceFactory] = available.flatMap { service in
+                guard disambiguation == service.serviceName else {
                     return nil
                 }
                 return service
@@ -192,7 +195,7 @@ extension Droplet {
                 // we are uanble to choose which service to use.
                 throw ServiceError.unknownService(
                     name: disambiguation,
-                    available: available.flatMap({ $0.type.name }),
+                    available: available.flatMap({ $0.serviceName }),
                     type: Type.self
                 )
             } else {
@@ -211,11 +214,11 @@ extension Droplet {
 
         // lazy loading
         // create an instance of this service type.
-        let item = try chosen.type.make(for: self) as! Type
+        let item = try chosen.makeService(for: self) as! Type
 
         // if the service type is a singleton,
         // cache it so it will be re-used.
-        if chosen.isSingleton {
+        if chosen.serviceIsSingleton {
             serviceCache[keyName] = item
         }
 
@@ -235,25 +238,15 @@ extension Droplet {
 // MARK: Service Utilities
 
 extension Services {
-    internal func types<P>(supporting protocol: P.Type) -> [ServiceType] {
-        return types.filter { service in
-            return _type(service.type, supports: P.self)
-        }
-    }
-
-    internal func instances<P>(supporting protocol: P.Type = P.self) -> [ServiceInstance] {
-        return instances.filter { service in
-            return _instance(service.instance, supports: P.self)
+    internal func factories<P>(supporting protocol: P.Type) -> [ServiceFactory] {
+        return factories.filter { factory in
+            return _type(factory.serviceType, supports: P.self)
         }
     }
 }
 
 private func _type<P>(_ any: Any.Type, supports protocol: P.Type) -> Bool {
     return any is P
-}
-
-private func _instance<P>(_ any: Any, supports protocol: P.Type) -> Bool {
-    return any as? P != nil
 }
 
 // MARK: Utilities

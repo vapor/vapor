@@ -9,11 +9,14 @@ class SessionsTests: XCTestCase {
     func testExample() throws {
         let s = MemorySessions()
         let m = SessionsMiddleware(s)
+
+        var config = Config()
+        try config.set("droplet.middleware", ["m"])
         
         var services = Services.default()
-        services.instance(m)
+        services.instance(m, name: "m")
         
-        let drop = try Droplet(nil, services)
+        let drop = try Droplet(config, services)
 
         drop.get("set") { req in
             try req.assertSession().data["foo"] = "bar"
@@ -78,12 +81,16 @@ class SessionsTests: XCTestCase {
             
             return cookie
         }
+
+        var config = Config()
+        try config.set("droplet.middleware", ["m"])
+
         let m = SessionsMiddleware(s, cookieName: cookieName, cookieFactory: cookieFactory)
         
         var services = Services.default()
-        services.instance(m)
+        services.instance(m, name: "m")
         
-        let drop = try Droplet(nil, services)
+        let drop = try Droplet(config, services)
         
         drop.get("should-set-expiry") { req in
             req.storage["session_expiry"] = true

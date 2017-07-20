@@ -19,11 +19,11 @@ public protocol ServerProtocol {
     ) throws
     
     /// Unique name for this type of server
-    static var name: String { get }
+    static var serviceName: String { get }
 }
 
 extension ServerProtocol {
-    public static var name: String {
+    public static var serviceName: String {
         return "\(self)".replacingOccurrences(of: "Server", with: "").lowercased()
     }
 }

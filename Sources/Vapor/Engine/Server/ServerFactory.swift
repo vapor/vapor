@@ -26,12 +26,12 @@ public final class ServerFactory<S: ServerProtocol>: ServerFactoryProtocol {
 // MARK: Service
 extension ServerFactory: Service {
     /// See Service.name
-    public static var name: String {
-        return S.name
+    public static var serviceName: String {
+        return S.serviceName
     }
 
     /// See Service.make
-    public static func make(for drop: Droplet) throws -> ServerFactory<S>? {
+    public static func makeService(for drop: Droplet) throws -> ServerFactory<S>? {
         return .init()
     }
 }

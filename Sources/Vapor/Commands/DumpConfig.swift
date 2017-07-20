@@ -27,12 +27,12 @@ public final class DumpConfig: Command {
 
 extension DumpConfig: Service {
     /// See Service.name
-    public static var name: String {
+    public static var serviceName: String {
         return "dump-config"
     }
 
     /// See Service.make
-    public static func make(for drop: Droplet) throws -> DumpConfig? {
+    public static func makeService(for drop: Droplet) throws -> DumpConfig? {
         return try self.init(drop.make(ConsoleProtocol.self), drop.config)
     }
 }

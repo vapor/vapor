@@ -20,7 +20,7 @@ public struct Config: StructuredDataWrapper {
     }
 
     public init(
-        prioritized: [Source] = [],
+        prioritized: [Source],
         arguments: [String] = CommandLine.arguments,
         environment: Environment = .development
     ) throws {
@@ -29,6 +29,12 @@ public struct Config: StructuredDataWrapper {
         self.context = emptyContext
         self.arguments = arguments
         self.environment = environment
+    }
+}
+
+extension Config {
+    public init() {
+        self.init([:])
     }
 }
 

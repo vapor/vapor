@@ -21,7 +21,7 @@ class ProviderTests: XCTestCase {
         
         var services = Services.default()
         services.provider(FastServerProvider.self)
-        services.instance(DebugConsole())
+        services.instance(DebugConsole(), name: "debug")
         
         let drop = try! Droplet(config, services)
         try! XCTAssert(drop.server() is ServerFactory<FastServer>)
@@ -34,7 +34,7 @@ class ProviderTests: XCTestCase {
         var services = Services.default()
         services.provider(SlowServerProvider.self)
         services.provider(FastServerProvider.self)
-        services.instance(DebugConsole())
+        services.instance(DebugConsole(), name: "debug")
         
         let drop = try! Droplet(config, services)
         try! XCTAssert(drop.server() is ServerFactory<FastServer>)
@@ -51,7 +51,7 @@ class ProviderTests: XCTestCase {
         var services = Services.default()
         services.provider(fast)
         services.provider(slow)
-        services.instance(DebugConsole())
+        services.instance(DebugConsole(), name: "debug")
 
         let drop = try! Droplet(config, services)
         
@@ -125,7 +125,7 @@ private final class FastServer: ServerProtocol {
         while true { }
     }
     
-    static var name: String { return "fast" }
+    static var serviceName: String { return "fast" }
 }
 
 private final class FastServerProvider: Provider {
@@ -169,7 +169,7 @@ private final class SlowServer: ServerProtocol {
         while true { }
     }
     
-    static var name: String { return "slow" }
+    static var serviceName: String { return "slow" }
 }
 
 private final class SlowServerProvider: Provider {

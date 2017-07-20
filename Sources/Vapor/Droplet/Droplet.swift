@@ -37,9 +37,9 @@ public final class Droplet {
         self.config = config
         var services = services ?? Services.default()
         
-        let providers = try services.providerTypes.map { providerType in
-            return try providerType.init(config: config)
-        } + services.providers
+        let providers = try services.providers.flatMap { factory in
+            return try factory.makeProvider(with: config)
+        }
         
         try providers.forEach { provider in
             try provider.register(&services)

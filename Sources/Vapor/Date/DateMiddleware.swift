@@ -92,12 +92,12 @@ public final class DateMiddleware: Middleware {
 
 extension DateMiddleware: Service {
     /// See Service.name
-    public static var name: String {
+    public static var serviceName: String {
         return "date"
     }
 
     /// See Service.make
-    public static func make(for drop: Droplet) throws -> DateMiddleware? {
+    public static func makeService(for drop: Droplet) throws -> DateMiddleware? {
         return .init()
     }
 }

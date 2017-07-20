@@ -16,10 +16,12 @@ class ConsoleTests: XCTestCase {
         
         var config = Config([:])
         config.arguments = ["/path/to/exe", "test-1"]
+        try config.set("droplet.console", "test")
+        try config.set("droplet.commands", ["one"])
         
         var services = Services.default()
-        services.instance(console)
-        services.instance(TestOneCommand(console: console))
+        services.instance(console, name: "test")
+        services.instance(TestOneCommand(console: console), name: "one")
         
         let drop = try! Droplet(config, services)
 
@@ -32,10 +34,12 @@ class ConsoleTests: XCTestCase {
         
         var config = Config([:])
         config.arguments = ["/path/to/exe", "test-2"]
+        try config.set("droplet.console", "test")
+        try config.set("droplet.commands", ["two"])
         
         var services = Services.default()
-        services.instance(console)
-        services.instance(TestTwoCommand(console: console))
+        services.instance(console, name: "test")
+        services.instance(TestTwoCommand(console: console), name: "two")
         
         let drop = try! Droplet(config, services)
 
@@ -55,10 +59,12 @@ class ConsoleTests: XCTestCase {
         
         var config = Config([:])
         config.arguments = ["/path/to/ext", "test-2", "123"]
+        try config.set("droplet.console", "test")
+        try config.set("droplet.commands", ["two"])
         
         var services = Services.default()
-        services.instance(console)
-        services.instance(TestTwoCommand(console: console))
+        services.instance(console, name: "test")
+        services.instance(TestTwoCommand(console: console), name: "two")
         
         let drop = try! Droplet(config, services)
 
@@ -72,10 +78,12 @@ class ConsoleTests: XCTestCase {
         
         var config = Config([:])
         config.arguments = ["/path/to/ext", "test-2", "123", "--opt-1=abc"]
+        try config.set("droplet.console", "test")
+        try config.set("droplet.commands", ["two"])
         
         var services = Services.default()
-        services.instance(console)
-        services.instance(TestTwoCommand(console: console))
+        services.instance(console, name: "test")
+        services.instance(TestTwoCommand(console: console), name: "two")
         
         let drop = try! Droplet(config, services)
  
@@ -101,9 +109,10 @@ class ConsoleTests: XCTestCase {
 
         var config = Config([:])
         config.arguments = ["vapor"]
+        try config.set("droplet.commands", ["test"])
         
         var services = Services.default()
-        services.instance(TestServe(console: console))
+        services.instance(TestServe(console: console), name: "test")
         
         let drop = try! Droplet(config, services)
 

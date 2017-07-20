@@ -40,12 +40,12 @@ public final class ErrorMiddleware: Middleware {
 
 extension ErrorMiddleware: Service {
     /// See Service.name
-    public static var name: String {
+    public static var serviceName: String {
         return "error"
     }
 
     /// See Service.make
-    public static func make(for drop: Droplet) throws -> ErrorMiddleware? {
+    public static func makeService(for drop: Droplet) throws -> ErrorMiddleware? {
         return try .init(drop.config.environment, drop.make(LogProtocol.self))
     }
 }

@@ -74,7 +74,7 @@ public final class Serve: Command {
 
 extension Serve: Service {
     /// See Service.make
-    public static func make(for drop: Droplet) throws -> Serve? {
+    public static func makeService(for drop: Droplet) throws -> Serve? {
         return try .init(
             drop.make(ConsoleProtocol.self),
             drop.make(ServerFactoryProtocol.self),

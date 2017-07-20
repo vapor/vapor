@@ -38,12 +38,12 @@ public final class ClientFactory<C: ClientProtocol>: ClientFactoryProtocol {
 
 extension ClientFactory: Service {
     /// See Service.name
-    public static var name: String {
-        return C.name
+    public static var serviceName: String {
+        return C.serviceName
     }
 
     /// See Service.make
-    public static func make(for drop: Droplet) throws -> ClientFactory? {
+    public static func makeService(for drop: Droplet) throws -> ClientFactory? {
         let proxy: Proxy?
         
         let config = drop.config

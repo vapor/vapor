@@ -29,12 +29,12 @@ extension Router: RouterProtocol { }
 
 extension Router: Service {
     /// See Service.name
-    public static var name: String {
+    public static var serviceName: String {
         return "branch"
     }
 
     /// See Service.make
-    public static func make(for drop: Droplet) throws -> Self? {
+    public static func makeService(for drop: Droplet) throws -> Self? {
         return .init()
     }
 }

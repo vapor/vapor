@@ -106,7 +106,7 @@ public final class Mailgun: MailProtocol {
 
 extension Mailgun: Service {
     /// See Service.make
-    public static func make(for drop: Droplet) throws -> Mailgun? {
+    public static func makeService(for drop: Droplet) throws -> Mailgun? {
         guard let mailgun = drop.config["mailgun"] else {
             throw ConfigError.missingFile("mailgun")
         }
