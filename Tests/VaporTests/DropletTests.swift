@@ -118,9 +118,8 @@ class DropletTests: XCTestCase {
     }
     
     func testProxy() throws {
-        // TODO: fixme (is proxy down?)
-        return
-        
+        // FIXME: find a reliable proxy server
+        /*
         let proxy = Proxy(
             hostname: "52.213.26.87",
             port: 8888,
@@ -136,12 +135,12 @@ class DropletTests: XCTestCase {
         let req = Request(method: .get, path: "/")
         let res = try client.respond(to: req)
         try XCTAssertEqual(res.bodyString(), "It works!!!\n")
+        */
     }
     
     func testDropletProxy() throws {
-        // TODO: fixme (is proxy down?)
-        return
-        
+        // FIXME: find a reliable proxy server
+        /*
         var config = Config([:])
         try config.set("droplet.client", "engine")
         try config.set("client.proxy.hostname", "52.213.26.87")
@@ -152,6 +151,7 @@ class DropletTests: XCTestCase {
         
         let res = try drop.client().get("http://34.248.148.23")
         try XCTAssertEqual(res.bodyString(), "It works!!!\n")
+        */
     }
     
     func testWebsockets() throws {
