@@ -111,7 +111,7 @@ extension CryptoHasher: Service {
             }
             
             let key = encoding.decode(encodedKey)
-            if key.allZeroes {
+            if key.isAllZeroes {
                 let log = try drop.make(LogProtocol.self)
                 log.warning("The current hash key \"\(encodedKey.makeString())\" is not secure.")
                 log.warning("Update hash.key in Config/crypto.json before using in production.")

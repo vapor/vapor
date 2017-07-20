@@ -67,7 +67,7 @@ extension CryptoCipher: Service {
         }
         
         let key = encoding.decode(encodedKey)
-        if key.allZeroes {
+        if key.isAllZeroes {
             let log = try drop.make(LogProtocol.self)
             log.warning("The current cipher key \"\(encodedKey.makeString())\" is not secure.")
             log.warning("Update cipher.key in Config/crypto.json before using in production.")
@@ -119,7 +119,7 @@ extension CryptoCipher: Service {
 }
 
 extension Array where Iterator.Element == Byte {
-    var allZeroes: Bool {
+    internal var isAllZeroes: Bool {
         for i in self {
             if i != 0 {
                 return false
