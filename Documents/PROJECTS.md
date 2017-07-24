@@ -6,6 +6,7 @@ People have built some awesome things with Vapor, and we can't wait to see what 
 * [Vapor Chat](#vapor-chat) - realtime chat site / iOS app
 * [Qutheory.io](#qutheoryio) - the official Vapor site
 * [Byte Fish](#byte-fish) - url shortener
+* [galax.io](#galaxio) - online multiplayer space game
 * [Vapor Dashboard](#vapor-dashboard) - realtime Vapor stats
 * [Starred Search](#starred-search) - search the readme files of starred github repos
 * [Emergency Numbers](#emergency-numbers-api) - an api providing the emergency number for various locations
@@ -76,6 +77,18 @@ https://github.com/rosslebeau/bytefish
 ### Site
 
 https://bytefish.herokuapp.com
+
+# galax.io
+
+A realtime multiplayer space game using WebSockets.
+
+### Author
+
+<a href="https://twitter.com/NathanFlurry”>@NathanFlurry</a>
+
+### Site
+
+http://galax.io
 
 # Emergency Numbers API
 
