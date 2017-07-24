@@ -84,7 +84,7 @@ A realtime multiplayer space game using WebSockets.
 
 ### Author
 
-<a href="https://twitter.com/NathanFlurry”>@NathanFlurry</a>
+[@NathanFlurry](https://twitter.com/NathanFlurry)
 
 ### Site
 
