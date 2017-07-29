@@ -3,10 +3,6 @@ import XCTest
 @testable import Vapor
 
 class CipherTests: XCTestCase {
-    static let allTests = [
-        ("testCipher", testCipher)
-    ]
-
     func testCipher() throws {
         let key = "passwordpasswordpasswordpassword".makeBytes()
         let cipher1 = try CryptoCipher(
@@ -15,8 +11,6 @@ class CipherTests: XCTestCase {
             iv: nil,
             encoding: .base64
         )
-
-        
         
         let secret = "vapor"
 
@@ -50,12 +44,18 @@ class CipherTests: XCTestCase {
             ]
         ])
 
-        let drop = try Droplet(config)
+        let drop = try! Droplet(config)
 
         let secret = "vapor"
-        let e = try drop.cipher.encrypt(secret).makeString()
+        let cipher = try! drop.cipher()
+        
+        let e = try! cipher.encrypt(secret).makeString()
         XCTAssertEqual(e, "cxVfJ0NqJpDHdtSYaYrSmw==")
-        XCTAssertEqual(try drop.cipher.decrypt(e).makeString(), secret)
+        try! XCTAssertEqual(cipher.decrypt(e).makeString(), secret)
     }
     
+    static let allTests = [
+        ("testCipher", testCipher),
+        ("testDroplet", testDroplet)
+    ]
 }

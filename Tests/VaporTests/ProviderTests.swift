@@ -2,72 +2,62 @@ import XCTest
 @testable import Vapor
 import HTTP
 import Transport
+import Console
 
 class ProviderTests: XCTestCase {
-    static let allTests = [
-        ("testBasic", testBasic),
-        ("testPrecedence", testPrecedence),
-        ("testOverride", testOverride),
-        ("testInitialized", testInitialized),
-        ("testProviderRepository", testProviderRepository),
-        ("testCheckoutsDirectory", testCheckoutsDirectory),
-    ]
-
-    override func setUp() {
-        Node.fuzzy = [JSON.self, Node.self]
-    }
-    
     func testBasic() throws {
-        var config = Config([:])
+        var config = Config.default()
         try config.set("droplet.server", "fast")
-        try config.addProvider(FastServerProvider.self)
-        let drop = try Droplet(config)
-
-        XCTAssert(type(of: drop.server) is ServerFactory<FastServer>.Type)
+        
+        var services = Services.default()
+        services.provider(FastServerProvider.self)
+        
+        let drop = try! Droplet(config, services)
+        try! XCTAssert(drop.server() is ServerFactory<FastServer>)
     }
 
     func testPrecedence() throws {
-        var config = Config([:])
+        var config = Config.default()
         try config.set("droplet.server", "fast")
-        try config.addProvider(FastServerProvider.self)
         
-        let drop = try Droplet(
-            config: config,
-            console: DebugConsole()
-        )
-
-        XCTAssert(type(of: drop.server) is ServerFactory<FastServer>.Type)
+        var services = Services.default()
+        services.provider(FastServerProvider.self)
+        services.instance(DebugConsole(), name: "debug", supports: [ConsoleProtocol.self])
+        
+        let drop = try! Droplet(config, services)
+        try! XCTAssert(drop.server() is ServerFactory<FastServer>)
     }
 
     func testOverride() throws {
-        var config = Config([:])
-        try config.addProvider(SlowServerProvider.self)
-        try config.addProvider(FastServerProvider.self)
+        var config = Config.default()
         try config.set("droplet.server", "fast")
         
-        let drop = try Droplet(
-            config: config,
-            console: DebugConsole()
-        )
-        XCTAssert(type(of: drop.server) is ServerFactory<FastServer>.Type)
+        var services = Services.default()
+        services.provider(SlowServerProvider.self)
+        services.provider(FastServerProvider.self)
+        services.instance(DebugConsole(), name: "debug", supports: [ConsoleProtocol.self])
+        
+        let drop = try! Droplet(config, services)
+        try! XCTAssert(drop.server() is ServerFactory<FastServer>)
     }
 
     func testInitialized() throws {
-        var config = Config([:])
+        var config = Config.default()
         try config.set("droplet.server", "slow")
+        config.arguments = ["vapor", "serve"]
+        
         let fast = try FastServerProvider(config: config)
         let slow = try SlowServerProvider(config: config)
 
-        config.arguments = ["vapor", "serve"]
-        try config.addProvider(fast)
-        try config.addProvider(slow)
+        var services = Services.default()
+        services.provider(fast)
+        services.provider(slow)
+        services.instance(DebugConsole(), name: "debug", supports: [ConsoleProtocol.self])
 
-        let drop = try Droplet(
-            config: config,
-            console: DebugConsole()
-        )
+        let drop = try! Droplet(config, services)
         
-        XCTAssert(type(of: drop.server) is ServerFactory<SlowServer>.Type)
+        try! print(drop.server())
+        try! XCTAssert(drop.server() is ServerFactory<SlowServer>)
 
         XCTAssertEqual(fast.beforeRunFlag, false)
         XCTAssertEqual(slow.beforeRunFlag, false)
@@ -76,7 +66,7 @@ class ProviderTests: XCTestCase {
             try! drop.runCommands()
         }
 
-        drop.console.wait(seconds: 1)
+        try! drop.console().wait(seconds: 1)
         XCTAssertEqual(slow.beforeRunFlag, true)
         XCTAssertEqual(fast.beforeRunFlag, true)
     }
@@ -90,16 +80,27 @@ class ProviderTests: XCTestCase {
     }
     
     func testDoubleBoot() throws {
-        var config = Config([:])
-        try config.addProvider(SlowServerProvider.self)
-        try config.addProvider(FastServerProvider.self)
-        try config.addProvider(FastServerProvider.self)
+        var config = Config.default()
         try config.set("droplet.server", "fast")
         
-        let drop = try Droplet(config)
-        XCTAssertEqual(drop.config.providers.count, 2)
-        XCTAssert(type(of: drop.server) is ServerFactory<FastServer>.Type)
+        var services = Services.default()
+        services.provider(SlowServerProvider.self)
+        services.provider(FastServerProvider.self)
+        services.provider(FastServerProvider.self)
+        
+        let drop = try Droplet(config, services)
+        XCTAssertEqual(drop.providers.count, 2)
+        try XCTAssert(drop.server() is ServerFactory<FastServer>)
     }
+    
+    static let allTests = [
+        ("testBasic", testBasic),
+        ("testPrecedence", testPrecedence),
+        ("testOverride", testOverride),
+        ("testInitialized", testInitialized),
+        ("testProviderRepository", testProviderRepository),
+        ("testCheckoutsDirectory", testCheckoutsDirectory),
+    ]
 }
 
 // MARK: Utility
@@ -124,6 +125,8 @@ private final class FastServer: ServerProtocol {
     ) throws {
         while true { }
     }
+    
+    static var serviceName: String { return "fast" }
 }
 
 private final class FastServerProvider: Provider {
@@ -133,8 +136,8 @@ private final class FastServerProvider: Provider {
     init(config: Configs.Config) throws {
     }
     
-    func boot(_ config: Config) throws {
-        config.addConfigurable(server: { _ in return ServerFactory<FastServer>() }, name: "fast")
+    func register(_ services: inout Services) throws {
+        services.register(ServerFactory<FastServer>.self)
     }
 
     func beforeRun(_ drop: Droplet) {
@@ -166,6 +169,8 @@ private final class SlowServer: ServerProtocol {
     ) throws {
         while true { }
     }
+    
+    static var serviceName: String { return "slow" }
 }
 
 private final class SlowServerProvider: Provider {
@@ -180,8 +185,8 @@ private final class SlowServerProvider: Provider {
         beforeRunFlag = true
     }
     
-    func boot(_ config: Config) throws {
-        config.addConfigurable(server: { _ in return ServerFactory<SlowServer>() }, name: "slow")
+    func register(_ services: inout Services) throws {
+        services.register(ServerFactory<SlowServer>.self)
     }
 
     func boot(_ drop: Droplet) {

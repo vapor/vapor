@@ -3,7 +3,7 @@ import Console
 
 /// Logs to the console
 public final class ConsoleLogger: LogProtocol {
-    let console: ConsoleProtocol
+    public let console: ConsoleProtocol
 
     public var enabled: [LogLevel]
 
@@ -25,13 +25,6 @@ public final class ConsoleLogger: LogProtocol {
         if enabled.contains(level) {
             console.output(message, style: level.consoleStyle)
         }
-    }
-}
-
-extension ConsoleLogger: ConfigInitializable {
-    public convenience init(config: Config) throws {
-        let console = try config.resolveConsole()
-        self.init(console)
     }
 }
 

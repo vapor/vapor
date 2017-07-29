@@ -3,31 +3,7 @@ import Node
 import HTTP
 @testable import Vapor
 
-class TestResponder: Responder {
-    var closure: (Request) throws -> Response
-
-    init(closure: @escaping (Request) throws -> Response) {
-        self.closure = closure
-    }
-    func respond(to request: Request) throws -> Response {
-        return try closure(request)
-    }
-}
-
 class ContentTests: XCTestCase {
-    static var allTests = [
-        ("testRequestSetJSONBody", testRequestSetJSONBody),
-        ("testRequestSetFormURLEncodedBody", testRequestSetFormURLEncodedBody),
-        ("testRequestGetFormURLEncodedBody", testRequestGetFormURLEncodedBody),
-        ("testRequestGetFormURLEncodedBodyInvalidHeader", testRequestGetFormURLEncodedBodyInvalidHeader),
-        ("testParse", testParse),
-        ("testFormURLEncoded", testFormURLEncoded),
-        ("testFormURLEncodedEdge", testFormURLEncodedEdge),
-        ("testFormURLEncodedDict", testFormURLEncodedDict),
-        ("testSplitString", testSplitString),
-        ("testEmptyQuery", testEmptyQuery),
-    ]
-
     func testRequestSetJSONBody() throws {
         let request = Request(method: .get, path: "/")
         let json = JSON(["hello": "world"])
@@ -157,5 +133,29 @@ class ContentTests: XCTestCase {
         let req = Request(method: .get, uri: "https://fake.com")
         req.query = Node([:])
         XCTAssertNil(req.query)
+    }
+    
+    static var allTests = [
+        ("testRequestSetJSONBody", testRequestSetJSONBody),
+        ("testRequestSetFormURLEncodedBody", testRequestSetFormURLEncodedBody),
+        ("testRequestGetFormURLEncodedBody", testRequestGetFormURLEncodedBody),
+        ("testRequestGetFormURLEncodedBodyInvalidHeader", testRequestGetFormURLEncodedBodyInvalidHeader),
+        ("testParse", testParse),
+        ("testFormURLEncoded", testFormURLEncoded),
+        ("testFormURLEncodedEdge", testFormURLEncodedEdge),
+        ("testFormURLEncodedDict", testFormURLEncodedDict),
+        ("testSplitString", testSplitString),
+        ("testEmptyQuery", testEmptyQuery),
+    ]
+}
+
+class TestResponder: Responder {
+    var closure: (Request) throws -> Response
+    
+    init(closure: @escaping (Request) throws -> Response) {
+        self.closure = closure
+    }
+    func respond(to request: Request) throws -> Response {
+        return try closure(request)
     }
 }

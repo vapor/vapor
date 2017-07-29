@@ -11,15 +11,16 @@ import HTTP
 import Vapor
 
 class FileMiddlewareTests: XCTestCase {
-    static let allTests = [
-        ("testETag", testETag),
-        ("testNonExistingFile", testNonExistingFile)
-    ]
-    
     func testETag() throws {
         let file = #file
-        let fileMiddleWare = FileMiddleware(publicDir: "")
-        let drop = try Droplet(middleware: [fileMiddleWare])
+        let fileMiddleware = FileMiddleware(publicDir: "")
+
+        var config = Config()
+        try config.set("droplet.middleware", ["my-file"])
+        var services = Services.default()
+        services.instance(fileMiddleware, name: "my-file", supports: [Middleware.self])
+        
+        let drop = try Droplet(config, services)
         
         var headers: [HeaderKey: String] = [:]
         
@@ -51,17 +52,31 @@ class FileMiddlewareTests: XCTestCase {
 
     func testNonExistingFile() throws {
         let file = "/nonsense/file.notexists"
-        let drop = try Droplet()
         
-        let response = try drop.respond(to: Request(method: .get, path: file))
+        var config = Config([:])
+        try config.set("droplet.middleware", ["error", "file"])
+        
+        let drop = try! Droplet(config)
+        
+        let response = try! drop.respond(to: Request(method: .get, path: file))
         XCTAssertEqual(response.status, .notFound, "Status code is not 404 for nonexisting file.")
     }
 
     func testThrowsOnRelativePath() throws {
         let file = "/../foo/bar/"
-        let drop = try Droplet()
+        
+        var config = Config([:])
+        try config.set("droplet.middleware", ["error", "file"])
+        
+        let drop = try Droplet(config)
 
         let response = try drop.respond(to: Request(method: .get, path: file))
         XCTAssertEqual(response.status, HTTP.Status.forbidden)
     }
+    
+    static let allTests = [
+        ("testETag", testETag),
+        ("testNonExistingFile", testNonExistingFile),
+        ("testThrowsOnRelativePath", testThrowsOnRelativePath)
+    ]
 }

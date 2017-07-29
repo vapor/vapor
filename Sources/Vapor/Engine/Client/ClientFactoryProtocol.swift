@@ -5,7 +5,7 @@ import TLS
 
 /// types conforming to this protocol can be
 /// set as the Droplet's `.client`
-public protocol ClientFactoryProtocol: Responder {
+public protocol ClientFactoryProtocol: class, Responder {
     var defaultProxy: Proxy? { get }
     
     func makeClient(

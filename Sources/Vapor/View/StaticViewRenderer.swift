@@ -23,3 +23,22 @@ public final class StaticViewRenderer: ViewRenderer {
         return view
     }
 }
+
+// MARK: Service
+
+extension StaticViewRenderer: Service {
+    /// See Service.name
+    public static var serviceName: String {
+        return "static"
+    }
+
+    /// See Service.serviceSupports
+    public static var serviceSupports: [Any.Type] {
+        return [ViewRenderer.self]
+    }
+
+    /// See Service.make
+    public static func makeService(for drop: Droplet) throws -> Self? {
+        return .init(viewsDir: drop.config.viewsDir)
+    }
+}

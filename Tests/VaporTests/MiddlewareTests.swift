@@ -2,24 +2,10 @@ import Vapor
 import XCTest
 import HTTP
 
-extension String: Swift.Error {}
-
 class MiddlewareTests: XCTestCase {
-    static let allTests = [
-        ("testConfigDate", testConfigDate),
-        ("testConfigDateMissing", testConfigDateMissing),
-        ("testConfigDateProvided", testConfigDateProvided),
-        ("testMultiple", testMultiple),
-        ("testConfigClient", testConfigClient),
-        ("testConfigClientNotEnabled", testConfigClientNotEnabled),
-    ]
-
     func testConfigDate() throws {
-        let config = Config([
-            "middleware": [
-                "date"
-            ]
-        ])
+        var config = Config([:])
+        try config.set("droplet.middleware", ["date"])
 
         let drop = try Droplet(config)
         drop.get { _ in
@@ -48,9 +34,13 @@ class MiddlewareTests: XCTestCase {
     }
 
     func testConfigDateProvided() throws {
-        let drop = try Droplet(middleware: [
-            FooMiddleware()
-        ])
+        var config = Config()
+        try config.set("droplet.middleware", ["foo"])
+
+        var services = Services.default()
+        services.instance(FooMiddleware(), name: "foo", supports: [Middleware.self])
+        
+        let drop = try Droplet(config, services)
 
         drop.get { _ in
             return "Hello, world"
@@ -63,10 +53,14 @@ class MiddlewareTests: XCTestCase {
     }
 
     func testMultiple() throws {
-        let drop = try Droplet(middleware: [
-            FooMiddleware(),
-            DateMiddleware()
-        ])
+        var config = Config()
+        try config.set("droplet.middleware", ["foo", "my-date"])
+
+        var services = Services.default()
+        services.instance(FooMiddleware(), name: "foo", supports: [Middleware.self])
+        services.instance(DateMiddleware(), name: "my-date", supports: [Middleware.self])
+        
+        let drop = try Droplet(config, services)
 
         drop.get { _ in
             return "Hello, world"
@@ -95,14 +89,29 @@ class MiddlewareTests: XCTestCase {
     }
 
     func testConfigClientNotEnabled() throws {
-        let drop = try Droplet(middleware: [FooMiddleware()])
+        var config = Config([:])
+        try config.set("droplet.client", "engine")
+        
+        var services = Services.default()
+        services.instance(FooMiddleware(), name: "foo", supports: [Middleware.self])
+        
+        let drop = try! Droplet(config, services)
 
-        let res = try drop.client.request(.get, "http://httpbin.org/headers")
+        let res = try! drop.client().request(.get, "http://httpbin.org/headers")
 
         XCTAssert(try res.bodyString().contains("Foo") != true)
         XCTAssert(try res.bodyString().contains("bar") != true)
         XCTAssertNil(res.headers["bar"])
     }
+    
+    static let allTests = [
+        ("testConfigDate", testConfigDate),
+        ("testConfigDateMissing", testConfigDateMissing),
+        ("testConfigDateProvided", testConfigDateProvided),
+        ("testMultiple", testMultiple),
+        ("testConfigClient", testConfigClient),
+        ("testConfigClientNotEnabled", testConfigClientNotEnabled),
+    ]
 }
 
 class FooMiddleware: Middleware {

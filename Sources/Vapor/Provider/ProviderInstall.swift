@@ -14,7 +14,7 @@ public final class ProviderInstall: Command {
         _ providers: [Provider],
         publicDir: String,
         viewsDir: String
-        ) {
+    ) {
         self.console = console
         self.providers = providers
         self.publicDir = publicDir
@@ -68,5 +68,23 @@ public final class ProviderInstall: Command {
                 console.print("Nothing to install")
             }
         }
+    }
+}
+
+// MARK: Service
+
+extension ProviderInstall: Service {
+    /// See Service.serviceSupports
+    public static var serviceSupports: [Any.Type] {
+        return [Command.self]
+    }
+
+    public static func makeService(for drop: Droplet) throws -> ProviderInstall? {
+        return try .init(
+            drop.make(ConsoleProtocol.self),
+            drop.providers,
+            publicDir: drop.config.publicDir,
+            viewsDir: drop.config.viewsDir
+        )
     }
 }

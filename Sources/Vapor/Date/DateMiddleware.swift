@@ -87,3 +87,22 @@ public final class DateMiddleware: Middleware {
         return response
     }
 }
+
+// MARK: Service
+
+extension DateMiddleware: Service {
+    /// See Service.serviceName
+    public static var serviceName: String {
+        return "date"
+    }
+
+    /// See Service.serviceSupports
+    public static var serviceSupports: [Any.Type] {
+        return [Middleware.self]
+    }
+
+    /// See Service.make
+    public static func makeService(for drop: Droplet) throws -> DateMiddleware? {
+        return .init()
+    }
+}

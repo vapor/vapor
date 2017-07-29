@@ -2,13 +2,6 @@ import XCTest
 @testable import Vapor
 
 class ConfigIntegrationTests: XCTestCase {
-    static let allTests = [
-       ("testSimple", testSimple),
-       ("testNesting", testNesting),
-       ("testEnvironmentCascading", testEnvironmentCascading),
-       ("testEnvironmentCascadingNesting", testEnvironmentCascadingNesting),
-    ]
-
     var workDir: String {
         let parent = #file.characters.split(separator: "/").map(String.init).dropLast().joined(separator: "/")
         let path = "/\(parent)/../../Sources/Development/"
@@ -34,6 +27,13 @@ class ConfigIntegrationTests: XCTestCase {
         let config = try Node.makeTestConfig(workDir: workDir, env: .production)
 		XCTAssert(config["app", "nested", "c", "true"]?.bool == false, "Nesting config incorrectly loaded.")
 	}
+    
+    static let allTests = [
+        ("testSimple", testSimple),
+        ("testNesting", testNesting),
+        ("testEnvironmentCascading", testEnvironmentCascading),
+        ("testEnvironmentCascadingNesting", testEnvironmentCascadingNesting),
+    ]
 }
 
 extension Node {

@@ -2,7 +2,7 @@ import Foundation
 
 /// Objects conforming to this protocol can be
 /// used as ciphers for encrypting and decrypting information.
-public protocol CipherProtocol {
+public protocol CipherProtocol: class {
     /// Encrypts bytes with a required key and
     /// optional initialization vector.
     func encrypt(_ bytes: Bytes) throws -> Bytes

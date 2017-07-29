@@ -11,6 +11,15 @@ public protocol ClientProtocol: Responder {
         securityLayer: SecurityLayer,
         proxy: Proxy?
     ) throws
+    
+    /// Unique name for this type of client
+    static var serviceName: String { get }
+}
+
+extension ClientProtocol {
+    public static var serviceName: String {
+        return "\(self)".replacingOccurrences(of: "Client", with: "").lowercased()
+    }
 }
 
 // MARK: Proxy
