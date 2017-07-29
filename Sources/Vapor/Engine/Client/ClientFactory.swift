@@ -42,6 +42,11 @@ extension ClientFactory: Service {
         return C.serviceName
     }
 
+    /// See Service.serviceSupports
+    public static var serviceSupports: [Any.Type] {
+        return [ClientFactoryProtocol.self]
+    }
+
     /// See Service.make
     public static func makeService(for drop: Droplet) throws -> ClientFactory? {
         let proxy: Proxy?

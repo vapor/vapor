@@ -1,7 +1,12 @@
 extension BCryptHasher: Service {
-    /// See Service.name
+    /// See Service.serviceName
     public static var serviceName: String {
         return "bcrypt"
+    }
+
+    /// See Service.serviceSupports
+    public static var serviceSupports: [Any.Type] {
+        return [HashProtocol.self]
     }
 
     /// See Service.make

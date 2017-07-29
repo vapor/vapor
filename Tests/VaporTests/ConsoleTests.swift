@@ -20,8 +20,8 @@ class ConsoleTests: XCTestCase {
         try config.set("droplet.commands", ["one"])
         
         var services = Services.default()
-        services.instance(console, name: "test")
-        services.instance(TestOneCommand(console: console), name: "one")
+        services.instance(console, name: "test", supports: [ConsoleProtocol.self])
+        services.instance(TestOneCommand(console: console), name: "one", supports: [Command.self])
         
         let drop = try! Droplet(config, services)
 
@@ -38,8 +38,8 @@ class ConsoleTests: XCTestCase {
         try config.set("droplet.commands", ["two"])
         
         var services = Services.default()
-        services.instance(console, name: "test")
-        services.instance(TestTwoCommand(console: console), name: "two")
+        services.instance(console, name: "test", supports: [ConsoleProtocol.self])
+        services.instance(TestTwoCommand(console: console), name: "two", supports: [Command.self])
         
         let drop = try! Droplet(config, services)
 
@@ -63,8 +63,8 @@ class ConsoleTests: XCTestCase {
         try config.set("droplet.commands", ["two"])
         
         var services = Services.default()
-        services.instance(console, name: "test")
-        services.instance(TestTwoCommand(console: console), name: "two")
+        services.instance(console, name: "test", supports: [ConsoleProtocol.self])
+        services.instance(TestTwoCommand(console: console), name: "two", supports: [Command.self])
         
         let drop = try! Droplet(config, services)
 
@@ -82,8 +82,8 @@ class ConsoleTests: XCTestCase {
         try config.set("droplet.commands", ["two"])
         
         var services = Services.default()
-        services.instance(console, name: "test")
-        services.instance(TestTwoCommand(console: console), name: "two")
+        services.instance(console, name: "test", supports: [ConsoleProtocol.self])
+        services.instance(TestTwoCommand(console: console), name: "two", supports: [Command.self])
         
         let drop = try! Droplet(config, services)
  
@@ -112,7 +112,7 @@ class ConsoleTests: XCTestCase {
         try config.set("droplet.commands", ["test"])
         
         var services = Services.default()
-        services.instance(TestServe(console: console), name: "test")
+        services.instance(TestServe(console: console), name: "test", supports: [Command.self])
         
         let drop = try! Droplet(config, services)
 

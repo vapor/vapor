@@ -18,7 +18,7 @@ class FileMiddlewareTests: XCTestCase {
         var config = Config()
         try config.set("droplet.middleware", ["my-file"])
         var services = Services.default()
-        services.instance(fileMiddleware, name: "my-file")
+        services.instance(fileMiddleware, name: "my-file", supports: [Middleware.self])
         
         let drop = try Droplet(config, services)
         

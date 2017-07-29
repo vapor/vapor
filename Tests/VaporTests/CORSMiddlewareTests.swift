@@ -9,7 +9,7 @@ class CORSMiddlewareTests: XCTestCase {
         
         var services = Services.default()
         let cors = CORSMiddleware(configuration: settings)
-        services.instance(cors, name: "my-cors")
+        services.instance(cors, name: "my-cors", supports: [Middleware.self])
         
         let drop = try! Droplet(config, services)
         
@@ -26,7 +26,7 @@ class CORSMiddlewareTests: XCTestCase {
         
         var services = Services.default()
         let cors = try! CORSMiddleware(config: settings)
-        services.instance(cors, name: "my-cors")
+        services.instance(cors, name: "my-cors", supports: [Middleware.self])
         
         let drop = try! Droplet(config, services)
         

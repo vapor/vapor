@@ -36,9 +36,14 @@ public final class FileMiddleware: Middleware {
 // MARK: Service
 
 extension FileMiddleware: Service {
-    /// See Service.name
+    /// See Service.serviceName
     public static var serviceName: String {
         return "file"
+    }
+
+    /// See Service.serviceSupports
+    public static var serviceSupports: [Any.Type] {
+        return [Middleware.self]
     }
 
     /// See Service.make

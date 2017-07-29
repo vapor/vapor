@@ -11,6 +11,10 @@ public struct TypeServiceFactory<S: Service>: ServiceFactory {
         return S.serviceIsSingleton
     }
 
+    public var serviceSupports: [Any.Type] {
+        return S.serviceSupports
+    }
+
     public func makeService(for drop: Droplet) throws -> Any? {
         return try S.makeService(for: drop)
     }

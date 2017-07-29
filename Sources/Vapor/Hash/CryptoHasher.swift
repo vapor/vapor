@@ -66,6 +66,11 @@ extension CryptoHasher: Service {
         return "crypto"
     }
 
+    /// See Service.serviceSupports
+    public static var serviceSupports: [Any.Type] {
+        return [HashProtocol.self]
+    }
+
     /// See Service.make
     public static func makeService(for drop: Droplet) throws -> CryptoHasher? {
         guard let crypto = drop.config["crypto"] else {

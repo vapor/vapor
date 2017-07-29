@@ -1,9 +1,14 @@
 import Crypto
 
 extension CryptoCipher: Service {
-    /// See Service.name
+    /// See Service.serviceName
     public static var serviceName: String {
         return "crypto"
+    }
+
+    /// See Service.serviceSupports
+    public static var serviceSupports: [Any.Type] {
+        return [CipherProtocol.self]
     }
 
     /// See Service.make()

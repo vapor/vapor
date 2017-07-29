@@ -105,6 +105,11 @@ public final class Mailgun: MailProtocol {
 // MARK: Service
 
 extension Mailgun: Service {
+    /// See Service.serviceSupports
+    public static var serviceSupports: [Any.Type] {
+        return [MailProtocol.self]
+    }
+
     /// See Service.make
     public static func makeService(for drop: Droplet) throws -> Mailgun? {
         guard let mailgun = drop.config["mailgun"] else {

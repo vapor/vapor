@@ -91,9 +91,14 @@ public final class DateMiddleware: Middleware {
 // MARK: Service
 
 extension DateMiddleware: Service {
-    /// See Service.name
+    /// See Service.serviceName
     public static var serviceName: String {
         return "date"
+    }
+
+    /// See Service.serviceSupports
+    public static var serviceSupports: [Any.Type] {
+        return [Middleware.self]
     }
 
     /// See Service.make

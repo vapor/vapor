@@ -6,6 +6,11 @@ extension Terminal: Service {
         return "terminal"
     }
 
+    /// See Service.serviceSupports
+    public static var serviceSupports: [Any.Type] {
+        return [ConsoleProtocol.self]
+    }
+
     /// See Service.make()
     public static func makeService(for drop: Droplet) throws -> Terminal? {
         return .init(arguments: drop.config.arguments)

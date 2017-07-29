@@ -38,7 +38,7 @@ class MiddlewareTests: XCTestCase {
         try config.set("droplet.middleware", ["foo"])
 
         var services = Services.default()
-        services.instance(FooMiddleware(), name: "foo")
+        services.instance(FooMiddleware(), name: "foo", supports: [Middleware.self])
         
         let drop = try Droplet(config, services)
 
@@ -57,8 +57,8 @@ class MiddlewareTests: XCTestCase {
         try config.set("droplet.middleware", ["foo", "my-date"])
 
         var services = Services.default()
-        services.instance(FooMiddleware(), name: "foo")
-        services.instance(DateMiddleware(), name: "my-date")
+        services.instance(FooMiddleware(), name: "foo", supports: [Middleware.self])
+        services.instance(DateMiddleware(), name: "my-date", supports: [Middleware.self])
         
         let drop = try Droplet(config, services)
 
@@ -93,7 +93,7 @@ class MiddlewareTests: XCTestCase {
         try config.set("droplet.client", "engine")
         
         var services = Services.default()
-        services.instance(FooMiddleware(), name: "foo")
+        services.instance(FooMiddleware(), name: "foo", supports: [Middleware.self])
         
         let drop = try! Droplet(config, services)
 

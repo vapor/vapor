@@ -44,6 +44,11 @@ extension ErrorMiddleware: Service {
         return "error"
     }
 
+    /// See Service.serviceSupports
+    public static var serviceSupports: [Any.Type] {
+        return [Middleware.self]
+    }
+
     /// See Service.make
     public static func makeService(for drop: Droplet) throws -> ErrorMiddleware? {
         return try .init(drop.config.environment, drop.make(LogProtocol.self))

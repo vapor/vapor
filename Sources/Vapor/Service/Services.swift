@@ -19,8 +19,13 @@ extension Services {
     }
 
     /// Adds an instance of a service to the Services.
-    public mutating func instance<S>(_ instance: S, name: String, isSingleton: Bool = true) {
-        let factory = BasicServiceFactory(S.self, name: name, isSingleton: isSingleton) { drop in
+    public mutating func instance<S>(
+        _ instance: S,
+        name: String,
+        supports: [Any.Type],
+        isSingleton: Bool = true
+    ) {
+        let factory = BasicServiceFactory(S.self, name: name, supports: supports, isSingleton: isSingleton) { drop in
             return instance
         }
         self.factory(factory)

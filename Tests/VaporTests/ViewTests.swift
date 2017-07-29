@@ -58,7 +58,7 @@ class ViewTests: XCTestCase {
         try config.set("droplet.view", "test")
 
         var services = Services.default()
-        services.instance(TestRenderer(viewsDir: ""), name: "test")
+        services.instance(TestRenderer(viewsDir: ""), name: "test", supports: [ViewRenderer.self])
         
         let drop = try Droplet(config, services)
         

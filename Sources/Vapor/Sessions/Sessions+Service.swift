@@ -7,6 +7,11 @@ extension SessionsMiddleware: Service {
         return "sessions"
     }
 
+    /// See Service.serviceSupports
+    public static var serviceSupports: [Any.Type] {
+        return [Middleware.self]
+    }
+
     /// See Service.make
     public static func makeService(for drop: Droplet) throws -> SessionsMiddleware? {
         return try .init(drop.make(SessionsProtocol.self))
@@ -19,6 +24,11 @@ extension MemorySessions: Service {
         return "memory"
     }
 
+    /// See Service.serviceSupports
+    public static var serviceSupports: [Any.Type] {
+        return [SessionsProtocol.self]
+    }
+
     /// See Service.make
     public static func makeService(for drop: Droplet) throws -> MemorySessions? {
         return .init()
@@ -29,6 +39,11 @@ extension CacheSessions: Service {
     /// See Service.name
     public static var serviceName: String {
         return "cache"
+    }
+
+    /// See Service.serviceSupports
+    public static var serviceSupports: [Any.Type] {
+        return [SessionsProtocol.self]
     }
 
     /// See Service.make

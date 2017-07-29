@@ -32,6 +32,11 @@ extension StaticViewRenderer: Service {
         return "static"
     }
 
+    /// See Service.serviceSupports
+    public static var serviceSupports: [Any.Type] {
+        return [ViewRenderer.self]
+    }
+
     /// See Service.make
     public static func makeService(for drop: Droplet) throws -> Self? {
         return .init(viewsDir: drop.config.viewsDir)

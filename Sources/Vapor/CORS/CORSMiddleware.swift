@@ -78,6 +78,11 @@ extension CORSMiddleware: Service {
         return "cors"
     }
 
+    /// See Service.serviceSupports
+    public static var serviceSupports: [Any.Type] {
+        return [Middleware.self]
+    }
+
     /// See Service.make
     public static func makeService(for drop: Droplet) throws -> CORSMiddleware? {
         return try .init(config: drop.config)

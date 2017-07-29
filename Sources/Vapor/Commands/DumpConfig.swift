@@ -31,6 +31,10 @@ extension DumpConfig: Service {
         return "dump-config"
     }
 
+    public static var serviceSupports: [Any.Type] {
+        return [Command.self]
+    }
+
     /// See Service.make
     public static func makeService(for drop: Droplet) throws -> DumpConfig? {
         return try self.init(drop.make(ConsoleProtocol.self), drop.config)

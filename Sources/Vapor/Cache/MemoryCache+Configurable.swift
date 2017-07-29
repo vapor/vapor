@@ -6,6 +6,10 @@ extension MemoryCache: Service {
         return "memory"
     }
 
+    public static var serviceSupports: [Any.Type] {
+        return [CacheProtocol.self]
+    }
+
     /// See Service.make()
     public static func makeService(for drop: Droplet) throws -> MemoryCache? {
         return .init()

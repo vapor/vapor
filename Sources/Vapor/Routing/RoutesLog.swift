@@ -171,6 +171,11 @@ extension RouteList: Service {
         return "routes"
     }
 
+    /// See Service.serviceSupports
+    public static var serviceSupports: [Any.Type] {
+        return [Command.self]
+    }
+
     /// See Service.make
     public static func makeService(for drop: Droplet) throws -> Self? {
         return try .init(drop.make(ConsoleProtocol.self), drop.make(RouterProtocol.self))

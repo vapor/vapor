@@ -35,7 +35,7 @@ class ConfigTests: XCTestCase {
         let extra = DateMiddleware()
         
         var services = Services.default()
-        services.instance(extra, name: "date-extra")
+        services.instance(extra, name: "date-extra", supports: [Middleware.self])
         
         let drop = try! Droplet(config, services)
         let middleware = try! drop.middleware()
@@ -80,7 +80,7 @@ class ConfigTests: XCTestCase {
         services.register(TestLogger.self)
         
         let term = Terminal(arguments: ["vapor"])
-        services.instance(term, name: "my-terminal")
+        services.instance(term, name: "my-terminal", supports: [Terminal.self])
         
         let drop = try! Droplet(config, services)
         
@@ -117,6 +117,11 @@ final class TestLogger: LogProtocol, Service {
         return "test"
     }
 
+    /// See Service.serviceSupports
+    public static var serviceSupports: [Any.Type] {
+        return [LogProtocol.self]
+    }
+
     static func makeService(for drop: Droplet) throws -> TestLogger? {
         return .init()
     }
@@ -131,6 +136,11 @@ final class NeedsLoggerMiddleware: Middleware, Service {
     
     static var serviceName: String {
         return "logger"
+    }
+
+    /// See Service.serviceSupports
+    public static var serviceSupports: [Any.Type] {
+        return [Middleware.self]
     }
 
     static func makeService(for drop: Droplet) throws -> NeedsLoggerMiddleware? {

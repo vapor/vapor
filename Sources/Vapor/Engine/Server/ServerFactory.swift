@@ -30,6 +30,11 @@ extension ServerFactory: Service {
         return S.serviceName
     }
 
+    /// See Service.serviceSupports
+    public static var serviceSupports: [Any.Type] {
+        return [ServerFactoryProtocol.self]
+    }
+
     /// See Service.make
     public static func makeService(for drop: Droplet) throws -> ServerFactory<S>? {
         return .init()

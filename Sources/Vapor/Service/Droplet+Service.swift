@@ -227,13 +227,9 @@ extension Droplet {
 extension Services {
     internal func factories<P>(supporting protocol: P.Type) -> [ServiceFactory] {
         return factories.filter { factory in
-            return _type(factory.serviceType, supports: P.self)
+            return factory.serviceType == P.self || factory.serviceSupports.contains(where: { $0 == P.self })
         }
     }
-}
-
-private func _type<P>(_ any: Any.Type, supports protocol: P.Type) -> Bool {
-    return any is P
 }
 
 // MARK: Utilities

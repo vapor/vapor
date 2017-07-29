@@ -2,6 +2,7 @@ import XCTest
 @testable import Vapor
 import HTTP
 import Transport
+import Console
 
 class ProviderTests: XCTestCase {
     func testBasic() throws {
@@ -21,7 +22,7 @@ class ProviderTests: XCTestCase {
         
         var services = Services.default()
         services.provider(FastServerProvider.self)
-        services.instance(DebugConsole(), name: "debug")
+        services.instance(DebugConsole(), name: "debug", supports: [ConsoleProtocol.self])
         
         let drop = try! Droplet(config, services)
         try! XCTAssert(drop.server() is ServerFactory<FastServer>)
@@ -34,7 +35,7 @@ class ProviderTests: XCTestCase {
         var services = Services.default()
         services.provider(SlowServerProvider.self)
         services.provider(FastServerProvider.self)
-        services.instance(DebugConsole(), name: "debug")
+        services.instance(DebugConsole(), name: "debug", supports: [ConsoleProtocol.self])
         
         let drop = try! Droplet(config, services)
         try! XCTAssert(drop.server() is ServerFactory<FastServer>)
@@ -51,7 +52,7 @@ class ProviderTests: XCTestCase {
         var services = Services.default()
         services.provider(fast)
         services.provider(slow)
-        services.instance(DebugConsole(), name: "debug")
+        services.instance(DebugConsole(), name: "debug", supports: [ConsoleProtocol.self])
 
         let drop = try! Droplet(config, services)
         

@@ -14,7 +14,7 @@ class SessionsTests: XCTestCase {
         try config.set("droplet.middleware", ["m"])
         
         var services = Services.default()
-        services.instance(m, name: "m")
+        services.instance(m, name: "m", supports: [Middleware.self])
         
         let drop = try Droplet(config, services)
 
@@ -88,7 +88,7 @@ class SessionsTests: XCTestCase {
         let m = SessionsMiddleware(s, cookieName: cookieName, cookieFactory: cookieFactory)
         
         var services = Services.default()
-        services.instance(m, name: "m")
+        services.instance(m, name: "m", supports: [Middleware.self])
         
         let drop = try Droplet(config, services)
         

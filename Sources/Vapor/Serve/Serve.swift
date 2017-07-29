@@ -73,6 +73,11 @@ public final class Serve: Command {
 // MARK: Service
 
 extension Serve: Service {
+    /// See Service.serviceSupports
+    public static var serviceSupports: [Any.Type] {
+        return [Command.self]
+    }
+
     /// See Service.make
     public static func makeService(for drop: Droplet) throws -> Serve? {
         return try .init(

@@ -33,6 +33,11 @@ extension Router: Service {
         return "branch"
     }
 
+    /// See Service.serviceSupports
+    public static var serviceSupports: [Any.Type] {
+        return [RouterProtocol.self]
+    }
+
     /// See Service.make
     public static func makeService(for drop: Droplet) throws -> Self? {
         return .init()
