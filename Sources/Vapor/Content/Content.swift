@@ -20,7 +20,7 @@ public final class Content {
 
     // Some closure weirdness to allow more complex capturing or lazy loading internally
 
-    public func append<W: StructuredDataWrapper>(_ element: @escaping (Void) -> W?) {
+    public func append<W: StructuredDataWrapper>(_ element: @escaping () -> W?) {
         let finder: ContentLoader = { indexes in
             guard let w = element()?[indexes] else { return nil }
             return Node(w)
