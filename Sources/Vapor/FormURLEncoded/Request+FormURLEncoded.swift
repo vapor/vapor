@@ -53,7 +53,7 @@ extension Request {
         set(data) {
             if let data = data, let query = try? data.formURLEncoded(), !query.isEmpty {
                 uri.query = query.makeString()
-                storage["query"] = query
+                storage["query"] = data
             } else {
                 storage["query"] = nil
                 uri.query = nil
