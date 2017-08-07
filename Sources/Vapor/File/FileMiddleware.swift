@@ -28,7 +28,13 @@ public final class FileMiddleware: Middleware {
             }
             let filePath = publicDir + path
             let ifNoneMatch = request.headers["If-None-Match"]
-            return try Response(filePath: filePath, ifNoneMatch: ifNoneMatch, chunkSize: chunkSize)
+
+            do {
+                return try Response(filePath: filePath, ifNoneMatch: ifNoneMatch, chunkSize: chunkSize)
+            } catch let newError as AbortError where newError.status == .notFound {
+                // throw original error, so custom reason is passed to client
+                throw error
+            }
         }
     }
 }

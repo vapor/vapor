@@ -57,6 +57,23 @@ class FileMiddlewareTests: XCTestCase {
         XCTAssertEqual(response.status, .notFound, "Status code is not 404 for nonexisting file.")
     }
 
+    func testCorrectMessageForNotFoundFromOriginalResponse() throws {
+        let path = "/existing_path"
+        let drop = try Droplet()
+        drop.get(path) { _ in
+            throw Abort(.notFound, reason: "Some important message")
+        }
+
+        let response = try drop.respond(to: Request(method: .get, path: path))
+
+        guard let json = response.json else {
+            XCTFail("response is not json")
+            return
+        }
+
+        XCTAssertEqual(try json.get("reason") as String, "Some important message")
+    }
+
     func testThrowsOnRelativePath() throws {
         let file = "/../foo/bar/"
         let drop = try Droplet()
