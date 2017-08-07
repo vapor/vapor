@@ -154,7 +154,17 @@ extension CORSConfiguration: ConfigInitializable {
         // Cache expiration
         self.cacheExpiration = try cors.get("cacheExpiration") ?? 600
 
-        // Exposed headers
-        self.exposedHeaders = try cors.get("exposedHeaders")
+        if let exposedHeaders = cors["exposedHeaders"] {
+            switch exposedHeaders.wrapped {
+            case .string(let string):
+                self.exposedHeaders = string
+            case .array(let array):
+                self.exposedHeaders = array.flatMap { $0.string }.joined(separator: ", ")
+            default:
+                throw CORSConfigurationError.missingRequiredConfigurationKey("`exposedHeaders` must be either a string or an array of strings.")
+            }
+        } else {
+            self.exposedHeaders = nil
+        }
     }
 }
