@@ -90,6 +90,11 @@ public final class Mailgun: MailProtocol {
             bodyKey: body
         ]
         
+        if let replyTo = mail.extendedFields["h:Reply-To"] {
+            let part = Part(headers: [:], body: replyTo.makeBytes())
+            req.formData?["h:Reply-To"] = Field(name: "h:Reply-To", filename: nil, part: part)
+        }
+        
         let client = try clientFactory.makeClient(
             hostname: apiURI.hostname,
             port: apiURI.port ?? 443,
