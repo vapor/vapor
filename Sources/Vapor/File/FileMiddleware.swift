@@ -19,7 +19,7 @@ public final class FileMiddleware: Middleware {
     public func respond(to request: Request, chainingTo next: Responder) throws -> Response {
         do {
             return try next.respond(to: request)
-        } catch let error as AbortError where error.status == .notFound {
+        } catch RouterError.missingRoute {
             // Check in file system
             var path = request.uri.path
             guard !path.contains("../") else { throw HTTP.Status.forbidden }
