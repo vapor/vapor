@@ -17,6 +17,9 @@ let package = Package(
         // Console protocol and implementation for powering command line interface.
         .package(url: "https://github.com/vapor/console.git", .upToNextMajor(from: "2.0.0")),
 
+        // Data mapper
+        .package(url: "https://github.com/vapor/node.git", .upToNextMajor(from: "2.1.0")),
+
         // JSON enum wrapper around Foundation JSON
         .package(url: "https://github.com/vapor/json.git", .upToNextMajor(from: "2.0.0")),
         
