@@ -29,9 +29,11 @@ public final class Droplet: Container {
     public init(
         _ config: Configs.Config? = nil,
         _ services: Services? = nil,
-        _ router: Router? = nil
+        _ router: Router? = nil,
+        arguments: [String] = CommandLine.arguments
     ) throws {
         var config = config ?? Config.default()
+
         // port override
         if let port = config.arguments.value(for: "port") {
             try config.set("server", "port", to: port)

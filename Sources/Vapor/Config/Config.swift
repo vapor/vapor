@@ -2,18 +2,19 @@ import Node
 import Core
 import Foundation
 import Configs
+import JSONs
 
 extension Config {
     public static func fromFiles(
         arguments: [String] = CommandLine.arguments,
         environment: Environment? = nil,
-        absoluteDirectory: String? = nil
+        at path: String? = nil
     ) throws -> Config {
         let env = environment
             ?? arguments.environment
             ?? .development
 
-        let configDirectory = absoluteDirectory
+        let configDirectory = path
             ?? Config.workingDirectory(for: arguments) + "Config/"
 
         if !Foundation.FileManager.default.fileExists(atPath: configDirectory) {
@@ -23,14 +24,32 @@ extension Config {
         }
         
         var sources = [Source]()
-        sources.append(.commandLine)
-        sources.append(.directory(root: configDirectory + "secrets"))
-        sources.append(.directory(root: configDirectory + env.description))
-        sources.append(.directory(root: configDirectory))
+        sources.append(.commandLine(arguments: arguments))
+        try sources.append(fromDirectory(configDirectory + "secrets"))
+        try sources.append(fromDirectory(configDirectory + env.description))
+        try sources.append(fromDirectory(configDirectory))
 
-        return try Config.makeConfig(prioritized: sources)
+        var config = Config.makeConfig(prioritized: sources)
+        config.environment = env
+        return config
+    }
+
+    internal static func fromDirectory(_ directory: String) throws -> Source {
+        let directory = directory.finished(with: "/")
+        var config = Config()
+
+        try FileManager().files(path: directory).forEach { name in
+            var name = name
+            let contents = try Config.loadContents(path: directory + name)
+            name.removedJSONSuffix()
+            config[name] = contents.environmentVariablesResolved()
+        }
+
+        return .memory(config: config)
     }
 }
+
+
 
 import Mapper
 extension StructuredData: MapRepresentable {
@@ -78,10 +97,10 @@ extension Config {
 }
 
 extension Config {
-    internal static func makeConfig(prioritized: [Source]) throws -> Config {
+    internal static func makeConfig(prioritized: [Source]) -> Config {
         var config = Config()
-        try prioritized.forEach { source in
-            let source = try source.makeConfig()
+        prioritized.forEach { source in
+            let source = source.makeConfig()
             config.merged(with: source).flatMap { config = $0 }
         }
         return config
@@ -89,14 +108,65 @@ extension Config {
 }
 
 extension Source {
-    fileprivate func makeConfig() throws -> Config {
+    fileprivate func makeConfig() -> Config {
         switch self {
-        case let .memory(name: name, config: config):
-            return .dictionary([name: config])
-        case .commandLine:
-            return Config.makeCLIConfig()
-        case let .directory(root: root):
-            return try Config.makeConfig(directory: root)
+        case .memory(let config):
+            return config
+        case .commandLine(let arguments):
+            return Config.makeCLIConfig(arguments: arguments)
         }
     }
 }
+
+
+extension Config {
+    /**
+     Load the file at a path as raw bytes, or as parsed JSON representation
+     */
+    private static func loadContents(path: String) throws -> Config {
+        let data = try DataFile.read(at: path)
+        guard path.hasSuffix(".json") else { return .string(data.makeString()) }
+        do {
+            let json = try JSON(bytes: data)
+            return try json.converted(to: Config.self)
+        } catch {
+            print("Failed to load json at path \(path)")
+            print("ensure there's no syntax errors in JSON")
+            throw error
+        }
+    }
+}
+
+/**
+ Not publicizing these because there's some nuance specific to config
+ */
+extension FileManager {
+    fileprivate func isDirectory(path: String) -> Bool {
+        var isDirectory: ObjCBool = false
+        _ = fileExists(atPath: path, isDirectory: &isDirectory)
+        #if os(Linux)
+            return isDirectory
+        #else
+            return isDirectory.boolValue
+        #endif
+    }
+
+    fileprivate func files(path: String) throws -> [String] {
+        let path = path.finished(with: "/")
+        guard isDirectory(path: path) else { return [] }
+        let subPaths = try subpathsOfDirectory(atPath: path)
+        return subPaths.filter { !$0.contains("/") && !isDirectory(path: path + $0) && $0 != ".DS_Store" }
+    }
+}
+
+/**
+ Drop JSON suffix for names
+ */
+extension String {
+    private static let jsonSuffixCount = ".json".makeBytes().count
+    fileprivate mutating func removedJSONSuffix() {
+        guard hasSuffix(".json") else { return }
+        self = self.makeBytes().dropLast(String.jsonSuffixCount).makeString()
+    }
+}
+

@@ -11,16 +11,16 @@ class ResponderTests: XCTestCase {
     }
 
     func testSee() throws {
-        let drop = try Droplet()
+        let drop = try! Droplet()
         drop.get("foo") { req in
             return "bar"
         }
         drop.get("json") { req in
-            return try JSON([
-                "hello": "world",
-                "nested": ["1", "2"],
-                "foo": "bar"
-            ])
+            var json = JSON()
+            try json.set("hello", to: "world")
+            try json.set("nested", to: ["1", "2"])
+            try json.set("foo", to: "bar")
+            return json
         }
 
         try drop.testResponse(to: .get, at: "foo")
@@ -32,7 +32,7 @@ class ResponderTests: XCTestCase {
             .assertJSON("hello", equals: "world")
             .assertJSON("foo", contains: "ar")
             .assertJSON("foo", contains: "ba")
-            .assertJSON("nested.1", fuzzyEquals: 2)
+            .assertJSON("nested", 1, fuzzyEquals: 2)
     }
 
     static let allTests = [

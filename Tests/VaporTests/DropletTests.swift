@@ -46,22 +46,6 @@ class DropletTests: XCTestCase {
         XCTAssert(found, "CSS Content Type not found: \(response)")
     }
 
-    func testTLSConfig() throws {
-        let config = try Config([
-            "servers": [
-                "hostname": "vapor.codes",
-                "port": 443,
-                "securityLayer": "tls",
-                "tls": [
-                    "certificates": "ca",
-                    "signature": "selfSigned"
-                ]
-            ]
-        ])
-
-        _ = try Droplet(config)
-    }
-
     func testRunDefaults() throws {
         var config = Config()
         config.arguments = ["vapor", "serve", "--port=8523"]
@@ -75,13 +59,13 @@ class DropletTests: XCTestCase {
     }
 
     func testRunConfig() throws {
-        let config = try Config([
+        let config: Configs.Config = [
             "server": [
                 "hostname": "0.0.0.0",
                 "port": 8524,
                 "securityLayer": "none"
             ]
-        ])
+        ]
         XCTAssertEqual(try config.makeServerConfig().port, 8524)
     }
 
@@ -100,7 +84,7 @@ class DropletTests: XCTestCase {
     }
     
     func testDumpConfig() throws {
-        var config = try Config([
+        var config: Configs.Config = [
             "server": [
                 "hostname": "0.0.0.0",
                 "port": 8524,
@@ -111,7 +95,7 @@ class DropletTests: XCTestCase {
                     "dump-config"
                 ]
             ]
-        ])
+        ]
         config.arguments = ["vapor", "dump-config", "server.port"]
         
         let drop = try! Droplet(config)
@@ -218,7 +202,6 @@ class DropletTests: XCTestCase {
     static let allTests = [
         ("testData", testData),
         ("testMediaType", testMediaType),
-        ("testTLSConfig", testTLSConfig),
         ("testRunDefaults", testRunDefaults),
         ("testRunConfig", testRunConfig),
         ("testHeadRequest", testHeadRequest),

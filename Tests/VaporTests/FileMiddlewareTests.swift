@@ -58,9 +58,9 @@ class FileMiddlewareTests: XCTestCase {
         var config = Config()
         try config.set("droplet", "middleware", to: ["error", "file"])
         
-        let drop = try! Droplet(config)
+        let drop = try Droplet(config)
         
-        let response = try! drop.respond(to: Request(method: .get, path: file))
+        let response = try drop.respond(to: Request(method: .get, path: file))
         XCTAssertEqual(response.status, .notFound, "Status code is not 404 for nonexisting file.")
     }
 

@@ -8,6 +8,7 @@ class EnvironmentTests: XCTestCase {
 
     func testEnvironment() throws {
         let drop = try Droplet()
+        print(drop.config)
         XCTAssertEqual(drop.config.environment, .development)
     }
 }

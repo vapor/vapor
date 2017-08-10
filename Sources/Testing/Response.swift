@@ -3,6 +3,7 @@ import Foundation
 import Node
 import Vapor
 import JSONs
+import Mapper
 
 // MARK: Assertions
 
@@ -49,12 +50,25 @@ extension Response {
         }
         return self
     }
+
+    /// Asserts the response body contains a
+    /// desired byte array.
+    @discardableResult
+    public func assertJSON(
+        _ path: Path...,
+        file: StaticString = #file,
+        line: UInt = #line,
+        errorReason: String = "does not pass test",
+        passes: (JSON) -> (Bool)
+    ) throws -> Response {
+        return try assertJSON(path, file: file, line: line, errorReason: errorReason, passes: passes)
+    }
     
     /// Asserts the response body contains a
     /// desired byte array.
     @discardableResult
     public func assertJSON(
-        _ key: String,
+        _ path: [Path],
         file: StaticString = #file,
         line: UInt = #line,
         errorReason: String = "does not pass test",
@@ -68,8 +82,8 @@ extension Response {
             )
             return self
         }
-        
-        let got = json[key] ?? .null
+
+        let got = json[path] ?? .null
         guard passes(got) else {
             onFail(
                 "JSON assertion failed. '\(got)' \(errorReason).",
@@ -86,7 +100,7 @@ extension Response {
     /// desired byte array.
     @discardableResult
     public func assertJSON(
-        _ key: String,
+        _ path: Path...,
         equals value: JSONRepresentable?,
         file: StaticString = #file,
         line: UInt = #line
@@ -94,7 +108,7 @@ extension Response {
         let expectation = try value?.makeJSON() ?? .null
         
         return try assertJSON(
-            key,
+            path,
             file: file,
             line: line,
             errorReason: "does not equal '\(expectation)'"
@@ -107,7 +121,7 @@ extension Response {
     /// does not equal the value.
     @discardableResult
     public func assertJSON(
-        _ key: String,
+        _ path: Path...,
         notEquals value: JSONRepresentable?,
         file: StaticString = #file,
         line: UInt = #line
@@ -115,7 +129,7 @@ extension Response {
         let expectation = try value?.makeJSON() ?? .null
         
         return try assertJSON(
-            key,
+            path,
             file: file,
             line: line,
             errorReason: "does equal '\(expectation)'"
@@ -128,15 +142,14 @@ extension Response {
     /// desired byte array.
     @discardableResult
     public func assertJSON(
-        _ key: String,
+        _ path: Path...,
         fuzzyEquals value: JSONRepresentable?,
         file: StaticString = #file,
         line: UInt = #line
     ) throws -> Response {
         let expectation = try value?.makeJSON() ?? .null
-
         return try assertJSON(
-            key,
+            path,
             file: file,
             line: line,
             errorReason: "does not fuzzy equal '\(expectation)'"
@@ -149,7 +162,7 @@ extension Response {
     /// desired byte array.
     @discardableResult
     public func assertJSON(
-        _ key: String,
+        _ path: Path...,
         contains value: JSONRepresentable,
         file: StaticString = #file,
         line: UInt = #line
@@ -157,7 +170,7 @@ extension Response {
         let expectation = try value.makeJSON()
         
         return try assertJSON(
-            key,
+            path,
             file: file,
             line: line,
             errorReason: "does not contain '\(expectation)'"

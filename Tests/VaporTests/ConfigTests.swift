@@ -36,8 +36,8 @@ class ConfigTests: XCTestCase {
         var services = Services.default()
         services.register(extra, name: "date-extra", supports: [Middleware.self])
         
-        let drop = try! Droplet(config, services)
-        let middleware = try! drop.middleware()
+        let drop = try Droplet(config, services)
+        let middleware = try drop.middleware()
         guard middleware.count == 6 else {
             XCTFail("Invalid middleware count")
             return

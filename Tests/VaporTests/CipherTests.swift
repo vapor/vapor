@@ -32,19 +32,13 @@ class CipherTests: XCTestCase {
     }
 
     func testDroplet() throws {        
-        let config = try Config([
-            "crypto": [
-                "cipher": [
-                    "key": "ufEQmM8rsGYM3Nuol4xZuQ==",
-                    "method": "aes128",
-                    "encoding": "base64"
-                ]
-            ],
-            "droplet": [
-                "cipher": "crypto"
-            ]
+        var config = Config()
+        try config.set("crypto", "cipher", to: [
+            "key": "ufEQmM8rsGYM3Nuol4xZuQ==",
+            "method": "aes128",
+            "encoding": "base64"
         ])
-
+        try config.set("droplet", "cipher", to: "crypto")
         let drop = try! Droplet(config)
 
         let secret = "vapor"

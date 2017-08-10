@@ -29,7 +29,7 @@ class RouteListTests: XCTestCase {
         var services = Services.default()
         services.register(console, name: "test", supports: [ConsoleProtocol.self])
         
-        let drop = try! Droplet(config, services)
+        let drop = try Droplet(config, services)
         
         drop.get("foo") { _ in return "" }
         drop.put("foo/bar/:id") { _ in return "" }

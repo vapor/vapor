@@ -7,7 +7,6 @@ import Routing
 /// Servers files from the supplied public directory
 /// on not found errors.
 public final class FileMiddleware: Middleware {
-
     private var publicDir: String
     private let loader = DataFile()
     private let chunkSize: Int
@@ -50,6 +49,6 @@ extension FileMiddleware: ServiceType {
 
     /// See Service.make
     public static func makeService(for container: Container) throws -> FileMiddleware? {
-        return try .init(config: container.config)
+        return FileMiddleware(publicDir: container.config.publicDir)
     }
 }

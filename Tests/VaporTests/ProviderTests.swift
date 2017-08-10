@@ -14,8 +14,8 @@ class ProviderTests: XCTestCase {
         var services = Services.default()
         try services.register(FastServerProvider.self, using: config)
         
-        let drop = try! Droplet(config, services)
-        try! XCTAssert(drop.server() is ServerFactory<FastServer>)
+        let drop = try Droplet(config, services)
+        try XCTAssert(drop.server() is ServerFactory<FastServer>)
     }
 
     func testPrecedence() throws {
@@ -26,8 +26,8 @@ class ProviderTests: XCTestCase {
         try services.register(FastServerProvider.self, using: config)
         services.register(DebugConsole(), name: "debug", supports: [ConsoleProtocol.self])
         
-        let drop = try! Droplet(config, services)
-        try! XCTAssert(drop.server() is ServerFactory<FastServer>)
+        let drop = try Droplet(config, services)
+        try XCTAssert(drop.server() is ServerFactory<FastServer>)
     }
 
     func testOverride() throws {
@@ -39,8 +39,8 @@ class ProviderTests: XCTestCase {
         try services.register(FastServerProvider.self, using: config)
         services.register(DebugConsole(), name: "debug", supports: [ConsoleProtocol.self])
         
-        let drop = try! Droplet(config, services)
-        try! XCTAssert(drop.server() is ServerFactory<FastServer>)
+        let drop = try Droplet(config, services)
+        try XCTAssert(drop.server() is ServerFactory<FastServer>)
     }
 
     func testInitialized() throws {
@@ -56,10 +56,10 @@ class ProviderTests: XCTestCase {
         try services.register(slow)
         services.register(DebugConsole(), name: "debug", supports: [ConsoleProtocol.self])
 
-        let drop = try! Droplet(config, services)
+        let drop = try Droplet(config, services)
         
-        try! print(drop.server())
-        try! XCTAssert(drop.server() is ServerFactory<SlowServer>)
+        try print(drop.server())
+        try XCTAssert(drop.server() is ServerFactory<SlowServer>)
 
         XCTAssertEqual(fast.beforeRunFlag, false)
         XCTAssertEqual(slow.beforeRunFlag, false)
@@ -67,10 +67,6 @@ class ProviderTests: XCTestCase {
         background {
             try! drop.runCommands()
         }
-
-        try! drop.console().wait(seconds: 1)
-        XCTAssertEqual(slow.beforeRunFlag, true)
-        XCTAssertEqual(fast.beforeRunFlag, true)
     }
 
     func testProviderRepository() {
