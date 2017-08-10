@@ -230,7 +230,9 @@ extension String {
             while index != self.endIndex {
                 let startIndex = index
                 let endIndex = self.index(index, offsetBy: batchSize, limitedBy: self.endIndex) ?? self.endIndex
-                let range = startIndex..<endIndex
+
+                // need explicit type here to properly infer on Linux
+                let range: Range<String.Index> = startIndex..<endIndex
 
                 let substring = self.substring(with: range)
 

@@ -32,7 +32,7 @@ public final class ProviderInstall: Command {
         }
         
         for (i, provider) in providers.enumerated() {
-            let type = type(of: provider)
+            let type = Swift.type(of: provider)
             console.info("[\(i + 1)/\(providers.count)]", newLine: false)
             console.print(" Installing \(type.repositoryName)")
             
