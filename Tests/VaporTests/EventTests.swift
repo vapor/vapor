@@ -8,11 +8,11 @@ class EventTests: XCTestCase {
     ]
 
     func testEventRemovedOnSubscriptionDeallocation() {
-        let emptyEvent = Event<Void>()
-        let _ = emptyEvent.subscribe {
+        let emptyEvent = Event<Int>()
+        let _ = emptyEvent.subscribe { int in
             XCTFail("Event shouldn't receive posts if 'subscription' isn't retained")
         }
-        emptyEvent.post()
+        emptyEvent.post(1)
     }
 
     func testInputAndEventRun() {

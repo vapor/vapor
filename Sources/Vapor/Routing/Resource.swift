@@ -60,7 +60,7 @@ extension RouteBuilder {
         self.resource(path, resource)
     }
 
-    public func resource<Model: Parameterizable>(_ path: String, _ resource: Resource<Model>) {
+    public func resource<Model>(_ path: String, _ resource: Resource<Model>) {
         var itemMethods: [Method] = []
         var multipleMethods: [Method] = []
 
@@ -121,11 +121,11 @@ extension RouteBuilder {
         if let about = resource.aboutItem {
             item(.options, about)
         } else {
-            item(.options) { request in
+            item(.options) { request, model in
                 return try JSON(node: [
                     "resource": "\(path)/:\(pathId)",
                     "methods": try JSON(node: itemMethods.map { $0.description })
-                ])
+                ]) 
             }
         }
 
@@ -142,7 +142,7 @@ extension RouteBuilder {
         }
     }
 
-    public func resource<Model: Parameterizable>(
+    public func resource<Model>(
         _ path: String,
         _ type: Model.Type = Model.self,
         closure: (Resource<Model>) -> ()
