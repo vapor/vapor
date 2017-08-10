@@ -15,7 +15,7 @@ let package = Package(
         .package(url: "https://github.com/vapor/bcrypt.git", .upToNextMajor(from: "1.1.0")),
 
         // Console protocol and implementation for powering command line interface.
-        .package(url: "https://github.com/vapor/console.git", .branch("beta")),
+        .package(url: "https://github.com/vapor/console.git", .upToNextMajor(from: "2.2.0")),
 
         // Useful helpers and extensions
         .package(url: "https://github.com/vapor/core.git", .upToNextMajor(from: "2.1.2")),
@@ -24,7 +24,7 @@ let package = Package(
         .package(url: "https://github.com/vapor/crypto.git", .upToNextMajor(from: "2.1.0")),
 
         // Core vapor transport layer
-        .package(url: "https://github.com/vapor/engine.git", .branch("swift-4-fix")),
+        .package(url: "https://github.com/vapor/engine.git", .upToNextMajor(from: "2.2.1")),
 
         // JSON enum wrapper around Foundation JSON
         .package(url: "https://github.com/vapor/json.git", .upToNextMajor(from: "2.1.0")),
