@@ -1,6 +1,8 @@
 import XCTest
 @testable import Vapor
 import Console
+import Configs
+import Service
 
 class ConsoleTests: XCTestCase {
     static let allTests = [
@@ -14,14 +16,14 @@ class ConsoleTests: XCTestCase {
     func testCommandRun() throws {
         let console = TestConsoleDriver()
         
-        var config = Config([:])
+        var config = Config()
         config.arguments = ["/path/to/exe", "test-1"]
-        try config.set("droplet.console", "test")
-        try config.set("droplet.commands", ["one"])
+        try config.set("droplet", "console", to: "test")
+        try config.set("droplet", "commands", to: ["one"])
         
         var services = Services.default()
-        services.instance(console, name: "test", supports: [ConsoleProtocol.self])
-        services.instance(TestOneCommand(console: console), name: "one", supports: [Command.self])
+        services.register(console, name: "test", supports: [ConsoleProtocol.self])
+        services.register(TestOneCommand(console: console), name: "one", supports: [Command.self])
         
         let drop = try! Droplet(config, services)
 
@@ -32,14 +34,14 @@ class ConsoleTests: XCTestCase {
     func testCommandInsufficientArgs() throws {
         let console = TestConsoleDriver()
         
-        var config = Config([:])
+        var config = Config()
         config.arguments = ["/path/to/exe", "test-2"]
-        try config.set("droplet.console", "test")
-        try config.set("droplet.commands", ["two"])
+        try config.set("droplet", "console", to: "test")
+        try config.set("droplet", "commands", to: ["two"])
         
         var services = Services.default()
-        services.instance(console, name: "test", supports: [ConsoleProtocol.self])
-        services.instance(TestTwoCommand(console: console), name: "two", supports: [Command.self])
+        services.register(console, name: "test", supports: [ConsoleProtocol.self])
+        services.register(TestTwoCommand(console: console), name: "two", supports: [Command.self])
         
         let drop = try! Droplet(config, services)
 
@@ -57,14 +59,14 @@ class ConsoleTests: XCTestCase {
     func testCommandFetchArgs() throws {
         let console = TestConsoleDriver()
         
-        var config = Config([:])
+        var config = Config()
         config.arguments = ["/path/to/ext", "test-2", "123"]
-        try config.set("droplet.console", "test")
-        try config.set("droplet.commands", ["two"])
+        try config.set("droplet", "console", to: "test")
+        try config.set("droplet", "commands", to: ["two"])
         
         var services = Services.default()
-        services.instance(console, name: "test", supports: [ConsoleProtocol.self])
-        services.instance(TestTwoCommand(console: console), name: "two", supports: [Command.self])
+        services.register(console, name: "test", supports: [ConsoleProtocol.self])
+        services.register(TestTwoCommand(console: console), name: "two", supports: [Command.self])
         
         let drop = try! Droplet(config, services)
 
@@ -76,14 +78,14 @@ class ConsoleTests: XCTestCase {
     func testCommandFetchOptions() throws {
         let console = TestConsoleDriver()
         
-        var config = Config([:])
+        var config = Config()
         config.arguments = ["/path/to/ext", "test-2", "123", "--opt-1=abc"]
-        try config.set("droplet.console", "test")
-        try config.set("droplet.commands", ["two"])
+        try config.set("droplet", "console", to: "test")
+        try config.set("droplet", "commands", to: ["two"])
         
         var services = Services.default()
-        services.instance(console, name: "test", supports: [ConsoleProtocol.self])
-        services.instance(TestTwoCommand(console: console), name: "two", supports: [Command.self])
+        services.register(console, name: "test", supports: [ConsoleProtocol.self])
+        services.register(TestTwoCommand(console: console), name: "two", supports: [Command.self])
         
         let drop = try! Droplet(config, services)
  
@@ -107,12 +109,12 @@ class ConsoleTests: XCTestCase {
         }
         let console = TestConsoleDriver()
 
-        var config = Config([:])
+        var config = Config()
         config.arguments = ["vapor"]
-        try config.set("droplet.commands", ["test"])
+        try config.set("droplet", "commands", to: ["test"])
         
         var services = Services.default()
-        services.instance(TestServe(console: console), name: "test", supports: [Command.self])
+        services.register(TestServe(console: console), name: "test", supports: [Command.self])
         
         let drop = try! Droplet(config, services)
 
@@ -150,7 +152,7 @@ final class TestTwoCommand: Command {
     }
 
     func run(arguments: [String]) throws {
-        let arg1 = try value("arg-1", from: arguments).string 
+        let arg1 = try String(value("arg-1", from: arguments))
         console.print(arg1, newLine: false)
 
         let opt1 = arguments.option("opt-1")?.string ?? ""

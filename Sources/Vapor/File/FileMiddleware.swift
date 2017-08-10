@@ -1,6 +1,8 @@
 import Foundation
 import HTTP
 import libc
+import Service
+import Routing
 
 /// Servers files from the supplied public directory
 /// on not found errors.
@@ -35,7 +37,7 @@ public final class FileMiddleware: Middleware {
 
 // MARK: Service
 
-extension FileMiddleware: Service {
+extension FileMiddleware: ServiceType {
     /// See Service.serviceName
     public static var serviceName: String {
         return "file"
@@ -47,7 +49,7 @@ extension FileMiddleware: Service {
     }
 
     /// See Service.make
-    public static func makeService(for drop: Droplet) throws -> FileMiddleware? {
-        return try .init(config: drop.config)
+    public static func makeService(for container: Container) throws -> FileMiddleware? {
+        return try .init(config: container.config)
     }
 }

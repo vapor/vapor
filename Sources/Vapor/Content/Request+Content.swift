@@ -9,7 +9,8 @@ extension Request {
 
             // in closures for weak lazy load, external implementations can use `data.append(self.json)`
             data.append { [weak self] in self?.query }
-            data.append { [weak self] in self?.json }
+            // FIXME
+            // data.append { [weak self] in self?.json }
             data.append { [weak self] in self?.formURLEncoded }
             data.append { [weak self] indexes in
                 guard let first = indexes.first else { return nil }

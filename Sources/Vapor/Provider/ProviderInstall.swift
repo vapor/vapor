@@ -1,4 +1,5 @@
 import Console
+import Service
 
 public final class ProviderInstall: Command {
     public let id = "provider-install"
@@ -73,18 +74,18 @@ public final class ProviderInstall: Command {
 
 // MARK: Service
 
-extension ProviderInstall: Service {
+extension ProviderInstall: ServiceType {
     /// See Service.serviceSupports
     public static var serviceSupports: [Any.Type] {
         return [Command.self]
     }
 
-    public static func makeService(for drop: Droplet) throws -> ProviderInstall? {
+    public static func makeService(for container: Container) throws -> ProviderInstall? {
         return try .init(
-            drop.make(ConsoleProtocol.self),
-            drop.providers,
-            publicDir: drop.config.publicDir,
-            viewsDir: drop.config.viewsDir
+            container.make(ConsoleProtocol.self),
+            container.services.providers,
+            publicDir: container.config.publicDir,
+            viewsDir: container.config.viewsDir
         )
     }
 }

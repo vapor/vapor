@@ -1,6 +1,7 @@
 import Cache
+import Service
 
-extension MemoryCache: Service {
+extension MemoryCache: ServiceType {
     /// See Service.name
     public var serviceName: String {
         return "memory"
@@ -11,7 +12,7 @@ extension MemoryCache: Service {
     }
 
     /// See Service.make()
-    public static func makeService(for drop: Droplet) throws -> MemoryCache? {
+    public static func makeService(for container: Container) throws -> MemoryCache? {
         return .init()
     }
 }

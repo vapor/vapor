@@ -1,24 +1,23 @@
 import Foundation
+import Configs
 
-extension Node {
-    /**
-        CLI Config expects arguments to have the following syntax:
-     
-            --config: <key-path> = <value>
-     
-        For example
-     
-            --config:database.user=some-user
-     
-        Will be accessible as
-     
-            config["database", "user"] // some-user
-    */
-    internal static func makeCLIConfig(arguments: [String] = CommandLine.arguments) -> Node {
+extension Config {
+    /// CLI Config expects arguments to have the following syntax:
+    ///
+    /// --config: <key-path> = <value>
+    ///
+    /// For example
+    ///
+    /// --config:database.user=some-user
+    ///
+    /// Will be accessible as
+    ///
+    /// config["database", "user"] // some-user
+    internal static func makeCLIConfig(arguments: [String] = CommandLine.arguments) -> Config {
         let configArgs = arguments.filter { $0.hasPrefix("--config") }
 
         // [FileName: Node]
-        var cli = [String: Node]()
+        var cli = [String: Config]()
 
         configArgs.forEach { arg in
             guard
@@ -26,7 +25,7 @@ extension Node {
                 let (name, path) = parseConfigKey(key)
                 else { return }
 
-            var argument = Node([:])
+            var argument = Config()
 
             if path.isEmpty {
                 argument = .string(value)
@@ -34,10 +33,10 @@ extension Node {
                 argument[path] = .string(value)
             }
 
-            cli.merge(with: [name: argument])
+            cli[name] = argument
         }
 
-        return Node(cli)
+        return .dictionary(cli)
     }
 
     private static func parseInput(_ arg: String) -> (key: String, value: String)? {

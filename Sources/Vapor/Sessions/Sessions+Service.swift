@@ -1,7 +1,9 @@
 import Sessions
 import Cache
+import Service
+import HTTP
 
-extension SessionsMiddleware: Service {
+extension SessionsMiddleware: ServiceType {
     /// See Service.name
     public static var serviceName: String {
         return "sessions"
@@ -13,12 +15,12 @@ extension SessionsMiddleware: Service {
     }
 
     /// See Service.make
-    public static func makeService(for drop: Droplet) throws -> SessionsMiddleware? {
-        return try .init(drop.make(SessionsProtocol.self))
+    public static func makeService(for container: Container) throws -> SessionsMiddleware? {
+        return try .init(container.make(SessionsProtocol.self))
     }
 }
 
-extension MemorySessions: Service {
+extension MemorySessions: ServiceType {
     /// See Service.name
     public static var serviceName: String {
         return "memory"
@@ -30,12 +32,12 @@ extension MemorySessions: Service {
     }
 
     /// See Service.make
-    public static func makeService(for drop: Droplet) throws -> MemorySessions? {
+    public static func makeService(for container: Container) throws -> MemorySessions? {
         return .init()
     }
 }
 
-extension CacheSessions: Service {
+extension CacheSessions: ServiceType {
     /// See Service.name
     public static var serviceName: String {
         return "cache"
@@ -47,7 +49,7 @@ extension CacheSessions: Service {
     }
 
     /// See Service.make
-    public static func makeService(for drop: Droplet) throws -> CacheSessions? {
-        return try .init(drop.make(CacheProtocol.self))
+    public static func makeService(for container: Container) throws -> CacheSessions? {
+        return try .init(container.make(CacheProtocol.self))
     }
 }

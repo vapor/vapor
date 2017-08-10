@@ -2,12 +2,12 @@ import Vapor
 import HTTP
 import Testing
 import XCTest
+import JSONs
 
 
 class ResponderTests: XCTestCase {
     override func setUp() {
         Testing.onFail = XCTFail
-        Node.fuzzy = [JSON.self, Node.self]
     }
 
     func testSee() throws {
@@ -16,7 +16,7 @@ class ResponderTests: XCTestCase {
             return "bar"
         }
         drop.get("json") { req in
-            return try JSON(node: [
+            return try JSON([
                 "hello": "world",
                 "nested": ["1", "2"],
                 "foo": "bar"

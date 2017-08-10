@@ -1,4 +1,5 @@
 import Crypto
+import Service
 
 /// Create normal and keyed hashes
 /// using the available HMAC methods from
@@ -60,7 +61,7 @@ public final class CryptoHasher: HashProtocol {
 
 // MARK: Service
 
-extension CryptoHasher: Service {
+extension CryptoHasher: ServiceType {
     /// See Service.name
     public static var serviceName: String {
         return "crypto"
@@ -72,8 +73,8 @@ extension CryptoHasher: Service {
     }
 
     /// See Service.make
-    public static func makeService(for drop: Droplet) throws -> CryptoHasher? {
-        guard let crypto = drop.config["crypto"] else {
+    public static func makeService(for container: Container) throws -> CryptoHasher? {
+        guard let crypto = container.config["crypto"] else {
             throw ConfigError.missingFile("crypto")
         }
 
@@ -106,7 +107,7 @@ extension CryptoHasher: Service {
         let method: Method
 
         // Key
-        if let encodedKey = crypto["hash", "key"]?.bytes {
+        if let encodedKey = crypto["hash", "key"]?.string?.makeBytes() {
             guard let hmac = try HMAC.Method(methodString) else {
                 throw ConfigError.unsupported(
                     value: methodString,
@@ -117,7 +118,7 @@ extension CryptoHasher: Service {
             
             let key = encoding.decode(encodedKey)
             if key.isAllZeroes {
-                let log = try drop.make(LogProtocol.self)
+                let log = try container.make(LogProtocol.self)
                 log.warning("The current hash key \"\(encodedKey.makeString())\" is not secure.")
                 log.warning("Update hash.key in Config/crypto.json before using in production.")
                 log.info("Use `openssl rand -base64 <length>` to generate a random string.")

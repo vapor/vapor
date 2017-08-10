@@ -1,4 +1,6 @@
 import Core
+import Service
+import Foundation
 
 extension Provider {
     /// The top level directory that hosts
@@ -28,7 +30,7 @@ private var providedDirectories: [String: String] = [:]
 private let checkouts: [String] = {
     let checkouts = workingDirectory.finished(with: "/") + ".build/checkouts/"
     do {
-        return try FileManager.contentsOfDirectory(checkouts)
+        return try FileManager.default.contentsOfDirectory(atPath: checkouts)
     } catch {
         return []
     }
@@ -38,7 +40,7 @@ private let checkouts: [String] = {
 private let packages: [String] = {
     let checkouts = workingDirectory.finished(with: "/") + "Packages/"
     do {
-        return try FileManager.contentsOfDirectory(checkouts)
+        return try FileManager.default.contentsOfDirectory(atPath: checkouts)
     } catch {
         return []
     }
@@ -48,7 +50,7 @@ private let packages: [String] = {
 private let sources: [String] = {
     let checkouts = workingDirectory.finished(with: "/") + "Sources/"
     do {
-        return try FileManager.contentsOfDirectory(checkouts)
+        return try FileManager.default.contentsOfDirectory(atPath: checkouts)
     } catch {
         return []
     }

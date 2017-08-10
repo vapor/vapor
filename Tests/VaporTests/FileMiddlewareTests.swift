@@ -9,6 +9,8 @@
 import XCTest
 import HTTP
 import Vapor
+import Service
+import Configs
 
 class FileMiddlewareTests: XCTestCase {
     func testETag() throws {
@@ -16,9 +18,9 @@ class FileMiddlewareTests: XCTestCase {
         let fileMiddleware = FileMiddleware(publicDir: "")
 
         var config = Config()
-        try config.set("droplet.middleware", ["my-file"])
+        try config.set("droplet", "middleware", to: ["my-file"])
         var services = Services.default()
-        services.instance(fileMiddleware, name: "my-file", supports: [Middleware.self])
+        services.register(fileMiddleware, name: "my-file", supports: [Middleware.self])
         
         let drop = try Droplet(config, services)
         
@@ -53,8 +55,8 @@ class FileMiddlewareTests: XCTestCase {
     func testNonExistingFile() throws {
         let file = "/nonsense/file.notexists"
         
-        var config = Config([:])
-        try config.set("droplet.middleware", ["error", "file"])
+        var config = Config()
+        try config.set("droplet", "middleware", to: ["error", "file"])
         
         let drop = try! Droplet(config)
         
@@ -65,8 +67,8 @@ class FileMiddlewareTests: XCTestCase {
     func testThrowsOnRelativePath() throws {
         let file = "/../foo/bar/"
         
-        var config = Config([:])
-        try config.set("droplet.middleware", ["error", "file"])
+        var config = Config()
+        try config.set("droplet", "middleware", to: ["error", "file"])
         
         let drop = try Droplet(config)
 

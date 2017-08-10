@@ -1,5 +1,6 @@
 import Debugging
 import HTTP
+import Node
 
 /// Represents errors that can be thrown in any Vapor closure.
 /// Then, these errors can be caught in `Middleware` to give a

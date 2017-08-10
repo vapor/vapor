@@ -3,15 +3,14 @@ import Vapor
 import Sessions
 import HTTP
 import Console
+import JSONs
+import Service
+import Configs
 
 class ConfigTests: XCTestCase {
-    override func setUp() {
-        Node.fuzzy = [JSON.self, Node.self]
-    }
-    
     func testConfigAvailableType() throws {
-        var config = Config([:])
-        try config.set("droplet.log", "test")
+        var config = Config()
+        try config.set("droplet", "log", to: "test")
         
         var services = Services.default()
         services.register(TestLogger.self)
@@ -21,9 +20,9 @@ class ConfigTests: XCTestCase {
      }
     
     func testMiddlewareOrder() throws {
-        var config = Config([:])
-        try config.set("droplet.sessions", "memory")
-        try config.set("droplet.middleware", [
+        var config = Config()
+        try config.set("droplet", "sessions", to: "memory")
+        try config.set("droplet", "middleware", to: [
             "date",
             "file",
             "date",
@@ -35,7 +34,7 @@ class ConfigTests: XCTestCase {
         let extra = DateMiddleware()
         
         var services = Services.default()
-        services.instance(extra, name: "date-extra", supports: [Middleware.self])
+        services.register(extra, name: "date-extra", supports: [Middleware.self])
         
         let drop = try! Droplet(config, services)
         let middleware = try! drop.middleware()
@@ -54,8 +53,8 @@ class ConfigTests: XCTestCase {
     
     func testDependency() throws {
         var config = Config.default()
-        try config.set("droplet.log", "test")
-        try config.set("droplet.middleware", ["logger"])
+        try config.set("droplet", "log", to: "test")
+        try config.set("droplet", "middleware", to: ["logger"])
         
         var services = Services.default()
         services.register(TestLogger.self)
@@ -72,15 +71,15 @@ class ConfigTests: XCTestCase {
  
     func testServices() throws {
         var config = Config()
-        try config.set("droplet.console", "my-terminal")
-        try config.set("droplet.log", "console")
+        try config.set("droplet", "console", to: "my-terminal")
+        try config.set("droplet", "log", to: "console")
 
         var services = Services.default()
         services.register(Terminal.self)
         services.register(TestLogger.self)
         
         let term = Terminal(arguments: ["vapor"])
-        services.instance(term, name: "my-terminal", supports: [Terminal.self])
+        services.register(term, name: "my-terminal", supports: [Terminal.self])
         
         let drop = try! Droplet(config, services)
         
@@ -110,7 +109,7 @@ class ConfigTests: XCTestCase {
 // MARK: Test Objects
 
 
-final class TestLogger: LogProtocol, Service {
+final class TestLogger: LogProtocol, ServiceType {
     var enabled: [LogLevel]  = []
     
     static var serviceName: String {
@@ -122,7 +121,7 @@ final class TestLogger: LogProtocol, Service {
         return [LogProtocol.self]
     }
 
-    static func makeService(for drop: Droplet) throws -> TestLogger? {
+    static func makeService(for container: Container) throws -> TestLogger? {
         return .init()
     }
 
@@ -131,7 +130,7 @@ final class TestLogger: LogProtocol, Service {
     }
 }
 
-final class NeedsLoggerMiddleware: Middleware, Service {
+final class NeedsLoggerMiddleware: Middleware, ServiceType {
     let log: LogProtocol
     
     static var serviceName: String {
@@ -143,8 +142,8 @@ final class NeedsLoggerMiddleware: Middleware, Service {
         return [Middleware.self]
     }
 
-    static func makeService(for drop: Droplet) throws -> NeedsLoggerMiddleware? {
-        return try .init(drop.make(LogProtocol.self))
+    static func makeService(for container: Container) throws -> NeedsLoggerMiddleware? {
+        return try .init(container.make(LogProtocol.self))
     }
     
     init(_ log: LogProtocol) {

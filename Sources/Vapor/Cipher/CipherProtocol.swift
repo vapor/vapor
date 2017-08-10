@@ -1,4 +1,5 @@
 import Foundation
+import Bits
 
 /// Objects conforming to this protocol can be
 /// used as ciphers for encrypting and decrypting information.

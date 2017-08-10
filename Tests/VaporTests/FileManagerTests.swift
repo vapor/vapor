@@ -13,22 +13,11 @@ import Core
 class FileManagerTests: XCTestCase {
     static let allTests = [
         ("testReadsFromExistingFile", testReadsFromExistingFile),
-        ("testReadsFromNonExistingFile", testReadsFromNonExistingFile)
     ]
     
     func testReadsFromExistingFile() {
         let filename = #file
-        let bytes = try! FileManager.readBytesFromFile(filename)
+        let bytes = FileManager.default.contents(atPath: filename)?.makeBytes() ?? []
         XCTAssertFalse(bytes.isEmpty)
-    }
-    
-    func testReadsFromNonExistingFile() throws {
-        let filename = "/nonsene/doesntExist.txt"
-        do {
-            let _ = try FileManager.readBytesFromFile(filename)
-            XCTFail("Should never reach here")
-        } catch DataFileError.load {
-            // We're happy here
-        }
     }
 }

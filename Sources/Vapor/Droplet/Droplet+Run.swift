@@ -24,10 +24,6 @@ extension Droplet {
     func runCommands() throws {
         let console = try self.console()
         let commands = try self.commands()
-        
-        for provider in providers {
-            try provider.beforeRun(self)
-        }
 
         var iterator = config.arguments.makeIterator()
 

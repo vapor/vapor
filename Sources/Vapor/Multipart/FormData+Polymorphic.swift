@@ -1,20 +1,22 @@
 import FormData
+import Bits
+import Node
 
 extension FormData.Field {
     public var isNull: Bool {
-        return part.body.makeString().isNull
+        return part.body.makeString() == "null"
     }
     
     public var bool: Bool? {
-        return part.body.makeString().bool
+        return Bool(part.body.makeString())
     }
     
     public var double: Double? {
-        return part.body.makeString().double
+        return Double(part.body.makeString())
     }
     
     public var int: Int? {
-        return part.body.makeString().int
+        return Int(part.body.makeString())
     }
     
     public var string: String? {
@@ -29,7 +31,15 @@ extension FormData.Field {
         return part.body.makeString().uint
     }
 
-    public var bytes: [UInt8]? {
+    public var dictionary: [String : Field]? {
+        return nil
+    }
+
+    public var array: [Field]? {
+        return nil
+    }
+
+    public var bytes: Bytes? {
         return part.body
     }
 }

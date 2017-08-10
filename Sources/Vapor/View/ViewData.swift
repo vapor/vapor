@@ -1,3 +1,5 @@
+import Node
+
 /// Structured Data Wrapper for view specific operations
 public struct ViewData: StructuredDataWrapper {
     public static let defaultContext: Context? = ViewContext.shared

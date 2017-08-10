@@ -1,6 +1,7 @@
 import Crypto
+import Service
 
-extension CryptoCipher: Service {
+extension CryptoCipher: ServiceType {
     /// See Service.serviceName
     public static var serviceName: String {
         return "crypto"
@@ -12,8 +13,8 @@ extension CryptoCipher: Service {
     }
 
     /// See Service.make()
-    public static func makeService(for drop: Droplet) throws -> CryptoCipher? {
-        guard let crypto = drop.config["crypto"] else {
+    public static func makeService(for container: Container) throws -> CryptoCipher? {
+        guard let crypto = container.config["crypto"] else {
             throw ConfigError.missingFile("crypto")
         }
         
@@ -59,7 +60,7 @@ extension CryptoCipher: Service {
             )
         }
         
-        guard let encodedKey = crypto["cipher", "key"]?.bytes else {
+        guard let encodedKey = crypto["cipher", "key"]?.string?.makeBytes() else {
             throw ConfigError.missing(
                 key: ["cipher", "key"],
                 file: "crypto",
@@ -73,14 +74,14 @@ extension CryptoCipher: Service {
         
         let key = encoding.decode(encodedKey)
         if key.isAllZeroes {
-            let log = try drop.make(LogProtocol.self)
+            let log = try container.make(LogProtocol.self)
             log.warning("The current cipher key \"\(encodedKey.makeString())\" is not secure.")
             log.warning("Update cipher.key in Config/crypto.json before using in production.")
             openSSLInfo(log)
         }
         
         guard method.keyLength == key.count else {
-            let log = try drop.make(LogProtocol.self)
+            let log = try container.make(LogProtocol.self)
             log.error("\"\(encodedKey.makeString())\" decoded using \(encoding) is \(key.count) bytes.")
             log.error("\(method) cipher key must be \(method.keyLength) bytes.")
             openSSLInfo(log)
@@ -91,7 +92,7 @@ extension CryptoCipher: Service {
             )
         }
         
-        let encodedIV = crypto["cipher", "iv"]?.bytes
+        let encodedIV = crypto["cipher", "iv"]?.string?.makeBytes()
         
         let iv: Bytes?
         if let encodedIV = encodedIV {
@@ -102,7 +103,7 @@ extension CryptoCipher: Service {
         
         if let iv = iv, let encodedIV = encodedIV {
             guard method.ivLength == iv.count else {
-                let log = try drop.make(LogProtocol.self)
+                let log = try container.make(LogProtocol.self)
                 log.error("\"\(encodedIV.makeString())\" decoded using \(encoding) is \(iv.count) bytes.")
                 log.error("\(method) cipher iv must be \(method.ivLength) bytes.")
                 openSSLInfo(log)

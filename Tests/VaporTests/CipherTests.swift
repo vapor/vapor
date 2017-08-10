@@ -1,6 +1,7 @@
 import Foundation
 import XCTest
 @testable import Vapor
+import Configs
 
 class CipherTests: XCTestCase {
     func testCipher() throws {
@@ -31,7 +32,7 @@ class CipherTests: XCTestCase {
     }
 
     func testDroplet() throws {        
-        let config = Config([
+        let config = try Config([
             "crypto": [
                 "cipher": [
                     "key": "ufEQmM8rsGYM3Nuol4xZuQ==",

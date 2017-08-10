@@ -4,6 +4,9 @@ import Vapor
 import HTTP
 import Core
 import Cookies
+import Configs
+import Service
+import Node
 
 class SessionsTests: XCTestCase {
     func testExample() throws {
@@ -11,10 +14,10 @@ class SessionsTests: XCTestCase {
         let m = SessionsMiddleware(s)
 
         var config = Config()
-        try config.set("droplet.middleware", ["m"])
+        try config.set("droplet", "middleware", to: ["m"])
         
         var services = Services.default()
-        services.instance(m, name: "m", supports: [Middleware.self])
+        services.register(m, name: "m", supports: [Middleware.self])
         
         let drop = try Droplet(config, services)
 
@@ -83,12 +86,12 @@ class SessionsTests: XCTestCase {
         }
 
         var config = Config()
-        try config.set("droplet.middleware", ["m"])
+        try config.set("droplet", "middleware", to: ["m"])
 
         let m = SessionsMiddleware(s, cookieName: cookieName, cookieFactory: cookieFactory)
         
         var services = Services.default()
-        services.instance(m, name: "m", supports: [Middleware.self])
+        services.register(m, name: "m", supports: [Middleware.self])
         
         let drop = try Droplet(config, services)
         

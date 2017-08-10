@@ -3,6 +3,9 @@ import Core
 @testable import Vapor
 import HTTP
 import Sessions
+import Node
+import Configs
+import Service
 
 class ViewTests: XCTestCase {
     static let allTests = [
@@ -55,10 +58,10 @@ class ViewTests: XCTestCase {
         }
         
         var config = Config.default()
-        try config.set("droplet.view", "test")
+        try config.set("droplet", "view", to: "test")
 
         var services = Services.default()
-        services.instance(TestRenderer(viewsDir: ""), name: "test", supports: [ViewRenderer.self])
+        services.register(TestRenderer(viewsDir: ""), name: "test", supports: [ViewRenderer.self])
         
         let drop = try Droplet(config, services)
         

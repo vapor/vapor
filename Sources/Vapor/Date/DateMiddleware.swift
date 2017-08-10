@@ -2,6 +2,7 @@ import Foundation
 import HTTP
 import Core
 import libc
+import Service
 
 fileprivate let DAY_NAMES = [
     "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
@@ -90,7 +91,7 @@ public final class DateMiddleware: Middleware {
 
 // MARK: Service
 
-extension DateMiddleware: Service {
+extension DateMiddleware: ServiceType {
     /// See Service.serviceName
     public static var serviceName: String {
         return "date"
@@ -102,7 +103,7 @@ extension DateMiddleware: Service {
     }
 
     /// See Service.make
-    public static func makeService(for drop: Droplet) throws -> DateMiddleware? {
+    public static func makeService(for container: Container) throws -> DateMiddleware? {
         return .init()
     }
 }

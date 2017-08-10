@@ -2,6 +2,8 @@ import XCTest
 import HTTP
 @testable import Vapor
 import Console
+import Configs
+import Service
 
 class RouteListTests: XCTestCase {
     static let allTests = [
@@ -22,10 +24,10 @@ class RouteListTests: XCTestCase {
         // Setup drop routes
         var config = Config.default()
         config.arguments = ["vapor", "routes"]
-        try config.set("droplet.console", "test")
+        try config.set("droplet", "console", to: "test")
         
         var services = Services.default()
-        services.instance(console, name: "test", supports: [ConsoleProtocol.self])
+        services.register(console, name: "test", supports: [ConsoleProtocol.self])
         
         let drop = try! Droplet(config, services)
         

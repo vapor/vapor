@@ -3,7 +3,7 @@ import XCTest
 import Core
 import Node
 import Cache
-import JSON
+import JSONs
 
 class SessionsProtocolTests: XCTestCase {
     static let allTests = [
@@ -11,10 +11,6 @@ class SessionsProtocolTests: XCTestCase {
         ("testCache", testCache),
         ("testCacheObject", testCacheObject),
     ]
-    
-    override func setUp() {
-        Node.fuzzy = [JSON.self, Node.self]
-    }
 
     func testMemory() throws {
         let s = MemorySessions()

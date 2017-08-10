@@ -1,6 +1,7 @@
 import XCTest
 @testable import HTTP
 @testable import Vapor
+import Node
 
 class QueryTests: XCTestCase {
     static let allTests = [

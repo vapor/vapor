@@ -2,6 +2,7 @@ import Foundation
 import XCTest
 @testable import Vapor
 import Crypto
+import Configs
 
 class HashTests: XCTestCase {
     static let allTests = [
@@ -38,7 +39,7 @@ class HashTests: XCTestCase {
         let defaultExpected = "fb7ae694ba3fd90ae3909ccccd0be0dae988e70296d7099bc5708a872f4cc172"
 
         //test drop facade
-        let config = Config([
+        let config = try Config([
             "crypto": [
                 "hash": [
                     "method": "sha256",
@@ -75,7 +76,7 @@ class HashTests: XCTestCase {
         let workFactor: UInt = 7
         let string = "vapor"
 
-        let config = try Config(node: [
+        let config = try Config([
             "droplet": [
                 "hash": "bcrypt"
             ],

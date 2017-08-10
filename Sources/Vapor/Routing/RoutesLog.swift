@@ -1,6 +1,7 @@
 import Console
 import HTTP
 import Foundation
+import Service
 
 /// A command that can be used to log all routes for 
 /// an application. 
@@ -165,7 +166,7 @@ extension ConsoleProtocol {
     }
 }
 
-extension RouteList: Service {
+extension RouteList: ServiceType {
     /// See Service.name
     public static var serviceName: String {
         return "routes"
@@ -177,7 +178,7 @@ extension RouteList: Service {
     }
 
     /// See Service.make
-    public static func makeService(for drop: Droplet) throws -> Self? {
-        return try .init(drop.make(ConsoleProtocol.self), drop.make(RouterProtocol.self))
+    public static func makeService(for container: Container) throws -> Self? {
+        return try .init(container.make(ConsoleProtocol.self), container.make(RouterProtocol.self))
     }
 }

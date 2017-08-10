@@ -4,7 +4,7 @@ import libc
 
 /// A replacement for Foundation's NSFileManager using
 /// implementation from Swift's core libraries.
-class FileManager {
+class XFileManager {
     enum Error: Swift.Error {
         case couldNotOpenFile
         case unreadable

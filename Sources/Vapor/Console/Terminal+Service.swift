@@ -1,6 +1,7 @@
 import Console
+import Service
 
-extension Terminal: Service {
+extension Terminal: ServiceType {
     /// See Service.name
     public static var serviceName: String {
         return "terminal"
@@ -12,7 +13,7 @@ extension Terminal: Service {
     }
 
     /// See Service.make()
-    public static func makeService(for drop: Droplet) throws -> Terminal? {
-        return .init(arguments: drop.config.arguments)
+    public static func makeService(for container: Container) throws -> Terminal? {
+        return .init(arguments: container.config.arguments)
     }
 }

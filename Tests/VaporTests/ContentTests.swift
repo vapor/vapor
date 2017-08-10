@@ -2,11 +2,12 @@ import XCTest
 import Node
 import HTTP
 @testable import Vapor
+import JSONs
 
 class ContentTests: XCTestCase {
     func testRequestSetJSONBody() throws {
         let request = Request(method: .get, path: "/")
-        let json = JSON(["hello": "world"])
+        let json = JSON.object(["hello": .string("world")])
         request.json = json
         XCTAssertEqual(json, request.json)
     }
@@ -81,8 +82,9 @@ class ContentTests: XCTestCase {
     func testFormURLEncodedDict() {
         let body = "obj[foo]=bar&obj[soo]=car"
         let data = Node(formURLEncoded: body.makeBytes(), allowEmptyValues: true)
-        let foo = try! data.converted(to: JSON.self).makeBytes().makeString()
-        print(foo)
+        // FIXME
+        // let foo = try! data.converted(to: JSON.self).makeBytes().makeString()
+        // print(foo)
         XCTAssertEqual(data["obj.foo"], "bar")
         XCTAssertEqual(data["obj.foo"], "bar")
     }
@@ -95,8 +97,9 @@ class ContentTests: XCTestCase {
 
     func testContent() throws {
         let content = Content()
-        let json = try JSON(node: ["a": "a"])
-        content.append(json)
+        let json = try JSON(["a": "a"])
+        // FIXME
+        // content.append(json)
         let string = try content.get("a") as String
         XCTAssertEqual(string, "a")
     }
@@ -104,11 +107,12 @@ class ContentTests: XCTestCase {
     func testContentLazyLoad() throws {
         let content = Content()
         var json: JSON? = nil
-        content.append { () -> JSON in
-            let js = JSON(["a": .string("a")])
-            json = js
-            return js
-        }
+        // FIXME
+//        content.append { () -> JSON in
+//            let js = JSON(["a": .string("a")])
+//            json = js
+//            return js
+//        }
         XCTAssertNil(json)
         // access lazy loads
         XCTAssertEqual(content["a"]?.string, "a")
@@ -122,8 +126,9 @@ class ContentTests: XCTestCase {
             return "custom"
         }
 
-        let json = try JSON(node: ["a": "a", "b": "b"])
-        content.append(json)
+        // FIXME
+        let json = try JSON(["a": "a", "b": "b"])
+        // content.append(json)
 
         XCTAssertEqual(content["a"]?.string, "a")
         XCTAssertEqual(content["b"]?.string, "custom")

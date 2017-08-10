@@ -1,5 +1,6 @@
 import TLS
 import Transport
+import Configs
 
 extension Configs.Config {
     internal func makeServerConfig() throws -> ServerConfig {
@@ -17,13 +18,12 @@ extension Configs.Config {
         serverConfig: Configs.Config?,
         file: String
     ) throws -> SecurityLayer {
-        let serverConfig = serverConfig?.converted(to: Node.self)
         let security = serverConfig?["securityLayer"]?.string ?? "none"
         let securityLayer: SecurityLayer
         
         switch security {
         case "tls":
-            if let tlsConfig = serverConfig?["tls"]?.object {
+            if let tlsConfig = serverConfig?["tls"]?.dictionary {
                 let config = try parseTLSConfig(tlsConfig, mode: .server)
                 securityLayer = .tls(config)
             } else {
@@ -42,7 +42,7 @@ extension Configs.Config {
         return securityLayer
     }
     
-    func parseTLSConfig(_ tlsConfig: [String: Node], mode: TLS.Mode) throws -> TLS.Context {
+    func parseTLSConfig(_ tlsConfig: [String: Configs.Config], mode: TLS.Mode) throws -> TLS.Context {
         let verifyHost = tlsConfig["verifyHost"]?.bool ?? true
         let verifyCertificates = tlsConfig["verifyCertificates"]?.bool ?? true
         
@@ -57,7 +57,7 @@ extension Configs.Config {
         return config
     }
     
-    func parseTLSCertificates(_ tlsConfig: [String: Node]) throws -> TLS.Certificates {
+    func parseTLSCertificates(_ tlsConfig: [String: Configs.Config]) throws -> TLS.Certificates {
         let certs: TLS.Certificates
         
         if let certsConfig = tlsConfig["certificates"]?.string {
@@ -102,7 +102,7 @@ extension Configs.Config {
         return certs
     }
     
-    func parseTLSSignature(_ tlsConfig: [String: Node]) -> TLS.Certificates.Signature {
+    func parseTLSSignature(_ tlsConfig: [String: Configs.Config]) -> TLS.Certificates.Signature {
         let signature: TLS.Certificates.Signature
         
         if let sigConfig = tlsConfig["signature"]?.string {

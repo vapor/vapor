@@ -1,3 +1,5 @@
+import Configs
+
 extension Config {
     // MARK: Directories
     

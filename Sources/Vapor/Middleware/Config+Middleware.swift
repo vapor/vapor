@@ -1,4 +1,5 @@
 import HTTP
+import Configs
 
 extension DateMiddleware: ConfigInitializable {
     public convenience init(config: Config) throws {

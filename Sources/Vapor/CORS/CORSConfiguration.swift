@@ -1,4 +1,5 @@
 import HTTP
+import Configs
 
 /// Error thrown during instantiation of the `CORSConfiguration`.
 public enum CORSConfigurationError: Error {
@@ -155,7 +156,7 @@ extension CORSConfiguration: ConfigInitializable {
         self.cacheExpiration = try cors.get("cacheExpiration") ?? 600
 
         if let exposedHeaders = cors["exposedHeaders"] {
-            switch exposedHeaders.wrapped {
+            switch exposedHeaders {
             case .string(let string):
                 self.exposedHeaders = string
             case .array(let array):

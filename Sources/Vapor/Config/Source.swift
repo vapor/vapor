@@ -1,3 +1,5 @@
+import Configs
+
 /**
     The source to load a configuration from.
 */
@@ -5,7 +7,7 @@ public enum Source {
     /**
         In memory configuration
     */
-    case memory(name: String, config: Node)
+    case memory(name: String, config: Config)
     /**
         Load configuration from CommandLine.arguments. 
      

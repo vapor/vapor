@@ -1,15 +1,17 @@
 import XCTest
 import HTTP
 import Vapor
+import Configs
+import Service
 
 class CORSMiddlewareTests: XCTestCase {
     func dropWithCors(config settings: CORSConfiguration = .default) -> Droplet {
-        var config = Config([:])
-        try! config.set("droplet.middleware", ["my-cors"])
+        var config = Config()
+        try! config.set("droplet", "middleware", to: ["my-cors"])
         
         var services = Services.default()
         let cors = CORSMiddleware(configuration: settings)
-        services.instance(cors, name: "my-cors", supports: [Middleware.self])
+        services.register(cors, name: "my-cors", supports: [Middleware.self])
         
         let drop = try! Droplet(config, services)
         
@@ -21,12 +23,12 @@ class CORSMiddlewareTests: XCTestCase {
     }
 
     func dropWithCors(settings: Configs.Config) -> Droplet {
-        var config = Config([:])
-        try! config.set("droplet.middleware", ["my-cors"])
+        var config = Config()
+        try! config.set("droplet", "middleware", to: ["my-cors"])
         
         var services = Services.default()
         let cors = try! CORSMiddleware(config: settings)
-        services.instance(cors, name: "my-cors", supports: [Middleware.self])
+        services.register(cors, name: "my-cors", supports: [Middleware.self])
         
         let drop = try! Droplet(config, services)
         

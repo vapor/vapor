@@ -1,4 +1,6 @@
-extension BCryptHasher: Service {
+import Service
+
+extension BCryptHasher: ServiceType {
     /// See Service.serviceName
     public static var serviceName: String {
         return "bcrypt"
@@ -10,8 +12,8 @@ extension BCryptHasher: Service {
     }
 
     /// See Service.make
-    public static func makeService(for drop: Droplet) throws -> BCryptHasher? {
-        guard let cost = drop.config["bcrypt", "cost"]?.uint else {
+    public static func makeService(for container: Container) throws -> BCryptHasher? {
+        guard let cost = container.config["bcrypt", "cost"]?.int else {
             throw ConfigError.missing(
                 key: ["cost"],
                 file: "bcrypt",
@@ -19,6 +21,6 @@ extension BCryptHasher: Service {
             )
         }
 
-        return .init(cost: cost)
+        return .init(cost: UInt(cost))
     }
 }

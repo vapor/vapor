@@ -2,6 +2,7 @@ import HTTP
 import Foundation
 import Node
 import Vapor
+import JSONs
 
 // MARK: Assertions
 
@@ -68,10 +69,10 @@ extension Response {
             return self
         }
         
-        let got = json[key] ?? JSON(.null)
+        let got = json[key] ?? .null
         guard passes(got) else {
             onFail(
-                "JSON assertion failed. '\(got.wrapped)' \(errorReason).",
+                "JSON assertion failed. '\(got)' \(errorReason).",
                 file,
                 line
             )
@@ -86,19 +87,19 @@ extension Response {
     @discardableResult
     public func assertJSON(
         _ key: String,
-        equals value: NodeRepresentable?,
+        equals value: JSONRepresentable?,
         file: StaticString = #file,
         line: UInt = #line
     ) throws -> Response {
-        let desired = try value?.makeNode(in: nil).wrapped ?? StructuredData.null
+        let expectation = try value?.makeJSON() ?? .null
         
         return try assertJSON(
             key,
             file: file,
             line: line,
-            errorReason: "does not equal '\(desired)'"
+            errorReason: "does not equal '\(expectation)'"
         ) { json in
-            return json.wrapped == desired
+            return json == expectation
         }
     }
     
@@ -107,11 +108,11 @@ extension Response {
     @discardableResult
     public func assertJSON(
         _ key: String,
-        notEquals value: NodeRepresentable?,
+        notEquals value: JSONRepresentable?,
         file: StaticString = #file,
         line: UInt = #line
     ) throws -> Response {
-        let expectation = try value.makeNode(in: jsonContext).wrapped
+        let expectation = try value?.makeJSON() ?? .null
         
         return try assertJSON(
             key,
@@ -119,7 +120,7 @@ extension Response {
             line: line,
             errorReason: "does equal '\(expectation)'"
         ) { json in
-            return json.wrapped != expectation
+            return json != expectation
         }
     }
     
@@ -128,19 +129,19 @@ extension Response {
     @discardableResult
     public func assertJSON(
         _ key: String,
-        fuzzyEquals value: NodeRepresentable?,
+        fuzzyEquals value: JSONRepresentable?,
         file: StaticString = #file,
         line: UInt = #line
     ) throws -> Response {
-        let desired = try value?.makeNode(in: nil).wrapped ?? StructuredData.null
-        
+        let expectation = try value?.makeJSON() ?? .null
+
         return try assertJSON(
             key,
             file: file,
             line: line,
-            errorReason: "does not fuzzy equal '\(desired)'"
+            errorReason: "does not fuzzy equal '\(expectation)'"
         ) { json in
-            return json.wrapped.string == desired.string
+            return json.string == expectation.string
         }
     }
     
@@ -149,19 +150,19 @@ extension Response {
     @discardableResult
     public func assertJSON(
         _ key: String,
-        contains value: NodeRepresentable,
+        contains value: JSONRepresentable,
         file: StaticString = #file,
         line: UInt = #line
     ) throws -> Response {
-        let desired = try value.makeNode(in: nil).wrapped
+        let expectation = try value.makeJSON()
         
         return try assertJSON(
             key,
             file: file,
             line: line,
-            errorReason: "does not contain '\(desired)'"
+            errorReason: "does not contain '\(expectation)'"
         ) { json in
-            guard let des = desired.string else {
+            guard let des = expectation.string else {
                 return false
             }
             guard let got = json.string else {

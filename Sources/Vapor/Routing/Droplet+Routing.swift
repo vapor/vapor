@@ -1,6 +1,6 @@
 import HTTP
-
-@_exported import Routing
+import Routing
+import Service
 
 extension Droplet: RouteBuilder {
     public func register(host: String?, method: Method, path: [String], responder: Responder) {
@@ -10,7 +10,7 @@ extension Droplet: RouteBuilder {
 
 extension Int {
     public init?(_ string: String) {
-        guard let int = string.int else {
+        guard let int = Int(string) else {
             return nil
         }
         self = int
@@ -27,7 +27,7 @@ extension Router: RouterProtocol { }
 
 // MARK: Service
 
-extension Router: Service {
+extension Router: ServiceType {
     /// See Service.name
     public static var serviceName: String {
         return "branch"
@@ -39,7 +39,7 @@ extension Router: Service {
     }
 
     /// See Service.make
-    public static func makeService(for drop: Droplet) throws -> Self? {
+    public static func makeService(for container: Container) throws -> Self? {
         return .init()
     }
 }

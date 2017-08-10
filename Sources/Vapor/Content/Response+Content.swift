@@ -6,7 +6,8 @@ extension Response {
             return data
         } else {
             let data = Content()
-            data.append { [weak self] in self?.json }
+            // FIXME
+            // data.append { [weak self] in self?.json }
             storage["data"] = data
             return data
         }

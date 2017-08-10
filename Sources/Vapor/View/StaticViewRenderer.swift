@@ -1,4 +1,6 @@
 import Core
+import Service
+import Node
 
 public final class StaticViewRenderer: ViewRenderer {
     let loader = DataFile()
@@ -26,7 +28,7 @@ public final class StaticViewRenderer: ViewRenderer {
 
 // MARK: Service
 
-extension StaticViewRenderer: Service {
+extension StaticViewRenderer: ServiceType {
     /// See Service.name
     public static var serviceName: String {
         return "static"
@@ -38,7 +40,7 @@ extension StaticViewRenderer: Service {
     }
 
     /// See Service.make
-    public static func makeService(for drop: Droplet) throws -> Self? {
-        return .init(viewsDir: drop.config.viewsDir)
+    public static func makeService(for container: Container) throws -> Self? {
+        return .init(viewsDir: container.config.viewsDir)
     }
 }

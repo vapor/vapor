@@ -1,5 +1,7 @@
 import XCTest
 @testable import Vapor
+import Node
+import Configs
 
 class ConfigIntegrationTests: XCTestCase {
     var workDir: String {
@@ -39,13 +41,11 @@ class ConfigIntegrationTests: XCTestCase {
 extension Node {
     static func makeTestConfig(workDir: String, env: Environment) throws -> Config {
         let configDirectory = workDir.finished(with: "/") + "Config/"
-        return try Config(
-            prioritized: [
-                .commandLine,
-                .directory(root: configDirectory + "secrets"),
-                .directory(root: configDirectory + env.description),
-                .directory(root: configDirectory)
-            ]
-        )
+        return try Config.makeConfig(prioritized: [
+            .commandLine,
+            .directory(root: configDirectory + "secrets"),
+            .directory(root: configDirectory + env.description),
+            .directory(root: configDirectory)
+        ])
     }
 }

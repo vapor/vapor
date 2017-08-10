@@ -1,5 +1,6 @@
 import HTTP
 import Configs
+import Service
 
 /// Middleware that adds support for CORS settings in request responses.
 /// For configuration of this middleware please use the `CORSConfiguration` object.
@@ -72,7 +73,7 @@ extension Request {
 
 // MARK: Service
 
-extension CORSMiddleware: Service {
+extension CORSMiddleware: ServiceType {
     /// See Service.name
     public static var serviceName: String {
         return "cors"
@@ -84,7 +85,7 @@ extension CORSMiddleware: Service {
     }
 
     /// See Service.make
-    public static func makeService(for drop: Droplet) throws -> CORSMiddleware? {
-        return try .init(config: drop.config)
+    public static func makeService(for container: Container) throws -> CORSMiddleware? {
+        return try .init(config: container.config)
     }
 }

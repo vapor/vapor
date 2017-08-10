@@ -2,6 +2,7 @@ import HTTP
 import Transport
 import Sockets
 import TLS
+import Service
 
 /// TCP and TLS clients from engine
 /// wrapped to conform to ClientProtocol.
@@ -24,7 +25,7 @@ public final class ServerFactory<S: ServerProtocol>: ServerFactoryProtocol {
 }
 
 // MARK: Service
-extension ServerFactory: Service {
+extension ServerFactory: ServiceType {
     /// See Service.name
     public static var serviceName: String {
         return S.serviceName
@@ -36,7 +37,7 @@ extension ServerFactory: Service {
     }
 
     /// See Service.make
-    public static func makeService(for drop: Droplet) throws -> ServerFactory<S>? {
+    public static func makeService(for container: Container) throws -> ServerFactory<S>? {
         return .init()
     }
 }

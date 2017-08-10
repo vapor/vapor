@@ -1,37 +1,38 @@
 import Core
 import Foundation
-import JSON
+import JSONs
+import Configs
 
-extension Node {
+extension Config {
     /**
         Load all files in a given directory as config files.
      
         - warning: will ignore all subdirectories.
         - parameter directory: the root path to the directory. 
     */
-    internal static func makeConfig(directory: String) throws -> Node {
+    internal static func makeConfig(directory: String) throws -> Config {
         let directory = directory.finished(with: "/")
-        var node = Node([:])
+        var config = Config()
 
-        try FileManager.default.files(path: directory).forEach { name in
+        try FileManager().files(path: directory).forEach { name in
             var name = name
-            let contents = try Node.loadContents(path: directory + name)
+            let contents = try Config.loadContents(path: directory + name)
             name.removedJSONSuffix()
-            node[name] = contents.hydratedEnv()
+            config[name] = contents.environmentVariablesResolved()
         }
 
-        return node
+        return config
     }
 
     /**
         Load the file at a path as raw bytes, or as parsed JSON representation
     */
-    private static func loadContents(path: String) throws -> Node {
+    private static func loadContents(path: String) throws -> Config {
         let data = try DataFile.read(at: path)
-        guard path.hasSuffix(".json") else { return .bytes(data) }
+        guard path.hasSuffix(".json") else { return .string(data.makeString()) }
         do {
             let json = try JSON(bytes: data)
-            return json.converted()
+            return try json.converted(to: Config.self)
         } catch {
             print("Failed to load json at path \(path)")
             print("ensure there's no syntax errors in JSON")

@@ -2,6 +2,8 @@ import HTTP
 import Transport
 import Sockets
 import TLS
+import Service
+import Configs
 
 /// TCP and TLS clients from engine
 /// wrapped to conform to ClientProtocol.
@@ -36,7 +38,7 @@ public final class ClientFactory<C: ClientProtocol>: ClientFactoryProtocol {
 
 // MARK: Service
 
-extension ClientFactory: Service {
+extension ClientFactory: ServiceType {
     /// See Service.name
     public static var serviceName: String {
         return C.serviceName
@@ -48,11 +50,11 @@ extension ClientFactory: Service {
     }
 
     /// See Service.make
-    public static func makeService(for drop: Droplet) throws -> ClientFactory? {
+    public static func makeService(for container: Container) throws -> ClientFactory? {
         let proxy: Proxy?
         
-        let config = drop.config
-        if let proxyConfig = config["client", "proxy"]?.object {
+        let config = container.config
+        if let proxyConfig = config["client", "proxy"]?.dictionary {
             guard let hostname = proxyConfig["hostname"]?.string else {
                 throw ConfigError.missing(
                     key: ["proxy", "hostname"],

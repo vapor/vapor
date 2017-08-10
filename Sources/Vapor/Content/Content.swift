@@ -1,4 +1,5 @@
-@_exported import PathIndexable
+import PathIndexable
+import Node
 
 public protocol RequestContentSubscript {}
 

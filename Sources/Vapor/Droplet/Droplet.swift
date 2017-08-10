@@ -5,49 +5,42 @@ import Sessions
 import Crypto
 import Transport
 import Sockets
+import Service
+import Configs
+import Routing
 
-public final class Droplet {
+public final class Droplet: Container {
+    /// Config file name
+    public static let configKey = "droplet"
+
     /// Provides access to config settings.
-    public let config: Config
+    public let config: Configs.Config
     
     /// Services available to this service container.
     public let services: Services
 
     /// The responder includes chained middleware
     internal var responder: Responder!
-    
-    /// Storage to add/manage dependencies, identified by a string
-    public var storage: [String: Any]
-    
-    /// External service providers that have registered
-    /// services and modified the Droplet.
-    public let providers: [Provider]
+
+    /// Extendable
+    public var extend: [String: Any]
 
     /// Creates a Droplet.
     public init(
-        _ config: Config? = nil,
+        _ config: Configs.Config? = nil,
         _ services: Services? = nil,
         _ router: Router? = nil
     ) throws {
         var config = config ?? Config.default()
         // port override
-        if let port = config.arguments.value(for: "port")?.int {
-            try config.set("server.port", port)
+        if let port = config.arguments.value(for: "port") {
+            try config.set("server", "port", to: port)
         }
         self.config = config
-        var services = services ?? Services.default()
-        
-        let providers = try services.providers.flatMap { factory in
-            return try factory.makeProvider(with: config)
-        }
-        
-        try providers.forEach { provider in
-            try provider.register(&services)
-        }
+        let services = services ?? Services.default()
         
         self.services = services
-        self.providers = providers
-        self.storage = [:]
+        extend = [:]
 
         let environment = config.environment
         
@@ -104,7 +97,7 @@ public final class Droplet {
         try view().shouldCache = environment == .production
 
         // boot providers
-        try providers.forEach { provider in
+        try services.providers.forEach { provider in
             try provider.boot(self)
         }
     }

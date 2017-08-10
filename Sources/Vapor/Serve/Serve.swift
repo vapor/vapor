@@ -1,6 +1,7 @@
 import HTTP
 import Console
 import Sockets
+import Service
 
 /// Serves the droplet.
 public final class Serve: Command {
@@ -72,20 +73,24 @@ public final class Serve: Command {
 
 // MARK: Service
 
-extension Serve: Service {
+extension Serve: ServiceType {
     /// See Service.serviceSupports
     public static var serviceSupports: [Any.Type] {
         return [Command.self]
     }
 
     /// See Service.make
-    public static func makeService(for drop: Droplet) throws -> Serve? {
+    public static func makeService(for container: Container) throws -> Serve? {
+        guard let drop = container as? Droplet else {
+            throw "serve command requires droplet container"
+        }
+
         return try .init(
-            drop.make(ConsoleProtocol.self),
-            drop.make(ServerFactoryProtocol.self),
-            drop.responder,
-            drop.make(LogProtocol.self),
-            drop.config.makeServerConfig()
+            container.make(ConsoleProtocol.self),
+            container.make(ServerFactoryProtocol.self),
+            drop.responder, // FIXME
+            container.make(LogProtocol.self),
+            container.config.makeServerConfig()
         )
     }
 }
