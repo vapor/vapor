@@ -170,7 +170,7 @@ extension LogProtocol {
         if let debuggable = error as? Debuggable {
             self.error(debuggable.loggable)
         } else {
-            let type = String(reflecting: type(of: error))
+            let type = String(reflecting: Swift.type(of: error))
             self.error("[\(type): \(error)]")
             info("Conform '\(type)' to Debugging.Debuggable to provide more debug information.")
         }

@@ -172,7 +172,6 @@ class DropletTests: XCTestCase {
                     ws.onText = { ws, text in
                         XCTAssertEqual(text, "foo")
                         group.leave()
-                        
                     }
                     
                     try ws.send("foo")
