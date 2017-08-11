@@ -1,7 +1,7 @@
 import Node
 import URI
 import HTTP
-import Sessions
+import Session
 
 extension Request: NodeRepresentable {
     /// Converts the Request into a Node.

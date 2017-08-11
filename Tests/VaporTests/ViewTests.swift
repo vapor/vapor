@@ -2,7 +2,7 @@ import XCTest
 import Core
 @testable import Vapor
 import HTTP
-import Sessions
+import Session
 import Node
 import Service
 
@@ -71,8 +71,8 @@ class ViewTests: XCTestCase {
         
         request.storage["test"] = "foobar"
         
-        session.data = Node.object([
-            "name": "Vapor"
+        session.data = SessionData.dictionary([
+            "name": .string("Vapor")
         ])
         
 

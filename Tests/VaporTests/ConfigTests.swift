@@ -1,6 +1,6 @@
 import XCTest
 import Vapor
-import Sessions
+import Session
 import HTTP
 import Console
 import JSONs

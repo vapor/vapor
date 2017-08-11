@@ -7,6 +7,7 @@ let package = Package(
         .library(name: "Cache", targets: ["Cache"]),
         .library(name: "Session", targets: ["Session"]),
         .library(name: "Testing", targets: ["Testing"]),
+        .library(name: "URLEncoded", targets: ["URLEncoded"]),
         .library(name: "Vapor", targets: ["Vapor"]),
     ],
     dependencies: [
@@ -23,13 +24,16 @@ let package = Package(
         .package(url: "https://github.com/vapor/crypto.git", .upToNextMajor(from: "2.1.0")),
 
         // Core vapor transport layer
-        .package(url: "https://github.com/vapor/engine.git", .upToNextMajor(from: "2.2.1")),
+        .package(url: "https://github.com/vapor/engine.git", .branch("beta")),
 
         // JSON enum wrapper around Foundation JSON
         .package(url: "https://github.com/vapor/json.git", .branch("mapper")),
 
         // Data mapper
         .package(url: "https://github.com/vapor/mapper.git", .branch("beta")),
+
+        // FIXME
+        .package(url: "https://github.com/vapor/node.git", .branch("master")),
         
         // Parses `Content-Type: multipart` as defined in RFC 2046.
         .package(url: "https://github.com/vapor/multipart.git", .upToNextMajor(from: "2.1.0")),
@@ -43,6 +47,8 @@ let package = Package(
     targets: [
         .target(name: "Cache", dependencies: ["Mapper", "Service"]),
         .testTarget(name: "CacheTests", dependencies: ["Cache"]),
+        .target(name: "URLEncoded", dependencies: ["HTTP", "Mapper"]),
+        .testTarget(name: "URLEncodedTests", dependencies: ["URLEncoded"]),
         .target(name: "Session", dependencies: ["Cache", "Cookies", "Crypto", "HTTP", "Service"]),
         .testTarget(name: "SessionTests", dependencies: ["Session"]),
         .target(name: "Testing", dependencies: ["Core", "HTTP", "Vapor"]),
@@ -60,6 +66,7 @@ let package = Package(
             "Service",
             "Session", 
             "SMTP",
+            "URLEncoded",
             "WebSockets"
         ]),
         .testTarget(name: "VaporTests", dependencies: ["Vapor"]),

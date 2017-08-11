@@ -1,6 +1,7 @@
 import HTTP
 import URI
 import Node
+import URLEncoded
 
 // MARK: Base
 
@@ -21,7 +22,7 @@ extension Responder {
     public func request(
         _ method: Method,
         _ uri: String,
-        query: [String: NodeRepresentable] = [:],
+        query: [String: URLEncodedFormRepresentable] = [:],
         _ headers: [HeaderKey: String] = [:],
         _ body: BodyRepresentable? = nil,
         through middleware: [Middleware] = []
@@ -34,7 +35,7 @@ extension Responder {
     internal func makeRequest(
         _ method: Method,
         _ uri: String,
-        query: [String: NodeRepresentable] = [:],
+        query: [String: URLEncodedFormRepresentable] = [:],
         _ headers: [HeaderKey: String] = [:],
         _ body: BodyRepresentable? = nil
     ) throws  -> Request {
@@ -44,7 +45,9 @@ extension Responder {
         req.headers = headers
 
         if !query.isEmpty {
-            req.query = try Node(node: query)
+            req.query = try .dictionary(query.mapValues {
+                try $0.makeURLEncodedForm()
+            })
         }
 
         if let body = body {
@@ -61,7 +64,7 @@ extension Responder {
     /// Calls `.request(.get, ...)`
     public func get(
         _ uri: String,
-        query: [String: NodeRepresentable] = [:],
+        query: [String: URLEncodedFormRepresentable] = [:],
         _ headers: [HeaderKey: String] = [:],
         _ body: BodyRepresentable? = nil,
         through middleware: [Middleware] = []
@@ -72,7 +75,7 @@ extension Responder {
     /// Calls `.request(.post, ...)`
     public func post(
         _ uri: String,
-        query: [String: NodeRepresentable] = [:],
+        query: [String: URLEncodedFormRepresentable] = [:],
         _ headers: [HeaderKey: String] = [:],
         _ body: BodyRepresentable? = nil,
         through middleware: [Middleware] = []
@@ -83,7 +86,7 @@ extension Responder {
     /// Calls `.request(.patch, ...)`
     public func patch(
         _ uri: String,
-        query: [String: NodeRepresentable] = [:],
+        query: [String: URLEncodedFormRepresentable] = [:],
         _ headers: [HeaderKey: String] = [:],
         _ body: BodyRepresentable? = nil,
         through middleware: [Middleware] = []
@@ -94,7 +97,7 @@ extension Responder {
     /// Calls `.request(.put, ...)`
     public func put(
         _ uri: String,
-        query: [String: NodeRepresentable] = [:],
+        query: [String: URLEncodedFormRepresentable] = [:],
         _ headers: [HeaderKey: String] = [:],
         _ body: BodyRepresentable? = nil,
         through middleware: [Middleware] = []
@@ -106,7 +109,7 @@ extension Responder {
     /// Calls `.request(.delete, ...)`
     public func delete(
         _ uri: String,
-        query: [String: NodeRepresentable] = [:],
+        query: [String: URLEncodedFormRepresentable] = [:],
         _ headers: [HeaderKey: String] = [:],
         _ body: BodyRepresentable? = nil,
         through middleware: [Middleware] = []

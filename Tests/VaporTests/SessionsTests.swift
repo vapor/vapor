@@ -1,5 +1,5 @@
 import XCTest
-@testable import Sessions
+@testable import Session
 import Vapor
 import HTTP
 import Core
@@ -10,7 +10,7 @@ import Node
 class SessionsTests: XCTestCase {
     func testExample() throws {
         let s = MemorySessions()
-        let m = SessionsMiddleware(s)
+        let m = SessionsMiddleware(sessions: s)
 
         var config = Config()
         try config.set("droplet", "middleware", to: ["m"])
@@ -69,7 +69,7 @@ class SessionsTests: XCTestCase {
     func testCustomCookieFactoryWithExpiryDate() throws {
         let s = MemorySessions()
         let cookieName = "test-name"
-        let cookieFactory: (Request) -> Cookie = { req in
+        let cookieModifier: (Request) -> Cookie = { req in
             var cookie = Cookie(
                 name: cookieName,
                 value: "",
@@ -87,7 +87,7 @@ class SessionsTests: XCTestCase {
         var config = Config()
         try config.set("droplet", "middleware", to: ["m"])
 
-        let m = SessionsMiddleware(s, cookieName: cookieName, cookieFactory: cookieFactory)
+        let m = SessionsMiddleware(sessions: s, cookieName: cookieName, cookeModifier: cookieFactory)
         
         var services = Services.default()
         services.register(m, name: "m", supports: [Middleware.self])

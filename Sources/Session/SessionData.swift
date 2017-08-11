@@ -33,12 +33,7 @@ extension SessionData: SessionDataConvertible {
     }
 }
 
-// Convenience
-extension SessionData {
-    public static var empty: SessionData {
-        return .dictionary([:])
-    }
-}
+// MARK: Map
 
 /// Support conversion to `Map` type for easy
 /// conversions b/t other data types.
@@ -72,6 +67,34 @@ extension SessionData: MapConvertible {
             return .null
         case .string(let string):
             return .string(string)
+        }
+    }
+}
+
+// MARK: Keyed
+
+extension SessionData: Keyed {
+    public static var empty: SessionData { return .dictionary([:]) }
+
+    public mutating func set(key: PathComponent, to value: SessionData?) {
+        switch key {
+        case .index(let int):
+            var array = self.array ?? []
+            array[safe: int] = value ?? .null
+            self = .array(array)
+        case .key(let string):
+            var dict = dictionary ?? [:]
+            dict[string] = value ?? .null
+            self = .dictionary(dict)
+        }
+    }
+
+    public func get(key: PathComponent) -> SessionData? {
+        switch key {
+        case .index(let int):
+            return array?[safe: int]
+        case .key(let string):
+            return dictionary?[string]
         }
     }
 }
