@@ -1,7 +1,7 @@
 dependencies:
   override:
     - eval "$(curl -sL https://apt.vapor.sh)"
-    - sudo apt-get install swift-beta
+    - sudo apt-get install swift-beta ctls
     - sudo chmod -R a+rx /usr/
 test:
   override:

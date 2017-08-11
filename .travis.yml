@@ -10,10 +10,10 @@ before_install:
     - if [ $TRAVIS_OS_NAME == "osx" ]; then
             brew tap vapor/tap;
             brew update;
-            brew install vapor;
+            brew install ctls;
         else
             eval "$(curl -sL https://apt.vapor.sh)";
-            sudo apt-get install vapor;
+            sudo apt-get install swift-beta ctls;
             sudo chmod -R a+rx /usr/;
         fi
 
