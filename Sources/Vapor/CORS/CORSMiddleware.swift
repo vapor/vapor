@@ -1,5 +1,5 @@
 import HTTP
-import Configs
+import Service
 
 /// Middleware that adds support for CORS settings in request responses.
 /// For configuration of this middleware please use the `CORSConfiguration` object.
@@ -23,7 +23,7 @@ public final class CORSMiddleware: Middleware, ConfigInitializable {
     ///
     /// - Parameter configuration: The settings configuration.
     /// - Throws: Exception if the `CORSConfiugration` couldn't be parsed out of `Configs.Config`.
-    public convenience init(config: Configs.Config) throws {
+    public convenience init(config: Config) throws {
         let configuration = try CORSConfiguration(config: config)
         self.init(configuration: configuration)
     }
@@ -59,11 +59,32 @@ public final class CORSMiddleware: Middleware, ConfigInitializable {
     }
 }
 
-extension Request {
+// MARK: HTTP
 
+extension Request {
     /// Returns `true` if the request is a pre-flight CORS request.
     var isPreflight: Bool {
         return method == .options
             && headers["Access-Control-Request-Method"] != nil
+    }
+}
+
+
+// MARK: Service
+
+extension CORSMiddleware: ServiceType {
+    /// See Service.name
+    public static var serviceName: String {
+        return "cors"
+    }
+
+    /// See Service.serviceSupports
+    public static var serviceSupports: [Any.Type] {
+        return [Middleware.self]
+    }
+
+    /// See Service.make
+    public static func makeService(for container: Container) throws -> CORSMiddleware? {
+        return try .init(config: container.config)
     }
 }

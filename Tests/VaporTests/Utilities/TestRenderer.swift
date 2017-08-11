@@ -1,4 +1,5 @@
 import Vapor
+import Node
 
 final class TestRenderer: ViewRenderer {
     var shouldCache: Bool

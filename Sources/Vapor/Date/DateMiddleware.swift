@@ -2,6 +2,7 @@ import Foundation
 import HTTP
 import Core
 import libc
+import Service
 
 fileprivate let DAY_NAMES = [
     "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
@@ -85,5 +86,24 @@ public final class DateMiddleware: Middleware {
         response.headers["Date"] = rfc1123
         
         return response
+    }
+}
+
+// MARK: Service
+
+extension DateMiddleware: ServiceType {
+    /// See Service.serviceName
+    public static var serviceName: String {
+        return "date"
+    }
+
+    /// See Service.serviceSupports
+    public static var serviceSupports: [Any.Type] {
+        return [Middleware.self]
+    }
+
+    /// See Service.make
+    public static func makeService(for container: Container) throws -> DateMiddleware? {
+        return .init()
     }
 }

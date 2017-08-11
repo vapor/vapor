@@ -2,6 +2,7 @@ import HTTP
 import Transport
 import Sockets
 import TLS
+import Service
 
 /// TCP and TLS clients from engine
 /// wrapped to conform to ClientProtocol.
@@ -23,8 +24,20 @@ public final class ServerFactory<S: ServerProtocol>: ServerFactoryProtocol {
     }
 }
 
-extension ServerFactory: ConfigInitializable {
-    public convenience init(config: Configs.Config) throws {
-        self.init()
+// MARK: Service
+extension ServerFactory: ServiceType {
+    /// See Service.name
+    public static var serviceName: String {
+        return S.serviceName
+    }
+
+    /// See Service.serviceSupports
+    public static var serviceSupports: [Any.Type] {
+        return [ServerFactoryProtocol.self]
+    }
+
+    /// See Service.make
+    public static func makeService(for container: Container) throws -> ServerFactory<S>? {
+        return .init()
     }
 }

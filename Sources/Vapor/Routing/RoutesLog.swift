@@ -1,6 +1,7 @@
 import Console
 import HTTP
 import Foundation
+import Service
 
 /// A command that can be used to log all routes for 
 /// an application. 
@@ -17,13 +18,13 @@ public final class RouteList: Command {
 
     public let id: String = "routes"
     public let console: ConsoleProtocol
-    public let router: Router
+    public let router: RouterProtocol
 
     /// Initialize a route list command with droplet
     /// requires Droplet reference so that if user updates
     /// console _after_ initializing RouteList
     /// we access latest console.
-    public init(_ console: ConsoleProtocol, _ router: Router) {
+    public init(_ console: ConsoleProtocol, _ router: RouterProtocol) {
         self.console = console
         self.router = router
     }
@@ -162,5 +163,22 @@ extension ConsoleProtocol {
     fileprivate func kill(_ message: String) -> Never {
         error(message, newLine: true)
         exit(1)
+    }
+}
+
+extension RouteList: ServiceType {
+    /// See Service.name
+    public static var serviceName: String {
+        return "routes"
+    }
+
+    /// See Service.serviceSupports
+    public static var serviceSupports: [Any.Type] {
+        return [Command.self]
+    }
+
+    /// See Service.make
+    public static func makeService(for container: Container) throws -> Self? {
+        return try .init(container.make(ConsoleProtocol.self), container.make(RouterProtocol.self))
     }
 }

@@ -5,6 +5,8 @@ import FormData
 import Multipart
 import URI
 import Dispatch
+import Node
+import Service
 
 class FormDataTests: XCTestCase {
     static let allTests = [
@@ -13,10 +15,6 @@ class FormDataTests: XCTestCase {
         ("testArray", testArray),
         ("testPlusEncoding", testPlusEncoding),
     ]
-    
-    override func setUp() {
-        Node.fuzzy = [JSON.self, Node.self]
-    }
 
     /// Ensure form encoding is handled properly
     func testPlusEncoding() throws {
@@ -59,8 +57,8 @@ class FormDataTests: XCTestCase {
             "text": textField,
             "garbage": garbageField
         ]
-        var config = Config([:])
-        try config.set("server.port", 8932)
+        var config = Config()
+        try config.set("server", "port", to: 8932)
         config.arguments = ["vapor", "serve"]
         let drop = try Droplet(config)
         

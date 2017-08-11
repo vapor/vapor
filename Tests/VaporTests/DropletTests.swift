@@ -4,22 +4,9 @@ import HTTP
 import Core
 import Sockets
 import Dispatch
+import Service
 
 class DropletTests: XCTestCase {
-    static let allTests = [
-        ("testData", testData),
-        ("testMediaType", testMediaType),
-        ("testTLSConfig", testTLSConfig),
-        ("testRunDefaults", testRunDefaults),
-        ("testRunConfig", testRunConfig),
-        ("testHeadRequest", testHeadRequest),
-        ("testDumpConfig", testDumpConfig),
-        ("testProxy", testProxy),
-        ("testDropletProxy", testDropletProxy),
-        ("testWebsockets", testWebsockets),
-        // ("testWebsocketsTLS", testWebsocketsTLS)
-    ]
-
     func testData() {
         do {
             let file = try DataFile.read(at: #file)
@@ -39,14 +26,15 @@ class DropletTests: XCTestCase {
         let parent = #file.characters.split(separator: "/").map(String.init).dropLast(3).joined(separator: "/")
         let workDir = "/\(parent)/Sources/Development/"
 
-        let config = try Config(node: [
-            "droplet": ["workDir": workDir]
-        ])
+        var config = Config()
+        try config.set("droplet", "workDir", to: workDir)
+        try config.set("droplet", "middleware", to: ["file"])
+        
         let drop = try Droplet(config)
 
         let request = Request(method: .get, path: "styles/app.css")
 
-        let response = try drop.respond(to: request)
+        let response = try! drop.respond(to: request)
 
         var found = false
         for header in response.headers {
@@ -58,24 +46,8 @@ class DropletTests: XCTestCase {
         XCTAssert(found, "CSS Content Type not found: \(response)")
     }
 
-    func testTLSConfig() throws {
-        let config = Config([
-            "servers": [
-                "hostname": "vapor.codes",
-                "port": 443,
-                "securityLayer": "tls",
-                "tls": [
-                    "certificates": "ca",
-                    "signature": "selfSigned"
-                ]
-            ]
-        ])
-
-        _ = try Droplet(config)
-    }
-
     func testRunDefaults() throws {
-        let config = Config([:])
+        var config = Config()
         config.arguments = ["vapor", "serve", "--port=8523"]
         let drop = try Droplet(config)
 
@@ -87,13 +59,13 @@ class DropletTests: XCTestCase {
     }
 
     func testRunConfig() throws {
-        let config = Config([
+        let config: Service.Config = [
             "server": [
                 "hostname": "0.0.0.0",
                 "port": 8524,
                 "securityLayer": "none"
             ]
-        ])
+        ]
         XCTAssertEqual(try config.makeServerConfig().port, 8524)
     }
 
@@ -112,16 +84,22 @@ class DropletTests: XCTestCase {
     }
     
     func testDumpConfig() throws {
-        let config = Config([
+        var config: Service.Config = [
             "server": [
                 "hostname": "0.0.0.0",
                 "port": 8524,
                 "securityLayer": "none"
+            ],
+            "droplet": [
+                "commands": [
+                    "dump-config"
+                ]
             ]
-        ])
+        ]
         config.arguments = ["vapor", "dump-config", "server.port"]
-        let drop = try Droplet(config)
-        try drop.runCommands()
+        
+        let drop = try! Droplet(config)
+        try! drop.runCommands()
     }
     
     func testProxy() throws {
@@ -156,52 +134,48 @@ class DropletTests: XCTestCase {
         
         let drop = try Droplet(config)
         
-        let res = try drop.client.get("http://34.248.148.23")
+        let res = try drop.client().get("http://34.248.148.23")
         try XCTAssertEqual(res.bodyString(), "It works!!!\n")
         */
     }
     
     func testWebsockets() throws {
-        let drop = try Droplet()
+        var config = Config()
+        try config.set("droplet", "client", to: "engine")
+        
+        let drop = try Droplet(config)
         
         let group = DispatchGroup()
         group.enter()
         background {
-            do {
-                try drop.client.socket.connect(to: "ws://echo.websocket.org") { ws in
-                    ws.onText = { ws, text in
-                        XCTAssertEqual(text, "foo")
-                        group.leave()
-                    }
-                    
-                    try ws.send("foo")
+            try! drop.client().socket.connect(to: "ws://echo.websocket.org") { ws in
+                ws.onText = { ws, text in
+                    XCTAssertEqual(text, "foo")
+                    group.leave()
                 }
-            } catch {
-                XCTFail("\(error)")
+                try ws.send("foo")
             }
         }
         group.wait()
     }
     
     func testWebsocketsTLS() throws {
-        let drop = try Droplet()
+        var config = Config()
+        try config.set("droplet", "client", to: "engine")
+        
+        let drop = try Droplet(config)
         
         let group = DispatchGroup()
         group.enter()
         background {
-            do {
-                try drop.client.socket.connect(to: "wss://echo.websocket.org") { ws in
-                    ws.onText = { ws, text in
-                        XCTAssertEqual(text, "foo")
-                        group.leave()
-                        
-                    }
+            try! drop.client().socket.connect(to: "wss://echo.websocket.org") { ws in
+                ws.onText = { ws, text in
+                    XCTAssertEqual(text, "foo")
+                    group.leave()
                     
-                    try ws.send("foo")
                 }
-            } catch {
-                XCTFail("\(error)")
-                group.leave()
+                
+                try ws.send("foo")
             }
         }
         group.wait()
@@ -211,10 +185,10 @@ class DropletTests: XCTestCase {
     #if Xcode
     
         func testFoundationClient() throws {
-            var config = Config([:])
-            try config.set("droplet.client", "foundation")
+            var config = Config()
+            try config.set("droplet", "client", to: "foundation")
             let drop = try Droplet(config)
-            let res = try! drop.client.get("https://httpbin.org/get")
+            let res = try! drop.client().get("https://httpbin.org/get")
             try print(res.bodyString())
             #if os(Linux)
                 try XCTAssert(res.bodyString().contains("curl"))
@@ -223,4 +197,18 @@ class DropletTests: XCTestCase {
             #endif
         }
     #endif
+    
+    
+    static let allTests = [
+        ("testData", testData),
+        ("testMediaType", testMediaType),
+        ("testRunDefaults", testRunDefaults),
+        ("testRunConfig", testRunConfig),
+        ("testHeadRequest", testHeadRequest),
+        ("testDumpConfig", testDumpConfig),
+        ("testProxy", testProxy),
+        ("testDropletProxy", testDropletProxy),
+        ("testWebsockets", testWebsockets),
+        // ("testWebsocketsTLS", testWebsocketsTLS)
+    ]
 }

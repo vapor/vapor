@@ -1,11 +1,12 @@
 import Foundation
 import HTTP
 import libc
+import Service
+import Routing
 
 /// Servers files from the supplied public directory
 /// on not found errors.
 public final class FileMiddleware: Middleware {
-
     private var publicDir: String
     private let loader = DataFile()
     private let chunkSize: Int
@@ -30,5 +31,24 @@ public final class FileMiddleware: Middleware {
             let ifNoneMatch = request.headers["If-None-Match"]
             return try Response(filePath: filePath, ifNoneMatch: ifNoneMatch, chunkSize: chunkSize)
         }
+    }
+}
+
+// MARK: Service
+
+extension FileMiddleware: ServiceType {
+    /// See Service.serviceName
+    public static var serviceName: String {
+        return "file"
+    }
+
+    /// See Service.serviceSupports
+    public static var serviceSupports: [Any.Type] {
+        return [Middleware.self]
+    }
+
+    /// See Service.make
+    public static func makeService(for container: Container) throws -> FileMiddleware? {
+        return FileMiddleware(publicDir: container.config.publicDir)
     }
 }

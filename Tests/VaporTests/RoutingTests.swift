@@ -26,11 +26,11 @@ class RoutingTests: XCTestCase {
     
     func testCollections() throws {
         let drop = try Droplet()
-        XCTAssertEqual(drop.router.routes.count, 0)
+        try XCTAssertEqual(drop.router().routes.count, 0)
         try drop.collection(TestCollectionA.self)
-        XCTAssertEqual(drop.router.routes.count, 1)
+        try XCTAssertEqual(drop.router().routes.count, 1)
         try drop.collection(TestCollectionB())
-        XCTAssertEqual(drop.router.routes.count, 2)
+        try XCTAssertEqual(drop.router().routes.count, 2)
         
     }
 }

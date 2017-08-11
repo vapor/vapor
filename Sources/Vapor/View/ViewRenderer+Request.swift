@@ -1,4 +1,5 @@
 import HTTP
+import Node
 
 extension ViewRenderer {
     /// Creates a view at the given path

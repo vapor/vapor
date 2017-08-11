@@ -1,4 +1,5 @@
 import Console
+import Service
 
 public final class ProviderInstall: Command {
     public let id = "provider-install"
@@ -14,7 +15,7 @@ public final class ProviderInstall: Command {
         _ providers: [Provider],
         publicDir: String,
         viewsDir: String
-        ) {
+    ) {
         self.console = console
         self.providers = providers
         self.publicDir = publicDir
@@ -68,5 +69,23 @@ public final class ProviderInstall: Command {
                 console.print("Nothing to install")
             }
         }
+    }
+}
+
+// MARK: Service
+
+extension ProviderInstall: ServiceType {
+    /// See Service.serviceSupports
+    public static var serviceSupports: [Any.Type] {
+        return [Command.self]
+    }
+
+    public static func makeService(for container: Container) throws -> ProviderInstall? {
+        return try .init(
+            container.make(ConsoleProtocol.self),
+            container.services.providers,
+            publicDir: container.config.publicDir,
+            viewsDir: container.config.viewsDir
+        )
     }
 }

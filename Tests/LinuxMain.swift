@@ -3,18 +3,11 @@
 import XCTest
 @testable import CacheTests
 @testable import SessionsTests
-@testable import ConfigsTests
 @testable import VaporTests
 
 XCTMain([
     // Cache
     testCase(MemoryCacheTests.allTests),
-
-    // Config
-    testCase(ConfigsTests.ConfigTests.allTests),
-    testCase(MergeTests.allTests),
-    testCase(EnvTests.allTests),
-    testCase(CLIConfigTests.allTests),
 
     // Sessions
     testCase(SessionsProtocolTests.allTests),

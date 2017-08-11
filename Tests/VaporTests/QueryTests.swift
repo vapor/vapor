@@ -1,6 +1,7 @@
 import XCTest
 @testable import HTTP
 @testable import Vapor
+import Node
 
 class QueryTests: XCTestCase {
     static let allTests = [
@@ -33,13 +34,13 @@ class QueryTests: XCTestCase {
 
     func testClientQueryNotNill() throws {
         let drop = try Droplet()
-        let req = try drop.client.makeRequest(.get, "https://api.spotify.com/v1/search?type=artist&q=test")
+        let req = try drop.client().makeRequest(.get, "https://api.spotify.com/v1/search?type=artist&q=test")
         XCTAssertNotNil(req.query)
     }
     
     func testQuerySetAndGet() throws {
         let drop = try Droplet()
-        let req = try drop.client.makeRequest(.get, "https://google.com")
+        let req = try drop.client().makeRequest(.get, "https://google.com")
         req.query = Node(["q": "swift vapor"])
         let query = req.query
         XCTAssertNotNil(query)

@@ -9,6 +9,8 @@ extension Droplet {
 
     /// Runs the Droplet's commands, defaulting to serve.
     public func run() throws -> Never  {
+        let console = try make(ConsoleProtocol.self)
+        
         do {
             try runCommands()
         } catch CommandError.general(let error) {
@@ -20,9 +22,8 @@ extension Droplet {
     }
 
     func runCommands() throws {
-        for provider in config.providers {
-            try provider.beforeRun(self)
-        }
+        let console = try self.console()
+        let commands = try self.commands()
 
         var iterator = config.arguments.makeIterator()
 

@@ -1,5 +1,6 @@
 import Routing
 import HTTP
+import JSONs
 
 public final class Resource<Model: Parameterizable> {
     public typealias Multiple = (Request) throws -> ResponseRepresentable
@@ -122,9 +123,9 @@ extension RouteBuilder {
             item(.options, about)
         } else {
             item(.options) { request, model in
-                return try JSON(node: [
-                    "resource": "\(path)/:\(pathId)",
-                    "methods": try JSON(node: itemMethods.map { $0.description })
+                return JSON.object([
+                    "resource": .string("\(path)/:\(pathId)"),
+                    "methods": .array(itemMethods.map { .string($0.description) })
                 ]) 
             }
         }
@@ -133,10 +134,9 @@ extension RouteBuilder {
             multiple(.options, about)
         } else {
             multiple(.options) { request in
-                let methods: [String] = multipleMethods.map { $0.description }
-                return try JSON(node: [
-                    "resource": path,
-                    "methods": try JSON(node: methods)
+                return JSON.object([
+                    "resource": .string(path),
+                    "methods": .array(multipleMethods.map { .string($0.description) })
                 ])
             }
         }

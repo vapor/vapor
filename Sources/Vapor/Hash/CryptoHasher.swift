@@ -1,4 +1,5 @@
 import Crypto
+import Service
 
 /// Create normal and keyed hashes
 /// using the available HMAC methods from
@@ -58,12 +59,22 @@ public final class CryptoHasher: HashProtocol {
     }
 }
 
-// MARK: Config
+// MARK: Service
 
-extension CryptoHasher: ConfigInitializable {
-    /// Creates a crypto hasher from a Config object
-    public convenience init(config: Configs.Config) throws {
-        guard let crypto = config["crypto"] else {
+extension CryptoHasher: ServiceType {
+    /// See Service.name
+    public static var serviceName: String {
+        return "crypto"
+    }
+
+    /// See Service.serviceSupports
+    public static var serviceSupports: [Any.Type] {
+        return [HashProtocol.self]
+    }
+
+    /// See Service.make
+    public static func makeService(for container: Container) throws -> CryptoHasher? {
+        guard let crypto = container.config["crypto"] else {
             throw ConfigError.missingFile("crypto")
         }
 
@@ -96,7 +107,7 @@ extension CryptoHasher: ConfigInitializable {
         let method: Method
 
         // Key
-        if let encodedKey = crypto["hash", "key"]?.bytes {
+        if let encodedKey = crypto["hash", "key"]?.string?.makeBytes() {
             guard let hmac = try HMAC.Method(methodString) else {
                 throw ConfigError.unsupported(
                     value: methodString,
@@ -106,8 +117,8 @@ extension CryptoHasher: ConfigInitializable {
             }
             
             let key = encoding.decode(encodedKey)
-            if key.allZeroes {
-                let log = try config.resolveLog()
+            if key.isAllZeroes {
+                let log = try container.make(LogProtocol.self)
                 log.warning("The current hash key \"\(encodedKey.makeString())\" is not secure.")
                 log.warning("Update hash.key in Config/crypto.json before using in production.")
                 log.info("Use `openssl rand -base64 <length>` to generate a random string.")
@@ -126,7 +137,7 @@ extension CryptoHasher: ConfigInitializable {
             method = .normal(hash)
         }
 
-        self.init(method: method, encoding: encoding)
+        return .init(method: method, encoding: encoding)
     }
 }
 

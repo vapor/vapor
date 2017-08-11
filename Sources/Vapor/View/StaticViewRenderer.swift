@@ -1,4 +1,6 @@
 import Core
+import Service
+import Node
 
 public final class StaticViewRenderer: ViewRenderer {
     let loader = DataFile()
@@ -21,5 +23,24 @@ public final class StaticViewRenderer: ViewRenderer {
         let view = View(bytes: bytes)
         cache?[path] = view
         return view
+    }
+}
+
+// MARK: Service
+
+extension StaticViewRenderer: ServiceType {
+    /// See Service.name
+    public static var serviceName: String {
+        return "static"
+    }
+
+    /// See Service.serviceSupports
+    public static var serviceSupports: [Any.Type] {
+        return [ViewRenderer.self]
+    }
+
+    /// See Service.make
+    public static func makeService(for container: Container) throws -> Self? {
+        return .init(viewsDir: container.config.viewsDir)
     }
 }

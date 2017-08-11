@@ -1,4 +1,3 @@
-import Configs
 import Console
 
 /// Logger protocol. Custom loggers must conform

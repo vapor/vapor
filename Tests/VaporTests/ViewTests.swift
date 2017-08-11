@@ -3,6 +3,8 @@ import Core
 @testable import Vapor
 import HTTP
 import Sessions
+import Node
+import Service
 
 class ViewTests: XCTestCase {
     static let allTests = [
@@ -54,12 +56,13 @@ class ViewTests: XCTestCase {
             }
         }
         
-        let config = Config([:])
+        var config = Config.default()
+        try config.set("droplet", "view", to: "test")
+
+        var services = Services.default()
+        services.register(TestRenderer(viewsDir: ""), name: "test", supports: [ViewRenderer.self])
         
-        let drop = try Droplet(
-            config: config,
-            view: TestRenderer(viewsDir: "")
-        )
+        let drop = try Droplet(config, services)
         
         let request = Request(method: .get, path: "/foopath")
         
@@ -74,7 +77,7 @@ class ViewTests: XCTestCase {
         
 
         
-        let view = try drop.view.make("test-template", for: request)
+        let view = try drop.view().make("test-template", for: request)
         let string = view.data.makeString()
         
         XCTAssert(string.contains("Vapor"))

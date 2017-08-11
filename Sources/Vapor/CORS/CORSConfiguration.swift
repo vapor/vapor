@@ -1,4 +1,5 @@
 import HTTP
+import Service
 
 /// Error thrown during instantiation of the `CORSConfiguration`.
 public enum CORSConfigurationError: Error {
@@ -113,7 +114,7 @@ extension CORSConfiguration: ConfigInitializable {
     ///
     /// - Parameter config: The settings config dictionary that should be used to extract settings.
     /// - Throws: Node extraction errors, if extraction fails.
-    public init(config: Configs.Config) throws {
+    public init(config: Config) throws {
         guard let cors = config["cors"] else {
             throw ConfigError.missingFile("cors")
         }
@@ -155,7 +156,7 @@ extension CORSConfiguration: ConfigInitializable {
         self.cacheExpiration = try cors.get("cacheExpiration") ?? 600
 
         if let exposedHeaders = cors["exposedHeaders"] {
-            switch exposedHeaders.wrapped {
+            switch exposedHeaders {
             case .string(let string):
                 self.exposedHeaders = string
             case .array(let array):

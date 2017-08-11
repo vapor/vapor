@@ -1,4 +1,7 @@
 import HTTP
+import Service
+import Node
+import Routing
 
 fileprivate let errorView = ErrorView()
 
@@ -16,7 +19,7 @@ public final class ErrorMiddleware: Middleware {
         do {
             return try next.respond(to: req)
         } catch {
-            log.error(error)
+            log.swiftError(error)
             return make(with: req, for: error)
         }
     }
@@ -38,10 +41,22 @@ public final class ErrorMiddleware: Middleware {
     }
 }
 
-extension ErrorMiddleware: ConfigInitializable {
-    public convenience init(config: Config) throws {
-        let log = try config.resolveLog()
-        self.init(config.environment, log)
+import JSONs
+
+extension ErrorMiddleware: ServiceType {
+    /// See Service.name
+    public static var serviceName: String {
+        return "error"
+    }
+
+    /// See Service.serviceSupports
+    public static var serviceSupports: [Any.Type] {
+        return [Middleware.self]
+    }
+
+    /// See Service.make
+    public static func makeService(for container: Container) throws -> ErrorMiddleware? {
+        return try .init(container.config.environment, container.make(LogProtocol.self))
     }
 }
 
@@ -60,11 +75,11 @@ extension JSON {
     fileprivate init(_ error: Error, env: Environment) {
         let status = Status(error)
         
-        var json = JSON(["error": true])
+        var json = JSON.object(["error": .bool(true)])
         if let abort = error as? AbortError {
-            json.set("reason", abort.reason)
+            json["reason"] = .string(abort.reason)
         } else {
-            json.set("reason", status.reasonPhrase)
+            json["reason"] = .string(status.reasonPhrase)
         }
         
         guard env != .production else {
@@ -74,50 +89,21 @@ extension JSON {
         
         if env != .production {
             if let abort = error as? AbortError {
-                json.set("metadata", abort.metadata)
+                json["metadata"] = (try? abort.metadata.converted(to: JSON.self)) ?? .null
             }
             
             if let debug = error as? Debuggable {
-                json.set("debugReason", debug.reason)
-                json.set("identifier", debug.fullIdentifier)
-                json.set("possibleCauses", debug.possibleCauses)
-                json.set("suggestedFixes", debug.suggestedFixes)
-                json.set("documentationLinks", debug.documentationLinks)
-                json.set("stackOverflowQuestions", debug.stackOverflowQuestions)
-                json.set("gitHubIssues", debug.gitHubIssues)
+                json["debugReason"] = .string(debug.reason)
+                json["identifier"] = .string(debug.fullIdentifier)
+                json["possibleCauses"] = .array(debug.possibleCauses.map { .string($0) })
+                json["suggestedFixes"] = .array(debug.suggestedFixes.map { .string($0) })
+                json["documentationLinks"] = .array(debug.documentationLinks.map { .string($0) })
+                json["stackOverflowQuestions"] = .array(debug.stackOverflowQuestions.map { .string($0) })
+                json["gitHubIssues"] = .array(debug.gitHubIssues.map { .string($0) })
             }
         }
         
         self = json
-    }
-}
-
-extension StructuredDataWrapper {
-    fileprivate mutating func set(_ key: String, _ closure: (Context?) throws -> Node) rethrows {
-        let node = try closure(context)
-        set(key, node)
-    }
-    
-    fileprivate mutating func set(_ key: String, _ value: String?) {
-        guard let value = value, !value.isEmpty else { return }
-        set(key, .string(value))
-    }
-    
-    fileprivate mutating func set(_ key: String, _ node: Node?) {
-        guard let node = node else { return }
-        self[key] = Self(node, context)
-    }
-    
-    fileprivate mutating func set(_ key: String, _ array: [String]?) {
-        guard let array = array?.map(StructuredData.string).map(Self.init), !array.isEmpty else { return }
-        self[key] = .array(array)
-    }
-}
-
-extension StructuredDataWrapper {
-    // TODO: I expected this, maybe put in node
-    init(_ node: Node, _ context: Context) {
-        self.init(node: node.wrapped, in: context)
     }
 }
 
@@ -166,7 +152,7 @@ extension RouterError: AbortError {
 }
 
 extension LogProtocol {
-    public func error(_ error: Error) {
+    public func swiftError(_ error: Error) {
         if let debuggable = error as? Debuggable {
             self.error(debuggable.loggable)
         } else {

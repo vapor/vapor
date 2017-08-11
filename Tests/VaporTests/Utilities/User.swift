@@ -1,4 +1,6 @@
 import Vapor
+import Node
+import Routing
 
 final class User: Parameterizable, NodeConvertible {
     var id: Node?

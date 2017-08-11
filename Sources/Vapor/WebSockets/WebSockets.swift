@@ -2,10 +2,7 @@ import WebSockets
 import HTTP
 import Sockets
 import TLS
-
-public typealias WebSocket = WebSockets.WebSocket
-@_exported import func Core.background
-
+import URI
 
 public final class WebSocketFactory {
     public static let shared = WebSocketFactory()

@@ -2,6 +2,7 @@ import Foundation
 import XCTest
 @testable import Vapor
 import Crypto
+import Service
 
 class HashTests: XCTestCase {
     static let allTests = [
@@ -38,19 +39,14 @@ class HashTests: XCTestCase {
         let defaultExpected = "fb7ae694ba3fd90ae3909ccccd0be0dae988e70296d7099bc5708a872f4cc172"
 
         //test drop facade
-        let config = Config([
-            "crypto": [
-                "hash": [
-                    "method": "sha256",
-                    "encoding": "hex"
-                ]
-            ],
-            "droplet": [
-                "hash": "crypto"
-            ]
+        var config = Config()
+        try config.set("crypto", "hash", to: [
+            "method": "sha256",
+            "encoding": "hex"
         ])
-        let drop = try Droplet(config)
-        let result = try drop.hash.make(string).makeString()
+        try config.set("droplet", "hash", to: "crypto")
+        let drop = try! Droplet(config)
+        let result = try! drop.hash().make(string).makeString()
         XCTAssert(defaultExpected == result, "Hash did not match")
     }
 
@@ -75,16 +71,12 @@ class HashTests: XCTestCase {
         let workFactor: UInt = 7
         let string = "vapor"
 
-        let config = try Config(node: [
-            "droplet": [
-                "hash": "bcrypt"
-            ],
-            "bcrypt": [
-                "cost": workFactor
-            ]
-        ])
+        var config = Config()
+        try config.set("droplet", "hash", to: "bcrypt")
+        try config.set("bcrypt", "cost", to: workFactor.description)
+
         let drop = try Droplet(config)
-        let result = try drop.hash.make(string).makeString()
+        let result = try drop.hash().make(string).makeString()
 
         let other = BCryptHasher(cost: workFactor)
         XCTAssertTrue(

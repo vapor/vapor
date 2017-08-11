@@ -11,11 +11,6 @@ import HTTP
 @testable import Vapor
 
 class AcceptLanguageTests: XCTestCase {
-    static let allTests = [
-        ("testSimple", testSimple),
-        ("testComplex", testComplex)
-    ]
-    
     func testSimple() throws {
         //Test case from: https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.4
         let request = Request(method: .get, uri: "https://www.w3.org")
@@ -42,4 +37,9 @@ class AcceptLanguageTests: XCTestCase {
         XCTAssertEqual(req.acceptLanguage.count, 4)
         XCTAssertEqual(req.acceptLanguage.first?.languageRange, "zh-CN")
     }
+    
+    static let allTests = [
+        ("testSimple", testSimple),
+        ("testComplex", testComplex)
+    ]
 }

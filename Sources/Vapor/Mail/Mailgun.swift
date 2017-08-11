@@ -2,6 +2,9 @@ import SMTP
 import URI
 import FormData
 import Multipart
+import Service
+import HTTP
+import JSONs
 
 public final class Mailgun: MailProtocol {
     public let clientFactory: ClientFactoryProtocol
@@ -30,12 +33,12 @@ public final class Mailgun: MailProtocol {
         req.headers["Authorization"] = "Basic \(basic)"
         
         var json = JSON()
-        try json.set("subject", mail.subject)
+        try json.set("subject", to: mail.subject)
         switch mail.body.type {
         case .html:
-            try json.set("html", mail.body.content)
+            try json.set("html", to: mail.body.content)
         case .plain:
-            try json.set("text", mail.body.content)
+            try json.set("text", to: mail.body.content)
         }
         
         let fromName = mail.from.name ?? "Vapor Mailgun"
@@ -107,11 +110,17 @@ public final class Mailgun: MailProtocol {
     }
 }
 
-// MARK: Config
+// MARK: Service
 
-extension Mailgun: ConfigInitializable {
-    public convenience init(config: Config) throws {
-        guard let mailgun = config["mailgun"] else {
+extension Mailgun: ServiceType {
+    /// See Service.serviceSupports
+    public static var serviceSupports: [Any.Type] {
+        return [MailProtocol.self]
+    }
+
+    /// See Service.make
+    public static func makeService(for container: Container) throws -> Mailgun? {
+        guard let mailgun = container.config["mailgun"] else {
             throw ConfigError.missingFile("mailgun")
         }
         
@@ -123,7 +132,7 @@ extension Mailgun: ConfigInitializable {
             throw ConfigError.missing(key: ["key"], file: "mailgun", desiredType: String.self)
         }
         
-        let client = try config.resolveClient()
-        try self.init(domain: domain, apiKey: apiKey, client)
+        let client = try container.make(ClientFactoryProtocol.self)
+        return try .init(domain: domain, apiKey: apiKey, client)
     }
 }

@@ -1,44 +1,51 @@
 import XCTest
 import HTTP
 import Vapor
+import Service
 
 class CORSMiddlewareTests: XCTestCase {
-    static let allTests = [
-        ("testCorsSameOrigin", testCorsSameOrigin),
-        ("testCorsAnyOrigin", testCorsAnyOrigin),
-        ("testCorsNoOrigin", testCorsNoOrigin),
-        ("testCorsCustomOriginFailure", testCorsCustomOriginFailure),
-        ("testCorsCustomOriginSuccess", testCorsCustomOriginSuccess),
-        ("testCorsMultipleCustomOriginSuccess", testCorsMultipleCustomOriginSuccess),
-        ("testCorsMultipleCustomOriginFailure", testCorsMultipleCustomOriginFailure),
-        ("testCorsCredentials", testCorsCredentials),
-        ("testCorsCaching", testCorsCaching),
-        ("testCorsMethods", testCorsMethods),
-    ]
-
-
-    func dropWithCors(config: CORSConfiguration = .default) -> Droplet {
-        let drop = try! Droplet(middleware: [
-            CORSMiddleware(configuration: config)
-        ])
-        drop.get("*") { _ in return "" }
+    func dropWithCors(config settings: CORSConfiguration = .default) -> Droplet {
+        var config = Config()
+        try! config.set("droplet", "middleware", to: ["my-cors"])
+        
+        var services = Services.default()
+        let cors = CORSMiddleware(configuration: settings)
+        services.register(cors, name: "my-cors", supports: [Middleware.self])
+        
+        let drop = try! Droplet(config, services)
+        
+        drop.get("*") { _
+            in return ""
+        }
+        
         return drop
     }
 
-    func dropWithCors(settings: Configs.Config) -> Droplet {
-        let drop = try! Droplet(middleware: [
-            CORSMiddleware(config: settings)
-        ])
-        drop.get("*") { _ in return "" }
+    func dropWithCors(settings: Config) -> Droplet {
+        var config = Config()
+        try! config.set("droplet", "middleware", to: ["my-cors"])
+        
+        var services = Services.default()
+        let cors = try! CORSMiddleware(config: settings)
+        services.register(cors, name: "my-cors", supports: [Middleware.self])
+        
+        let drop = try! Droplet(config, services)
+        
+        drop.get("*") { _
+            in return ""
+        }
+        
         return drop
     }
 
     // MARK: - Origin Tests -
 
     func testCorsSameOrigin() {
-        let config = CORSConfiguration(allowedOrigin: .originBased,
-                                       allowedMethods: [.get],
-                                       allowedHeaders: [])
+        let config = CORSConfiguration(
+            allowedOrigin: .originBased,
+            allowedMethods: [.get],
+            allowedHeaders: []
+        )
         let drop = dropWithCors(config: config)
 
         do {
@@ -211,4 +218,17 @@ class CORSMiddlewareTests: XCTestCase {
             XCTAssert(false)
         }
     }
+    
+    static let allTests = [
+        ("testCorsSameOrigin", testCorsSameOrigin),
+        ("testCorsAnyOrigin", testCorsAnyOrigin),
+        ("testCorsNoOrigin", testCorsNoOrigin),
+        ("testCorsCustomOriginFailure", testCorsCustomOriginFailure),
+        ("testCorsCustomOriginSuccess", testCorsCustomOriginSuccess),
+        ("testCorsMultipleCustomOriginSuccess", testCorsMultipleCustomOriginSuccess),
+        ("testCorsMultipleCustomOriginFailure", testCorsMultipleCustomOriginFailure),
+        ("testCorsCredentials", testCorsCredentials),
+        ("testCorsCaching", testCorsCaching),
+        ("testCorsMethods", testCorsMethods),
+    ]
 }
