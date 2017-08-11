@@ -2,7 +2,6 @@ import XCTest
 import HTTP
 @testable import Vapor
 import Console
-import Configs
 import Service
 
 class RouteListTests: XCTestCase {

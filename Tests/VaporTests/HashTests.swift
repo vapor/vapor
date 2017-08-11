@@ -2,7 +2,7 @@ import Foundation
 import XCTest
 @testable import Vapor
 import Crypto
-import Configs
+import Service
 
 class HashTests: XCTestCase {
     static let allTests = [

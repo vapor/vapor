@@ -1,7 +1,7 @@
 extension String: Error {}
 
 import JSONs
-import Configs
+import Service
 
 extension JSON: Equatable {
     public static func ==(lhs: JSON, rhs: JSON) -> Bool {

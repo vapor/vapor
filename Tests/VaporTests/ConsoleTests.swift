@@ -1,7 +1,6 @@
 import XCTest
 @testable import Vapor
 import Console
-import Configs
 import Service
 
 class ConsoleTests: XCTestCase {

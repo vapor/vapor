@@ -1,5 +1,4 @@
 import HTTP
-import Configs
 import Service
 
 /// Middleware that adds support for CORS settings in request responses.
@@ -24,7 +23,7 @@ public final class CORSMiddleware: Middleware, ConfigInitializable {
     ///
     /// - Parameter configuration: The settings configuration.
     /// - Throws: Exception if the `CORSConfiugration` couldn't be parsed out of `Configs.Config`.
-    public convenience init(config: Configs.Config) throws {
+    public convenience init(config: Config) throws {
         let configuration = try CORSConfiguration(config: config)
         self.init(configuration: configuration)
     }

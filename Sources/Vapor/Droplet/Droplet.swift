@@ -6,7 +6,6 @@ import Crypto
 import Transport
 import Sockets
 import Service
-import Configs
 import Routing
 
 public final class Droplet: Container {
@@ -14,7 +13,7 @@ public final class Droplet: Container {
     public static let configKey = "droplet"
 
     /// Provides access to config settings.
-    public let config: Configs.Config
+    public let config: Config
     
     /// Services available to this service container.
     public let services: Services
@@ -27,7 +26,7 @@ public final class Droplet: Container {
 
     /// Creates a Droplet.
     public init(
-        _ config: Configs.Config? = nil,
+        _ config: Config? = nil,
         _ services: Services? = nil,
         _ router: Router? = nil,
         arguments: [String] = CommandLine.arguments

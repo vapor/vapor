@@ -5,7 +5,6 @@ import HTTP
 import Console
 import JSONs
 import Service
-import Configs
 
 class ConfigTests: XCTestCase {
     func testConfigAvailableType() throws {

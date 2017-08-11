@@ -6,7 +6,7 @@ import Multipart
 import URI
 import Dispatch
 import Node
-import Configs
+import Service
 
 class FormDataTests: XCTestCase {
     static let allTests = [

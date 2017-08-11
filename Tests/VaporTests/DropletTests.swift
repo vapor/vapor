@@ -4,7 +4,7 @@ import HTTP
 import Core
 import Sockets
 import Dispatch
-import Configs
+import Service
 
 class DropletTests: XCTestCase {
     func testData() {
@@ -26,7 +26,7 @@ class DropletTests: XCTestCase {
         let parent = #file.characters.split(separator: "/").map(String.init).dropLast(3).joined(separator: "/")
         let workDir = "/\(parent)/Sources/Development/"
 
-        var config = Configs.Config()
+        var config = Config()
         try config.set("droplet", "workDir", to: workDir)
         try config.set("droplet", "middleware", to: ["file"])
         
@@ -59,7 +59,7 @@ class DropletTests: XCTestCase {
     }
 
     func testRunConfig() throws {
-        let config: Configs.Config = [
+        let config: Service.Config = [
             "server": [
                 "hostname": "0.0.0.0",
                 "port": 8524,
@@ -84,7 +84,7 @@ class DropletTests: XCTestCase {
     }
     
     func testDumpConfig() throws {
-        var config: Configs.Config = [
+        var config: Service.Config = [
             "server": [
                 "hostname": "0.0.0.0",
                 "port": 8524,

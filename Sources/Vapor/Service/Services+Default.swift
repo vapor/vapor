@@ -4,6 +4,8 @@ import Cache
 import Service
 import Routing
 
+public typealias Config = Service.Config
+
 extension Services {
     public static func `default`() -> Services {
         var services = Services()

@@ -1,7 +1,6 @@
 import XCTest
 import HTTP
 import Vapor
-import Configs
 import Service
 
 class CORSMiddlewareTests: XCTestCase {
@@ -22,7 +21,7 @@ class CORSMiddlewareTests: XCTestCase {
         return drop
     }
 
-    func dropWithCors(settings: Configs.Config) -> Droplet {
+    func dropWithCors(settings: Config) -> Droplet {
         var config = Config()
         try! config.set("droplet", "middleware", to: ["my-cors"])
         

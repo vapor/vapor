@@ -1,4 +1,4 @@
-import Configs
+import Service
 
 extension StaticViewRenderer: ConfigInitializable {
     public convenience init(config: Config) throws {

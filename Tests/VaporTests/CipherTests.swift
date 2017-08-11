@@ -1,7 +1,6 @@
 import Foundation
 import XCTest
 @testable import Vapor
-import Configs
 
 class CipherTests: XCTestCase {
     func testCipher() throws {

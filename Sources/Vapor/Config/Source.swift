@@ -1,4 +1,4 @@
-import Configs
+import Service
 
 /**
     The source to load a configuration from.

@@ -1,6 +1,5 @@
 import XCTest
 @testable import Vapor
-import Configs
 
 class ConfigIntegrationTests: XCTestCase {
     var workDir: String {

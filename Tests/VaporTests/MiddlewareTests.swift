@@ -1,7 +1,6 @@
 import Vapor
 import XCTest
 import HTTP
-import Configs
 import Service
 
 class MiddlewareTests: XCTestCase {

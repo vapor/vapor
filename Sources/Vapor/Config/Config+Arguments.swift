@@ -1,5 +1,5 @@
 import Foundation
-import Configs
+import Service
 
 extension Config {
     /// CLI Config expects arguments to have the following syntax:

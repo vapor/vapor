@@ -1,4 +1,4 @@
-import Configs
+import Service
 
 extension Config {
     public static func `default`(arguments: [String] = CommandLine.arguments) -> Config {

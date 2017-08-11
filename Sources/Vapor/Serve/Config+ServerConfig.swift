@@ -1,8 +1,8 @@
 import TLS
 import Transport
-import Configs
+import Service
 
-extension Configs.Config {
+extension Config {
     internal func makeServerConfig() throws -> ServerConfig {
         let serverConfig = self["server"]
         let port = serverConfig?["port"]?.int?.port ?? 8080
@@ -15,7 +15,7 @@ extension Configs.Config {
     }
     
     internal func makeSecurityLayer(
-        serverConfig: Configs.Config?,
+        serverConfig: Config?,
         file: String
     ) throws -> SecurityLayer {
         let security = serverConfig?["securityLayer"]?.string ?? "none"
@@ -42,7 +42,7 @@ extension Configs.Config {
         return securityLayer
     }
     
-    func parseTLSConfig(_ tlsConfig: [String: Configs.Config], mode: TLS.Mode) throws -> TLS.Context {
+    func parseTLSConfig(_ tlsConfig: [String: Config], mode: TLS.Mode) throws -> TLS.Context {
         let verifyHost = tlsConfig["verifyHost"]?.bool ?? true
         let verifyCertificates = tlsConfig["verifyCertificates"]?.bool ?? true
         
@@ -57,7 +57,7 @@ extension Configs.Config {
         return config
     }
     
-    func parseTLSCertificates(_ tlsConfig: [String: Configs.Config]) throws -> TLS.Certificates {
+    func parseTLSCertificates(_ tlsConfig: [String: Config]) throws -> TLS.Certificates {
         let certs: TLS.Certificates
         
         if let certsConfig = tlsConfig["certificates"]?.string {
@@ -102,7 +102,7 @@ extension Configs.Config {
         return certs
     }
     
-    func parseTLSSignature(_ tlsConfig: [String: Configs.Config]) -> TLS.Certificates.Signature {
+    func parseTLSSignature(_ tlsConfig: [String: Config]) -> TLS.Certificates.Signature {
         let signature: TLS.Certificates.Signature
         
         if let sigConfig = tlsConfig["signature"]?.string {

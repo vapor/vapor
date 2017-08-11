@@ -1,8 +1,8 @@
 import Node
 import Core
 import Foundation
-import Configs
 import JSONs
+import Service
 
 extension Config {
     public static func fromFiles(

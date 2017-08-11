@@ -10,7 +10,6 @@ import XCTest
 import HTTP
 import Vapor
 import Service
-import Configs
 
 class FileMiddlewareTests: XCTestCase {
     func testETag() throws {

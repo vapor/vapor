@@ -1,4 +1,4 @@
-import Configs
+import Service
 
 extension Config {
     // MARK: Directories

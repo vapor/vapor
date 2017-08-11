@@ -1,4 +1,4 @@
-import Configs
+import Service
 
 extension Config {
     internal func merged(with sub: Config) -> Config? {

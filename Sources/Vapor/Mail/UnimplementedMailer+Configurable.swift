@@ -1,4 +1,4 @@
-import Configs
+import Service
 
 extension UnimplementedMailer: ConfigInitializable {
     public convenience init(config: Config) throws {

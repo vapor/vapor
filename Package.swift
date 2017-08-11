@@ -50,7 +50,6 @@ let package = Package(
         .target(name: "Vapor", dependencies: [
             "BCrypt", 
             "Cache", 
-            "Configs", 
             "Console", 
             "FormData",
             "HTTP", 

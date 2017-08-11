@@ -3,7 +3,6 @@ import XCTest
 import HTTP
 import Transport
 import Console
-import Configs
 import Service
 
 class ProviderTests: XCTestCase {
@@ -131,7 +130,7 @@ private final class FastServerProvider: Provider, ConfigInitializable {
     static let repositoryName = "fast-server"
     var beforeRunFlag = false
 
-    init(config: Configs.Config) throws {
+    init(config: Config) throws {
     }
     
     func register(_ services: inout Services) throws {
@@ -175,7 +174,7 @@ private final class SlowServerProvider: Provider, ConfigInitializable {
     static let repositoryName = "slow-server"
     var beforeRunFlag = false
 
-    init(config: Configs.Config) throws {
+    init(config: Config) throws {
         
     }
     

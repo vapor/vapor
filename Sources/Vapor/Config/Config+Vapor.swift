@@ -1,5 +1,5 @@
 import Mapper
-import Configs
+import Service
 
 // MARK: Environment
 

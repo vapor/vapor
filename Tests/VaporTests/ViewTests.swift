@@ -4,7 +4,6 @@ import Core
 import HTTP
 import Sessions
 import Node
-import Configs
 import Service
 
 class ViewTests: XCTestCase {
