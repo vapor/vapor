@@ -41,7 +41,7 @@ let package = Package(
         .package(url: "https://github.com/vapor/service.git", .branch("beta")),
     ],
     targets: [
-        .target(name: "Caches", dependencies: ["Mapper"]),
+        .target(name: "Caches", dependencies: ["Mapper", "Service"]),
         .testTarget(name: "CachesTests", dependencies: ["Caches"]),
         .target(name: "Sessions", dependencies: ["Caches", "Cookies", "Crypto", "HTTP"]),
         .testTarget(name: "SessionsTests", dependencies: ["Sessions"]),

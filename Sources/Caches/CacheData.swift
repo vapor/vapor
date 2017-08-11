@@ -1,5 +1,7 @@
 import Mapper
 
+/// Supported data types for storing
+// and fetching from a `Cache`.
 public enum CacheData {
     case string(String)
     case array([CacheData])
@@ -7,16 +9,20 @@ public enum CacheData {
     case null
 }
 
+/// Able to be represented as `CacheData`.
 public protocol CacheDataRepresentable {
     func makeCacheData() throws -> CacheData
 }
 
+/// Able to be initialized with `CacheData`
 public protocol CacheDataInitializable {
     init(cacheData: CacheData) throws
 }
 
+/// Able to convert to and from `CacheData`.
 public typealias CacheDataConvertible = CacheDataInitializable & CacheDataRepresentable
 
+// CacheData can obviously convert to/from itself.
 extension CacheData: CacheDataConvertible {
     public init(cacheData: CacheData) throws {
         self = cacheData
@@ -27,6 +33,8 @@ extension CacheData: CacheDataConvertible {
     }
 }
 
+/// Support conversion to `Map` type for easy
+/// conversions b/t other data types.
 extension CacheData: MapConvertible {
     public init(map: Map) {
         switch map {
@@ -61,8 +69,12 @@ extension CacheData: MapConvertible {
     }
 }
 
-extension CacheData: Polymorphic {}
+// Convenience accessors like `.string`.
+extension CacheData: Polymorphic {
+    // Automatically implemented by conforming to `MapConvertible`.
+}
 
+// Instances of `CacheData` can be compared.
 extension CacheData: Equatable {
     public static func ==(lhs: CacheData, rhs: CacheData) -> Bool {
         switch (lhs, rhs) {
@@ -79,6 +91,8 @@ extension CacheData: Equatable {
         }
     }
 }
+
+// MARK: Compatible Types
 
 extension String: CacheDataConvertible {
     public init(cacheData: CacheData) throws {
