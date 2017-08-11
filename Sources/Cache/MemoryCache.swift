@@ -11,13 +11,21 @@ public final class MemoryCache: Cache {
     // Private storage
     private var _storage: [String: (Date?, CacheData)]
 
+    /// Used to synchronize access to the session data.
+    private var lock = NSLock()
+
     /// Creates a new MemoryCache.
     public init() {
         _storage = [:]
     }
 
-    /// See: Cache.get()
+    /// See Cache.get()
     public func get(_ key: String) throws -> CacheData {
+        lock.lock()
+        defer {
+            lock.unlock()
+        }
+
         guard let (expiration, value) = _storage[key] else {
             return .null
         }
@@ -29,13 +37,22 @@ public final class MemoryCache: Cache {
         return value
     }
 
-    /// See: Cache.set()
+    /// See Cache.set()
     public func set(_ key: String, to data: CacheData, expiration: Date?) throws {
+        lock.lock()
+        defer {
+            lock.unlock()
+        }
+
         _storage[key] = (expiration, data)
     }
 
-    /// See: Cache.delete()
+    /// See Cache.delete()
     public func delete(_ key: String) throws {
+        lock.lock()
+        defer {
+            lock.unlock()
+        }
         _storage.removeValue(forKey: key)
     }
 }
@@ -43,5 +60,18 @@ public final class MemoryCache: Cache {
 // MARK: Service
 
 extension MemoryCache: ServiceType {
-    
+    /// See ServiceType.serviceName
+    public static var serviceName: String {
+        return "memory"
+    }
+
+    /// See ServiceType.serviceSupports
+    public static var serviceSupports: [Any.Type] {
+        return [Cache.self]
+    }
+
+    /// See ServiceType.makeService()
+    public static func makeService(for container: Container) throws -> Self? {
+        return .init()
+    }
 }

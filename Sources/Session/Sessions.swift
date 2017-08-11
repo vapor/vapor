@@ -1,8 +1,8 @@
-import Node
+import Crypto
 
 /// Session storage engines that conform to this
 /// protocol can be used to power the Session class.
-public protocol SessionsProtocol: class {
+public protocol Sessions {
     /// Creates a new, random identifier
     /// to use for storing a Session
     func makeIdentifier() throws -> String
@@ -21,8 +21,23 @@ public protocol SessionsProtocol: class {
     func contains(identifier: String) throws -> Bool
 }
 
-extension SessionsProtocol {
+extension Sessions {
+    /// See Sessions.contains()
     public func contains(identifier: String) throws -> Bool {
         return try get(identifier: identifier) != nil
+    }
+
+    /// See Sessions.makeIdentifier()
+    public func makeIdentifier() throws -> String {
+        return try Self.randomBase64String(byteCount: 16)
+    }
+}
+
+// MARK: Utilities
+
+extension Sessions {
+    /// Generates a random Base64 encoded string.
+    public static func randomBase64String(byteCount: Int) throws -> String {
+        return try Crypto.Random.bytes(count: byteCount).base64Encoded.makeString()
     }
 }

@@ -1,4 +1,4 @@
-import Cache
+import Caches
 import Service
 
 extension MemoryCache: ServiceType {

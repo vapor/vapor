@@ -1,4 +1,4 @@
-import Cache
+import Caches
 
 extension Droplet {
     /// Store and retreive key:value

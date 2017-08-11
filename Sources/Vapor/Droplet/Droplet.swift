@@ -1,6 +1,6 @@
 import HTTP
 import Console
-import Cache
+import Caches
 import Sessions
 import Crypto
 import Transport

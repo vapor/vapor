@@ -4,8 +4,8 @@ import PackageDescription
 let package = Package(
     name: "Vapor",
     products: [
-        .library(name: "Caches", targets: ["Caches"]),
-        .library(name: "Sessions", targets: ["Sessions"]),
+        .library(name: "Cache", targets: ["Cache"]),
+        .library(name: "Session", targets: ["Session"]),
         .library(name: "Testing", targets: ["Testing"]),
         .library(name: "Vapor", targets: ["Vapor"]),
     ],
@@ -41,15 +41,15 @@ let package = Package(
         .package(url: "https://github.com/vapor/service.git", .branch("beta")),
     ],
     targets: [
-        .target(name: "Caches", dependencies: ["Mapper", "Service"]),
-        .testTarget(name: "CachesTests", dependencies: ["Caches"]),
-        .target(name: "Sessions", dependencies: ["Caches", "Cookies", "Crypto", "HTTP"]),
-        .testTarget(name: "SessionsTests", dependencies: ["Sessions"]),
+        .target(name: "Cache", dependencies: ["Mapper", "Service"]),
+        .testTarget(name: "CacheTests", dependencies: ["Cache"]),
+        .target(name: "Session", dependencies: ["Cache", "Cookies", "Crypto", "HTTP", "Service"]),
+        .testTarget(name: "SessionTests", dependencies: ["Session"]),
         .target(name: "Testing", dependencies: ["Core", "HTTP", "Vapor"]),
         .testTarget(name: "TestingTests", dependencies: ["Testing"]),
         .target(name: "Vapor", dependencies: [
             "BCrypt", 
-            "Caches", 
+            "Cache", 
             "Console", 
             "FormData",
             "HTTP", 
@@ -58,7 +58,7 @@ let package = Package(
             "Multipart",
             "Routing",
             "Service",
-            "Sessions", 
+            "Session", 
             "SMTP",
             "WebSockets"
         ]),

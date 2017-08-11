@@ -26,14 +26,14 @@ extension Cache {
     }
 
     /// Sets the key to a `CacheDataRepresentable` type.
-    /// - See: `Cache.set()`
+    /// - See `Cache.set()`
     public func set<T: CacheDataRepresentable>(_ key: String, to data: T) throws {
         return try set(key, to: data.makeCacheData(), expiration: nil)
     }
 
     /// Sets the key to a `CacheDataRepresentable` type that will
     /// expire after the supplied time interval.
-    /// - See: `Cache.set()`
+    /// - See `Cache.set()`
     public func set(_ key: String, to data: CacheDataRepresentable, expireAfter: TimeInterval) throws {
         return try set(key, to: data.makeCacheData(), expiration: Date(timeIntervalSinceNow: expireAfter))
     }
