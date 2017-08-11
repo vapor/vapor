@@ -24,10 +24,10 @@ let package = Package(
         .package(url: "https://github.com/vapor/crypto.git", .upToNextMajor(from: "2.1.0")),
 
         // Core vapor transport layer
-        .package(url: "https://github.com/vapor/engine.git", .branch("beta")),
+        .package(url: "https://github.com/vapor/engine.git", .branch("content")),
 
         // JSON enum wrapper around Foundation JSON
-        .package(url: "https://github.com/vapor/json.git", .branch("mapper")),
+        .package(url: "https://github.com/vapor/json.git", .branch("beta")),
 
         // Data mapper
         .package(url: "https://github.com/vapor/mapper.git", .branch("beta")),
@@ -59,7 +59,7 @@ let package = Package(
             "Console", 
             "FormData",
             "HTTP", 
-            "JSONs",
+            "JSON",
             "Mapper",
             "Multipart",
             "Routing",

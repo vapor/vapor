@@ -36,3 +36,10 @@ public final class Session {
         shouldDestroy = true
     }
 }
+
+extension Session {
+    /// Creates a new Session using a SessionDataRepresentable value.
+    public convenience init(identifier: String, data: SessionDataRepresentable) throws {
+        try self.init(identifier: identifier, data: data.makeSessionData())
+    }
+}

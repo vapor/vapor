@@ -127,7 +127,7 @@ extension URLEncodedForm: Content {
                         )
                     }
 
-                    let string = "\(key)%5B\(subKey)%5D=\(value)"
+                    let string = "\(key)[\(subKey)]=\(value)"
                     guard let encoded = string.data(using: .utf8) else {
                         throw URLEncodedError.unableToEncode(string: string)
                     }
@@ -143,7 +143,7 @@ extension URLEncodedForm: Content {
                         )
                     }
 
-                    let string = "\(key)%5B%5D=\(val)"
+                    let string = "\(key)[]=\(val)"
                     guard let encoded = string.data(using: .utf8) else {
                         throw URLEncodedError.unableToEncode(string: string)
                     }

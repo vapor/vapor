@@ -1,6 +1,6 @@
 import Console
 import Service
-import JSONs
+import JSON
 
 /// Command for dumping compiled config to the console.
 public final class DumpConfig: Command {

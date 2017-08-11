@@ -16,7 +16,7 @@ public protocol SessionDataRepresentable {
 
 /// Able to be initialized with `SessionData`
 public protocol SessionDataInitializable {
-    init(SessionData: SessionData) throws
+    init(sessionData: SessionData) throws
 }
 
 /// Able to convert to and from `SessionData`.
@@ -24,8 +24,8 @@ public typealias SessionDataConvertible = SessionDataInitializable & SessionData
 
 // SessionData can obviously convert to/from itself.
 extension SessionData: SessionDataConvertible {
-    public init(SessionData: SessionData) throws {
-        self = SessionData
+    public init(sessionData: SessionData) throws {
+        self = sessionData
     }
 
     public func makeSessionData() throws -> SessionData {
@@ -99,6 +99,18 @@ extension SessionData: Keyed {
     }
 }
 
+// Keyed convenience
+extension SessionData {
+    public mutating func set<T: SessionDataRepresentable>(_ path: Path..., to sessionData: T) throws {
+        try set(path, to: sessionData) { try $0.makeSessionData() }
+    }
+
+    public func get<T: SessionDataInitializable>(_ path: Path...) throws -> T {
+        return try get(path) { try T.init(sessionData: $0) }
+    }
+}
+
+
 // Convenience accessors like `.string`.
 extension SessionData: Polymorphic {
     // Automatically implemented by conforming to `MapConvertible`.
@@ -125,8 +137,8 @@ extension SessionData: Equatable {
 // MARK: Compatible Types
 
 extension String: SessionDataConvertible {
-    public init(SessionData: SessionData) throws {
-        self = try SessionData.assertString()
+    public init(sessionData: SessionData) throws {
+        self = try sessionData.assertString()
     }
 
     public func makeSessionData() -> SessionData {
@@ -135,8 +147,8 @@ extension String: SessionDataConvertible {
 }
 
 extension Int: SessionDataConvertible {
-    public init(SessionData: SessionData) throws {
-        self = try SessionData.assertInt()
+    public init(sessionData: SessionData) throws {
+        self = try sessionData.assertInt()
     }
 
     public func makeSessionData() -> SessionData {
@@ -145,12 +157,38 @@ extension Int: SessionDataConvertible {
 }
 
 extension Double: SessionDataConvertible {
-    public init(SessionData: SessionData) throws {
-        self = try SessionData.assertDouble()
+    public init(sessionData: SessionData) throws {
+        self = try sessionData.assertDouble()
     }
 
     public func makeSessionData() throws -> SessionData {
         return .string(self.description)
+    }
+}
+
+// MARK: Expressible
+
+extension SessionData: ExpressibleByArrayLiteral {
+    public init(arrayLiteral elements: SessionData...) {
+        self = .array(elements)
+    }
+}
+
+extension SessionData: ExpressibleByDictionaryLiteral {
+    public init(dictionaryLiteral elements: (String, SessionData)...) {
+        self = .dictionary(Dictionary(uniqueKeysWithValues: elements) )
+    }
+}
+
+extension SessionData: ExpressibleByStringLiteral {
+    public init(stringLiteral value: String) {
+        self = .string(value)
+    }
+}
+
+extension SessionData: ExpressibleByNilLiteral {
+    public init(nilLiteral: ()) {
+        self = .null
     }
 }
 

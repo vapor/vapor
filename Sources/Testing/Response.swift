@@ -2,7 +2,7 @@ import HTTP
 import Foundation
 import Node
 import Vapor
-import JSONs
+import JSON
 import Mapper
 
 // MARK: Assertions

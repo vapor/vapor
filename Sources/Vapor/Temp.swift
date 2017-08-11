@@ -1,6 +1,6 @@
 extension String: Error {}
 
-import JSONs
+import JSON
 import Service
 
 extension JSON: Equatable {

@@ -3,7 +3,7 @@ import Vapor
 import Session
 import HTTP
 import Console
-import JSONs
+import JSON
 import Service
 
 class ConfigTests: XCTestCase {

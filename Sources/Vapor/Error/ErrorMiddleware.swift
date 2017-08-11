@@ -2,6 +2,7 @@ import HTTP
 import Service
 import Node
 import Routing
+import JSON
 
 fileprivate let errorView = ErrorView()
 
@@ -40,8 +41,6 @@ public final class ErrorMiddleware: Middleware {
         return response
     }
 }
-
-import JSONs
 
 extension ErrorMiddleware: ServiceType {
     /// See Service.name

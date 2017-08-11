@@ -1,9 +1,9 @@
 import XCTest
-@testable import Sessions
+import Session
 import Core
 import Node
 import Cache
-import JSONs
+import JSON
 
 class SessionsProtocolTests: XCTestCase {
     static let allTests = [
@@ -18,7 +18,8 @@ class SessionsProtocolTests: XCTestCase {
 
         XCTAssertNil(s.get(identifier: id))
 
-        s.set(Session(identifier: id, data: Node("bar")))
+        let session = try Session(identifier: id, data: "bar")
+        s.set(session)
         XCTAssertEqual(s.get(identifier: id)?.data.string, "bar")
 
         try s.destroy(identifier: id)
@@ -27,12 +28,13 @@ class SessionsProtocolTests: XCTestCase {
 
     func testCache() throws {
         let m = MemoryCache()
-        let s = CacheSessions(m)
+        let s = CacheSessions(cache: m)
         let id = try s.makeIdentifier()
 
         XCTAssertNil(try s.get(identifier: id))
 
-        try s.set(Session(identifier: id, data: Node("bar")))
+        let session = try Session(identifier: id, data: "bar")
+        try s.set(session)
         XCTAssertEqual(try s.get(identifier: id)?.data.string, "bar")
 
         try s.destroy(identifier: id)
@@ -41,13 +43,13 @@ class SessionsProtocolTests: XCTestCase {
     
     func testCacheObject() throws {
         let memory = MemoryCache()
-        let sessions = CacheSessions(memory)
+        let sessions = CacheSessions(cache: memory)
         let id = try sessions.makeIdentifier()
         
         XCTAssert(try sessions.contains(identifier: id) == false)
 
         let session = Session(identifier: id)
-        try session.data.set("foo", "bar")
+        try session.data.set("foo", to: "bar")
         try sessions.set(session)
 
         let fetched = try sessions.get(identifier: id)

@@ -1,6 +1,6 @@
 import Routing
 import HTTP
-import JSONs
+import JSON
 
 public final class Resource<Model: Parameterizable> {
     public typealias Multiple = (Request) throws -> ResponseRepresentable

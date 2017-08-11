@@ -1,7 +1,7 @@
 import Node
 import Core
 import Foundation
-import JSONs
+import JSON
 import Service
 
 extension Config {

@@ -1,11 +1,10 @@
 import XCTest
-@testable import Session
+import Session
 import Vapor
 import HTTP
 import Core
 import Cookies
 import Service
-import Node
 
 class SessionsTests: XCTestCase {
     func testExample() throws {
@@ -21,8 +20,8 @@ class SessionsTests: XCTestCase {
         let drop = try Droplet(config, services)
 
         drop.get("set") { req in
-            try req.assertSession().data["foo"] = "bar"
-            try req.assertSession().data["bar"] = "baz"
+            try req.assertSession().data["foo"] = .string("bar")
+            try req.assertSession().data["bar"] = .string("baz")
             return "set"
         }
 
@@ -46,18 +45,7 @@ class SessionsTests: XCTestCase {
         let cookie = res.cookies.cookies[cookieIndex]
         
         XCTAssertTrue(cookie.httpOnly)
-        
         XCTAssertEqual(cookie.path, "/")
-
-        for s in s.sessions {
-            print(s.key)
-            print(s.value.data)
-        }
-        
-        XCTAssertEqual(s.sessions[c]?.data, Node([
-            "foo": "bar",
-            "bar": "baz"
-        ]))
 
         let req2 = Request(method: .get, path: "get")
         req2.cookies["vapor-session"] = c
@@ -69,25 +57,20 @@ class SessionsTests: XCTestCase {
     func testCustomCookieFactoryWithExpiryDate() throws {
         let s = MemorySessions()
         let cookieName = "test-name"
-        let cookieModifier: (Request) -> Cookie = { req in
-            var cookie = Cookie(
-                name: cookieName,
-                value: "",
-                httpOnly: true
-            )
-            
-            if req.storage["session_expiry"] as? Bool ?? false {
-                let oneMonthTime: TimeInterval = 30 * 24 * 60 * 60
-                cookie.expires = Date().addingTimeInterval(oneMonthTime)
-            }
-            
-            return cookie
-        }
 
         var config = Config()
         try config.set("droplet", "middleware", to: ["m"])
 
-        let m = SessionsMiddleware(sessions: s, cookieName: cookieName, cookeModifier: cookieFactory)
+        let m = SessionsMiddleware(sessions: s, cookieName: cookieName) { req, cookie in
+            var cookie = cookie
+
+            if req.storage["session_expiry"] as? Bool ?? false {
+                let oneMonthTime: TimeInterval = 30 * 24 * 60 * 60
+                cookie.expires = Date().addingTimeInterval(oneMonthTime)
+            }
+
+            return cookie
+        }
         
         var services = Services.default()
         services.register(m, name: "m", supports: [Middleware.self])
@@ -96,7 +79,7 @@ class SessionsTests: XCTestCase {
         
         drop.get("should-set-expiry") { req in
             req.storage["session_expiry"] = true
-            try req.assertSession().data["foo"] = "bar"
+            try req.assertSession().data.set("foo", to: "bar")
             return "should expire"
         }
         

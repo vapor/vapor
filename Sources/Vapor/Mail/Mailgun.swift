@@ -4,7 +4,7 @@ import FormData
 import Multipart
 import Service
 import HTTP
-import JSONs
+import JSON
 
 public final class Mailgun: MailProtocol {
     public let clientFactory: ClientFactoryProtocol

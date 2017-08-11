@@ -1,5 +1,5 @@
 import HTTP
-import JSONs
+import JSON
 
 extension Body {
     public init(_ json: JSON) throws {

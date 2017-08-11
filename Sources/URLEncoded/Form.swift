@@ -16,7 +16,7 @@ public protocol URLEncodedFormRepresentable {
 
 /// Able to be initialized with `URLEncodedForm`
 public protocol URLEncodedFormInitializable {
-    init(URLEncodedForm: URLEncodedForm) throws
+    init(urlEncodedForm: URLEncodedForm) throws
 }
 
 /// Able to convert to and from `URLEncodedForm`.
@@ -24,8 +24,8 @@ public typealias URLEncodedFormConvertible = URLEncodedFormInitializable & URLEn
 
 // URLEncodedForm can obviously convert to/from itself.
 extension URLEncodedForm: URLEncodedFormConvertible {
-    public init(URLEncodedForm: URLEncodedForm) throws {
-        self = URLEncodedForm
+    public init(urlEncodedForm: URLEncodedForm) throws {
+        self = urlEncodedForm
     }
 
     public func makeURLEncodedForm() throws -> URLEncodedForm {
@@ -92,11 +92,52 @@ extension URLEncodedForm: Equatable {
     }
 }
 
+// MARK: Keyed
+
+extension URLEncodedForm: Keyed {
+    public static var empty: URLEncodedForm { return .dictionary([:]) }
+
+    public mutating func set(key: PathComponent, to value: URLEncodedForm?) {
+        switch key {
+        case .index(let int):
+            var array = self.array ?? []
+            array[safe: int] = value ?? .null
+            self = .array(array)
+        case .key(let string):
+            var dict = dictionary ?? [:]
+            dict[string] = value ?? .null
+            self = .dictionary(dict)
+        }
+    }
+
+    public func get(key: PathComponent) -> URLEncodedForm? {
+        switch key {
+        case .index(let int):
+            return array?[safe: int]
+        case .key(let string):
+            return dictionary?[string]
+        }
+    }
+}
+
+// Keyed convenience
+extension URLEncodedForm {
+    public mutating func set<T: URLEncodedFormRepresentable>(_ path: Path..., to value: T) throws {
+        try set(path, to: value) { try $0.makeURLEncodedForm() }
+    }
+
+    public func get<T: URLEncodedFormInitializable>(_ path: Path...) throws -> T {
+        return try get(path) { try T.init(urlEncodedForm: $0) }
+    }
+}
+
+
+
 // MARK: Compatible Types
 
 extension String: URLEncodedFormConvertible {
-    public init(URLEncodedForm: URLEncodedForm) throws {
-        self = try URLEncodedForm.assertString()
+    public init(urlEncodedForm: URLEncodedForm) throws {
+        self = try urlEncodedForm.assertString()
     }
 
     public func makeURLEncodedForm() -> URLEncodedForm {
@@ -105,8 +146,8 @@ extension String: URLEncodedFormConvertible {
 }
 
 extension Int: URLEncodedFormConvertible {
-    public init(URLEncodedForm: URLEncodedForm) throws {
-        self = try URLEncodedForm.assertInt()
+    public init(urlEncodedForm: URLEncodedForm) throws {
+        self = try urlEncodedForm.assertInt()
     }
 
     public func makeURLEncodedForm() -> URLEncodedForm {
@@ -115,8 +156,8 @@ extension Int: URLEncodedFormConvertible {
 }
 
 extension Double: URLEncodedFormConvertible {
-    public init(URLEncodedForm: URLEncodedForm) throws {
-        self = try URLEncodedForm.assertDouble()
+    public init(urlEncodedForm: URLEncodedForm) throws {
+        self = try urlEncodedForm.assertDouble()
     }
 
     public func makeURLEncodedForm() throws -> URLEncodedForm {
@@ -124,4 +165,28 @@ extension Double: URLEncodedFormConvertible {
     }
 }
 
+// MARK: Expressible
 
+extension URLEncodedForm: ExpressibleByArrayLiteral {
+    public init(arrayLiteral elements: URLEncodedForm...) {
+        self = .array(elements)
+    }
+}
+
+extension URLEncodedForm: ExpressibleByDictionaryLiteral {
+    public init(dictionaryLiteral elements: (String, URLEncodedForm)...) {
+        self = .dictionary(Dictionary(uniqueKeysWithValues: elements) )
+    }
+}
+
+extension URLEncodedForm: ExpressibleByStringLiteral {
+    public init(stringLiteral value: String) {
+        self = .string(value)
+    }
+}
+
+extension URLEncodedForm: ExpressibleByNilLiteral {
+    public init(nilLiteral: ()) {
+        self = .null
+    }
+}

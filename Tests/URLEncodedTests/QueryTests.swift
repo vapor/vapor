@@ -1,7 +1,7 @@
 import XCTest
-@testable import HTTP
+import HTTP
 @testable import Vapor
-import Node
+import URLEncoded
 
 class QueryTests: XCTestCase {
     static let allTests = [
@@ -13,7 +13,7 @@ class QueryTests: XCTestCase {
     
     func testPercentEncodedValues() {
         let request = Request(method: .get, uri: "http://example.com?fizz=bu%3Dzz%2Bzz&aaa=bb%2Bccc%26dd")
-        let query = request.query?.object
+        let query = request.query?.dictionary
         
         XCTAssertNotNil(query)
         XCTAssertEqual(2, query?.count)
@@ -23,7 +23,7 @@ class QueryTests: XCTestCase {
     
     func testQueryWithoutParameter() {
         let request = Request(method: .get, uri: "http://example.com?fizz&buzz")
-        let query = request.query?.object
+        let query = request.query?.dictionary
         
         XCTAssertNotNil(query)
         XCTAssertEqual(2, query?.count)
@@ -41,9 +41,9 @@ class QueryTests: XCTestCase {
     func testQuerySetAndGet() throws {
         let drop = try Droplet()
         let req = try drop.client().makeRequest(.get, "https://google.com")
-        req.query = Node(["q": "swift vapor"])
+        req.query = .dictionary(["q": .string("swift vapor")])
         let query = req.query
         XCTAssertNotNil(query)
-        XCTAssertEqual(query?["q"]?.string, "swift vapor")
+        XCTAssertEqual(query?.dictionary?["q"]?.string, "swift vapor")
     }
 }

@@ -1,4 +1,4 @@
-import JSONs
+import JSON
 import HTTP
 
 extension JSON: ResponseRepresentable {

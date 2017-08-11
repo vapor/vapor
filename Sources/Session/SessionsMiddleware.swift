@@ -24,7 +24,7 @@ public final class SessionsMiddleware: Middleware {
     let cookieModifier: CookieModifier
 
     /// Allows user to modify cookie.
-    public typealias CookieModifier = (Cookie) throws -> Cookie
+    public typealias CookieModifier = (Request, Cookie) throws -> Cookie
 
     /// Creates a new SessionsMiddleware.
     /// Note: The `name` and `value` properties of cookies
@@ -38,7 +38,7 @@ public final class SessionsMiddleware: Middleware {
     ) {
         self.sessions = sessions
         self.cookieName = cookieName
-        self.cookieModifier = cookieModifier ?? { $0 }
+        self.cookieModifier = cookieModifier ?? { $1 }
     }
 
     /// Responds to the request.
@@ -58,8 +58,8 @@ public final class SessionsMiddleware: Middleware {
 
         let response = try chain.respond(to: request)
 
-        var cookie = Cookie(name: cookieName, value: session.identifier)
-        cookie = try cookieModifier(cookie)
+        var cookie = Cookie(name: cookieName, value: session.identifier, httpOnly: true)
+        cookie = try cookieModifier(request, cookie)
 
         if session.shouldDestroy {
             try sessions.destroy(identifier: session.identifier)
