@@ -15,20 +15,20 @@ class ContentTests: XCTestCase {
     func testPlusEncoding() throws {
         let data = URLEncodedForm.dictionary(["aaa": .string("+bbb ccc")])
         let encoded = try data.serialize().makeString()
-        XCTAssertEqual("aaa=%2Bbbb%20ccc", encoded)
+        XCTAssertEqual("aaa=+bbb ccc", encoded)
     }
 
     func testNested() throws {
         let data: URLEncodedForm = ["key": ["subKey1": "value1", "subKey2": "value2"]]
         let encoded = try data.serialize().makeString()
         // could equal either because dictionaries are unordered
-        XCTAssertEqual(encoded, "key[subKey1%5D=value1&key%5BsubKey2%5D=value2")
+        XCTAssert(encoded == "key[subKey2]=value2&key[subKey1]=value1" || encoded == "key[subKey1]=value1&key[subKey2]=value2")
     }
 
     func testArray() throws {
         let data: URLEncodedForm = ["key": ["1", "2", "3"]]
         let encoded = try data.serialize().makeString()
-        XCTAssertEqual("key%5B%5D=1&key%5B%5D=2&key%5B%5D=3", encoded)
+        XCTAssertEqual("key[]=1&key[]=2&key[]=3", encoded)
     }
 
     func testRequestSetFormURLEncodedBody() throws {
@@ -36,7 +36,7 @@ class ContentTests: XCTestCase {
         let data: URLEncodedForm = ["hello": "world"]
         try request.content(data)
         try XCTAssertEqual(data, request.content(URLEncodedForm.self))
-        XCTAssertEqual("application/x-www-form-urlencoded", request.headers["Content-Type"])
+        XCTAssertEqual("application/x-www-form-urlencoded; charset=utf-8", request.headers["Content-Type"])
         XCTAssertNotNil(request.body.bytes)
         let bodyString = request.body.bytes!.makeString().removingPercentEncoding
         XCTAssertEqual("hello=world", bodyString)
@@ -90,8 +90,8 @@ class ContentTests: XCTestCase {
     func testFormURLEncodedDict() throws {
         let string = "obj[foo]=bar&obj[soo]=car"
         let data = try URLEncodedForm.parse(data: string.data(using: .utf8)!)
-        XCTAssertEqual(data["obj.foo"], "bar")
-        XCTAssertEqual(data["obj.foo"], "bar")
+        XCTAssertEqual(data["obj", "foo"], "bar")
+        XCTAssertEqual(data["obj", "foo"], "bar")
     }
 
     func testSplitString() {
