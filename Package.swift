@@ -4,7 +4,7 @@ import PackageDescription
 let package = Package(
     name: "Vapor",
     products: [
-        .library(name: "Cache", targets: ["Cache"]),
+        .library(name: "Caches", targets: ["Caches"]),
         .library(name: "Sessions", targets: ["Sessions"]),
         .library(name: "Testing", targets: ["Testing"]),
         .library(name: "Vapor", targets: ["Vapor"]),
@@ -29,7 +29,7 @@ let package = Package(
         .package(url: "https://github.com/vapor/json.git", .branch("mapper")),
 
         // Data mapper
-        .package(url: "https://github.com/vapor/node.git", .upToNextMajor(from: "2.1.0")),
+        .package(url: "https://github.com/vapor/mapper.git", .branch("beta")),
         
         // Parses `Content-Type: multipart` as defined in RFC 2046.
         .package(url: "https://github.com/vapor/multipart.git", .upToNextMajor(from: "2.1.0")),
@@ -41,21 +41,21 @@ let package = Package(
         .package(url: "https://github.com/vapor/service.git", .branch("beta")),
     ],
     targets: [
-        .target(name: "Cache", dependencies: ["Node"]),
-        .testTarget(name: "CacheTests", dependencies: ["Cache"]),
-        .target(name: "Sessions", dependencies: ["Cache", "Cookies", "Crypto", "HTTP"]),
+        .target(name: "Caches", dependencies: ["Mapper"]),
+        .testTarget(name: "CachesTests", dependencies: ["Caches"]),
+        .target(name: "Sessions", dependencies: ["Caches", "Cookies", "Crypto", "HTTP"]),
         .testTarget(name: "SessionsTests", dependencies: ["Sessions"]),
         .target(name: "Testing", dependencies: ["Core", "HTTP", "Vapor"]),
         .testTarget(name: "TestingTests", dependencies: ["Testing"]),
         .target(name: "Vapor", dependencies: [
             "BCrypt", 
-            "Cache", 
+            "Caches", 
             "Console", 
             "FormData",
             "HTTP", 
-            "JSONs", 
-            "Multipart", 
-            "Node",
+            "JSONs",
+            "Mapper",
+            "Multipart",
             "Routing",
             "Service",
             "Sessions", 

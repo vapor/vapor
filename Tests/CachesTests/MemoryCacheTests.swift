@@ -17,24 +17,24 @@ class MemoryCacheTests: XCTestCase {
     }
 
     func testBasic() throws {
-        try cache.set("hello", "world")
-        XCTAssertEqual(try cache.get("hello")?.string, "world")
+        try cache.set("hello", to: "world")
+        try XCTAssertEqual(cache.get("hello").string, "world")
     }
 
     func testDelete() throws {
-        try cache.set("ephemeral", 42)
-        XCTAssertEqual(try cache.get("ephemeral")?.string, "42")
+        try cache.set("ephemeral", to: 42)
+        try XCTAssertEqual(cache.get("ephemeral").string, "42")
         try cache.delete("ephemeral")
-        XCTAssertEqual(try cache.get("ephemeral"), nil)
+        try XCTAssertEqual(cache.get("ephemeral"), CacheData.null)
     }
 
     func testExpiration() throws {
-        try cache.set("ephemeral", 42, expiration: Date(timeIntervalSinceNow: 0.5))
-        XCTAssertEqual(try cache.get("ephemeral")?.string, "42")
+        try cache.set("ephemeral", to: 42, expireAfter: 0.5)
+        try XCTAssertEqual(cache.get("ephemeral").string, "42")
         
         let exp = expectation(description: "cache")
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            XCTAssertTrue(try! self.cache.get("ephemeral")?.isNull ?? false)
+            try! XCTAssertTrue(self.cache.get("ephemeral").isNull)
             exp.fulfill()
         }
         
