@@ -42,7 +42,7 @@ extension Config {
             var name = name
             let contents = try Config.loadContents(path: directory + name)
             name.removedJSONSuffix()
-            config[name] = contents.environmentVariablesResolved()
+            config[name] = contents
         }
 
         return .memory(config: config)

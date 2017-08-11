@@ -32,6 +32,7 @@ public final class Droplet: Container {
         arguments: [String] = CommandLine.arguments
     ) throws {
         var config = config ?? Config.default()
+        config.resolveEnv()
 
         // port override
         if let port = config.arguments.value(for: "port") {
