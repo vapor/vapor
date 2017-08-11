@@ -62,6 +62,6 @@ let package = Package(
             "SMTP",
             "WebSockets"
         ]),
-        .testTarget(name: "VaporTests", dependencies: ["Vapor"]),
+        .testTarget(name: "VaporTests", dependencies: ["Vapor", "Testing"]),
     ]
 )

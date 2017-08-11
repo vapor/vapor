@@ -4,6 +4,7 @@ import HTTP
 import Core
 import Sockets
 import Dispatch
+import Testing
 
 class DropletTests: XCTestCase {
     static let allTests = [
@@ -205,6 +206,13 @@ class DropletTests: XCTestCase {
             }
         }
         group.wait()
+    }
+    
+    func test404() throws {
+        let drop = try Droplet()
+        
+        try drop.testResponse(to: .get, at: "asdf")
+            .assertStatus(is: .notFound)
     }
   
     // temporary fix for Circle CI
