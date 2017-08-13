@@ -1,3 +1,4 @@
+import Bits
 import HTTP
 import FormData
 import Multipart

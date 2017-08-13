@@ -14,6 +14,6 @@ extension ConsoleLogger: ServiceType {
 
     /// See Service.make
     public static func makeService(for container: Container) throws -> ConsoleLogger? {
-        return try .init(container.make(ConsoleProtocol.self))
+        return try ConsoleLogger(console: container.make())
     }
 }

@@ -1,10 +1,10 @@
-import Core
+import Bits
 
 extension BytesConvertible {
     func testMakeBytes(
         file: StaticString = #file,
         line: UInt = #line
-        ) throws -> Bytes {
+    ) throws -> Bytes {
         let bytes: Bytes
         do {
             bytes = try makeBytes()

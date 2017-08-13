@@ -1,7 +1,6 @@
-import XCTest
-@testable import Sessions
 import HTTP
-import Node
+import Session
+import XCTest
 
 class SessionTests: XCTestCase {
     static let allTests = [
@@ -17,7 +16,7 @@ class SessionTests: XCTestCase {
         do {
             _ = try request.assertSession()
             XCTFail("Should have errored.")
-        } catch SessionsError.notConfigured {
+        } catch is SessionsError {
             //
         } catch {
             XCTFail("Wrong error: \(error)")
@@ -31,11 +30,7 @@ class SessionTests: XCTestCase {
 
     func testDestroy() throws {
         let s = Session(identifier: "")
-
-        s.data = Node("bar")
-
+        s.data = "bar"
         s.destroy()
-
-        XCTAssertTrue(s.shouldDestroy)
     }
 }

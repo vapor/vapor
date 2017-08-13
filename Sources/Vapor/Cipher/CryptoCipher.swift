@@ -1,3 +1,4 @@
+import Bits
 import Crypto
 import Foundation
 import CTLS
@@ -13,14 +14,9 @@ public final class CryptoCipher: CipherProtocol {
     public let encoding: CryptoEncoding
 
     /// Creates a CryptoCipher
-    public init(
-        method: Cipher.Method,
-        key: Bytes,
-        iv: Bytes? = nil,
-        encoding: CryptoEncoding
-    ) throws {
-        self.cipher = try Cipher(method, key: key, iv: iv)
-        self.encoding = encoding
+    public init(config: CryptoCipherConfig) throws {
+        self.cipher = try Cipher(config.method, key: config.key, iv: config.iv)
+        self.encoding = config.encoding
     }
 
     /// Encrypts a message
@@ -43,5 +39,23 @@ extension Cipher.Method {
     
     var ivLength: Int {
         return Int(EVP_CIPHER_iv_length(evp))
+    }
+}
+
+public struct CryptoCipherConfig {
+    public let method: Cipher.Method
+    public let key: Bytes
+    public let iv: Bytes?
+    public let encoding: CryptoEncoding
+
+    public init(method: Cipher.Method, key: Bytes, iv: Bytes? = nil, encoding: CryptoEncoding) throws {
+        self.method = method
+        self.key = key
+        self.iv = iv
+        self.encoding = encoding
+
+        guard method.keyLength == key.count else {
+            throw "key count is not correct for method"
+        }
     }
 }

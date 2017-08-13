@@ -2,8 +2,7 @@ import Vapor
 import HTTP
 import Testing
 import XCTest
-import JSONs
-
+import JSON
 
 class ResponderTests: XCTestCase {
     override func setUp() {

@@ -1,3 +1,5 @@
+import Bits
+
 /// Exhaustive list of methods
 /// by which a message/hash can be encoded.
 public enum CryptoEncoding {

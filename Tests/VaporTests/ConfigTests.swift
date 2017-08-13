@@ -1,9 +1,9 @@
 import XCTest
 import Vapor
-import Sessions
+import Session
 import HTTP
 import Console
-import JSONs
+import JSON
 import Service
 
 class ConfigTests: XCTestCase {

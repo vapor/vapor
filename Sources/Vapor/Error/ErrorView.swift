@@ -1,4 +1,6 @@
+import Bits
 import Core
+import Foundation
 import HTTP
 
 /// Internal error view used to create error HTML pages.
@@ -12,23 +14,17 @@ internal final class ErrorView {
         path.append("error.html")
 
         let file = "/" + path.joined(separator: "/")
-        do {
-            let string = try DataFile.read(at: file).makeString()
+        let string = FileManager.default.contents(atPath: file)?.makeString() ?? ""
 
-            let comps = string.components(separatedBy: "#(code)")
-            head = comps.first?.makeBytes() ?? []
+        let comps = string.components(separatedBy: "#(code)")
+        head = comps.first?.makeBytes() ?? []
 
-            if let compsTwo = comps.last?.components(separatedBy: "#(message)") {
-                middle = compsTwo.first?.bytes ?? []
-                tail = compsTwo.last?.bytes ?? []
-            } else {
-                middle = []
-                tail = []
-            }
-        } catch {
-            head = "<h1>".makeBytes()
-            middle = "</h1><p>".makeBytes()
-            tail = "</p>".makeBytes()
+        if let compsTwo = comps.last?.components(separatedBy: "#(message)") {
+            middle = compsTwo.first?.makeBytes() ?? []
+            tail = compsTwo.last?.makeBytes() ?? []
+        } else {
+            middle = []
+            tail = []
         }
     }
 

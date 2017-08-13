@@ -1,7 +1,7 @@
 #if os(Linux)
 
 import XCTest
-@testable import CacheTests
+@testable import CachesTests
 @testable import SessionsTests
 @testable import VaporTests
 

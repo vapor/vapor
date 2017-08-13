@@ -1,10 +1,27 @@
-import SMTP
-import URI
+import Core
+import HTTP
 import FormData
 import Multipart
 import Service
-import HTTP
-import JSONs
+import SMTP
+import URI
+
+public struct MailgunConfig {
+    public let domain: String
+    public let apiKey: String
+}
+
+public struct MailgunRequest: JSONCodable {
+    public let subject: String
+    public var html: String?
+    public var text: String?
+
+    public init(subject: String, html: String? = nil, text: String? = nil) {
+        self.subject = subject
+        self.html = html
+        self.text = text
+    }
+}
 
 public final class Mailgun: MailProtocol {
     public let clientFactory: ClientFactoryProtocol
@@ -12,13 +29,12 @@ public final class Mailgun: MailProtocol {
     public let apiKey: String
     
     public init(
-        domain: String,
-        apiKey: String,
-        _ clientFactory: ClientFactoryProtocol
+        config: MailgunConfig,
+        client: ClientFactoryProtocol
     ) throws {
-        self.apiURI = try URI("https://api.mailgun.net/v3/\(domain)/")
-        self.clientFactory = clientFactory
-        self.apiKey = apiKey
+        self.apiURI = try URI("https://api.mailgun.net/v3/\(config.domain)/")
+        self.clientFactory = client
+        self.apiKey = config.apiKey
     }
     
     public func send(_ emails: [Email]) throws {
@@ -31,14 +47,13 @@ public final class Mailgun: MailProtocol {
         
         let basic = "api:\(apiKey)".makeBytes().base64Encoded.makeString()
         req.headers["Authorization"] = "Basic \(basic)"
-        
-        var json = JSON()
-        try json.set("subject", to: mail.subject)
+
+        var json = MailgunRequest(subject: mail.subject)
         switch mail.body.type {
         case .html:
-            try json.set("html", to: mail.body.content)
+            json.html = mail.body.content
         case .plain:
-            try json.set("text", to: mail.body.content)
+            json.text = mail.body.content
         }
         
         let fromName = mail.from.name ?? "Vapor Mailgun"
@@ -105,7 +120,7 @@ public final class Mailgun: MailProtocol {
         )
         let res = try client.respond(to: req)
         guard res.status.statusCode < 400 else {
-            throw Abort.badRequest
+            throw Abort(.badRequest)
         }
     }
 }
@@ -113,6 +128,11 @@ public final class Mailgun: MailProtocol {
 // MARK: Service
 
 extension Mailgun: ServiceType {
+    /// See Service.serviceName
+    public static var serviceName: String {
+        return "mailgun"
+    }
+
     /// See Service.serviceSupports
     public static var serviceSupports: [Any.Type] {
         return [MailProtocol.self]
@@ -120,19 +140,9 @@ extension Mailgun: ServiceType {
 
     /// See Service.make
     public static func makeService(for container: Container) throws -> Mailgun? {
-        guard let mailgun = container.config["mailgun"] else {
-            throw ConfigError.missingFile("mailgun")
-        }
-        
-        guard let domain = mailgun["domain"]?.string else {
-            throw ConfigError.missing(key: ["domain"], file: "mailgun", desiredType: String.self)
-        }
-        
-        guard let apiKey = mailgun["key"]?.string else {
-            throw ConfigError.missing(key: ["key"], file: "mailgun", desiredType: String.self)
-        }
-        
-        let client = try container.make(ClientFactoryProtocol.self)
-        return try .init(domain: domain, apiKey: apiKey, client)
+        return try Mailgun(
+            config: container.make(),
+            client: container.make()
+        )
     }
 }

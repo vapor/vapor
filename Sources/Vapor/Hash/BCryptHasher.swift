@@ -1,4 +1,8 @@
+import Bits
 import BCrypt
+
+public typealias Hasher = HashProtocol
+public typealias Application = Droplet
 
 /// Create BCrypt hashes using the 
 /// vapor/crypto package.
@@ -12,8 +16,8 @@ public final class BCryptHasher: HashProtocol {
     /// specified work factor.
     ///
     /// See BCryptHasher.workFactor
-    public init(cost: UInt = Salt.defaultCost) {
-        self.cost = cost
+    public init(config: BCryptHasherConfig) {
+        self.cost = config.cost
     }
 
     /// See HashProtocol.make
@@ -28,5 +32,12 @@ public final class BCryptHasher: HashProtocol {
             message: message,
             matches: digest
         )
+    }
+}
+
+public struct BCryptHasherConfig {
+    public let cost: UInt
+    public init(cost: UInt = Salt.defaultCost) {
+        self.cost = cost
     }
 }

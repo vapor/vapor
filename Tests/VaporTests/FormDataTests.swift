@@ -9,20 +9,6 @@ import Node
 import Service
 
 class FormDataTests: XCTestCase {
-    static let allTests = [
-        ("testHolistic", testHolistic),
-        ("testNested", testNested),
-        ("testArray", testArray),
-        ("testPlusEncoding", testPlusEncoding),
-    ]
-
-    /// Ensure form encoding is handled properly
-    func testPlusEncoding() throws {
-        let node = ["aaa": "+bbb ccc"] as Node
-        let encoded = try node.formURLEncoded().makeString()
-        XCTAssertEqual("aaa=%2Bbbb%20ccc", encoded)
-    }
-    
     /// Test form data serialization and parsing
     /// for a text, html, and blob field.
     func testHolistic() throws {
@@ -93,18 +79,9 @@ class FormDataTests: XCTestCase {
         XCTAssertEqual(try response.bodyString(), "👍")
     }
 
-    func testNested() throws {
-        let node = ["key": ["subKey1": "value1", "subKey2": "value2"]] as Node
-        let encoded = try node.formURLEncoded().makeString()
-        // could equal either because dictionaries are unordered
-        XCTAssertEqualsAny(encoded, options: "key%5BsubKey1%5D=value1&key%5BsubKey2%5D=value2", "key%5BsubKey2%5D=value2&key%5BsubKey1%5D=value1")
-    }
-
-    func testArray() throws {
-        let node = ["key": ["1", "2", "3"]] as Node
-        let encoded = try node.formURLEncoded().makeString()
-        XCTAssertEqual("key%5B%5D=1&key%5B%5D=2&key%5B%5D=3", encoded)
-    }
+    static let allTests = [
+        ("testHolistic", testHolistic),
+    ]
 }
 
 fileprivate func XCTAssertEqualsAny<T: Equatable>(_ input: T, options: T...) {

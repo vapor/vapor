@@ -1,7 +1,8 @@
+import Core
+import Debugging
 import HTTP
-import Service
-import Node
 import Routing
+import Service
 
 fileprivate let errorView = ErrorView()
 
@@ -10,7 +11,7 @@ fileprivate let errorView = ErrorView()
 public final class ErrorMiddleware: Middleware {
     let log: LogProtocol
     let environment: Environment
-    public init(_ environment: Environment, _ log: LogProtocol) {
+    public init(environment: Environment, log: LogProtocol) {
         self.log = log
         self.environment = environment
     }
@@ -19,12 +20,12 @@ public final class ErrorMiddleware: Middleware {
         do {
             return try next.respond(to: req)
         } catch {
-            log.swiftError(error)
-            return make(with: req, for: error)
+            try log.swiftError(error)
+            return try make(with: req, for: error)
         }
     }
     
-    public func make(with req: Request, for error: Error) -> Response {
+    public func make(with req: Request, for error: Error) throws -> Response {
         guard !req.accept.prefers("html") else {
             let status: Status = Status(error)
             let bytes = errorView.render(
@@ -36,12 +37,13 @@ public final class ErrorMiddleware: Middleware {
         
         let status = Status(error)
         let response = Response(status: status)
-        response.json = JSON(error, env: environment)
+
+        let info = DebugInformation(error, env: environment)
+        try response.content(info)
+
         return response
     }
 }
-
-import JSONs
 
 extension ErrorMiddleware: ServiceType {
     /// See Service.name
@@ -56,7 +58,10 @@ extension ErrorMiddleware: ServiceType {
 
     /// See Service.make
     public static func makeService(for container: Container) throws -> ErrorMiddleware? {
-        return try .init(container.config.environment, container.make(LogProtocol.self))
+        return try ErrorMiddleware(
+            environment: container.environment,
+            log: container.make()
+        )
     }
 }
 
@@ -70,95 +75,74 @@ extension Status {
     }
 }
 
+fileprivate struct DebugInformation: JSONEncodable, ContentEncodable {
+    var error = true
+    var reason: String
+    var metadata: [String: String]?
 
-extension JSON {
+    // debugging
+    var debugReason: String?
+    var identifier: String?
+    var possibleCauses: [String]?
+    var suggestedFixes: [String]?
+    var documentationLinks: [String]?
+    var stackOverflowQuestions: [String]?
+    var gitHubIssues: [String]?
+
     fileprivate init(_ error: Error, env: Environment) {
         let status = Status(error)
-        
-        var json = JSON.object(["error": .bool(true)])
+
         if let abort = error as? AbortError {
-            json["reason"] = .string(abort.reason)
+            reason = abort.reason
         } else {
-            json["reason"] = .string(status.reasonPhrase)
+            reason = status.reasonPhrase
         }
         
         guard env != .production else {
-            self = json
             return
         }
-        
-        if env != .production {
-            if let abort = error as? AbortError {
-                json["metadata"] = (try? abort.metadata.converted(to: JSON.self)) ?? .null
-            }
-            
-            if let debug = error as? Debuggable {
-                json["debugReason"] = .string(debug.reason)
-                json["identifier"] = .string(debug.fullIdentifier)
-                json["possibleCauses"] = .array(debug.possibleCauses.map { .string($0) })
-                json["suggestedFixes"] = .array(debug.suggestedFixes.map { .string($0) })
-                json["documentationLinks"] = .array(debug.documentationLinks.map { .string($0) })
-                json["stackOverflowQuestions"] = .array(debug.stackOverflowQuestions.map { .string($0) })
-                json["gitHubIssues"] = .array(debug.gitHubIssues.map { .string($0) })
-            }
+
+        if let abort = error as? AbortError {
+            metadata = abort.metadata
         }
-        
-        self = json
+
+        if let debug = error as? Debuggable {
+            debugReason = debug.reason
+            identifier = debug.fullIdentifier
+        }
+
+        if let help = error as? Helpable {
+            possibleCauses = help.possibleCauses
+            suggestedFixes = help.suggestedFixes
+            documentationLinks = help.documentationLinks
+            stackOverflowQuestions = help.stackOverflowQuestions
+            gitHubIssues = help.gitHubIssues
+        }
     }
 }
-
-extension Debuggable {
-    var loggable: String {
-        var print: [String] = []
-        
-        print.append("\(Self.readableName): \(reason)")
-        print.append("Identifier: \(fullIdentifier)")
-        
-        if !possibleCauses.isEmpty {
-            print.append("Possible Causes: \(possibleCauses.commaSeparated)")
-        }
-        
-        if !suggestedFixes.isEmpty {
-            print.append("Suggested Fixes: \(suggestedFixes.commaSeparated)")
-        }
-        
-        if !documentationLinks.isEmpty {
-            print.append("Documentation Links: \(documentationLinks.commaSeparated)")
-        }
-        
-        if !stackOverflowQuestions.isEmpty {
-            print.append("Stack Overflow Questions: \(stackOverflowQuestions.commaSeparated)")
-        }
-        
-        if !gitHubIssues.isEmpty {
-            print.append("GitHub Issues: \(gitHubIssues.commaSeparated)")
-        }
-        
-        return print.map { "[\($0)]" }.joined(separator: " ")
-    }
-}
-
-extension Sequence where Iterator.Element == String {
-    var commaSeparated: String {
-        return joined(separator: ", ")
-    }
-}
-
 
 extension RouterError: AbortError {
-    public var status: Status { return Abort.notFound.status }
-    public var reason: String { return Abort.notFound.reason }
-    public var metadata: Node? { return Abort.notFound.metadata }
+    public var status: Status {
+        return .notFound
+    }
+
+    public var reason: String {
+        return Status.notFound.reasonPhrase
+    }
+
+    public var metadata: [String: String]? {
+        return nil
+    }
 }
 
 extension LogProtocol {
-    public func swiftError(_ error: Error) {
+    public func swiftError(_ error: Error) throws {
         if let debuggable = error as? Debuggable {
-            self.error(debuggable.loggable)
+            try self.error(debuggable.debuggableHelp(format: .short))
         } else {
             let type = String(reflecting: Swift.type(of: error))
-            self.error("[\(type): \(error)]")
-            info("Conform '\(type)' to Debugging.Debuggable to provide more debug information.")
+            try self.error("[\(type): \(error)]")
+            try info("Conform '\(type)' to Debugging.Debuggable to provide more debug information.")
         }
     }
 }

@@ -13,14 +13,6 @@ extension BCryptHasher: ServiceType {
 
     /// See Service.make
     public static func makeService(for container: Container) throws -> BCryptHasher? {
-        guard let cost = container.config["bcrypt", "cost"]?.int else {
-            throw ConfigError.missing(
-                key: ["cost"],
-                file: "bcrypt",
-                desiredType: UInt.self
-            )
-        }
-
-        return .init(cost: UInt(cost))
+        return try BCryptHasher(config: container.make())
     }
 }

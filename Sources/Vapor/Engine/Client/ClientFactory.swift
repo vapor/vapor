@@ -51,39 +51,39 @@ extension ClientFactory: ServiceType {
     /// See Service.make
     public static func makeService(for container: Container) throws -> ClientFactory? {
         let proxy: Proxy?
-        
-        let config = container.config
-        if let proxyConfig = config["client", "proxy"]?.dictionary {
-            guard let hostname = proxyConfig["hostname"]?.string else {
-                throw ConfigError.missing(
-                    key: ["proxy", "hostname"],
-                    file: "client",
-                    desiredType: String.self
-                )
-            }
-            
-            guard let port = proxyConfig["port"]?.int?.port else {
-                throw ConfigError.missing(
-                    key: ["proxy", "port"],
-                    file: "client",
-                    desiredType: Port.self
-                )
-            }
-            
-            let securityLayer = try config.makeSecurityLayer(
-                serverConfig: Config(proxyConfig),
-                file: "client"
-            )
-            
-            proxy = Proxy(
-                hostname: hostname,
-                port: port,
-                securityLayer: securityLayer
-            )
-        } else {
-            proxy = nil
-        }
-        
-        return .init(defaultProxy: proxy)
+            fatalError("Need client factory config")
+//        let config = container.config
+//        if let proxyConfig = config["client", "proxy"]?.dictionary {
+//            guard let hostname = proxyConfig["hostname"]?.string else {
+//                throw ConfigError.missing(
+//                    key: ["proxy", "hostname"],
+//                    file: "client",
+//                    desiredType: String.self
+//                )
+//            }
+//
+//            guard let port = proxyConfig["port"]?.int?.port else {
+//                throw ConfigError.missing(
+//                    key: ["proxy", "port"],
+//                    file: "client",
+//                    desiredType: Port.self
+//                )
+//            }
+//
+//            let securityLayer = try config.makeSecurityLayer(
+//                serverConfig: Config(proxyConfig),
+//                file: "client"
+//            )
+//
+//            proxy = Proxy(
+//                hostname: hostname,
+//                port: port,
+//                securityLayer: securityLayer
+//            )
+//        } else {
+//            proxy = nil
+//        }
+//
+//        return .init(defaultProxy: proxy)
     }
 }

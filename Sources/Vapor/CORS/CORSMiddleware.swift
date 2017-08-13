@@ -6,7 +6,7 @@ import Service
 ///
 /// - Note: Make sure this middleware is inserted before all your error/abort middlewares,
 ///         so that even the failed request responses contain proper CORS information.
-public final class CORSMiddleware: Middleware, ConfigInitializable {
+public final class CORSMiddleware: Middleware {
 
     /// Configuration used for populating headers in response for CORS requests.
     public let configuration: CORSConfiguration
@@ -23,10 +23,10 @@ public final class CORSMiddleware: Middleware, ConfigInitializable {
     ///
     /// - Parameter configuration: The settings configuration.
     /// - Throws: Exception if the `CORSConfiugration` couldn't be parsed out of `Configs.Config`.
-    public convenience init(config: Config) throws {
-        let configuration = try CORSConfiguration(config: config)
-        self.init(configuration: configuration)
-    }
+//    public convenience init(config: Config) throws {
+//        let configuration = try CORSConfiguration(config: config)
+//        self.init(configuration: configuration)
+//    }
 
     public func respond(to request: Request, chainingTo chain: Responder) throws -> Response {
         // Check if it's valid CORS request
@@ -85,6 +85,6 @@ extension CORSMiddleware: ServiceType {
 
     /// See Service.make
     public static func makeService(for container: Container) throws -> CORSMiddleware? {
-        return try .init(config: container.config)
+        return try CORSMiddleware(configuration: container.make())
     }
 }

@@ -3,13 +3,13 @@ import Console
 
 /// Logs to the console
 public final class ConsoleLogger: LogProtocol {
-    public let console: ConsoleProtocol
+    public let console: Console
 
     public var enabled: [LogLevel]
 
     /// Creates an instance of `ConsoleLogger`
     /// with the desired `Console`.
-    public init(_ console: ConsoleProtocol) {
+    public init(console: Console) {
         self.console = console
         enabled = LogLevel.all
     }
@@ -21,9 +21,9 @@ public final class ConsoleLogger: LogProtocol {
         file: String = #file,
         function: String = #function,
         line: Int = #line
-    ) {
+    ) throws {
         if enabled.contains(level) {
-            console.output(message, style: level.consoleStyle)
+            try console.output(message, style: level.consoleStyle)
         }
     }
 }

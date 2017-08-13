@@ -1,11 +1,10 @@
 import Debugging
 import HTTP
-import Node
 
 /// Represents errors that can be thrown in any Vapor closure.
 /// Then, these errors can be caught in `Middleware` to give a
 /// desired response.
-public protocol AbortError: Swift.Error {
+public protocol AbortError: Error {
     /// The HTTP status code to return.
     var status: Status { get }
 
@@ -16,13 +15,13 @@ public protocol AbortError: Swift.Error {
 
     /// `Optional` metadata.
     /// This will not be shown in production mode.
-    var metadata: Node? { get }
+    var metadata: [String: String]? { get }
 }
 
 // MARK: Optional
 
 extension AbortError {
-    public var metadata: Node? {
+    public var metadata: [String: String]? {
         return nil
     }
 }

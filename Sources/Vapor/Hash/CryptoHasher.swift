@@ -1,3 +1,4 @@
+import Bits
 import Crypto
 import Service
 
@@ -15,23 +16,11 @@ public final class CryptoHasher: HashProtocol {
 
     /// Creates a CryptoHasher with the desired
     /// HMAC method and HashEncoding
-    public init(method: Method, encoding: CryptoEncoding) {
-        self.method = method
-        self.encoding = encoding
+    public init(config: CryptoHasherConfig) {
+        self.method = config.method
+        self.encoding = config.encoding
     }
-
-    /// Creates a CryptoHasher using a
-    /// keyed HMAC algorithm.
-    public convenience init(hmac: HMAC.Method, encoding: CryptoEncoding, key: Bytes) {
-        self.init(method: .keyed(hmac, key: key), encoding: encoding)
-    }
-
-    /// Creates a CryptoHasher using a
-    /// normal Hash algorithm.
-    public convenience init(hash: Hash.Method, encoding: CryptoEncoding) {
-        self.init(method: .normal(hash), encoding: encoding)
-    }
-
+    
     /// An exhaustive list of ways
     /// the hasher can hash data.
     public enum Method {
@@ -59,6 +48,16 @@ public final class CryptoHasher: HashProtocol {
     }
 }
 
+public struct CryptoHasherConfig {
+    public let method: CryptoHasher.Method
+    public let encoding: CryptoEncoding
+
+    public init(method: CryptoHasher.Method, encoding: CryptoEncoding) {
+        self.method = method
+        self.encoding = encoding
+    }
+}
+
 // MARK: Service
 
 extension CryptoHasher: ServiceType {
@@ -74,70 +73,7 @@ extension CryptoHasher: ServiceType {
 
     /// See Service.make
     public static func makeService(for container: Container) throws -> CryptoHasher? {
-        guard let crypto = container.config["crypto"] else {
-            throw ConfigError.missingFile("crypto")
-        }
-
-        // Method
-        guard let methodString = crypto["hash", "method"]?.string else {
-            throw ConfigError.missing(
-                key: ["hash", "method"],
-                file: "crypto",
-                desiredType: String.self
-            )
-        }
-
-        // Encoding
-        guard let encodingString = crypto["hash", "encoding"]?.string else {
-            throw ConfigError.missing(
-                key: ["hash", "encoding"],
-                file: "crypto",
-                desiredType: String.self
-            )
-        }
-
-        guard let encoding = try CryptoEncoding(encodingString) else {
-            throw ConfigError.unsupported(
-                value: encodingString,
-                key: ["hash", "encoding"],
-                file: "crypto"
-            )
-        }
-
-        let method: Method
-
-        // Key
-        if let encodedKey = crypto["hash", "key"]?.string?.makeBytes() {
-            guard let hmac = try HMAC.Method(methodString) else {
-                throw ConfigError.unsupported(
-                    value: methodString,
-                    key: ["hash", "method"],
-                    file: "crypto"
-                )
-            }
-            
-            let key = encoding.decode(encodedKey)
-            if key.isAllZeroes {
-                let log = try container.make(LogProtocol.self)
-                log.warning("The current hash key \"\(encodedKey.makeString())\" is not secure.")
-                log.warning("Update hash.key in Config/crypto.json before using in production.")
-                log.info("Use `openssl rand -base64 <length>` to generate a random string.")
-            }
-
-            method = .keyed(hmac, key: key)
-        } else {
-            guard let hash = try Hash.Method(methodString) else {
-                throw ConfigError.unsupported(
-                    value: methodString,
-                    key: ["hash", "method"],
-                    file: "crypto"
-                )
-            }
-
-            method = .normal(hash)
-        }
-
-        return .init(method: method, encoding: encoding)
+        return try CryptoHasher(config: container.make())
     }
 }
 

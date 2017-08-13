@@ -1,9 +1,7 @@
+import Bits
 import HTTP
 import Foundation
-import Node
 import Vapor
-import JSONs
-import Mapper
 
 // MARK: Assertions
 
@@ -51,11 +49,14 @@ extension Response {
         return self
     }
 
+    // FIXME: need intermediate representation for JSON, possible we can use codable for this?
+
+    /*
     /// Asserts the response body contains a
     /// desired byte array.
     @discardableResult
     public func assertJSON(
-        _ path: Path...,
+        _ path: String...,
         file: StaticString = #file,
         line: UInt = #line,
         errorReason: String = "does not pass test",
@@ -185,6 +186,7 @@ extension Response {
             return got.contains(des)
         }
     }
+ */
 
     /// Asserts the response status code equals
     /// a desired status code

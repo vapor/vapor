@@ -1,10 +1,8 @@
-import Console
-import Sessions
 import Cache
-import Service
+import Console
 import Routing
-
-public typealias Config = Service.Config
+import Service
+import Session
 
 extension Services {
     public static func `default`() -> Services {
@@ -43,7 +41,7 @@ extension Services {
         services.register(ServerFactory<EngineServer>.self)
 
         // commands
-        services.register(DumpConfig.self)
+        // services.register(DumpConfig.self)
         services.register(Serve.self)
         services.register(RouteList.self)
         services.register(ProviderInstall.self)
@@ -53,10 +51,13 @@ extension Services {
         services.register(CacheSessions.self)
 
         // view
-        services.register(StaticViewRenderer.self)
+        // FIXME: static view renderer
+        // services.register(StaticViewRenderer.self)
 
         // mail
         services.register(Mailgun.self)
+
+        services.register(ServerConfig.default())
         
         return services
     }
