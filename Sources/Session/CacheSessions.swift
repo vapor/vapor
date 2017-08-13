@@ -1,6 +1,5 @@
 import Crypto
 import Cache
-import Node
 import Foundation
 import Service
 
@@ -21,14 +20,18 @@ public final class CacheSessions: Sessions {
             return nil
         }
 
-        let sessionData = try cacheData.converted(to: SessionData.self)
+        /// let sessionData = try cacheData.converted(to: SessionData.self)
+        // FIXME
+        let sessionData = SessionData.null
         return Session(identifier: identifier, data: sessionData)
     }
 
     /// See Sessions.set()
     public func set(_ session: Session) throws {
-        let cacheData = try session.data.converted(to: CacheData.self)
-        try cache.set(session.identifier, to: cacheData)
+        // FIXME
+        // let cacheData = try session.data.converted(to: CacheData.self)
+        let cacheData = CacheData.null
+        try cache.set(session.identifier, to: cacheData, expiration: nil)
     }
 
     /// See Sessions.destroy()

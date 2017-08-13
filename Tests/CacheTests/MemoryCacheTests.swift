@@ -17,19 +17,19 @@ class MemoryCacheTests: XCTestCase {
     }
 
     func testBasic() throws {
-        try cache.set("hello", to: "world")
+        try cache.set("hello", to: .string("world"), expiration: nil)
         try XCTAssertEqual(cache.get("hello").string, "world")
     }
 
     func testDelete() throws {
-        try cache.set("ephemeral", to: 42)
+        try cache.set("ephemeral", to: .string("42"), expiration: nil)
         try XCTAssertEqual(cache.get("ephemeral").string, "42")
         try cache.delete("ephemeral")
         try XCTAssertEqual(cache.get("ephemeral"), CacheData.null)
     }
 
     func testExpiration() throws {
-        try cache.set("ephemeral", to: 42, expireAfter: 0.5)
+        try cache.set("ephemeral", to: .string("42"), expiration: Date(timeIntervalSinceNow: 0.5))
         try XCTAssertEqual(cache.get("ephemeral").string, "42")
         
         let exp = expectation(description: "cache")

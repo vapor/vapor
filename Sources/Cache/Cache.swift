@@ -21,20 +21,21 @@ public protocol Cache {
 extension Cache {
     /// Initializes a `CacheDataInitializable` type using the
     /// supplied data.
-    public func get<T: CacheDataInitializable>(_ key: String) throws -> T {
-        return try T(cacheData: get(key))
+    public func get<T: CacheDecodable>(_ key: String) throws -> T {
+        let data = try get(key)
+        return try T(cacheData: data)
     }
 
-    /// Sets the key to a `CacheDataRepresentable` type.
-    /// - See `Cache.set()`
-    public func set<T: CacheDataRepresentable>(_ key: String, to data: T) throws {
-        return try set(key, to: data.makeCacheData(), expiration: nil)
-    }
-
-    /// Sets the key to a `CacheDataRepresentable` type that will
-    /// expire after the supplied time interval.
-    /// - See `Cache.set()`
-    public func set(_ key: String, to data: CacheDataRepresentable, expireAfter: TimeInterval) throws {
-        return try set(key, to: data.makeCacheData(), expiration: Date(timeIntervalSinceNow: expireAfter))
-    }
+//    /// Sets the key to a `CacheDataRepresentable` type.
+//    /// - See `Cache.set()`
+//    public func set<T: CacheDataRepresentable>(_ key: String, to data: T) throws {
+//        return try set(key, to: data.makeCacheData(), expiration: nil)
+//    }
+//
+//    /// Sets the key to a `CacheDataRepresentable` type that will
+//    /// expire after the supplied time interval.
+//    /// - See `Cache.set()`
+//    public func set(_ key: String, to data: CacheDataRepresentable, expireAfter: TimeInterval) throws {
+//        return try set(key, to: data.makeCacheData(), expiration: Date(timeIntervalSinceNow: expireAfter))
+//    }
 }

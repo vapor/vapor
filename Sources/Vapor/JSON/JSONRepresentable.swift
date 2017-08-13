@@ -1,8 +1,8 @@
-import JSON
-import HTTP
+//import HTTP
+//
+//extension JSON: ResponseRepresentable {
+//    public func makeResponse() throws -> Response {
+//        return try Response(status: .ok, json: self)
+//    }
+//}
 
-extension JSON: ResponseRepresentable {
-    public func makeResponse() throws -> Response {
-        return try Response(status: .ok, json: self)
-    }
-}

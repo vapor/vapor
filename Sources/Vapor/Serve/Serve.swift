@@ -1,34 +1,34 @@
-import HTTP
+import Command
 import Console
+import HTTP
+import libc
 import Sockets
 import Service
 
 /// Serves the droplet.
 public final class Serve: Command {
-    public let signature: [Argument] = [
-        Option(name: "port", help: ["Overrides the default serving port."]),
-        Option(name: "workdir", help: ["Overrides the working directory to a custom path."])
-    ]
-
-    public let help: [String] = [
-        "Boots the Droplet's servers and begins accepting requests."
-    ]
-
-    public let id: String = "serve"
-    
+    public let signature: CommandSignature
     public let server: ServerFactoryProtocol
-    public let console: ConsoleProtocol
+    public let console: Console
     public let responder: Responder
     public let log: LogProtocol
     public let config: ServerConfig
 
     public init(
-        _ console: ConsoleProtocol,
-        _ server: ServerFactoryProtocol,
-        _ responder: Responder,
-        _ log: LogProtocol,
-        _ config: ServerConfig
+        console: Console,
+        server: ServerFactoryProtocol,
+        responder: Responder,
+        log: LogProtocol,
+        config: ServerConfig
     ) {
+        self.signature = .init(
+            arguments: [],
+            options: [
+                .init(name: "port", help: ["Overrides the default serving port."]),
+                .init(name: "workdir", help: ["Overrides the working directory to a custom path."])
+            ],
+            help: ["Boots the Droplet's servers and begins accepting requests."]
+        )
         self.console = console
         self.server = server
         self.responder = responder
@@ -36,7 +36,7 @@ public final class Serve: Command {
         self.config = config
     }
 
-    public func run(arguments: [String]) throws {
+    public func run(using console: Console, with input: CommandInput) throws {
         do {
             let server = try self.server.makeServer(
                 hostname: config.hostname,
@@ -44,7 +44,7 @@ public final class Serve: Command {
                 config.securityLayer
             )
             
-            console.info("Starting server on \(config.hostname):\(config.port)")
+            try console.info("Starting server on \(config.hostname):\(config.port)")
             try server.start(responder) { error in
                 /// This error is thrown on read timeouts and is providing excess logging of expected behavior.
                 /// We will continue to work to resolve the underlying issue associated with this error.
@@ -64,9 +64,9 @@ public final class Serve: Command {
             log.error("server did not block execution")
             exit(1)
         } catch ServerError.bind(let host, let port, _) {
-            console.error("Could not bind to \(host):\(port), it may be in use or require sudo.")
+            try console.error("Could not bind to \(host):\(port), it may be in use or require sudo.")
         } catch {
-            console.error("Serve error: \(error)")
+            try console.error("Serve error: \(error)")
         }
     }
 }
@@ -74,6 +74,11 @@ public final class Serve: Command {
 // MARK: Service
 
 extension Serve: ServiceType {
+    /// See Service.serviceName
+    public static var serviceName: String {
+        return "serve"
+    }
+
     /// See Service.serviceSupports
     public static var serviceSupports: [Any.Type] {
         return [Command.self]
@@ -86,11 +91,11 @@ extension Serve: ServiceType {
         }
 
         return try .init(
-            container.make(ConsoleProtocol.self),
-            container.make(ServerFactoryProtocol.self),
-            drop.responder, // FIXME
-            container.make(LogProtocol.self),
-            container.config.makeServerConfig()
+            console: container.make(Console.self),
+            server: container.make(ServerFactoryProtocol.self),
+            responder :drop.responder, // FIXME
+            log: container.make(LogProtocol.self),
+            config: container.make(ServerConfig.self)
         )
     }
 }

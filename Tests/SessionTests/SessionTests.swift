@@ -1,7 +1,6 @@
-import XCTest
-import Session
 import HTTP
-import Node
+import Session
+import XCTest
 
 class SessionTests: XCTestCase {
     static let allTests = [

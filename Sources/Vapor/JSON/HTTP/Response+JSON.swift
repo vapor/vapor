@@ -1,5 +1,4 @@
 import HTTP
-import JSON
 
 extension Response {
     /// Convenience Initializer

@@ -107,6 +107,8 @@ public struct CORSConfiguration {
     }
 }
 
+/*
+
 extension CORSConfiguration: ConfigInitializable {
 
     /// Creates the CORS configuration of the the Vapor's settings config dictionary.
@@ -169,3 +171,5 @@ extension CORSConfiguration: ConfigInitializable {
         }
     }
 }
+
+ */

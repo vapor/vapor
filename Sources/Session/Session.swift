@@ -24,7 +24,7 @@ public final class Session {
     }
 
     /// Creates a new Session.
-    public init(identifier: String, data: SessionData = .empty) {
+    public init(identifier: String, data: SessionData = .dictionary([:])) {
         self.identifier = identifier
         self.data = data
         self.shouldCreate = false
@@ -39,7 +39,7 @@ public final class Session {
 
 extension Session {
     /// Creates a new Session using a SessionDataRepresentable value.
-    public convenience init(identifier: String, data: SessionDataRepresentable) throws {
-        try self.init(identifier: identifier, data: data.makeSessionData())
-    }
+//    public convenience init(identifier: String, data: SessionDataEncodable) throws {
+//        try self.init(identifier: identifier, data: data.makeSessionData())
+//    }
 }

@@ -1,4 +1,4 @@
-import Mapper
+import Core
 
 /// Supported data types for storing
 // and fetching from a `Cache`.
@@ -9,70 +9,61 @@ public enum CacheData {
     case null
 }
 
-/// Able to be represented as `CacheData`.
-public protocol CacheDataRepresentable {
-    func makeCacheData() throws -> CacheData
-}
+// MARK: Polymorphic
 
-/// Able to be initialized with `CacheData`
-public protocol CacheDataInitializable {
-    init(cacheData: CacheData) throws
-}
-
-/// Able to convert to and from `CacheData`.
-public typealias CacheDataConvertible = CacheDataInitializable & CacheDataRepresentable
-
-// CacheData can obviously convert to/from itself.
-extension CacheData: CacheDataConvertible {
-    public init(cacheData: CacheData) throws {
-        self = cacheData
-    }
-
-    public func makeCacheData() throws -> CacheData {
-        return self
-    }
-}
-
-/// Support conversion to `Map` type for easy
-/// conversions b/t other data types.
-extension CacheData: MapConvertible {
-    public init(map: Map) {
-        switch map {
+extension CacheData: Polymorphic {
+    public var string: String? {
+        switch self {
         case .string(let string):
-            self = .string(string)
-        case .int(let int):
-            self = .string(int.description)
-        case .double(let double):
-            self = .string(double.description)
-        case .bool(let bool):
-            self = .string(bool.description)
-        case .null:
-            self = .null
-        case .dictionary(let dict):
-            self = .dictionary(dict.mapValues { CacheData(map: $0) })
-        case .array(let arr):
-            self = .array(arr.map { CacheData(map: $0) })
+            return string
+        default:
+            return nil
         }
     }
 
-    public func makeMap() -> Map {
+    public var int: Int? {
+        return string?.int
+    }
+
+    public var double: Double? {
+        return string?.double
+    }
+
+    public var bool: Bool? {
+        return string?.bool
+    }
+
+    public var dictionary: [String : CacheData]? {
+        switch self {
+        case .dictionary(let dict):
+            return dict
+        default:
+            return nil
+        }
+    }
+
+    public var array: [CacheData]? {
         switch self {
         case .array(let arr):
-            return .array(arr.map { $0.makeMap() })
-        case .dictionary(let dict):
-            return .dictionary(dict.mapValues { $0.makeMap() })
+            return arr
+        default:
+            return nil
+        }
+    }
+
+    public var isNull: Bool {
+        switch self {
         case .null:
-            return .null
-        case .string(let string):
-            return .string(string)
+            return true
+        case .string(let str):
+            return str.isNull
+        default:
+            return false
         }
     }
 }
 
-// Convenience accessors like `.string`.
-extension CacheData: Polymorphic {
-    // Automatically implemented by conforming to `MapConvertible`.
-}
+// MARK: Equatable
 
 // Instances of `CacheData` can be compared.
 extension CacheData: Equatable {
@@ -89,37 +80,5 @@ extension CacheData: Equatable {
         default:
             return false
         }
-    }
-}
-
-// MARK: Compatible Types
-
-extension String: CacheDataConvertible {
-    public init(cacheData: CacheData) throws {
-        self = try cacheData.assertString()
-    }
-
-    public func makeCacheData() -> CacheData {
-        return .string(self)
-    }
-}
-
-extension Int: CacheDataConvertible {
-    public init(cacheData: CacheData) throws {
-        self = try cacheData.assertInt()
-    }
-
-    public func makeCacheData() -> CacheData {
-        return .string(self.description)
-    }
-}
-
-extension Double: CacheDataConvertible {
-    public init(cacheData: CacheData) throws {
-        self = try cacheData.assertDouble()
-    }
-
-    public func makeCacheData() throws -> CacheData {
-        return .string(self.description)
     }
 }

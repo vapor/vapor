@@ -1,3 +1,4 @@
+import Command
 import Console
 import HTTP
 import Foundation
@@ -159,7 +160,7 @@ extension String {
     }
 }
 
-extension ConsoleProtocol {
+extension Console {
     fileprivate func kill(_ message: String) -> Never {
         error(message, newLine: true)
         exit(1)

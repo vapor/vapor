@@ -1,10 +1,8 @@
-import Console
-import Session
 import Cache
-import Service
+import Console
 import Routing
-
-public typealias Config = Service.Config
+import Service
+import Session
 
 extension Services {
     public static func `default`() -> Services {

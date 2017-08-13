@@ -1,3 +1,4 @@
+import Command
 import Console
 import Service
 

@@ -1,8 +1,9 @@
-import SMTP
+import Debugging
 import Foundation
-import Transport
 import Service
+import SMTP
 import Sockets
+import Transport
 
 /// Defines objects capable of transmitting emails
 public protocol MailProtocol {

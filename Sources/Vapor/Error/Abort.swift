@@ -1,6 +1,5 @@
-import HTTP
-import Node
 import Debugging
+import HTTP
 
 /// A basic conformance to `AbortError` for
 /// convenient error throwing

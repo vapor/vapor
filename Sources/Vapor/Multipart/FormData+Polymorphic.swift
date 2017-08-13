@@ -1,6 +1,5 @@
-import FormData
 import Bits
-import Node
+import FormData
 
 extension FormData.Field {
     public var isNull: Bool {

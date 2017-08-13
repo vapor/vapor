@@ -1,9 +1,7 @@
-import XCTest
-import Session
-import Core
-import Node
 import Cache
-import JSON
+import Core
+import Session
+import XCTest
 
 class SessionsProtocolTests: XCTestCase {
     static let allTests = [
@@ -18,7 +16,7 @@ class SessionsProtocolTests: XCTestCase {
 
         XCTAssertNil(s.get(identifier: id))
 
-        let session = try Session(identifier: id, data: "bar")
+        let session = Session(identifier: id, data: .string("bar"))
         s.set(session)
         XCTAssertEqual(s.get(identifier: id)?.data.string, "bar")
 
@@ -33,7 +31,7 @@ class SessionsProtocolTests: XCTestCase {
 
         XCTAssertNil(try s.get(identifier: id))
 
-        let session = try Session(identifier: id, data: "bar")
+        let session = Session(identifier: id, data: .string("bar"))
         try s.set(session)
         XCTAssertEqual(try s.get(identifier: id)?.data.string, "bar")
 
@@ -49,11 +47,11 @@ class SessionsProtocolTests: XCTestCase {
         XCTAssert(try sessions.contains(identifier: id) == false)
 
         let session = Session(identifier: id)
-        try session.data.set("foo", to: "bar")
+        session.data = .dictionary(["foo": "bar"])
         try sessions.set(session)
 
         let fetched = try sessions.get(identifier: id)
-        XCTAssertEqual(try fetched?.data.get("foo"), "bar")
+        XCTAssertEqual(fetched?.data.dictionary?["foo"]?.string, "bar")
 
         try sessions.destroy(identifier: id)
         XCTAssert(try sessions.get(identifier: id) == nil)

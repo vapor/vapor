@@ -1,7 +1,9 @@
-import Service
+//
+//import Service
+//
+//extension StaticViewRenderer: ConfigInitializable {
+//    public convenience init(config: Config) throws {
+//        self.init(viewsDir: config.viewsDir)
+//    }
+//}
 
-extension StaticViewRenderer: ConfigInitializable {
-    public convenience init(config: Config) throws {
-        self.init(viewsDir: config.viewsDir)
-    }
-}

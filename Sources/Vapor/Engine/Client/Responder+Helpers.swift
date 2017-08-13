@@ -1,7 +1,6 @@
+import Core
 import HTTP
 import URI
-import Node
-import URLEncoded
 
 // MARK: Base
 

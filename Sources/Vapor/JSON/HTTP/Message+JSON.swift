@@ -1,5 +1,4 @@
 import HTTP
-import JSON
 
 extension Message {
     public var json: JSON? {

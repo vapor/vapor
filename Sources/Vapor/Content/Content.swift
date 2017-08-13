@@ -1,3 +1,35 @@
+import Core
+import HTTP
+
+public protocol ContentDecodable {
+    static func decode(from message: Message) throws -> Self
+}
+
+public protocol ContentEncodable {
+    func encode(to message: Message) throws
+}
+
+public typealias ContentCodable = ContentDecodable & ContentEncodable
+
+
+extension Message {
+    public func content<C: ContentEncodable>(_ content: C) throws {
+        try content.encode(to: self)
+    }
+
+    public func content<C: ContentDecodable>() throws -> C {
+        return try C.decode(from: self)
+    }
+}
+
+extension ContentEncodable where Self: JSONEncodable {
+    public func encode(to message: Message) throws {
+        // make json
+        // serialize
+    }
+
+}
+
 //import PathIndexable
 //import Node
 //

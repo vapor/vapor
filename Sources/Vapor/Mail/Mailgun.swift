@@ -1,10 +1,9 @@
-import SMTP
-import URI
+import HTTP
 import FormData
 import Multipart
 import Service
-import HTTP
-import JSON
+import SMTP
+import URI
 
 public final class Mailgun: MailProtocol {
     public let clientFactory: ClientFactoryProtocol

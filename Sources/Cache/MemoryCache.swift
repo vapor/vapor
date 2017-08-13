@@ -1,5 +1,4 @@
 import Foundation
-import Mapper
 import Service
 
 /// A basic Cache implementation that stores
