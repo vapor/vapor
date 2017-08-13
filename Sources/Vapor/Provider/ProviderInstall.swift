@@ -1,45 +1,42 @@
 import Command
 import Console
+import Foundation
 import Service
 
 public final class ProviderInstall: Command {
-    public let id = "provider-install"
-    public let help = ["Installs Resources and Public files from providers"]
-    public let console: ConsoleProtocol
-    
+    public let signature: CommandSignature
     public let providers: [Provider]
     public let publicDir: String
     public let viewsDir: String
     
     public init(
-        _ console: ConsoleProtocol,
-        _ providers: [Provider],
+        providers: [Provider],
         publicDir: String,
         viewsDir: String
     ) {
-        self.console = console
+        self.signature = .init(arguments: [], options: [], help: ["Installs Resources and Public files from providers"])
         self.providers = providers
         self.publicDir = publicDir
         self.viewsDir = viewsDir
     }
-    
-    public func run(arguments: [String]) throws {
-        console.print("This command copies resource files from your providers")
-        console.print("into your root project directories.")
-        console.warning("Any files with the same name will be replaced.")
-        console.print("You have \(providers.count) providers that will be installed.")
-        guard console.confirm("Would you like to continue?") else {
-            console.warning("Install cancelled.")
+
+    public func run(using console: Console, with input: CommandInput) throws {
+        try console.print("This command copies resource files from your providers")
+        try console.print("into your root project directories.")
+        try console.warning("Any files with the same name will be replaced.")
+        try console.print("You have \(providers.count) providers that will be installed.")
+        guard try console.confirm("Would you like to continue?") else {
+            try console.warning("Install cancelled.")
             return
         }
         
         for (i, provider) in providers.enumerated() {
             let type = Swift.type(of: provider)
-            console.info("[\(i + 1)/\(providers.count)]", newLine: false)
-            console.print(" Installing \(type.repositoryName)")
+            try console.info("[\(i + 1)/\(providers.count)]", newLine: false)
+            try console.print(" Installing \(type.repositoryName)")
             
             guard let root = type.providedDirectory else {
-                console.error("Could not find directory for \(type)")
+                try console.error("Could not find directory for \(type)")
                 continue
             }
             
@@ -49,25 +46,25 @@ public final class ProviderInstall: Command {
             var dirty = false
             
             do {
-                _ = try console.backgroundExecute(program: "/bin/sh", arguments: ["-c", "cp -rf \(publicDir)* \(self.publicDir)"])
-                console.print("Copied public files")
+                _ = try console.backgroundExecute(program: "/bin/sh", arguments: ["-c", "cp -rf \(publicDir)* \(self.publicDir)"]) as Data
+                try console.print("Copied public files")
                 dirty = true
             } catch {
                 //
             }
             
             do {
-                _ = try console.backgroundExecute(program: "/bin/sh", arguments: ["-c", "cp -rf \(viewsDir)* \(self.viewsDir)"])
-                console.print("Copied resource files")
+                _ = try console.backgroundExecute(program: "/bin/sh", arguments: ["-c", "cp -rf \(viewsDir)* \(self.viewsDir)"]) as Data
+                try console.print("Copied resource files")
                 dirty = true
             } catch {
                 //
             }
             
             if dirty {
-                console.success("Installed \(type.repositoryName)")
+                try console.success("Installed \(type.repositoryName)")
             } else {
-                console.print("Nothing to install")
+                try console.print("Nothing to install")
             }
         }
     }
@@ -76,17 +73,22 @@ public final class ProviderInstall: Command {
 // MARK: Service
 
 extension ProviderInstall: ServiceType {
+    /// See Service.serviceName
+    public static var serviceName: String {
+        return "provider-install"
+    }
+
     /// See Service.serviceSupports
     public static var serviceSupports: [Any.Type] {
         return [Command.self]
     }
 
     public static func makeService(for container: Container) throws -> ProviderInstall? {
-        return try .init(
-            container.make(ConsoleProtocol.self),
-            container.services.providers,
-            publicDir: container.config.publicDir,
-            viewsDir: container.config.viewsDir
+        let dirs = WorkingDirectory()
+        return ProviderInstall(
+            providers: container.services.providers,
+            publicDir: dirs.publicDir,
+            viewsDir: dirs.viewsDir
         )
     }
 }

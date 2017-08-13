@@ -41,7 +41,7 @@ extension Services {
         services.register(ServerFactory<EngineServer>.self)
 
         // commands
-        services.register(DumpConfig.self)
+        // services.register(DumpConfig.self)
         services.register(Serve.self)
         services.register(RouteList.self)
         services.register(ProviderInstall.self)
@@ -51,7 +51,8 @@ extension Services {
         services.register(CacheSessions.self)
 
         // view
-        services.register(StaticViewRenderer.self)
+        // FIXME: static view renderer
+        // services.register(StaticViewRenderer.self)
 
         // mail
         services.register(Mailgun.self)

@@ -10,5 +10,5 @@ public protocol LogProtocol: class {
     /// Log the given message at the passed filter level.
     /// file, function and line of the logging call
     /// are automatically injected in the convenience function.
-    func log(_ level: LogLevel, message: String, file: String, function: String, line: Int)
+    func log(_ level: LogLevel, message: String, file: String, function: String, line: Int) throws
 }

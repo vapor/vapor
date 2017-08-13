@@ -1,3 +1,5 @@
+import Bits
+
 /// Creates hash digests
 public protocol HashProtocol: class {
     /// Given a message, this method

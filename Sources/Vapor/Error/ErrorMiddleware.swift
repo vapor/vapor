@@ -11,7 +11,7 @@ fileprivate let errorView = ErrorView()
 public final class ErrorMiddleware: Middleware {
     let log: LogProtocol
     let environment: Environment
-    public init(_ environment: Environment, _ log: LogProtocol) {
+    public init(environment: Environment, log: LogProtocol) {
         self.log = log
         self.environment = environment
     }
@@ -20,12 +20,12 @@ public final class ErrorMiddleware: Middleware {
         do {
             return try next.respond(to: req)
         } catch {
-            log.swiftError(error)
-            return make(with: req, for: error)
+            try log.swiftError(error)
+            return try make(with: req, for: error)
         }
     }
     
-    public func make(with req: Request, for error: Error) -> Response {
+    public func make(with req: Request, for error: Error) throws -> Response {
         guard !req.accept.prefers("html") else {
             let status: Status = Status(error)
             let bytes = errorView.render(
@@ -58,7 +58,10 @@ extension ErrorMiddleware: ServiceType {
 
     /// See Service.make
     public static func makeService(for container: Container) throws -> ErrorMiddleware? {
-        return try ErrorMiddleware(container.config.environment, container.make(LogProtocol.self))
+        return try ErrorMiddleware(
+            environment: container.environment,
+            log: container.make()
+        )
     }
 }
 
@@ -75,7 +78,7 @@ extension Status {
 fileprivate struct DebugInformation: JSONEncodable, ContentEncodable {
     var error = true
     var reason: String
-    var metadata: [String: String]
+    var metadata: [String: String]?
 
     // debugging
     var debugReason: String?
@@ -119,19 +122,27 @@ fileprivate struct DebugInformation: JSONEncodable, ContentEncodable {
 }
 
 extension RouterError: AbortError {
-    public var status: Status { return Abort.notFound.status }
-    public var reason: String { return Abort.notFound.reason }
-    public var metadata: [String: String]? { return Abort.notFound.metadata }
+    public var status: Status {
+        return .notFound
+    }
+
+    public var reason: String {
+        return Status.notFound.reasonPhrase
+    }
+
+    public var metadata: [String: String]? {
+        return nil
+    }
 }
 
 extension LogProtocol {
-    public func swiftError(_ error: Error) {
+    public func swiftError(_ error: Error) throws {
         if let debuggable = error as? Debuggable {
-            self.error(debuggable.debuggableHelp(format: .short))
+            try self.error(debuggable.debuggableHelp(format: .short))
         } else {
             let type = String(reflecting: Swift.type(of: error))
-            self.error("[\(type): \(error)]")
-            info("Conform '\(type)' to Debugging.Debuggable to provide more debug information.")
+            try self.error("[\(type): \(error)]")
+            try info("Conform '\(type)' to Debugging.Debuggable to provide more debug information.")
         }
     }
 }

@@ -95,7 +95,7 @@ final class UnimplementedMailer: MailProtocol {
     }
 }
 
-enum MailerError: Debuggable {
+enum MailerError: Debuggable, Error {
     case unimplemented
 }
 

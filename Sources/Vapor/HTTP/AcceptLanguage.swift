@@ -33,8 +33,9 @@ extension Request {
     }
 }
 
-extension Request {
-    public var lang: String {
-        return headers["Accept-Language"]?.string ?? ""
-    }
-}
+//extension Request {
+//    public var lang: String {
+//        return headers["Accept-Language"]?.string ?? ""
+//    }
+//}
+

@@ -13,39 +13,33 @@ import Service
 /// Use in Xcode with:
 /// Droplet(arguments: ["vapor", "routes"])
 public final class RouteList: Command {
-    public let help: [String] = [
-        "Logs the routes of your application"
-    ]
-
-    public let id: String = "routes"
-    public let console: ConsoleProtocol
+    public let signature: CommandSignature
+    public let console: Console
     public let router: RouterProtocol
 
     /// Initialize a route list command with droplet
     /// requires Droplet reference so that if user updates
     /// console _after_ initializing RouteList
     /// we access latest console.
-    public init(_ console: ConsoleProtocol, _ router: RouterProtocol) {
+    public init(console: Console, router: RouterProtocol) {
+        self.signature = .init(arguments: [], options: [], help: ["Logs the routes of your application"])
         self.console = console
         self.router = router
     }
 
-    public func run(arguments: [String] = []) {
-        guard arguments.isEmpty else {
-            console.kill("invalid arguments \(arguments) expected no arguments")
-        }
+    public func run(using console: Console, with input: CommandInput) throws {
         let titles = ["Host", "Method", "Path"]
-        var table = makeTable(routes: router.routes)
+        var table = try makeTable(routes: router.routes)
         table.insert(titles, at: 0)
-        log(table: table, with: console)
+        try log(table: table, with: console)
     }
 
     /// Turns an array of route strings into a list of rows
-    func makeTable(routes: [String]) -> [[String]] {
+    func makeTable(routes: [String]) throws -> [[String]] {
         var hosts: [String: [(method: String, path: String)]] = [:]
-        routes.forEach { route in
+        try routes.forEach { route in
             let split = route.components(separatedBy: " ")
-            guard split.count == 3 else { console.kill("invalid route \(route)") }
+            guard split.count == 3 else { try console.kill("invalid route \(route)") }
             let host = split[0]
             var existing = hosts[host] ?? []
 
@@ -70,11 +64,15 @@ public final class RouteList: Command {
     }
 
     /// Takes a table represented as a list of rows and logs to console
-    func log(table rows: [[String]], with console: ConsoleProtocol) {
+    func log(table rows: [[String]], with console: Console) throws {
         // Lint to ensure our table is valid
-        guard let numberOfColumns = rows.first?.count else { console.kill("invalid table") }
-        rows.forEach { row in
-            guard row.count == numberOfColumns else { console.kill("invalid row \(row)") }
+        guard let numberOfColumns = rows.first?.count else {
+            try console.kill("invalid table")
+        }
+        try rows.forEach { row in
+            guard row.count == numberOfColumns else {
+                try console.kill("invalid row \(row)")
+            }
         }
 
         // Get metadata
@@ -84,33 +82,33 @@ public final class RouteList: Command {
         let separatorLine = separator(columnWidths: columnWidths)
 
         // top of table
-        console.print(separatorLine, newLine: true)
+        try console.print(separatorLine, newLine: true)
 
-        rows.enumerated().forEach { idx, labels in
+        try rows.enumerated().forEach { idx, labels in
             let paddedLabels = labels
                 .enumerated().map { idx, label -> String in
                     let length = columnWidths[idx]
                     return label.padded(length: length)
             }
 
-            console.print("| ", newLine: false)
+            try console.print("| ", newLine: false)
             // title label logs different color than data
             let colorLog = idx == 0 ? console.warning : console.info
-            paddedLabels.forEach { label in
-                colorLog(label, false)
-                console.print(" | ", newLine: false)
+            try paddedLabels.forEach { label in
+                try colorLog(label, false)
+                try console.print(" | ", newLine: false)
             }
             // terminate row
-            console.print("", newLine: true)
+            try console.print("", newLine: true)
 
             // title gets an additional separator
             if idx == 0 {
-                console.print(separatorLine, newLine: true)
+                try console.print(separatorLine, newLine: true)
             }
         }
 
         // bottom of table
-        console.print(separatorLine, newLine: true)
+        try console.print(separatorLine, newLine: true)
     }
 
     /// parse various labels to ensure our widths are formatted
@@ -161,8 +159,8 @@ extension String {
 }
 
 extension Console {
-    fileprivate func kill(_ message: String) -> Never {
-        error(message, newLine: true)
+    fileprivate func kill(_ message: String) throws -> Never {
+        try error(message, newLine: true)
         exit(1)
     }
 }
@@ -180,6 +178,9 @@ extension RouteList: ServiceType {
 
     /// See Service.make
     public static func makeService(for container: Container) throws -> Self? {
-        return try .init(container.make(ConsoleProtocol.self), container.make(RouterProtocol.self))
+        return try .init(
+            console: container.make(),
+            router: container.make()
+        )
     }
 }

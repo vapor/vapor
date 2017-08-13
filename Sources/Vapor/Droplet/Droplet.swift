@@ -8,12 +8,78 @@ import Sockets
 import Service
 import Routing
 
+
+struct WorkingDirectory {
+    let workDir = ""
+    let publicDir = ""
+    let resourcesDir = ""
+    let viewsDir = ""
+}
+
+public struct Config: Disambiguator {
+    var chosenSingle: [String: String]
+    var chosenMultiple: [String: [String]]
+
+    public init() {
+        self.chosenSingle = [:]
+        self.chosenMultiple = [:]
+    }
+
+    public func disambiguateSingle<Type>(available: [ServiceFactory], type: Type.Type, for container: Container) throws -> ServiceFactory {
+        guard let chosen = chosenSingle["\(Type.self)"] else {
+            throw "please choose for \(Type.self)"
+        }
+
+        let filtered = available.filter { "\($0.serviceType)" == chosen }
+        guard filtered.count == 1 else {
+            throw "too many showed up for chosen! \(Type.self)"
+        }
+
+        return filtered[0]
+    }
+
+    public func disambiguateMultiple<Type>(available: [ServiceFactory], type: Type.Type, for container: Container) throws -> [ServiceFactory] {
+        guard let chosen = chosenMultiple["\(Type.self)"] else {
+            throw "please choose for \(Type.self)"
+        }
+
+        let filtered: [ServiceFactory] = try chosen.map { chosen in
+            for service in available {
+                if "\(service.serviceType)" == chosen {
+                    return service
+                }
+            }
+            throw "could not find service named \(chosen) for \(Type.self)!"
+        }
+
+        return filtered
+    }
+
+    public mutating func prefer<T, P>(_ type: T.Type, for protocol: P.Type) {
+        chosenSingle["\(P.self)"] = "\(T.self)"
+    }
+
+    public mutating func prefer<T, P>(_ types: T.Type..., for protocol: [P].Type) {
+        chosenMultiple["\(P.self)"] = types.map { "\($0)" }
+    }
+
+    public static func `default`() -> Config {
+        return Config()
+    }
+}
+
 public final class Droplet: Container {
     /// Config file name
     public static let configKey = "droplet"
 
     /// Provides access to config settings.
     public let config: Config
+
+    public var disambiguator: Disambiguator {
+        return config
+    }
+
+    public let environment: Service.Environment
     
     /// Services available to this service container.
     public let services: Services
@@ -26,32 +92,35 @@ public final class Droplet: Container {
 
     /// Creates a Droplet.
     public init(
-        _ config: Config? = nil,
-        _ services: Services? = nil,
-        _ router: Router? = nil,
+        config: Config? = nil,
+        environment: Service.Environment = .development,
+        services: Services? = nil,
+        router: Router? = nil,
         arguments: [String] = CommandLine.arguments
     ) throws {
-        var config = config ?? Config.default()
-        config.resolveEnv()
+        self.config = Config.default()
 
         // port override
-        if let port = config.arguments.value(for: "port") {
-            try config.set("server", "port", to: port)
-        }
-        self.config = config
-        let services = services ?? Services.default()
+//        if let port = config.arguments.value(for: "port") {
+//            try config.set("server", "port", to: port)
+//        }
+//        self.config = config
+        var services = services ?? Services.default()
+        services.register(WorkingDirectory(), name: "workdir")
+
         
         self.services = services
         extend = [:]
 
-        let environment = config.environment
+        // let environment = config.environment
+        self.environment = environment
         
         let log = try self.log()
         let router = try self.router()
         
         let chain = try middleware().chain(to: router)
         let responder = Request.Handler { request in
-            log.info("\(request.method) \(request.uri.path)")
+            try log.info("\(request.method) \(request.uri.path)")
 
             let isHead = request.method == .head
             if isHead {
@@ -65,9 +134,9 @@ public final class Droplet: Container {
             do {
                 response = try chain.respond(to: request)
             } catch {
-                log.error("Uncaught error: \(type(of: error))")
-                log.swiftError(error)
-                log.info("Use `ErrorMiddleware` or catch \(type(of: error)) to provide a better error response.")
+                try log.error("Uncaught error: \(type(of: error))")
+                try log.swiftError(error)
+                try log.info("Use `ErrorMiddleware` or catch \(type(of: error)) to provide a better error response.")
                 response = Response(status: .internalServerError)
             }
 
@@ -87,7 +156,7 @@ public final class Droplet: Container {
         // change logging based on env
         switch environment {
         case .production:
-            log.info("Production mode enabled, disabling informational logs.")
+            try log.info("Production mode enabled, disabling informational logs.")
             log.enabled = [.error, .fatal]
         case .development:
             log.enabled = [.info, .warning, .error, .fatal]
@@ -96,7 +165,8 @@ public final class Droplet: Container {
         }
         
         // disable cache by default during development
-        try view().shouldCache = environment == .production
+        // FIXME: cache needs to be properly disabled during prod
+        // try view().shouldCache = environment == .production
 
         // boot providers
         try services.providers.forEach { provider in

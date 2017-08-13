@@ -1,3 +1,4 @@
+import Core
 import HTTP
 import Routing
 
@@ -122,10 +123,13 @@ extension RouteBuilder {
             item(.options, about)
         } else {
             item(.options) { request, model in
+                // FIXME
+                fatalError("not supported")
+                /*
                 return JSON.object([
                     "resource": .string("\(path)/:\(pathId)"),
                     "methods": .array(itemMethods.map { .string($0.description) })
-                ]) 
+                ]) */
             }
         }
 
@@ -133,10 +137,13 @@ extension RouteBuilder {
             multiple(.options, about)
         } else {
             multiple(.options) { request in
+                // FIXME
+                fatalError("not supported")
+                /*
                 return JSON.object([
                     "resource": .string(path),
                     "methods": .array(multipleMethods.map { .string($0.description) })
-                ])
+                ])*/
             }
         }
     }

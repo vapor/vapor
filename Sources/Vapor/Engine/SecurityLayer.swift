@@ -1,4 +1,5 @@
 import TLS
+import Transport
 
 /// Available security layers
 public enum SecurityLayer {

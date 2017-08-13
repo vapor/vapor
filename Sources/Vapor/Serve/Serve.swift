@@ -56,12 +56,13 @@ public final class Serve: Command {
                 {
                     return
                 }
-                
-                self.log.error("Server error: \(error)")
+
+                // FIXME: throwing
+                try! self.log.error("Server error: \(error)")
             }
             
             // don't enforce -> Never on protocol because of Swift warnings
-            log.error("server did not block execution")
+            try log.error("server did not block execution")
             exit(1)
         } catch ServerError.bind(let host, let port, _) {
             try console.error("Could not bind to \(host):\(port), it may be in use or require sudo.")

@@ -37,6 +37,7 @@ let package = Package(
     targets: [
         .target(name: "Cache", dependencies: ["Core", "Service"]),
         .testTarget(name: "CacheTests", dependencies: ["Cache"]),
+        .target(name: "Development", dependencies: ["Vapor"]),
         .target(name: "Session", dependencies: ["Cache", "Cookies", "Core", "Crypto", "HTTP", "Service"]),
         .testTarget(name: "SessionTests", dependencies: ["Session"]),
         .target(name: "Testing", dependencies: ["Core", "HTTP", "Vapor"]),

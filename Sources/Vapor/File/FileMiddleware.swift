@@ -8,10 +8,11 @@ import Routing
 /// on not found errors.
 public final class FileMiddleware: Middleware {
     private var publicDir: String
-    private let loader = DataFile()
+    private let loader: FileManager
     private let chunkSize: Int
 
     public init(publicDir: String, chunkSize: Int? = nil) {
+        self.loader = FileManager()
         // Remove last "/" from the publicDir if present, so we can directly append uri path from the request.
         self.publicDir = publicDir.finished(with: "/")
         self.chunkSize = chunkSize ?? 32_768 // 2^15
@@ -49,6 +50,7 @@ extension FileMiddleware: ServiceType {
 
     /// See Service.make
     public static func makeService(for container: Container) throws -> FileMiddleware? {
-        return FileMiddleware(publicDir: container.config.publicDir)
+        let dirs = try container.make(WorkingDirectory.self)
+        return FileMiddleware(publicDir: dirs.publicDir)
     }
 }

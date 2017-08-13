@@ -21,9 +21,9 @@ public extension Response {
             let attributes = try? Foundation.FileManager.default.attributesOfItem(atPath: filePath),
             let modifiedAt = attributes[.modificationDate] as? Date,
             let fileSize = attributes[.size] as? NSNumber
-            else {
-                throw Abort.notFound
-            }
+        else {
+            throw Abort(.notFound)
+        }
 
         var headers: [HeaderKey: String] = [:]
 
@@ -49,7 +49,7 @@ public extension Response {
         // Try to open the file for reading, keeping it open until the chunking finishes.
         // This is the last chance to report a Not Found error to the client.
         guard let file = fopen(filePath, "r") else {
-            throw Abort.notFound
+            throw Abort(.notFound)
         }
 
         // return chunked response

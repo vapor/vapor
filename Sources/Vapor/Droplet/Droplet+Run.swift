@@ -1,4 +1,5 @@
 import libc
+import Command
 import Console
 import Dispatch
 
@@ -8,24 +9,24 @@ extension Droplet {
     }
 
     /// Runs the Droplet's commands, defaulting to serve.
-    public func run() throws -> Never  {
-        let console = try make(ConsoleProtocol.self)
+    public func run(arguments: [String] = CommandLine.arguments) throws -> Never  {
+        let console = try make(Console.self)
         
         do {
-            try runCommands()
+            try runCommands(arguments: arguments)
         } catch CommandError.general(let error) {
-            console.error("Error: ", newLine: false)
-            console.print("\(error)")
+            try console.error("Error: ", newLine: false)
+            try console.print("\(error)")
             exit(1)
         }
         exit(0)
     }
 
-    func runCommands() throws {
-        let console = try self.console()
-        let commands = try self.commands()
+    func runCommands(arguments: [String]) throws {
+        let console = try make(Console.self)
+        let commands = try make([Command.self])
 
-        var iterator = config.arguments.makeIterator()
+        var iterator = arguments.makeIterator()
 
         guard let executable = iterator.next() else {
             throw CommandError.general("No executable.")
@@ -33,24 +34,18 @@ extension Droplet {
 
         var args = Array(iterator)
 
-        if !args.flag("help") && args.values.count == 0 {
-            console.warning("No command supplied, defaulting to serve...")
-            args.insert("serve", at: 0)
-        }
-
         do {
-            try console.run(
-                executable: executable,
-                commands: commands.map { $0 as Runnable },
-                arguments: args,
-                help: [
-                    "This command line interface is used to serve your droplet, prepare the database, and more.",
-                    "Custom commands can be added by appending them to the Droplet's commands array.",
-                    "Use --help on individual commands to learn more."
-                ]
-            )
-        } catch ConsoleError.help {
-            // nothing
+            // FIXME: figure out how to get the commands and run the console
+//            try console.run(
+//                executable: executable,
+//                commands: commands.map { $0 as Runnable },
+//                arguments: args,
+//                help: [
+//                    "This command line interface is used to serve your droplet, prepare the database, and more.",
+//                    "Custom commands can be added by appending them to the Droplet's commands array.",
+//                    "Use --help on individual commands to learn more."
+//                ]
+//            ) 
         } catch {
             throw CommandError.general("\(error)")
         }

@@ -21,7 +21,7 @@ extension Responder {
     public func request(
         _ method: Method,
         _ uri: String,
-        query: [String: URLEncodedFormRepresentable] = [:],
+        query: [String: URLEncodable] = [:],
         _ headers: [HeaderKey: String] = [:],
         _ body: BodyRepresentable? = nil,
         through middleware: [Middleware] = []
@@ -34,7 +34,7 @@ extension Responder {
     internal func makeRequest(
         _ method: Method,
         _ uri: String,
-        query: [String: URLEncodedFormRepresentable] = [:],
+        query: [String: URLEncodable] = [:],
         _ headers: [HeaderKey: String] = [:],
         _ body: BodyRepresentable? = nil
     ) throws  -> Request {
@@ -44,9 +44,8 @@ extension Responder {
         req.headers = headers
 
         if !query.isEmpty {
-            req.query = try .dictionary(query.mapValues {
-                try $0.makeURLEncodedForm()
-            })
+            // FIXME: actually set query
+            // req.query = query.encode(...)
         }
 
         if let body = body {
@@ -63,7 +62,7 @@ extension Responder {
     /// Calls `.request(.get, ...)`
     public func get(
         _ uri: String,
-        query: [String: URLEncodedFormRepresentable] = [:],
+        query: [String: URLEncodable] = [:],
         _ headers: [HeaderKey: String] = [:],
         _ body: BodyRepresentable? = nil,
         through middleware: [Middleware] = []
@@ -74,7 +73,7 @@ extension Responder {
     /// Calls `.request(.post, ...)`
     public func post(
         _ uri: String,
-        query: [String: URLEncodedFormRepresentable] = [:],
+        query: [String: URLEncodable] = [:],
         _ headers: [HeaderKey: String] = [:],
         _ body: BodyRepresentable? = nil,
         through middleware: [Middleware] = []
@@ -85,7 +84,7 @@ extension Responder {
     /// Calls `.request(.patch, ...)`
     public func patch(
         _ uri: String,
-        query: [String: URLEncodedFormRepresentable] = [:],
+        query: [String: URLEncodable] = [:],
         _ headers: [HeaderKey: String] = [:],
         _ body: BodyRepresentable? = nil,
         through middleware: [Middleware] = []
@@ -96,7 +95,7 @@ extension Responder {
     /// Calls `.request(.put, ...)`
     public func put(
         _ uri: String,
-        query: [String: URLEncodedFormRepresentable] = [:],
+        query: [String: URLEncodable] = [:],
         _ headers: [HeaderKey: String] = [:],
         _ body: BodyRepresentable? = nil,
         through middleware: [Middleware] = []
@@ -108,7 +107,7 @@ extension Responder {
     /// Calls `.request(.delete, ...)`
     public func delete(
         _ uri: String,
-        query: [String: URLEncodedFormRepresentable] = [:],
+        query: [String: URLEncodable] = [:],
         _ headers: [HeaderKey: String] = [:],
         _ body: BodyRepresentable? = nil,
         through middleware: [Middleware] = []

@@ -85,6 +85,6 @@ extension CORSMiddleware: ServiceType {
 
     /// See Service.make
     public static func makeService(for container: Container) throws -> CORSMiddleware? {
-        return try .init(config: container.config)
+        return try CORSMiddleware(configuration: container.make())
     }
 }

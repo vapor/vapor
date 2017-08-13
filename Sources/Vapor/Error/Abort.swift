@@ -3,9 +3,9 @@ import HTTP
 
 /// A basic conformance to `AbortError` for
 /// convenient error throwing
-public struct Abort: AbortError, Debuggable {
+public struct Abort: AbortError, Debuggable, Traceable, Helpable {
     public let status: Status
-    public let metadata: Node?
+    public let metadata: [String: String]?
 
     // MARK: Debuggable
 
@@ -35,20 +35,22 @@ public struct Abort: AbortError, Debuggable {
     
     /// File in which the error was thrown
     public let file: String
+
+    /// Function from which the error was thrown
+    public let function: String
     
     /// Line number at which the error was thrown
-    public let line: Int
+    public let line: UInt
     
     /// The column at which the error was thrown
-    public let column: Int
-    
-    /// The function in which the error was thrown
-    /// TODO: waiting on https://bugs.swift.org/browse/SR-5380
-    /// public let function: String
+    public let column: UInt
+
+    /// The stack trace at which the error was thrown
+    public var stackTrace: [String]
 
     public init(
         _ status: Status,
-        metadata: Node? = nil,
+        metadata: [String: String]? = nil,
         // Debuggable
         reason: String? = nil,
         identifier: String? = nil,
@@ -58,10 +60,9 @@ public struct Abort: AbortError, Debuggable {
         stackOverflowQuestions: [String]? = nil,
         gitHubIssues: [String]? = nil,
         file: String = #file,
-        line: Int = #line,
-        column: Int = #column
-        /// See TODO in property decl
-        /// function: String = #function
+        function: String = #function,
+        line: UInt = #line,
+        column: UInt = #column
     ) {
         self.status = status
         self.metadata = metadata
@@ -73,15 +74,9 @@ public struct Abort: AbortError, Debuggable {
         self.stackOverflowQuestions = stackOverflowQuestions ?? []
         self.gitHubIssues = gitHubIssues ?? []
         self.file = file
+        self.function = function
         self.line = line
         self.column = column
-        /// See TODO in property decl
-        /// self.function = function
+        self.stackTrace = Abort.makeStackTrace()
     }
-
-    // most common
-    public static let badRequest = Abort(.badRequest)
-    public static let unauthorized = Abort(.unauthorized)
-    public static let notFound = Abort(.notFound)
-    public static let serverError = Abort(.internalServerError)
 }
