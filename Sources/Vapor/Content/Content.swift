@@ -1,12 +1,14 @@
 import Core
+import Foundation
 import HTTP
+import Transport
 
 public protocol ContentDecodable {
-    static func decode(from message: Message) throws -> Self
+    static func decodeContent(from message: Message) throws -> Self
 }
 
 public protocol ContentEncodable {
-    func encode(to message: Message) throws
+    func encodeContent(to message: Message) throws
 }
 
 public typealias ContentCodable = ContentDecodable & ContentEncodable
@@ -14,20 +16,51 @@ public typealias ContentCodable = ContentDecodable & ContentEncodable
 
 extension Message {
     public func content<C: ContentEncodable>(_ content: C) throws {
-        try content.encode(to: self)
+        try content.encodeContent(to: self)
     }
 
-    public func content<C: ContentDecodable>() throws -> C {
-        return try C.decode(from: self)
+    public func content<C: ContentDecodable>(_ content: C.Type) throws -> C {
+        return try C.decodeContent(from: self)
     }
 }
 
 extension ContentEncodable where Self: JSONEncodable {
-    public func encode(to message: Message) throws {
-        // make json
-        // serialize
+    public func encodeContent(to message: Message) throws {
+        let json = "\(self)"
+        message.body = .data(json.makeBytes())
+        message.headers[.contentType] = "application/json"
+    }
+}
+
+extension ContentDecodable where Self: JSONDecodable {
+    public static func decodeContent(from message: Message) throws -> Self {
+        // FIXME: mediatype
+        guard message.contentType?.contains("application/json") == true else {
+            throw "needs to be json"
+        }
+
+        let data = Data(message.body.bytes!)
+        return try self.init(json: data)
+    }
+}
+
+public protocol ResponseEncodable: ResponseRepresentable {
+    func encodeResponse(to stream: Transport.Stream) throws
+}
+
+
+extension ResponseEncodable where Self: ContentEncodable {
+    public func encodeResponse(to stream: Transport.Stream) throws {
+        var res = try makeResponse()
+        // send on stream
+
     }
 
+    public func makeResponse() throws -> Response {
+        let res = Response(status: .ok)
+        try res.content(self)
+        return res
+    }
 }
 
 //import PathIndexable

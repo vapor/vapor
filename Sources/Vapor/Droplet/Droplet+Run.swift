@@ -4,50 +4,38 @@ import Console
 import Dispatch
 
 extension Droplet {
-    enum ExecutionError: Swift.Error {
-        case insufficientArguments, noCommandFound
-    }
-
     /// Runs the Droplet's commands, defaulting to serve.
-    public func run(arguments: [String] = CommandLine.arguments) throws -> Never  {
+    public func run(arguments: [String] = CommandLine.arguments) throws {
         let console = try make(Console.self)
-        
-        do {
-            try runCommands(arguments: arguments)
-        } catch CommandError.general(let error) {
-            try console.error("Error: ", newLine: false)
-            try console.print("\(error)")
-            exit(1)
+
+        let group = try VaporGroup(commands: make([Command.self]))
+        try console.run(.group(group), arguments: arguments)
+    }
+}
+
+
+struct VaporGroup: Group {
+    var signature: GroupSignature
+
+    init(commands: [Command]) {
+        var runnables: [String: Runnable] = [:]
+
+        for command in commands {
+            runnables["\(type(of:command))"] = .command(command)
         }
-        exit(0)
+
+        self.signature = .init(
+            runnables: runnables,
+            options: [],
+            help: [
+                "This command line interface is used to serve your droplet, prepare the database, and more.",
+                "Custom commands can be added by appending them to the Droplet's commands array.",
+                "Use --help on individual commands to learn more."
+            ]
+        )
     }
 
-    func runCommands(arguments: [String]) throws {
-        let console = try make(Console.self)
-        let commands = try make([Command.self])
-
-        var iterator = arguments.makeIterator()
-
-        guard let executable = iterator.next() else {
-            throw CommandError.general("No executable.")
-        }
-
-        var args = Array(iterator)
-
-        do {
-            // FIXME: figure out how to get the commands and run the console
-//            try console.run(
-//                executable: executable,
-//                commands: commands.map { $0 as Runnable },
-//                arguments: args,
-//                help: [
-//                    "This command line interface is used to serve your droplet, prepare the database, and more.",
-//                    "Custom commands can be added by appending them to the Droplet's commands array.",
-//                    "Use --help on individual commands to learn more."
-//                ]
-//            ) 
-        } catch {
-            throw CommandError.general("\(error)")
-        }
+    func run(using console: Console, with input: GroupInput) throws {
+        try console.run(signature.runnables["Serve"]!, arguments: [input.executable])
     }
 }

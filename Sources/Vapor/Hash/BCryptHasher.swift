@@ -1,6 +1,9 @@
 import Bits
 import BCrypt
 
+public typealias Hasher = HashProtocol
+public typealias Application = Droplet
+
 /// Create BCrypt hashes using the 
 /// vapor/crypto package.
 public final class BCryptHasher: HashProtocol {

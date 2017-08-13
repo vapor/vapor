@@ -1,4 +1,5 @@
 import HTTP
+import Command
 import Console
 import Cache
 import Session
@@ -27,6 +28,8 @@ public struct Config: Disambiguator {
 
     public func disambiguateSingle<Type>(available: [ServiceFactory], type: Type.Type, for container: Container) throws -> ServiceFactory {
         guard let chosen = chosenSingle["\(Type.self)"] else {
+            print(chosenSingle)
+            print(available)
             throw "please choose for \(Type.self)"
         }
 
@@ -59,12 +62,15 @@ public struct Config: Disambiguator {
         chosenSingle["\(P.self)"] = "\(T.self)"
     }
 
-    public mutating func prefer<T, P>(_ types: T.Type..., for protocol: [P].Type) {
+    public mutating func prefer<P>(_ types: Any.Type..., for protocol: [P.Type]) {
         chosenMultiple["\(P.self)"] = types.map { "\($0)" }
     }
 
     public static func `default`() -> Config {
-        return Config()
+        var config = Config()
+        config.prefer(DateMiddleware.self, for: [Middleware.self])
+        config.prefer(Serve.self, ProviderInstall.self, for: [Command.self])
+        return config
     }
 }
 
@@ -98,7 +104,7 @@ public final class Droplet: Container {
         router: Router? = nil,
         arguments: [String] = CommandLine.arguments
     ) throws {
-        self.config = Config.default()
+        self.config = config ?? Config.default()
 
         // port override
 //        if let port = config.arguments.value(for: "port") {
@@ -106,7 +112,7 @@ public final class Droplet: Container {
 //        }
 //        self.config = config
         var services = services ?? Services.default()
-        services.register(WorkingDirectory(), name: "workdir")
+        services.register(WorkingDirectory())
 
         
         self.services = services

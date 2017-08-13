@@ -1,3 +1,5 @@
+@_exported import Service
+
 //extension String: Error {}
 //
 //import Service

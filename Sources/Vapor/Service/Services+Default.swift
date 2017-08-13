@@ -56,6 +56,8 @@ extension Services {
 
         // mail
         services.register(Mailgun.self)
+
+        services.register(ServerConfig.default())
         
         return services
     }
