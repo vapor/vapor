@@ -28,7 +28,9 @@ public final class ErrorMiddleware: Middleware {
                 code: status.statusCode,
                 message: status.reasonPhrase
             )
-            return View(bytes: bytes).makeResponse()
+            let res = View(bytes: bytes).makeResponse()
+            res.status = status
+            return res
         }
         
         let status = Status(error)

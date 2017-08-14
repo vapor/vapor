@@ -4,6 +4,7 @@ import HTTP
 import Core
 import Sockets
 import Dispatch
+import Testing
 
 class DropletTests: XCTestCase {
     static let allTests = [
@@ -17,6 +18,8 @@ class DropletTests: XCTestCase {
         ("testProxy", testProxy),
         ("testDropletProxy", testDropletProxy),
         ("testWebsockets", testWebsockets),
+        ("test404", test404),
+        ("testErrorMiddleware404", testErrorMiddleware404),
         // ("testWebsocketsTLS", testWebsocketsTLS)
     ]
 
@@ -206,7 +209,25 @@ class DropletTests: XCTestCase {
         }
         group.wait()
     }
-  
+    
+    func test404() throws {
+        Testing.onFail = XCTFail
+        let drop = try Droplet()
+        
+        try drop.testResponse(to: .get, at: "asdf", headers: [.accept: "text/html"])
+            .assertStatus(is: .notFound)
+    }
+
+    func testErrorMiddleware404() throws {
+        Testing.onFail = XCTFail
+
+        let config = Config([:])
+        let drop = try Droplet(middleware: [ErrorMiddleware(config: config)])
+
+        try drop.testResponse(to: .get, at: "asdf", headers: [.accept: "text/html"])
+            .assertStatus(is: .notFound)
+    }
+
     // temporary fix for Circle CI
     #if Xcode
     
