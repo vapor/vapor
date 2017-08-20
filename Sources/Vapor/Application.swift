@@ -1,0 +1,68 @@
+import Foundation
+import Dispatch
+import HTTP
+import Service
+
+/// Core framework class. You usually create only
+/// one of these per application.
+/// Acts as a service container and much more.
+public final class Application: Container {
+    /// Config preferences and requirements for available services.
+    public var config: Config
+
+    /// Environment this application is running in.
+    public let environment: Environment
+
+    /// Services that can be created by this application.
+    public let services: Services
+
+    /// Use this to create stored properties in extensions.
+    public var extend: [String : Any]
+
+    /// Creates a new Application.
+    public init(
+        config: Config = .default(),
+        environment: Environment = .development,
+        services: Services = .default()
+    ) {
+        self.config = config
+        self.environment = environment
+        self.services = services
+        self.extend = [:]
+    }
+
+    /// Make an instance of the provided interface for this Application.
+    public func make<T>(_ interface: T.Type) throws -> T {
+        return try make(T.self, for: Application.self)
+    }
+
+    /// Runs the Application's server.
+    public func run() throws -> Never {
+        // TODO: run console / commands here.
+        let server = try make(Server.self)
+        try server.start(with: self)
+
+        let group = DispatchGroup()
+        group.enter()
+        group.wait()
+        exit(0)
+    }
+}
+
+// MARK: Responder
+
+extension Application: Responder {
+    public func respond(to req: Request, using writer: ResponseWriter) {
+        // TODO: should application register a responder object using SC?
+        let res: Response
+        do {
+            res = try Response(body: "vapor!")
+        } catch {
+            let data = "Error: \(error)".data(using: .utf8) ?? Data()
+            let body = Body(data)
+            res = Response(body: body)
+        }
+
+        writer.write(res)
+    }
+}
