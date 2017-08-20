@@ -12,7 +12,7 @@ public final class EngineServer: Server {
     }
 
     /// Start the server. Server protocol requirement.
-    public func start<R: Responder>(with responder: R) throws {
+    public func start(with responder: Responder) throws {
         // create a tcp server
         let server = try TCP.Server(workerCount: config.workerCount)
 

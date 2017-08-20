@@ -4,5 +4,5 @@ import HTTP
 /// and subsequently responding to requests sent
 /// to that address.
 public protocol Server {
-    func start<R: Responder>(with responder: R) throws
+    func start(with responder: Responder) throws
 }

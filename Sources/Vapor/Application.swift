@@ -40,29 +40,12 @@ public final class Application: Container {
     public func run() throws -> Never {
         // TODO: run console / commands here.
         let server = try make(Server.self)
-        try server.start(with: self)
+        let responder = try make(Responder.self)
+        try server.start(with: responder)
 
         let group = DispatchGroup()
         group.enter()
         group.wait()
         exit(0)
-    }
-}
-
-// MARK: Responder
-
-extension Application: Responder {
-    public func respond(to req: Request, using writer: ResponseWriter) {
-        // TODO: should application register a responder object using SC?
-        let res: Response
-        do {
-            res = try Response(body: "vapor!")
-        } catch {
-            let data = "Error: \(error)".data(using: .utf8) ?? Data()
-            let body = Body(data)
-            res = Response(body: body)
-        }
-
-        writer.write(res)
     }
 }
