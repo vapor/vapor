@@ -14,10 +14,10 @@ let package = Package(
         .package(url: "https://github.com/vapor/debugging.git", .branch("beta")),
 
         // Networking layer.
-        .package(url: "https://github.com/vapor/engine.git", .branch("middleware")),
+        .package(url: "https://github.com/vapor/engine.git", .branch("beta")),
 
         // Routing and responder package.
-        .package(url: "https://github.com/vapor/routing.git", .branch("rework")),
+        .package(url: "https://github.com/vapor/routing.git", .branch("beta")),
 
         // Service container and configuration system.
         .package(url: "https://github.com/vapor/service.git", .branch("beta")),

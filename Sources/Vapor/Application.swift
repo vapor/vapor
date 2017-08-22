@@ -1,5 +1,6 @@
-import Foundation
+import Core
 import Dispatch
+import Foundation
 import HTTP
 import Routing
 import Service
@@ -18,7 +19,7 @@ public final class Application: Container {
     public let services: Services
 
     /// Use this to create stored properties in extensions.
-    public var extend: [String : Any]
+    public var extend: Extend
 
     /// Creates a new Application.
     public init(
@@ -29,7 +30,7 @@ public final class Application: Container {
         self.config = config
         self.environment = environment
         self.services = services
-        self.extend = [:]
+        self.extend = Extend()
     }
 
     /// Make an instance of the provided interface for this Application.
