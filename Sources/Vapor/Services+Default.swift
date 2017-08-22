@@ -1,4 +1,5 @@
 import HTTP
+import Routing
 import Service
 
 extension Services {
@@ -16,15 +17,18 @@ extension Services {
             return EngineServerConfig()
         }
 
-        // register responder
-        services.register(Responder.self) { container in
-            return try RouterResponder(
-                router: container.make(for: RouterResponder.self)
-            )
+        // register middleware
+        services.register { container in
+            return MiddlewareConfig([
+                DateMiddleware.self
+            ])
+        }
+        services.register(Middleware.self) { container in
+            return DateMiddleware()
         }
 
         // register router
-        services.register(Router.self) { container in
+        services.register([SyncRouter.self, AsyncRouter.self, Router.self]) { container in
             return TestRouter()
         }
 

@@ -1,6 +1,7 @@
 import Foundation
 import Dispatch
 import HTTP
+import Routing
 import Service
 
 /// Core framework class. You usually create only
@@ -40,8 +41,15 @@ public final class Application: Container {
     public func run() throws -> Never {
         // TODO: run console / commands here.
         let server = try make(Server.self)
-        let responder = try make(Responder.self)
-        try server.start(with: responder)
+
+        let router = try RouterResponder(
+            router: make(Router.self)
+        )
+
+        let middleware = try make(MiddlewareConfig.self).resolve(for: self)
+        let chained = middleware.makeResponder(chainedto: router)
+
+        try server.start(with: chained)
 
         let group = DispatchGroup()
         group.enter()
