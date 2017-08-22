@@ -1,9 +1,16 @@
 import Core
 import HTTP
 import Routing
+import Service
 import Vapor
 
-let app = Application()
+var services = Services.default()
+
+services.register { container in
+    MiddlewareConfig([])
+}
+
+let app = Application(services: services)
 
 let async = try app.make(AsyncRouter.self)
 let sync = try app.make(SyncRouter.self)
