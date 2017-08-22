@@ -17,14 +17,14 @@ public final class EngineServer: Server {
         let server = try TCP.Server(workerCount: config.workerCount)
 
         // setup the server pipeline
-        server.consume { client in
+        server.drain { client in
             let parser = HTTP.RequestParser()
             let serializer = HTTP.ResponseSerializer()
 
             client.stream(to: parser)
-                .stream(to: responder.makeStream())
+                .stream(to: responder.makeStream(on: client.queue))
                 .stream(to: serializer)
-                .consume(into: client)
+                .drain(into: client)
 
             client.start()
         }

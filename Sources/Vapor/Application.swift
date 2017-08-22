@@ -1,6 +1,8 @@
-import Foundation
+import Core
 import Dispatch
+import Foundation
 import HTTP
+import Routing
 import Service
 
 /// Core framework class. You usually create only
@@ -17,7 +19,7 @@ public final class Application: Container {
     public let services: Services
 
     /// Use this to create stored properties in extensions.
-    public var extend: [String : Any]
+    public var extend: Extend
 
     /// Creates a new Application.
     public init(
@@ -28,7 +30,7 @@ public final class Application: Container {
         self.config = config
         self.environment = environment
         self.services = services
-        self.extend = [:]
+        self.extend = Extend()
     }
 
     /// Make an instance of the provided interface for this Application.
@@ -40,8 +42,15 @@ public final class Application: Container {
     public func run() throws -> Never {
         // TODO: run console / commands here.
         let server = try make(Server.self)
-        let responder = try make(Responder.self)
-        try server.start(with: responder)
+
+        let router = try RouterResponder(
+            router: make(Router.self)
+        )
+
+        let middleware = try make(MiddlewareConfig.self).resolve(for: self)
+        let chained = middleware.makeResponder(chainedto: router)
+
+        try server.start(with: chained)
 
         let group = DispatchGroup()
         group.enter()
