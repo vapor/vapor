@@ -59,7 +59,7 @@ final class TestMiddleware: Middleware {
 
         try next.respond(to: request).then { res in
             res.headers["baz"] = "bar"
-            try! promise.complete(res)
+            promise.complete(res)
         }
 
         return promise.future

@@ -5,7 +5,7 @@ import Dispatch
 /// Concretely implemented by `Future<T>`
 public protocol FutureType {
     associatedtype Expectation
-    func completeOrAwait(on queue: DispatchQueue?, callback: @escaping ResultCallback)
+    func addAwaiter(callback: @escaping ResultCallback)
 }
 
 // MARK: Convenience
@@ -30,8 +30,8 @@ extension FutureType {
     /// completion of this future.
     ///
     /// Will *not* be executed if an error occurrs
-    public func then(on queue: DispatchQueue? = nil, callback: @escaping ExpectationCallback) -> Self {
-        completeOrAwait(on: queue) { result in
+    public func then(callback: @escaping ExpectationCallback) -> Self {
+        addAwaiter { result in
             guard let ex = result.expectation else {
                 return
             }
@@ -47,8 +47,8 @@ extension FutureType {
     ///
     /// Will *only* be executed if an error occurred.
     //// Successful results will not call this handler.
-    public func `catch`(on queue: DispatchQueue? = nil, callback: @escaping ErrorCallback) {
-        completeOrAwait(on: queue) { result in
+    public func `catch`(callback: @escaping ErrorCallback) {
+        addAwaiter { result in
             guard let er = result.error else {
                 return
             }
@@ -58,10 +58,10 @@ extension FutureType {
     }
 
     /// Maps a future to a future of a different type.
-    public func map<T>(on queue: DispatchQueue? = nil, callback: @escaping ExpectationMapCallback<T>) -> Future<T> {
+    public func map<T>(callback: @escaping ExpectationMapCallback<T>) -> Future<T> {
         let promise = Promise(T.self)
 
-        then(on: queue) { expectation in
+        then { expectation in
             do {
                 let mapped = try callback(expectation)
                 promise.complete(mapped)
@@ -83,7 +83,7 @@ extension FutureType {
         let semaphore = DispatchSemaphore(value: 0)
         var awaitedResult: FutureResult<Expectation>?
 
-        self.completeOrAwait(on: .global()) { result in
+        addAwaiter { result in
             awaitedResult = result
             semaphore.signal()
         }
@@ -109,25 +109,22 @@ extension FutureType {
 extension Array where Element: FutureType {
     /// Flattens an array of future results into one
     /// future array result.
-    public func flatten(on queue: DispatchQueue? = nil) -> Future<[Element.Expectation]> {
+    public func flatten() -> Future<[Element.Expectation]> {
         let promise = Promise<[Element.Expectation]>()
 
         var elements: [Element.Expectation] = []
 
         var iterator = makeIterator()
         func handle(_ future: Element) {
-            future.completeOrAwait(on: queue) { element in
-                do {
-                    let res = try element.unwrap()
-                    elements.append(res)
-                    if let next = iterator.next() {
-                        handle(next)
-                    } else {
-                        promise.complete(elements)
-                    }
-                } catch {
-                    promise.fail(error)
+            future.then { res in
+                elements.append(res)
+                if let next = iterator.next() {
+                    handle(next)
+                } else {
+                    promise.complete(elements)
                 }
+            }.catch { error in
+                promise.fail(error)
             }
         }
 

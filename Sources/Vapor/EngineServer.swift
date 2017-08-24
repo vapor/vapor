@@ -30,6 +30,10 @@ public final class EngineServer: Server {
             client.start()
         }
 
+        server.errorStream = { error in
+            debugPrint(error)
+        }
+
         // bind, listen, and start accepting
         try server.start(
             hostname: config.hostname,

@@ -23,8 +23,11 @@ extension Services {
                 DateMiddleware.self
             ])
         }
-        services.register(Middleware.self) { container in
+        services.register { container in
             return DateMiddleware()
+        }
+        services.register { container in
+            return ErrorMiddleware()
         }
 
         // register router

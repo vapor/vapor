@@ -17,7 +17,9 @@ var services = Services.default()
 try services.register(Leaf.Provider())
 
 services.register { container in
-    MiddlewareConfig([])
+    MiddlewareConfig([
+        ErrorMiddleware.self
+    ])
 }
 
 let app = Application(services: services)
@@ -38,7 +40,7 @@ sync.on(.get, to: "plaintext") { req in
 
 let view = try app.make(ViewRenderer.self)
 async.on(.get, to: "welcome") { req in
-    return try view.make("hello", context: "foo", for: req)
+    return try view.make("/Users/tanner/Desktop/hello", context: "foo", for: req)
 }
 
 print("Starting server...")
