@@ -25,9 +25,9 @@ let app = Application(services: services)
 let async = try app.make(AsyncRouter.self)
 let sync = try app.make(SyncRouter.self)
 
-async.on(.get, to: "hello") { req -> Future<User> in
-    let user = User(name: "Vapor", age: 3)
-    return .init(user)
+let user = User(name: "Vapor", age: 3);
+async.on(.get, to: "hello") { req in
+    return Future<User>(user)
 }
 
 let hello = try Response(body: "Hello, world!")
@@ -37,7 +37,7 @@ sync.on(.get, to: "plaintext") { req in
 }
 
 let view = try app.make(ViewRenderer.self)
-async.on(.get, to: "welcome") { req -> Future<View> in
+async.on(.get, to: "welcome") { req in
     return try view.make("hello", context: "foo")
 }
 
