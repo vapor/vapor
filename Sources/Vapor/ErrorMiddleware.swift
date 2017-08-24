@@ -3,10 +3,10 @@ import Debugging
 import HTTP
 
 public final class ErrorMiddleware: Middleware {
-    public func respond(to request: Request, chainingTo next: Responder) throws -> Future<Response> {
+    public func respond(to req: Request, chainingTo next: Responder) throws -> Future<Response> {
         let promise = Promise(Response.self)
 
-        try next.respond(to: request).then { res in
+        try next.respond(to: req).then { res in
             promise.complete(res)
         }.catch { error in
             // print(request)
