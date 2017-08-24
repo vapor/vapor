@@ -17,7 +17,7 @@ let package = Package(
         .package(url: "https://github.com/vapor/engine.git", .branch("beta")),
 
         // TEMP: leaf view rendering, should be optional
-        .package(url: "https://github.com/vapor/leaf.git", .branch("beta")),
+        .package(url: "https://github.com/vapor/leaf.git", .branch("service")),
 
         // Routing and responder package.
         .package(url: "https://github.com/vapor/routing.git", .branch("beta")),
@@ -26,12 +26,11 @@ let package = Package(
         .package(url: "https://github.com/vapor/service.git", .branch("beta")),
     ],
     targets: [
-        .target(name: "Development", dependencies: ["Vapor"]),
+        .target(name: "Development", dependencies: ["Leaf", "Vapor"]),
         .target(name: "Vapor", dependencies: [
             "Core",
             "Debugging",
             "HTTP",
-            "Leaf",
             "Routing",
             "Service",
             "TCP",
