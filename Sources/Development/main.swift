@@ -38,7 +38,7 @@ sync.on(.get, to: "plaintext") { req in
 
 let view = try app.make(ViewRenderer.self)
 async.on(.get, to: "welcome") { req in
-    return try view.make("hello", context: "foo")
+    return try view.make("hello", context: "foo", for: req)
 }
 
 print("Starting server...")

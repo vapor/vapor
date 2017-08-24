@@ -1,0 +1,65 @@
+import Dispatch
+
+/// Represents a tag that has been parsed.
+public struct ParsedTag {
+    /// Name used for this tag.
+    public let name: String
+
+    /// Resolved parameters to this tag.
+    public let parameters: [Context]
+
+    /// Optional tag body
+    public let body: [Syntax]?
+
+    /// Source code location of this parsed tag
+    public let source: Source
+
+    /// Queue to complete futures on.
+    public let queue: DispatchQueue
+
+    init(
+        name: String,
+        parameters: [Context],
+        body: [Syntax]?,
+        source: Source,
+        queue: DispatchQueue
+    ) {
+        self.name = name
+        self.parameters = parameters
+        self.body = body
+        self.source = source
+        self.queue = queue
+    }
+}
+
+
+extension ParsedTag {
+    /// Create a general tag error.
+    public func error(reason: String) -> TagError {
+        return TagError(
+            tag: name,
+            source: source,
+            reason: reason
+        )
+    }
+
+    public func requireParameterCount(_ n: Int) throws {
+        guard parameters.count == n else {
+            throw error(reason: "Invalid parameter count: \(parameters.count)/\(n)")
+        }
+    }
+
+    public func requireBody() throws -> [Syntax] {
+        guard let body = body else {
+            throw error(reason: "Missing body")
+        }
+
+        return body
+    }
+
+    public func requireNoBody() throws {
+        guard body == nil else {
+            throw error(reason: "Extraneous body")
+        }
+    }
+}
