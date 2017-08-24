@@ -4,5 +4,5 @@ import Foundation
 public protocol FileReader {
     /// Reads the file at the supplied path
     /// Supply a queue to complete the future on.
-    func read(at path: String, on queue: DispatchQueue) -> Future<Data>
+    func read(at path: String) -> Future<Data>
 }

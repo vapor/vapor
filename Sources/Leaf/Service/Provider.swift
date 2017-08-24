@@ -5,15 +5,13 @@ import Service
 /// Used to configure Leaf renderer.
 public struct LeafConfig {
     let tags: [String: Tag]
-    let file: FileReader & FileCache
 
-    public init(tags: [String: Tag], file: FileReader & FileCache) {
+    public init(tags: [String: Tag]) {
         self.tags = tags
-        self.file = file
     }
 
     public static func `default`() -> LeafConfig {
-        return LeafConfig(tags: defaultTags, file: File())
+        return LeafConfig(tags: defaultTags)
     }
 }
 
@@ -27,7 +25,7 @@ public final class Provider: Service.Provider {
     public func register(_ services: inout Services) throws {
         services.register(ViewRenderer.self) { container -> Leaf.Renderer in
             let config = try container.make(LeafConfig.self, for: Renderer.self)
-            return Leaf.Renderer(tags: config.tags, file: config.file)
+            return Leaf.Renderer(tags: config.tags)
         }
 
         services.register { container in

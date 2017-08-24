@@ -8,12 +8,12 @@ public final class Renderer {
 
     /// The renderer will use this to read files for
     /// tags that require it (such as #embed)
-    public let file: FileReader & FileCache
+    private var _files: [Int: FileReader & FileCache]
 
     /// Create a new Leaf renderer.
-    public init(tags: [String: Tag], file: FileReader & FileCache) {
+    public init(tags: [String: Tag]) {
         self.tags = tags
-        self.file = file
+        self._files = [:]
     }
 
     // ASTs only need to be parsed once
@@ -73,7 +73,15 @@ extension Renderer {
         let path = path.hasSuffix(".leaf") ? path : path + ".leaf"
         let promise = Promise(Data.self)
 
-        file.cachedRead(at: path, on: queue).then { view in
+        let file: FileReader & FileCache
+        if let existing = _files[queue.hashValue] {
+            file = existing
+        } else {
+            file = File(queue: queue)
+            _files[queue.hashValue] = file
+        }
+
+        file.cachedRead(at: path).then { view in
             do {
                 try self.render(template: view, context: context, on: queue).then { data in
                     promise.complete(data)

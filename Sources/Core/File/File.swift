@@ -6,14 +6,20 @@ public final class File: FileReader, FileCache {
     /// Cached data.
     private var cache: [Int: Data]
 
+    /// This file's queue. Must be sync.
+    /// all calls to this File reader must be made
+    /// from this queue.
+    let queue: DispatchQueue
+
     /// Create a new CFile
     /// FIXME: add cache maximum
-    public init() {
+    public init(queue: DispatchQueue) {
         self.cache = [:]
+        self.queue = queue
     }
 
     /// See FileReader.read
-    public func read(at path: String, on queue: DispatchQueue) -> Future<Data> {
+    public func read(at path: String) -> Future<Data> {
         let promise = Promise(Data.self)
 
         let file = DispatchIO(
@@ -59,7 +65,7 @@ public final class File: FileReader, FileCache {
     }
 
     /// See FileCache.getFile
-    public func getFile<H: Hashable>(hash: H, on queue: DispatchQueue) -> Future<Data?> {
+    public func getFile<H: Hashable>(hash: H) -> Future<Data?> {
         return Future(cache[hash.hashValue])
     }
 
