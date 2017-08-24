@@ -8,7 +8,9 @@ public final class DateMiddleware: Middleware {
 
         try next.respond(to: request).then { res in
             res.headers[.date] = Date().description
-            try! promise.complete(res)
+            promise.complete(res)
+        }.catch { error in
+            promise.fail(error)
         }
 
         return promise.future

@@ -16,6 +16,9 @@ let package = Package(
         // Networking layer.
         .package(url: "https://github.com/vapor/engine.git", .branch("beta")),
 
+        // TEMP: leaf view rendering, should be optional
+        .package(url: "https://github.com/vapor/leaf.git", .branch("beta")),
+
         // Routing and responder package.
         .package(url: "https://github.com/vapor/routing.git", .branch("beta")),
 
@@ -28,6 +31,7 @@ let package = Package(
             "Core",
             "Debugging",
             "HTTP",
+            "Leaf",
             "Routing",
             "Service",
             "TCP",
