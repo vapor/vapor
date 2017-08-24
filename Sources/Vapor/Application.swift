@@ -49,7 +49,6 @@ public final class Application: Container {
 
         let middleware = try make(MiddlewareConfig.self).resolve(for: self)
         let chained = middleware.makeResponder(chainedto: router)
-
         try server.start(with: chained)
 
         let group = DispatchGroup()

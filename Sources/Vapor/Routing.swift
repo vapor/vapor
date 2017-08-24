@@ -11,10 +11,7 @@ public struct RouterResponder: Responder {
 
     public func respond(to req: Request) throws -> Future<Response> {
         guard let responder = router.route(request: req) else {
-            // TODO: needs to return the error page
-            let promise = Promise<Response>()
-            try promise.complete(Response(status: .notFound))
-            return promise.future
+            return Future(Response(status: .notFound))
         }
 
         return try responder.respond(to: req)
