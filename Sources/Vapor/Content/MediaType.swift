@@ -647,7 +647,6 @@ private let mediaTypes = [
     "application": "application/x-ms-application", 
     "lnk": "application/x-ms-shortcut", 
     "wmd": "application/x-ms-wmd", 
-    "wmz": "application/x-ms-wmz", 
     "xbap": "application/x-ms-xbap", 
     "mdb": "application/x-msaccess", 
     "obd": "application/x-msbinder", 
@@ -811,7 +810,6 @@ private let mediaTypes = [
     "uvvg": "image/vnd.dece.graphic", 
     "djvu": "image/vnd.djvu", 
     "djv": "image/vnd.djvu", 
-    "sub": "image/vnd.dvb.subtitle", 
     "dwg": "image/vnd.dwg", 
     "dxf": "image/vnd.dxf", 
     "fbs": "image/vnd.fastbidsheet", 
@@ -991,7 +989,7 @@ private let mediaTypes = [
     "wmx": "video/x-ms-wmx", 
     "wvx": "video/x-ms-wvx", 
     "avi": "video/x-msvideo", 
-    "movie": "video/x-sgi-movie", 
+    "movie": "video/x-sgi-mo§vie", 
     "smv": "video/x-smv", 
     "ice": "x-conference/x-cooltalk"
 ]
