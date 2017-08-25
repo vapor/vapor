@@ -55,7 +55,12 @@ public final class Client: Core.Stream {
         }
 
         if writeSource == nil {
-            writeSource = socket.onWriteable(queue: queue) {
+            let source = DispatchSource.makeWriteSource(
+                fileDescriptor: socket.descriptor.raw,
+                queue: queue
+            )
+            
+            source.setEventHandler {
                 // important: make sure to suspend or else writeable
                 // will keep calling.
                 self.writeSource?.suspend()
@@ -78,12 +83,24 @@ public final class Client: Core.Stream {
                     self.errorStream?(error)
                 }
             }
+
+            source.setCancelHandler {
+                self.close()
+            }
+
+            source.resume()
+            writeSource = source
         }
     }
 
     /// Starts receiving data from the client
     public func start() {
-        readSource = socket.onReadable(queue: queue) {
+        let source = DispatchSource.makeReadSource(
+            fileDescriptor: socket.descriptor.raw,
+            queue: queue
+        )
+
+        source.setEventHandler {
             let read: Int
             do {
                 read = try self.socket.read(
@@ -92,8 +109,14 @@ public final class Client: Core.Stream {
                 )
             } catch {
                 // any errors that occur here cannot be thrown,
-                // so send them to stream error catcher.
+                //selfso send them to stream error catcher.
                 self.errorStream?(error)
+                return
+            }
+
+            guard read > 0 else {
+                // need to close!!! gah
+                self.close()
                 return
             }
 
@@ -105,25 +128,33 @@ public final class Client: Core.Stream {
             )
             self.outputStream?(bufferView)
         }
+
+        source.setCancelHandler {
+            self.close()
+        }
+
+        source.resume()
+        readSource = source
     }
 
     /// Closes the client.
     public func close() {
+        // important!!!!!!
+        // for some reason you can't cancel a suspended write source
+        // if you remove this line, your life will be ruined forever!!!
+        writeSource?.resume()
+        readSource = nil
+        writeSource = nil
         socket.close()
         // important! it's common for a client to drain into itself
         // we need to make sure to break that reference cycle
         outputStream = nil
+        errorStream = nil
     }
 
     /// Deallocated the pointer buffer
     deinit {
-        close()
+        outputBuffer.baseAddress.unsafelyUnwrapped.deallocate(capacity: outputBuffer.count)
+        outputBuffer.baseAddress.unsafelyUnwrapped.deinitialize()
     }
 }
-
-
-extension Int {
-    static let untilEOF = size_t.max - 1
-}
-
-extension String: Swift.Error { }

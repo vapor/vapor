@@ -26,7 +26,9 @@ public final class Server: Core.OutputStream {
         self.socket = socket
         self.queue = DispatchQueue(label: "codes.vapor.net.tcp.server.main", qos: .background)
         var workers: [DispatchQueue] = []
-        for i in 1...workerCount {
+        /// important! this should be _less than_ the worker count
+        /// to leave room for the accepting thread
+        for i in 1..<workerCount {
             let worker = DispatchQueue(label: "codes.vapor.net.tcp.server.worker.\(i)", qos: .userInteractive)
             workers.append(worker)
         }
@@ -47,7 +49,11 @@ public final class Server: Core.OutputStream {
         try socket.bind(hostname: hostname, port: port)
         try socket.listen(backlog: backlog)
 
-        readSource = socket.onReadable(queue: queue) {
+        let source = DispatchSource.makeReadSource(
+            fileDescriptor: socket.descriptor.raw,
+            queue: queue
+        )
+        source.setEventHandler {
             let socket: Socket
             do {
                 socket = try self.socket.accept()
@@ -56,10 +62,12 @@ public final class Server: Core.OutputStream {
                 return
             }
 
-            let queue = self.worker.next()!
-            let client = Client(socket: socket, queue: queue)
+            let worker = self.worker.next()!
+            let client = Client(socket: socket, queue: worker)
             client.errorStream = self.errorStream
             self.outputStream?(client)
         }
+        source.resume()
+        readSource = source
     }
 }
