@@ -8,11 +8,17 @@ let package = Package(
         .library(name: "Core", targets: ["Core"]),
         .library(name: "libc", targets: ["libc"]),
 
+        // Crypto
+        .library(name: "Crypto", targets: ["Crypto"]),
+
         // Debugging
         .library(name: "Debugging", targets: ["Debugging"]),
 
         // Leaf
         .library(name: "Leaf", targets: ["Leaf"]),
+
+        // MySQL
+        .library(name: "MySQL", targets: ["MySQL"]),
 
         // Net
         .library(name: "HTTP", targets: ["HTTP"]),
@@ -34,6 +40,10 @@ let package = Package(
         .testTarget(name: "CoreTests", dependencies: ["Core"]),
         .target(name: "libc"),
 
+        // Crypto
+        .target(name: "Crypto", dependencies: ["Core"]),
+        .testTarget(name: "CryptoTests", dependencies: ["Crypto"]),
+
         // Debugging
         .target(name: "Debugging"),
         .testTarget(name: "DebuggingTests", dependencies: ["Debugging"]),
@@ -41,6 +51,11 @@ let package = Package(
         // Leaf
         .target(name: "Leaf", dependencies: ["Core", "Service"]),
         .testTarget(name: "LeafTests", dependencies: ["Leaf"]),
+
+        // MySQL
+
+        .target(name: "MySQL", dependencies: ["TCP", "Crypto"]),
+        .testTarget(name: "MySQLTests", dependencies: ["MySQL"]),
 
         // Net
         .target(name: "CHTTP"),

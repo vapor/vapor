@@ -328,12 +328,13 @@ class LeafTests: XCTestCase {
         Content: <p>Nested!</p>
         """
 
-        let renderer = Renderer(tags: defaultTags, fileReader: preloaded)
+        let renderer = Renderer(tags: defaultTags) { queue in
+            return preloaded
+        }
         try XCTAssertEqual(renderer.render(template, context: .dictionary([:]), on: queue).sync(), expected)
     }
 
     func testRealFile() throws {
-        let dispatch = File()
 
         let template = """
         #import("/Users/tanner/Desktop/hello.leaf")
@@ -343,7 +344,9 @@ class LeafTests: XCTestCase {
         Hello
         """
         
-        let renderer = Renderer(tags: defaultTags, fileReader: dispatch)
+        let renderer = Renderer(tags: defaultTags) { queue in
+            return File(queue: queue)
+        }
         let rendered = try renderer.render(template, context: .dictionary([:]), on: queue).sync()
         XCTAssertEqual(rendered, expected)
     }
@@ -353,13 +356,22 @@ class LeafTests: XCTestCase {
         try services.register(Leaf.Provider())
 
         services.register { container in
-            return LeafConfig(tags: defaultTags, fileReader: TestFiles())
+            return LeafConfig(tags: defaultTags) { queue in
+                TestFiles()
+            }
         }
 
         let container = BasicContainer(services: services)
 
         let view = try container.make(ViewRenderer.self, for: XCTest.self)
-        let rendered = try view.make("foo", context: "hello", on: queue).sync()
+
+        struct TestContext: Encodable {
+            var name = "test"
+        }
+        let rendered = try view.make(
+            "foo", context: TestContext(),
+            on: queue
+            ).sync()
 
         let expected = """
         Test file name: "foo.leaf"
