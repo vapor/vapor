@@ -3,6 +3,7 @@ import Crypto
 import Core
 
 class Field: Hashable {
+    /// The flags set for this field
     struct Flags: OptionSet, ExpressibleByIntegerLiteral {
         init(integerLiteral value: UInt16) {
             self.rawValue = value
@@ -30,6 +31,7 @@ class Field: Hashable {
         static let set : Flags           = 0b0000100000000000
     }
     
+    /// The type of content in this field
     enum FieldType : Byte {
         case decimal    = 0x00
         case tiny       = 0x01 // int8, uint8, bool
@@ -61,10 +63,12 @@ class Field: Hashable {
         case geometry   = 0xff
     }
     
+    /// Makes this field hashable
     var hashValue: Int {
         return table.hashValue &+ name.hashValue &+ length.hashValue &+ fieldType.rawValue.hashValue &+ flags.rawValue.hashValue
     }
     
+    /// Makes this field equatable, so it can be compared to be unique
     static func ==(lhs: Field, rhs: Field) -> Bool {
         return  lhs.table == rhs.table &&
                 lhs.name == rhs.name &&
@@ -86,6 +90,7 @@ class Field: Hashable {
     let flags: Flags
     let decimals: Byte
     
+    /// If `true`, parse this field from binary blobs, not text strings
     var isBinary: Bool {
         switch fieldType {
         case .varString: return true
@@ -97,6 +102,7 @@ class Field: Hashable {
         }
     }
     
+    /// Creates a new field from the packet's parsed data
     init(catalog: String,
          database: String,
          table: String,
@@ -124,6 +130,7 @@ class Field: Hashable {
     }
 }
 
+/// All supported column contents
 enum Column {
     case string(String)
     case uint64(UInt64)
@@ -140,6 +147,8 @@ enum Column {
     case varString(Data)
 }
 
+/// A single row from a table
 struct Row {
+    /// A list of all collected columns and their metadata (Field)
     var fields = [(field: Field, column: Column)]()
 }

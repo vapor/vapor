@@ -44,6 +44,11 @@ public final class ResponseParser: CParser, Core.Stream {
         }
     }
     
+    public func parse(from data: Data) throws -> Response? {
+        let buffer = ByteBuffer(start: data.withUnsafeBytes { $0 }, count: data.count)
+        return try parse(from: buffer)
+    }
+    
     /// Parses a Request from the stream.
     public func parse(from buffer: ByteBuffer) throws -> Response? {
         let results: CParseResults

@@ -1,22 +1,7 @@
 class ResultsBuilder : ResultsStream {
     /// Parses a packet into a Row
     func parseRows(from packet: Packet) throws -> Row {
-        let parser = Parser(packet: packet)
-        var row = Row()
-        
-        for field in columns {
-            if field.isBinary {
-                let value = try parser.parseLenEncData()
-                
-                try row.append(value, forField: field)
-            } else {
-                let value = try parser.parseLenEncString()
-                
-                try row.append(value, forField: field)
-            }
-        }
-        
-        return row
+        return try packet.makeRow(columns: columns)
     }
     
     init(connection: Connection) {

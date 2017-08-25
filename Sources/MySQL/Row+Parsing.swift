@@ -1,5 +1,27 @@
 import Foundation
 
+extension Packet {
+    /// Reads this packet as a row containing the data related to the provided columns
+    func makeRow(columns: [Field]) throws -> Row {
+        let parser = Parser(packet: self)
+        var row = Row()
+        
+        for field in columns {
+            if field.isBinary {
+                let value = try parser.parseLenEncData()
+                
+                try row.append(value, forField: field)
+            } else {
+                let value = try parser.parseLenEncString()
+                
+                try row.append(value, forField: field)
+            }
+        }
+        
+        return row
+    }
+}
+
 /// An extension that implements deserialization from a Row's columns in binary to a concrete type
 extension Row {
     /// A small helper to append a column and field to the fields array

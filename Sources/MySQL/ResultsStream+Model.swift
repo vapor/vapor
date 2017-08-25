@@ -1,20 +1,7 @@
 class ModelBuilder<D: Decodable> : ResultsStream {
     /// Parses a packet into a Decodable entity
     func parseRows(from packet: Packet) throws -> D {
-        let parser = Parser(packet: packet)
-        var row = Row()
-        
-        for field in columns {
-            if field.isBinary {
-                let value = try parser.parseLenEncData()
-                
-                try row.append(value, forField: field)
-            } else {
-                let value = try parser.parseLenEncString()
-                
-                try row.append(value, forField: field)
-            }
-        }
+        let row = try packet.makeRow(columns: columns)
         
         let decoder = try RowDecoder(keyed: row, lossyIntegers: true, lossyStrings: true)
         return try D(from: decoder)
