@@ -142,7 +142,9 @@ public final class Client: Core.Stream {
         // important!!!!!!
         // for some reason you can't cancel a suspended write source
         // if you remove this line, your life will be ruined forever!!!
-        writeSource?.resume()
+        if self.inputBuffer == nil {
+            writeSource?.resume()
+        }
         readSource = nil
         writeSource = nil
         socket.close()
