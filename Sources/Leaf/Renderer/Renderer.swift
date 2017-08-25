@@ -58,8 +58,9 @@ public final class Renderer {
 extension Renderer: ViewRenderer {
     /// See ViewRenderer.make
     public func make(_ path: String, context: Encodable, on queue: DispatchQueue) throws -> Future<View> {
-        // FIXME: Leaf Context encoder
-        return render(path: path, context: .null, on: queue).map { data in
+        let encoder = ContextEncoder()
+        try context.encode(to: encoder)
+        return render(path: path, context: encoder.context, on: queue).map { data in
             return View(data: data)
         }
     }
