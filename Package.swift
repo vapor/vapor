@@ -23,6 +23,9 @@ let package = Package(
         // Net
         .library(name: "HTTP", targets: ["HTTP"]),
         .library(name: "TCP", targets: ["TCP"]),
+        
+        // WebSockets
+        .library(name: "WebSocket", targets: ["WebSocket"]),
 
         // Routing
         .library(name: "Routing", targets: ["Routing"]),
@@ -63,9 +66,13 @@ let package = Package(
         .testTarget(name: "HTTPTests", dependencies: ["HTTP"]),
         .target(name: "TCP", dependencies: ["Debugging", "Core", "libc"]),
         .testTarget(name: "TCPTests", dependencies: ["TCP"]),
+        
+        // WebSocket
+        .target(name: "WebSocket", dependencies: ["Core", "Debugging", "TCP", "HTTP", "Crypto"]),
+        .testTarget(name: "WebSocketTests", dependencies: ["WebSocket"]),
 
         // Routing
-        .target(name: "Routing", dependencies: ["Core", "Debugging", "HTTP"]),
+        .target(name: "Routing", dependencies: ["Core", "Debugging", "HTTP", "WebSocket"]),
         .testTarget(name: "RoutingTests", dependencies: ["Routing"]),
 
         // Service
@@ -81,6 +88,7 @@ let package = Package(
             "Routing",
             "Service",
             "TCP",
+            "WebSocket",
         ]),
         .testTarget(name: "VaporTests", dependencies: ["Vapor"]),
     ]

@@ -3,9 +3,9 @@ import Core
 import Foundation
 
 /// Parses requests from a readable stream.
-public final class ResponseParser: CParser {
+public final class ResponseParser: CParser, Core.Stream {
     // MARK: Stream
-    public typealias Input = DispatchData
+    public typealias Input = ByteBuffer
     public typealias Output = Response
     public var outputStream: OutputHandler?
     public var errorStream: ErrorHandler?
@@ -32,10 +32,9 @@ public final class ResponseParser: CParser {
     }
     
     /// Handles incoming stream data
-    public func inputStream(_ input: DispatchData) {
+    public func inputStream(_ input: ByteBuffer) {
         do {
-            let data = Data(input)
-            guard let request = try parse(from: data) else {
+            guard let request = try parse(from: input) else {
                 return
             }
             outputStream?(request)
@@ -43,11 +42,6 @@ public final class ResponseParser: CParser {
             self.errorStream?(error)
             reset(HTTP_RESPONSE)
         }
-    }
-    
-    public func parse(from data: Data) throws -> Response? {
-        let buffer = ByteBuffer(start: data.withUnsafeBytes { $0 }, count: data.count)
-        return try parse(from: buffer)
     }
     
     /// Parses a Request from the stream.
