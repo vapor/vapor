@@ -334,23 +334,6 @@ class LeafTests: XCTestCase {
         try XCTAssertEqual(renderer.render(template, context: .dictionary([:]), on: queue).sync(), expected)
     }
 
-    func testRealFile() throws {
-
-        let template = """
-        #import("/Users/tanner/Desktop/hello.leaf")
-        """
-
-        let expected = """
-        Hello
-        """
-        
-        let renderer = Renderer(tags: defaultTags) { queue in
-            return File(queue: queue)
-        }
-        let rendered = try renderer.render(template, context: .dictionary([:]), on: queue).sync()
-        XCTAssertEqual(rendered, expected)
-    }
-
     func testService() throws {
         var services = Services()
         try services.register(Leaf.Provider())
