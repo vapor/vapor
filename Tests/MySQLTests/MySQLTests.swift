@@ -32,7 +32,7 @@ class MySQLTests: XCTestCase {
 //            print(row)
 //        }
         
-        try User.query("SELECT * from users", onConnection: connection).drain { user in
+        try User.forEach("SELECT * from users", onConnection: connection) { user in
             print(user)
         }
         

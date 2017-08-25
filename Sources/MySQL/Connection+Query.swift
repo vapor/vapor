@@ -1,24 +1,24 @@
 import Foundation
 import Core
 
-extension Table {
-    static func query(_ sql: String, onConnection connection: Connection) throws -> ResultStream<Self> {
+extension Decodable {
+    static func forEach(_ sql: String, onConnection connection: Connection, _ handler: @escaping ((Self) -> ())) throws {
         // Cannot send another SQL query before the other one is done
         _ = try connection.currentQueryFuture?.sync()
 
         let resultBuilder = ModelBuilder<Self>(connection: connection)
 
         let done = connection.onPackets(resultBuilder.inputStream)
-
-        let resultStream = ResultStream<Self> {
+        
+        resultBuilder.complete = {
             done.complete(true)
         }
-
-        resultStream.errorStream = { error in
+        
+        resultBuilder.errorStream = { error in
             done.fail(error)
         }
 
-        resultBuilder.drain(into: resultStream)
+        resultBuilder.drain(handler)
 
         var buffer = Data()
         buffer.reserveCapacity(sql.utf8.count + 1)
@@ -29,12 +29,12 @@ extension Table {
 
         try connection.write(packetFor: buffer)
 
-        return resultStream
+        return
     }
 }
 
 extension Connection {
-    func query(_ sql: String) throws -> ResultStream<Row> {
+    func query(_ sql: String, _ handler: @escaping ((Row) -> ())) throws {
         // Cannot send another SQL query before the other one is done
         _ = try self.currentQueryFuture?.sync()
 
@@ -42,15 +42,15 @@ extension Connection {
 
         let done = self.onPackets(resultBuilder.inputStream)
 
-        let resultStream = ResultStream<Row> {
+        resultBuilder.complete = {
             done.complete(true)
         }
 
-        resultStream.errorStream = { error in
+        resultBuilder.errorStream = { error in
             done.fail(error)
         }
 
-        resultBuilder.drain(into: resultStream)
+        resultBuilder.drain(handler)
 
         var buffer = Data()
         buffer.reserveCapacity(1 + sql.utf8.count)
@@ -60,7 +60,5 @@ extension Connection {
         buffer.append(contentsOf: [UInt8](sql.utf8))
 
         try self.write(packetFor: buffer)
-
-        return resultStream
     }
 }

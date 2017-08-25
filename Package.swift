@@ -80,7 +80,7 @@ let package = Package(
         .testTarget(name: "ServiceTests", dependencies: ["Service"]),
 
         // Vapor
-        .target(name: "Development", dependencies: ["Leaf", "Vapor"]),
+        .target(name: "Development", dependencies: ["Leaf", "Vapor", "MySQL"]),
         .target(name: "Vapor", dependencies: [
             "Core",
             "Debugging",
