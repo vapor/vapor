@@ -1,6 +1,7 @@
 import Foundation
 import Core
 
+/// A helper class that helps with parsing a packet
 class Parser {
     var position: Int
     var packet: Packet

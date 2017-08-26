@@ -1,3 +1,40 @@
+import Foundation
+
+/// A response from the server
+enum Response {
+    struct State {
+        let marker: UInt8
+        let state: (UInt8, UInt8, UInt8, UInt8, UInt8)
+    }
+    
+    var error: Error? {
+        if case .error(let error) = self {
+            return error
+        }
+        
+        return nil
+    }
+    
+    struct Error : Swift.Error {
+        let code: UInt16
+        let state: State?
+        let message: String
+    }
+    
+    case error(Error)
+    
+    struct OK {
+        let affectedRows: UInt64
+        let lastInsertId: UInt64
+        let status: UInt16?
+        let warnings: UInt16?
+        let data: Data
+    }
+    
+    case ok(OK)
+    case eof(OK)
+}
+
 /// Keeps track of capabilities. Which can be the server's, client's or combined capabilities
 struct Capabilities : OptionSet, ExpressibleByIntegerLiteral {
     var rawValue: UInt32

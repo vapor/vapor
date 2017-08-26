@@ -24,13 +24,13 @@ class MySQLTests: XCTestCase {
     }
     
     func testExample() throws {
-        let connection = try Connection.makeConnection(hostname: "localhost", user: "root", password: nil, database: "test", queue: .global()).sync()
+        let pool = ConnectionPool(hostname: "localhost", user: "root", password: nil, database: "test", queue: .global())
         
 //        try connection.query("SELECT * from users").drain { row in
 //            print(row)
 //        }
         
-        try connection.forEach(User.self, in: "SELECT * from users") { user in
+        try pool.forEach(User.self, in: "SELECT * from users") { user in
             print(user)
         }
         

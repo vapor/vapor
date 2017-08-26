@@ -96,6 +96,7 @@ import Crypto
 import Core
 
 extension Connection {
+    /// Respond to the server's incoming handshake
     func doHandshake(for packet: Packet) {
         do {
             let handshake = try packet.parseHandshake()
@@ -103,10 +104,12 @@ extension Connection {
             
             try self.sendHandshake()
         } catch {
+            self.authenticated.fail(error)
             self.socket.close()
         }
     }
     
+    /// Send the handshaek to the client
     func sendHandshake() throws {
         guard let handshake = self.handshake else {
             throw MySQLError.invalidHandshake
@@ -188,20 +191,19 @@ extension Connection {
         }
     }
     
+    /// Parse the authentication request
     func finishAuthentication(for packet: Packet, completing: Promise<Void>) {
         do {
             let response = try packet.parseResponse(mysql41: self.mysql41)
             
             switch response {
             case .error(_):
-                self.reserved = false
                 completing.fail(MySQLError.invalidCredentials)
                 // Unauthenticated
                 self.socket.close()
                 return
             default:
                 completing.complete(())
-                self.reserved = false
                 return
             }
         } catch {

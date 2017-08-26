@@ -32,9 +32,6 @@ public final class Connection {
     /// The database to select
     let database: String?
     
-    /// If `true`, this connectin is in use
-    var reserved = false
-    
     /// A future promise
     var authenticated: Promise<Void>
     
@@ -111,26 +108,19 @@ public final class Connection {
         self.database = database
         
         self.authenticated = Promise<Void>()
-        self.reserved = true
         
         self.parser.drain(self.handlePacket)
     }
     
     /// Closes the connection
     func close() {
-        self.reserved = true
         self.socket.close()
     }
     
     /// Sets the proided handler to capture packets
     ///
     /// - throws: The connection is reserved
-    internal func reserve(receivingPacketsInto handler: @escaping ((Packet) -> ())) throws {
-        guard !reserved else {
-            throw MySQLError.connectionInUse
-        }
-        
-        self.reserved = true
+    internal func receivePackets(into handler: @escaping ((Packet) -> ())) {
         self.parser.outputStream = handler
     }
     

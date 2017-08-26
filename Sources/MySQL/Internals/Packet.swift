@@ -18,6 +18,7 @@ internal class Packet {
     }
 }
 
+/// Parses buffers into packets
 internal final class PacketParser : Core.Stream {
     var buffer: (buffer: MutableByteBuffer, containing: Int, sequenceId: UInt8)?
     
