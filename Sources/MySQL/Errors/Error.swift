@@ -1,4 +1,4 @@
-public enum MySQLError : Error {
+enum MySQLError : Error {
     case invalidPacket
     case invalidHandshake
     case invalidResponse
@@ -6,4 +6,6 @@ public enum MySQLError : Error {
     case unsupported
     case parsingError
     case decodingError
+    case connectionInUse
+    case invalidCredentials
 }

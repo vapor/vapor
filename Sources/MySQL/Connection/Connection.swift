@@ -3,45 +3,42 @@ import Core
 import TCP
 import Dispatch
 
-struct Capabilities : OptionSet, ExpressibleByIntegerLiteral {
-    var rawValue: UInt32
-    
-    static let protocol41: Capabilities = 0x0200
-    static let longFlag: Capabilities = 0x0004
-    static let connectWithDB: Capabilities = 0x0008
-    static let secureConnection: Capabilities = 0x8000
-    
-    init(rawValue: UInt32) {
-        self.rawValue = rawValue
-    }
-    
-    init(integerLiteral value: UInt32) {
-        self.rawValue = value
-    }
-}
-
-protocol Table : Decodable {}
-
-final class Connection {
+/// A connectio to a MySQL database servers
+public final class Connection {
+    /// The TCP socket it's connected on
     let socket: Socket
+    
+    /// The queue on which the TCP socket is reading
     let queue: DispatchQueue
+    
+    /// The internal buffer in which incoming data is stored
     let buffer: MutableByteBuffer
+    
+    /// Parses the incoming buffers into packets
     let parser: PacketParser
-    var resultsBuilder: Table?
+    
+    /// The state of the server's handshake
     var handshake: Handshake?
+    
+    /// A dispatch source that reads on the provided queue
     var source: DispatchSourceRead
+    
+    /// The username to authenticate with
     let username: String
+    
+    /// The password to authenticate with
     let password: String?
+    
+    /// The database to select
     let database: String?
     
-    var currentQuery: Promise<Bool>?
+    /// If `true`, this connectin is in use
+    var reserved = false
     
-    var currentQueryFuture: Future<Bool>? {
-        return currentQuery?.future
-    }
+    /// A future promise
+    var authenticated: Promise<Void>
     
-    var authenticated: Bool?
-    
+    /// The client's capabilities
     var capabilities: Capabilities {
         var base: Capabilities = [
             .protocol41, .longFlag, .secureConnection
@@ -54,15 +51,24 @@ final class Connection {
         return base
     }
     
+    /// If `true`, both parties support MySQL's v4.1 protocol
     var mysql41: Bool {
         // client && server 4.1 support
         return handshake?.isGreaterThan4 == true && self.capabilities.contains(.protocol41) && handshake?.capabilities.contains(.protocol41) == true
     }
     
-    var initialized: Bool {
-        return self.handshake != nil
+    /// Creates a new connection and completes the handshake
+    public static func makeConnection(hostname: String, port: UInt16 = 3306, user: String, password: String?, database: String?, queue: DispatchQueue) throws -> Future<Connection> {
+        let connection = try Connection(hostname: hostname, port: port, user: user, password: password, database: database, queue: queue)
+        
+        return connection.authenticated.future.map { _ in
+            return connection
+        }
     }
     
+    /// Creates a new connection
+    ///
+    /// Doesn't finish the handshake synchronously
     init(hostname: String, port: UInt16 = 3306, user: String, password: String?, database: String?, queue: DispatchQueue) throws {
         let socket = try Socket()
         
@@ -103,49 +109,55 @@ final class Connection {
         self.username = user
         self.password = password
         self.database = database
+        
+        self.authenticated = Promise<Void>()
+        self.reserved = true
+        
         self.parser.drain(self.handlePacket)
-        self.currentQuery = Promise<Bool>()
     }
     
+    /// Closes the connection
     func close() {
+        self.reserved = true
         self.socket.close()
     }
     
-    func onPackets(_ handler: @escaping ((Packet) -> ())) -> Promise<Bool> {
-        _ = try? self.currentQueryFuture?.sync()
-        let promise = Promise<Bool>()
-        
-        self.currentQuery = promise
-        self.parser.outputStream = handler
-        
-        promise.future.then { _ in
-            self.parser.drain(self.handlePacket)
+    /// Sets the proided handler to capture packets
+    ///
+    /// - throws: The connection is reserved
+    internal func reserve(receivingPacketsInto handler: @escaping ((Packet) -> ())) throws {
+        guard !reserved else {
+            throw MySQLError.connectionInUse
         }
         
-        return promise
+        self.reserved = true
+        self.parser.outputStream = handler
     }
     
-    func handlePacket(_ packet: Packet) {
+    /// Handles the incoming packet with the default handler
+    ///
+    /// Handles the packet for the handshake
+    internal func handlePacket(_ packet: Packet) {
         guard self.handshake != nil else {
             self.doHandshake(for: packet)
             return
         }
         
-        guard let authenticated = authenticated else {
-            finishAuthentication(for: packet)
+        guard authenticated.future.isCompleted else {
+            finishAuthentication(for: packet, completing: authenticated)
             return
         }
         
-        guard authenticated else {
-            self.socket.close()
-            return
-        }
+        // We're expecting nothing
     }
     
+    /// Writes a packet's payload data to the socket
     func write(packetFor data: Data, startingAt start: UInt8 = 0) throws {
+        // Creates a pointer to call the other handler
         let pointer = UnsafeMutablePointer<UInt8>.allocate(capacity: data.count)
         
         defer {
+            // deallocate the pointer after writing is completed
             pointer.deallocate(capacity: data.count)
         }
         
@@ -156,6 +168,7 @@ final class Connection {
         try write(packetFor: buffer)
     }
     
+    /// Writes a packet's payload buffer to the socket
     func write(packetFor data: ByteBuffer, startingAt start: UInt8 = 0) throws {
         var offset = 0
         
@@ -169,8 +182,11 @@ final class Connection {
             pointer.deallocate(capacity: Packet.maxPayloadSize &+ 4)
         }
         
+        // Starts the packet number at the starting number
+        // The handshake starts at 1, instead of 0
         var packetNumber: UInt8 = start
         
+        // Splits the paylad into packets
         while offset < data.count {
             defer {
                 packetNumber = packetNumber &+ 1

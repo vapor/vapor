@@ -1,3 +1,6 @@
+/// A promise is a variable that can be completed when it's ready
+///
+/// It can be transformed into a future which can only be read
 public final class Promise<T> {
     /// This promise's future.
     public let future: Future<T>

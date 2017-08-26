@@ -24,36 +24,21 @@ class MySQLTests: XCTestCase {
     }
     
     func testExample() throws {
-        let connection = try Connection(hostname: "localhost", user: "root", password: nil, database: "test", queue: .global())
-        
-        XCTAssert(try connection.currentQueryFuture?.sync(timeout: .seconds(10)) ?? true)
+        let connection = try Connection.makeConnection(hostname: "localhost", user: "root", password: nil, database: "test", queue: .global()).sync()
         
 //        try connection.query("SELECT * from users").drain { row in
 //            print(row)
 //        }
         
-        try User.forEach("SELECT * from users", onConnection: connection) { user in
+        try connection.forEach(User.self, in: "SELECT * from users") { user in
             print(user)
         }
         
-//        let results = try User.query("SELECT * from users", onConnection: connection)
-        
-//        print(try results.await(for: .seconds(5)))
-        
-//        let results = try connection.query("SELECT @@version, @@version, 1337, 3.14, 'what up', NULL")
-//
-//        do {
-//            let ok = try results.await()
-//
-//            print(ok)
-//        } catch {
-//            print(error)
-//        }
         sleep(5000)
     }
 }
 
-struct User : Table {
+struct User : Decodable {
     var id: Int
     var username: String
 }
