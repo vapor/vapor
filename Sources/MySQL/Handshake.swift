@@ -227,13 +227,13 @@ extension Connection {
             
             switch response {
             case .error(_):
-                try self.currentQuery?.complete(false)
+                self.currentQuery?.complete(false)
                 // Unauthenticated
                 self.socket.close()
                 return
             default:
                 self.authenticated = true
-                try self.currentQuery?.complete(true)
+                self.currentQuery?.complete(true)
                 return
             }
         } catch {

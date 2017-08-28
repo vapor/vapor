@@ -120,6 +120,8 @@ final class Connection {
         
         promise.future.then { _ in
             self.parser.drain(self.handlePacket)
+        }.catch { error in
+            promise.fail(error)
         }
         
         return promise
