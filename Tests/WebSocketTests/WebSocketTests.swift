@@ -8,26 +8,26 @@ import XCTest
 class WebSocketTests : XCTestCase {
     func testClientServer() throws {
         let app = WebSocketApplication()
-        let tcpServer = try TCP.Server()
-        let server = HTTP.Server(server: tcpServer)
+        let tcp = try TCP.Server()
+        let server = HTTP.Server(tcp: tcp)
         
         server.drain { client in
-            let parser = HTTP.RequestParser()
+            let parser = HTTP.RequestParser(queue: .global())
             let serializer = HTTP.ResponseSerializer()
             
             client.stream(to: parser)
-                .stream(to: app.makeStream(on: client.client.queue))
+                .stream(to: app.makeStream())
                 .stream(to: serializer)
                 .drain(into: client)
             
-            client.client.start()
+            client.tcp.start()
         }
         
         server.errorStream = { error in
             debugPrint(error)
         }
         
-        try tcpServer.start(port: 8080)
+        try server.tcp.start(port: 8080)
         
         let promise0 = Promise<Void>()
         let promise1 = Promise<Void>()

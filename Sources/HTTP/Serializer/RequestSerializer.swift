@@ -8,7 +8,7 @@ public final class RequestSerializer: Serializer {
     public typealias Input = Request
 
     /// See OutputStream.Output
-    public typealias Output = DispatchData
+    public typealias Output = SerializedMessage
 
     /// See OutputStream.outputStream
     public var outputStream: OutputHandler?
@@ -22,7 +22,8 @@ public final class RequestSerializer: Serializer {
     /// Handles incoming requests.
     public func inputStream(_ input: Request) {
         let data = serialize(input)
-        outputStream?(data)
+        let message = SerializedMessage(message: data, onUpgrade: input.onUpgrade)
+        outputStream?(message)
     }
 
     /// Serializes a request into DispatchData.

@@ -1,5 +1,6 @@
 import CHTTP
 import Core
+import Dispatch
 import Foundation
 
 /// Parses requests from a readable stream.
