@@ -33,7 +33,6 @@ async.on(.get, to: "hello") { req in
 }
 
 let hello = try Response(body: "Hello, world!")
-let fut = Future(hello as ResponseRepresentable)
 sync.on(.get, to: "plaintext") { req in
     return hello
 }
