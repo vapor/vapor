@@ -1,4 +1,5 @@
 import Core
+import Dispatch
 import Foundation
 
 /// Renders Leaf templates using the Leaf parser and serializer.
@@ -10,10 +11,15 @@ public final class Renderer {
     /// tags that require it (such as #embed)
     private var _files: [Int: FileReader & FileCache]
 
+    /// Create a file reader & cache for the supplied queue
+    public typealias FileFactory = (DispatchQueue) -> (FileReader & FileCache)
+    private let fileFactory: FileFactory
+
     /// Create a new Leaf renderer.
-    public init(tags: [String: Tag]) {
+    public init(tags: [String: Tag], fileFactory: @escaping FileFactory) {
         self.tags = tags
         self._files = [:]
+        self.fileFactory = fileFactory
     }
 
     // ASTs only need to be parsed once
@@ -78,7 +84,7 @@ extension Renderer {
         if let existing = _files[queue.hashValue] {
             file = existing
         } else {
-            file = File(queue: queue)
+            file = fileFactory(queue)
             _files[queue.hashValue] = file
         }
 

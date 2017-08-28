@@ -54,3 +54,12 @@ public final class MapStream<In, Out>: Stream {
         }
     }
 }
+
+extension OutputStream {
+    public func map<T>(_ transform: @escaping ((Output) throws -> (T))) -> MapStream<Output, T> {
+        let stream = MapStream(map: transform)
+        self.drain(into: stream)
+        
+        return stream
+    }
+}

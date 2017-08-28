@@ -6,15 +6,25 @@ import libc
 
 extension Renderer {
     static func makeTestRenderer() -> Renderer {
-        return Renderer(tags: defaultTags, fileReader: TestFiles())
+        return Renderer(tags: defaultTags) { queue in
+            return TestFiles()
+        }
     }
 }
 
-final class TestFiles: FileReader {
+final class TestFiles: FileReader, FileCache {
+
     init() {}
 
+    func getFile<H: Hashable>(hash: H) -> Future<Data?> {
+        return Future(nil)
+    }
 
-    func read(at path: String, on queue: DispatchQueue) -> Future<Data> {
+    func setFile<H: Hashable>(file: Data?, hash: H) {
+        // nothing
+    }
+
+    func read(at path: String) -> Future<Data> {
         let data = """
             Test file name: "\(path)"
             """.data(using: .utf8)!
@@ -25,13 +35,21 @@ final class TestFiles: FileReader {
     }
 }
 
-final class PreloadedFiles: FileReader {
+final class PreloadedFiles: FileReader, FileCache {
     var files: [String: Data]
     init() {
         files = [:]
     }
 
-    func read(at path: String, on queue: DispatchQueue) -> Future<Data> {
+    func getFile<H: Hashable>(hash: H) -> Future<Data?> {
+        return Future(nil)
+    }
+
+    func setFile<H: Hashable>(file: Data?, hash: H) {
+        // nothing
+    }
+
+    func read(at path: String) -> Future<Data> {
         let promise = Promise(Data.self)
 
         if let data = files[path] {

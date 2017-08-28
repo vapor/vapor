@@ -17,19 +17,25 @@ class SocketsTests : XCTestCase {
 
         let queue = DispatchQueue(label: "codes.vapor.test")
 
-        let read = socket.onWriteable(queue: queue) {
+        let write = DispatchSource.makeWriteSource(fileDescriptor: socket.descriptor.raw, queue: queue)
+        write.setEventHandler {
             _ = try! socket.write(data)
         }
+        write.resume()
 
         let group = DispatchGroup()
         group.enter()
-        let write = socket.onReadable(queue: queue) {
+
+
+        let read = DispatchSource.makeReadSource(fileDescriptor: socket.descriptor.raw, queue: queue)
+        read.setEventHandler {
             let response = try! socket.read(max: 8_192)
 
             let string = String(data: response, encoding: .utf8)
             XCTAssert(string?.contains("HTTP/1.0 400 Bad Request") == true)
             group.leave()
         }
+        read.resume()
 
         XCTAssertNotNil([read, write])
         group.wait()
@@ -46,16 +52,24 @@ class SocketsTests : XCTestCase {
 
         var accepted: (Socket, DispatchSourceRead)?
 
-        let read = server.onReadable(queue: queue) {
+        let read = DispatchSource.makeReadSource(fileDescriptor: server.descriptor.raw, queue: queue)
+        read.setEventHandler {
             let client = try! server.accept()
-            let read = client.onReadable(queue: queue) {
+            let read = DispatchSource.makeReadSource(
+                fileDescriptor: client.descriptor.raw,
+                queue: queue
+            )
+            read.setEventHandler {
                 let data = try! client.read(max: 8_192)
                 XCTAssertEqual(String(data: data, encoding: .utf8), "hello")
                 group.leave()
             }
+            read.resume()
+            
             accepted = (client, read)
             XCTAssertNotNil(accepted)
         }
+        read.resume()
         XCTAssertNotNil(read)
 
         do {
