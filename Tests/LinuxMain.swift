@@ -1,17 +1,17 @@
 #if os(Linux)
 
 import XCTest
-import CoreTests
-import CryptoTests
-import DebuggingTests
-import HTTPTests
-import LeafTests
-import MySQLTests
-import RoutingTests
-import ServiceTests
-import TCPTests
-import VaporTests
-import WebSocketTests
+@testable import CoreTests
+@testable import CryptoTests
+@testable import DebuggingTests
+@testable import HTTPTests
+@testable import LeafTests
+@testable import MySQLTests
+@testable import RoutingTests
+@testable import ServiceTests
+@testable import TCPTests
+@testable import VaporTests
+@testable import WebSocketTests
 
 XCTMain([
     // Core
