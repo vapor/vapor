@@ -48,11 +48,21 @@ public class ConnectionPool {
     
     typealias Complete = (()->())
     
-    internal func retain(_ handler: @escaping ((Connection, @escaping Complete) -> ())) throws {
+    /// Retains a connection (or creates a new one) to execute the handler with
+    internal func retain<T>(_ handler: @escaping ((Connection, @escaping ((T) -> ()), @escaping Stream.ErrorHandler) -> ())) throws -> Future<T> {
+        let promise = Promise<T>()
+        
+        // Checks for an existing connection
         for pair in pool where !pair.reserved {
             pair.reserved = true
-            handler(pair.connection) {
+            
+            // Runs the handler with the connection
+            handler(pair.connection, { result in
+                // On completion, return the connection, complete the promise
+                promise.complete(result)
                 pair.reserved = false
+            }) { error in
+                promise.fail(error)
             }
         }
         
@@ -62,39 +72,16 @@ public class ConnectionPool {
             
             self.pool.append(pair)
             
-            handler(pair.connection) {
+            // Runs the handler with the connection
+            handler(pair.connection, { result in
+                // On completion, return the connection, complete the promise
+                promise.complete(result)
                 pair.reserved = false
+            }) { error in
+                promise.fail(error)
             }
         }
-    }
-    
-    /// Loops over all rows resulting from the query
-    ///
-    /// - parameter type: Deserializes all rows to the provided `Decodable` `D`
-    /// - parameter query: Fetches results using this query
-    /// - parameter handler: Executes the handler for each deserialized result
-    public func forEach<D: Decodable>(_ type: D.Type, in query: Query, _ handler: @escaping ((D) -> ())) throws {
-        try retain { connection, complete in
-            // Set up a parser
-            let resultBuilder = ModelBuilder<D>(connection: connection)
-            connection.receivePackets(into: resultBuilder.inputStream)
-            
-            resultBuilder.complete = {
-                complete()
-            }
-            
-            resultBuilder.errorStream = { error in
-                complete()
-            }
-            
-            resultBuilder.drain(handler)
-            
-            // Send the query
-            do {
-                try connection.write(query: query.string)
-            } catch {
-                complete()
-            }
-        }
+        
+        return promise.future
     }
 }

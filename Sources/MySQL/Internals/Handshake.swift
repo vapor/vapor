@@ -198,21 +198,12 @@ extension Connection {
             
             switch response {
             case .error(_):
-<<<<<<< HEAD:Sources/MySQL/Internals/Handshake.swift
                 completing.fail(MySQLError.invalidCredentials)
-=======
-                self.currentQuery?.complete(false)
->>>>>>> 36d856c22e5574b74bfcadaf116de8cc9aa5b61f:Sources/MySQL/Handshake.swift
                 // Unauthenticated
                 self.socket.close()
                 return
             default:
-<<<<<<< HEAD:Sources/MySQL/Internals/Handshake.swift
                 completing.complete(())
-=======
-                self.authenticated = true
-                self.currentQuery?.complete(true)
->>>>>>> 36d856c22e5574b74bfcadaf116de8cc9aa5b61f:Sources/MySQL/Handshake.swift
                 return
             }
         } catch {

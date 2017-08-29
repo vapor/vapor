@@ -2,6 +2,7 @@ import Core
 import Dispatch
 import TCP
 import HTTP
+import Vapor
 import WebSocket
 import XCTest
 
@@ -9,25 +10,9 @@ class WebSocketTests : XCTestCase {
     func testClientServer() throws {
         let app = WebSocketApplication()
         let tcp = try TCP.Server()
-        let server = HTTP.Server(tcp: tcp)
+        let server = EngineServer(config: EngineServerConfig())
         
-        server.drain { client in
-            let parser = HTTP.RequestParser(queue: .global())
-            let serializer = HTTP.ResponseSerializer()
-            
-            client.stream(to: parser)
-                .stream(to: app.makeStream())
-                .stream(to: serializer)
-                .drain(into: client)
-            
-            client.tcp.start()
-        }
-        
-        server.errorStream = { error in
-            debugPrint(error)
-        }
-        
-        try server.tcp.start(port: 8080)
+        try server.start(with: app)
         
         let promise0 = Promise<Void>()
         let promise1 = Promise<Void>()
