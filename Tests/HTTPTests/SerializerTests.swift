@@ -17,8 +17,7 @@ class SerializerTests : XCTestCase {
         <vapor>
         """
 
-        print(data)
-        XCTAssertEqual(String(data: data, encoding: .utf8), expected)
+        XCTAssertEqual(data, expected.data(using: .ascii))
     }
     
     static let allTests = [
