@@ -49,7 +49,7 @@ XCTMain([
     testCase(ServiceTests.allTests),
 
     // TCP
-    testCase(SocketTests.allTests),
+    testCase(SocketsTests.allTests),
 
     // Vapor
     testCase(ApplicationTests.allTests),
