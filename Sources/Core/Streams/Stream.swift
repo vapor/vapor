@@ -10,6 +10,11 @@ public protocol InputStream: BaseStream {
     func inputStream(_ input: Input)
 }
 
+public protocol ClosableStream: BaseStream {
+    /// A function that gets called if the stream closes
+    var onClose: (() -> ())? { get set }
+}
+
 public protocol OutputStream: BaseStream {
     /// The output type for this stream.
     /// For example: Request, ByteBuffer, Client

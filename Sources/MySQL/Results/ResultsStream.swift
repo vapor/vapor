@@ -1,26 +1,23 @@
 import Core
 
-protocol ResultsStream : Stream {
-    associatedtype Input = Packet
-    
+protocol ResultsStream : OutputStream, ClosableStream {
     var columns: [Field] { get set }
     var header: UInt64? { get set }
-    var connection: Connection { get }
+    var mysql41: Bool { get }
     
     func parseRows(from packet: Packet) throws -> Output
-    var complete: (()->())? { get set }
 }
 
 fileprivate let serverMoreResultsExists: UInt16 = 0x0008
 
 extension ResultsStream {
-    func inputStream(_ input: Packet) {
+    public func inputStream(_ input: Packet) {
         do {
             guard let header = self.header else {
                 let parser = Parser(packet: input)
                 
                 guard let header = try? parser.parseLenEnc() else {
-                    if case .error(let error) = try input.parseResponse(mysql41: connection.mysql41) {
+                    if case .error(let error) = try input.parseResponse(mysql41: mysql41) {
                         self.errorStream?(error)
                     }
                     return
@@ -52,7 +49,7 @@ extension ResultsStream {
                 return
             }
             
-            complete?()
+            onClose?()
             return
         }
         
@@ -60,7 +57,7 @@ extension ResultsStream {
         if packet.payload.count > 0,
             let pointer = packet.payload.baseAddress,
             pointer[0] == 0xff,
-            let error = try packet.parseResponse(mysql41: self.connection.mysql41).error {
+            let error = try packet.parseResponse(mysql41: self.mysql41).error {
                 throw error
         }
         
@@ -75,7 +72,7 @@ extension ResultsStream {
         // EOF
         if packet.isResponse {
             do {
-                switch try packet.parseResponse(mysql41: connection.mysql41 == true) {
+                switch try packet.parseResponse(mysql41: mysql41) {
                 case .error(let error):
                     self.errorStream?(error)
                     return

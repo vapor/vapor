@@ -1,4 +1,4 @@
-class ModelBuilder<D: Decodable> : ResultsStream {
+public class ModelStream<D: Decodable> : ResultsStream {
     /// Parses a packet into a Decodable entity
     func parseRows(from packet: Packet) throws -> D {
         let row = try packet.makeRow(columns: columns)
@@ -7,15 +7,11 @@ class ModelBuilder<D: Decodable> : ResultsStream {
         return try D(from: decoder)
     }
     
-    init(connection: Connection) {
-        self.connection = connection
+    init(mysql41: Bool) {
+        self.mysql41 = mysql41
     }
     
-    /// Streams `nil` for end of stream
-    var complete: (()->())?
-    
-    /// The connection that the results are streamed frmo
-    var connection: Connection
+    public var onClose: (() -> ())?
     
     /// A list of all fields' descriptions in this table
     var columns = [Field]()
@@ -23,11 +19,11 @@ class ModelBuilder<D: Decodable> : ResultsStream {
     /// The header is used to indicate the amount of returned columns
     var header: UInt64?
     
-    typealias Output = D
+    let mysql41: Bool
     
-    var outputStream: OutputHandler?
+    public typealias Output = D
     
-    var errorStream: ErrorHandler?
+    public var outputStream: OutputHandler?
     
-    typealias Input = Packet
+    public var errorStream: ErrorHandler?
 }

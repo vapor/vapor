@@ -11,18 +11,18 @@ extension ConnectionPool {
         
         return try retain { connection, complete, fail in
             // Set up a parser
-            let resultBuilder = ResultsBuilder(connection: connection)
-            connection.receivePackets(into: resultBuilder.inputStream)
+            let stream = RowStream(mysql41: connection.mysql41)
+            connection.receivePackets(into: stream.inputStream)
             
-            resultBuilder.complete = {
+            stream.onClose = {
                 complete(rows)
             }
             
-            resultBuilder.errorStream = { error in
+            stream.errorStream = { error in
                 fail(error)
             }
             
-            resultBuilder.drain { row in
+            stream.drain { row in
                 rows.append(row)
             }
             
@@ -45,10 +45,10 @@ extension ConnectionPool {
         
         return try retain { connection, complete, fail in
             // Set up a parser
-            let resultBuilder = ModelBuilder<D>(connection: connection)
+            let resultBuilder = ModelStream<D>(mysql41: connection.mysql41)
             connection.receivePackets(into: resultBuilder.inputStream)
             
-            resultBuilder.complete = {
+            resultBuilder.onClose = {
                 complete(results)
             }
             

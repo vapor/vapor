@@ -21,16 +21,16 @@
 ///     print(squares) // [1, 4, 9]
 ///
 public final class MapStream<In, Out>: Stream {
-    /// See InputStream.Input
+    /// See `InputStream.Input`
     public typealias Input = In
 
-    /// See OutputStream.Output
+    /// See `OutputStream.Output`
     public typealias Output = Out
 
-    /// See OutputStream.outputStream
+    /// See `OutputStream.outputStream`
     public var outputStream: OutputHandler?
 
-    /// See BaseStream.errorStream
+    /// See `BaseStream.errorStream`
     public var errorStream: ErrorHandler?
 
     /// Maps input to output
@@ -56,6 +56,14 @@ public final class MapStream<In, Out>: Stream {
 }
 
 extension OutputStream {
+    /// Transforms the output of one stream (as the input of the transform) to another output
+    ///
+    /// An example of mapping ints to strings:
+    ///
+    ///     let integerStream: BasicOutputStream<Int>
+    ///     let stringSteam:   MapStream<Int, String> = integerStream.map { integer in
+    ///         return integer.description
+    ///     }
     public func map<T>(_ transform: @escaping ((Output) throws -> (T))) -> MapStream<Output, T> {
         let stream = MapStream(map: transform)
         self.drain(into: stream)

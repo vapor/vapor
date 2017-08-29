@@ -11,18 +11,18 @@ extension ConnectionPool {
     internal func forEachRow(in query: Query, _ handler: @escaping ((Row) -> ())) throws -> Future<Void> {
         return try retain { connection, complete, fail in
             // Set up a parser
-            let resultBuilder = ResultsBuilder(connection: connection)
-            connection.receivePackets(into: resultBuilder.inputStream)
+            let stream = RowStream(mysql41: connection.mysql41)
+            connection.receivePackets(into: stream.inputStream)
             
-            resultBuilder.complete = {
+            stream.onClose = {
                 complete(())
             }
             
-            resultBuilder.errorStream = { error in
+            stream.errorStream = { error in
                 complete(())
             }
             
-            resultBuilder.drain(handler)
+            stream.drain(handler)
             
             // Send the query
             do {
@@ -44,10 +44,10 @@ extension ConnectionPool {
     public func forEach<D: Decodable>(_ type: D.Type, in query: Query, _ handler: @escaping ((D) -> ())) throws -> Future<Void> {
         return try retain { connection, complete, fail in
             // Set up a parser
-            let resultBuilder = ModelBuilder<D>(connection: connection)
+            let resultBuilder = ModelStream<D>(mysql41: connection.mysql41)
             connection.receivePackets(into: resultBuilder.inputStream)
             
-            resultBuilder.complete = {
+            resultBuilder.onClose = {
                 complete(())
             }
             

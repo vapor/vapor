@@ -49,7 +49,7 @@ public class ConnectionPool {
     typealias Complete = (()->())
     
     /// Retains a connection (or creates a new one) to execute the handler with
-    internal func retain<T>(_ handler: @escaping ((Connection, @escaping ((T) -> ()), @escaping Stream.ErrorHandler) -> ())) throws -> Future<T> {
+    internal func retain<T>(_ handler: @escaping ((Connection, @escaping ((T) -> ()), @escaping Stream.ErrorHandler) -> Void)) throws -> Future<T> {
         let promise = Promise<T>()
         
         // Checks for an existing connection
