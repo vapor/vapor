@@ -1,3 +1,9 @@
+import Core
+
+public protocol FutureEncoder {
+    mutating func encode<E>(_ future: Future<E>) throws
+}
+
 public final class ContextEncoder: Encoder {
     public var codingPath: [CodingKey]
     public var userInfo: [CodingUserInfoKey: Any]
@@ -20,9 +26,22 @@ public final class ContextEncoder: Encoder {
     }
 
     public func singleValueContainer() -> SingleValueEncodingContainer {
-        fatalError("unimplemented")
+        return ContextContainer<NoKey>(encoder: self)
+    }
+}
+
+public struct NoKey: CodingKey {
+    public var stringValue: String
+    public var intValue: Int?
+
+    public init?(stringValue: String) {
+        self.stringValue = ""
     }
 
-
+    public init?(intValue: Int) {
+        self.stringValue = ""
+        self.intValue = nil
+    }
 }
+
 

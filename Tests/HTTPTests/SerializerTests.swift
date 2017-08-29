@@ -17,6 +17,7 @@ class SerializerTests : XCTestCase {
         <vapor>
         """
 
+        print(data)
         XCTAssertEqual(String(data: data, encoding: .utf8), expected)
     }
     

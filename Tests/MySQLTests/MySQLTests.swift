@@ -11,9 +11,9 @@ class MySQLTests: XCTestCase {
     func testExample() throws {
         let connection = try Connection(
             hostname: "localhost",
-            user: "root",
+            user: "ubuntu",
             password: nil,
-            database: "test",
+            database: "circle_test",
             queue: .global()
         )
         

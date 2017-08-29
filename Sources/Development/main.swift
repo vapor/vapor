@@ -1,4 +1,5 @@
 import Core
+import Dispatch
 import HTTP
 import Leaf
 import Routing
@@ -38,7 +39,16 @@ sync.on(.get, to: "plaintext") { req in
 }
 
 let view = try app.make(ViewRenderer.self)
-async.on(.get, to: "leaf") { req in
+async.on(.get, to: "leaf") { req -> Future<View> in
+    user.child = User(name: "Leaf", age: 1)
+    let promise = Promise(User.self)
+    user.futureChild = promise.future
+
+    try req.requireQueue().asyncAfter(deadline: .now() + 2) {
+        let user = User(name: "unborn", age: -1)
+        promise.complete(user)
+    }
+    
     return try view.make("/Users/tanner/Desktop/hello", context: user, for: req)
 }
 

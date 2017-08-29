@@ -1,7 +1,10 @@
+import Core
+
 internal struct ContextContainer<K: CodingKey>:
     KeyedEncodingContainerProtocol,
     UnkeyedEncodingContainer,
-    SingleValueEncodingContainer
+    SingleValueEncodingContainer,
+    FutureEncoder
 {
     typealias Key = K
 
@@ -9,7 +12,8 @@ internal struct ContextContainer<K: CodingKey>:
 
     var encoder: ContextEncoder
     var codingPath: [CodingKey] {
-        return encoder.codingPath
+        get { return encoder.codingPath }
+        set { encoder.codingPath = newValue }
     }
 
     public init(encoder: ContextEncoder) {
@@ -165,18 +169,77 @@ internal struct ContextContainer<K: CodingKey>:
         fatalError("unimplemented")
     }
 
+
+    mutating func encode<E>(_ future: Future<E>) throws {
+        let promise = Promise(Context.self)
+
+        future.then { item in
+            if let encodable = item as? Encodable {
+                let encoder = ContextEncoder()
+                try! encodable.encode(to: encoder)
+                promise.complete(encoder.context)
+            } else {
+                print("fail")
+                promise.fail("could not encode")
+            }
+        }.catch { error in
+            print("fail")
+            promise.fail(error)
+        }
+
+        set(.future(promise.future))
+    }
+
     mutating func encode(_ value: String, forKey key: K) throws {
         set(.string(value), forKey: key)
     }
 
     mutating func encode<T: Encodable>(_ value: T, forKey key: K) throws {
-        fatalError("unimplemented")
+        codingPath.append(key)
+        try value.encode(to: encoder)
+        _ = codingPath.popLast()
     }
 
-    func set(_ value: Context, forKey key: K) {
-        if var dict = encoder.context.dictionary {
-            dict[key.stringValue] = value
-            encoder.context = .dictionary(dict)
+    mutating func set(_ context: inout Context, to value: Context?, at path: [CodingKey]) {
+        var child: Context?
+        switch path.count {
+        case 1:
+            child = value
+        case 2...:
+            child = context.dictionary?[path[0].stringValue] ?? Context.dictionary([:])
+            set(&child!, to: value, at: Array(path[1...]))
+        default: return
         }
+
+        if case .dictionary(var dict) = context {
+            dict[path[0].stringValue] = child
+            context = .dictionary(dict)
+        } else if let child = child {
+            context = .dictionary([
+                path[0].stringValue: child
+            ])
+        }
+    }
+
+    /// Returns the value, if one at from the given path.
+    public func get(_ context: Context, at path: [CodingKey]) -> Context? {
+        var child = context
+
+        for seg in path {
+            guard let c = child.dictionary?[seg.stringValue] else {
+                return nil
+            }
+            child = c
+        }
+
+        return child
+    }
+
+    mutating func set(_ value: Context) {
+        set(&encoder.context, to: value, at: encoder.codingPath)
+    }
+
+    mutating func set(_ value: Context, forKey key: K) {
+        set(&encoder.context, to: value, at: encoder.codingPath + [key])
     }
 }
