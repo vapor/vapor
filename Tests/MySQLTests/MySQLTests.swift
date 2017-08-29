@@ -6,54 +6,28 @@ import Core
 class MySQLTests: XCTestCase {
     static let allTests = [
         ("testExample", testExample)
-//        ("testSelectVersion", testSelectVersion),
-//        ("testTables", testTables),
-//        ("testParameterization", testParameterization),
-//        ("testDates", testDates),
-//        ("testTimestamps", testTimestamps),
-//        ("testSpam", testSpam),
-//        ("testError", testError),
-//        ("testTransaction", testTransaction),
-//        ("testTransactionFailed", testTransactionFailed),
-//        ("testBlob", testBlob),
-//        ("testLongtext", testLongtext),
     ]
 
-    override func setUp() {
-        
-    }
-    
     func testExample() throws {
-        let connection = try Connection(hostname: "localhost", user: "root", password: nil, database: "test", queue: .global())
+        let connection = try Connection(
+            hostname: "localhost",
+            user: "root",
+            password: nil,
+            database: "test",
+            queue: .global()
+        )
         
-        XCTAssert(try connection.currentQueryFuture?.sync(timeout: .seconds(10)) ?? true)
+        XCTAssert(try connection.currentQueryFuture?.sync(timeout: .seconds(1)) ?? true)
         
-//        try connection.query("SELECT * from users").drain { row in
-//            print(row)
-//        }
-        
-        try User.forEach("SELECT * from users", onConnection: connection) { user in
+        try User.forEach("SELECT * from users", on: connection) { user in
             print(user)
         }
-        
-//        let results = try User.query("SELECT * from users", onConnection: connection)
-        
-//        print(try results.await(for: .seconds(5)))
-        
-//        let results = try connection.query("SELECT @@version, @@version, 1337, 3.14, 'what up', NULL")
-//
-//        do {
-//            let ok = try results.await()
-//
-//            print(ok)
-//        } catch {
-//            print(error)
-//        }
-        sleep(5000)
+
+        sleep(1000)
     }
 }
 
-struct User : Table {
+struct User: Table {
     var id: Int
     var username: String
 }

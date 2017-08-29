@@ -1,8 +1,8 @@
 import Foundation
 import Core
 
-extension Decodable {
-    static func forEach(_ sql: String, onConnection connection: Connection, _ handler: @escaping ((Self) -> ())) throws {
+extension Table {
+    static func forEach(_ sql: String, on connection: Connection, _ handler: @escaping ((Self) -> ())) throws {
         // Cannot send another SQL query before the other one is done
         _ = try connection.currentQueryFuture?.sync()
 
