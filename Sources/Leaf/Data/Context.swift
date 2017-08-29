@@ -1,3 +1,4 @@
+import Core
 import Dispatch
 import Foundation
 
@@ -11,6 +12,7 @@ public enum Context {
     case data(Data)
     case dictionary([String: Context])
     case array([Context])
+    case future(Future<Context>)
     public typealias Lazy = () -> (Context)
     case lazy(Lazy)
     case null

@@ -1,4 +1,5 @@
 import Core
+import Dispatch
 import Leaf
 import Service
 import XCTest

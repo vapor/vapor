@@ -60,6 +60,8 @@ final class TestMiddleware: Middleware {
         try next.respond(to: request).then { res in
             res.headers["baz"] = "bar"
             promise.complete(res)
+        }.catch { error in
+            promise.fail(error)
         }
 
         return promise.future

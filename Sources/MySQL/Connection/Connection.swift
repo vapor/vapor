@@ -122,6 +122,17 @@ public final class Connection {
     /// - throws: The connection is reserved
     internal func receivePackets(into handler: @escaping ((Packet) -> ())) {
         self.parser.outputStream = handler
+<<<<<<< HEAD:Sources/MySQL/Connection/Connection.swift
+=======
+        
+        promise.future.then { _ in
+            self.parser.drain(self.handlePacket)
+        }.catch { error in
+            promise.fail(error)
+        }
+        
+        return promise
+>>>>>>> 36d856c22e5574b74bfcadaf116de8cc9aa5b61f:Sources/MySQL/Connection.swift
     }
     
     /// Handles the incoming packet with the default handler

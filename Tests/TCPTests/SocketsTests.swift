@@ -2,7 +2,7 @@ import Dispatch
 import TCP
 import XCTest
 
-class SocketsTests : XCTestCase {
+class SocketsTests: XCTestCase {
     func testConnect() throws {
         let socket = try Socket()
         try socket.connect(hostname: "google.com")

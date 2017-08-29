@@ -81,11 +81,11 @@ extension Renderer {
         let promise = Promise(Data.self)
 
         let file: FileReader & FileCache
-        if let existing = _files[queue.hashValue] {
+        if let existing = _files[queue.label.hashValue] {
             file = existing
         } else {
             file = fileFactory(queue)
-            _files[queue.hashValue] = file
+            _files[queue.label.hashValue] = file
         }
 
         file.cachedRead(at: path).then { view in

@@ -28,15 +28,12 @@ fileprivate let _eol = DispatchData("\r\n")
 
 extension DispatchData {
     init(_ string: String) {
-        self.init(bytes: string.unsafeRawBufferPointer)
-    }
-}
-
-extension String {
-    var unsafeRawBufferPointer: UnsafeRawBufferPointer {
-        let data = self.data(using: .utf8) ?? Data()
-        return data.withUnsafeBytes { pointer in
-            return UnsafeRawBufferPointer(start: pointer, count: data.count)
+        let bytes = string.withCString { pointer in
+            return UnsafeRawBufferPointer(
+                start: pointer,
+                count: string.utf8.count
+            )
         }
+        self.init(bytes: bytes)
     }
 }

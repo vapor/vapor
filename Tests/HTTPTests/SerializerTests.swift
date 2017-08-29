@@ -17,7 +17,16 @@ class SerializerTests : XCTestCase {
         <vapor>
         """
 
-        XCTAssertEqual(String(data: data, encoding: .utf8), expected)
+        var it = data.makeIterator()
+        var it2 = expected.data(using: .utf8)?.makeIterator()
+        while let next = it.next() {
+            if let comp = it2?.next() {
+                print("\(next): \(comp) \(next == comp ? "" : "!!!")")
+            } else {
+                print("wtf \(next)")
+            }
+        }
+        XCTAssertEqual(data, expected.data(using: .utf8))
     }
     
     static let allTests = [

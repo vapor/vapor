@@ -279,10 +279,10 @@ public final class Serializer {
             return promise.future
         case .identifier(let id):
             let promise = Promise(Context?.self)
-            if let data = try contextFetch(path: id) {
-                promise.complete(data)
-            } else {
-                promise.complete(.null)
+            try contextFetch(path: id).then { value in
+                promise.complete(value ?? .null)
+            }.catch { error in
+                promise.fail(error)
             }
             return promise.future
         case .tag(let name, let parameters, let body, let chained):
@@ -297,14 +297,10 @@ public final class Serializer {
             switch syntax.kind {
             case .identifier(let id):
                 let promise = Promise(Context?.self)
-                if let data = try contextFetch(path: id) {
-                    if data.bool == true {
-                        promise.complete(.bool(false))
-                    } else {
-                        promise.complete(.bool(true))
-                    }
-                } else {
-                    promise.complete(.bool(true))
+                try contextFetch(path: id).then { data in
+                        promise.complete(.bool(data?.bool == true))
+                }.catch { error in
+                    promise.fail(error)
                 }
                 return promise.future
             case .constant(let c):
@@ -333,18 +329,44 @@ public final class Serializer {
     }
 
     // fetches data from the context
-    private func contextFetch(path: [String]) throws -> Context? {
+    private func contextFetch(path: [String]) throws -> Future<Context?> {
+        var promise = Promise(Context?.self)
+
         var current = context
+        var iterator = path.makeIterator()
 
-        for part in path {
-            guard let sub = current.dictionary?[part] else {
-                return nil
+        func handle(_ path: String) {
+            switch current {
+            case .dictionary(let dict):
+                if let value = dict[path] {
+                    current = value
+                    if let next = iterator.next() {
+                        handle(next)
+                    } else {
+                        promise.complete(current)
+                    }
+                } else {
+                    promise.complete(nil)
+                }
+            case .future(let fut):
+                fut.then { value in
+                    current = value
+                    handle(path)
+                }.catch { error in
+                    promise.fail(error)
+                }
+            default:
+                promise.complete(nil)
             }
-
-            current = sub
         }
 
-        return current
+        if let first = iterator.next() {
+            handle(first)
+        } else {
+            promise.complete(current)
+        }
+
+        return promise.future
     }
 }
 

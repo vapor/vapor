@@ -14,7 +14,12 @@ extension WebSocket {
     /// - parameter port: The port to connect to, for HTTP
     /// - parameter uri: The URI is not officially part of the spec, but could route to a different API on the server
     /// - parameter queue: The queue on which this websocket will read and write
-    public static func connect(hostname: String, port: UInt16 = 80, uri: URI = URI(path: "/"), queue: DispatchQueue) throws -> Future<WebSocket> {
+    public static func connect(
+        hostname: String,
+        port: UInt16 = 80,
+        uri: URI = URI(path: "/"),
+        queue: DispatchQueue
+    ) throws -> Future<WebSocket> {
         // Create a new socket to the host
         let socket = try TCP.Socket()
         try socket.connect(hostname: hostname, port: port)
@@ -38,7 +43,7 @@ extension WebSocket {
             "Upgrade": "websocket",
             "Sec-WebSocket-Key": uuid,
             "Sec-WebSocket-Version": "13"
-            ])
+        ])
 
         // Calculates the expected key
         let expectatedKey = try Base64Encoder.encode(data: SHA1.hash(uuid + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"))
@@ -48,14 +53,15 @@ extension WebSocket {
         serializer.errorStream = promise.fail
 
         // Sets up the handler for the handshake
-        serializer.stream(to: client).stream(to: parser).drain { response in
+        client.stream(to: parser).drain { response in
             // The server must accept the upgrade
             guard
                 response.status == .upgrade,
                 response.headers["Connection"] == "Upgrade",
-                response.headers["Upgrade"] == "websocket" else {
-                    promise.fail(Error(.notUpgraded))
-                    return
+                response.headers["Upgrade"] == "websocket"
+            else {
+                promise.fail(Error(.notUpgraded))
+                return
             }
 
             // Protocol version 13 uses `-Key` instead of `Accept`
@@ -78,7 +84,8 @@ extension WebSocket {
         client.start()
 
         // Send the initial request
-        serializer.inputStream(request)
+        let data = serializer.serialize(request)
+        client.inputStream(data)
 
         return promise.future
     }
