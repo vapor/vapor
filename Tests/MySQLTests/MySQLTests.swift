@@ -19,7 +19,11 @@ class MySQLTests: XCTestCase {
             print(user)
         }
         
+        try pool.stream(User.self, in: "SELECT * FROM users").drain { user in
+            print(user)
+        }
         
+        print(try pool.all(User.self, in: "SELECT * FROM users").sync())
         
         
         sleep(5000)

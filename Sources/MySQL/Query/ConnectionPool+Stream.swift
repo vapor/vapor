@@ -5,7 +5,7 @@ extension ConnectionPool {
     ///
     /// - parameter query: The query to be executed to receive results from
     /// - throws: Network error
-    /// - returns: A future containing all results
+    /// - returns: A stream of all resulting rows
     internal func streamRows(in query: Query) throws -> RowStream {
         let stream = RowStream(mysql41: true)
         
@@ -45,35 +45,42 @@ extension ConnectionPool {
     ///
     /// - parameter query: The query to be executed to receive results from
     /// - throws: Network error
-    /// - returns: A future containing all results
-//    public func stream<D: Decodable>(_ type: D.Type, in query: Query) throws -> Future<[D]> {
-//        var results = [D]()
-//        
-//        return try retain { connection, complete, fail in
-//            // Set up a parser
-//            let resultBuilder = ModelBuilder<D>(connection: connection)
-//            connection.receivePackets(into: resultBuilder.inputStream)
-//            
-//            resultBuilder.complete = {
-//                complete(results)
-//            }
-//            
-//            resultBuilder.errorStream = { error in
-//                fail(error)
-//            }
-//            
-//            resultBuilder.drain { result in
-//                results.append(result)
-//            }
-//            
-//            // Send the query
-//            do {
-//                try connection.write(query: query.string)
-//            } catch {
-//                fail(error)
-//            }
-//        }
-//    }
+    /// - returns: A stream of all decoded resulting
+    public func stream<D: Decodable>(_ type: D.Type, in query: Query) throws -> ModelStream<D> {
+        let stream = ModelStream<D>(mysql41: true)
+        
+        let future = try retain { connection, complete, fail in
+            // Set up a parser
+            connection.receivePackets(into: stream.inputStream)
+            
+            stream.onClose = {
+                complete(())
+            }
+            
+            stream.errorStream = { error in
+                fail(error)
+            }
+            
+            // Send the query
+            do {
+                try connection.write(query: query.string)
+            } catch {
+                fail(error)
+            }
+        } as Future<Void>
+        
+        future.addAwaiter { result in
+            switch result {
+            case .error(let error):
+                stream.errorStream?(error)
+                stream.onClose?()
+            case .expectation(_):
+                stream.onClose?()
+            }
+        }
+        
+        return stream
+    }
 }
 
 

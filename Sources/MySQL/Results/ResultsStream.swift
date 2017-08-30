@@ -45,7 +45,7 @@ extension ResultsStream {
             parser.position = 1
             let flags = try parser.parseUInt16()
             
-            if flags & serverMoreResultsExists == 0 {
+            if flags & serverMoreResultsExists != 0 {
                 return
             }
             
