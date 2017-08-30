@@ -9,21 +9,21 @@ class MySQLTests: XCTestCase {
     ]
 
     func testExample() throws {
-        let connection = try Connection(
-            hostname: "localhost",
-            user: "ubuntu",
-            password: nil,
-            database: "circle_test",
-            queue: .global()
-        )
-        
-        XCTAssert(try connection.currentQueryFuture?.sync(timeout: .seconds(1)) ?? true)
-        
-        try User.forEach("SELECT * from users", on: connection) { user in
-            print(user)
-        }
-
-        sleep(1000)
+//        let connection = try Connection(
+//            hostname: "localhost",
+//            user: "ubuntu",
+//            password: nil,
+//            database: "circle_test",
+//            queue: .global()
+//        )
+//        
+//        XCTAssert(try connection.currentQueryFuture?.sync(timeout: .seconds(1)) ?? true)
+//        
+//        try User.forEach("SELECT * from users", on: connection) { user in
+//            print(user)
+//        }
+//
+//        sleep(1000)
     }
 }
 
