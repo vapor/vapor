@@ -18,6 +18,7 @@ public final class Server: Core.OutputStream {
         self.tcp = tcp
         tcp.outputStream = { tcp in
             let client = HTTP.Client(tcp: tcp)
+            client.errorStream = self.errorStream
             self.outputStream?(client)
         }
     }

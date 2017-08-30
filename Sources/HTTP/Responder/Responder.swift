@@ -45,9 +45,11 @@ public final class ResponderStream: Core.Stream {
             try responder.respond(to: input).then { res in
                 self.outputStream?(res)
             }.catch { error in
+                // FIXME: respond w/ error
                 self.errorStream?(error)
             }
         } catch {
+            // FIXME: respond w/ error
             errorStream?(error)
         }
     }

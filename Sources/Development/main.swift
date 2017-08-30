@@ -52,6 +52,24 @@ async.on(.get, to: "leaf") { req -> Future<View> in
     return try view.make("/Users/tanner/Desktop/hello", context: user, for: req)
 }
 
+async.on(.get, to: "proxy") { req -> Future<Response> in
+    let client = try app.make(Vapor.Client.self)
+    let uri = URI(
+        scheme: "http",
+        userInfo: nil,
+        hostname: "vapor.codes",
+        port: 80,
+        path: "/",
+        query: nil,
+        fragment: nil
+    )
+
+    let clientReq = Request(method: .get, uri: uri)
+    clientReq.queue = req.queue
+
+    return try client.respond(to: clientReq)
+}
+
 print("Starting server...")
 try app.run()
 
