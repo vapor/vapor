@@ -7,6 +7,7 @@ class EnvTests: XCTestCase {
         ("testEnv", testEnv),
         ("testBasicEnv", testBasicEnv),
         ("testDefaults", testDefaults),
+        ("testEmptyDefault", testEmptyDefault),
         ("testNoEnv", testNoEnv),
         ("testEmpty", testEmpty),
         ("testEnvArray", testEnvArray),
@@ -54,6 +55,17 @@ class EnvTests: XCTestCase {
         ]
         let expectation: Node = [
             "port": "8080"
+        ]
+
+        XCTAssertEqual(node.hydratedEnv(), expectation)
+    }
+
+    func testEmptyDefault() {
+        let node: Node = [
+            "port": "$NO_EXIST:"
+        ]
+        let expectation: Node = [
+            "port": ""
         ]
 
         XCTAssertEqual(node.hydratedEnv(), expectation)
