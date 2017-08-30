@@ -26,7 +26,7 @@ class MySQLTests: XCTestCase {
         print(try pool.all(User.self, in: "SELECT * FROM users").sync())
         
         
-        sleep(5000)
+        sleep(5)
     }
 }
 
