@@ -23,9 +23,6 @@ let package = Package(
         // Net
         .library(name: "HTTP", targets: ["HTTP"]),
         .library(name: "TCP", targets: ["TCP"]),
-        
-        // WebSockets
-        .library(name: "WebSocket", targets: ["WebSocket"]),
 
         // Routing
         .library(name: "Routing", targets: ["Routing"]),
@@ -33,10 +30,18 @@ let package = Package(
         // Service
         .library(name: "Service", targets: ["Service"]),
 
+        // TLS
+        .library(name: "TLS", targets: ["TLS"]),
+
         // Vapor
         .library(name: "Vapor", targets: ["Vapor"]),
+        
+        // WebSockets
+        .library(name: "WebSocket", targets: ["WebSocket"]),
     ],
-    dependencies: [],
+    dependencies: [
+        .package(url: "https://github.com/vapor/ctls.git", from: "1.1.2")
+    ],
     targets: [
         // Core
         .target(name: "Core", dependencies: ["libc", "Debugging"]),
@@ -56,7 +61,6 @@ let package = Package(
         .testTarget(name: "LeafTests", dependencies: ["Leaf"]),
 
         // MySQL
-
         .target(name: "MySQL", dependencies: ["TCP", "Crypto"]),
         .testTarget(name: "MySQLTests", dependencies: ["MySQL"]),
 
@@ -66,10 +70,6 @@ let package = Package(
         .testTarget(name: "HTTPTests", dependencies: ["HTTP"]),
         .target(name: "TCP", dependencies: ["Debugging", "Core", "libc"]),
         .testTarget(name: "TCPTests", dependencies: ["TCP"]),
-        
-        // WebSocket
-        .target(name: "WebSocket", dependencies: ["Core", "Debugging", "TCP", "HTTP", "Crypto"]),
-        .testTarget(name: "WebSocketTests", dependencies: ["WebSocket"]),
 
         // Routing
         .target(name: "Routing", dependencies: ["Core", "Debugging", "HTTP", "WebSocket"]),
@@ -78,6 +78,10 @@ let package = Package(
         // Service
         .target(name: "Service", dependencies: ["Core", "Debugging"]),
         .testTarget(name: "ServiceTests", dependencies: ["Service"]),
+
+        // TLS
+        .target(name: "TLS", dependencies: ["CTLS", "Debugging"]),
+        .testTarget(name: "TLSTests", dependencies: ["TLS"]),
 
         // Vapor
         .target(name: "Development", dependencies: ["Leaf", "Vapor", "MySQL"]),
@@ -91,5 +95,9 @@ let package = Package(
             "WebSocket",
         ]),
         .testTarget(name: "VaporTests", dependencies: ["Vapor"]),
+
+        // WebSocket
+        .target(name: "WebSocket", dependencies: ["Core", "Debugging", "TCP", "HTTP", "Crypto"]),
+        .testTarget(name: "WebSocketTests", dependencies: ["WebSocket"]),
     ]
 )

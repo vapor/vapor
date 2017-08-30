@@ -9,6 +9,7 @@ import XCTest
 @testable import MySQLTests
 @testable import RoutingTests
 @testable import ServiceTests
+@testable import TLSTests
 @testable import TCPTests
 @testable import VaporTests
 @testable import WebSocketTests
@@ -48,8 +49,11 @@ XCTMain([
     testCase(ConfigTests.allTests),
     testCase(ServiceTests.allTests),
 
+    // TLS
+    testCase(TLSTests.SocketsTests.allTests),
+
     // TCP
-    testCase(SocketsTests.allTests),
+    testCase(TCPTests.SocketsTests.allTests),
 
     // Vapor
     testCase(ApplicationTests.allTests),

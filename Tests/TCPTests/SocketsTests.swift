@@ -83,6 +83,7 @@ class SocketsTests: XCTestCase {
     }
 
     static let allTests = [
-        ("testConnect", testConnect)
+        ("testConnect", testConnect),
+        ("testBind", testBind),
     ]
 }
