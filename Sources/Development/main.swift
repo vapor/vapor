@@ -1,4 +1,5 @@
 import Core
+import Dispatch
 import HTTP
 import Leaf
 import Routing
@@ -17,7 +18,9 @@ var services = Services.default()
 try services.register(Leaf.Provider())
 
 services.register { container in
-    MiddlewareConfig([])
+    MiddlewareConfig([
+        ErrorMiddleware.self
+    ])
 }
 
 let app = Application(services: services)
@@ -31,17 +34,24 @@ async.on(.get, to: "hello") { req in
 }
 
 let hello = try Response(body: "Hello, world!")
-let fut = Future(hello as ResponseRepresentable)
 sync.on(.get, to: "plaintext") { req in
     return hello
 }
 
 let view = try app.make(ViewRenderer.self)
-async.on(.get, to: "welcome") { req in
-    return try view.make("hello", context: "foo")
+async.on(.get, to: "leaf") { req -> Future<View> in
+    user.child = User(name: "Leaf", age: 1)
+    let promise = Promise(User.self)
+    user.futureChild = promise.future
+
+    try req.requireQueue().asyncAfter(deadline: .now() + 2) {
+        let user = User(name: "unborn", age: -1)
+        promise.complete(user)
+    }
+    
+    return try view.make("/Users/tanner/Desktop/hello", context: user, for: req)
 }
 
 print("Starting server...")
 try app.run()
-
 
