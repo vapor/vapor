@@ -12,7 +12,7 @@ extension String {
         guard hasPrefix("$") else { return self }
         let components = self.makeBytes()
             .dropFirst()
-            .split(separator: .colon, maxSplits: 1, omittingEmptySubsequences: true)
+            .split(separator: .colon, maxSplits: 1, omittingEmptySubsequences: false)
             .map({ $0.makeString() })
 
         return components.first.flatMap(Env.get)
