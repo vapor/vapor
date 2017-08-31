@@ -19,6 +19,8 @@ extension ResultsStream {
                 guard let header = try? parser.parseLenEnc() else {
                     if case .error(let error) = try input.parseResponse(mysql41: mysql41) {
                         self.errorStream?(error)
+                    } else {
+                        self.onClose?()
                     }
                     return
                 }

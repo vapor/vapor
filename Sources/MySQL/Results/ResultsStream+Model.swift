@@ -11,6 +11,7 @@ public class ModelStream<D: Decodable> : ResultsStream {
         self.mysql41 = mysql41
     }
     
+    /// Internal API: Do not touch
     public var onClose: (() -> ())?
     
     /// A list of all fields' descriptions in this table
@@ -27,3 +28,4 @@ public class ModelStream<D: Decodable> : ResultsStream {
     
     public var errorStream: ErrorHandler?
 }
+

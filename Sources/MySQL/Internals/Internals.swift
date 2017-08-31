@@ -1,3 +1,4 @@
+import Debugging
 import Foundation
 
 /// A response from the server
@@ -15,10 +16,40 @@ enum Response {
         return nil
     }
     
-    struct Error : Swift.Error {
+    struct Error : Swift.Error, Traceable, Debuggable {
+        var reason: String {
+            return message
+        }
+        
+        var identifier: String {
+            return "mysql:error:\(message)"
+        }
+        
         let code: UInt16
         let state: State?
         let message: String
+        public var file: String
+        public var function: String
+        public var line: UInt
+        public var column: UInt
+        public var stackTrace: [String]
+        
+        init(code: UInt16,
+             state: State?,
+             message: String,
+             file: String = #file,
+             function: String = #function,
+             line: UInt = #line,
+             column: UInt = #column) {
+            self.code = code
+            self.state = state
+            self.message = message
+            self.file = file
+            self.function = function
+            self.line = line
+            self.column = column
+            self.stackTrace = Error.makeStackTrace()
+        }
     }
     
     case error(Error)

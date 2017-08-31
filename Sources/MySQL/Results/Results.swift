@@ -2,20 +2,20 @@ import Foundation
 import Crypto
 import Core
 
-class Field: Hashable {
+public class Field: Hashable {
     /// The flags set for this field
-    struct Flags: OptionSet, ExpressibleByIntegerLiteral {
-        init(integerLiteral value: UInt16) {
+    public struct Flags: OptionSet, ExpressibleByIntegerLiteral {
+        public init(integerLiteral value: UInt16) {
             self.rawValue = value
         }
         
-        init(rawValue: UInt16) {
+        public init(rawValue: UInt16) {
             self.rawValue = rawValue
         }
         
-        var rawValue: UInt16
+        public var rawValue: UInt16
         
-        typealias RawValue = UInt16
+        public typealias RawValue = UInt16
         
         static let notNull : Flags       = 0b0000000000000001
         static let primaryKey : Flags    = 0b0000000000000010
@@ -64,12 +64,12 @@ class Field: Hashable {
     }
     
     /// Makes this field hashable
-    var hashValue: Int {
+    public var hashValue: Int {
         return table.hashValue &+ name.hashValue &+ length.hashValue &+ fieldType.rawValue.hashValue &+ flags.rawValue.hashValue
     }
     
     /// Makes this field equatable, so it can be compared to be unique
-    static func ==(lhs: Field, rhs: Field) -> Bool {
+    public static func ==(lhs: Field, rhs: Field) -> Bool {
         return  lhs.table == rhs.table &&
                 lhs.name == rhs.name &&
                 lhs.length == rhs.length &&
@@ -77,12 +77,12 @@ class Field: Hashable {
                 lhs.flags == rhs.flags
     }
     
-    let catalog: String
-    let database: String
-    let table: String
-    let originalTable: String
-    let name: String
-    let originalName: String
+    public let catalog: String
+    public let database: String
+    public let table: String
+    public let originalTable: String
+    public let name: String
+    public let originalName: String
     let charSet: Byte
     let collation: Byte
     let length: UInt32
