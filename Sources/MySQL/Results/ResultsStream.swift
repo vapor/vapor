@@ -25,6 +25,10 @@ extension ResultsStream {
                     return
                 }
                 
+                if header == 0 {
+                    self.onClose?()
+                }
+                
                 self.header = header
                 return
             }

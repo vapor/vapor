@@ -26,24 +26,27 @@ class MySQLTests: XCTestCase {
             throw error
         }
     }
+    
+    override func setUp() {
+        _ = try? pool.allRows(in: "DROP TABLE users").sync()
+    }
 
     func testExample() throws {
-        
         
 //        try connection.forEachRow(in: "SELECT * from users").drain { row in
 //            print(row)
 //        }
         
         do {
-            try pool.forEach(User.self, in: "SELECT * from users2") { user in
+            try pool.forEach(User.self, in: "SELECT * from users") { user in
                 print(user)
             }
 
-            try pool.stream(User.self, in: "SELECT * FROM users2").drain { user in
+            try pool.stream(User.self, in: "SELECT * FROM users").drain { user in
                 print(user)
             }
             
-            print(try pool.all(User.self, in: "SELECT * FROM users2").sync())
+            print(try pool.all(User.self, in: "SELECT * FROM users").sync())
         } catch {
             print(error)
         }

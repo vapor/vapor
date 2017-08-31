@@ -59,11 +59,14 @@ public class ConnectionPool {
             // Runs the handler with the connection
             handler(pair.connection, { result in
                 // On completion, return the connection, complete the promise
-                promise.complete(result)
                 pair.reserved = false
+                promise.complete(result)
             }) { error in
+                pair.reserved = false
                 promise.fail(error)
             }
+            
+            return promise.future
         }
         
         _ = try Connection.makeConnection(hostname: hostname, user: user, password: password, database: database, queue: queue).then { connection in
@@ -75,9 +78,10 @@ public class ConnectionPool {
             // Runs the handler with the connection
             handler(pair.connection, { result in
                 // On completion, return the connection, complete the promise
-                promise.complete(result)
                 pair.reserved = false
+                promise.complete(result)
             }) { error in
+                pair.reserved = false
                 promise.fail(error)
             }
         }
