@@ -16,3 +16,12 @@ extension Connection {
         try self.write(packetFor: buffer)
     }
 }
+
+extension ConnectionPool {
+    @discardableResult
+    public func query(_ query: Query) throws -> Future<Void> {
+        return try self.allRows(in: query).map { _ in
+            return ()
+        }
+    }
+}

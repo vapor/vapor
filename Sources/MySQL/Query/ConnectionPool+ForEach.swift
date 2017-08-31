@@ -19,7 +19,7 @@ extension ConnectionPool {
             }
             
             stream.errorStream = { error in
-                complete(())
+                fail(error)
             }
             
             stream.drain(handler)
