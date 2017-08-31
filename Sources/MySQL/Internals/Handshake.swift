@@ -198,7 +198,7 @@ extension Connection {
             
             switch response {
             case .error(_):
-                completing.fail(Error.invalidCredentials)
+                completing.fail(Error(.invalidCredentials))
                 // Unauthenticated
                 self.socket.close()
                 return
