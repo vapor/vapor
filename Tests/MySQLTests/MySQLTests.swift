@@ -67,8 +67,6 @@ class MySQLTests: XCTestCase {
         try pool.stream(User.self, in: "SELECT * FROM users").drain { user in
             XCTAssertEqual(user.username, iterator.next())
         }
-        
-        sleep(1)
     }
     
     func testComplexModel() throws {

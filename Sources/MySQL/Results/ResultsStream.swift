@@ -86,12 +86,12 @@ extension ResultsStream {
                     fallthrough
                 case .eof(_):
                     guard amount == columns.count else {
-                        self.errorStream?(MySQLError.invalidPacket)
+                        self.errorStream?(Error(.invalidPacket))
                         return
                     }
                 }
             } catch {
-                self.errorStream?(MySQLError.invalidPacket)
+                self.errorStream?(Error(.invalidPacket))
                 return
             }
         }
@@ -114,7 +114,7 @@ extension ResultsStream {
             let length = try parser.parseUInt32()
             
             guard let fieldType = Field.FieldType(rawValue: try parser.byte()) else {
-                throw MySQLError.invalidPacket
+                throw Error(.invalidPacket)
             }
             
             let flags = Field.Flags(rawValue: try parser.parseUInt16())
@@ -136,7 +136,7 @@ extension ResultsStream {
             
             self.columns.append(field)
         } catch {
-            self.errorStream?(MySQLError.invalidPacket)
+            self.errorStream?(Error(.invalidPacket))
             return
         }
     }

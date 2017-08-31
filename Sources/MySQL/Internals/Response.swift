@@ -8,21 +8,21 @@ extension Packet {
     /// Parses this packet into a Response
     func parseResponse(mysql41: Bool) throws -> Response {
         guard self.payload.count > 0 else {
-            throw MySQLError.invalidResponse
+            throw Error(.invalidResponse)
         }
         
         switch self.payload[0] {
             // error
         case 0xff:
             guard self.payload.count > 3 else {
-                throw MySQLError.invalidResponse
+                throw Error(.invalidResponse)
             }
             
             let code = (UInt16(payload[1]) << 8) | UInt16(payload[2])
             
             if mysql41 {
                 guard self.payload.count > 10 else {
-                    throw MySQLError.invalidResponse
+                    throw Error(.invalidResponse)
                 }
                 
                 let state = Response.State(
@@ -44,7 +44,7 @@ extension Packet {
             // EOF
         case 0xfe:
             guard self.payload.count > 3 else {
-                throw MySQLError.invalidResponse
+                throw Error(.invalidResponse)
             }
             
             let parser = Parser(packet: self, position: 1)
@@ -76,7 +76,7 @@ extension Packet {
                 return .eof(ok)
             }
         default:
-            throw MySQLError.invalidResponse
+            throw Error(.invalidResponse)
         }
     }
 }

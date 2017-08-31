@@ -22,7 +22,7 @@ extension Packet {
         
         // Require decimal `10` to be the protocol version
         guard try parser.byte() == 10 else {
-            throw MySQLError.invalidHandshake
+            throw Error(.invalidHandshake)
         }
         
         // UTF-8
@@ -34,11 +34,11 @@ extension Packet {
         }
         
         guard try parser.byte() == 0 else {
-            throw MySQLError.invalidHandshake
+            throw Error(.invalidHandshake)
         }
         
         guard let serverVersion = String(bytes: serverVersionBuffer, encoding: .utf8) else {
-            throw MySQLError.invalidHandshake
+            throw Error(.invalidHandshake)
         }
         
         // ID of the MySQL internal thread handling this connection
@@ -49,7 +49,7 @@ extension Packet {
         
         // null terminator of the random seed
         guard try parser.byte() == 0 else {
-            throw MySQLError.invalidHandshake
+            throw Error(.invalidHandshake)
         }
         
         // capabilities + default collation
@@ -73,7 +73,7 @@ extension Packet {
             randomSeed.append(contentsOf: try parser.buffer(length: 12))
             
             guard try parser.byte() == 0 else {
-                throw MySQLError.invalidHandshake
+                throw Error(.invalidHandshake)
             }
             
             if parser.position < payload.count &- 1 {
@@ -112,7 +112,7 @@ extension Connection {
     /// Send the handshaek to the client
     func sendHandshake() throws {
         guard let handshake = self.handshake else {
-            throw MySQLError.invalidHandshake
+            throw Error(.invalidHandshake)
         }
         
         if handshake.isGreaterThan4 {
@@ -187,7 +187,7 @@ extension Connection {
             
             try self.write(packetFor: data, startingAt: 1)
         } else {
-            throw MySQLError.invalidHandshake
+            throw Error(.invalidHandshake)
         }
     }
     
@@ -198,7 +198,7 @@ extension Connection {
             
             switch response {
             case .error(_):
-                completing.fail(MySQLError.invalidCredentials)
+                completing.fail(Error.invalidCredentials)
                 // Unauthenticated
                 self.socket.close()
                 return

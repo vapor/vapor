@@ -2,9 +2,9 @@ import Foundation
 import Crypto
 import Core
 
-public class Field: Hashable {
+class Field: Hashable {
     /// The flags set for this field
-    public struct Flags: OptionSet, ExpressibleByIntegerLiteral {
+    struct Flags: OptionSet, ExpressibleByIntegerLiteral {
         public init(integerLiteral value: UInt16) {
             self.rawValue = value
         }

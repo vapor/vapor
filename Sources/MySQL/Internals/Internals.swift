@@ -52,8 +52,6 @@ enum Response {
         }
     }
     
-    case error(Error)
-    
     struct OK {
         let affectedRows: UInt64
         let lastInsertId: UInt64
@@ -62,6 +60,7 @@ enum Response {
         let data: Data
     }
     
+    case error(Error)
     case ok(OK)
     case eof(OK)
 }

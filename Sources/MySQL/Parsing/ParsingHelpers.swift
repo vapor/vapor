@@ -17,7 +17,7 @@ class Parser {
     
     func require(_ n: Int) throws {
         guard position &+ n < packet.payload.count else {
-            throw MySQLError.invalidHandshake
+            throw Error(.invalidHandshake)
         }
     }
     
@@ -80,7 +80,7 @@ class Parser {
     
     func parseLenEnc() throws -> UInt64 {
         guard position < self.payload.count else {
-            throw MySQLError.invalidResponse
+            throw Error(.invalidResponse)
         }
         
         switch self.payload[position] {
@@ -97,7 +97,7 @@ class Parser {
             
             return try parseUInt64()
         case 0xff:
-            throw MySQLError.invalidResponse
+            throw Error(.invalidResponse)
         default:
             defer { position = position &+ 1 }
             return UInt64(self.payload[position])
@@ -108,7 +108,7 @@ class Parser {
         let length = Int(try parseLenEnc())
         
         guard position &+ length <= self.payload.count else {
-            throw MySQLError.invalidResponse
+            throw Error(.invalidResponse)
         }
         
         defer { position = position &+ length }
@@ -120,7 +120,7 @@ class Parser {
         let length = Int(try parseLenEnc())
         
         guard position &+ length <= self.payload.count else {
-            throw MySQLError.invalidResponse
+            throw Error(.invalidResponse)
         }
         
         defer { position = position &+ length }
