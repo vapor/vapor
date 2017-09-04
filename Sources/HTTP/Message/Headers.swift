@@ -44,7 +44,7 @@ extension Headers : ExpressibleByDictionaryLiteral {
 }
 
 extension Headers {
-    // Used instead of HTTPHeaders to save CPU on dictionary construction
+    // Used instead of Headers to save CPU on dictionary construction
     /// :nodoc:
     public struct Literal : ExpressibleByDictionaryLiteral {
         let fields: [(name: Name, value: String)]

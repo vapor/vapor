@@ -85,8 +85,7 @@ extension CParser {
             case .value(let key, let value):
                 // there was previously a value being parsed.
                 // it is now finished.
-                let copiedValue = Data(value)
-                let headerValue = String(data: copiedValue, encoding: .utf8) ?? ""
+                let headerValue = String(bytes: value, encoding: .utf8) ?? ""
                 results.headers[key, default: []].append(headerValue)
                 // start a new key
                 results.headerState = .key(data)

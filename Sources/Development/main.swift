@@ -52,6 +52,20 @@ async.on(.get, to: "leaf") { req -> Future<View> in
     return try view.make("/Users/tanner/Desktop/hello", context: user, for: req)
 }
 
+extension String: ResponseRepresentable {
+    public func makeResponse() throws -> Response {
+        return try Response(body: self)
+    }
+}
+
+async.on(.post, to: "test") { (req: Request) throws -> Future<String> in
+    let req = try MultipartParser.parse(request: req)
+    
+    print(req)
+    
+    return Future("test")
+}
+
 print("Starting server...")
 try app.run()
 
