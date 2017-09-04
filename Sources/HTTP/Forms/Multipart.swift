@@ -55,14 +55,18 @@ public final class MultipartParser {
             return String(bytes: data[position..<position + offset], encoding: .utf8)
         }
         
+        func checkBoundaryStartEnd() throws {
+            guard data[position] == .hyphen, data[position &+ 1] == .hyphen else {
+                throw Error(identifier: "http:multipart:boundary", reason: "Invalid multipart formatting")
+            }
+        }
+        
         while position < data.count {
             // require '--' + boundary + \r\n
             try require(2 + boundary.count + 2)
             
             // check '--'
-            guard data[position] == .hyphen, data[position &+ 1] == .hyphen else {
-                throw Error(identifier: "http:multipart:boundary", reason: "Invalid multipart formatting")
-            }
+            try checkBoundaryStartEnd()
             
             // skip '--'
             position = position &+ 2
@@ -76,7 +80,8 @@ public final class MultipartParser {
             position = position &+ boundary.count
             
             guard try carriageReturnNewLine() else {
-                throw Error(identifier: "http:multipart:boundary", reason: "Invalid boundary, missing end of line")
+                try checkBoundaryStartEnd()
+                return
             }
             
             var headers = Headers()
@@ -135,10 +140,11 @@ public final class MultipartParser {
             var base = position
             
             contentCheck: while true {
-                try require(base + fullBoundary.count)
+                try require(fullBoundary.count)
                 
                 if data[base] == fullBoundary.first, data[base..<base + fullBoundary.count] == fullBoundary {
                     partData = Data(data[position..<base])
+                    position = base
                     break contentCheck
                 }
                 
