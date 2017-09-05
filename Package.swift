@@ -48,7 +48,7 @@ let package = Package(
         
         // Core
         .target(name: "Core", dependencies: ["libc", "Debugging", "Files", "Async"]),
-        .testTarget(name: "CoreTests", dependencies: ["Core"]),
+//        .testTarget(name: "CoreTests", dependencies: ["Core"]),
         .target(name: "libc"),
 
         // Crypto

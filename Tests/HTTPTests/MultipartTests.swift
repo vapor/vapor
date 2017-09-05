@@ -1,7 +1,7 @@
 import HTTP
 import XCTest
 
-class MultipartTests: XCTestCare {
+class MultipartTests: XCTestCase {
     func testRequest() throws {
         let named = """
 test123
@@ -37,6 +37,6 @@ Content-Disposition: form-data; name="multinamed[]"; filename=""\r
         
         let multipart = try MultipartParser.parse(multipart: Data(data.utf8), boundary: Data("----WebKitFormBoundaryPVOZifB9OqEwP2fn".utf8))
         
-        XCTAssertEqual(multipart.count, 3)
+        XCTAssertEqual(multipart.parts.count, 3)
     }
 }
