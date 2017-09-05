@@ -33,6 +33,7 @@ class SocketsTests: XCTestCase {
 
             let string = String(data: response, encoding: .utf8)
             XCTAssert(string?.contains("HTTP/1.0 400 Bad Request") == true)
+            // FIXME: Tanner, crashing
             group.leave()
         }
         read.resume()
@@ -62,6 +63,7 @@ class SocketsTests: XCTestCase {
             read.setEventHandler {
                 let data = try! client.read(max: 8_192)
                 XCTAssertEqual(String(data: data, encoding: .utf8), "hello")
+                // FIXME: Tanner, crashing
                 group.leave()
             }
             read.resume()
