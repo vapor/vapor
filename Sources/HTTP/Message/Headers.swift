@@ -10,7 +10,7 @@
 public struct Headers: Codable {
     var storage: [Name: [String]]
 
-    /// :nodoc:
+    
     public subscript(name: Name) -> String? {
         get {
             guard let value = storage[name] else { return nil }
@@ -25,8 +25,21 @@ public struct Headers: Codable {
             storage[name] = newValue.map { [$0] }
         }
     }
+    
+    public subscript(name: Name, attribute: String) -> String? {
+        get {
+            guard let header = self[name] else { return nil }
+            guard let range = header.range(of: "\(attribute)=\"") else { return nil }
+            
+            let remainder = header[range.upperBound...]
+            
+            guard let end = remainder.index(of: "\"") else { return nil }
+            
+            return String(remainder[remainder.startIndex..<end])
+        }
+    }
 
-    /// :nodoc:
+    
     public subscript(valuesFor name: Name) -> [String] {
         get { return storage[name] ?? [] }
         set { storage[name] = newValue.isEmpty ? nil : newValue }

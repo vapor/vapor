@@ -21,7 +21,7 @@ public struct LeafConfig {
         return LeafConfig(
             tags: defaultTags
         ) { queue in
-            return File(queue: queue)
+            return CachedFileSystem(queue: queue)
         }
     }
 }

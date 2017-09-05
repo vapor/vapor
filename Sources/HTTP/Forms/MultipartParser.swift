@@ -120,22 +120,7 @@ public final class MultipartParser {
                 throw Error(identifier: "http:multipart:headers", reason: "Invalid content disposition")
             }
             
-            var contentParts = content.split(separator: ";")
-            var key: String?
-            
-            if contentParts.count > 1 {
-                contentParts.removeFirst()
-                
-                for part in contentParts {
-                    let keyValue = part.split(separator: "=")
-                    
-                    guard keyValue.count == 2 else {
-                        throw Error(identifier: "http:multipart:headers", reason: "Invalid key-value pair in header")
-                    }
-                    
-                    key = keyValue[1].replacingOccurrences(of: "\"", with: "")
-                }
-            }
+            let key = headers[.contentDisposition, "name"]
             
             // The compiler doesn't understand this will never be `nil`
             var partData: Data!

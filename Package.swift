@@ -39,7 +39,7 @@ let package = Package(
     dependencies: [],
     targets: [
         // Async
-        .target(name: "Async"),
+        .target(name: "Async", dependencies: ["Debugging"]),
         .testTarget(name: "AsyncTests", dependencies: ["Async"]),
         
         // Bits
@@ -47,7 +47,7 @@ let package = Package(
         .testTarget(name: "BitsTests", dependencies: ["Bits"]),
         
         // Core
-        .target(name: "Core", dependencies: ["libc", "Debugging", "Files", "Async"]),
+        .target(name: "Core", dependencies: ["libc", "Debugging", "Async"]),
 //        .testTarget(name: "CoreTests", dependencies: ["Core"]),
         .target(name: "libc"),
 
@@ -60,7 +60,7 @@ let package = Package(
         .testTarget(name: "DebuggingTests", dependencies: ["Debugging"]),
         
         // Files
-        .target(name: "Files", dependencies: ["libc", "Async"]),
+        .target(name: "Files", dependencies: ["libc", "Core"]),
         .testTarget(name: "FilesTests", dependencies: ["Files"]),
         
         // HTTP
