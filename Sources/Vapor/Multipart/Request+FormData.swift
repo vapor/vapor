@@ -76,13 +76,15 @@ extension HTTP.Message {
                 body = .data(serialized)
                 headers[.contentType] = "multipart/form-data; boundary=" + boundary.makeString()
             } else {
-                if
+                
+                guard
                     let contentType = headers[.contentType],
                     contentType.contains("multipart/form-data")
-                {
-                    body = .data([])
-                    headers.removeValue(forKey: .contentType)
+                else {
+                    return
                 }
+                body = .data([])
+                headers.removeValue(forKey: .contentType)
             }
         }
     }
