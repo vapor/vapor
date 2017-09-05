@@ -17,9 +17,9 @@ extension Request {
             
             let quality: Double
             if pieces.count == 2 {
-                let q = pieces[1].split(separator: "=")
+                let q = pieces.last!.split(separator: "=")
                 if q.count == 2 {
-                    let valueString = String(q[1])
+                    let valueString = String(q.last!)
                     quality = Double(valueString) ?? 1.0
                 } else {
                     quality = 1.0
