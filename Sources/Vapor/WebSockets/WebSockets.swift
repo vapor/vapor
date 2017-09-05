@@ -56,7 +56,13 @@ public final class WebSocketFactory {
         onConnect: @escaping (WebSocket) throws -> Void
     ) throws {
         let uri = try URI(uri)
-        try connect(to: uri, protocols: protocols, headers: headers, onConnect: onConnect)
+        try connect(
+            to: uri,
+            protocols:
+            protocols,
+            headers: headers,
+            onConnect: onConnect
+        )
     }
 }
 
