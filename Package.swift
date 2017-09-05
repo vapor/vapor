@@ -60,8 +60,8 @@ let package = Package(
         .testTarget(name: "DebuggingTests", dependencies: ["Debugging"]),
         
         // Files
-        .target(name: "Files", dependencies: ["libc"]),
-        .testTarget(name: "FilesTests", dependencies: ["Files", "Async"]),
+        .target(name: "Files", dependencies: ["libc", "Async"]),
+        .testTarget(name: "FilesTests", dependencies: ["Files"]),
         
         // HTTP
         .target(name: "CHTTP"),
