@@ -58,8 +58,7 @@ public final class WebSocketFactory {
         let uri = try URI(uri)
         try connect(
             to: uri,
-            protocols:
-            protocols,
+            protocols: protocols,
             headers: headers,
             onConnect: onConnect
         )
