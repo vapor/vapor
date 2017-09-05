@@ -1,8 +1,9 @@
-import Core
+import Async
+import Bits
 import TCP
 
 /// An HTTP client wrapped around TCP client
-public final class Client: Core.Stream {
+public final class Client: Async.Stream {
     public typealias Input = SerializedMessage
     public typealias Output = ByteBuffer
 

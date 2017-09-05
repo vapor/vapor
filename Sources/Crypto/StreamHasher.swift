@@ -1,10 +1,11 @@
 import Foundation
-import Core
+import Async
+import Bits
 
 /// Hashes the contents of a byte stream
 ///
 /// When done hashing the stream, call `complete` to receive the hash and reset the hash to it's original state
-public class ByteStreamHasher<H: Hash> : Core.Stream {
+public class ByteStreamHasher<H: Hash> : Async.Stream {
     /// See `InputStream` for details
     public func inputStream(_ input: ByteBuffer) {
         context.update(input)

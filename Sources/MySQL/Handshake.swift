@@ -1,3 +1,5 @@
+import Bits
+
 struct Handshake {
     let version = 10
     let serverVersion: String
@@ -126,7 +128,6 @@ extension Packet {
 
 import Foundation
 import Crypto
-import Core
 
 extension Connection {
     func doHandshake(for packet: Packet) {

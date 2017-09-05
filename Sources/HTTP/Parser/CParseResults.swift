@@ -20,12 +20,18 @@ internal final class CParseResults {
     var headers: [Headers.Name: [String]]
     var body: DispatchData?
     var url: DispatchData?
+    
+    /// The maximum size of a request in bytes
+    ///
+    /// 10MB by default
+    public let maximumSize: Int
 
     /// Creates a new results object
-    init() {
+    init(maximumSize: Int = 10_000_000) {
         self.isComplete = false
         self.headers = [:]
         self.headerState = .none
+        self.maximumSize = maximumSize
     }
 }
 

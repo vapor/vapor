@@ -1,4 +1,5 @@
 import Foundation
+import Async
 
 /// Capable of reading files asynchronously.
 public protocol FileReader {

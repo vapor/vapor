@@ -1,7 +1,8 @@
-import Core
 import CHTTP
+import Async
 import Dispatch
 import Foundation
+import Bits
 
 /// Possible header states
 enum HeaderState {
@@ -12,7 +13,7 @@ enum HeaderState {
 
 
 /// Internal CHTTP parser protocol
-internal protocol CParser: class, Core.Stream {
+internal protocol CParser: class, Async.Stream {
     var parser: http_parser { get set }
     var settings: http_parser_settings { get set }
 }
@@ -172,6 +173,12 @@ extension CParser {
             if results.body == nil {
                 results.body = data
             } else {
+                guard let count = results.body?.count,
+                    count + data.count < results.maximumSize else {
+                        // Too much data
+                        return 1
+                }
+                
                 results.body?.append(data)
             }
             return 0

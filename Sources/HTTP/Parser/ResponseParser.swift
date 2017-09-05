@@ -1,9 +1,10 @@
 import CHTTP
-import Core
+import Async
+import Bits
 import Foundation
 
 /// Parses requests from a readable stream.
-public final class ResponseParser: CParser, Core.Stream {
+public final class ResponseParser: CParser, Async.Stream {
     // MARK: Stream
     public typealias Input = ByteBuffer
     public typealias Output = Response

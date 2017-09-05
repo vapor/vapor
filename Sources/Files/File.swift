@@ -1,6 +1,7 @@
 import Dispatch
 import Foundation
 import libc
+import Async
 
 public final class File: FileReader, FileCache {
     /// Cached data.

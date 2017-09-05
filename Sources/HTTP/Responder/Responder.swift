@@ -1,5 +1,5 @@
-import Core
 import Dispatch
+import Async
 
 /// Capable of responding to a request.
 public protocol Responder {
@@ -15,7 +15,7 @@ extension Responder {
 }
 
 /// A stream containing an HTTP responder.
-public final class ResponderStream: Core.Stream {
+public final class ResponderStream: Async.Stream {
     /// See InputStream.Input
     public typealias Input = Request
 

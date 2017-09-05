@@ -1,5 +1,5 @@
 import CHTTP
-import Core
+import Bits
 import Dispatch
 import Foundation
 
@@ -10,7 +10,7 @@ public final class RequestParser: CParser {
     public typealias Output = Request
     public var outputStream: OutputHandler?
     public var errorStream: ErrorHandler?
-
+    
     // Internal variables to conform
     // to the C HTTP parser protocol.
     var parser: http_parser

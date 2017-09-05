@@ -38,8 +38,16 @@ let package = Package(
     ],
     dependencies: [],
     targets: [
+        // Async
+        .target(name: "Async"),
+        .testTarget(name: "AsyncTests", dependencies: ["Async"]),
+        
+        // Bits
+        .target(name: "Bits"),
+        .testTarget(name: "BitsTests", dependencies: ["Bits"]),
+        
         // Core
-        .target(name: "Core", dependencies: ["libc", "Debugging"]),
+        .target(name: "Core", dependencies: ["libc", "Debugging", "Files", "Async"]),
         .testTarget(name: "CoreTests", dependencies: ["Core"]),
         .target(name: "libc"),
 
@@ -50,21 +58,26 @@ let package = Package(
         // Debugging
         .target(name: "Debugging"),
         .testTarget(name: "DebuggingTests", dependencies: ["Debugging"]),
-
-        // Leaf
-        .target(name: "Leaf", dependencies: ["Core", "Service"]),
-        .testTarget(name: "LeafTests", dependencies: ["Leaf"]),
-
-        // MySQL
-
-        .target(name: "MySQL", dependencies: ["TCP", "Crypto"]),
-        .testTarget(name: "MySQLTests", dependencies: ["MySQL"]),
-
-        // Net
+        
+        // Files
+        .target(name: "Files", dependencies: ["libc"]),
+        .testTarget(name: "FilesTests", dependencies: ["Files", "Async"]),
+        
+        // HTTP
         .target(name: "CHTTP"),
         .target(name: "HTTP", dependencies: ["CHTTP", "TCP"]),
         .testTarget(name: "HTTPTests", dependencies: ["HTTP"]),
-        .target(name: "TCP", dependencies: ["Debugging", "Core", "libc"]),
+
+        // Leaf
+        .target(name: "Leaf", dependencies: ["Core", "Service", "Files"]),
+        .testTarget(name: "LeafTests", dependencies: ["Leaf"]),
+
+        // MySQL
+        .target(name: "MySQL", dependencies: ["TCP", "Crypto"]),
+        .testTarget(name: "MySQLTests", dependencies: ["MySQL"]),
+        
+        // Network
+        .target(name: "TCP", dependencies: ["Debugging", "Async", "Bits", "libc"]),
         .testTarget(name: "TCPTests", dependencies: ["TCP"]),
         
         // WebSocket
