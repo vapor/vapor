@@ -15,6 +15,9 @@ let package = Package(
         .library(name: "Debugging", targets: ["Debugging"]),
 
         // Leaf
+        .library(name: "JWT", targets: ["JWT"]),
+
+        // Leaf
         .library(name: "Leaf", targets: ["Leaf"]),
 
         // MySQL
@@ -50,6 +53,10 @@ let package = Package(
         // Debugging
         .target(name: "Debugging"),
         .testTarget(name: "DebuggingTests", dependencies: ["Debugging"]),
+
+        // JWT
+        .target(name: "JWT", dependencies: ["Crypto"]),
+        .testTarget(name: "JWTTests", dependencies: ["JWT"]),
 
         // Leaf
         .target(name: "Leaf", dependencies: ["Core", "Service"]),

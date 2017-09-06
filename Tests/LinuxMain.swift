@@ -5,6 +5,7 @@ import XCTest
 @testable import CryptoTests
 @testable import DebuggingTests
 @testable import HTTPTests
+@testable import JWTTests
 @testable import LeafTests
 @testable import MySQLTests
 @testable import RoutingTests
@@ -34,6 +35,9 @@ XCTMain([
     testCase(MiddlewareTests.allTests),
     testCase(ParserTests.allTests),
     testCase(SerializerTests.allTests),
+
+    // JWT
+    testCase(JWTTests.allTests),
 
     // Leaf
     testCase(LeafTests.allTests),
