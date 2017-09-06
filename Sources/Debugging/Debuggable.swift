@@ -14,6 +14,13 @@ extension Debuggable {
     }
 }
 
+extension Debuggable {
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(self.reason)
+    }
+}
+
 // MARK: Representations
 
 extension Debuggable {

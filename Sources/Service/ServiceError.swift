@@ -1,6 +1,6 @@
 import Debugging
 
-public enum ServiceError: Error, Debuggable {
+public enum ServiceError: Error, Debuggable, Encodable {
     case multipleInstances(
         type: Any.Type
     )

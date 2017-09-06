@@ -1,6 +1,6 @@
 import Debugging
 
-public struct FileError: Debuggable, Traceable, Error {
+public struct FileError: Debuggable, Traceable, Error, Encodable {
     /// Kinds of File errors
     enum Kind {
         case invalidDescriptor

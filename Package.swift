@@ -17,6 +17,9 @@ let package = Package(
         // Leaf
         .library(name: "Leaf", targets: ["Leaf"]),
 
+        // Leaf
+        .library(name: "Logging", targets: ["Logging"]),
+
         // MySQL
         .library(name: "MySQL", targets: ["MySQL"]),
 
@@ -54,6 +57,10 @@ let package = Package(
         // Leaf
         .target(name: "Leaf", dependencies: ["Core", "Service"]),
         .testTarget(name: "LeafTests", dependencies: ["Leaf"]),
+
+        // Logging
+        .target(name: "Logging", dependencies: ["Core", "Service"]),
+        .testTarget(name: "LoggingTests", dependencies: ["Logging"]),
 
         // MySQL
 
