@@ -13,8 +13,7 @@ extension AsyncRouter {
     ) where F.Expectation: ResponseRepresentable {
         let responder = BasicAsyncResponder(closure: closure)
         self.register(
-            responder: responder,
-            at: [.constant(method.string)] + path.makePathComponents()
+            route: Route(method: method, path: path.makePathComponents(), responder: responder)
         )
     }
 }

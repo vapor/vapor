@@ -10,10 +10,12 @@ public final class TrieRouter: Router {
     }
 
     /// See Router.register()
-    public func register(responder: Responder, at path: [PathComponent]) {
+    public func register(route: Route) {
         // always start at the root node
         var current: TrieRouterNode = root
 
+        let path = [.constant(route.method.string)] + route.path
+        
         // traverse the path components supplied
         var iterator = path.makeIterator()
         while let path = iterator.next() {
@@ -39,11 +41,13 @@ public final class TrieRouter: Router {
         }
 
         // set the resolved nodes responder
-        current.responder = responder
+        current.responder = route.responder
     }
 
     /// See Router.route()
-    public func route(path: [String], parameters: inout ParameterBag) -> Responder? {
+    public func route(request: Request, parameters: inout ParameterBag) -> Responder? {
+        let path = [request.method.string] + request.uri.path.split(separator: "/").map(String.init)
+        
         // always start at the root node
         var current: TrieRouterNode = root
 

@@ -9,8 +9,7 @@ extension SyncRouter {
     public func on(_ method: Method, to path: PathComponentRepresentable..., use closure: @escaping BasicSyncResponder.Closure) {
         let responder = BasicSyncResponder(closure: closure)
         self.register(
-            responder: responder,
-            at: [.constant(method.string)] + path.makePathComponents()
+            route: Route(method: method, path: path.makePathComponents(), responder: responder)
         )
     }
 }
