@@ -20,52 +20,52 @@ enum JWTError : Error {
     case unsupported
 }
 
-/// JSON Web Signature (signature based JSON Web Token)
-public struct JSONWebSignature<C: Codable> : Codable {
-    /// The header (details) used for signing and processing this JSON Web Signature
-    public struct Header : Codable {
-        enum CodingKeys: String, CodingKey {
-            case algorithm = "alg"
-            case signatureType = "typ"
-            case payloadType = "cty"
-            case criticalFields = "crit"
-        }
+/// The header (details) used for signing and processing this JSON Web Signature
+public struct Header : Codable {
+    enum CodingKeys: String, CodingKey {
+        case algorithm = "alg"
+        case signatureType = "typ"
+        case payloadType = "cty"
+        case criticalFields = "crit"
+    }
+    
+    /// The algorithm used with the signing
+    public var algorithm: Algorithm
+    
+    /// The Signature's Content Type
+    public var signatureType: String?
+    
+    /// The Payload's Content Type
+    public var payloadType: String?
+    
+    public var criticalFields: [String]?
+    
+    /// The algorithm to use for signing
+    public enum Algorithm : String, Codable {
+        /// HMAC SHA256
+        case HS256
         
-        /// The algorithm used with the signing
-        public var algorithm: Algorithm
+        /// HMAC SHA384
+        case HS384
         
-        /// The Signature's Content Type
-        public var signatureType: String?
+        /// HMAC SHA512
+        case HS512
         
-        /// The Payload's Content Type
-        public var payloadType: String?
-        
-        public var criticalFields: [String]?
-        
-        /// The algorithm to use for signing
-        public enum Algorithm : String, Codable {
-            /// HMAC SHA256
-            case HS256
-            
-            /// HMAC SHA384
-            case HS384
-            
-            /// HMAC SHA512
-            case HS512
-            
-            internal func sign(_ data: Data, with secret: Data) throws -> Data {
-                switch self {
-                case .HS256:
-                    return HMAC<SHA256>.authenticate(data, withKey: secret)
-                case .HS384:
-                    return HMAC<SHA384>.authenticate(data, withKey: secret)
-                case .HS512:
-                    return HMAC<SHA512>.authenticate(data, withKey: secret)
-                }
+        internal func sign(_ data: Data, with secret: Data) throws -> Data {
+            switch self {
+            case .HS256:
+                return HMAC<SHA256>.authenticate(data, withKey: secret)
+            case .HS384:
+                return HMAC<SHA384>.authenticate(data, withKey: secret)
+            case .HS512:
+                return HMAC<SHA512>.authenticate(data, withKey: secret)
             }
         }
     }
-    
+}
+
+/// JSON Web Signature (signature based JSON Web Token)
+public struct JSONWebSignature<C: Codable> : Codable {
     /// The headers linked to this message
     ///
     /// A Web Token can be signed by multiple headers
@@ -169,19 +169,19 @@ public struct JSONWebSignature<C: Codable> : Codable {
     }
 }
 
-extension JSONWebSignature.Header {
+extension Header {
     /// Creates a simple HMAC SHA256 header
-    public static func hs256() -> JSONWebSignature.Header {
-        return JSONWebSignature.Header(algorithm: .HS256, signatureType: nil, payloadType: nil, criticalFields: nil)
+    public static func hs256() -> Header {
+        return Header(algorithm: .HS256, signatureType: nil, payloadType: nil, criticalFields: nil)
     }
     
     /// Creates a simple HMAC SHA384 header
-    public static func hs384() -> JSONWebSignature.Header {
-        return JSONWebSignature.Header(algorithm: .HS384, signatureType: nil, payloadType: nil, criticalFields: nil)
+    public static func hs384() -> Header {
+        return Header(algorithm: .HS384, signatureType: nil, payloadType: nil, criticalFields: nil)
     }
     
     /// Creates a simple HMAC SHA512 header
-    public static func hs512() -> JSONWebSignature.Header {
-        return JSONWebSignature.Header(algorithm: .HS512, signatureType: nil, payloadType: nil, criticalFields: nil)
+    public static func hs512() -> Header {
+        return Header(algorithm: .HS512, signatureType: nil, payloadType: nil, criticalFields: nil)
     }
 }
