@@ -46,7 +46,7 @@ extension FutureType {
     /// completion of this future.
     ///
     /// Will *only* be executed if an error occurred.
-    //// Successful results will not call this handler.
+    /// Successful results will not call this handler.
     public func `catch`(callback: @escaping ErrorCallback) {
         addAwaiter { result in
             guard let er = result.error else {
@@ -55,6 +55,23 @@ extension FutureType {
 
             callback(er)
         }
+    }
+    
+    /// Adds a handler to be asynchronously executed on
+    /// completion of this future.
+    ///
+    /// Will *only* be executed if an error of the specified type occurred.
+    /// Successful results will not call this handler.
+    public func `catch`<E: Error>(_ type: E.Type, callback: @escaping ((E) -> ())) -> Self {
+        addAwaiter { result in
+            guard let er = result.error as? E else {
+                return
+            }
+            
+            callback(er)
+        }
+        
+        return self
     }
 
     /// Maps a future to a future of a different type.
