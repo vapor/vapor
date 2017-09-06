@@ -65,7 +65,7 @@ let package = Package(
         
         // HTTP
         .target(name: "CHTTP"),
-        .target(name: "HTTP", dependencies: ["CHTTP", "TCP"]),
+        .target(name: "HTTP", dependencies: ["CHTTP", "TCP", "Files"]),
         .testTarget(name: "HTTPTests", dependencies: ["HTTP"]),
 
         // Leaf
