@@ -23,7 +23,7 @@ class RouterTests: XCTestCase {
         do {
             var params = ParameterBag()
             let responder = router.route(
-                path: ["GET", "foo", "bar", "baz"],
+                request: Request(method: .get, uri: URI(path: "/foo/bar/baz")),
                 parameters: &params
             )
 
@@ -35,7 +35,7 @@ class RouterTests: XCTestCase {
         do {
             var params = ParameterBag()
             let responder = router.route(
-                path: ["GET", "hello", "world"],
+                request: Request(method: .get, uri: URI(path: "/hello/world")),
                 parameters: &params
             )
 
@@ -47,7 +47,7 @@ class RouterTests: XCTestCase {
         do {
             var params = ParameterBag()
             let responder = router.route(
-                path: ["GET", "users", "bob", "comments"],
+                request: Request(method: .get, uri: URI(path: "/users/bob/comments")),
                 parameters: &params
             )
 
