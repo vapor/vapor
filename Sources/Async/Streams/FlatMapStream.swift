@@ -45,8 +45,8 @@ public final class FlatMapStream<In, Out>: Stream {
     public let transform: FlatMapClosure
     
     /// Create a new Map stream with the supplied closure.
-    public init(map: @escaping FlatMapClosure) {
-        self.transform = map
+    public init(transform: @escaping FlatMapClosure) {
+        self.transform = transform
     }
     
     /// See InputStream.inputStream
@@ -63,7 +63,7 @@ public final class FlatMapStream<In, Out>: Stream {
 
 extension OutputStream {
     public func flatMap<T>(_ transform: @escaping ((Output) throws -> (T?))) -> FlatMapStream<Output, T> {
-        let stream = FlatMapStream(map: transform)
+        let stream = FlatMapStream(transform: transform)
         self.drain(into: stream)
         return stream
     }

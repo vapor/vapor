@@ -40,8 +40,8 @@ public final class MapStream<In, Out>: Stream {
     public let transform: MapClosure
 
     /// Create a new Map stream with the supplied closure.
-    public init(map: @escaping MapClosure) {
-        self.transform = map
+    public init(transform: @escaping MapClosure) {
+        self.transform = transform
     }
 
     /// See InputStream.inputStream
@@ -57,7 +57,7 @@ public final class MapStream<In, Out>: Stream {
 
 extension OutputStream {
     public func map<T>(_ transform: @escaping ((Output) throws -> (T))) -> MapStream<Output, T> {
-        let stream = MapStream(map: transform)
+        let stream = MapStream(transform: transform)
         self.drain(into: stream)
         
         return stream
