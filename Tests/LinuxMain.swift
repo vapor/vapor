@@ -10,6 +10,7 @@ import XCTest
 @testable import RoutingTests
 @testable import ServiceTests
 @testable import TCPTests
+@testable import ValidationTests
 @testable import VaporTests
 @testable import WebSocketTests
 
@@ -50,6 +51,9 @@ XCTMain([
 
     // TCP
     testCase(SocketsTests.allTests),
+
+    // Validation
+    testCase(ValidationTests.allTests),
 
     // Vapor
     testCase(ApplicationTests.allTests),

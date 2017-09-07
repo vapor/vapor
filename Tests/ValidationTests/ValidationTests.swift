@@ -66,6 +66,14 @@ class ValidationTests: XCTestCase {
     func expectSuccess(_ error: ErrorMessage?) {
         XCTAssertNil(error)
     }
+    
+    static var allTests = [
+        ("testStringValidation", testStringValidation),
+        ("testBooleans", testBooleans),
+        ("testAssert", testAssert),
+        ("testValidatable", testValidatable),
+        ("testEmailValidation", testEmailValidation),
+    ]
 }
 
 struct User : Validatable {
