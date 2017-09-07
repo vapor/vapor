@@ -37,7 +37,7 @@ XCTMain([
     testCase(SerializerTests.allTests),
 
     // JWT
-    testCase(JWTTests.allTests),
+    testCase(JWSTests.allTests),
 
     // Leaf
     testCase(LeafTests.allTests),
