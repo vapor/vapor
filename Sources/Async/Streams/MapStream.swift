@@ -37,17 +37,17 @@ public final class MapStream<In, Out>: Stream {
     public typealias MapClosure = (In) throws -> (Out)
 
     /// The stored map closure
-    public let map: MapClosure
+    public let transform: MapClosure
 
     /// Create a new Map stream with the supplied closure.
     public init(map: @escaping MapClosure) {
-        self.map = map
+        self.transform = map
     }
 
     /// See InputStream.inputStream
     public func inputStream(_ input: In) {
         do {
-            let output = try map(input)
+            let output = try transform(input)
             outputStream?(output)
         } catch {
             errorStream?(error)
