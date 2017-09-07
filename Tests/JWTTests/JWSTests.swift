@@ -40,8 +40,7 @@ class JWSTests: XCTestCase {
     }
     
     static var allTests: [(String, (JWSTests) -> () throws -> Void)] = [
-        ("testBasics", testBasics),
-        ("testSuccess", testSuccess),
+        ("testBasics", testBasics)
     ]
 }
 
