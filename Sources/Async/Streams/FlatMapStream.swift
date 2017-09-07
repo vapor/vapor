@@ -4,15 +4,15 @@
 /// Example using a data buffer emmitter and a data->string flatmapper:
 ///
 ///     let dataEmitter = EmitterStream(Data.self)
-///     let squareMapStream = FlatMapStream<Data, String> { data in
+///     let stringFlatMapStream = FlatMapStream<Data, String> { data in
 ///         // If initialization fails,
 ///         return String(bytes: data, encoding: .utf8)
 ///     }
 ///
-///     var squares: [String] = []
+///     var strings: [String] = []
 ///
-///     dataEmitter.stream(to: squareMapStream).drain { square in
-///         squares.append(square)
+///     dataEmitter.stream(to: stringFlatMapStream).drain { string in
+///         strings(string)
 ///     }
 ///
 ///     dataEmitter.emit(Data("one".utf8))
@@ -23,7 +23,7 @@
 ///     dataEmitter.emit(Data([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10] as [UInt8))
 ///
 ///     // The invalid string didn't get serialized (resulting in `nil`), which was flatMapped out
-///     print(squares) // ["one", "two", "three"]
+///     print(strings) // ["one", "two", "three"]
 ///
 public final class FlatMapStream<In, Out>: Stream {
     /// See InputStream.Input
