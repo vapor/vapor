@@ -85,6 +85,7 @@ let package = Package(
             "Core",
             "Debugging",
             "HTTP",
+            "Leaf",
             "Routing",
             "Service",
             "TCP",
