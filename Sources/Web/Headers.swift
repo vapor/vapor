@@ -9,7 +9,10 @@
 /// ```
 public struct Headers: Codable {
     var storage: [Name: [String]]
-
+    
+    public init(storage: [Name: [String]]) {
+        self.storage = storage
+    }
     
     public subscript(name: Name) -> String? {
         get {
@@ -38,7 +41,7 @@ public struct Headers: Codable {
             return String(remainder[remainder.startIndex..<end])
         }
     }
-
+    
     
     public subscript(valuesFor name: Name) -> [String] {
         get { return storage[name] ?? [] }
@@ -61,19 +64,19 @@ extension Headers {
     /// :nodoc:
     public struct Literal : ExpressibleByDictionaryLiteral {
         let fields: [(name: Name, value: String)]
-
+        
         public init(dictionaryLiteral: (Name, String)...) {
             fields = dictionaryLiteral
         }
     }
-
+    
     /// Appends a header to the headers
     public mutating func append(_ literal: Headers.Literal) {
         for (name, value) in literal.fields {
             storage[name, default: []].append(value)
         }
     }
-
+    
     /// Replaces a header in the headers
     public mutating func replace(_ literal: Headers.Literal) {
         for (name, _) in literal.fields {
@@ -90,16 +93,16 @@ extension Headers : Sequence {
     public func makeIterator() -> AnyIterator<(name: Name, value: String)> {
         return AnyIterator(StorageIterator(storage.makeIterator()))
     }
-
+    
     struct StorageIterator : IteratorProtocol {
         var headers: DictionaryIterator<Name, [String]>
         var header: (name: Name, values: IndexingIterator<[String]>)?
-
+        
         init(_ iterator: DictionaryIterator<Name, [String]>) {
             headers = iterator
             header = headers.next().map { (name: $0.key, values: $0.value.makeIterator()) }
         }
-
+        
         mutating func next() -> (name: Name, value: String)? {
             while header != nil {
                 if let value = header!.values.next() {
@@ -120,39 +123,39 @@ extension Headers {
         let original: String
         let lowercased: String
         public let hashValue: Int
-
+        
         /// Create a HTTP header name with the provided String.
         public init(_ name: String) {
             original = name
             lowercased = name.lowercased()
             hashValue = lowercased.hashValue
         }
-
+        
         public init(stringLiteral: String) {
             self.init(stringLiteral)
         }
-
+        
         public init(unicodeScalarLiteral: String) {
             self.init(unicodeScalarLiteral)
         }
-
+        
         public init(extendedGraphemeClusterLiteral: String) {
             self.init(extendedGraphemeClusterLiteral)
         }
-
+        
         /// :nodoc:
         public var description: String {
             return original
         }
-
+        
         /// :nodoc:
         public static func == (lhs: Name, rhs: Name) -> Bool {
             return lhs.lowercased == rhs.lowercased
         }
-
+        
         // https://www.iana.org/assignments/message-headers/message-headers.xhtml
         // Permanent Message Header Field Names
-
+        
         /// A-IM header.
         public static let aIM = Name("A-IM")
         /// Accept header.
@@ -457,7 +460,7 @@ extension Headers {
         public static let warning = Name("Warning")
         /// X-Frame-Options header.
         public static let xFrameOptions = Name("X-Frame-Options")
-
+        
         // https://www.iana.org/assignments/message-headers/message-headers.xhtml
         // Provisional Message Header Field Names
         /// Access-Control header.
@@ -530,3 +533,4 @@ extension Headers {
         public static let xDeviceUserAgent = Name("X-Device-User-Agent")
     }
 }
+

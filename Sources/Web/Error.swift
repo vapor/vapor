@@ -2,7 +2,7 @@ import Debugging
 import Foundation
 import libc
 
-/// Errors that can be thrown while working with HTTP.
+/// Errors that can be thrown while working with Web related objects.
 public struct Error: Traceable, Debuggable, Swift.Error {
     public static let readableName = "HTTP Error"
     public let identifier: String
@@ -12,7 +12,7 @@ public struct Error: Traceable, Debuggable, Swift.Error {
     public var line: UInt
     public var column: UInt
     public var stackTrace: [String]
-
+    
     public init(
         identifier: String,
         reason: String,
@@ -20,7 +20,7 @@ public struct Error: Traceable, Debuggable, Swift.Error {
         function: String = #function,
         line: UInt = #line,
         column: UInt = #column
-    ) {
+        ) {
         self.identifier = identifier
         self.reason = reason
         self.file = file
@@ -29,13 +29,13 @@ public struct Error: Traceable, Debuggable, Swift.Error {
         self.column = column
         self.stackTrace = Error.makeStackTrace()
     }
-
+    
     public static func invalidMessage(
         file: String = #file,
         function: String = #function,
         line: UInt = #line,
         column: UInt = #column
-    ) -> Error {
+        ) -> Error {
         return Error(
             identifier: "invalidMessage",
             reason: "Unable to parse invalid HTTP message.",
@@ -45,14 +45,14 @@ public struct Error: Traceable, Debuggable, Swift.Error {
             column: column
         )
     }
-
+    
     public static func contentRequired(
         _ type: Any.Type,
         file: String = #file,
         function: String = #function,
         line: UInt = #line,
         column: UInt = #column
-    ) -> Error {
+        ) -> Error {
         return Error(
             identifier: "contentRequired",
             reason: "\(type) content required.",
@@ -63,6 +63,7 @@ public struct Error: Traceable, Debuggable, Swift.Error {
         )
     }
 }
+
 
 
 

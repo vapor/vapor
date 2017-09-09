@@ -2,6 +2,7 @@ import CHTTP
 import Async
 import Bits
 import Foundation
+import Web
 
 /// Parses requests from a readable stream.
 public final class ResponseParser: CParser, Async.Stream {

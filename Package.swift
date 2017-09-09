@@ -65,13 +65,13 @@ let package = Package(
         
         // HTTP
         .target(name: "CHTTP"),
-        .target(name: "HTTP", dependencies: ["CHTTP", "TCP", "Files"]),
+        .target(name: "HTTP", dependencies: ["CHTTP", "TCP", "Files", "Web"]),
         .testTarget(name: "HTTPTests", dependencies: ["HTTP"]),
 
         // Leaf
         .target(name: "Leaf", dependencies: ["Core", "Service", "Files"]),
         .testTarget(name: "LeafTests", dependencies: ["Leaf"]),
-
+        
         // MySQL
         .target(name: "MySQL", dependencies: ["TCP", "Crypto"]),
         .testTarget(name: "MySQLTests", dependencies: ["MySQL"]),
@@ -79,6 +79,10 @@ let package = Package(
         // Network
         .target(name: "TCP", dependencies: ["Debugging", "Async", "Bits", "libc"]),
         .testTarget(name: "TCPTests", dependencies: ["TCP"]),
+        
+        // Web
+        .target(name: "Web", dependencies: ["Files"]),
+        .testTarget(name: "WebTests", dependencies: ["Web"]),
         
         // WebSocket
         .target(name: "WebSocket", dependencies: ["Core", "Debugging", "TCP", "HTTP", "Crypto"]),
