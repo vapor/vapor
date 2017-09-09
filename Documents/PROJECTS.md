@@ -17,6 +17,7 @@ People have built some awesome things with Vapor, and we can't wait to see what 
 * [SwiftyBot](#swiftybot) - a simple Telegram bot
 * [TinyFaces](#tinyfaces) - an api with random avatars that can be used by designers in their designs
 * [Geobot](#geobot) - a simple chat bot built using Wit.ai and Vapor
+* [HomeKitty](#homekitty) - a crowdsourced HomeKit database
 
 # PDX Cocoaheads
 
@@ -207,3 +208,10 @@ A simple [Wit.ai](https://wit.ai) chat bot powered by Vapor.
 
 ### Site
 [Demo](https://geobot-swift.herokuapp.com)
+
+# HomeKitty
+
+A crowdsourced HomeKit-compatible accessories database.
+
+### Site
+[HomeKitty](https://homekitty.world)
