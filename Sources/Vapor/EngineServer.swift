@@ -74,5 +74,6 @@ public struct EngineServerConfig {
         self.port = port
         self.backlog = backlog
         self.workerCount = workerCount
+        self.maximumRequestSize = maximumRequestSize
     }
 }
