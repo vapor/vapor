@@ -18,7 +18,7 @@ class PBKDF2Tests: XCTestCase {
         ]
         
         for test in tests {
-            let result = try PBKDF2<SHA1>.derive(fromPassword: Data(test.key.utf8), saltedWith: Data(test.salt.utf8), iterating: test.iterations, derivedKeyLength: SHA1.digestSize).hexString.lowercased()
+            let result = try PBKDF2<SHA1>.deriveKey(fromPassword: Data(test.key.utf8), saltedWith: Data(test.salt.utf8), iterating: test.iterations, derivedKeyLength: SHA1.digestSize).hexString.lowercased()
             
             XCTAssertEqual(result, test.expected.lowercased())
         }
@@ -34,7 +34,7 @@ class PBKDF2Tests: XCTestCase {
         ]
         
         for test in tests {
-            let result = try PBKDF2<MD5>.derive(fromPassword: Data(test.key.utf8), saltedWith: Data(test.salt.utf8), iterating: test.iterations, derivedKeyLength: MD5.digestSize).hexString.lowercased()
+            let result = try PBKDF2<MD5>.deriveKey(fromPassword: Data(test.key.utf8), saltedWith: Data(test.salt.utf8), iterating: test.iterations, derivedKeyLength: MD5.digestSize).hexString.lowercased()
             
             XCTAssertEqual(result, test.expected.lowercased())
         }
@@ -43,7 +43,7 @@ class PBKDF2Tests: XCTestCase {
     func testPerformance() {
         // ~0.137 release
         measure {
-            _ = try! PBKDF2<SHA1>.derive(fromPassword: Data("p".utf8), saltedWith: Data("somewhatlongsaltstringthatIwanttotest".utf8), iterating: 10_000, derivedKeyLength: SHA1.digestSize)
+            _ = try! PBKDF2<SHA1>.deriveKey(fromPassword: Data("p".utf8), saltedWith: Data("somewhatlongsaltstringthatIwanttotest".utf8), iterating: 10_000, derivedKeyLength: SHA1.digestSize)
         }
     }
 }
