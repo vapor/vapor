@@ -147,8 +147,8 @@ public final class Base64Encoder : Base64 {
     /// Creates a new Base64 encoder
     ///
     /// - parameter allocatedCapacity: The expected (maximum) size of each buffer inputted into this stream
-    public init(allocatedCapacity: Int = 65_507) {
-        self.allocatedCapacity = (allocatedCapacity / 3) * 4 &+ ((allocatedCapacity % 3 > 0) ? 1 : 0)
+    public init(decodedCapacity: Int = 65_507) {
+        self.allocatedCapacity = (decodedCapacity / 3) * 4 &+ ((decodedCapacity % 3 > 0) ? 1 : 0)
         self.pointer = MutableBytesPointer.allocate(capacity: self.allocatedCapacity)
         self.pointer.initialize(to: 0, count: self.allocatedCapacity)
     }
