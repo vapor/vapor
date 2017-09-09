@@ -39,7 +39,7 @@ public final class PBKDF2<Variant: Hash> {
     /// - returns: The derived key bytes
     public static func deriveKey(fromPassword password: Data, saltedWith salt: Data, iterating iterations: Int = 10_000, derivedKeyLength keySize: Int? = Variant.digestSize) throws -> Data {
         // Used to create a block number to append to the salt before deriving
-        func integerBytes(blockNum block: UInt32) -> Data {
+        func integerData(blockNum block: UInt32) -> Data {
             var bytes = Data(repeating: 0, count: 4)
             bytes[0] = UInt8((block >> 24) & 0xFF)
             bytes[1] = UInt8((block >> 16) & 0xFF)
@@ -106,7 +106,7 @@ public final class PBKDF2<Variant: Hash> {
         
         // Loop over all blocks
         for block in 1...blocks {
-            let s = salt + integerBytes(blockNum: block)
+            let s = salt + integerData(blockNum: block)
             
             // Iterate the first time
             var ui = try authenticate(innerPadding: innerPadding, outerPadding: outerPadding, message: s)
@@ -127,7 +127,7 @@ public final class PBKDF2<Variant: Hash> {
     
     /// Validates a password using HMAC based PBKDF2<Variant>
     public static func validate(_ password: Data, saltedWith salt: Data, against: Data, iterating iterations: Int) throws -> Bool {
-        let newHash = try derive(fromPassword: password, saltedWith: salt, iterating: iterations, derivedKeyLength: against.count)
+        let newHash = try deriveKey(fromPassword: password, saltedWith: salt, iterating: iterations, derivedKeyLength: against.count)
         
         return newHash == against
     }
