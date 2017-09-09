@@ -27,7 +27,7 @@ internal final class CParseResults {
     public let maximumSize: Int
 
     /// Creates a new results object
-    init(maximumSize: Int = 10_000_000) {
+    init(maximumSize: Int) {
         self.isComplete = false
         self.headers = [:]
         self.headerState = .none
@@ -39,9 +39,9 @@ internal final class CParseResults {
 
 extension CParseResults {
     /// Sets the parse results object on a C parser
-    static func set(on parser: inout http_parser) -> CParseResults {
+    static func set(on parser: inout http_parser, maximumSize: Int) -> CParseResults {
         let results = UnsafeMutablePointer<CParseResults>.allocate(capacity: 1)
-        let new = CParseResults()
+        let new = CParseResults(maximumSize: maximumSize)
         results.initialize(to: new)
         parser.data = UnsafeMutableRawPointer(results)
         return new

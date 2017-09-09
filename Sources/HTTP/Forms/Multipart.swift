@@ -29,13 +29,13 @@ public struct Multipart {
     public func getString(forName name: String) throws -> String {
         for part in parts where part.key == name {
             guard let string = String(bytes: part.data, encoding: .utf8) else {
-                throw Error(identifier: "http:multipart:invalid-utf8-string", reason: "The part could not be deserialized as UTF-8")
+                throw Error(identifier: "multipart:invalid-utf8-string", reason: "The part could not be deserialized as UTF-8")
             }
             
             return string
         }
         
-        throw Error(identifier: "http:multipart:no-part", reason: "There is no part with the provided name")
+        throw Error(identifier: "multipart:no-part", reason: "There is no part with the provided name")
     }
     
     public func getFile(forName name: String) throws -> File {
@@ -44,7 +44,7 @@ public struct Multipart {
             return File(named: name, data: part.data)
         }
         
-        throw Error(identifier: "http:multipart:no-part", reason: "There is no part with the provided name")
+        throw Error(identifier: "multipart:no-part", reason: "There is no part with the provided name")
     }
     
     public func getFiles(forName name: String) -> [File] {

@@ -69,7 +69,7 @@ extension Request {
         version: Version = Version(major: 1, minor: 1),
         headers: Headers = Headers(),
         json: JSONEncodable
-        ) throws {
+    ) throws {
         try self.init(method: method, uri: uri, version: version, headers: headers, body: Body(json.encodeJSON()))
     }
 }

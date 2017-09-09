@@ -19,7 +19,8 @@ public final class EngineServer: Server {
 
         // setup the server pipeline
         server.drain { client in
-            let parser = HTTP.RequestParser(queue: client.tcp.queue)
+            let parser = HTTP.RequestParser(queue: client.tcp.queue,
+                                            maximumSize: self.config.maximumRequestSize)
             let responderStream = responder.makeStream()
             let serializer = HTTP.ResponseSerializer()
 
@@ -58,13 +59,16 @@ public struct EngineServerConfig {
     /// Number of client accepting workers.
     /// Should be equal to the number of logical cores.
     public let workerCount: Int
+    
+    public let maximumRequestSize: Int
 
     /// Creates a new engine server config
     public init(
         hostname: String = "localhost",
         port: UInt16 = 8080,
         backlog: Int32 = 4096,
-        workerCount: Int = 8
+        workerCount: Int = 8,
+        maximumRequestSize: Int = 10_000_000
     ) {
         self.hostname = hostname
         self.port = port
