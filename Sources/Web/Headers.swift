@@ -10,10 +10,12 @@
 public struct Headers: Codable {
     var storage: [Name: [String]]
     
+    /// Creates a new Headers object from parsed data
     public init(storage: [Name: [String]]) {
         self.storage = storage
     }
     
+    /// Fetches the first value matching the header name
     public subscript(name: Name) -> String? {
         get {
             guard let value = storage[name] else { return nil }
@@ -29,6 +31,11 @@ public struct Headers: Codable {
         }
     }
     
+    /// https://tools.ietf.org/html/rfc2616#section-3.6
+    ///
+    /// "Parameters are in  the form of attribute/value pairs."
+    ///
+    /// From a header + attribute, this subscript will fetch a value
     public subscript(name: Name, attribute: String) -> String? {
         get {
             guard let header = self[name] else { return nil }
@@ -42,7 +49,7 @@ public struct Headers: Codable {
         }
     }
     
-    
+    /// Fetches all headers for a header name
     public subscript(valuesFor name: Name) -> [String] {
         get { return storage[name] ?? [] }
         set { storage[name] = newValue.isEmpty ? nil : newValue }
