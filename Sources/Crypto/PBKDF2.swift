@@ -21,7 +21,23 @@ public final class PBKDF2<Variant: Hash> {
     /// - throws: Too little iterations
     ///
     /// - returns: The derived key bytes
-    public static func derive(fromPassword password: Data, saltedWith salt: Data, iterating iterations: Int = 10_000, derivedKeyLength keySize: Int? = nil) throws -> Data {
+    public static func deriveKey(fromPassword password: String, saltedWith salt: Data, iterating iterations: Int = 10_000, derivedKeyLength keySize: Int? = Variant.digestSize) throws -> Data {
+        return try deriveKey(fromPassword: Data(password.utf8), saltedWith: salt, iterating: iterations, derivedKeyLength: keySize)
+    }
+    
+    /// Derives a key from a given set of parameters
+    ///
+    /// - parameter password: The password to hash
+    /// - parameter salt: The random salt that should be unique to the user's credentials, used for preventing Rainbow Tables
+    /// - parameter iterations: The amount of iterations to use for strengthening the key, higher is stronger/safer but also slower
+    /// - parameter keySize: The amount of bytes to output
+    ///
+    /// - throws: Invalid input bytes for password or salt
+    /// - throws: Too large amount of key bytes requested
+    /// - throws: Too little iterations
+    ///
+    /// - returns: The derived key bytes
+    public static func deriveKey(fromPassword password: Data, saltedWith salt: Data, iterating iterations: Int = 10_000, derivedKeyLength keySize: Int? = Variant.digestSize) throws -> Data {
         // Used to create a block number to append to the salt before deriving
         func integerBytes(blockNum block: UInt32) -> Data {
             var bytes = Data(repeating: 0, count: 4)
