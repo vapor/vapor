@@ -45,7 +45,8 @@ public final class TrieRouter: Router {
     }
 
     /// See Router.route()
-    public func route(request: Request, parameters: inout ParameterBag) -> Responder? {
+    public func route(request: Request) -> Responder? {
+        var parameters = request.parameters
         let path = [request.method.string] + request.uri.path.split(separator: "/").map(String.init)
         
         // always start at the root node

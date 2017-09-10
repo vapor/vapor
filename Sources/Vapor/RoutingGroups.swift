@@ -15,8 +15,8 @@ public final class Group : Router {
         self.super.register(route: route)
     }
     
-    public func route(request: Request, parameters: inout ParameterBag) -> Responder? {
-        return self.super.route(request: request, parameters: &parameters)
+    public func route(request: Request) -> Responder? {
+        return self.super.route(request: request)
     }
 }
 
