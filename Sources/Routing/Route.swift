@@ -4,13 +4,13 @@ import Core
 /// A route. When registered to a router, replies to `Request`s using the `Responder`.
 public final class Route : Extendable {
     /// The path at which the route is assigned
-    public var path: [PathComponent]
+    public internal(set) var path: [PathComponent]
     
     /// The method that this route responds to
-    public var method: Method
+    public internal(set) var method: Method
     
     /// The responder. Used to respond to a `Request`
-    public var responder: Responder
+    public internal(set) var responder: Responder
     
     /// A storage place to extend the `Route` with.
     /// Can store metadata like Documentation/Route descriptions
