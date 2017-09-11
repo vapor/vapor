@@ -52,3 +52,16 @@ public final class OutputStreamSplitter<O: OutputStream> {
         self.splits.append(closure)
     }
 }
+
+extension OutputStream {
+    @discardableResult
+    public func split<S: Sequence, I: InputStream>(into inputStreams: S) -> OutputStreamSplitter<Self> where S.Iterator.Element == I, I.Input == Output {
+        let splitStream = OutputStreamSplitter(self)
+        
+        for stream in inputStreams {
+            splitStream.split(closure: stream.inputStream)
+        }
+        
+        return splitStream
+    }
+}

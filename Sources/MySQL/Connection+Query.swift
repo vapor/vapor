@@ -1,5 +1,5 @@
+import Async
 import Foundation
-import Core
 
 extension Table {
     static func forEach(_ sql: String, on connection: Connection, _ handler: @escaping ((Self) -> ())) throws {

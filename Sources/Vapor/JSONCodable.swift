@@ -6,13 +6,13 @@ import Foundation
 /// Can be encoded as JSON data.
 public protocol JSONEncodable: Encodable {
     /// Encodes JSON representation to supplied Data.
-    func encodeJSON(to data: inout Data) throws
+    func encodeJSON() throws -> Data
 }
 
 extension JSONEncodable {
     /// See JSONEncodable.encode
-    public func encodeJSON(to data: inout Data) throws {
-        data = try JSONEncoder().encode(self)
+    public func encodeJSON() throws -> Data {
+        return try JSONEncoder().encode(self)
     }
 }
 
@@ -55,6 +55,33 @@ extension JSONEncodable where Self: ContentEncodable {
     /// See ContentEncodable.encode
     public func encodeContent(to message: Message) throws {
         message.mediaType = .json
-        return try encodeJSON(to: &message.body.data)
+        message.body.data = try encodeJSON()
+    }
+}
+
+// MARK: Request & Response
+
+extension Request {
+    /// Create a new HTTP request using a JSONEncodable.
+    public convenience init(
+        method: HTTP.Method = .get,
+        uri: URI = URI(),
+        version: Version = Version(major: 1, minor: 1),
+        headers: Headers = Headers(),
+        json: JSONEncodable
+    ) throws {
+        try self.init(method: method, uri: uri, version: version, headers: headers, body: Body(json.encodeJSON()))
+    }
+}
+
+extension Response {
+    /// Create a new HTTP response using a JSONEncodable.
+    public convenience init(
+        version: Version = Version(major: 1, minor: 1),
+        status: Status = .ok,
+        headers: Headers = Headers(),
+        json: JSONEncodable
+        ) throws {
+        try self.init(version: version, status: status, headers: headers, body: Body(json.encodeJSON()))
     }
 }

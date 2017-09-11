@@ -1,5 +1,4 @@
-//import Core
-//
+////
 //class ResultStream<Result> : InputStream {
 //    typealias Input = Result
 //    

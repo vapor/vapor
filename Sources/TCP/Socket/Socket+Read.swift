@@ -1,7 +1,7 @@
-import Core
 import Dispatch
 import Foundation
 import libc
+import Bits
 
 extension Socket {
     /// Read data from the socket into the supplied buffer.

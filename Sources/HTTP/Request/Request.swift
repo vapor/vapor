@@ -1,5 +1,5 @@
-import Core
 import Foundation
+import Core
 
 /// An HTTP request.
 ///

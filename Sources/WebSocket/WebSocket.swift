@@ -1,5 +1,5 @@
+import Bits
 import Foundation
-import Core
 import HTTP
 import Crypto
 import TCP

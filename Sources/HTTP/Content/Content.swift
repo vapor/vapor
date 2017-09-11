@@ -20,6 +20,7 @@ public protocol ContentEncodable {
 // MARK: Message
 
 extension Message {
+    /// The mediatype for this message
     public var mediaType: MediaType? {
         get {
             guard let contentType = headers[.contentType] else {
@@ -35,16 +36,21 @@ extension Message {
 }
 
 extension Message {
-    public func content<C: ContentEncodable>(_ encodable: C) throws {
+    /// Encodes this message from the provided `ContentEncodable` instance
+    public func encode<C: ContentEncodable>(from encodable: C) throws {
         try encodable.encodeContent(to: self)
     }
 
-    public func content<C: ContentDecodable>(_ decodable: C.Type = C.self) throws -> C? {
+    /// Decodes this message into the provided `ContentDecodable` type
+    public func decode<C: ContentDecodable>(to decodable: C.Type = C.self) throws -> C? {
         return try decodable.decodeContent(from: self)
     }
 
-    public func requireContent<C: ContentDecodable>(_ decodable: C.Type = C.self) throws -> C {
-        guard let content = try self.content(C.self) else {
+    /// Extracts this message as the provided `ContentDecodable`
+    ///
+    /// Throws an error if decoding returned `nil`
+    public func requireContent<C: ContentDecodable>(as decodable: C.Type = C.self) throws -> C {
+        guard let content = try self.decode(to: C.self) else {
             throw Error.contentRequired(C.self)
         }
 

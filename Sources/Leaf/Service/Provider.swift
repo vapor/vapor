@@ -1,4 +1,5 @@
-import Core
+import Files
+import Async
 import Dispatch
 import Foundation
 import Service
@@ -20,7 +21,7 @@ public struct LeafConfig {
         return LeafConfig(
             tags: defaultTags
         ) { queue in
-            return File(queue: queue)
+            return CachedFileSystem(queue: queue)
         }
     }
 }

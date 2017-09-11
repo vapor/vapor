@@ -1,7 +1,7 @@
 import Dispatch
 
 /// A socket event.
-public typealias SocketEvent = () -> ()
+//public typealias SocketEvent = () -> ()
 
 extension Socket {
 //    /// The socket event will be called on the supplied queue

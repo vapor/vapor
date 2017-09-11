@@ -20,12 +20,18 @@ internal final class CParseResults {
     var headers: [Headers.Name: [String]]
     var body: DispatchData?
     var url: DispatchData?
+    
+    /// The maximum size of a request in bytes
+    ///
+    /// 10MB by default
+    public let maximumSize: Int
 
     /// Creates a new results object
-    init() {
+    init(maximumSize: Int) {
         self.isComplete = false
         self.headers = [:]
         self.headerState = .none
+        self.maximumSize = maximumSize
     }
 }
 
@@ -33,9 +39,9 @@ internal final class CParseResults {
 
 extension CParseResults {
     /// Sets the parse results object on a C parser
-    static func set(on parser: inout http_parser) -> CParseResults {
+    static func set(on parser: inout http_parser, maximumSize: Int) -> CParseResults {
         let results = UnsafeMutablePointer<CParseResults>.allocate(capacity: 1)
-        let new = CParseResults()
+        let new = CParseResults(maximumSize: maximumSize)
         results.initialize(to: new)
         parser.data = UnsafeMutableRawPointer(results)
         return new

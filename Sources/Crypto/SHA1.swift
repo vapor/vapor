@@ -1,5 +1,5 @@
-import Core
 import Foundation
+import Bits
 
 public final class SHA1 : Hash {
     public static let digestSize = 20

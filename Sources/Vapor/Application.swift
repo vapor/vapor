@@ -1,4 +1,5 @@
 import Core
+import Async
 import Dispatch
 import Foundation
 import HTTP

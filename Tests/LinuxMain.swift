@@ -1,7 +1,9 @@
 #if os(Linux)
 
 import XCTest
-@testable import CoreTests
+@testable import AsyncTests
+@testable import FilesTests
+@testable import BitsTests
 @testable import CryptoTests
 @testable import DebuggingTests
 @testable import HTTPTests
@@ -14,7 +16,7 @@ import XCTest
 @testable import WebSocketTests
 
 XCTMain([
-    // Core
+    // Async
     testCase(FutureTests.allTests),
     testCase(StreamTests.allTests),
 

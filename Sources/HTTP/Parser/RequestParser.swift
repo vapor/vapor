@@ -1,5 +1,5 @@
 import CHTTP
-import Core
+import Bits
 import Dispatch
 import Foundation
 
@@ -19,9 +19,13 @@ public final class RequestParser: CParser {
 
     /// Queue to be set on messages created by this parser.
     private let queue: DispatchQueue
+    
+    // The maximum amount of bytes to parse
+    private let maximumSize: Int
 
     /// Creates a new Request parser.
-    public init(queue: DispatchQueue) {
+    public init(queue: DispatchQueue, maximumSize: Int = 10_000_000) {
+        self.maximumSize = maximumSize
         self.parser = http_parser()
         self.settings = http_parser_settings()
         self.state = .ready
@@ -58,7 +62,7 @@ public final class RequestParser: CParser {
         case .ready:
             // create a new results object and set
             // a reference to it on the parser
-            let newResults = CParseResults.set(on: &parser)
+            let newResults = CParseResults.set(on: &parser, maximumSize: maximumSize)
             results = newResults
             state = .parsing
         case .parsing:

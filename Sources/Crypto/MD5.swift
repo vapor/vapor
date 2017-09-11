@@ -5,7 +5,7 @@
 //  Created by Joannis Orlandos on 06/08/2017.
 //
 
-import Core
+import Bits
 import Foundation
 
 fileprivate let s: [UInt32] = [ 7, 12, 17, 22,  7, 12, 17, 22,  7, 12, 17, 22,  7, 12, 17, 22,

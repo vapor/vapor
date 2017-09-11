@@ -1,4 +1,5 @@
 import Foundation
+import Async
 
 /// Capable of caching file data asynchronously.
 public protocol FileCache {

@@ -1,4 +1,4 @@
-import Core
+import Async
 
 protocol ResultsStream : Stream {
     associatedtype Input = Packet

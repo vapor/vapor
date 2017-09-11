@@ -1,9 +1,10 @@
-import Core
+import Bits
 import Dispatch
 import Foundation
+import Async
 
 /// Internal Swift HTTP serializer protocol.
-internal protocol Serializer: Core.Stream { }
+internal protocol Serializer: Async.Stream { }
 
 extension Serializer {
     internal func serialize(header name: Headers.Name, value: String) -> DispatchData {

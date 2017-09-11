@@ -1,10 +1,11 @@
-import Core
+import Async
 import Dispatch
 import HTTP
 import TCP
+import Async
 
 /// Manages frames to and from a TCP connection
-internal final class Connection: Core.Stream {
+internal final class Connection: Async.Stream {
     internal typealias Input = Frame
     internal typealias Output = Frame
 

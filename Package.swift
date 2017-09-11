@@ -38,9 +38,17 @@ let package = Package(
     ],
     dependencies: [],
     targets: [
+        // Async
+        .target(name: "Async", dependencies: ["Debugging"]),
+        .testTarget(name: "AsyncTests", dependencies: ["Async"]),
+        
+        // Bits
+        .target(name: "Bits"),
+        .testTarget(name: "BitsTests", dependencies: ["Bits"]),
+        
         // Core
-        .target(name: "Core", dependencies: ["libc", "Debugging"]),
-        .testTarget(name: "CoreTests", dependencies: ["Core"]),
+        .target(name: "Core", dependencies: ["libc", "Debugging", "Async"]),
+//        .testTarget(name: "CoreTests", dependencies: ["Core"]),
         .target(name: "libc"),
 
         // Crypto
@@ -50,22 +58,31 @@ let package = Package(
         // Debugging
         .target(name: "Debugging"),
         .testTarget(name: "DebuggingTests", dependencies: ["Debugging"]),
+        
+        // Files
+        .target(name: "Files", dependencies: ["libc", "Core"]),
+        .testTarget(name: "FilesTests", dependencies: ["Files"]),
+        
+        // HTTP
+        .target(name: "CHTTP"),
+        .target(name: "HTTP", dependencies: ["CHTTP", "TCP", "Files", "Web"]),
+        .testTarget(name: "HTTPTests", dependencies: ["HTTP"]),
 
         // Leaf
-        .target(name: "Leaf", dependencies: ["Core", "Service"]),
+        .target(name: "Leaf", dependencies: ["Core", "Service", "Files"]),
         .testTarget(name: "LeafTests", dependencies: ["Leaf"]),
-
+        
         // MySQL
-
         .target(name: "MySQL", dependencies: ["TCP", "Crypto"]),
         .testTarget(name: "MySQLTests", dependencies: ["MySQL"]),
-
-        // Net
-        .target(name: "CHTTP"),
-        .target(name: "HTTP", dependencies: ["CHTTP", "TCP"]),
-        .testTarget(name: "HTTPTests", dependencies: ["HTTP"]),
-        .target(name: "TCP", dependencies: ["Debugging", "Core", "libc"]),
+        
+        // Network
+        .target(name: "TCP", dependencies: ["Debugging", "Async", "Bits", "libc"]),
         .testTarget(name: "TCPTests", dependencies: ["TCP"]),
+        
+        // Web
+        .target(name: "Web", dependencies: ["Files"]),
+        .testTarget(name: "WebTests", dependencies: ["Web"]),
         
         // WebSocket
         .target(name: "WebSocket", dependencies: ["Core", "Debugging", "TCP", "HTTP", "Crypto"]),

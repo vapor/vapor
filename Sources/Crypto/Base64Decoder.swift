@@ -1,5 +1,6 @@
-import Core
 import libc
+import Async
+import Bits
 
 /// Precomputed decoding table
 //fileprivate let decodeLookupTable: Data = [
@@ -44,7 +45,7 @@ fileprivate let encodeTable = Data("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqr
 ///     // this will possibly stream the final 4 bytes if the input wasn't depleted yet
 ///     encoder.finishStream()
 ///     // after finishing the stream, the encoder will return to the start and will be reuable for the next incoming data
-public final class Base64Encoder : Core.Stream {
+public final class Base64Encoder : Async.Stream {
     /// Accepts byte streams
     public typealias Input = ByteBuffer
     

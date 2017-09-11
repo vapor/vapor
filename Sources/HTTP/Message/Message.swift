@@ -1,5 +1,5 @@
-import Core
 import Dispatch
+import Core
 
 /// An HTTP message.
 /// This is the basis of HTTP request and response,

@@ -1,8 +1,9 @@
 import Dispatch
 import Foundation
 import libc
+import Async
 
-public final class File: FileReader, FileCache {
+public final class CachedFileSystem: FileReader, FileCache {
     /// Cached data.
     private var cache: [Int: Data]
 
