@@ -34,6 +34,6 @@ extension String: PathComponentRepresentable {
     /// Convert string to constant path component.
     /// See PathComponentRepresentable.makePathComponent()
     public func makePathComponent() -> PathComponent {
-        return .constant(self)
+        return .constant(self) // TODO: .addingPercentEncoding(withAllowedCharacters: .urlPathAllowed))
     }
 }

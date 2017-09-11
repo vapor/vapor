@@ -46,7 +46,6 @@ public final class TrieRouter: Router {
 
     /// See Router.route()
     public func route(request: Request) -> Responder? {
-        var parameters = request.parameters
         let path = [request.method.string] + request.uri.path.split(separator: "/").map(String.init)
         
         // always start at the root node
@@ -63,7 +62,7 @@ public final class TrieRouter: Router {
                 // if no constant routes were found that match the path, but
                 // a dynamic parameter child was found, we can use it
                 let lazy = LazyParameter(type: node.parameter, value: path)
-                parameters.parameters.append(lazy)
+                request.parameters.parameters.append(lazy)
                 current = node
             } else {
                 // no constant routes were found, and this node doesn't have
