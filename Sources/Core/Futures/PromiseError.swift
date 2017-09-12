@@ -1,7 +1,7 @@
 import Debugging
 
 /// Errors that can be thrown while using promises.
-public struct PromiseError: Swift.Error, Debuggable, Traceable {
+public struct PromiseError: Swift.Error, Debuggable, Traceable, Encodable {
     public static let readableName = "Promise Error"
     public let identifier: String
     public var reason: String

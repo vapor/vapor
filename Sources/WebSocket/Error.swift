@@ -1,7 +1,7 @@
 import Debugging
 
 /// A WebSocket error, when creating or using a WebSocket
-public struct Error : Swift.Error, Debuggable, Traceable {
+public struct Error : Swift.Error, Debuggable, Traceable, Encodable {
     /// A description of the problem
     public var reason: String {
         switch problem {

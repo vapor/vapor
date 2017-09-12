@@ -2,7 +2,7 @@ import Debugging
 import libc
 
 /// Errors that can be thrown while working with TCP sockets.
-public struct Error: Traceable, Debuggable, Swift.Error {
+public struct Error: Traceable, Debuggable, Swift.Error, Encodable {
     public static let readableName = "TCP Error"
     public let identifier: String
     public var reason: String
