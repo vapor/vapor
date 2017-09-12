@@ -2,6 +2,9 @@ import HTTP
 
 /// A basic router
 public final class TrieRouter: Router {
+    /// All routes registered to this router
+    public private(set) var routes: [Route] = []
+    
     /// The root node
     var root: RootNode
 
@@ -10,10 +13,14 @@ public final class TrieRouter: Router {
     }
 
     /// See Router.register()
-    public func register(responder: Responder, at path: [PathComponent]) {
+    public func register(route: Route) {
+        self.routes.append(route)
+        
         // always start at the root node
         var current: TrieRouterNode = root
 
+        let path = [.constant(route.method.string)] + route.path
+        
         // traverse the path components supplied
         var iterator = path.makeIterator()
         while let path = iterator.next() {
@@ -39,11 +46,13 @@ public final class TrieRouter: Router {
         }
 
         // set the resolved nodes responder
-        current.responder = responder
+        current.responder = route.responder
     }
 
     /// See Router.route()
-    public func route(path: [String], parameters: inout ParameterBag) -> Responder? {
+    public func route(request: Request) -> Responder? {
+        let path = [request.method.string] + request.uri.path.split(separator: "/").map(String.init)
+        
         // always start at the root node
         var current: TrieRouterNode = root
 
@@ -58,7 +67,7 @@ public final class TrieRouter: Router {
                 // if no constant routes were found that match the path, but
                 // a dynamic parameter child was found, we can use it
                 let lazy = LazyParameter(type: node.parameter, value: path)
-                parameters.parameters.append(lazy)
+                request.parameters.parameters.append(lazy)
                 current = node
             } else {
                 // no constant routes were found, and this node doesn't have

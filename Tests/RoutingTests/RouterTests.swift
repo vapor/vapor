@@ -15,47 +15,37 @@ class RouterTests: XCTestCase {
         }
 
         router.on(.get, to: "users", User.parameter, "comments") { req in
+            let bob = try req.parameters.next(User.self)
+            XCTAssertEqual(bob.name, "bob")
+            
             return try Response(body: "users!")
         }
 
-        let req = Request()
-
         do {
-            var params = ParameterBag()
-            let responder = router.route(
-                path: ["GET", "foo", "bar", "baz"],
-                parameters: &params
-            )
+            let request = Request(method: .get, uri: URI(path: "/foo/bar/baz"))
+            let responder = router.route(request: request)
 
             XCTAssertNotNil(responder)
-            let res = try responder!.respond(to: req)
+            let res = try responder!.respond(to: request)
             try XCTAssertEqual(String(data: res.sync().body.data, encoding: .utf8), "foo")
         }
 
         do {
-            var params = ParameterBag()
-            let responder = router.route(
-                path: ["GET", "hello", "world"],
-                parameters: &params
-            )
+            let request = Request(method: .get, uri: URI(path: "/hello/world"))
+            let responder = router.route(request: request)
 
             XCTAssertNotNil(responder)
-            let res = try responder!.respond(to: req)
+            let res = try responder!.respond(to: request)
             try XCTAssertEqual(String(data: res.sync().body.data, encoding: .utf8), "hello")
         }
 
         do {
-            var params = ParameterBag()
-            let responder = router.route(
-                path: ["GET", "users", "bob", "comments"],
-                parameters: &params
-            )
+            let request = Request(method: .get, uri: URI(path: "/users/bob/comments"))
+            let responder = router.route(request: request)
 
             XCTAssertNotNil(responder)
-            let res = try responder!.respond(to: req)
+            let res = try responder!.respond(to: request)
             try XCTAssertEqual(String(data: res.sync().body.data, encoding: .utf8), "users!")
-            let bob = try params.next(User.self)
-            XCTAssertEqual(bob.name, "bob")
         }
     }
 
@@ -75,7 +65,7 @@ final class User: Parameter {
         self.name = name
     }
 
-    static func make(for parameter: String) throws -> User {
+    static func make(for parameter: String, in request: Request) throws -> User {
         return User(name: parameter)
     }
 }

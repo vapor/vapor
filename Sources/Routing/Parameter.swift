@@ -1,10 +1,12 @@
+import HTTP
+
 /// Capable of being used as a route parameter.
 public protocol Parameter {
     /// the unique key to use as a slug in route building
     static var uniqueSlug: String { get }
 
     // returns the found model for the resolved url parameter
-    static func make(for parameter: String) throws -> Self
+    static func make(for parameter: String, in request: Request) throws -> Self
 }
 
 extension Parameter {

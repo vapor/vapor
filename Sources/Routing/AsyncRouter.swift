@@ -6,16 +6,17 @@ public protocol AsyncRouter: Router { }
 
 extension AsyncRouter {
     /// Registers a route handler at the supplied path.
+    @discardableResult
     public func on<F: FutureType>(
         _ method: Method,
         to path: PathComponentRepresentable...,
         use closure: @escaping BasicAsyncResponder<F>.Closure
-    ) where F.Expectation: ResponseRepresentable {
+    ) -> Route where F.Expectation: ResponseRepresentable {
         let responder = BasicAsyncResponder(closure: closure)
-        self.register(
-            responder: responder,
-            at: [.constant(method.string)] + path.makePathComponents()
-        )
+        let route = Route(method: method, path: path.makePathComponents(), responder: responder)
+        self.register(route: route)
+        
+        return route
     }
 }
 

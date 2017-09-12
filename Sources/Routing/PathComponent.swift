@@ -24,7 +24,7 @@ extension PathComponent: PathComponentRepresentable {
 
 extension Array where Element == PathComponentRepresentable {
     /// Convert to array of path components.
-    func makePathComponents() -> [PathComponent] {
+    public func makePathComponents() -> [PathComponent] {
         return map { $0.makePathComponent() }
     }
 }
@@ -34,6 +34,6 @@ extension String: PathComponentRepresentable {
     /// Convert string to constant path component.
     /// See PathComponentRepresentable.makePathComponent()
     public func makePathComponent() -> PathComponent {
-        return .constant(self)
+        return .constant(self) // TODO: .addingPercentEncoding(withAllowedCharacters: .urlPathAllowed))
     }
 }

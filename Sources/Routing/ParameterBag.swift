@@ -1,12 +1,16 @@
+import HTTP
+
 /// A bag for holding parameters resolved during router
 public struct ParameterBag {
     /// The parameters, not yet resolved
     /// so that the `.next()` method can throw any errors.
     var parameters: [LazyParameter]
+    let request: Request
 
     /// Create a new parameters bag
-    public init() {
+    public init(request: Request) {
         self.parameters = []
+        self.request = request
     }
 
     /// Grabs the next parameter from the parameter bag.
@@ -33,7 +37,7 @@ public struct ParameterBag {
             ))
         }
 
-        let item = try current.type.make(for: current.value)
+        let item = try current.type.make(for: current.value, in: request)
         guard let cast = item as? P else {
             throw Error(.invalidParameterType(
                 actual: type(of: item),
