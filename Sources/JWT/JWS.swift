@@ -4,7 +4,7 @@ import Foundation
 fileprivate let jwsFields = ["typ", "cty", "alg", "jku", "jwk", "kid"]
 
 /// Errors related to JWT
-enum JWTError : Error {
+enum JWTError: Error {
     /// Happens when deserialization isn't possible according to spec
     case invalidJWS
     
@@ -21,7 +21,7 @@ enum JWTError : Error {
 }
 
 /// The header (details) used for signing and processing this JSON Web Signature
-public struct Header : Codable {
+public struct Header: Codable {
     enum CodingKeys: String, CodingKey {
         case algorithm = "alg"
         case signatureType = "typ"
@@ -41,7 +41,7 @@ public struct Header : Codable {
     public var criticalFields: [String]?
     
     /// The algorithm to use for signing
-    public enum Algorithm : String, Codable {
+    public enum Algorithm: String, Codable {
         /// HMAC SHA256
         case HS256
         
@@ -65,7 +65,7 @@ public struct Header : Codable {
 }
 
 /// JSON Web Signature (signature based JSON Web Token)
-public struct JSONWebSignature<C: Codable> : Codable {
+public struct JSONWebSignature<C: Codable>: Codable {
     /// The headers linked to this message
     ///
     /// A Web Token can be signed by multiple headers
