@@ -7,9 +7,13 @@ class Base64Tests : XCTestCase {
     ]
     
     func encMatch(_ string: String, toMatch match: String) throws {
-        let result = try Base64Encoder.encode(string: string)
+        let result = Base64Encoder.encode(string: string)
         
         XCTAssertEqual(result, match)
+        
+        let old = try Base64Decoder.decode(string: result)
+        
+        XCTAssertEqual(string, String(bytes: old, encoding: .utf8))
     }
     
     func testEncoding() throws {
