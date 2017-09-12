@@ -38,9 +38,7 @@ extension Hash {
         return Self.chunkSize &- 8
     }
     
-    /// Hashes the contents of this byte sequence
-    ///
-    /// Doesn't finalize the hash and thus doesn't return the data
+    /// Processes the contents of this `Data` and returns the resulting hash
     public static func hash(_ data: Data) -> Data {
         let h = Self()
         
@@ -50,14 +48,20 @@ extension Hash {
         }
     }
     
-    /// Hashes the contents of this byte sequence
-    ///
-    /// Doesn't finalize the hash and thus doesn't return the data
-    public func finalize(_ data: Data) {
+    /// Processes the contents of this ByteBuffer and returns the resulting hash
+    public static func hash(_ data: ByteBuffer) -> Data {
         let h = Self()
         
+        h.finalize(data)
+        return h.hash
+    }
+    
+    /// Processes the contents of this byte sequence
+    ///
+    /// Doesn't finalize the hash and thus doesn't return any results
+    public func finalize(_ data: Data) {
         Array(data).withUnsafeBufferPointer { buffer in
-            h.finalize(buffer)
+            self.finalize(buffer)
         }
     }
     
