@@ -4,7 +4,7 @@ import HTTP
 /// content codable
 extension ContentEncodable where Self: ResponseRepresentable {
     /// See ResponseRepresentable.makeResponse
-    public func makeResponse() throws -> Response {
+    public func makeResponse(for request: Request) throws -> Response {
         let response = Response()
         try encodeContent(to: response)
         return response

@@ -31,7 +31,7 @@ public struct BasicSyncResponder: Responder {
 
     /// See: HTTP.Responder.respond
     public func respond(to req: Request) throws -> Future<Response> {
-        let res = try closure(req).makeResponse()
+        let res = try closure(req).makeResponse(for: req)
         let promise = Promise<Response>()
         promise.complete(res)
         return promise.future

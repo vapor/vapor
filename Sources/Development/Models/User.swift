@@ -3,7 +3,7 @@ import HTTP
 import Leaf
 import Vapor
 
-final class User: JSONCodable, ContentCodable, ResponseRepresentable {
+final class User: JSONCodable, ResponseRepresentable {
     var name: String
     var age: Int
     var child: User?

@@ -2,7 +2,7 @@ import HTTP
 import TCP
 
 /// A TCP based server with HTTP parsing and serialization pipeline.
-public final class EngineServer: Server {
+public final class EngineServer: HTTPServer {
     /// Chosen configuration for this server.
     public let config: EngineServerConfig
 

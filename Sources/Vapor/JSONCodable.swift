@@ -58,3 +58,17 @@ extension JSONEncodable where Self: ContentEncodable {
         return try encodeJSON(to: &message.body.data)
     }
 }
+
+/// Free JSONEncodable implementation for ResponseRepresentable
+
+public typealias JSONResponseRepresentable = JSONEncodable & ResponseRepresentable
+
+extension JSONEncodable where Self: ResponseRepresentable {
+    public func makeResponse(for request: Request) throws -> Response {
+        let data = try JSONEncoder().encode(self)
+        
+        return Response(headers: [
+            .contentType: "application/json"
+        ], body: Body(data))
+    }
+}

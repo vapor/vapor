@@ -36,7 +36,7 @@ public struct BasicAsyncResponder<F: FutureType>: Responder where F.Expectation:
     /// See: HTTP.Responder.respond
     public func respond(to req: Request) throws -> Future<Response> {
         return try closure(req).map { rep in
-            return try rep.makeResponse()
+            return try rep.makeResponse(for: req)
         }
     }
 }

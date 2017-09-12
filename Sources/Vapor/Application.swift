@@ -8,7 +8,7 @@ import Service
 /// Core framework class. You usually create only
 /// one of these per application.
 /// Acts as a service container and much more.
-public final class Application: Container {
+open class Application: Container {
     /// Config preferences and requirements for available services.
     public var config: Config
 
@@ -41,7 +41,7 @@ public final class Application: Container {
     /// Runs the Application's server.
     public func run() throws -> Never {
         // TODO: run console / commands here.
-        let server = try make(Server.self)
+        let server = try make(HTTPServer.self)
 
         let router = try RouterResponder(
             router: make(Router.self)
