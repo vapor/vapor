@@ -32,3 +32,10 @@ Tutorials are defined as example code with explaination.
 **API design:**
 
 - APIs and functionalities that are required by a library should be internal until there's little to no doubt the API needs to change for this version of the library
+
+**Readme:**
+
+README.md files **must** contain at least:
+
+- A short description of what the library does
+- Some _basic_ usage examples
