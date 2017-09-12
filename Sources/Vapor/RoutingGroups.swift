@@ -9,6 +9,9 @@ import Routing
 ///
 /// All middleware will be applied to the Responder
 public final class Group : Router {
+    /// All routes registered to this group
+    public private(set) var routes: [Route] = []
+    
     let `super`: Router
     let components: [PathComponent]
     let middleware: [Middleware]
@@ -28,6 +31,7 @@ public final class Group : Router {
     ///
     /// Warning: Will modify the route
     public func register(route: Route) {
+        self.routes.append(route)
         route.path.insert(contentsOf: self.components, at: 0)
         route.responder = middleware.makeResponder(chainedto: route.responder)
         self.super.register(route: route)

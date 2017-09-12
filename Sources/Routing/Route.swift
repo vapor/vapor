@@ -2,7 +2,7 @@ import HTTP
 import Core
 
 /// A route. When registered to a router, replies to `Request`s using the `Responder`.
-public final class Route : Extendable {
+public final class Route: Extendable {
     /// The path at which the route is assigned
     public var path: [PathComponent]
     

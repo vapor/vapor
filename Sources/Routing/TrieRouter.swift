@@ -2,6 +2,9 @@ import HTTP
 
 /// A basic router
 public final class TrieRouter: Router {
+    /// All routes registered to this router
+    public private(set) var routes: [Route] = []
+    
     /// The root node
     var root: RootNode
 
@@ -11,6 +14,8 @@ public final class TrieRouter: Router {
 
     /// See Router.register()
     public func register(route: Route) {
+        self.routes.append(route)
+        
         // always start at the root node
         var current: TrieRouterNode = root
 
