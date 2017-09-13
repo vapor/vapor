@@ -29,18 +29,16 @@ public final class Request: Message {
     /// may be a full URI in the case of a proxy
     public var uri: URI
 
-    /// See Message.version
+    /// See `Message.version`
     public var version: Version
 
-    /// See Message.headers
+    /// See `Message.headers`
     public var headers: Headers
 
-    /// See Message.body
-    public var body: Body {
-        didSet { updateContentLength() }
-    }
+    /// See `Message.body`
+    public var body: Body
     
-    /// See Extendable.extend
+    /// See `Extendable.extend`
     public var extend: Extend
 
     /// Create a new HTTP request.
@@ -78,7 +76,7 @@ extension Request {
 
 /// Can be converted from a response.
 public protocol RequestInitializable {
-    init(response: Request) throws
+    init(request: Request) throws
 }
 
 /// Can be converted to a response

@@ -1,25 +1,14 @@
 import Core
 import HTTP
+import Service
 import Routing
 
-public final class TypeSafeRequest<Content: Codable> : RequestConvertible {
-    public init(response: Request) throws {
-        
-    }
-    
-    public func makeRequest() throws -> Request {
-        
-    }
+public protocol ContentEncoder {
+    func encode<E: Encodable>(_ entity: E) throws -> Body
 }
 
-public final class TypeSafeResponse<Content: Codable> : ResponseConvertible {
-    public init(response: Response) throws {
-        
-    }
-    
-    public func makeResponse(for request: Request) throws -> Response {
-        
-    }
+public protocol ContentDecoder {
+    func decode<D: Decodable>(_ entity: D.Type, from body: Body) throws -> D
 }
 
 open class AsyncController<Input: Codable, Output: Codable> {
