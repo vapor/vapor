@@ -5,20 +5,30 @@ import Service
 import Routing
 
 public protocol ContentEncoder {
+    var type: MediaType { get }
     func encodeBody<E: Encodable>(from entity: E) throws -> Body
 }
 
 public protocol ContentDecoder {
+    var type: MediaType { get }
     func decode<D: Decodable>(_ entity: D.Type, from body: Body) throws -> D
 }
 
 extension JSONEncoder: ContentEncoder {
+    public var type: MediaType {
+        return .json
+    }
+    
     public func encodeBody<E>(from entity: E) throws -> Body where E : Encodable {
         return Body(try self.encode(entity))
     }
 }
 
 extension JSONDecoder: ContentDecoder {
+    public var type: MediaType {
+        return .json
+    }
+    
     public func decode<D>(_ entity: D.Type, from body: Body) throws -> D where D : Decodable {
         return try self.decode(D.self, from: body.data)
     }

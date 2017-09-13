@@ -54,6 +54,9 @@ public final class TypeSafeRequest<Content: Codable> {
     public func makeRequest(using encoder: ContentEncoder) throws -> Request {
         let body = try encoder.encodeBody(from: self.body)
         
+        var headers = self.headers
+        headers[.contentType] = encoder.type.description
+        
         return Request(
             method: self.method,
             uri: self.uri,

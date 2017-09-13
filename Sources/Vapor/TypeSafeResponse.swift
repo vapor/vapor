@@ -41,6 +41,9 @@ public final class TypeSafeResponse<Content: Codable> {
         let encoder = try container.make(ContentEncoder.self, for: C.self)
         let body = try encoder.encodeBody(from: self.body)
         
+        var headers = self.headers
+        headers[.contentType] = encoder.type.description
+        
         return Response(
             version: version,
             status: status,
