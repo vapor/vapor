@@ -96,6 +96,7 @@ let package = Package(
         // Vapor
         .target(name: "Development", dependencies: ["Leaf", "Vapor", "MySQL"]),
         .target(name: "Vapor", dependencies: [
+            "Async"
             "Core",
             "Debugging",
             "HTTP",

@@ -75,3 +75,25 @@ extension Request {
         try self.init(method: method, uri: uri, version: version, headers: headers, body: body.makeBody())
     }
 }
+
+/// Can be converted from a response.
+public protocol RequestInitializable {
+    init(response: Request) throws
+}
+
+/// Can be converted to a response
+public protocol RequestRepresentable {
+    func makeRequest() throws -> Request
+}
+
+/// Can be converted from and to a response
+public typealias RequestConvertible = RequestInitializable & RequestRepresentable
+
+// MARK: Response Conformance
+
+extension Request: RequestRepresentable {
+    public func makeRequest() throws -> Request {
+        return self
+    }
+}
+

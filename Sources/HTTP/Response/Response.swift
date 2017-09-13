@@ -74,6 +74,7 @@ public protocol ResponseInitializable {
 
 /// Can be converted to a response
 public protocol ResponseRepresentable {
+    /// Makes a response using the context provided by the Request
     func makeResponse(for request: Request) throws -> Response
 }
 
@@ -83,6 +84,7 @@ public typealias ResponseConvertible = ResponseInitializable & ResponseRepresent
 // MARK: Response Conformance
 
 extension Response: ResponseRepresentable {
+    /// See `ResponseRepresentable.makeResponse`
     public func makeResponse(for request: Request) throws -> Response {
         return self
     }
