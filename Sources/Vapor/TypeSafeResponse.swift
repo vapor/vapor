@@ -2,7 +2,7 @@ import Core
 import Service
 import HTTP
 
-public final class TypeSafeResponse<Content: Codable> : ResponseRepresentable {
+public final class TypeSafeResponse<Content: Codable> {
     public var status: Status
     
     public var version: Version
@@ -13,8 +13,18 @@ public final class TypeSafeResponse<Content: Codable> : ResponseRepresentable {
     
     public var extend: Extend
     
-    let container: Container
-    let containerType: Container.Type
+    public init(
+        version: Version = Version(major: 1, minor: 1),
+        status: Status = .ok,
+        headers: Headers = Headers(),
+        body: Content
+        ) {
+        self.version = version
+        self.status = status
+        self.headers = headers
+        self.body = body
+        self.extend = Extend()
+    }
     
     public init<C: Container>(response: Response, for container: C) throws {
         self.status = response.status
@@ -24,20 +34,12 @@ public final class TypeSafeResponse<Content: Codable> : ResponseRepresentable {
         
         let decoder = try container.make(ContentDecoder.self, for: C.self)
         self.body = try decoder.decode(Content.self, from: response.body)
-        self.container = container
-        self.containerType = C.self
     }
     
-    public func makeResponse(for request: Request) throws -> Response {
-        guard
-            let mediaTypeString = request.headers[.contentType],
-            let mediaType = MediaType(string: mediaTypeString)
-            else {
-                throw HTTP.Error.contentRequired(Content.self)
-        }
-        
-        let encoder = try container.unsafeMake(ContentEncoder.self, for: containerType) as! ContentEncoder
-        let body = try encoder.encode(self.body)
+    public func makeResponse<C: Container>(for request: Request, for container: C) throws -> Response {
+        // TODO: Detect request accept type(s)
+        let encoder = try container.make(ContentEncoder.self, for: C.self)
+        let body = try encoder.encodeBody(from: self.body)
         
         return Response(
             version: version,

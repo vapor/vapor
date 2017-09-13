@@ -3,7 +3,7 @@ import Service
 import HTTP
 
 /// An HTTP Request with a type-safe body
-public final class TypeSafeRequest<Content: Codable> : RequestRepresentable {
+public final class TypeSafeRequest<Content: Codable> {
     /// HTTP requests have a method, like GET or POST
     public var method: Method
     
@@ -23,8 +23,20 @@ public final class TypeSafeRequest<Content: Codable> : RequestRepresentable {
     /// See `Extendable.extend`
     public var extend: Extend
     
-    /// The MediaType of this content
-    public var encoder: ContentEncoder
+    public init(
+        method: Method = .get,
+        uri: URI = URI(),
+        version: Version = Version(major: 1, minor: 1),
+        headers: Headers = Headers(),
+        body: Content
+        ) {
+        self.method = method
+        self.uri = uri
+        self.version = version
+        self.headers = headers
+        self.body = body
+        self.extend = Extend()
+    }
     
     public init<C: Container>(request: Request, for container: C) throws {
         self.method = request.method
@@ -33,21 +45,14 @@ public final class TypeSafeRequest<Content: Codable> : RequestRepresentable {
         self.headers = request.headers
         self.extend = request.extend
         
-        guard
-            let mediaTypeString = request.headers[.contentType],
-            let mediaType = MediaType(string: mediaTypeString)
-            else {
-                throw HTTP.Error.contentRequired(Content.self)
-        }
-        
-        self.encoder = try container.make(ContentEncoder.self, for: C.self)
+        // TODO: Detect content type
         
         let decoder = try container.make(ContentDecoder.self, for: C.self)
         self.body = try decoder.decode(Content.self, from: request.body)
     }
     
-    public func makeRequest() throws -> Request {
-        let body = try encoder.encode(self.body)
+    public func makeRequest(using encoder: ContentEncoder) throws -> Request {
+        let body = try encoder.encodeBody(from: self.body)
         
         return Request(
             method: self.method,

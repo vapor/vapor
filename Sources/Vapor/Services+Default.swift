@@ -1,4 +1,5 @@
 import HTTP
+import Foundation
 import Routing
 import Service
 
@@ -33,6 +34,15 @@ extension Services {
         // register router
         services.register([SyncRouter.self, AsyncRouter.self, Router.self]) { container in
             return TrieRouter()
+        }
+        
+        // Register content types
+        services.register([ContentEncoder.self]) { container in
+            return JSONEncoder()
+        }
+        
+        services.register([ContentDecoder.self]) { container in
+            return JSONDecoder()
         }
 
         return services
