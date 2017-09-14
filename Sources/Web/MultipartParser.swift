@@ -134,11 +134,11 @@ public enum MultipartParser {
             }
             
             // The default 1:1 binary encoding
-            var decoder: ContentDecoder = DataEncoding.binary
+            var decoder: TransferDecoder = TransferEncoding.binary
             
             // If a different encoding mechanism is specified, use that
             if let encodingString = headers[.contentTransferEncoding] {
-                guard let registeredCoder = DataEncoding.registery[encodingString] else {
+                guard let registeredCoder = TransferEncoding.registery[encodingString] else {
                     throw Error(identifier: "multipart:body-encoding", reason: "Unknown multipart encoding")
                 }
                 

@@ -42,10 +42,6 @@ Content-Disposition: form-data; name="multinamed[]"; filename=""\r
         XCTAssertEqual(try multipart.getString(forName: "test"), "eqw-dd-sa----123;1[234")
         XCTAssertEqual(try multipart.getFile(forName: "named").data, Data(named.utf8))
         XCTAssertEqual(try multipart.getFile(forName: "multinamed[]").data, Data(multinamed.utf8))
-        
-        XCTAssertEqual(multipart["test"], try multipart.getString(forName: "test"))
-        XCTAssertEqual(multipart[fileFor: "test"]?.data, try multipart.getFile(forName: "test").data)
-        XCTAssertEqual(multipart[fileFor: "test"]?.data, try multipart.getFile(forName: "test").data)
     }
 
     func testMultifile() throws {
@@ -67,10 +63,11 @@ Content-Disposition: form-data; name="multinamed[]"; filename=""\r
         
         let multipart = try MultipartParser.parse(multipart: Data(data.utf8), boundary: Data("----WebKitFormBoundaryPVOZifB9OqEwP2fn".utf8))
         
-        let files = multipart[filesFor: "multinamed[]"]
+        let files = multipart.getFiles(forName: "multinamed[]")
         
         XCTAssertEqual(files.count, 2)
-        XCTAssertEqual(multipart[fileFor: "multinamed[]"]?.data, Data(named.utf8))
+        let file = try multipart.getFile(forName: "multinamed[]")
+        XCTAssertEqual(file.data, Data(named.utf8))
         
         XCTAssertEqual(files.first?.data, Data(named.utf8))
         XCTAssertEqual(files.last?.data, Data(multinamed.utf8))

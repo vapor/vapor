@@ -1,3 +1,4 @@
+import Web
 import CHTTP
 import Dispatch
 import Foundation
@@ -52,7 +53,7 @@ public final class URIParser {
 
         // sets a port if one was supplied
         // in the url bytes
-        let p: Port?
+        let p: Web.Port?
         if let bytes = copiedData.string(for: port) {
             p = Port(bytes)
         } else {

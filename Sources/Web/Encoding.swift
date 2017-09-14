@@ -3,14 +3,14 @@ import Async
 import Bits
 
 /// Encodes buffers
-public protocol ContentEncoder {
+public protocol TransferEncoder {
     // Encodes the buffer
     func encode(_ buffer: ByteBuffer) throws -> ByteBuffer
     
     init(headers: Headers) throws
 }
 
-extension ContentEncoder {
+extension TransferEncoder {
     /// Encodes data to an encoded data blob
     public func encode(_ data: Data) throws -> Data {
         return try data.withUnsafeBytes { (pointer: BytesPointer) -> Data in
@@ -21,14 +21,14 @@ extension ContentEncoder {
 }
 
 /// Decodes buffers
-public protocol ContentDecoder {
+public protocol TransferDecoder {
     // Decodes the buffer
     func decode(_ buffer: ByteBuffer) throws -> ByteBuffer
     
     init(headers: Headers) throws
 }
 
-extension ContentDecoder {
+extension TransferDecoder {
     /// Encodes data to a decoded data blob
     public func decode(_ data: Data) throws -> Data {
         return try data.withUnsafeBytes { (pointer: BytesPointer) -> Data in
@@ -39,19 +39,19 @@ extension ContentDecoder {
 }
 
 /// An encoding registery
-public enum DataEncoding {
-    public typealias ContentEncoderBuilder = ((Headers) throws -> (ContentEncoder))
-    public typealias ContentDecoderBuilder = ((Headers) throws -> (ContentDecoder))
+public enum TransferEncoding {
+    public typealias TransferEncoderBuilder = ((Headers) throws -> (TransferEncoder))
+    public typealias TransferDecoderBuilder = ((Headers) throws -> (TransferDecoder))
     
     /// Keeps track of all encoding types and their encoder and decoder
-    public static var registery: [String: (encoder: ContentEncoderBuilder, decoder: ContentDecoderBuilder)] = [
-        "binary": (BinaryContentCoder.init, BinaryContentCoder.init)
+    public static var registery: [String: (encoder: TransferEncoderBuilder, decoder: TransferDecoderBuilder)] = [
+        "binary": (BinaryTransferCoder.init, BinaryTransferCoder.init)
     ]
     
-    public static let binary = BinaryContentCoder()
+    public static let binary = BinaryTransferCoder()
 }
 
-public final class BinaryContentCoder: ContentEncoder, ContentDecoder {
+public final class BinaryTransferCoder: TransferEncoder, TransferDecoder {
     public func encode(_ buffer: ByteBuffer) throws -> ByteBuffer {
         return buffer
     }

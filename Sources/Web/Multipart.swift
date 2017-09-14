@@ -22,24 +22,8 @@ public struct Part {
 
 /// A Multipart, commonly used in HTTP Forms and SMTP emails
 public struct Multipart {
-    /// Accesses the value with the provided name as a `String`
-    ///
-    /// Returns `nil` if there is no (UTF-8) `String`
-    public subscript(name: String) -> String? {
-        return try? self.getString(forName: name)
-    }
-    
-    /// Accesses the value with the provided name as a `File`
-    ///
-    /// Returns `nil` if there is no file
-    public subscript(fileFor name: String) -> File? {
-        return try? self.getFile(forName: name)
-    }
-    
-    /// Accesses all values associated with the name as an array of files
-    public subscript(filesFor name: String) -> [File] {
-        return self.getFiles(forName: name)
-    }
+    /// All raw parts in this multipart
+    public var parts: [Part]
     
     /// Gets the `String` associated with the `name`. Throws an error if there is no `String` encoded as UTF-8
     public func getString(forName name: String) throws -> String {
@@ -75,7 +59,4 @@ public struct Multipart {
             return File(named: name, data: part.data)
         }
     }
-    
-    /// All raw parts in this multipart
-    public var parts: [Part]
 }
