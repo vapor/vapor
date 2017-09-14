@@ -1,13 +1,18 @@
 import Core
 import HTTP
 
-/// Adds the current `Date` to each `Response`
+/// Checks the cookies for each `Request`
 public final class SessionCookieMiddleware: Middleware {
+    /// The cookie to look for
     let cookieName: String
-    
+
+    /// Fallback handler when the `Cookie` is missing
     public var missingCookie: ((Request) throws -> (Response))
+    
+    /// Checks the `Cookie.Value` for each `Request`
     public var cookieValidator: ((Cookie.Value) throws -> ())
     
+    /// Creates a new `SessionCookieMiddleware` that can validate `Request`s
     public init(cookie: String, onRequest validate: @escaping ((Cookie.Value) throws -> ())) {
         self.cookieName = cookie
         self.cookieValidator = validate
