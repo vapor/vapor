@@ -7,9 +7,9 @@ public protocol SyncRouter: Router { }
 extension SyncRouter {
     /// Registers a route handler at the supplied path.
     @discardableResult
-    public func on(_ method: Method, to path: PathComponentRepresentable..., use closure: @escaping BasicSyncResponder.Closure) -> Route {
+    public func on(_ method: Method, to path: [PathComponent], use closure: @escaping BasicSyncResponder.Closure) -> Route {
         let responder = BasicSyncResponder(closure: closure)
-        let route = Route(method: method, path: path.makePathComponents(), responder: responder)
+        let route = Route(method: method, path: path, responder: responder)
         self.register(route: route)
         
         return route
