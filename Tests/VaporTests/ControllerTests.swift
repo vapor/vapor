@@ -9,13 +9,11 @@ class ControllerTests: XCTestCase {
         let app = Application()
         let sync = try app.make(SyncRouter.self)
         
-        let controller = SyncController(for: app)
-        
-        controller.on(.get, input: Login.Input.self, to: "user", "joannis") { loginRequest in
-            return Login.Output(token: loginRequest.body.username + loginRequest.body.password)
+        sync.get("user", "example") { req in
+            let loginRequest = try req.decode(as: Login.Input.self)
+            
+            return Login.Output(token: loginRequest.username + loginRequest.password)
         }
-        
-        controller.register(to: sync)
         
         let input = Login.Input(username: "example", password: "test")
         let request = try TypeSafeRequest(uri: URI(path: "/user/joannis/"), body: input).makeRequest(using: JSONEncoder())
@@ -33,12 +31,12 @@ class ControllerTests: XCTestCase {
 }
 
 enum Login {
-    struct Input: Codable {
+    struct Input: Decodable {
         var username: String
         var password: String
     }
     
-    struct Output: Codable {
+    struct Output: Codable, ResponseRepresentable {
         var token: String
     }
 }
