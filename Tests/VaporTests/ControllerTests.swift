@@ -16,7 +16,9 @@ class ControllerTests: XCTestCase {
         }
         
         let input = Login.Input(username: "example", password: "test")
-        let request = try TypeSafeRequest(uri: URI(path: "/user/joannis/"), body: input).makeRequest(using: JSONEncoder())
+        let body = try JSONEncoder.encodeBody(from: input)
+        
+        let request = Request(uri: URI(path: "/user/joannis/"), body: body)
         
         guard let responder = sync.route(request: request) else {
             XCTFail()
@@ -24,14 +26,14 @@ class ControllerTests: XCTestCase {
         }
         
         let response = try responder.respond(to: request).sync()
-        let output = try JSONDecoder().decode(Login.Output.self, from: response.body)
+        let output = try JSONDecoder.decode(Login.Output.self, from: response.body)
         
         XCTAssertEqual("exampletest", output.token)
     }
 }
 
 enum Login {
-    struct Input: Decodable {
+    struct Input: Codable {
         var username: String
         var password: String
     }
