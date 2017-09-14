@@ -18,7 +18,9 @@ class ControllerTests: XCTestCase {
         let input = Login.Input(username: "example", password: "test")
         let body = try JSONEncoder.encodeBody(from: input)
         
-        let request = Request(uri: URI(path: "/user/joannis/"), body: body)
+        let request = Request(uri: URI(path: "/user/example/"), body: body)
+        request.mediaType = .json
+        request.headers[.accept] = MediaType.json.description
         
         guard let responder = sync.route(request: request) else {
             XCTFail()
