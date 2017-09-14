@@ -1,4 +1,5 @@
 extension Cookies {
+    /// Seriaizes the `Cookies` for a `Request`
     public func serialize(into request: Request) {
         guard !cookies.isEmpty else {
             request.headers[.cookie] = nil
@@ -12,6 +13,7 @@ extension Cookies {
         request.headers[.cookie] = cookie
     }
     
+    /// Seriaizes the `Cookies` for a `Response`
     public func serialize(into request: Response)  {
         guard !cookies.isEmpty else {
             request.headers[.cookie] = nil
@@ -27,6 +29,7 @@ extension Cookies {
 }
 
 extension Cookie {
+    /// Seriaizes an individual `Cookie`
     public func serialized() -> String {
         var serialized = "\(name)=\(value.value)"
         

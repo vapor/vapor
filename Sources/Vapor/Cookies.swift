@@ -1,4 +1,6 @@
+/// A `Cookie` Array
 public struct Cookies: ExpressibleByArrayLiteral {
+    /// All `Cookie`s contained
     public var cookies = [Cookie]()
     
     /// Creates an empty `Cookies`
@@ -42,6 +44,7 @@ public struct Cookies: ExpressibleByArrayLiteral {
 }
 
 extension Cookies: Sequence {
+    /// Iterates over all `Cookie`s
     public func makeIterator() -> IndexingIterator<[Cookie]> {
         return cookies.makeIterator()
     }

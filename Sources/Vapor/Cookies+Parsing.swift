@@ -1,6 +1,7 @@
 import Foundation
 
 extension Cookies {
+    /// Parses a `Request` cookie
     public init?(request string: String) {
         var cookies: Cookies = []
         
@@ -19,6 +20,7 @@ extension Cookies {
         self = cookies
     }
     
+    /// Parses a `Response` cookie
     public init?(response string: String) {
         var cookies: Cookies = []
         
@@ -39,6 +41,7 @@ extension Cookies {
 }
 
 extension Cookie {
+    /// Parses an individual `Cookie`
     public init?(from string: String) {
         var name: String?
         var valueString: String?

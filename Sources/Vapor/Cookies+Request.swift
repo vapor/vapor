@@ -1,4 +1,5 @@
 extension Request {
+    /// Sets and extracts `Cookies` from the `Request`
     public var cookies: Cookies? {
         get {
             guard let cookies = self.headers[.cookie] else {
@@ -18,6 +19,7 @@ extension Request {
 }
 
 extension Response {
+    /// Sets and extracts `Cookies` from the `Response`
     public var cookies: Cookies? {
         get {
             guard let cookies = self.headers[.cookie] else {
