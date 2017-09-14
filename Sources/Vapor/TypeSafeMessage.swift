@@ -4,7 +4,8 @@ import HTTP
 import Service
 import Routing
 
-extension Request {
+extension Message {
+    /// Decodes the `Body` of a `Message` using the `MediaType`'s associated `ContentDecoder`
     public func decode<D: Decodable>(as: D.Type) throws -> D {
         guard let media = self.mediaType else {
             throw Error.unknownMediaType()
@@ -18,7 +19,11 @@ extension Request {
     }
 }
 
+/// Provides a default implementation for `Encodable & ResponseRepresnetables` types
 extension ResponseRepresentable where Self: Encodable {
+    /// Encodes this `Response` using the default `MediaType` encoding.
+    ///
+    /// Uses the `Accept` header to determine the correct `MediaType`
     public func makeResponse(for request: Request) throws -> Response {
         // TODO: Multiple accepted types
         // https://en.wikipedia.org/wiki/Content_negotiation
