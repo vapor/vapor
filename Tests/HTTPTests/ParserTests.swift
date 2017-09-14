@@ -63,10 +63,38 @@ class ParserTests : XCTestCase {
         XCTAssertEqual(res.headers[.connection], "Closed")
         XCTAssertEqual(String(data: res.body.data, encoding: .utf8), "<vapor>")
     }
+    
+    func testMaximumRequestParserBuffer() throws {
+        let request = Request(method: .get, uri: URI(path: "test"))
+        
+        let serializer = RequestSerializer()
+        let data = serializer.serialize(request)
+        
+        let requestParser = RequestParser(queue: .global(), maxSize: data.count)
+        _ = try requestParser.parse(from: Data(data))
+        
+        let failingRequestParser = RequestParser(queue: .global(), maxSize: data.count - 1)
+        XCTAssertThrowsError(_ = try failingRequestParser.parse(from: Data(data)))
+    }
+    
+    func testMaximumResponseParserBuffer() throws {
+        let response = Response(status: .ok)
+        
+        let serializer = ResponseSerializer()
+        let data = serializer.serialize(response)
+        
+        let responseParser = ResponseParser(maxSize: data.count)
+        _ = try responseParser.parse(from: Data(data))
+        
+        let failingResponseParser = ResponseParser(maxSize: data.count - 1)
+        XCTAssertThrowsError(try failingResponseParser.parse(from: Data(data)))
+    }
 
     static let allTests = [
         ("testRequest", testRequest),
         ("testResponse", testResponse),
+        ("testMaximumRequestParserBuffer", testMaximumRequestParserBuffer),
+        ("testMaximumResponseParserBuffer", testMaximumResponseParserBuffer),
     ]
 }
 

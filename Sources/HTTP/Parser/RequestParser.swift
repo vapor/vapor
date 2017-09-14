@@ -20,12 +20,15 @@ public final class RequestParser: CParser {
     /// Queue to be set on messages created by this parser.
     private let queue: DispatchQueue
     
+    /// The amount of parsed bytes for this request
+    private var accumulatedSize: Int = 0
+    
     // The maximum amount of bytes to parse
-    private let maximumSize: Int
+    private let maxSize: Int
 
     /// Creates a new Request parser.
-    public init(queue: DispatchQueue, maximumSize: Int = 10_000_000) {
-        self.maximumSize = maximumSize
+    public init(queue: DispatchQueue, maxSize: Int = 10_000_000) {
+        self.maxSize = maxSize
         self.parser = http_parser()
         self.settings = http_parser_settings()
         self.state = .ready
@@ -56,13 +59,21 @@ public final class RequestParser: CParser {
 
     /// Parses a Request from the stream.
     public func parse(from buffer: ByteBuffer) throws -> Request? {
+        guard buffer.count + accumulatedSize <= maxSize else {
+            throw Error(identifier: "RequestParser:maxBufferSizeReached", reason: "The received Request was exceeds the maximum Request size")
+        }
+        
+        defer {
+            accumulatedSize += buffer.count
+        }
+        
         let results: CParseResults
 
         switch state {
         case .ready:
             // create a new results object and set
             // a reference to it on the parser
-            let newResults = CParseResults.set(on: &parser, maximumSize: maximumSize)
+            let newResults = CParseResults.set(on: &parser)
             results = newResults
             state = .parsing
         case .parsing:
@@ -145,6 +156,7 @@ public final class RequestParser: CParser {
             body: body
         )
 
+        self.accumulatedSize = 0
         request.queue = self.queue
         return request
     }

@@ -18,12 +18,15 @@ public final class ResponseParser: CParser, Async.Stream {
     var settings: http_parser_settings
     var state:  CHTTPParserState
     
+    /// The amount of parsed bytes for this request
+    private var accumulatedSize: Int = 0
+    
     // The maximum amount of bytes to parse
-    private let maximumSize: Int
+    private let maxSize: Int
     
     /// Creates a new Request parser.
-    public init(maximumSize: Int = 10_000_000) {
-        self.maximumSize = maximumSize
+    public init(maxSize: Int = 10_000_000) {
+        self.maxSize = maxSize
         self.parser = http_parser()
         self.settings = http_parser_settings()
         self.state = .ready
@@ -57,13 +60,21 @@ public final class ResponseParser: CParser, Async.Stream {
     
     /// Parses a Request from the stream.
     public func parse(from buffer: ByteBuffer) throws -> Response? {
+        guard buffer.count + accumulatedSize <= maxSize else {
+            throw Error(identifier: "ResponseParser:maxBufferSizeReached", reason: "The received Response was exceeds the maximum Response size")
+        }
+        
+        defer {
+            accumulatedSize += buffer.count
+        }
+        
         let results: CParseResults
         
         switch state {
         case .ready:
             // create a new results object and set
             // a reference to it on the parser
-            let newResults = CParseResults.set(on: &parser, maximumSize: maximumSize)
+            let newResults = CParseResults.set(on: &parser)
             results = newResults
             state = .parsing
         case .parsing:
@@ -102,6 +113,8 @@ public final class ResponseParser: CParser, Async.Stream {
         } else {
             body = Body()
         }
+        
+        self.accumulatedSize = 0
         
         // create the request
         return Response(

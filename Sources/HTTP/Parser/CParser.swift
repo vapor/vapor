@@ -173,12 +173,6 @@ extension CParser {
             if results.body == nil {
                 results.body = data
             } else {
-                guard let count = results.body?.count,
-                    count + data.count < results.maximumSize else {
-                        // Too much data
-                        return 1
-                }
-                
                 results.body?.append(data)
             }
             return 0
