@@ -9,16 +9,18 @@ class ControllerTests: XCTestCase {
         let app = Application()
         let sync = try app.make(SyncRouter.self)
         
-        let controller = SyncController(for: app)
-        
-        controller.on(.get, input: Login.Input.self, to: "user", "joannis") { loginRequest in
-            return Login.Output(token: loginRequest.body.username + loginRequest.body.password)
+        sync.get("user", "example") { req in
+            let loginRequest = try req.decode(as: Login.Input.self)
+            
+            return Login.Output(token: loginRequest.username + loginRequest.password)
         }
         
-        controller.register(to: sync)
-        
         let input = Login.Input(username: "example", password: "test")
-        let request = try TypeSafeRequest(uri: URI(path: "/user/joannis/"), body: input).makeRequest(using: JSONEncoder())
+        let body = try JSONEncoder.encodeBody(from: input)
+        
+        let request = Request(uri: URI(path: "/user/example/"), body: body)
+        request.mediaType = .json
+        request.headers[.accept] = MediaType.json.description
         
         guard let responder = sync.route(request: request) else {
             XCTFail()
@@ -26,7 +28,7 @@ class ControllerTests: XCTestCase {
         }
         
         let response = try responder.respond(to: request).sync()
-        let output = try JSONDecoder().decode(Login.Output.self, from: response.body)
+        let output = try JSONDecoder.decode(Login.Output.self, from: response.body)
         
         XCTAssertEqual("exampletest", output.token)
     }
@@ -38,7 +40,7 @@ enum Login {
         var password: String
     }
     
-    struct Output: Codable {
+    struct Output: Codable, ResponseRepresentable {
         var token: String
     }
 }

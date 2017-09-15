@@ -9,11 +9,11 @@ extension AsyncRouter {
     @discardableResult
     public func on<F: FutureType>(
         _ method: Method,
-        to path: PathComponentRepresentable...,
+        to path: [PathComponent],
         use closure: @escaping BasicAsyncResponder<F>.Closure
     ) -> Route where F.Expectation: ResponseRepresentable {
         let responder = BasicAsyncResponder(closure: closure)
-        let route = Route(method: method, path: path.makePathComponents(), responder: responder)
+        let route = Route(method: method, path: path, responder: responder)
         self.register(route: route)
         
         return route

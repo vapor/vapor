@@ -24,9 +24,11 @@ extension Services {
                 DateMiddleware.self
             ])
         }
+        
         services.register { container in
             return DateMiddleware()
         }
+        
         services.register { container in
             return ErrorMiddleware()
         }
@@ -37,12 +39,8 @@ extension Services {
         }
         
         // Register content types
-        services.register([ContentEncoder.self]) { container in
-            return JSONEncoder()
-        }
-        
-        services.register([ContentDecoder.self]) { container in
-            return JSONDecoder()
+        services.register { container in
+            return ContentCoders.default
         }
 
         return services
