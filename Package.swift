@@ -61,6 +61,9 @@ let package = Package(
         .target(name: "JWT", dependencies: ["Crypto"]),
         .testTarget(name: "JWTTests", dependencies: ["JWT"]),
 
+        .target(name: "HTTP2", dependencies: ["CHTTP", "TCP", "HTTP"]),
+        .testTarget(name: "HTTP2Tests", dependencies: ["HTTP2"]),
+
         // Leaf
         .target(name: "Leaf", dependencies: ["Core", "Service"]),
         .testTarget(name: "LeafTests", dependencies: ["Leaf"]),
