@@ -93,6 +93,12 @@ class ServiceTests: XCTestCase {
 
     static var allTests = [
         ("testHappyPath", testHappyPath),
+        ("testMultiple", testMultiple),
+        ("testTagged", testTagged),
+        ("testClient", testClient),
+        ("testSpecific", testSpecific),
+        ("testProvider", testProvider),
+        ("testRequire", testRequire)
     ]
 }
 

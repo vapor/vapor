@@ -47,6 +47,8 @@ extension Route {
         case .options: path.options = operation
         default: break
         }
+        
+        self.swaggerRoute = path
     }
 }
 
