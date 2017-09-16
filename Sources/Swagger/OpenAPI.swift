@@ -12,6 +12,11 @@ public final class OpenAPI: Encodable {
     public func serialize() throws -> String? {
         return String(bytes: try JSONEncoder().encode(self), encoding: .utf8)
     }
+    
+    public func write(to file: URL) throws {
+        let data = try JSONEncoder().encode(self)
+        try data.write(to: file)
+    }
 }
 
 public enum Error: Swift.Error {
