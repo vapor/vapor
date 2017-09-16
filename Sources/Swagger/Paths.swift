@@ -48,7 +48,7 @@ fileprivate extension Array where Element == PathComponent {
             case .constant(let constant):
                 return constant
             case .parameter(let parameter):
-                return parameter.uniqueSlug
+                return "{{\(parameter.uniqueSlug)}}"
             }
         }.joined(separator: "/")
     }
