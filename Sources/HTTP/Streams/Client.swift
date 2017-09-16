@@ -2,28 +2,25 @@ import Core
 import TCP
 
 /// An HTTP client wrapped around TCP client
-public final class Client: Core.Stream {
-    public typealias Input = SerializedMessage
-    public typealias Output = ByteBuffer
-
-    public var outputStream: OutputHandler? {
-        get {
-            return tcp.outputStream
-        }
-        set {
-            tcp.outputStream = newValue
-        }
-    }
-    public var errorStream: ErrorHandler?
-
+public final class Client {
     public let tcp: TCP.Client
-
+    
+    let serializer = RequestSerializer()
+    let parser = ResponseParser()
+    
     public init(tcp: TCP.Client) {
         self.tcp = tcp
     }
-
-    public func inputStream(_ input: SerializedMessage) {
-        tcp.inputStream(input.message)
-        input.onUpgrade?(tcp)
+    
+    public func send(request: Request) throws -> Future<Response> {
+        let promise = Promise<Response>()
+        
+        parser.drain(promise.complete)
+        tcp.drain(into: parser)
+        
+        let data = serializer.serialize(request)
+        tcp.inputStream(data)
+        
+        return promise.future
     }
 }
