@@ -93,6 +93,10 @@ let package = Package(
         .target(name: "Service", dependencies: ["Core", "Debugging"]),
         .testTarget(name: "ServiceTests", dependencies: ["Service"]),
 
+        // Swagger
+        .target(name: "Swagger", dependencies: ["Routing"]),
+        .testTarget(name: "SwaggerTests", dependencies: ["Swagger"]),
+
         // Vapor
         .target(name: "Development", dependencies: ["Leaf", "Vapor", "MySQL"]),
         .target(name: "Vapor", dependencies: [
