@@ -42,3 +42,4 @@ extension ResponseRepresentable where Self: Encodable {
         throw Error.unknownMediaType()
     }
 }
+

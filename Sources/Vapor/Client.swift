@@ -1,8 +1,11 @@
+import Async
 import Dispatch
 import HTTP
 import TCP
 
+// MARK: Connect
 extension HTTP.Client {
+    /// Connects an `HTTP.Client` to an HTTP Server
     public static func connect(to uri: URI, on queue: DispatchQueue) throws -> HTTP.Client {
         guard
             uri.scheme == "http" || uri.scheme == "https",

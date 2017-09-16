@@ -24,7 +24,7 @@ public final class Client {
     /// Sends a single `Request` and returns a future that can be completed with a `Response`
     ///
     /// The `Client` *must* not be used during the Future's completion.
-    public func send(request: Request) throws -> Future<Response> {
+    public func send(request: RequestRepresentable) throws -> Future<Response> {
         let promise = Promise<Response>()
         
         tcp.stream(to: parser).drain(promise.complete)
@@ -33,7 +33,7 @@ public final class Client {
             promise.fail(error)
         }
         
-        let data = serializer.serialize(request)
+        let data = serializer.serialize(try request.makeRequest())
         tcp.inputStream(data)
         
         return promise.future
