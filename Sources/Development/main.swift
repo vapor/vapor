@@ -6,10 +6,9 @@ import Routing
 import Service
 import Vapor
 
-extension View: ContentEncodable, ResponseRepresentable {
-    public func encodeContent(to message: Message) throws {
-        message.mediaType = .html
-        message.body = Body(data)
+extension View: ResponseRepresentable {
+    public func makeResponse(for request: Request) throws -> Response {
+        return Response(body: Body(self.data))
     }
 }
 
