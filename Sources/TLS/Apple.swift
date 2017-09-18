@@ -180,6 +180,7 @@ enum Error: Swift.Error {
     
     public final class AppleSSLClient: AppleSSLSocket, Core.Stream {
         public var outputBuffer = MutableByteBuffer(start: .allocate(capacity: Int(UInt16.max)), count: Int(UInt16.max))
+        private var source: DispatchSourceRead?
         
         public typealias Output = ByteBuffer
         public typealias Input = ByteBuffer
@@ -198,7 +199,7 @@ enum Error: Swift.Error {
         
         /// Starts receiving data from the client
         @discardableResult
-        public func start(on queue: DispatchQueue) -> DispatchSourceRead {
+        public func start(on queue: DispatchQueue) {
             let source = DispatchSource.makeReadSource(
                 fileDescriptor: self.descriptor.raw,
                 queue: queue
@@ -213,7 +214,7 @@ enum Error: Swift.Error {
                     )
                 } catch {
                     // any errors that occur here cannot be thrown,
-                    //selfso send them to stream error catcher.
+                    // so send them to stream error catcher.
                     self.errorStream?(error)
                     return
                 }
@@ -224,7 +225,7 @@ enum Error: Swift.Error {
                     return
                 }
                 
-                // create a view into our internal buffer and
+                // create a view into the internal buffer and
                 // send to the output stream
                 let bufferView = ByteBuffer(
                     start: self.outputBuffer.baseAddress,
@@ -238,7 +239,7 @@ enum Error: Swift.Error {
             }
             
             source.resume()
-            return source
+            self.source = source
         }
     }
 #endif
