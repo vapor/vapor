@@ -10,6 +10,12 @@ class BCryptTests: XCTestCase {
         ("testVerify", testVerify)
     ]
     
+    func testPerformance() throws {
+        measure {
+            _ = try! BCrypt.make(message: "password")
+        }
+    }
+    
     func testVersion() throws {
         let digest = try BCrypt.make(message: "foo")
         XCTAssert(String(bytes: digest, encoding: .utf8)!.hasPrefix("$2y$06$"))
