@@ -30,8 +30,7 @@ class ApplicationTests: XCTestCase {
         SSL.start(on: queue)
         serializer.inputStream(Request())
         
-        let response = try promise.future.sync(timeout: .seconds(15))
-        print(response)
+        XCTAssertNoThrow(try promise.future.sync(timeout: .seconds(15)))
     }
     
     static let allTests = [
