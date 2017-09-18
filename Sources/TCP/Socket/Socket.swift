@@ -3,7 +3,7 @@ import Dispatch
 import libc
 
 /// Any TCP socket. It doesn't specify being a server or client yet.
-public class Socket {
+open class Socket {
     /// The file descriptor related to this socket
     public let descriptor: Descriptor
 
@@ -58,7 +58,7 @@ public class Socket {
     }
 
     /// Closes the socket
-    public func close() {
+    open func close() {
         libc.close(descriptor.raw)
     }
     
@@ -72,5 +72,67 @@ public class Socket {
 
     deinit {
         close()
+    }
+    
+    /// Writes all data from the pointer's position with the length specified to this socket.
+    open func write(max: Int, from buffer: ByteBuffer) throws -> Int {
+        guard let pointer = buffer.baseAddress else {
+            return 0
+        }
+        
+        let sent = send(descriptor.raw, pointer, max, 0)
+        guard sent != -1 else {
+            switch errno {
+            case EINTR:
+                // try again
+                return try write(max: max, from: buffer)
+            case ECONNRESET, EBADF:
+                // closed by peer, need to close this side.
+                // Since this is not an error, no need to throw unless the close
+                // itself throws an error.
+                self.close()
+                return 0
+            default:
+                throw Error.posix(errno, identifier: "write")
+            }
+        }
+        
+        return sent
+    }
+    
+    /// Read data from the socket into the supplied buffer.
+    /// Returns the amount of bytes actually read.
+    open func read(max: Int, into buffer: MutableByteBuffer) throws -> Int {
+        let receivedBytes = libc.read(descriptor.raw, buffer.baseAddress.unsafelyUnwrapped, max)
+        
+        guard receivedBytes != -1 else {
+            switch errno {
+            case EINTR:
+                // try again
+                return try read(max: max, into: buffer)
+            case ECONNRESET:
+                // closed by peer, need to close this side.
+                // Since this is not an error, no need to throw unless the close
+                // itself throws an error.
+                _ = close()
+                return 0
+            case EAGAIN:
+                // timeout reached (linux)
+                return 0
+            default:
+                throw Error.posix(errno, identifier: "read")
+            }
+        }
+        
+        guard receivedBytes > 0 else {
+            // receiving 0 indicates a proper close .. no error.
+            // attempt a close, no failure possible because throw indicates already closed
+            // if already closed, no issue.
+            // do NOT propogate as error
+            _ = close()
+            return 0
+        }
+        
+        return receivedBytes
     }
 }

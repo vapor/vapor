@@ -21,7 +21,7 @@ public final class HTTP2Peer: Core.Stream {
             print(frame)
         }
         
-        frameSerializer.stream(to: client)
+        frameSerializer.drain(into: client)
     }
     
     public func inputStream(_ input: Frame) {

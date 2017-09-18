@@ -61,7 +61,7 @@ let package = Package(
         .target(name: "JWT", dependencies: ["Crypto"]),
         .testTarget(name: "JWTTests", dependencies: ["JWT"]),
 
-        .target(name: "HTTP2", dependencies: ["CHTTP", "TCP", "HTTP"]),
+        .target(name: "HTTP2", dependencies: ["CHTTP", "TCP", "HTTP", "TLS"]),
         .testTarget(name: "HTTP2Tests", dependencies: ["HTTP2"]),
 
         // Leaf
@@ -81,6 +81,7 @@ let package = Package(
         .target(name: "CHTTP"),
         .target(name: "HTTP", dependencies: ["CHTTP", "TCP"]),
         .testTarget(name: "HTTPTests", dependencies: ["HTTP"]),
+        .target(name: "TLS", dependencies: ["Core", "TCP"]),
         .target(name: "TCP", dependencies: ["Debugging", "Core", "libc"]),
         .testTarget(name: "TCPTests", dependencies: ["TCP"]),
         
@@ -106,8 +107,8 @@ let package = Package(
             "Routing",
             "Service",
             "TCP",
-            "WebSocket",
+            "WebSocket"
         ]),
-        .testTarget(name: "VaporTests", dependencies: ["Vapor"]),
+        .testTarget(name: "VaporTests", dependencies: ["Vapor", "TLS"]),
     ]
 )
