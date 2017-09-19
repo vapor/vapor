@@ -29,6 +29,7 @@ let package = Package(
         // Net
         .library(name: "HTTP", targets: ["HTTP"]),
         .library(name: "TCP", targets: ["TCP"]),
+        .library(name: "TLS", targets: ["TLS"]),
         
         // WebSockets
         .library(name: "WebSocket", targets: ["WebSocket"]),
@@ -60,9 +61,6 @@ let package = Package(
         // JWT
         .target(name: "JWT", dependencies: ["Crypto"]),
         .testTarget(name: "JWTTests", dependencies: ["JWT"]),
-
-        .target(name: "HTTP2", dependencies: ["CHTTP", "TCP", "HTTP", "TLS"]),
-        .testTarget(name: "HTTP2Tests", dependencies: ["HTTP2"]),
 
         // Leaf
         .target(name: "Leaf", dependencies: ["Core", "Service"]),
