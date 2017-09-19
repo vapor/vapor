@@ -8,15 +8,26 @@ enum Error: Swift.Error {
     case contextAlreadyCreated
     case noSSLContext
     case sslError(Int32)
+    case invalidCertificate
 }
 
 #if os(macOS) || os(iOS)
     import Core
+    import Foundation
     import Security
     
-    public class AppleSSLSocket: TCP.Socket {
+    /// https://developer.apple.com/documentation/security/secure_transport
+    public class AppleSSLSocket: TCP.Socket, Core.Stream {
+        public typealias Output = ByteBuffer
+        public typealias Input = ByteBuffer
+        
+        public var outputStream: OutputHandler?
+        public var errorStream: ErrorHandler?
+        
         var context: SSLContext?
+        public var outputBuffer = MutableByteBuffer(start: .allocate(capacity: Int(UInt16.max)), count: Int(UInt16.max))
         var descriptorCopy = UnsafeMutablePointer<Int32>.allocate(capacity: 1)
+        private var source: DispatchSourceRead?
         
         deinit {
             descriptorCopy.deallocate(capacity: 1)
@@ -62,12 +73,6 @@ enum Error: Swift.Error {
             }
         }
         
-        public func initializeSSLServer() throws {
-            let context = try self.initialize(side: .serverSide)
-            
-            try handshake(for: context)
-        }
-        
         @discardableResult
         public override func write(max: Int, from buffer: ByteBuffer) throws -> Int {
             guard let context = self.context else {
@@ -94,6 +99,75 @@ enum Error: Swift.Error {
             SSLRead(context, buffer.baseAddress!, buffer.count, &processed)
             
             return processed
+        }
+        
+        public func inputStream(_ input: ByteBuffer) {
+            do {
+                try self.write(max: input.count, from: input)
+            } catch {
+                self.errorStream?(error)
+                self.close()
+            }
+        }
+        
+        public func setCertificate(to certificate: Data, for context: SSLContext) throws {
+            guard let certificate = SecCertificateCreateWithData(nil, certificate as CFData) else {
+                throw Error.invalidCertificate
+            }
+            
+            let ref = UnsafeMutablePointer<SecIdentity?>.allocate(capacity: 1)
+            defer { ref.deallocate(capacity: 1) }
+            
+            guard
+                SecIdentityCreateWithCertificate(nil, certificate, ref) == 0,
+                SSLSetCertificate(context, [ref, certificate] as CFArray) == 0
+                else {
+                    throw Error.invalidCertificate
+            }
+        }
+        
+        /// Starts receiving data from the client
+        public func start(on queue: DispatchQueue) {
+            let source = DispatchSource.makeReadSource(
+                fileDescriptor: self.descriptor.raw,
+                queue: queue
+            )
+            
+            source.setEventHandler {
+                let read: Int
+                do {
+                    read = try self.read(
+                        max: self.outputBuffer.count,
+                        into: self.outputBuffer
+                    )
+                } catch {
+                    // any errors that occur here cannot be thrown,
+                    // so send them to stream error catcher.
+                    self.errorStream?(error)
+                    return
+                }
+                
+                guard read > 0 else {
+                    // need to close!!! gah
+                    self.close()
+                    return
+                }
+                
+                // create a view into the internal buffer and
+                // send to the output stream
+                let bufferView = ByteBuffer(
+                    start: self.outputBuffer.baseAddress,
+                    count: read
+                )
+                self.outputStream?(bufferView)
+            }
+            
+            source.setCancelHandler {
+                self.close()
+            }
+            
+            source.resume()
+            self.source = source
         }
         
         public override func close() {
