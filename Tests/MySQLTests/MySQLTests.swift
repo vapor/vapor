@@ -17,7 +17,7 @@ class MySQLTests: XCTestCase {
 //            queue: .global()
 //        )
 //        
-//        XCTAssert(try connection.currentQueryFuture?.sync(timeout: .seconds(1)) ?? true)
+//        XCTAssert(try connection.currentQueryFuture?.blockingAwait(timeout: .seconds(1)) ?? true)
 //        
 //        try User.forEach("SELECT * from users", on: connection) { user in
 //            print(user)

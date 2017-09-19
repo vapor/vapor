@@ -112,7 +112,7 @@ final class Connection {
     }
     
     func onPackets(_ handler: @escaping ((Packet) -> ())) -> Promise<Bool> {
-        _ = try? self.currentQueryFuture?.sync()
+        _ = try? self.currentQueryFuture?.blockingAwait()
         let promise = Promise<Bool>()
         
         self.currentQuery = promise

@@ -9,7 +9,7 @@ class ApplicationTests: XCTestCase {
         let queue = DispatchQueue(label: "test")
         
         let SSL = try AppleSSLClient()
-        try SSL.connect(hostname: "google.com", port: 443).sync()
+        try SSL.connect(hostname: "google.com", port: 443).blockingAwait()
         try SSL.initializeSSLClient(hostname: "google.com")
         
         let parser = ResponseParser()
@@ -30,7 +30,7 @@ class ApplicationTests: XCTestCase {
         SSL.start(on: queue)
         serializer.inputStream(Request())
         
-        XCTAssertNoThrow(try promise.future.sync(timeout: .seconds(15)))
+        XCTAssertNoThrow(try promise.future.blockingAwait(timeout: .seconds(15)))
     }
     
     static let allTests = [
