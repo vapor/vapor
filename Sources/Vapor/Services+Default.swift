@@ -17,6 +17,11 @@ extension Services {
             return EngineServerConfig()
         }
 
+        // register client
+        services.register(Client.self) { container in
+            return EngineClient()
+        }
+
         // register middleware
         services.register { container in
             return MiddlewareConfig([
