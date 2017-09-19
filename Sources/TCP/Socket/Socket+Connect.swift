@@ -5,6 +5,7 @@ import libc
 extension Socket {
     /// connect - initiate a connection on a socket
     /// http://man7.org/linux/man-pages/man2/connect.2.html
+    @discardableResult
     public func connect(hostname: String = "localhost", port: UInt16 = 80) throws -> Future<Void> {
         var hints = addrinfo()
 

@@ -34,8 +34,10 @@ enum Error: Swift.Error {
             descriptorCopy.deallocate(capacity: 1)
         }
         
-        public init(socket: Socket) {
+        public init(socket: Socket) throws {
             self.socket = socket
+            
+            super.init(established: socket.descriptor, isNonBlocking: socket.isNonBlocking, shouldReuseAddress: socket.shouldReuseAddress)
         }
         
         func initialize(side: SSLProtocolSide) throws -> SSLContext {
@@ -138,7 +140,7 @@ enum Error: Swift.Error {
         /// Starts receiving data from the client
         public func start(on queue: DispatchQueue) {
             let source = DispatchSource.makeReadSource(
-                fileDescriptor: self.descriptor.raw,
+                fileDescriptor: self.descriptor,
                 queue: queue
             )
             

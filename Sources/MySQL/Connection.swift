@@ -76,7 +76,7 @@ final class Connection {
         let parser = PacketParser()
 
         let source = DispatchSource.makeReadSource(
-            fileDescriptor: socket.descriptor.raw,
+            fileDescriptor: socket.descriptor,
             queue: queue
         )
 
