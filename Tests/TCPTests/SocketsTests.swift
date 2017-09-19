@@ -17,7 +17,7 @@ class SocketsTests: XCTestCase {
 
         let queue = DispatchQueue(label: "codes.vapor.test")
 
-        let write = DispatchSource.makeWriteSource(fileDescriptor: socket.descriptor.raw, queue: queue)
+        let write = DispatchSource.makeWriteSource(fileDescriptor: socket.descriptor, queue: queue)
         write.setEventHandler {
             _ = try! socket.write(data)
         }
@@ -27,7 +27,7 @@ class SocketsTests: XCTestCase {
         group.enter()
 
 
-        let read = DispatchSource.makeReadSource(fileDescriptor: socket.descriptor.raw, queue: queue)
+        let read = DispatchSource.makeReadSource(fileDescriptor: socket.descriptor, queue: queue)
         read.setEventHandler {
             let response = try! socket.read(max: 8_192)
 
@@ -52,11 +52,11 @@ class SocketsTests: XCTestCase {
 
         var accepted: (Socket, DispatchSourceRead)?
 
-        let read = DispatchSource.makeReadSource(fileDescriptor: server.descriptor.raw, queue: queue)
+        let read = DispatchSource.makeReadSource(fileDescriptor: server.descriptor, queue: queue)
         read.setEventHandler {
             let client = try! server.accept()
             let read = DispatchSource.makeReadSource(
-                fileDescriptor: client.descriptor.raw,
+                fileDescriptor: client.descriptor,
                 queue: queue
             )
             read.setEventHandler {

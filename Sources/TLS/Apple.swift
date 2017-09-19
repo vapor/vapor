@@ -2,90 +2,74 @@ import Core
 import TCP
 import Dispatch
 
-enum Error: Swift.Error {
-    case cannotCreateContext
-    case writeError
-    case contextAlreadyCreated
-    case noSSLContext
-    case sslError(Int32)
-    case invalidCertificate
-}
-
 #if os(macOS) || os(iOS)
     import Core
     import Foundation
     import Security
     
+    /// A generic SSL socket based on Apple's Security Framework.
+    ///
+    /// Subclasses TCP.Socket so it can be used in every TCP.Socket's place
+    ///
+    /// Serves as a base for `AppleSSLClient` and `AppleSSLServer`.
+    ///
+    /// Streams incoming raw data through SSL and as ciphertext to the other end.
+    ///
+    /// The TCP socket will also be read and deciphered into plaintext and outputted.
+    ///
     /// https://developer.apple.com/documentation/security/secure_transport
     public class AppleSSLSocket: TCP.Socket, Core.Stream {
+        /// See `OutputStream.Output`
         public typealias Output = ByteBuffer
+        
+        /// See `InputStream.Input`
         public typealias Input = ByteBuffer
         
+        /// See `OutputStream.outputStream`
         public var outputStream: OutputHandler?
+        
+        /// See `Stream.errorStream`
         public var errorStream: ErrorHandler?
         
+        /// The `SSLContext` that manages this stream
         var context: SSLContext?
+        
+        /// The underlying TCP socket
         let socket: Socket
-        public var outputBuffer = MutableByteBuffer(start: .allocate(capacity: Int(UInt16.max)), count: Int(UInt16.max))
+        
+        /// A buffer storing all deciphered data received from the remote
+        let outputBuffer = MutableByteBuffer(start: .allocate(capacity: Int(UInt16.max)), count: Int(UInt16.max))
+        
+        /// Used to give reference/pointer access to the descriptor to SSL
         var descriptorCopy = UnsafeMutablePointer<Int32>.allocate(capacity: 1)
-        private var source: DispatchSourceRead?
+        
+        /// Keeps a strong reference to the DispatchSource so it keeps reading
+        var source: DispatchSourceRead?
         
         deinit {
             descriptorCopy.deallocate(capacity: 1)
+            outputBuffer.baseAddress?.deallocate(capacity: outputBuffer.count)
         }
         
+        /// Creates a new AppleSSLSocket
+        ///
+        /// This should be accessed through the server/client subclass
         public convenience init() throws {
             let socket = try Socket()
             
             try self.init(socket: socket)
         }
         
+        /// Creates a new AppleSSLSocket by leveraging an existing socket
+        ///
+        /// This should be accessed through the server/client subclass
         public init(socket: Socket) throws {
             self.socket = socket
             
             super.init(established: socket.descriptor, isNonBlocking: socket.isNonBlocking, shouldReuseAddress: socket.shouldReuseAddress)
         }
         
-        func initialize(side: SSLProtocolSide) throws -> SSLContext {
-            guard context == nil else {
-                throw Error.contextAlreadyCreated
-            }
-            
-            guard let context = SSLCreateContext(nil, side, .streamType) else {
-                throw Error.cannotCreateContext
-            }
-            
-            self.context = context
-            
-            descriptorCopy.pointee = self.socket.descriptor
-            
-            var status = SSLSetIOFuncs(context, readSSL, writeSSL)
-                
-            guard status == 0 else {
-                throw Error.sslError(status)
-            }
-            
-            status = SSLSetConnection(context, descriptorCopy)
-            
-            guard status == 0 else {
-                throw Error.sslError(status)
-            }
-            
-            return context
-        }
-        
-        func handshake(for context: SSLContext) throws {
-            var result: Int32
-            
-            repeat {
-                result = SSLHandshake(context)
-            } while result == errSSLWouldBlock
-            
-            guard result == errSecSuccess || result == errSSLPeerAuthCompleted else {
-                throw Error.sslError(result)
-            }
-        }
-        
+        /// Writes the buffer to this SSL socket
         @discardableResult
         public override func write(max: Int, from buffer: ByteBuffer) throws -> Int {
             guard let context = self.context else {
@@ -100,6 +84,7 @@ enum Error: Swift.Error {
             return processed
         }
         
+        /// Writes the buffer to this SSL socket
         @discardableResult
         public override func read(max: Int, into buffer: MutableByteBuffer) throws -> Int {
             guard let context = self.context else {
@@ -114,6 +99,7 @@ enum Error: Swift.Error {
             return processed
         }
         
+        /// Accepts a `ByteBuffer` as plain data that will be send as ciphertext using SSL.
         public func inputStream(_ input: ByteBuffer) {
             do {
                 try self.write(max: input.count, from: input)
@@ -123,136 +109,13 @@ enum Error: Swift.Error {
             }
         }
         
-        public func setCertificate(to certificate: Data, for context: SSLContext) throws {
-            guard let certificate = SecCertificateCreateWithData(nil, certificate as CFData) else {
-                throw Error.invalidCertificate
-            }
-            
-            var ref: SecIdentity?
-            
-            var error = SecIdentityCreateWithCertificate(nil, certificate, &ref)
-            
-            guard error == errSecSuccess else {
-                throw Error.invalidCertificate
-            }
-            
-            error = SSLSetCertificate(context, [ref as Any, certificate] as CFArray)
-            
-            guard error == errSecSuccess else {
-                throw Error.invalidCertificate
-            }
-        }
-        
-        /// Starts receiving data from the client
-        public func start(on queue: DispatchQueue) {
-            let source = DispatchSource.makeReadSource(
-                fileDescriptor: self.descriptor,
-                queue: queue
-            )
-            
-            source.setEventHandler {
-                let read: Int
-                do {
-                    read = try self.read(
-                        max: self.outputBuffer.count,
-                        into: self.outputBuffer
-                    )
-                } catch {
-                    // any errors that occur here cannot be thrown,
-                    // so send them to stream error catcher.
-                    self.errorStream?(error)
-                    return
-                }
-                
-                guard read > 0 else {
-                    // need to close!!! gah
-                    self.close()
-                    return
-                }
-                
-                // create a view into the internal buffer and
-                // send to the output stream
-                let bufferView = ByteBuffer(
-                    start: self.outputBuffer.baseAddress,
-                    count: read
-                )
-                self.outputStream?(bufferView)
-            }
-            
-            source.setCancelHandler {
-                self.close()
-            }
-            
-            source.resume()
-            self.source = source
-        }
-        
+        /// Closes the connection
         public override func close() {
-            guard let context = context else {
-                return
+            if let context = context {
+                SSLClose(context)
             }
             
-            SSLClose(context)
             super.close()
         }
-    }
-    
-    fileprivate func readSSL(ref: SSLConnectionRef, pointer: UnsafeMutableRawPointer, length: UnsafeMutablePointer<Int>) -> OSStatus {
-        let socket = ref.assumingMemoryBound(to: Int32.self).pointee
-        let lengthRequested = length.pointee
-        
-        var readCount = Darwin.recv(socket, pointer, lengthRequested, 0)
-        
-        defer { length.initialize(to: readCount) }
-        if readCount == 0 {
-            return OSStatus(errSSLClosedGraceful)
-        } else if readCount < 0 {
-            readCount = 0
-            
-            switch errno {
-            case ENOENT:
-                return OSStatus(errSSLClosedGraceful)
-            case EAGAIN:
-                return OSStatus(errSSLWouldBlock)
-            case EWOULDBLOCK:
-                return OSStatus(errSSLWouldBlock)
-            case ECONNRESET:
-                return OSStatus(errSSLClosedAbort)
-            default:
-                return OSStatus(errSecIO)
-            }
-        }
-        
-        guard lengthRequested <= readCount else {
-            return OSStatus(errSSLWouldBlock)
-        }
-        
-        return noErr
-    }
-    
-    fileprivate func writeSSL(ref: SSLConnectionRef, pointer: UnsafeRawPointer, length: UnsafeMutablePointer<Int>) -> OSStatus {
-        let context = ref.bindMemory(to: Int32.self, capacity: 1).pointee
-        let toWrite = length.pointee
-        
-        var writeCount = Darwin.send(context, pointer, toWrite, 0)
-        
-        defer { length.initialize(to: writeCount) }
-        if writeCount == 0 {
-            return OSStatus(errSSLClosedGraceful)
-        } else if writeCount < 0 {
-            writeCount = 0
-            
-            guard errno == EAGAIN else {
-                return OSStatus(errSecIO)
-            }
-            
-            return OSStatus(errSSLWouldBlock)
-        }
-        
-        guard toWrite <= writeCount else {
-            return Int32(errSSLWouldBlock)
-        }
-        
-        return noErr
     }
 #endif

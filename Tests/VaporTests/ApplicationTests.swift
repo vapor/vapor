@@ -11,11 +11,11 @@ class ApplicationTests: XCTestCase {
         
         let cert = FileManager.default.contents(atPath: "/Users/joannisorlandos/Desktop/server.crt.bin")!
         
-        var clients = [AppleSSLServer]()
+        var clients = [AppleSSLPeer]()
         
         server.drain { client in
             do {
-                let client = try AppleSSLServer(socket: client.socket)
+                let client = try AppleSSLPeer(socket: client.socket)
                 try client.initialize(certificate: cert)
                 
                 let parser = RequestParser(queue: .global())
