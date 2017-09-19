@@ -38,6 +38,6 @@ The end of events marks the end of a stream. Like a TCP socket being closed, or 
 
 ## Why
 
-Asynchronous is important for a webframework like vapor and it's components to keep all components both scalable and maintainable.
+Asynchronous is important for a web framework like vapor and it's components to keep all components both scalable and maintainable.
 
 The added achievement to this project is the increased performance, readability and maintainability of code.

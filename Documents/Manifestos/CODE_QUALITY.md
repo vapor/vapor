@@ -1,6 +1,6 @@
 # Code Quality manifesto
 
-Code quality needs to be ensured for every project. Projects the size of Vapor, however, need strict checks to ensure there is little to no quality regression.
+Code quality needs to be ensured for every project. Projects the size of Vapor however need strict checks to ensure there is little to no quality regression.
 
 This manifesto is designed as a base line for code quality in all official Vapor projects.
 
@@ -11,7 +11,7 @@ Code quality is a very broad term that can mean many things. Definitions differ 
 **Unit tests:**
 
 - An absolute minimum of 80% test coverage
-- When critical code is dependent on random factors, these random factors will be simulated to the extend possible
+- When critical code is dependent on random factors, these random factors will be simulated to the extent possible
 
 **Structure:**
 
@@ -20,7 +20,7 @@ Code quality is a very broad term that can mean many things. Definitions differ 
 **Inline documentation:**
 
 - A minimum of 80% inline documentation for publically exposed functionality
-- Critical objects to the library and it's consumers needs a more thorough explaination of the functionality
+- Critical objects to the library and its consumers needs a more thorough explaination of the functionality
 
 **Tutorials:**
 
