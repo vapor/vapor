@@ -34,6 +34,12 @@ enum Error: Swift.Error {
             descriptorCopy.deallocate(capacity: 1)
         }
         
+        public convenience init() throws {
+            let socket = try Socket()
+            
+            try self.init(socket: socket)
+        }
+        
         public init(socket: Socket) throws {
             self.socket = socket
             
