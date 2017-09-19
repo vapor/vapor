@@ -5,7 +5,7 @@ import libc
 /// Any TCP socket. It doesn't specify being a server or client yet.
 open class Socket {
     /// The file descriptor related to this socket
-    public let descriptor: Descriptor
+    public let descriptor: Int32
 
     /// True if the socket is non blocking
     public let isNonBlocking: Bool
@@ -15,7 +15,7 @@ open class Socket {
 
     /// Creates a TCP socket around an existing descriptor
     public init(
-        established: Descriptor,
+        established: Int32,
         isNonBlocking: Bool,
         shouldReuseAddress: Bool
     ) {
@@ -33,11 +33,10 @@ open class Socket {
         guard sockfd > 0 else {
             throw Error.posix(errno, identifier: "socketCreate")
         }
-        let descriptor = Descriptor(raw: sockfd)
-
+        
         if isNonBlocking {
             // Set the socket to async/non blocking I/O
-            guard fcntl(descriptor.raw, F_SETFL, O_NONBLOCK) == 0 else {
+            guard fcntl(sockfd, F_SETFL, O_NONBLOCK) == 0 else {
                 throw Error.posix(errno, identifier: "setNonBlocking")
             }
         }
@@ -45,13 +44,13 @@ open class Socket {
         if shouldReuseAddress {
             var yes = 1
             let intSize = socklen_t(MemoryLayout<Int>.size)
-            guard setsockopt(descriptor.raw, SOL_SOCKET, SO_REUSEADDR, &yes, intSize) == 0 else {
+            guard setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, intSize) == 0 else {
                 throw Error.posix(errno, identifier: "setReuseAddress")
             }
         }
 
         self.init(
-            established: descriptor,
+            established: sockfd,
             isNonBlocking: isNonBlocking,
             shouldReuseAddress: shouldReuseAddress
         )
@@ -59,13 +58,13 @@ open class Socket {
 
     /// Closes the socket
     open func close() {
-        libc.close(descriptor.raw)
+        libc.close(descriptor)
     }
     
     /// Returns a boolean describing if the socket is still healthy and open
     public var isConnected: Bool {
         var error = 0
-        getsockopt(descriptor.raw, SOL_SOCKET, SO_ERROR, &error, nil)
+        getsockopt(descriptor, SOL_SOCKET, SO_ERROR, &error, nil)
         
         return error == 0
     }
@@ -80,7 +79,7 @@ open class Socket {
             return 0
         }
         
-        let sent = send(descriptor.raw, pointer, max, 0)
+        let sent = send(descriptor, pointer, max, 0)
         guard sent != -1 else {
             switch errno {
             case EINTR:
@@ -103,7 +102,7 @@ open class Socket {
     /// Read data from the socket into the supplied buffer.
     /// Returns the amount of bytes actually read.
     open func read(max: Int, into buffer: MutableByteBuffer) throws -> Int {
-        let receivedBytes = libc.read(descriptor.raw, buffer.baseAddress.unsafelyUnwrapped, max)
+        let receivedBytes = libc.read(descriptor, buffer.baseAddress.unsafelyUnwrapped, max)
         
         guard receivedBytes != -1 else {
             switch errno {

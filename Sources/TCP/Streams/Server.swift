@@ -50,7 +50,7 @@ public final class Server: Core.OutputStream {
         try socket.listen(backlog: backlog)
 
         let source = DispatchSource.makeReadSource(
-            fileDescriptor: socket.descriptor.raw,
+            fileDescriptor: socket.descriptor,
             queue: queue
         )
         source.setEventHandler {

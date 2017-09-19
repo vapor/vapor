@@ -29,7 +29,7 @@ extension Socket {
             throw Error(identifier: "unwrapAddress", reason: "Could not unwrap address info.")
         }
 
-        res = libc.connect(descriptor.raw, info.pointee.ai_addr, info.pointee.ai_addrlen)
+        res = libc.connect(descriptor, info.pointee.ai_addr, info.pointee.ai_addrlen)
         guard res == 0 || (isNonBlocking && errno == EINPROGRESS) else {
             throw Error.posix(errno, identifier: "connect")
         }
@@ -39,7 +39,7 @@ extension Socket {
         }
         
         let promise = Promise<Void>()
-        let write = DispatchSource.makeWriteSource(fileDescriptor: descriptor.raw, queue: .global())
+        let write = DispatchSource.makeWriteSource(fileDescriptor: descriptor, queue: .global())
         
         write.setEventHandler {
             promise.complete(())

@@ -25,12 +25,17 @@ enum Error: Swift.Error {
         public var errorStream: ErrorHandler?
         
         var context: SSLContext?
+        let socket: Socket
         public var outputBuffer = MutableByteBuffer(start: .allocate(capacity: Int(UInt16.max)), count: Int(UInt16.max))
         var descriptorCopy = UnsafeMutablePointer<Int32>.allocate(capacity: 1)
         private var source: DispatchSourceRead?
         
         deinit {
             descriptorCopy.deallocate(capacity: 1)
+        }
+        
+        public init(socket: Socket) {
+            self.socket = socket
         }
         
         func initialize(side: SSLProtocolSide) throws -> SSLContext {
@@ -44,7 +49,7 @@ enum Error: Swift.Error {
             
             self.context = context
             
-            descriptorCopy.pointee = self.descriptor.raw
+            descriptorCopy.pointee = self.socket.descriptor
             
             var status = SSLSetIOFuncs(context, readSSL, writeSSL)
                 
@@ -115,14 +120,18 @@ enum Error: Swift.Error {
                 throw Error.invalidCertificate
             }
             
-            let ref = UnsafeMutablePointer<SecIdentity?>.allocate(capacity: 1)
-            defer { ref.deallocate(capacity: 1) }
+            var ref: SecIdentity?
             
-            guard
-                SecIdentityCreateWithCertificate(nil, certificate, ref) == 0,
-                SSLSetCertificate(context, [ref, certificate] as CFArray) == 0
-                else {
-                    throw Error.invalidCertificate
+            var error = SecIdentityCreateWithCertificate(nil, certificate, &ref)
+            
+            guard error == errSecSuccess else {
+                throw Error.invalidCertificate
+            }
+            
+            error = SSLSetCertificate(context, [ref as Any, certificate] as CFArray)
+            
+            guard error == errSecSuccess else {
+                throw Error.invalidCertificate
             }
         }
         
