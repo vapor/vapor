@@ -71,8 +71,8 @@ class WebSocketTests : XCTestCase {
             promise0.complete(())
         }
         
-        try promise0.future.sync(timeout: .seconds(10))
-//        try promise1.future.sync()
+        try promise0.future.blockingAwait(timeout: .seconds(10))
+//        try promise1.future.blockingAwait()
     }
     
     static let allTests = [

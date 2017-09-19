@@ -56,7 +56,7 @@ public final class Client: Core.Stream {
 
         if writeSource == nil {
             let source = DispatchSource.makeWriteSource(
-                fileDescriptor: socket.descriptor.raw,
+                fileDescriptor: socket.descriptor,
                 queue: queue
             )
             
@@ -96,7 +96,7 @@ public final class Client: Core.Stream {
     /// Starts receiving data from the client
     public func start() {
         let source = DispatchSource.makeReadSource(
-            fileDescriptor: socket.descriptor.raw,
+            fileDescriptor: socket.descriptor,
             queue: queue
         )
 

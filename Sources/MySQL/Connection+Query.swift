@@ -4,7 +4,7 @@ import Core
 extension Table {
     static func forEach(_ sql: String, on connection: Connection, _ handler: @escaping ((Self) -> ())) throws {
         // Cannot send another SQL query before the other one is done
-        _ = try connection.currentQueryFuture?.sync()
+        _ = try connection.currentQueryFuture?.blockingAwait()
 
         let resultBuilder = ModelBuilder<Self>(connection: connection)
 
@@ -36,7 +36,7 @@ extension Table {
 extension Connection {
     func query(_ sql: String, _ handler: @escaping ((Row) -> ())) throws {
         // Cannot send another SQL query before the other one is done
-        _ = try self.currentQueryFuture?.sync()
+        _ = try self.currentQueryFuture?.blockingAwait()
 
         let resultBuilder = ResultsBuilder(connection: self)
 
