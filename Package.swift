@@ -14,6 +14,9 @@ let package = Package(
         // Debugging
         .library(name: "Debugging", targets: ["Debugging"]),
 
+        // Fluent
+        // .library(name: "Fluent", targets: ["Fluent"]),
+
         // Leaf
         .library(name: "JWT", targets: ["JWT"]),
 
@@ -39,6 +42,9 @@ let package = Package(
         // Service
         .library(name: "Service", targets: ["Service"]),
 
+        // SQLite
+        .library(name: "SQLite", targets: ["SQLite"]),
+
         // Vapor
         .library(name: "Vapor", targets: ["Vapor"]),
     ],
@@ -59,6 +65,10 @@ let package = Package(
         // Debugging
         .target(name: "Debugging"),
         .testTarget(name: "DebuggingTests", dependencies: ["Debugging"]),
+
+        // Debugging
+//        .target(name: "Fluent", dependencies: ["SQLite"]),
+//        .testTarget(name: "FluentTests", dependencies: ["Fluent"]),
 
         // JWT
         .target(name: "JWT", dependencies: ["Crypto"]),
@@ -95,6 +105,12 @@ let package = Package(
         // Service
         .target(name: "Service", dependencies: ["Core", "Debugging"]),
         .testTarget(name: "ServiceTests", dependencies: ["Service"]),
+
+        // SQLite
+        .target(name: "CSQLite"),
+        .target(name: "SQLite", dependencies: ["Core", "CSQLite", "Debugging"]),
+        .testTarget(name: "SQLiteTests", dependencies: ["SQLite"]),
+
 
         // Vapor
         .target(name: "Development", dependencies: ["Leaf", "Vapor", "MySQL"]),
