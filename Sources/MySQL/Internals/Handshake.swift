@@ -109,7 +109,7 @@ extension Connection {
         }
     }
     
-    /// Send the handshaek to the client
+    /// Send the handshake to the client
     func sendHandshake() throws {
         guard let handshake = self.handshake else {
             throw Error(.invalidHandshake)

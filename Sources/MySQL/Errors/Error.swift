@@ -29,7 +29,7 @@ public struct Error : Swift.Error, Debuggable, Traceable {
          function: String = #function,
          line: UInt = #line,
          column: UInt = #column
-        ) {
+    ) {
         self.stackTrace = Error.makeStackTrace()
         self.file = file
         self.function = function
