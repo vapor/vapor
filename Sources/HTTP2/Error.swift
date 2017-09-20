@@ -49,7 +49,7 @@ public struct Error : Swift.Error, Debuggable, Traceable, Encodable {
     internal let problem: Problem
     
     /// The problem occurring
-    enum Problem : String {
+    enum Problem: String {
         /// The HTTP connection was not upgraded to HTTP2
         case notUpgraded
     }
