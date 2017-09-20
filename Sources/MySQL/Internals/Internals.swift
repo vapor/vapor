@@ -22,7 +22,7 @@ enum Response {
         }
         
         var identifier: String {
-            return "mysql:error:\(message)"
+            return "remote-error"
         }
         
         let code: UInt16
