@@ -8,7 +8,9 @@ import Vapor
 
 extension View: ResponseRepresentable {
     public func makeResponse(for request: Request) throws -> Response {
-        return Response(body: Body(self.data))
+        return Response(headers: [
+            .contentType: "text/html"
+        ], body: Body(self.data))
     }
 }
 

@@ -12,7 +12,7 @@ extension Message {
         }
         
         for (type, decoder) in ContentCoders.default.decoders where type == media {
-            return try decoder.decode(D.self, from: self.body)
+            return try decoder.makeBody(self.body, from: D.self)
         }
         
         throw Error.unknownMediaType()

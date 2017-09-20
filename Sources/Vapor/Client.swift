@@ -3,6 +3,8 @@ import Dispatch
 import HTTP
 import TCP
 
+public typealias HTTPClient = HTTP.Client
+
 // MARK: Connect
 extension HTTP.Client {
     /// Connects an `HTTP.Client` to an HTTP Server
