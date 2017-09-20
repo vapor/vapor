@@ -11,13 +11,19 @@ class SQLiteTests: XCTestCase {
     }
 
     func testTables() {
-        try! database.statement("DROP TABLE IF EXISTS foo").execute().sync()
-        try! database.statement("CREATE TABLE foo (bar INT(4), baz VARCHAR(16), biz FLOAT)").execute().sync()
-        try! database.statement("INSERT INTO foo VALUES (42, 'Life', 0.44)").execute().sync()
-        try! database.statement("INSERT INTO foo VALUES (1337, 'Elite', 209.234)").execute().sync()
-        try! database.statement("INSERT INTO foo VALUES (9, NULL, 34.567)").execute().sync()
+        try! database.query("select * From foo").drain { row in
+            print(row)
+        }.catch { error in
+            print("failed: \(error)")
+        }
 
-        if let resultBar = try! database.statement("SELECT * FROM foo WHERE bar = 42").all().sync().first {
+        try! database.query("DROP TABLE IF EXISTS foo").execute().sync()
+        try! database.query("CREATE TABLE foo (bar INT(4), baz VARCHAR(16), biz FLOAT)").execute().sync()
+        try! database.query("INSERT INTO foo VALUES (42, 'Life', 0.44)").execute().sync()
+        try! database.query("INSERT INTO foo VALUES (1337, 'Elite', 209.234)").execute().sync()
+        try! database.query("INSERT INTO foo VALUES (9, NULL, 34.567)").execute().sync()
+
+        if let resultBar = try! database.query("SELECT * FROM foo WHERE bar = 42").all().sync().first {
             XCTAssertEqual(resultBar["bar"]?.integer, 42)
             XCTAssertEqual(resultBar["baz"]?.text, "Life")
             XCTAssertEqual(resultBar["biz"]?.float, 0.44)
@@ -26,14 +32,14 @@ class SQLiteTests: XCTestCase {
         }
 
 
-        if let resultBaz = try! database.statement("SELECT * FROM foo where baz = 'Elite'").all().sync().first {
+        if let resultBaz = try! database.query("SELECT * FROM foo where baz = 'Elite'").all().sync().first {
             XCTAssertEqual(resultBaz["bar"]?.integer, 1337)
             XCTAssertEqual(resultBaz["baz"]?.text, "Elite")
         } else {
             XCTFail("Could not get baz result")
         }
 
-        if let resultBaz = try! database.statement("SELECT * FROM foo where bar = 9").all().sync().first {
+        if let resultBaz = try! database.query("SELECT * FROM foo where bar = 9").all().sync().first {
             XCTAssertEqual(resultBaz["bar"]?.integer, 9)
             XCTAssertEqual(resultBaz["baz"]?.isNull, true)
         } else {
@@ -45,20 +51,20 @@ class SQLiteTests: XCTestCase {
         /// This string includes characters from most Unicode categories
         /// such as Latin, Latin-Extended-A/B, Cyrrilic, Greek etc.
         let unicode = "®¿ÐØ×ĞƋƢǂǊǕǮȐȘȢȱȵẀˍΔῴЖ♆"
-        try! database.statement("DROP TABLE IF EXISTS `foo`").execute().sync()
-        try! database.statement("CREATE TABLE `foo` (bar TEXT)").execute().sync()
+        try! database.query("DROP TABLE IF EXISTS `foo`").execute().sync()
+        try! database.query("CREATE TABLE `foo` (bar TEXT)").execute().sync()
 
-        try! database.statement("INSERT INTO `foo` VALUES(?)")
+        try! database.query("INSERT INTO `foo` VALUES(?)")
             .bind(unicode)
             .execute()
             .sync()
 
 
-        let selectAllResults = try! database.statement("SELECT * FROM `foo`").all().sync().first
+        let selectAllResults = try! database.query("SELECT * FROM `foo`").all().sync().first
         XCTAssertNotNil(selectAllResults)
         XCTAssertEqual(selectAllResults!["bar"]?.text, unicode)
 
-        let selectWhereResults = try! database.statement("SELECT * FROM `foo` WHERE bar = '\(unicode)'").all().sync().first
+        let selectWhereResults = try! database.query("SELECT * FROM `foo` WHERE bar = '\(unicode)'").all().sync().first
         XCTAssertNotNil(selectWhereResults)
         XCTAssertEqual(selectWhereResults!["bar"]?.text, unicode)
     }
@@ -66,14 +72,14 @@ class SQLiteTests: XCTestCase {
     func testBigInts() throws {
         let max = Int.max
 
-        try! database.statement("DROP TABLE IF EXISTS foo").execute().sync()
-        try! database.statement("CREATE TABLE foo (max INT)").execute().sync()
-        try! database.statement("INSERT INTO foo VALUES (?)")
+        try! database.query("DROP TABLE IF EXISTS foo").execute().sync()
+        try! database.query("CREATE TABLE foo (max INT)").execute().sync()
+        try! database.query("INSERT INTO foo VALUES (?)")
             .bind(max)
             .execute()
             .sync()
 
-        if let result = try! database.statement("SELECT * FROM foo").all().sync().first {
+        if let result = try! database.query("SELECT * FROM foo").all().sync().first {
             XCTAssertEqual(result["max"]?.integer, max)
         }
     }
@@ -81,14 +87,14 @@ class SQLiteTests: XCTestCase {
     func testBlob() {
         let data = Data(bytes: [0, 1, 2])
 
-        try! database.statement("DROP TABLE IF EXISTS `foo`").execute().sync()
-        try! database.statement("CREATE TABLE foo (bar BLOB(4))").execute().sync()
-        try! database.statement("INSERT INTO foo VALUES (?)")
+        try! database.query("DROP TABLE IF EXISTS `foo`").execute().sync()
+        try! database.query("CREATE TABLE foo (bar BLOB(4))").execute().sync()
+        try! database.query("INSERT INTO foo VALUES (?)")
             .bind(data)
             .execute()
             .sync()
 
-        if let result = try! database.statement("SELECT * FROM foo").all().sync().first {
+        if let result = try! database.query("SELECT * FROM foo").all().sync().first {
             XCTAssertEqual(result["bar"]!.blob, data)
         } else {
             XCTFail()
@@ -97,7 +103,7 @@ class SQLiteTests: XCTestCase {
 
     func testError() {
         do {
-            try database.statement("asdf").execute().sync()
+            try database.query("asdf").execute().sync()
             XCTFail("Should have errored")
         } catch let error as SQLite.Error {
             print(error)

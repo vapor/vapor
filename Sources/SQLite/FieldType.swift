@@ -10,7 +10,7 @@ public enum FieldType {
     case null
 
     /// Create a new field type from statement and an offset.
-    init(statement: Statement, offset: Int32) throws {
+    init(statement: Query, offset: Int32) throws {
         switch sqlite3_column_type(statement.raw, offset) {
         case SQLITE_INTEGER:
             self = .integer

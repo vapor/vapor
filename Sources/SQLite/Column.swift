@@ -7,7 +7,7 @@ public final class Column {
     public var name: String
 
     /// Create a column from a statement pointer and offest.
-    init(statement: Statement, offset: Int32) throws {
+    init(statement: Query, offset: Int32) throws {
         guard let nameRaw = sqlite3_column_name(statement.raw, offset) else {
             throw Error(problem: .error, reason: "Unexpected nil column name")
         }

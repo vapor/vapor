@@ -15,7 +15,7 @@ let SQLITE_TRANSIENT = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
 ///         .then { ... }
 ///         .catch { ... }
 ///
-public final class Statement: Core.OutputStream {
+public final class Query: Core.OutputStream {
     // stream conformance
     public typealias Output = Row
 
@@ -36,7 +36,7 @@ public final class Statement: Core.OutputStream {
     public let database: Database
 
     /// the raw query string
-    public let query: String
+    public let statement: String
 
     /// current bind position
     var bindPosition: Int32
@@ -53,9 +53,9 @@ public final class Statement: Core.OutputStream {
     /// The supplied DispatchQueue will be used to dispatch output stream calls.
     /// Make sure to supply the event loop to this parameter so you get called back
     /// on the appropriate thread.
-    public init(query: String, database: Database) throws {
+    public init(statement: String, database: Database) throws {
         var raw: Raw?
-        let ret = sqlite3_prepare_v2(database.raw, query, -1, &raw, nil)
+        let ret = sqlite3_prepare_v2(database.raw, statement, -1, &raw, nil)
         guard ret == SQLITE_OK else {
             throw Error(statusCode: ret, database: database)
         }
@@ -66,7 +66,7 @@ public final class Statement: Core.OutputStream {
 
         self.database = database
         self.raw = statementPointer
-        self.query = query
+        self.statement = statement
 
         bindPosition = 0
     }
@@ -194,6 +194,8 @@ public final class Statement: Core.OutputStream {
         // drain the stream of results
         drain { row in
             rows.append(row)
+        }.catch { error in
+            promise.fail(error)
         }
 
         // start the statement's output stream

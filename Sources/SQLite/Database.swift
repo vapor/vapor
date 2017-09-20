@@ -47,8 +47,8 @@ public final class Database {
     }
 
     /// Creates a new SQLite statement.
-    public func statement(_ query: String) throws -> Statement {
-        return try Statement(query: query, database: self)
+    public func query(_ query: String) throws -> Query {
+        return try Query(statement: query, database: self)
     }
 
     /// Returns an identifier for the last inserted row.

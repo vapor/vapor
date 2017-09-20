@@ -12,7 +12,7 @@ public struct Field {
     public var data: Data
 
     /// Create a field from statement pointer, column, and offset.
-    init(statement: Statement, column: Column, offset: Int32) throws {
+    init(statement: Query, column: Column, offset: Int32) throws {
         let type = try FieldType(statement: statement, offset: offset)
         switch type {
         case .integer:
