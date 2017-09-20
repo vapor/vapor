@@ -14,103 +14,70 @@ struct Handshake {
 }
 
 extension Packet {
+    /// Parses this packet into the server's handshake
     func parseHandshake() throws -> Handshake {
         let length = payload.count
         
-        // Require or `10` to be the protocol version
-        guard length > 1, payload[0] == 10 else {
-            throw MySQLError.invalidHandshake
+        let parser = Parser(packet: self)
+        
+        // Require decimal `10` to be the protocol version
+        guard try parser.byte() == 10 else {
+            throw Error(.invalidHandshake)
         }
         
+        // UTF-8
         var serverVersionBuffer = [UInt8]()
-        var position = 1
         
-        while position < length, payload[position] != 0 {
-            serverVersionBuffer.append(payload[position])
-            position = position &+ 1
+        // Parse the server's version
+        while parser.position < length, payload[parser.position] != 0 {
+            serverVersionBuffer.append(try parser.byte())
+        }
+        
+        guard try parser.byte() == 0 else {
+            throw Error(.invalidHandshake)
         }
         
         guard let serverVersion = String(bytes: serverVersionBuffer, encoding: .utf8) else {
-            throw MySQLError.invalidHandshake
-        }
-        
-        func require(_ n: Int) throws {
-            guard position &+ n < length else {
-                throw MySQLError.invalidHandshake
-            }
-        }
-        
-        func readUInt16() throws -> UInt16 {
-            try require(2)
-            
-            let byte0 = (UInt16(payload[position]).littleEndian >> 1) & 0xff
-            let byte1 = (UInt16(payload[position &+ 1]).littleEndian) & 0xff
-            
-            defer { position = position &+ 2 }
-            
-            return byte0 | byte1
-        }
-        
-        func readUInt32() throws -> UInt32 {
-            try require(4)
-            
-            let byte0 = (UInt32(payload[position]).littleEndian >> 3) & 0xff
-            let byte1 = (UInt32(payload[position &+ 1]).littleEndian >> 2) & 0xff
-            let byte2 = (UInt32(payload[position &+ 2]).littleEndian >> 1) & 0xff
-            let byte3 = (UInt32(payload[position &+ 3]).littleEndian) & 0xff
-            
-            defer { position = position &+ 4 }
-            
-            return byte0 | byte1 | byte2 | byte3
-        }
-        
-        func buffer(length: Int) throws -> [UInt8] {
-            try require(length)
-            
-            defer { position = position &+ length }
-            
-            return Array(payload[position..<position &+ length])
+            throw Error(.invalidHandshake)
         }
         
         // ID of the MySQL internal thread handling this connection
-        let threadId = try readUInt32()
+        let threadId = try parser.parseUInt32()
         
-        var randomSeed = try buffer(length: 8)
+        // 8 bytes of the random seed
+        var randomSeed = try parser.buffer(length: 8)
         
         // null terminator of the random seed
-        position = position &+ 1
+        guard try parser.byte() == 0 else {
+            throw Error(.invalidHandshake)
+        }
         
         // capabilities + default collation
-        try require(3)
         
-        let capabilities = Capabilities(rawValue: UInt32(try readUInt16()))
+        // two of the possible 4 server capabilities bytes
+        let capabilities = Capabilities(rawValue: UInt32(try parser.parseUInt16()))
         
-        let defaultCollation = payload[position]
+        let defaultCollation = try parser.byte()
         
-        // skip past the default collation
-        position = position &+ 1
-        
-        let serverStatus = try readUInt16()
+        let serverStatus = try parser.parseUInt16()
         
         // 13 reserved bytes
-        try require(13)
-        position = position &+ 13
+        try parser.require(13)
+        parser.position = parser.position &+ 13
         
         var authenticationScheme: String? = nil
         
         // if MySQL server version >= 4.1
-        if position &+ 13 < length {
-            // 13 extra random seed bytes, the last is a null
-            randomSeed.append(contentsOf: payload[position..<position &+ 12])
+        if parser.position &+ 13 < length {
+            // 12 extra random seed bytes
+            randomSeed.append(contentsOf: try parser.buffer(length: 12))
             
-            guard payload[position &+ 13] == 0 else {
-                throw MySQLError.invalidHandshake
+            guard try parser.byte() == 0 else {
+                throw Error(.invalidHandshake)
             }
             
-            position = position &+ 13
-            
-            if position < payload.count &- 1 {
-                authenticationScheme = String(bytes: payload[position..<payload.count &- 1], encoding: .utf8)
+            if parser.position < payload.count &- 1 {
+                authenticationScheme = String(bytes: payload[parser.position..<payload.count &- 1], encoding: .utf8)
             }
         }
         
@@ -129,6 +96,7 @@ import Crypto
 import Core
 
 extension Connection {
+    /// Respond to the server's incoming handshake
     func doHandshake(for packet: Packet) {
         do {
             let handshake = try packet.parseHandshake()
@@ -136,13 +104,15 @@ extension Connection {
             
             try self.sendHandshake()
         } catch {
+            self.authenticated.fail(error)
             self.socket.close()
         }
     }
     
+    /// Send the handshake to the client
     func sendHandshake() throws {
         guard let handshake = self.handshake else {
-            throw MySQLError.invalidHandshake
+            throw Error(.invalidHandshake)
         }
         
         if handshake.isGreaterThan4 {
@@ -217,23 +187,23 @@ extension Connection {
             
             try self.write(packetFor: data, startingAt: 1)
         } else {
-            throw MySQLError.invalidHandshake
+            throw Error(.invalidHandshake)
         }
     }
     
-    func finishAuthentication(for packet: Packet) {
+    /// Parse the authentication request
+    func finishAuthentication(for packet: Packet, completing: Promise<Void>) {
         do {
             let response = try packet.parseResponse(mysql41: self.mysql41)
             
             switch response {
             case .error(_):
-                self.currentQuery?.complete(false)
+                completing.fail(Error(.invalidCredentials))
                 // Unauthenticated
                 self.socket.close()
                 return
             default:
-                self.authenticated = true
-                self.currentQuery?.complete(true)
+                completing.complete(())
                 return
             }
         } catch {

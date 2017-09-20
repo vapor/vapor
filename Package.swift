@@ -48,6 +48,9 @@ let package = Package(
         .target(name: "Core", dependencies: ["libc", "Debugging"]),
         .testTarget(name: "CoreTests", dependencies: ["Core"]),
         .target(name: "libc"),
+        
+        // Codable
+        .target(name: "CodableHelpers"),
 
         // Crypto
         .target(name: "Crypto", dependencies: ["Core"]),
@@ -71,9 +74,9 @@ let package = Package(
 
         // MySQL
 
-        .target(name: "MySQL", dependencies: ["TCP", "Crypto"]),
+        .target(name: "MySQL", dependencies: ["TCP", "Crypto", "CodableHelpers"]),
         .testTarget(name: "MySQLTests", dependencies: ["MySQL"]),
-
+        
         // Net
         .target(name: "CHTTP"),
         .target(name: "HTTP", dependencies: ["CHTTP", "TCP"]),

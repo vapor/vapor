@@ -1,29 +1,32 @@
 import Core
 
-protocol ResultsStream : Stream {
-    associatedtype Input = Packet
-    
+protocol ResultsStream : OutputStream, ClosableStream {
     var columns: [Field] { get set }
     var header: UInt64? { get set }
-    var connection: Connection { get }
+    var mysql41: Bool { get }
     
     func parseRows(from packet: Packet) throws -> Output
-    var complete: (()->())? { get set }
 }
 
 fileprivate let serverMoreResultsExists: UInt16 = 0x0008
 
 extension ResultsStream {
-    func inputStream(_ input: Packet) {
+    public func inputStream(_ input: Packet) {
         do {
             guard let header = self.header else {
                 let parser = Parser(packet: input)
                 
                 guard let header = try? parser.parseLenEnc() else {
-                    if case .error(let error) = try input.parseResponse(mysql41: connection.mysql41) {
+                    if case .error(let error) = try input.parseResponse(mysql41: mysql41) {
                         self.errorStream?(error)
+                    } else {
+                        self.onClose?()
                     }
                     return
+                }
+                
+                if header == 0 {
+                    self.onClose?()
                 }
                 
                 self.header = header
@@ -48,11 +51,11 @@ extension ResultsStream {
             parser.position = 1
             let flags = try parser.parseUInt16()
             
-            if flags & serverMoreResultsExists == 0 {
+            if flags & serverMoreResultsExists != 0 {
                 return
             }
             
-            complete?()
+            onClose?()
             return
         }
         
@@ -60,7 +63,7 @@ extension ResultsStream {
         if packet.payload.count > 0,
             let pointer = packet.payload.baseAddress,
             pointer[0] == 0xff,
-            let error = try packet.parseResponse(mysql41: self.connection.mysql41).error {
+            let error = try packet.parseResponse(mysql41: self.mysql41).error {
                 throw error
         }
         
@@ -75,7 +78,7 @@ extension ResultsStream {
         // EOF
         if packet.isResponse {
             do {
-                switch try packet.parseResponse(mysql41: connection.mysql41 == true) {
+                switch try packet.parseResponse(mysql41: mysql41) {
                 case .error(let error):
                     self.errorStream?(error)
                     return
@@ -83,12 +86,12 @@ extension ResultsStream {
                     fallthrough
                 case .eof(_):
                     guard amount == columns.count else {
-                        self.errorStream?(MySQLError.invalidPacket)
+                        self.errorStream?(Error(.invalidPacket))
                         return
                     }
                 }
             } catch {
-                self.errorStream?(MySQLError.invalidPacket)
+                self.errorStream?(Error(.invalidPacket))
                 return
             }
         }
@@ -111,7 +114,7 @@ extension ResultsStream {
             let length = try parser.parseUInt32()
             
             guard let fieldType = Field.FieldType(rawValue: try parser.byte()) else {
-                throw MySQLError.invalidPacket
+                throw Error(.invalidPacket)
             }
             
             let flags = Field.Flags(rawValue: try parser.parseUInt16())
@@ -133,7 +136,7 @@ extension ResultsStream {
             
             self.columns.append(field)
         } catch {
-            self.errorStream?(MySQLError.invalidPacket)
+            self.errorStream?(Error(.invalidPacket))
             return
         }
     }

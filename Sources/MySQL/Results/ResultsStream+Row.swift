@@ -1,18 +1,12 @@
-class ResultsBuilder : ResultsStream {
+final class RowStream : ResultsStream {
     /// Parses a packet into a Row
     func parseRows(from packet: Packet) throws -> Row {
         return try packet.makeRow(columns: columns)
     }
     
-    init(connection: Connection) {
-        self.connection = connection
+    init(mysql41: Bool) {
+        self.mysql41 = mysql41
     }
-    
-    /// Streams `nil` for end of stream
-    var complete: (()->())?
-    
-    /// The connection that the results are streamed frmo
-    var connection: Connection
     
     /// A list of all fields' descriptions in this table
     var columns = [Field]()
@@ -25,6 +19,10 @@ class ResultsBuilder : ResultsStream {
     var outputStream: OutputHandler?
     
     var errorStream: ErrorHandler?
+    
+    let mysql41: Bool
+    
+    var onClose: (() -> ())?
     
     typealias Input = Packet
 }

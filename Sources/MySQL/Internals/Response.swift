@@ -1,60 +1,28 @@
 import Foundation
 
-enum Response {
-    struct State {
-        let marker: UInt8
-        let state: (UInt8, UInt8, UInt8, UInt8, UInt8)
-    }
-    
-    var error: Error? {
-        if case .error(let error) = self {
-            return error
-        }
-        
-        return nil
-    }
-    
-    struct Error : Swift.Error {
-        let code: UInt16
-        let state: State?
-        let message: String
-    }
-    
-    case error(Error)
-    
-    struct OK {
-        let affectedRows: UInt64
-        let lastInsertId: UInt64
-        let status: UInt16?
-        let warnings: UInt16?
-        let data: Data
-    }
-    
-    case ok(OK)
-    case eof(OK)
-}
-
 extension Packet {
     var isResponse: Bool {
         return payload.count > 0 && (payload[0] == 0xff || payload[0] == 0xfe || payload[0] == 0x00)
     }
     
+    /// Parses this packet into a Response
     func parseResponse(mysql41: Bool) throws -> Response {
         guard self.payload.count > 0 else {
-            throw MySQLError.invalidResponse
+            throw Error(.invalidResponse)
         }
         
         switch self.payload[0] {
+            // error
         case 0xff:
             guard self.payload.count > 3 else {
-                throw MySQLError.invalidResponse
+                throw Error(.invalidResponse)
             }
             
             let code = (UInt16(payload[1]) << 8) | UInt16(payload[2])
             
             if mysql41 {
                 guard self.payload.count > 10 else {
-                    throw MySQLError.invalidResponse
+                    throw Error(.invalidResponse)
                 }
                 
                 let state = Response.State(
@@ -70,11 +38,13 @@ extension Packet {
                 
                 return .error(Response.Error(code: code, state: nil, message: message))
             }
+            // OK
         case 0x00:
             fallthrough
+            // EOF
         case 0xfe:
             guard self.payload.count > 3 else {
-                throw MySQLError.invalidResponse
+                throw Error(.invalidResponse)
             }
             
             let parser = Parser(packet: self, position: 1)
@@ -106,7 +76,7 @@ extension Packet {
                 return .eof(ok)
             }
         default:
-            throw MySQLError.invalidResponse
+            throw Error(.invalidResponse)
         }
     }
 }
