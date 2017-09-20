@@ -61,7 +61,7 @@ public final class Server: Core.OutputStream {
                 self.errorStream?(error)
                 return
             }
-
+            
             let worker = self.worker.next()!
             let client = Client(socket: socket, queue: worker)
             client.errorStream = self.errorStream

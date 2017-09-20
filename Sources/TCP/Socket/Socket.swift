@@ -7,6 +7,9 @@ public class Socket {
     /// The file descriptor related to this socket
     public let descriptor: Descriptor
 
+    /// The remote's address
+    public var address: sockaddr_storage?
+    
     /// True if the socket is non blocking
     public let isNonBlocking: Bool
 

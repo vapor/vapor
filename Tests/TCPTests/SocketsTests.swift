@@ -23,9 +23,7 @@ class SocketsTests: XCTestCase {
         }
         write.resume()
 
-        let group = DispatchGroup()
-        group.enter()
-
+        let semaphore = DispatchSemaphore(value: 0)
 
         let read = DispatchSource.makeReadSource(fileDescriptor: socket.descriptor.raw, queue: queue)
         read.setEventHandler {
@@ -33,12 +31,12 @@ class SocketsTests: XCTestCase {
 
             let string = String(data: response, encoding: .utf8)
             XCTAssert(string?.contains("HTTP/1.0 400 Bad Request") == true)
-            group.leave()
+            semaphore.signal()
         }
         read.resume()
 
         XCTAssertNotNil([read, write])
-        group.wait()
+        semaphore.wait()
     }
 
     func testBind() throws {
@@ -47,8 +45,7 @@ class SocketsTests: XCTestCase {
         try server.listen()
 
         let queue = DispatchQueue(label: "codes.vapor.test")
-        let group = DispatchGroup()
-        group.enter()
+        let semaphore = DispatchSemaphore(value: 0)
 
         var accepted: (Socket, DispatchSourceRead)?
 
@@ -62,12 +59,13 @@ class SocketsTests: XCTestCase {
             read.setEventHandler {
                 let data = try! client.read(max: 8_192)
                 XCTAssertEqual(String(data: data, encoding: .utf8), "hello")
-                group.leave()
+                semaphore.signal()
             }
             read.resume()
             
             accepted = (client, read)
             XCTAssertNotNil(accepted)
+            XCTAssertEqual(client.address?.remoteAddress, "127.0.0.1")
         }
         read.resume()
         XCTAssertNotNil(read)
@@ -79,7 +77,7 @@ class SocketsTests: XCTestCase {
             _ = try! client.write(data)
         }
 
-        group.wait()
+        semaphore.wait()
     }
 
     static let allTests = [
