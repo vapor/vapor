@@ -15,9 +15,31 @@ public struct Cookie {
     }
 }
 
+/// Can be initialized by a CookieValue
+public protocol CookieValueInitializable {
+    /// Creates a new instance from a value
+    init(from value: Cookie.Value) throws
+}
+
+/// Can be represented as a CookieValue
+public protocol CookieValueRepresentable {
+    /// Creates a new `Cookie.Value` from this instance
+    func makeCookieValue() throws -> Cookie.Value
+}
+
 extension Cookie {
     /// The `Cookie` pair's `Value`
-    public struct Value: ExpressibleByStringLiteral {
+    public struct Value: CookieValueInitializable, CookieValueRepresentable, ExpressibleByStringLiteral {
+        /// Initializes itself to itself
+        public init(from value: Cookie.Value) throws {
+            self = value
+        }
+        
+        /// Returns itself
+        public func makeCookieValue() throws -> Cookie.Value {
+            return self
+        }
+        
         /// A cookie which can only be sent in requests originating from the same origin as the target domain.
         ///
         /// This restriction mitigates attacks such as cross-site request forgery (XSRF).

@@ -2,44 +2,48 @@ import Foundation
 import Core
 import HTTP
 
+/// Something that is convertible between a Cookie and an instance.
+public protocol SessionCookie: CookieValueRepresentable, CookieValueInitializable {
+    /// Validates if the session. For example to lock a session to an IP address.
+    func validate(for request: Request) throws
+}
+
+extension Cookie.Value: SessionCookie {
+    /// Always succeeds
+    public func validate(for request: Request) throws {}
+}
+
 /// Checks the cookies for each `Request`
-public final class SessionCookieMiddleware: Middleware {
+public final class SessionCookieMiddleware<SC: SessionCookie>: Middleware {
     /// The cookie to work with
     let cookieName: String
     
-    public typealias CookieFactory = ((Request) throws -> (Cookie.Value))
-    public typealias CookieValidator = ((Cookie.Value) throws -> ())
+    /// Used to create new sessions
+    public typealias SessionFactory = ((Request) throws -> (SC))
     
     /// Creates new cookies
-    public var cookieFactory: CookieFactory
-    
-    /// Checks the `Cookie.Value` for each `Request`
-    public var cookieValidator: CookieValidator
+    public var sessionFactory: SessionFactory
     
     /// Creates a new `SessionCookieMiddleware` that can validate `Request`s
-    public init(cookie: String, onRequest validate: @escaping CookieValidator) {
+    public init(cookie: String, sessionType: SC.Type = SC.self, factory: @escaping SessionFactory) {
         self.cookieName = cookie
-        self.cookieValidator = validate
         
-        self.cookieFactory = { _ in
-            return Cookie.Value(value: UUID().uuidString)
-        }
+        self.sessionFactory = factory
     }
     
     /// See `Middleware.respond`
     public func respond(to request: Request, chainingTo next: Responder) throws -> Future<Response> {
-        let cookie: Cookie.Value
+        let cookie: SC
         
         if let cookieValue = request.cookies[cookieName] {
-            cookie = cookieValue
+            cookie = try SC.init(from: cookieValue)
         } else {
-            let cookieValue = try cookieFactory(request)
-            request.cookies[cookieName] = cookieValue
-            
+            let cookieValue = try sessionFactory(request)
+            request.cookies[cookieName] = try cookieValue.makeCookieValue()
             cookie = cookieValue
         }
         
-        try cookieValidator(cookie)
+        try cookie.validate(for: request)
         
         return try next.respond(to: request)
     }
