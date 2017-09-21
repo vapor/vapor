@@ -14,13 +14,13 @@ let package = Package(
         // Debugging
         .library(name: "Debugging", targets: ["Debugging"]),
 
-        // Leaf
+        // JWT
         .library(name: "JWT", targets: ["JWT"]),
 
         // Leaf
         .library(name: "Leaf", targets: ["Leaf"]),
 
-        // Leaf
+        // Logging
         .library(name: "Logging", targets: ["Logging"]),
 
         // MySQL
