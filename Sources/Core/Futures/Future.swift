@@ -41,11 +41,6 @@ public final class Future<T>: FutureType {
         self.init()
         self.result = .error(error)
     }
-
-    /// Reset the future so it can be triggered again
-    internal func reset() {
-        result = nil
-    }
     
     /// `true` if the future is already completed.
     public var isCompleted: Bool {
