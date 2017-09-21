@@ -1,5 +1,6 @@
-import XCTest
+import Dispatch
 @testable import SQLite
+import XCTest
 
 class SQLiteTests: XCTestCase {
     var database: Database!
