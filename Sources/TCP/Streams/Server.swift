@@ -20,6 +20,12 @@ public final class Server: Core.OutputStream {
     let workers: [DispatchQueue]
     var worker: LoopIterator<[DispatchQueue]>
     var readSource: DispatchSourceRead?
+    
+    /// Limits the amount of connections per IP address to prevent certain Denial of Service attacks
+    public var maxConnectionsPerIP = 10
+    
+    /// The external connection counter
+    fileprivate var remotes = [RemoteAddress]()
 
     /// Creates a TCP server from an existing TCP socket.
     public init(socket: Socket, workerCount: Int) {
@@ -53,6 +59,7 @@ public final class Server: Core.OutputStream {
             fileDescriptor: socket.descriptor.raw,
             queue: queue
         )
+        
         source.setEventHandler {
             let socket: Socket
             do {
@@ -62,6 +69,41 @@ public final class Server: Core.OutputStream {
                 return
             }
             
+            // Accept must always set the address
+            let currentRemoteAddress = socket.address!
+            var currentRemote: RemoteAddress? = nil
+            
+            for remote in self.remotes where remote.address == currentRemoteAddress {
+                guard remote.count < self.maxConnectionsPerIP else {
+                    self.errorStream?(Error(identifier: "remote-count", reason: "To prevent a possible Denial of Service attack, the user's connection was not served"))
+                    return
+                }
+                
+                currentRemote = remote
+            }
+            
+            if currentRemote == nil {
+                currentRemote = RemoteAddress(address: currentRemoteAddress)
+            }
+            
+            socket.beforeClose = {
+                self.queue.async {
+                    guard let currentRemote = currentRemote else {
+                        return
+                    }
+                    
+                    currentRemote.count -= 1
+                    
+                    guard currentRemote.count <= 0 else {
+                        return
+                    }
+                    
+                    if let index = self.remotes.index(where: { $0.address == currentRemoteAddress }) {
+                        self.remotes.remove(at: index)
+                    }
+                }
+            }
+            
             let worker = self.worker.next()!
             let client = Client(socket: socket, queue: worker)
             client.errorStream = self.errorStream
@@ -69,5 +111,14 @@ public final class Server: Core.OutputStream {
         }
         source.resume()
         readSource = source
+    }
+}
+
+fileprivate final class RemoteAddress {
+    let address: sockaddr_storage
+    var count = 0
+    
+    init(address: sockaddr_storage) {
+        self.address = address
     }
 }

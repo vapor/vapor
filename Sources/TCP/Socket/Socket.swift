@@ -15,6 +15,9 @@ public class Socket {
 
     /// True if the socket should re-use addresses
     public let shouldReuseAddress: Bool
+    
+    /// Will be triggered before closing the socket, as part of the cleanup process
+    public var beforeClose: (()->())? = nil
 
     /// Creates a TCP socket around an existing descriptor
     public init(
@@ -62,6 +65,7 @@ public class Socket {
 
     /// Closes the socket
     public func close() {
+        beforeClose?()
         libc.close(descriptor.raw)
     }
     

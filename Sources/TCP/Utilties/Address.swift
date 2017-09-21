@@ -29,8 +29,6 @@ extension sockaddr_storage {
     
     /// The remote's IP address
     public var remoteAddress: String {
-        var copy = self
-        
         let stringData: UnsafeMutablePointer<Int8>
         let maxStringLength: socklen_t
         
@@ -39,21 +37,15 @@ extension sockaddr_storage {
             maxStringLength = socklen_t(INET_ADDRSTRLEN)
             stringData = UnsafeMutablePointer<Int8>.allocate(capacity: numericCast(maxStringLength))
             
-            _ = withUnsafePointer(to: &copy) { pointer in
-                pointer.withMemoryRebound(to: sockaddr_in.self, capacity: 1) { pointer in
-                    var address = pointer.pointee.sin_addr
-                    inet_ntop(numericCast(self.ss_family), &address, stringData, maxStringLength)
-                }
+            _ = self.withIn_addr { address in
+                inet_ntop(numericCast(self.ss_family), &address, stringData, maxStringLength)
             }
         case UInt8(AF_INET6):
             maxStringLength = socklen_t(INET6_ADDRSTRLEN)
             stringData = UnsafeMutablePointer<Int8>.allocate(capacity: numericCast(maxStringLength))
             
-            _ = withUnsafePointer(to: &copy) { pointer in
-                pointer.withMemoryRebound(to: sockaddr_in6.self, capacity: 1) { pointer in
-                    var address = pointer.pointee.sin6_addr
-                    inet_ntop(numericCast(self.ss_family), &address, stringData, maxStringLength)
-                }
+            _ = self.withIn6_addr { address in
+                inet_ntop(numericCast(self.ss_family), &address, stringData, maxStringLength)
             }
         default:
             fatalError()
@@ -65,6 +57,55 @@ extension sockaddr_storage {
         
         // This cannot fail
         return String(validatingUTF8: stringData)!
+    }
+    
+    fileprivate func withIn_addr<T>(call: ((inout in_addr)->(T))) -> T {
+        var copy = self
+        
+        return withUnsafePointer(to: &copy) { pointer in
+            return pointer.withMemoryRebound(to: sockaddr_in.self, capacity: 1) { pointer in
+                var address = pointer.pointee.sin_addr
+                
+                return call(&address)
+            }
+        }
+    }
+    
+    fileprivate func withIn6_addr<T>(call: ((inout in6_addr)->(T))) -> T {
+        var copy = self
+        
+        return withUnsafePointer(to: &copy) { pointer in
+            return pointer.withMemoryRebound(to: sockaddr_in6.self, capacity: 1) { pointer in
+                var address = pointer.pointee.sin6_addr
+                
+                return call(&address)
+            }
+        }
+    }
+}
+
+extension sockaddr_storage: Equatable {
+    public static func ==(lhs: sockaddr_storage, rhs: sockaddr_storage) -> Bool {
+        guard lhs.ss_family == rhs.ss_family else {
+            return false
+        }
+        
+        switch lhs.ss_family {
+        case UInt8(AF_INET):
+            return lhs.withIn_addr { lhs in
+                return rhs.withIn_addr { rhs in
+                    return memcmp(&lhs, &rhs, MemoryLayout<in6_addr>.size) == 0
+                }
+            }
+        case UInt8(AF_INET6):
+            return lhs.withIn6_addr { lhs in
+                return rhs.withIn6_addr { rhs in
+                    return memcmp(&lhs, &rhs, MemoryLayout<in6_addr>.size) == 0
+                }
+            }
+        default:
+            fatalError()
+        }
     }
 }
 

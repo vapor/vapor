@@ -70,17 +70,41 @@ class SocketsTests: XCTestCase {
         read.resume()
         XCTAssertNotNil(read)
 
-        do {
-            let client = try Socket(isNonBlocking: false)
-            try client.connect(hostname: "localhost", port: 8337)
-            let data = "hello".data(using: .utf8)!
-            _ = try! client.write(data)
-        }
+        try clientHello()
 
+        semaphore.wait()
+    }
+    
+    func testServer() throws {
+        let server = try Server()
+        try server.start(port: 8337)
+        let semaphore = DispatchSemaphore(value: 0)
+        
+        server.drain { client in
+            client.drain { buffer in
+                XCTAssertEqual(String(bytes: buffer, encoding: .utf8), "hello")
+                semaphore.signal()
+            }
+            
+            client.start()
+        }
+        
+        try clientHello()
         semaphore.wait()
     }
 
     static let allTests = [
-        ("testConnect", testConnect)
+        ("testConnect", testConnect),
+        ("testBind", testBind),
+        ("testServer", testServer),
     ]
+}
+
+fileprivate func clientHello() throws {
+    do {
+        let client = try Socket(isNonBlocking: false)
+        try client.connect(hostname: "localhost", port: 8337)
+        let data = "hello".data(using: .utf8)!
+        _ = try! client.write(data)
+    }
 }
