@@ -7,14 +7,14 @@ extension sockaddr_storage {
         
         let val: UInt16
         
-        switch self.ss_family {
-        case UInt8(AF_INET):
+        switch numericCast(self.ss_family) as UInt32 {
+        case numericCast(AF_INET):
             val = withUnsafePointer(to: &copy) { pointer -> UInt16 in
                 pointer.withMemoryRebound(to: sockaddr_in.self, capacity: 1) { pointer -> UInt16 in
                     return pointer.pointee.sin_port
                 }
             }
-        case UInt8(AF_INET6):
+        case numericCast(AF_INET6):
             val = withUnsafePointer(to: &copy) { pointer -> UInt16 in
                 pointer.withMemoryRebound(to: sockaddr_in6.self, capacity: 1) { pointer -> UInt16 in
                     return pointer.pointee.sin6_port
@@ -32,15 +32,15 @@ extension sockaddr_storage {
         let stringData: UnsafeMutablePointer<Int8>
         let maxStringLength: socklen_t
         
-        switch self.ss_family {
-        case UInt8(AF_INET):
+        switch numericCast(self.ss_family) as UInt32 {
+        case numericCast(AF_INET):
             maxStringLength = socklen_t(INET_ADDRSTRLEN)
             stringData = UnsafeMutablePointer<Int8>.allocate(capacity: numericCast(maxStringLength))
             
             _ = self.withIn_addr { address in
                 inet_ntop(numericCast(self.ss_family), &address, stringData, maxStringLength)
             }
-        case UInt8(AF_INET6):
+        case numericCast(AF_INET6):
             maxStringLength = socklen_t(INET6_ADDRSTRLEN)
             stringData = UnsafeMutablePointer<Int8>.allocate(capacity: numericCast(maxStringLength))
             
@@ -90,14 +90,14 @@ extension sockaddr_storage: Equatable {
             return false
         }
         
-        switch lhs.ss_family {
-        case UInt8(AF_INET):
+        switch numericCast(lhs.ss_family) as UInt32 {
+        case numericCast(AF_INET):
             return lhs.withIn_addr { lhs in
                 return rhs.withIn_addr { rhs in
                     return memcmp(&lhs, &rhs, MemoryLayout<in6_addr>.size) == 0
                 }
             }
-        case UInt8(AF_INET6):
+        case numericCast(AF_INET6):
             return lhs.withIn6_addr { lhs in
                 return rhs.withIn6_addr { rhs in
                     return memcmp(&lhs, &rhs, MemoryLayout<in6_addr>.size) == 0
