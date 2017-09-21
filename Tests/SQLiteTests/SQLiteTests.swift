@@ -3,12 +3,12 @@ import Dispatch
 import XCTest
 
 class SQLiteTests: XCTestCase {
-    var database: Database!
+    var database: Connection!
     var queue: DispatchQueue!
 
     override func setUp() {
         self.queue = DispatchQueue(label: "sqlite.tests.queue")
-        self.database = Database.makeTestConnection(queue: queue)
+        self.database = Connection.makeTestConnection(queue: queue)
     }
 
     func testTables() {

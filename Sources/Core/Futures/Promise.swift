@@ -17,6 +17,11 @@ public final class Promise<T> {
         future.complete(with: .error(error))
     }
 
+    /// Reset the promise's future so it can be called again.
+    public func reset() {
+        future.reset()
+    }
+
     /// Fulfills the promise.
     /// If the promise has already been fulfilled,
     /// it will quiety ignore the input.

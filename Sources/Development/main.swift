@@ -1,5 +1,6 @@
 import Core
 import Dispatch
+import Foundation
 import HTTP
 import Leaf
 import Routing
@@ -51,6 +52,64 @@ async.on(.get, to: "leaf") { req -> Future<View> in
     
     return try view.make("/Users/tanner/Desktop/hello", context: user, for: req)
 }
+
+extension String: ResponseRepresentable {
+    public func makeResponse() throws -> Response {
+        let data = self.data(using: .utf8)!
+        return Response(status: .ok, headers: ["Content-Type": "text/plain"], body: Body(data))
+    }
+}
+
+import SQLite
+
+let database = SQLite.Database(path: "/tmp/db.sqlite")
+let pool = database.makeConnectionPool(max: 256)
+
+async.on(.get, to: "sqlite") { req -> Future<String> in
+    let promise = Promise(String.self)
+
+    try pool.makeConnection(on: req.requireQueue()).then { connection in
+        do {
+            try connection.query("select sqlite_version();").all().then { row in
+                let version = row[0]["sqlite_version()"]?.text ?? "no version"
+                promise.complete(version)
+                pool.releaseConnection(connection)
+            }.catch { error in
+                promise.fail(error)
+                pool.releaseConnection(connection)
+            }
+        } catch {
+            promise.fail(error)
+            pool.releaseConnection(connection)
+        }
+    }.catch { error in
+        promise.fail(error)
+    }
+
+    return promise.future
+}
+
+//
+//let database = SQLite.Database(path: "/tmp/db.sqlite")
+//
+//async.on(.get, to: "sqlite") { req -> Future<String> in
+//    let promise = Promise(String.self)
+//
+//    let connection = try database.makeConnection(on: req.requireQueue())
+//
+//    try connection.query("select sqlite_version();").all().then { row in
+//        let version = row[0]["sqlite_version()"]?.text ?? "no version"
+//        promise.complete(version)
+//        connection.close()
+//    }.catch { error in
+//        promise.fail(error)
+//        connection.close()
+//    }
+//
+//    return promise.future
+//}
+
+
 
 print("Starting server...")
 try app.run()

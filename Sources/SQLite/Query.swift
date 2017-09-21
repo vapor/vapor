@@ -33,7 +33,7 @@ public final class Query: Core.OutputStream {
 
     /// the database this statement will
     /// be executed on.
-    public let database: Database
+    public let database: Connection
 
     /// the raw query string
     public let statement: String
@@ -53,7 +53,7 @@ public final class Query: Core.OutputStream {
     /// The supplied DispatchQueue will be used to dispatch output stream calls.
     /// Make sure to supply the event loop to this parameter so you get called back
     /// on the appropriate thread.
-    public init(statement: String, database: Database) throws {
+    public init(statement: String, database: Connection) throws {
         var raw: Raw?
         let ret = sqlite3_prepare_v2(database.raw, statement, -1, &raw, nil)
         guard ret == SQLITE_OK else {
