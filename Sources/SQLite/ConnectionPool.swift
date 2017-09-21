@@ -35,22 +35,33 @@ public final class ConnectionPool {
     public func makeConnection(on queue: DispatchQueue) throws -> Future<Connection> {
         let promise = Promise(Connection.self)
 
-
         lock.async {
             do {
                 if let ready = self.available.popLast() {
-                    promise.complete(ready)
+                    queue.async {
+                        ready.queue = queue
+                        promise.complete(ready)
+                    }
                 } else {
                     if self.active < self.max {
                         let connection = try self.database.makeConnection(on: queue)
                         self.active += 1
-                        promise.complete(connection)
+                        queue.async {
+                            promise.complete(connection)
+                        }
                     } else {
-                        self.waiters.append(promise.complete)
+                        self.waiters.append({ connection in
+                            queue.async {
+                                connection.queue = queue
+                                promise.complete(connection)
+                            }
+                        })
                     }
                 }
             } catch {
-                promise.fail(error)
+                queue.async {
+                    promise.fail(error)
+                }
             }
         }
 

@@ -33,7 +33,7 @@ public final class Query: Core.OutputStream {
 
     /// the database this statement will
     /// be executed on.
-    public let database: Connection
+    public let connection: Connection
 
     /// the raw query string
     public let statement: String
@@ -64,7 +64,7 @@ public final class Query: Core.OutputStream {
             throw Error(statusCode: ret, database: database)
         }
 
-        self.database = database
+        self.connection = database
         self.raw = statementPointer
         self.statement = statement
 
@@ -80,7 +80,7 @@ public final class Query: Core.OutputStream {
     public func bind(_ value: Double) throws -> Self {
         let ret = sqlite3_bind_double(raw, nextBindPosition, value)
         guard ret == SQLITE_OK else {
-            throw Error(statusCode: ret, database: database)
+            throw Error(statusCode: ret, database: connection)
         }
         return self
     }
@@ -89,7 +89,7 @@ public final class Query: Core.OutputStream {
     public func bind(_ value: Int) throws -> Self {
         let ret = sqlite3_bind_int64(raw, nextBindPosition, Int64(value))
         guard ret == SQLITE_OK else {
-            throw Error(statusCode: ret, database: database)
+            throw Error(statusCode: ret, database: connection)
         }
         return self
     }
@@ -99,7 +99,7 @@ public final class Query: Core.OutputStream {
         let strlen = Int32(value.utf8.count)
         let ret = sqlite3_bind_text(raw, nextBindPosition, value, strlen, SQLITE_TRANSIENT)
         guard ret == SQLITE_OK else {
-            throw Error(statusCode: ret, database: database)
+            throw Error(statusCode: ret, database: connection)
         }
         return self
     }
@@ -110,7 +110,7 @@ public final class Query: Core.OutputStream {
         let pointer: UnsafePointer<Byte> = value.withUnsafeBytes { $0 }
         let ret = sqlite3_bind_blob(raw, nextBindPosition, UnsafeRawPointer(pointer), count, SQLITE_TRANSIENT)
         guard ret == SQLITE_OK else {
-            throw Error(statusCode: ret, database: database)
+            throw Error(statusCode: ret, database: connection)
         }
         return self
     }
@@ -124,7 +124,7 @@ public final class Query: Core.OutputStream {
     public func bindNull() throws -> Self {
         let ret = sqlite3_bind_null(raw, nextBindPosition)
         if ret != SQLITE_OK {
-            throw Error(statusCode: ret, database: database)
+            throw Error(statusCode: ret, database: connection)
         }
         return self
     }
@@ -138,7 +138,7 @@ public final class Query: Core.OutputStream {
 
         // sqlite may block at anytime, so we need to run everything
         // on a separate background queue
-        database.background.async {
+        connection.background.async {
             var columns: [Column] = []
             let count = sqlite3_column_count(self.raw)
             columns.reserveCapacity(Int(count))
@@ -164,20 +164,20 @@ public final class Query: Core.OutputStream {
                     }
 
                     // return to event loop
-                    self.database.queue.async { self.outputStream?(row) }
+                    self.connection.queue.async { self.outputStream?(row) }
                 }
 
                 // cleanup
                 let ret = sqlite3_finalize(self.raw)
                 guard ret == SQLITE_OK else {
-                    throw Error(statusCode: ret, database: self.database)
+                    throw Error(statusCode: ret, database: self.connection)
                 }
 
                 // return to event loop
-                self.database.queue.async { promise.complete(()) }
+                self.connection.queue.async { promise.complete(()) }
             } catch {
                 // return to event loop
-                self.database.queue.async { promise.fail(error) }
+                self.connection.queue.async { promise.fail(error) }
             }
         }
 
