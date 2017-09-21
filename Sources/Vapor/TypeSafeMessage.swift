@@ -17,6 +17,16 @@ extension Message {
         
         throw Error.unknownMediaType()
     }
+    
+    /// Encodes an `Encodable` using the `MediaType`'s associated `ContentEncoder` to the `Message`'s body
+    public func encode<E: Encodable>(_ entity: E, as media: MediaType = .json) throws {
+        for (type, encoder) in ContentCoders.default.encoders where type == media {
+            self.body = try encoder.encodeBody(from: entity)
+            return
+        }
+        
+        throw Error.unknownMediaType()
+    }
 }
 
 /// Provides a default implementation for `Encodable & ResponseRepresnetables` types
