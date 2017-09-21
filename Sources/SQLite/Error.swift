@@ -35,7 +35,7 @@ public struct Error: Swift.Error, Debuggable, Traceable {
     /// Dynamically generate an error from status code and database.
     init(
         statusCode: Int32,
-        database: Database,
+        database: Connection,
         file: String = #file,
         function: String = #function,
         line: UInt = #line,

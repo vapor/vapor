@@ -113,7 +113,7 @@ let package = Package(
 
 
         // Vapor
-        .target(name: "Development", dependencies: ["Leaf", "Vapor", "MySQL"]),
+        .target(name: "Development", dependencies: ["Leaf", "Vapor", "MySQL", "SQLite"]),
         .target(name: "Vapor", dependencies: [
             "Core",
             "Debugging",

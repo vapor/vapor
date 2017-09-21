@@ -33,7 +33,7 @@ public final class Query: Core.OutputStream {
 
     /// the database this statement will
     /// be executed on.
-    public let database: Database
+    public let connection: Connection
 
     /// the raw query string
     public let statement: String
@@ -53,7 +53,7 @@ public final class Query: Core.OutputStream {
     /// The supplied DispatchQueue will be used to dispatch output stream calls.
     /// Make sure to supply the event loop to this parameter so you get called back
     /// on the appropriate thread.
-    public init(statement: String, database: Database) throws {
+    public init(statement: String, database: Connection) throws {
         var raw: Raw?
         let ret = sqlite3_prepare_v2(database.raw, statement, -1, &raw, nil)
         guard ret == SQLITE_OK else {
@@ -64,7 +64,7 @@ public final class Query: Core.OutputStream {
             throw Error(statusCode: ret, database: database)
         }
 
-        self.database = database
+        self.connection = database
         self.raw = statementPointer
         self.statement = statement
 
@@ -80,7 +80,7 @@ public final class Query: Core.OutputStream {
     public func bind(_ value: Double) throws -> Self {
         let ret = sqlite3_bind_double(raw, nextBindPosition, value)
         guard ret == SQLITE_OK else {
-            throw Error(statusCode: ret, database: database)
+            throw Error(statusCode: ret, database: connection)
         }
         return self
     }
@@ -89,7 +89,7 @@ public final class Query: Core.OutputStream {
     public func bind(_ value: Int) throws -> Self {
         let ret = sqlite3_bind_int64(raw, nextBindPosition, Int64(value))
         guard ret == SQLITE_OK else {
-            throw Error(statusCode: ret, database: database)
+            throw Error(statusCode: ret, database: connection)
         }
         return self
     }
@@ -99,7 +99,7 @@ public final class Query: Core.OutputStream {
         let strlen = Int32(value.utf8.count)
         let ret = sqlite3_bind_text(raw, nextBindPosition, value, strlen, SQLITE_TRANSIENT)
         guard ret == SQLITE_OK else {
-            throw Error(statusCode: ret, database: database)
+            throw Error(statusCode: ret, database: connection)
         }
         return self
     }
@@ -110,7 +110,7 @@ public final class Query: Core.OutputStream {
         let pointer: UnsafePointer<Byte> = value.withUnsafeBytes { $0 }
         let ret = sqlite3_bind_blob(raw, nextBindPosition, UnsafeRawPointer(pointer), count, SQLITE_TRANSIENT)
         guard ret == SQLITE_OK else {
-            throw Error(statusCode: ret, database: database)
+            throw Error(statusCode: ret, database: connection)
         }
         return self
     }
@@ -124,12 +124,47 @@ public final class Query: Core.OutputStream {
     public func bindNull() throws -> Self {
         let ret = sqlite3_bind_null(raw, nextBindPosition)
         if ret != SQLITE_OK {
-            throw Error(statusCode: ret, database: database)
+            throw Error(statusCode: ret, database: connection)
         }
         return self
     }
 
     // MARK: Execute
+
+    public func blockingExecute() throws {
+        var columns: [Column] = []
+        let count = sqlite3_column_count(self.raw)
+        columns.reserveCapacity(Int(count))
+
+        // iterate over column count and intialize columns once
+        // we will then re-use the columns for each row
+        for i in 0..<count {
+            let column = try Column(statement: self, offset: i)
+            columns.append(column)
+        }
+
+        // step over the query, this will continue to return SQLITE_ROW
+        // for as long as there are new rows to be fetched
+        while sqlite3_step(self.raw) == SQLITE_ROW {
+            var row = Row()
+
+            // iterator over column count again and create a field
+            // for each column. Use the column we have already initialized.
+            for i in 0..<count {
+                let field = try Field(statement: self, column: columns[Int(i)], offset: i)
+                row.fields[field.column.name] = field
+            }
+
+            // return to event loop
+            self.connection.queue.async { self.outputStream?(row) }
+        }
+
+        // cleanup
+        let ret = sqlite3_finalize(self.raw)
+        guard ret == SQLITE_OK else {
+            throw Error(statusCode: ret, database: self.connection)
+        }
+    }
 
     /// Starts executing the statement.
     public func execute() -> Future<Void> {
@@ -138,46 +173,16 @@ public final class Query: Core.OutputStream {
 
         // sqlite may block at anytime, so we need to run everything
         // on a separate background queue
-        database.background.async {
-            var columns: [Column] = []
-            let count = sqlite3_column_count(self.raw)
-            columns.reserveCapacity(Int(count))
-
+        connection.background.async {
             do {
-                // iterate over column count and intialize columns once
-                // we will then re-use the columns for each row
-                for i in 0..<count {
-                    let column = try Column(statement: self, offset: i)
-                    columns.append(column)
-                }
-
-                // step over the query, this will continue to return SQLITE_ROW
-                // for as long as there are new rows to be fetched
-                while sqlite3_step(self.raw) == SQLITE_ROW {
-                    var row = Row()
-
-                    // iterator over column count again and create a field
-                    // for each column. Use the column we have already initialized.
-                    for i in 0..<count {
-                        let field = try Field(statement: self, column: columns[Int(i)], offset: i)
-                        row.fields[field.column.name] = field
-                    }
-
-                    // return to event loop
-                    self.database.queue.async { self.outputStream?(row) }
-                }
-
-                // cleanup
-                let ret = sqlite3_finalize(self.raw)
-                guard ret == SQLITE_OK else {
-                    throw Error(statusCode: ret, database: self.database)
-                }
+                // blocking execute now that we're on the background thread
+                try self.blockingExecute()
 
                 // return to event loop
-                self.database.queue.async { promise.complete(()) }
+                self.connection.queue.async { promise.complete(()) }
             } catch {
                 // return to event loop
-                self.database.queue.async { promise.fail(error) }
+                self.connection.queue.async { promise.fail(error) }
             }
         }
 

@@ -1,10 +1,10 @@
 import XCTest
 @testable import SQLite
 
-extension Database {
-    static func makeTestConnection(queue: DispatchQueue) -> Database? {
+extension Connection {
+    static func makeTestConnection(queue: DispatchQueue) -> Connection? {
         do {
-            let sqlite = try Database(path: "/tmp/test_database.sqlite", queue: queue)
+            let sqlite = try Connection(path: "/tmp/test_database.sqlite", queue: queue)
             return sqlite
             
         } catch {
