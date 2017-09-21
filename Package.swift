@@ -70,8 +70,7 @@ let package = Package(
         .testTarget(name: "LoggingTests", dependencies: ["Logging"]),
 
         // MySQL
-
-        .target(name: "MySQL", dependencies: ["TCP", "Crypto"]),
+        .target(name: "MySQL", dependencies: ["TCP", "Crypto", "Core"]),
         .testTarget(name: "MySQLTests", dependencies: ["MySQL"]),
 
         // Net

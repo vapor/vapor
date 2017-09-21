@@ -1,3 +1,4 @@
+import Core
 import Foundation
 
 /// Decodes into an entity Rows into entities, and columns into variables

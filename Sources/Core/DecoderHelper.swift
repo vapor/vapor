@@ -36,7 +36,7 @@ public enum Either<Value, Keyed, Unkeyed> {
     case unkeyed(Unkeyed)
     case value(Value)
     
-    func getValue() throws -> Value {
+    public func getValue() throws -> Value {
         guard case .value(let value) = self else {
             throw DecodingError.invalidContext
         }
@@ -44,7 +44,7 @@ public enum Either<Value, Keyed, Unkeyed> {
         return value
     }
     
-    func getKeyed() throws -> Keyed {
+    public func getKeyed() throws -> Keyed {
         guard case .keyed(let keyed) = self else {
             throw DecodingError.invalidContext
         }
@@ -589,11 +589,11 @@ public protocol KeyedDecodingHelper {
 }
 
 extension KeyedDecodingContainerProtocolHelper where D.Keyed : KeyedDecodingHelper, D.Keyed.Value == D.Value {
-    func value(forKey key: Key) throws -> D.Value? {
+    public func value(forKey key: Key) throws -> D.Value? {
         return try decoder.either.getKeyed().value(forKey: key.stringValue)
     }
 
-    func decode(_ type: Int.Type, forKey key: Key) throws -> Int {
+    public func decode(_ type: Int.Type, forKey key: Key) throws -> Int {
         guard let value = try decoder.either.getKeyed().value(forKey: key.stringValue) else {
             throw DecodingError.incorrectValue
         }
@@ -601,7 +601,7 @@ extension KeyedDecodingContainerProtocolHelper where D.Keyed : KeyedDecodingHelp
         return try decoder.unwrap(value)
     }
 
-    func decode(_ type: Int8.Type, forKey key: Key) throws -> Int8 {
+    public func decode(_ type: Int8.Type, forKey key: Key) throws -> Int8 {
         guard let value = try decoder.either.getKeyed().value(forKey: key.stringValue) else {
             throw DecodingError.incorrectValue
         }
@@ -609,7 +609,7 @@ extension KeyedDecodingContainerProtocolHelper where D.Keyed : KeyedDecodingHelp
         return try decoder.unwrap(value)
     }
 
-    func decode(_ type: Int16.Type, forKey key: Key) throws -> Int16 {
+    public func decode(_ type: Int16.Type, forKey key: Key) throws -> Int16 {
         guard let value = try decoder.either.getKeyed().value(forKey: key.stringValue) else {
             throw DecodingError.incorrectValue
         }
@@ -617,7 +617,7 @@ extension KeyedDecodingContainerProtocolHelper where D.Keyed : KeyedDecodingHelp
         return try decoder.unwrap(value)
     }
 
-    func decode(_ type: Int32.Type, forKey key: Key) throws -> Int32 {
+    public func decode(_ type: Int32.Type, forKey key: Key) throws -> Int32 {
         guard let value = try decoder.either.getKeyed().value(forKey: key.stringValue) else {
             throw DecodingError.incorrectValue
         }
@@ -625,7 +625,7 @@ extension KeyedDecodingContainerProtocolHelper where D.Keyed : KeyedDecodingHelp
         return try decoder.unwrap(value)
     }
 
-    func decode(_ type: Int64.Type, forKey key: Key) throws -> Int64 {
+    public func decode(_ type: Int64.Type, forKey key: Key) throws -> Int64 {
         guard let value = try decoder.either.getKeyed().value(forKey: key.stringValue) else {
             throw DecodingError.incorrectValue
         }
@@ -633,7 +633,7 @@ extension KeyedDecodingContainerProtocolHelper where D.Keyed : KeyedDecodingHelp
         return try decoder.unwrap(value)
     }
 
-    func decode(_ type: UInt.Type, forKey key: Key) throws -> UInt {
+    public func decode(_ type: UInt.Type, forKey key: Key) throws -> UInt {
         guard let value = try decoder.either.getKeyed().value(forKey: key.stringValue) else {
             throw DecodingError.incorrectValue
         }
@@ -641,7 +641,7 @@ extension KeyedDecodingContainerProtocolHelper where D.Keyed : KeyedDecodingHelp
         return try decoder.unwrap(value)
     }
 
-    func decode(_ type: UInt8.Type, forKey key: Key) throws -> UInt8 {
+    public func decode(_ type: UInt8.Type, forKey key: Key) throws -> UInt8 {
         guard let value = try decoder.either.getKeyed().value(forKey: key.stringValue) else {
             throw DecodingError.incorrectValue
         }
@@ -649,7 +649,7 @@ extension KeyedDecodingContainerProtocolHelper where D.Keyed : KeyedDecodingHelp
         return try decoder.unwrap(value)
     }
 
-    func decode(_ type: UInt16.Type, forKey key: Key) throws -> UInt16 {
+    public func decode(_ type: UInt16.Type, forKey key: Key) throws -> UInt16 {
         guard let value = try decoder.either.getKeyed().value(forKey: key.stringValue) else {
             throw DecodingError.incorrectValue
         }
@@ -657,7 +657,7 @@ extension KeyedDecodingContainerProtocolHelper where D.Keyed : KeyedDecodingHelp
         return try decoder.unwrap(value)
     }
 
-    func decode(_ type: UInt32.Type, forKey key: Key) throws -> UInt32 {
+    public func decode(_ type: UInt32.Type, forKey key: Key) throws -> UInt32 {
         guard let value = try decoder.either.getKeyed().value(forKey: key.stringValue) else {
             throw DecodingError.incorrectValue
         }
@@ -665,7 +665,7 @@ extension KeyedDecodingContainerProtocolHelper where D.Keyed : KeyedDecodingHelp
         return try decoder.unwrap(value)
     }
 
-    func decode(_ type: UInt64.Type, forKey key: Key) throws -> UInt64 {
+    public func decode(_ type: UInt64.Type, forKey key: Key) throws -> UInt64 {
         guard let value = try decoder.either.getKeyed().value(forKey: key.stringValue) else {
             throw DecodingError.incorrectValue
         }
@@ -673,7 +673,7 @@ extension KeyedDecodingContainerProtocolHelper where D.Keyed : KeyedDecodingHelp
         return try decoder.unwrap(value)
     }
 
-    func decode(_ type: Float.Type, forKey key: Key) throws -> Float {
+    public func decode(_ type: Float.Type, forKey key: Key) throws -> Float {
         guard let value = try decoder.either.getKeyed().value(forKey: key.stringValue) else {
             throw DecodingError.incorrectValue
         }
@@ -681,7 +681,7 @@ extension KeyedDecodingContainerProtocolHelper where D.Keyed : KeyedDecodingHelp
         return try decoder.unwrap(value)
     }
 
-    func decode(_ type: Double.Type, forKey key: Key) throws -> Double {
+    public func decode(_ type: Double.Type, forKey key: Key) throws -> Double {
         guard let value = try decoder.either.getKeyed().value(forKey: key.stringValue) else {
             throw DecodingError.incorrectValue
         }
@@ -689,7 +689,7 @@ extension KeyedDecodingContainerProtocolHelper where D.Keyed : KeyedDecodingHelp
         return try decoder.unwrap(value)
     }
 
-    func decode<T>(_ type: T.Type, forKey key: Key) throws -> T where T : Decodable {
+    public func decode<T>(_ type: T.Type, forKey key: Key) throws -> T where T : Decodable {
         guard let value = try decoder.either.getKeyed().value(forKey: key.stringValue) else {
             throw DecodingError.incorrectValue
         }
@@ -699,7 +699,7 @@ extension KeyedDecodingContainerProtocolHelper where D.Keyed : KeyedDecodingHelp
         return try T(from: newDecoder)
     }
 
-    func nestedContainer<NestedKey>(keyedBy type: NestedKey.Type, forKey key: Key) throws -> KeyedDecodingContainer<NestedKey> where NestedKey : CodingKey {
+    public func nestedContainer<NestedKey>(keyedBy type: NestedKey.Type, forKey key: Key) throws -> KeyedDecodingContainer<NestedKey> where NestedKey : CodingKey {
 //        guard let keyed = try decoder.either.getKeyed().value(forKey: key.stringValue) as? D.Keyed else {
 //            throw DecodingError.incorrectValue
 //        }
@@ -714,7 +714,7 @@ extension KeyedDecodingContainerProtocolHelper where D.Keyed : KeyedDecodingHelp
         return try D(keyed: keyed, lossyIntegers: decoder.lossyIntegers, lossyStrings: decoder.lossyStrings).container(keyedBy: type)
     }
 
-    func nestedUnkeyedContainer(forKey key: Key) throws -> UnkeyedDecodingContainer {
+    public func nestedUnkeyedContainer(forKey key: Key) throws -> UnkeyedDecodingContainer {
         guard let unkeyed = try decoder.either.getKeyed().value(forKey: key.stringValue) as? D.Unkeyed else {
             throw DecodingError.incorrectValue
         }
@@ -722,7 +722,7 @@ extension KeyedDecodingContainerProtocolHelper where D.Keyed : KeyedDecodingHelp
         return try D(unkeyed: unkeyed, lossyIntegers: decoder.lossyIntegers, lossyStrings: decoder.lossyStrings).unkeyedContainer()
     }
 
-    func superDecoder() throws -> Decoder {
+    public func superDecoder() throws -> Decoder {
         guard let value = try decoder.either.getKeyed().value(forKey: "super") else {
             throw DecodingError.incorrectValue
         }
@@ -730,7 +730,7 @@ extension KeyedDecodingContainerProtocolHelper where D.Keyed : KeyedDecodingHelp
         return try D(any: value, lossyIntegers: decoder.lossyIntegers, lossyStrings: decoder.lossyStrings)
     }
 
-    func superDecoder(forKey key: Key) throws -> Decoder {
+    public func superDecoder(forKey key: Key) throws -> Decoder {
         guard let keyed = try decoder.either.getKeyed().value(forKey: key.stringValue) as? D.Keyed else {
             throw DecodingError.incorrectValue
         }
@@ -801,8 +801,6 @@ extension SingleValueDecodingContainerHelper {
     }
 }
 
-
-
-enum DecodingError : Error {
+public enum DecodingError : Error {
     case failedLossyIntegerConversion, invalidContext, incorrectValue, unimplemented
 }
