@@ -1,13 +1,51 @@
 import libc
 
-extension sockaddr_storage {
+public struct Address {
+    public let storage: sockaddr_storage
+    
+    init(storage: sockaddr_storage) {
+        self.storage = storage
+    }
+    
+}
+
+extension Address: Equatable {
+    public static func ==(lhs: Address, rhs: Address) -> Bool {
+        let lhs = lhs.storage
+        let rhs = rhs.storage
+        
+        guard lhs.ss_family == rhs.ss_family else {
+            return false
+        }
+        
+        switch numericCast(lhs.ss_family) as UInt32 {
+        case numericCast(AF_INET):
+            return lhs.withIn_addr { lhs in
+                return rhs.withIn_addr { rhs in
+                    return memcmp(&lhs, &rhs, MemoryLayout<in6_addr>.size) == 0
+                }
+            }
+        case numericCast(AF_INET6):
+            return lhs.withIn6_addr { lhs in
+                return rhs.withIn6_addr { rhs in
+                    return memcmp(&lhs, &rhs, MemoryLayout<in6_addr>.size) == 0
+                }
+            }
+        default:
+            fatalError()
+        }
+    }
+    
+}
+
+extension Address {
     /// The remote peer's connection's port
     public var port: UInt16 {
-        var copy = self
+        var copy = self.storage
         
         let val: UInt16
         
-        switch numericCast(self.ss_family) as UInt32 {
+        switch numericCast(self.storage.ss_family) as UInt32 {
         case numericCast(AF_INET):
             val = withUnsafePointer(to: &copy) { pointer -> UInt16 in
                 pointer.withMemoryRebound(to: sockaddr_in.self, capacity: 1) { pointer -> UInt16 in
@@ -32,20 +70,20 @@ extension sockaddr_storage {
         let stringData: UnsafeMutablePointer<Int8>
         let maxStringLength: socklen_t
         
-        switch numericCast(self.ss_family) as UInt32 {
+        switch numericCast(self.storage.ss_family) as UInt32 {
         case numericCast(AF_INET):
             maxStringLength = socklen_t(INET_ADDRSTRLEN)
             stringData = UnsafeMutablePointer<Int8>.allocate(capacity: numericCast(maxStringLength))
             
-            _ = self.withIn_addr { address in
-                inet_ntop(numericCast(self.ss_family), &address, stringData, maxStringLength)
+            _ = self.storage.withIn_addr { address in
+                inet_ntop(numericCast(self.storage.ss_family), &address, stringData, maxStringLength)
             }
         case numericCast(AF_INET6):
             maxStringLength = socklen_t(INET6_ADDRSTRLEN)
             stringData = UnsafeMutablePointer<Int8>.allocate(capacity: numericCast(maxStringLength))
             
-            _ = self.withIn6_addr { address in
-                inet_ntop(numericCast(self.ss_family), &address, stringData, maxStringLength)
+            _ = self.storage.withIn6_addr { address in
+                inet_ntop(numericCast(self.storage.ss_family), &address, stringData, maxStringLength)
             }
         default:
             fatalError()
@@ -58,7 +96,9 @@ extension sockaddr_storage {
         // This cannot fail
         return String(validatingUTF8: stringData)!
     }
-    
+}
+
+extension sockaddr_storage {
     fileprivate func withIn_addr<T>(call: ((inout in_addr)->(T))) -> T {
         var copy = self
         
@@ -80,31 +120,6 @@ extension sockaddr_storage {
                 
                 return call(&address)
             }
-        }
-    }
-}
-
-extension sockaddr_storage: Equatable {
-    public static func ==(lhs: sockaddr_storage, rhs: sockaddr_storage) -> Bool {
-        guard lhs.ss_family == rhs.ss_family else {
-            return false
-        }
-        
-        switch numericCast(lhs.ss_family) as UInt32 {
-        case numericCast(AF_INET):
-            return lhs.withIn_addr { lhs in
-                return rhs.withIn_addr { rhs in
-                    return memcmp(&lhs, &rhs, MemoryLayout<in6_addr>.size) == 0
-                }
-            }
-        case numericCast(AF_INET6):
-            return lhs.withIn6_addr { lhs in
-                return rhs.withIn6_addr { rhs in
-                    return memcmp(&lhs, &rhs, MemoryLayout<in6_addr>.size) == 0
-                }
-            }
-        default:
-            fatalError()
         }
     }
 }

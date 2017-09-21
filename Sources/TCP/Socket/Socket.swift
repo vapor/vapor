@@ -8,7 +8,7 @@ public class Socket {
     public let descriptor: Descriptor
 
     /// The remote's address
-    public var address: sockaddr_storage?
+    public var address: Address?
     
     /// True if the socket is non blocking
     public let isNonBlocking: Bool

@@ -15,8 +15,11 @@ public final class EngineServer: Server {
     public func start(with responder: Responder) throws {
         // create a tcp server
         let tcp = try TCP.Server(workerCount: config.workerCount)
-        let server = HTTP.Server(tcp: tcp)
-
+        let securityLayer = PeerValidationStream(maxConnectionsPerIP: config.maxConnectionsPerIP)
+        let secureTCP = tcp.stream(to: securityLayer)
+        
+        let server = HTTP.Server(server: secureTCP)
+        
         // setup the server pipeline
         server.drain { client in
             let parser = HTTP.RequestParser(queue: client.tcp.queue)
@@ -36,7 +39,7 @@ public final class EngineServer: Server {
         }
 
         // bind, listen, and start accepting
-        try server.tcp.start(
+        try tcp.start(
             hostname: config.hostname,
             port: config.port,
             backlog: config.backlog
@@ -58,17 +61,22 @@ public struct EngineServerConfig {
     /// Number of client accepting workers.
     /// Should be equal to the number of logical cores.
     public let workerCount: Int
+    
+    /// Limits the amount of connections per IP address to prevent certain Denial of Service attacks
+    public let maxConnectionsPerIP: Int
 
     /// Creates a new engine server config
     public init(
         hostname: String = "localhost",
         port: UInt16 = 8080,
         backlog: Int32 = 4096,
-        workerCount: Int = 8
+        workerCount: Int = 8,
+        maxConnectionsPerIP: Int = 50
     ) {
         self.hostname = hostname
         self.port = port
         self.backlog = backlog
         self.workerCount = workerCount
+        self.maxConnectionsPerIP = maxConnectionsPerIP
     }
 }

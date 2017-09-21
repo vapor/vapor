@@ -74,7 +74,7 @@ extension Socket {
             shouldReuseAddress: shouldReuseAddress
         )
         
-        socket.address = address
+        socket.address = Address(storage: address)
         
         return socket
     }
