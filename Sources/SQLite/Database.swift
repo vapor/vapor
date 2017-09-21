@@ -16,7 +16,7 @@ public final class Database {
     }
 
     /// Make a connection pool for this database.
-    public func makeConnectionPool(max: UInt) -> ConnectionPool {
-        return ConnectionPool(max: max, database: self)
+    public func makeConnectionPool(max: UInt, on queue: DispatchQueue) -> ConnectionPool {
+        return ConnectionPool(max: max, database: self, queue: queue)
     }
 }

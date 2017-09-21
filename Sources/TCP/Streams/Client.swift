@@ -14,7 +14,7 @@ public final class Client: Core.Stream {
     /// This client's dispatch queue. Use this
     /// for all async operations performed as a
     /// result of this client.
-    public let queue: DispatchQueue
+    public let worker: Worker
 
     /// The client stream's underlying socket.
     public let socket: Socket
@@ -33,9 +33,9 @@ public final class Client: Core.Stream {
     var writeSource: DispatchSourceWrite?
 
     /// Creates a new Remote Client from the ServerSocket's details
-    public init(socket: Socket, queue: DispatchQueue) {
+    public init(socket: Socket, worker: Worker) {
         self.socket = socket
-        self.queue = queue
+        self.worker = worker
 
         // Allocate one TCP packet
         let size = 65_507
@@ -57,7 +57,7 @@ public final class Client: Core.Stream {
         if writeSource == nil {
             let source = DispatchSource.makeWriteSource(
                 fileDescriptor: socket.descriptor.raw,
-                queue: queue
+                queue: worker.queue
             )
             
             source.setEventHandler {
@@ -97,7 +97,7 @@ public final class Client: Core.Stream {
     public func start() {
         let source = DispatchSource.makeReadSource(
             fileDescriptor: socket.descriptor.raw,
-            queue: queue
+            queue: worker.queue
         )
 
         source.setEventHandler {

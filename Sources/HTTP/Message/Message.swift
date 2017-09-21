@@ -56,18 +56,18 @@ extension Message {
     ///
     /// Make sure not to block this queue as it will
     /// block all other requests on the queue.
-    public var queue: DispatchQueue? {
-        get { return extend["http:dispatch-queue"] as? DispatchQueue }
-        set { return extend["http:dispatch-queue"] = newValue }
+    public var worker: Worker? {
+        get { return extend["http:worker"] as? Worker }
+        set { return extend["http:worker"] = newValue }
     }
 
     /// Return's the message's queue if one exists or throws.
-    public func requireQueue() throws -> DispatchQueue {
-        guard let queue = self.queue else {
-            throw Error(identifier: "missingDispatchQueue", reason: "The queue property on this message is nil.")
+    public func requireWorker() throws -> Worker {
+        guard let worker = self.worker else {
+            throw Error(identifier: "missingWorker", reason: "The worker property on this message is nil.")
         }
 
-        return queue
+        return worker
     }
 }
 

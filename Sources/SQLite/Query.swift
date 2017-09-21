@@ -131,6 +131,41 @@ public final class Query: Core.OutputStream {
 
     // MARK: Execute
 
+    public func blockingExecute() throws {
+        var columns: [Column] = []
+        let count = sqlite3_column_count(self.raw)
+        columns.reserveCapacity(Int(count))
+
+        // iterate over column count and intialize columns once
+        // we will then re-use the columns for each row
+        for i in 0..<count {
+            let column = try Column(statement: self, offset: i)
+            columns.append(column)
+        }
+
+        // step over the query, this will continue to return SQLITE_ROW
+        // for as long as there are new rows to be fetched
+        while sqlite3_step(self.raw) == SQLITE_ROW {
+            var row = Row()
+
+            // iterator over column count again and create a field
+            // for each column. Use the column we have already initialized.
+            for i in 0..<count {
+                let field = try Field(statement: self, column: columns[Int(i)], offset: i)
+                row.fields[field.column.name] = field
+            }
+
+            // return to event loop
+            self.connection.queue.async { self.outputStream?(row) }
+        }
+
+        // cleanup
+        let ret = sqlite3_finalize(self.raw)
+        guard ret == SQLITE_OK else {
+            throw Error(statusCode: ret, database: self.connection)
+        }
+    }
+
     /// Starts executing the statement.
     public func execute() -> Future<Void> {
         // will alert when done
@@ -139,39 +174,9 @@ public final class Query: Core.OutputStream {
         // sqlite may block at anytime, so we need to run everything
         // on a separate background queue
         connection.background.async {
-            var columns: [Column] = []
-            let count = sqlite3_column_count(self.raw)
-            columns.reserveCapacity(Int(count))
-
             do {
-                // iterate over column count and intialize columns once
-                // we will then re-use the columns for each row
-                for i in 0..<count {
-                    let column = try Column(statement: self, offset: i)
-                    columns.append(column)
-                }
-
-                // step over the query, this will continue to return SQLITE_ROW
-                // for as long as there are new rows to be fetched
-                while sqlite3_step(self.raw) == SQLITE_ROW {
-                    var row = Row()
-
-                    // iterator over column count again and create a field
-                    // for each column. Use the column we have already initialized.
-                    for i in 0..<count {
-                        let field = try Field(statement: self, column: columns[Int(i)], offset: i)
-                        row.fields[field.column.name] = field
-                    }
-
-                    // return to event loop
-                    self.connection.queue.async { self.outputStream?(row) }
-                }
-
-                // cleanup
-                let ret = sqlite3_finalize(self.raw)
-                guard ret == SQLITE_OK else {
-                    throw Error(statusCode: ret, database: self.connection)
-                }
+                // blocking execute now that we're on the background thread
+                try self.blockingExecute()
 
                 // return to event loop
                 self.connection.queue.async { promise.complete(()) }
