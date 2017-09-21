@@ -101,6 +101,7 @@ extension URI {
 }
 
 extension String {
+    /// Is supposed to run over SSL
     public var isSecure: Bool {
         return self == "https" || self == "wss"
     }

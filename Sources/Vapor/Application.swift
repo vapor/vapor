@@ -17,7 +17,7 @@ public final class Application: Container {
     public let environment: Environment
 
     /// Services that can be created by this application.
-    public let services: Services
+    public var services: Services
 
     /// Use this to create stored properties in extensions.
     public var extend: Extend
