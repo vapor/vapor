@@ -7,7 +7,7 @@ public final class Connection {
     public var raw: Raw
 
     /// the queue statement's will dispatch stream output to.
-    public var queue: DispatchQueue
+    public let queue: DispatchQueue
 
     /// serial background queue to perform all calls to SQLite C API on.
     /// this must be a serial queue since the SQLITE_OPEN_NOMUTEX does not

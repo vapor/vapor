@@ -36,7 +36,6 @@ public final class ConnectionPool {
 
         do {
             if let ready = self.available.popLast() {
-                ready.queue = queue
                 promise.complete(ready)
             } else {
                 if self.active < self.max {
