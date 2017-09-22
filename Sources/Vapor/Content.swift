@@ -16,7 +16,7 @@ public protocol ContentDecoder {
     static var type: MediaType { get }
     
     /// Decodes from the `MediaType` statelessly
-    static func makeBody<D: Decodable>(_ body: Body, from entity: D.Type) throws -> D
+    static func decodeBody<D: Decodable>(_ body: Body, as type: D.Type) throws -> D
 }
 
 /// `Foundation.JSONEncoder` as JSON ContentEncoder
@@ -40,7 +40,7 @@ extension JSONDecoder: ContentDecoder {
     }
     
     /// Decodes from the `MediaType` statelessly
-    public static func makeBody<D>(_ body: Body, from entity: D.Type) throws -> D where D : Decodable {
+    public static func decodeBody<D>(_ body: Body, as type: D.Type) throws -> D where D : Decodable {
         return try JSONDecoder().decode(D.self, from: body.data)
     }
 }
