@@ -29,19 +29,17 @@ public final class SHA512 : SHA2_64 {
         var buffer = Data()
         buffer.reserveCapacity(32)
         
-        var data = Data(repeating: 0, count: 8)
-        
         func convert(_ int: UInt64) {
             let int = int.bigEndian
             
-            data[0] = UInt8(int & 0xff)
-            data[1] = UInt8((int >> 8) & 0xff)
-            data[2] = UInt8((int >> 16) & 0xff)
-            data[3] = UInt8((int >> 24) & 0xff)
-            data[4] = UInt8((int >> 32) & 0xff)
-            data[5] = UInt8((int >> 40) & 0xff)
-            data[6] = UInt8((int >> 48) & 0xff)
-            data[7] = UInt8((int >> 56) & 0xff)
+            buffer.append(UInt8(int & 0xff))
+            buffer.append(UInt8((int >> 8) & 0xff))
+            buffer.append(UInt8((int >> 16) & 0xff))
+            buffer.append(UInt8((int >> 24) & 0xff))
+            buffer.append(UInt8((int >> 32) & 0xff))
+            buffer.append(UInt8((int >> 40) & 0xff))
+            buffer.append(UInt8((int >> 48) & 0xff))
+            buffer.append(UInt8((int >> 56) & 0xff))
         }
         
         convert(h0)
