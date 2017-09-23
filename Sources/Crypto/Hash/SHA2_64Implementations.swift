@@ -31,7 +31,7 @@ public final class SHA512 : SHA2_64 {
         
         var data = Data(repeating: 0, count: 8)
         
-        func convert(_ int: UInt64) -> Data {
+        func convert(_ int: UInt64) {
             let int = int.bigEndian
             
             data[0] = UInt8(int & 0xff)
@@ -42,18 +42,16 @@ public final class SHA512 : SHA2_64 {
             data[5] = UInt8((int >> 40) & 0xff)
             data[6] = UInt8((int >> 48) & 0xff)
             data[7] = UInt8((int >> 56) & 0xff)
-            
-            return data
         }
         
-        buffer.append(contentsOf: convert(h0))
-        buffer.append(contentsOf: convert(h1))
-        buffer.append(contentsOf: convert(h2))
-        buffer.append(contentsOf: convert(h3))
-        buffer.append(contentsOf: convert(h4))
-        buffer.append(contentsOf: convert(h5))
-        buffer.append(contentsOf: convert(h6))
-        buffer.append(contentsOf: convert(h7))
+        convert(h0)
+        convert(h1)
+        convert(h2)
+        convert(h3)
+        convert(h4)
+        convert(h5)
+        convert(h6)
+        convert(h7)
         
         return buffer
     }
@@ -123,29 +121,25 @@ public final class SHA384: SHA2_64 {
         var buffer = Data()
         buffer.reserveCapacity(32)
         
-        var data = Data(repeating: 0, count: 8)
-        
-        func convert(_ int: UInt64) -> Data {
+        func convert(_ int: UInt64) {
             let int = int.bigEndian
             
-            data[0] = UInt8(int & 0xff)
-            data[1] = UInt8((int >> 8) & 0xff)
-            data[2] = UInt8((int >> 16) & 0xff)
-            data[3] = UInt8((int >> 24) & 0xff)
-            data[4] = UInt8((int >> 32) & 0xff)
-            data[5] = UInt8((int >> 40) & 0xff)
-            data[6] = UInt8((int >> 48) & 0xff)
-            data[7] = UInt8((int >> 56) & 0xff)
-            
-            return data
+            buffer.append(UInt8(int & 0xff))
+            buffer.append(UInt8((int >> 8) & 0xff))
+            buffer.append(UInt8((int >> 16) & 0xff))
+            buffer.append(UInt8((int >> 24) & 0xff))
+            buffer.append(UInt8((int >> 32) & 0xff))
+            buffer.append(UInt8((int >> 40) & 0xff))
+            buffer.append(UInt8((int >> 48) & 0xff))
+            buffer.append(UInt8((int >> 56) & 0xff))
         }
         
-        buffer.append(contentsOf: convert(h0))
-        buffer.append(contentsOf: convert(h1))
-        buffer.append(contentsOf: convert(h2))
-        buffer.append(contentsOf: convert(h3))
-        buffer.append(contentsOf: convert(h4))
-        buffer.append(contentsOf: convert(h5))
+        convert(h0)
+        convert(h1)
+        convert(h2)
+        convert(h3)
+        convert(h4)
+        convert(h5)
         
         return buffer
     }

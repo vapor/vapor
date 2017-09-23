@@ -29,24 +29,23 @@ public final class SHA256 : SHA2_32 {
         var buffer = Data()
         buffer.reserveCapacity(32)
         
-        func convert(_ int: UInt32) -> Data {
+        func convert(_ int: UInt32) {
             let int = int.bigEndian
-            return Data([
-                UInt8(int & 0xff),
-                UInt8((int >> 8) & 0xff),
-                UInt8((int >> 16) & 0xff),
-                UInt8((int >> 24) & 0xff)
-            ])
+            
+            buffer.append(UInt8(int & 0xff))
+            buffer.append(UInt8((int >> 8) & 0xff))
+            buffer.append(UInt8((int >> 16) & 0xff))
+            buffer.append(UInt8((int >> 24) & 0xff))
         }
         
-        buffer.append(contentsOf: convert(h0))
-        buffer.append(contentsOf: convert(h1))
-        buffer.append(contentsOf: convert(h2))
-        buffer.append(contentsOf: convert(h3))
-        buffer.append(contentsOf: convert(h4))
-        buffer.append(contentsOf: convert(h5))
-        buffer.append(contentsOf: convert(h6))
-        buffer.append(contentsOf: convert(h7))
+        convert(h0)
+        convert(h1)
+        convert(h2)
+        convert(h3)
+        convert(h4)
+        convert(h5)
+        convert(h6)
+        convert(h7)
         
         return buffer
     }
@@ -115,23 +114,22 @@ public final class SHA224 : SHA2_32 {
         var buffer = Data()
         buffer.reserveCapacity(28)
         
-        func convert(_ int: UInt32) -> Data {
+        func convert(_ int: UInt32) {
             let int = int.bigEndian
-            return Data([
-                UInt8(int & 0xff),
-                UInt8((int >> 8) & 0xff),
-                UInt8((int >> 16) & 0xff),
-                UInt8((int >> 24) & 0xff)
-            ])
+            
+            buffer.append(UInt8(int & 0xff))
+            buffer.append(UInt8((int >> 8) & 0xff))
+            buffer.append(UInt8((int >> 16) & 0xff))
+            buffer.append(UInt8((int >> 24) & 0xff))
         }
         
-        buffer.append(contentsOf: convert(h0))
-        buffer.append(contentsOf: convert(h1))
-        buffer.append(contentsOf: convert(h2))
-        buffer.append(contentsOf: convert(h3))
-        buffer.append(contentsOf: convert(h4))
-        buffer.append(contentsOf: convert(h5))
-        buffer.append(contentsOf: convert(h6))
+        convert(h0)
+        convert(h1)
+        convert(h2)
+        convert(h3)
+        convert(h4)
+        convert(h5)
+        convert(h6)
         
         return buffer
     }

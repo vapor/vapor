@@ -34,7 +34,7 @@ class WebSocketTests : XCTestCase {
         let promise0 = Promise<Void>()
         let promise1 = Promise<Void>()
         
-        _ = try WebSocket.connect("ws://0.0.0.0:8080/"), queue: .global()).then { socket in
+        _ = try WebSocket.connect(to: "ws://0.0.0.0:8080/", queue: .global()).then { socket in
             let responses = ["test", "cat", "banana"]
             let reversedResponses = responses.map {
                 String($0.reversed())

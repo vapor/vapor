@@ -28,7 +28,7 @@ class ControllerTests: XCTestCase {
         }
         
         let response = try responder.respond(to: request).sync()
-        let output = try JSONDecoder.decode(Login.Output.self, from: response.body)
+        let output = try JSONDecoder.decodeBody(response.body, as: Login.Output.self)
         
         XCTAssertEqual("exampletest", output.token)
     }
