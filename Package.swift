@@ -74,7 +74,7 @@ let package = Package(
         .testTarget(name: "MySQLTests", dependencies: ["MySQL"]),
         
         // MySQL
-        .target(name: "Multipart", dependencies: ["Core", "Debugging"]),
+        .target(name: "Multipart", dependencies: ["Core", "Debugging", "HTTP"]),
         .testTarget(name: "MultipartTests", dependencies: ["Multipart"]),
 
         // Net

@@ -8,6 +8,7 @@ import XCTest
 @testable import JWTTests
 @testable import LeafTests
 @testable import MySQLTests
+@testable import MultipartTests
 @testable import RoutingTests
 @testable import ServiceTests
 @testable import TCPTests
@@ -44,6 +45,9 @@ XCTMain([
 
     // MySQL
     testCase(MySQLTests.allTests),
+
+    // Multipart
+    testCase(MultipartTests.allTests),
 
     // Routing
     testCase(RouterTests.allTests),
