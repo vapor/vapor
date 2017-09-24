@@ -1,5 +1,5 @@
 import Dispatch
-import Core
+import Async
 import Crypto
 import Foundation
 import TCP

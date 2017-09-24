@@ -1,4 +1,4 @@
-import Core
+import Async
 import Dispatch
 
 /// Capable of responding to a request.
@@ -15,7 +15,7 @@ extension Responder {
 }
 
 /// A stream containing an HTTP responder.
-public final class ResponderStream: Core.Stream {
+public final class ResponderStream: Async.Stream {
     /// See InputStream.Input
     public typealias Input = Request
 

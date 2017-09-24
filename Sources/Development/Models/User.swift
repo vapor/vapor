@@ -1,5 +1,5 @@
 import Foundation
-import Core
+import Async
 import HTTP
 import Leaf
 import Vapor

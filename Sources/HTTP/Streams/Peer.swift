@@ -1,8 +1,9 @@
-import Core
+import Async
+import Bits
 import TCP
 
 /// An HTTP `Server`'s peer wrapped around TCP client
-public final class Peer: Core.Stream {
+public final class Peer: Async.Stream {
     /// See `InputStream.Input`
     public typealias Input = SerializedMessage
     

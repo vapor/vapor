@@ -1,5 +1,5 @@
 import Foundation
-import Core
+import Bits
 
 /// Encodes buffers
 public protocol TransferEncoder {

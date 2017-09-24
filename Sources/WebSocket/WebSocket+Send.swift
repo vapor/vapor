@@ -1,8 +1,9 @@
 import libc
-import Core
+import Async
+import Bits
 
 /// Serializes frames to binary
-final class FrameSerializer : Core.Stream {
+final class FrameSerializer : Async.Stream {
     typealias Input = Frame
     
     typealias Output = ByteBuffer

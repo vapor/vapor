@@ -1,5 +1,5 @@
 import Foundation
-import Core
+import Async
 import HTTP
 
 /// Something that is convertible between a Cookie and an instance.

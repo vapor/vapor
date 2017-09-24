@@ -1,4 +1,4 @@
-import Core
+import Async
 import TCP
 
 /// An HTTP client wrapped around TCP client

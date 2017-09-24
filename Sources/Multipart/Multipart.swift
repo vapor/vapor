@@ -1,4 +1,5 @@
 import Foundation
+import Core
 
 /// A single part
 public struct Part {
@@ -38,24 +39,22 @@ public struct Form {
     }
     
     /// Gets the `File` associated with the `name`. Throws an error if there is no `File` encoded as UTF-8
-    public func getFile(forName name: String) throws -> File {
+    public func getFile(forName name: String) throws -> Data {
         for part in parts where part.key == name {
-            let name = part.headers[.contentDisposition, "filename"] ?? ""
-            return File(named: name, data: part.data)
+            return part.data
         }
         
         throw Error(identifier: "multipart:no-part", reason: "There is no part with the provided name")
     }
     
     /// Gets all `File`s associated with the `name`.
-    public func getFiles(forName name: String) -> [File] {
+    public func getFiles(forName name: String) -> [Data] {
         return parts.flatMap { part in
             guard part.key == name else {
                 return nil
             }
             
-            let name = part.headers[.contentDisposition, "filename"] ?? ""
-            return File(named: name, data: part.data)
+            return part.data
         }
     }
 }

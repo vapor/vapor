@@ -1,5 +1,5 @@
 import Foundation
-import Core
+import Bits
 
 class Parser {
     var position: Int

@@ -1,8 +1,8 @@
-import Core
+import Async
 import TCP
 
 /// HTTP server wrapped around TCP server
-public final class Server: Core.OutputStream {
+public final class Server: Async.OutputStream {
     // MARK: Stream
     public typealias Output = HTTP.Peer
     public var errorStream: ErrorHandler? {

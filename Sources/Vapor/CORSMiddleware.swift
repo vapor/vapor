@@ -1,4 +1,4 @@
-import Core
+import Async
 import HTTP
 
 /// Middleware that adds support for CORS settings in request responses.

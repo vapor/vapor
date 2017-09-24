@@ -1,5 +1,6 @@
+import Bits
 import Foundation
-import Core
+import Async
 import TCP
 import Dispatch
 

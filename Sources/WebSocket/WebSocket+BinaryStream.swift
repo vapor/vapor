@@ -1,6 +1,7 @@
-import Core
+import Async
+import Bits
 
-final class BinaryStream : Core.Stream {
+final class BinaryStream : Async.Stream {
     /// Sends this binary data to the other party
     func inputStream(_ input: ByteBuffer) {
         do {

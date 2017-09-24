@@ -1,4 +1,4 @@
-import Core
+import Bits
 import Foundation
 
 public final class SHA256 : SHA2_32 {
