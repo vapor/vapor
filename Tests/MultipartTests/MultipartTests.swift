@@ -1,6 +1,5 @@
 import Multipart
 import XCTest
-import Files
 
 class MultipartTests: XCTestCase {
     let named = """

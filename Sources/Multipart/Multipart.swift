@@ -1,5 +1,4 @@
 import Foundation
-import Files
 
 /// A single part
 public struct Part {
