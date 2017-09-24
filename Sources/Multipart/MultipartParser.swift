@@ -1,15 +1,15 @@
 import Foundation
-import Bits
+import Core
 
 /// An enum with no cases can't be instantiated
 ///
 /// This parser can only be used statically, a design choice considering the way multipart is best parsed
-public final class MultipartParser {
+public final class Parser {
     fileprivate let boundary: Data
     fileprivate let fullBoundary: Data
     fileprivate let data: Data
     var position = 0
-    var multipart = Multipart(parts: [])
+    var multipart = Form(parts: [])
     
     /// Creates a new parser for a Multipart form
     init(data: Data, boundary: Data) {
@@ -107,7 +107,7 @@ public final class MultipartParser {
             
             // The first 2 bytes match, check if a boundary is hit
             if data[base] == fullBoundary[0], data[base &+ 1] == fullBoundary[1], data[base..<base + fullBoundary.count] == fullBoundary {
-                position = base
+                defer { position = base }
                 return Data(data[position..<base])
             }
             
@@ -197,8 +197,8 @@ public final class MultipartParser {
     /// Parses the input mulitpart data using the provided boundary
     ///
     /// - throws: If the multipart data is invalid
-    public static func parse(multipart data: Data, boundary: Data) throws -> Multipart {
-        let parser = MultipartParser(data: data, boundary: boundary)
+    public static func parse(multipart data: Data, boundary: Data) throws -> Form {
+        let parser = Parser(data: data, boundary: boundary)
         
         try parser.parse()
         

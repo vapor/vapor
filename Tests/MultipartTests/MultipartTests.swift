@@ -1,4 +1,4 @@
-import Web
+import Multipart
 import XCTest
 import Files
 
@@ -35,13 +35,13 @@ Content-Disposition: form-data; name="multinamed[]"; filename=""\r
 ------WebKitFormBoundaryPVOZifB9OqEwP2fn--\r
 """
         
-        let multipart = try MultipartParser.parse(multipart: Data(data.utf8), boundary: Data("----WebKitFormBoundaryPVOZifB9OqEwP2fn".utf8))
+        let form = try Multipart.Parser.parse(multipart: Data(data.utf8), boundary: Data("----WebKitFormBoundaryPVOZifB9OqEwP2fn".utf8))
         
-        XCTAssertEqual(multipart.parts.count, 3)
+        XCTAssertEqual(form.parts.count, 3)
         
-        XCTAssertEqual(try multipart.getString(forName: "test"), "eqw-dd-sa----123;1[234")
-        XCTAssertEqual(try multipart.getFile(forName: "named").data, Data(named.utf8))
-        XCTAssertEqual(try multipart.getFile(forName: "multinamed[]").data, Data(multinamed.utf8))
+        XCTAssertEqual(try form.getString(forName: "test"), "eqw-dd-sa----123;1[234")
+        XCTAssertEqual(try form.getFile(forName: "named").data, Data(named.utf8))
+        XCTAssertEqual(try form.getFile(forName: "multinamed[]").data, Data(multinamed.utf8))
     }
 
     func testMultifile() throws {
@@ -61,7 +61,7 @@ Content-Disposition: form-data; name="multinamed[]"; filename=""\r
         ------WebKitFormBoundaryPVOZifB9OqEwP2fn--\r
         """
         
-        let multipart = try MultipartParser.parse(multipart: Data(data.utf8), boundary: Data("----WebKitFormBoundaryPVOZifB9OqEwP2fn".utf8))
+        let multipart = try Multipart.Parser.parse(multipart: Data(data.utf8), boundary: Data("----WebKitFormBoundaryPVOZifB9OqEwP2fn".utf8))
         
         let files = multipart.getFiles(forName: "multinamed[]")
         

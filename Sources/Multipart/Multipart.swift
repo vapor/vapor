@@ -21,7 +21,7 @@ public struct Part {
 }
 
 /// A Multipart, commonly used in HTTP Forms and SMTP emails
-public struct Multipart {
+public struct Form {
     /// All raw parts in this multipart
     public var parts: [Part]
     

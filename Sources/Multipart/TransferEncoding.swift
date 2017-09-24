@@ -1,6 +1,5 @@
 import Foundation
-import Async
-import Bits
+import Core
 
 /// Encodes buffers
 public protocol TransferEncoder {
