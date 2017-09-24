@@ -20,7 +20,7 @@ public struct Error: Traceable, Debuggable, Swift.Error {
         function: String = #function,
         line: UInt = #line,
         column: UInt = #column
-        ) {
+    ) {
         self.identifier = identifier
         self.reason = reason
         self.file = file
@@ -35,7 +35,7 @@ public struct Error: Traceable, Debuggable, Swift.Error {
         function: String = #function,
         line: UInt = #line,
         column: UInt = #column
-        ) -> Error {
+    ) -> Error {
         return Error(
             identifier: "invalidMessage",
             reason: "Unable to parse invalid HTTP message.",
@@ -52,7 +52,7 @@ public struct Error: Traceable, Debuggable, Swift.Error {
         function: String = #function,
         line: UInt = #line,
         column: UInt = #column
-        ) -> Error {
+    ) -> Error {
         return Error(
             identifier: "contentRequired",
             reason: "\(type) content required.",
