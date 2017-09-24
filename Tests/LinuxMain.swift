@@ -1,7 +1,7 @@
 #if os(Linux)
 
 import XCTest
-@testable import CoreTests
+@testable import AsyncTests
 @testable import CryptoTests
 @testable import DebuggingTests
 @testable import HTTPTests

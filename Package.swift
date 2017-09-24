@@ -5,6 +5,8 @@ let package = Package(
     name: "Vapor",
     products: [
         // Core
+        .library(name: "Async", targets: ["Async"]),
+        .library(name: "Bits", targets: ["Bits"]),
         .library(name: "Core", targets: ["Core"]),
         .library(name: "libc", targets: ["libc"]),
 
@@ -44,9 +46,15 @@ let package = Package(
     ],
     dependencies: [],
     targets: [
+        // Async
+        .target(name: "Async"),
+        .testTarget(name: "AsyncTests", dependencies: ["Async"]),
+
+        // Bits
+        .target(name: "Bits"),
+
         // Core
         .target(name: "Core", dependencies: ["libc", "Debugging"]),
-        .testTarget(name: "CoreTests", dependencies: ["Core"]),
         .target(name: "libc"),
 
         // Crypto
