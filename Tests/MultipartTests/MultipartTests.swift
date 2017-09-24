@@ -39,8 +39,8 @@ Content-Disposition: form-data; name="multinamed[]"; filename=""\r
         XCTAssertEqual(form.parts.count, 3)
         
         XCTAssertEqual(try form.getString(forName: "test"), "eqw-dd-sa----123;1[234")
-        XCTAssertEqual(try form.getFile(forName: "named").data, Data(named.utf8))
-        XCTAssertEqual(try form.getFile(forName: "multinamed[]").data, Data(multinamed.utf8))
+        XCTAssertEqual(try form.getFile(forName: "named"), Data(named.utf8))
+        XCTAssertEqual(try form.getFile(forName: "multinamed[]"), Data(multinamed.utf8))
     }
 
     func testMultifile() throws {
@@ -66,9 +66,9 @@ Content-Disposition: form-data; name="multinamed[]"; filename=""\r
         
         XCTAssertEqual(files.count, 2)
         let file = try multipart.getFile(forName: "multinamed[]")
-        XCTAssertEqual(file.data, Data(named.utf8))
+        XCTAssertEqual(file, Data(named.utf8))
         
-        XCTAssertEqual(files.first?.data, Data(named.utf8))
-        XCTAssertEqual(files.last?.data, Data(multinamed.utf8))
+        XCTAssertEqual(files.first, Data(named.utf8))
+        XCTAssertEqual(files.last, Data(multinamed.utf8))
     }
 }

@@ -1,5 +1,5 @@
 import TCP
-import Core
+import Async
 import Dispatch
 import HTTP
 import XCTest
