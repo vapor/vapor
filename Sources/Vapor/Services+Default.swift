@@ -37,11 +37,6 @@ extension Services {
         services.register([SyncRouter.self, AsyncRouter.self, Router.self]) { container in
             return TrieRouter()
         }
-        
-        // Register content types
-        services.register { container in
-            return ContentCoders.default
-        }
 
         return services
     }

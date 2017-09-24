@@ -1,3 +1,4 @@
+import Foundation
 import Core
 import HTTP
 import Leaf
@@ -8,6 +9,12 @@ final class User: Codable, ResponseRepresentable {
     var age: Int
     var child: User?
     var futureChild: Future<User>?
+    
+    func makeResponse(for request: Request) throws -> Response {
+        let body = Body(try JSONEncoder().encode(self))
+        
+        return Response(body: body)
+    }
 
     init(name: String, age: Int) {
         self.name = name
