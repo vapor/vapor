@@ -5,10 +5,19 @@ import Core
 ///
 /// This parser can only be used statically, a design choice considering the way multipart is best parsed
 public final class Parser {
+    /// The boundary between all parts
     fileprivate let boundary: Data
+    
+    /// A helper variable that consists of all bytes inbetween one part's body and the next part's headers
     fileprivate let fullBoundary: Data
+    
+    /// The multipart form data to parse
     fileprivate let data: Data
+    
+    /// The current position, used for parsing
     var position = 0
+    
+    /// The output form
     var multipart = Form(parts: [])
     
     /// Creates a new parser for a Multipart form
