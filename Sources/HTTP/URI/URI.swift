@@ -111,40 +111,6 @@ import Foundation
 
 extension URI: ExpressibleByStringLiteral {
     public init(stringLiteral value: String) {
-        guard let url = URL(string: value) else {
-            self.init(path: value)
-            return
-        }
-        
-        let port: Port?
-        let info: UserInfo?
-        
-        if let urlPort = url.port, urlPort < Int(UInt16.max) {
-            port = UInt16(urlPort)
-        } else {
-            port = nil
-        }
-        
-        if let user = url.user?.split(separator: ":", maxSplits: 1) {
-            if user.count == 2 {
-                info = UserInfo(username: String(user[0]), info: String(user[1]))
-            } else if user.count == 1 {
-                info = UserInfo(username: String(user[0]), info: nil)
-            } else {
-                info = nil
-            }
-        } else {
-            info = nil
-        }
-        
-        self.init(
-            scheme: url.scheme,
-            userInfo: info,
-            hostname: url.host,
-            port: port,
-            path: url.path,
-            query: url.query,
-            fragment: url.fragment
-        )
+        self = URIParser().parse(bytes: DispatchData(value))
     }
 }
