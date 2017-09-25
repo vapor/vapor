@@ -50,15 +50,20 @@ public enum TransferEncoding {
     public static let binary = BinaryTransferCoder()
 }
 
+/// No encoding
 public final class BinaryTransferCoder: TransferEncoder, TransferDecoder {
+    /// Returns the input
     public func encode(_ buffer: ByteBuffer) throws -> ByteBuffer {
         return buffer
     }
     
+    /// Returns the input
     public func decode(_ buffer: ByteBuffer) throws -> ByteBuffer {
         return buffer
     }
     
+    /// Helper initializer, since Headers aren't used
     public init() {}
+    
     public init(headers: Headers) throws {}
 }
