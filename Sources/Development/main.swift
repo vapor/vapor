@@ -1,5 +1,6 @@
 import Core
 import Dispatch
+import Fluent
 import Foundation
 import HTTP
 import Leaf
