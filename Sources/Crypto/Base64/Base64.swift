@@ -1,7 +1,8 @@
 import Foundation
-import Core
+import Async
+import Bits
 
-protocol Base64 : class, Core.Stream {
+protocol Base64: class, Async.Stream {
     static func process(_ buffer: ByteBuffer, toPointer pointer: MutableBytesPointer, capacity: Int, finish: Bool) throws -> (complete: Bool, filled: Int, consumed: Int)
     
     associatedtype Input = ByteBuffer

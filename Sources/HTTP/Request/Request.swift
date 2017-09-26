@@ -29,18 +29,16 @@ public final class Request: Message {
     /// may be a full URI in the case of a proxy
     public var uri: URI
 
-    /// See Message.version
+    /// See `Message.version`
     public var version: Version
 
-    /// See Message.headers
+    /// See `Message.headers`
     public var headers: Headers
 
-    /// See Message.body
-    public var body: Body {
-        didSet { updateContentLength() }
-    }
+    /// See `Message.body`
+    public var body: Body
     
-    /// See Extendable.extend
+    /// See `Extendable.extend`
     public var extend: Extend
 
     /// Create a new HTTP request.
@@ -75,3 +73,25 @@ extension Request {
         try self.init(method: method, uri: uri, version: version, headers: headers, body: body.makeBody())
     }
 }
+
+/// Can be converted from a response.
+public protocol RequestInitializable {
+    init(request: Request) throws
+}
+
+/// Can be converted to a response
+public protocol RequestRepresentable {
+    func makeRequest() throws -> Request
+}
+
+/// Can be converted from and to a response
+public typealias RequestConvertible = RequestInitializable & RequestRepresentable
+
+// MARK: Response Conformance
+
+extension Request: RequestRepresentable {
+    public func makeRequest() throws -> Request {
+        return self
+    }
+}
+

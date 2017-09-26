@@ -1,4 +1,4 @@
-import Core
+import Async
 
 public final class Contains: Leaf.Tag {
     public func render(parsed: ParsedTag, context: inout Context, renderer: Renderer) throws -> Future<Context?> {

@@ -1,4 +1,4 @@
-import Core
+import Async
 import HTTP
 
 /// Capable of register async routes.
@@ -9,11 +9,11 @@ extension AsyncRouter {
     @discardableResult
     public func on<F: FutureType>(
         _ method: Method,
-        to path: PathComponentRepresentable...,
+        to path: [PathComponent],
         use closure: @escaping BasicAsyncResponder<F>.Closure
     ) -> Route where F.Expectation: ResponseRepresentable {
         let responder = BasicAsyncResponder(closure: closure)
-        let route = Route(method: method, path: path.makePathComponents(), responder: responder)
+        let route = Route(method: method, path: path, responder: responder)
         self.register(route: route)
         
         return route
@@ -36,7 +36,7 @@ public struct BasicAsyncResponder<F: FutureType>: Responder where F.Expectation:
     /// See: HTTP.Responder.respond
     public func respond(to req: Request) throws -> Future<Response> {
         return try closure(req).map { rep in
-            return try rep.makeResponse()
+            return try rep.makeResponse(for: req)
         }
     }
 }

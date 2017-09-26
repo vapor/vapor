@@ -1,4 +1,4 @@
-import Core
+import Async
 
 public protocol FutureEncoder {
     mutating func encode<E>(_ future: Future<E>) throws

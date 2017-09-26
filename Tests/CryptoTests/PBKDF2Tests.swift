@@ -5,7 +5,7 @@ class PBKDF2Tests: XCTestCase {
     static var allTests = [
         ("testSHA1", testSHA1),
         ("testMD5", testMD5),
-        ("testPerformance", testPerformance),
+//        ("testPerformance", testPerformance),
     ]
 
     func testSHA1() throws {
@@ -40,11 +40,11 @@ class PBKDF2Tests: XCTestCase {
         }
     }
     
-    func testPerformance() {
-        // ~0.137 release
-        measure {
-            _ = try! PBKDF2<SHA1>.deriveKey(fromPassword: Data("p".utf8), saltedWith: Data("somewhatlongsaltstringthatIwanttotest".utf8), iterating: 10_000, derivedKeyLength: SHA1.digestSize)
-        }
-    }
+//    func testPerformance() {
+//        // ~0.137 release
+//        measure {
+//            _ = try! PBKDF2<SHA1>.deriveKey(fromPassword: Data("p".utf8), saltedWith: Data("somewhatlongsaltstringthatIwanttotest".utf8), iterating: 10_000, derivedKeyLength: SHA1.digestSize)
+//        }
+//    }
 }
 

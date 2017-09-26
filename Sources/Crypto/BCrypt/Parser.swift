@@ -1,5 +1,5 @@
 import Foundation
-import Core
+import Bits
 
 extension BCrypt {
     final class Parser {

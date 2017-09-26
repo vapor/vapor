@@ -5,6 +5,8 @@ let package = Package(
     name: "Vapor",
     products: [
         // Core
+        .library(name: "Async", targets: ["Async"]),
+        .library(name: "Bits", targets: ["Bits"]),
         .library(name: "Core", targets: ["Core"]),
         .library(name: "libc", targets: ["libc"]),
 
@@ -14,13 +16,13 @@ let package = Package(
         // Debugging
         .library(name: "Debugging", targets: ["Debugging"]),
 
-        // Leaf
+        // JWT
         .library(name: "JWT", targets: ["JWT"]),
 
         // Leaf
         .library(name: "Leaf", targets: ["Leaf"]),
 
-        // Leaf
+        // Logging
         .library(name: "Logging", targets: ["Logging"]),
 
         // MySQL
@@ -44,16 +46,22 @@ let package = Package(
     ],
     dependencies: [],
     targets: [
+        // Async
+        .target(name: "Async"),
+        .testTarget(name: "AsyncTests", dependencies: ["Async"]),
+
+        // Bits
+        .target(name: "Bits"),
+
         // Core
         .target(name: "Core", dependencies: ["libc", "Debugging"]),
-        .testTarget(name: "CoreTests", dependencies: ["Core"]),
         .target(name: "libc"),
         
         // Codable
         .target(name: "CodableHelpers"),
 
         // Crypto
-        .target(name: "Crypto", dependencies: ["Core"]),
+        .target(name: "Crypto", dependencies: ["libc", "Async", "Bits", "Core", "Debugging"]),
         .testTarget(name: "CryptoTests", dependencies: ["Crypto"]),
 
         // Debugging
@@ -73,10 +81,13 @@ let package = Package(
         .testTarget(name: "LoggingTests", dependencies: ["Logging"]),
 
         // MySQL
-
-        .target(name: "MySQL", dependencies: ["TCP", "Crypto", "CodableHelpers"]),
+        .target(name: "MySQL", dependencies: ["TCP", "Crypto", "Core"]),
         .testTarget(name: "MySQLTests", dependencies: ["MySQL"]),
         
+        // MySQL
+        .target(name: "Multipart", dependencies: ["Core", "Debugging", "HTTP"]),
+        .testTarget(name: "MultipartTests", dependencies: ["Multipart"]),
+
         // Net
         .target(name: "CHTTP"),
         .target(name: "HTTP", dependencies: ["CHTTP", "TCP"]),

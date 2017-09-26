@@ -4,7 +4,7 @@ import Crypto
 class SHA1Tests: XCTestCase {
     static var allTests = [
         ("testBasic", testBasic),
-        ("testPerformance", testPerformance),
+//        ("testPerformance", testPerformance),
         ("testHMAC", testHMAC),
     ]
 
@@ -47,11 +47,11 @@ class SHA1Tests: XCTestCase {
         }
     }
     
-    func testPerformance() {
-        measure {
-            _ = SHA1.hash(Data("kaas".utf8))
-        }
-    }
+//    func testPerformance() {
+//        measure {
+//            _ = SHA1.hash(Data("kaas".utf8))
+//        }
+//    }
     
     func testNotCrashing() {
         let data = Data(repeating: 0x02, count: 263)

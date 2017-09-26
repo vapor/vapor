@@ -1,3 +1,4 @@
+import Async
 import Foundation
 
 /// Capable of reading files asynchronously.

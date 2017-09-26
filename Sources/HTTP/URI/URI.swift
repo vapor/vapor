@@ -1,3 +1,4 @@
+import Dispatch
 /*
  https://tools.ietf.org/html/rfc3986#section-3
 
@@ -103,5 +104,14 @@ extension URI {
 extension String {
     public var isSecure: Bool {
         return self == "https" || self == "wss"
+    }
+}
+
+// MARK: String literal
+import Foundation
+
+extension URI: ExpressibleByStringLiteral {
+    public init(stringLiteral value: String) {
+        self = URIParser().parse(bytes: DispatchData(value))
     }
 }
