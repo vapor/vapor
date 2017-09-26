@@ -1,6 +1,6 @@
 import Async
 
-class ModelBuilder<D: Decodable> : ResultsStream {
+public final class ModelStream<D: Decodable> : ResultsStream {
     /// Parses a packet into a Decodable entity
     func parseRows(from packet: Packet) throws -> D {
         let row = try packet.makeRow(columns: columns)

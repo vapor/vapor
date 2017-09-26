@@ -1,4 +1,5 @@
 import Bits
+import Async
 
 struct Handshake {
     let version = 10

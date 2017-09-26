@@ -57,9 +57,6 @@ let package = Package(
         .target(name: "Core", dependencies: ["libc", "Debugging"]),
         .target(name: "libc"),
         
-        // Codable
-        .target(name: "CodableHelpers"),
-
         // Crypto
         .target(name: "Crypto", dependencies: ["libc", "Async", "Bits", "Core", "Debugging"]),
         .testTarget(name: "CryptoTests", dependencies: ["Crypto"]),
