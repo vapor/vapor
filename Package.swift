@@ -91,10 +91,6 @@ let package = Package(
         .testTarget(name: "HTTPTests", dependencies: ["HTTP"]),
         .target(name: "TCP", dependencies: ["Debugging", "Core", "libc"]),
         .testTarget(name: "TCPTests", dependencies: ["TCP"]),
-        
-        // WebSocket
-        .target(name: "WebSocket", dependencies: ["Core", "Debugging", "TCP", "HTTP", "Crypto"]),
-        .testTarget(name: "WebSocketTests", dependencies: ["WebSocket"]),
 
         // Routing
         .target(name: "Routing", dependencies: ["Core", "Debugging", "HTTP", "WebSocket"]),
@@ -104,6 +100,10 @@ let package = Package(
         .target(name: "Service", dependencies: ["Core", "Debugging"]),
         .testTarget(name: "ServiceTests", dependencies: ["Service"]),
 
+        // Validation
+        .target(name: "Validation", dependencies: ["Debugging"]),
+        .testTarget(name: "ValidationTests", dependencies: ["Validation"]),
+        
         // Vapor
         .target(name: "Development", dependencies: ["Leaf", "Vapor", "MySQL"]),
         .target(name: "Vapor", dependencies: [
@@ -117,5 +117,9 @@ let package = Package(
             "WebSocket",
         ]),
         .testTarget(name: "VaporTests", dependencies: ["Vapor"]),
+        
+        // WebSocket
+        .target(name: "WebSocket", dependencies: ["Core", "Debugging", "TCP", "HTTP", "Crypto"]),
+        .testTarget(name: "WebSocketTests", dependencies: ["WebSocket"]),
     ]
 )
