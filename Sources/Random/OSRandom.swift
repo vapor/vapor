@@ -19,10 +19,21 @@ public final class OSRandom: DataGenerator, EmptyInitializable {
 
         return bytes
     }
+
+    fileprivate func makeRandom(min: Int, max: Int) -> Int {
+        let top = max - min + 1
+        #if os(Linux)
+            // will always be initialized
+            guard randomInitialized else { fatalError() }
+            return Int(libc.random() % top) + min
+        #else
+            return Int(arc4random_uniform(UInt32(top))) + min
+        #endif
+    }
 }
 
 extension Int {
-    static let maxByte: Int = Int(Byte.max)
+    fileprivate static let maxByte: Int = Int(Byte.max)
 }
 
 #if os(Linux)
@@ -38,13 +49,4 @@ extension Int {
     }()
 #endif
 
-public func makeRandom(min: Int, max: Int) -> Int {
-    let top = max - min + 1
-    #if os(Linux)
-        // will always be initialized
-        guard randomInitialized else { fatalError() }
-        return Int(libc.random() % top) + min
-    #else
-        return Int(arc4random_uniform(UInt32(top))) + min
-    #endif
-}
+
