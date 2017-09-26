@@ -1,3 +1,4 @@
+import Dispatch
 /*
  https://tools.ietf.org/html/rfc3986#section-3
 
