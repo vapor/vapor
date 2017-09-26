@@ -29,9 +29,7 @@ public final class EngineServer: Server {
                 .drain(into: client)
 
             client.tcp.start()
-        }
-
-        server.errorStream = { error in
+        }.catch { error in
             debugPrint(error)
         }
 
