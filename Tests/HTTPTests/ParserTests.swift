@@ -1,3 +1,4 @@
+import Core
 import HTTP
 import XCTest
 
@@ -16,7 +17,8 @@ class ParserTests : XCTestCase {
         hello
         """.data(using: .utf8) ?? Data()
 
-        let parser = RequestParser(queue: .global())
+        let worker = Worker(queue: .global())
+        let parser = RequestParser(worker: worker)
         guard let req = try parser.parse(from: data) else {
             XCTFail("No request parsed")
             return
