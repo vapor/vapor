@@ -71,4 +71,9 @@ Content-Disposition: form-data; name="multinamed[]"; filename=""\r
         XCTAssertEqual(files.first, Data(named.utf8))
         XCTAssertEqual(files.last, Data(multinamed.utf8))
     }
+    
+    static let allTests = [
+        ("testBasics", testBasics),
+        ("testMultifile", testMultifile)
+    ]
 }
