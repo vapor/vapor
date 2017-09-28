@@ -2,7 +2,7 @@ import Core
 import TCP
 
 /// HTTP server wrapped around TCP server
-public final class Server: Core.OutputStream {
+public final class Server<OS: OutputStream>: Core.OutputStream where OS.Output == TCP.Client {
     // MARK: Stream
     public typealias Output = HTTP.Client
     public var errorStream: ErrorHandler? {
@@ -12,9 +12,9 @@ public final class Server: Core.OutputStream {
 
     public var outputStream: OutputHandler?
 
-    public let tcp: TCP.Server
+    public let tcp: OS
 
-    public init(tcp: TCP.Server) {
+    public init(tcp: OS) {
         self.tcp = tcp
         tcp.outputStream = { tcp in
             let client = HTTP.Client(tcp: tcp)

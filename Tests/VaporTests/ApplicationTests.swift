@@ -11,12 +11,12 @@ class ApplicationTests: XCTestCase {
         
         let cert = FileManager.default.contents(atPath: "/Users/joannisorlandos/Desktop/server.crt.bin")!
         
-        var clients = [AppleSSLPeer]()
+        var clients = [AppleSSLSocket<TCP.Client>]()
         
         server.drain { client in
             do {
-                let client = try AppleSSLPeer(socket: client.socket)
-                try client.initialize(certificate: cert)
+                let client = try AppleSSLSocket(socket: client)
+                try client.initializePeer(signedBy: cert)
                 
                 let parser = RequestParser(queue: .global())
                 let serializer = ResponseSerializer()
@@ -49,9 +49,11 @@ class ApplicationTests: XCTestCase {
     func client(to host: String, port: UInt16) throws {
         let queue = DispatchQueue(label: "test")
         
-        let SSL = try AppleSSLClient()
+        let clientSocket = try TCP.Socket()
+        let client = TCP.Client(socket: clientSocket, queue: .global())
+        let SSL = try AppleSSLSocket(socket: client)
         try SSL.connect(hostname: host, port: port).blockingAwait()
-        try SSL.initialize(hostname: host)
+        try SSL.initializeClient(server: host)
         
         let parser = ResponseParser()
         let serializer = RequestSerializer()

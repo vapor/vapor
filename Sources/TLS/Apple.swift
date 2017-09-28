@@ -18,7 +18,7 @@ import Dispatch
     /// The TCP socket will also be read and deciphered into plaintext and outputted.
     ///
     /// https://developer.apple.com/documentation/security/secure_transport
-    public class AppleSSLSocket: TCP.Socket, Core.Stream {
+    public class AppleSSLSocket<OS: Core.Stream>: Core.Stream where OS.Output == ByteBuffer, OS.Input == ByteBuffer {
         /// See `OutputStream.Output`
         public typealias Output = ByteBuffer
         
@@ -65,13 +65,11 @@ import Dispatch
         /// This should be accessed through the server/client subclass
         public init(socket: Socket) throws {
             self.socket = socket
-            
-            super.init(established: socket.descriptor, isNonBlocking: socket.isNonBlocking, shouldReuseAddress: socket.shouldReuseAddress)
         }
         
         /// Writes the buffer to this SSL socket
         @discardableResult
-        public override func write(max: Int, from buffer: ByteBuffer) throws -> Int {
+        public func write(max: Int, from buffer: ByteBuffer) throws -> Int {
             guard let context = self.context else {
                 close()
                 throw Error.noSSLContext
@@ -86,7 +84,7 @@ import Dispatch
         
         /// Writes the buffer to this SSL socket
         @discardableResult
-        public override func read(max: Int, into buffer: MutableByteBuffer) throws -> Int {
+        public func read(max: Int, into buffer: MutableByteBuffer) throws -> Int {
             guard let context = self.context else {
                 close()
                 throw Error.noSSLContext
@@ -110,12 +108,12 @@ import Dispatch
         }
         
         /// Closes the connection
-        public override func close() {
+        public func close() {
             if let context = context {
                 SSLClose(context)
             }
             
-            super.close()
+            socket.close()
         }
     }
 #endif
