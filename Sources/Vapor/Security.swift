@@ -36,7 +36,10 @@ public final class PeerValidationStream: Core.Stream {
     /// Validates incoming clients
     public func inputStream(_ input: Client) {
         // Accept must always set the address
-        let currentRemoteAddress = input.socket.address!
+        guard let currentRemoteAddress = input.socket.address else {
+            return
+        }
+        
         var currentRemote: RemoteAddress? = nil
         
         // Looks for currently open connections from this address
