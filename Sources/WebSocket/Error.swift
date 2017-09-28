@@ -5,6 +5,8 @@ public struct Error : Swift.Error, Debuggable, Traceable, Encodable {
     /// A description of the problem
     public var reason: String {
         switch problem {
+        case .invalidURI:
+            return "The URI was invalid for WebSocket connections"
         case .notUpgraded:
             return "The HTTP connection was not upgraded to WebSocket"
         case .invalidMask:
@@ -60,6 +62,9 @@ public struct Error : Swift.Error, Debuggable, Traceable, Encodable {
     
     /// The problem occurring
     enum Problem : String {
+        /// The URI was invalid for WebSocket connections
+        case invalidURI
+        
         /// The HTTP connection was not upgraded to WebSocket
         case notUpgraded
         

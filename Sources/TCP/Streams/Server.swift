@@ -1,9 +1,10 @@
+import Async
 import Core
 import Dispatch
 import libc
 
 /// A server socket can accept peers. Each accepted peer get's it own socket after accepting.
-public final class Server: Core.OutputStream {
+public final class Server: Async.OutputStream {
     // MARK: Stream
     public typealias Output = Client
     public var errorStream: ErrorHandler?

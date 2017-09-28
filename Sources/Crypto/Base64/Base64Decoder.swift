@@ -1,5 +1,6 @@
 import Foundation
-import Core
+import Bits
+import Async
 
 /// Precomputed decoding table
 fileprivate let decodeTable: [UInt8] = [

@@ -1,5 +1,5 @@
 import XCTest
-import Core
+import Bits
 @testable import Random
 
 class RandomTests: XCTestCase {
@@ -19,7 +19,7 @@ class RandomTests: XCTestCase {
         let rand = try OSRandom.makeInt64()
         print(rand)
         let bytes = try OSRandom.bytes(count: 32)
-        print(String(data: bytes, encoding: .utf8))
+        print(String(data: bytes, encoding: .utf8) ?? "n/a")
     }
 
     func testURandomCount() throws {

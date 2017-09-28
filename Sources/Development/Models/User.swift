@@ -1,13 +1,20 @@
-import Core
+import Foundation
+import Async
 import HTTP
 import Leaf
 import Vapor
 
-final class User: JSONCodable, ContentCodable, ResponseRepresentable {
+final class User: Codable, ResponseRepresentable {
     var name: String
     var age: Int
     var child: User?
     var futureChild: Future<User>?
+    
+    func makeResponse(for request: Request) throws -> Response {
+        let body = Body(try JSONEncoder().encode(self))
+        
+        return Response(body: body)
+    }
 
     init(name: String, age: Int) {
         self.name = name

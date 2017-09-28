@@ -1,14 +1,18 @@
 #if os(Linux)
 
 import XCTest
-@testable import CoreTests
+@testable import AsyncTests
 @testable import CryptoTests
 @testable import DebuggingTests
 @testable import HTTPTests
 @testable import JWTTests
 @testable import LeafTests
 @testable import MySQLTests
+<<<<<<< HEAD
 @testable import RandomTests
+=======
+@testable import MultipartTests
+>>>>>>> origin/beta
 @testable import RoutingTests
 @testable import ServiceTests
 @testable import TCPTests
@@ -46,8 +50,13 @@ XCTMain([
     // MySQL
     testCase(MySQLTests.allTests),
 
+<<<<<<< HEAD
     // Random
     testCase(RandomTests.allTests),
+=======
+    // Multipart
+    testCase(MultipartTests.allTests),
+>>>>>>> origin/beta
 
     // Routing
     testCase(RouterTests.allTests),

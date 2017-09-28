@@ -1,3 +1,6 @@
+import Bits
+import Async
+
 struct Handshake {
     let version = 10
     let serverVersion: String

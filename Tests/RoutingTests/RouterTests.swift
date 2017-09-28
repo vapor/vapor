@@ -6,15 +6,15 @@ class RouterTests: XCTestCase {
     func testRouter() throws {
         let router = TrieRouter()
 
-        router.on(.get, to: "hello", "world") { req in
+        router.on(.get, to: ["hello", "world"].makePathComponents()) { req in
             return try Response(body: "hello")
         }
 
-        router.on(.get, to: "foo", "bar", "baz") { req in
+        router.on(.get, to: ["foo", "bar", "baz"].makePathComponents()) { req in
             return try Response(body: "foo")
         }
 
-        router.on(.get, to: "users", User.parameter, "comments") { req in
+        router.on(.get, to: ["users", User.parameter, "comments"].makePathComponents()) { req in
             let bob = try req.parameters.next(User.self)
             XCTAssertEqual(bob.name, "bob")
             

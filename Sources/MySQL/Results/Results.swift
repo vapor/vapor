@@ -1,6 +1,6 @@
 import Foundation
 import Crypto
-import Core
+import Bits
 
 class Field: Hashable {
     /// The flags set for this field

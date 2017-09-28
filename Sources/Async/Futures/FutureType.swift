@@ -89,7 +89,7 @@ extension FutureType {
         }
 
         guard semaphore.wait(timeout: time) == .success else {
-            throw PromiseError(identifier: "timeout", reason: "Timeout reached waiting for future \(Expectation.self)")
+            throw PromiseTimeout(expecting: Expectation.self)
         }
 
         return try awaitedResult!.unwrap()

@@ -1,6 +1,7 @@
-import Core
+import Async
+import Bits
 
-public final class FrameParser : Core.Stream {
+public final class FrameParser : Async.Stream {
     public typealias Input = ByteBuffer
     public typealias Output = Frame
     
