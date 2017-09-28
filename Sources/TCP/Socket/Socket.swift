@@ -16,8 +16,11 @@ public class Socket {
     /// True if the socket should re-use addresses
     public let shouldReuseAddress: Bool
     
+    /// A handler that gets called when closing the socket
+    public typealias CloseHandler = (()->())
+    
     /// Will be triggered before closing the socket, as part of the cleanup process
-    public var beforeClose: (()->())? = nil
+    public var beforeClose: CloseHandler? = nil
 
     /// Creates a TCP socket around an existing descriptor
     public init(
