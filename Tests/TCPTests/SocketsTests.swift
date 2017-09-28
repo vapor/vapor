@@ -65,19 +65,19 @@ class SocketsTests: XCTestCase {
             
             accepted = (client, read)
             XCTAssertNotNil(accepted)
-            XCTAssertEqual(client.address?.remoteAddress, "127.0.0.1")
+            XCTAssert(client.address?.remoteAddress == "127.0.0.1" || client.address?.remoteAddress == "0.0.0.0" || client.address?.remoteAddress == "::1")
         }
         read.resume()
         XCTAssertNotNil(read)
 
-        try clientHello()
+        try clientHello(port: 8337)
 
         semaphore.wait()
     }
     
     func testServer() throws {
         let server = try Server()
-        try server.start(port: 8337)
+        try server.start(port: 8338)
         let semaphore = DispatchSemaphore(value: 0)
         
         server.drain { client in
@@ -89,7 +89,7 @@ class SocketsTests: XCTestCase {
             client.start()
         }
         
-        try clientHello()
+        try clientHello(port: 8338)
         semaphore.wait()
     }
 
@@ -100,10 +100,10 @@ class SocketsTests: XCTestCase {
     ]
 }
 
-fileprivate func clientHello() throws {
+fileprivate func clientHello(port: UInt16) throws {
     do {
         let client = try Socket(isNonBlocking: false)
-        try client.connect(hostname: "localhost", port: 8337)
+        try client.connect(hostname: "localhost", port: port)
         let data = "hello".data(using: .utf8)!
         _ = try! client.write(data)
     }
