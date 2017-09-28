@@ -18,7 +18,7 @@ class BCryptTests: XCTestCase {
     
     func testVersion() throws {
         let digest = try BCrypt.make(message: "foo")
-        XCTAssert(String(bytes: digest, encoding: .utf8)!.hasPrefix("$2y$06$"))
+        XCTAssert(String(bytes: digest, encoding: .utf8)!.hasPrefix("$2y$12$"))
     }
     
     func testFail() throws {
