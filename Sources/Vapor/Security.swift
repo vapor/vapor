@@ -15,12 +15,8 @@ fileprivate final class RemoteAddress {
 /// Validates peers against a set of rules before further processing the peer
 ///
 /// Used to harden a TCP Server against Denial of Service and other attacks.
-public final class PeerValidationStream: Core.Stream {
+public final class PeerValidationStream {
     public typealias Input = TCP.Client
-    public typealias Output = TCP.Client
-    
-    public var errorStream: ErrorHandler?
-    public var outputStream: OutputHandler?
     
     /// Limits the amount of connections per IP address to prevent certain Denial of Service attacks
     public var maxConnectionsPerIP: Int
@@ -34,10 +30,10 @@ public final class PeerValidationStream: Core.Stream {
     }
     
     /// Validates incoming clients
-    public func inputStream(_ input: Client) {
+    public func accept(client: Client) -> Bool {
         // Accept must always set the address
-        guard let currentRemoteAddress = input.socket.address else {
-            return
+        guard let currentRemoteAddress = client.socket.address else {
+            return false
         }
         
         var currentRemote: RemoteAddress? = nil
@@ -46,9 +42,7 @@ public final class PeerValidationStream: Core.Stream {
         for remote in self.remotes where remote.address == currentRemoteAddress {
             // If there is one, ensure there aren't too many
             guard remote.count < self.maxConnectionsPerIP else {
-                self.errorStream?(Error(identifier: "remote-count", reason: "To prevent a possible Denial of Service attack, the user's connection was not served"))
-                input.close()
-                return
+                return false
             }
             
             currentRemote = remote
@@ -60,8 +54,8 @@ public final class PeerValidationStream: Core.Stream {
         }
         
         // Cleans up be decreasing the counter
-        input.socket.beforeClose = {
-            input.queue.async {
+        client.socket.beforeClose = {
+            client.queue.async {
                 guard let currentRemote = currentRemote else {
                     return
                 }
@@ -80,6 +74,6 @@ public final class PeerValidationStream: Core.Stream {
             }
         }
         
-        outputStream?(input)
+        return true
     }
 }

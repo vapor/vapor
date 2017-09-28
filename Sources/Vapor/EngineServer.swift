@@ -15,10 +15,9 @@ public final class EngineServer: Server {
     public func start(with responder: Responder) throws {
         // create a tcp server
         let tcp = try TCP.Server(workerCount: config.workerCount)
-        let securityLayer = PeerValidationStream(maxConnectionsPerIP: config.maxConnectionsPerIP)
-        let secureTCP = tcp.stream(to: securityLayer)
+        tcp.accept = PeerValidationStream(maxConnectionsPerIP: config.maxConnectionsPerIP).accept
         
-        let server = HTTP.Server(server: secureTCP)
+        let server = HTTP.Server(tcp: tcp)
         
         // setup the server pipeline
         server.drain { client in

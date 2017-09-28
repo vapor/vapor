@@ -20,6 +20,12 @@ public final class Server: Core.OutputStream {
     let workers: [DispatchQueue]
     var worker: LoopIterator<[DispatchQueue]>
     var readSource: DispatchSourceRead?
+    
+    public typealias AcceptClosure = (Client) -> (Bool)
+    
+    public var accept: AcceptClosure = { _ in
+        return true
+    }
 
     /// Creates a TCP server from an existing TCP socket.
     public init(socket: Socket, workerCount: Int) {
@@ -53,7 +59,7 @@ public final class Server: Core.OutputStream {
             fileDescriptor: socket.descriptor.raw,
             queue: queue
         )
-
+        
         source.setEventHandler {
             let socket: Socket
             do {
@@ -65,9 +71,16 @@ public final class Server: Core.OutputStream {
 
             let worker = self.worker.next()!
             let client = Client(socket: socket, queue: worker)
+            
+            guard self.accept(client) else {
+                client.close()
+                return
+            }
+            
             client.errorStream = self.errorStream
             self.outputStream?(client)
         }
+        
         source.resume()
         readSource = source
     }
