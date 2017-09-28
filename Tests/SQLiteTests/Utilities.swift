@@ -5,7 +5,7 @@ import XCTest
 extension Connection {
     static func makeTestConnection(queue: DispatchQueue) -> Connection? {
         do {
-            let sqlite = try Connection(path: "/tmp/test_database.sqlite", queue: queue)
+            let sqlite = try Database(path: "/tmp/test_database.sqlite").makeConnection(on: queue)
             return sqlite
             
         } catch {

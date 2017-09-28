@@ -32,9 +32,9 @@ let package = Package(
         // Net
         .library(name: "HTTP", targets: ["HTTP"]),
         .library(name: "TCP", targets: ["TCP"]),
-        
-        // WebSockets
-        .library(name: "WebSocket", targets: ["WebSocket"]),
+
+        // Random
+        .library(name: "Random", targets: ["Random"]),
 
         // Routing
         .library(name: "Routing", targets: ["Routing"]),
@@ -47,6 +47,9 @@ let package = Package(
 
         // Vapor
         .library(name: "Vapor", targets: ["Vapor"]),
+        
+        // WebSockets
+        .library(name: "WebSocket", targets: ["WebSocket"]),
     ],
     dependencies: [],
     targets: [
@@ -93,10 +96,9 @@ let package = Package(
         .testTarget(name: "HTTPTests", dependencies: ["HTTP"]),
         .target(name: "TCP", dependencies: ["Debugging", "Core", "libc"]),
         .testTarget(name: "TCPTests", dependencies: ["TCP"]),
-        
-        // WebSocket
-        .target(name: "WebSocket", dependencies: ["Core", "Debugging", "TCP", "HTTP", "Crypto"]),
-        .testTarget(name: "WebSocketTests", dependencies: ["WebSocket"]),
+
+        .target(name: "Random", dependencies: ["Core"]),
+        .testTarget(name: "RandomTests", dependencies: ["Random"]),
 
         // Routing
         .target(name: "Routing", dependencies: ["Core", "Debugging", "HTTP", "WebSocket"]),
@@ -111,7 +113,6 @@ let package = Package(
         .target(name: "SQLite", dependencies: ["Core", "CSQLite", "Debugging"]),
         .testTarget(name: "SQLiteTests", dependencies: ["SQLite"]),
 
-
         // Vapor
         .target(name: "Development", dependencies: ["Leaf", "Vapor", "MySQL", "SQLite"]),
         .target(name: "Vapor", dependencies: [
@@ -125,5 +126,9 @@ let package = Package(
             "WebSocket",
         ]),
         .testTarget(name: "VaporTests", dependencies: ["Vapor"]),
+        
+        // WebSocket
+        .target(name: "WebSocket", dependencies: ["Core", "Debugging", "TCP", "HTTP", "Crypto"]),
+        .testTarget(name: "WebSocketTests", dependencies: ["WebSocket"]),
     ]
 )
