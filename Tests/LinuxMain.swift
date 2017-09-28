@@ -7,12 +7,9 @@ import XCTest
 @testable import HTTPTests
 @testable import JWTTests
 @testable import LeafTests
-@testable import MySQLTests
-<<<<<<< HEAD
-@testable import RandomTests
-=======
 @testable import MultipartTests
->>>>>>> origin/beta
+@testable import MySQLTests
+@testable import RandomTests
 @testable import RoutingTests
 @testable import ServiceTests
 @testable import TCPTests
@@ -47,11 +44,11 @@ XCTMain([
     // Leaf
     testCase(LeafTests.allTests),
 
-    // MySQL
-    testCase(MySQLTests.allTests),
-
     // Multipart
     testCase(MultipartTests.allTests),
+
+    // MySQL
+    testCase(MySQLTests.allTests),
 
     // Random
     testCase(RandomTests.allTests),
