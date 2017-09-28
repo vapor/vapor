@@ -50,13 +50,11 @@ XCTMain([
     // MySQL
     testCase(MySQLTests.allTests),
 
-<<<<<<< HEAD
-    // Random
-    testCase(RandomTests.allTests),
-=======
     // Multipart
     testCase(MultipartTests.allTests),
->>>>>>> origin/beta
+
+    // Random
+    testCase(RandomTests.allTests),
 
     // Routing
     testCase(RouterTests.allTests),
