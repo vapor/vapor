@@ -3,7 +3,6 @@ import Core
 import Dispatch
 import TCP
 import HTTP
-import Vapor
 import WebSocket
 import XCTest
 
@@ -13,9 +12,10 @@ class WebSocketTests : XCTestCase {
         return;
         let app = WebSocketApplication()
         let tcp = try TCP.Server()
-        let server = EngineServer(config: EngineServerConfig())
+        // FIXME: websockets tests can't rely on Vapor, Vapor imports WebSockets
+        // let server = EngineServer(config: EngineServerConfig())
         
-        try server.start(with: app)
+        // try server.start(with: app)
         
         let promise0 = Promise<Void>()
         let promise1 = Promise<Void>()
