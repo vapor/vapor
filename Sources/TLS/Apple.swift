@@ -1,9 +1,7 @@
-import Async
-import Bits
-import Dispatch
-
 #if os(macOS) || os(iOS)
-    import Core
+    import Async
+    import Bits
+    import Dispatch
     import Foundation
     import Security
     

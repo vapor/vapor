@@ -1,8 +1,8 @@
-import Core
-import Security
-import Dispatch
-
 #if os(macOS) || os(iOS)
+    import Core
+    import Security
+    import Dispatch
+    
     extension AppleSSLSocket {
         /// A helper that initializes SSL as either the client or server side
         func initialize(side: SSLProtocolSide) throws -> SSLContext {
