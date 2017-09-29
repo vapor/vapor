@@ -1,6 +1,5 @@
 import Async
 import Bits
-import TCP
 import Dispatch
 
 #if os(macOS) || os(iOS)

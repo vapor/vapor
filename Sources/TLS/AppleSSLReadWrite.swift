@@ -1,6 +1,5 @@
 import Core
 import Security
-import TCP
 import Dispatch
 
 #if os(macOS) || os(iOS)
