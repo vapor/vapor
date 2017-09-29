@@ -1,10 +1,10 @@
-import Core
+import Async
 import TCP
 
 /// HTTP server wrapped around TCP server
-public final class Server<OS: OutputStream>: Core.OutputStream where OS.Output == TCP.Client {
+public final class Server<OS: OutputStream>: Async.OutputStream where OS.Output == TCP.Client {
     // MARK: Stream
-    public typealias Output = HTTP.Client
+    public typealias Output = HTTP.Peer
     public var errorStream: ErrorHandler? {
         get { return tcp.errorStream }
         set { tcp.errorStream = newValue }
@@ -17,7 +17,7 @@ public final class Server<OS: OutputStream>: Core.OutputStream where OS.Output =
     public init(tcp: OS) {
         self.tcp = tcp
         tcp.outputStream = { tcp in
-            let client = HTTP.Client(tcp: tcp)
+            let client = HTTP.Peer(tcp: tcp)
             self.outputStream?(client)
         }
     }

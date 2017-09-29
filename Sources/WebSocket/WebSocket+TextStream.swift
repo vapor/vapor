@@ -1,7 +1,8 @@
-import Core
+import Async
+import Bits
 
 /// A stream of incoming and outgoing strings between 2 parties over WebSockets
-final class TextStream : Core.Stream {
+final class TextStream : Async.Stream {
     /// Sends a string to the other party
     func inputStream(_ input: String) {
         _ = input.withCString(encodedAs: UTF8.self) { pointer in

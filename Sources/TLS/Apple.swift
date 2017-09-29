@@ -1,4 +1,5 @@
-import Core
+import Async
+import Bits
 import TCP
 import Dispatch
 
@@ -18,7 +19,7 @@ import Dispatch
     /// The TCP socket will also be read and deciphered into plaintext and outputted.
     ///
     /// https://developer.apple.com/documentation/security/secure_transport
-    public class AppleSSLSocket<OS: Core.Stream>: Core.Stream where OS.Output == ByteBuffer, OS.Input == ByteBuffer {
+    public class AppleSSLSocket<OS: Async.Stream>: Async.Stream where OS.Output == ByteBuffer, OS.Input == ByteBuffer {
         /// See `OutputStream.Output`
         public typealias Output = ByteBuffer
         

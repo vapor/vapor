@@ -1,4 +1,5 @@
-import Core
+import Async
+import Bits
 import CHTTP
 import Dispatch
 import Foundation
@@ -12,7 +13,7 @@ enum HeaderState {
 
 
 /// Internal CHTTP parser protocol
-internal protocol CParser: class, Core.Stream {
+internal protocol CParser: class, Async.Stream {
     var parser: http_parser { get set }
     var settings: http_parser_settings { get set }
 }

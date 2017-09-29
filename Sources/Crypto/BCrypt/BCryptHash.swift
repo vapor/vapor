@@ -1,5 +1,5 @@
+import Bits
 import Foundation
-import Core
 
 public final class BCrypt {
     // the salt for this hash
@@ -78,7 +78,7 @@ public final class BCrypt {
             }
         }
         
-        var result = Data(repeating: 0, count: clen * 4)
+        var result = Data(repeating: 0, count: clen &* 4)
         
         j = 0
         for i in 0..<clen {
@@ -110,7 +110,7 @@ public final class BCrypt {
     
     // MARK: Private
     
-    private func streamToWord(
+    fileprivate func streamToWord(
         with data: UnsafeMutablePointer<Byte>,
         length: Int,
         off offp: inout UInt32
@@ -121,14 +121,14 @@ public final class BCrypt {
         
         for _ in 0..<4{
             word = (word << 8) | (UInt32(data[Int(off)]) & 0xff)
-            off = (off + 1) % UInt32(length)
+            off = (off &+ 1) % UInt32(length)
         }
         
         offp = off
         return word
     }
     
-    private func encipher(lr: UnsafeMutablePointer<UInt32>, off: Int) {
+    fileprivate func encipher(lr: UnsafeMutablePointer<UInt32>, off: Int) {
         if off < 0 {
             // Invalid offset.
             return
@@ -136,33 +136,33 @@ public final class BCrypt {
         
         var n : UInt32
         var l : UInt32 = lr[off]
-        var r : UInt32 = lr[off + 1]
+        var r : UInt32 = lr[off &+ 1]
         
         l ^= p[0]
         var i : Int = 0
-        while i <= 16 - 2 {
+        while i <= 16 &- 2 {
             // Feistel substitution on left word
-            n = s.advanced(by: Int((l >> 24) & 0xff)).pointee
-            n = n &+ s.advanced(by: Int(0x100 | ((l >> 16) & 0xff))).pointee
-            n ^= s.advanced(by: Int(0x200 | ((l >> 8) & 0xff))).pointee
-            n = n &+ s.advanced(by: Int(0x300 | (l & 0xff))).pointee
+            n = s.advanced(by: numericCast((l >> 24) & 0xff)).pointee
+            n = n &+ s.advanced(by: numericCast(0x100 | ((l >> 16) & 0xff))).pointee
+            n ^= s.advanced(by: numericCast(0x200 | ((l >> 8) & 0xff))).pointee
+            n = n &+ s.advanced(by: numericCast(0x300 | (l & 0xff))).pointee
             i += 1
             r ^= n ^ p.advanced(by: i).pointee
             
             // Feistel substitution on right word
-            n = s.advanced(by: Int((r >> 24) & 0xff)).pointee
-            n = n &+ s.advanced(by: Int(0x100 | ((r >> 16) & 0xff))).pointee
-            n ^= s.advanced(by: Int(0x200 | ((r >> 8) & 0xff))).pointee
-            n = n &+ s.advanced(by: Int(0x300 | (r & 0xff))).pointee
+            n = s.advanced(by: numericCast((r >> 24) & 0xff)).pointee
+            n = n &+ s.advanced(by: numericCast(0x100 | ((r >> 16) & 0xff))).pointee
+            n ^= s.advanced(by: numericCast(0x200 | ((r >> 8) & 0xff))).pointee
+            n = n &+ s.advanced(by: numericCast(0x300 | (r & 0xff))).pointee
             i += 1
             l ^= n ^ p.advanced(by: i).pointee
         }
         
-        lr[off] = r ^ p.advanced(by: 16 + 1).pointee
-        lr[off + 1] = l
+        lr[off] = r ^ p.advanced(by: 16 &+ 1).pointee
+        lr[off &+ 1] = l
     }
     
-    private func key(_ key: inout Data) {
+    fileprivate func key(_ key: inout Data) {
         var koffp: UInt32 = 0
         var lr: [UInt32] = [0, 0]
         let plen: Int = 18
@@ -180,8 +180,8 @@ public final class BCrypt {
             while i < plen {
                 self.encipher(lr: &lr, off: 0)
                 p[i] = lr[0]
-                p[i + 1] = lr[1]
-                i += 2
+                p[i &+ 1] = lr[1]
+                i = i &+ 2
             }
             
             i = 0
@@ -189,13 +189,13 @@ public final class BCrypt {
             while i < slen {
                 self.encipher(lr: &lr, off: 0)
                 s[i] = lr[0]
-                s[i + 1] = lr[1]
-                i += 2
+                s[i &+ 1] = lr[1]
+                i = i &+ 2
             }
         }
     }
     
-    private func enhanceKeySchedule(with data: inout Data, key: inout Data) {
+    fileprivate func enhanceKeySchedule(with data: inout Data, key: inout Data) {
         var koffp: UInt32 = 0
         var doffp: UInt32 = 0
         
@@ -217,9 +217,9 @@ public final class BCrypt {
                     lr[1] ^= streamToWord(with: dataPointer, length: dataLength, off: &doffp)
                     self.encipher(lr: &lr, off: 0)
                     p[i] = lr[0]
-                    p[i + 1] = lr[1]
+                    p[i &+ 1] = lr[1]
                     
-                    i += 2
+                    i = i &+ 2
                 }
                 
                 i = 0
@@ -229,9 +229,9 @@ public final class BCrypt {
                     lr[1] ^= streamToWord(with: dataPointer, length: dataLength, off: &doffp)
                     self.encipher(lr: &lr, off: 0)
                     s[i] = lr[0]
-                    s[i + 1] = lr[1]
+                    s[i &+ 1] = lr[1]
                     
-                    i += 2
+                    i = i &+ 2
                 }
             }
         }

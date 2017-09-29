@@ -3,7 +3,7 @@ import Foundation
 extension BCrypt {
     public struct Salt {
         public static var defaultRandom: RandomProtocol = OSRandom()
-        public static var defaultCost: UInt = 6
+        public static var defaultCost: UInt = 12
         
         public enum Version {
             case two(Scheme)

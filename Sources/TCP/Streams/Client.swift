@@ -1,10 +1,11 @@
-import Core
+import Async
+import Bits
 import Dispatch
 import Foundation
 import libc
 
 /// TCP client stream.
-public final class Client: Core.Stream {
+public final class Client: Async.Stream {
     // MARK: Stream
     public typealias Input = ByteBuffer
     public typealias Output = ByteBuffer

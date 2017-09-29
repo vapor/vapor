@@ -1,12 +1,10 @@
 import Foundation
-import Core
+import Bits
 
 public protocol RandomProtocol {
     /// Get a random array of Data
     func data(count: Int) throws -> Data
 }
-
-
 
 // MARK: - Throwing getter methods
 extension RandomProtocol {

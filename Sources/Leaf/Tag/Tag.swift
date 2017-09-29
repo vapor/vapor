@@ -1,4 +1,4 @@
-import Core
+import Async
 import Foundation
 
 public protocol Tag {

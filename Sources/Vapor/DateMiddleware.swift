@@ -1,8 +1,10 @@
-import Core
+import Async
 import HTTP
 import Foundation
 
+/// Adds the current `Date` to each `Response`
 public final class DateMiddleware: Middleware {
+    /// See `Middleware.respond`
     public func respond(to request: Request, chainingTo next: Responder) throws -> Future<Response> {
         let promise = Promise<Response>()
 

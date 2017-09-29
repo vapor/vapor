@@ -1,4 +1,4 @@
-import Core
+import Async
 import HTTP
 
 /// Capable of registering sync routes.
@@ -7,9 +7,9 @@ public protocol SyncRouter: Router { }
 extension SyncRouter {
     /// Registers a route handler at the supplied path.
     @discardableResult
-    public func on(_ method: Method, to path: PathComponentRepresentable..., use closure: @escaping BasicSyncResponder.Closure) -> Route {
+    public func on(_ method: Method, to path: [PathComponent], use closure: @escaping BasicSyncResponder.Closure) -> Route {
         let responder = BasicSyncResponder(closure: closure)
-        let route = Route(method: method, path: path.makePathComponents(), responder: responder)
+        let route = Route(method: method, path: path, responder: responder)
         self.register(route: route)
         
         return route
@@ -31,7 +31,7 @@ public struct BasicSyncResponder: Responder {
 
     /// See: HTTP.Responder.respond
     public func respond(to req: Request) throws -> Future<Response> {
-        let res = try closure(req).makeResponse()
+        let res = try closure(req).makeResponse(for: req)
         let promise = Promise<Response>()
         promise.complete(res)
         return promise.future

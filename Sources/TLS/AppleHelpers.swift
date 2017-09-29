@@ -1,5 +1,6 @@
 #if os(macOS) || os(iOS)
     import Core
+    import Bits
     import Foundation
     import Security
     
