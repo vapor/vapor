@@ -16,7 +16,7 @@
     /// The TCP socket will also be read and deciphered into plaintext and outputted.
     ///
     /// https://developer.apple.com/documentation/security/secure_transport
-    public class AppleSSLSocket<OS: Async.Stream>: Async.Stream where OS.Output == ByteBuffer, OS.Input == ByteBuffer, OS: ClosableStream {
+    public class AppleSSLStream<OS: Async.Stream>: Async.Stream where OS.Output == ByteBuffer, OS.Input == ByteBuffer, OS: ClosableStream {
         /// See `OutputStream.Output`
         public typealias Output = ByteBuffer
         
@@ -52,7 +52,7 @@
             outputBuffer.baseAddress?.deallocate(capacity: outputBuffer.count)
         }
         
-        /// Creates a new AppleSSLSocket on top of a socket
+        /// Creates a new AppleSSLStream on top of a socket
         public init(socket: OS) throws {
             self.socket = socket
         }

@@ -5,7 +5,7 @@
     import Dispatch
 
     /// An SSL client. Can be initialized by upgrading an existing socket or by starting an SSL socket.
-    extension AppleSSLSocket {
+    extension AppleSSLStream {
         /// Upgrades the connection to SSL.
         public func initializeClient(hostname: String, signedBy certificate: Certificate? = nil) throws {
             let context = try self.initialize(side: .clientSide)
