@@ -27,13 +27,16 @@ final class HTTPTestServer: HTTPServer {
         backlog: Int32 = 4096,
         workerCount: Int = 8
     ) {
-        
+        self.hostname = hostname
+        self.port = port
+        self.workerCount = workerCount
+        self.backlog = backlog
     }
     
     /// Start the server. Server protocol requirement.
     public func start(with responder: Responder) throws {
         // create a tcp server
-        let tcp = try TCP.Server(workerCount: config.workerCount)
+        let tcp = try TCP.Server(workerCount: workerCount)
         let server = HTTP.Server(tcp: tcp)
         
         // setup the server pipeline
@@ -56,9 +59,9 @@ final class HTTPTestServer: HTTPServer {
         
         // bind, listen, and start accepting
         try server.tcp.start(
-            hostname: config.hostname,
-            port: config.port,
-            backlog: config.backlog
+            hostname: hostname,
+            port: port,
+            backlog: backlog
         )
     }
 }
@@ -69,7 +72,7 @@ class WebSocketTests : XCTestCase {
         return;
         let app = WebSocketApplication()
         let tcp = try TCP.Server()
-        let server = HTTPTestServer(config: EngineServerConfig())
+        let server = HTTPTestServer()
         
         try server.start(with: app)
         
