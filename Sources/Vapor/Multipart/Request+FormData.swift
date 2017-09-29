@@ -19,7 +19,9 @@ extension HTTP.Message {
                 let type = headers[.contentType], type.contains("multipart/form-data"),
                 case let .data(bytes) = self.body,
                 let boundary = try? Parser.extractBoundary(contentType: type)
-                else { return nil }
+            else {
+                return nil
+            }
 
             let multipart = Parser(boundary: boundary)
             let parser = FormData.Parser(multipart: multipart)
@@ -74,13 +76,15 @@ extension HTTP.Message {
                 body = .data(serialized)
                 headers[.contentType] = "multipart/form-data; boundary=" + boundary.makeString()
             } else {
-                if
+                
+                guard
                     let contentType = headers[.contentType],
                     contentType.contains("multipart/form-data")
-                {
-                    body = .data([])
-                    headers.removeValue(forKey: .contentType)
+                else {
+                    return
                 }
+                body = .data([])
+                headers.removeValue(forKey: .contentType)
             }
         }
     }
