@@ -91,6 +91,7 @@ let package = Package(
         .target(name: "HTTP", dependencies: ["CHTTP", "TCP"]),
         .testTarget(name: "HTTPTests", dependencies: ["HTTP"]),
         .target(name: "TLS", dependencies: ["Core"]),
+        .testTarget(name: "TLSTests", dependencies: ["TLS"]),
         .target(name: "TCP", dependencies: ["Debugging", "Core", "libc"]),
         .testTarget(name: "TCPTests", dependencies: ["TCP"]),
         
