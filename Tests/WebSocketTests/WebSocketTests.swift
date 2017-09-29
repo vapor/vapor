@@ -2,11 +2,10 @@ import Async
 import Dispatch
 import TCP
 import HTTP
-import Vapor
 import WebSocket
 import XCTest
 
-final class HTTPTestServer: HTTPServer {
+final class HTTPTestServer {
     /// Host name the server will bind to.
     public let hostname: String
     
