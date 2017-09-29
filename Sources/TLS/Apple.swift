@@ -19,7 +19,7 @@ import Dispatch
     /// The TCP socket will also be read and deciphered into plaintext and outputted.
     ///
     /// https://developer.apple.com/documentation/security/secure_transport
-    public class AppleSSLSocket<OS: Async.Stream>: Async.Stream where OS.Output == ByteBuffer, OS.Input == ByteBuffer {
+    public class AppleSSLSocket<OS: Async.Stream>: Async.Stream where OS.Output == ByteBuffer, OS.Input == ByteBuffer, OS: ClosableStream {
         /// See `OutputStream.Output`
         public typealias Output = ByteBuffer
         
@@ -29,6 +29,9 @@ import Dispatch
         /// See `OutputStream.outputStream`
         public var outputStream: OutputHandler?
         
+        /// See `BaseStream.onClose`
+        public var onClose: CloseHandler?
+        
         /// See `Stream.errorStream`
         public var errorStream: ErrorHandler?
         
@@ -36,7 +39,7 @@ import Dispatch
         var context: SSLContext?
         
         /// The underlying TCP socket
-        let socket: Socket
+        let socket: OS
         
         /// A buffer storing all deciphered data received from the remote
         let outputBuffer = MutableByteBuffer(start: .allocate(capacity: Int(UInt16.max)), count: Int(UInt16.max))
@@ -52,19 +55,8 @@ import Dispatch
             outputBuffer.baseAddress?.deallocate(capacity: outputBuffer.count)
         }
         
-        /// Creates a new AppleSSLSocket
-        ///
-        /// This should be accessed through the server/client subclass
-        public convenience init() throws {
-            let socket = try Socket()
-            
-            try self.init(socket: socket)
-        }
-        
-        /// Creates a new AppleSSLSocket by leveraging an existing socket
-        ///
-        /// This should be accessed through the server/client subclass
-        public init(socket: Socket) throws {
+        /// Creates a new AppleSSLSocket on top of a socket
+        public init(socket: OS) throws {
             self.socket = socket
         }
         

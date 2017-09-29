@@ -1,17 +1,46 @@
+import Bits
 import Async
 import Dispatch
 import HTTP
 import TCP
 
 /// Manages frames to and from a TCP connection
-internal final class Connection: Async.Stream {
-    internal typealias Input = Frame
-    internal typealias Output = Frame
+internal final class Connection: Async.Stream, ClosableStream {
+    /// Sends the closing frame and closes the connection
+    func close() {
+        do {
+            let frame = try Frame(op: .close, payload: ByteBuffer(start: nil, count: 0), mask: serverSide ? nil : randomMask(), isFinal: true)
+            
+            self.inputStream(frame)
+            self.client.close()
+        } catch {
+            errorStream?(error)
+        }
+    }
+    
+    /// See `InputStream.Input`
+    typealias Input = Frame
+    
+    /// See `OutputStream.Output`
+    typealias Output = Frame
 
-    /// The incoming frames handelr
+    /// The incoming frames handler
+    ///
+    /// See `OutputStream.outputStream`
     var outputStream: OutputHandler?
     
+    /// See `BaseStream.erorStream`
     var errorStream: ErrorHandler?
+    
+    /// Called when the connection closes
+    var onClose: CloseHandler? {
+        get {
+            return self.client.onClose
+        }
+        set {
+            self.client.onClose = newValue
+        }
+    }
     
     /// Serializes data into frames
     let serializer: FrameSerializer

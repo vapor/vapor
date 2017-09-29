@@ -10,6 +10,16 @@ public final class Peer: Async.Stream {
     /// See `OutputStream.Output`
     public typealias Output = ByteBuffer
     
+    /// See `BaseStream.onClose`
+    public var onClose: CloseHandler? {
+        get {
+            return tcp.onClose
+        }
+        set {
+            tcp.onClose = newValue
+        }
+    }
+    
     /// See `OutputStream.OutputHandler`
     public var outputStream: OutputHandler? {
         get {

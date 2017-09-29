@@ -17,6 +17,9 @@ public final class ResponseParser: CParser, Async.Stream {
     var settings: http_parser_settings
     var state:  CHTTPParserState
     
+    /// See `BaseStream.onClose`
+    public var onClose: CloseHandler?
+    
     /// Creates a new Request parser.
     public init() {
         self.parser = http_parser()

@@ -112,6 +112,9 @@ internal final class PacketParser : Async.Stream {
         }
     }
     
+    /// See `BaseStream.onClose`. Not used.
+    var onClose: CloseHandler?
+    
     var outputStream: ((Packet) -> ())?
     var errorStream: BaseStream.ErrorHandler?
     

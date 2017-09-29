@@ -20,6 +20,9 @@
 ///     print(squares) // [1, 4, 9]
 ///
 public final class EmitterStream<Out>: OutputStream {
+    /// See `BaseStream.onClose`
+    public var onClose: CloseHandler?
+    
     /// See OutputStream.Output
     public typealias Output = Out
 

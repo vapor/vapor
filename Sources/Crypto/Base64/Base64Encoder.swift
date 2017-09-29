@@ -23,18 +23,21 @@ fileprivate let encodeTable = Data("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqr
 ///     // this will possibly stream the final 4 bytes if the input wasn't depleted yet
 ///     encoder.finishStream()
 ///     // after finishing the stream, the encoder will return to the start and will be reuable for the next incoming data
-public final class Base64Encoder : Base64 {
+public final class Base64Encoder: Base64 {
     /// Accepts byte streams
     public typealias Input = ByteBuffer
     
     /// Outputs Base64Encoded byte streams
     public typealias Output = ByteBuffer
     
-    /// See `OutputStream.OutputHandler`
-    public var outputStream: OutputHandler?
+    /// See `BaseStream.onClose`
+    public var onClose: CloseHandler?
     
-    /// See `BaseStream.Errorhandler`
+    /// See `BaseStream.errorStream`
     public var errorStream: ErrorHandler?
+    
+    /// See `OutputStream.outputStream`
+    public var outputStream: OutputHandler?
     
     /// Encodes the contents of the buffer into the pointer until the provided capacity has been reached
     ///
@@ -148,8 +151,8 @@ public final class Base64Encoder : Base64 {
     /// Creates a new Base64 encoder
     ///
     /// - parameter allocatedCapacity: The expected (maximum) size of each buffer inputted into this stream
-    public init(decodedCapacity: Int = 65_507) {
-        self.allocatedCapacity = (decodedCapacity / 3) * 4 &+ ((decodedCapacity % 3 > 0) ? 1 : 0)
+    public init(bufferCapacity: Int = 65_507) {
+        self.allocatedCapacity = (bufferCapacity / 3) * 4 &+ ((bufferCapacity % 3 > 0) ? 1 : 0)
         self.pointer = MutableBytesPointer.allocate(capacity: self.allocatedCapacity)
         self.pointer.initialize(to: 0, count: self.allocatedCapacity)
     }

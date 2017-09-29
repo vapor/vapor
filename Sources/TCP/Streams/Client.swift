@@ -5,11 +5,18 @@ import Foundation
 import libc
 
 /// TCP client stream.
-public final class Client: Async.Stream {
+public final class Client: Async.Stream, ClosableStream {
     // MARK: Stream
     public typealias Input = ByteBuffer
     public typealias Output = ByteBuffer
+    
+    /// See `BaseStream.onClose`
+    public var onClose: CloseHandler?
+    
+    /// See `BaseStream.errorStream`
     public var errorStream: ErrorHandler?
+    
+    /// See `OutputStream.outputStream`
     public var outputStream: OutputHandler?
 
     /// This client's dispatch queue. Use this

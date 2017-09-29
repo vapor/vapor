@@ -60,7 +60,7 @@ class MiddlewareTests : XCTestCase {
         let client = HTTP.Client(tcp: tcpClient)
         tcpClient.start()
         
-        let response = try client.send(request: Request()).sync()
+        let response = try client.send(request: Request()).blockingAwait()
         
         XCTAssertEqual(response.body.data, Data(responder.response.utf8))
     }

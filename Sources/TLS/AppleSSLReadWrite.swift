@@ -17,8 +17,6 @@ import Dispatch
             
             self.context = context
             
-            descriptorCopy.pointee = self.socket.descriptor
-            
             var status = SSLSetIOFuncs(context, readSSL, writeSSL)
             
             guard status == 0 else {

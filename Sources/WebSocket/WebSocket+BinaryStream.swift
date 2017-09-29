@@ -1,23 +1,10 @@
 import Async
 import Bits
 
+/// A stream of incoming and outgoing binary  between 2 parties over WebSockets
 final class BinaryStream : Async.Stream {
-    /// Sends this binary data to the other party
-    func inputStream(_ input: ByteBuffer) {
-        do {
-            let mask = self.masking ? randomMask() : nil
-            
-            let frame = try Frame(op: .binary, payload: input, mask: mask)
-            
-            if masking {
-                frame.mask()
-            }
-            
-            frameStream?.inputStream(frame)
-        } catch {
-            self.errorStream?(error)
-        }
-    }
+    /// See `BaseStream.onClose`
+    var onClose: CloseHandler?
     
     /// A stream of incoming binary data
     var outputStream: ((ByteBuffer) -> ())?
@@ -39,6 +26,23 @@ final class BinaryStream : Async.Stream {
     
     /// Creates a new BinaryStream that has yet to be linked up with other streams
     init() { }
+    
+    /// Sends this binary data to the other party
+    func inputStream(_ input: ByteBuffer) {
+        do {
+            let mask = self.masking ? randomMask() : nil
+            
+            let frame = try Frame(op: .binary, payload: input, mask: mask)
+            
+            if masking {
+                frame.mask()
+            }
+            
+            frameStream?.inputStream(frame)
+        } catch {
+            self.errorStream?(error)
+        }
+    }
 }
 
 

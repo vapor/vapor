@@ -20,6 +20,9 @@ public final class RequestParser: CParser {
 
     /// Queue to be set on messages created by this parser.
     private let queue: DispatchQueue
+    
+    /// See `BaseStream.onClose`
+    public var onClose: CloseHandler?
 
     /// Creates a new Request parser.
     public init(queue: DispatchQueue) {

@@ -1,6 +1,6 @@
 import Async
 
-protocol ResultsStream : OutputStream, ClosableStream {
+protocol ResultsStream : OutputStream {
     var columns: [Field] { get set }
     var header: UInt64? { get set }
     var mysql41: Bool { get }

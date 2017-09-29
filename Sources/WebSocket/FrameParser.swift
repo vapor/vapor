@@ -2,11 +2,45 @@ import Async
 import Bits
 
 public final class FrameParser : Async.Stream {
+    /// See `InputStream.Input`
     public typealias Input = ByteBuffer
+    
+    /// See `OutputStream.Output`
     public typealias Output = Frame
     
+    /// See `OutputStream.outputStream`
     public var outputStream: OutputHandler?
+    
+    /// See `baseStream.errorStream`
     public var errorStream: ErrorHandler?
+    
+    /// See `baseStream.onClose`
+    public var onClose: BaseStream.CloseHandler?
+    
+    /// The currently accumulated payload data
+    var accumulated = 0
+    
+    /// The buffer in which Frames are stored
+    let bufferBuilder: MutableBytesPointer
+    
+    /// The maximum accepted payload size (to prevent memory attacks)
+    let maximumPayloadSize: Int
+    
+    /// The remainder buffer that couldn't yet be parsed (such as 2 bytes of an UInt32)
+    var partialBuffer = [UInt8]()
+    
+    /// The currently processing frame
+    var processing: Frame.Header?
+    
+    deinit {
+        bufferBuilder.deallocate(capacity: maximumPayloadSize + 15)
+    }
+    
+    public init(maximumPayloadSize: Int = 10_000_000) {
+        self.maximumPayloadSize = maximumPayloadSize
+        // 2 for the header, 9 for the length, 4 for the mask
+        self.bufferBuilder = MutableBytesPointer.allocate(capacity: maximumPayloadSize + 15)
+    }
     
     public func inputStream(_ input: ByteBuffer) {
         guard let pointer = input.baseAddress, input.count > 0 else {
@@ -113,23 +147,6 @@ public final class FrameParser : Async.Stream {
                 self.inputStream(ByteBuffer(start: pointer.advanced(by: result.1), count: input.count &- result.1))
             }
         }
-    }
-    
-    deinit {
-        bufferBuilder.deallocate(capacity: maximumPayloadSize + 15)
-    }
-    
-    var accumulated = 0
-    let bufferBuilder: MutableBytesPointer
-    let maximumPayloadSize: Int
-    
-    var partialBuffer = [UInt8]()
-    var processing: Frame.Header?
-    
-    public init(maximumPayloadSize: Int = 10_000_000) {
-        self.maximumPayloadSize = maximumPayloadSize
-        // 2 for the header, 9 for the length, 4 for the mask
-        self.bufferBuilder = MutableBytesPointer.allocate(capacity: maximumPayloadSize + 15)
     }
     
     static func decodeFrameHeader(from base: UnsafePointer<UInt8>, length: Int) throws -> Frame.Header {

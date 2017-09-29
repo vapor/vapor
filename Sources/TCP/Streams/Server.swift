@@ -3,10 +3,22 @@ import Dispatch
 import libc
 
 /// A server socket can accept peers. Each accepted peer get's it own socket after accepting.
-public final class Server: Async.OutputStream {
+public final class Server: Async.OutputStream, ClosableStream {
+    /// Closes the socket
+    public func close() {
+        socket.close()
+    }
+    
     // MARK: Stream
     public typealias Output = Client
+    
+    /// See `BaseStream.onClose`
+    public var onClose: CloseHandler?
+    
+    /// See `BaseStream.errorStream`
     public var errorStream: ErrorHandler?
+    
+    /// See `OutputStream.outputStream`
     public var outputStream: OutputHandler?
 
     // MARK: Dispatch

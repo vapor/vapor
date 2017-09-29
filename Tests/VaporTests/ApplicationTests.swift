@@ -1,4 +1,5 @@
-import Core
+import Async
+import Bits
 import HTTP
 import Vapor
 import TLS
@@ -11,12 +12,12 @@ class ApplicationTests: XCTestCase {
         
         let cert = FileManager.default.contents(atPath: "/Users/joannisorlandos/Desktop/server.crt.bin")!
         
-        var clients = [AppleSSLStream<TCP.Client>]()
+        var clients = [AppleSSLSocket<TCP.Client>]()
         
         server.drain { client in
             do {
-                let client = try AppleSSLStream(socket: client)
-                try client.initializePeer(signedBy: cert)
+                let client = try AppleSSLSocket(socket: client)
+                try client.initializePeer(signedBy: Certificate(raw: cert))
                 
                 let parser = RequestParser(queue: .global())
                 let serializer = ResponseSerializer()
@@ -52,8 +53,8 @@ class ApplicationTests: XCTestCase {
         let clientSocket = try TCP.Socket()
         let client = TCP.Client(socket: clientSocket, queue: .global())
         let SSL = try AppleSSLSocket(socket: client)
-        try SSL.connect(hostname: host, port: port).blockingAwait()
-        try SSL.initializeClient(server: host)
+        try clientSocket.connect(hostname: host, port: port).blockingAwait()
+        try SSL.initializeClient(hostname: host)
         
         let parser = ResponseParser()
         let serializer = RequestSerializer()

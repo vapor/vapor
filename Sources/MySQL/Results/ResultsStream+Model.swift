@@ -13,8 +13,10 @@ public final class ModelStream<D: Decodable> : ResultsStream {
         self.mysql41 = mysql41
     }
     
-    /// Internal API: Do not touch
-    public var onClose: (() -> ())?
+    /// See `BaseStream.onClose`.
+    ///
+    /// Do not touch
+    public var onClose: CloseHandler?
     
     /// A list of all fields' descriptions in this table
     var columns = [Field]()

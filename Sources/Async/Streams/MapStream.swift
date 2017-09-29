@@ -21,6 +21,9 @@
 ///     print(squares) // [1, 4, 9]
 ///
 public final class MapStream<In, Out>: Stream {
+    /// See `BaseStream.onClose`
+    public var onClose: CloseHandler?
+    
     /// See `InputStream.Input`
     public typealias Input = In
 

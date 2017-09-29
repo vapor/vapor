@@ -8,6 +8,8 @@ protocol Base64: class, Async.Stream {
     associatedtype Input = ByteBuffer
     associatedtype Output = ByteBuffer
     
+    init(bufferCapacity: Int)
+    
     /// The capacity currently used in the pointer
     var currentCapacity: Int { get set }
     
@@ -22,6 +24,18 @@ protocol Base64: class, Async.Stream {
 }
 
 extension Base64 {
+    public static func transforming<OS: Async.OutputStream>(_ input: OS) -> Self where OS.Output == ByteBuffer {
+        let stream = Self.init(bufferCapacity: 65_507)
+        
+        input.onClose = {
+            stream.finishStream()
+        }
+        
+        input.drain(stream.inputStream)
+        
+        return stream
+    }
+    
     /// Processed the `input`'s `ByteBuffer` by Base64-encoding it
     ///
     /// Calls the `OutputHandler` with the Base64-encoded data
@@ -92,5 +106,7 @@ extension Base64 {
         if remainder.count > 0 {
             self.inputStream(ByteBuffer(start: nil, count: 0))
         }
+        
+        self.onClose?()
     }
 }
