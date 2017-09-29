@@ -4,7 +4,7 @@
     import Foundation
     import Security
     
-    extension AppleSSLStream {
+    extension SSLStream {
         /// Runs the SSL handshake, regardless of client or server
         func handshake(for context: SSLContext) throws {
             var result: Int32

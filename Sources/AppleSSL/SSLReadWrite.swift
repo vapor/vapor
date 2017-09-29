@@ -3,7 +3,7 @@
     import Security
     import Dispatch
     
-    extension AppleSSLStream {
+    extension SSLStream {
         /// A helper that initializes SSL as either the client or server side
         func initialize(side: SSLProtocolSide) throws -> SSLContext {
             guard context == nil else {

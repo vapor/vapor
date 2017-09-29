@@ -1,4 +1,5 @@
 import Dispatch
+import AppleSSL
 import TCP
 import XCTest
 

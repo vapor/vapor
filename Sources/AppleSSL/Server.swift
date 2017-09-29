@@ -3,7 +3,7 @@
     import Foundation
     
     /// A remote peer. This class should be used on a TCP server to accept SSL connections/upgrades.
-    extension AppleSSLStream {
+    extension SSLStream {
         /// Upgrades the peer to SSL
         public func initializePeer(signedBy certificate: Certificate) throws {
             let context = try self.initialize(side: .serverSide)

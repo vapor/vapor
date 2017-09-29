@@ -16,7 +16,7 @@
     /// The TCP socket will also be read and deciphered into plaintext and outputted.
     ///
     /// https://developer.apple.com/documentation/security/secure_transport
-    public class AppleSSLStream<OS: Async.Stream>: Async.Stream where OS.Output == ByteBuffer, OS.Input == ByteBuffer, OS: ClosableStream {
+    public final class SSLStream<OS: Async.Stream>: Async.Stream where OS.Output == ByteBuffer, OS.Input == ByteBuffer, OS: ClosableStream {
         /// See `OutputStream.Output`
         public typealias Output = ByteBuffer
         
@@ -52,7 +52,7 @@
             outputBuffer.baseAddress?.deallocate(capacity: outputBuffer.count)
         }
         
-        /// Creates a new AppleSSLStream on top of a socket
+        /// Creates a new SSLStream on top of a socket
         public init(socket: OS) throws {
             self.socket = socket
         }
@@ -67,12 +67,21 @@
             
             var processed = 0
             
-            SSLWrite(context, buffer.baseAddress, buffer.count, &processed)
+            let status = SSLWrite(context, buffer.baseAddress, buffer.count, &processed)
+            
+            guard status > 0 else {
+                if status == 0 {
+                    self.close()
+                    return 0
+                } else {
+                    throw Error.sslError(status)
+                }
+            }
             
             return processed
         }
         
-        /// Writes the buffer to this SSL socket
+        /// Reads from this SSL socket
         @discardableResult
         public func read(max: Int, into buffer: MutableByteBuffer) throws -> Int {
             guard let context = self.context else {

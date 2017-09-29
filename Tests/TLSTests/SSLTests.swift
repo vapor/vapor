@@ -8,11 +8,11 @@
 //
 //        let cert = FileManager.default.contents(atPath: "/Users/joannisorlandos/Desktop/server.crt.bin")!
 //
-//        var clients = [AppleSSLSocket<TCP.Client>]()
+//        var clients = [SSLStream<TCP.Client>]()
 //
 //        server.drain { client in
 //            do {
-//                let client = try AppleSSLSocket(socket: client)
+//                let client = try SSLStream(socket: client)
 //                try client.initializePeer(signedBy: Certificate(raw: cert))
 //
 //                let parser = RequestParser(queue: .global())
@@ -39,4 +39,4 @@
 //        try client(to: "localhost", port: 8081)
 //    }
 //}
-
+//
