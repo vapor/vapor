@@ -8,7 +8,7 @@ enum SSLSettings {
     internal static var initialized = false
 }
 
-public final class SSLStream<OS: Async.Stream>: Async.Stream where OS.Output == ByteBuffer, OS.Input == ByteBuffer, OS: ClosableStream {
+public final class SSLStream<DuplexByteStream: Async.Stream>: Async.Stream where DuplexByteStream.Output == ByteBuffer, DuplexByteStream.Input == ByteBuffer, DuplexByteStream: ClosableStream {
     /// See `OutputStream.Output`
     public typealias Output = ByteBuffer
     
@@ -34,7 +34,7 @@ public final class SSLStream<OS: Async.Stream>: Async.Stream where OS.Output == 
     var descriptor: Int32
     
     /// The underlying TCP socket
-    let socket: OS
+    let socket: DuplexByteStream
     
     /// Keeps a strong reference to the DispatchSource so it keeps reading
     var source: DispatchSourceRead?
@@ -47,7 +47,7 @@ public final class SSLStream<OS: Async.Stream>: Async.Stream where OS.Output == 
     }
     
     /// Creates a new SSLStream on top of a socket
-    public init(socket: OS, descriptor: Int32) throws {
+    public init(socket: DuplexByteStream, descriptor: Int32) throws {
         self.socket = socket
         self.descriptor = descriptor
     }

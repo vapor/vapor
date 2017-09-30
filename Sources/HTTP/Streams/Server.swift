@@ -2,7 +2,7 @@ import Async
 import TCP
 
 /// HTTP server wrapped around TCP server
-public final class Server<OS: OutputStream>: Async.OutputStream where OS.Output == TCP.Client {
+public final class Server<ClientStream: OutputStream>: Async.OutputStream where ClientStream.Output == TCP.Client {
     // MARK: Stream
     public typealias Output = HTTP.Peer
     
@@ -26,10 +26,10 @@ public final class Server<OS: OutputStream>: Async.OutputStream where OS.Output 
     public var outputStream: OutputHandler?
 
     /// The wrapped Client Stream
-    public let tcp: OS
+    public let tcp: ClientStream
 
     /// Creates a new HTTP Server from a Client stream
-    public init(tcp: OS) {
+    public init(tcp: ClientStream) {
         self.tcp = tcp
         tcp.outputStream = { tcp in
             let client = HTTP.Peer(tcp: tcp)

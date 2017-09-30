@@ -16,7 +16,7 @@
     /// The TCP socket will also be read and deciphered into plaintext and outputted.
     ///
     /// https://developer.apple.com/documentation/security/secure_transport
-    public final class SSLStream<OS: Async.Stream>: Async.Stream where OS.Output == ByteBuffer, OS.Input == ByteBuffer, OS: ClosableStream {
+    public final class SSLStream<DuplexByteStream: Async.Stream>: Async.Stream where DuplexByteStream.Output == ByteBuffer, DuplexByteStream.Input == ByteBuffer, DuplexByteStream: ClosableStream {
         /// See `OutputStream.Output`
         public typealias Output = ByteBuffer
         
@@ -36,7 +36,7 @@
         var context: SSLContext?
         
         /// The underlying TCP socket
-        let socket: OS
+        let socket: DuplexByteStream
         
         /// A buffer storing all deciphered data received from the remote
         let outputBuffer = MutableByteBuffer(start: .allocate(capacity: Int(UInt16.max)), count: Int(UInt16.max))
@@ -52,7 +52,7 @@
         }
         
         /// Creates a new SSLStream on top of a socket
-        public init(socket: OS, descriptor: Int32) throws {
+        public init(socket: DuplexByteStream, descriptor: Int32) throws {
             self.socket = socket
             self.descriptor = descriptor
         }

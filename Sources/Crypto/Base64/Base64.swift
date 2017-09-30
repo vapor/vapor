@@ -24,7 +24,7 @@ protocol Base64: class, Async.Stream {
 }
 
 extension Base64 {
-    public static func transforming<OS: Async.OutputStream>(_ input: OS) -> Self where OS.Output == ByteBuffer {
+    public static func transforming<ByteStream: Async.OutputStream>(_ input: ByteStream) -> Self where ByteStream.Output == ByteBuffer {
         let stream = Self.init(bufferCapacity: 65_507)
         
         input.onClose = {
