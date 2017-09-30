@@ -1,3 +1,4 @@
+import Dispatch
 import HTTP
 import Crypto
 import Bits
@@ -11,6 +12,7 @@ import XCTest
 
 class ControllerTests: XCTestCase {
     func appleSSLClient(to host: String, port: UInt16, message: Data) throws {
+        #if os(macOS)
         let queue = DispatchQueue(label: "test")
         
         let clientSocket = try TCP.Socket()
@@ -25,6 +27,7 @@ class ControllerTests: XCTestCase {
         }
         
         SSL.start(on: queue)
+        #endif
     }
     
     func openSSLClient(to host: String, port: UInt16, message: Data) throws {
