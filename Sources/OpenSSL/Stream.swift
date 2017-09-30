@@ -94,47 +94,6 @@ public final class SSLStream<OS: Async.Stream>: Async.Stream where OS.Output == 
         return numericCast(read)
     }
     
-    public func connect(hostname: String = "localhost", port: UInt16 = 80) throws -> Future<Void> {
-        var hints = addrinfo()
-        
-        // Support both IPv4 and IPv6
-        hints.ai_family = AF_INET
-        
-        // Specify that this is a TCP Stream
-        hints.ai_socktype = SOCK_STREAM
-        
-        // Look ip the sockeaddr for the hostname
-        var result: UnsafeMutablePointer<addrinfo>?
-        
-        var res = getaddrinfo(hostname, port.description, &hints, &result)
-        guard res == 0 else {
-            fatalError()
-        }
-        defer {
-            freeaddrinfo(result)
-        }
-        
-        guard let info = result else {
-            fatalError()
-        }
-        
-        res = libc.connect(descriptor, info.pointee.ai_addr, info.pointee.ai_addrlen)
-        guard res == 0 || errno == EINPROGRESS else {
-            fatalError()
-        }
-        
-        let promise = Promise<Void>()
-        let write = DispatchSource.makeWriteSource(fileDescriptor: descriptor, queue: .global())
-        
-        write.setEventHandler {
-            promise.complete(())
-            write.cancel()
-        }
-        
-        write.resume()
-        return promise.future
-    }
-    
     /// Accepts a `ByteBuffer` as plain data that will be send as ciphertext using SSL.
     public func inputStream(_ input: ByteBuffer) {
         do {
