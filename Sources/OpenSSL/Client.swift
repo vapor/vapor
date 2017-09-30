@@ -22,6 +22,14 @@ extension SSLStream {
     
     /// A helper that initializes SSL as either the client or server side
     func initialize(side: Side) throws -> UnsafeMutablePointer<SSL> {
+        if !SSLSettings.initialized {
+            SSL_library_init()
+            SSL_load_error_strings()
+            OPENSSL_config(nil)
+            OPENSSL_add_all_algorithms_conf()
+            SSLSettings.initialized = true
+        }
+        
         guard context == nil else {
             throw Error.contextAlreadyCreated
         }
@@ -30,10 +38,17 @@ extension SSLStream {
         
         switch side {
         case .client:
-            method = SSLv2_client_method()
+            method = SSLv23_client_method()
         }
         
         guard let context = SSL_CTX_new(method) else {
+            throw Error.cannotCreateContext
+        }
+        
+        SSL_CTX_ctrl(context, SSL_CTRL_MODE, SSL_MODE_AUTO_RETRY, nil)
+        SSL_CTX_ctrl(context, SSL_CTRL_OPTIONS, SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3 | SSL_OP_NO_COMPRESSION, nil)
+        
+        guard SSL_CTX_set_cipher_list(context, "DEFAULT") == 1 else {
             throw Error.cannotCreateContext
         }
         
@@ -45,7 +60,7 @@ extension SSLStream {
         
         let status = SSL_set_fd(ssl, self.descriptor)
         
-        guard status == 0 else {
+        guard status > 0 else {
             throw Error.sslError(status)
         }
         

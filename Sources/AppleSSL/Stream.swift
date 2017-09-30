@@ -42,19 +42,19 @@
         let outputBuffer = MutableByteBuffer(start: .allocate(capacity: Int(UInt16.max)), count: Int(UInt16.max))
         
         /// Used to give reference/pointer access to the descriptor to SSL
-        var descriptorCopy = UnsafeMutablePointer<Int32>.allocate(capacity: 1)
+        var descriptor: Int32
         
         /// Keeps a strong reference to the DispatchSource so it keeps reading
         var source: DispatchSourceRead?
         
         deinit {
-            descriptorCopy.deallocate(capacity: 1)
             outputBuffer.baseAddress?.deallocate(capacity: outputBuffer.count)
         }
         
         /// Creates a new SSLStream on top of a socket
-        public init(socket: OS) throws {
+        public init(socket: OS, descriptor: Int32) throws {
             self.socket = socket
+            self.descriptor = descriptor
         }
         
         /// Writes the buffer to this SSL socket

@@ -50,7 +50,7 @@
         /// Starts receiving data from the client, reads on the provided queue
         public func start(on queue: DispatchQueue) {
             let source = DispatchSource.makeReadSource(
-                fileDescriptor: self.descriptorCopy.pointee,
+                fileDescriptor: self.descriptor,
                 queue: queue
             )
             

@@ -5,8 +5,7 @@ import libc
 extension Socket {
     /// connect - initiate a connection on a socket
     /// http://man7.org/linux/man-pages/man2/connect.2.html
-    @discardableResult
-    public func connect(hostname: String = "localhost", port: UInt16 = 80) throws -> Future<Void> {
+    public func connect(hostname: String = "localhost", port: UInt16 = 80) throws {
         var hints = addrinfo()
 
         // Support both IPv4 and IPv6
@@ -34,13 +33,11 @@ extension Socket {
         guard res == 0 || (isNonBlocking && errno == EINPROGRESS) else {
             throw Error.posix(errno, identifier: "connect")
         }
-        
-        guard isNonBlocking else {
-            return Future(())
-        }
-        
+    }
+    
+    public func writable(queue: DispatchQueue) -> Future<Void> {
         let promise = Promise<Void>()
-        let write = DispatchSource.makeWriteSource(fileDescriptor: descriptor, queue: .global())
+        let write = DispatchSource.makeWriteSource(fileDescriptor: descriptor, queue: queue)
         
         write.setEventHandler {
             promise.complete(())

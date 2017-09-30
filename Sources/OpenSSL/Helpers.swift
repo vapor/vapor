@@ -4,14 +4,23 @@ import Dispatch
 
 extension SSLStream {
     /// Runs the SSL handshake, regardless of client or server
-    func handshake(for context: UnsafeMutablePointer<SSL>) throws {
-        var result = SSL_connect(ssl)
+    func handshake(for ssl: UnsafeMutablePointer<SSL>) throws {
+        var result: Int32
+        var code: Int32
+
+//        repeat {
+//            result = SSL_connect(ssl)
+//            code = SSL_get_error(ssl, result)
+//        } while result == -1 && (code == SSL_ERROR_WANT_READ || code == SSL_ERROR_WANT_WRITE)
+//        
+//        guard result == 1 else {
+//            throw Error.sslError(result)
+//        }
         
-        guard result == 1 else {
-            throw Error.sslError(result)
-        }
-        
-        result = SSL_do_handshake(ssl)
+        repeat {
+            result = SSL_connect(ssl)
+            code = SSL_get_error(ssl, result)
+        } while result == -1 && (code == SSL_ERROR_WANT_READ || code == SSL_ERROR_WANT_WRITE)
         
         guard result == 1 else {
             throw Error.sslError(result)

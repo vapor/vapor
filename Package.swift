@@ -123,7 +123,7 @@ let package = Package(
             "TCP",
             "WebSocket"
         ]),
-        .testTarget(name: "VaporTests", dependencies: ["Vapor"]),
+        .testTarget(name: "VaporTests", dependencies: ["Vapor", "OpenSSL", "AppleSSL"]),
 
         // WebSocket
         .target(name: "WebSocket", dependencies: ["Core", "Debugging", "TCP", "HTTP", "Crypto"]),

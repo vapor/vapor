@@ -22,7 +22,7 @@
                 throw Error.sslError(status)
             }
             
-            status = SSLSetConnection(context, descriptorCopy)
+            status = SSLSetConnection(context, &self.descriptor)
             
             guard status == 0 else {
                 throw Error.sslError(status)
@@ -47,11 +47,13 @@
         
         // If there's no error, no data
         if readCount == 0 {
+            length.initialize(to: 0)
             return OSStatus(errSSLClosedGraceful)
             
         // On error
         } else if readCount < 0 {
             readCount = 0
+            length.initialize(to: 0)
             
             switch errno {
             case ENOENT:
@@ -67,10 +69,7 @@
             }
         }
         
-        // TODO: Is this right?
-        guard lengthRequested <= readCount else {
-            return OSStatus(errSSLWouldBlock)
-        }
+        length.initialize(to: readCount)
         
         // No errors, requested data
         return noErr
