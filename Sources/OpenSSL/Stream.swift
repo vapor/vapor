@@ -57,7 +57,7 @@ public final class SSLStream<DuplexByteStream: Async.Stream>: Async.Stream where
     public func write(max: Int, from buffer: ByteBuffer) throws -> Int {
         guard let ssl = ssl else {
             close()
-            throw Error.noSSLContext
+            throw Error(.noSSLContext)
         }
         
         let written = SSL_write(ssl, buffer.baseAddress, Int32(buffer.count))
@@ -67,7 +67,7 @@ public final class SSLStream<DuplexByteStream: Async.Stream>: Async.Stream where
                 self.close()
                 return 0
             } else {
-                throw Error.sslError(SSL_get_error(ssl, written))
+                throw Error(.sslError(SSL_get_error(ssl, written)))
             }
         }
         
@@ -79,7 +79,7 @@ public final class SSLStream<DuplexByteStream: Async.Stream>: Async.Stream where
     public func read(max: Int, into buffer: MutableByteBuffer) throws -> Int {
         guard let ssl = ssl else {
             close()
-            throw Error.noSSLContext
+            throw Error(.noSSLContext)
         }
         
         let read = SSL_read(ssl, buffer.baseAddress!, Int32(buffer.count))
@@ -88,7 +88,7 @@ public final class SSLStream<DuplexByteStream: Async.Stream>: Async.Stream where
             self.close()
             return 0
         } else if read < 0 {
-            throw Error.sslError(SSL_get_error(ssl, read))
+            throw Error(.sslError(SSL_get_error(ssl, read)))
         }
         
         return numericCast(read)
@@ -105,6 +105,11 @@ public final class SSLStream<DuplexByteStream: Async.Stream>: Async.Stream where
     }
     
     public func close() {
-        self.socket.close()
+        guard let source = source else {
+            socket.close()
+            return
+        }
+        
+        source.cancel()
     }
 }

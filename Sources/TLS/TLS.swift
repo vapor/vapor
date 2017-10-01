@@ -1,0 +1,85 @@
+#if os(macOS) || os(iOS)
+    import AppleSSL
+#else
+    import OpenSSL
+#endif
+
+import Async
+import Bits
+import Dispatch
+import TCP
+
+/// A Client (used for connecting to servers) that uses the platform specific SSL library.
+public final class TLSClient: Async.Stream {
+    /// See `OutputStream.Output`
+    public typealias Output = ByteBuffer
+    
+    /// See `InputStream.Input`
+    public typealias Input = ByteBuffer
+    
+    /// See `OutputStream.outputStream`
+    public var outputStream: OutputHandler? {
+        get {
+            return ssl.outputStream
+        }
+        set {
+            ssl.outputStream = newValue
+        }
+    }
+    
+    /// See `BaseStream.onClose`
+    public var onClose: CloseHandler? {
+        get {
+            return ssl.onClose
+        }
+        set {
+            ssl.onClose = newValue
+        }
+    }
+    
+    /// See `Stream.errorStream`
+    public var errorStream: ErrorHandler? {
+        get {
+            return ssl.errorStream
+        }
+        set {
+            ssl.errorStream = newValue
+        }
+    }
+    
+    /// The AppleSSL (macOS/iOS) or OpenSSL (Linux) stream
+    let ssl: SSLStream<TCP.Client>
+    
+    /// The TCP that is used in the SSL Stream
+    let client: TCP.Client
+    
+    /// A DispatchQueue on which this Client executes all operations
+    let queue: DispatchQueue
+    
+    /// Creates a new `TLSClient` by specifying a queue.
+    ///
+    /// Can throw an error if the initialization phase fails
+    public init(queue: DispatchQueue) throws {
+        let socket = try Socket()
+        
+        self.queue = queue
+        self.client = TCP.Client(socket: socket, queue: queue)
+        self.ssl = try SSLStream(socket: self.client, descriptor: socket.descriptor)
+    }
+    
+    /// Attempts to connect to a server on the provided hostname and port
+    public func connect(hostname: String, port: UInt16) throws -> Future<Void> {
+        try client.socket.connect(hostname: hostname, port: port)
+        
+        // Continues setting up SSL after the socket becomes writable (successful connection)
+        return client.socket.writable(queue: queue).map {
+            try self.ssl.initializeClient(hostname: hostname)
+            self.ssl.start(on: self.queue)
+        }
+    }
+    
+    /// Used for sending data over TLS
+    public func inputStream(_ input: ByteBuffer) {
+        ssl.inputStream(input)
+    }
+}

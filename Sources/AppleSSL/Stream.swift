@@ -62,7 +62,7 @@
         public func write(max: Int, from buffer: ByteBuffer) throws -> Int {
             guard let context = self.context else {
                 close()
-                throw Error.noSSLContext
+                throw Error(.noSSLContext)
             }
             
             var processed = 0
@@ -74,7 +74,7 @@
                     self.close()
                     return 0
                 } else {
-                    throw Error.sslError(status)
+                    throw Error(.sslError(status))
                 }
             }
             
@@ -86,7 +86,7 @@
         public func read(max: Int, into buffer: MutableByteBuffer) throws -> Int {
             guard let context = self.context else {
                 close()
-                throw Error.noSSLContext
+                throw Error(.noSSLContext)
             }
             
             var processed = 0
@@ -108,11 +108,12 @@
         
         /// Closes the connection
         public func close() {
-            if let context = context {
-                SSLClose(context)
+            guard let source = source else {
+                socket.close()
+                return
             }
             
-            socket.close()
+            source.cancel()
         }
     }
 #endif

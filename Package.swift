@@ -109,7 +109,14 @@ let package = Package(
         // TLS
         .target(name: "AppleSSL", dependencies: ["Async", "Debugging"]),
         .target(name: "OpenSSL", dependencies: ["CTLS", "Async", "Debugging"]),
-        .testTarget(name: "TLSTests", dependencies: ["AppleSSL", "OpenSSL"]),
+        
+        #if os(macOS) || os(iOS)
+            .target(name: "TLS", dependencies: ["AppleSSL", "TCP"]),
+        #else
+            .target(name: "TLS", dependencies: ["OpenSSL", "TCP"]),
+        #endif
+        
+        .testTarget(name: "TLSTests", dependencies: ["TLS"]),
 
         // Vapor
         .target(name: "Development", dependencies: ["Leaf", "Vapor", "MySQL"]),

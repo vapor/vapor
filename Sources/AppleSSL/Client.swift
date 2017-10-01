@@ -14,7 +14,7 @@
             let status = SSLSetPeerDomainName(context, &hostname, hostname.count)
             
             guard status == 0 else {
-                throw Error.sslError(status)
+                throw Error(.sslError(status))
             }
             
             if let certificate = certificate {

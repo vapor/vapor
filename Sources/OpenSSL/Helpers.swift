@@ -7,15 +7,6 @@ extension SSLStream {
     func handshake(for ssl: UnsafeMutablePointer<SSL>) throws {
         var result: Int32
         var code: Int32
-
-//        repeat {
-//            result = SSL_connect(ssl)
-//            code = SSL_get_error(ssl, result)
-//        } while result == -1 && (code == SSL_ERROR_WANT_READ || code == SSL_ERROR_WANT_WRITE)
-//        
-//        guard result == 1 else {
-//            throw Error.sslError(result)
-//        }
         
         repeat {
             result = SSL_connect(ssl)
@@ -23,7 +14,7 @@ extension SSLStream {
         } while result == -1 && (code == SSL_ERROR_WANT_READ || code == SSL_ERROR_WANT_WRITE)
         
         guard result == 1 else {
-            throw Error.sslError(result)
+            throw Error(.sslError(result))
         }
     }
     

@@ -6,26 +6,30 @@
     extension SSLStream {
         /// A helper that initializes SSL as either the client or server side
         func initialize(side: SSLProtocolSide) throws -> SSLContext {
+            // We currently don't support renegotiation of SSL connections
             guard context == nil else {
-                throw Error.contextAlreadyCreated
+                throw Error(.contextAlreadyCreated)
             }
             
+            // Creates a new context
             guard let context = SSLCreateContext(nil, side, .streamType) else {
-                throw Error.cannotCreateContext
+                throw Error(.cannotCreateContext)
             }
             
             self.context = context
             
+            // Sets the read/write functions
             var status = SSLSetIOFuncs(context, readSSL, writeSSL)
             
             guard status == 0 else {
-                throw Error.sslError(status)
+                throw Error(.sslError(status))
             }
             
+            // Adds the file descriptor to this connection
             status = SSLSetConnection(context, &self.descriptor)
             
             guard status == 0 else {
-                throw Error.sslError(status)
+                throw Error(.sslError(status))
             }
             
             return context

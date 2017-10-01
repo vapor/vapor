@@ -14,7 +14,7 @@
             } while result == errSSLWouldBlock
             
             guard result == errSecSuccess || result == errSSLPeerAuthCompleted else {
-                throw Error.sslError(result)
+                throw Error(.sslError(result))
             }
         }
         
@@ -29,7 +29,7 @@
         /// https://www.sslshopper.com/article-most-common-openssl-commands.html
         public func setCertificate(to certificate: Certificate, for context: SSLContext) throws {
             guard let certificate = SecCertificateCreateWithData(nil, certificate.data as CFData) else {
-                throw Error.invalidCertificate
+                throw Error(.invalidCertificate)
             }
             
             var ref: SecIdentity?
@@ -37,13 +37,13 @@
             var error = SecIdentityCreateWithCertificate(nil, certificate, &ref)
             
             guard error == errSecSuccess else {
-                throw Error.invalidCertificate
+                throw Error(.invalidCertificate)
             }
             
             error = SSLSetCertificate(context, [ref as Any, certificate] as CFArray)
             
             guard error == errSecSuccess else {
-                throw Error.invalidCertificate
+                throw Error(.invalidCertificate)
             }
         }
         
@@ -84,6 +84,10 @@
             }
             
             source.setCancelHandler {
+                if let context = self.context {
+                    SSLClose(context)
+                }
+                
                 self.close()
             }
             
