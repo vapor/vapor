@@ -29,25 +29,27 @@
                 
                 // If it's not blocking and not a success, it's an error
                 guard result == errSecSuccess || result == errSSLPeerAuthCompleted else {
+                    readSource.cancel()
                     promise.fail(Error(.sslError(result)))
                     return
                 }
                 
-                promise.complete(())
-            }
-            
-            // When done, remove the source, luke!
-            readSource.setCancelHandler {
                 readSource.cancel()
-                self.readSource = nil
+                promise.complete(())
             }
             
             // Now that the async stuff's et up, let's start your engines
             readSource.resume()
             
+            let future = promise.future
+            
+            future.addAwaiter { _ in
+                self.readSource = nil
+            }
+            
             self.readSource = readSource
             
-            return promise.future
+            return future
         }
         
         /// Sets the certificate regardless of Client/Server.

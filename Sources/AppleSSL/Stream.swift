@@ -74,16 +74,22 @@
                     return
                 }
                 
-                let data = self.writeQueue.removeFirst()
+                let data = self.writeQueue[0]
                 
                 data.withUnsafeBytes { (pointer: BytesPointer) in
                     let buffer = UnsafeBufferPointer(start: pointer, count: data.count)
                     
                     do {
                         try self.write(from: buffer, allowWouldBlock: false)
+                        _ = self.writeQueue.removeFirst()
                     } catch {
                         self.errorStream?(error)
                     }
+                }
+                
+                guard self.writeQueue.count > 0 else {
+                    self.writeSource.suspend()
+                    return
                 }
             }
         }

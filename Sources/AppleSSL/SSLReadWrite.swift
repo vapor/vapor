@@ -56,11 +56,11 @@
                 if status == 0 {
                     self.close()
                     return 0
-                } else if status == errSSLWouldBlock, allowWouldBlock {
+                } else if status == errSSLWouldBlock {
                     writeQueue.append(Data(buffer))
                     
                     // Wasn't already running
-                    if writeQueue.count > 1 {
+                    if writeQueue.count == 1 {
                         writeSource.resume()
                     }
                     
