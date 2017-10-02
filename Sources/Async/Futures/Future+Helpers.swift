@@ -7,12 +7,16 @@ extension Future {
             do {
                 try closure(result).then { result in
                     promise.complete(result)
+                    
+                // Cascades failed promise results
                 }.catch { error in
                     promise.fail(error)
                 }
+            // Failed transformations fail the promise
             } catch {
                 promise.fail(error)
             }
+        // Cascades failed promises
         }.catch { error in
             promise.fail(error)
         }
