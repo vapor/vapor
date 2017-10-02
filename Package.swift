@@ -16,6 +16,9 @@ let package = Package(
         // Debugging
         .library(name: "Debugging", targets: ["Debugging"]),
 
+        // Fluent
+        // .library(name: "Fluent", targets: ["Fluent"]),
+
         // JWT
         .library(name: "JWT", targets: ["JWT"]),
 
@@ -31,9 +34,9 @@ let package = Package(
         // Net
         .library(name: "HTTP", targets: ["HTTP"]),
         .library(name: "TCP", targets: ["TCP"]),
-        
-        // WebSockets
-        .library(name: "WebSocket", targets: ["WebSocket"]),
+
+        // Random
+        .library(name: "Random", targets: ["Random"]),
 
         // Routing
         .library(name: "Routing", targets: ["Routing"]),
@@ -41,8 +44,14 @@ let package = Package(
         // Service
         .library(name: "Service", targets: ["Service"]),
 
+        // SQLite
+        .library(name: "SQLite", targets: ["SQLite"]),
+
         // Vapor
         .library(name: "Vapor", targets: ["Vapor"]),
+        
+        // WebSockets
+        .library(name: "WebSocket", targets: ["WebSocket"]),
     ],
     dependencies: [],
     targets: [
@@ -64,6 +73,10 @@ let package = Package(
         // Debugging
         .target(name: "Debugging"),
         .testTarget(name: "DebuggingTests", dependencies: ["Debugging"]),
+
+        // Debugging
+//        .target(name: "Fluent", dependencies: ["SQLite"]),
+//        .testTarget(name: "FluentTests", dependencies: ["Fluent"]),
 
         // JWT
         .target(name: "JWT", dependencies: ["Crypto"]),
@@ -91,10 +104,9 @@ let package = Package(
         .testTarget(name: "HTTPTests", dependencies: ["HTTP"]),
         .target(name: "TCP", dependencies: ["Debugging", "Core", "libc"]),
         .testTarget(name: "TCPTests", dependencies: ["TCP"]),
-        
-        // WebSocket
-        .target(name: "WebSocket", dependencies: ["Core", "Debugging", "TCP", "HTTP", "Crypto"]),
-        .testTarget(name: "WebSocketTests", dependencies: ["WebSocket"]),
+
+        .target(name: "Random", dependencies: ["Core"]),
+        .testTarget(name: "RandomTests", dependencies: ["Random"]),
 
         // Routing
         .target(name: "Routing", dependencies: ["Core", "Debugging", "HTTP", "WebSocket"]),
@@ -104,8 +116,13 @@ let package = Package(
         .target(name: "Service", dependencies: ["Core", "Debugging"]),
         .testTarget(name: "ServiceTests", dependencies: ["Service"]),
 
+        // SQLite
+        .target(name: "CSQLite"),
+        .target(name: "SQLite", dependencies: ["Core", "CSQLite", "Debugging"]),
+        .testTarget(name: "SQLiteTests", dependencies: ["SQLite"]),
+
         // Vapor
-        .target(name: "Development", dependencies: ["Leaf", "Vapor", "MySQL"]),
+        .target(name: "Development", dependencies: ["Leaf", "Vapor", "MySQL", "SQLite"]),
         .target(name: "Vapor", dependencies: [
             "Core",
             "Debugging",
@@ -117,5 +134,9 @@ let package = Package(
             "WebSocket",
         ]),
         .testTarget(name: "VaporTests", dependencies: ["Vapor"]),
+        
+        // WebSocket
+        .target(name: "WebSocket", dependencies: ["Core", "Debugging", "TCP", "HTTP", "Crypto"]),
+        .testTarget(name: "WebSocketTests", dependencies: ["WebSocket"]),
     ]
 )

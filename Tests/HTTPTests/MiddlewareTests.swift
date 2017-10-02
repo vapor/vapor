@@ -1,7 +1,8 @@
-import TCP
 import Async
+import Core
 import Dispatch
 import HTTP
+import TCP
 import XCTest
 
 class MiddlewareTests : XCTestCase {
@@ -38,7 +39,7 @@ class MiddlewareTests : XCTestCase {
         
         let server = HTTP.Server(tcp: serverSocket)
         server.drain { peer in
-            let parser = HTTP.RequestParser(queue: peer.tcp.queue)
+            let parser = HTTP.RequestParser(worker: peer.tcp.worker)
             
             let responderStream = responder.makeStream()
             let serializer = HTTP.ResponseSerializer()
@@ -56,7 +57,7 @@ class MiddlewareTests : XCTestCase {
         let socket = try TCP.Socket()
         try socket.connect(hostname: "0.0.0.0", port: 1234)
         
-        let tcpClient = TCP.Client.init(socket: socket, queue: .global())
+        let tcpClient = TCP.Client(socket: socket, worker: Worker(queue: .global()))
         let client = HTTP.Client(tcp: tcpClient)
         tcpClient.start()
         
