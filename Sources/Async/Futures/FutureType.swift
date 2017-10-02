@@ -1,4 +1,3 @@
-//import Foundation
 import Dispatch
 
 /// A future result type.
