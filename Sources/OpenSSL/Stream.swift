@@ -36,6 +36,9 @@ public final class SSLStream<DuplexByteStream: Async.Stream>: Async.Stream where
     /// The underlying TCP socket
     let socket: DuplexByteStream
     
+    /// The queue to read on
+    let queue: DispatchQueue
+    
     /// Keeps a strong reference to the DispatchSource so it keeps reading
     var source: DispatchSourceRead?
     
@@ -47,9 +50,10 @@ public final class SSLStream<DuplexByteStream: Async.Stream>: Async.Stream where
     }
     
     /// Creates a new SSLStream on top of a socket
-    public init(socket: DuplexByteStream, descriptor: Int32) throws {
+    public init(socket: DuplexByteStream, descriptor: Int32, queue: DispatchQueue) throws {
         self.socket = socket
         self.descriptor = descriptor
+        self.queue = queue
     }
     
     /// Writes the buffer to this SSL socket

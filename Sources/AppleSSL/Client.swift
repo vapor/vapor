@@ -1,13 +1,13 @@
 #if os(macOS) || os(iOS)
+    import Async
     import Security
-    import Core
     import Foundation
     import Dispatch
 
     /// An SSL client. Can be initialized by upgrading an existing socket or by starting an SSL socket.
     extension SSLStream {
         /// Upgrades the connection to SSL.
-        public func initializeClient(hostname: String, signedBy certificate: Certificate? = nil) throws {
+        public func initializeClient(hostname: String, signedBy certificate: Certificate? = nil) throws -> Future<Void> {
             let context = try self.initialize(side: .clientSide)
             
             var hostname = [Int8](hostname.utf8.map { Int8($0) })
@@ -21,7 +21,7 @@
                 try self.setCertificate(to: certificate, for: context)
             }
             
-            try handshake(for: context)
+            return try handshake(for: context)
         }
     }
 #endif

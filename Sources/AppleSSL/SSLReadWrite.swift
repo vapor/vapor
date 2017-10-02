@@ -1,6 +1,7 @@
 #if os(macOS) || os(iOS)
-    import Core
+    import Bits
     import Security
+    import Foundation
     import Dispatch
     
     extension SSLStream {
@@ -33,6 +34,44 @@
             }
             
             return context
+        }
+        
+        /// Writes to AppleSSL using the provided buffer
+        ///
+        /// If `allowWouldBlock` is true, when a "would block" occurs, the data will be appended to the writeQueue
+        /// Otherwise an error will be thrown
+        @discardableResult
+        func write(from buffer: ByteBuffer, allowWouldBlock: Bool) throws -> Int {
+            guard let context = self.context else {
+                close()
+                throw Error(.noSSLContext)
+            }
+            
+            var processed = 0
+            
+            let status = SSLWrite(context, buffer.baseAddress, buffer.count, &processed)
+            
+            guard status > 0 else {
+                // Clean close
+                if status == 0 {
+                    self.close()
+                    return 0
+                } else if status == errSSLWouldBlock, allowWouldBlock {
+                    writeQueue.append(Data(buffer))
+                    
+                    // Wasn't already running
+                    if writeQueue.count > 1 {
+                        writeSource.resume()
+                    }
+                    
+                    return buffer.count
+                    // Error
+                } else {
+                    throw Error(.sslError(status))
+                }
+            }
+            
+            return processed
         }
     }
     

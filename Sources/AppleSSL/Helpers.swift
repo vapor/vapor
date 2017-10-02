@@ -1,21 +1,53 @@
 #if os(macOS) || os(iOS)
-    import Core
+    import Async
     import Bits
     import Foundation
     import Security
     
     extension SSLStream {
         /// Runs the SSL handshake, regardless of client or server
-        func handshake(for context: SSLContext) throws {
-            var result: Int32
+        func handshake(for context: SSLContext) throws -> Future<Void> {
+            var result = SSLHandshake(context)
             
-            repeat {
-                result = SSLHandshake(context)
-            } while result == errSSLWouldBlock
-            
-            guard result == errSecSuccess || result == errSSLPeerAuthCompleted else {
-                throw Error(.sslError(result))
+            // If the success is immediate
+            if result == errSecSuccess || result == errSSLPeerAuthCompleted {
+                return Future(())
             }
+            
+            // Otherwise set up a readsource
+            let readSource = DispatchSource.makeReadSource(fileDescriptor: self.descriptor, queue: self.queue)
+            let promise = Promise<Void>()
+            
+            // Listen for input
+            readSource.setEventHandler {
+                // On input, continue the handshake
+                result = SSLHandshake(context)
+                
+                if result == errSSLWouldBlock {
+                    return
+                }
+                
+                // If it's not blocking and not a success, it's an error
+                guard result == errSecSuccess || result == errSSLPeerAuthCompleted else {
+                    promise.fail(Error(.sslError(result)))
+                    return
+                }
+                
+                promise.complete(())
+            }
+            
+            // When done, remove the source, luke!
+            readSource.setCancelHandler {
+                readSource.cancel()
+                self.readSource = nil
+            }
+            
+            // Now that the async stuff's et up, let's start your engines
+            readSource.resume()
+            
+            self.readSource = readSource
+            
+            return promise.future
         }
         
         /// Sets the certificate regardless of Client/Server.
@@ -48,19 +80,16 @@
         }
         
         /// Starts receiving data from the client, reads on the provided queue
-        public func start(on queue: DispatchQueue) {
+        public func start() {
             let source = DispatchSource.makeReadSource(
                 fileDescriptor: self.descriptor,
-                queue: queue
+                queue: self.queue
             )
             
             source.setEventHandler {
                 let read: Int
                 do {
-                    read = try self.read(
-                        max: self.outputBuffer.count,
-                        into: self.outputBuffer
-                    )
+                    read = try self.read(into: self.outputBuffer)
                 } catch {
                     // any errors that occur here cannot be thrown,
                     // so send them to stream error catcher.
@@ -92,7 +121,7 @@
             }
             
             source.resume()
-            self.source = source
+            self.readSource = source
         }
     }
 #endif

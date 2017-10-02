@@ -38,52 +38,65 @@
         /// The underlying TCP socket
         let socket: DuplexByteStream
         
+        /// The queue to read on
+        let queue: DispatchQueue
+        
         /// A buffer storing all deciphered data received from the remote
         let outputBuffer = MutableByteBuffer(start: .allocate(capacity: Int(UInt16.max)), count: Int(UInt16.max))
         
         /// Used to give reference/pointer access to the descriptor to SSL
         var descriptor: Int32
         
-        /// Keeps a strong reference to the DispatchSource so it keeps reading
-        var source: DispatchSourceRead?
+        /// Keeps a strong reference to the DispatchSourceRead so it keeps reading
+        var readSource: DispatchSourceRead?
+        
+        /// A buffer of all data that still needs to be written
+        var writeQueue = [Data]()
+        
+        /// Keeps a strong reference to the DispatchSourceWrite so it can keep writing
+        let writeSource: DispatchSourceWrite
         
         deinit {
             outputBuffer.baseAddress?.deallocate(capacity: outputBuffer.count)
         }
         
         /// Creates a new SSLStream on top of a socket
-        public init(socket: DuplexByteStream, descriptor: Int32) throws {
+        public init(socket: DuplexByteStream, descriptor: Int32, queue: DispatchQueue) throws {
             self.socket = socket
             self.descriptor = descriptor
+            self.queue = queue
+            
+            self.writeSource = DispatchSource.makeWriteSource(fileDescriptor: descriptor, queue: queue)
+            
+            self.writeSource.setEventHandler {
+                guard self.writeQueue.count > 0 else {
+                    self.writeSource.suspend()
+                    return
+                }
+                
+                let data = self.writeQueue.removeFirst()
+                
+                data.withUnsafeBytes { (pointer: BytesPointer) in
+                    let buffer = UnsafeBufferPointer(start: pointer, count: data.count)
+                    
+                    do {
+                        try self.write(from: buffer, allowWouldBlock: false)
+                    } catch {
+                        self.errorStream?(error)
+                    }
+                }
+            }
         }
         
         /// Writes the buffer to this SSL socket
         @discardableResult
-        public func write(max: Int, from buffer: ByteBuffer) throws -> Int {
-            guard let context = self.context else {
-                close()
-                throw Error(.noSSLContext)
-            }
-            
-            var processed = 0
-            
-            let status = SSLWrite(context, buffer.baseAddress, buffer.count, &processed)
-            
-            guard status > 0 else {
-                if status == 0 {
-                    self.close()
-                    return 0
-                } else {
-                    throw Error(.sslError(status))
-                }
-            }
-            
-            return processed
+        public func write(from buffer: ByteBuffer) throws -> Int {
+            return try self.write(from: buffer, allowWouldBlock: true)
         }
         
         /// Reads from this SSL socket
         @discardableResult
-        public func read(max: Int, into buffer: MutableByteBuffer) throws -> Int {
+        public func read(into buffer: MutableByteBuffer) throws -> Int {
             guard let context = self.context else {
                 close()
                 throw Error(.noSSLContext)
@@ -99,7 +112,7 @@
         /// Accepts a `ByteBuffer` as plain data that will be send as ciphertext using SSL.
         public func inputStream(_ input: ByteBuffer) {
             do {
-                try self.write(max: input.count, from: input)
+                try self.write(from: input)
             } catch {
                 self.errorStream?(error)
                 self.close()
@@ -108,12 +121,16 @@
         
         /// Closes the connection
         public func close() {
-            guard let source = source else {
+            guard let readSource = readSource else {
                 socket.close()
                 return
             }
             
-            source.cancel()
+            readSource.cancel()
+            
+            if writeQueue.count > 0 {
+                writeSource.cancel()
+            }
         }
     }
 #endif

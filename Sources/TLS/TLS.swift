@@ -64,7 +64,7 @@ public final class TLSClient: Async.Stream {
         
         self.queue = queue
         self.client = TCP.Client(socket: socket, queue: queue)
-        self.ssl = try SSLStream(socket: self.client, descriptor: socket.descriptor)
+        self.ssl = try SSLStream(socket: self.client, descriptor: socket.descriptor, queue: queue)
     }
     
     /// Attempts to connect to a server on the provided hostname and port
@@ -72,9 +72,10 @@ public final class TLSClient: Async.Stream {
         try client.socket.connect(hostname: hostname, port: port)
         
         // Continues setting up SSL after the socket becomes writable (successful connection)
-        return client.socket.writable(queue: queue).map {
-            try self.ssl.initializeClient(hostname: hostname)
-            self.ssl.start(on: self.queue)
+        return client.socket.writable(queue: queue).reduce {
+            return try self.ssl.initializeClient(hostname: hostname)
+        }.map {
+            self.ssl.start()
         }
     }
     

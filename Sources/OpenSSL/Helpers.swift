@@ -34,10 +34,10 @@ extension SSLStream {
     }
     
     /// Starts receiving data from the client, reads on the provided queue
-    public func start(on queue: DispatchQueue) {
+    public func start() {
         let source = DispatchSource.makeReadSource(
             fileDescriptor: self.descriptor,
-            queue: queue
+            queue: self.queue
         )
         
         source.setEventHandler {

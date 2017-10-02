@@ -35,16 +35,21 @@ extension Socket {
         }
     }
     
+    /// Gets called when the connection becomes writable.
+    ///
+    /// This is a non-threadsafe operation and thus should only be used once at a time.
     public func writable(queue: DispatchQueue) -> Future<Void> {
         let promise = Promise<Void>()
-        let write = DispatchSource.makeWriteSource(fileDescriptor: descriptor, queue: queue)
+        let write = self.writeSource ?? DispatchSource.makeWriteSource(fileDescriptor: descriptor, queue: queue)
         
         write.setEventHandler {
             promise.complete(())
-            write.cancel()
+            write.suspend()
         }
         
         write.resume()
+        self.writeSource = write
+        
         return promise.future
     }
 }
