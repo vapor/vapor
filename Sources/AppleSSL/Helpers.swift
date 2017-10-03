@@ -61,8 +61,8 @@
         /// You need to register the `.p12` file to the `login` keychain. The `.p12` must be associated with the public key certificate defined here.
         ///
         /// https://www.sslshopper.com/article-most-common-openssl-commands.html
-        public func setCertificate(to certificate: Certificate, for context: SSLContext) throws {
-            guard let certificate = SecCertificateCreateWithData(nil, certificate.data as CFData) else {
+        public func setCertificate(to certificate: Data, for context: SSLContext) throws {
+            guard let certificate = SecCertificateCreateWithData(nil, certificate as CFData) else {
                 throw Error(.invalidCertificate)
             }
             

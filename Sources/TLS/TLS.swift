@@ -1,4 +1,4 @@
-#if os(macOS) || os(iOS)
+#if (os(macOS) || os(iOS)) && !OPENSSL
     import AppleSSL
 #else
     import OpenSSL

@@ -1,25 +1,79 @@
+import Async
 import Bits
 import CTLS
 import Dispatch
 
 extension SSLStream {
     /// Runs the SSL handshake, regardless of client or server
-    func handshake(for ssl: UnsafeMutablePointer<SSL>) throws {
-        var result: Int32
-        var code: Int32
-        
-        repeat {
-            result = SSL_connect(ssl)
-            code = SSL_get_error(ssl, result)
-        } while result == -1 && (code == SSL_ERROR_WANT_READ || code == SSL_ERROR_WANT_WRITE)
-        
-        guard result == 1 else {
-            throw Error(.sslError(result))
+    func handshake(for ssl: UnsafeMutablePointer<SSL>, side: Side) throws -> Future<Void> {
+        func retry() -> Int32 {
+            if case .client = side {
+                return SSL_connect(ssl)
+            } else {
+                return SSL_accept(ssl)
+            }
         }
+        
+        var result = retry()
+        var code = SSL_get_error(ssl, result)
+        
+        // If the success is immediate
+        if result == 0 {
+            return Future(())
+        }
+        
+        // Otherwise set up a readsource
+        let readSource = DispatchSource.makeReadSource(fileDescriptor: self.descriptor, queue: self.queue)
+        let promise = Promise<Void>()
+        
+        // Listen for input
+        readSource.setEventHandler {
+            // On input, continue the handshake
+            result = retry()
+            code = SSL_get_error(ssl, result)
+            
+            if result == -1 && (
+                code == SSL_ERROR_WANT_READ ||
+                code == SSL_ERROR_WANT_WRITE ||
+                code == SSL_ERROR_WANT_CONNECT ||
+                code == SSL_ERROR_WANT_ACCEPT
+            ) {
+                return
+            }
+            
+            // If it's not blocking and not a success, it's an error
+            guard result > 0 else {
+                readSource.cancel()
+                promise.fail(Error(.sslError(result)))
+                return
+            }
+            
+            readSource.cancel()
+            promise.complete(())
+        }
+        
+        // Now that the async stuff's et up, let's start your engines
+        readSource.resume()
+        
+        let future = promise.future
+        
+        future.addAwaiter { _ in
+            self.readSource = nil
+        }
+        
+        self.readSource = readSource
+        
+        return future
     }
     
-    /// Sets the certificate regardless of Client/Server.
-    ///
+    func setCertificate(certificatePath: String) throws {
+        guard let context = context else {
+            throw Error(.noSSLContext)
+        }
+        
+        SSL_CTX_load_verify_locations(context, certificatePath, nil)
+    }
+    
     /// This is mandatory for SSL Servers to work. Optional for Clients.
     ///
     /// The certificate entered is the public key. The private key will be retreived from the keychain.
@@ -27,9 +81,23 @@ extension SSLStream {
     /// You need to register the `.p12` file to the `login` keychain. The `.p12` must be associated with the public key certificate defined here.
     ///
     /// https://www.sslshopper.com/article-most-common-openssl-commands.html
-    public func setCertificate(toFileAt certificatePath: String) throws {
-        if let context = context {
-            SSL_CTX_load_verify_locations(context, certificatePath, nil)
+    func setServerCertificates(certificatePath: String, keyPath: String) throws {
+        guard let context = context else {
+            throw Error(.noSSLContext)
+        }
+        
+        SSL_CTX_use_certificate_file(context, certificatePath, SSL_FILETYPE_PEM)
+        
+        var error = SSL_CTX_use_certificate_file(context, certificatePath, SSL_FILETYPE_PEM)
+        
+        guard error > 0 else  {
+            throw Error(.sslError(error))
+        }
+        
+        error = SSL_CTX_use_PrivateKey_file(context, keyPath, SSL_FILETYPE_PEM)
+        
+        guard error > 0 else  {
+            throw Error(.sslError(error))
         }
     }
     
@@ -43,10 +111,7 @@ extension SSLStream {
         source.setEventHandler {
             let read: Int
             do {
-                read = try self.read(
-                    max: self.outputBuffer.count,
-                    into: self.outputBuffer
-                )
+                read = try self.read(into: self.outputBuffer)
             } catch {
                 // any errors that occur here cannot be thrown,
                 // so send them to stream error catcher.
@@ -74,6 +139,6 @@ extension SSLStream {
         }
         
         source.resume()
-        self.source = source
+        self.readSource = source
     }
 }

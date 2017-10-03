@@ -12,6 +12,9 @@ public struct Error: Swift.Error {
     ///
     /// This allows adding extra error reasons
     enum Reason {
+        /// OpenSSL was not initialized
+        case notInitialized
+        
         /// Creating the SSL context failed
         case cannotCreateContext
         

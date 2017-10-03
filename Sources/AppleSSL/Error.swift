@@ -26,5 +26,8 @@ public struct Error: Swift.Error {
         
         /// The provided certificate was not loaded/used successfully
         case invalidCertificate
+        
+        /// The certificate didn't exist at the given path
+        case certificateNotFound
     }
 }

@@ -1,33 +1,31 @@
+import Async
 import CTLS
 
 /// An SSL client. Can be initialized by upgrading an existing socket or by starting an SSL socket.
 extension SSLStream {
     /// Upgrades the connection to SSL.
-    public func initializeClient(hostname: String, signedBy certificate: String? = nil) throws {
+    public func initializeClient(hostname: String, signedBy certificate: String? = nil) throws -> Future<Void> {
         let ssl = try self.initialize(side: .client)
         
         var hostname = [UInt8](hostname.utf8)
         SSL_ctrl(ssl, SSL_CTRL_SET_TLSEXT_HOSTNAME, Int(TLSEXT_NAMETYPE_host_name), &hostname)
         
         if let certificate = certificate {
-            try self.setCertificate(toFileAt: certificate)
+            try self.setCertificate(certificatePath: certificate)
         }
         
-        try handshake(for: ssl)
+        return try handshake(for: ssl, side: .client)
     }
     
     enum Side {
         case client
+        case server(certificate: String, key: String)
     }
     
     /// A helper that initializes SSL as either the client or server side
     func initialize(side: Side) throws -> UnsafeMutablePointer<SSL> {
-        if !SSLSettings.initialized {
-            SSL_library_init()
-            SSL_load_error_strings()
-            OPENSSL_config(nil)
-            OPENSSL_add_all_algorithms_conf()
-            SSLSettings.initialized = true
+        guard SSLSettings.initialized else {
+            throw Error(.notInitialized)
         }
         
         guard context == nil else {
@@ -39,20 +37,23 @@ extension SSLStream {
         switch side {
         case .client:
             method = SSLv23_client_method()
+        case .server(_, _):
+            method = SSLv23_server_method()
         }
         
         guard let context = SSL_CTX_new(method) else {
             throw Error(.cannotCreateContext)
         }
         
-        SSL_CTX_ctrl(context, SSL_CTRL_MODE, SSL_MODE_AUTO_RETRY, nil)
-        SSL_CTX_ctrl(context, SSL_CTRL_OPTIONS, SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3 | SSL_OP_NO_COMPRESSION, nil)
-        
         guard SSL_CTX_set_cipher_list(context, "DEFAULT") == 1 else {
             throw Error(.cannotCreateContext)
         }
         
         self.context = context
+        
+        if case .server(let certificate, let key) = side {
+            try self.setServerCertificates(certificatePath: certificate, keyPath: key)
+        }
         
         guard let ssl = SSL_new(context) else {
             throw Error(.noSSLContext)
@@ -63,6 +64,8 @@ extension SSLStream {
         guard status > 0 else {
             throw Error(.sslError(status))
         }
+        
+        self.ssl = ssl
         
         return ssl
     }

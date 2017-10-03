@@ -2,10 +2,18 @@ import Async
 import Bits
 import CTLS
 import Dispatch
+import Foundation
 import libc
 
 enum SSLSettings {
-    internal static var initialized = false
+    internal static var initialized: Bool = {
+        SSL_library_init()
+        SSL_load_error_strings()
+//        OpenSSL_add_all_ciphers()
+        OPENSSL_config(nil)
+        OPENSSL_add_all_algorithms_conf()
+        return true
+    }()
 }
 
 public final class SSLStream<DuplexByteStream: Async.Stream>: Async.Stream where DuplexByteStream.Output == ByteBuffer, DuplexByteStream.Input == ByteBuffer, DuplexByteStream: ClosableStream {
@@ -39,8 +47,14 @@ public final class SSLStream<DuplexByteStream: Async.Stream>: Async.Stream where
     /// The queue to read on
     let queue: DispatchQueue
     
-    /// Keeps a strong reference to the DispatchSource so it keeps reading
-    var source: DispatchSourceRead?
+    /// Keeps a strong reference to the DispatchSourceRead so it keeps reading
+    var readSource: DispatchSourceRead?
+    
+    /// A buffer of all data that still needs to be written
+    var writeQueue = [Data]()
+    
+    /// Keeps a strong reference to the DispatchSourceWrite so it can keep writing
+    let writeSource: DispatchSourceWrite
     
     /// A buffer storing all deciphered data received from the remote
     let outputBuffer = MutableByteBuffer(start: .allocate(capacity: Int(UInt16.max)), count: Int(UInt16.max))
@@ -54,11 +68,38 @@ public final class SSLStream<DuplexByteStream: Async.Stream>: Async.Stream where
         self.socket = socket
         self.descriptor = descriptor
         self.queue = queue
+        
+        self.writeSource = DispatchSource.makeWriteSource(fileDescriptor: descriptor, queue: queue)
+        
+        self.writeSource.setEventHandler {
+            guard self.writeQueue.count > 0 else {
+                self.writeSource.suspend()
+                return
+            }
+            
+            let data = self.writeQueue[0]
+            
+            data.withUnsafeBytes { (pointer: BytesPointer) in
+                let buffer = UnsafeBufferPointer(start: pointer, count: data.count)
+                
+                do {
+                    try self.write(from: buffer)
+                    _ = self.writeQueue.removeFirst()
+                } catch {
+                    self.errorStream?(error)
+                }
+            }
+            
+            guard self.writeQueue.count > 0 else {
+                self.writeSource.suspend()
+                return
+            }
+        }
     }
     
     /// Writes the buffer to this SSL socket
     @discardableResult
-    public func write(max: Int, from buffer: ByteBuffer) throws -> Int {
+    public func write(from buffer: ByteBuffer) throws -> Int {
         guard let ssl = ssl else {
             close()
             throw Error(.noSSLContext)
@@ -80,7 +121,7 @@ public final class SSLStream<DuplexByteStream: Async.Stream>: Async.Stream where
     
     /// Reads from this SSL socket
     @discardableResult
-    public func read(max: Int, into buffer: MutableByteBuffer) throws -> Int {
+    public func read(into buffer: MutableByteBuffer) throws -> Int {
         guard let ssl = ssl else {
             close()
             throw Error(.noSSLContext)
@@ -101,7 +142,7 @@ public final class SSLStream<DuplexByteStream: Async.Stream>: Async.Stream where
     /// Accepts a `ByteBuffer` as plain data that will be send as ciphertext using SSL.
     public func inputStream(_ input: ByteBuffer) {
         do {
-            try self.write(max: input.count, from: input)
+            try self.write(from: input)
         } catch {
             self.errorStream?(error)
             self.close()
@@ -109,11 +150,11 @@ public final class SSLStream<DuplexByteStream: Async.Stream>: Async.Stream where
     }
     
     public func close() {
-        guard let source = source else {
+        guard let readSource = readSource else {
             socket.close()
             return
         }
         
-        source.cancel()
+        readSource.cancel()
     }
 }
