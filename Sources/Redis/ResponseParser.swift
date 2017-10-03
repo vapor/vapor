@@ -17,11 +17,7 @@ final class ResponseParser: Async.InputStream {
     init() {}
     
     func inputStream(_ input: ByteBuffer) {
-        guard let input = String(bytes: input, encoding: .utf8) else {
-            return
-        }
-        
-        responseBuffer.append(contentsOf: input)
+        responseBuffer.append(contentsOf: Data(input))
         
         do {
             try parseBuffer()
@@ -31,7 +27,7 @@ final class ResponseParser: Async.InputStream {
         }
     }
     
-    fileprivate func simpleString(from position: inout String.Index) -> String? {
+    fileprivate func simpleString(from position: inout Int) -> String? {
         var offset = 0
         var carriageReturnFound = false
         
@@ -39,7 +35,7 @@ final class ResponseParser: Async.InputStream {
         detectionLoop: for character in responseBuffer[position...] {
             offset += 1
             
-            if character == "\r" {
+            if character == .carriageReturn {
                 carriageReturnFound = true
                 break detectionLoop
             }
@@ -59,10 +55,10 @@ final class ResponseParser: Async.InputStream {
             position = responseBuffer.index(position, offsetBy: offset + 1)
         }
         
-        return String(responseBuffer[position..<endIndex])
+        return String(bytes: responseBuffer[position..<endIndex], encoding: .utf8)
     }
     
-    fileprivate func parseToken(_ token: Character, at position: inout String.Index) throws -> (result: _RedisValue, complete: Bool)? {
+    fileprivate func parseToken(_ token: Character, at position: inout Int) throws -> (result: _RedisValue, complete: Bool)? {
         switch token {
         case "+":
             // Simple string
@@ -111,7 +107,7 @@ final class ResponseParser: Async.InputStream {
             
             let endPosition = responseBuffer.index(position, offsetBy: size)
             
-            return (.parsed(.bulkString(String(responseBuffer[position..<endPosition]))), true)
+            return (.parsed(.bulkString(Data(responseBuffer[position..<endPosition]))), true)
         case "*":
             // Arrays
             guard let string = simpleString(from: &position) else {
@@ -137,7 +133,7 @@ final class ResponseParser: Async.InputStream {
                 let oldPosition = position
                 
                 guard
-                    let (result, complete) = try parseToken(responseBuffer[position], at: &position),
+                    let (result, complete) = try parseToken(Character(Unicode.Scalar(responseBuffer[position])), at: &position),
                     complete
                 else {
                     position = oldPosition
@@ -159,7 +155,7 @@ final class ResponseParser: Async.InputStream {
         }
     }
     
-    fileprivate func remaining(_ n: Int, from position: String.Index) -> Bool {
+    fileprivate func remaining(_ n: Int, from position: Int) -> Bool {
         return responseBuffer.distance(from: position, to: responseBuffer.endIndex) > 1
     }
     
@@ -177,7 +173,7 @@ final class ResponseParser: Async.InputStream {
         
         while responseQueue.count > 0 {
             if let parsingValue = parsingValue {
-                guard case .array(var values) = parsingValue else {
+                guard case .parsing(var values) = parsingValue else {
                     throw ClientError.parsingError
                 }
                 
@@ -193,7 +189,7 @@ final class ResponseParser: Async.InputStream {
                     }
                     
                     guard
-                        let (result, complete) = try parseToken(responseBuffer[index], at: &index),
+                        let (result, complete) = try parseToken(Character(Unicode.Scalar(responseBuffer[index])), at: &index),
                         complete
                     else {
                         return
@@ -209,7 +205,7 @@ final class ResponseParser: Async.InputStream {
             
             guard
                 let token = responseBuffer.first,
-                let (result, complete) = try parseToken(token, at: &index)
+                let (result, complete) = try parseToken(Character(Unicode.Scalar(token)), at: &index)
             else {
                 return
             }

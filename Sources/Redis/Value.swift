@@ -7,6 +7,10 @@ indirect enum _RedisValue {
 }
 
 public indirect enum RedisValue {
+    init(bulk: String) {
+        self = .bulkString(Data(bulk.utf8))
+    }
+    
     case null
     case basicString(String)
     case bulkString(Data)
