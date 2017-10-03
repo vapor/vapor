@@ -8,9 +8,9 @@ final class ResponseParser: Async.InputStream {
     var onClose: BaseStream.CloseHandler?
     var errorStream: BaseStream.ErrorHandler?
     
-    var responseQueue = [Promise<RedisValue>]()
-    var responseBuffer = ""
-    var parsingValue: RedisValue?
+    var responseQueue = [Promise<_RedisValue>]()
+    var responseBuffer = Data()
+    var parsingValue: _RedisValue?
     
     var maximumRepsonseSize = 10_000_000
     
@@ -62,7 +62,7 @@ final class ResponseParser: Async.InputStream {
         return String(responseBuffer[position..<endIndex])
     }
     
-    fileprivate func parseToken(_ token: Character, at position: inout String.Index) throws -> (result: RedisValue, complete: Bool)? {
+    fileprivate func parseToken(_ token: Character, at position: inout String.Index) throws -> (result: _RedisValue, complete: Bool)? {
         switch token {
         case "+":
             // Simple string
@@ -70,14 +70,14 @@ final class ResponseParser: Async.InputStream {
                 return nil
             }
             
-            return (.basicString(string), true)
+            return (.parsed(.basicString(string)), true)
         case "-":
             // Error
             guard let string = simpleString(from: &position) else {
                 return nil
             }
             
-            return (.error(RedisError(string: string)), true)
+            return (.parsed(.error(RedisError(string: string))), true)
         case ":":
             // Integer
             guard let string = simpleString(from: &position) else {
@@ -92,7 +92,7 @@ final class ResponseParser: Async.InputStream {
                 throw ClientError.parsingError
             }
             
-            return (.integer(number), true)
+            return (.parsed(.integer(number)), true)
         case "$":
             // Bulk strings
             guard let string = simpleString(from: &position) else {
@@ -111,7 +111,7 @@ final class ResponseParser: Async.InputStream {
             
             let endPosition = responseBuffer.index(position, offsetBy: size)
             
-            return (.bulkString(String(responseBuffer[position..<endPosition])), true)
+            return (.parsed(.bulkString(String(responseBuffer[position..<endPosition]))), true)
         case "*":
             // Arrays
             guard let string = simpleString(from: &position) else {
@@ -127,11 +127,11 @@ final class ResponseParser: Async.InputStream {
                     throw ClientError.parsingError
             }
             
-            var array = [RedisValue](repeating: .notYetParsed, count: size)
+            var array = [_RedisValue](repeating: .notYetParsed, count: size)
             
             for index in 0..<size {
                 guard remaining(1, from: position) else {
-                    return (.array(array), false)
+                    return (.parsing(array), false)
                 }
                 
                 let oldPosition = position
@@ -141,13 +141,19 @@ final class ResponseParser: Async.InputStream {
                     complete
                 else {
                     position = oldPosition
-                    return (.array(array), false)
+                    return (.parsing(array), false)
                 }
                 
                 array[index] = result
             }
             
-            return (.array(array), true)
+            return (.parsed(.array(try array.map { value in
+                guard case .parsed(let value) = value else {
+                    throw ClientError.parsingError
+                }
+                
+                return value
+            })), true)
         default:
             throw ClientError.invalidTypeToken
         }
@@ -162,7 +168,7 @@ final class ResponseParser: Async.InputStream {
             return
         }
         
-        func flush(_ result: RedisValue) {
+        func flush(_ result: _RedisValue) {
             let completion = responseQueue.removeFirst()
             
             completion.complete(result)
@@ -215,7 +221,7 @@ final class ResponseParser: Async.InputStream {
                 return
             }
             
-            flush(parsingValue)
+            flush(result)
         }
     }
 }

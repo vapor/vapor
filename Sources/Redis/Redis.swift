@@ -7,6 +7,7 @@ public final class Redis<Connection: Async.Stream> where Connection.Input == Byt
     let socket: Connection
     
     let responseParser = ResponseParser()
+    let requestSerializer = RequestSerializer()
     
     public var maximumRepsonseSize: Int {
         get {
@@ -17,6 +18,21 @@ public final class Redis<Connection: Async.Stream> where Connection.Input == Byt
         }
     }
     
+    public func runCommand(_ command: RedisValue) throws -> Future<RedisValue> {
+        let promise = Promise<_RedisValue>()
+        
+        responseParser.responseQueue.append(promise)
+        requestSerializer.inputStream(command)
+        
+        return promise.future.map { result in
+            guard case .parsed(let value) = result else {
+                throw ClientError.parsingError
+            }
+            
+            return value
+        }
+    }
+    
     public init(socket: Connection) {
         self.socket = socket
         
@@ -24,6 +40,7 @@ public final class Redis<Connection: Async.Stream> where Connection.Input == Byt
             socket.close()
         }
         
+        requestSerializer.drain(into: socket)
         socket.drain(into: responseParser)
     }
 }
