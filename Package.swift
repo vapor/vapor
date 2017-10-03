@@ -3,9 +3,9 @@ import PackageDescription
 
 
 #if os(macOS) || os(iOS)
-    let ssl = "AppleSSL"
+    let ssl: Target.Dependency = "AppleSSL"
 #else
-    let ssl = "OpenSSL"
+    let ssl: Target.Dependency = "OpenSSL"
 #endif
 
 let package = Package(
