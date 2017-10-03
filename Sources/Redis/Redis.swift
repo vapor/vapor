@@ -6,8 +6,25 @@ import Dispatch
 public final class Redis<Connection: Async.Stream> where Connection.Input == ByteBuffer, Connection.Output == ByteBuffer, Connection: ClosableStream {
     let socket: Connection
     
+    let responseParser = ResponseParser()
+    
+    public var maximumRepsonseSize: Int {
+        get {
+            return responseParser.maximumRepsonseSize
+        }
+        set {
+            responseParser.maximumRepsonseSize = newValue
+        }
+    }
+    
     public init(socket: Connection) {
         self.socket = socket
+        
+        socket.errorStream = { _ in
+            socket.close()
+        }
+        
+        socket.drain(into: responseParser)
     }
 }
 
