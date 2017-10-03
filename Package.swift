@@ -1,6 +1,13 @@
 // swift-tools-version:4.0
 import PackageDescription
 
+
+#if os(macOS) || os(iOS)
+    let ssl = "AppleSSL"
+#else
+    let ssl = "OpenSSL"
+#endif
+
 let package = Package(
     name: "Vapor",
     products: [
@@ -110,11 +117,7 @@ let package = Package(
         .target(name: "AppleSSL", dependencies: ["Async", "Debugging"]),
         .target(name: "OpenSSL", dependencies: ["CTLS", "Async", "Debugging"]),
         
-        #if os(macOS) || os(iOS)
-            .target(name: "TLS", dependencies: ["AppleSSL", "TCP"]),
-        #else
-            .target(name: "TLS", dependencies: ["OpenSSL", "TCP"]),
-        #endif
+        .target(name: "TLS", dependencies: [ssl, "TCP"]),
         
         .testTarget(name: "TLSTests", dependencies: ["TLS"]),
 
