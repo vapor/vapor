@@ -9,7 +9,7 @@ test:
     - swift build -c release
     - swift test
     - sudo apt-get remove swift
-    - sudo apt-get install swift-beta
+    - sudo apt-get install swift=3.1.1
     - swift build
     - swift build -c release
     - swift test
