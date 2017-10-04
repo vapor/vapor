@@ -41,7 +41,7 @@ final class HTTPTestServer {
         
         // setup the server pipeline
         server.drain { client in
-            let parser = HTTP.RequestParser(queue: client.tcp.queue)
+            let parser = HTTP.RequestParser(worker: client.tcp.worker)
             let responderStream = responder.makeStream()
             let serializer = HTTP.ResponseSerializer()
             
@@ -80,7 +80,7 @@ class WebSocketTests : XCTestCase {
         let promise1 = Promise<Void>()
 
         let worker = Worker(queue: .global())
-        _ = try WebSocket.connect(to: "ws://0.0.0.0:8080/", queue: worker.queue).then { socket in
+        _ = try WebSocket.connect(to: "ws://0.0.0.0:8080/", worker: worker).then { socket in
             let responses = ["test", "cat", "banana"]
             let reversedResponses = responses.map {
                 String($0.reversed())

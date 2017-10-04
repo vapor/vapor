@@ -16,16 +16,13 @@ extension WebSocket {
     /// - parameter uri: The URI is not officially part of the spec, but could route to a different API on the server
     /// - parameter queue: The queue on which this websocket will read and write
     public static func connect(
-        hostname: String,
-        port: UInt16 = 80,
-        uri: URI = URI(path: "/"),
+        to uri: URI,
         worker: Worker
     ) throws -> Future<WebSocket> {
         guard
             uri.scheme == "ws" || uri.scheme == "wss",
             let hostname = uri.hostname,
-            let port = uri.defaultPort ?? uri.port
-        else {
+            let port = uri.defaultPort ?? uri.port else {
                 throw Error(.invalidURI)
         }
         
