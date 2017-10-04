@@ -4,16 +4,16 @@ import Foundation
 
 /// A single SQLite field. There are one or more of these per Row.
 /// Each field references a unique column for that result set.
-public struct Field {
+public struct SQLiteField {
     /// A pointer to the column for this field
     public var column: Column
 
     /// The field's data
-    public var data: Data
+    public var data: SQLiteData
 
     /// Create a field from statement pointer, column, and offset.
-    init(statement: Query, column: Column, offset: Int32) throws {
-        let type = try FieldType(statement: statement, offset: offset)
+    init(statement: SQLiteQuery, column: Column, offset: Int32) throws {
+        let type = try SQLiteFieldType(statement: statement, offset: offset)
         switch type {
         case .integer:
             let val = sqlite3_column_int64(statement.raw, offset)
@@ -25,7 +25,7 @@ public struct Field {
             data = .float(double)
         case .text:
             guard let val = sqlite3_column_text(statement.raw, offset) else {
-                throw Error(problem: .error, reason: "Unexpected nil column text.")
+                throw SQLiteError(problem: .error, reason: "Unexpected nil column text.")
             }
             let string = String(cString: val)
             data = .text(string)

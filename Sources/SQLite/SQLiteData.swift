@@ -2,7 +2,7 @@ import Core
 import Foundation
 
 /// All possibles cases for SQLite data.
-public enum Data {
+public enum SQLiteData {
     case integer(Int)
     case float(Double)
     case text(String)
@@ -10,7 +10,7 @@ public enum Data {
     case null
 }
 
-extension Data {
+extension SQLiteData {
     /// Returns an Int if the data is case .integer
     public var integer: Int? {
         switch self {
