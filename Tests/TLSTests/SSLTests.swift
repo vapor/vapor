@@ -1,5 +1,6 @@
 import XCTest
 import Async
+import Core
 import Dispatch
 import TCP
 import Bits
@@ -64,9 +65,10 @@ class AppleTests: XCTestCase {
         
         try server.start(port: 8432)
         let clientQueue = DispatchQueue(label: "test.client")
+        let clinetWorker = Worker(queue: clientQueue)
         
         let future = try clientQueue.sync { () -> Future<()> in
-            let client = try TLSClient(queue: clientQueue)
+            let client = try TLSClient(worker: clinetWorker)
             
             clients.append(client)
             

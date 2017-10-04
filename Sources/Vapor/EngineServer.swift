@@ -19,7 +19,7 @@ public final class EngineServer: HTTPServer {
 
         // setup the server pipeline
         server.drain { client in
-            let parser = HTTP.RequestParser(queue: client.tcp.queue)
+            let parser = HTTP.RequestParser(worker: client.tcp.worker)
             let responderStream = responder.makeStream()
             let serializer = HTTP.ResponseSerializer()
 
@@ -29,9 +29,7 @@ public final class EngineServer: HTTPServer {
                 .drain(into: client)
 
             client.tcp.start()
-        }
-
-        server.errorStream = { error in
+        }.catch { error in
             debugPrint(error)
         }
 

@@ -1,6 +1,7 @@
-import Dispatch
 import Async
+import Core
 import Crypto
+import Dispatch
 import Foundation
 import TCP
 import HTTP
@@ -15,13 +16,16 @@ extension WebSocket {
     /// - parameter uri: The URI is not officially part of the spec, but could route to a different API on the server
     /// - parameter queue: The queue on which this websocket will read and write
     public static func connect(
-        to uri: URI,
-        queue: DispatchQueue
+        hostname: String,
+        port: UInt16 = 80,
+        uri: URI = URI(path: "/"),
+        worker: Worker
     ) throws -> Future<WebSocket> {
         guard
             uri.scheme == "ws" || uri.scheme == "wss",
             let hostname = uri.hostname,
-            let port = uri.defaultPort ?? uri.port else {
+            let port = uri.defaultPort ?? uri.port
+        else {
                 throw Error(.invalidURI)
         }
         
@@ -30,7 +34,7 @@ extension WebSocket {
         try socket.connect(hostname: hostname, port: port)
         
         // The TCP Client that will be used by both HTTP and the WebSocket for communication
-        let client = TCPClient(socket: socket, queue: queue)
+        let client = TCPClient(socket: socket, worker: worker)
         
         // TODO: TLS
         

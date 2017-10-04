@@ -1,4 +1,5 @@
 import Async
+import Core
 import Dispatch
 import libc
 
@@ -29,20 +30,20 @@ public final class Server: Async.OutputStream, ClosableStream {
     // MARK: Internal
 
     let socket: Socket
-    let workers: [DispatchQueue]
-    var worker: LoopIterator<[DispatchQueue]>
+    let workers: [Worker]
+    var worker: LoopIterator<[Worker]>
     var readSource: DispatchSourceRead?
 
     /// Creates a TCP server from an existing TCP socket.
     public init(socket: Socket, workerCount: Int) {
         self.socket = socket
         self.queue = DispatchQueue(label: "codes.vapor.net.tcp.server.main", qos: .background)
-        var workers: [DispatchQueue] = []
+        var workers: [Worker] = []
         /// important! this should be _less than_ the worker count
         /// to leave room for the accepting thread
         for i in 1..<workerCount {
             let worker = DispatchQueue(label: "codes.vapor.net.tcp.server.worker.\(i)", qos: .userInteractive)
-            workers.append(worker)
+            workers.append(Worker(queue: worker))
         }
         worker = LoopIterator(collection: workers)
         self.workers = workers
@@ -75,7 +76,7 @@ public final class Server: Async.OutputStream, ClosableStream {
             }
 
             let worker = self.worker.next()!
-            let client = TCPClient(socket: socket, queue: worker)
+            let client = TCPClient(socket: socket, worker: worker)
             client.errorStream = self.errorStream
             self.outputStream?(client)
         }

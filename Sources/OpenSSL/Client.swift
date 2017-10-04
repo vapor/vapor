@@ -1,5 +1,5 @@
 import Async
-import CTLS
+import COpenSSL
 
 /// An SSL client. Can be initialized by upgrading an existing socket or by starting an SSL socket.
 extension SSLStream {

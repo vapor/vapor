@@ -6,6 +6,7 @@
 
 import Async
 import Bits
+import Core
 import Dispatch
 import TCP
 
@@ -59,11 +60,11 @@ public final class TLSClient: Async.Stream, ClosableStream {
     /// Creates a new `TLSClient` by specifying a queue.
     ///
     /// Can throw an error if the initialization phase fails
-    public init(queue: DispatchQueue) throws {
+    public init(worker: Worker) throws {
         let socket = try Socket()
         
-        self.queue = queue
-        self.client = TCPClient(socket: socket, queue: queue)
+        self.queue = worker.queue
+        self.client = TCPClient(socket: socket, worker: worker)
         self.ssl = try SSLStream(socket: self.client, descriptor: socket.descriptor, queue: queue)
     }
     

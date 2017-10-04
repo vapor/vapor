@@ -1,4 +1,5 @@
 import Async
+import Core
 import Dispatch
 import TCP
 import HTTP
@@ -73,12 +74,13 @@ class WebSocketTests : XCTestCase {
         let tcp = try TCP.Server()
         let server = HTTPTestServer()
         
-        try server.start(with: app)
+        // try server.start(with: app)
         
         let promise0 = Promise<Void>()
         let promise1 = Promise<Void>()
-        
-        _ = try WebSocket.connect(to: "ws://0.0.0.0:8080/", queue: .global()).then { socket in
+
+        let worker = Worker(queue: .global())
+        _ = try WebSocket.connect(to: "ws://0.0.0.0:8080/", queue: worker.queue).then { socket in
             let responses = ["test", "cat", "banana"]
             let reversedResponses = responses.map {
                 String($0.reversed())
