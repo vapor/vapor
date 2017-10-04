@@ -1,11 +1,17 @@
-public final class Storage {
+import Foundation
+
+public final class Storage: Codable {
     public init() {}
 
     // Entity
     fileprivate var exists: Bool = false
-    fileprivate var id: Identifier? = nil
+
+    // FIXME: should we still have id auto implemented here?
+    fileprivate var id: Encodable? = nil
 
     // Timestampable
+
+    // FIXME: should we auto implement this?
     internal var createdAt: Date? = nil
     internal var updatedAt: Date? = nil
 
@@ -14,7 +20,18 @@ public final class Storage {
     internal var shouldForceDelete: Bool = false
     
     // Dirty key updates
-    internal var fetchedRow: Row? = nil
+
+    // FIXME: fetched row?
+    // internal var fetchedRow: Row? = nil
+
+    // Codable
+    public func encode(to encoder: Encoder) throws {
+        // nothing
+    }
+
+    public convenience init(from decoder: Decoder) throws {
+        self.init()
+    }
 }
 
 public protocol Storable {
@@ -39,7 +56,7 @@ extension Storable {
 
     /// The entity's primary identifier
     /// used for updating, filtering, deleting, etc.
-    public var id: Identifier? {
+    public var id: Encodable? {
         get {
             return storage.id
         }

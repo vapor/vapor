@@ -1,7 +1,7 @@
 extension Database {
     /// Creates the schema of the database
     /// for the given entity.
-    public func create<E: Entity>(_ e: E.Type, closure: (Creator) throws -> ()) throws {
+    public func create<E: Model>(_ e: E.Type, closure: (Creator) throws -> ()) throws {
         if e.database == nil { e.database = self }
 
         let creator = Creator(E.self)
@@ -28,7 +28,7 @@ extension Database {
 
     /// Modifies the schema of the database
     /// for the given entity.
-    public func modify<E: Entity>(_ e: E.Type, closure: (Modifier) throws -> ()) throws {
+    public func modify<E: Model>(_ e: E.Type, closure: (Modifier) throws -> ()) throws {
         if e.database == nil { e.database = self }
 
         let modifier = Modifier(E.self)
@@ -46,7 +46,7 @@ extension Database {
 
     /// Deletes the schema of the database
     /// for the given entity.
-    public func delete<E: Entity>(_ e: E.Type) throws {
+    public func delete<E: Model>(_ e: E.Type) throws {
         if e.database == nil { e.database = self }
 
         let query = Query<E>(self)

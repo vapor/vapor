@@ -1,9 +1,9 @@
 import Async
 import Dispatch
 
-public final class ConnectionPool {
+public final class SQLiteConnectionPool {
     /// The database to use to generate new connections.
-    public let database: Database
+    public let database: SQLiteDatabase
 
     /// The queue for this pool
     public let queue: DispatchQueue
@@ -15,13 +15,13 @@ public final class ConnectionPool {
     private var active: UInt
 
     /// Available connections.
-    private var available: [Connection]
+    private var available: [SQLiteConnection]
 
     /// Notified when more connections are available.
-    private var waiters: [(Connection) -> ()]
+    private var waiters: [(SQLiteConnection) -> ()]
 
     /// Create a new Queue pool
-    public init(max: UInt, database: Database, queue: DispatchQueue) {
+    public init(max: UInt, database: SQLiteDatabase, queue: DispatchQueue) {
         self.database = database
         self.queue = queue
         self.max = max
@@ -31,8 +31,8 @@ public final class ConnectionPool {
     }
 
     /// Request a connection from this queue pool.
-    public func requestConnection() -> Future<Connection> {
-        let promise = Promise(Connection.self)
+    public func requestConnection() -> Future<SQLiteConnection> {
+        let promise = Promise(SQLiteConnection.self)
 
         do {
             if let ready = self.available.popLast() {
@@ -54,7 +54,7 @@ public final class ConnectionPool {
     }
 
     /// Release a connection back to the queue pool.
-    public func releaseConnection(_ connection: Connection) {
+    public func releaseConnection(_ connection: SQLiteConnection) {
         if let waiter = self.waiters.popLast() {
             waiter(connection)
         } else {

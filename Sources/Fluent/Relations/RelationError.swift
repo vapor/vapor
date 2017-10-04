@@ -1,8 +1,10 @@
+import Debugging
+
 /// Errors thrown while interacting
 /// with relations on entities.
 /// Ex: Children, Parent, Siblings
 public enum RelationError {
-    case idRequired(Entity)
+    case idRequired(Model)
     case unspecified(Error)
 }
 

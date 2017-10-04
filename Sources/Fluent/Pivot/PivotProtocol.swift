@@ -5,12 +5,10 @@
 ///
 /// let teams = users.teams()
 public protocol PivotProtocol {
-    associatedtype Left: Entity
-    associatedtype Right: Entity
-    
-    /// Custom left/right id keys
-    static var leftIdKey: String { get }
-    static var rightIdKey: String { get }
+    associatedtype Left: Model
+    associatedtype Right: Model
+
+    init(leftId: Encodable, rightId: Encodable)
 
     /// Returns true if the two entities are related
     static func related(_ left: Left, _ right: Right) throws -> Bool
@@ -27,15 +25,15 @@ public protocol PivotProtocol {
 
 /// PivotProtocol methods that come
 /// pre-implemented if the Pivot conforms to Entity
-extension PivotProtocol where Self: Entity {
+extension PivotProtocol where Self: Model {
     /// See PivotProtocol.related
     public static func related(_ left: Left, _ right: Right) throws -> Bool {
-        let leftId = try left.assertExists()
-        let rightId = try right.assertExists()
+        let leftId = try left.requireExists()
+        let rightId = try right.requireExists()
 
         let results = try makeQuery()
-            .filter(leftIdKey, leftId)
-            .filter(rightIdKey, rightId)
+            .filter(Left.idKey, leftId)
+            .filter(Right.idKey, rightId)
             .first()
 
         return results != nil
@@ -44,14 +42,10 @@ extension PivotProtocol where Self: Entity {
     /// See PivotProtocol.attach
     @discardableResult
     public static func attach(_ left: Left, _ right: Right) throws -> Self {
-        let leftId = try left.assertExists()
-        let rightId = try right.assertExists()
+        let leftId = try left.requireExists()
+        let rightId = try right.requireExists()
 
-        var row = Row()
-        try row.set(leftIdKey, leftId)
-        try row.set(rightIdKey, rightId)
-
-        let pivot = try self.init(row: row)
+        let pivot = self.init(leftId: leftId, rightId: rightId)
         try pivot.save()
 
         return pivot
@@ -59,12 +53,12 @@ extension PivotProtocol where Self: Entity {
 
     /// See PivotProtocol.detach
     public static func detach(_ left: Left, _ right: Right) throws {
-        let leftId = try left.assertExists()
-        let rightId = try right.assertExists()
+        let leftId = try left.requireExists()
+        let rightId = try right.requireExists()
 
         try makeQuery()
-            .filter(leftIdKey, leftId)
-            .filter(rightIdKey, rightId)
+            .filter(Left.idKey, leftId)
+            .filter(Right.idKey, rightId)
             .delete()
     }
 }

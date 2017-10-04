@@ -16,9 +16,9 @@ let SQLITE_TRANSIENT = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
 ///         .then { ... }
 ///         .catch { ... }
 ///
-public final class Query: Async.OutputStream {
+public final class SQLiteQuery: Async.OutputStream {
     // stream conformance
-    public typealias Output = Row
+    public typealias Output = SQLiteRow
 
     /// See OutputStream.OutputHandler
     public var outputStream: OutputHandler?
@@ -34,7 +34,7 @@ public final class Query: Async.OutputStream {
 
     /// the database this statement will
     /// be executed on.
-    public let connection: Connection
+    public let connection: SQLiteConnection
 
     /// the raw query string
     public let statement: String
@@ -54,15 +54,15 @@ public final class Query: Async.OutputStream {
     /// The supplied DispatchQueue will be used to dispatch output stream calls.
     /// Make sure to supply the event loop to this parameter so you get called back
     /// on the appropriate thread.
-    public init(statement: String, database: Connection) throws {
+    public init(statement: String, database: SQLiteConnection) throws {
         var raw: Raw?
         let ret = sqlite3_prepare_v2(database.raw, statement, -1, &raw, nil)
         guard ret == SQLITE_OK else {
-            throw Error(statusCode: ret, database: database)
+            throw SQLiteError(statusCode: ret, database: database)
         }
 
         guard let statementPointer = raw else {
-            throw Error(statusCode: ret, database: database)
+            throw SQLiteError(statusCode: ret, database: database)
         }
 
         self.connection = database
@@ -81,7 +81,7 @@ public final class Query: Async.OutputStream {
     public func bind(_ value: Double) throws -> Self {
         let ret = sqlite3_bind_double(raw, nextBindPosition, value)
         guard ret == SQLITE_OK else {
-            throw Error(statusCode: ret, database: connection)
+            throw SQLiteError(statusCode: ret, database: connection)
         }
         return self
     }
@@ -90,7 +90,7 @@ public final class Query: Async.OutputStream {
     public func bind(_ value: Int) throws -> Self {
         let ret = sqlite3_bind_int64(raw, nextBindPosition, Int64(value))
         guard ret == SQLITE_OK else {
-            throw Error(statusCode: ret, database: connection)
+            throw SQLiteError(statusCode: ret, database: connection)
         }
         return self
     }
@@ -100,7 +100,7 @@ public final class Query: Async.OutputStream {
         let strlen = Int32(value.utf8.count)
         let ret = sqlite3_bind_text(raw, nextBindPosition, value, strlen, SQLITE_TRANSIENT)
         guard ret == SQLITE_OK else {
-            throw Error(statusCode: ret, database: connection)
+            throw SQLiteError(statusCode: ret, database: connection)
         }
         return self
     }
@@ -111,7 +111,7 @@ public final class Query: Async.OutputStream {
         let pointer: UnsafePointer<Byte> = value.withUnsafeBytes { $0 }
         let ret = sqlite3_bind_blob(raw, nextBindPosition, UnsafeRawPointer(pointer), count, SQLITE_TRANSIENT)
         guard ret == SQLITE_OK else {
-            throw Error(statusCode: ret, database: connection)
+            throw SQLiteError(statusCode: ret, database: connection)
         }
         return self
     }
@@ -125,7 +125,7 @@ public final class Query: Async.OutputStream {
     public func bindNull() throws -> Self {
         let ret = sqlite3_bind_null(raw, nextBindPosition)
         if ret != SQLITE_OK {
-            throw Error(statusCode: ret, database: connection)
+            throw SQLiteError(statusCode: ret, database: connection)
         }
         return self
     }
@@ -147,12 +147,12 @@ public final class Query: Async.OutputStream {
         // step over the query, this will continue to return SQLITE_ROW
         // for as long as there are new rows to be fetched
         while sqlite3_step(self.raw) == SQLITE_ROW {
-            var row = Row()
+            var row = SQLiteRow()
 
             // iterator over column count again and create a field
             // for each column. Use the column we have already initialized.
             for i in 0..<count {
-                let field = try Field(statement: self, column: columns[Int(i)], offset: i)
+                let field = try SQLiteField(statement: self, column: columns[Int(i)], offset: i)
                 row.fields[field.column.name] = field
             }
 
@@ -163,7 +163,7 @@ public final class Query: Async.OutputStream {
         // cleanup
         let ret = sqlite3_finalize(self.raw)
         guard ret == SQLITE_OK else {
-            throw Error(statusCode: ret, database: self.connection)
+            throw SQLiteError(statusCode: ret, database: self.connection)
         }
     }
 
@@ -191,11 +191,11 @@ public final class Query: Async.OutputStream {
     }
 
     /// Convenience for gathering all rows into a single array.
-    public func all() throws -> Future<[Row]> {
-        let promise = Promise([Row].self)
+    public func all() throws -> Future<[SQLiteRow]> {
+        let promise = Promise([SQLiteRow].self)
 
         // cache the rows
-        var rows: [Row] = []
+        var rows: [SQLiteRow] = []
 
         // drain the stream of results
         drain { row in

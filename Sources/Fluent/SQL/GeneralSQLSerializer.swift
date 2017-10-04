@@ -1,5 +1,5 @@
 /// Serializers a Query into general SQL
-open class GeneralSQLSerializer<E: Entity>: SQLSerializer {
+open class GeneralSQLSerializer<E: Model>: SQLSerializer {
     public let query: Query<E>
     public required init(_ query: Query<E>) {
         self.query = query
@@ -816,6 +816,6 @@ public func +=(lhs: inout [String], rhs: String) {
     lhs.append(rhs)
 }
 
-public func +=(lhs: inout [Node], rhs: Node) {
+public func +=(lhs: inout [Encodable], rhs: Encodable) {
     lhs.append(rhs)
 }

@@ -1,5 +1,5 @@
 /// Represents an abstract database query.
-public final class Query<E: Entity> {
+public final class Query<E: Model> {
     /// The type of action to perform
     /// on the data. Defaults to `.fetch`
     public var action: Action
@@ -10,7 +10,7 @@ public final class Query<E: Entity> {
 
     /// Optional data to be used during
     ///`.create` or `.modify` actions.
-    public var data: [RawOr<String>: RawOr<Node>]
+    public var data: [RawOr<String>: RawOr<Encodable>]
 
     /// Optionally limit the amount of
     /// entities affected by the action.
@@ -28,12 +28,6 @@ public final class Query<E: Entity> {
     /// An optional entity used for delete
     /// and save queries
     public var entity: E?
-
-    private(set) lazy var context: RowContext = {
-        let context = RowContext()
-        // context.database = self.database
-        return context
-    }()
 
     /// If true, soft deleted entities will be 
     /// included (given the Entity type is SoftDeletable)
@@ -61,7 +55,7 @@ public final class Query<E: Entity> {
     /// Performs the Query returning the raw
     /// Node data from the driver.
     @discardableResult
-    public func raw() throws -> Node {
+    public func raw<D: Decodable>(_ type: D.Type = D.self) throws -> D {
         // if this is a soft deletable entity,
         // and soft deleted rows should not be included,
         // then filter them out

@@ -1,9 +1,13 @@
+import Debugging
+
 /// Errors that can be thrown while
 /// attempting to attach, detach, or
 /// check the relation on pivots.
-public enum PivotError {
-    case idRequired(Entity)
-    case existRequired(Entity)
+
+// FIXME: convert to struct
+public enum PivotError: Error {
+    case idRequired(Model)
+    case existRequired(Model)
     case unspecified(Error)
 }
 

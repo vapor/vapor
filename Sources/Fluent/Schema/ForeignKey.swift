@@ -2,22 +2,22 @@
 /// that uniquely identifies a row of another table or the same table.
 public struct ForeignKey {
     /// The entity type of the local field
-    public let entity: Entity.Type
+    public let entity: Model.Type
     /// The name of the field to hold the reference
     public let field: String
     /// The name of the field being referenced
     public let foreignField: String
     /// The entity type of the foreign field being referenced
-    public let foreignEntity: Entity.Type
+    public let foreignEntity: Model.Type
     /// The unique identifying name of this foreign key
     public var name: String
     
     /// Creates a new ForeignKey
     public init(
-        entity: Entity.Type,
+        entity: Model.Type,
         field: String,
         foreignField: String,
-        foreignEntity: Entity.Type,
+        foreignEntity: Model.Type,
         name: String? = nil
     ) {
         self.entity = entity

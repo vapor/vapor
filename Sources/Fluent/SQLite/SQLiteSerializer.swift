@@ -3,7 +3,7 @@
     import SQLite
 
     /// SQLite-specific overrides for the GeneralSQLSerializer
-    public class SQLiteSerializer<E: Entity>: GeneralSQLSerializer<E> {
+    public class SQLiteSerializer<E: Model>: GeneralSQLSerializer<E> {
         /// Serializes a SQLite data type.
         public override func type(_ type: Field.DataType, primaryKey: Bool) -> String {
             // SQLite has a design where any data type that does not contain `TEXT`,

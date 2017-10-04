@@ -1,5 +1,5 @@
 extension QueryRepresentable where Self: ExecutorRepresentable {
-    public func aggregate(_ agg: Aggregate) throws -> Node {
+    public func aggregate<D: Decodable>(_ agg: Aggregate) throws -> D {
         return try aggregate(nil, agg)
     }
     
@@ -14,15 +14,17 @@ extension QueryRepresentable where Self: ExecutorRepresentable {
     /// // find the sum of the age of all users
     /// User.aggregate("age", .sum)
     /// ```
-    public func aggregate(_ field: String?, _ aggregate: Aggregate) throws -> Node {
+    public func aggregate<D: Decodable>(_ field: String?, _ aggregate: Aggregate) throws -> D {
         let query = try makeQuery()
         query.action = Action.aggregate(field: field, aggregate)
-        
-        let raw = try query.raw()
-        return raw[0, "_fluent_aggregate"] ?? raw
+
+        // FIXME: how to do this w/ codable?
+        fatalError("aggregate not yet supported")
+        // let raw = try query.raw()
+        //return raw[0, "_fluent_aggregate"] ?? raw
     }
     
-    public func aggregate(_ field: String?, raw: String) throws -> Node {
+    public func aggregate<D: Decodable>(_ field: String?, raw: String) throws -> D {
         return try aggregate(field, .custom(string: raw))
     }
 }
@@ -31,6 +33,6 @@ extension QueryRepresentable where Self: ExecutorRepresentable {
 
 extension QueryRepresentable where Self: ExecutorRepresentable {
     public func count() throws -> Int {
-        return try aggregate(.count).int ?? 0
+        return try aggregate(.count) as Int
     }
 }

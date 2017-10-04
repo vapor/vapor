@@ -2,7 +2,7 @@
 /// Can modify or delete fields.
 public final class Modifier: Builder {
     /// The entity being modified
-    public var entity: Entity.Type
+    public var entity: Model.Type
     
     /// The fields to be created
     public var fields: [RawOr<Field>]
@@ -17,7 +17,7 @@ public final class Modifier: Builder {
     public var deleteForeignKeys: [RawOr<ForeignKey>]
     
     /// Creators a new modifier
-    public init(_ e: Entity.Type) {
+    public init(_ e: Model.Type) {
         entity = e
         fields = []
         foreignKeys = []
@@ -35,7 +35,7 @@ public final class Modifier: Builder {
     }
     
     /// Delete a foreign key
-    public func deleteForeignKey<E: Entity>(_ field: String, referencing: String, on: E.Type) {
+    public func deleteForeignKey<E: Model>(_ field: String, referencing: String, on: E.Type) {
         let fk = ForeignKey(
             entity: entity,
             field: field,

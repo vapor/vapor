@@ -1,4 +1,4 @@
-public typealias QueryClosure<E: Entity> = (Query<E>) throws -> ()
+public typealias QueryClosure<E: Model> = (Query<E>) throws -> ()
 
 extension QueryRepresentable where Self: ExecutorRepresentable {
     /// Grouped filter closure with specified relation.

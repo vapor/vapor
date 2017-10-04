@@ -71,19 +71,20 @@ public final class ThreadConnectionPool {
         //  It shouldn't happen that two calls come on same thread anyways, but
         //  in the interest of 'just in case'
         guard let existing = connections[id], !existing.isClosed else {
-            var connection: Connection?
-            try connectionsLock.locked {
-                //  Just in case our first attempt to access failed in a non thread safe manner
-                //  to prevent duplicates, we do a quick check here.
-                //
-                //  Likely redundant, but beneficial for safety.
-                //
-                if let existing = connections[id], !existing.isClosed {
-                    connection = existing
-                    return
-                }
+            let connection: Connection
+
+            // FIXME: no locking!
+            connectionsLock.lock()
+            //  Just in case our first attempt to access failed in a non thread safe manner
+            //  to prevent duplicates, we do a quick check here.
+            //
+            //  Likely redundant, but beneficial for safety.
+            //
+            if let existing = connections[id], !existing.isClosed {
+                connection = existing
+            } else {
                 connections[id] = nil
-                
+
                 // Attempt to make space if possible
                 if connections.keys.count >= maxConnections { clearClosedConnections() }
                 // If space hasn't been created, attempt to wait for space
@@ -94,9 +95,9 @@ public final class ThreadConnectionPool {
                 connections[id] = c
                 connection = c
             }
-            
-            guard let c = connection else { throw Error.lockFailure }
-            return c
+            connectionsLock.unlock()
+
+            return connection
         }
         
         return existing
@@ -127,7 +128,7 @@ extension ThreadConnectionPool: Executor {
         set { }
     }
     
-    public func query<E>(_ query: RawOr<Query<E>>) throws -> Node {
+    public func query<E, D: Decodable>(_ query: RawOr<Query<E>>) throws -> D {
         let type: ConnectionType
         switch query {
         case .raw:

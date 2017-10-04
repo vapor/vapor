@@ -2,11 +2,11 @@
 /// from a child entity to its parent.
 /// ex: child entities have a "parent_id"
 public final class Parent<
-    Child: Entity, Parent: Entity
+    Child: Model, Parent: Model
 > {
     /// The parent entity id. This
     /// will be used to find the parent.
-    public let parentId: Identifier
+    public let parentId: Encodable
 
     /// The child requesting its parent
     public let child: Child
@@ -19,7 +19,7 @@ public final class Parent<
     public init(
         from child: Child,
         to parentType: Parent.Type = Parent.self,
-        withId parentId: Identifier
+        withId parentId: Encodable
     ) {
         self.child = child
         self.parentId = parentId
@@ -39,9 +39,9 @@ extension Parent: ExecutorRepresentable {
     }
 }
 
-extension Entity {
-    public func parent<P: Entity>(
-        id parentId: Identifier?,
+extension Model {
+    public func parent<P: Model>(
+        id parentId: Encodable?,
         type parentType: P.Type = P.self
     ) -> Parent<Self, P> {
         let id = parentId ?? Identifier(.null)

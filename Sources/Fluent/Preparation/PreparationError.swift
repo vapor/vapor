@@ -1,4 +1,8 @@
-public enum PreparationError {
+import Debugging
+
+// FIXME: make struct
+
+public enum PreparationError: Error {
     case neverPrepared(Preparation.Type)
     case unspecified(Error)
 }

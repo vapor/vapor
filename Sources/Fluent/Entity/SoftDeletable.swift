@@ -1,7 +1,9 @@
+import Foundation
+
 /// Conforming an entity to SoftDeletable
 /// allows the entity to be temporarily deleted
 /// with the possibility to restore.
-public protocol SoftDeletable: Entity {
+public protocol SoftDeletable: Model {
     /// Table key to use for deleted at date
     static var deletedAtKey: String { get }
 
@@ -101,7 +103,7 @@ extension QueryRepresentable where E: SoftDeletable, Self: ExecutorRepresentable
 
 // MARK: Entity
 
-extension Entity where Self: SoftDeletable {
+extension Model where Self: SoftDeletable {
     /// Includes soft deleted entities in
     /// the results
     public static func withSoftDeleted() throws -> Query<Self> {

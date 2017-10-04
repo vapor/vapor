@@ -12,7 +12,7 @@ extension QueryRepresentable where E: Paginatable, Self: ExecutorRepresentable {
 
         // create the query and get a total count
         let query = try makeQuery()
-        let total = try query.aggregate(.count).int ?? 0
+        let total = try query.aggregate(.count) as Int
 
         // limit the query to the desired page
         try query.limit(count, offset: (page - 1) * count)

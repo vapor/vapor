@@ -96,7 +96,7 @@ extension Database {
         
         if try hasPrepared(preparation) {
             // already prepared, set entity db
-            if let model = preparation as? Entity.Type {
+            if let model = preparation as? Model.Type {
                 model.database = self
             }
             return
@@ -104,7 +104,7 @@ extension Database {
         
         try preparation.prepare(self)
         
-        if let model = preparation as? Entity.Type {
+        if let model = preparation as? Model.Type {
             // preparation successful, set entity db
             model.database = self
         }

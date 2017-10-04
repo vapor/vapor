@@ -6,7 +6,7 @@ public struct Field {
     public let type: DataType
     public let optional: Bool
     public let unique: Bool
-    public let `default`: Node?
+    public let `default`: Encodable?
     public let primaryKey: Bool
 
     public enum DataType {
@@ -25,7 +25,7 @@ public struct Field {
         type: DataType,
         optional: Bool = false,
         unique: Bool = false,
-        default: Node? = nil,
+        default: Encodable? = nil,
         primaryKey: Bool = false
     ) {
         self.name = name

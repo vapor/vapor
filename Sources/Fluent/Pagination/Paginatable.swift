@@ -1,6 +1,6 @@
 // Conforming to this protocol allows the entity
 // to be paginated using `query.paginate()`
-public protocol Paginatable: Entity {
+public protocol Paginatable: Model {
     static var defaultPageSize: Int { get }
     static var maxPageSize: Int? { get }
     static var defaultPageSorts: [Sort] { get }

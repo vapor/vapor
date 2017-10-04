@@ -1,7 +1,7 @@
 /// Double pivots
 /// A pivot in which either the 
 /// left or right Entity is another pivot
-extension PivotProtocol where Left: PivotProtocol, Self: Entity {
+extension PivotProtocol where Left: PivotProtocol, Self: Model {
     /// Returns true if the three entities
     /// are related by the pivot.
     public static func related(
@@ -9,9 +9,9 @@ extension PivotProtocol where Left: PivotProtocol, Self: Entity {
         middle: Left.Right,
         right: Right
     ) throws -> Bool {
-        let leftId = try left.assertExists()
-        let middleId = try middle.assertExists()
-        let rightId = try right.assertExists()
+        let leftId = try left.requireExists()
+        let middleId = try middle.requireExists()
+        let rightId = try right.requireExists()
 
         let result = try Left
             .makeQuery()
@@ -25,7 +25,7 @@ extension PivotProtocol where Left: PivotProtocol, Self: Entity {
     }
 }
 
-extension PivotProtocol where Right: PivotProtocol, Self: Entity {
+extension PivotProtocol where Right: PivotProtocol, Self: Model {
     /// Returns true if the three entities
     /// are related by the pivot.
     public static func related(
@@ -33,9 +33,9 @@ extension PivotProtocol where Right: PivotProtocol, Self: Entity {
         middle: Right.Left,
         right: Right.Right
     ) throws -> Bool {
-        let leftId = try left.assertExists()
-        let middleId = try middle.assertExists()
-        let rightId = try right.assertExists()
+        let leftId = try left.requireExists()
+        let middleId = try middle.requireExists()
+        let rightId = try right.requireExists()
         
         let result = try Right
             .makeQuery()

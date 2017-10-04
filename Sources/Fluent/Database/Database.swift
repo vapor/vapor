@@ -68,7 +68,7 @@ public final class Database: Executor, QueryLogger {
     public var log: QueryLogCallback?
     
     /// QueryLogger protocol
-    public func log(_ statement: String, _ values: [Node]) {
+    public func log(_ statement: String, _ values: [Encodable]) {
         log?(QueryLog(statement, values))
     }
 }
@@ -84,7 +84,7 @@ extension Database {
     
     /// See Executor protocol.
     @discardableResult
-    public func query<E>(_ query: RawOr<Query<E>>) throws -> Node {
+    public func query<E, D: Decodable>(_ query: RawOr<Query<E>>) throws -> D {
         return try threadConnectionPool.query(query)
     }
 }

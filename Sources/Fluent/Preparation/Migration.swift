@@ -1,25 +1,12 @@
-final class Migration: Entity {
+final class Migration: Model {
     static var entity = migrationEntityName
-    let storage = Storage()
     var name: String
     var batch: Int
+    let storage = Storage()
 
     init(name: String, batch: Int) {
         self.name = name
         self.batch = batch
-    }
-
-    init(row: Row) throws {
-        name = try row.get("name")
-        batch = try row.get("batch")
-        id = try row.get(idKey)
-    }
-
-    func makeRow() throws -> Row {
-        var row = Row()
-        try row.set("name", name)
-        try row.set("batch", batch)
-        return row
     }
 }
 

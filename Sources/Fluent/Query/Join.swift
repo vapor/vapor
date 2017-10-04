@@ -12,11 +12,11 @@
 public struct Join {
     /// Entity that will be accepting
     /// the joined data
-    public let base: Entity.Type
+    public let base: Model.Type
 
     /// Entity that will be joining
     /// the base data
-    public let joined: Entity.Type
+    public let joined: Model.Type
     
     /// An exhaustive list of 
     /// possible join types.
@@ -51,7 +51,7 @@ public struct Join {
     public let joinedKey: String
 
     /// Create a new Join
-    public init<Base: Entity, Joined: Entity>(
+    public init<Base: Model, Joined: Model>(
         kind: Kind,
         base: Base.Type,
         joined: Joined.Type,
@@ -70,7 +70,7 @@ extension QueryRepresentable where Self: ExecutorRepresentable {
     /// Create and add a Join to this Query.
     /// See Join for more information.
     @discardableResult
-    public func join<Joined: Entity>(
+    public func join<Joined: Model>(
         kind: Join.Kind = .inner,
         _ joined: Joined.Type,
         baseKey: String = E.idKey,

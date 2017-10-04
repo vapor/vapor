@@ -2,7 +2,7 @@
 /// through a Pivot table from the Local 
 /// entity to the Foreign entity.
 public final class Siblings<
-    Local: Entity, Foreign: Entity, Through: Entity
+    Local: Model, Foreign: Model, Through: Model
 > {
     /// This will be used to filter the 
     /// collection of foreign entities related
@@ -75,11 +75,11 @@ extension Siblings: ExecutorRepresentable {
     }
 }
 
-extension Entity {
+extension Model {
     /// Creates a Siblings relation using the current
     /// entity as the Local entity in the relation.
     public func siblings<
-        Foreign: Entity, Through: Entity
+        Foreign: Model, Through: Model
     > (
         to foreignType: Foreign.Type = Foreign.self,
         through pivotType: Through.Type = Through.self,

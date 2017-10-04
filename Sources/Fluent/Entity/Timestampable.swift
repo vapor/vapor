@@ -1,7 +1,9 @@
+import Foundation
+
 /// When added to an entity, timestamps
 /// will automatically be created during
 /// preparation and updated when the model saves.
-public protocol Timestampable: Entity {
+public protocol Timestampable: Model {
     static var updatedAtKey: String { get }
     static var createdAtKey: String { get }
     var createdAt: Date? { get set }

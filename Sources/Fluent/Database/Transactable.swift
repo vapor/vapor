@@ -1,3 +1,5 @@
+import Debugging
+
 /// Drivers that can perform data transactions should
 /// conform to this protocol.
 public protocol Transactable {

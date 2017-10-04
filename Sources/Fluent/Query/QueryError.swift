@@ -1,3 +1,6 @@
+import Debugging
+
+// FIXME: refactor to struct
 public enum QueryError: Error {
     case notSupported(String)
     case invalidDriverResponse(String)

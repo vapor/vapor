@@ -2,7 +2,7 @@ import CSQLite
 import Debugging
 
 /// Errors that can be thrown while using SQLite
-public struct Error: Swift.Error, Debuggable, Traceable {
+public struct SQLiteError: Swift.Error, Debuggable, Traceable {
     let problem: Problem
     public let reason: String
     public var file: String
@@ -29,13 +29,13 @@ public struct Error: Swift.Error, Debuggable, Traceable {
         self.function = function
         self.line = line
         self.column = column
-        self.stackTrace = Error.makeStackTrace()
+        self.stackTrace = SQLiteError.makeStackTrace()
     }
 
     /// Dynamically generate an error from status code and database.
     init(
         statusCode: Int32,
-        database: Connection,
+        database: SQLiteConnection,
         file: String = #file,
         function: String = #function,
         line: UInt = #line,
@@ -47,7 +47,7 @@ public struct Error: Swift.Error, Debuggable, Traceable {
         self.function = function
         self.line = line
         self.column = column
-        self.stackTrace = Error.makeStackTrace()
+        self.stackTrace = SQLiteError.makeStackTrace()
     }
 }
 

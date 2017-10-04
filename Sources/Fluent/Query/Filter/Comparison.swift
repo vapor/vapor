@@ -16,34 +16,28 @@ extension Filter {
     
 }
 
-public func == (lhs: String, rhs: NodeRepresentable) throws -> Filter.Method {
-    let node = try rhs.makeNode(in: rowContext)
-    return .compare(lhs, .equals, node)
+public func == (lhs: String, rhs: Encodable) throws -> Filter.Method {
+    return .compare(lhs, .equals, rhs)
 }
 
-public func > (lhs: String, rhs: NodeRepresentable) throws -> Filter.Method {
-    let node = try rhs.makeNode(in: rowContext)
-    return .compare(lhs, .greaterThan, node)
+public func > (lhs: String, rhs: Encodable) throws -> Filter.Method {
+    return .compare(lhs, .greaterThan, rhs)
 }
 
-public func < (lhs: String, rhs: NodeRepresentable) throws -> Filter.Method {
-    let node = try rhs.makeNode(in: rowContext)
-    return .compare(lhs, .lessThan, node)
+public func < (lhs: String, rhs: Encodable) throws -> Filter.Method {
+    return .compare(lhs, .lessThan, rhs)
 }
 
-public func >= (lhs: String, rhs: NodeRepresentable) throws -> Filter.Method {
-    let node = try rhs.makeNode(in: rowContext)
-    return .compare(lhs, .greaterThanOrEquals, node)
+public func >= (lhs: String, rhs: Encodable) throws -> Filter.Method {
+    return .compare(lhs, .greaterThanOrEquals, rhs)
 }
 
-public func <= (lhs: String, rhs: NodeRepresentable) throws -> Filter.Method {
-    let node = try rhs.makeNode(in: rowContext)
-    return .compare(lhs, .lessThanOrEquals, node)
+public func <= (lhs: String, rhs: Encodable) throws -> Filter.Method {
+    return .compare(lhs, .lessThanOrEquals, rhs)
 }
 
-public func != (lhs: String, rhs: NodeRepresentable) throws -> Filter.Method {
-    let node = try rhs.makeNode(in: rowContext)
-    return .compare(lhs, .notEquals, node)
+public func != (lhs: String, rhs: Encodable) throws -> Filter.Method {
+    return .compare(lhs, .notEquals, rhs)
 }
 
 extension Filter.Comparison: Equatable {

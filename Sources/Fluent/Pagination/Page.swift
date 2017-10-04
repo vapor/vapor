@@ -1,5 +1,5 @@
 // Represents a page of results for the entity
-public struct Page<E: Entity & Paginatable> {
+public struct Page<E: Model & Paginatable> {
     public let number: Int
     public let data: [E]
     public let size: Int

@@ -2,7 +2,7 @@
 /// from a parent entity to many children entities.
 /// ex: child entities have a "parent_id"
 public final class Children<
-    Parent: Entity, Child: Entity
+    Parent: Model, Child: Model
 > {
     /// The parent entity id. This
     /// will be used to filter the children
@@ -40,8 +40,8 @@ extension Children: ExecutorRepresentable {
     }
 }
 
-extension Entity {
-    public func children<Child: Entity>(
+extension Model {
+    public func children<Child: Model>(
         type childType: Child.Type = Child.self,
         foreignIdKey: String = Self.foreignIdKey
     ) -> Children<Self, Child> {

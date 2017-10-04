@@ -14,10 +14,10 @@ public struct QueryLog {
     }
     
     /// Create a log from raw sql and values.
-    init(_ statement: String, _ values: [Node] = []) {
+    init(_ statement: String, _ values: [Encodable] = []) {
         var log = statement
         if values.count > 0 {
-            let valuesString = values.map({ $0.string ?? "" }).joined(separator: ", ")
+            let valuesString = values.map({ "\($0)" }).joined(separator: ", ")
             log += " [\(valuesString)]"
         }
         self.init(log)
@@ -31,5 +31,5 @@ extension QueryLog: CustomStringConvertible {
 }
 
 public protocol QueryLogger: class {
-    func log(_ statement: String, _ values: [Node])
+    func log(_ statement: String, _ values: [Encodable])
 }

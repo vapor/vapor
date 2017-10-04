@@ -1,11 +1,11 @@
 /// Represents an entity that can be
 /// stored and retrieved from the `Database`.
-public protocol Entity: class, RowConvertible, Storable {
+public protocol Model: class, Storable {
     /// The entity's primary identifier
     /// used for updating, filtering, deleting, etc.
     /// - note: automatically implemented by Storable
     ///         only override for custom use cases
-    var id: Identifier? { get set }
+    var id: Encodable? { get set }
 
     /// The plural relational name of this model.
     /// Used as the collection or table name.
@@ -49,24 +49,24 @@ public protocol Entity: class, RowConvertible, Storable {
 
     /// Called before any entity will be created.
     /// Throwing will cancel the creation.
-    static func willCreate(entity: Entity) throws
+    static func willCreate(_ model: Model) throws
 
     /// Called after any entity has been created.
-    static func didCreate(entity: Entity)
+    static func didCreate(_ model: Model)
 
     /// Called before any entity will be updated.
     /// Throwing will cancel the update.
-    static func willUpdate(entity: Entity) throws
+    static func willUpdate(_ model: Model) throws
 
     /// Called after any entity has been updated.
-    static func didUpdate(entity: Entity)
+    static func didUpdate(_ model: Model)
 
     /// Called before any entity will be deleted.
     /// Throwing will cancel the deletion.
-    static func willDelete(entity: Entity) throws
+    static func willDelete(_ model: Model) throws
 
     /// Called after any entity has been deleted.
-    static func didDelete(entity: Entity)
+    static func didDelete(_ model: Model)
 
     /// Called before the entity will be created.
     /// Throwing will cancel the creation.
@@ -90,7 +90,7 @@ public protocol Entity: class, RowConvertible, Storable {
     func didDelete()
 }
 
-extension Entity {
+extension Model {
     //// Creates a `Query` instance for this `Model`.
     public static func makeQuery(_ executor: Executor? = nil) throws -> Query<Self> {
         let executor = try executor ?? makeExecutor()
@@ -99,13 +99,13 @@ extension Entity {
     
     public static func makeExecutor() throws -> Executor {
         guard let db = database else {
-            throw EntityError.noDatabase(self)
+            throw ModelError.noDatabase(self)
         }
         return db
     }
 }
 
-extension Entity {
+extension Model {
     public func makeQuery(_ executor: Executor) throws -> Query<Self> {
         let query = try Self.makeQuery(executor)
         query.entity = self
@@ -123,17 +123,17 @@ extension Entity {
 
 // MARK: Optional
 
-extension Entity {
+extension Model {
     public static var computedFields: [RawOr<ComputedField>] {
         return []
     }
     
-    public static func willCreate(entity: Entity) {}
-    public static func didCreate(entity: Entity) {}
-    public static func willUpdate(entity: Entity) {}
-    public static func didUpdate(entity: Entity) {}
-    public static func willDelete(entity: Entity) {}
-    public static func didDelete(entity: Entity) {}
+    public static func willCreate(_ model: Model) {}
+    public static func didCreate(_ model: Model) {}
+    public static func willUpdate(_ model: Model) {}
+    public static func didUpdate(_ model: Model) {}
+    public static func willDelete(_ model: Model) {}
+    public static func didDelete(_ model: Model) {}
 
     public func willCreate() {}
     public func didCreate() {}
@@ -145,7 +145,7 @@ extension Entity {
 
 // MARK: CRUD
 
-extension Entity {
+extension Model {
     /// Persists the entity into the
     /// data store and sets the `id` property.
     public func save() throws {
@@ -165,11 +165,11 @@ extension Entity {
 
     /// Returns all entities for this `Model`.
     public static func count() throws -> Int {
-        return try Self.makeQuery().aggregate(.count).int ?? 0
+        return try Self.makeQuery().count()
     }
 
     /// Finds the entity with the given `id`.
-    public static func find(_ id: NodeRepresentable?) throws -> Self? {
+    public static func find(_ id: Encodable?) throws -> Self? {
         return try Self.makeQuery().find(id)
     }
     
@@ -180,14 +180,14 @@ extension Entity {
 
 // MARK: Relatable
 
-extension Storable where Self: Entity {
+extension Storable where Self: Model {
     /// See Entity.idKey -- instance implementation of static var
     public var idKey: String {
         return Self.idKey
     }
 }
 
-extension Entity {
+extension Model {
     /// See Entity.entity
     public static var entity: String {
         return name + "s"
@@ -238,7 +238,7 @@ extension Entity {
 
 // MARK: Database
 
-extension Entity {
+extension Model {
     /// Fetches or sets the `Database` for this
     /// relatable object from the static database map.
     public static var database: Database? {
@@ -257,17 +257,17 @@ extension Entity {
 
 // MARK: Convenience
 
-extension Entity {
+extension Model {
     /// Asserts that the entity exists and returns
     /// its identifier.
     @discardableResult
-    public func assertExists() throws -> Identifier {
+    public func requireExists() throws -> Encodable {
         guard let id = self.id else {
-            throw EntityError.noId(Self.self)
+            throw ModelError.noId(Self.self)
         }
 
         guard exists else {
-            throw EntityError.doesntExist(Self.self)
+            throw ModelError.doesntExist(Self.self)
         }
 
         return id

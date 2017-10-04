@@ -2,7 +2,7 @@ import CSQLite
 import Dispatch
 
 /// SQlite connection. Use this to create statements that can be executed.
-public final class Connection {
+public final class SQLiteConnection {
     public typealias Raw = OpaquePointer
     public var raw: Raw
 
@@ -20,16 +20,16 @@ public final class Connection {
     /// The supplied DispatchQueue will be used to dispatch output stream calls.
     /// Make sure to supply the event loop to this parameter so you get called back
     /// on the appropriate thread.
-    public init(database: Database, queue: DispatchQueue) throws {
+    public init(database: SQLiteDatabase, queue: DispatchQueue) throws {
         let options = SQLITE_OPEN_CREATE | SQLITE_OPEN_READWRITE | SQLITE_OPEN_NOMUTEX
         var raw: Raw?
 
-        guard sqlite3_open_v2(database.path, &raw, options, nil) == SQLITE_OK else {
-            throw Error(problem: .error, reason: "Could not open database.")
+        guard sqlite3_open_v2(database.storage.path, &raw, options, nil) == SQLITE_OK else {
+            throw SQLiteError(problem: .error, reason: "Could not open database.")
         }
 
         guard let r = raw else {
-            throw Error(problem: .error, reason: "Unexpected nil database.")
+            throw SQLiteError(problem: .error, reason: "Unexpected nil database.")
         }
 
         self.raw = r
@@ -47,8 +47,8 @@ public final class Connection {
     }
 
     /// Creates a new SQLite statement.
-    public func query(_ query: String) throws -> Query {
-        return try Query(statement: query, database: self)
+    public func query(_ query: String) throws -> SQLiteQuery {
+        return try SQLiteQuery(statement: query, database: self)
     }
 
     /// Returns an identifier for the last inserted row.

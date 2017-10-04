@@ -25,7 +25,7 @@ public protocol Executor {
     ///         instead of interpolating them into the raw string
     ///         can help prevent SQL injection.
     @discardableResult
-    func query<E>(_ query: RawOr<Query<E>>) throws -> Node
+    func query<M, D: Decodable>(_ query: RawOr<Query<M>>) throws -> D
     
     // Any queries executed by this executor
     // should be logged to the query logger
@@ -36,13 +36,12 @@ public protocol Executor {
 
 extension Executor {
     @discardableResult
-    public func raw(_ raw: String, _ values: [NodeRepresentable] = []) throws -> Node {
-        let nodes = try values.map { try $0.makeNode(in: rowContext) }
-        return try self.query(RawOr<Query<Raw>>.raw(raw, nodes))
+    public func raw<D: Decodable>(_ raw: String, _ values: [Encodable] = []) throws -> D {
+        return try self.query(RawOr<Query<Raw>>.raw(raw, values))
     }
     
     @discardableResult
-    public func query<E>(_ query: Query<E>) throws -> Node {
+    public func query<E, D: Decodable>(_ query: Query<E>) throws -> D {
         return try self.query(.some(query))
     }
 }

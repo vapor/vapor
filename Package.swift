@@ -63,7 +63,7 @@ let package = Package(
         .target(name: "Bits"),
 
         // Core
-        .target(name: "Core", dependencies: ["libc", "Debugging"]),
+        .target(name: "Core", dependencies: ["Async", "Debugging", "libc"]),
         .target(name: "libc"),
         
         // Crypto
@@ -75,7 +75,7 @@ let package = Package(
         .testTarget(name: "DebuggingTests", dependencies: ["Debugging"]),
 
         // Fluent
-        .target(name: "Fluent", dependencies: ["SQLite"]),
+        .target(name: "Fluent", dependencies: ["Random", "SQLite"]),
         //.testTarget(name: "FluentTests", dependencies: ["Fluent"]),
 
         // JWT

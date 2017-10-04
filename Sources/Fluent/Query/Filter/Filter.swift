@@ -8,17 +8,17 @@ public struct Filter {
     }
 
     public enum Method {
-        case compare(String, Comparison, Node)
-        case subset(String, Scope, [Node])
+        case compare(String, Comparison, Encodable)
+        case subset(String, Scope, [Encodable])
         case group(Relation, [RawOr<Filter>])
     }
 
-    public init(_ entity: Entity.Type, _ method: Method) {
+    public init(_ entity: Model.Type, _ method: Method) {
         self.entity = entity
         self.method = method
     }
 
-    public var entity: Entity.Type
+    public var entity: Model.Type
     public var method: Method
 }
 
@@ -28,8 +28,7 @@ extension Filter: CustomStringConvertible {
         case .compare(let field, let comparison, let value):
             return "(\(entity)) \(field) \(comparison) \(value)"
         case .subset(let field, let scope, let values):
-            let valueDescriptions = values.map { $0.string ?? "" }
-            return "(\(entity)) \(field) \(scope) \(valueDescriptions)"
+            return "(\(entity)) \(field) \(scope) \(values)"
         case .group(let relation, let filters):
             return filters.map { $0.description }.joined(separator: "\(relation)")
         }

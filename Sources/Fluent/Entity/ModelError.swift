@@ -1,17 +1,21 @@
+import Debugging
+
+// FIXME: convert to struct
+
 /// Errors that can be thrown when
 /// working with entities.
-public enum EntityError {
+public enum ModelError: Error {
     /// missing database
-    case noDatabase(Entity.Type)
+    case noDatabase(Model.Type)
     /// All entities from db must have an id
-    case noId(Entity.Type)
+    case noId(Model.Type)
     /// All entities from
-    case doesntExist(Entity.Type)
+    case doesntExist(Model.Type)
     /// Reserved for extensions
     case unspecified(Error)
 }
 
-extension EntityError: Debuggable {
+extension ModelError: Debuggable {
     public var identifier: String {
         switch self {
         case .noDatabase:

@@ -1,5 +1,5 @@
 public protocol QueryRepresentable {
-    associatedtype E: Entity
+    associatedtype E: Model
     func makeQuery(_ executor: Executor) throws -> Query<E>
 }
 
@@ -68,7 +68,7 @@ extension QueryRepresentable where Self: ExecutorRepresentable {
     }
 
     /// Returns the first entity with the given `id`.
-    public func find(_ id: NodeRepresentable?) throws -> E? {
+    public func find(_ id: Encodable?) throws -> E? {
         return try makeQuery()
             .filter(E.idKey, id)
             .first()
@@ -80,16 +80,15 @@ extension QueryRepresentable where Self: ExecutorRepresentable {
     /// Attempts the create action for the supplied
     /// serialized data.
     /// Returns the new entity's identifier.
-    public func create(_ row: Row?) throws -> Identifier {
+    public func create(_ row: [String: Encodable]) throws -> Encodable {
         let query = try makeQuery()
 
-        query.action = .create
-        row?.makeNode(in: query.context).rawOrObject?.forEach { (key, value) in
-            query.data[key] = value
+        for (key, val) in row {
+            query.data[.some(key)] = .some(val)
         }
 
-        let raw = try query.raw()
-        return Identifier(raw)
+        let raw = try query.raw() as String
+        return raw
     }
     
     public func save() throws {
@@ -135,7 +134,7 @@ extension QueryRepresentable where Self: ExecutorRepresentable {
             }
 
             try modify(row)
-            E.didUpdate(entity: entity)
+            E.didUpdate(entity)
             entity.didUpdate()
         } else {
             // create
@@ -197,7 +196,7 @@ extension QueryRepresentable where Self: ExecutorRepresentable {
     /// Attempts to delete the supplied entity
     /// if its identifier is set.
     public func delete(_ entity: E) throws {
-        let id = try entity.assertExists()
+        let id = try entity.requireExists()
         let query = try makeQuery()
 
         // if the model is soft deletable and
@@ -228,16 +227,12 @@ extension QueryRepresentable where Self: ExecutorRepresentable {
 extension QueryRepresentable where Self: ExecutorRepresentable {
     /// Attempts to modify model's collection with
     /// the supplied serialized data.
-    public func modify(_ row: Row?) throws {
+    public func modify() throws {
         let query = try makeQuery()
-
         query.action = .modify
-        row?.makeNode(in: query.context).rawOrObject?.forEach { (key, value) in
-            query.data[key] = value
-        }
 
         let idKey = E.idKey
-        if let id = row?[idKey] {
+        if let id = query.entity?.id {
             _ = try filter(idKey, id)
         }
         

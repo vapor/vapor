@@ -11,24 +11,23 @@ extension QueryRepresentable where Self: ExecutorRepresentable {
 
     /// Filter entity with field, comparison, and value.
     @discardableResult
-    public func filter<T: Entity>(
+    public func filter<T: Model>(
         _ entity: T.Type,
         _ field: String,
         _ comparison: Filter.Comparison,
-        _ value: NodeRepresentable?
+        _ value: Encodable?
     ) throws -> Query<Self.E> {
         let query = try makeQuery()
-        let value = try value?.makeNode(in: query.context) ?? .null
         let filter = Filter(entity, .compare(field, comparison, value))
         return try query.filter(filter)
     }
 
     /// Filter entity where field equals value
     @discardableResult
-    public func filter<T: Entity>(
+    public func filter<T: Model>(
         _ entity: T.Type,
         _ field: String,
-        _ value: NodeRepresentable?
+        _ value: Encodable?
     ) throws -> Query<Self.E> {
         return try makeQuery()
             .filter(entity, field, .equals, value)
@@ -39,7 +38,7 @@ extension QueryRepresentable where Self: ExecutorRepresentable {
     public func filter(
         _ field: String,
         _ comparison: Filter.Comparison,
-        _ value: NodeRepresentable?
+        _ value: Encodable?
     ) throws -> Query<Self.E> {
         return try makeQuery()
             .filter(E.self, field, comparison, value)
@@ -49,7 +48,7 @@ extension QueryRepresentable where Self: ExecutorRepresentable {
     @discardableResult
     public func filter(
         _ field: String,
-        _ value: NodeRepresentable?
+        _ value: Encodable?
     ) throws -> Query<Self.E> {
         return try makeQuery()
             .filter(field, .equals, value)
@@ -57,7 +56,7 @@ extension QueryRepresentable where Self: ExecutorRepresentable {
 
     /// Entity operator filter queries
     @discardableResult
-    public func filter<T: Entity>(
+    public func filter<T: Model>(
         _ entity: T.Type,
         _ value: Filter.Method
     ) throws -> Query<Self.E> {
@@ -77,8 +76,7 @@ extension QueryRepresentable where Self: ExecutorRepresentable {
 
     /// Subset `in` filter.
     @discardableResult
-    public func filter(_ field: String, in values: [NodeRepresentable?]) throws -> Query<Self.E> {
-        let values = try values.map { try $0.makeNode(in: Row.defaultContext) }
+    public func filter(_ field: String, in values: [Encodable?]) throws -> Query<Self.E> {
         let method = Filter.Method.subset(field, .in, values)
         let filter = Filter(E.self, method)
         return try makeQuery().filter(filter)
@@ -86,8 +84,7 @@ extension QueryRepresentable where Self: ExecutorRepresentable {
 
     /// Subset `notIn` filter. 
     @discardableResult
-    public func filter(_ field: String, notIn values: [NodeRepresentable?]) throws -> Query<Self.E> {
-        let values = try values.map { try $0.makeNode(in: Row.defaultContext) }
+    public func filter(_ field: String, notIn values: [Encodable?]) throws -> Query<Self.E> {
         let method = Filter.Method.subset(field, .notIn, values)
         let filter = Filter(E.self, method)
         return try makeQuery().filter(filter)

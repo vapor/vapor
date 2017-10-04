@@ -4,13 +4,18 @@
 /// and can be used like any other Fluent model
 /// in preparations, querying, etc.
 public final class Pivot<
-    L: Entity,
-    R: Entity
->: PivotProtocol, Entity {
+    L: Model,
+    R: Model
+>: PivotProtocol, Model {
     public typealias Left = L
     public typealias Right = R
 
     // MARK: Overridable
+
+    public init(leftId: Encodable, rightId: Encodable) {
+        self.leftId = leftId
+        self.rightId = rightId
+    }
     
     public static var identifier: String {
         if Left.name < Right.name {
@@ -20,30 +25,30 @@ public final class Pivot<
         }
     }
 
-    public static var name: String {
-        get { return _names[identifier] ?? _defaultName }
-        set { _names[identifier] = newValue }
-    }
-    
-    public static var entity: String {
-        get { return _entities[identifier] ?? _defaultEntity }
-        set { _entities[identifier] = newValue }
-    }
-    
-    public static var rightIdKey: String {
-        get { return _rightIdKeys[identifier] ?? Right.foreignIdKey }
-        set { _rightIdKeys[identifier] = newValue }
-    }
-    
-    public static var leftIdKey: String {
-        get { return _leftIdKeys[identifier] ?? Left.foreignIdKey }
-        set { _leftIdKeys[identifier] = newValue }
-    }
-    
+//    public static var name: String {
+//        get { return _names[identifier] ?? _defaultName }
+//        set { _names[identifier] = newValue }
+//    }
+//
+//    public static var entity: String {
+//        get { return _entities[identifier] ?? _defaultEntity }
+//        set { _entities[identifier] = newValue }
+//    }
+//
+//    public static var rightIdKey: String {
+//        get { return _rightIdKeys[identifier] ?? Right.foreignIdKey }
+//        set { _rightIdKeys[identifier] = newValue }
+//    }
+//
+//    public static var leftIdKey: String {
+//        get { return _leftIdKeys[identifier] ?? Left.foreignIdKey }
+//        set { _leftIdKeys[identifier] = newValue }
+//    }
+
     // MARK: Instance
 
-    public var leftId: Identifier
-    public var rightId: Identifier
+    public var leftId: Encodable
+    public var rightId: Encodable
     public let storage = Storage()
 
     public init(_ left: Left, _ right: Right) throws {
@@ -67,19 +72,35 @@ public final class Pivot<
         self.rightId = rightId
     }
 
-    public init(row: Row) throws {
-        leftId = try row.get(type(of: self).leftIdKey)
-        rightId = try row.get(type(of: self).rightIdKey)
+    enum CodingKeys: CodingKey {
+        case id
+        case leftId
+        case rightId
 
-        id = try row.get(idKey)
+        var stringValue: String {
+            switch self {
+            case .id:
+                return Pivot<Left, Right>.idKey
+            case .leftId:
+                return Left.foreignIdKey
+            case .rightId:
+                return Right.foreignIdKey
+            }
+        }
     }
 
-    public func makeRow() throws -> Row {
-        var row = Row()
-        try row.set(idKey, id)
-        try row.set(type(of: self).leftIdKey, leftId)
-        try row.set(type(of: self).rightIdKey, rightId)
-        return row
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        leftId = try container.decode(String.self, forKey: .leftId)
+        rightId = try container.decode(String.self, forKey: .rightId)
+        id = try container.decode(String.self, forKey: .id)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(Optional(leftId), forKey: CodingKeys.leftId)
+        try container.encode(Optional(rightId), forKey: CodingKeys.rightId)
+        try container.encode(id, forKey: .id)
     }
 }
 
@@ -87,8 +108,8 @@ extension Pivot: Preparation {
     public static func prepare(_ database: Database) throws {
         try database.create(self) { builder in
             builder.id()
-            builder.foreignId(for: Left.self, foreignIdKey: leftIdKey)
-            builder.foreignId(for: Right.self, foreignIdKey: rightIdKey)
+            builder.foreignId(for: Left.self, foreignIdKey: Left.idKey)
+            builder.foreignId(for: Right.self, foreignIdKey: Right.idKey)
         }
     }
 

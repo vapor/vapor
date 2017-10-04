@@ -1,6 +1,6 @@
 /// Represents any type of schema builder
 public protocol Builder: class {
-    var entity: Entity.Type { get} 
+    var entity: Model.Type { get} 
     var fields: [RawOr<Field>] { get set }
     var foreignKeys: [RawOr<ForeignKey>] { get set }
 }
@@ -19,7 +19,7 @@ extension Builder {
         self.field(field)
     }
 
-    public func foreignId<E: Entity>(
+    public func foreignId<E: Model>(
         for entityType: E.Type,
         optional: Bool = false,
         unique: Bool = false,
@@ -48,7 +48,7 @@ extension Builder {
         _ name: String,
         optional: Bool = false,
         unique: Bool = false,
-        default: NodeRepresentable? = nil
+        default: Encodable? = nil
     ) {
         let field = Field(
             name: name,
@@ -65,7 +65,7 @@ extension Builder {
         length: Int? = nil,
         optional: Bool = false,
         unique: Bool = false,
-        default: NodeRepresentable? = nil
+        default: Encodable? = nil
     ) {
         let field = Field(
             name: name,
@@ -160,7 +160,7 @@ extension Builder {
 
     // MARK: Relations
 
-    public func parent<E: Entity>(
+    public func parent<E: Model>(
         _ entity: E.Type = E.self,
         optional: Bool = false,
         unique: Bool = false,
@@ -182,7 +182,7 @@ extension Builder {
     
     /// Adds a foreign key constraint from a local
     /// column to a column on the foreign entity.
-    public func foreignKey<E: Entity>(
+    public func foreignKey<E: Model>(
         _ foreignIdKey: String,
         references idKey: String,
         on foreignEntity: E.Type = E.self,
@@ -200,7 +200,7 @@ extension Builder {
     
     /// Adds a foreign key constraint from a local
     /// column to a column on the foreign entity.
-    public func foreignKey<E: Entity>(
+    public func foreignKey<E: Model>(
         for: E.Type = E.self
     ) {
         self.foreignKey(
@@ -224,7 +224,7 @@ public var autoForeignKeys = true
 
 extension Builder {
     @available(*, deprecated, message: "Please use foreignKey(_: String, references: String, on: Entity, named: String)")
-    public func foreignKey<E: Entity>(
+    public func foreignKey<E: Model>(
         foreignIdKey: String = E.foreignIdKey,
         referencesIdKey: String = E.idKey,
         on foreignEntity: E.Type = E.self,

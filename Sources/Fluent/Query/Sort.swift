@@ -8,7 +8,7 @@ public struct Sort {
     }
 
     /// The entity to sort.
-    public let entity: Entity.Type
+    public let entity: Model.Type
 
     /// The name of the field to sort.
     public let field: String
@@ -16,7 +16,7 @@ public struct Sort {
     /// The direction to sort by.
     public let direction: Direction
 
-    public init(_ entity: Entity.Type, _ field: String, _ direction: Direction) {
+    public init(_ entity: Model.Type, _ field: String, _ direction: Direction) {
         self.entity = entity
         self.field = field
         self.direction = direction

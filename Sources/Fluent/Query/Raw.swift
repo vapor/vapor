@@ -1,5 +1,5 @@
 public enum RawOr<Wrapped> {
-    case raw(String, [Node])
+    case raw(String, [Encodable])
     case some(Wrapped)
 }
 
@@ -29,44 +29,15 @@ extension RawOr: Hashable {
     }
 }
 
-extension Node {
-    internal var rawOrObject: [RawOr<String>: RawOr<Node>]? {
-        guard let object = self.object else {
-            return nil
-        }
-        
-        var rawOrObject: [RawOr<String>: RawOr<Node>] = [:]
-        
-        for (key, value) in object {
-            let rawOrKey = RawOr<String>.some(key)
-            let rawOrValue = RawOr<Node>.some(value)
-            rawOrObject[rawOrKey] = rawOrValue
-        }
-        
-        return rawOrObject
-    }
-}
-
 // MARK: Filter
 
 extension QueryRepresentable where Self: ExecutorRepresentable {
     @discardableResult
     public func filter(
         raw string: String,
-        _ values: [Node] = []
+        _ values: [Encodable] = []
     ) throws -> Query<E> {
         let query = try makeQuery()
-        query.filters.append(.raw(string, values))
-        return query
-    }
-
-    @discardableResult
-    public func filter(
-        raw string: String,
-        _ values: [NodeRepresentable]
-    ) throws -> Query<E> {
-        let query = try makeQuery()
-        let values = try values.map { try $0.makeNode(in: query.context) }
         query.filters.append(.raw(string, values))
         return query
     }
@@ -141,8 +112,6 @@ extension QueryRepresentable where Self: ExecutorRepresentable {
     }
 }
 
-public final class Raw: Entity {
+public final class Raw: Model {
     public let storage = Storage()
-    public init(row: Row) throws {}
-    public func makeRow() throws -> Row { return Row() }
 }
