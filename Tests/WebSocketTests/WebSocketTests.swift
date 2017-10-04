@@ -1,4 +1,5 @@
 import Async
+import Core
 import Dispatch
 import TCP
 import HTTP
@@ -36,11 +37,11 @@ final class HTTPTestServer {
     public func start(with responder: Responder) throws {
         // create a tcp server
         let tcp = try TCP.Server(workerCount: workerCount)
-        let server = HTTP.Server(tcp: tcp)
+        let server = HTTP.Server(clientStream: tcp)
         
         // setup the server pipeline
         server.drain { client in
-            let parser = HTTP.RequestParser(queue: client.tcp.queue)
+            let parser = HTTP.RequestParser(worker: client.tcp.worker)
             let responderStream = responder.makeStream()
             let serializer = HTTP.ResponseSerializer()
             
@@ -57,7 +58,7 @@ final class HTTPTestServer {
         }
         
         // bind, listen, and start accepting
-        try server.tcp.start(
+        try server.clientStream.start(
             hostname: hostname,
             port: port,
             backlog: backlog
@@ -73,12 +74,13 @@ class WebSocketTests : XCTestCase {
         let tcp = try TCP.Server()
         let server = HTTPTestServer()
         
-        try server.start(with: app)
+        // try server.start(with: app)
         
         let promise0 = Promise<Void>()
         let promise1 = Promise<Void>()
-        
-        _ = try WebSocket.connect(to: "ws://0.0.0.0:8080/", queue: .global()).then { socket in
+
+        let worker = Worker(queue: .global())
+        _ = try WebSocket.connect(to: "ws://0.0.0.0:8080/", worker: worker).then { socket in
             let responses = ["test", "cat", "banana"]
             let reversedResponses = responses.map {
                 String($0.reversed())

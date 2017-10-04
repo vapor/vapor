@@ -6,11 +6,12 @@
 
 import Async
 import Bits
+import Core
 import Dispatch
 import TCP
 
 /// A Client (used for connecting to servers) that uses the platform specific SSL library.
-public final class TLSClient: Async.Stream {
+public final class TLSClient: Async.Stream, ClosableStream {
     /// See `OutputStream.Output`
     public typealias Output = ByteBuffer
     
@@ -48,10 +49,10 @@ public final class TLSClient: Async.Stream {
     }
     
     /// The AppleSSL (macOS/iOS) or OpenSSL (Linux) stream
-    let ssl: SSLStream<TCP.Client>
+    let ssl: SSLStream<TCPClient>
     
     /// The TCP that is used in the SSL Stream
-    let client: TCP.Client
+    let client: TCPClient
     
     /// A DispatchQueue on which this Client executes all operations
     let queue: DispatchQueue
@@ -59,11 +60,11 @@ public final class TLSClient: Async.Stream {
     /// Creates a new `TLSClient` by specifying a queue.
     ///
     /// Can throw an error if the initialization phase fails
-    public init(queue: DispatchQueue) throws {
+    public init(worker: Worker) throws {
         let socket = try Socket()
         
-        self.queue = queue
-        self.client = TCP.Client(socket: socket, queue: queue)
+        self.queue = worker.queue
+        self.client = TCPClient(socket: socket, worker: worker)
         self.ssl = try SSLStream(socket: self.client, descriptor: socket.descriptor, queue: queue)
     }
     
@@ -82,5 +83,9 @@ public final class TLSClient: Async.Stream {
     /// Used for sending data over TLS
     public func inputStream(_ input: ByteBuffer) {
         ssl.inputStream(input)
+    }
+    
+    public func close() {
+        ssl.close()
     }
 }

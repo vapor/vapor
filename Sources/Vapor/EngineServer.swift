@@ -15,11 +15,11 @@ public final class EngineServer: HTTPServer {
     public func start(with responder: Responder) throws {
         // create a tcp server
         let tcp = try TCP.Server(workerCount: config.workerCount)
-        let server = HTTP.Server(tcp: tcp)
+        let server = HTTP.Server(clientStream: tcp)
 
         // setup the server pipeline
         server.drain { client in
-            let parser = HTTP.RequestParser(queue: client.tcp.queue)
+            let parser = HTTP.RequestParser(worker: client.tcp.worker)
             let responderStream = responder.makeStream()
             let serializer = HTTP.ResponseSerializer()
 
@@ -29,14 +29,12 @@ public final class EngineServer: HTTPServer {
                 .drain(into: client)
 
             client.tcp.start()
-        }
-
-        server.errorStream = { error in
+        }.catch { error in
             debugPrint(error)
         }
 
         // bind, listen, and start accepting
-        try server.tcp.start(
+        try server.clientStream.start(
             hostname: config.hostname,
             port: config.port,
             backlog: config.backlog

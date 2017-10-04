@@ -3,11 +3,8 @@ import Bits
 
 /// A stream of incoming and outgoing strings between 2 parties over WebSockets
 final class TextStream : Async.Stream {
-    /// See `BaseStream.onClose`
-    var onClose: CloseHandler?
-    
     /// A stream of strings received from the other party
-    var outputStream: ((String) -> ())?
+    var outputStream: OutputHandler?
     
     /// A framestream to stream text frames to
     internal weak var frameStream: Connection?

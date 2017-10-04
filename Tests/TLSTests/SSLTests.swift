@@ -1,5 +1,7 @@
 import XCTest
 import Async
+import Core
+import Dispatch
 import TCP
 import Bits
 import Crypto
@@ -16,10 +18,14 @@ import TLS
 #endif
     
 class AppleTests: XCTestCase {
+    let allTests = [
+        ("testSSL", testSSL)
+    ]
+    
     func testSSL() throws {
         let server = try TCP.Server()
         
-        var peers = [SSLStream<TCP.Client>]()
+        var peers = [SSLStream<TCPClient>]()
         var clients = [TLSClient]()
         
         let peerQueue = DispatchQueue(label: "test.peer")
@@ -59,9 +65,10 @@ class AppleTests: XCTestCase {
         
         try server.start(port: 8432)
         let clientQueue = DispatchQueue(label: "test.client")
+        let clinetWorker = Worker(queue: clientQueue)
         
         let future = try clientQueue.sync { () -> Future<()> in
-            let client = try TLSClient(queue: clientQueue)
+            let client = try TLSClient(worker: clinetWorker)
             
             clients.append(client)
             

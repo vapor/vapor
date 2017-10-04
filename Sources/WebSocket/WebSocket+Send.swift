@@ -4,9 +4,6 @@ import Bits
 
 /// Serializes frames to binary
 final class FrameSerializer : Async.Stream {
-    /// Not used
-    var onClose: BaseStream.CloseHandler?
-    
     /// See `InputStream.Input`
     typealias Input = Frame
     

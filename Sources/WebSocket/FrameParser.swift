@@ -14,9 +14,6 @@ public final class FrameParser : Async.Stream {
     /// See `baseStream.errorStream`
     public var errorStream: ErrorHandler?
     
-    /// See `baseStream.onClose`
-    public var onClose: BaseStream.CloseHandler?
-    
     /// The currently accumulated payload data
     var accumulated = 0
     

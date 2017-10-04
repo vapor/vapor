@@ -23,6 +23,9 @@ let package = Package(
         // Debugging
         .library(name: "Debugging", targets: ["Debugging"]),
 
+        // Fluent
+        // .library(name: "Fluent", targets: ["Fluent"]),
+
         // JWT
         .library(name: "JWT", targets: ["JWT"]),
 
@@ -38,16 +41,18 @@ let package = Package(
         // Net
         .library(name: "HTTP", targets: ["HTTP"]),
         .library(name: "TCP", targets: ["TCP"]),
-        
+
+        // Random
+        .library(name: "Random", targets: ["Random"]),
+
         // Routing
         .library(name: "Routing", targets: ["Routing"]),
 
         // Service
         .library(name: "Service", targets: ["Service"]),
 
-        // TLS
-        .library(name: "AppleSSL", targets: ["AppleSSL"]),
-        .library(name: "OpenSSL", targets: ["OpenSSL"]),
+        // SQLite
+        .library(name: "SQLite", targets: ["SQLite"]),
 
         // Vapor
         .library(name: "Vapor", targets: ["Vapor"]),
@@ -55,9 +60,7 @@ let package = Package(
         // WebSockets
         .library(name: "WebSocket", targets: ["WebSocket"]),
     ],
-    dependencies: [
-        .package(url: "https://github.com/vapor/ctls.git", from: "1.1.2")
-    ],
+    dependencies: [],
     targets: [
         // Async
         .target(name: "Async"),
@@ -77,6 +80,10 @@ let package = Package(
         // Debugging
         .target(name: "Debugging"),
         .testTarget(name: "DebuggingTests", dependencies: ["Debugging"]),
+
+        // Debugging
+//        .target(name: "Fluent", dependencies: ["SQLite"]),
+//        .testTarget(name: "FluentTests", dependencies: ["Fluent"]),
 
         // JWT
         .target(name: "JWT", dependencies: ["Crypto"]),
@@ -105,6 +112,9 @@ let package = Package(
         .target(name: "TCP", dependencies: ["Debugging", "Core", "libc"]),
         .testTarget(name: "TCPTests", dependencies: ["TCP"]),
 
+        .target(name: "Random", dependencies: ["Core"]),
+        .testTarget(name: "RandomTests", dependencies: ["Random"]),
+
         // Routing
         .target(name: "Routing", dependencies: ["Core", "Debugging", "HTTP", "WebSocket"]),
         .testTarget(name: "RoutingTests", dependencies: ["Routing"]),
@@ -118,15 +128,17 @@ let package = Package(
         .testTarget(name: "ServiceTests", dependencies: ["Service"]),
 
         // TLS
-        .target(name: "AppleSSL", dependencies: ["Async", "Debugging"]),
-        .target(name: "OpenSSL", dependencies: ["CTLS", "Async", "Debugging"]),
-        
         .target(name: "TLS", dependencies: [ssl, "TCP"]),
         
         .testTarget(name: "TLSTests", dependencies: ["TLS"]),
 
+        // SQLite
+        .target(name: "CSQLite"),
+        .target(name: "SQLite", dependencies: ["Core", "CSQLite", "Debugging"]),
+        .testTarget(name: "SQLiteTests", dependencies: ["SQLite"]),
+
         // Vapor
-        .target(name: "Development", dependencies: ["Leaf", "Vapor", "MySQL"]),
+        .target(name: "Development", dependencies: ["Leaf", "Vapor", "MySQL", "SQLite"]),
         .target(name: "Vapor", dependencies: [
             "Core",
             "Debugging",
@@ -137,10 +149,32 @@ let package = Package(
             "TCP",
             "WebSocket"
         ]),
-        .testTarget(name: "VaporTests", dependencies: ["Vapor", "OpenSSL", "AppleSSL"]),
+        .testTarget(name: "VaporTests", dependencies: ["Vapor"]),
 
         // WebSocket
         .target(name: "WebSocket", dependencies: ["Core", "Debugging", "TCP", "HTTP", "Crypto"]),
         .testTarget(name: "WebSocketTests", dependencies: ["WebSocket"]),
     ]
 )
+
+#if os(macOS) || os(iOS)
+    package.targets.append(
+        .target(name: "AppleSSL", dependencies: ["Async", "Debugging"])
+    )
+    
+    package.products.append(
+        .library(name: "AppleSSL", targets: ["AppleSSL"])
+    )
+#else
+    package.dependencies.append(
+        .package(url: "https://github.com/vapor/copenssl.git", .revision("master"))
+    )
+    
+    package.targets.append(
+        .target(name: "OpenSSL", dependencies: ["COpenSSL", "Async", "Debugging"])
+    )
+    
+    package.products.append(
+        .library(name: "OpenSSL", targets: ["OpenSSL"])
+    )
+#endif

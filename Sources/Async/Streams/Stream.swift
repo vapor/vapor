@@ -11,7 +11,13 @@ public protocol InputStream: BaseStream {
 }
 
 public protocol ClosableStream: BaseStream {
+    typealias CloseHandler = (() -> ())
+    
+    /// Closes the connection
     func close()
+    
+    /// A function that gets called if the stream closes
+    var onClose: CloseHandler? { get set }
 }
 
 public protocol OutputStream: BaseStream {
@@ -33,11 +39,6 @@ public protocol OutputStream: BaseStream {
 public protocol BaseStream: class {
     /// A closure that takes one error.
     typealias ErrorHandler = (Error) -> ()
-    
-    typealias CloseHandler = (() -> ())
-    
-    /// A function that gets called if the stream closes
-    var onClose: CloseHandler? { get set }
 
     /// Pass any errors that are thrown to
     /// the error stream
@@ -48,8 +49,17 @@ public protocol BaseStream: class {
 
 extension OutputStream {
     /// Drains the output stream into a closure.
-    public func drain(_ handler: @escaping OutputHandler) {
+    @discardableResult
+    public func drain(_ handler: @escaping OutputHandler) -> Self {
         self.outputStream = handler
+        return self
+    }
+
+    /// Drains the output stream into a closure.
+    @discardableResult
+    public func `catch`(_ handler: @escaping ErrorHandler) -> Self {
+        self.errorStream = handler
+        return self
     }
 
     /// Drains the output stream into another

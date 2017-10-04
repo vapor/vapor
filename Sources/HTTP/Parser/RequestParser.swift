@@ -19,17 +19,14 @@ public final class RequestParser: CParser {
     var state:  CHTTPParserState
 
     /// Queue to be set on messages created by this parser.
-    private let queue: DispatchQueue
-    
-    /// See `BaseStream.onClose`
-    public var onClose: CloseHandler?
+    private let worker: Worker
 
     /// Creates a new Request parser.
-    public init(queue: DispatchQueue) {
+    public init(worker: Worker) {
         self.parser = http_parser()
         self.settings = http_parser_settings()
         self.state = .ready
-        self.queue = queue
+        self.worker = worker
         reset(HTTP_REQUEST)
     }
 
@@ -145,7 +142,7 @@ public final class RequestParser: CParser {
             body: body
         )
 
-        request.queue = self.queue
+        request.worker = self.worker
         return request
     }
 }

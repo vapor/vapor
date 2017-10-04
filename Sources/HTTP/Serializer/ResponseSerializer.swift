@@ -9,9 +9,6 @@ public final class ResponseSerializer: Serializer {
 
     /// See OutputStream.Output
     public typealias Output = SerializedMessage
-    
-    /// See `BaseStream.onClose`
-    public var onClose: CloseHandler?
 
     /// See OutputStream.outputStream
     public var outputStream: OutputHandler?

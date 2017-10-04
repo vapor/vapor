@@ -1,4 +1,8 @@
 final class RowStream : ResultsStream {
+    func close() {
+        self.onClose?()
+    }
+    
     /// Parses a packet into a Row
     func parseRows(from packet: Packet) throws -> Row {
         return try packet.makeRow(columns: columns)
@@ -22,7 +26,7 @@ final class RowStream : ResultsStream {
     
     let mysql41: Bool
     
-    var onClose: (() -> ())?
+    var onClose: CloseHandler?
     
     typealias Input = Packet
 }

@@ -2,7 +2,7 @@ import Foundation
 import Async
 import Bits
 
-protocol Base64: class, Async.Stream {
+protocol Base64: class, Async.Stream, ClosableStream {
     static func process(_ buffer: ByteBuffer, toPointer pointer: MutableBytesPointer, capacity: Int, finish: Bool) throws -> (complete: Bool, filled: Int, consumed: Int)
     
     associatedtype Input = ByteBuffer
@@ -27,8 +27,10 @@ extension Base64 {
     public static func transforming<ByteStream: Async.OutputStream>(_ input: ByteStream) -> Self where ByteStream.Output == ByteBuffer {
         let stream = Self.init(bufferCapacity: 65_507)
         
-        input.onClose = {
-            stream.finishStream()
+        if let input = input as? ClosableStream {
+            input.onClose = {
+                stream.close()
+            }
         }
         
         input.drain(stream.inputStream)
@@ -101,8 +103,8 @@ extension Base64 {
     
     /// Completes the stream, flushing all remaining bytes by encoding them
     ///
-    /// TODO: Implement using closable streams instead
-    public func finishStream() {
+    /// Any data after this will reopen the stream
+    public func close() {
         if remainder.count > 0 {
             self.inputStream(ByteBuffer(start: nil, count: 0))
         }

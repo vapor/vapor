@@ -2,7 +2,7 @@ import TCP
 
 let onUpgradeKey = "http:on-upgrade"
 
-public typealias OnUpgrade = (TCP.Client) -> ()
+public typealias OnUpgrade = (TCPClient) -> ()
 
 extension Message {
     public var onUpgrade: OnUpgrade? {

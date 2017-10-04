@@ -1,6 +1,7 @@
-import Dispatch
 import Async
+import Core
 import Crypto
+import Dispatch
 import Foundation
 import TCP
 import HTTP
@@ -16,7 +17,7 @@ extension WebSocket {
     /// - parameter queue: The queue on which this websocket will read and write
     public static func connect(
         to uri: URI,
-        queue: DispatchQueue
+        worker: Worker
     ) throws -> Future<WebSocket> {
         guard
             uri.scheme == "ws" || uri.scheme == "wss",
@@ -30,7 +31,7 @@ extension WebSocket {
         try socket.connect(hostname: hostname, port: port)
         
         // The TCP Client that will be used by both HTTP and the WebSocket for communication
-        let client = TCP.Client(socket: socket, queue: queue)
+        let client = TCPClient(socket: socket, worker: worker)
         
         // TODO: TLS
         
