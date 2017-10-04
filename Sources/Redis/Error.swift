@@ -5,4 +5,5 @@ public struct RedisError: Error {
 enum ClientError: Error {
     case invalidTypeToken
     case parsingError
+    case unexpectedResult(RedisValue)
 }

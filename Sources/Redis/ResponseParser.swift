@@ -58,6 +58,24 @@ final class ResponseParser: Async.InputStream {
         return String(bytes: responseBuffer[position..<endIndex], encoding: .utf8)
     }
     
+    fileprivate func integer(from position: inout Int) throws -> Int? {
+        guard let string = simpleString(from: &position) else {
+            return nil
+        }
+        
+        let integerIndex = string.index(after: string.startIndex)
+        let integerEnd = string.index(string.endIndex, offsetBy: -1)
+        
+        guard
+            string.count > 1,
+            let number = Int(string[integerIndex..<integerEnd])
+        else {
+            throw ClientError.parsingError
+        }
+        
+        return number
+    }
+    
     fileprivate func parseToken(_ token: Character, at position: inout Int) throws -> (result: _RedisValue, complete: Bool)? {
         switch token {
         case "+":
@@ -76,30 +94,18 @@ final class ResponseParser: Async.InputStream {
             return (.parsed(.error(RedisError(string: string))), true)
         case ":":
             // Integer
-            guard let string = simpleString(from: &position) else {
+            guard let number = try integer(from: &position) else {
                 return nil
-            }
-            
-            guard
-                string.count > 1,
-                let number = Int(string)
-            else {
-                throw ClientError.parsingError
             }
             
             return (.parsed(.integer(number)), true)
         case "$":
             // Bulk strings
-            guard let string = simpleString(from: &position) else {
+            guard let size = try integer(from: &position) else {
                 return nil
             }
             
-            let integerIndex = string.index(after: string.startIndex)
-            let integerEnd = string.index(string.endIndex, offsetBy: -1)
-            
             guard
-                string.count > 1,
-                let size = Int(string[integerIndex..<integerEnd]),
                 size >= -1,
                 size < responseBuffer.distance(from: position, to: responseBuffer.endIndex)
             else {
@@ -108,19 +114,19 @@ final class ResponseParser: Async.InputStream {
             
             let endPosition = responseBuffer.index(position, offsetBy: size)
             
+            defer {
+                position = responseBuffer.index(position, offsetBy: size + 2)
+            }
+            
             return (.parsed(.bulkString(Data(responseBuffer[position..<endPosition]))), true)
         case "*":
             // Arrays
-            guard let string = simpleString(from: &position) else {
+            guard let size = try integer(from: &position) else {
                 return nil
             }
             
-            guard
-                string.count > 1,
-                let size = Int(string),
-                size >= 0
-                else {
-                    throw ClientError.parsingError
+            guard size >= 0 else {
+                throw ClientError.parsingError
             }
             
             var array = [_RedisValue](repeating: .notYetParsed, count: size)
