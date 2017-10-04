@@ -48,10 +48,10 @@ public final class TLSClient: Async.Stream, ClosableStream {
     }
     
     /// The AppleSSL (macOS/iOS) or OpenSSL (Linux) stream
-    let ssl: SSLStream<TCP.Client>
+    let ssl: SSLStream<TCPClient>
     
     /// The TCP that is used in the SSL Stream
-    let client: TCP.Client
+    let client: TCPClient
     
     /// A DispatchQueue on which this Client executes all operations
     let queue: DispatchQueue
@@ -63,7 +63,7 @@ public final class TLSClient: Async.Stream, ClosableStream {
         let socket = try Socket()
         
         self.queue = queue
-        self.client = TCP.Client(socket: socket, queue: queue)
+        self.client = TCPClient(socket: socket, queue: queue)
         self.ssl = try SSLStream(socket: self.client, descriptor: socket.descriptor, queue: queue)
     }
     

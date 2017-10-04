@@ -5,7 +5,7 @@ import Foundation
 import libc
 
 /// TCP client stream.
-public final class Client: Async.Stream, ClosableStream {
+public final class TCPClient: Async.Stream, ClosableStream {
     // MARK: Stream
     public typealias Input = ByteBuffer
     public typealias Output = ByteBuffer

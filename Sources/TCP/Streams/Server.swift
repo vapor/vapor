@@ -10,7 +10,7 @@ public final class Server: Async.OutputStream, ClosableStream {
     }
     
     // MARK: Stream
-    public typealias Output = Client
+    public typealias Output = TCPClient
     
     /// See `BaseStream.onClose`
     public var onClose: CloseHandler?
@@ -75,7 +75,7 @@ public final class Server: Async.OutputStream, ClosableStream {
             }
 
             let worker = self.worker.next()!
-            let client = Client(socket: socket, queue: worker)
+            let client = TCPClient(socket: socket, queue: worker)
             client.errorStream = self.errorStream
             self.outputStream?(client)
         }

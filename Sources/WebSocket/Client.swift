@@ -30,7 +30,7 @@ extension WebSocket {
         try socket.connect(hostname: hostname, port: port)
         
         // The TCP Client that will be used by both HTTP and the WebSocket for communication
-        let client = TCP.Client(socket: socket, queue: queue)
+        let client = TCPClient(socket: socket, queue: queue)
         
         // TODO: TLS
         

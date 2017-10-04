@@ -20,7 +20,7 @@ class AppleTests: XCTestCase {
     func testSSL() throws {
         let server = try TCP.Server()
         
-        var peers = [SSLStream<TCP.Client>]()
+        var peers = [SSLStream<TCPClient>]()
         var clients = [TLSClient]()
         
         let peerQueue = DispatchQueue(label: "test.peer")

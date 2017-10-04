@@ -36,7 +36,7 @@ final class HTTPTestServer {
     public func start(with responder: Responder) throws {
         // create a tcp server
         let tcp = try TCP.Server(workerCount: workerCount)
-        let server = HTTP.Server(tcp: tcp)
+        let server = HTTP.Server(clientStream: tcp)
         
         // setup the server pipeline
         server.drain { client in
@@ -57,7 +57,7 @@ final class HTTPTestServer {
         }
         
         // bind, listen, and start accepting
-        try server.tcp.start(
+        try server.clientStream.start(
             hostname: hostname,
             port: port,
             backlog: backlog

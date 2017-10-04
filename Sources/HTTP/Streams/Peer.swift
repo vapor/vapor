@@ -34,10 +34,10 @@ public final class Peer: Async.Stream, ClosableStream {
     public var errorStream: ErrorHandler?
     
     /// The underlying TCP Client
-    public let tcp: TCP.Client
+    public let tcp: TCPClient
     
     /// Creates a new `Peer` from a `TCP.Client`
-    public init(tcp: TCP.Client) {
+    public init(tcp: TCPClient) {
         self.tcp = tcp
     }
     

@@ -2,7 +2,7 @@ import Async
 import TCP
 
 /// HTTP server wrapped around TCP server
-public final class Server<ClientStream: OutputStream>: Async.OutputStream where ClientStream.Output == TCP.Client {
+public final class Server<ClientStream: OutputStream>: Async.OutputStream where ClientStream.Output == TCPClient {
     // MARK: Stream
     public typealias Output = HTTP.Peer
     

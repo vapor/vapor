@@ -48,12 +48,12 @@ internal final class Connection: Async.Stream, ClosableStream {
     let serverSide: Bool
 
     /// The underlying TCP connection
-    let client: TCP.Client
+    let client: TCPClient
     
     /// Creates a new WebSocket Connection manager for a TCP.Client
     ///
     /// `serverSide` is used to determine if sent frames need to be masked
-    init(client: TCP.Client, serverSide: Bool = true) {
+    init(client: TCPClient, serverSide: Bool = true) {
         self.client = client
         self.serverSide = serverSide
         
