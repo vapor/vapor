@@ -16,7 +16,7 @@ enum SSLSettings {
     }()
 }
 
-public final class SSLStream<DuplexByteStream: Async.Stream>: Async.Stream where DuplexByteStream.Output == ByteBuffer, DuplexByteStream.Input == ByteBuffer, DuplexByteStream: ClosableStream {
+public final class SSLStream<DuplexByteStream: Async.Stream>: Async.Stream, ClosableStream where DuplexByteStream.Output == ByteBuffer, DuplexByteStream.Input == ByteBuffer, DuplexByteStream: ClosableStream {
     /// See `OutputStream.Output`
     public typealias Output = ByteBuffer
     

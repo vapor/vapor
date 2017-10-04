@@ -1,6 +1,6 @@
 import Async
 
-protocol ResultsStream : OutputStream {
+protocol ResultsStream : OutputStream, ClosableStream {
     var columns: [Field] { get set }
     var header: UInt64? { get set }
     var mysql41: Bool { get }
@@ -20,13 +20,13 @@ extension ResultsStream {
                     if case .error(let error) = try input.parseResponse(mysql41: mysql41) {
                         self.errorStream?(error)
                     } else {
-                        self.onClose?()
+                        self.close()
                     }
                     return
                 }
                 
                 if header == 0 {
-                    self.onClose?()
+                    self.close()
                 }
                 
                 self.header = header
@@ -55,7 +55,7 @@ extension ResultsStream {
                 return
             }
             
-            onClose?()
+            close()
             return
         }
         

@@ -21,9 +21,6 @@ public final class ResponderStream: Async.Stream {
 
     /// See OutputStream.Output
     public typealias Output = Response
-    
-    /// See `BaseStream.onClose`
-    public var onClose: CloseHandler?
 
     /// See BaseStream.errorStream
     public var errorStream: ErrorHandler?

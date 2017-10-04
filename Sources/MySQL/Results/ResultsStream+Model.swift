@@ -1,21 +1,10 @@
 import Async
 
 public final class ModelStream<D: Decodable> : ResultsStream {
-    /// Parses a packet into a Decodable entity
-    func parseRows(from packet: Packet) throws -> D {
-        let row = try packet.makeRow(columns: columns)
-        
-        let decoder = try RowDecoder(keyed: row, lossyIntegers: true, lossyStrings: true)
-        return try D(from: decoder)
+    public func close() {
+        self.onClose?()
     }
     
-    init(mysql41: Bool) {
-        self.mysql41 = mysql41
-    }
-    
-    /// See `BaseStream.onClose`.
-    ///
-    /// Do not touch
     public var onClose: CloseHandler?
     
     /// A list of all fields' descriptions in this table
@@ -31,5 +20,18 @@ public final class ModelStream<D: Decodable> : ResultsStream {
     public var outputStream: OutputHandler?
     
     public var errorStream: ErrorHandler?
+    
+    init(mysql41: Bool) {
+        self.mysql41 = mysql41
+    }
+    
+    /// Parses a packet into a Decodable entity
+    func parseRows(from packet: Packet) throws -> D {
+        let row = try packet.makeRow(columns: columns)
+        
+        let decoder = try RowDecoder(keyed: row, lossyIntegers: true, lossyStrings: true)
+        return try D(from: decoder)
+    }
+    
 }
 

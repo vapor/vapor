@@ -3,7 +3,7 @@ import Bits
 import TCP
 
 /// An HTTP `Server`'s peer wrapped around TCP client
-public final class Peer: Async.Stream {
+public final class Peer: Async.Stream, ClosableStream {
     /// See `InputStream.Input`
     public typealias Input = SerializedMessage
     
@@ -45,5 +45,9 @@ public final class Peer: Async.Stream {
     public func inputStream(_ input: SerializedMessage) {
         tcp.inputStream(input.message)
         input.onUpgrade?(tcp)
+    }
+    
+    public func close() {
+        tcp.close()
     }
 }

@@ -10,7 +10,7 @@ import Dispatch
 import TCP
 
 /// A Client (used for connecting to servers) that uses the platform specific SSL library.
-public final class TLSClient: Async.Stream {
+public final class TLSClient: Async.Stream, ClosableStream {
     /// See `OutputStream.Output`
     public typealias Output = ByteBuffer
     
@@ -82,5 +82,9 @@ public final class TLSClient: Async.Stream {
     /// Used for sending data over TLS
     public func inputStream(_ input: ByteBuffer) {
         ssl.inputStream(input)
+    }
+    
+    public func close() {
+        ssl.close()
     }
 }

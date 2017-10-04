@@ -27,9 +27,6 @@ public class ByteStreamHasher<H: Hash> : Async.InputStream {
     /// `ByteStreamHasher` accepts byte streams
     public typealias Input = ByteBuffer
     
-    /// See `BaseStream.onClose`
-    public var onClose: CloseHandler?
-    
     /// See `BaseStream.errorStream`
     public var errorStream: ErrorHandler?
     

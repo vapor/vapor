@@ -15,7 +15,7 @@ import Security
 /// The TCP socket will also be read and deciphered into plaintext and outputted.
 ///
 /// https://developer.apple.com/documentation/security/secure_transport
-public final class SSLStream<DuplexByteStream: Async.Stream>: Async.Stream where DuplexByteStream.Output == ByteBuffer, DuplexByteStream.Input == ByteBuffer, DuplexByteStream: ClosableStream {
+public final class SSLStream<DuplexByteStream: Async.Stream>: Async.Stream, ClosableStream where DuplexByteStream.Output == ByteBuffer, DuplexByteStream.Input == ByteBuffer, DuplexByteStream: ClosableStream {
     /// See `OutputStream.Output`
     public typealias Output = ByteBuffer
     
