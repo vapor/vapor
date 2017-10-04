@@ -58,7 +58,7 @@ XCTMain([
     testCase(ServiceTests.allTests),
 
     // TLS
-    testCase(TLSTests.SocketsTests.allTests),
+    testCase(TLSTests.SSLTests.allTests),
 
     // TCP
     testCase(TCPTests.SocketsTests.allTests),
