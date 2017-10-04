@@ -55,7 +55,7 @@ let package = Package(
         .library(name: "WebSocket", targets: ["WebSocket"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/vapor/ctls.git", from: "1.1.2")
+        .package(url: "https://github.com/vapor/copenssl.git", .revision("master"))
     ],
     targets: [
         // Async
@@ -113,7 +113,7 @@ let package = Package(
         .testTarget(name: "ServiceTests", dependencies: ["Service"]),
 
         // TLS
-        .target(name: "OpenSSL", dependencies: ["CTLS", "Async", "Debugging"]),
+        .target(name: "OpenSSL", dependencies: ["COpenSSL", "Async", "Debugging"]),
         
         .target(name: "TLS", dependencies: [ssl, "TCP"]),
         
