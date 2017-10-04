@@ -13,7 +13,12 @@ final class RequestSerializer: Async.Stream {
     init() {}
     
     func inputStream(_ input: RedisValue) {
-        
+        let message = input.serialize()
+            
+        message.withUnsafeBytes { (pointer: BytesPointer) in
+            let buffer = ByteBuffer(start: pointer, count: message.count)
+            outputStream?(buffer)
+        }
     }
 }
 
@@ -31,7 +36,7 @@ extension RedisValue {
         case .integer(let int):
             return Data(":\(int)\r\n".utf8)
         case .bulkString(let data):
-            return Data("$\(data.count)".utf8) + data + Data("\r\n".utf8)
+            return Data("$\(data.count)\r\n".utf8) + data + Data("\r\n".utf8)
         case .array(let values):
             var buffer = Data("*\(values.count)\r\n".utf8)
             for value in values {

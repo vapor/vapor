@@ -95,10 +95,13 @@ final class ResponseParser: Async.InputStream {
                 return nil
             }
             
+            let integerIndex = string.index(after: string.startIndex)
+            let integerEnd = string.index(string.endIndex, offsetBy: -1)
+            
             guard
                 string.count > 1,
                 string.first == "$",
-                let size = Int(string),
+                let size = Int(string[integerIndex..<integerEnd]),
                 size >= -1,
                 size < responseBuffer.distance(from: position, to: responseBuffer.endIndex)
             else {
@@ -210,7 +213,7 @@ final class ResponseParser: Async.InputStream {
                 return
             }
             
-            responseBuffer.removeSubrange(...index)
+            responseBuffer.removeSubrange(..<index)
             
             guard complete else {
                 parsingValue = result
