@@ -2,16 +2,27 @@ import Async
 import Bits
 import Foundation
 
-final class RequestSerializer: Async.Stream {
+/// A streaming Redis value serializer
+final class ValueSerializer: Async.Stream {
+    /// See `InputStream.Input`
     typealias Input = RedisValue
+    
+    /// See `OutputStream.Output`
     typealias Output = ByteBuffer
     
+    /// See `BaseStream.onClose`
     var onClose: BaseStream.CloseHandler?
+    
+    /// See `BaseStream.errorStream`
     var errorStream: BaseStream.ErrorHandler?
+    
+    /// See `OutputStream.outputStream`
     var outputStream: OutputHandler?
 
+    /// Creates a new ValueSerializer
     init() {}
     
+    /// Serializes a value to the outputStream
     func inputStream(_ input: RedisValue) {
         let message = input.serialize()
             
@@ -22,9 +33,11 @@ final class RequestSerializer: Async.Stream {
     }
 }
 
+/// Static "fast" route for serializing `null` values
 fileprivate let nullData = Data("$-1\r\n".utf8)
 
 extension RedisValue {
+    /// Serializes a single value
     func serialize() -> Data {
         switch self {
         case .null:

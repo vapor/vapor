@@ -1,6 +1,10 @@
 import Async
 
 extension Client {
+    /// Stores the `value` at the key `key`
+    ///
+    /// - returns: A future that will be completed (or failed) when the key is stored or failed to be stored
+    /// - throws: On network error
     @discardableResult
     public func set(_ value: RedisValue, forKey key: String) throws -> Future<Void> {
         return try self.runCommand(["SET", RedisValue(bulk: key), value]).map { result in
@@ -10,6 +14,10 @@ extension Client {
         }
     }
     
+    /// Removes the value at the key `key`
+    ///
+    /// - returns: A future that will be completed (or failed) when the key is removed or failed to be removed
+    /// - throws: On network error
     @discardableResult
     public func delete(_ keys: String...) throws -> Future<Int> {
         let keys = keys.map { RedisValue(bulk: $0) }
@@ -27,6 +35,10 @@ extension Client {
         }
     }
     
+    /// Fetches the value at the key `key`
+    ///
+    /// - returns: A future that will be completed (or failed) with the value associated with this `key`
+    /// - throws: On network error
     @discardableResult
     public func getValue(forKey key: String) throws -> Future<RedisValue> {
         return try self.runCommand(["GET", RedisValue(bulk: key)]).map { result in
