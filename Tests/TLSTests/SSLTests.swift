@@ -17,6 +17,10 @@ import TLS
 #endif
     
 class AppleTests: XCTestCase {
+    let allTests = [
+        ("testSSL", testSSL)
+    ]
+    
     func testSSL() throws {
         let server = try TCP.Server()
         
