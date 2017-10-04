@@ -46,7 +46,6 @@ let package = Package(
         .library(name: "Service", targets: ["Service"]),
 
         // TLS
-        .library(name: "AppleSSL", targets: ["AppleSSL"]),
         .library(name: "OpenSSL", targets: ["OpenSSL"]),
 
         // Vapor
@@ -114,7 +113,6 @@ let package = Package(
         .testTarget(name: "ServiceTests", dependencies: ["Service"]),
 
         // TLS
-        .target(name: "AppleSSL", dependencies: ["Async", "Debugging"]),
         .target(name: "OpenSSL", dependencies: ["CTLS", "Async", "Debugging"]),
         
         .target(name: "TLS", dependencies: [ssl, "TCP"]),
@@ -140,3 +138,8 @@ let package = Package(
         .testTarget(name: "WebSocketTests", dependencies: ["WebSocket"]),
     ]
 )
+
+#if os(macOS) || os(iOS)
+    package.targets.append(.target(name: "AppleSSL", dependencies: ["Async", "Debugging"]))
+    package.products.append(.library(name: "AppleSSL", targets: ["AppleSSL"]))
+#endif
