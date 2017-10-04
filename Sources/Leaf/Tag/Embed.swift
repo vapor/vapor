@@ -1,4 +1,4 @@
-import Core
+import Async
 
 public final class Embed: Tag {
     public init() {}

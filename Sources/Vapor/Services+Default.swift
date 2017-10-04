@@ -1,4 +1,5 @@
 import HTTP
+import Foundation
 import Routing
 import Service
 
@@ -8,7 +9,7 @@ extension Services {
         var services = Services()
 
         // register engine server and default config settings
-        services.register(Server.self) { container in
+        services.register(HTTPServer.self) { container in
             return try EngineServer(
                 config: container.make(for: EngineServer.self)
             )
@@ -23,9 +24,11 @@ extension Services {
                 DateMiddleware.self
             ])
         }
+        
         services.register { container in
             return DateMiddleware()
         }
+        
         services.register { container in
             return ErrorMiddleware()
         }

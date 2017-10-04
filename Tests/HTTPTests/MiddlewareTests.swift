@@ -1,6 +1,8 @@
+import Async
 import Core
 import Dispatch
 import HTTP
+import TCP
 import XCTest
 
 class MiddlewareTests : XCTestCase {
@@ -28,6 +30,40 @@ class MiddlewareTests : XCTestCase {
         let req = Request()
         server.emit(req)
         group.wait()
+    }
+    
+    func testClientServer() throws {
+        let responder = HelloWorldResponder()
+        
+        let serverSocket = try TCP.Server()
+        
+        let server = HTTP.Server(tcp: serverSocket)
+        server.drain { peer in
+            let parser = HTTP.RequestParser(worker: peer.tcp.worker)
+            
+            let responderStream = responder.makeStream()
+            let serializer = HTTP.ResponseSerializer()
+            
+            peer.stream(to: parser)
+                .stream(to: responderStream)
+                .stream(to: serializer)
+                .drain(into: peer)
+            
+            peer.tcp.start()
+        }
+        
+        try serverSocket.start(port: 1234)
+        
+        let socket = try TCP.Socket()
+        try socket.connect(hostname: "0.0.0.0", port: 1234)
+        
+        let tcpClient = TCP.Client(socket: socket, worker: Worker(queue: .global()))
+        let client = HTTP.Client(tcp: tcpClient)
+        tcpClient.start()
+        
+        let response = try client.send(request: Request()).sync()
+        
+        XCTAssertEqual(response.body.data, Data(responder.response.utf8))
     }
 
     static let allTests = [
@@ -65,6 +101,21 @@ final class TestMiddleware: Middleware {
         }
 
         return promise.future
+    }
+}
+struct HelloWorldResponder: Responder, ExpressibleByStringLiteral {
+    init(stringLiteral value: String) {
+        self.response = value
+    }
+    
+    init() {}
+    
+    var response = "Hello world"
+    
+    func respond(to req: Request) throws -> Future<Response> {
+        let response = try Response(body: self.response)
+        
+        return Future(response)
     }
 }
 

@@ -1,5 +1,6 @@
+import Async
+import Bits
 import CSQLite
-import Core
 import Dispatch
 import Foundation
 
@@ -15,7 +16,7 @@ let SQLITE_TRANSIENT = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
 ///         .then { ... }
 ///         .catch { ... }
 ///
-public final class Query: Core.OutputStream {
+public final class Query: Async.OutputStream {
     // stream conformance
     public typealias Output = Row
 

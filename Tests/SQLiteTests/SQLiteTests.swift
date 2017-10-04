@@ -1,3 +1,4 @@
+import Async
 import Dispatch
 @testable import SQLite
 import XCTest

@@ -1,5 +1,6 @@
 import Foundation
-import Core
+import Async
+import Bits
 
 internal class Packet {
     // Maximum payload size
@@ -19,7 +20,7 @@ internal class Packet {
 }
 
 /// Parses buffers into packets
-internal final class PacketParser : Core.Stream {
+internal final class PacketParser : Async.Stream {
     var buffer: (buffer: MutableByteBuffer, containing: Int, sequenceId: UInt8)?
     
     func inputStream(_ input: MutableByteBuffer) {

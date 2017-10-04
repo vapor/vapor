@@ -1,4 +1,4 @@
-import Core
+import Async
 
 protocol ResultsStream : OutputStream, ClosableStream {
     var columns: [Field] { get set }

@@ -1,5 +1,5 @@
+import Bits
 import Foundation
-import Core
 
 public final class BCrypt {
     // the salt for this hash

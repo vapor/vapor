@@ -1,5 +1,5 @@
 import Foundation
-import Core
+import Bits
 
 /// A helper class that helps with parsing a packet
 class Parser {

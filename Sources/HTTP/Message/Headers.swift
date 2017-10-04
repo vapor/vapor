@@ -25,6 +25,24 @@ public struct Headers: Codable {
             storage[name] = newValue.map { [$0] }
         }
     }
+    
+    /// https://tools.ietf.org/html/rfc2616#section-3.6
+    ///
+    /// "Parameters are in  the form of attribute/value pairs."
+    ///
+    /// From a header + attribute, this subscript will fetch a value
+    public subscript(name: Name, attribute: String) -> String? {
+        get {
+            guard let header = self[name] else { return nil }
+            guard let range = header.range(of: "\(attribute)=\"") else { return nil }
+            
+            let remainder = header[range.upperBound...]
+            
+            guard let end = remainder.index(of: "\"") else { return nil }
+            
+            return String(remainder[remainder.startIndex..<end])
+        }
+    }
 
     /// :nodoc:
     public subscript(valuesFor name: Name) -> [String] {

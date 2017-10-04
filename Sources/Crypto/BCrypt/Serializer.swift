@@ -1,4 +1,4 @@
-import Core
+import Bits
 import Foundation
 
 extension BCrypt {

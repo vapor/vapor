@@ -1,4 +1,4 @@
-import Core
+import Async
 
 /// Capable of transforming requests and responses.
 public protocol Middleware {

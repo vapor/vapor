@@ -1,5 +1,5 @@
 import XCTest
-import Core
+import Async
 
 final class StreamTests : XCTestCase {
     func testPipeline() throws {

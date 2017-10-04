@@ -1,4 +1,4 @@
-import Core
+import Async
 
 public final class Print: Tag {
     public init() { }
