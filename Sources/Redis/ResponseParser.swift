@@ -82,7 +82,6 @@ final class ResponseParser: Async.InputStream {
             
             guard
                 string.count > 1,
-                string.first == ":",
                 let number = Int(string)
             else {
                 throw ClientError.parsingError
@@ -100,7 +99,6 @@ final class ResponseParser: Async.InputStream {
             
             guard
                 string.count > 1,
-                string.first == "$",
                 let size = Int(string[integerIndex..<integerEnd]),
                 size >= -1,
                 size < responseBuffer.distance(from: position, to: responseBuffer.endIndex)
@@ -119,7 +117,6 @@ final class ResponseParser: Async.InputStream {
             
             guard
                 string.count > 1,
-                string.first == "$",
                 let size = Int(string),
                 size >= 0
                 else {
