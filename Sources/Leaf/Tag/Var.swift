@@ -3,10 +3,10 @@ import Async
 public final class Var: Tag {
     public init() {}
 
-    public func render(parsed: ParsedTag, context: inout Context, renderer: Renderer) throws -> Future<Context?> {
-        let promise = Promise(Context?.self)
+    public func render(parsed: ParsedTag, context: inout LeafData, renderer: Renderer) throws -> Future<LeafData?> {
+        let promise = Promise(LeafData?.self)
 
-        func updateContext(with c: Context) {
+        func updateContext(with c: LeafData) {
             context = c
         }
 

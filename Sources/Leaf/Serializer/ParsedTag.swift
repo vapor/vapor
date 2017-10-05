@@ -6,7 +6,7 @@ public struct ParsedTag {
     public let name: String
 
     /// Resolved parameters to this tag.
-    public let parameters: [Context]
+    public let parameters: [LeafData]
 
     /// Optional tag body
     public let body: [Syntax]?
@@ -19,7 +19,7 @@ public struct ParsedTag {
 
     init(
         name: String,
-        parameters: [Context],
+        parameters: [LeafData],
         body: [Syntax]?,
         source: Source,
         queue: DispatchQueue

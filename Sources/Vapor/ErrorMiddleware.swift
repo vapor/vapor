@@ -8,22 +8,36 @@ public final class ErrorMiddleware: Middleware {
     public func respond(to req: Request, chainingTo next: Responder) throws -> Future<Response> {
         let promise = Promise(Response.self)
 
-        try next.respond(to: req).then { res in
-            promise.complete(res)
-        }.catch { error in
-            debugPrint(error)
-
-            let reason: String
-            if let debuggable = error as? Debuggable {
-                reason = debuggable.reason
-            } else {
-                reason = "Unknown reason."
+        do {
+            try next.respond(to: req).then { res in
+                promise.complete(res)
+            }.catch { error in
+                debugPrint(error)
+                promise.complete(error.makeResponse())
             }
-
-            let res = try! Response(status: .internalServerError, body: "Oops: \(reason)")
-            promise.complete(res)
+        } catch {
+            debugPrint(error)
+            promise.complete(error.makeResponse())
         }
 
         return promise.future
+    }
+}
+
+extension Swift.Error {
+    /// Creates a response for a given error
+    fileprivate func makeResponse() -> Response {
+        let reason: String
+        if let debuggable = self as? Debuggable {
+            reason = debuggable.reason
+        } else {
+            reason = "Unknown reason."
+        }
+
+        let res = try! Response(
+            status: .internalServerError,
+            body: "Oops: \(reason)"
+        )
+        return res
     }
 }

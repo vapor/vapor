@@ -4,23 +4,23 @@ import Foundation
 
 /// Data structure for passing data
 /// into Leaf templates as a context.
-public enum Context {
+public enum LeafData {
     case bool(Bool)
     case string(String)
     case int(Int)
     case double(Double)
     case data(Data)
-    case dictionary([String: Context])
-    case array([Context])
-    case future(Future<Context>)
-    public typealias Lazy = () -> (Context)
+    case dictionary([String: LeafData])
+    case array([LeafData])
+    case future(Future<LeafData>)
+    public typealias Lazy = () -> (LeafData)
     case lazy(Lazy)
     case null
 }
 
 // MARK: Polymorphic
 
-extension Context {
+extension LeafData {
     /// Attempts to convert to string or returns nil.
     public var string: String? {
         switch self {
@@ -90,7 +90,7 @@ extension Context {
     }
 
     /// Returns dictionary if context contains one.
-    public var dictionary: [String: Context]? {
+    public var dictionary: [String: LeafData]? {
         switch self {
         case .dictionary(let d):
             return d
@@ -100,7 +100,7 @@ extension Context {
     }
 
     /// Returns array if context contains one.
-    public var array: [Context]? {
+    public var array: [LeafData]? {
         switch self {
         case .array(let a):
             return a
@@ -126,8 +126,8 @@ extension Context {
 
 // MARK: Equatable
 
-extension Context: Equatable {
-    public static func ==(lhs: Context, rhs: Context) -> Bool {
+extension LeafData: Equatable {
+    public static func ==(lhs: LeafData, rhs: LeafData) -> Bool {
         switch (lhs, rhs) {
         case (.array(let a), .array(let b)):
             return a == b

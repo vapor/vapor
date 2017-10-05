@@ -28,7 +28,7 @@ public final class Renderer {
 
     /// Renders the supplied template bytes into a view
     /// using the supplied context.
-    public func render(template: Data, context: Context, on queue: DispatchQueue) throws -> Future<Data> {
+    public func render(template: Data, context: LeafData, on queue: DispatchQueue) throws -> Future<Data> {
         let hash = template.hashValue
 
         let ast: [Syntax]
@@ -65,7 +65,7 @@ public final class Renderer {
 extension Renderer: ViewRenderer {
     /// See ViewRenderer.make
     public func make(_ path: String, context: Encodable, on queue: DispatchQueue) throws -> Future<View> {
-        let encoder = ContextEncoder()
+        let encoder = LeafDataEncoder()
         try context.encode(to: encoder)
         return render(path: path, context: encoder.context, on: queue).map { data in
             return View(data: data)
@@ -77,7 +77,7 @@ extension Renderer: ViewRenderer {
 
 extension Renderer {
     /// Loads the leaf template from the supplied path.
-    public func render(path: String, context: Context, on queue: DispatchQueue) -> Future<Data> {
+    public func render(path: String, context: LeafData, on queue: DispatchQueue) -> Future<Data> {
         let path = path.hasSuffix(".leaf") ? path : path + ".leaf"
         let promise = Promise(Data.self)
 
@@ -110,7 +110,7 @@ extension Renderer {
     }
 
     /// Renders a string template and returns a string.
-    public func render(_ view: String, context: Context, on queue: DispatchQueue) -> Future<String> {
+    public func render(_ view: String, context: LeafData, on queue: DispatchQueue) -> Future<String> {
         let promise = Promise(String.self)
 
         do {

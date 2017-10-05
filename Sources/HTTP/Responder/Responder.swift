@@ -48,7 +48,7 @@ public final class ResponderStream: Async.Stream {
                 self.errorStream?(error)
             }
         } catch {
-            errorStream?(error)
+            self.errorStream?(error)
         }
     }
 }

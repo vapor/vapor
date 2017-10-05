@@ -3,8 +3,8 @@ import Foundation
 
 public final class Loop: Tag {
     public init() {}
-    public func render(parsed: ParsedTag, context: inout Context, renderer: Renderer) throws -> Future<Context?> {
-        let promise = Promise(Context?.self)
+    public func render(parsed: ParsedTag, context: inout LeafData, renderer: Renderer) throws -> Future<LeafData?> {
+        let promise = Promise(LeafData?.self)
 
         if case .dictionary(var dict) = context {
             let body = try parsed.requireBody()
@@ -16,14 +16,14 @@ public final class Loop: Tag {
 
             for (i, item) in array.enumerated() {
                 let isLast = i == array.count - 1
-                let loop = Context.dictionary([
+                let loop = LeafData.dictionary([
                     "index": .int(i),
                     "isFirst": .bool(i == 0),
                     "isLast": .bool(isLast)
                     ])
                 dict["loop"] = loop
                 dict[key] = item
-                let temp = Context.dictionary(dict)
+                let temp = LeafData.dictionary(dict)
                 let serializer = Serializer(
                     ast: body,
                     renderer: renderer,

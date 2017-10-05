@@ -18,6 +18,7 @@ public final class Server: Async.OutputStream {
         self.tcp = tcp
         tcp.outputStream = { tcp in
             let client = HTTP.Peer(tcp: tcp)
+            client.errorStream = self.errorStream
             self.outputStream?(client)
         }
     }

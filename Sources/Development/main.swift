@@ -1,30 +1,27 @@
 import Async
 import Core
 import Dispatch
+import Fluent
 import Foundation
 import HTTP
 import Leaf
 import Routing
 import Service
+import SQLite
 import Vapor
 
-extension View: ResponseRepresentable {
-    public func makeResponse(for request: Request) throws -> Response {
-        return Response(headers: [
-            .contentType: "text/html"
-        ], body: Body(self.data))
-    }
-}
-
-
 var services = Services.default()
-try services.register(Leaf.Provider())
 
-services.register { container in
+services.register(SQLiteStorage.file(path: "/tmp/db.sqlite"))
+try services.register(LeafProvider())
+try services.register(FluentProvider())
+
+services.register(
     MiddlewareConfig([
+        DatabaseMiddleware.self,
         ErrorMiddleware.self
     ])
-}
+)
 
 let app = Application(services: services)
 
@@ -62,44 +59,30 @@ extension String: ResponseRepresentable {
     }
 }
 
-import SQLite
-
-extension Worker {
-    func connectionPool(for database: Database) -> ConnectionPool {
-        if let existing = extend["vapor:connection-pool"] as? ConnectionPool {
-            return existing
-        } else {
-            let new = database.makeConnectionPool(max: 2, on: queue)
-            extend["vapor:connection-pool"] = new
-            return new
-        }
-    }
+struct Message: Model {
+    var id: String?
+    var text: String
+    var time: Int
+    let storage = Storage()
 }
 
-let database = SQLite.Database(path: "/tmp/db.sqlite")
-
-async.get("sqlite") { req -> Future<String> in
+async.get("fluent") { req -> Future<String> in
     let promise = Promise(String.self)
-    
-    let pool = try req.requireWorker()
-        .connectionPool(for: database)
 
-    pool.requestConnection().then { connection in
-        do {
-            try connection.query("select sqlite_version();").all().then { row in
-                let version = row[0]["sqlite_version()"]?.text ?? "no version"
-                promise.complete(version)
-                pool.releaseConnection(connection)
-            }.catch { error in
-                promise.fail(error)
-                pool.releaseConnection(connection)
-            }
-        } catch {
-            promise.fail(error)
-            pool.releaseConnection(connection)
+    let query = try req.makeQuery(for: Message.self)
+    // FIXME: generate sql
+    query.sql = "SELECT * FROM `messages`;"
+
+    query.data = Message(id: "UUID:5", text: "asdf", time: 123)
+
+    query.all().then { messages in
+        var data = ""
+        for message in messages {
+            data += "\(message.id!): \(message.text) @ \(message.time)\n"
         }
-    }.catch { error in
-        promise.fail(error)
+        promise.complete(data)
+    }.catch { err in
+        promise.fail(err)
     }
 
     return promise.future

@@ -5,12 +5,12 @@ import Foundation
 /// Serializes parsed Leaf ASTs into view bytes.
 public final class Serializer {
     let ast: [Syntax]
-    var context: Context
+    var context: LeafData
     let renderer: Renderer
     let queue: DispatchQueue
 
     /// Creates a new Serializer.
-    public init(ast: [Syntax], renderer: Renderer,  context: Context, queue: DispatchQueue) {
+    public init(ast: [Syntax], renderer: Renderer,  context: LeafData, queue: DispatchQueue) {
         self.ast = ast
         self.context = context
         self.renderer = renderer
@@ -78,15 +78,15 @@ public final class Serializer {
         body: [Syntax]?,
         chained: Syntax?,
         source: Source
-    ) throws -> Future<Context?> {
+    ) throws -> Future<LeafData?> {
         guard let tag = renderer.tags[name] else {
             throw SerializerError.unknownTag(name: name, source: source)
         }
 
-        var inputFutures: [Future<Context>] = []
+        var inputFutures: [Future<LeafData>] = []
 
         for parameter in parameters {
-            let promise = Promise(Context.self)
+            let promise = Promise(LeafData.self)
             try resolveSyntax(parameter).then { input in
                 promise.complete(input ?? .null)
             }.catch { error in
@@ -95,7 +95,7 @@ public final class Serializer {
             inputFutures.append(promise.future)
         }
 
-        let promise = Promise(Context?.self)
+        let promise = Promise(LeafData?.self)
 
         inputFutures.flatten().then { inputs in
             do {
@@ -151,8 +151,8 @@ public final class Serializer {
     }
 
     // resolves a constant to data
-    private func resolveConstant(_ const: Constant) throws -> Future<Context> {
-        let promise = Promise(Context.self)
+    private func resolveConstant(_ const: Constant) throws -> Future<LeafData> {
+        let promise = Promise(LeafData.self)
         switch const {
         case .bool(let bool):
             promise.complete(.bool(bool))
@@ -177,11 +177,11 @@ public final class Serializer {
     }
 
     // resolves an expression to data
-    private func resolveExpression(_ op: Operator, left: Syntax, right: Syntax) throws -> Future<Context> {
+    private func resolveExpression(_ op: Operator, left: Syntax, right: Syntax) throws -> Future<LeafData> {
         let l = try resolveSyntax(left)
         let r = try resolveSyntax(right)
 
-        let promise = Promise(Context.self)
+        let promise = Promise(LeafData.self)
 
         switch op {
         case .equal:
@@ -259,10 +259,10 @@ public final class Serializer {
     }
 
     // resolves syntax to data (or fails)
-    private func resolveSyntax(_ syntax: Syntax) throws -> Future<Context?> {
+    private func resolveSyntax(_ syntax: Syntax) throws -> Future<LeafData?> {
         switch syntax.kind {
         case .constant(let constant):
-            let promise = Promise(Context?.self)
+            let promise = Promise(LeafData?.self)
             try resolveConstant(constant).then { data in
                 promise.complete(data)
             }.catch { error in
@@ -270,7 +270,7 @@ public final class Serializer {
             }
             return promise.future
         case .expression(let op, let left, let right):
-            let promise = Promise(Context?.self)
+            let promise = Promise(LeafData?.self)
             try resolveExpression(op, left: left, right: right).then { data in
                 promise.complete(data)
             }.catch { error in
@@ -278,7 +278,7 @@ public final class Serializer {
             }
             return promise.future
         case .identifier(let id):
-            let promise = Promise(Context?.self)
+            let promise = Promise(LeafData?.self)
             try contextFetch(path: id).then { value in
                 promise.complete(value ?? .null)
             }.catch { error in
@@ -296,7 +296,7 @@ public final class Serializer {
         case .not(let syntax):
             switch syntax.kind {
             case .identifier(let id):
-                let promise = Promise(Context?.self)
+                let promise = Promise(LeafData?.self)
                 try contextFetch(path: id).then { data in
                         promise.complete(.bool(data?.bool == true))
                 }.catch { error in
@@ -317,7 +317,7 @@ public final class Serializer {
                     throw SerializerError.unexpectedSyntax(syntax)
                 }
 
-                let promise = Promise(Context?.self)
+                let promise = Promise(LeafData?.self)
                 promise.complete(.bool(ret))
                 return promise.future
             default:
@@ -329,8 +329,8 @@ public final class Serializer {
     }
 
     // fetches data from the context
-    private func contextFetch(path: [String]) throws -> Future<Context?> {
-        var promise = Promise(Context?.self)
+    private func contextFetch(path: [String]) throws -> Future<LeafData?> {
+        var promise = Promise(LeafData?.self)
 
         var current = context
         var iterator = path.makeIterator()

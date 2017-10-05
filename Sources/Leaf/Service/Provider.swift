@@ -26,7 +26,7 @@ public struct LeafConfig {
     }
 }
 
-public final class Provider: Service.Provider {
+public final class LeafProvider: Provider {
     /// See Service.Provider.repositoryName
     public static let repositoryName = "leaf"
 
