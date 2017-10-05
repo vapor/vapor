@@ -1,7 +1,8 @@
 import Async
 import Bits
-import TCP
+import Core
 import Dispatch
+import TCP
 
 /// A Redis client
 ///
@@ -61,15 +62,15 @@ public final class Client<Connection: Async.Stream> where Connection.Input == By
 /// Connects to `Redis` using on a TCP socket to the provided hostname and port
 ///
 /// Listens to the socket using the provided `DispatchQueue`
-public func connect(hostname: String = "localhost", port: UInt16 = 6379, queue: DispatchQueue) throws -> Future<Client<TCP.Client>> {
+public func connect(hostname: String = "localhost", port: UInt16 = 6379, worker: Worker) throws -> Future<Client<TCPClient>> {
     let socket = try TCP.Socket()
     try socket.connect(hostname: hostname, port: port)
     
-    return socket.writable(queue: queue).map { _ in
-        let client = TCP.Client(socket: socket, queue: queue)
+    return socket.writable(queue: worker.queue).map { _ in
+        let client = TCPClient(socket: socket, worker: worker)
         client.start()
         
-        return Client<TCP.Client>(socket: client)
+        return Client<TCPClient>(socket: client)
     }
 }
 

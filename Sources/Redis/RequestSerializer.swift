@@ -10,9 +10,6 @@ final class ValueSerializer: Async.Stream {
     /// See `OutputStream.Output`
     typealias Output = ByteBuffer
     
-    /// See `BaseStream.onClose`
-    var onClose: BaseStream.CloseHandler?
-    
     /// See `BaseStream.errorStream`
     var errorStream: BaseStream.ErrorHandler?
     

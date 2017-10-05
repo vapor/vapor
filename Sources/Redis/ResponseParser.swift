@@ -7,9 +7,6 @@ final class ValueParser: Async.InputStream {
     /// See `InputStream.Input`
     typealias Input = ByteBuffer
     
-    /// See `BaseStream.onClose`
-    var onClose: BaseStream.CloseHandler?
-    
     /// See `BaseStream.errorStream`
     var errorStream: BaseStream.ErrorHandler?
     
