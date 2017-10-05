@@ -17,6 +17,7 @@ extension SSLStream {
         return try handshake(for: ssl, side: .client)
     }
     
+    /// The type of handshake to perform
     enum Side {
         case client
         case server(certificate: String, key: String)
