@@ -4,7 +4,7 @@ extension Request {
     /// Extracts a `SessionCookie` from this `Request`.
     ///
     /// Requires the `SessionCookie` to be set by `SessionCookieMiddleware`
-    public func sessionCookie<SC: SessionCookie>(named cookieName: String? = nil) throws -> SC {
+    public func getSessionCookie<SC: SessionCookie>(named cookieName: String? = nil) throws -> SC {
         let extendToken: String
         
         // No cookieName means attempting to use the last set cookie
