@@ -33,17 +33,20 @@ public final class SessionCookieMiddleware<SC: SessionCookie>: Middleware {
     
     /// See `Middleware.respond`
     public func respond(to request: Request, chainingTo next: Responder) throws -> Future<Response> {
-        let cookie: SC
+        let session: SC
         
         if let cookieValue = request.cookies[cookieName] {
-            cookie = try SC.init(from: cookieValue)
+            session = try SC.init(from: cookieValue)
         } else {
             let cookieValue = try sessionFactory(request)
             request.cookies[cookieName] = try cookieValue.makeCookieValue()
-            cookie = cookieValue
+            session = cookieValue
         }
         
-        try cookie.validate(for: request)
+        try session.validate(for: request)
+        
+        request.extend["vapor:session-cookie:\(cookieName)"] = session
+        request.extend["vapor:last-session-cookie"] = session
         
         return try next.respond(to: request)
     }
