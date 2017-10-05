@@ -1,5 +1,5 @@
 import Async
-import CTLS
+import COpenSSL
 import Foundation
 
 /// A remote peer. This class should be used on a TCP server to accept SSL connections/upgrades.

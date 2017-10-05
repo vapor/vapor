@@ -1,6 +1,6 @@
 import Async
 import Bits
-import CTLS
+import COpenSSL
 import Dispatch
 
 extension SSLStream {
