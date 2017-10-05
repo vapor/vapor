@@ -1,7 +1,6 @@
 // swift-tools-version:4.0
 import PackageDescription
 
-
 #if os(macOS) || os(iOS)
     let ssl: Target.Dependency = "AppleSSL"
 #else
