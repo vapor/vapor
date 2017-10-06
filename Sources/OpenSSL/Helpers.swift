@@ -91,14 +91,12 @@ extension SSLStream {
         var error = SSL_CTX_use_certificate_file(context, certificatePath, SSL_FILETYPE_PEM)
         
         guard error > 0 else {
-            ERR_print_errors_fp(stdout)
             throw Error(.sslError(error))
         }
         
         error = SSL_CTX_use_PrivateKey_file(context, keyPath, SSL_FILETYPE_PEM)
         
         guard error > 0 else {
-            ERR_print_errors_fp(stdout)
             throw Error(.sslError(error))
         }
     }
