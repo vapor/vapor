@@ -1,6 +1,6 @@
 import Bits
 import CHTTP
-import Core
+import Async
 import Dispatch
 import Foundation
 

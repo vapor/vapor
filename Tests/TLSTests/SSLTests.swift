@@ -77,7 +77,7 @@ class SSLTests: XCTestCase {
         let clientQueue = DispatchQueue(label: "test.client")
         
         let future = try clientQueue.sync { () -> Future<()> in
-            let client = try TLSClient(queue: clientQueue)
+            let client = try TLSClient(worker: Worker(queue: clientQueue))
             
             clients.append(client)
             

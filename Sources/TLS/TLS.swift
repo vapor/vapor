@@ -57,14 +57,17 @@ public final class TLSClient: Async.Stream, ClosableStream {
     /// A DispatchQueue on which this Client executes all operations
     let queue: DispatchQueue
     
+    /// The certificate used by the client, if any
+    public var clientCertificatePath: String? = nil
+    
     /// Creates a new `TLSClient` by specifying a queue.
     ///
     /// Can throw an error if the initialization phase fails
-    public init(queue: DispatchQueue) throws {
+    public init(worker: Worker) throws {
         let socket = try Socket()
         
-        self.queue = queue
-        self.client = TCPClient(socket: socket, worker: Worker(queue: queue))
+        self.queue = worker.queue
+        self.client = TCPClient(socket: socket, worker: worker)
         self.ssl = try SSLStream(socket: self.client, descriptor: socket.descriptor, queue: queue)
     }
     
@@ -74,7 +77,7 @@ public final class TLSClient: Async.Stream, ClosableStream {
         
         // Continues setting up SSL after the socket becomes writable (successful connection)
         return client.socket.writable(queue: queue).flatten {
-            return try self.ssl.initializeClient(hostname: hostname)
+            return try self.ssl.initializeClient(hostname: hostname, signedBy: self.clientCertificatePath)
         }.map {
             self.ssl.start()
         }
