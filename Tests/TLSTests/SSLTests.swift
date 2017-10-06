@@ -16,6 +16,16 @@ import TLS
     
     typealias SSLStream = OpenSSL.SSLStream
 #endif
+
+#if Xcode
+    private var workDir: String {
+        let parent = #file.characters.split(separator: "/").map(String.init).dropLast().joined(separator: "/")
+        let path = "/\(parent)/"
+        return path
+    }
+#else
+    private let workDir = "./Tests/TLSTests/"
+#endif
     
 class SSLTests: XCTestCase {
     static let allTests = [
@@ -47,11 +57,11 @@ class SSLTests: XCTestCase {
                 }
                 
                 #if os(macOS) && !OPENSSL
-                    let cert = "/Users/joannisorlandos/Desktop/server.crt.bin"
+                    let cert = "\(workDir)public.der"
                     try tlsClient.initializePeer(signedBy: cert).blockingAwait(timeout: .seconds(2))
                 #else
-                    let cert = "/Users/joannisorlandos/Desktop/cert.pem"
-                    let key = "/Users/joannisorlandos/Desktop/key.pem"
+                    let cert = "\(workDir)public.pem"
+                    let key = "\(workDir)private.pem"
                     
                     try tlsClient.initializePeer(certificate: cert, key: key).blockingAwait(timeout: .seconds(2))
                 #endif
