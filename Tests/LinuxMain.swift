@@ -69,7 +69,7 @@ XCTMain([
     testCase(TCPTests.SocketsTests.allTests),
 
     // Vapor
-    testCase(ApplicationTests.allTests),
+    //testCase(ApplicationTests.allTests),
 
     // WebSocket
     testCase(WebSocketTests.allTests),
