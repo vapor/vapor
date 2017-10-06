@@ -156,7 +156,7 @@ let package = Package(
 
 #if os(macOS) || os(iOS)
     package.targets.append(
-        .target(name: "AppleSSL", dependencies: ["Async", "Debugging"])
+        .target(name: "AppleSSL", dependencies: ["Async", "Bits", "Debugging"])
     )
     
     package.products.append(
