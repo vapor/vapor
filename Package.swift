@@ -52,6 +52,9 @@ let package = Package(
 
         // SQLite
         .library(name: "SQLite", targets: ["SQLite"]),
+        
+        // TLS/SSL
+        .library(name: "TLS", targets: ["TLS"]),
 
         // Vapor
         .library(name: "Vapor", targets: ["Vapor"]),
@@ -124,7 +127,6 @@ let package = Package(
 
         // TLS
         .target(name: "TLS", dependencies: [ssl, "TCP"]),
-        
         .testTarget(name: "TLSTests", dependencies: ["TLS"]),
 
         // SQLite
