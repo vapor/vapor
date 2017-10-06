@@ -17,7 +17,7 @@ import TLS
     typealias SSLStream = OpenSSL.SSLStream
 #endif
     
-class AppleTests: XCTestCase {
+class SSLTests: XCTestCase {
     let allTests = [
         ("testSSL", testSSL)
     ]
