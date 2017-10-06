@@ -1,6 +1,6 @@
 extension Future {
     /// Reduces a nested future into a one-dimensional future, preventing code pyramids
-    public func reduce<B>(_ closure: @escaping ((T) throws -> (Future<B>))) -> Future<B> {
+    public func flatten<B>(_ closure: @escaping ((T) throws -> (Future<B>))) -> Future<B> {
         let promise = Promise<B>()
         
         self.then { result in
