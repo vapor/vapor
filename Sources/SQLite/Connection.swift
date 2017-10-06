@@ -24,7 +24,7 @@ public final class Connection {
         let options = SQLITE_OPEN_CREATE | SQLITE_OPEN_READWRITE | SQLITE_OPEN_NOMUTEX
         var raw: Raw?
 
-        guard sqlite3_open_v2(database.path, &raw, options, nil) == SQLITE_OK else {
+        guard sqlite3_open_v2(database.storage.path, &raw, options, nil) == SQLITE_OK else {
             throw Error(problem: .error, reason: "Could not open database.")
         }
 

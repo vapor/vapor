@@ -58,6 +58,7 @@ class SQLiteTests: XCTestCase {
 
         try! database.query("INSERT INTO `foo` VALUES(?)")
             .bind(unicode)
+            .drain
             .execute()
             .sync()
 
