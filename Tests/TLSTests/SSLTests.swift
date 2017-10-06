@@ -18,7 +18,7 @@ import TLS
 #endif
     
 class SSLTests: XCTestCase {
-    let allTests = [
+    static let allTests = [
         ("testSSL", testSSL)
     ]
     
