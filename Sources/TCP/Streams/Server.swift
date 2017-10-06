@@ -1,9 +1,10 @@
+import Async
 import Core
 import Dispatch
 import libc
 
 /// A server socket can accept peers. Each accepted peer get's it own socket after accepting.
-public final class Server: Core.OutputStream {
+public final class Server: Async.OutputStream {
     // MARK: Stream
     public typealias Output = Client
     public var errorStream: ErrorHandler?
@@ -17,26 +18,24 @@ public final class Server: Core.OutputStream {
     // MARK: Internal
 
     let socket: Socket
-    let workers: [DispatchQueue]
-    var worker: LoopIterator<[DispatchQueue]>
+    let workers: [Worker]
+    var worker: LoopIterator<[Worker]>
     var readSource: DispatchSourceRead?
     
     public typealias AcceptClosure = (Client) -> (Bool)
     
-    public var accept: AcceptClosure = { _ in
-        return true
-    }
+    public var accept: AcceptClosure?
 
     /// Creates a TCP server from an existing TCP socket.
     public init(socket: Socket, workerCount: Int) {
         self.socket = socket
         self.queue = DispatchQueue(label: "codes.vapor.net.tcp.server.main", qos: .background)
-        var workers: [DispatchQueue] = []
+        var workers: [Worker] = []
         /// important! this should be _less than_ the worker count
         /// to leave room for the accepting thread
         for i in 1..<workerCount {
             let worker = DispatchQueue(label: "codes.vapor.net.tcp.server.worker.\(i)", qos: .userInteractive)
-            workers.append(worker)
+            workers.append(Worker(queue: worker))
         }
         worker = LoopIterator(collection: workers)
         self.workers = workers
@@ -70,9 +69,10 @@ public final class Server: Core.OutputStream {
             }
 
             let worker = self.worker.next()!
-            let client = Client(socket: socket, queue: worker)
             
-            guard self.accept(client) else {
+            let client = Client(socket: socket, worker: worker)
+            
+            guard self.accept?(client) != false else {
                 client.close()
                 return
             }

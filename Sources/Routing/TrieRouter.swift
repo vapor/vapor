@@ -37,11 +37,17 @@ public final class TrieRouter: Router {
                     current = new
                 }
             case .parameter(let p):
-                // there can only ever be one parameter node at
-                // a given node in the tree, so always create a new one
-                let new = ParameterNode(parameter: p)
-                current.parameterChild = new
-                current = new
+                if let node = current.parameterChild {
+                    // there can only ever be one parameter node at
+                    // a given node in the tree, so always overwrite the closure
+                    current = node
+                } else {
+                    // if no child node matches this constant,
+                    // we must create a new one
+                    let new = ParameterNode(parameter: p)
+                    current.parameterChild = new
+                    current = new
+                }
             }
         }
 

@@ -1,3 +1,4 @@
+import Async
 import Core
 import Dispatch
 import TCP
@@ -11,30 +12,16 @@ class WebSocketTests : XCTestCase {
         return;
         let app = WebSocketApplication()
         let tcp = try TCP.Server()
-        let server = HTTP.Server(tcp: tcp)
+        // FIXME: websockets tests can't rely on Vapor, Vapor imports WebSockets
+        // let server = EngineServer(config: EngineServerConfig())
         
-        server.drain { client in
-            let parser = HTTP.RequestParser(queue: .global())
-            let serializer = HTTP.ResponseSerializer()
-            
-            client.stream(to: parser)
-                .stream(to: app.makeStream())
-                .stream(to: serializer)
-                .drain(into: client)
-            
-            client.tcp.start()
-        }
-        
-        server.errorStream = { error in
-            debugPrint(error)
-        }
-        
-        try server.tcp.start(port: 8080)
+        // try server.start(with: app)
         
         let promise0 = Promise<Void>()
         let promise1 = Promise<Void>()
-        
-        _ = try WebSocket.connect(hostname: "0.0.0.0", port: 8080, uri: URI(path: "/"), queue: .global()).then { socket in
+
+        let worker = Worker(queue: .global())
+        _ = try WebSocket.connect(hostname: "0.0.0.0", port: 8080, uri: URI(path: "/"), worker: worker).then { socket in
             let responses = ["test", "cat", "banana"]
             let reversedResponses = responses.map {
                 String($0.reversed())

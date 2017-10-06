@@ -2,7 +2,7 @@ import HTTP
 import TCP
 
 /// A TCP based server with HTTP parsing and serialization pipeline.
-public final class EngineServer: Server {
+public final class EngineServer: HTTPServer {
     /// Chosen configuration for this server.
     public let config: EngineServerConfig
 
@@ -21,7 +21,7 @@ public final class EngineServer: Server {
         
         // setup the server pipeline
         server.drain { client in
-            let parser = HTTP.RequestParser(queue: client.tcp.queue)
+            let parser = HTTP.RequestParser(worker: client.tcp.worker)
             let responderStream = responder.makeStream()
             let serializer = HTTP.ResponseSerializer()
 
@@ -31,9 +31,7 @@ public final class EngineServer: Server {
                 .drain(into: client)
 
             client.tcp.start()
-        }
-
-        server.errorStream = { error in
+        }.catch { error in
             debugPrint(error)
         }
 

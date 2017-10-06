@@ -1,4 +1,4 @@
-import Core
+import Bits
 import Foundation
 
 /// Parses leaf templates into a cacheable AST

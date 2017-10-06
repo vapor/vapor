@@ -1,5 +1,5 @@
 import Foundation
-import Core
+import Bits
 
 extension BCrypt {
     /// Base64 extension for BCrypt. This is a weird base64 since instead of using

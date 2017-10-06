@@ -3,7 +3,7 @@ import Debugging
 import Foundation
 import libc
 
-/// Errors that can be thrown while working with TCP sockets.
+/// Errors that can be thrown while working with HTTP.
 public struct Error: Traceable, Debuggable, Swift.Error, Encodable {
     public static let readableName = "HTTP Error"
     public let identifier: String

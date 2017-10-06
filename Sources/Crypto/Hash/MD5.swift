@@ -5,7 +5,7 @@
 //  Created by Joannis Orlandos on 06/08/2017.
 //
 
-import Core
+import Bits
 import Foundation
 
 fileprivate let s: [UInt32] = [ 7, 12, 17, 22,  7, 12, 17, 22,  7, 12, 17, 22,  7, 12, 17, 22,
@@ -78,20 +78,19 @@ public final class MD5 : Hash {
         var buffer = Data()
         buffer.reserveCapacity(16)
         
-        func convert(_ int: UInt32) -> Data {
+        func convert(_ int: UInt32) {
             let int = int.littleEndian
-            return Data([
-                UInt8(int & 0xff),
-                UInt8((int >> 8) & 0xff),
-                UInt8((int >> 16) & 0xff),
-                UInt8((int >> 24) & 0xff)
-            ])
+            
+            buffer.append(UInt8(int & 0xff))
+            buffer.append(UInt8((int >> 8) & 0xff))
+            buffer.append(UInt8((int >> 16) & 0xff))
+            buffer.append(UInt8((int >> 24) & 0xff))
         }
         
-        buffer.append(contentsOf: convert(a0))
-        buffer.append(contentsOf: convert(b0))
-        buffer.append(contentsOf: convert(c0))
-        buffer.append(contentsOf: convert(d0))
+        convert(a0)
+        convert(b0)
+        convert(c0)
+        convert(d0)
         
         return buffer
     }
