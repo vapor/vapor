@@ -55,7 +55,7 @@ public final class PeerValidationStream {
         
         // Cleans up be decreasing the counter
         client.socket.beforeClose = {
-            client.queue.async {
+            client.worker.queue.async {
                 guard let currentRemote = currentRemote else {
                     return
                 }
