@@ -4,7 +4,6 @@ import Core
 import Dispatch
 import TCP
 import Bits
-import Crypto
 import TLS
 
 #if os(macOS) && !OPENSSL
@@ -40,7 +39,8 @@ class SSLTests: XCTestCase {
         
         let peerQueue = DispatchQueue(label: "test.peer")
         
-        let message = OSRandom().data(count: 20)
+        let message = Data("Hello world".utf8)
+        
         var count = 0
         
         let receivedFuture = Promise<Void>()
