@@ -12,8 +12,8 @@ extension SQLiteDatabase: Database {
 }
 
 extension SQLiteConnection: DatabaseConnection {
-    public func execute<M, I: InputStream, D: Decodable>(
-        query: Query<M>,
+    public func execute<I: InputStream, D: Decodable>(
+        query: DatabaseQuery,
         into stream: I
     ) -> Future<Void> where I.Input == D {
         let promise = Promise(Void.self)
@@ -29,8 +29,8 @@ extension SQLiteConnection: DatabaseConnection {
         return promise.future
     }
 
-    private func _perform<M, I: InputStream, D: Decodable>(
-        _ fluentQuery: Query<M>,
+    private func _perform<I: InputStream, D: Decodable>(
+        _ fluentQuery: DatabaseQuery,
         into stream: I
     ) throws -> Future<Void> where I.Input == D {
         let promise = Promise(Void.self)
@@ -41,14 +41,14 @@ extension SQLiteConnection: DatabaseConnection {
 
         switch fluentQuery.action {
         case .fetch:
-            var select = DataQuery(statement: .select, table: M.entity)
+            var select = DataQuery(statement: .select, table: fluentQuery.entity)
 
             if let data = fluentQuery.data {
                 let encoder = SQLiteRowEncoder()
                 try data.encode(to: encoder)
                 print(encoder.row)
                 select.columns += encoder.row.fields.keys.map {
-                    DataColumn(table: M.entity, name: $0.name)
+                    DataColumn(table: fluentQuery.entity, name: $0.name)
                 }
                 // do this on insert
                 // values += encoder.row.fields.values.map { $0.data }
@@ -77,7 +77,7 @@ extension SQLiteConnection: DatabaseConnection {
             
             sqlQuery = .data(select)
         case .aggregate(let field, let aggregate):
-            var select = DataQuery(statement: .select, table: M.entity)
+            var select = DataQuery(statement: .select, table: fluentQuery.entity)
 
             let count = DataComputed(function: "count", key: "fluentAggregate")
             select.computed.append(count)

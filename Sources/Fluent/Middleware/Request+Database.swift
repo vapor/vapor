@@ -38,14 +38,14 @@ extension Request {
     /// connection pool and cached to the request.
     ///
     /// Subsequent calls to this function will use the same connection.
-    public func makeQuery<M>(for modelType: M.Type = M.self) throws -> Query<M> {
+    public func query<M>(_ modelType: M.Type = M.self) throws -> QueryBuilder<M> {
         if let currentConnection = self.currentConnection {
-            return Query(on: currentConnection)
+            return QueryBuilder(on: currentConnection)
         } else {
             let pool = try requireWorker().requireConnectionPool()
             let conn = pool.requestConnection()
             currentConnection = conn
-            return Query(on: conn)
+            return QueryBuilder(on: conn)
         }
     }
 }

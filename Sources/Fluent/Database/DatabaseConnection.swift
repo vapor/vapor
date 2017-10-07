@@ -6,8 +6,8 @@ public protocol DatabaseConnection {
     /// Executes the supplied query on the database connection.
     /// The returned future will be completed when the query is complete.
     /// Results will be outputed through the query's output stream.
-    func execute<M, I: InputStream, D: Decodable>(
-        query: Query<M>,
+    func execute<I: InputStream, D: Decodable>(
+        query: DatabaseQuery,
         into stream: I
     ) -> Future<Void> where I.Input == D
 }

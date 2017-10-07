@@ -69,26 +69,25 @@ struct Message: Model {
 async.get("fluent") { req -> Future<String> in
     let promise = Promise(String.self)
 
-    try req.makeQuery(for: Message.self)
-        .filter("text" == "hello")
-        .count().then { count in
-            print(count)
-    }
-    
-//    // FIXME: generate sql
-//    // query.sql = "SELECT * FROM `messages`;"
-//
-//    query.data = Message(id: "UUID:5", text: "asdf", time: 123)
-//
-//    query.all().then { messages in
-//        var data = ""
-//        for message in messages {
-//            data += "\(message.id!): \(message.text) @ \(message.time)\n"
-//        }
-//        promise.complete(data)
-//    }.catch { err in
-//        promise.fail(err)
+//    try req.query(Message.self)
+//        .filter("text" == "hello")
+//        .count().then { count in
+//            print(count)
 //    }
+
+    let query = try req.query(Message.self)
+
+    // query.data = Message(id: "UUID:5", text: "asdf", time: 123)
+
+    query.all().then { messages in
+        var data = ""
+        for message in messages {
+            data += "\(message.id!): \(message.text) @ \(message.time)\n"
+        }
+        promise.complete(data)
+    }.catch { err in
+        promise.fail(err)
+    }
 
     return promise.future
 }

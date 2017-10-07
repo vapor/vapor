@@ -29,7 +29,7 @@ public func != (lhs: String, rhs: Encodable) throws -> FilterMethod {
     return .compare(lhs, .notEquals, rhs)
 }
 
-extension Query {
+extension QueryBuilder {
     /// Entity operator filter queries
     @discardableResult
     public func filter<T: Model>(

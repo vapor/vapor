@@ -35,7 +35,7 @@ extension Comparison: Equatable {
     }
 }
 
-extension Query {
+extension QueryBuilder {
     /// Filter entity with field, comparison, and value.
     @discardableResult
     public func filter<T: Model>(

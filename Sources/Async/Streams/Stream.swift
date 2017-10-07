@@ -11,8 +11,11 @@ public protocol InputStream: BaseStream {
 }
 
 public protocol ClosableStream: BaseStream {
+    /// A handler called when the stream closes.
+    typealias CloseHandler = () -> ()
+
     /// A function that gets called if the stream closes
-    var onClose: (() -> ())? { get set }
+    var onClose: CloseHandler? { get set }
 }
 
 public protocol OutputStream: BaseStream {

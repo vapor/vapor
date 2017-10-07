@@ -3,7 +3,7 @@ public enum Relation {
     case and, or
 }
 
-extension Query {
+extension QueryBuilder {
     /// Subset `in` filter.
     @discardableResult
     public func filter(_ field: String, in values: [Encodable?]) throws -> Self {
