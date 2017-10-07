@@ -6,7 +6,10 @@ extension QueryBuilder {
     /// results to the output stream.
     /// The resulting future will be completed when the
     /// query is done or fails
-    public func execute<T: Decodable>(decoding type: T.Type = T.self) -> BasicStream<T> {
+    public func execute<T: Decodable>(
+        decoding type: T.Type = T.self,
+        outputStream: @escaping BasicStream<T>.OutputHandler
+    ) -> BasicStream<T> {
         let stream = BasicStream<T>()
 
         connection.then { conn in
@@ -18,6 +21,8 @@ extension QueryBuilder {
         }.catch { err in
             stream.errorStream?(err)
         }
+
+        stream.outputStream = outputStream
 
         return stream
     }
@@ -31,7 +36,7 @@ extension QueryBuilder {
 
         var models: [M] = []
 
-        execute(decoding: M.self).drain { model in
+        execute(decoding: M.self) { model in
             models.append(model)
         }.catch { err in
             promise.fail(err)
