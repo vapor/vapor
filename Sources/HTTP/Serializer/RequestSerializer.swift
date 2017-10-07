@@ -30,15 +30,9 @@ public final class RequestSerializer: Serializer {
     public func serialize(_ request: Request) -> DispatchData {
         var serialized = serialize(method: request.method, uri: request.uri)
 
-        let iterator = request.headers.makeIterator()
-        while let header = iterator.next() {
-            let data = serialize(header: header.name, value: header.value)
-            serialized.append(data)
-        }
-        serialized.append(eol)
+        serialized.append(serialize(request.headers))
 
-        let body = serialize(request.body)
-        serialized.append(body)
+        serialized.append(serialize(request.body))
 
         return serialized
     }

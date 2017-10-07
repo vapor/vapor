@@ -42,7 +42,7 @@ public final class Response: Message {
     /// Create a new HTTP response.
     public init(
         version: Version = Version(major: 1, minor: 1),
-        status: Status = .ok,
+        status: Status = 200,
         headers: Headers = Headers(),
         body: Body = Body()
     ) {
@@ -59,7 +59,7 @@ extension Response {
     /// Create a new HTTP response using something BodyRepresentable.
     public convenience init(
         version: Version = Version(major: 1, minor: 1),
-        status: Status = .ok,
+        status: Status = 200,
         headers: Headers = Headers(),
         body: BodyRepresentable
     ) throws {
