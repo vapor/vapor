@@ -39,7 +39,7 @@ public final class ResponseSerializer: Serializer {
 
     /// Handles http response status serialization.
     private func serialize(_ status: Status) -> DispatchData {
-        return DispatchData("HTTP/1.1 \(status.code.description) \(status.message.utf8)\r\n")
+        return DispatchData("HTTP/1.1 \(status.code.description) \(status.message)\r\n")
     }
 }
 

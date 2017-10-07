@@ -2,24 +2,6 @@
 ///
 /// TODO: Add more status codes
 public struct Status: Codable, ExpressibleByIntegerLiteral, Equatable {
-    enum CodingKeys: CodingKey {
-        case code, message
-    }
-
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        try self.init(
-            code: container.decode(Int.self, forKey: .code),
-            message: container.decode(String.self, forKey: .message)
-        )
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(code, forKey: .code)
-        try container.encode(message, forKey: .message)
-    }
-
     /// Checks of two Statuses are equal
     public static func ==(lhs: Status, rhs: Status) -> Bool {
         return lhs.code == rhs.code
@@ -32,7 +14,7 @@ public struct Status: Codable, ExpressibleByIntegerLiteral, Equatable {
 
     /// Creates a new (custom) status code
     public init(code: Int, message: String = "") {
-        self.code = code
+        self.code = code 
         self.message = message
     }
 
@@ -41,8 +23,8 @@ public struct Status: Codable, ExpressibleByIntegerLiteral, Equatable {
         self.init(code: value)
     }
     
-    public static let upgrade = Status(code: 101, message: "UPGRADE")
+    public static let upgrade = Status(code: 101, message: "Upgrade")
     public static let ok = Status(code: 200, message: "OK")
-    public static let notFound = Status(code: 404, message: "NOT FOUND")
-    public static let internalServerError = Status(code: 500, message: "INTERNAL SERVER ERROR")
+    public static let notFound = Status(code: 404, message: "Not Found")
+    public static let internalServerError = Status(code: 500, message: "Internal Server Error")
 }
