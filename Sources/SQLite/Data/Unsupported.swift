@@ -84,8 +84,8 @@ extension UnsupportedEncodingContainer: UnkeyedEncodingContainer {
         return 0
     }
 
-    func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type) -> KeyedEncodingContainer<NestedKey> where NestedKey : CodingKey {
-        fatalError("unsupported")
+    func nestedContainer<NestedKey: CodingKey>(keyedBy keyType: NestedKey.Type) -> KeyedEncodingContainer<NestedKey> {
+        return KeyedEncodingContainer(UnsupportedEncodingContainer<NestedKey>(encoder: encoder))
     }
 
     func nestedUnkeyedContainer() -> UnkeyedEncodingContainer {
@@ -107,7 +107,7 @@ extension UnsupportedEncodingContainer: KeyedEncodingContainerProtocol {
     }
 
     func nestedContainer<NestedKey: CodingKey>(keyedBy keyType: NestedKey.Type, forKey key: Key) -> KeyedEncodingContainer<NestedKey> {
-        fatalError("unsupported")
+        return KeyedEncodingContainer(UnsupportedEncodingContainer<NestedKey>(encoder: encoder))
     }
 
     func nestedUnkeyedContainer(forKey key: Key) -> UnkeyedEncodingContainer {

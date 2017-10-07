@@ -12,11 +12,14 @@ extension SQLiteDatabase: Database {
 }
 
 extension SQLiteConnection: DatabaseConnection {
-    public func execute<M>(_ query: Query<M>) -> Future<Void> {
+    public func execute<M, I: InputStream, D: Decodable>(
+        query: Query<M>,
+        into stream: I
+    ) -> Future<Void> where I.Input == D {
         let promise = Promise(Void.self)
 
         do {
-            try _perform(query)
+            try _perform(query, into: stream)
                 .then { promise.complete(()) }
                 .catch { err in promise.fail(err) }
         } catch {
@@ -26,7 +29,10 @@ extension SQLiteConnection: DatabaseConnection {
         return promise.future
     }
 
-    private func _perform<M>(_ fluentQuery: Query<M>) throws -> Future<Void> {
+    private func _perform<M, I: InputStream, D: Decodable>(
+        _ fluentQuery: Query<M>,
+        into stream: I
+    ) throws -> Future<Void> where I.Input == D {
         let promise = Promise(Void.self)
 
         let sqlQuery: SQLQuery
@@ -70,8 +76,15 @@ extension SQLiteConnection: DatabaseConnection {
             }
             
             sqlQuery = .data(select)
+        case .aggregate(let field, let aggregate):
+            var select = DataQuery(statement: .select, table: M.entity)
+
+            let count = DataComputed(function: "count", key: "fluentAggregate")
+            select.computed.append(count)
+
+            sqlQuery = .data(select)
         default:
-            fatalError("not implemented")
+            fatalError("\(fluentQuery.action) not yet supported")
         }
 
         let string = SQLiteSQLSerializer()
@@ -92,10 +105,11 @@ extension SQLiteConnection: DatabaseConnection {
         sqliteQuery.drain { row in
             let decoder = SQLiteRowDecoder(row: row)
             do {
-                let model = try M(from: decoder)
-                fluentQuery.outputStream?(model)
+                let model = try D(from: decoder)
+                stream.inputStream(model)
             } catch {
-                fluentQuery.errorStream?(error)
+                fatalError("uncaught error")
+                // fluentQuery.errorStream?(error)
             }
         }.catch { err in
             promise.fail(err)
