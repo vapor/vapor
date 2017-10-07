@@ -52,6 +52,9 @@ extension WebSocket {
     ///
     /// Any previously listening closures will be overridden
     public func onBinary(_ closure: @escaping ((ByteBuffer) -> ())) {
-        self.binaryStream.drain(closure)
+        self.binaryStream.drain(closure).catch { error in
+            // FIXME: @joannis
+            fatalError("\(error)")
+        }
     }
 }

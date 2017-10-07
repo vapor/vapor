@@ -2,6 +2,7 @@ public final class SQLiteRowEncoder: Encoder {
     public var codingPath: [CodingKey]
     public var userInfo: [CodingUserInfoKey: Any]
     public var row: SQLiteRow
+    public var data: SQLiteData = .null
 
     public init() {
         self.codingPath = []

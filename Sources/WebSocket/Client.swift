@@ -89,6 +89,8 @@ extension WebSocket {
                 // Complete using the new websocket
                 promise.complete(WebSocket(client: client, serverSide: false))
             }
+        }.catch { error in
+            promise.fail(error)
         }
 
         // Start reading in the client

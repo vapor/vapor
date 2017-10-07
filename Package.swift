@@ -75,7 +75,7 @@ let package = Package(
         .testTarget(name: "DebuggingTests", dependencies: ["Debugging"]),
 
         // Fluent
-        .target(name: "Fluent", dependencies: ["Async", "Core", "HTTP", "SQLite", "Vapor"]),
+        .target(name: "Fluent", dependencies: ["Async", "Core", "HTTP", "SQL", "SQLite", "Vapor"]),
         .testTarget(name: "FluentTests", dependencies: ["Fluent"]),
 
         // JWT
@@ -115,6 +115,10 @@ let package = Package(
         // Service
         .target(name: "Service", dependencies: ["Core", "Debugging"]),
         .testTarget(name: "ServiceTests", dependencies: ["Service"]),
+
+        // SQL
+        .target(name: "SQL"),
+        .testTarget(name: "SQLTests", dependencies: ["SQL"]),
 
         // SQLite
         .target(name: "CSQLite"),

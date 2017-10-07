@@ -58,7 +58,7 @@ internal final class EncodingContainer<K: CodingKey>:
     }
 
     func encode(_ value: Int) throws {
-        fatalError("unimplemented")
+        encoder.data = .integer(value)
     }
 
     func encode(_ value: Int8) throws {
@@ -106,7 +106,7 @@ internal final class EncodingContainer<K: CodingKey>:
     }
 
     func encode(_ value: String) throws {
-        fatalError("unimplemented")
+        encoder.data = .text(value)
     }
 
     func encode<T: Encodable>(_ value: T) throws {

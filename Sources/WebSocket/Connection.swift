@@ -34,12 +34,18 @@ internal final class Connection: Async.Stream {
         // Streams incoming data into the parser which sends it to this frame's handler
         client.stream(to: parser).drain { frame in
             self.outputStream?(frame)
+        }.catch { error in
+            // FIXME: @joannis
+            fatalError("\(error)")
         }
         
         // Streams outgoing data to the serializer, which sends it over the socket
         serializer.drain { buffer in
             let buffer = UnsafeRawBufferPointer(buffer)
             client.inputStream(DispatchData(bytes: buffer))
+        }.catch { error in
+            // FIXME: @joannis
+            fatalError("\(error)")
         }
     }
 

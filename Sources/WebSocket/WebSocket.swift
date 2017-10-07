@@ -27,7 +27,10 @@ public class WebSocket {
         self.textStream.frameStream = self.connection
         self.binaryStream.frameStream = self.connection
         
-        self.connection.drain(self.processFrame)
+        self.connection.drain(self.processFrame).catch { error in
+            // FIXME: @joannis
+            fatalError("\(error)")
+        }
     }
     
     /// Closes the connection to the other side by sending a `close` frame and closing the TCP connection

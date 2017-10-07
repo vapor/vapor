@@ -25,6 +25,9 @@ extension ConnectionPool {
             
             stream.drain { row in
                 rows.append(row)
+            }.catch { error in
+                // FIXME: @joannis
+                fatalError("\(error)")
             }
             
             // Send the query
@@ -59,6 +62,9 @@ extension ConnectionPool {
             
             resultBuilder.drain { result in
                 results.append(result)
+            }.catch { error in
+                // FIXME: @joannis
+                fatalError("\(error)")
             }
             
             // Send the query

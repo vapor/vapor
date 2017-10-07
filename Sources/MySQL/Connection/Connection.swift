@@ -110,7 +110,10 @@ public final class Connection {
         
         self.authenticated = Promise<Void>()
         
-        self.parser.drain(self.handlePacket)
+        self.parser.drain(self.handlePacket).catch { error in
+            // FIXME: @joannis
+            fatalError("\(error)")
+        }
     }
     
     /// Closes the connection

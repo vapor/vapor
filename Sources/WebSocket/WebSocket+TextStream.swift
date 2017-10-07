@@ -51,6 +51,9 @@ extension WebSocket {
     ///
     /// Any previously listening closures will be overridden
     public func onText(_ closure: @escaping ((String) -> ())) {
-        self.textStream.drain(closure)
+        self.textStream.drain(closure).catch { error in
+            // FIXME: @joannis
+            fatalError("\(error)")
+        }
     }
 }

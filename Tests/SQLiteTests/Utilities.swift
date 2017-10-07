@@ -2,12 +2,13 @@ import Dispatch
 import XCTest
 @testable import SQLite
 
-extension Connection {
-    static func makeTestConnection(queue: DispatchQueue) -> Connection? {
+extension SQLiteConnection {
+    static func makeTestConnection(queue: DispatchQueue) -> SQLiteConnection? {
         do {
-            let sqlite = try Database(path: "/tmp/test_database.sqlite").makeConnection(on: queue)
-            return sqlite
-            
+            let sqlite = try SQLiteDatabase(
+                storage: .file(path: "/tmp/test_database.sqlite")
+            )
+            return try SQLiteConnection(database: sqlite, queue: queue)
         } catch {
             XCTFail()
         }

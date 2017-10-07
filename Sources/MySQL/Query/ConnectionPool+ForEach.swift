@@ -23,7 +23,10 @@ extension ConnectionPool {
                 fail(error)
             }
             
-            stream.drain(handler)
+            stream.drain(handler).catch { error in
+                // FIXME: @joannis
+                fatalError("\(error)")
+            }
             
             // Send the query
             do {
@@ -56,7 +59,10 @@ extension ConnectionPool {
                 fail(error)
             }
             
-            resultBuilder.drain(handler)
+            resultBuilder.drain(handler).catch { error in
+                // FIXME: @joannis
+                fatalError("\(error)")
+            }
             
             // Send the query
             do {

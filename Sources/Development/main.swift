@@ -70,8 +70,10 @@ async.get("fluent") { req -> Future<String> in
     let promise = Promise(String.self)
 
     let query = try req.makeQuery(for: Message.self)
+        .filter("text" == "hello")
+    
     // FIXME: generate sql
-    query.sql = "SELECT * FROM `messages`;"
+    // query.sql = "SELECT * FROM `messages`;"
 
     query.data = Message(id: "UUID:5", text: "asdf", time: 123)
 

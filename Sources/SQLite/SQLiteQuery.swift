@@ -77,59 +77,6 @@ public final class SQLiteQuery: Async.OutputStream {
         sqlite3_clear_bindings(statementPointer)
     }
 
-    /// Bind a Double to the current bind position.
-    public func bind(_ value: Double) throws -> Self {
-        let ret = sqlite3_bind_double(raw, nextBindPosition, value)
-        guard ret == SQLITE_OK else {
-            throw SQLiteError(statusCode: ret, connection: connection)
-        }
-        return self
-    }
-
-    /// Bind an Int to the current bind position.
-    public func bind(_ value: Int) throws -> Self {
-        let ret = sqlite3_bind_int64(raw, nextBindPosition, Int64(value))
-        guard ret == SQLITE_OK else {
-            throw SQLiteError(statusCode: ret, connection: connection)
-        }
-        return self
-    }
-
-    /// Bind a String to the current bind position.
-    public func bind(_ value: String) throws -> Self {
-        let strlen = Int32(value.utf8.count)
-        let ret = sqlite3_bind_text(raw, nextBindPosition, value, strlen, SQLITE_TRANSIENT)
-        guard ret == SQLITE_OK else {
-            throw SQLiteError(statusCode: ret, connection: connection)
-        }
-        return self
-    }
-
-    /// Bind Bytes to the current bind position.
-    public func bind(_ value: Foundation.Data) throws -> Self {
-        let count = Int32(value.count)
-        let pointer: UnsafePointer<Byte> = value.withUnsafeBytes { $0 }
-        let ret = sqlite3_bind_blob(raw, nextBindPosition, UnsafeRawPointer(pointer), count, SQLITE_TRANSIENT)
-        guard ret == SQLITE_OK else {
-            throw SQLiteError(statusCode: ret, connection: connection)
-        }
-        return self
-    }
-
-    /// Bind a Bool to the current bind position.
-    public func bind(_ value: Bool) throws -> Self {
-        return try bind(value ? 1 : 0)
-    }
-
-    /// Binds null to the current bind position
-    public func bindNull() throws -> Self {
-        let ret = sqlite3_bind_null(raw, nextBindPosition)
-        if ret != SQLITE_OK {
-            throw SQLiteError(statusCode: ret, connection: connection)
-        }
-        return self
-    }
-
     // MARK: Execute
 
     public func blockingExecute() throws {

@@ -3,13 +3,19 @@ import Dispatch
 @testable import SQLite
 import XCTest
 
+extension SQLiteConnection {
+    func query(_ string: String) throws -> SQLiteQuery {
+        return try SQLiteQuery(statement: string, connection: self)
+    }
+}
+
 class SQLiteTests: XCTestCase {
-    var database: Connection!
+    var database: SQLiteConnection!
     var queue: DispatchQueue!
 
     override func setUp() {
         self.queue = DispatchQueue(label: "sqlite.tests.queue")
-        self.database = Connection.makeTestConnection(queue: queue)
+        self.database = SQLiteConnection.makeTestConnection(queue: queue)
     }
 
     func testTables() {
@@ -107,7 +113,7 @@ class SQLiteTests: XCTestCase {
         do {
             try database.query("asdf").execute().sync()
             XCTFail("Should have errored")
-        } catch let error as SQLite.Error {
+        } catch let error as SQLiteError {
             print(error)
             XCTAssert(error.reason.contains("syntax error"))
         } catch {

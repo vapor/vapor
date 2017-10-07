@@ -27,7 +27,9 @@ public final class Client {
     public func send(request: RequestRepresentable) throws -> Future<Response> {
         let promise = Promise<Response>()
         
-        tcp.stream(to: parser).drain(promise.complete)
+        tcp.stream(to: parser)
+            .drain(promise.complete)
+            .catch(promise.fail)
         
         tcp.errorStream = { error in
             promise.fail(error)
