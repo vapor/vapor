@@ -21,19 +21,14 @@ extension QueryBuilder {
         let promise = Promise(Int.self)
 
         query.action = .aggregate(field: nil, .count)
-        let stream = BasicStream<AggregateResult>()
 
-        stream.drain { row in
-            promise.complete(row.fluentAggregate)
+        execute(decoding: AggregateResult.self).drain { res in
+            promise.complete(res.fluentAggregate)
         }.catch { err in
             promise.fail(err)
+        }.finally {
+            promise.fail("did not complete")
         }
-
-        connection.then { conn in
-            conn.execute(query: self.query, into: stream).then {
-                promise.fail("never completed")
-            }.catch(callback: promise.fail)
-        }.catch(callback: promise.fail)
 
         return promise.future
     }
@@ -56,5 +51,9 @@ public final class BasicStream<Data>: Stream, ClosableStream {
 extension ClosableStream {
     public func close() {
         onClose?()
+    }
+
+    public func finally(_ onClose: @escaping CloseHandler) {
+        self.onClose = onClose
     }
 }
