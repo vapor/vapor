@@ -22,7 +22,7 @@ extension QueryBuilder {
 
         query.action = .aggregate(field: nil, .count)
 
-        execute(decoding: AggregateResult.self) { res in
+        run(decoding: AggregateResult.self) { res in
             promise.complete(res.fluentAggregate)
         }.catch { err in
             promise.fail(err)

@@ -6,7 +6,7 @@ extension QueryBuilder {
     /// results to the output stream.
     /// The resulting future will be completed when the
     /// query is done or fails
-    public func execute<T: Decodable>(
+    public func run<T: Decodable>(
         decoding type: T.Type = T.self,
         outputStream: @escaping BasicStream<T>.OutputHandler
     ) -> BasicStream<T> {
@@ -27,6 +27,13 @@ extension QueryBuilder {
         return stream
     }
 
+    /// Convenience run that defaults to query builder's model.
+    public func run(
+        outputStream: @escaping BasicStream<M>.OutputHandler
+    ) -> BasicStream<M> {
+        return run(decoding: M.self, outputStream: outputStream)
+    }
+
     /// Executes the query, collecting the results
     /// into an array.
     /// The resulting array or an error will be resolved
@@ -36,7 +43,7 @@ extension QueryBuilder {
 
         var models: [M] = []
 
-        execute(decoding: M.self) { model in
+        run(decoding: M.self) { model in
             models.append(model)
         }.catch { err in
             promise.fail(err)
