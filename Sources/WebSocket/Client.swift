@@ -1,5 +1,4 @@
 import Async
-import Core
 import Crypto
 import Dispatch
 import Foundation

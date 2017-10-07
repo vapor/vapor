@@ -1,4 +1,3 @@
-import Core
 import Foundation
 
 // MARK: - Throwing static methods

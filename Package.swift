@@ -111,7 +111,7 @@ let package = Package(
         .target(name: "CHTTP"),
         .target(name: "HTTP", dependencies: ["CHTTP", "TCP"]),
         .testTarget(name: "HTTPTests", dependencies: ["HTTP"]),
-        .target(name: "TCP", dependencies: ["Debugging", "libc"]),
+        .target(name: "TCP", dependencies: ["Debugging", "Async", "libc"]),
         .testTarget(name: "TCPTests", dependencies: ["TCP"]),
 
         .target(name: "Random", dependencies: ["Core"]),
