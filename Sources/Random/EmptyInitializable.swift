@@ -1,4 +1,5 @@
 import Foundation
+import Core
 
 // MARK: - Throwing static methods
 extension DataGenerator where Self: EmptyInitializable {
