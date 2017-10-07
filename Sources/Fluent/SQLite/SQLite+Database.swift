@@ -59,7 +59,7 @@ extension SQLiteConnection: DatabaseConnection {
                         comparison: .equal // FIXME: convert
                     )
 
-                    let encoder = SQLiteRowEncoder()
+                    let encoder = SQLiteDataEncoder()
                     try value.encode(to: encoder)
                     values.append(encoder.data)
                 default:
