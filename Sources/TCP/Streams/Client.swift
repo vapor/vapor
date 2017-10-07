@@ -71,13 +71,14 @@ public final class Client: Async.Stream {
                 guard let data = self.inputBuffer else {
                     return
                 }
+                
                 self.inputBuffer = nil
 
-                // copy input into contiguous data and write it.
-                let copied = Data(data)
-                let buffer = ByteBuffer(start: copied.withUnsafeBytes { $0 }, count: copied.count)
                 do {
-                    _ = try self.socket.write(max: copied.count, from: buffer)
+                    try data.withUnsafeBytes { (pointer: BytesPointer) in
+                        let buffer = ByteBuffer(start: pointer, count: data.count)
+                        _ = try self.socket.write(max: data.count, from: buffer)
+                    }
                     // FIXME: we should verify the lengths match here.
                 } catch {
                     // any errors that occur here cannot be thrown,

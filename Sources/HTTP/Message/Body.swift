@@ -1,13 +1,50 @@
 import Foundation
+import Bits
 
 /// Represents an HTTP body.
-public struct Body: Codable {
-    /// The body's data.
-    public var data: Data
+public enum Body: Codable {
+    case data(Data)
+    case dispatchData(DispatchData)
+    
+    public func encode(to encoder: Encoder) throws {
+        switch self {
+        case .data(let data): try data.encode(to: encoder)
+        case .dispatchData(let data): try Data(data).encode(to: encoder)
+        }
+    }
+    
+    public func withUnsafeBytes<Return>(_ run: ((BytesPointer) throws -> (Return))) rethrows -> Return {
+        switch self {
+        case .data(let data):
+            return try data.withUnsafeBytes(run)
+        case .dispatchData(let data):
+            return try data.withUnsafeBytes(body: run)
+        }
+    }
+    
+    public var count: Int {
+        switch self {
+        case .data(let data): return data.count
+        case .dispatchData(let data): return data.count
+        }
+    }
+    
+    public init(from decoder: Decoder) throws {
+        self = .data(try Data(from: decoder))
+    }
 
-    /// Createa new body.
-    public init(_ data: Data = Data()) {
-        self.data = data
+    public init() {
+        self.init(Data())
+    }
+    
+    /// Create a new body.
+    public init(_ data: Data) {
+        self = .data(data)
+    }
+    
+    /// Create a new body.
+    public init(_ data: DispatchData) {
+        self = .dispatchData(data)
     }
 }
 

@@ -12,12 +12,13 @@ extension Serializer {
     }
 
     internal func serialize(_ body: Body) -> DispatchData {
-        let pointer: BytesPointer = body.data.withUnsafeBytes { $0 }
-        let bodyRaw = UnsafeRawBufferPointer(
-            start: UnsafeRawPointer(pointer),
-            count: body.data.count
-        )
-        return DispatchData(bytes: bodyRaw)
+        return body.withUnsafeBytes { (pointer: BytesPointer) in
+            let bodyRaw = UnsafeRawBufferPointer(
+                start: UnsafeRawPointer(pointer),
+                count: body.count
+            )
+            return DispatchData(bytes: bodyRaw)
+        }
     }
 
     public var eol: DispatchData {

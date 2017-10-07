@@ -47,8 +47,10 @@ public final class RequestParser: CParser {
     /// an entire HTTP request, nil will be returned and
     /// the parser will remain ready to accept new Data.
     public func parse(from data: Data) throws -> Request? {
-        let buffer = ByteBuffer(start: data.withUnsafeBytes { $0 }, count: data.count)
-        return try parse(from: buffer)
+        return try data.withUnsafeBytes { (pointer: BytesPointer) in
+            let buffer = ByteBuffer(start: pointer, count: data.count)
+            return try parse(from: buffer)
+        }
     }
 
     /// Parses a Request from the stream.
@@ -127,8 +129,7 @@ public final class RequestParser: CParser {
 
         let body: Body
         if let data = results.body {
-            let copied = Data(data)
-            body = Body(copied)
+            body = Body(data)
         } else {
             body = Body()
         }
