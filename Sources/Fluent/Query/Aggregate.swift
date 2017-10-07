@@ -40,7 +40,11 @@ public final class BasicStream<Data>: Stream, ClosableStream {
     public typealias Input = Data
     public typealias Output = Data
 
-    public var errorStream: ErrorHandler?
+    public var errorStream: ErrorHandler? {
+        didSet {
+            print("did set error stream")
+        }
+    }
     public var outputStream: OutputHandler?
     public var onClose: CloseHandler?
     public func inputStream(_ input: Data) {

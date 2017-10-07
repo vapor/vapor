@@ -1,11 +1,11 @@
 import SQL
 import XCTest
 
-final class SQLQueryTests: XCTestCase {
+final class DataTests: XCTestCase {
     func testBasicSelectStar() {
         let select = DataQuery(statement: .select, table: "foo")
         XCTAssertEqual(
-            GeneralSQLSerializer.shared.serialize(query: select),
+            GeneralSQLSerializer.shared.serialize(data: select),
             "SELECT `foo`.* FROM `foo`"
         )
     }
@@ -20,7 +20,7 @@ final class SQLQueryTests: XCTestCase {
         select.predicates.append(predicateB)
 
         XCTAssertEqual(
-            GeneralSQLSerializer.shared.serialize(query: select),
+            GeneralSQLSerializer.shared.serialize(data: select),
             "SELECT `foo`.* FROM `foo` WHERE `id` = ? AND `foo`.`name` = ?"
         )
     }

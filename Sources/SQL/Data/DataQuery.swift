@@ -1,9 +1,9 @@
 /// SQL data manipulation query (DML)
 public struct DataQuery {
     public var statement: DataStatement
+    public var table: String
     public var columns: [DataColumn]
     public var computed: [DataComputed]
-    public var table: String
     public var predicates: [Predicate]
     public var joins: [Join]
 

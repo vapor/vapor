@@ -15,22 +15,25 @@ extension FutureType {
     public typealias Result = FutureResult<Expectation>
 
     /// Callback for accepting a result.
-    public typealias ResultCallback = ((Result) -> ())
+    public typealias ResultCallback = (Result) -> ()
+
+    /// Callback for accepting a result.
+    public typealias AlwaysCallback = () -> ()
 
     /// Callback for accepting the expectation.
-    public typealias ExpectationCallback = ((Expectation) -> ())
+    public typealias ExpectationCallback = (Expectation) -> ()
 
     /// Callback for accepting an error.
-    public typealias ErrorCallback = ((Error) -> ())
+    public typealias ErrorCallback = (Error) -> ()
 
     /// Callback for accepting the expectation.
-    public typealias ExpectationMapCallback<T> = ((Expectation) throws -> (T))
+    public typealias ExpectationMapCallback<T> = (Expectation) throws -> (T)
 
     /// Adds a handler to be asynchronously executed on
     /// completion of this future.
     ///
     /// Will *not* be executed if an error occurrs
-    public func then(callback: @escaping ExpectationCallback) -> Self {
+    public func then(_ callback: @escaping ExpectationCallback) -> Self {
         addAwaiter { result in
             guard let ex = result.expectation else {
                 return
@@ -47,7 +50,7 @@ extension FutureType {
     ///
     /// Will *only* be executed if an error occurred.
     //// Successful results will not call this handler.
-    public func `catch`(callback: @escaping ErrorCallback) {
+    public func `catch`(_ callback: @escaping ErrorCallback) {
         addAwaiter { result in
             guard let er = result.error else {
                 return
@@ -58,7 +61,7 @@ extension FutureType {
     }
 
     /// Maps a future to a future of a different type.
-    public func map<T>(callback: @escaping ExpectationMapCallback<T>) -> Future<T> {
+    public func map<T>(_ callback: @escaping ExpectationMapCallback<T>) -> Future<T> {
         let promise = Promise(T.self)
 
         then { expectation in
@@ -93,6 +96,19 @@ extension FutureType {
         }
 
         return try awaitedResult!.unwrap()
+    }
+
+    /// Chains a future to a promise of the same type.
+    public func chain(to promise: Promise<Expectation>) {
+        then(promise.complete).catch(promise.fail)
+    }
+
+    /// Get called back whenever the future is complete,
+    /// ignoring the result.
+    public func always(_ callback: @escaping AlwaysCallback) {
+        addAwaiter { _ in
+            callback()
+        }
     }
 
     /// Waits for the specified duration for a result.

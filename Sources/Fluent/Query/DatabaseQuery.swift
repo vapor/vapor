@@ -1,3 +1,4 @@
+/// A query that can be sent to a Fluent database.
 public struct DatabaseQuery {
     /// The entity to query
     public let entity: String
@@ -17,7 +18,7 @@ public struct DatabaseQuery {
     /// Create a new database query.
     public init(entity: String) {
         self.entity = entity
-        self.action = .fetch
+        self.action = .data(.read)
         self.filters = []
         self.isDistinct = false
         self.data = nil

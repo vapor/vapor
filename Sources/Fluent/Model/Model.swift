@@ -23,3 +23,18 @@ extension Model {
         return "\(Self.self)".lowercased() + "s"
     }
 }
+
+// MARK: Convenience
+extension Model {
+    /// Create a query for this model type on the supplied connection.
+    public static func makeQuery<Self>(on conn: DatabaseConnection) -> QueryBuilder<Self> {
+        return QueryBuilder(on: conn)
+    }
+
+    /// Create a query for this model instance on the supplied connection.
+    public func makeQuery(on conn: DatabaseConnection) -> QueryBuilder<Self> {
+        let builder = QueryBuilder<Self>(on: conn)
+        builder.query.data = self
+        return builder
+    }
+}

@@ -11,3 +11,10 @@ public protocol DatabaseConnection {
         into stream: I
     ) -> Future<Void> where I.Input == D
 }
+
+// Convenience
+extension DatabaseConnection {
+    public func makeQuery<M>(for type: M.Type = M.self) -> QueryBuilder<M> {
+        return QueryBuilder(on: self)
+    }
+}

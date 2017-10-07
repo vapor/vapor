@@ -40,42 +40,62 @@ extension SQLiteConnection: DatabaseConnection {
         var values: [SQLiteData] = []
 
         switch fluentQuery.action {
-        case .fetch:
-            var select = DataQuery(statement: .select, table: fluentQuery.entity)
+        case .data(let data):
+            switch data {
+            case .fetch:
+                var select = DataQuery(statement: .select, table: fluentQuery.entity)
 
-            if let data = fluentQuery.data {
+                if let data = fluentQuery.data {
+                    let encoder = SQLiteRowEncoder()
+                    try data.encode(to: encoder)
+                    print(encoder.row)
+                    select.columns += encoder.row.fields.keys.map {
+                        DataColumn(table: fluentQuery.entity, name: $0.name)
+                    }
+                    // do this on insert
+                    // values += encoder.row.fields.values.map { $0.data }
+                }
+
+                for filter in fluentQuery.filters {
+                    let predicate: Predicate
+
+                    switch filter.method {
+                    case .compare(let field, let comp, let value):
+                        predicate = Predicate(
+                            table: filter.entity,
+                            column: field,
+                            comparison: .equal // FIXME: convert
+                        )
+
+                        let encoder = SQLiteDataEncoder()
+                        try value.encode(to: encoder)
+                        values.append(encoder.data)
+                    default:
+                        fatalError("not implemented")
+                    }
+
+                    select.predicates.append(predicate)
+                }
+
+                sqlQuery = .data(select)
+            case .modify:
+                var insert = DataQuery(statement: .insert, table: fluentQuery.entity)
+
+                guard let data = fluentQuery.data else {
+                    throw "data required for insert"
+                }
+
                 let encoder = SQLiteRowEncoder()
                 try data.encode(to: encoder)
                 print(encoder.row)
-                select.columns += encoder.row.fields.keys.map {
+                insert.columns += encoder.row.fields.keys.map {
                     DataColumn(table: fluentQuery.entity, name: $0.name)
                 }
-                // do this on insert
-                // values += encoder.row.fields.values.map { $0.data }
+                values += encoder.row.fields.values.map { $0.data }
+                sqlQuery = .data(insert)
+            default:
+                fatalError("\(fluentQuery.action) not yet supported")
             }
-
-            for filter in fluentQuery.filters {
-                let predicate: Predicate
-
-                switch filter.method {
-                case .compare(let field, let comp, let value):
-                    predicate = Predicate(
-                        table: filter.entity,
-                        column: field,
-                        comparison: .equal // FIXME: convert
-                    )
-
-                    let encoder = SQLiteDataEncoder()
-                    try value.encode(to: encoder)
-                    values.append(encoder.data)
-                default:
-                    fatalError("not implemented")
-                }
-
-                select.predicates.append(predicate)
-            }
-            
-            sqlQuery = .data(select)
         case .aggregate(let field, let aggregate):
             var select = DataQuery(statement: .select, table: fluentQuery.entity)
 
@@ -83,8 +103,15 @@ extension SQLiteConnection: DatabaseConnection {
             select.computed.append(count)
 
             sqlQuery = .data(select)
-        default:
-            fatalError("\(fluentQuery.action) not yet supported")
+        case .schema(let schema):
+            switch schema {
+            case .create:
+                var create = SchemaQuery(statement: .create, table: fluentQuery.entity)
+
+                
+            default:
+                fatalError("not supported")
+            }
         }
 
         let string = SQLiteSQLSerializer()

@@ -12,7 +12,7 @@ final class StreamTests : XCTestCase {
 
         numberEmitter.stream(to: squareMapStream).drain { square in
             squares.append(square)
-        }
+        }.catch { XCTFail("\($0)") }
 
         numberEmitter.emit(1)
         numberEmitter.emit(2)

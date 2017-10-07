@@ -40,10 +40,10 @@ extension QueryBuilder {
     /// in the returned future.
     public func all() -> Future<[M]> {
         let promise = Promise([M].self)
-
         var models: [M] = []
+        let stream = BasicStream<M>()
 
-        run(decoding: M.self) { model in
+        stream.drain { model in
             models.append(model)
         }.catch { err in
             promise.fail(err)
@@ -51,6 +51,11 @@ extension QueryBuilder {
             promise.complete(models)
         }
 
+        connection.then { conn in
+            conn.execute(query: self.query, into: stream)
+                .then(stream.close)
+                .catch(promise.fail)
+        }.catch(promise.fail)
 
         return promise.future
     }

@@ -17,3 +17,23 @@ public final class QueryBuilder<M: Model> {
         self.connection = connection
     }
 }
+
+// MARK: CRUD
+
+extension QueryBuilder {
+    public func save() -> Future<Void> {
+        query.action = .data(.update) // TODO: check if exists
+        return all().map { _ in Void() }
+    }
+}
+
+// MARK: Convenience
+extension QueryBuilder {
+    /// Convenience init with non-future connection.
+    public convenience init(
+        _ type: M.Type = M.self,
+        on conn: DatabaseConnection
+    ) {
+        self.init(M.self, on: Future(conn))
+    }
+}

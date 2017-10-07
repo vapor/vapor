@@ -2,11 +2,21 @@
 /// on database entities, such as fetching, deleting,
 /// creating, and updating.
 public enum Action {
-    case fetch
-    case aggregate(field: String?, Aggregate)
-    case delete
+    case data(DataAction)
+    case schema(SchemaAction)
+    case aggregate(Aggregate, field: String?)
+
+}
+
+public enum SchemaAction {
     case create
-    case modify
-    // FIXME:
-    // case schema(Schema)
+    case update
+    case delete
+}
+
+public enum DataAction {
+    case create
+    case read
+    case update
+    case delete
 }
