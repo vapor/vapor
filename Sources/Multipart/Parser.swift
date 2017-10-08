@@ -1,5 +1,4 @@
 import Foundation
-import Core
 
 /// An enum with no cases can't be instantiated
 ///

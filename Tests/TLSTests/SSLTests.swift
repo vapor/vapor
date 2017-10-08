@@ -4,7 +4,6 @@ import Core
 import Dispatch
 import TCP
 import Bits
-import Crypto
 import TLS
 
 #if os(macOS) && !OPENSSL
@@ -16,9 +15,19 @@ import TLS
     
     typealias SSLStream = OpenSSL.SSLStream
 #endif
+
+#if Xcode
+    private var workDir: String {
+        let parent = #file.characters.split(separator: "/").map(String.init).dropLast().joined(separator: "/")
+        let path = "/\(parent)/"
+        return path
+    }
+#else
+    private let workDir = "./Tests/TLSTests/"
+#endif
     
-class AppleTests: XCTestCase {
-    let allTests = [
+class SSLTests: XCTestCase {
+    static let allTests = [
         ("testSSL", testSSL)
     ]
     
@@ -30,7 +39,8 @@ class AppleTests: XCTestCase {
         
         let peerQueue = DispatchQueue(label: "test.peer")
         
-        let message = OSRandom().data(count: 20)
+        let message = Data("Hello world".utf8)
+        
         var count = 0
         
         let receivedFuture = Promise<Void>()
@@ -47,11 +57,11 @@ class AppleTests: XCTestCase {
                 }
                 
                 #if os(macOS) && !OPENSSL
-                    let cert = "/Users/joannisorlandos/Desktop/server.crt.bin"
+                    let cert = "\(workDir)public.der"
                     try tlsClient.initializePeer(signedBy: cert).blockingAwait(timeout: .seconds(2))
                 #else
-                    let cert = "/Users/joannisorlandos/Desktop/cert.pem"
-                    let key = "/Users/joannisorlandos/Desktop/key.pem"
+                    let cert = "\(workDir)public.pem"
+                    let key = "\(workDir)private.pem"
                     
                     try tlsClient.initializePeer(certificate: cert, key: key).blockingAwait(timeout: .seconds(2))
                 #endif
@@ -65,24 +75,23 @@ class AppleTests: XCTestCase {
         
         try server.start(port: 8432)
         let clientQueue = DispatchQueue(label: "test.client")
-        let clinetWorker = Worker(queue: clientQueue)
-        
+
         let future = try clientQueue.sync { () -> Future<()> in
-            let client = try TLSClient(worker: clinetWorker)
-            
+            let client = try TLSClient(worker: Worker(queue: clientQueue))
+
             clients.append(client)
-            
-            return try client.connect(hostname: "localhost", port: 8432).map {
+
+            return try client.connect(hostname: CurrentHost.hostname, port: 8432).map {
                 message.withUnsafeBytes { (pointer: BytesPointer) in
                     let buffer = ByteBuffer(start: pointer, count: message.count)
-                    
+
                     client.inputStream(buffer)
                 }
             }
         }
         
         try future.blockingAwait(timeout: .seconds(1))
-        try receivedFuture.future.blockingAwait(timeout: .seconds(1))
+        try receivedFuture.future.blockingAwait()
         
         XCTAssertEqual(count, 1)
         XCTAssertEqual(peers.count, 1)

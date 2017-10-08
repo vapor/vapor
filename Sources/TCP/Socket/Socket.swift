@@ -1,5 +1,5 @@
 import Bits
-import Core
+import Async
 import Dispatch
 import libc
 

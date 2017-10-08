@@ -1,16 +1,20 @@
 import Async
 import Bits
-import CTLS
+import COpenSSL
 import Dispatch
 
 extension SSLStream {
     /// Runs the SSL handshake, regardless of client or server
     func handshake(for ssl: UnsafeMutablePointer<SSL>, side: Side) throws -> Future<Void> {
+        var accepted = false
+        
         func retry() -> Int32 {
             if case .client = side {
                 return SSL_connect(ssl)
-            } else {
+            } else if !accepted {
                 return SSL_accept(ssl)
+            } else {
+                return SSL_do_handshake(ssl)
             }
         }
         
@@ -26,8 +30,7 @@ extension SSLStream {
         let readSource = DispatchSource.makeReadSource(fileDescriptor: self.descriptor, queue: self.queue)
         let promise = Promise<Void>()
         
-        // Listen for input
-        readSource.setEventHandler {
+        func tryAgain() {
             // On input, continue the handshake
             result = retry()
             code = SSL_get_error(ssl, result)
@@ -48,8 +51,18 @@ extension SSLStream {
                 return
             }
             
-            readSource.cancel()
-            promise.complete(())
+            if accepted {
+                readSource.cancel()
+                promise.complete(())
+            } else {
+                accepted = true
+                tryAgain()
+            }
+        }
+        
+        // Listen for input
+        readSource.setEventHandler {
+            tryAgain()
         }
         
         // Now that the async stuff's et up, let's start your engines
@@ -90,13 +103,13 @@ extension SSLStream {
         
         var error = SSL_CTX_use_certificate_file(context, certificatePath, SSL_FILETYPE_PEM)
         
-        guard error > 0 else  {
+        guard error > 0 else {
             throw Error(.sslError(error))
         }
         
         error = SSL_CTX_use_PrivateKey_file(context, keyPath, SSL_FILETYPE_PEM)
         
-        guard error > 0 else  {
+        guard error > 0 else {
             throw Error(.sslError(error))
         }
     }

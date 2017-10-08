@@ -1,6 +1,6 @@
 import Async
 import Bits
-import Core
+import Async
 import Dispatch
 import Foundation
 import libc

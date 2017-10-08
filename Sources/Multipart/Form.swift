@@ -1,5 +1,4 @@
 import Foundation
-import Core
 
 /// A single part
 public struct Part {

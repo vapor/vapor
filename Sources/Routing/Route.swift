@@ -1,5 +1,5 @@
 import HTTP
-import Core
+import Async
 
 /// A route. When registered to a router, replies to `Request`s using the `Responder`.
 public final class Route: Extendable {

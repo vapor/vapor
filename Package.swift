@@ -1,7 +1,6 @@
 // swift-tools-version:4.0
 import PackageDescription
 
-
 #if os(macOS) || os(iOS)
     let ssl: Target.Dependency = "AppleSSL"
 #else
@@ -53,6 +52,9 @@ let package = Package(
 
         // SQLite
         .library(name: "SQLite", targets: ["SQLite"]),
+        
+        // TLS/SSL
+        .library(name: "TLS", targets: ["TLS"]),
 
         // Vapor
         .library(name: "Vapor", targets: ["Vapor"]),
@@ -109,7 +111,7 @@ let package = Package(
         .target(name: "CHTTP"),
         .target(name: "HTTP", dependencies: ["CHTTP", "TCP"]),
         .testTarget(name: "HTTPTests", dependencies: ["HTTP"]),
-        .target(name: "TCP", dependencies: ["Debugging", "Core", "libc"]),
+        .target(name: "TCP", dependencies: ["Debugging", "Async", "libc"]),
         .testTarget(name: "TCPTests", dependencies: ["TCP"]),
 
         .target(name: "Random", dependencies: ["Core"]),
@@ -129,7 +131,6 @@ let package = Package(
 
         // TLS
         .target(name: "TLS", dependencies: [ssl, "TCP"]),
-        
         .testTarget(name: "TLSTests", dependencies: ["TLS"]),
 
         // SQLite
@@ -159,7 +160,7 @@ let package = Package(
 
 #if os(macOS) || os(iOS)
     package.targets.append(
-        .target(name: "AppleSSL", dependencies: ["Async", "Debugging"])
+        .target(name: "AppleSSL", dependencies: ["Async", "Bits", "Debugging"])
     )
     
     package.products.append(

@@ -5,7 +5,7 @@ import COpenSSL
 extension SSLStream {
     /// Upgrades the connection to SSL.
     public func initializeClient(hostname: String, signedBy certificate: String? = nil) throws -> Future<Void> {
-        let ssl = try self.initialize(side: .client)
+        let ssl = try self.initialize(side: .client, method: .ssl23)
         
         var hostname = [UInt8](hostname.utf8)
         SSL_ctrl(ssl, SSL_CTRL_SET_TLSEXT_HOSTNAME, Int(TLSEXT_NAMETYPE_host_name), &hostname)
@@ -17,13 +17,40 @@ extension SSLStream {
         return try handshake(for: ssl, side: .client)
     }
     
+    /// The type of handshake to perform
     enum Side {
         case client
         case server(certificate: String, key: String)
     }
     
+    enum Method {
+        case ssl23
+        case tls1_0
+        case tls1_1
+        case tls1_2
+        
+        func method(side: Side) -> UnsafePointer<SSL_METHOD> {
+            switch side {
+            case .client:
+                switch self {
+                case .ssl23: return SSLv23_client_method()
+                case .tls1_0: return TLSv1_client_method()
+                case .tls1_1: return TLSv1_1_client_method()
+                case .tls1_2: return TLSv1_2_client_method()
+                }
+            case .server(_, _):
+                switch self {
+                case .ssl23: return SSLv23_server_method()
+                case .tls1_0: return TLSv1_server_method()
+                case .tls1_1: return TLSv1_1_server_method()
+                case .tls1_2: return TLSv1_2_server_method()
+                }
+            }
+        }
+    }
+    
     /// A helper that initializes SSL as either the client or server side
-    func initialize(side: Side) throws -> UnsafeMutablePointer<SSL> {
+    func initialize(side: Side, method: Method) throws -> UnsafeMutablePointer<SSL> {
         guard SSLSettings.initialized else {
             throw Error(.notInitialized)
         }
@@ -38,7 +65,7 @@ extension SSLStream {
         case .client:
             method = SSLv23_client_method()
         case .server(_, _):
-            method = SSLv23_server_method()
+            method = TLSv1_2_server_method()
         }
         
         guard let context = SSL_CTX_new(method) else {

@@ -1,3 +1,5 @@
+import Foundation
+
 /// Infinitely loop over a collection.
 /// Used to supply server worker queues to clients.
 internal struct LoopIterator<Base: Collection>: IteratorProtocol {
@@ -22,6 +24,23 @@ internal struct LoopIterator<Base: Collection>: IteratorProtocol {
             index = collection.startIndex
         }
         return result
+    }
+}
+
+import Bits
+
+public enum CurrentHost {
+    public static var hostname: String {
+        #if os(Linux)
+            let pointer = UnsafeMutablePointer<Int8>.allocate(capacity: 256)
+            gethostname(pointer, 256)
+            let hostname = String(cString: pointer)
+            
+            pointer.deinitialize(count: 256)
+            return hostname
+        #else
+            return "localhost"
+        #endif
     }
 }
 
