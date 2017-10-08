@@ -5,7 +5,7 @@ import libc
 extension Socket {
     /// connect - initiate a connection on a socket
     /// http://man7.org/linux/man-pages/man2/connect.2.html
-    public func connect(hostname: String = "localhost", port: UInt16 = 80) throws {
+    public func connect(hostname: String, port: UInt16) throws {
         var hints = addrinfo()
 
         // Support both IPv4 and IPv6

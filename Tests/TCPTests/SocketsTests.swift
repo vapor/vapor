@@ -7,7 +7,7 @@ class SocketsTests: XCTestCase {
         // FIXME: @Tanner. `group.leave()` crashes
         return
         let socket = try Socket()
-        try socket.connect(hostname: "google.com")
+        try socket.connect(hostname: "google.com", port: 80)
 
         let data = """
         GET / HTTP/1.1\r
@@ -48,7 +48,7 @@ class SocketsTests: XCTestCase {
         return
         
         let server = try Socket()
-        try server.bind(hostname: "localhost", port: 8337)
+        try server.bind(hostname: ProcessInfo().hostName, port: 8337)
         try server.listen()
 
         let queue = DispatchQueue(label: "codes.vapor.test")
@@ -79,7 +79,7 @@ class SocketsTests: XCTestCase {
 
         do {
             let client = try Socket(isNonBlocking: false)
-            try client.connect(hostname: "localhost", port: 8337)
+            try client.connect(hostname: ProcessInfo().hostName, port: 8337)
             let data = "hello".data(using: .utf8)!
             _ = try! client.write(data)
         }

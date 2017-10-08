@@ -81,7 +81,7 @@ class SSLTests: XCTestCase {
             
             clients.append(client)
             
-            return try client.connect(hostname: "localhost", port: 8432).map {
+            return try client.connect(hostname: ProcessInfo().hostName, port: 8432).map {
                 message.withUnsafeBytes { (pointer: BytesPointer) in
                     let buffer = ByteBuffer(start: pointer, count: message.count)
                     

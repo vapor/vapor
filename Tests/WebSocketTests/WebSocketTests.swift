@@ -1,5 +1,6 @@
 import Async
 import Core
+import Foundation
 import Dispatch
 import TCP
 import HTTP
@@ -22,7 +23,7 @@ final class HTTPTestServer {
     
     /// Creates a new engine server config
     public init(
-        hostname: String = "localhost",
+        hostname: String = ProcessInfo().hostName,
         port: UInt16 = 8080,
         backlog: Int32 = 4096,
         workerCount: Int = 8

@@ -17,7 +17,7 @@ class MySQLTests: XCTestCase {
         _ = try? pool.dropTables(named: "users", "complex").blockingAwait()
     }
     
-    let pool = ConnectionPool(hostname: "localhost", user: "root", password: nil, database: "test", queue: .global())
+    let pool = ConnectionPool(hostname: ProcessInfo().hostName, user: "root", password: nil, database: "test", queue: .global())
     
     func testCreateUsersSchema() throws {
         let table = Table(named: "users")
