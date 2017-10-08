@@ -41,7 +41,6 @@ extension SSLStream {
                 code == SSL_ERROR_WANT_CONNECT ||
                 code == SSL_ERROR_WANT_ACCEPT
             ) {
-                print(code)
                 return
             }
             
