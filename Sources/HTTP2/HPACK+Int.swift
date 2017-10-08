@@ -21,7 +21,8 @@ extension Packet {
         
         repeat {
             byte = data[position]
-            integer = integer + numericCast(byte & 0b01111111) * power(of: 2, to: offset)
+            position += 1
+            integer += numericCast(byte & 0b01111111) * power(of: 2, to: offset)
             offset += 7
             // While the significant bit is set
         } while byte & 0b10000000 == 0b10000000
@@ -32,6 +33,10 @@ extension Packet {
 
 fileprivate func power(of base: Int, to times: Int) -> Int {
     var amount = base
+    
+    if times == 0 {
+        return 1
+    }
     
     for _ in 0..<times - 1 {
         amount = amount &* base
