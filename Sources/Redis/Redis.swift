@@ -1,6 +1,5 @@
 import Async
 import Bits
-import Core
 import Dispatch
 import TCP
 
