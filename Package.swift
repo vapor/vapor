@@ -39,6 +39,7 @@ let package = Package(
 
         // Net
         .library(name: "HTTP", targets: ["HTTP"]),
+        .library(name: "HTTP2", targets: ["HTTP2"]),
         .library(name: "TCP", targets: ["TCP"]),
 
         // Random
@@ -113,6 +114,9 @@ let package = Package(
         .testTarget(name: "HTTPTests", dependencies: ["HTTP"]),
         .target(name: "TCP", dependencies: ["Debugging", "Async", "libc"]),
         .testTarget(name: "TCPTests", dependencies: ["TCP"]),
+        
+        .target(name: "HTTP2", dependencies: ["HTTP", "TLS"]),
+        .testTarget(name: "HTTP2Tests", dependencies: ["HTTP2"]),
 
         .target(name: "Random", dependencies: ["Core"]),
         .testTarget(name: "RandomTests", dependencies: ["Random"]),
