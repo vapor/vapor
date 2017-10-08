@@ -1,7 +1,7 @@
 // swift-tools-version:4.0
 import PackageDescription
 
-#if !os(macOS) || os(iOS)
+#if os(macOS) || os(iOS)
     let ssl: Target.Dependency = "AppleSSL"
 #else
     let ssl: Target.Dependency = "OpenSSL"
@@ -154,7 +154,7 @@ let package = Package(
     ]
 )
 
-#if !os(macOS) || os(iOS)
+#if os(macOS) || os(iOS)
     package.targets.append(
         .target(name: "AppleSSL", dependencies: ["Async", "Bits", "Debugging"])
     )
