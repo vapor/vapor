@@ -37,10 +37,11 @@ extension SSLStream {
             
             if result == -1 && (
                 code == SSL_ERROR_WANT_READ ||
-                    code == SSL_ERROR_WANT_WRITE ||
-                    code == SSL_ERROR_WANT_CONNECT ||
-                    code == SSL_ERROR_WANT_ACCEPT
-                ) {
+                code == SSL_ERROR_WANT_WRITE ||
+                code == SSL_ERROR_WANT_CONNECT ||
+                code == SSL_ERROR_WANT_ACCEPT
+            ) {
+                print(code)
                 return
             }
             

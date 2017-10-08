@@ -74,27 +74,27 @@ class SSLTests: XCTestCase {
         }
         
         try server.start(port: 8432)
-//        let clientQueue = DispatchQueue(label: "test.client")
-//
-//        let future = try clientQueue.sync { () -> Future<()> in
-//            let client = try TLSClient(worker: Worker(queue: clientQueue))
-//
-//            clients.append(client)
-//
-//            return try client.connect(hostname: CurrentHost.hostname, port: 8432).map {
-//                message.withUnsafeBytes { (pointer: BytesPointer) in
-//                    let buffer = ByteBuffer(start: pointer, count: message.count)
-//
-//                    client.inputStream(buffer)
-//                }
-//            }
-//        }
+        let clientQueue = DispatchQueue(label: "test.client")
+
+        let future = try clientQueue.sync { () -> Future<()> in
+            let client = try TLSClient(worker: Worker(queue: clientQueue))
+
+            clients.append(client)
+
+            return try client.connect(hostname: CurrentHost.hostname, port: 8432).map {
+                message.withUnsafeBytes { (pointer: BytesPointer) in
+                    let buffer = ByteBuffer(start: pointer, count: message.count)
+
+                    client.inputStream(buffer)
+                }
+            }
+        }
         
-//        try future.blockingAwait(timeout: .seconds(1))
+        try future.blockingAwait(timeout: .seconds(1))
         try receivedFuture.future.blockingAwait()
         
         XCTAssertEqual(count, 1)
         XCTAssertEqual(peers.count, 1)
-//        XCTAssertEqual(clients.count, 1)
+        XCTAssertEqual(clients.count, 1)
     }
 }
