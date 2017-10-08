@@ -29,7 +29,7 @@ extension Serializer {
         data.reserveCapacity(headers.storage.count * 64)
         
         for (name, value) in headers {
-            data.append(contentsOf: name.lowercased.utf8)
+            data.append(contentsOf: name.original.utf8)
             data.append(headerKeyValueSeparator)
             data.append(contentsOf: value.utf8)
             data.append(eol)
