@@ -4,7 +4,8 @@ import Foundation
 
 public final class Packet {
     var data: Data
-    var position = 0
+    var bytePosition = 0
+    var bitPosition = 0
     
     init(data: Data = Data()) {
         self.data = data
