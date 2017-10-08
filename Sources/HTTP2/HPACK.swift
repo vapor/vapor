@@ -6,7 +6,7 @@ public final class Packet {
     var data: Data
     var position = 0
     
-    init(data: Data) {
+    init(data: Data = Data()) {
         self.data = data
     }
 }

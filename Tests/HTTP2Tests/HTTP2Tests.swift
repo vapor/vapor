@@ -1,7 +1,7 @@
 import XCTest
 @testable import HTTP2
 
-public class ParsingTests: XCTestCase {
+public class HPackTests: XCTestCase {
     /// http://httpwg.org/specs/rfc7541.html#rfc.section.C.1.1
     func testHPackIntegerParsing() throws {
         // First 3 bits don't matter in a 5-bit prefix
@@ -34,9 +34,16 @@ public class ParsingTests: XCTestCase {
         XCTAssertEqual(twelve, 12)
     }
     
+    func testIntegerSerialization() throws {
+        let message = Packet()
+        try message.append(integer: 1337, prefix: 5)
+        
+        let leetPacket = Packet(data: Data([0b00011111, 0b10011010, 0b00001010]))
+        XCTAssertEqual(message.data, leetPacket.data)
+    }
+    
     /// http://httpwg.org/specs/rfc7541.html#rfc.section.C.1.2
     func testMultilineHPackIntegerParsing() throws {
-        
         let leetPacket = Packet(data: Data([0b00011111, 0b10011010, 0b00001010]))
         
         let leet = try leetPacket.parseInteger(prefix: 5)
