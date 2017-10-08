@@ -1,21 +1,25 @@
-import Core
+import Bits
+import Async
 import Dispatch
 import libc
 
 /// Any TCP socket. It doesn't specify being a server or client yet.
-public class Socket {
+public final class Socket {
     /// The file descriptor related to this socket
-    public let descriptor: Descriptor
+    public let descriptor: Int32
 
     /// True if the socket is non blocking
     public let isNonBlocking: Bool
 
     /// True if the socket should re-use addresses
     public let shouldReuseAddress: Bool
+    
+    /// A write source that's used to check when the connection is open
+    internal var writeSource: DispatchSourceWrite?
 
     /// Creates a TCP socket around an existing descriptor
     public init(
-        established: Descriptor,
+        established: Int32,
         isNonBlocking: Bool,
         shouldReuseAddress: Bool
     ) {
@@ -33,11 +37,10 @@ public class Socket {
         guard sockfd > 0 else {
             throw Error.posix(errno, identifier: "socketCreate")
         }
-        let descriptor = Descriptor(raw: sockfd)
-
+        
         if isNonBlocking {
             // Set the socket to async/non blocking I/O
-            guard fcntl(descriptor.raw, F_SETFL, O_NONBLOCK) == 0 else {
+            guard fcntl(sockfd, F_SETFL, O_NONBLOCK) == 0 else {
                 throw Error.posix(errno, identifier: "setNonBlocking")
             }
         }
@@ -45,13 +48,13 @@ public class Socket {
         if shouldReuseAddress {
             var yes = 1
             let intSize = socklen_t(MemoryLayout<Int>.size)
-            guard setsockopt(descriptor.raw, SOL_SOCKET, SO_REUSEADDR, &yes, intSize) == 0 else {
+            guard setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, intSize) == 0 else {
                 throw Error.posix(errno, identifier: "setReuseAddress")
             }
         }
 
         self.init(
-            established: descriptor,
+            established: sockfd,
             isNonBlocking: isNonBlocking,
             shouldReuseAddress: shouldReuseAddress
         )
@@ -59,13 +62,13 @@ public class Socket {
 
     /// Closes the socket
     public func close() {
-        libc.close(descriptor.raw)
+        libc.close(descriptor)
     }
     
     /// Returns a boolean describing if the socket is still healthy and open
     public var isConnected: Bool {
         var error = 0
-        getsockopt(descriptor.raw, SOL_SOCKET, SO_ERROR, &error, nil)
+        getsockopt(descriptor, SOL_SOCKET, SO_ERROR, &error, nil)
         
         return error == 0
     }

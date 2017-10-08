@@ -1,6 +1,12 @@
 // swift-tools-version:4.0
 import PackageDescription
 
+#if os(macOS) || os(iOS)
+    let ssl: Target.Dependency = "AppleSSL"
+#else
+    let ssl: Target.Dependency = "OpenSSL"
+#endif
+
 let package = Package(
     name: "Vapor",
     products: [
@@ -46,6 +52,9 @@ let package = Package(
 
         // SQLite
         .library(name: "SQLite", targets: ["SQLite"]),
+        
+        // TLS/SSL
+        .library(name: "TLS", targets: ["TLS"]),
 
         // Vapor
         .library(name: "Vapor", targets: ["Vapor"]),
@@ -91,7 +100,7 @@ let package = Package(
         .testTarget(name: "LoggingTests", dependencies: ["Logging"]),
 
         // MySQL
-        .target(name: "MySQL", dependencies: ["TCP", "Crypto", "Core"]),
+        .target(name: "MySQL", dependencies: ["TCP", "Crypto"]),
         .testTarget(name: "MySQLTests", dependencies: ["MySQL"]),
         
         // MySQL
@@ -102,7 +111,7 @@ let package = Package(
         .target(name: "CHTTP"),
         .target(name: "HTTP", dependencies: ["CHTTP", "TCP"]),
         .testTarget(name: "HTTPTests", dependencies: ["HTTP"]),
-        .target(name: "TCP", dependencies: ["Debugging", "Core", "libc"]),
+        .target(name: "TCP", dependencies: ["Debugging", "Async", "libc"]),
         .testTarget(name: "TCPTests", dependencies: ["TCP"]),
 
         .target(name: "Random", dependencies: ["Core"]),
@@ -115,6 +124,10 @@ let package = Package(
         // Service
         .target(name: "Service", dependencies: ["Core", "Debugging"]),
         .testTarget(name: "ServiceTests", dependencies: ["Service"]),
+
+        // TLS
+        .target(name: "TLS", dependencies: [ssl, "TCP"]),
+        .testTarget(name: "TLSTests", dependencies: ["TLS"]),
 
         // SQLite
         .target(name: "CSQLite"),
@@ -131,12 +144,34 @@ let package = Package(
             "Routing",
             "Service",
             "TCP",
-            "WebSocket",
+            "WebSocket"
         ]),
         .testTarget(name: "VaporTests", dependencies: ["Vapor"]),
-        
+
         // WebSocket
         .target(name: "WebSocket", dependencies: ["Core", "Debugging", "TCP", "HTTP", "Crypto"]),
         .testTarget(name: "WebSocketTests", dependencies: ["WebSocket"]),
     ]
 )
+
+#if os(macOS) || os(iOS)
+    package.targets.append(
+        .target(name: "AppleSSL", dependencies: ["Async", "Bits", "Debugging"])
+    )
+    
+    package.products.append(
+        .library(name: "AppleSSL", targets: ["AppleSSL"])
+    )
+#else
+    package.dependencies.append(
+        .package(url: "https://github.com/vapor/copenssl.git", .revision("master"))
+    )
+    
+    package.targets.append(
+        .target(name: "OpenSSL", dependencies: ["COpenSSL", "Async", "Debugging"])
+    )
+    
+    package.products.append(
+        .library(name: "OpenSSL", targets: ["OpenSSL"])
+    )
+#endif

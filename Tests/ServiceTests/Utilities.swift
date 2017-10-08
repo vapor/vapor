@@ -1,4 +1,4 @@
-import Core
+import Async
 import Service
 
 final class TestContainer: Container {

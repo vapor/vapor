@@ -21,7 +21,7 @@ public class WebSocket {
     ///
     /// - parameter client: The TCP.Client that the WebSocket connection runs on
     /// - parameter serverSide: If `true`, run the WebSocket as a server side connection.
-    public init(client: TCP.Client, serverSide: Bool = true) {
+    public init(client: TCPClient, serverSide: Bool = true) {
         self.connection = Connection(client: client, serverSide: serverSide)
         
         self.textStream.frameStream = self.connection
@@ -32,11 +32,6 @@ public class WebSocket {
     
     /// Closes the connection to the other side by sending a `close` frame and closing the TCP connection
     public func close() {
-        do {
-            let frame = try Frame(op: .close, payload: ByteBuffer(start: nil, count: 0), mask: connection.serverSide ? nil : randomMask(), isFinal: true)
-            
-            self.connection.inputStream(frame)
-            self.connection.client.close()
-        } catch {}
+        connection.close()
     }
 }

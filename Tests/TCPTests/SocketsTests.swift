@@ -7,7 +7,7 @@ class SocketsTests: XCTestCase {
         // FIXME: @Tanner. `group.leave()` crashes
         return
         let socket = try Socket()
-        try socket.connect(hostname: "google.com")
+        try socket.connect(hostname: "google.com", port: 80)
 
         let data = """
         GET / HTTP/1.1\r
@@ -19,7 +19,7 @@ class SocketsTests: XCTestCase {
 
         let queue = DispatchQueue(label: "codes.vapor.test")
 
-        let write = DispatchSource.makeWriteSource(fileDescriptor: socket.descriptor.raw, queue: queue)
+        let write = DispatchSource.makeWriteSource(fileDescriptor: socket.descriptor, queue: queue)
         write.setEventHandler {
             _ = try! socket.write(data)
         }
@@ -29,7 +29,7 @@ class SocketsTests: XCTestCase {
         group.enter()
 
 
-        let read = DispatchSource.makeReadSource(fileDescriptor: socket.descriptor.raw, queue: queue)
+        let read = DispatchSource.makeReadSource(fileDescriptor: socket.descriptor, queue: queue)
         read.setEventHandler {
             let response = try! socket.read(max: 8_192)
 
@@ -48,7 +48,7 @@ class SocketsTests: XCTestCase {
         return
         
         let server = try Socket()
-        try server.bind(hostname: "localhost", port: 8337)
+        try server.bind(hostname: CurrentHost.hostname, port: 8337)
         try server.listen()
 
         let queue = DispatchQueue(label: "codes.vapor.test")
@@ -57,11 +57,11 @@ class SocketsTests: XCTestCase {
 
         var accepted: (Socket, DispatchSourceRead)?
 
-        let read = DispatchSource.makeReadSource(fileDescriptor: server.descriptor.raw, queue: queue)
+        let read = DispatchSource.makeReadSource(fileDescriptor: server.descriptor, queue: queue)
         read.setEventHandler {
             let client = try! server.accept()
             let read = DispatchSource.makeReadSource(
-                fileDescriptor: client.descriptor.raw,
+                fileDescriptor: client.descriptor,
                 queue: queue
             )
             read.setEventHandler {
@@ -79,7 +79,7 @@ class SocketsTests: XCTestCase {
 
         do {
             let client = try Socket(isNonBlocking: false)
-            try client.connect(hostname: "localhost", port: 8337)
+            try client.connect(hostname: CurrentHost.hostname, port: 8337)
             let data = "hello".data(using: .utf8)!
             _ = try! client.write(data)
         }
@@ -88,6 +88,7 @@ class SocketsTests: XCTestCase {
     }
 
     static let allTests = [
-        ("testConnect", testConnect)
+        ("testConnect", testConnect),
+        ("testBind", testBind),
     ]
 }

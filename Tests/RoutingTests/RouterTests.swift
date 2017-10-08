@@ -27,7 +27,7 @@ class RouterTests: XCTestCase {
 
             XCTAssertNotNil(responder)
             let res = try responder!.respond(to: request)
-            try XCTAssertEqual(String(data: res.sync().body.data, encoding: .utf8), "foo")
+            try XCTAssertEqual(String(data: res.blockingAwait().body.data, encoding: .utf8), "foo")
         }
 
         do {
@@ -36,7 +36,7 @@ class RouterTests: XCTestCase {
 
             XCTAssertNotNil(responder)
             let res = try responder!.respond(to: request)
-            try XCTAssertEqual(String(data: res.sync().body.data, encoding: .utf8), "hello")
+            try XCTAssertEqual(String(data: res.blockingAwait().body.data, encoding: .utf8), "hello")
         }
 
         do {
@@ -45,7 +45,7 @@ class RouterTests: XCTestCase {
 
             XCTAssertNotNil(responder)
             let res = try responder!.respond(to: request)
-            try XCTAssertEqual(String(data: res.sync().body.data, encoding: .utf8), "users!")
+            try XCTAssertEqual(String(data: res.blockingAwait().body.data, encoding: .utf8), "users!")
         }
     }
 

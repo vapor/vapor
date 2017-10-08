@@ -7,8 +7,8 @@ extension Socket {
     /// Read data from the socket into the supplied buffer.
     /// Returns the amount of bytes actually read.
     public func read(max: Int, into buffer: MutableByteBuffer) throws -> Int {
-        let receivedBytes = libc.read(descriptor.raw, buffer.baseAddress.unsafelyUnwrapped, max)
-
+        let receivedBytes = libc.read(descriptor, buffer.baseAddress.unsafelyUnwrapped, max)
+        
         guard receivedBytes != -1 else {
             switch errno {
             case EINTR:
@@ -27,7 +27,7 @@ extension Socket {
                 throw Error.posix(errno, identifier: "read")
             }
         }
-
+        
         guard receivedBytes > 0 else {
             // receiving 0 indicates a proper close .. no error.
             // attempt a close, no failure possible because throw indicates already closed
@@ -36,14 +36,10 @@ extension Socket {
             _ = close()
             return 0
         }
-
+        
         return receivedBytes
     }
-}
-
-// MARK: Convenience
-
-extension Socket {
+    
     /// Reads bytes and copies them into a Data struct.
     public func read(max: Int) throws -> Data {
         var pointer = MutableBytesPointer.allocate(capacity: max)

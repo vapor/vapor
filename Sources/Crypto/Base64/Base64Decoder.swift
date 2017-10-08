@@ -33,6 +33,9 @@ public final class Base64Decoder: Base64 {
     /// See `OutputStream.OutputHandler`
     public var outputStream: OutputHandler?
     
+    /// See `BaseStream.onClose`
+    public var onClose: CloseHandler?
+    
     /// See `BaseStream.Errorhandler`
     public var errorStream: ErrorHandler?
     
@@ -51,8 +54,8 @@ public final class Base64Decoder: Base64 {
     /// Creates a new Base64 encoder
     ///
     /// - parameter allocatedCapacity: The expected (maximum) size of each buffer inputted into this stream
-    public init(decodedCapacity: Int = 65_507) {
-        self.allocatedCapacity = (decodedCapacity / 3) * 4 &+ ((decodedCapacity % 3 > 0) ? 1 : 0)
+    public init(bufferCapacity: Int = 65_507) {
+        self.allocatedCapacity = (bufferCapacity / 3) * 4 &+ ((bufferCapacity % 3 > 0) ? 1 : 0)
         self.pointer = MutableBytesPointer.allocate(capacity: self.allocatedCapacity)
         self.pointer.initialize(to: 0, count: self.allocatedCapacity)
     }
@@ -61,7 +64,6 @@ public final class Base64Decoder: Base64 {
         self.pointer.deinitialize(count: self.allocatedCapacity)
         self.pointer.deallocate(capacity: self.allocatedCapacity)
     }
-    
     
     /// Decodes the contents of the buffer into the pointer until the provided capacity has been reached
     ///
@@ -189,12 +191,12 @@ public final class Base64Decoder: Base64 {
         }
     }
     
-    /// Encodes the incoming buffer into a new buffer as Base64
+    /// Decodes the incoming buffer into a new buffer from Base64
     ///
     /// Requires
     ///
     /// - parameter buffer: The buffer to encode
-    /// - parameter handle: The closure to execute with the Base64 encoded buffer
+    /// - parameter handle: The closure to execute with the binary buffer
     public static func decode<T>(buffer: ByteBuffer, _ handle: ((MutableByteBuffer) throws -> (T))) throws -> T {
         let allocatedCapacity = ((buffer.count / 4) * 3) &+ ((buffer.count % 4 > 0) ? 3 : 0)
         

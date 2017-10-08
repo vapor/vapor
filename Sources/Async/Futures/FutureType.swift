@@ -1,4 +1,3 @@
-import Foundation
 import Dispatch
 
 /// A future result type.
@@ -79,7 +78,7 @@ extension FutureType {
     ///
     /// Will return the results when available unless the specified
     /// time has been reached, in which case it will timeout
-    public func sync(deadline time: DispatchTime = .distantFuture) throws -> Expectation {
+    public func blockingAwait(deadline time: DispatchTime = .distantFuture) throws -> Expectation {
         let semaphore = DispatchSemaphore(value: 0)
         var awaitedResult: FutureResult<Expectation>?
 
@@ -98,8 +97,8 @@ extension FutureType {
     /// Waits for the specified duration for a result.
     ///
     /// Will return the results when available unless the specified timeout has been reached, in which case it will timeout
-    public func sync(timeout interval: DispatchTimeInterval) throws -> Expectation {
-        return try sync(deadline: DispatchTime.now() + interval)
+    public func blockingAwait(timeout interval: DispatchTimeInterval) throws -> Expectation {
+        return try blockingAwait(deadline: DispatchTime.now() + interval)
     }
 }
 

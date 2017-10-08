@@ -6,7 +6,7 @@ final class FutureTests : XCTestCase {
     func testSimpleFuture() throws {
         let promise = Promise(String.self)
         promise.complete("test")
-        XCTAssertEqual(try promise.future.sync(), "test")
+        XCTAssertEqual(try promise.future.blockingAwait(), "test")
     }
     
     func testFutureThen() throws {
@@ -37,7 +37,7 @@ final class FutureTests : XCTestCase {
         }
         
         XCTAssertFalse(promise.future.isCompleted)
-        XCTAssertThrowsError(try promise.future.sync(timeout: .seconds(1)))
+        XCTAssertThrowsError(try promise.future.blockingAwait(timeout: .seconds(1)))
     }
     
     func testErrorFuture() throws {

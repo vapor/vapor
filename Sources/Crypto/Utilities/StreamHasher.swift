@@ -27,7 +27,7 @@ public class ByteStreamHasher<H: Hash> : Async.InputStream {
     /// `ByteStreamHasher` accepts byte streams
     public typealias Input = ByteBuffer
     
-    /// Unused. Can be used to receive errors, although hashes don't generate errors
+    /// See `BaseStream.errorStream`
     public var errorStream: ErrorHandler?
     
     /// The hash context

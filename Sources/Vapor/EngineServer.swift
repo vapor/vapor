@@ -15,7 +15,7 @@ public final class EngineServer: HTTPServer {
     public func start(with responder: Responder) throws {
         // create a tcp server
         let tcp = try TCP.Server(workerCount: config.workerCount)
-        let server = HTTP.Server(tcp: tcp)
+        let server = HTTP.Server(clientStream: tcp)
 
         // setup the server pipeline
         server.drain { client in
@@ -34,7 +34,7 @@ public final class EngineServer: HTTPServer {
         }
 
         // bind, listen, and start accepting
-        try server.tcp.start(
+        try server.clientStream.start(
             hostname: config.hostname,
             port: config.port,
             backlog: config.backlog
@@ -59,7 +59,7 @@ public struct EngineServerConfig {
 
     /// Creates a new engine server config
     public init(
-        hostname: String = "localhost",
+        hostname: String = "0.0.0.0",
         port: UInt16 = 8080,
         backlog: Int32 = 4096,
         workerCount: Int = 8

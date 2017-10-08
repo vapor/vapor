@@ -1,19 +1,78 @@
 import Async
 import Core
+import Foundation
 import Dispatch
 import TCP
 import HTTP
 import WebSocket
 import XCTest
 
+final class HTTPTestServer {
+    /// Host name the server will bind to.
+    public let hostname: String
+    
+    /// Port the server will bind to.
+    public let port: UInt16
+    
+    /// Listen backlog.
+    public let backlog: Int32
+    
+    /// Number of client accepting workers.
+    /// Should be equal to the number of logical cores.
+    public let workerCount: Int
+    
+    /// Creates a new engine server config
+    public init(
+        hostname: String = CurrentHost.hostname,
+        port: UInt16 = 8080,
+        backlog: Int32 = 4096,
+        workerCount: Int = 8
+    ) {
+        self.hostname = hostname
+        self.port = port
+        self.workerCount = workerCount
+        self.backlog = backlog
+    }
+    
+    /// Start the server. Server protocol requirement.
+    public func start(with responder: Responder) throws {
+        // create a tcp server
+        let tcp = try TCP.Server(workerCount: workerCount)
+        let server = HTTP.Server(clientStream: tcp)
+        
+        // setup the server pipeline
+        server.drain { client in
+            let parser = HTTP.RequestParser(worker: client.tcp.worker)
+            let responderStream = responder.makeStream()
+            let serializer = HTTP.ResponseSerializer()
+            
+            client.stream(to: parser)
+                .stream(to: responderStream)
+                .stream(to: serializer)
+                .drain(into: client)
+            
+            client.tcp.start()
+        }
+        
+        server.errorStream = { error in
+            debugPrint(error)
+        }
+        
+        // bind, listen, and start accepting
+        try server.clientStream.start(
+            hostname: hostname,
+            port: port,
+            backlog: backlog
+        )
+    }
+}
+
 class WebSocketTests : XCTestCase {
     func testClientServer() throws {
-        // FIXME: joannis, failing on linux
         return;
         let app = WebSocketApplication()
         let tcp = try TCP.Server()
-        // FIXME: websockets tests can't rely on Vapor, Vapor imports WebSockets
-        // let server = EngineServer(config: EngineServerConfig())
+        let server = HTTPTestServer()
         
         // try server.start(with: app)
         
@@ -21,7 +80,7 @@ class WebSocketTests : XCTestCase {
         let promise1 = Promise<Void>()
 
         let worker = Worker(queue: .global())
-        _ = try WebSocket.connect(hostname: "0.0.0.0", port: 8080, uri: URI(path: "/"), worker: worker).then { socket in
+        _ = try WebSocket.connect(to: "ws://0.0.0.0:8080/", worker: worker).then { socket in
             let responses = ["test", "cat", "banana"]
             let reversedResponses = responses.map {
                 String($0.reversed())
@@ -58,8 +117,8 @@ class WebSocketTests : XCTestCase {
             promise0.complete(())
         }
         
-        try promise0.future.sync(timeout: .seconds(10))
-//        try promise1.future.sync()
+        try promise0.future.blockingAwait(timeout: .seconds(10))
+//        try promise1.future.blockingAwait()
     }
     
     static let allTests = [
