@@ -5,7 +5,7 @@ public protocol KeyedCache {
     /// Gets the value as type `D` deserialized from the value associated with the `key`
     ///
     /// Returns an empty future that triggers on successful storage
-    func get<D: Decodable>(_ type: D.Type, forKey key: String) throws -> Future<D>
+    func get<D: Decodable>(_ type: D.Type, forKey key: String) throws -> Future<D?>
     
     /// Sets the value to `entity` stored associated with the `key`
     ///
