@@ -1,4 +1,5 @@
 import Foundation
+import Dispatch
 import Bits
 
 /// Represents an HTTP body.
