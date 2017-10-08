@@ -1,3 +1,5 @@
+import Foundation
+
 /// Infinitely loop over a collection.
 /// Used to supply server worker queues to clients.
 internal struct LoopIterator<Base: Collection>: IteratorProtocol {
