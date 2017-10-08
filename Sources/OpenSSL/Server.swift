@@ -6,8 +6,9 @@ import Foundation
 extension SSLStream {
     /// Upgrades the peer to SSL
     public func initializePeer(certificate: String, key: String) throws -> Future<Void> {
-        let ssl = try self.initialize(side:
-            .server(certificate: certificate, key: key)
+        let ssl = try self.initialize(
+            side: .server(certificate: certificate, key: key),
+            method: .tls1_2
         )
         
         return try handshake(for: ssl, side: .server(certificate: certificate, key: key))

@@ -6,11 +6,15 @@ import Dispatch
 extension SSLStream {
     /// Runs the SSL handshake, regardless of client or server
     func handshake(for ssl: UnsafeMutablePointer<SSL>, side: Side) throws -> Future<Void> {
+        var accepted = false
+        
         func retry() -> Int32 {
             if case .client = side {
                 return SSL_connect(ssl)
-            } else {
+            } else if !accepted {
                 return SSL_accept(ssl)
+            } else {
+                return SSL_do_handshake(ssl)
             }
         }
         
@@ -26,18 +30,17 @@ extension SSLStream {
         let readSource = DispatchSource.makeReadSource(fileDescriptor: self.descriptor, queue: self.queue)
         let promise = Promise<Void>()
         
-        // Listen for input
-        readSource.setEventHandler {
+        func tryAgain() {
             // On input, continue the handshake
             result = retry()
             code = SSL_get_error(ssl, result)
             
             if result == -1 && (
                 code == SSL_ERROR_WANT_READ ||
-                code == SSL_ERROR_WANT_WRITE ||
-                code == SSL_ERROR_WANT_CONNECT ||
-                code == SSL_ERROR_WANT_ACCEPT
-            ) {
+                    code == SSL_ERROR_WANT_WRITE ||
+                    code == SSL_ERROR_WANT_CONNECT ||
+                    code == SSL_ERROR_WANT_ACCEPT
+                ) {
                 return
             }
             
@@ -48,8 +51,18 @@ extension SSLStream {
                 return
             }
             
-            readSource.cancel()
-            promise.complete(())
+            if accepted {
+                readSource.cancel()
+                promise.complete(())
+            } else {
+                accepted = true
+                tryAgain()
+            }
+        }
+        
+        // Listen for input
+        readSource.setEventHandler {
+            tryAgain()
         }
         
         // Now that the async stuff's et up, let's start your engines
