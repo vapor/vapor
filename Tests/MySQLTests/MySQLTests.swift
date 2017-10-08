@@ -1,4 +1,5 @@
 import XCTest
+import TCP
 @testable import MySQL
 //import JSON
 import Core
@@ -17,7 +18,7 @@ class MySQLTests: XCTestCase {
         _ = try? pool.dropTables(named: "users", "complex").blockingAwait()
     }
     
-    let pool = ConnectionPool(hostname: ProcessInfo().hostName, user: "root", password: nil, database: "test", queue: .global())
+    let pool = ConnectionPool(hostname: CurrentHost.hostname, user: "root", password: nil, database: "test", queue: .global())
     
     func testCreateUsersSchema() throws {
         let table = Table(named: "users")

@@ -23,7 +23,7 @@ final class HTTPTestServer {
     
     /// Creates a new engine server config
     public init(
-        hostname: String = ProcessInfo().hostName,
+        hostname: String = CurrentHost.hostname,
         port: UInt16 = 8080,
         backlog: Int32 = 4096,
         workerCount: Int = 8
@@ -69,8 +69,6 @@ final class HTTPTestServer {
 
 class WebSocketTests : XCTestCase {
     func testClientServer() throws {
-        // FIXME: joannis, failing on linux
-        return;
         let app = WebSocketApplication()
         let tcp = try TCP.Server()
         let server = HTTPTestServer()

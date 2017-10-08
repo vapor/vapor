@@ -25,6 +25,16 @@ internal struct LoopIterator<Base: Collection>: IteratorProtocol {
     }
 }
 
+public enum CurrentHost {
+    public static var hostname: String {
+        #if os(Linux)
+            return ProcessInfo().hostName
+        #else
+            return "localhost"
+        #endif
+    }
+}
+
 #if os(Linux)
 import libc
 

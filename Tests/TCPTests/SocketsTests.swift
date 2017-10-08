@@ -48,7 +48,7 @@ class SocketsTests: XCTestCase {
         return
         
         let server = try Socket()
-        try server.bind(hostname: ProcessInfo().hostName, port: 8337)
+        try server.bind(hostname: CurrentHost.hostname, port: 8337)
         try server.listen()
 
         let queue = DispatchQueue(label: "codes.vapor.test")
@@ -79,7 +79,7 @@ class SocketsTests: XCTestCase {
 
         do {
             let client = try Socket(isNonBlocking: false)
-            try client.connect(hostname: ProcessInfo().hostName, port: 8337)
+            try client.connect(hostname: CurrentHost.hostname, port: 8337)
             let data = "hello".data(using: .utf8)!
             _ = try! client.write(data)
         }

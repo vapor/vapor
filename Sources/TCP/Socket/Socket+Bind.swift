@@ -4,7 +4,7 @@ import Foundation
 extension Socket {
     /// bind - bind a name to a socket
     /// http://man7.org/linux/man-pages/man2/bind.2.html
-    public func bind(hostname: String = ProcessInfo().hostName, port: UInt16) throws {
+    public func bind(hostname: String = CurrentHost.hostname, port: UInt16) throws {
         var hints = addrinfo()
 
         // Support both IPv4 and IPv6
