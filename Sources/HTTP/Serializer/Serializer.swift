@@ -8,7 +8,7 @@ internal protocol Serializer: Async.Stream { }
 
 extension Serializer {
     internal func serialize(_ body: Body) -> DispatchData {
-        switch body {
+        switch body.storage {
         case .dispatchData(let data):
             return data
         case .data(_):
