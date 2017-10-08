@@ -44,6 +44,7 @@ public protocol BaseStream: class {
 
 extension OutputStream {
     /// Drains the output stream into a closure.
+    @discardableResult
     public func drain(_ handler: @escaping OutputHandler) -> Self {
         self.outputStream = handler
         return self

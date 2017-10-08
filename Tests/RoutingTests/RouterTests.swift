@@ -1,4 +1,5 @@
 import HTTP
+import Bits
 import Routing
 import XCTest
 
@@ -26,8 +27,11 @@ class RouterTests: XCTestCase {
             let responder = router.route(request: request)
 
             XCTAssertNotNil(responder)
-            let res = try responder!.respond(to: request)
-            try XCTAssertEqual(String(data: res.sync().body.data, encoding: .utf8), "foo")
+            let res = try responder!.respond(to: request).sync()
+            res.body.withUnsafeBytes { (pointer: BytesPointer) in
+                let buffer = ByteBuffer(start: pointer, count: res.body.count)
+                XCTAssertEqual(String(bytes: buffer, encoding: .utf8), "foo")
+            }
         }
 
         do {
@@ -35,8 +39,11 @@ class RouterTests: XCTestCase {
             let responder = router.route(request: request)
 
             XCTAssertNotNil(responder)
-            let res = try responder!.respond(to: request)
-            try XCTAssertEqual(String(data: res.sync().body.data, encoding: .utf8), "hello")
+            let res = try responder!.respond(to: request).sync()
+            res.body.withUnsafeBytes { (pointer: BytesPointer) in
+                let buffer = ByteBuffer(start: pointer, count: res.body.count)
+                XCTAssertEqual(String(bytes: buffer, encoding: .utf8), "hello")
+            }
         }
 
         do {
@@ -44,8 +51,11 @@ class RouterTests: XCTestCase {
             let responder = router.route(request: request)
 
             XCTAssertNotNil(responder)
-            let res = try responder!.respond(to: request)
-            try XCTAssertEqual(String(data: res.sync().body.data, encoding: .utf8), "users!")
+            let res = try responder!.respond(to: request).sync()
+            res.body.withUnsafeBytes { (pointer: BytesPointer) in
+                let buffer = ByteBuffer(start: pointer, count: res.body.count)
+                XCTAssertEqual(String(bytes: buffer, encoding: .utf8), "users!")
+            }
         }
     }
 

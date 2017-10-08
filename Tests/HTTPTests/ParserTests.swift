@@ -1,4 +1,5 @@
 import Core
+import Bits
 import HTTP
 import XCTest
 
@@ -33,7 +34,11 @@ class ParserTests : XCTestCase {
         XCTAssertEqual(req.headers[.acceptLanguage], "en-us")
         XCTAssertEqual(req.headers[.acceptEncoding], "gzip, deflate")
         XCTAssertEqual(req.headers[.connection], "Keep-Alive")
-        XCTAssertEqual(String(data: req.body.data, encoding: .utf8), "hello")
+        
+        req.body.withUnsafeBytes { (pointer: BytesPointer) in
+            let buffer = ByteBuffer(start: pointer, count: req.body.count)
+            XCTAssertEqual(String(bytes: buffer, encoding: .utf8), "hello")
+        }
     }
 
     func testResponse() throws {
@@ -63,7 +68,11 @@ class ParserTests : XCTestCase {
         XCTAssertEqual(res.headers[.contentType], "text/html")
         XCTAssertEqual(res.mediaType, .html)
         XCTAssertEqual(res.headers[.connection], "Closed")
-        XCTAssertEqual(String(data: res.body.data, encoding: .utf8), "<vapor>")
+        
+        res.body.withUnsafeBytes { (pointer: BytesPointer) in
+            let buffer = ByteBuffer(start: pointer, count: res.body.count)
+            XCTAssertEqual(String(bytes: buffer, encoding: .utf8), "<vapor>")
+        }
     }
 
     static let allTests = [
