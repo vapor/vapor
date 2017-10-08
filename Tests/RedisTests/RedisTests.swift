@@ -1,5 +1,6 @@
 import XCTest
 import Dispatch
+import Async
 import Core
 @testable import Redis
 
