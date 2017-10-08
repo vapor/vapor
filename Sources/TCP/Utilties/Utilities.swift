@@ -30,7 +30,7 @@ internal struct LoopIterator<Base: Collection>: IteratorProtocol {
 public enum CurrentHost {
     public static var hostname: String {
         #if os(Linux)
-            return ProcessInfo().hostName
+            return ProcessInfo.processInfo.hostName
         #else
             return "localhost"
         #endif
