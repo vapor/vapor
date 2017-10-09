@@ -59,19 +59,20 @@ public class HPackTests: XCTestCase {
         XCTAssertEqual(data, [0x64, 0x02])
     }
     
-//    func parseHuffmanStringParsing() throws {
-//        let data = Data([0x64, 0x02])
-//
-//        let string = String(data: HuffmanDecoder<UInt8>.hpack.decode(data: data), encoding: .utf8)
-//        XCTAssertEqual(string, "302")
-//    }
-//
-//    func testHuffmanStrings() throws {
-//        let string = "302"
-//
-//        let data = HuffmanEncoder<UInt8>.hpack.encode(string: string)
-//        let sameString = String(data: HuffmanDecoder.hpack.decode(data: data), encoding: .utf8)
-//
-//        XCTAssertEqual(sameString, "302")
-//    }
+    func testHuffmanStringParsing() throws {
+        let data = Data([0x64, 0x02])
+
+        let decoded = try HuffmanDecoder.hpack().decode(data: data)
+        let string = String(bytes: decoded, encoding: .utf8)
+        XCTAssertEqual(string, "302")
+    }
+
+    func testHuffmanStrings() throws {
+        let string = "302"
+
+        let data = HuffmanEncoder.hpack.encode(string: string)
+        let sameString = String(bytes: try HuffmanDecoder.hpack().decode(data: data), encoding: .utf8)
+
+        XCTAssertEqual(sameString, "302")
+    }
 }

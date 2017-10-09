@@ -46,6 +46,8 @@ final class HuffmanEncoder {
     
     public func encode(data input: Data) -> Data {
         var data = Data()
+        data.reserveCapacity(input.count)
+        
         var bitOffset: UInt8 = 0
         
         nextCharacter: for byte in input {

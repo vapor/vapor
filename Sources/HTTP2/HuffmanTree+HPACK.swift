@@ -4,6 +4,12 @@ extension HuffmanEncoder {
     }()
 }
 
+extension HuffmanDecoder {
+    static func hpack() throws -> HuffmanDecoder {
+        return try HuffmanDecoder(tree: HuffmanTree(encoded: .hpack))
+    }
+}
+
 fileprivate extension EncodingTable {
     mutating func append(_ pair: Pair) {
         elements.append(numericCast(encoded.count))

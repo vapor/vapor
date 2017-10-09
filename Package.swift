@@ -115,11 +115,17 @@ let package = Package(
         .target(name: "TCP", dependencies: ["Debugging", "Async", "libc"]),
         .testTarget(name: "TCPTests", dependencies: ["TCP"]),
         
-        .target(name: "HTTP2", dependencies: ["HTTP", "TLS"]),
+        // HTTP/2
+        .target(name: "HTTP2", dependencies: ["HTTP", "TLS", "Pufferfish"]),
         .testTarget(name: "HTTP2Tests", dependencies: ["HTTP2"]),
 
+        // Random crypto
         .target(name: "Random", dependencies: ["Core"]),
         .testTarget(name: "RandomTests", dependencies: ["Random"]),
+        
+        // Compression
+        .target(name: "Pufferfish", dependencies: ["Pufferfish"]),
+        .testTarget(name: "PufferfishTests", dependencies: ["Pufferfish"]),
 
         // Routing
         .target(name: "Routing", dependencies: ["Core", "Debugging", "HTTP", "WebSocket"]),
