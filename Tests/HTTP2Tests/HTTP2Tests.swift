@@ -54,7 +54,7 @@ public class HPackTests: XCTestCase {
     func testHuffmanStringSerialization() throws {
         let string = "302"
         
-        let data = Array(HuffmanEncoder<UInt8>.hpack.encode(string: string))
+        let data = Array(HuffmanEncoder.hpack.encode(string: string))
         XCTAssertEqual(data.count, 2)
         XCTAssertEqual(data, [0x64, 0x02])
     }

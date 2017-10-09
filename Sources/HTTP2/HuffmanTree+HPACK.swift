@@ -1,22 +1,22 @@
-extension HuffmanEncoder where T == UInt8 {
-    static var hpack: HuffmanEncoder<UInt8> = {
-        return HuffmanEncoder<UInt8>(encodingTable: .hpack)
+extension HuffmanEncoder {
+    static var hpack: HuffmanEncoder = {
+        return HuffmanEncoder(encodingTable: .hpack)
     }()
 }
 
-fileprivate extension EncodingTable where T == UInt8 {
+fileprivate extension EncodingTable {
     mutating func append(_ pair: Pair) {
         elements.append(numericCast(encoded.count))
         encoded.append(pair)
     }
 }
 
-extension EncodingTable where T == UInt8 {
+extension EncodingTable {
     /// Predefined HPACK Huffman tree
     ///
     /// Generated from: http://httpwg.org/specs/rfc7541.html#rfc.section.B
-    static var hpack: EncodingTable<UInt8> = {
-        var encodingTable = EncodingTable<UInt8>(reserving: 257)
+    static var hpack: EncodingTable = {
+        var encodingTable = EncodingTable(reserving: 257)
         
         encodingTable.append((0b11111111_11000, 13))
         encodingTable.append((0b11111111_11111111_1011000, 23))
