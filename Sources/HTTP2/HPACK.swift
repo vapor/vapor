@@ -19,7 +19,7 @@ public final class HPACKDecoder {
     
     fileprivate func getEntry(at index: Int) throws -> HeadersTable.Entry {
         // First the static entries
-        if index <= HeadersTable.staticEntries.count {
+        if index >= 0, index <= HeadersTable.staticEntries.count {
             return HeadersTable.staticEntries[index &- 1]
         }
         
@@ -27,7 +27,7 @@ public final class HPACKDecoder {
         let index = index &- HeadersTable.staticEntries.count &- 1
         
         // The synamic entry *must* exist
-        guard index >= 0, index < table.dynamicEntries.count else {
+        guard index < table.dynamicEntries.count else {
             throw Error(.invalidStaticTableIndex(index))
         }
         
