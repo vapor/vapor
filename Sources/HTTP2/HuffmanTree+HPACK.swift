@@ -1,3 +1,5 @@
+import Pufferfish
+
 extension HuffmanEncoder {
     static var hpack: HuffmanEncoder = {
         return HuffmanEncoder(encodingTable: .hpack)
@@ -12,7 +14,7 @@ extension HuffmanDecoder {
 
 fileprivate extension EncodingTable {
     mutating func append(_ pair: Pair) {
-        elements.append(numericCast(encoded.count))
+        elements.append(.single(numericCast(encoded.count)))
         encoded.append(pair)
     }
 }

@@ -124,7 +124,7 @@ let package = Package(
         .testTarget(name: "RandomTests", dependencies: ["Random"]),
         
         // Compression
-        .target(name: "Pufferfish", dependencies: ["Pufferfish"]),
+        .target(name: "Pufferfish"),
         .testTarget(name: "PufferfishTests", dependencies: ["Pufferfish"]),
 
         // Routing

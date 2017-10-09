@@ -1,18 +1,25 @@
 import Foundation
 
-struct EncodingTable {
-    typealias Pair = (encoded: UInt64, bits: UInt8)
+public enum HuffmanAssociatedData {
+    case single(UInt8)
+    case many(Data)
+}
+
+public struct EncodingTable {
+    public typealias Pair = (encoded: UInt64, bits: UInt8)
     
-    var elements = [UInt8]()
-    var encoded = [Pair]()
+    public var elements = [HuffmanAssociatedData]()
+    public var encoded = [Pair]()
     
-    init(reserving size: Int = 0) {
+    public init(reserving size: Int = 0) {
         elements.reserveCapacity(size)
         encoded.reserveCapacity(size)
     }
 }
 
-final class HuffmanEncoder {
+struct IncompleteEncodingTable: Swift.Error {}
+
+public final class HuffmanEncoder {
     var encodingTable: EncodingTable
     var array = [UInt8](repeating: 0, count: 8)
     
@@ -27,7 +34,7 @@ final class HuffmanEncoder {
         0b01111111
     ]
     
-    init(encodingTable: EncodingTable) {
+    public init(encodingTable: EncodingTable) {
         self.encodingTable = encodingTable
     }
     
@@ -44,14 +51,24 @@ final class HuffmanEncoder {
         array[7] = UInt8((int >> 56) & 0xff)
     }
     
-    public func encode(data input: Data) -> Data {
+    public func encode(data input: Data) throws -> Data {
         var data = Data()
         data.reserveCapacity(input.count)
         
         var bitOffset: UInt8 = 0
         
         nextCharacter: for byte in input {
-            let (encoded, bitLength) = encodingTable.encoded[numericCast(byte)]
+            guard let encodedIndex = encodingTable.elements.index(where: { element in
+                if case .single(let single) = element, single == byte {
+                    return true
+                }
+                
+                return false
+            }) else {
+                throw IncompleteEncodingTable()
+            }
+            
+            let (encoded, bitLength) = encodingTable.encoded[encodedIndex]
             convert(encoded)
             var index = 0
             var processed: UInt8 = 0
@@ -63,10 +80,9 @@ final class HuffmanEncoder {
                     
                     // If we can't full up a full byte
                     if bitOffset &+ unprocessed < 8 {
-                        let bitStartIndex = processed % 8
-                        let omittedBits = 8 &- bitStartIndex
+                        let omittedBits = 8 &- bitOffset
                         
-                        let newByte = (array[index] << omittedBits) >> omittedBits
+                        let newByte = (array[index] << omittedBits) >> unprocessed
                         data[data.count &- 1] |= newByte
                         
                         bitOffset = bitOffset &+ unprocessed

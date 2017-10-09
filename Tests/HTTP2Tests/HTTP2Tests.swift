@@ -1,7 +1,8 @@
 import XCTest
 @testable import HTTP2
+import Pufferfish
 
-public class HPackTests: XCTestCase {
+public class HPACKTests: XCTestCase {
     /// http://httpwg.org/specs/rfc7541.html#rfc.section.C.1.1
     func testHPackIntegerParsing() throws {
         // First 3 bits don't matter in a 5-bit prefix

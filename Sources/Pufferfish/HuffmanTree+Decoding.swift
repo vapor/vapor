@@ -1,9 +1,9 @@
 import Foundation
 
-final class HuffmanDecoder {
-    let tree: HuffmanTree
+public final class HuffmanDecoder {
+    public let tree: HuffmanTree
     
-    init(tree: HuffmanTree) {
+    public init(tree: HuffmanTree) {
         self.tree = tree
     }
     
@@ -19,12 +19,15 @@ final class HuffmanDecoder {
                 let node = goLeft ? currentTree.left : currentTree.right
                 
                 switch node {
-                case .single(let byte):
-                    output.append(byte)
-                    currentTree = self.tree
-                case .many(let data):
-                    output.append(contentsOf: data)
-                    currentTree = self.tree
+                case .leaf(let leaf):
+                    switch leaf {
+                    case .single(let byte):
+                        output.append(byte)
+                        currentTree = self.tree
+                    case .many(let data):
+                        output.append(contentsOf: data)
+                        currentTree = self.tree
+                    }
                 case .tree(let tree):
                     currentTree = tree
                 }
