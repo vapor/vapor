@@ -4,6 +4,13 @@ extension HuffmanEncoder where T == UInt8 {
     }()
 }
 
+fileprivate extension EncodingTable where T == UInt8 {
+    mutating func append(_ pair: Pair) {
+        elements.append(numericCast(encoded.count))
+        encoded.append(pair)
+    }
+}
+
 extension EncodingTable where T == UInt8 {
     /// Predefined HPACK Huffman tree
     ///
@@ -41,8 +48,8 @@ extension EncodingTable where T == UInt8 {
         encodingTable.append((0b11111111_11111111_11111111_0111, 28))
         encodingTable.append((0b11111111_11111111_11111111_1000, 28))
         encodingTable.append((0b11111111_11111111_11111111_1001, 28))
+        encodingTable.append((0b11111111_11111111_11111111_1010, 28))
         encodingTable.append((0b11111111_11111111_11111111_1011, 28))
-        
         encodingTable.append((0b010100, 6))
         encodingTable.append((0b11111110_00, 10))
         encodingTable.append((0b11111110_01, 10))
@@ -267,7 +274,7 @@ extension EncodingTable where T == UInt8 {
         encodingTable.append((0b11111111_11111111_11111101_111, 27))
         encodingTable.append((0b11111111_11111111_11111110_000, 27))
         encodingTable.append((0b11111111_11111111_11111011_10, 26))
-        encodingTable.append((0b11111111_11111111_11111111_111111, 30))
+//        encodingTable.append((0b11111111_11111111_11111111_111111, 30))
         
         return encodingTable
     }()

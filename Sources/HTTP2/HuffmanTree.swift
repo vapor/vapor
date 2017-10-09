@@ -26,13 +26,6 @@ struct EncodingTable<T> {
     }
 }
 
-extension EncodingTable where T == UInt8 {
-    mutating func append(_ pair: Pair) {
-        elements.append(numericCast(encoded.count))
-        encoded.append(pair)
-    }
-}
-
 final class HuffmanEncoder<T> {
     var encodingTable: EncodingTable<T>
     var array = [UInt8](repeating: 0, count: 8)
@@ -65,11 +58,11 @@ final class HuffmanEncoder<T> {
         array[7] = UInt8((int >> 56) & 0xff)
     }
     
-    public func encode(data: Data) -> Data {
+    public func encode(data input: Data) -> Data {
         var data = Data()
         var bitOffset: UInt8 = 0
         
-        nextCharacter: for byte in data {
+        nextCharacter: for byte in input {
             let (encoded, bitLength) = encodingTable.encoded[numericCast(byte)]
             convert(encoded)
             var index = 0
