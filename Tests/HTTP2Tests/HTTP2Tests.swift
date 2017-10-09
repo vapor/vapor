@@ -50,4 +50,12 @@ public class HPackTests: XCTestCase {
         
         XCTAssertEqual(leet, 1337)
     }
+    
+    func testHuffmanStringEncoding() throws {
+        let string = "302"
+        
+        let data = Array(HuffmanTree.hpack.encode(string: string))
+        XCTAssertEqual(data.count, 2)
+        XCTAssertEqual(data, [0x64, 0x02])
+    }
 }

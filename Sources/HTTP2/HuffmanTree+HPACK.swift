@@ -5,7 +5,7 @@ extension HuffmanTree {
     static var hpack: HuffmanTree = {
         let tree = HuffmanTree()
         
-        tree.table.reserveCapacity(256)
+        tree.table = .init(repeating: (0, 0), count: 257)
         
         tree.table[0] =  (0b11111111_11000, 13)
         tree.table[1] =  (0b11111111_11111111_1011000, 23)

@@ -34,30 +34,68 @@ final class HuffmanTree {
         var data = Data()
         var bitOffset: UInt8 = 0
         
-        for character in string.utf8 {
-            var (encoded, bitLength) = table[numericCast(character)]
+        nextCharacter: for character in string.utf8 {
+            let (encoded, bitLength) = table[numericCast(character)]
             convert(encoded)
+            var index = 0
+            var processed: UInt8 = 0
             
-            if bitOffset > 0 {
-                if bitOffset &+ bitLength < 8 {
-                    bitOffset = bitOffset &+ bitLength
+            while processed < bitLength {
+                if bitOffset > 0 {
+                    // Bits not yet written
+                    let unprocessed = (bitLength &- processed)
+                    
+                    // If we can't full up a full byte
+                    if bitOffset &+ unprocessed < 8 {
+                        let bitStartIndex = processed % 8
+                        let omittedBits = 8 &- bitStartIndex
+                        
+                        let newByte = (array[index] << omittedBits) >> omittedBits
+                        data[data.count &- 1] |= newByte
+                        
+                        bitOffset = bitOffset &+ unprocessed
+                        continue nextCharacter
+                    } else {
+                        // Take enough to fill up a byte
+                        let take = 8 &- bitOffset
+                        
+                        let byte = (array[index] << bitOffset) >> bitOffset
+                        data[data.count &- 1] |= byte
+                        
+                        processed = processed &+ take
+                        bitOffset = 0
+                    }
                 } else {
-                    let byte = data[data.count &- 1] & bits[numericCast(8 &- bitOffset)]
-                    data[data.count &- 1] = byte &+ (array[0] & bits[numericCast(bitOffset)])
-                    bitLength = bitLength &- bitOffset
-                }
-            } else {
-                let halfBits = bitLength % 8
-                data.append(numericCast(array[0] << halfBits))
-                
-                if bitLength > 8 {
-                    bitLength -= 8
-                } else {
-                    bitOffset = bitLength
+                    defer { processed = processed &+ 8 }
+                    
+                    let unprocessed = (bitLength &- processed)
+                    let fullBytes = unprocessed / 8
+                    let remainderBits = unprocessed % 8
+                    
+                    for _ in 0..<fullBytes {
+                        data.append(array[index])
+                        index = index &+ 1
+                    }
+                    
+                    if remainderBits > 0 {
+                        data.append(array[index] << (8 &- remainderBits))
+                    }
+                    
+                    bitOffset = remainderBits
+                    
+                    continue nextCharacter
                 }
             }
+        }
+        
+        if bitOffset > 0, data.count > 0 {
+            var reset: UInt8 = 0x00
             
+            for _ in 0..<8 {
+                reset = (reset << 1) | 0b00000001
+            }
             
+            data[data.count &- 1] &= reset
         }
         
         return data
