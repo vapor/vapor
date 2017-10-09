@@ -4,7 +4,7 @@ extension Packet {
         try self.serialize(integer: string.count, prefix: 7)
         
         if huffmanEncoded {
-            HuffmanTree.hpack.encode(string: string)
+            data.append(contentsOf: HuffmanEncoder<UInt8>.hpack.encode(string: string))
         } else {
             data.append(contentsOf: string.utf8)
         }

@@ -1,7 +1,40 @@
 import Foundation
 
-final class HuffmanTree {
-    var table = [(data: UInt64, bitLength: UInt8)]()
+indirect enum HuffmanNode<T> {
+    case value(T)
+    case tree(HuffmanTree<T>)
+}
+
+struct HuffmanTree<T> {
+    let left: HuffmanNode<T>
+    let right: HuffmanNode<T>
+}
+
+func +<T>(lhs: HuffmanNode<T>, rhs: HuffmanNode<T>) -> HuffmanTree<T> {
+    return HuffmanTree(left: lhs, right: rhs)
+}
+
+struct EncodingTable<T> {
+    typealias Pair = (encoded: UInt64, bits: UInt8)
+    
+    var elements = [T]()
+    var encoded = [Pair]()
+    
+    init(reserving size: Int = 0) {
+        elements.reserveCapacity(size)
+        encoded.reserveCapacity(size)
+    }
+}
+
+extension EncodingTable where T == UInt8 {
+    mutating func append(_ pair: Pair) {
+        elements.append(numericCast(encoded.count))
+        encoded.append(pair)
+    }
+}
+
+final class HuffmanEncoder<T> {
+    var encodingTable: EncodingTable<T>
     var array = [UInt8](repeating: 0, count: 8)
     
     fileprivate let bits: [UInt8] = [
@@ -15,7 +48,9 @@ final class HuffmanTree {
         0b01111111
     ]
     
-    init() {}
+    init(encodingTable: EncodingTable<T>) {
+        self.encodingTable = encodingTable
+    }
     
     fileprivate func convert(_ int: UInt64) {
         let int = int.littleEndian
@@ -30,12 +65,12 @@ final class HuffmanTree {
         array[7] = UInt8((int >> 56) & 0xff)
     }
     
-    func encode(data: Data) -> Data {
+    public func encode(data: Data) -> Data {
         var data = Data()
         var bitOffset: UInt8 = 0
         
         nextCharacter: for byte in data {
-            let (encoded, bitLength) = table[numericCast(byte)]
+            let (encoded, bitLength) = encodingTable.encoded[numericCast(byte)]
             convert(encoded)
             var index = 0
             var processed: UInt8 = 0
