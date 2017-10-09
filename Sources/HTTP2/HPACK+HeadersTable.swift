@@ -6,7 +6,7 @@ final class HeadersTable {
         var isDummy = false
         var value: String? = nil
         
-        init(index: Int, name: Headers.Name?, value: String? = nil) {
+        init(index: Int = 0, name: Headers.Name?, value: String? = nil) {
             self.name = name ?? ""
             self.value = value
             self.isDummy = name == nil

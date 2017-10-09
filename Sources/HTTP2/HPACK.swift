@@ -17,6 +17,30 @@ public final class HPACKDecoder {
     var tableSize: Int = 4_096
     var maxTableSize: Int?
     
+    fileprivate func getEntry(at index: Int) throws -> HeadersTable.Entry {
+        // First the static entries
+        if index <= HeadersTable.staticEntries.count {
+            return HeadersTable.staticEntries[index &- 1]
+        }
+        
+        // Get the dynamic entry index
+        let index = index &- HeadersTable.staticEntries.count &- 1
+        
+        // The synamic entry *must* exist
+        guard index >= 0, index < table.dynamicEntries.count else {
+            throw Error(.invalidStaticTableIndex(index))
+        }
+        
+        let entry = table.dynamicEntries[index]
+        
+        // Check if the name exist (I.E. not a dummy index reservation)
+        guard !entry.isDummy else {
+            throw Error(.invalidStaticTableIndex(index))
+        }
+        
+        return entry
+    }
+    
     public func decode(_ packet: Packet) throws {
         var decoded = Headers()
         
@@ -49,30 +73,6 @@ public final class HPACKDecoder {
                 continue nextHeader
             }
             
-            func getEntry(at index: Int) throws -> HeadersTable.Entry {
-                // First the static entries
-                if index <= HeadersTable.staticEntries.count {
-                    return HeadersTable.staticEntries[index &- 1]
-                }
-                
-                // Get the dynamic entry index
-                let index = index &- HeadersTable.staticEntries.count &- 1
-                
-                // The synamic entry *must* exist
-                guard index >= 0, index < table.dynamicEntries.count else {
-                    throw Error(.invalidStaticTableIndex(index))
-                }
-                
-                let entry = table.dynamicEntries[index]
-                
-                // Check if the name exist (I.E. not a dummy index reservation)
-                guard !entry.isDummy else {
-                    throw Error(.invalidStaticTableIndex(index))
-                }
-                
-                return entry
-            }
-            
             let staticEntry = byte & 0b10000000 == 0
             
             // If this is regarding a static entry
@@ -88,30 +88,37 @@ public final class HPACKDecoder {
                 continue nextHeader
             }
             
-            let indexedName = (byte & 0b11000000) == 0b01000000
+            let incrementallyIndexed = (byte & 0b11000000) == 0b01000000
+            let notIndexed = (byte & 0b11110000) == 0
+            let neverIndexed = (byte & 0b11110000) == 0b00010000
             
-            // If this is an indexes key
-            // http://httpwg.org/specs/rfc7541.html#literal.header.with.incremental.indexing
-            if indexedName {
-                let name: Headers.Name
-                
-                // If no other bits are set, this is a new name with an incremetal index
-                if byte == 0b01000000 {
-                    let nameString = try packet.parseString()
-                    
-                    name = Headers.Name(nameString)
+            let name: Headers.Name
+            
+            if incrementallyIndexed {
+                if (byte & 0b00111111) == 0 {
+                    name = Headers.Name(try packet.parseString())
                 } else {
-                    let index = try packet.parseInteger(prefix: 6)
-                    
-                    name = try getEntry(at: index).name
+                    let nameIndex = try packet.parseInteger(prefix: 6)
+                    name = try getEntry(at: nameIndex).name
                 }
-                
-                let value = try packet.parseString()
-                
-                decoded[name] = value
-                
-                continue nextHeader
+            } else {
+                if (byte & 0b00001111) == 0 {
+                    name = Headers.Name(try packet.parseString())
+                } else {
+                    let nameIndex = try packet.parseInteger(prefix: 4)
+                    name = try getEntry(at: nameIndex).name
+                }
             }
+            let value = try packet.parseString()
+            
+            if incrementallyIndexed {
+                let newEntry = HeadersTable.Entry(name: name, value: value)
+                table.dynamicEntries.insert(newEntry, at: 0)
+            }
+            
+            decoded[name] = value
+            
+            continue nextHeader
         }
     }
 }
