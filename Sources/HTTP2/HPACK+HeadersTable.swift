@@ -1,17 +1,22 @@
-final class StaticTable {
-    static let `default` = StaticTable()
-    
+import HTTP
+
+final class HeadersTable {
     struct Entry {
-        var index: Int
-        var name: String
+        var name: Headers.Name
+        var isDummy = false
         var value: String? = nil
         
-        init(index: Int, name: String, value: String? = nil) {
-            self.index = index
-            self.name = name
+        init(index: Int, name: Headers.Name?, value: String? = nil) {
+            self.name = name ?? ""
             self.value = value
+            self.isDummy = name == nil
         }
     }
+    
+    /// Concatenation of static and dynamic entries
+    ///
+    /// http://httpwg.org/specs/rfc7541.html#rfc.section.2.3.3
+    var dynamicEntries = [Entry]()
     
     static let authority = Entry(index: 1, name: ":authority")
     static let get = Entry(index: 2, name: ":method", value: "GET")
@@ -77,32 +82,18 @@ final class StaticTable {
     static let via = Entry(index: 60, name: "via")
     static let wwwAuthenticate = Entry(index: 61, name: "www-authenticate")
     
-    static var dictionary: [Int: Entry] = {
-        var entries = [
-            authority, get, post, root, index, http, https,
-            ok, noContent, partialContent, notModified, badRequest, notFound, internalServerError,
-            acceptCharset, acceptEncoding, acceptLanguages, acceptRanges, accept,
-            accessControlAllowOrigin, age, allow, authorization, cacheControl,
-            contentDisposition, contentEncoding, contentLanguage, contentLength,
-            contentLocation, contentRange, contentType, cookie, date, etag, expect, expires,
-            from, host, ifMatch, ifModifiedSince, ifNoneMatch, ifRange, ifUnmodifiedSince,
-            lastModified, link, location, maxForwards, proxyAuthenticate, proxyAuthorization,
-            range, referer, refresh, retryAfter, server, setCookie, strictTransportSecurity,
-            transferEncoding, userAgent, vary, via, wwwAuthenticate
-        ]
-        
-        var dictionary = [Int: Entry]()
-        
-        for entry in entries {
-            dictionary[entry.index] = entry
-        }
-        
-        return dictionary
-    }()
+    static let staticEntries = [
+        authority, get, post, root, index, http, https,
+        ok, noContent, partialContent, notModified, badRequest, notFound, internalServerError,
+        acceptCharset, acceptEncoding, acceptLanguages, acceptRanges, accept,
+        accessControlAllowOrigin, age, allow, authorization, cacheControl,
+        contentDisposition, contentEncoding, contentLanguage, contentLength,
+        contentLocation, contentRange, contentType, cookie, date, etag, expect, expires,
+        from, host, ifMatch, ifModifiedSince, ifNoneMatch, ifRange, ifUnmodifiedSince,
+        lastModified, link, location, maxForwards, proxyAuthenticate, proxyAuthorization,
+        range, referer, refresh, retryAfter, server, setCookie, strictTransportSecurity,
+        transferEncoding, userAgent, vary, via, wwwAuthenticate
+    ]
     
     init() {}
-    
-    subscript(index: Int) -> StaticTable.Entry? {
-        return StaticTable.dictionary[index]
-    }
 }

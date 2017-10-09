@@ -2,6 +2,8 @@ extension Packet {
     /// Decodes an HTTP/2 integer
     ///
     /// http://httpwg.org/specs/rfc7541.html#rfc.section.5.1
+    ///
+    /// TODO: Prevent integer overflows
     func parseInteger(prefix n: Int) throws -> Int {
         guard n >= 1 && n <= 8, bytePosition < data.count else {
             throw Error(.invalidPrefixSize(n))
