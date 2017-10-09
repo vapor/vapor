@@ -41,7 +41,7 @@ public final class HPACKDecoder {
         return entry
     }
     
-    public func decode(_ packet: Packet) throws {
+    public func decode(_ packet: Packet) throws -> Headers {
         var decoded = Headers()
         
         nextHeader: while packet.bytePosition < packet.data.count {
@@ -73,7 +73,7 @@ public final class HPACKDecoder {
                 continue nextHeader
             }
             
-            let staticEntry = byte & 0b10000000 == 0
+            let staticEntry = byte & 0b10000000 == 0b10000000
             
             // If this is regarding a static entry
             // http://httpwg.org/specs/rfc7541.html#rfc.section.6.1
@@ -89,13 +89,14 @@ public final class HPACKDecoder {
             }
             
             let incrementallyIndexed = (byte & 0b11000000) == 0b01000000
-            let notIndexed = (byte & 0b11110000) == 0
-            let neverIndexed = (byte & 0b11110000) == 0b00010000
+//            let notIndexed = (byte & 0b11110000) == 0
+//            let neverIndexed = (byte & 0b11110000) == 0b00010000
             
             let name: Headers.Name
             
             if incrementallyIndexed {
                 if (byte & 0b00111111) == 0 {
+                    packet.bytePosition += 1
                     name = Headers.Name(try packet.parseString())
                 } else {
                     let nameIndex = try packet.parseInteger(prefix: 6)
@@ -103,6 +104,7 @@ public final class HPACKDecoder {
                 }
             } else {
                 if (byte & 0b00001111) == 0 {
+                    packet.bytePosition += 1
                     name = Headers.Name(try packet.parseString())
                 } else {
                     let nameIndex = try packet.parseInteger(prefix: 4)
@@ -120,6 +122,8 @@ public final class HPACKDecoder {
             
             continue nextHeader
         }
+        
+        return decoded
     }
 }
 

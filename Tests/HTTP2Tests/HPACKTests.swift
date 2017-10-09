@@ -77,6 +77,23 @@ public class HPACKTests: XCTestCase {
         XCTAssertEqual(sameString, "302")
     }
     
+    // http://httpwg.org/specs/rfc7541.html#rfc.section.C.2.1
+    func testHeaderDecoding() throws {
+        let encodedHeaders = Data([
+            0x40, 0x0a, 0x63, 0x75,
+            0x73, 0x74, 0x6f, 0x6d,
+            0x2d, 0x6b, 0x65, 0x79,
+            0x0d, 0x63, 0x75, 0x73,
+            0x74, 0x6f, 0x6d, 0x2d,
+            0x68, 0x65, 0x61, 0x64,
+            0x65, 0x72
+        ])
+        
+        let headers = try HPACKDecoder().decode(Packet(data: encodedHeaders))
+        
+        XCTAssertEqual(headers["custom-key"], "custom-header")
+    }
+    
     func testConstants() {
         XCTAssertEqual(HeadersTable.staticEntries.count, 61)
     }

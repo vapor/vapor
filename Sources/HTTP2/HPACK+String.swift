@@ -22,7 +22,7 @@ extension Packet {
         let plainText = byte & 0b10000000 == 0
         let length = try self.parseInteger(prefix: 7)
         
-        guard self.bytePosition + length < self.data.count else {
+        guard self.bytePosition + length <= self.data.count else {
             throw Error(.unexpectedEOF)
         }
         
