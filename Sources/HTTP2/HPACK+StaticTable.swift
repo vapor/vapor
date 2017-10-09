@@ -80,11 +80,15 @@ final class StaticTable {
     static var dictionary: [Int: Entry] = {
         var entries = [
             authority, get, post, root, index, http, https,
-            
-            ok, noContent, partialContent, notModified,
-            badRequest, notFound, internalServerError,
-            
-            
+            ok, noContent, partialContent, notModified, badRequest, notFound, internalServerError,
+            acceptCharset, acceptEncoding, acceptLanguages, acceptRanges, accept,
+            accessControlAllowOrigin, age, allow, authorization, cacheControl,
+            contentDisposition, contentEncoding, contentLanguage, contentLength,
+            contentLocation, contentRange, contentType, cookie, date, etag, expect, expires,
+            from, host, ifMatch, ifModifiedSince, ifNoneMatch, ifRange, ifUnmodifiedSince,
+            lastModified, link, location, maxForwards, proxyAuthenticate, proxyAuthorization,
+            range, referer, refresh, retryAfter, server, setCookie, strictTransportSecurity,
+            transferEncoding, userAgent, vary, via, wwwAuthenticate
         ]
         
         var dictionary = [Int: Entry]()
