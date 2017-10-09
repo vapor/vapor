@@ -30,12 +30,12 @@ final class HuffmanTree {
         array[7] = UInt8((int >> 56) & 0xff)
     }
     
-    func encode(string: String) -> Data {
+    func encode(data: Data) -> Data {
         var data = Data()
         var bitOffset: UInt8 = 0
         
-        nextCharacter: for character in string.utf8 {
-            let (encoded, bitLength) = table[numericCast(character)]
+        nextCharacter: for byte in data {
+            let (encoded, bitLength) = table[numericCast(byte)]
             convert(encoded)
             var index = 0
             var processed: UInt8 = 0
