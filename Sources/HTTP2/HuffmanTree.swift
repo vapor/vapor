@@ -1,7 +1,9 @@
 import Foundation
 
 final class HuffmanTree {
-    static var hpack: HuffmanTree!
+    var table = [(data: UInt64, bitLength: UInt8)]()
+    
+    init() {}
     
     func encode(string: String) -> Data {
         var data = Data()
