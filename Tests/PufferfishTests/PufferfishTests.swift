@@ -28,7 +28,7 @@ public class PufferfishTests: XCTestCase {
         0b11111111,
         0b01010101,
         0b10101010
-        ])
+    ])
     
     let predecoded = Data([
         0x00, 0xf0, 0xff, 0x0f,
@@ -37,7 +37,7 @@ public class PufferfishTests: XCTestCase {
         0x0f, 0x0f, 0x0f, 0x0f,
         0xf0, 0xf0, 0xf0, 0xf0,
         0x00, 0x00, 0x00, 0x00
-        ])
+    ])
     
     func testEncoding() throws {
         let encoder = HuffmanEncoder(encodingTable: tree.encodingTable)

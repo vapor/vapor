@@ -37,15 +37,15 @@ public class HPACKTests: XCTestCase {
         let cases = [ten0, ten1, ten2, ten3, ten4, ten5, ten6, ten7]
         
         for testCase in cases {
-            let packet = Packet(data: Data([testCase]))
+            let packet = Payload(data: Data([testCase]))
             
             let number = try packet.parseInteger(prefix: 5)
             
             XCTAssertEqual(number, 10)
         }
         
-        let elevenPacket = Packet(data: Data([11]))
-        let twelvePacket = Packet(data: Data([12]))
+        let elevenPacket = Payload(data: Data([11]))
+        let twelvePacket = Payload(data: Data([12]))
         
         let eleven = try elevenPacket.parseInteger(prefix: 4)
         let twelve = try twelvePacket.parseInteger(prefix: 4)
@@ -55,16 +55,16 @@ public class HPACKTests: XCTestCase {
     }
     
     func testIntegerSerialization() throws {
-        let message = Packet()
+        let message = Payload()
         try message.append(integer: 1337, prefix: 5)
         
-        let leetPacket = Packet(data: Data([0b00011111, 0b10011010, 0b00001010]))
+        let leetPacket = Payload(data: Data([0b00011111, 0b10011010, 0b00001010]))
         XCTAssertEqual(message.data, leetPacket.data)
     }
     
     /// http://httpwg.org/specs/rfc7541.html#rfc.section.C.1.2
     func testMultilineHPPACKIntegers() throws {
-        let leetPacket = Packet(data: Data([0b00011111, 0b10011010, 0b00001010]))
+        let leetPacket = Payload(data: Data([0b00011111, 0b10011010, 0b00001010]))
         
         let leet = try leetPacket.parseInteger(prefix: 5)
         
@@ -108,7 +108,7 @@ public class HPACKTests: XCTestCase {
             0x65, 0x72
         ])
         
-        let headers = try HPACKDecoder().decode(Packet(data: encodedHeaders))
+        let headers = try HPACKDecoder().decode(Payload(data: encodedHeaders))
         
         XCTAssertEqual(headers["custom-key"], "custom-header")
     }
@@ -119,7 +119,7 @@ public class HPACKTests: XCTestCase {
             0x6c, 0x65, 0x2f, 0x70, 0x61, 0x74, 0x68
         ])
         
-        let headers = try HPACKDecoder().decode(Packet(data: encodedHeaders))
+        let headers = try HPACKDecoder().decode(Payload(data: encodedHeaders))
         
         XCTAssertEqual(headers[":path"], "/sample/path")
     }
@@ -131,7 +131,7 @@ public class HPACKTests: XCTestCase {
             0x65, 0x63, 0x72, 0x65, 0x74
         ])
         
-        let headers = try HPACKDecoder().decode(Packet(data: encodedHeaders))
+        let headers = try HPACKDecoder().decode(Payload(data: encodedHeaders))
         
         XCTAssertEqual(headers["password"], "secret")
     }
@@ -141,7 +141,7 @@ public class HPACKTests: XCTestCase {
             0x82
         ])
         
-        let headers = try HPACKDecoder().decode(Packet(data: encodedHeaders))
+        let headers = try HPACKDecoder().decode(Payload(data: encodedHeaders))
         
         XCTAssertEqual(headers[":method"], "GET")
     }
@@ -158,7 +158,7 @@ public class HPACKTests: XCTestCase {
             0x65, 0x2e, 0x63, 0x6f, 0x6d
         ])
         
-        var headers = try decoder.decode(Packet(data: encodedHeaders))
+        var headers = try decoder.decode(Payload(data: encodedHeaders))
         
         XCTAssertEqual(headers[":method"], "GET")
         XCTAssertEqual(headers[":scheme"], "http")
@@ -178,7 +178,7 @@ public class HPACKTests: XCTestCase {
             0x68, 0x65
         ])
         
-        headers = try decoder.decode(Packet(data: encodedHeaders))
+        headers = try decoder.decode(Payload(data: encodedHeaders))
         
         XCTAssertEqual(headers[":method"], "GET")
         XCTAssertEqual(headers[":scheme"], "http")
@@ -206,7 +206,7 @@ public class HPACKTests: XCTestCase {
             0x65
         ])
         
-        headers = try decoder.decode(Packet(data: encodedHeaders))
+        headers = try decoder.decode(Payload(data: encodedHeaders))
         
         XCTAssertEqual(headers[":method"], "GET")
         XCTAssertEqual(headers[":scheme"], "https")
@@ -238,7 +238,7 @@ public class HPACKTests: XCTestCase {
             0xff
             ])
         
-        var headers = try decoder.decode(Packet(data: encodedHeaders))
+        var headers = try decoder.decode(Payload(data: encodedHeaders))
         
         XCTAssertEqual(headers[":method"], "GET")
         XCTAssertEqual(headers[":scheme"], "http")
@@ -257,7 +257,7 @@ public class HPACKTests: XCTestCase {
             0x10, 0x64, 0x9c, 0xbf
         ])
         
-        headers = try decoder.decode(Packet(data: encodedHeaders))
+        headers = try decoder.decode(Payload(data: encodedHeaders))
         
         XCTAssertEqual(headers[":method"], "GET")
         XCTAssertEqual(headers[":scheme"], "http")
@@ -284,7 +284,7 @@ public class HPACKTests: XCTestCase {
             0xb8, 0xe8, 0xb4, 0xbf
         ])
         
-        headers = try decoder.decode(Packet(data: encodedHeaders))
+        headers = try decoder.decode(Payload(data: encodedHeaders))
         
         XCTAssertEqual(headers[":method"], "GET")
         XCTAssertEqual(headers[":scheme"], "https")
@@ -321,7 +321,7 @@ public class HPACKTests: XCTestCase {
             0x6c, 0x65, 0x2e, 0x63, 0x6f, 0x6d
         ])
         
-        var headers = try decoder.decode(Packet(data: encodedHeaders))
+        var headers = try decoder.decode(Payload(data: encodedHeaders))
         
         XCTAssertEqual(headers[":status"], "302")
         XCTAssertEqual(headers[.cacheControl], "private")
@@ -344,7 +344,7 @@ public class HPACKTests: XCTestCase {
             0x48, 0x03, 0x33, 0x30, 0x37, 0xc1, 0xc0, 0xbf
         ])
         
-        headers = try decoder.decode(Packet(data: encodedHeaders))
+        headers = try decoder.decode(Payload(data: encodedHeaders))
         
         XCTAssertEqual(headers[":status"], "307")
         XCTAssertEqual(headers[.cacheControl], "private")
@@ -379,7 +379,7 @@ public class HPACKTests: XCTestCase {
             0x3d, 0x31,
         ])
         
-        headers = try decoder.decode(Packet(data: encodedHeaders))
+        headers = try decoder.decode(Payload(data: encodedHeaders))
         
         XCTAssertEqual(headers[":status"], "200")
         XCTAssertEqual(headers[.cacheControl], "private")
@@ -414,7 +414,7 @@ public class HPACKTests: XCTestCase {
             0xe9, 0xae, 0x82, 0xae, 0x43, 0xd3
         ])
         
-        var headers = try decoder.decode(Packet(data: encodedHeaders))
+        var headers = try decoder.decode(Payload(data: encodedHeaders))
         
         XCTAssertEqual(headers[":status"], "302")
         XCTAssertEqual(headers[.cacheControl], "private")
@@ -437,7 +437,7 @@ public class HPACKTests: XCTestCase {
             0x48, 0x83, 0x64, 0x0e, 0xff, 0xc1, 0xc0, 0xbf
         ])
         
-        headers = try decoder.decode(Packet(data: encodedHeaders))
+        headers = try decoder.decode(Payload(data: encodedHeaders))
         
         XCTAssertEqual(headers[":status"], "307")
         XCTAssertEqual(headers[.cacheControl], "private")
@@ -469,7 +469,7 @@ public class HPACKTests: XCTestCase {
             0x4e, 0xe5, 0xb1, 0x06, 0x3d, 0x50, 0x07
         ])
         
-        headers = try decoder.decode(Packet(data: encodedHeaders))
+        headers = try decoder.decode(Payload(data: encodedHeaders))
         
         XCTAssertEqual(headers[":status"], "200")
         XCTAssertEqual(headers[.cacheControl], "private")
@@ -497,7 +497,7 @@ public class HPACKTests: XCTestCase {
             0x65, 0x2e, 0x63, 0x6f
         ])
         
-        XCTAssertThrowsError(try HPACKDecoder().decode(Packet(data: encodedHeaders)))
+        XCTAssertThrowsError(try HPACKDecoder().decode(Payload(data: encodedHeaders)))
     }
     
     func testConstants() {

@@ -2,16 +2,6 @@
 import HTTP
 import Foundation
 
-public final class Packet {
-    var data: Data
-    var bytePosition = 0
-    var bitPosition = 0
-    
-    init(data: Data = Data()) {
-        self.data = data
-    }
-}
-
 extension HeadersTable.Entry {
     var octets: Int {
         return self.name.description.utf8.count + self.value.utf8.count + 32
@@ -56,7 +46,7 @@ public final class HPACKDecoder {
         }
     }
     
-    public func decode(_ packet: Packet) throws -> Headers {
+    public func decode(_ packet: Payload) throws -> Headers {
         var decoded = Headers()
         
         nextHeader: while packet.bytePosition < packet.data.count {
@@ -151,6 +141,7 @@ struct Error: Swift.Error {
         case unexpectedEOF
         case invalidPrefixSize(Int)
         case invalidUTF8String
+        case invalidUpgrade
         case maxHeaderTableSizeOverridden(max: Int, updatedTo: Int)
         case invalidStaticTableIndex(Int)
     }

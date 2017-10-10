@@ -1,4 +1,4 @@
-extension Packet {
+extension Payload {
     /// Decodes an HTTP/2 integer
     ///
     /// http://httpwg.org/specs/rfc7541.html#rfc.section.5.1

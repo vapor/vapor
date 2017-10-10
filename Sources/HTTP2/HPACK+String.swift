@@ -1,6 +1,6 @@
 import Pufferfish
 
-extension Packet {
+extension Payload {
     public func append(string: String, huffmanEncoded: Bool = false) throws {
         data.append(huffmanEncoded ? 0b10000000 : 0)
         try self.serialize(integer: string.count, prefix: 7)
