@@ -4,9 +4,9 @@ final class HeadersTable {
     struct Entry {
         var name: Headers.Name
         var isDummy = false
-        var value: String? = nil
+        var value: String
         
-        init(index: Int = 0, name: Headers.Name?, value: String? = nil) {
+        init(index: Int = 0, name: Headers.Name?, value: String = "") {
             self.name = name ?? ""
             self.value = value
             self.isDummy = name == nil

@@ -12,9 +12,16 @@ public final class Packet {
     }
 }
 
+extension HeadersTable.Entry {
+    var octets: Int {
+        return self.name.description.utf8.count + self.value.utf8.count + 32
+    }
+}
+
 public final class HPACKDecoder {
     let table = HeadersTable()
     var tableSize: Int = 4_096
+    var currentTableSize = 0
     var maxTableSize: Int?
     
     fileprivate func getEntry(at index: Int) throws -> HeadersTable.Entry {
@@ -41,6 +48,14 @@ public final class HPACKDecoder {
         return entry
     }
     
+    fileprivate func cleanTable() {
+        // Remove extra entries if the table shrinks
+        while currentTableSize > self.tableSize {
+            let nextEntry = table.dynamicEntries.removeLast()
+            currentTableSize -= nextEntry.octets
+        }
+    }
+    
     public func decode(_ packet: Packet) throws -> Headers {
         var decoded = Headers()
         
@@ -63,12 +78,8 @@ public final class HPACKDecoder {
                     }
                 }
                 
-                // Remove extra entries if the table shrinks
-                if table.dynamicEntries.count > size {
-                    table.dynamicEntries.removeLast(size - table.dynamicEntries.count)
-                }
-                
                 self.tableSize = size
+                cleanTable()
                 
                 continue nextHeader
             }
@@ -116,6 +127,8 @@ public final class HPACKDecoder {
             if incrementallyIndexed {
                 let newEntry = HeadersTable.Entry(name: name, value: value)
                 table.dynamicEntries.insert(newEntry, at: 0)
+                currentTableSize += newEntry.octets
+                cleanTable()
             }
             
             decoded[name] = value

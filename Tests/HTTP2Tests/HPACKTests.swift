@@ -131,6 +131,7 @@ public class HPACKTests: XCTestCase {
     func testPlainMultiHeaderRequestDecoding() throws {
         let decoder = HPACKDecoder()
         
+        // http://httpwg.org/specs/rfc7541.html#n-first-request_1
         var encodedHeaders = Data([
             0x82, 0x86, 0x84, 0x41, 0x0f,
             0x77, 0x77, 0x77, 0x2e, 0x65,
@@ -150,6 +151,7 @@ public class HPACKTests: XCTestCase {
         XCTAssertEqual(decoder.table.dynamicEntries[0].name, ":authority")
         XCTAssertEqual(decoder.table.dynamicEntries[0].value, "www.example.com")
         
+        // http://httpwg.org/specs/rfc7541.html#n-second-request_1
         encodedHeaders = Data([
             0x82, 0x86, 0x84, 0xbe,
             0x58, 0x08, 0x6e, 0x6f,
@@ -173,6 +175,7 @@ public class HPACKTests: XCTestCase {
         XCTAssertEqual(decoder.table.dynamicEntries[0].value, "no-cache")
         XCTAssertEqual(decoder.table.dynamicEntries[1].value, "www.example.com")
         
+        // http://httpwg.org/specs/rfc7541.html#n-third-request_1
         encodedHeaders = Data([
             0x82, 0x87, 0x85, 0xbf,
             0x40, 0x0a, 0x63, 0x75,
@@ -207,6 +210,7 @@ public class HPACKTests: XCTestCase {
     func testHuffmanMultiHeaderRequestDecoding() throws {
         let decoder = HPACKDecoder()
         
+        // http://httpwg.org/specs/rfc7541.html#n-first-request_2
         var encodedHeaders = Data([
             0x82, 0x86, 0x84, 0x41,
             0x8c, 0xf1, 0xe3, 0xc2,
@@ -227,6 +231,7 @@ public class HPACKTests: XCTestCase {
         XCTAssertEqual(decoder.table.dynamicEntries[0].name, ":authority")
         XCTAssertEqual(decoder.table.dynamicEntries[0].value, "www.example.com")
         
+        // http://httpwg.org/specs/rfc7541.html#n-second-request_2
         encodedHeaders = Data([
             0x82, 0x86, 0x84, 0xbe,
             0x58, 0x86, 0xa8, 0xeb,
@@ -248,6 +253,8 @@ public class HPACKTests: XCTestCase {
         
         XCTAssertEqual(decoder.table.dynamicEntries[0].value, "no-cache")
         XCTAssertEqual(decoder.table.dynamicEntries[1].value, "www.example.com")
+        
+        // http://httpwg.org/specs/rfc7541.html#n-third-request_2
         
         encodedHeaders = Data([
             0x82, 0x87, 0x85, 0xbf,
@@ -277,8 +284,100 @@ public class HPACKTests: XCTestCase {
         XCTAssertEqual(decoder.table.dynamicEntries[2].value, "www.example.com")
     }
     
+    // http://httpwg.org/specs/rfc7541.html#response.examples.without.huffman.coding
     func testHeaderResponseDecoding() throws {
+        let decoder = HPACKDecoder()
+        decoder.tableSize = 256
         
+        // http://httpwg.org/specs/rfc7541.html#n-first-response_1
+        var encodedHeaders = Data([
+            0x48, 0x03, 0x33, 0x30, 0x32, 0x58, 0x07, 0x70,
+            0x72, 0x69, 0x76, 0x61, 0x74, 0x65, 0x61, 0x1d,
+            0x4d, 0x6f, 0x6e, 0x2c, 0x20, 0x32, 0x31, 0x20,
+            0x4f, 0x63, 0x74, 0x20, 0x32, 0x30, 0x31, 0x33,
+            0x20, 0x32, 0x30, 0x3a, 0x31, 0x33, 0x3a, 0x32,
+            0x31, 0x20, 0x47, 0x4d, 0x54, 0x6e, 0x17, 0x68,
+            0x74, 0x74, 0x70, 0x73, 0x3a, 0x2f, 0x2f, 0x77,
+            0x77, 0x77, 0x2e, 0x65, 0x78, 0x61, 0x6d, 0x70,
+            0x6c, 0x65, 0x2e, 0x63, 0x6f, 0x6d
+        ])
+        
+        var headers = try decoder.decode(Packet(data: encodedHeaders))
+        
+        XCTAssertEqual(headers[":status"], "302")
+        XCTAssertEqual(headers[.cacheControl], "private")
+        XCTAssertEqual(headers[.date], "Mon, 21 Oct 2013 20:13:21 GMT")
+        XCTAssertEqual(headers[.location], "https://www.example.com")
+        
+        XCTAssertEqual(decoder.table.dynamicEntries.count, 4)
+        
+        XCTAssertEqual(decoder.table.dynamicEntries[0].name, .location)
+        XCTAssertEqual(decoder.table.dynamicEntries[1].name, .date)
+        XCTAssertEqual(decoder.table.dynamicEntries[2].name, .cacheControl)
+        XCTAssertEqual(decoder.table.dynamicEntries[3].name, ":status")
+        
+        XCTAssertEqual(decoder.table.dynamicEntries[0].value, "https://www.example.com")
+        XCTAssertEqual(decoder.table.dynamicEntries[1].value, "Mon, 21 Oct 2013 20:13:21 GMT")
+        XCTAssertEqual(decoder.table.dynamicEntries[2].value, "private")
+        XCTAssertEqual(decoder.table.dynamicEntries[3].value, "302")
+        
+        encodedHeaders = Data([
+            0x48, 0x03, 0x33, 0x30, 0x37, 0xc1, 0xc0, 0xbf
+        ])
+        
+        headers = try decoder.decode(Packet(data: encodedHeaders))
+        
+        XCTAssertEqual(headers[":status"], "307")
+        XCTAssertEqual(headers[.cacheControl], "private")
+        XCTAssertEqual(headers[.date], "Mon, 21 Oct 2013 20:13:21 GMT")
+        XCTAssertEqual(headers[.location], "https://www.example.com")
+        
+        XCTAssertEqual(decoder.table.dynamicEntries.count, 4)
+        
+        XCTAssertEqual(decoder.table.dynamicEntries[0].name, ":status")
+        XCTAssertEqual(decoder.table.dynamicEntries[1].name, .location)
+        XCTAssertEqual(decoder.table.dynamicEntries[2].name, .date)
+        XCTAssertEqual(decoder.table.dynamicEntries[3].name, .cacheControl)
+        
+        XCTAssertEqual(decoder.table.dynamicEntries[0].value, "307")
+        XCTAssertEqual(decoder.table.dynamicEntries[1].value, "https://www.example.com")
+        XCTAssertEqual(decoder.table.dynamicEntries[2].value, "Mon, 21 Oct 2013 20:13:21 GMT")
+        XCTAssertEqual(decoder.table.dynamicEntries[3].value, "private")
+        
+        encodedHeaders = Data([
+            0x88, 0xc1, 0x61, 0x1d, 0x4d, 0x6f, 0x6e, 0x2c,
+            0x20, 0x32, 0x31, 0x20, 0x4f, 0x63, 0x74, 0x20,
+            0x32, 0x30, 0x31, 0x33, 0x20, 0x32, 0x30, 0x3a,
+            0x31, 0x33, 0x3a, 0x32, 0x32, 0x20, 0x47, 0x4d,
+            0x54, 0xc0, 0x5a, 0x04, 0x67, 0x7a, 0x69, 0x70,
+            0x77, 0x38, 0x66, 0x6f, 0x6f, 0x3d, 0x41, 0x53,
+            0x44, 0x4a, 0x4b, 0x48, 0x51, 0x4b, 0x42, 0x5a,
+            0x58, 0x4f, 0x51, 0x57, 0x45, 0x4f, 0x50, 0x49,
+            0x55, 0x41, 0x58, 0x51, 0x57, 0x45, 0x4f, 0x49,
+            0x55, 0x3b, 0x20, 0x6d, 0x61, 0x78, 0x2d, 0x61,
+            0x67, 0x65, 0x3d, 0x33, 0x36, 0x30, 0x30, 0x3b,
+            0x20, 0x76, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e,
+            0x3d, 0x31,
+        ])
+        
+        headers = try decoder.decode(Packet(data: encodedHeaders))
+        
+        XCTAssertEqual(headers[":status"], "200")
+        XCTAssertEqual(headers[.cacheControl], "private")
+        XCTAssertEqual(headers[.date], "Mon, 21 Oct 2013 20:13:22 GMT")
+        XCTAssertEqual(headers[.location], "https://www.example.com")
+        XCTAssertEqual(headers[.contentEncoding], "gzip")
+        XCTAssertEqual(headers[.setCookie], "foo=ASDJKHQKBZXOQWEOPIUAXQWEOIU; max-age=3600; version=1")
+        
+        XCTAssertEqual(decoder.table.dynamicEntries.count, 3)
+        
+        XCTAssertEqual(decoder.table.dynamicEntries[0].name, .setCookie)
+        XCTAssertEqual(decoder.table.dynamicEntries[1].name, .contentEncoding)
+        XCTAssertEqual(decoder.table.dynamicEntries[2].name, .date)
+        
+        XCTAssertEqual(decoder.table.dynamicEntries[0].value, "foo=ASDJKHQKBZXOQWEOPIUAXQWEOIU; max-age=3600; version=1")
+        XCTAssertEqual(decoder.table.dynamicEntries[1].value, "gzip")
+        XCTAssertEqual(decoder.table.dynamicEntries[2].value, "Mon, 21 Oct 2013 20:13:22 GMT")
     }
     
     func testHeaderDecodingFailure0() throws {
