@@ -3,6 +3,25 @@ import XCTest
 import Pufferfish
 
 public class HPACKTests: XCTestCase {
+    static let allTests = [
+        ("testHPackIntegerParsing", testHPackIntegerParsing),
+        ("testIntegerSerialization", testIntegerSerialization),
+        ("testMultilineHPPACKIntegers", testMultilineHPPACKIntegers),
+        ("testHuffmanStringSerialization", testHuffmanStringSerialization),
+        ("testHuffmanStringParsing", testHuffmanStringParsing),
+        ("testHuffmanStrings", testHuffmanStrings),
+        ("testHeaderDecoding0", testHeaderDecoding0),
+        ("testHeaderDecoding1", testHeaderDecoding1),
+        ("testHeaderDecoding2", testHeaderDecoding2),
+        ("testHeaderDecoding3", testHeaderDecoding3),
+        ("testPlainMultiHeaderRequestDecoding", testPlainMultiHeaderRequestDecoding),
+        ("testHuffmanMultiHeaderRequestDecoding", testHuffmanMultiHeaderRequestDecoding),
+        ("testHeaderResponseDecoding", testHeaderResponseDecoding),
+        ("testHuffmanHeaderResponseDecoding", testHuffmanHeaderResponseDecoding),
+        ("testHeaderDecodingFailure0", testHeaderDecodingFailure0),
+        ("testConstants", testConstants),
+    ]
+    
     /// http://httpwg.org/specs/rfc7541.html#rfc.section.C.1.1
     func testHPackIntegerParsing() throws {
         // First 3 bits don't matter in a 5-bit prefix
@@ -358,6 +377,96 @@ public class HPACKTests: XCTestCase {
             0x67, 0x65, 0x3d, 0x33, 0x36, 0x30, 0x30, 0x3b,
             0x20, 0x76, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e,
             0x3d, 0x31,
+        ])
+        
+        headers = try decoder.decode(Packet(data: encodedHeaders))
+        
+        XCTAssertEqual(headers[":status"], "200")
+        XCTAssertEqual(headers[.cacheControl], "private")
+        XCTAssertEqual(headers[.date], "Mon, 21 Oct 2013 20:13:22 GMT")
+        XCTAssertEqual(headers[.location], "https://www.example.com")
+        XCTAssertEqual(headers[.contentEncoding], "gzip")
+        XCTAssertEqual(headers[.setCookie], "foo=ASDJKHQKBZXOQWEOPIUAXQWEOIU; max-age=3600; version=1")
+        
+        XCTAssertEqual(decoder.table.dynamicEntries.count, 3)
+        
+        XCTAssertEqual(decoder.table.dynamicEntries[0].name, .setCookie)
+        XCTAssertEqual(decoder.table.dynamicEntries[1].name, .contentEncoding)
+        XCTAssertEqual(decoder.table.dynamicEntries[2].name, .date)
+        
+        XCTAssertEqual(decoder.table.dynamicEntries[0].value, "foo=ASDJKHQKBZXOQWEOPIUAXQWEOIU; max-age=3600; version=1")
+        XCTAssertEqual(decoder.table.dynamicEntries[1].value, "gzip")
+        XCTAssertEqual(decoder.table.dynamicEntries[2].value, "Mon, 21 Oct 2013 20:13:22 GMT")
+    }
+    
+    // http://httpwg.org/specs/rfc7541.html#response.examples.with.huffman.coding
+    func testHuffmanHeaderResponseDecoding() throws {
+        let decoder = HPACKDecoder()
+        decoder.tableSize = 256
+        
+        var encodedHeaders = Data([
+            0x48, 0x82, 0x64, 0x02, 0x58, 0x85, 0xae, 0xc3,
+            0x77, 0x1a, 0x4b, 0x61, 0x96, 0xd0, 0x7a, 0xbe,
+            0x94, 0x10, 0x54, 0xd4, 0x44, 0xa8, 0x20, 0x05,
+            0x95, 0x04, 0x0b, 0x81, 0x66, 0xe0, 0x82, 0xa6,
+            0x2d, 0x1b, 0xff, 0x6e, 0x91, 0x9d, 0x29, 0xad,
+            0x17, 0x18, 0x63, 0xc7, 0x8f, 0x0b, 0x97, 0xc8,
+            0xe9, 0xae, 0x82, 0xae, 0x43, 0xd3
+        ])
+        
+        var headers = try decoder.decode(Packet(data: encodedHeaders))
+        
+        XCTAssertEqual(headers[":status"], "302")
+        XCTAssertEqual(headers[.cacheControl], "private")
+        XCTAssertEqual(headers[.date], "Mon, 21 Oct 2013 20:13:21 GMT")
+        XCTAssertEqual(headers[.location], "https://www.example.com")
+        
+        XCTAssertEqual(decoder.table.dynamicEntries.count, 4)
+        
+        XCTAssertEqual(decoder.table.dynamicEntries[0].name, .location)
+        XCTAssertEqual(decoder.table.dynamicEntries[1].name, .date)
+        XCTAssertEqual(decoder.table.dynamicEntries[2].name, .cacheControl)
+        XCTAssertEqual(decoder.table.dynamicEntries[3].name, ":status")
+        
+        XCTAssertEqual(decoder.table.dynamicEntries[0].value, "https://www.example.com")
+        XCTAssertEqual(decoder.table.dynamicEntries[1].value, "Mon, 21 Oct 2013 20:13:21 GMT")
+        XCTAssertEqual(decoder.table.dynamicEntries[2].value, "private")
+        XCTAssertEqual(decoder.table.dynamicEntries[3].value, "302")
+        
+        encodedHeaders = Data([
+            0x48, 0x83, 0x64, 0x0e, 0xff, 0xc1, 0xc0, 0xbf
+        ])
+        
+        headers = try decoder.decode(Packet(data: encodedHeaders))
+        
+        XCTAssertEqual(headers[":status"], "307")
+        XCTAssertEqual(headers[.cacheControl], "private")
+        XCTAssertEqual(headers[.date], "Mon, 21 Oct 2013 20:13:21 GMT")
+        XCTAssertEqual(headers[.location], "https://www.example.com")
+        
+        XCTAssertEqual(decoder.table.dynamicEntries.count, 4)
+        
+        XCTAssertEqual(decoder.table.dynamicEntries[0].name, ":status")
+        XCTAssertEqual(decoder.table.dynamicEntries[1].name, .location)
+        XCTAssertEqual(decoder.table.dynamicEntries[2].name, .date)
+        XCTAssertEqual(decoder.table.dynamicEntries[3].name, .cacheControl)
+        
+        XCTAssertEqual(decoder.table.dynamicEntries[0].value, "307")
+        XCTAssertEqual(decoder.table.dynamicEntries[1].value, "https://www.example.com")
+        XCTAssertEqual(decoder.table.dynamicEntries[2].value, "Mon, 21 Oct 2013 20:13:21 GMT")
+        XCTAssertEqual(decoder.table.dynamicEntries[3].value, "private")
+        
+        encodedHeaders = Data([
+            0x88, 0xc1, 0x61, 0x96, 0xd0, 0x7a, 0xbe, 0x94,
+            0x10, 0x54, 0xd4, 0x44, 0xa8, 0x20, 0x05, 0x95,
+            0x04, 0x0b, 0x81, 0x66, 0xe0, 0x84, 0xa6, 0x2d,
+            0x1b, 0xff, 0xc0, 0x5a, 0x83, 0x9b, 0xd9, 0xab,
+            0x77, 0xad, 0x94, 0xe7, 0x82, 0x1d, 0xd7, 0xf2,
+            0xe6, 0xc7, 0xb3, 0x35, 0xdf, 0xdf, 0xcd, 0x5b,
+            0x39, 0x60, 0xd5, 0xaf, 0x27, 0x08, 0x7f, 0x36,
+            0x72, 0xc1, 0xab, 0x27, 0x0f, 0xb5, 0x29, 0x1f,
+            0x95, 0x87, 0x31, 0x60, 0x65, 0xc0, 0x03, 0xed,
+            0x4e, 0xe5, 0xb1, 0x06, 0x3d, 0x50, 0x07
         ])
         
         headers = try decoder.decode(Packet(data: encodedHeaders))
