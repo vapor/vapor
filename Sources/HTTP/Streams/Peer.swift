@@ -1,11 +1,12 @@
 import Async
+import Dispatch
 import Bits
 import TCP
 
 /// An HTTP `Server`'s peer wrapped around TCP client
 public final class Peer: Async.Stream, ClosableStream {
     /// See `InputStream.Input`
-    public typealias Input = SerializedMessage
+    public typealias Input = DispatchData
     
     /// See `OutputStream.Output`
     public typealias Output = ByteBuffer
@@ -42,9 +43,8 @@ public final class Peer: Async.Stream, ClosableStream {
     }
     
     /// Writes the serialized message and upgrades if necessary
-    public func inputStream(_ input: SerializedMessage) {
-        tcp.inputStream(input.message)
-        input.onUpgrade?(tcp)
+    public func inputStream(_ input: DispatchData) {
+        tcp.inputStream(input)
     }
     
     public func close() {
