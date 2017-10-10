@@ -145,6 +145,11 @@ public class HPACKTests: XCTestCase {
         XCTAssertEqual(headers[":path"], "/")
         XCTAssertEqual(headers[":authority"], "www.example.com")
         
+        XCTAssertEqual(decoder.table.dynamicEntries.count, 1)
+        
+        XCTAssertEqual(decoder.table.dynamicEntries[0].name, ":authority")
+        XCTAssertEqual(decoder.table.dynamicEntries[0].value, "www.example.com")
+        
         encodedHeaders = Data([
             0x82, 0x86, 0x84, 0xbe,
             0x58, 0x08, 0x6e, 0x6f,
@@ -159,6 +164,14 @@ public class HPACKTests: XCTestCase {
         XCTAssertEqual(headers[":path"], "/")
         XCTAssertEqual(headers[":authority"], "www.example.com")
         XCTAssertEqual(headers[.cacheControl], "no-cache")
+        
+        XCTAssertEqual(decoder.table.dynamicEntries.count, 2)
+        
+        XCTAssertEqual(decoder.table.dynamicEntries[0].name, "cache-control")
+        XCTAssertEqual(decoder.table.dynamicEntries[1].name, ":authority")
+        
+        XCTAssertEqual(decoder.table.dynamicEntries[0].value, "no-cache")
+        XCTAssertEqual(decoder.table.dynamicEntries[1].value, "www.example.com")
         
         encodedHeaders = Data([
             0x82, 0x87, 0x85, 0xbf,
@@ -178,6 +191,16 @@ public class HPACKTests: XCTestCase {
         XCTAssertEqual(headers[":path"], "/index.html")
         XCTAssertEqual(headers[":authority"], "www.example.com")
         XCTAssertEqual(headers["custom-key"], "custom-value")
+        
+        XCTAssertEqual(decoder.table.dynamicEntries.count, 3)
+        
+        XCTAssertEqual(decoder.table.dynamicEntries[0].name, "custom-key")
+        XCTAssertEqual(decoder.table.dynamicEntries[1].name, "cache-control")
+        XCTAssertEqual(decoder.table.dynamicEntries[2].name, ":authority")
+        
+        XCTAssertEqual(decoder.table.dynamicEntries[0].value, "custom-value")
+        XCTAssertEqual(decoder.table.dynamicEntries[1].value, "no-cache")
+        XCTAssertEqual(decoder.table.dynamicEntries[2].value, "www.example.com")
     }
     
     // http://httpwg.org/specs/rfc7541.html#request.examples.with.huffman.coding
@@ -199,6 +222,11 @@ public class HPACKTests: XCTestCase {
         XCTAssertEqual(headers[":path"], "/")
         XCTAssertEqual(headers[":authority"], "www.example.com")
         
+        XCTAssertEqual(decoder.table.dynamicEntries.count, 1)
+        
+        XCTAssertEqual(decoder.table.dynamicEntries[0].name, ":authority")
+        XCTAssertEqual(decoder.table.dynamicEntries[0].value, "www.example.com")
+        
         encodedHeaders = Data([
             0x82, 0x86, 0x84, 0xbe,
             0x58, 0x86, 0xa8, 0xeb,
@@ -212,6 +240,14 @@ public class HPACKTests: XCTestCase {
         XCTAssertEqual(headers[":path"], "/")
         XCTAssertEqual(headers[":authority"], "www.example.com")
         XCTAssertEqual(headers[.cacheControl], "no-cache")
+        
+        XCTAssertEqual(decoder.table.dynamicEntries.count, 2)
+        
+        XCTAssertEqual(decoder.table.dynamicEntries[0].name, "cache-control")
+        XCTAssertEqual(decoder.table.dynamicEntries[1].name, ":authority")
+        
+        XCTAssertEqual(decoder.table.dynamicEntries[0].value, "no-cache")
+        XCTAssertEqual(decoder.table.dynamicEntries[1].value, "www.example.com")
         
         encodedHeaders = Data([
             0x82, 0x87, 0x85, 0xbf,
@@ -229,6 +265,20 @@ public class HPACKTests: XCTestCase {
         XCTAssertEqual(headers[":path"], "/index.html")
         XCTAssertEqual(headers[":authority"], "www.example.com")
         XCTAssertEqual(headers["custom-key"], "custom-value")
+        
+        XCTAssertEqual(decoder.table.dynamicEntries.count, 3)
+        
+        XCTAssertEqual(decoder.table.dynamicEntries[0].name, "custom-key")
+        XCTAssertEqual(decoder.table.dynamicEntries[1].name, "cache-control")
+        XCTAssertEqual(decoder.table.dynamicEntries[2].name, ":authority")
+        
+        XCTAssertEqual(decoder.table.dynamicEntries[0].value, "custom-value")
+        XCTAssertEqual(decoder.table.dynamicEntries[1].value, "no-cache")
+        XCTAssertEqual(decoder.table.dynamicEntries[2].value, "www.example.com")
+    }
+    
+    func testHeaderResponseDecoding() throws {
+        
     }
     
     func testHeaderDecodingFailure0() throws {
