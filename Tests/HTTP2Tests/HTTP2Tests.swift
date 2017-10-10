@@ -1,6 +1,6 @@
 import XCTest
 @testable import HTTP2
-import Pufferfish
+import Async
 
 public class HTTP2Tests: XCTestCase {
     static let allTests = [
@@ -8,6 +8,8 @@ public class HTTP2Tests: XCTestCase {
     ]
     
     func testClient() throws {
+        let queue = DispatchQueue(label: "http2.client")
         
+        let client = try HTTP2Client.connect(hostname: "google.com", worker: Worker(queue: queue)).blockingAwait()
     }
 }

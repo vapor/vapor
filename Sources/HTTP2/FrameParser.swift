@@ -9,6 +9,8 @@ public final class FrameParser: Async.Stream {
     public var errorStream: ErrorHandler?
     
     public func inputStream(_ input: ByteBuffer) {
+        print(Array(input))
         
+        print(input.count)
     }
 }
