@@ -21,6 +21,18 @@ public struct SSLOption {
         }
     }
     
+    /// Sends the Application Layer Protocol Negotiation supported protocols
+    public static func alpn(protocols: [String]) -> SSLOption {
+        return SSLOption { context in
+            if #available(OSX 10.13, *) {
+                var protocols = protocols as CFArray
+                try assert(status: SSLSetALPNProtocols(context, protocols))
+            } else {
+                throw Error(.notSupported)
+            }
+        }
+    }
+    
     /// Sets the minimum SSL Protocol version
     public static func minimumVersion(_ protocol: SSLProtocol) -> SSLOption {
         return SSLOption { context in

@@ -60,6 +60,8 @@ public final class TLSClient: Async.Stream, ClosableStream {
     /// The certificate used by the client, if any
     public var clientCertificatePath: String? = nil
     
+    public var protocols: [String]?
+    
     /// Creates a new `TLSClient` by specifying a queue.
     ///
     /// Can throw an error if the initialization phase fails
@@ -77,9 +79,15 @@ public final class TLSClient: Async.Stream, ClosableStream {
         
         // Continues setting up SSL after the socket becomes writable (successful connection)
         return client.socket.writable(queue: queue).flatten {
-            return try self.ssl.initializeClient(options: [
-                .peerDomainName(hostname)
-            ])
+            var options = [SSLOption]()
+            
+            options.append(.peerDomainName(hostname))
+            
+            if let protocols = self.protocols {
+                options.append(.alpn(protocols: protocols))
+            }
+            
+            return try self.ssl.initializeClient(options: options)
         }.map {
             self.ssl.start()
         }
