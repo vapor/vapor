@@ -1,26 +1,18 @@
-os:
-    - linux
-    - osx
-language: generic
-sudo: required
-dist: trusty
+os: osx
+osx_image: xcode9
 
-osx_image: xcode8.3
 before_install:
-    - if [ $TRAVIS_OS_NAME == "osx" ]; then
-            brew tap vapor/tap;
-            brew update;
-            brew install ctls;
-        else
-            eval "$(curl -sL https://apt.vapor.sh)";
-            sudo apt-get install swift-beta ctls;
-            sudo chmod -R a+rx /usr/;
-        fi
+    - brew tap vapor/tap
+    - brew update
+    - brew install ctls mysql
+    - mysql.server start
+    - mysql -e 'CREATE DATABASE IF NOT EXISTS test;' -uroot
 
 script:
     - swift build
     - swift build -c release
-    - swift test
+    - swift package generate-xcodeproj
+    - xcodebuild -scheme Vapor-Package -enableCodeCoverage YES test | xcpretty
 
 after_success:
     - eval "$(curl -sL https://swift.vapor.sh/codecov)"

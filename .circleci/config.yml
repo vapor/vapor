@@ -1,0 +1,18 @@
+version: 2
+
+jobs:
+  build:
+    docker:
+      - image: swift:4.0
+      - image: circleci/mysql:latest
+        environment:
+          MYSQL_USER: root
+          MYSQL_DATABASE: test
+          MYSQL_ALLOW_EMPTY_PASSWORD: true
+    steps:
+      - run: eval "$(curl -sL https://apt.vapor.sh)"
+      - run: apt-get install -yq ctls
+      - checkout
+      - run: swift build
+      - run: swift build -c release
+      - run: swift test
