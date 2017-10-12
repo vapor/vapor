@@ -8,7 +8,7 @@ import Routing
 /// All path components will be inserted before the Route's path
 ///
 /// All middleware will be applied to the Responder
-public final class Group : Router {
+public final class Group : Router, SyncRouter, AsyncRouter {
     /// All routes registered to this group
     public private(set) var routes: [Route] = []
     

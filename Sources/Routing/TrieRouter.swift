@@ -57,7 +57,15 @@ public final class TrieRouter: Router {
 
     /// See Router.route()
     public func route(request: Request) -> Responder? {
-        let path = [request.method.string] + request.uri.path.split(separator: "/").map(String.init)
+        var path: [String]
+        
+        if request.method == .options, let methodName = request.headers[.accessControlAllowMethods] {
+             path = [methodName]
+        } else {
+            path = [request.method.string]
+        }
+        
+        path += request.uri.path.split(separator: "/").map(String.init)
         
         // always start at the root node
         var current: TrieRouterNode = root
