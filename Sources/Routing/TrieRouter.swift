@@ -59,7 +59,7 @@ public final class TrieRouter: Router {
     public func route(request: Request) -> Responder? {
         var path: [String]
         
-        if request.method == .options, let methodName = request.headers[.accessControlAllowMethods] {
+        if request.method == .options, let methodName = request.headers[.accessControlRequestHeaders] {
              path = [methodName]
         } else {
             path = [request.method.string]

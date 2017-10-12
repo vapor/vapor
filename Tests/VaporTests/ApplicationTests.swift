@@ -25,7 +25,7 @@ class ApplicationTests: XCTestCase {
             uri: "/good",
             headers: [
                 .origin: "http://localhost:8090",
-                .accessControlAllowMethods: "POST",
+                .accessControlRequestHeaders: "POST",
             ]
         )
         

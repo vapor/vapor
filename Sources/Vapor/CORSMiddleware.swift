@@ -54,6 +54,6 @@ public final class CORSMiddleware: Middleware {
 extension Request {
     /// Returns `true` if the request is a pre-flight CORS request.
     var isPreflight: Bool {
-        return method == .options && headers[.accessControlAllowMethods] != nil
+        return method == .options && headers[.accessControlRequestHeaders] != nil
     }
 }
