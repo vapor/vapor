@@ -1,4 +1,5 @@
 import Async
+import Bits
 import Core
 import Foundation
 import Dispatch
@@ -69,18 +70,19 @@ final class HTTPTestServer {
 
 class WebSocketTests : XCTestCase {
     func testClientServer() throws {
-        return;
         let app = WebSocketApplication()
-        let tcp = try TCP.Server()
         let server = HTTPTestServer()
         
-        // try server.start(with: app)
+        try server.start(with: app)
         
         let promise0 = Promise<Void>()
         let promise1 = Promise<Void>()
 
         let worker = Worker(queue: .global())
-        _ = try WebSocket.connect(to: "ws://0.0.0.0:8080/", worker: worker).then { socket in
+        
+        let uri = URI(stringLiteral: "ws://\(CurrentHost.hostname):8080/")
+        
+        _ = try WebSocket.connect(to: uri, worker: worker).then { socket in
             let responses = ["test", "cat", "banana"]
             let reversedResponses = responses.map {
                 String($0.reversed())
@@ -110,15 +112,19 @@ class WebSocketTests : XCTestCase {
                 socket.send(response)
             }
             
-//            socket.send(Data([
-//                0x00, 0x01, 0x00, 0x02
-//                ]))
+            Data([
+                0x00, 0x01, 0x00, 0x02
+            ]).withUnsafeBytes { (pointer: BytesPointer) in
+                let buffer = ByteBuffer(start: pointer, count: 4)
+                
+                socket.send(buffer)
+            }
             
             promise0.complete(())
-        }
+        }.blockingAwait(timeout: .seconds(3))
         
         try promise0.future.blockingAwait(timeout: .seconds(10))
-//        try promise1.future.blockingAwait()
+        try promise1.future.blockingAwait(timeout: .seconds(10))
     }
     
     static let allTests = [

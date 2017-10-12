@@ -101,7 +101,7 @@ public enum Method : Equatable, Hashable, Codable, CustomDebugStringConvertible,
 
     /// Creates a new method from a String
     public init(_ string: String ){
-        switch string {
+        switch string.uppercased() {
         case "GET": self = .get
         case "PUT": self = .put
         case "POST": self = .post

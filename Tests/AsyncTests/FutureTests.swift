@@ -107,6 +107,42 @@ final class FutureTests : XCTestCase {
         intPromise.complete(42)
         group.wait()
     }
+    
+    func testFutureFlatten() throws {
+        let string = Promise<String>()
+        let bool = Promise<Bool>()
+        
+        let integer = string.future.flatten { string in
+            return bool.future.map { bool in
+                return bool ? Int(string) : -1
+            }
+        }
+        
+        string.complete("30")
+        bool.complete(true)
+        
+        let int = try integer.blockingAwait()
+        
+        XCTAssertEqual(int, 30)
+    }
+    
+    func testFutureFlatten2() throws {
+        let string = Promise<String>()
+        let bool = Promise<Bool>()
+        
+        let integer = string.future.flatten { string in
+            return bool.future.map { bool in
+                return bool ? Int(string) : -1
+            }
+        }
+        
+        string.complete("30")
+        bool.complete(false)
+        
+        let int = try integer.blockingAwait()
+        
+        XCTAssertEqual(int, -1)
+    }
 
     static let allTests = [
         ("testSimpleFuture", testSimpleFuture),
