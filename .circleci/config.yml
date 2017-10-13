@@ -21,7 +21,7 @@ jobs:
     macos:
       xcode: "9.0"
     steps:
-      - run: gem install xcpretty
+      - run: sudo gem install xcpretty
       - run: brew tap vapor/tap
       - run: brew update
       - run: brew install ctls mysql
