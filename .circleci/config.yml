@@ -1,7 +1,7 @@
 version: 2
 
 jobs:
-  build:
+  linux:
     docker:
       - image: swift:4.0
       - image: circleci/mysql:latest
@@ -16,3 +16,30 @@ jobs:
       - run: swift build
       - run: swift build -c release
       - run: swift test
+  
+  macOS:
+    macos:
+      xcode: "9.0"
+    steps:
+      - run: gem install xcpretty
+      - run: brew tap vapor/tap
+      - run: brew update
+      - run: brew install ctls mysql
+      - run: mysql.server start
+      - run: mysql -e 'CREATE DATABASE IF NOT EXISTS test;' -uroot
+      - checkout
+      - run: swift build
+      - run: swift build -c release
+      - run: swift package generate-xcodeproj
+      - run: xcodebuild -scheme Vapor-Package -enableCodeCoverage YES test | xcpretty
+      - run: bash <(curl -s https://codecov.io/bash)
+
+workflows:
+  version: 2
+  macOS:
+    jobs:
+      - macOS
+
+  linux:
+    jobs:
+      - linux
