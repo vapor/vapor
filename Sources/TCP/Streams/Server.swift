@@ -58,7 +58,7 @@ public final class Server: Async.OutputStream, ClosableStream {
     /// Starts listening for peers asynchronously
     ///
     /// - parameter maxIncomingConnections: The maximum backlog of incoming connections. Defaults to 4096.
-    public func start(hostname: String = "0.0.0.0", port: UInt16, backlog: Int32 = 4096) throws {
+    public func start(hostname: String = "0.0.0.0", port: UInt16, backlog: Int32 = 4096) throws -> Future<Void> {
         try socket.bind(hostname: hostname, port: port)
         try socket.listen(backlog: backlog)
 
@@ -82,5 +82,7 @@ public final class Server: Async.OutputStream, ClosableStream {
         }
         source.resume()
         readSource = source
+        
+        return socket.writable(queue: queue)
     }
 }

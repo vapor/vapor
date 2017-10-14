@@ -36,7 +36,7 @@ final class HTTPTestServer {
     }
     
     /// Start the server. Server protocol requirement.
-    public func start(with responder: Responder) throws {
+    public func start(with responder: Responder) throws -> Future<Void> {
         // create a tcp server
         let tcp = try TCP.Server(workerCount: workerCount)
         let server = HTTP.Server(clientStream: tcp)
@@ -60,7 +60,7 @@ final class HTTPTestServer {
         }
         
         // bind, listen, and start accepting
-        try server.clientStream.start(
+        return try server.clientStream.start(
             hostname: hostname,
             port: port,
             backlog: backlog
@@ -73,7 +73,7 @@ class WebSocketTests : XCTestCase {
         let app = WebSocketApplication()
         let server = HTTPTestServer()
         
-        try server.start(with: app)
+        try server.start(with: app).blockingAwait(timeout: .seconds(5))
         
         let promise0 = Promise<Void>()
         let promise1 = Promise<Void>()
