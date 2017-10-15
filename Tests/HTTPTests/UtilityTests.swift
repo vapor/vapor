@@ -25,7 +25,7 @@ class UtilityTests : XCTestCase {
         XCTAssertEqual(Method.post, Method("post"))
     }
     
-    func testCookies() {
+    func testCookie() {
         var cookie = Cookie(named: "token", value: "Hello World")
         XCTAssertEqual(cookie.serialized(), "token=Hello World")
         
@@ -44,14 +44,38 @@ class UtilityTests : XCTestCase {
         cookie = Cookie(from: cookie.serialized())!
         XCTAssertEqual(cookie.name, "token")
         XCTAssertEqual(cookie.value.value, "Test")
-        XCTAssertEqual(cookie.value.expires?.timeIntervalSince1970, date.timeIntervalSince1970)
+        XCTAssertEqual(Int(cookie.value.expires?.timeIntervalSince1970 ?? 0), Int(date.timeIntervalSince1970))
         XCTAssertEqual(cookie.value.httpOnly, true)
+    }
+    
+    func testCookies() {
+        var cookies: Cookies = [
+            "session": "test",
+            "token2": "abc123"
+        ]
+        
+        XCTAssertEqual(cookies["session"]?.value, "test")
+        XCTAssertNil(cookies["SessioN"]?.value)
+        XCTAssertEqual(cookies["token2"]?.value, "abc123")
+        
+        cookies["token2"] = "123abc"
+        XCTAssertEqual(cookies["token2"]?.value, "123abc")
+        
+        cookies["test"] = "test"
+        
+        for cookie in cookies {
+            XCTAssert(["session", "token2", "test"].contains(cookie.name))
+            XCTAssert(["123abc", "test"].contains(cookie.value.value))
+        }
+        
+        XCTAssertEqual(cookies.cookies.count, 3)
     }
     
     static let allTests = [
         ("testRFC1123", testRFC1123),
         ("HTTPURIs", HTTPURIs),
         ("testMethod", testMethod),
+        ("testCookie", testCookie),
         ("testCookies", testCookies),
     ]
 }
