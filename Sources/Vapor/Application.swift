@@ -10,13 +10,13 @@ import Service
 /// Acts as a service container and much more.
 public final class Application: Container {
     /// Config preferences and requirements for available services.
-    public var config: Config
+    public let config: Config
 
     /// Environment this application is running in.
     public let environment: Environment
 
     /// Services that can be created by this application.
-    public var services: Services
+    public let services: Services
 
     /// Use this to create stored properties in extensions.
     public var extend: Extend
