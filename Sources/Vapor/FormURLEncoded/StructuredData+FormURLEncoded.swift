@@ -5,7 +5,7 @@ import Node
 extension Node {
     /// Queries allow empty values
     /// FormURLEncoded does not
-    public init(formURLEncoded data: Bytes, allowEmptyValues: Bool) {
+    public init(formURLEncoded data: Bytes) {
         var urlEncoded: [String: Node] = [:]
 
         let replacePlus: (Byte) -> (Byte) = { byte in
@@ -15,38 +15,40 @@ extension Node {
         
         for pair in data.split(separator: .ampersand) {
             var value: Node = .string("")
-            var keyData: Bytes
+            var keyData = Bytes()
 
             /// Allow empty subsequences
             /// value= => "value": ""
-            /// value => "value": true
+            /// value  => "value": true
             let token = pair.split(
                 separator: .equals,
                 maxSplits: 1, // max 1, `foo=a=b` should be `"foo": "a=b"`
-                omittingEmptySubsequences: !allowEmptyValues
+                omittingEmptySubsequences: false
             )
-            if token.count == 2 {
-                keyData = token[0].map(replacePlus)
-                    .makeString()
-                    .percentDecoded
-                    .makeBytes()
-                
-                let valueData = token[1].map(replacePlus)
-                    .makeString()
-                    .percentDecoded
-                
-                value = .string(valueData)
-            } else if allowEmptyValues && token.count == 1 {
-                keyData = token[0].map(replacePlus)
-                    .makeString()
-                    .percentDecoded.makeBytes()
-                
-                value = .bool(true)
-            } else {
-                print("Found bad encoded pair \(pair.makeString()) ... continuing")
-                continue
+            switch (token.count) {
+                case 2:
+                    keyData = token[0].map(replacePlus)
+                        .makeString()
+                        .percentDecoded
+                        .makeBytes()
+                    
+                    let valueData = token[1].map(replacePlus)
+                        .makeString()
+                        .percentDecoded
+                    
+                    value = .string(valueData)
+                case 1:
+                    keyData = token[0].map(replacePlus)
+                        .makeString()
+                        .percentDecoded
+                        .makeBytes()
+                    
+                    value = .bool(true)
+                default:
+                    assertionFailure("Must have exactly one or two tokens after splitting pairs")
+                    continue // Compiler complains if this isn't present
             }
-
+            
             var keyIndicatedArray = false
 
             var subKey = ""
