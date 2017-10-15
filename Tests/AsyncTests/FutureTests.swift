@@ -108,11 +108,11 @@ final class FutureTests : XCTestCase {
         group.wait()
     }
     
-    func testFutureFlatten() throws {
+    func testFutureFlatMap() throws {
         let string = Promise<String>()
         let bool = Promise<Bool>()
         
-        let integer = string.future.flatten { string in
+        let integer = string.future.flatMap { string in
             return bool.future.map { bool in
                 return bool ? Int(string) : -1
             }
@@ -126,11 +126,11 @@ final class FutureTests : XCTestCase {
         XCTAssertEqual(int, 30)
     }
     
-    func testFutureFlatten2() throws {
+    func testFutureFlatMap2() throws {
         let string = Promise<String>()
         let bool = Promise<Bool>()
         
-        let integer = string.future.flatten { string in
+        let integer = string.future.flatMap { string in
             return bool.future.map { bool in
                 return bool ? Int(string) : -1
             }
@@ -143,6 +143,63 @@ final class FutureTests : XCTestCase {
         
         XCTAssertEqual(int, -1)
     }
+    
+    func testFutureFlatMapErrors() throws {
+        let string = Promise<String>()
+        let bool = Promise<Bool>()
+        
+        let integer = string.future.flatMap { string in
+            return bool.future.map { bool -> Int? in
+                guard bool else {
+                    throw CustomError()
+                }
+                
+                return bool ? Int(string) : -1
+            }
+        }
+        
+        string.complete("30")
+        bool.complete(false)
+        
+        XCTAssertThrowsError(try integer.blockingAwait())
+    }
+    
+    func testFutureFlatMapErrors2() throws {
+        let string = Promise<String>()
+        let bool = Promise<Bool>()
+        
+        let integer = string.future.flatMap { string -> Future<Int?> in
+            guard string == "-1" else {
+                throw CustomError()
+            }
+            
+            return bool.future.map { bool in
+                return bool ? Int(string) : -1
+            }
+        }
+        
+        string.complete("30")
+        bool.complete(false)
+        
+        XCTAssertThrowsError(try integer.blockingAwait())
+    }
+    
+    func testFlatten() throws {
+        let future = Future("TEST example")
+        
+        let promise = Promise<String>()
+        promise.flatten(future)
+        
+        XCTAssertEqual(try promise.future.blockingAwait(), "TEST example")
+    }
+    
+    func testPrecompleted() throws {
+        let future = Future("Hello world")
+        XCTAssertEqual(try future.blockingAwait(), "Hello world")
+        
+        let future2 = Future<Any>(error: CustomError())
+        XCTAssertThrowsError(try future2.blockingAwait())
+    }
 
     static let allTests = [
         ("testSimpleFuture", testSimpleFuture),
@@ -151,6 +208,8 @@ final class FutureTests : XCTestCase {
         ("testErrorFuture", testErrorFuture),
         ("testArrayFuture", testArrayFuture),
         ("testFutureMap", testFutureMap),
+        ("testFutureFlatMap", testFutureFlatMap),
+        ("testFutureFlatMap2", testFutureFlatMap2),
     ]
 }
 
