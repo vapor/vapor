@@ -1,4 +1,5 @@
 import Async
+import Bits
 import Core
 import Dispatch
 import HTTP
@@ -63,7 +64,10 @@ class MiddlewareTests : XCTestCase {
         
         let response = try client.send(request: Request()).blockingAwait()
         
-        XCTAssertEqual(response.body.data, Data(responder.response.utf8))
+        response.body.withUnsafeBytes { (pointer: BytesPointer) in
+            let buffer = ByteBuffer(start: pointer, count: response.body.count)
+            XCTAssertEqual(Data(buffer), Data(responder.response.utf8))
+        }
     }
 
     static let allTests = [
