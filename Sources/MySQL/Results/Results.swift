@@ -65,24 +65,24 @@ class Field: Hashable {
     
     /// Makes this field hashable
     public var hashValue: Int {
-        return table.hashValue &+ name.hashValue &+ length.hashValue &+ fieldType.rawValue.hashValue &+ flags.rawValue.hashValue
+        return name.hashValue &+ length.hashValue &+ fieldType.rawValue.hashValue &+ flags.rawValue.hashValue
     }
     
     /// Makes this field equatable, so it can be compared to be unique
     public static func ==(lhs: Field, rhs: Field) -> Bool {
         return  lhs.table == rhs.table &&
-                lhs.name == rhs.name &&
-                lhs.length == rhs.length &&
-                lhs.fieldType == rhs.fieldType &&
-                lhs.flags == rhs.flags
+            lhs.name == rhs.name &&
+            lhs.length == rhs.length &&
+            lhs.fieldType == rhs.fieldType &&
+            lhs.flags == rhs.flags
     }
     
-    public let catalog: String
-    public let database: String
-    public let table: String
-    public let originalTable: String
+    let catalog: String?
+    let database: String?
+    let table: String?
+    let originalTable: String?
     public let name: String
-    public let originalName: String
+    let originalName: String?
     let charSet: Byte
     let collation: Byte
     let length: UInt32
@@ -93,7 +93,6 @@ class Field: Hashable {
     /// If `true`, parse this field from binary blobs, not text strings
     var isBinary: Bool {
         switch fieldType {
-        case .varString: return true
         case .blob: return true
         case .longBlob: return true
         case .tinyBlob: return true
@@ -103,18 +102,19 @@ class Field: Hashable {
     }
     
     /// Creates a new field from the packet's parsed data
-    init(catalog: String,
-         database: String,
-         table: String,
-         originalTable: String,
+    init(catalog: String?,
+         database: String?,
+         table: String?,
+         originalTable: String?,
          name: String,
-         originalName: String,
+         originalName: String?,
          charSet: Byte,
          collation: Byte,
          length: UInt32,
          fieldType: FieldType,
          flags: Flags,
-         decimals: Byte) {
+         decimals: Byte
+        ) {
         self.catalog = catalog
         self.database = database
         self.table = table
@@ -144,11 +144,14 @@ enum Column {
     case double(Double)
     case float(Float)
     case null
-    case varString(Data)
+    case varString(String)
 }
 
 /// A single row from a table
 struct Row {
     /// A list of all collected columns and their metadata (Field)
-    var fields = [(field: Field, column: Column)]()
+    var fields = [Field]()
+    var fieldNames = [String]()
+    var columns = [Column]()
 }
+
