@@ -6,9 +6,9 @@ import TCP
 /// A Redis client
 ///
 /// Wraps around the provided Connection/Closable Binary Stream
-public final class Client<Connection: Async.Stream> where Connection.Input == ByteBuffer, Connection.Output == ByteBuffer, Connection: ClosableStream {
+public final class RedisClient<DuplexByteStream: Async.Stream> where DuplexByteStream.Input == ByteBuffer, DuplexByteStream.Output == ByteBuffer, DuplexByteStream: ClosableStream {
     /// The closable binary stream that this client runs on
-    let socket: Connection
+    let socket: DuplexByteStream
     
     /// Parses values from binary
     let valueParser = ValueParser()
@@ -30,8 +30,8 @@ public final class Client<Connection: Async.Stream> where Connection.Input == By
     ///
     /// - returns: A future containing the server's response
     /// - throws: On network error
-    public func runCommand(_ command: RedisValue) throws -> Future<RedisValue> {
-        let promise = Promise<_RedisValue>()
+    public func runCommand(_ command: RedisData) -> Future<RedisData> {
+        let promise = Promise<PartialRedisData>()
         
         valueParser.responseQueue.append(promise)
         valueSerializer.inputStream(command)
@@ -46,7 +46,7 @@ public final class Client<Connection: Async.Stream> where Connection.Input == By
     }
     
     /// Creates a new Redis client on the provided connection
-    public init(socket: Connection) {
+    public init(socket: DuplexByteStream) {
         self.socket = socket
         
         socket.errorStream = { _ in
@@ -61,7 +61,7 @@ public final class Client<Connection: Async.Stream> where Connection.Input == By
 /// Connects to `Redis` using on a TCP socket to the provided hostname and port
 ///
 /// Listens to the socket using the provided `DispatchQueue`
-public func connect(hostname: String = "localhost", port: UInt16 = 6379, worker: Worker) throws -> Future<Client<TCPClient>> {
+public func connect(hostname: String = "localhost", port: UInt16 = 6379, worker: Worker) throws -> Future<RedisClient<TCPClient>> {
     let socket = try TCP.Socket()
     try socket.connect(hostname: hostname, port: port)
     
@@ -69,7 +69,7 @@ public func connect(hostname: String = "localhost", port: UInt16 = 6379, worker:
         let client = TCPClient(socket: socket, worker: worker)
         client.start()
         
-        return Client<TCPClient>(socket: client)
+        return RedisClient<TCPClient>(socket: client)
     }
 }
 

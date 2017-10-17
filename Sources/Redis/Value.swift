@@ -7,7 +7,7 @@ public struct RedisError: Error {
 }
 
 /// A Redis primitive value
-public indirect enum RedisValue {
+public indirect enum RedisData {
     /// Initializes a bulk string from a String
     public init(bulk: String) {
         self = .bulkString(Data(bulk.utf8))
@@ -18,7 +18,7 @@ public indirect enum RedisValue {
     case bulkString(Data)
     case error(RedisError)
     case integer(Int)
-    case array([RedisValue])
+    case array([RedisData])
     
     /// Extracts the basic/bulk string as a `String`.
     public var string: String? {
@@ -33,28 +33,28 @@ public indirect enum RedisValue {
     }
 }
 
-extension RedisValue: ExpressibleByStringLiteral {
+extension RedisData: ExpressibleByStringLiteral {
     /// Initializes a bulk string from a String literal
     public init(stringLiteral value: String) {
         self = .bulkString(Data(value.utf8))
     }
 }
 
-extension RedisValue: ExpressibleByArrayLiteral {
+extension RedisData: ExpressibleByArrayLiteral {
     /// Initializes an array from an Array literal
-    public init(arrayLiteral elements: RedisValue...) {
+    public init(arrayLiteral elements: RedisData...) {
         self = .array(elements)
     }
 }
 
-extension RedisValue: ExpressibleByNilLiteral {
+extension RedisData: ExpressibleByNilLiteral {
     /// Initializes null from a nil literal
     public init(nilLiteral: ()) {
         self = .null
     }
 }
 
-extension RedisValue: ExpressibleByIntegerLiteral {
+extension RedisData: ExpressibleByIntegerLiteral {
     /// Initializes an integer from an integer literal
     public init(integerLiteral value: Int) {
         self = .integer(value)

@@ -5,7 +5,7 @@ import Foundation
 /// A streaming Redis value serializer
 final class ValueSerializer: Async.Stream {
     /// See `InputStream.Input`
-    typealias Input = RedisValue
+    typealias Input = RedisData
     
     /// See `OutputStream.Output`
     typealias Output = ByteBuffer
@@ -20,7 +20,7 @@ final class ValueSerializer: Async.Stream {
     init() {}
     
     /// Serializes a value to the outputStream
-    func inputStream(_ input: RedisValue) {
+    func inputStream(_ input: RedisData) {
         let message = input.serialize()
             
         message.withUnsafeBytes { (pointer: BytesPointer) in
@@ -33,7 +33,7 @@ final class ValueSerializer: Async.Stream {
 /// Static "fast" route for serializing `null` values
 fileprivate let nullData = Data("$-1\r\n".utf8)
 
-extension RedisValue {
+extension RedisData {
     /// Serializes a single value
     func serialize() -> Data {
         switch self {

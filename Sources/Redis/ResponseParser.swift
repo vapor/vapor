@@ -11,21 +11,21 @@ final class ValueParser: Async.InputStream {
     var errorStream: BaseStream.ErrorHandler?
     
     /// A set of promises awaiting a response
-    var responseQueue = [Promise<_RedisValue>]()
+    var responseQueue = [Promise<PartialRedisData>]()
     
     /// The currently accumulated data from the socket
     var responseBuffer = Data()
     
     /// The in-progress parsing value
-    var parsingValue: _RedisValue?
+    var parsingValue: PartialRedisData?
     
-    /// The maximum size of a response RedisValue
+    /// The maximum size of a response RedisData
     var maximumResponseSize = 10_000_000
     
     /// Creates a new ValueParser
     init() {}
     
-    /// Accepts input binary and processes it to a RedisValue
+    /// Accepts input binary and processes it to a RedisData
     func inputStream(_ input: ByteBuffer) {
         responseBuffer.append(contentsOf: Data(input))
         
@@ -102,7 +102,7 @@ final class ValueParser: Async.InputStream {
     ///
     /// - throws: On an unexpected result
     /// - returns: The value (and if it's completely parsed) as a tuple, or `nil` if more data is needed to continue
-    fileprivate func parseToken(_ token: Character, at position: inout Int) throws -> (result: _RedisValue, complete: Bool)? {
+    fileprivate func parseToken(_ token: Character, at position: inout Int) throws -> (result: PartialRedisData, complete: Bool)? {
         switch token {
         case "+":
             // Simple string
@@ -156,7 +156,7 @@ final class ValueParser: Async.InputStream {
                 throw ClientError.parsingError
             }
             
-            var array = [_RedisValue](repeating: .notYetParsed, count: size)
+            var array = [PartialRedisData](repeating: .notYetParsed, count: size)
             
             // Parse all elements
             for index in 0..<size {
@@ -197,7 +197,7 @@ final class ValueParser: Async.InputStream {
     }
     
     /// Helper that flushes the value into the first response
-    fileprivate func flush(_ result: _RedisValue) {
+    fileprivate func flush(_ result: PartialRedisData) {
         assert(responseQueue.count > 0, "ResponseQueue received a response and wasn't checked")
         
         let completion = responseQueue.removeFirst()
@@ -282,13 +282,13 @@ final class ValueParser: Async.InputStream {
 }
 
 /// A parsing-in-progress Redis value
-indirect enum _RedisValue {
+indirect enum PartialRedisData {
     /// Placeholder for values in arrays
     case notYetParsed
     
     /// An array that's being parsed
-    case parsing([_RedisValue])
+    case parsing([PartialRedisData])
     
     /// A correctly parsed value
-    case parsed(RedisValue)
+    case parsed(RedisData)
 }

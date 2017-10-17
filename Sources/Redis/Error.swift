@@ -7,5 +7,5 @@ enum ClientError: Error {
     case parsingError
     
     /// The command's result was unexpected
-    case unexpectedResult(RedisValue)
+    case unexpectedResult(RedisData)
 }
