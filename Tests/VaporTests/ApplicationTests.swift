@@ -53,7 +53,7 @@ class ApplicationTests: XCTestCase {
         XCTAssertEqual(response?.status, 200)
         response?.body.withUnsafeBytes { pointer in
             let data = Data(ByteBuffer(start: pointer, count: response!.body.count))
-            XCTAssertNotEqual(data, Data("hello".utf8))
+            XCTAssertEqual(data, Data("hello".utf8))
         }
     }
 }
