@@ -14,7 +14,10 @@ public final class Socket {
     /// True if the socket should re-use addresses
     public let shouldReuseAddress: Bool
     
-    /// A write source that's used to check when the connection is open
+    /// A write source that's used to check when the connection is readable
+    internal var readSource: DispatchSourceRead?
+    
+    /// A write source that's used to check when the connection is writable
     internal var writeSource: DispatchSourceWrite?
 
     /// Creates a TCP socket around an existing descriptor
