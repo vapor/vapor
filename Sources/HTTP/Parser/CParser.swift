@@ -127,8 +127,7 @@ extension CParser {
             case .key(let key):
                 // there was previously a key being parsed.
                 // it is now finished.
-                let copiedKey = Data(key)
-                let key = String(data: copiedKey, encoding: .utf8)
+                let key = String(bytes: key, encoding: .utf8)
                 let headerKey = Headers.Name(key ?? "")
                 // add the new bytes alongside the created key
                 results.headerState = .value(name: headerKey, data)
@@ -149,8 +148,7 @@ extension CParser {
             case .value(let key, let value):
                 // there was previously a value being parsed.
                 // it should be added to the headers dict.
-                let copiedValue = Data(value)
-                let valueString = String(data: copiedValue, encoding: .utf8) ?? ""
+                let valueString = String(bytes: value, encoding: .utf8) ?? ""
                 results.headers[key, default: []].append(valueString)
             default:
                 // no other cases need to be handled.

@@ -7,25 +7,45 @@ import Foundation
 internal protocol Serializer: Async.Stream { }
 
 extension Serializer {
-    internal func serialize(header name: Headers.Name, value: String) -> DispatchData {
-        return DispatchData("\(name): \(value)\r\n")
-    }
-
     internal func serialize(_ body: Body) -> DispatchData {
-        let pointer: BytesPointer = body.data.withUnsafeBytes { $0 }
-        let bodyRaw = UnsafeRawBufferPointer(
-            start: UnsafeRawPointer(pointer),
-            count: body.data.count
-        )
-        return DispatchData(bytes: bodyRaw)
+        switch body.storage {
+        case .dispatchData(let data):
+            return data
+        case .data(_):
+            return body.withUnsafeBytes { (pointer: BytesPointer) in
+                let bodyRaw = UnsafeRawBufferPointer(
+                    start: UnsafeRawPointer(pointer),
+                    count: body.count
+                )
+                return DispatchData(bytes: bodyRaw)
+            }
+        }
     }
-
-    public var eol: DispatchData {
-        return _eol
+    
+    internal func serialize(_ headers: Headers) -> DispatchData {
+        var data = Data()
+        
+        // Magic numer `64` is reserves space per header (seems sensible)
+        data.reserveCapacity(headers.storage.count * 64)
+        
+        for (name, value) in headers {
+            data.append(contentsOf: name.original.utf8)
+            data.append(headerKeyValueSeparator)
+            data.append(contentsOf: value.utf8)
+            data.append(eol)
+        }
+        data.append(eol)
+        
+        return data.withUnsafeBytes { (pointer: BytesPointer) in
+            let buffer = UnsafeRawBufferPointer(
+                start: UnsafeRawPointer(pointer),
+                count: data.count
+            )
+            
+            return DispatchData(bytes: buffer)
+        }
     }
 }
-
-fileprivate let _eol = DispatchData("\r\n")
 
 extension DispatchData {
     init(_ string: String) {

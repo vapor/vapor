@@ -32,18 +32,28 @@ class ApplicationTests: XCTestCase {
         var response = try router.route(request: request)?.respond(to: request).blockingAwait()
         
         XCTAssertEqual(response?.status, 200)
-        XCTAssertNotEqual(response?.body.data, Data("hello".utf8))
+        
+        response?.body.withUnsafeBytes { pointer in
+            let data = Data(ByteBuffer(start: pointer, count: response!.body.count))
+            XCTAssertNotEqual(data, Data("hello".utf8))
+        }
         
         request = Request(method: .get, uri: "/good")
         response = try router.route(request: request)?.respond(to: request).blockingAwait()
         
         XCTAssertNotEqual(response?.status, 200)
-        XCTAssertNotEqual(response?.body.data, Data("hello".utf8))
+        response?.body.withUnsafeBytes { pointer in
+            let data = Data(ByteBuffer(start: pointer, count: response!.body.count))
+            XCTAssertNotEqual(data, Data("hello".utf8))
+        }
         
         request = Request(method: .post, uri: "/good")
         response = try router.route(request: request)?.respond(to: request).blockingAwait()
         
         XCTAssertEqual(response?.status, 200)
-        XCTAssertEqual(response?.body.data, Data("hello".utf8))
+        response?.body.withUnsafeBytes { pointer in
+            let data = Data(ByteBuffer(start: pointer, count: response!.body.count))
+            XCTAssertEqual(data, Data("hello".utf8))
+        }
     }
 }

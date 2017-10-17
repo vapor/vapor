@@ -58,7 +58,7 @@ async.get("leaf") { req -> Future<View> in
 extension String: ResponseRepresentable {
     public func makeResponse(for req: Request) throws -> Response {
         let data = self.data(using: .utf8)!
-        return Response(status: .ok, headers: ["Content-Type": "text/plain"], body: Body(data))
+        return Response(status: .ok, headers: [.contentType: "text/plain"], body: Body(data))
     }
 }
 
