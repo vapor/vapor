@@ -10,24 +10,13 @@ class BCryptTests: XCTestCase {
         ("testVerify", testVerify)
     ]
     
-    func testPerformance() throws {
-        return;
-        measure {
-            _ = try! BCrypt.make(message: "password")
-        }
-    }
-    
     func testVersion() throws {
-        // FIXME: fails
-        return;
-        let digest = try BCrypt.make(message: "foo")
+        let digest = try BCrypt.make(message: "foo", with: BCrypt.Salt(.two(.y), cost: 6, bytes: nil))
         XCTAssert(String(bytes: digest, encoding: .utf8)!.hasPrefix("$2y$06$"))
     }
     
     func testFail() throws {
-        // FIXME: extremely slow on macOS
-        return;
-        let salt = try BCrypt.Salt()
+        let salt = try BCrypt.Salt(.two(.y), cost: 6, bytes: nil)
         let digest = try BCrypt.make(message: "foo", with: salt)
         let res = try BCrypt.verify(message: "bar", matches: digest)
         XCTAssertEqual(res, false)

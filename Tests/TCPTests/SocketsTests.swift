@@ -4,8 +4,6 @@ import XCTest
 
 class SocketsTests: XCTestCase {
     func testConnect() throws {
-        // FIXME: @Tanner. `group.leave()` crashes
-        return
         let socket = try Socket()
         try socket.connect(hostname: "google.com", port: 80)
 
@@ -44,9 +42,6 @@ class SocketsTests: XCTestCase {
     }
 
     func testBind() throws {
-        // FIXME: @Tanner. `group.leave()` crashes
-        return
-        
         let server = try Socket()
         try server.bind(hostname: CurrentHost.hostname, port: 8337)
         try server.listen()
