@@ -57,39 +57,72 @@ public final class TrieRouter: Router {
 
     /// See Router.route()
     public func route(request: Request) -> Responder? {
-        var path: [String]
+        var path = [Substring]()
+        path.reserveCapacity(7)
         
-        if request.method == .options, let methodName = request.headers[.accessControlAllowMethods] {
-             path = [methodName]
-        } else {
-            path = [request.method.string]
+        // Skip past the first `/`
+        var baseIndex = request.uri.path.index(after: request.uri.path.startIndex)
+        
+        if baseIndex < request.uri.path.endIndex {
+            var currentIndex = baseIndex
+            
+            // Split up the path
+            while currentIndex < request.uri.path.endIndex {
+                if request.uri.path[currentIndex] == "/" {
+                    path.append(request.uri.path[baseIndex..<currentIndex])
+                    currentIndex = request.uri.path.index(after: currentIndex)
+                }
+                
+                currentIndex = request.uri.path.index(after: currentIndex)
+            }
+            
+            // Add remaining path component
+            if baseIndex != request.uri.path.endIndex {
+                path.append(request.uri.path[baseIndex...])
+            }
         }
-        
-        path += request.uri.path.split(separator: "/").map(String.init)
         
         // always start at the root node
         var current: TrieRouterNode = root
-
-        // traverse the constant path supplied
-        var iterator = path.makeIterator()
-        while let path = iterator.next() {
-            if let node = current.findConstantNode(at: path) {
+        
+        func walkingPathSuccessfully<S: StringProtocol>(component: S) -> Bool {
+            if let node = current.findConstantNode(at: String(component)) {
                 // if we find a constant route path that matches this component,
                 // then we should use it.
                 current = node
             } else if let node = current.parameterChild {
                 // if no constant routes were found that match the path, but
                 // a dynamic parameter child was found, we can use it
-                let lazy = LazyParameter(type: node.parameter, value: path)
+                let lazy = LazyParameter(type: node.parameter, value: String(component))
                 request.parameters.parameters.append(lazy)
                 current = node
             } else {
                 // no constant routes were found, and this node doesn't have
                 // a dynamic parameter child. so no match.
+                return false
+            }
+            
+            return true
+        }
+        
+        // Start with the method
+        if request.method == .options, let methodName = request.headers[.accessControlAllowMethods] {
+            guard walkingPathSuccessfully(component: methodName) else {
+                return nil
+            }
+        } else {
+            guard walkingPathSuccessfully(component: request.method.string) else {
                 return nil
             }
         }
 
+        // traverse the constant path supplied
+        for component in path {
+            guard walkingPathSuccessfully(component: component) else {
+                return nil
+            }
+        }
+        
         // return the resolved responder if there hasn't
         // been an early exit.
         return current.responder
