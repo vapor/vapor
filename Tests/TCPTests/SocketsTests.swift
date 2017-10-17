@@ -1,3 +1,4 @@
+import Async
 import Dispatch
 import TCP
 import XCTest
@@ -22,9 +23,8 @@ class SocketsTests: XCTestCase {
             _ = try! socket.write(data)
         }
         write.resume()
-
-        let group = DispatchGroup()
-        group.enter()
+        
+        let promise = Promise<Void>()
 
 
         let read = DispatchSource.makeReadSource(fileDescriptor: socket.descriptor, queue: queue)
@@ -33,12 +33,12 @@ class SocketsTests: XCTestCase {
 
             let string = String(data: response, encoding: .utf8)
             XCTAssert(string?.contains("HTTP/1.0 400 Bad Request") == true)
-            group.leave()
+            promise.complete(())
         }
         read.resume()
 
         XCTAssertNotNil([read, write])
-        group.wait()
+        try promise.future.blockingAwait(timeout: .seconds(3))
     }
 
     func testBind() throws {
@@ -47,8 +47,7 @@ class SocketsTests: XCTestCase {
         try server.listen()
 
         let queue = DispatchQueue(label: "codes.vapor.test")
-        let group = DispatchGroup()
-        group.enter()
+        let promise = Promise<Void>()
 
         var accepted: (Socket, DispatchSourceRead)?
 
@@ -62,7 +61,7 @@ class SocketsTests: XCTestCase {
             read.setEventHandler {
                 let data = try! client.read(max: 8_192)
                 XCTAssertEqual(String(data: data, encoding: .utf8), "hello")
-                group.leave()
+                promise.complete(())
             }
             read.resume()
             
@@ -79,7 +78,7 @@ class SocketsTests: XCTestCase {
             _ = try! client.write(data)
         }
 
-        group.wait()
+        try promise.future.blockingAwait(timeout: .seconds(3))
     }
 
     static let allTests = [
