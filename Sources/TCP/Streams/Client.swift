@@ -129,7 +129,7 @@ public final class TCPClient: Async.Stream, ClosableStream {
             do {
                 read = try self.socket.read(
                     max: self.outputBuffer.count,
-                    into: self.outputBuffer
+                    into: self.outputBuffer.baseAddress!
                 )
             } catch {
                 // any errors that occur here cannot be thrown,
