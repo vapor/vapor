@@ -206,6 +206,44 @@ final class ValueParser: Async.InputStream {
         parsingValue = nil
     }
     
+    fileprivate func continueParsing(partialValues values: [PartialRedisData]) throws -> Bool {
+        var values = values
+        
+        // Loops over all elements
+        for i in 0..<values.count {
+            // Parses every `notyetParsed`
+            guard case .notYetParsed = values[i] else {
+                continue
+            }
+            
+            // Fetch the token
+            var index = responseBuffer.startIndex
+            
+            guard remaining(1, from: index) else {
+                parsingValue = .parsing(values)
+                return false
+            }
+            
+            // Parses the value associated with the token
+            guard
+                let (result, complete) = try parseToken(Character(Unicode.Scalar(responseBuffer[index])), at: &index),
+                complete
+            else {
+                parsingValue = .parsing(values)
+                // Parsing halted, stop
+                return false
+            }
+            
+            // Remove the parsed data
+            responseBuffer.removeSubrange(..<index)
+            
+            // Changes the value in this array
+            values[i] = result
+        }
+        
+        return false
+    }
+    
     /// Continues parsing the `Data` buffer
     fileprivate func parseBuffer() throws {
         // If not enough characters are available, it's not even worth trying.
@@ -218,38 +256,12 @@ final class ValueParser: Async.InputStream {
             // Continue parsing if a value is partially parsed
             if let parsingValue = parsingValue {
                 // The only half-parsed values can be arrays
-                guard case .parsing(var values) = parsingValue else {
+                guard case .parsing(let values) = parsingValue else {
                     throw ClientError.parsingError
                 }
                 
-                // Loops over all elements
-                for i in 0..<values.count {
-                    // Parses every `notyetParsed`
-                    guard case .notYetParsed = values[i] else {
-                        continue
-                    }
-                    
-                    // Fetch the token
-                    var index = responseBuffer.startIndex
-                    
-                    guard remaining(1, from: index) else {
-                        return
-                    }
-                    
-                    // Parses the value associated with the token
-                    guard
-                        let (result, complete) = try parseToken(Character(Unicode.Scalar(responseBuffer[index])), at: &index),
-                        complete
-                    else {
-                        // Parsing halted, stop
-                        return
-                    }
-                    
-                    // Remove the parsed data
-                    responseBuffer.removeSubrange(..<index)
-                    
-                    // Changes the value in this array
-                    values[i] = result
+                guard try continueParsing(partialValues: values) else {
+                    return
                 }
                 
                 // Flushes the resulting array to a request
