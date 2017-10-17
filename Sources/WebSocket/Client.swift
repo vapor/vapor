@@ -43,18 +43,18 @@ extension WebSocket {
         let parser = ResponseParser()
         
         // Generates the UUID that will make up the WebSocket-Key
-        let uuid = NSUUID().uuidString
+        let id = OSRandom().data(count: 16).base64EncodedString()
         
         // Create a basic HTTP Request, requesting an upgrade
         let request = Request(method: .get, uri: uri, headers: [
+            "Host": uri.hostname ?? "",
             "Connection": "Upgrade",
-            "Upgrade": "websocket",
-            "Sec-WebSocket-Key": uuid,
+            "Sec-WebSocket-Key": id,
             "Sec-WebSocket-Version": "13"
         ])
 
         // Calculates the expected key
-        let expectatedKey = Base64Encoder.encode(data: SHA1.hash(uuid + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"))
+        let expectatedKey = Base64Encoder.encode(data: SHA1.hash(id + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"))
         let expectedKeyString = String(bytes: expectatedKey, encoding: .utf8) ?? ""
 
         // Any errors in the handshake will cause the promise to fail
@@ -87,14 +87,16 @@ extension WebSocket {
                 promise.complete(WebSocket(client: client, serverSide: false))
             }
         }
-
-        // Start reading in the client
-        client.start()
-
-        // Send the initial request
-        let data = serializer.serialize(request)
-        client.inputStream(data)
-
-        return promise.future
+        
+        return client.socket.writable(queue: worker.queue).flatMap {
+            // Start reading in the client
+            client.start()
+            
+            // Send the initial request
+            let data = serializer.serialize(request)
+            client.inputStream(data)
+            
+            return promise.future
+        }
     }
 }
