@@ -28,19 +28,22 @@ public final class TCPClient: Async.Stream, ClosableStream {
     /// The client stream's underlying socket.
     public let socket: Socket
 
-    // Bytes from the socket are read into this buffer.
-    // Views into this buffer supplied to output streams.
+    /// Bytes from the socket are read into this buffer.
+    /// Views into this buffer supplied to output streams.
     let outputBuffer: MutableByteBuffer
 
-    // Data being fed into the client stream is stored here.
+    /// Data being fed into the client stream is stored here.
     var inputBuffer = [Data]()
 
-    // Stores read event source.
+    /// Stores read event source.
     var readSource: DispatchSourceRead?
 
-    // Stores write event source.
+    /// Stores write event source.
     var writeSource: DispatchSourceWrite?
 
+    /// Keeps track of the writesource's active status so it's not resumed too often
+    var writing = false
+    
     /// Creates a new Remote Client from the ServerSocket's details
     public init(socket: Socket, worker: Worker) {
         self.socket = socket
@@ -57,19 +60,26 @@ public final class TCPClient: Async.Stream, ClosableStream {
     /// Handles normal stream input
     public func inputStream(_ input: ByteBuffer) {
         inputBuffer.append(Data(input))
-        ensureWriteSource().resume()
+        ensureWriteSourceResumed()
     }
     
     /// Handles DispatchData input
     public func inputStream(_ input: DispatchData) {
         inputBuffer.append(Data(input))
-        ensureWriteSource().resume()
+        ensureWriteSourceResumed()
     }
     
     /// Handles Data input
     public func inputStream(_ input: Data) {
         inputBuffer.append(input)
-        ensureWriteSource().resume()
+        ensureWriteSourceResumed()
+    }
+    
+    private func ensureWriteSourceResumed() {
+        if !writing {
+            ensureWriteSource().resume()
+            writing = true
+        }
     }
     
     /// Creates a new WriteSource is there is no write source yet
@@ -81,16 +91,20 @@ public final class TCPClient: Async.Stream, ClosableStream {
             )
             
             source.setEventHandler {
-                // important: make sure to suspend or else writeable
-                // will keep calling.
-                self.writeSource?.suspend()
-                
                 // grab input buffer
                 guard self.inputBuffer.count > 0 else {
                     return
                 }
                 
                 let data = self.inputBuffer.removeFirst()
+                
+                if self.inputBuffer.count == 0 {
+                    // important: make sure to suspend or else writeable
+                    // will keep calling.
+                    self.writeSource?.suspend()
+                    
+                    self.writing = false
+                }
                 
                 data.withUnsafeBytes { (pointer: BytesPointer) in
                     let buffer = ByteBuffer(start: pointer, count: data.count)
