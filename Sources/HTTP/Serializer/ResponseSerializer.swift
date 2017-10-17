@@ -30,8 +30,7 @@ public final class ResponseSerializer: Serializer {
     public func serialize(_ response: Response) -> DispatchData {
         var serialized = serialize(response.status)
 
-        let iterator = response.headers.makeIterator()
-        while let header = iterator.next() {
+        for header in response.headers {
             let data = serialize(header: header.name, value: header.value)
             serialized.append(data)
         }
