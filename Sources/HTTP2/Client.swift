@@ -41,7 +41,7 @@ public final class HTTP2Client: BaseStream {
     
     public static func connect(hostname: String, port: UInt16 = 443, settings: HTTP2Settings = HTTP2Settings(), worker: Worker) throws -> Future<HTTP2Client> {
         let tlsClient = try TLSClient(worker: worker)
-        tlsClient.protocols = ["h2"]
+        tlsClient.protocols = ["h2", "http/1.1"]
         
         let client = HTTP2Client(upgrading: tlsClient)
         

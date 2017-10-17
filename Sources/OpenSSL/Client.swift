@@ -4,14 +4,15 @@ import COpenSSL
 /// An SSL client. Can be initialized by upgrading an existing socket or by starting an SSL socket.
 extension SSLStream {
     /// Upgrades the connection to SSL.
-    public func initializeClient(hostname: String, signedBy certificate: String? = nil) throws -> Future<Void> {
+    public func initializeClient(options: [SSLOption]) throws -> Future<Void> {
         let ssl = try self.initialize(side: .client, method: .ssl23)
         
-        var hostname = [UInt8](hostname.utf8)
-        SSL_ctrl(ssl, SSL_CTRL_SET_TLSEXT_HOSTNAME, Int(TLSEXT_NAMETYPE_host_name), &hostname)
+        guard let context = self.context else {
+            throw Error(.noSSLContext)
+        }
         
-        if let certificate = certificate {
-            try self.setCertificate(certificatePath: certificate)
+        for option in options {
+            try option.apply(ssl, context)
         }
         
         return try handshake(for: ssl, side: .client)

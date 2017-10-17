@@ -79,14 +79,6 @@ extension SSLStream {
         return future
     }
     
-    func setCertificate(certificatePath: String) throws {
-        guard let context = context else {
-            throw Error(.noSSLContext)
-        }
-        
-        SSL_CTX_load_verify_locations(context, certificatePath, nil)
-    }
-    
     /// This is mandatory for SSL Servers to work. Optional for Clients.
     ///
     /// The certificate entered is the public key. The private key will be retreived from the keychain.

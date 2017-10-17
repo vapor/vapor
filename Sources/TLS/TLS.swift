@@ -60,7 +60,13 @@ public final class TLSClient: Async.Stream, ClosableStream {
     /// The certificate used by the client, if any
     public var clientCertificatePath: String? = nil
     
-    public var protocols: [String]?
+    public var protocols = [String]() {
+        didSet {
+            preferences = ALPNPreferences(array: protocols)
+        }
+    }
+    
+    var preferences: ALPNPreferences = []
     
     /// Creates a new `TLSClient` by specifying a queue.
     ///
@@ -83,8 +89,8 @@ public final class TLSClient: Async.Stream, ClosableStream {
             
             options.append(.peerDomainName(hostname))
             
-            if let protocols = self.protocols {
-                options.append(.alpn(protocols: protocols))
+            if self.protocols.count > 0 {
+                options.append(.alpn(protocols: self.preferences))
             }
             
             return try self.ssl.initializeClient(options: options)
