@@ -122,7 +122,7 @@ let package = Package(
         .testTarget(name: "RoutingTests", dependencies: ["Routing"]),
         
         // Redis
-        .target(name: "Redis", dependencies: ["Async", "Bits", "TCP"]),
+        .target(name: "Redis", dependencies: ["Async", "Bits", "Debugging", "TCP"]),
         .testTarget(name: "RedisTests", dependencies: ["Redis"]),
 
         // Service
