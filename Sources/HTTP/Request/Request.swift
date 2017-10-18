@@ -20,7 +20,7 @@ import Foundation
 ///
 ///     let req = Request(method: .post, body: "hello")
 ///
-/// See Message
+/// http://localhost:8000/http/request/
 public final class Request: Message {
     /// HTTP requests have a method, like GET or POST
     public var method: Method
