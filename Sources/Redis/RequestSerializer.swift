@@ -3,7 +3,7 @@ import Bits
 import Foundation
 
 /// A streaming Redis value serializer
-final class ValueSerializer: Async.Stream {
+final class DataSerializer: Async.Stream {
     /// See `InputStream.Input`
     typealias Input = RedisData
     
@@ -11,7 +11,7 @@ final class ValueSerializer: Async.Stream {
     typealias Output = ByteBuffer
     
     /// See `BaseStream.errorStream`
-    var errorStream: BaseStream.ErrorHandler?
+    var errorStream: ErrorHandler?
     
     /// See `OutputStream.outputStream`
     var outputStream: OutputHandler?

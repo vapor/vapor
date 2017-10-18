@@ -3,12 +3,12 @@ import Bits
 import Foundation
 
 /// A streaming Redis value parser
-final class ValueParser: Async.InputStream {
+final class DataParser: Async.InputStream {
     /// See `InputStream.Input`
     typealias Input = ByteBuffer
     
     /// See `BaseStream.errorStream`
-    var errorStream: BaseStream.ErrorHandler?
+    var errorStream: ErrorHandler?
     
     /// A set of promises awaiting a response
     var responseQueue = [Promise<PartialRedisData>]()

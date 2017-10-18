@@ -6,7 +6,7 @@ extension RedisClient {
     /// - returns: A future that will be completed (or failed) when the key is stored or failed to be stored
     @discardableResult
     public func set(_ value: RedisData, forKey key: String) -> Future<Void> {
-        return self.runCommand(["SET", RedisData(bulk: key), value]).map { result in
+        return self.run(command: "SET", arguments: [RedisData(bulk: key), value]).map { result in
             if case .error(let error) = result {
                 throw error
             }
@@ -20,7 +20,7 @@ extension RedisClient {
     public func delete(keys: [String]) -> Future<Int> {
         let keys = keys.map { RedisData(bulk: $0) }
         
-        return self.runCommand(.array(["DEL"] + keys)).map { result in
+        return self.run(command: "DEL", arguments: keys).map { result in
             if case .error(let error) = result {
                 throw error
             }
@@ -38,7 +38,7 @@ extension RedisClient {
     /// - returns: A future that will be completed (or failed) with the value associated with this `key`
     @discardableResult
     public func getValue(forKey key: String) -> Future<RedisData> {
-        return self.runCommand(["GET", RedisData(bulk: key)]).map { result in
+        return self.run(command: "GET", arguments: [RedisData(bulk: key)]).map { result in
             if case .error(let error) = result {
                 throw error
             }

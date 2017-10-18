@@ -10,19 +10,19 @@ public final class RedisClient<DuplexByteStream: Async.Stream> where DuplexByteS
     /// The closable binary stream that this client runs on
     let socket: DuplexByteStream
     
-    /// Parses values from binary
-    let valueParser = ValueParser()
+    /// Parses redis data from binary
+    let dataParser = DataParser()
     
-    /// Serializes value to binary
-    let valueSerializer = ValueSerializer()
+    /// Serializes redis data to binary
+    let dataSerializer = DataSerializer()
     
     /// The maximum size of a single response. Prevents excessive memory usage
     public var maximumResponseSize: Int {
         get {
-            return valueParser.maximumResponseSize
+            return dataParser.maximumResponseSize
         }
         set {
-            valueParser.maximumResponseSize = newValue
+            dataParser.maximumResponseSize = newValue
         }
     }
     
@@ -30,11 +30,15 @@ public final class RedisClient<DuplexByteStream: Async.Stream> where DuplexByteS
     ///
     /// - returns: A future containing the server's response
     /// - throws: On network error
-    public func runCommand(_ command: RedisData) -> Future<RedisData> {
+    public func run(command: String, arguments: [RedisData]? = nil) -> Future<RedisData> {
         let promise = Promise<PartialRedisData>()
         
-        valueParser.responseQueue.append(promise)
-        valueSerializer.inputStream(command)
+        dataParser.responseQueue.append(promise)
+        
+        let arguments = arguments ?? []
+        let command = RedisData.array([.basicString(command)] + arguments)
+        
+        dataSerializer.inputStream(command)
         
         return promise.future.map { result in
             guard case .parsed(let value) = result else {
@@ -53,8 +57,8 @@ public final class RedisClient<DuplexByteStream: Async.Stream> where DuplexByteS
             socket.close()
         }
         
-        valueSerializer.drain(into: socket)
-        socket.drain(into: valueParser)
+        dataSerializer.drain(into: socket)
+        socket.drain(into: dataParser)
     }
 }
 
