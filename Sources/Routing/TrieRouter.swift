@@ -54,73 +54,83 @@ public final class TrieRouter: Router {
         // set the resolved nodes responder
         current.responder = route.responder
     }
-
-    /// See Router.route()
-    public func route(request: Request) -> Responder? {
+    
+    fileprivate func split(_ uri: String) -> [Substring] {
         var path = [Substring]()
         path.reserveCapacity(7)
         
         // Skip past the first `/`
-        var baseIndex = request.uri.path.index(after: request.uri.path.startIndex)
+        var baseIndex = uri.index(after: uri.startIndex)
         
-        if baseIndex < request.uri.path.endIndex {
+        if baseIndex < uri.endIndex {
             var currentIndex = baseIndex
             
             // Split up the path
-            while currentIndex < request.uri.path.endIndex {
-                if request.uri.path[currentIndex] == "/" {
-                    path.append(request.uri.path[baseIndex..<currentIndex])
+            while currentIndex < uri.endIndex {
+                if uri[currentIndex] == "/" {
+                    path.append(uri[baseIndex..<currentIndex])
                     
-                    baseIndex = request.uri.path.index(after: currentIndex)
+                    baseIndex = uri.index(after: currentIndex)
                     currentIndex = baseIndex
                 } else {
-                    currentIndex = request.uri.path.index(after: currentIndex)
+                    currentIndex = uri.index(after: currentIndex)
                 }
             }
             
             // Add remaining path component
-            if baseIndex != request.uri.path.endIndex {
-                path.append(request.uri.path[baseIndex...])
+            if baseIndex != uri.endIndex {
+                path.append(uri[baseIndex...])
             }
         }
+        
+        return path
+    }
+    
+    fileprivate func walk<S: StringProtocol>(
+        node current: inout TrieRouterNode,
+        component: S,
+        request: Request
+    ) -> Bool {
+        if let node = current.findConstantNode(at: String(component)) {
+            // if we find a constant route path that matches this component,
+            // then we should use it.
+            current = node
+        } else if let node = current.parameterChild {
+            // if no constant routes were found that match the path, but
+            // a dynamic parameter child was found, we can use it
+            let lazy = LazyParameter(type: node.parameter, value: String(component))
+            request.parameters.parameters.append(lazy)
+            current = node
+        } else {
+            // no constant routes were found, and this node doesn't have
+            // a dynamic parameter child. so no match.
+            return false
+        }
+        
+        return true
+    }
+
+    /// See Router.route()
+    public func route(request: Request) -> Responder? {
+        let path = split(request.uri.path)
         
         // always start at the root node
         var current: TrieRouterNode = root
         
-        func walkingPathSuccessfully<S: StringProtocol>(component: S) -> Bool {
-            if let node = current.findConstantNode(at: String(component)) {
-                // if we find a constant route path that matches this component,
-                // then we should use it.
-                current = node
-            } else if let node = current.parameterChild {
-                // if no constant routes were found that match the path, but
-                // a dynamic parameter child was found, we can use it
-                let lazy = LazyParameter(type: node.parameter, value: String(component))
-                request.parameters.parameters.append(lazy)
-                current = node
-            } else {
-                // no constant routes were found, and this node doesn't have
-                // a dynamic parameter child. so no match.
-                return false
-            }
-            
-            return true
-        }
-        
         // Start with the method
         if request.method == .options, let methodName = request.headers[.accessControlAllowMethods] {
-            guard walkingPathSuccessfully(component: methodName) else {
+            guard walk(node: &current, component: methodName, request: request) else {
                 return nil
             }
         } else {
-            guard walkingPathSuccessfully(component: request.method.string) else {
+            guard walk(node: &current, component: request.method.string, request: request) else {
                 return nil
             }
         }
 
         // traverse the constant path supplied
         for component in path {
-            guard walkingPathSuccessfully(component: component) else {
+            guard walk(node: &current, component: component, request: request) else {
                 return nil
             }
         }
