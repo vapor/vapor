@@ -38,7 +38,8 @@ final class HTTPTestServer {
     /// Start the server. Server protocol requirement.
     public func start(with responder: Responder) throws {
         // create a tcp server
-        let tcp = try TCP.Server(workerCount: workerCount)
+        let socket = try Socket(isNonBlocking: false)
+        let tcp = TCP.Server(socket: socket, workerCount: workerCount)
         let server = HTTP.Server(clientStream: tcp)
         
         // setup the server pipeline
@@ -78,7 +79,8 @@ class WebSocketTests : XCTestCase {
         let promise0 = Promise<Void>()
         let promise1 = Promise<Void>()
 
-        let worker = Worker(queue: .global())
+        let queue = DispatchQueue(label: "test.client")
+        let worker = Worker(queue: queue)
         
         let uri = URI(stringLiteral: "ws://\(CurrentHost.hostname):8080/")
         
@@ -121,7 +123,7 @@ class WebSocketTests : XCTestCase {
             }
             
             promise0.complete(())
-        }.blockingAwait(timeout: .seconds(3))
+        }.blockingAwait(timeout: .seconds(10))
         
         try promise0.future.blockingAwait(timeout: .seconds(10))
         try promise1.future.blockingAwait(timeout: .seconds(10))

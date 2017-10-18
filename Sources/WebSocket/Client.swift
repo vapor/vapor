@@ -21,7 +21,7 @@ extension WebSocket {
         guard
             uri.scheme == "ws" || uri.scheme == "wss",
             let hostname = uri.hostname,
-            let port = uri.defaultPort ?? uri.port
+            let port = uri.port ?? uri.defaultPort
         else {
             throw Error(.invalidURI)
         }

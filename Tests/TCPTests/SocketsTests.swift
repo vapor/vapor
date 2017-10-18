@@ -69,7 +69,6 @@ class SocketsTests: XCTestCase {
             XCTAssertNotNil(accepted)
         }
         read.resume()
-        XCTAssertNotNil(read)
 
         do {
             let client = try Socket(isNonBlocking: false)
