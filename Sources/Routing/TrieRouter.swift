@@ -55,6 +55,7 @@ public final class TrieRouter: Router {
         current.responder = route.responder
     }
     
+    /// Splits the URI into a substring for each component
     fileprivate func split(_ uri: String) -> [Substring] {
         var path = [Substring]()
         path.reserveCapacity(7)
@@ -86,6 +87,11 @@ public final class TrieRouter: Router {
         return path
     }
     
+    /// Walks the provided node based on the provided component.
+    ///
+    /// Returns a boolean for a successful walk
+    ///
+    /// Uses the provided request for parameterized components
     fileprivate func walk<S: StringProtocol>(
         node current: inout TrieRouterNode,
         component: S,
