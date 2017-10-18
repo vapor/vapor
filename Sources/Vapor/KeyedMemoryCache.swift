@@ -2,7 +2,7 @@ import Async
 import Dispatch
 
 /// Stores key-value pair in a dictionary thread-safely
-public final class KeyedDictionaryCache: KeyedCache {
+public final class InMemoryKeyedCache: KeyedCache {
     /// The underlying storage of this cache
     var storage = [String: Any]()
     

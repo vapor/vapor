@@ -1,10 +1,10 @@
 import HTTP
 
-extension Request {
+extension SessionCookie {
     /// Extracts a `SessionCookie` from this `Request`.
     ///
     /// Requires the `SessionCookie` to be set by `SessionCookieMiddleware`
-    public func getSessionCookie<SC: SessionCookie>(named cookieName: String? = nil) throws -> SC {
+    public init(from request: Request, named cookieName: String? = nil) throws {
         let extendToken: String
         
         // No cookieName means attempting to use the last set cookie
@@ -14,10 +14,10 @@ extension Request {
             extendToken = "vapor:last-session-cookie"
         }
         
-        guard let session = self.extend[extendToken] as? SC else {
-            throw Error(identifier: "session-cookie:not-found", reason: "The session cookie of the type '\(SC.self)' was not found at the key '\(extendToken)' in this Request")
+        guard let session = request.extend[extendToken] as? Self else {
+            throw Error(identifier: "session-cookie:not-found", reason: "The session cookie of the type '\(Self.self)' was not found at the key '\(extendToken)' in this Request")
         }
         
-        return session
+        self = session
     }
 }
