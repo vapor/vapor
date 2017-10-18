@@ -7,22 +7,66 @@ public struct RedisError: Swift.Error {
 }
 
 /// A Redis primitive value
-public indirect enum RedisData {
+public struct RedisData {
+    /// Internal storage abstraction
+    indirect enum Storage {
+        case null
+        case basicString(String)
+        case bulkString(Data)
+        case error(RedisError)
+        case integer(Int)
+        case array([RedisData])
+    }
+    
+    /// Stores the actual value so we don't have to break the API
+    var storage: Storage
+    
+    /// Creates a new RedisData
+    private init(storage: Storage) {
+        self.storage = storage
+    }
+    
     /// Initializes a bulk string from a String
     public init(bulk: String) {
         self = .bulkString(Data(bulk.utf8))
     }
     
-    case null
-    case basicString(String)
-    case bulkString(Data)
-    case error(RedisError)
-    case integer(Int)
-    case array([RedisData])
+    /// Creates a BasicString. Used for command names and basic responses
+    public static func basicString(_ string: String) -> RedisData {
+        return RedisData(storage: .basicString(string))
+    }
+    
+    /// Creates a textual bulk string, or a "normal" String
+    public static func bulkString(_ string: String) -> RedisData {
+        return RedisData(storage: .bulkString(Data(string.utf8)))
+    }
+    
+    /// Creates a binary bulk string, or a "normal" Data
+    public static func bulkString(_ data: Data) -> RedisData {
+        return RedisData(storage: .bulkString(data))
+    }
+    
+    /// Creates an array of redis data
+    public static func array(_ data: [RedisData]) -> RedisData {
+        return RedisData(storage: .array(data))
+    }
+    
+    /// Creates a new Redis Integer Data
+    public static func integer(_ int: Int) -> RedisData {
+        return RedisData(storage: .integer(int))
+    }
+    
+    /// Creates a redis Error
+    public static func error(_ error: RedisError) -> RedisData {
+        return RedisData(storage: .error(error))
+    }
+    
+    /// Redis' Null
+    public static let null = RedisData(storage: .null)
     
     /// Extracts the basic/bulk string as a `String`.
     public var string: String? {
-        switch self {
+        switch self.storage {
         case .basicString(let string):
             return string
         case .bulkString(let data):

@@ -36,7 +36,7 @@ fileprivate let nullData = Data("$-1\r\n".utf8)
 extension RedisData {
     /// Serializes a single value
     func serialize() -> Data {
-        switch self {
+        switch self.storage {
         case .null:
             return nullData
         case .basicString(let string):
