@@ -70,10 +70,12 @@ public final class TrieRouter: Router {
             while currentIndex < request.uri.path.endIndex {
                 if request.uri.path[currentIndex] == "/" {
                     path.append(request.uri.path[baseIndex..<currentIndex])
+                    
+                    baseIndex = request.uri.path.index(after: currentIndex)
+                    currentIndex = baseIndex
+                } else {
                     currentIndex = request.uri.path.index(after: currentIndex)
                 }
-                
-                currentIndex = request.uri.path.index(after: currentIndex)
             }
             
             // Add remaining path component
