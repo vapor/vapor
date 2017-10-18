@@ -37,7 +37,7 @@ extension RedisClient {
     ///
     /// - returns: A future that will be completed (or failed) with the value associated with this `key`
     @discardableResult
-    public func getValue(forKey key: String) -> Future<RedisData> {
+    public func getData(forKey key: String) -> Future<RedisData> {
         return self.run(command: "GET", arguments: [RedisData(bulk: key)]).map { result in
             if case .error(let error) = result {
                 throw error
