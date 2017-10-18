@@ -1,5 +1,5 @@
 import Multipart
-import Bits
+import HTTP
 import XCTest
 
 class MultipartTests: XCTestCase {
@@ -35,11 +35,10 @@ Content-Disposition: form-data; name="multinamed[]"; filename=""\r
 ------WebKitFormBoundaryPVOZifB9OqEwP2fn--\r
 """
         
-        let body = Data(data.utf8)
-            
-        let form = try body.withUnsafeBytes { (pointer: BytesPointer) in
-            return try MultipartParser.parse(multipart: ByteBuffer(start: pointer, count: body.count), boundary: Data("----WebKitFormBoundaryPVOZifB9OqEwP2fn".utf8))
-        }
+        let body = Body(Data(data.utf8))
+        
+        let form = try MultipartParser.parse(from: body, boundary: Data("----WebKitFormBoundaryPVOZifB9OqEwP2fn".utf8))
+        
         
         XCTAssertEqual(form.parts.count, 3)
         
@@ -65,11 +64,9 @@ Content-Disposition: form-data; name="multinamed[]"; filename=""\r
         ------WebKitFormBoundaryPVOZifB9OqEwP2fn--\r
         """
         
-        let body = Data(data.utf8)
+        let body = Body(Data(data.utf8))
         
-        let multipart = try body.withUnsafeBytes { (pointer: BytesPointer) in
-            return try MultipartParser.parse(multipart: ByteBuffer(start: pointer, count: body.count), boundary: Data("----WebKitFormBoundaryPVOZifB9OqEwP2fn".utf8))
-        }
+        let multipart = try MultipartParser.parse(from: body, boundary: Data("----WebKitFormBoundaryPVOZifB9OqEwP2fn".utf8))
         
         let files = multipart.getFiles(forName: "multinamed[]")
         

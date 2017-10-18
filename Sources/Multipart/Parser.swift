@@ -210,12 +210,27 @@ public final class MultipartParser {
     
     /// Parses the input mulitpart data using the provided boundary
     ///
-    /// - throws: If the multipart data is invalid
-    public static func parse(multipart data: ByteBuffer, boundary: Data) throws -> Form {
-        let parser = MultipartParser(data: data, boundary: boundary)
+    /// - throws: If the multipart data is an invalid Multipart form
+    public static func parse(from buffer: ByteBuffer, boundary: Data) throws -> Form {
+        let parser = MultipartParser(data: buffer, boundary: boundary)
         
         try parser.parse()
         
         return parser.multipart
+    }
+    
+    /// Parses the input mulitpart body using the provided boundary
+    ///
+    /// - throws: If the multipart data is an invalid Multipart form
+    public static func parse(from body: Body, boundary: Data) throws -> Form {
+        return try body.withUnsafeBytes { pointer in
+            let buffer = ByteBuffer(start: pointer, count: body.count)
+            
+            let parser = MultipartParser(data: buffer, boundary: boundary)
+            
+            try parser.parse()
+            
+            return parser.multipart
+        }
     }
 }
