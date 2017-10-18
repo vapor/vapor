@@ -30,7 +30,7 @@ public final class Parser {
     // Requires `n` bytes
     fileprivate func require(_ n: Int) throws {
         guard position + n < data.count else {
-            throw Error(identifier: "multipart:missing-data", reason: "Invalid multipart formatting")
+            throw MultipartError(identifier: "multipart:missing-data", reason: "Invalid multipart formatting")
         }
     }
     
@@ -48,7 +48,7 @@ public final class Parser {
         
         headerKey: while true {
             guard position + offset < data.count else {
-                throw Error(identifier: "multipart:eof", reason: "Unexpected end of multipart")
+                throw MultipartError(identifier: "multipart:eof", reason: "Unexpected end of multipart")
             }
             
             if data[position &+ offset] == trigger {
@@ -68,7 +68,7 @@ public final class Parser {
     /// Asserts that the position is on top of two hyphens
     fileprivate func assertBoundaryStartEnd() throws {
         guard data[position] == .hyphen, data[position &+ 1] == .hyphen else {
-            throw Error(identifier: "multipart:boundary", reason: "Invalid multipart formatting")
+            throw MultipartError(identifier: "multipart:boundary", reason: "Invalid multipart formatting")
         }
     }
     
@@ -89,7 +89,7 @@ public final class Parser {
             
             // header key
             guard let key = try scanStringUntil(.colon) else {
-                throw Error(identifier: "multipart:invalid-header-key", reason: "Invalid multipart header key string encoding")
+                throw MultipartError(identifier: "multipart:invalid-header-key", reason: "Invalid multipart header key string encoding")
             }
             
             // skip space (': ')
@@ -97,7 +97,7 @@ public final class Parser {
             
             // header value
             guard let value = try scanStringUntil(.carriageReturn) else {
-                throw Error(identifier: "multipart:invalid-header-value", reason: "Invalid multipart header value string encoding")
+                throw MultipartError(identifier: "multipart:invalid-header-value", reason: "Invalid multipart header value string encoding")
             }
             
             headers[Headers.Name(key)] = value
@@ -137,7 +137,7 @@ public final class Parser {
         // If a different encoding mechanism is specified, use that
         if let encodingString = headers[.contentTransferEncoding] {
             guard let registeredCoder = TransferEncoding.registery[encodingString] else {
-                throw Error(identifier: "multipart:body-encoding", reason: "Unknown multipart encoding")
+                throw MultipartError(identifier: "multipart:body-encoding", reason: "Unknown multipart encoding")
             }
             
             decoder = try registeredCoder.decoder(headers)
@@ -154,7 +154,7 @@ public final class Parser {
     /// Parses the `Data` and adds it to the Multipart.
     fileprivate func parse() throws {
         guard multipart.parts.count == 0 else {
-            throw Error(identifier: "multipart:multiple-parses", reason: "Multipart may only be parsed once")
+            throw MultipartError(identifier: "multipart:multiple-parses", reason: "Multipart may only be parsed once")
         }
         
         while position < data.count {
@@ -169,7 +169,7 @@ public final class Parser {
             
             // check boundary
             guard data[position..<position &+ boundary.count] == boundary else {
-                throw Error(identifier: "multipart:boundary", reason: "Wrong boundary")
+                throw MultipartError(identifier: "multipart:boundary", reason: "Wrong boundary")
             }
             
             // skip boundary
@@ -183,7 +183,7 @@ public final class Parser {
             var headers = try readHeaders()
             
             guard let content = headers[.contentDisposition], content.starts(with: "form-data") else {
-                throw Error(identifier: "multipart:headers", reason: "Invalid content disposition")
+                throw MultipartError(identifier: "multipart:headers", reason: "Invalid content disposition")
             }
             
             let key = headers[.contentDisposition, "name"]
@@ -193,7 +193,7 @@ public final class Parser {
             // If it doesn't end in a second `\r\n`, this must be the end of the data z
             guard try carriageReturnNewLine() else {
                 guard data[position] == .hyphen, data[position &+ 1] == .hyphen else {
-                    throw Error(identifier: "multipart:invalid-eof", reason: "Invalid multipart ending")
+                    throw MultipartError(identifier: "multipart:invalid-eof", reason: "Invalid multipart ending")
                 }
                 
                 return
