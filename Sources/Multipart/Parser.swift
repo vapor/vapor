@@ -1,10 +1,11 @@
 import Foundation
+import Bits
 import HTTP
 
 /// An enum with no cases can't be instantiated
 ///
 /// This parser can only be used statically, a design choice considering the way multipart is best parsed
-public final class Parser {
+public final class MultipartParser {
     /// The boundary between all parts
     fileprivate let boundary: Data
     
@@ -12,7 +13,7 @@ public final class Parser {
     fileprivate let fullBoundary: Data
     
     /// The multipart form data to parse
-    fileprivate let data: Data
+    fileprivate let data: ByteBuffer
     
     /// The current position, used for parsing
     var position = 0
@@ -21,7 +22,7 @@ public final class Parser {
     var multipart = Form(parts: [])
     
     /// Creates a new parser for a Multipart form
-    init(data: Data, boundary: Data) {
+    init(data: ByteBuffer, boundary: Data) {
         self.data = data
         self.boundary = boundary
         self.fullBoundary = Data([.carriageReturn, .newLine, .hyphen, .hyphen] + boundary)
@@ -110,17 +111,19 @@ public final class Parser {
     fileprivate func seekUntilBoundary() throws -> Data {
         var base = position
         
-        // Seeks to the end of this part's content
-        contentSeek: while true {
-            try require(fullBoundary.count)
-            
-            // The first 2 bytes match, check if a boundary is hit
-            if data[base] == fullBoundary[0], data[base &+ 1] == fullBoundary[1], data[base..<base + fullBoundary.count] == fullBoundary {
-                defer { position = base }
-                return Data(data[position..<base])
+        return try fullBoundary.withUnsafeBytes { (boundaryPointer: BytesPointer) throws -> Data in
+            // Seeks to the end of this part's content
+            contentSeek: while true {
+                try require(fullBoundary.count)
+                
+                // The first 2 bytes match, check if a boundary is hit
+                if data[base] == fullBoundary[0], data[base &+ 1] == fullBoundary[1], memcmp(boundaryPointer, data.baseAddress!.advanced(by: base), fullBoundary.count) == 0 {
+                    defer { position = base }
+                    return Data(data[position..<base])
+                }
+                
+                base = base &+ 1
             }
-            
-            base = base &+ 1
         }
     }
     
@@ -167,9 +170,11 @@ public final class Parser {
             // skip '--'
             position = position &+ 2
             
-            // check boundary
-            guard data[position..<position &+ boundary.count] == boundary else {
-                throw MultipartError(identifier: "multipart:boundary", reason: "Wrong boundary")
+            try boundary.withUnsafeBytes { (boundaryPointer: BytesPointer) in
+                // check boundary
+                guard memcmp(data.baseAddress!.advanced(by: position), boundaryPointer, boundary.count) == 0 else {
+                    throw MultipartError(identifier: "multipart:boundary", reason: "Wrong boundary")
+                }
             }
             
             // skip boundary
@@ -206,8 +211,8 @@ public final class Parser {
     /// Parses the input mulitpart data using the provided boundary
     ///
     /// - throws: If the multipart data is invalid
-    public static func parse(multipart data: Data, boundary: Data) throws -> Form {
-        let parser = Parser(data: data, boundary: boundary)
+    public static func parse(multipart data: ByteBuffer, boundary: Data) throws -> Form {
+        let parser = MultipartParser(data: data, boundary: boundary)
         
         try parser.parse()
         
