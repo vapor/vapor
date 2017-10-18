@@ -5,6 +5,8 @@ import HTTP
 /// An enum with no cases can't be instantiated
 ///
 /// This parser can only be used statically, a design choice considering the way multipart is best parsed
+///
+/// http://localhost:8000/http/multipart/#parsing-a-multipart-form
 public final class MultipartParser {
     /// The boundary between all parts
     fileprivate let boundary: Data

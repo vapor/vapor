@@ -2,6 +2,8 @@ import Foundation
 import HTTP
 
 /// A single part
+///
+/// http://localhost:8000/http/multipart/#reading-forms
 public struct Part {
     /// The part's containing data
     public var data: Data
@@ -21,6 +23,8 @@ public struct Part {
 }
 
 /// A Multipart, commonly used in HTTP Forms and SMTP emails
+///
+/// http://localhost:8000/http/multipart/#reading-forms
 public struct Form {
     /// All raw parts in this multipart
     public var parts: [Part]
