@@ -25,7 +25,7 @@ class ApplicationTests: XCTestCase {
             uri: "/good",
             headers: [
                 .origin: "http://localhost:8090",
-                .accessControlRequestHeaders: "POST",
+                .accessControlRequestMethod: "POST",
             ]
         )
         
@@ -34,8 +34,8 @@ class ApplicationTests: XCTestCase {
         XCTAssertEqual(response?.status, 200)
         
         response?.body.withUnsafeBytes { pointer in
-            let data = Data(ByteBuffer(start: pointer, count: response!.body.count))
-            XCTAssertNotEqual(data, Data("hello".utf8))
+            let data = Array(ByteBuffer(start: pointer, count: response!.body.count))
+            XCTAssertNotEqual(data, Array("hello".utf8))
         }
         
         request = Request(method: .get, uri: "/good")

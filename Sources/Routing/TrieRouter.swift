@@ -123,15 +123,16 @@ public final class TrieRouter: Router {
         // always start at the root node
         var current: TrieRouterNode = root
         
+        // Options exception
+        if request.method == .options, request.headers[.accessControlRequestMethod] != nil {
+            return BasicSyncResponder { _ in
+                return Response()
+            }
+        }
+        
         // Start with the method
-        if request.method == .options, let methodName = request.headers[.accessControlRequestMethod] {
-            guard walk(node: &current, component: methodName, request: request) else {
-                return nil
-            }
-        } else {
-            guard walk(node: &current, component: request.method.string, request: request) else {
-                return nil
-            }
+        guard walk(node: &current, component: request.method.string, request: request) else {
+            return nil
         }
 
         // traverse the constant path supplied
