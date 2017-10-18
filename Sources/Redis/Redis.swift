@@ -43,7 +43,7 @@ public final class RedisClient<DuplexByteStream: Async.Stream> where DuplexByteS
         
         return promise.future.map { result in
             guard case .parsed(let value) = result else {
-                throw Error(.parsingError)
+                throw RedisError(.parsingError)
             }
             
             return value

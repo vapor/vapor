@@ -26,7 +26,7 @@ extension RedisClient {
             }
             
             guard case .integer(let int) = result.storage else {
-                throw Error(.unexpectedResult(result))
+                throw RedisError(.unexpectedResult(result))
             }
             
             return int

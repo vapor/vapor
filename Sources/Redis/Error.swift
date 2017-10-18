@@ -1,6 +1,6 @@
 import Debugging
 
-public struct Error: Debuggable, Traceable, Swift.Error, Encodable {
+public struct RedisError: Debuggable, Traceable, Swift.Error, Encodable {
     /// rrors
     enum ClientError {
         /// Parsing the Value's token failed because the value's identifying token is unknown
@@ -11,6 +11,9 @@ public struct Error: Debuggable, Traceable, Swift.Error, Encodable {
         
         /// The command's result was unexpected
         case unexpectedResult(RedisData)
+        
+        /// A server-side error
+        case serverSide(String)
     }
     
     /// This error's kind
@@ -25,6 +28,8 @@ public struct Error: Debuggable, Traceable, Swift.Error, Encodable {
             return "The server response was unsuccessfully parsed"
         case .unexpectedResult(let result):
             return "The server response was successfully parsed but did not match driver expectations. The result was: \(result)"
+        case .serverSide(let reason):
+            return reason
         }
     }
     
@@ -37,6 +42,8 @@ public struct Error: Debuggable, Traceable, Swift.Error, Encodable {
             return "responseParsingError"
         case .unexpectedResult(let result):
             return "Unexpected result: (\(result))"
+        case .serverSide(let reason):
+            return "Server error: \(reason)"
         }
     }
     
@@ -63,6 +70,6 @@ public struct Error: Debuggable, Traceable, Swift.Error, Encodable {
         self.function = function
         self.line = line
         self.column = column
-        self.stackTrace = Error.makeStackTrace()
+        self.stackTrace = RedisError.makeStackTrace()
     }
 }

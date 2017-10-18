@@ -1,11 +1,5 @@
 import Foundation
 
-/// A Redis error
-public struct RedisError: Swift.Error {
-    /// The error message
-    public let string: String
-}
-
 /// A Redis primitive value
 public struct RedisData {
     /// Internal storage abstraction

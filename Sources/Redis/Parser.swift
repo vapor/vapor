@@ -92,7 +92,7 @@ final class DataParser: Async.InputStream {
             string.count > 1,
             let number = Int(string[integerIndex..<integerEnd])
         else {
-            throw Error(.parsingError)
+            throw RedisError(.parsingError)
         }
         
         return number
@@ -117,7 +117,7 @@ final class DataParser: Async.InputStream {
                 return nil
             }
             
-            return (.parsed(.error(RedisError(string: string))), true)
+            return (.parsed(.error(RedisError(.serverSide(string)))), true)
         case ":":
             // Integer
             guard let number = try integer(from: &position) else {
@@ -136,7 +136,7 @@ final class DataParser: Async.InputStream {
                 size >= -1,
                 size < responseBuffer.distance(from: position, to: responseBuffer.endIndex)
             else {
-                throw Error(.parsingError)
+                throw RedisError(.parsingError)
             }
             
             let endPosition = responseBuffer.index(position, offsetBy: size)
@@ -153,7 +153,7 @@ final class DataParser: Async.InputStream {
             }
             
             guard size >= 0 else {
-                throw Error(.parsingError)
+                throw RedisError(.parsingError)
             }
             
             var array = [PartialRedisData](repeating: .notYetParsed, count: size)
@@ -181,13 +181,13 @@ final class DataParser: Async.InputStream {
             // All elements have been parsed, return the complete array
             return (.parsed(.array(try array.map { value in
                 guard case .parsed(let value) = value else {
-                    throw Error(.parsingError)
+                    throw RedisError(.parsingError)
                 }
                 
                 return value
             })), true)
         default:
-            throw Error(.invalidTypeToken)
+            throw RedisError(.invalidTypeToken)
         }
     }
     
@@ -257,7 +257,7 @@ final class DataParser: Async.InputStream {
             if let parsingValue = parsingValue {
                 // The only half-parsed values can be arrays
                 guard case .parsing(let values) = parsingValue else {
-                    throw Error(.parsingError)
+                    throw RedisError(.parsingError)
                 }
                 
                 guard try continueParsing(partialValues: values) else {

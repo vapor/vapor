@@ -42,7 +42,7 @@ extension RedisData {
         case .basicString(let string):
             return Data(("+" + string).utf8)
         case .error(let error):
-            return Data(("-" + error.string).utf8)
+            return Data(("-" + error.reason).utf8)
         case .integer(let int):
             return Data(":\(int)\r\n".utf8)
         case .bulkString(let data):
