@@ -1,4 +1,5 @@
 import Foundation
+import HTTP
 
 /// An enum with no cases can't be instantiated
 ///

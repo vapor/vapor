@@ -1,4 +1,5 @@
 import Foundation
+import HTTP
 
 /// A single part
 public struct Part {
