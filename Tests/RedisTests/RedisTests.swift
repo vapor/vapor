@@ -1,6 +1,7 @@
 import XCTest
 import Dispatch
 import Async
+import TCP
 import Core
 @testable import Redis
 
@@ -12,7 +13,7 @@ class RedisTests: XCTestCase {
     func testCRUD() throws {
         let queue = DispatchQueue(label: "test.kaas")
         
-        let connection = try Redis.connect(hostname: "localhost", worker: Worker(queue: queue)).blockingAwait(timeout: .seconds(1))
+        let connection = try RedisClient<TCPClient>.connect(hostname: "localhost", worker: Worker(queue: queue)).blockingAwait(timeout: .seconds(1))
         
         _ = try connection.delete(keys: ["*"]).blockingAwait(timeout: .seconds(1))
         

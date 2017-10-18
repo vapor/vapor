@@ -62,18 +62,19 @@ public final class RedisClient<DuplexByteStream: Async.Stream> where DuplexByteS
     }
 }
 
-/// Connects to `Redis` using on a TCP socket to the provided hostname and port
-///
-/// Listens to the socket using the provided `DispatchQueue`
-public func connect(hostname: String = "localhost", port: UInt16 = 6379, worker: Worker) throws -> Future<RedisClient<TCPClient>> {
-    let socket = try TCP.Socket()
-    try socket.connect(hostname: hostname, port: port)
-    
-    return socket.writable(queue: worker.queue).map { _ in
-        let client = TCPClient(socket: socket, worker: worker)
-        client.start()
+extension RedisClient where DuplexByteStream == TCPClient {
+    /// Connects to `Redis` using on a TCP socket to the provided hostname and port
+    ///
+    /// Listens to the socket using the provided `DispatchQueue`
+    public func connect(hostname: String = "localhost", port: UInt16 = 6379, worker: Worker) throws -> Future<RedisClient<TCPClient>> {
+        let socket = try TCP.Socket()
+        try socket.connect(hostname: hostname, port: port)
         
-        return RedisClient<TCPClient>(socket: client)
+        return socket.writable(queue: worker.queue).map { _ in
+            let client = TCPClient(socket: socket, worker: worker)
+            client.start()
+            
+            return RedisClient<TCPClient>(socket: client)
+        }
     }
 }
-
