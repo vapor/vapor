@@ -1,6 +1,7 @@
 import Async
 import Bits
 import Dispatch
+import Foundation
 import TCP
 
 /// A Redis client
@@ -36,7 +37,7 @@ public final class RedisClient<DuplexByteStream: Async.Stream> where DuplexByteS
         dataParser.responseQueue.append(promise)
         
         let arguments = arguments ?? []
-        let command = RedisData.array([.basicString(command)] + arguments)
+        let command = RedisData.array([.bulkString(Data(command.utf8))] + arguments)
         
         dataSerializer.inputStream(command)
         
