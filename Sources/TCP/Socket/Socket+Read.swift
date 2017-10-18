@@ -6,14 +6,14 @@ import libc
 extension Socket {
     /// Read data from the socket into the supplied buffer.
     /// Returns the amount of bytes actually read.
-    public func read(max: Int, into buffer: MutableByteBuffer) throws -> Int {
-        let receivedBytes = libc.read(descriptor, buffer.baseAddress.unsafelyUnwrapped, max)
+    public func read(max: Int, into pointer: MutableBytesPointer) throws -> Int {
+        let receivedBytes = libc.read(descriptor, pointer, max)
         
         guard receivedBytes != -1 else {
             switch errno {
             case EINTR:
                 // try again
-                return try read(max: max, into: buffer)
+                return try read(max: max, into: pointer)
             case ECONNRESET:
                 // closed by peer, need to close this side.
                 // Since this is not an error, no need to throw unless the close
@@ -42,14 +42,14 @@ extension Socket {
     
     /// Reads bytes and copies them into a Data struct.
     public func read(max: Int) throws -> Data {
-        var pointer = MutableBytesPointer.allocate(capacity: max)
-        defer {
-            pointer.deallocate(capacity: max)
-            pointer.deinitialize(count: max)
+        var data = Data(repeating: 0, count: max)
+        
+        let read = try data.withUnsafeMutableBytes { (pointer: MutableBytesPointer) in
+            return try self.read(max: max, into: pointer)
         }
-        let buffer = MutableByteBuffer(start: pointer, count: max)
-        let read = try self.read(max: max, into: buffer)
-        let frame = ByteBuffer(start: pointer, count: read)
-        return Data(buffer: frame)
+        
+        data.removeLast(data.count &- read)
+        
+        return data
     }
 }

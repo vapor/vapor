@@ -26,7 +26,9 @@ extension Packet {
 extension Row {
     /// A small helper to append a column and field to the fields array
     fileprivate mutating func append(_ value: Column, forField field: Field) {
-        self.fields.append((field: field, column: value))
+        self.fieldNames.append(field.name)
+        self.fields.append(field)
+        self.columns.append(value)
     }
     
     /// Decodes the value's Data as a binary type from the provided field
@@ -34,8 +36,6 @@ extension Row {
         switch field.fieldType {
         case .null:
             append(.null, forField: field)
-        case .varString:
-            append(.varString(value), forField: field)
         default:
             throw Error(.unsupported)
         }
@@ -44,6 +44,8 @@ extension Row {
     /// Decodes the value's Data as a text expressed type from the provided field
     mutating func append(_ value: String, forField field: Field) throws {
         switch field.fieldType {
+        case .varString:
+            append(.varString(value), forField: field)
         case .null:
             append(.null, forField: field)
         case .string:
