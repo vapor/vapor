@@ -66,7 +66,7 @@ extension RedisClient where DuplexByteStream == TCPClient {
     /// Connects to `Redis` using on a TCP socket to the provided hostname and port
     ///
     /// Listens to the socket using the provided `DispatchQueue`
-    public func connect(hostname: String = "localhost", port: UInt16 = 6379, worker: Worker) throws -> Future<RedisClient<TCPClient>> {
+    public static func connect(hostname: String = "localhost", port: UInt16 = 6379, worker: Worker) throws -> Future<RedisClient<TCPClient>> {
         let socket = try TCP.Socket()
         try socket.connect(hostname: hostname, port: port)
         

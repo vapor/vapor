@@ -15,7 +15,7 @@ extension SessionCookie {
         }
         
         guard let session = request.extend[extendToken] as? Self else {
-            throw Error(identifier: "session-cookie:not-found", reason: "The session cookie of the type '\(Self.self)' was not found at the key '\(extendToken)' in this Request")
+            throw SessionsError.cookieNotFound(name: cookieName, type: Self.self)
         }
         
         self = session
