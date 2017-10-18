@@ -1,4 +1,6 @@
 /// A `Cookie` Array
+///
+/// http://localhost:8000/http/cookies/#multiple-cookies
 public struct Cookies: ExpressibleByArrayLiteral, ExpressibleByDictionaryLiteral {
     /// All `Cookie`s contained
     public var cookies = [Cookie]()

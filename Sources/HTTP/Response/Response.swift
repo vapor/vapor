@@ -20,7 +20,7 @@ import Foundation
 ///
 ///     let res = Response(status: .ok, body: "hello")
 ///
-/// See Message
+/// http://localhost:8000/http/response/
 public final class Response: Message {
     /// See Message.version
     public var version: Version
@@ -68,11 +68,15 @@ extension Response {
 }
 
 /// Can be converted from a response.
+///
+/// http://localhost:8000/http/response/#responseinitializable
 public protocol ResponseInitializable {
     init(response: Response) throws
 }
 
 /// Can be converted to a response
+///
+/// http://localhost:8000/http/response/#responserepresentable
 public protocol ResponseRepresentable {
     /// Makes a response using the context provided by the Request
     func makeResponse(for request: Request) throws -> Response

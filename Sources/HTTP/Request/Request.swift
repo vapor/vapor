@@ -74,20 +74,20 @@ extension Request {
     }
 }
 
-/// Can be converted from a response.
+/// Can be converted from a request.
 public protocol RequestInitializable {
     init(request: Request) throws
 }
 
-/// Can be converted to a response
+/// Can be converted to a request
 public protocol RequestRepresentable {
     func makeRequest() throws -> Request
 }
 
-/// Can be converted from and to a response
+/// Can be converted from and to a request
 public typealias RequestConvertible = RequestInitializable & RequestRepresentable
 
-// MARK: Response Conformance
+// MARK: Request Conformance
 
 extension Request: RequestRepresentable {
     public func makeRequest() throws -> Request {
