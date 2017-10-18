@@ -29,6 +29,7 @@ public final class Future<T>: FutureType {
     /// Can only be created by a Promise, so this is hidden
     internal init() {
         awaiters = []
+        awaiters.reserveCapacity(5)
         result = nil
     }
 

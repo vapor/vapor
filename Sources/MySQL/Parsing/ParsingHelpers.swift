@@ -105,18 +105,13 @@ class Parser {
     }
     
     func parseLenEncData() throws -> Data {
-        let length = Int(try parseLenEnc())
-        
-        guard position &+ length <= self.payload.count else {
-            throw MySQLError(.invalidResponse)
-        }
-        
-        defer { position = position &+ length }
+        let length = try skipLenEnc()
         
         return Data(self.payload[position..<position &+ length])
     }
     
-    func parseLenEncString() throws -> String {
+    @discardableResult
+    func skipLenEnc() throws -> Int {
         let length = Int(try parseLenEnc())
         
         guard position &+ length <= self.payload.count else {
@@ -125,6 +120,17 @@ class Parser {
         
         defer { position = position &+ length }
         
-        return String(bytes: self.payload[position..<position &+ length], encoding: .utf8) ?? ""
+        return length
+    }
+    
+    func parseLenEncString() throws -> String {
+        let length = try skipLenEnc()
+        
+        let buffer = UnsafeMutablePointer<UInt8>.allocate(capacity: length)
+        memcpy(buffer, self.payload.baseAddress!.advanced(by: position &- length), length)
+        
+        let result = String.init(bytesNoCopy: buffer, length: length, encoding: .utf8, freeWhenDone: true)
+        
+        return result ?? ""
     }
 }

@@ -36,6 +36,19 @@ public final class Connection {
     /// A future promise
     var authenticated: Promise<Void>
     
+    // A buffer that stores all packets before writing
+    let writeBuffer = UnsafeMutablePointer<UInt8>.allocate(capacity: Packet.maxPayloadSize &+ 4)
+    
+    let readBuffer = UnsafeMutablePointer<UInt8>.allocate(capacity: Int(UInt16.max))
+    
+    deinit {
+        writeBuffer.deinitialize(count: Packet.maxPayloadSize &+ 4)
+        writeBuffer.deallocate(capacity: Packet.maxPayloadSize &+ 4)
+        
+        readBuffer.deinitialize(count: Int(UInt16.max))
+        readBuffer.deallocate(capacity: Int(UInt16.max))
+    }
+    
     /// The client's capabilities
     var capabilities: Capabilities {
         var base: Capabilities = [
@@ -70,33 +83,17 @@ public final class Connection {
     init(hostname: String, port: UInt16 = 3306, user: String, password: String?, database: String?, queue: DispatchQueue) throws {
         let socket = try Socket()
         
-        let bufferSize = Int(UInt16.max)
-        
-        let pointer = UnsafeMutablePointer<UInt8>.allocate(capacity: bufferSize)
-        let buffer = MutableByteBuffer(start: pointer, count: bufferSize)
+        let buffer = MutableByteBuffer(start: readBuffer, count: Int(UInt16.max))
         
         try socket.connect(hostname: hostname, port: port)
         
         let parser = PacketParser()
-
+        
         let source = DispatchSource.makeReadSource(
             fileDescriptor: socket.descriptor,
             queue: queue
         )
-
-        source.setEventHandler {
-            do {
-                let usedBufferSize = try socket.read(max: bufferSize, into: buffer)
-                
-                // Reuse existing pointer to data
-                let newBuffer = MutableByteBuffer(start: pointer, count: usedBufferSize)
-                
-                parser.inputStream(newBuffer)
-            } catch {
-                socket.close()
-            }
-        }
-        source.resume()
+        
         self.source = source
         
         self.parser = parser
@@ -109,6 +106,20 @@ public final class Connection {
         self.database = database
         
         self.authenticated = Promise<Void>()
+        
+        source.setEventHandler {
+            do {
+                let usedBufferSize = try socket.read(max: numericCast(UInt16.max), into: self.readBuffer)
+                
+                // Reuse existing pointer to data
+                let newBuffer = MutableByteBuffer(start: self.readBuffer, count: usedBufferSize)
+                
+                parser.inputStream(newBuffer)
+            } catch {
+                socket.close()
+            }
+        }
+        source.resume()
         
         self.parser.drain(self.handlePacket)
     }
@@ -144,19 +155,11 @@ public final class Connection {
     
     /// Writes a packet's payload data to the socket
     func write(packetFor data: Data, startingAt start: UInt8 = 0) throws {
-        // Creates a pointer to call the other handler
-        let pointer = UnsafeMutablePointer<UInt8>.allocate(capacity: data.count)
-        
-        defer {
-            // deallocate the pointer after writing is completed
-            pointer.deallocate(capacity: data.count)
+        try data.withUnsafeBytes { (pointer: BytesPointer) in
+            let buffer = ByteBuffer(start: pointer, count: data.count)
+            
+            try write(packetFor: buffer)
         }
-        
-        data.copyBytes(to: pointer, count: data.count)
-        
-        let buffer = ByteBuffer(start: pointer, count: data.count)
-        
-        try write(packetFor: buffer)
     }
     
     /// Writes a packet's payload buffer to the socket
@@ -165,12 +168,6 @@ public final class Connection {
         
         guard let input = data.baseAddress else {
             throw MySQLError(.invalidPacket)
-        }
-        
-        let pointer = UnsafeMutablePointer<UInt8>.allocate(capacity: Packet.maxPayloadSize &+ 4)
-        
-        defer {
-            pointer.deallocate(capacity: Packet.maxPayloadSize &+ 4)
         }
         
         // Starts the packet number at the starting number
@@ -190,17 +187,17 @@ public final class Connection {
                 UInt8((packetSize) & 0xff),
                 UInt8((packetSize >> 8) & 0xff),
                 UInt8((packetSize >> 16) & 0xff),
-            ]
+                ]
             
             defer {
                 offset = offset + dataSize
             }
             
-            memcpy(pointer, packetSizeBytes, 3)
-            pointer[3] = packetNumber
-            memcpy(pointer.advanced(by: 4), input.advanced(by: offset), dataSize)
+            memcpy(self.writeBuffer, packetSizeBytes, 3)
+            self.writeBuffer[3] = packetNumber
+            memcpy(self.writeBuffer.advanced(by: 4), input.advanced(by: offset), dataSize)
             
-            let buffer = ByteBuffer(start: pointer, count: dataSize &+ 4)
+            let buffer = ByteBuffer(start: self.writeBuffer, count: dataSize &+ 4)
             _ = try self.socket.write(max: dataSize &+ 4, from: buffer)
         }
         
