@@ -76,6 +76,8 @@ class WebSocketTests : XCTestCase {
         
         try server.start(with: app)
         
+        sleep(1)
+        
         let promise0 = Promise<Void>()
         let promise1 = Promise<Void>()
 
@@ -145,6 +147,9 @@ struct WebSocketApplication: Responder {
                 websocket.onText { text in
                     let rev = String(text.reversed())
                     websocket.send(rev)
+                }
+                websocket.onBinary { buffer in
+                    websocket.send(buffer)
                 }
             }
             promise.complete(res)
