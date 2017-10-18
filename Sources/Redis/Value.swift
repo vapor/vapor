@@ -1,7 +1,7 @@
 import Foundation
 
 /// A Redis error
-public struct RedisError: Error {
+public struct RedisError: Swift.Error {
     /// The error message
     public let string: String
 }

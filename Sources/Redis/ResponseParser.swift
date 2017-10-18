@@ -92,7 +92,7 @@ final class DataParser: Async.InputStream {
             string.count > 1,
             let number = Int(string[integerIndex..<integerEnd])
         else {
-            throw ClientError.parsingError
+            throw Error(.parsingError)
         }
         
         return number
@@ -136,7 +136,7 @@ final class DataParser: Async.InputStream {
                 size >= -1,
                 size < responseBuffer.distance(from: position, to: responseBuffer.endIndex)
             else {
-                throw ClientError.parsingError
+                throw Error(.parsingError)
             }
             
             let endPosition = responseBuffer.index(position, offsetBy: size)
@@ -153,7 +153,7 @@ final class DataParser: Async.InputStream {
             }
             
             guard size >= 0 else {
-                throw ClientError.parsingError
+                throw Error(.parsingError)
             }
             
             var array = [PartialRedisData](repeating: .notYetParsed, count: size)
@@ -181,13 +181,13 @@ final class DataParser: Async.InputStream {
             // All elements have been parsed, return the complete array
             return (.parsed(.array(try array.map { value in
                 guard case .parsed(let value) = value else {
-                    throw ClientError.parsingError
+                    throw Error(.parsingError)
                 }
                 
                 return value
             })), true)
         default:
-            throw ClientError.invalidTypeToken
+            throw Error(.invalidTypeToken)
         }
     }
     
@@ -257,7 +257,7 @@ final class DataParser: Async.InputStream {
             if let parsingValue = parsingValue {
                 // The only half-parsed values can be arrays
                 guard case .parsing(let values) = parsingValue else {
-                    throw ClientError.parsingError
+                    throw Error(.parsingError)
                 }
                 
                 guard try continueParsing(partialValues: values) else {
