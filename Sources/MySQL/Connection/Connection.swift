@@ -164,7 +164,7 @@ public final class Connection {
         var offset = 0
         
         guard let input = data.baseAddress else {
-            throw Error(.invalidPacket)
+            throw MySQLError(.invalidPacket)
         }
         
         let pointer = UnsafeMutablePointer<UInt8>.allocate(capacity: Packet.maxPayloadSize &+ 4)

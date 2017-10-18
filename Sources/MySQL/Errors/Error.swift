@@ -1,6 +1,37 @@
 import Debugging
 
-public struct Error : Swift.Error, Debuggable, Traceable {
+public struct MySQLError : Swift.Error, Debuggable, Traceable, Helpable {
+    public var possibleCauses: [String] {
+        switch problem {
+        case .invalidCredentials:
+            return [
+                "The username, database and/or password was invalid."
+            ]
+        case .connectionInUse:
+            return [
+                "The connection is already being used by another query."
+            ]
+        default:
+            return []
+        }
+    }
+    
+    public var suggestedFixes: [String] {
+        switch problem {
+        case .invalidCredentials:
+            return [
+                "If you're not using a password on this user, set the password to `nil`, rather than an empty string (\"\")"
+            ]
+        case .connectionInUse:
+            return [
+                "If you're manually managing your connections, ensure a single connection is not used for more than one query at a time.",
+                "If you're not managing connections yourself and are using the ConnectionPool instead, please file a bug report."
+            ]
+        default:
+            return []
+        }
+    }
+    
     /// A description of the problem
     public var reason: String {
         switch problem {
@@ -30,7 +61,7 @@ public struct Error : Swift.Error, Debuggable, Traceable {
          line: UInt = #line,
          column: UInt = #column
     ) {
-        self.stackTrace = Error.makeStackTrace()
+        self.stackTrace = MySQLError.makeStackTrace()
         self.file = file
         self.function = function
         self.line = line
