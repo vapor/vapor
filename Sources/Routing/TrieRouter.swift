@@ -1,6 +1,12 @@
 import HTTP
 
-/// A basic router
+/// A basic router that can route requests depending on the method and URI
+///
+/// http://localhost:8000/routing/router/
+///
+/// http://localhost:8000/routing/async/
+///
+/// http://localhost:8000/routing/sync/
 public final class TrieRouter: Router {
     /// All routes registered to this router
     public private(set) var routes: [Route] = []

@@ -2,6 +2,8 @@ import Async
 import HTTP
 
 /// Capable of register async routes.
+///
+/// http://localhost:8000/routing/async/
 public protocol AsyncRouter: Router { }
 
 extension AsyncRouter {

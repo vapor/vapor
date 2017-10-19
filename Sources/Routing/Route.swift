@@ -2,6 +2,8 @@ import HTTP
 import Async
 
 /// A route. When registered to a router, replies to `Request`s using the `Responder`.
+///
+/// http://localhost:8000/routing/route/
 public final class Route: Extendable {
     /// The path at which the route is assigned
     public var path: [PathComponent]
