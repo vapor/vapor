@@ -4,11 +4,16 @@ import Bits
 
 /// Serializes frames to binary
 final class FrameSerializer : Async.Stream {
+    /// See `InputStream.Input`
     typealias Input = Frame
     
+    /// See `OutputStream.Output`
     typealias Output = ByteBuffer
     
+    /// See `OutputStream.outputStream`
     var outputStream: OutputHandler?
+    
+    /// See `BaseStream.erorStream`
     var errorStream: ErrorHandler?
     
     func inputStream(_ input: Frame) {
@@ -22,8 +27,14 @@ final class FrameSerializer : Async.Stream {
         outputStream?(ByteBuffer(start: input.buffer.baseAddress, count: input.buffer.count))
     }
     
+    /// If true, masks the messages before sending
     let mask: Bool
     
+    /// Creates a FrameSerializer
+    ///
+    /// If masking, masks the messages before sending
+    ///
+    /// Only clients send masked messages
     init(masking: Bool) {
         self.mask = masking
     }

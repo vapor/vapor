@@ -1,4 +1,4 @@
-import Core
+import Async
 import Dispatch
 
 /// An HTTP message.
@@ -42,7 +42,7 @@ extension Message {
     /// body length. This should be called whenever the
     /// body is modified.
     internal func updateContentLength() {
-        headers[.contentLength] = body.data.count.description
+        headers[.contentLength] = body.count.description
     }
 }
 

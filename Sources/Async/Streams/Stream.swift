@@ -13,7 +13,10 @@ public protocol InputStream: BaseStream {
 public protocol ClosableStream: BaseStream {
     /// A handler called when the stream closes.
     typealias CloseHandler = () -> ()
-
+    
+    /// Closes the connection
+    func close()
+    
     /// A function that gets called if the stream closes
     var onClose: CloseHandler? { get set }
 }
@@ -47,6 +50,7 @@ public protocol BaseStream: class {
 
 extension OutputStream {
     /// Drains the output stream into a closure.
+    @discardableResult
     public func drain(_ handler: @escaping OutputHandler) -> Self {
         self.outputStream = handler
         return self

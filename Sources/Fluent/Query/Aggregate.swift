@@ -20,7 +20,7 @@ extension QueryBuilder {
     public func count(field: String? = nil) -> Future<Int> {
         let promise = Promise(Int.self)
 
-        query.action = .aggregate(field: nil, .count)
+        query.action = .aggregate(.count, field: nil)
 
         run(decoding: AggregateResult.self) { res in
             promise.complete(res.fluentAggregate)

@@ -6,9 +6,9 @@ import TCP
 /// Can handle a single `Request` at a given time.
 ///
 /// Multiple requests at the same time are subject to unknown behaviour
-public final class Client {
+public final class HTTPClient {
     /// The underlying TCP Client
-    public let tcp: TCP.Client
+    public let tcp: TCPClient
     
     /// Serializes the inputted `Request`s
     let serializer = RequestSerializer()
@@ -17,7 +17,7 @@ public final class Client {
     let parser = ResponseParser()
     
     /// Creates a new Client wrapped around a `TCP.Client`
-    public init(tcp: TCP.Client) {
+    public init(tcp: TCPClient) {
         self.tcp = tcp
     }
     

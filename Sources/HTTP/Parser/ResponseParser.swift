@@ -46,8 +46,10 @@ public final class ResponseParser: CParser, Async.Stream {
     }
     
     public func parse(from data: Data) throws -> Response? {
-        let buffer = ByteBuffer(start: data.withUnsafeBytes { $0 }, count: data.count)
-        return try parse(from: buffer)
+        return try data.withUnsafeBytes { (pointer: BytesPointer) in
+            let buffer = ByteBuffer(start: pointer, count: data.count)
+            return try parse(from: buffer)
+        }
     }
     
     /// Parses a Request from the stream.

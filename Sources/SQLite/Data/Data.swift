@@ -1,4 +1,3 @@
-import Core
 import Foundation
 
 /// All possibles cases for SQLite data.

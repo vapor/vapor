@@ -53,7 +53,7 @@ extension SQLiteQuery {
 
     /// Bind Bytes to the current bind position.
     @discardableResult
-    public func bind(_ value: Foundation.Data) throws -> Self {
+    public func bind(_ value: Data) throws -> Self {
         let count = Int32(value.count)
         let pointer: UnsafePointer<Byte> = value.withUnsafeBytes { $0 }
         let ret = sqlite3_bind_blob(raw, nextBindPosition, UnsafeRawPointer(pointer), count, SQLITE_TRANSIENT)

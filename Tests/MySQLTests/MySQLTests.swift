@@ -1,4 +1,5 @@
 import XCTest
+import TCP
 @testable import MySQL
 //import JSON
 import Core
@@ -14,10 +15,10 @@ class MySQLTests: XCTestCase {
     ]
     
     override func setUp() {
-        _ = try? pool.dropTables(named: "users", "complex").sync()
+        _ = try? pool.dropTables(named: "users", "complex").blockingAwait()
     }
     
-    let pool = ConnectionPool(hostname: "localhost", user: "root", password: nil, database: "test", queue: .global())
+    let pool = ConnectionPool(hostname: CurrentHost.hostname, user: "root", password: nil, database: "test", queue: .global())
     
     func testCreateUsersSchema() throws {
         let table = Table(named: "users")
@@ -26,17 +27,18 @@ class MySQLTests: XCTestCase {
         
         table.schema.append(Table.Column(named: "username", type: .varChar(length: 32, binary: false), autoIncrement: false, primary: false, unique: false))
         
-        try pool.createTable(table).sync()
+        try pool.createTable(table).blockingAwait()
     }
     
     func testPopulateUsersSchema() throws {
         try testCreateUsersSchema()
         
-        try pool.query("INSERT INTO users (username) VALUES ('Joannis')").sync()
-        try pool.query("INSERT INTO users (username) VALUES ('Logan')").sync()
-        try pool.query("INSERT INTO users (username) VALUES ('Tanner')").sync()
+        try pool.query("INSERT INTO users (username) VALUES ('Joannis')").blockingAwait()
+        try pool.query("INSERT INTO users (username) VALUES ('Logan')").blockingAwait()
+        try pool.query("INSERT INTO users (username) VALUES ('Tanner')").blockingAwait()
     }
 
+    
     func testForEach() throws {
         try testPopulateUsersSchema()
         
@@ -52,7 +54,7 @@ class MySQLTests: XCTestCase {
         
         var iterator = ["Joannis", "Logan", "Tanner"].makeIterator()
         
-        let users = try pool.all(User.self, in: "SELECT * FROM users").sync()
+        let users = try pool.all(User.self, in: "SELECT * FROM users").blockingAwait()
         
         for user in users {
             XCTAssertEqual(user.username, iterator.next())
@@ -84,18 +86,18 @@ class MySQLTests: XCTestCase {
         table.schema.append(Table.Column(named: "ui64", type: .uint64()))
         
         do {
-            try pool.createTable(table).sync()
+            try pool.createTable(table).blockingAwait()
             
-            try pool.query("INSERT INTO complex (number0, number1, i16, ui16, i32, ui32, i64, ui64) VALUES (3.14, 6.28, -5, 5, -10000, 10000, 5000, 0)").sync()
+            try pool.query("INSERT INTO complex (number0, number1, i16, ui16, i32, ui32, i64, ui64) VALUES (3.14, 6.28, -5, 5, -10000, 10000, 5000, 0)").blockingAwait()
             
-            try pool.query("INSERT INTO complex (number0, number1, i16, ui16, i32, ui32, i64, ui64) VALUES (3.14, 6.28, -5, 5, -10000, 10000, 5000, 0)").sync()
+            try pool.query("INSERT INTO complex (number0, number1, i16, ui16, i32, ui32, i64, ui64) VALUES (3.14, 6.28, -5, 5, -10000, 10000, 5000, 0)").blockingAwait()
         } catch {
             debugPrint(error)
             XCTFail()
             throw error
         }
         
-        let all = try pool.all(Complex.self, in: "SELECT * FROM complex").sync()
+        let all = try pool.all(Complex.self, in: "SELECT * FROM complex").blockingAwait()
         
         XCTAssertEqual(all.count, 2)
         
@@ -113,12 +115,12 @@ class MySQLTests: XCTestCase {
         XCTAssertEqual(first.i64, 5_000)
         XCTAssertEqual(first.ui64, 0)
         
-        try pool.dropTable(named: "complex").sync()
+        try pool.dropTable(named: "complex").blockingAwait()
     }
     
     func testFailures() throws {
-        XCTAssertThrowsError(try pool.query("INSERT INTO users (username) VALUES ('Exampleuser')").sync())
-        XCTAssertThrowsError(try pool.all(User.self, in: "SELECT * FORM users").sync())
+        XCTAssertThrowsError(try pool.query("INSERT INTO users (username) VALUES ('Exampleuser')").blockingAwait())
+        XCTAssertThrowsError(try pool.all(User.self, in: "SELECT * FORM users").blockingAwait())
     }
 }
 

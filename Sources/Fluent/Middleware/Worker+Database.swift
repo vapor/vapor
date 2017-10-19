@@ -1,16 +1,32 @@
-import Core
+import Async
+
+extension String {
+    /// Default database name.
+    public static var defaultDatabaseName: String {
+        return "default"
+    }
+}
 
 extension Worker {
     /// This worker's database.
-    var database: Database? {
-        get { return extend["fluent:database"] as? Database }
-        set { extend["fluent:database"] = newValue }
+    func getDatabase(named name: String = .defaultDatabaseName) -> Database? {
+        return extend["fluent:database:\(name)"] as? Database
+    }
+
+    /// Sets this worker's database.
+    func setDatabase(
+        named name: String = "default",
+        to database: Database?
+    ) {
+        extend["fluent:database:\(name)"] = database
     }
 
     /// Returns this worker's database if one
     /// exists or throws an error.
-    func requireDatabase() throws -> Database {
-        guard let database = self.database else {
+    func requireDatabase(
+        named name: String = .defaultDatabaseName
+    ) throws -> Database {
+        guard let database = getDatabase(named: name) else {
             throw "Database on worker required"
         }
 
@@ -18,8 +34,10 @@ extension Worker {
     }
 
     /// This's worker's connection pool.
-    var connectionPool: DatabaseConnectionPool? {
-        guard let database = self.database else {
+    func getConnectionPool(
+        databaseName: String = .defaultDatabaseName
+    ) -> DatabaseConnectionPool? {
+        guard let database = getDatabase(named: databaseName) else {
             return nil
         }
 
@@ -34,8 +52,10 @@ extension Worker {
 
     /// Returns this worker's connection pool if one
     /// exists or throws an error.
-    func requireConnectionPool() throws -> DatabaseConnectionPool {
-        guard let connectionPool = self.connectionPool else {
+    func requireConnectionPool(
+        databaseName: String = .defaultDatabaseName
+    ) throws -> DatabaseConnectionPool {
+        guard let connectionPool = getConnectionPool(databaseName: databaseName) else {
             throw "Connection pool on worker required"
         }
 

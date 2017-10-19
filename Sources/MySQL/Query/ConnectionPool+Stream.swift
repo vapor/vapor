@@ -35,7 +35,7 @@ extension ConnectionPool {
             case .error(let error):
                 stream.errorStream?(error)
             case .expectation(_):
-                stream.onClose?()
+                stream.close()
             }
         }
         
@@ -74,9 +74,9 @@ extension ConnectionPool {
             switch result {
             case .error(let error):
                 stream.errorStream?(error)
-                stream.onClose?()
+                stream.close()
             case .expectation(_):
-                stream.onClose?()
+                stream.close()
             }
         }
         

@@ -2,21 +2,26 @@ import Async
 import TCP
 
 /// HTTP server wrapped around TCP server
-public final class Server: Async.OutputStream {
+public final class Server<ClientStream: OutputStream>: Async.OutputStream where ClientStream.Output == TCPClient {
     // MARK: Stream
     public typealias Output = HTTP.Peer
+    
+    /// See `BaseStream.errorStream`
     public var errorStream: ErrorHandler? {
-        get { return tcp.errorStream }
-        set { tcp.errorStream = newValue }
+        get { return clientStream.errorStream }
+        set { clientStream.errorStream = newValue }
     }
 
+    /// See `OutputStream.outputStream`
     public var outputStream: OutputHandler?
 
-    public let tcp: TCP.Server
+    /// The wrapped Client Stream
+    public let clientStream: ClientStream
 
-    public init(tcp: TCP.Server) {
-        self.tcp = tcp
-        tcp.outputStream = { tcp in
+    /// Creates a new HTTP Server from a Client stream
+    public init(clientStream: ClientStream) {
+        self.clientStream = clientStream
+        clientStream.outputStream = { tcp in
             let client = HTTP.Peer(tcp: tcp)
             client.errorStream = self.errorStream
             self.outputStream?(client)

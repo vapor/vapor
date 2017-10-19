@@ -42,7 +42,7 @@ extension SQLiteConnection: DatabaseConnection {
         switch fluentQuery.action {
         case .data(let data):
             switch data {
-            case .fetch:
+            case .create:
                 var select = DataQuery(statement: .select, table: fluentQuery.entity)
 
                 if let data = fluentQuery.data {
@@ -78,7 +78,7 @@ extension SQLiteConnection: DatabaseConnection {
                 }
 
                 sqlQuery = .data(select)
-            case .modify:
+            case .update:
                 var insert = DataQuery(statement: .insert, table: fluentQuery.entity)
 
                 guard let data = fluentQuery.data else {
@@ -107,8 +107,8 @@ extension SQLiteConnection: DatabaseConnection {
             switch schema {
             case .create:
                 var create = SchemaQuery(statement: .create, table: fluentQuery.entity)
-
-                
+                // TODO: implement me
+                sqlQuery = .schema(create)
             default:
                 fatalError("not supported")
             }
