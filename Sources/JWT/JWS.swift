@@ -144,8 +144,8 @@ public struct JSONWebSignature<C: JWT> {
     }
     
     /// Creates a new JSON Web Signature from predefined data
-    public init(headers: [Header], payload: C, signer: Signer<C>) {
-        self.headers = headers
+    public init(header: Header, payload: C, signer: Signer<C>) {
+        self.headers = [header]
         self.payload = payload
         self.signer = signer
     }

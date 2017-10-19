@@ -7,9 +7,9 @@ class JWSTests: XCTestCase {
         
         let signer = Signer<AuthenticationMessage>(secret: secret, identifier: "xctest")
         
-        let signature = try JSONWebSignature(headers: [.hs256()], payload: AuthenticationMessage(token: "test"), signer: signer).sign()
+        let signature = try JSONWebSignature(header: .hs256(), payload: AuthenticationMessage(token: "test"), signer: signer).sign()
         
-        let signedString = try JSONWebSignature(headers: [.hs256()], payload: AuthenticationMessage(token: "test"), signer: signer).signedString()
+        let signedString = try JSONWebSignature(header: .hs256(), payload: AuthenticationMessage(token: "test"), signer: signer).signedString()
         
         XCTAssertEqual(Data(signedString.utf8), signature)
         
@@ -27,7 +27,7 @@ class JWSTests: XCTestCase {
         let otherSecret = Data("dasdasdassad".utf8)
         let otherSigner = Signer<AuthenticationMessage>(secret: otherSecret, identifier: "xctest")
         
-        let signature = try JSONWebSignature(headers: [header], payload: AuthenticationMessage(token: "test"), signer: signer).sign()
+        let signature = try JSONWebSignature(header: header, payload: AuthenticationMessage(token: "test"), signer: signer).sign()
         
         XCTAssertThrowsError(try JSONWebSignature<AuthenticationMessage>(from: signature, verifyingAs: otherSigner))
     }
@@ -73,7 +73,7 @@ class JWSTests: XCTestCase {
         )
         
         func test(claim: TimeClaim, expectingFailure: Bool) throws {
-            let jwt = JSONWebSignature(headers: [.hs256()], payload: claim, signer: signer)
+            let jwt = JSONWebSignature(header: .hs256(), payload: claim, signer: signer)
             let token = try jwt.sign()
             
             if expectingFailure {
@@ -100,10 +100,10 @@ class JWSTests: XCTestCase {
         let validClaim = AudienceBasedClaim(aud: "verifier")
         let invalidClaim = AudienceBasedClaim(aud: "fake")
         
-        let validJWT = JSONWebSignature(headers: [.hs256()], payload: validClaim, signer: signer)
+        let validJWT = JSONWebSignature(header: .hs256(), payload: validClaim, signer: signer)
         let validToken = try validJWT.sign()
         
-        let invalidJWT = JSONWebSignature(headers: [.hs256()], payload: invalidClaim, signer: signer)
+        let invalidJWT = JSONWebSignature(header: .hs256(), payload: invalidClaim, signer: signer)
         let invalidToken = try invalidJWT.sign()
         
         XCTAssertThrowsError(try JSONWebSignature(from: invalidToken, verifyingAs: verifier))
