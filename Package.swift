@@ -120,6 +120,10 @@ let package = Package(
         // Routing
         .target(name: "Routing", dependencies: ["Core", "Debugging", "HTTP", "WebSocket"]),
         .testTarget(name: "RoutingTests", dependencies: ["Routing"]),
+        
+        // Redis
+        .target(name: "Redis", dependencies: ["Async", "Bits", "Debugging", "TCP"]),
+        .testTarget(name: "RedisTests", dependencies: ["Redis"]),
 
         // Service
         .target(name: "Service", dependencies: ["Core", "Debugging"]),

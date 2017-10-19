@@ -10,6 +10,7 @@ import XCTest
 @testable import MultipartTests
 @testable import MySQLTests
 @testable import RandomTests
+@testable import RedisTests
 @testable import RoutingTests
 @testable import ServiceTests
 @testable import TLSTests
@@ -55,6 +56,9 @@ XCTMain([
     // Random
     testCase(RandomTests.allTests),
 
+    // Redis
+    testCase(RedisTests.allTests),
+    
     // Routing
     testCase(RouterTests.allTests),
 
