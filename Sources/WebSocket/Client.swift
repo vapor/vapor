@@ -10,10 +10,10 @@ extension WebSocket {
     ///
     /// The future will be completed with the WebSocket connection once the handshake using HTTP is complete.
     ///
-    /// - parameter hostname: The server's hostname to connect to
-    /// - parameter port: The port to connect to, for HTTP
-    /// - parameter uri: The URI is not officially part of the spec, but could route to a different API on the server
-    /// - parameter queue: The queue on which this websocket will read and write
+    /// - parameter uri: The URI containing the remote host to connect to.
+    /// - parameter worker: The Worker which this websocket will use for managing read and write operations
+    ///
+    /// http://localhost:8000/websocket/client/#connecting-a-websocket-client
     public static func connect(
         to uri: URI,
         worker: Worker

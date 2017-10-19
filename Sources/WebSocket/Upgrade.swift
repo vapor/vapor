@@ -5,11 +5,15 @@ import Crypto
 
 extension WebSocket {
     /// Returns true if this request should upgrade to websocket protocol
+    ///
+    /// http://localhost:8000/websocket/upgrade/#determining-an-upgrade
     public static func shouldUpgrade(for req: Request) -> Bool {
         return req.headers[.connection] == "Upgrade" && req.headers[.secWebSocketKey] != nil && req.headers[.secWebSocketVersion] != nil
     }
     
     /// Creates a websocket upgrade response for the upgrade request
+    ///
+    /// http://localhost:8000/websocket/upgrade/#upgrading-the-connection
     public static func upgradeResponse(for req: Request) throws -> Response {
         guard
             req.method == .get,
