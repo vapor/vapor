@@ -9,23 +9,18 @@ extension String {
 
 extension Worker {
     /// This worker's database.
-    func getDatabase(named name: String = .defaultDatabaseName) -> Database? {
+    func getDatabase(named name: String) -> Database? {
         return extend["fluent:database:\(name)"] as? Database
     }
 
     /// Sets this worker's database.
-    func setDatabase(
-        named name: String = "default",
-        to database: Database?
-    ) {
+    func setDatabase(named name: String, to database: Database?) {
         extend["fluent:database:\(name)"] = database
     }
 
     /// Returns this worker's database if one
     /// exists or throws an error.
-    func requireDatabase(
-        named name: String = .defaultDatabaseName
-    ) throws -> Database {
+    func requireDatabase(named name: String) throws -> Database {
         guard let database = getDatabase(named: name) else {
             throw "Database on worker required"
         }
@@ -35,7 +30,7 @@ extension Worker {
 
     /// This's worker's connection pool.
     func getConnectionPool(
-        databaseName: String = .defaultDatabaseName
+        forDatabaseNamed databaseName: String
     ) -> DatabaseConnectionPool? {
         guard let database = getDatabase(named: databaseName) else {
             return nil
@@ -53,9 +48,9 @@ extension Worker {
     /// Returns this worker's connection pool if one
     /// exists or throws an error.
     func requireConnectionPool(
-        databaseName: String = .defaultDatabaseName
+        forDatabaseNamed databaseName: String
     ) throws -> DatabaseConnectionPool {
-        guard let connectionPool = getConnectionPool(databaseName: databaseName) else {
+        guard let connectionPool = getConnectionPool(forDatabaseNamed: databaseName) else {
             throw "Connection pool on worker required"
         }
 

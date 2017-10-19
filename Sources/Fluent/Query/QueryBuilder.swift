@@ -6,15 +6,15 @@ public final class QueryBuilder<M: Model> {
     public var query: DatabaseQuery
 
     /// The connection this query will be excuted on.
-    public let connection: Future<DatabaseConnection>
+    public let executor: Future<QueryExecutor>
 
     /// Create a new query.
     public init(
         _ type: M.Type = M.self,
-        on connection: Future<DatabaseConnection>
+        on executor: Future<QueryExecutor>
     ) {
         query = DatabaseQuery(entity: M.entity)
-        self.connection = connection
+        self.executor = executor
     }
 }
 
@@ -22,7 +22,7 @@ public final class QueryBuilder<M: Model> {
 
 extension QueryBuilder {
     public func save() -> Future<Void> {
-        query.action = .data(.update) // TODO: check if exists
+        query.action = .update // TODO: check if exists
         return all().map { _ in Void() }
     }
 }
@@ -32,8 +32,18 @@ extension QueryBuilder {
     /// Convenience init with non-future connection.
     public convenience init(
         _ type: M.Type = M.self,
-        on conn: DatabaseConnection
+        on executor: QueryExecutor
     ) {
-        self.init(M.self, on: Future(conn))
+        self.init(M.self, on: Future(executor))
+    }
+
+    /// Create a new query.
+    public convenience init(
+        _ type: M.Type = M.self,
+        on conn: Future<DatabaseConnection>
+    ) {
+        let promise = Promise(QueryExecutor.self)
+        conn.then(promise.complete).catch(promise.fail)
+        self.init(M.self, on: promise.future)
     }
 }

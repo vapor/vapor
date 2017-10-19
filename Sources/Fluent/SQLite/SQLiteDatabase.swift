@@ -12,6 +12,51 @@ extension SQLiteDatabase: Database {
 }
 
 extension SQLiteConnection: DatabaseConnection {
+
+}
+
+extension SQLiteConnection: SchemaExecutor {
+    public func execute(schema: DatabaseSchema) -> Future<Void> {
+        let promise = Promise(Void.self)
+
+        let sqlQuery: SQLQuery
+        var values: [SQLiteData] = []
+
+        switch schema.action {
+        case .create:
+            var create = SchemaQuery(statement: .create, table: schema.entity)
+            // TODO: implement me
+            sqlQuery = .schema(create)
+        default:
+            fatalError("not supported")
+        }
+
+        let string = SQLiteSQLSerializer()
+            .serialize(query: sqlQuery)
+
+        print(string)
+
+        let sqliteQuery = try! SQLiteQuery(
+            statement: string,
+            connection: self
+        )
+
+        for value in values {
+            print(value)
+            try! sqliteQuery.bind(value)
+        }
+
+        sqliteQuery.execute().then {
+            promise.complete()
+        }.catch { err in
+            promise.fail(err)
+        }
+
+        return promise.future
+    }
+}
+
+extension SQLiteConnection: QueryExecutor {
     public func execute<I: InputStream, D: Decodable>(
         query: DatabaseQuery,
         into stream: I
@@ -40,9 +85,7 @@ extension SQLiteConnection: DatabaseConnection {
         var values: [SQLiteData] = []
 
         switch fluentQuery.action {
-        case .data(let data):
-            switch data {
-            case .create:
+            case .read:
                 var select = DataQuery(statement: .select, table: fluentQuery.entity)
 
                 if let data = fluentQuery.data {
@@ -93,9 +136,6 @@ extension SQLiteConnection: DatabaseConnection {
                 }
                 values += encoder.row.fields.values.map { $0.data }
                 sqlQuery = .data(insert)
-            default:
-                fatalError("\(fluentQuery.action) not yet supported")
-            }
         case .aggregate(let field, let aggregate):
             var select = DataQuery(statement: .select, table: fluentQuery.entity)
 
@@ -103,15 +143,9 @@ extension SQLiteConnection: DatabaseConnection {
             select.computed.append(count)
 
             sqlQuery = .data(select)
-        case .schema(let schema):
-            switch schema {
-            case .create:
-                var create = SchemaQuery(statement: .create, table: fluentQuery.entity)
-                // TODO: implement me
-                sqlQuery = .schema(create)
-            default:
-                fatalError("not supported")
-            }
+
+        default:
+            fatalError("\(fluentQuery.action) not yet supported")
         }
 
         let string = SQLiteSQLSerializer()

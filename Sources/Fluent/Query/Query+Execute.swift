@@ -12,7 +12,7 @@ extension QueryBuilder {
     ) -> BasicStream<T> {
         let stream = BasicStream<T>()
 
-        connection.then { conn in
+        executor.then { conn in
             conn.execute(query: self.query, into: stream).then {
                 stream.close()
             }.catch { err in
@@ -51,7 +51,7 @@ extension QueryBuilder {
             promise.complete(models)
         }
 
-        connection.then { conn in
+        executor.then { conn in
             conn.execute(query: self.query, into: stream)
                 .then(stream.close)
                 .catch(promise.fail)

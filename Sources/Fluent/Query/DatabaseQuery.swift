@@ -4,7 +4,7 @@ public struct DatabaseQuery {
     public let entity: String
 
     /// The action to perform on the database
-    public var action: Action
+    public var action: QueryAction
 
     /// Result stream will be filtered by these queries.
     public var filters: [Filter]
@@ -18,7 +18,7 @@ public struct DatabaseQuery {
     /// Create a new database query.
     public init(entity: String) {
         self.entity = entity
-        self.action = .data(.read)
+        self.action = .read
         self.filters = []
         self.isDistinct = false
         self.data = nil
