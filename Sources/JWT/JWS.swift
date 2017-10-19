@@ -18,6 +18,26 @@ enum JWTError: Error {
     
     /// An unsupported feature
     case unsupported
+    
+    case claimExpired
+    
+    case claimedTooSoon
+    
+    case invalidAudience
+}
+
+public struct Signer<C: JWT> {
+    public typealias Verifier = ((C) throws -> Void)
+    
+    var secret: Data
+    var identifier: String
+    
+    public var verifications = [Verifier]()
+    
+    init(secret: Data, identifier: String) {
+        self.secret = secret
+        self.identifier = identifier
+    }
 }
 
 /// The header (details) used for signing and processing this JSON Web Signature
@@ -65,7 +85,7 @@ public struct Header: Codable {
 }
 
 /// JSON Web Signature (signature based JSON Web Token)
-public struct JSONWebSignature<C: Codable>: Codable {
+public struct JSONWebSignature<C: JWT> {
     /// The headers linked to this message
     ///
     /// A Web Token can be signed by multiple headers
@@ -77,7 +97,7 @@ public struct JSONWebSignature<C: Codable>: Codable {
     public var payload: C
     
     /// The secret that is used by all authorized parties to sign messages
-    private var secret: Data
+    private var signer: Signer<C>
     
     /// Signs the message and returns the UTF8 encoded String of this message
     public func signedString(_ header: Header? = nil) throws -> String {
@@ -117,17 +137,17 @@ public struct JSONWebSignature<C: Codable>: Codable {
         let payloadData = try JSONEncoder().encode(payload)
         let encodedPayload = Base64Encoder.encode(data: payloadData)
         
-        let signature = try usedHeader.algorithm.sign(Data(encodedHeader + [0x2e] + encodedPayload), with: secret)
+        let signature = try usedHeader.algorithm.sign(Data(encodedHeader + [0x2e] + encodedPayload), with: signer.secret)
         let encodedSignature = Base64Encoder.encode(data: signature)
         
         return encodedHeader + [0x2e] + encodedPayload + [0x2e] + encodedSignature
     }
     
     /// Creates a new JSON Web Signature from predefined data
-    public init(headers: [Header], payload: C, secret: Data) {
+    public init(headers: [Header], payload: C, signer: Signer<C>) {
         self.headers = headers
         self.payload = payload
-        self.secret = secret
+        self.signer = signer
     }
     
     /// Parses a JWT String into a JSON Web Signature
@@ -135,8 +155,8 @@ public struct JSONWebSignature<C: Codable>: Codable {
     /// Verifies using the provided secret
     ///
     /// - throws: When the signature is invalid or the JWT is invalid
-    public init(from string: String, verifyingWith secret: Data) throws {
-        try self.init(from: Data(string.utf8), verifyingWith: secret)
+    public init(from string: String, verifyingAs signer: Signer<C>) throws {
+        try self.init(from: Data(string.utf8), verifyingAs: signer)
     }
     
     /// Parses a JWT UTF8 String into a JSON Web Signature
@@ -144,10 +164,10 @@ public struct JSONWebSignature<C: Codable>: Codable {
     /// Verifies using the provided secret
     ///
     /// - throws: When the signature is invalid or the JWT is invalid
-    public init(from string: Data, verifyingWith secret: Data) throws {
+    public init(from string: Data, verifyingAs signer: Signer<C>) throws {
         let parts = string.split(separator: 0x2e)
         
-        self.secret = secret
+        self.signer = signer
         
         switch parts.count {
         case 3:
@@ -165,6 +185,32 @@ public struct JSONWebSignature<C: Codable>: Codable {
             }
         default:
             throw JWTError.invalidJWS
+        }
+        
+        try self.verify(claim: payload)
+    }
+    
+    fileprivate func verify(claim: C) throws {
+        if let claim = claim as? ExpirationClaim {
+            guard claim.exp > Date() else {
+                throw JWTError.claimExpired
+            }
+        }
+        
+        if let claim = claim as? NotBeforeClaim {
+            guard Date() > claim.nbf else {
+                throw JWTError.claimedTooSoon
+            }
+        }
+        
+        if let claim = claim as? AudienceClaim {
+            guard claim.aud == signer.identifier else {
+                throw JWTError.invalidAudience
+            }
+        }
+        
+        for verify in signer.verifications {
+            try verify(claim)
         }
     }
 }
