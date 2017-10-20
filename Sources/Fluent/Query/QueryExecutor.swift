@@ -12,7 +12,7 @@ public protocol QueryExecutor {
 
 // Convenience
 extension QueryExecutor {
-    public func makeQuery<M>(for type: M.Type = M.self) -> QueryBuilder<M> {
+    public func query<M>(_ type: M.Type = M.self) -> QueryBuilder<M> {
         return QueryBuilder(on: self)
     }
 }

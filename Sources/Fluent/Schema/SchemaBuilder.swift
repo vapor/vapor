@@ -9,12 +9,18 @@ public protocol SchemaBuilder: class {
 
     /// The connection this schema builder will execute on.
     var executor: Future<SchemaExecutor> { get }
+
+    /// Create a new schema builder.
+    init(_ type: ModelType.Type, on executor: Future<SchemaExecutor>)
 }
 
+// MARK: Convenience
+
 extension SchemaBuilder {
-    /// Adds a string type field.
-    public func string(_ name: String) {
-        let field = Field(name: name, type: .string)
-        schema.addFields.append(field)
+    public init<S: SchemaExecutor>(
+        _ type: ModelType.Type = ModelType.self,
+        on executor: S
+    ) {
+        self.init(ModelType.self, on: Future(executor))
     }
 }

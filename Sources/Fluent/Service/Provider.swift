@@ -1,3 +1,4 @@
+import Dispatch
 import HTTP
 import Service
 import SQLite
@@ -32,12 +33,17 @@ public final class FluentProvider: Provider {
         let config = try container.make(MigrationConfig.self, for: FluentProvider.self)
         let databases = try container.make(Databases.self, for: FluentProvider.self)
 
+        let migrationQueue = DispatchQueue(label: "codes.vapor.fluent.migration")
+
         for migration in config.migrations {
             guard let database = databases.storage[migration.database] else {
                 throw "no database \(migration.database) was found for migration \(migration.migration)"
             }
 
-            try migration.migration.prepare(database: database).blockingAwait() // FIXME: is this fine being blocking?
+            let conn = try database.makeConnection(on: migrationQueue)
+            print("Migrating \(migration.migration)")
+            try migration.migration.prepare(conn).blockingAwait() // FIXME: is this fine being blocking?
+            print("done!")
         }
     }
 }
@@ -45,8 +51,8 @@ public final class FluentProvider: Provider {
 import Async
 
 public protocol Migration {
-    static func prepare(database: Database) -> Future<Void>
-    static func revert(database: Database) -> Future<Void>
+    static func prepare(_ database: DatabaseConnection) -> Future<Void>
+    static func revert(_ database: DatabaseConnection) -> Future<Void>
 }
 
 public struct Databases {
@@ -64,14 +70,14 @@ public struct DatabaseConfig {
 
     public mutating func add(
         database: Database,
-        as id: DatabaseIdentifier = .main
+        as id: DatabaseIdentifier = .default
     ) {
         databases[id] = { _ in database }
     }
 
     public mutating func add<D: Database>(
         database: D.Type,
-        as id: DatabaseIdentifier = .main
+        as id: DatabaseIdentifier = .default
     ) {
         databases[id] = { try $0.make(D.self, for: DatabaseConfig.self) }
     }
@@ -86,7 +92,7 @@ public struct MigrationConfig {
 
     public mutating func add<M: Migration>(
         migration: M.Type,
-        database: DatabaseIdentifier = .main
+        database: DatabaseIdentifier = .default
     ) {
         migrations.append((M.self, database))
     }

@@ -51,7 +51,7 @@ extension Request {
     /// Subsequent calls to this function will use the same connection.
     public func query<M>(
         _ modelType: M.Type = M.self,
-        database: DatabaseIdentifier = .main
+        database: DatabaseIdentifier = .default
     ) throws -> QueryBuilder<M> {
         if let currentConnection = getCurrentConnection(database: database) {
             return QueryBuilder(on: currentConnection)

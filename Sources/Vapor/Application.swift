@@ -26,11 +26,16 @@ public final class Application: Container {
         config: Config = .default(),
         environment: Environment = .development,
         services: Services = .default()
-    ) {
+    ) throws {
         self.config = config
         self.environment = environment
         self.services = services
         self.extend = Extend()
+
+        // boot all service providers
+        for provider in services.providers {
+            try provider.boot(self)
+        }
     }
 
     /// Make an instance of the provided interface for this Application.

@@ -24,7 +24,7 @@ extension DatabaseIdentifier: Hashable {
 
 extension DatabaseIdentifier {
     /// The main/default database identifier.
-    public static var main: DatabaseIdentifier {
-        return DatabaseIdentifier("main")
+    public static var `default`: DatabaseIdentifier {
+        return DatabaseIdentifier("default")
     }
 }

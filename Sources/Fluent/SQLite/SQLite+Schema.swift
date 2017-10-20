@@ -39,8 +39,8 @@ extension SQLiteConnection: SchemaExecutor {
 
         sqliteQuery.execute().then {
             promise.complete()
-            }.catch { err in
-                promise.fail(err)
+        }.catch { err in
+            promise.fail(err)
         }
 
         return promise.future
@@ -52,8 +52,8 @@ extension Field {
         return SchemaColumn(
             name: name,
             dataType: type.dataType,
-            isNotNull: true, // FIXME: implement
-            isPrimaryKey: false // FIXME: implement
+            isNotNull: !isOptional,
+            isPrimaryKey: isIdentifier
         )
     }
 }
@@ -63,6 +63,12 @@ extension FieldType {
         switch self {
         case .string:
             return "TEXT"
+        case .int:
+            return "INTEGER"
+        case .double:
+            return "REAL"
+        case .data:
+            return "BLOB"
         case .custom(let custom):
             return custom
         }

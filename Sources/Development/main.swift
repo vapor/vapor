@@ -31,6 +31,11 @@ databaseConfig.add(
 services.register(databaseConfig)
 
 
+var migrationConfig = MigrationConfig()
+migrationConfig.add(migration: User.self, database: .memory)
+migrationConfig.add(migration: AddUsers.self, database: .memory)
+services.register(migrationConfig)
+
 services.register(
     MiddlewareConfig([
         DatabaseMiddleware.self,
@@ -38,7 +43,7 @@ services.register(
     ])
 )
 
-let app = Application(services: services)
+let app = try Application(services: services)
 
 let async = try app.make(AsyncRouter.self)
 let sync = try app.make(SyncRouter.self)
@@ -55,9 +60,9 @@ sync.get("plaintext") { req in
 
 let view = try app.make(ViewRenderer.self)
 async.get("leaf") { req -> Future<View> in
-    user.child = User(name: "Leaf", age: 1)
+    // user.child = User(name: "Leaf", age: 1)
     let promise = Promise(User.self)
-    user.futureChild = promise.future
+    // user.futureChild = promise.future
 
     try req.requireWorker().queue.asyncAfter(deadline: .now() + 2) {
         let user = User(name: "unborn", age: -1)

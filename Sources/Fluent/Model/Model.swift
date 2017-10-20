@@ -1,3 +1,5 @@
+import Async
+
 /// Fluent database models. These types can be fetched
 /// from a database connection using a query.
 ///
@@ -21,6 +23,22 @@ extension Model {
     /// See Model.entity
     public static var entity: String {
         return "\(Self.self)".lowercased() + "s"
+    }
+}
+
+// MARK: CRUD
+
+extension Model {
+    public func save(to executor: QueryExecutor) -> Future<Void> {
+        let query = executor.query(Self.self)
+        query.query.data = self
+        if exists {
+            query.query.action = .update
+            query.filter("id" == id)
+        } else {
+            query.query.action = .create
+        }
+        return executor.execute(query: query.query, into: BasicStream<Self>())
     }
 }
 

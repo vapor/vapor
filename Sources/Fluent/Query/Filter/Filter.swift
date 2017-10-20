@@ -34,7 +34,7 @@ extension QueryBuilder {
     @discardableResult
     public func filter(
         _ filter: Filter
-    ) throws -> Self {
+    ) -> Self {
         query.filters.append(filter)
         return self
     }
