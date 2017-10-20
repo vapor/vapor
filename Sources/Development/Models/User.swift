@@ -3,6 +3,7 @@ import Async
 import HTTP
 import Leaf
 import Vapor
+import Fluent
 
 final class User: Codable, ResponseRepresentable {
     var name: String
@@ -33,5 +34,16 @@ extension Future: Codable {
 
     public convenience init(from decoder: Decoder) throws {
         fatalError("blah")
+    }
+}
+
+extension User: Migration {
+    static func prepare(database: Database) -> Future<Void> {
+        // FIXME: we should probably get a database connection passed
+        database.makeConnection(on: .global()).
+    }
+
+    static func revert(database: Database) -> Future<Void> {
+        <#code#>
     }
 }

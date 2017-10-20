@@ -7,23 +7,24 @@ import SQLite
 /// from a given request for queries.
 public final class DatabaseMiddleware: Middleware {
     /// This middleware's database.
-    public let database: Database
-
-    /// The database's unique name.
-    public let name: String
+    public let databases: Databases
 
     /// Create a new database middleware with the
     /// supplied database.
-    public init(database: Database, name: String = .defaultDatabaseName) {
-        self.database = database
-        self.name = name
+    public init(databases: Databases) {
+        self.databases = databases
     }
 
     /// See Responder.respond(to:...)
     public func respond(to req: Request, chainingTo next: Responder) throws -> Future<Response> {
-        try req.requireWorker().setDatabase(named: name, to: database)
+        let worker = try req.requireWorker()
+        for (id, database) in databases.storage {
+            worker.setDatabase(id: id, to: database)
+        }
         let res = try next.respond(to: req)
-        try req.releaseCurrentConnection()
+        for id in databases.storage.keys {
+            try req.releaseCurrentConnection(database: id)
+        }
         return res
     }
 }

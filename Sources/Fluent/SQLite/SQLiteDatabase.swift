@@ -11,50 +11,7 @@ extension SQLiteDatabase: Database {
     }
 }
 
-extension SQLiteConnection: DatabaseConnection {
-
-}
-
-extension SQLiteConnection: SchemaExecutor {
-    public func execute(schema: DatabaseSchema) -> Future<Void> {
-        let promise = Promise(Void.self)
-
-        let sqlQuery: SQLQuery
-        var values: [SQLiteData] = []
-
-        switch schema.action {
-        case .create:
-            var create = SchemaQuery(statement: .create, table: schema.entity)
-            // TODO: implement me
-            sqlQuery = .schema(create)
-        default:
-            fatalError("not supported")
-        }
-
-        let string = SQLiteSQLSerializer()
-            .serialize(query: sqlQuery)
-
-        print(string)
-
-        let sqliteQuery = try! SQLiteQuery(
-            statement: string,
-            connection: self
-        )
-
-        for value in values {
-            print(value)
-            try! sqliteQuery.bind(value)
-        }
-
-        sqliteQuery.execute().then {
-            promise.complete()
-        }.catch { err in
-            promise.fail(err)
-        }
-
-        return promise.future
-    }
-}
+extension SQLiteConnection: DatabaseConnection { }
 
 extension SQLiteConnection: QueryExecutor {
     public func execute<I: InputStream, D: Decodable>(

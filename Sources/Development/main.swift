@@ -10,11 +10,26 @@ import Service
 import SQLite
 import Vapor
 
+extension DatabaseIdentifier {
+    static var memory: DatabaseIdentifier {
+        return .init("memory")
+    }
+}
+
 var services = Services.default()
 
 services.register(SQLiteStorage.file(path: "/tmp/db.sqlite"))
 try services.register(LeafProvider())
 try services.register(FluentProvider())
+
+var databaseConfig = DatabaseConfig()
+databaseConfig.add(database: SQLiteDatabase.self)
+databaseConfig.add(
+    database: SQLiteDatabase(storage: .memory),
+    as: .memory
+)
+services.register(databaseConfig)
+
 
 services.register(
     MiddlewareConfig([

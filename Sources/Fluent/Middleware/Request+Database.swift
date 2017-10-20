@@ -8,34 +8,34 @@ extension Request {
     /// this request to use the _same_ connection when it
     /// becomes available.
     func getCurrentConnection(
-        forDatabaseNamed databaseName: String
+        database: DatabaseIdentifier
     ) -> Future<DatabaseConnection>? {
-        return extend["fluent:current-connection:\(databaseName)"] as? Future<DatabaseConnection>
+        return extend["fluent:current-connection:\(database.uid)"] as? Future<DatabaseConnection>
     }
 
     func setCurrentConnection(
         to connection: Future<DatabaseConnection>?,
-        forDatabaseNamed databaseName: String
+        database: DatabaseIdentifier
     ) {
-        extend["fluent:current-connection:\(databaseName)"] = connection
+        extend["fluent:current-connection:\(database.uid)"] = connection
     }
 
 
     /// Releases the current connection for this request
     /// if one exists.
     func releaseCurrentConnection(
-        forDatabaseNamed databaseName: String = .defaultDatabaseName
+        database: DatabaseIdentifier
     ) throws {
-        guard let current = getCurrentConnection(forDatabaseNamed: databaseName) else {
+        guard let current = getCurrentConnection(database: database) else {
             return
         }
 
         let pool = try requireWorker()
-            .requireConnectionPool(forDatabaseNamed: databaseName)
+            .requireConnectionPool(database: database)
 
         current.then { conn in
             pool.releaseConnection(conn)
-            self.setCurrentConnection(to: nil, forDatabaseNamed: databaseName)
+            self.setCurrentConnection(to: nil, database: database)
         }.catch { err in
             print("could not release connection")
         }
@@ -51,15 +51,15 @@ extension Request {
     /// Subsequent calls to this function will use the same connection.
     public func query<M>(
         _ modelType: M.Type = M.self,
-        database: String = .defaultDatabaseName
+        database: DatabaseIdentifier = .main
     ) throws -> QueryBuilder<M> {
-        if let currentConnection = getCurrentConnection(forDatabaseNamed: database) {
+        if let currentConnection = getCurrentConnection(database: database) {
             return QueryBuilder(on: currentConnection)
         } else {
             let pool = try requireWorker()
-                .requireConnectionPool(forDatabaseNamed: database)
+                .requireConnectionPool(database: database)
             let conn = pool.requestConnection()
-            setCurrentConnection(to: conn, forDatabaseNamed: database)
+            setCurrentConnection(to: conn, database: database)
             return QueryBuilder(on: conn)
         }
     }
