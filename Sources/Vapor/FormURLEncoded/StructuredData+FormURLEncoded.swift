@@ -5,7 +5,7 @@ import Node
 extension Node {
     /// Queries allow empty values
     /// FormURLEncoded does not
-    public init(formURLEncoded data: Bytes) {
+    public init(formURLEncoded data: Bytes, distinguishingEmptyValues: Bool = true) {
         var urlEncoded: [String: Node] = [:]
 
         let replacePlus: (Byte) -> (Byte) = { byte in
@@ -23,7 +23,7 @@ extension Node {
             let token = pair.split(
                 separator: .equals,
                 maxSplits: 1, // max 1, `foo=a=b` should be `"foo": "a=b"`
-                omittingEmptySubsequences: false
+                omittingEmptySubsequences: !distinguishingEmptyValues
             )
             switch (token.count) {
                 case 2:
@@ -38,12 +38,21 @@ extension Node {
                     
                     value = .string(valueData)
                 case 1:
-                    keyData = token[0].map(replacePlus)
-                        .makeString()
-                        .percentDecoded
-                        .makeBytes()
-                    
-                    value = .bool(true)
+                    // When distinguishing empty values, params of the form "value" (no =)
+                    // are represented with the value true, while params of the form "value="
+                    // are represented with an empty string as the value. However, when not
+                    // distinguishing empty values, both of these forms are absent from the
+                    // result altogether.
+                    if distinguishingEmptyValues {
+                        keyData = token[0].map(replacePlus)
+                            .makeString()
+                            .percentDecoded
+                            .makeBytes()
+                        
+                        value = .bool(true)
+                    } else {
+                        continue
+                    }
                 default:
                     assertionFailure("Must have exactly one or two tokens after splitting pairs")
                     continue // Compiler complains if this isn't present

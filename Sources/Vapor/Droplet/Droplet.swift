@@ -124,6 +124,12 @@ public final class Droplet {
         let view = try view ?? config.resolveView()
         let cache = try cache ?? config.resolveCache()
         let mail = try mail ?? config.resolveMail()
+        
+        // TODO: Is there a better config file for this setting? server.json
+        //       doesn't quite seem to fit.
+        // default of false matches original behavior before this setting was added
+        let emptyFormURLEncodedValues = config["droplet", "wwwFormsMaterializeEmptyValues"]?.bool ?? false
+        Request.distinguishEmptyFormURLEncodedValues = emptyFormURLEncodedValues
 
         // settings
         let environment = config.environment

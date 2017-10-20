@@ -19,6 +19,8 @@ class ContentTests: XCTestCase {
         ("testRequestSetJSONBody", testRequestSetJSONBody),
         ("testRequestSetFormURLEncodedBody", testRequestSetFormURLEncodedBody),
         ("testRequestGetFormURLEncodedBody", testRequestGetFormURLEncodedBody),
+        ("testRequestGetFormURLEncodedBodyDistinguished", testRequestGetFormURLEncodedBodyDistinguished),
+        ("testRequestGetFormURLEncodedBodyAmbiguous", testRequestGetFormURLEncodedBodyAmbiguous),
         ("testRequestGetFormURLEncodedBodyInvalidHeader", testRequestGetFormURLEncodedBodyInvalidHeader),
         ("testParse", testParse),
         ("testFormURLEncoded", testFormURLEncoded),
@@ -52,6 +54,46 @@ class ContentTests: XCTestCase {
         request.body = Body("hello=world")
         let data = request.formURLEncoded
         
+        XCTAssertNotNil(data)
+        XCTAssertEqual(["hello": "world"], data)
+        
+        let cached = request.storage["form-urlencoded"] as? Node
+        XCTAssertNotNil(cached)
+        
+        if let cached = cached {
+            XCTAssertEqual(["hello": "world"], cached)
+        }
+    }
+
+    func testRequestGetFormURLEncodedBodyDistinguished() throws {
+        let originalDistinguishingSetting = Request.distinguishEmptyFormURLEncodedValues
+        Request.distinguishEmptyFormURLEncodedValues = true
+        let request = Request(method: .post, path: "/")
+        request.headers["Content-Type"] = "application/x-www-form-urlencoded"
+        request.body = Body("hello=world&wubbalubba=&dubdub")
+        let data = request.formURLEncoded
+        Request.distinguishEmptyFormURLEncodedValues = originalDistinguishingSetting
+        
+        XCTAssertNotNil(data)
+        XCTAssertEqual(["hello": "world", "wubbalubba": "", "dubdub": true], data)
+        
+        let cached = request.storage["form-urlencoded"] as? Node
+        XCTAssertNotNil(cached)
+        
+        if let cached = cached {
+            XCTAssertEqual(["hello": "world", "wubbalubba": "", "dubdub": true], cached)
+        }
+    }
+
+    func testRequestGetFormURLEncodedBodyAmbiguous() throws {
+        let originalDistinguishingSetting = Request.distinguishEmptyFormURLEncodedValues
+        Request.distinguishEmptyFormURLEncodedValues = false
+        let request = Request(method: .post, path: "/")
+        request.headers["Content-Type"] = "application/x-www-form-urlencoded"
+        request.body = Body("hello=world&wubbalubba=&dubdub")
+        let data = request.formURLEncoded
+        Request.distinguishEmptyFormURLEncodedValues = originalDistinguishingSetting
+
         XCTAssertNotNil(data)
         XCTAssertEqual(["hello": "world"], data)
         
