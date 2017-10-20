@@ -6,7 +6,13 @@ import Dispatch
 extension SSLStream {
     /// Runs the SSL handshake, regardless of client or server
     func handshake(for ssl: UnsafeMutablePointer<SSL>, side: Side) throws -> Future<Void> {
-        var accepted = false
+        var accepted: Bool
+        
+        if case .client = side {
+            accepted = true
+        } else {
+            accepted = false
+        }
         
         func retry() -> Int32 {
             if case .client = side {
@@ -18,63 +24,88 @@ extension SSLStream {
             }
         }
         
-        var result = retry()
-        var code = SSL_get_error(ssl, result)
-        
-        // If the success is immediate
-        if result == 0 {
-            return Future(())
-        }
-        
         // Otherwise set up a readsource
         let readSource = DispatchSource.makeReadSource(fileDescriptor: self.descriptor, queue: self.queue)
+        let writeSource = DispatchSource.makeWriteSource(fileDescriptor: self.descriptor, queue: self.queue)
+        
+        var reading = true
+        var writing = false
+        
         let promise = Promise<Void>()
         
-        func tryAgain() {
-            // On input, continue the handshake
-            result = retry()
-            code = SSL_get_error(ssl, result)
+        func process(result: Int32) {
+            let code = SSL_get_error(ssl, result)
             
-            if result == -1 && (
-                code == SSL_ERROR_WANT_READ ||
-                code == SSL_ERROR_WANT_WRITE ||
-                code == SSL_ERROR_WANT_CONNECT ||
-                code == SSL_ERROR_WANT_ACCEPT
-            ) {
-                return
+            if reading {
+                reading = false
+                readSource.suspend()
             }
             
-            // If it's not blocking and not a success, it's an error
-            guard result > 0 else {
+            if writing {
+                writing = false
+                writeSource.suspend()
+            }
+            
+            if result == -1 {
+                if code == SSL_ERROR_WANT_READ {
+                    reading = true
+                    readSource.resume()
+                    return
+                }
+                
+                if code == SSL_ERROR_WANT_WRITE {
+                    writing = true
+                    writeSource.resume()
+                    return
+                }
+                
+                if code == SSL_ERROR_WANT_CONNECT {
+                    process(result: retry())
+                    return
+                }
+                
                 readSource.cancel()
+                ERR_print_errors_fp(stdout)
                 promise.fail(Error(.sslError(result)))
                 return
             }
             
             if accepted {
                 readSource.cancel()
+                writeSource.cancel()
                 promise.complete(())
             } else {
                 accepted = true
-                tryAgain()
+                process(result: retry())
             }
         }
         
-        // Listen for input
-        readSource.setEventHandler {
-            tryAgain()
+        func tryAgain() {
+            // On input, continue the handshake
+            process(result: retry())
         }
         
-        // Now that the async stuff's et up, let's start your engines
-        readSource.resume()
+        readSource.setEventHandler(handler: tryAgain)
+        
+        tryAgain()
         
         let future = promise.future
         
         future.addAwaiter { _ in
+            if reading {
+                readSource.cancel()
+            }
+            
+            if writing {
+                writeSource.cancel()
+            }
+            
             self.readSource = nil
+            self.writeSource = nil
         }
         
         self.readSource = readSource
+        self.writeSource = writeSource
         
         return future
     }
@@ -108,12 +139,12 @@ extension SSLStream {
     
     /// Starts receiving data from the client, reads on the provided queue
     public func start() {
-        let source = DispatchSource.makeReadSource(
+        let readSource = DispatchSource.makeReadSource(
             fileDescriptor: self.descriptor,
             queue: self.queue
         )
         
-        source.setEventHandler {
+        readSource.setEventHandler {
             let read: Int
             do {
                 read = try self.read(into: self.outputBuffer)
@@ -139,11 +170,40 @@ extension SSLStream {
             self.outputStream?(bufferView)
         }
         
-        source.setCancelHandler {
+        readSource.setCancelHandler {
             self.close()
         }
         
-        source.resume()
-        self.readSource = source
+        readSource.resume()
+        self.readSource = readSource
+        
+        let writeSource = DispatchSource.makeWriteSource(fileDescriptor: descriptor, queue: queue)
+        
+        writeSource.setEventHandler {
+            guard self.writeQueue.count > 0 else {
+                writeSource.suspend()
+                return
+            }
+            
+            let data = self.writeQueue[0]
+            
+            data.withUnsafeBytes { (pointer: BytesPointer) in
+                let buffer = UnsafeBufferPointer(start: pointer, count: data.count)
+                
+                do {
+                    try self.write(from: buffer)
+                    _ = self.writeQueue.removeFirst()
+                } catch {
+                    self.errorStream?(error)
+                }
+            }
+            
+            guard self.writeQueue.count > 0 else {
+                writeSource.suspend()
+                return
+            }
+        }
+        
+        self.writeSource = writeSource
     }
 }

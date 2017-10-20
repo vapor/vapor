@@ -96,27 +96,32 @@ public struct SSLOption {
                     return SSL_TLSEXT_ERR_NOACK
                 }, nil)
             
-                SSL_CTX_set_alpn_protos(context, protocolsBuffer, UInt32(preferences.protocols.count))
+//                SSL_CTX_set_alpn_protos(context, protocolsBuffer, UInt32(preferences.protocols.count))
             },
             preHandshake: nil,
             postHandshake: { ssl, context in
-            let protocolPointer = UnsafeMutablePointer<UnsafePointer<UInt8>?>.allocate(capacity: 1)
-            let protocolLengthPointer = UnsafeMutablePointer<UInt32>.allocate(capacity: 1)
-            
-            defer {
-                protocolPointer.deallocate(capacity: 1)
-                protocolLengthPointer.deallocate(capacity: 1)
+                let protocolPointer = UnsafeMutablePointer<UnsafePointer<UInt8>?>.allocate(capacity: 1)
+                let protocolLengthPointer = UnsafeMutablePointer<UInt32>.allocate(capacity: 1)
+                
+                defer {
+                    protocolPointer.deallocate(capacity: 1)
+                    protocolLengthPointer.deallocate(capacity: 1)
+                }
+                
+                SSL_get0_next_proto_negotiated(ssl, protocolPointer, protocolLengthPointer)
+                
+                if protocolPointer.pointee == nil {
+                    SSL_get0_alpn_selected(ssl, protocolPointer, protocolLengthPointer)
+                }
+                
+                let protoBuffer = UnsafeBufferPointer<UInt8>(start: protocolPointer.pointee, count: numericCast(protocolLengthPointer.pointee))
+                
+                let proto = String(bytes: protoBuffer, encoding: .utf8) ?? ""
+                
+                guard preferences.protocols.contains(proto) else {
+                    throw Error(.invalidALPNProtocol)
+                }
             }
-            
-            SSL_get0_alpn_selected(ssl, protocolPointer, protocolLengthPointer)
-            
-            let protoBuffer = UnsafeBufferPointer<UInt8>(start: protocolPointer.pointee, count: numericCast(protocolLengthPointer.pointee))
-            
-            let proto = String(bytes: protoBuffer, encoding: .utf8) ?? ""
-            
-            guard preferences.protocols.contains(proto) else {
-                throw Error(.invalidALPNProtocol)
-            }
-        })
+        )
     }
 }

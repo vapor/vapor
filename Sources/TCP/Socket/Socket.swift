@@ -14,6 +14,9 @@ public final class Socket {
     /// True if the socket should re-use addresses
     public let shouldReuseAddress: Bool
     
+    /// A read source that's used to check when the connection is open
+    internal var readSource: DispatchSourceRead?
+    
     /// A write source that's used to check when the connection is open
     internal var writeSource: DispatchSourceWrite?
 

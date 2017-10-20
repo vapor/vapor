@@ -9,7 +9,6 @@ enum SSLSettings {
     internal static var initialized: Bool = {
         SSL_library_init()
         SSL_load_error_strings()
-//        OpenSSL_add_all_ciphers()
         OPENSSL_config(nil)
         OPENSSL_add_all_algorithms_conf()
         return true
@@ -54,7 +53,7 @@ public final class SSLStream<DuplexByteStream: Async.Stream>: Async.Stream, Clos
     var writeQueue = [Data]()
     
     /// Keeps a strong reference to the DispatchSourceWrite so it can keep writing
-    let writeSource: DispatchSourceWrite
+    var writeSource: DispatchSourceWrite?
     
     /// A buffer storing all deciphered data received from the remote
     let outputBuffer = MutableByteBuffer(start: .allocate(capacity: Int(UInt16.max)), count: Int(UInt16.max))
@@ -68,33 +67,6 @@ public final class SSLStream<DuplexByteStream: Async.Stream>: Async.Stream, Clos
         self.socket = socket
         self.descriptor = descriptor
         self.queue = queue
-        
-        self.writeSource = DispatchSource.makeWriteSource(fileDescriptor: descriptor, queue: queue)
-        
-        self.writeSource.setEventHandler {
-            guard self.writeQueue.count > 0 else {
-                self.writeSource.suspend()
-                return
-            }
-            
-            let data = self.writeQueue[0]
-            
-            data.withUnsafeBytes { (pointer: BytesPointer) in
-                let buffer = UnsafeBufferPointer(start: pointer, count: data.count)
-                
-                do {
-                    try self.write(from: buffer)
-                    _ = self.writeQueue.removeFirst()
-                } catch {
-                    self.errorStream?(error)
-                }
-            }
-            
-            guard self.writeQueue.count > 0 else {
-                self.writeSource.suspend()
-                return
-            }
-        }
     }
     
     /// Writes the buffer to this SSL socket
