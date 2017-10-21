@@ -17,51 +17,104 @@ public final class HTTP2Client: BaseStream {
     
     public var errorStream: ErrorHandler?
     
+    fileprivate var _nextStreamID: Int32 = 1
+    
+    var nextStreamID: Int32 {
+        defer {
+            _nextStreamID = _nextStreamID &+ 2
+            
+            // When overflowing, reset to 1
+            if _nextStreamID <= 0 {
+                _nextStreamID = 1
+            }
+        }
+        
+        return _nextStreamID
+    }
+    
     var upgraded = false
-    public private(set) var remoteSettings = HTTP2Settings() {
+    
+    public internal(set) var remoteSettings = HTTP2Settings() {
         didSet {
             self.frameParser.settings = remoteSettings
         }
     }
     
-    public private(set) var settings = HTTP2Settings() {
+    public internal(set) var settings = HTTP2Settings() {
         didSet {
             self.frameSerializer.inputStream(settings.frame)
         }
     }
     
     public var updatingSettings = false
+    let streamPool: HTTP2StreamPool
     
-    fileprivate let promise = Promise<HTTP2Client>()
+    let promise = Promise<HTTP2Client>()
     
-    fileprivate var future: Future<HTTP2Client> {
+    var future: Future<HTTP2Client> {
         return promise.future
     }
     
     init(upgrading client: TLSClient) {
         self.client = client
+        self.streamPool = HTTP2StreamPool(
+            serializer: self.frameSerializer,
+            parser: self.frameParser
+        )
         
         client.drain(into: frameParser)
         frameSerializer.drain(into: client)
         
         frameParser.drain { frame in
             do {
-                switch frame.type {
-                case .settings:
-                    if frame.flags & 0x01 == 0x01 {
-                        // Acknowledgement
-                        self.updatingSettings = false
-                    } else {
-                        try self.remoteSettings.update(to: frame)
-                        self.frameSerializer.inputStream(HTTP2Settings.acknowledgeFrame)
-                        
-                        if !self.future.isCompleted {
-                            self.promise.complete(self)
-                        }
+                if frame.streamIdentifier == 0 {
+                    guard
+                        frame.type == .settings || frame.type == .ping  ||
+                        frame.type == .priority || frame.type == .reset ||
+                        frame.type == .goAway   || frame.type == .windowUpdate
+                    else {
+                        throw Error(.invalidStreamIdentifier)
                     }
-                default:
-                    print(frame)
-                    print(frame.payload.data.count)
+                
+                    switch frame.type {
+                    case .settings:
+                        guard frame.streamIdentifier == 0 else {
+                            throw Error(.invalidStreamIdentifier)
+                        }
+                        
+                        if frame.flags & 0x01 == 0x01 {
+                            // Acknowledgement
+                            self.updatingSettings = false
+                        } else {
+                            try self.remoteSettings.update(to: frame)
+                            self.frameSerializer.inputStream(HTTP2Settings.acknowledgeFrame)
+                            
+                            if !self.future.isCompleted {
+                                self.promise.complete(self)
+                            }
+                        }
+                    case .ping:
+                        fatalError()
+                    case .priority:
+                        fatalError()
+                    case .reset:
+                        fatalError()
+                    case .goAway:
+                        fatalError()
+                    case .windowUpdate:
+                        fatalError()
+                    default:
+                        throw Error(.invalidStreamIdentifier)
+                    }
+                } else {
+                    switch frame.type {
+                    case .headers, .data, .pushPromise:
+                        self.streamPool[frame.streamIdentifier].inputStream(frame)
+                    case .windowUpdate:
+                        fatalError()
+                    default:
+                        throw Error(.invalidStreamIdentifier)
+                    }
                 }
             } catch {
                 self.handleError(error: error)
@@ -76,33 +129,5 @@ public final class HTTP2Client: BaseStream {
     fileprivate func handleError(error: Swift.Error) {
         self.errorStream?(error)
         self.close()
-    }
-    
-    public func updateSettings(to settings: HTTP2Settings) {
-        self.settings = settings
-        self.updatingSettings = true
-    }
-    
-    public static func connect(hostname: String, port: UInt16 = 443, settings: HTTP2Settings = HTTP2Settings(), worker: Worker) throws -> Future<HTTP2Client> {
-        let tlsClient = try TLSClient(worker: worker)
-        tlsClient.protocols = ["h2", "http/1.1"]
-        
-        let client = HTTP2Client(upgrading: tlsClient)
-        
-        try tlsClient.connect(hostname: hostname, port: port).then {
-            Constants.staticPreface.withUnsafeBytes { (pointer: BytesPointer) in
-                let buffer = ByteBuffer(start: pointer, count: Constants.staticPreface.count)
-                
-                tlsClient.inputStream(buffer)
-            }
-            
-            client.updateSettings(to: settings)
-        }.catch(callback: client.promise.fail)
-        
-        return client.future
-    }
-    
-    public func close() {
-        self.client.close()
     }
 }
