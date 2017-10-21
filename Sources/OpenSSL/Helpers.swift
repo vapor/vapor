@@ -6,13 +6,7 @@ import Dispatch
 extension SSLStream {
     /// Runs the SSL handshake, regardless of client or server
     func handshake(for ssl: UnsafeMutablePointer<SSL>, side: Side) throws -> Future<Void> {
-        var accepted: Bool
-        
-        if case .client = side {
-            accepted = true
-        } else {
-            accepted = false
-        }
+        var accepted = false
         
         func retry() -> Int32 {
             if case .client = side {
@@ -24,90 +18,35 @@ extension SSLStream {
             }
         }
         
-        // Otherwise set up a readsource
-        let readSource = DispatchSource.makeReadSource(fileDescriptor: self.descriptor, queue: self.queue)
-        let writeSource = DispatchSource.makeWriteSource(fileDescriptor: self.descriptor, queue: self.queue)
-        
-        var reading = true
-        var writing = false
-        
         let promise = Promise<Void>()
         
-        func process(result: Int32) {
-            let code = SSL_get_error(ssl, result)
+        var result: Int32
+        var code: Int32
+        
+        func attemptInstantiation() {
+            repeat {
+                result = retry()
+                code = SSL_get_error(ssl, result)
+            } while result == -1 && (
+                code == SSL_ERROR_WANT_READ ||
+                code == SSL_ERROR_WANT_WRITE ||
+                code == SSL_ERROR_WANT_READ ||
+                code == SSL_ERROR_WANT_CONNECT
+            )
             
-            if reading {
-                reading = false
-                readSource.suspend()
-            }
-            
-            if writing {
-                writing = false
-                writeSource.suspend()
+            if case .server = side, !accepted {
+                accepted = true
+                return attemptInstantiation()
             }
             
             if result == -1 {
-                if code == SSL_ERROR_WANT_READ {
-                    reading = true
-                    readSource.resume()
-                    return
-                }
-                
-                if code == SSL_ERROR_WANT_WRITE {
-                    writing = true
-                    writeSource.resume()
-                    return
-                }
-                
-                if code == SSL_ERROR_WANT_CONNECT {
-                    process(result: retry())
-                    return
-                }
-                
-                readSource.cancel()
-                ERR_print_errors_fp(stdout)
                 promise.fail(Error(.sslError(result)))
-                return
-            }
-            
-            if accepted {
-                readSource.cancel()
-                writeSource.cancel()
-                promise.complete(())
             } else {
-                accepted = true
-                process(result: retry())
+                promise.complete(())
             }
         }
         
-        func tryAgain() {
-            // On input, continue the handshake
-            process(result: retry())
-        }
-        
-        readSource.setEventHandler(handler: tryAgain)
-        
-        tryAgain()
-        
-        let future = promise.future
-        
-        future.addAwaiter { _ in
-            if reading {
-                readSource.cancel()
-            }
-            
-            if writing {
-                writeSource.cancel()
-            }
-            
-            self.readSource = nil
-            self.writeSource = nil
-        }
-        
-        self.readSource = readSource
-        self.writeSource = writeSource
-        
-        return future
+        return promise.future
     }
     
     /// This is mandatory for SSL Servers to work. Optional for Clients.

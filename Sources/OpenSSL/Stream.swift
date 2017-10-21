@@ -121,6 +121,14 @@ public final class SSLStream<DuplexByteStream: Async.Stream>: Async.Stream, Clos
         }
     }
     
+    /// Returns a boolean describing if the socket is still healthy and open
+    public var isConnected: Bool {
+        var error = 0
+        getsockopt(descriptor, SOL_SOCKET, SO_ERROR, &error, nil)
+        
+        return error == 0
+    }
+    
     public func close() {
         guard let readSource = readSource else {
             socket.close()

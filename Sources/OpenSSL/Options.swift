@@ -41,12 +41,12 @@ public struct SSLOption {
     }
     
     public static func alpn(protocols preferences: ALPNPreferences) -> SSLOption {
+        let protocolsBuffer = Array(preferences.protocols.map { proto in
+            return [UInt8(proto.utf8.count)] + proto.utf8
+        }.joined())
+        
         return SSLOption(
             setupContext: { context in
-                let protocolsBuffer = Array(preferences.protocols.map { proto in
-                    return [UInt8(proto.utf8.count)] + proto.utf8
-                }.joined())
-                
                 SSL_CTX_set_next_proto_select_cb(context, { (ssl, output, outputLength, input, inputLength, protocols) -> Int32 in
                     guard let input = input else {
                         return SSL_TLSEXT_ERR_NOACK
@@ -95,10 +95,12 @@ public struct SSLOption {
 
                     return SSL_TLSEXT_ERR_NOACK
                 }, nil)
-            
-//                SSL_CTX_set_alpn_protos(context, protocolsBuffer, UInt32(preferences.protocols.count))
+                
+                SSL_CTX_set_alpn_protos(context, protocolsBuffer, UInt32(protocolsBuffer.count))
             },
-            preHandshake: nil,
+            preHandshake: { ssl, _ in
+                SSL_set_alpn_protos(ssl, protocolsBuffer, UInt32(protocolsBuffer.count))
+            },
             postHandshake: { ssl, context in
                 let protocolPointer = UnsafeMutablePointer<UnsafePointer<UInt8>?>.allocate(capacity: 1)
                 let protocolLengthPointer = UnsafeMutablePointer<UInt32>.allocate(capacity: 1)
