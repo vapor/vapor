@@ -9,6 +9,7 @@ jobs:
           MYSQL_USER: root
           MYSQL_DATABASE: test
           MYSQL_ALLOW_EMPTY_PASSWORD: true
+      - image: redis:latest
     steps:
       - run: eval "$(curl -sL https://apt.vapor.sh)"
       - run: apt-get install -yq ctls
@@ -24,7 +25,8 @@ jobs:
       - run: sudo gem install xcpretty
       - run: brew tap vapor/tap
       - run: brew update
-      - run: brew install ctls mysql
+      - run: brew install ctls mysql redis
+      - run: brew services start redis
       - run: mysql.server start
       - run: mysql -e 'CREATE DATABASE IF NOT EXISTS test;' -uroot
       - checkout
