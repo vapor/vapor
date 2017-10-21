@@ -50,8 +50,7 @@ XCTMain([
     testCase(MultipartTests.allTests),
 
     // MySQL
-    // FIXME: joannis, fix these :)
-    // testCase(MySQLTests.allTests),
+    testCase(MySQLTests.allTests),
 
     // Random
     testCase(RandomTests.allTests),

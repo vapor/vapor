@@ -1,0 +1,47 @@
+version: 2
+
+jobs:
+  linux:
+    docker:
+      - image: swift:4.0
+      - image: circleci/mysql:latest
+        environment:
+          MYSQL_USER: root
+          MYSQL_DATABASE: test
+          MYSQL_ALLOW_EMPTY_PASSWORD: true
+      - image: redis:latest
+    steps:
+      - run: eval "$(curl -sL https://apt.vapor.sh)"
+      - run: apt-get install -yq ctls
+      - checkout
+      - run: swift build
+      - run: swift build -c release
+      - run: swift test
+  
+  macOS:
+    macos:
+      xcode: "9.0"
+    steps:
+      - run: sudo gem install xcpretty
+      - run: brew tap vapor/tap
+      - run: brew update
+      - run: brew install ctls mysql redis
+      - run: brew services start redis
+      - run: mysql.server start
+      - run: mysql -e 'CREATE DATABASE IF NOT EXISTS test;' -uroot
+      - checkout
+      - run: swift build
+      - run: swift build -c release
+      - run: swift package generate-xcodeproj
+      - run: xcodebuild -scheme Vapor-Package -enableCodeCoverage YES test | xcpretty
+      - run: bash <(curl -s https://codecov.io/bash)
+
+workflows:
+  version: 2
+  macOS:
+    jobs:
+      - macOS
+
+  linux:
+    jobs:
+      - linux

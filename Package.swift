@@ -72,7 +72,7 @@ let package = Package(
         .target(name: "Bits"),
 
         // Core
-        .target(name: "Core", dependencies: ["libc", "Debugging"]),
+        .target(name: "Core", dependencies: ["libc", "Debugging", "Async"]),
         .target(name: "libc"),
         
         // Crypto
@@ -130,7 +130,7 @@ let package = Package(
         .testTarget(name: "ServiceTests", dependencies: ["Service"]),
 
         // TLS
-        .target(name: "TLS", dependencies: [ssl, "TCP"]),
+        .target(name: "TLS", dependencies: [ssl, "TCP", "Core"]),
         .testTarget(name: "TLSTests", dependencies: ["TLS"]),
 
         // SQLite
