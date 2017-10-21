@@ -1,3 +1,4 @@
+import Bits
 import Foundation
 
 /// http://httpwg.org/specs/rfc7540.html#FrameHeader
@@ -25,18 +26,6 @@ public struct Frame {
     
     var acknowledgeSettings: Frame {
         return Frame(type: .settings, payload: Payload(data: Data()), streamID: 0, flags: 0b10000000)
-    }
-}
-
-/// http://httpwg.org/specs/rfc7540.html#SETTINGS
-public struct HTTP2Settings {
-    public init() {}
-    
-    var frame: Frame {
-        let payloadData = Data()
-        let payload = Payload(data: payloadData)
-        
-        return Frame(type: .settings, payload: payload, streamID: 0)
     }
 }
 

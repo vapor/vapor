@@ -20,8 +20,8 @@ extension SSLStream {
         
         let promise = Promise<Void>()
         
-        var result: Int32
-        var code: Int32
+        var result: Int32 = 0
+        var code: Int32 = 0
         
         func attemptInstantiation() {
             repeat {
@@ -45,6 +45,8 @@ extension SSLStream {
                 promise.complete(())
             }
         }
+        
+        attemptInstantiation()
         
         return promise.future
     }
