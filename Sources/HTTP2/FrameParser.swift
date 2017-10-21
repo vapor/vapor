@@ -66,19 +66,19 @@ public final class FrameParser: Async.Stream {
         
         while offset < input.count {
             guard (continueNextByte(offset: 0) {
-                payloadLength &= numericCast((pointer[offset]) << 16)
+                payloadLength |= numericCast((pointer[offset]) << 16)
             }) else {
                 return
             }
             
             guard (continueNextByte(offset: 1) {
-                payloadLength &= numericCast((pointer[offset]) << 8)
+                payloadLength |= numericCast((pointer[offset]) << 8)
             }) else {
                 return
             }
             
             guard (continueNextByte(offset: 2) {
-                payloadLength &= numericCast((pointer[offset]))
+                payloadLength |= numericCast(pointer[offset])
             }) else {
                 return
             }
@@ -99,26 +99,31 @@ public final class FrameParser: Async.Stream {
                 return
             }
             
-            guard (continueNextByte(offset: 5) {
-                streamIdentifier &= numericCast((pointer[offset]) << 24)
+            guard (try continueNextByte(offset: 5) {
+                guard pointer[offset] & 0b10000000 == 0 else {
+                    // RESERVED BIT
+                    throw Error(.invalidFrameReceived)
+                }
+                
+                streamIdentifier |= numericCast((pointer[offset]) << 24)
             }) else {
                 return
             }
             
             guard (continueNextByte(offset: 6) {
-                streamIdentifier &= numericCast((pointer[offset]) << 16)
+                streamIdentifier |= numericCast((pointer[offset]) << 16)
             }) else {
                 return
             }
             
             guard (continueNextByte(offset: 7) {
-                streamIdentifier &= numericCast((pointer[offset]) << 8)
+                streamIdentifier |= numericCast((pointer[offset]) << 8)
             }) else {
                 return
             }
             
             guard (continueNextByte(offset: 8) {
-                streamIdentifier &= numericCast((pointer[offset]))
+                streamIdentifier |= numericCast((pointer[offset]))
             }) else {
                 return
             }
