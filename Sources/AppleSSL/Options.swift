@@ -25,8 +25,8 @@ public struct SSLOption {
     public static func alpn(protocols: [String]) -> SSLOption {
         return SSLOption { context in
             if #available(OSX 10.13, *) {
-                var protocols = protocols as CFArray
-                try assert(status: SSLSetALPNProtocols(context, protocols))
+//                var protocols = protocols as CFArray
+//                try assert(status: SSLSetALPNProtocols(context, protocols))
             } else {
                 throw Error(.notSupported)
             }

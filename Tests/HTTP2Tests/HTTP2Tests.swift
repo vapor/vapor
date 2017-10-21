@@ -11,5 +11,7 @@ public class HTTP2Tests: XCTestCase {
         let queue = DispatchQueue(label: "http2.client")
         
         let client = try HTTP2Client.connect(hostname: "google.com", worker: Worker(queue: queue)).blockingAwait()
+        
+        
     }
 }
