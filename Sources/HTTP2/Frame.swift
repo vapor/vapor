@@ -4,7 +4,16 @@ import Foundation
 /// http://httpwg.org/specs/rfc7540.html#FrameHeader
 public struct Frame {
     enum FrameType: UInt8 {
+        case data = 0
+        case headers = 1
+        case priority = 2
+        case reset = 3
         case settings = 4
+        case pushPromise = 5
+        case ping = 6
+        case goAway = 7
+        case windowUpdate = 8
+        case continuation = 9
     }
     
     var payloadLength: UInt32
@@ -12,11 +21,11 @@ public struct Frame {
     var flags: UInt8
     
     // Most significant bit *must* be `0` as it represents a reserved bit
-    var streamIdentifier: UInt32
+    var streamIdentifier: Int32
     
     var payload: Payload
     
-    init(type: FrameType, payload: Payload, streamID: UInt32, flags: UInt8 = 0) {
+    init(type: FrameType, payload: Payload, streamID: Int32, flags: UInt8 = 0) {
         self.type = type
         self.payload = payload
         self.payloadLength = numericCast(payload.data.count)

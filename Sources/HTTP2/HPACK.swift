@@ -139,6 +139,7 @@ struct Error: Swift.Error {
     
     enum Problem {
         case unexpectedEOF
+        case invalidFrameReceived
         case invalidSettingsFrame(Frame)
         case invalidPrefixSize(Int)
         case invalidUTF8String

@@ -18,7 +18,12 @@ public final class HTTP2Client: BaseStream {
     public var errorStream: ErrorHandler?
     
     var upgraded = false
-    public private(set) var remoteSettings = HTTP2Settings()
+    public private(set) var remoteSettings = HTTP2Settings() {
+        didSet {
+            self.frameParser.settings = remoteSettings
+        }
+    }
+    
     public private(set) var settings = HTTP2Settings() {
         didSet {
             self.frameSerializer.inputStream(settings.frame)
@@ -54,6 +59,9 @@ public final class HTTP2Client: BaseStream {
                             self.promise.complete(self)
                         }
                     }
+                default:
+                    print(frame)
+                    print(frame.payload.data.count)
                 }
             } catch {
                 self.handleError(error: error)
