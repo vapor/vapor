@@ -58,7 +58,22 @@ public struct HTTP2Settings {
     }
     
     var frame: Frame {
-        let payloadData = Data()
+        var payloadData = Data()
+        
+        payloadData.append(value: self.headerTableSize, forId: 0x01)
+        payloadData.append(value: self.pushEnabled ? 1 : 0, forId: 0x02)
+        
+        if let maxConcurrentStreams = maxConcurrentStreams {
+            payloadData.append(value: maxConcurrentStreams, forId: 0x03)
+        }
+        
+        payloadData.append(value: self.maxInitialWindowSize, forId: 0x04)
+        payloadData.append(value: self.maxFrameSize, forId: 0x05)
+        
+        if let maxHeaderListSize = maxHeaderListSize {
+            payloadData.append(value: maxHeaderListSize, forId: 0x06)
+        }
+        
         let payload = Payload(data: payloadData)
         
         return Frame(type: .settings, payload: payload, streamID: 0)
@@ -66,5 +81,18 @@ public struct HTTP2Settings {
     
     static var acknowledgeFrame: Frame {
         return Frame(type: .settings, payload: Payload(), streamID: 0, flags: 0x01)
+    }
+}
+
+fileprivate extension Data {
+    mutating func append(value: UInt32, forId: UInt16) {
+        self.append(contentsOf: [
+            numericCast((forId >> 8) & 0xff),
+            numericCast((forId) & 0xff),
+            numericCast((value >> 24) & 0xff),
+            numericCast((value >> 16) & 0xff),
+            numericCast((value >> 8) & 0xff),
+            numericCast((value) & 0xff),
+        ])
     }
 }

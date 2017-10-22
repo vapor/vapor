@@ -26,10 +26,14 @@ extension HTTP2Client {
                     let body = String(data: frame.payload.data, encoding: .utf8)
                     
                     print(body)
+                case .reset:
+                    promise.fail(Error(.clientError))
                 default:
                     break
                 }
             }
+            
+            stream.catch(promise.fail)
             
             for frame in try request.headerFrames(for: stream) {
                 stream.context.serializer.inputStream(frame)

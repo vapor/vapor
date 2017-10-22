@@ -7,6 +7,10 @@ extension HTTP2Client {
         if frame.flags & 0x01 == 0x01 {
             // Acknowledgement
             self.updatingSettings = false
+            
+            if !self.future.isCompleted {
+                self.promise.complete(self)
+            }
         } else {
             do {
                 try self.remoteSettings.update(to: frame)
@@ -15,10 +19,6 @@ extension HTTP2Client {
                 return
             }
             self.context.serializer.inputStream(HTTP2Settings.acknowledgeFrame)
-            
-            if !self.future.isCompleted {
-                self.promise.complete(self)
-            }
         }
     }
     
@@ -39,9 +39,10 @@ extension HTTP2Client {
         case .priority:
             fatalError()
         case .reset:
-            fatalError()
+            self.close()
         case .goAway:
-            fatalError()
+            // TODO: Continue streams below treshold
+            self.close()
         case .windowUpdate:
             let update = try WindowUpdate(frame: frame, errorsTo: self.context.serializer)
             

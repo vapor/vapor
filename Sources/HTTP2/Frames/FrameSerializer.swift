@@ -19,7 +19,7 @@ public final class FrameSerializer: Async.Stream {
         input.payloadLength = numericCast(input.payload.data.count)
         
         // header size + payload
-        let messageLength = 24 + input.payload.data.count
+        let messageLength = 9 + input.payload.data.count
         
         let pointer = MutableBytesPointer.allocate(capacity: messageLength)
         
@@ -34,9 +34,10 @@ public final class FrameSerializer: Async.Stream {
         // flags
         pointer[4] = input.flags
         
-        pointer.advanced(by: 5).withMemoryRebound(to: Int32.self, capacity: 1) { pointer in
-            pointer.pointee = input.streamIdentifier
-        }
+        pointer[5] = numericCast((input.streamIdentifier >> 24) & 0xff)
+        pointer[6] = numericCast((input.streamIdentifier >> 16) & 0xff)
+        pointer[7] = numericCast((input.streamIdentifier >> 8) & 0xff)
+        pointer[8] = numericCast((input.streamIdentifier) & 0xff)
         
         input.payload.data.withUnsafeBytes { (payload: BytesPointer) in
             _ = memcpy(pointer.advanced(by: 9), payload, input.payload.data.count)

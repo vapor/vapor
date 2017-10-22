@@ -32,6 +32,10 @@ extension HTTP2Client {
     }
     
     public func close() {
+        for stream in streamPool.streams.values {
+            stream.close()
+        }
+        
         self.client.close()
     }
 }

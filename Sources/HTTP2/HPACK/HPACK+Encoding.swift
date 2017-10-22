@@ -25,15 +25,21 @@ public final class HPACKEncoder {
             }
         }
         
-        if let host = request.uri.hostname ?? request.headers[.host] {
+        try payloads.withPayload(maxSize: size) { payload in
+            try payload.fullyIndexed(index: HeadersTable.https.index)
+        }
+        
+        if let host = request.headers[.host] ?? request.uri.hostname {
             try payloads.withPayload(maxSize: size) { payload in
-                try payload.headerIndexed(index: HeadersTable.get.index, value: host)
+                try payload.headerIndexed(index: HeadersTable.authority.index, value: host)
             }
         }
         
         nextHeader: for (name, value) in request.headers where name != .host {
+            let name = name.description.lowercased()
+            
             for entry in HeadersTable.staticEntries {
-                if entry.name == name {
+                if entry.name.description == name {
                     try payloads.withPayload(maxSize: size) { payload in
                         try payload.headerIndexed(index: entry.index, value: value)
                     }
@@ -61,6 +67,10 @@ extension Array where Element == Frame {
         
         for i in 0..<headers.count {
             let frame = Frame(type: .headers, payload: headers[i], streamID: streamID)
+            
+            if i > 0 {
+                frame.type = .continuation
+            }
             
             if i == headers.count - 1 {
                 // The last header needs the END_HEADERS flag
@@ -103,6 +113,7 @@ extension Payload {
     }
     
     func setAuthority(to authority: String, huffmanEncoded: Bool = true) throws {
-        try headerIndexed(index: HeadersTable.authority.index, value: authority, huffmanEncoded: huffmanEncoded)
+        try headerIndexed(index: HeadersTable.host.index, value: authority, huffmanEncoded: huffmanEncoded)
+//        try headerIndexed(index: HeadersTable.authority.index, value: authority, huffmanEncoded: huffmanEncoded)
     }
 }

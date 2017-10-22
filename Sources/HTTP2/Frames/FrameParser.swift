@@ -66,13 +66,13 @@ public final class FrameParser: Async.Stream {
         
         while offset < input.count {
             guard (continueNextByte(offset: 0) {
-                payloadLength |= numericCast((pointer[offset]) << 16)
+                payloadLength |= numericCast(pointer[offset]) << 16
             }) else {
                 return
             }
             
             guard (continueNextByte(offset: 1) {
-                payloadLength |= numericCast((pointer[offset]) << 8)
+                payloadLength |= numericCast(pointer[offset]) << 8
             }) else {
                 return
             }
@@ -89,8 +89,8 @@ public final class FrameParser: Async.Stream {
                 }
                 
                 self.type = frameType
-                }) else {
-                    return
+            }) else {
+                return
             }
             
             guard (continueNextByte(offset: 4) {

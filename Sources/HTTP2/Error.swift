@@ -15,6 +15,7 @@ struct Error: Swift.Error {
         case invalidPrefixSize(Int)
         case invalidUTF8String
         case invalidUpgrade
+        case clientError
         case invalidStreamIdentifier
         case maxHeaderTableSizeOverridden(max: Int, updatedTo: Int)
         case invalidTableIndex(Int)

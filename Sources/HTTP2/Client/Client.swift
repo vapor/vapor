@@ -16,7 +16,7 @@ public final class HTTP2Client: BaseStream {
     
     public var errorStream: ErrorHandler?
     
-    fileprivate var _nextStreamID: Int32 = 1
+    fileprivate var _nextStreamID: Int32 = 3
     
     var nextStreamID: Int32 {
         defer {
@@ -24,7 +24,7 @@ public final class HTTP2Client: BaseStream {
             
             // When overflowing, reset to 1
             if _nextStreamID <= 0 {
-                _nextStreamID = 1
+                self.close()
             }
         }
         
@@ -69,14 +69,13 @@ public final class HTTP2Client: BaseStream {
         
         context.parser.drain { frame in
             do {
-                if frame.type == .reset {
-                    fatalError("I'm afraid of errors!")
-                } else if frame.streamIdentifier == 0 {
+                if frame.streamIdentifier == 0 {
                     try self.processTopLevelStream(from: frame)
                 } else {
                     guard
                         frame.type == .windowUpdate || frame.type == .headers ||
-                        frame.type == .pushPromise  || frame.type == .data
+                        frame.type == .pushPromise  || frame.type == .data ||
+                        frame.type == .reset
                     else {
                         throw Error(.invalidStreamIdentifier)
                     }

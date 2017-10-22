@@ -53,6 +53,10 @@ public final class HTTP2Stream: Async.Stream {
         self.context = context
     }
     
+    public func close() {
+        errorStream?(Error(.clientError))
+    }
+    
     public func inputStream(_ frame: Frame) {
         do {
             switch frame.type {
@@ -68,6 +72,8 @@ public final class HTTP2Stream: Async.Stream {
                 outputStream?(frame)
             case .data:
                 outputStream?(frame)
+            case .reset:
+                throw Error(.clientError)
             case .pushPromise:
                 assertionFailure("Unsupported")
                 break

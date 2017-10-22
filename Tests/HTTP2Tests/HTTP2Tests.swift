@@ -14,7 +14,7 @@ public class HTTP2Tests: XCTestCase {
         
         let response = try HTTP2Client.connect(hostname: "google.com", worker: worker).flatten { client -> Future<Response> in
             let request = Request(method: .get, uri: "/", headers: [
-                :
+                .host: "www.google.com"
             ], body: Body())
             
             return try client.send(request)
