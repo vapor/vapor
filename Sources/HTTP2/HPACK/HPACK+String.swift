@@ -2,12 +2,15 @@ import Pufferfish
 
 extension Payload {
     public func append(string: String, huffmanEncoded: Bool = false) throws {
-        data.append(huffmanEncoded ? 0b10000000 : 0)
-        try self.serialize(integer: string.count, prefix: 7)
+        let huffmanMarker: UInt8 = huffmanEncoded ? 0b10000000 : 0
+        self.data.append(huffmanMarker)
         
         if huffmanEncoded {
-            data.append(contentsOf: try HuffmanEncoder.hpack.encode(string: string))
+            let encoded = try HuffmanEncoder.hpack.encode(string: string)
+            try self.serialize(integer: encoded.count, prefix: 7)
+            data.append(contentsOf: encoded)
         } else {
+            try self.serialize(integer: string.utf8.count, prefix: 7)
             data.append(contentsOf: string.utf8)
         }
     }

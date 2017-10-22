@@ -17,7 +17,7 @@ struct Error: Swift.Error {
         case invalidUpgrade
         case invalidStreamIdentifier
         case maxHeaderTableSizeOverridden(max: Int, updatedTo: Int)
-        case invalidStaticTableIndex(Int)
+        case invalidTableIndex(Int)
     }
 }
 

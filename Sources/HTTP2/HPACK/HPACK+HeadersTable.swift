@@ -19,25 +19,30 @@ final class HeadersTable {
     var currentTableSize = 0
     var maxTableSize: Int?
     
-    func getEntry(at index: Int) throws -> HeadersTable.Entry {
+    func getEntry(at index: Int, dynamicTable: Bool = true) throws -> HeadersTable.Entry {
         // First the static entries
         if index >= 0, index <= HeadersTable.staticEntries.count {
+            // Tables start at 1
             return HeadersTable.staticEntries[index &- 1]
+        }
+        
+        if !dynamicTable {
+            throw Error(.invalidTableIndex(index))
         }
         
         // Get the dynamic entry index
         let index = index &- HeadersTable.staticEntries.count &- 1
         
-        // The synamic entry *must* exist
+        // The dynamic entry *must* exist
         guard index < dynamicEntries.count else {
-            throw Error(.invalidStaticTableIndex(index))
+            throw Error(.invalidTableIndex(index))
         }
         
         let entry = dynamicEntries[index]
         
         // Check if the name exist (I.E. not a dummy index reservation)
         guard !entry.isDummy else {
-            throw Error(.invalidStaticTableIndex(index))
+            throw Error(.invalidTableIndex(index))
         }
         
         return entry

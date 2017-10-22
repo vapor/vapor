@@ -25,7 +25,7 @@ public final class HuffmanTree {
                 let shifted = encoded << 1
                 
                 process(tree.left, encoded: shifted, bits: bits &+ 1)
-                process(tree.right, encoded: shifted  &+ 1, bits: bits &+ 1)
+                process(tree.right, encoded: shifted &+ 1, bits: bits &+ 1)
             case .leaf(let leaf):
                 table.elements.append(leaf)
                 table.encoded.append((encoded, UInt8(bits &+ 1)))
@@ -45,8 +45,12 @@ public final class HuffmanTree {
             let (data, size) = table.encoded[index]
             var currentTree = self
             
-            for bit in (0..<size).reversed() {
-                let left =  (1 << bit) & data == 0
+            var bit = size
+            
+            while bit > 0 {
+                bit = bit &- 1
+                
+                let left = (1 << bit) & data == 0
                 
                 // branch
                 if bit == 0 {

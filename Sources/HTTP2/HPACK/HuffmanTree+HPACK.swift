@@ -282,7 +282,6 @@ extension EncodingTable {
         encodingTable.append((0b11111111_11111111_11111101_111, 27))
         encodingTable.append((0b11111111_11111111_11111110_000, 27))
         encodingTable.append((0b11111111_11111111_11111011_10, 26))
-//        encodingTable.append((0b11111111_11111111_11111111_111111, 30))
         
         return encodingTable
     }()

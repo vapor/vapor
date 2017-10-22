@@ -1,4 +1,5 @@
 import XCTest
+import HTTP
 @testable import HTTP2
 import Pufferfish
 
@@ -92,12 +93,37 @@ public class HPACKTests: XCTestCase {
     }
     
     func testHuffmanStrings() throws {
-        let string = "302"
+        let strings = [
+            "302",
+            "Mon, 21 Oct 2013 20:13:22 GMT"
+        ]
         
-        let data = try HuffmanEncoder.hpack.encode(string: string)
-        let sameString = String(bytes: try HuffmanDecoder.hpack().decode(data: data), encoding: .utf8)
+        for string in strings {
+            let data = try HuffmanEncoder.hpack.encode(string: string)
+            let sameString = String(bytes: try HuffmanDecoder.hpack().decode(data: data), encoding: .utf8)
+            
+            XCTAssertEqual(sameString, string)
+        }
+    }
+    
+    func testHuffmanData() throws {
+        var data = Data()
         
-        XCTAssertEqual(sameString, "302")
+        for byte in UInt8.min...UInt8.max {
+            data.append(byte)
+            
+            let encoded = try HuffmanEncoder.hpack.encode(data: data)
+            let decoded = try HuffmanDecoder.hpack().decode(data: encoded)
+            
+            if data != decoded {
+                XCTFail("Byte \(byte) failed \(Array(encoded))")
+                print(Array(encoded))
+                print(Array(decoded))
+                print(Array(data))
+                let encoded = try HuffmanEncoder.hpack.encode(data: data)
+                let decoded = try HuffmanDecoder.hpack().decode(data: encoded)
+            }
+        }
     }
     
     // http://httpwg.org/specs/rfc7541.html#rfc.section.C.2.1
@@ -310,7 +336,7 @@ public class HPACKTests: XCTestCase {
     // http://httpwg.org/specs/rfc7541.html#response.examples.without.huffman.coding
     func testHeaderResponseDecoding() throws {
         let decoder = HPACKDecoder()
-        decoder.tableSize = 256
+        decoder.table.tableSize = 256
         
         // http://httpwg.org/specs/rfc7541.html#n-first-response_1
         var encodedHeaders = Data([
@@ -406,7 +432,7 @@ public class HPACKTests: XCTestCase {
     // http://httpwg.org/specs/rfc7541.html#response.examples.with.huffman.coding
     func testHuffmanHeaderResponseDecoding() throws {
         let decoder = HPACKDecoder()
-        decoder.tableSize = 256
+        decoder.table.tableSize = 256
         
         var encodedHeaders = Data([
             0x48, 0x82, 0x64, 0x02, 0x58, 0x85, 0xae, 0xc3,
@@ -494,7 +520,38 @@ public class HPACKTests: XCTestCase {
     }
     
     func testHeaderEncoding0() throws {
+        var headers = Headers()
+        let encoder = HPACKEncoder()
+        let decoder = HPACKDecoder()
         
+        headers[.cacheControl] = "private"
+        headers[.date] = "Mon, 21 Oct 2013 20:13:22 GMT"
+        headers[.location] = "https://www.example.com"
+        headers[.contentEncoding] = "gzip"
+        headers[.setCookie] = "foo=ASDJKHQKBZXOQWEOPIUAXQWEOIU; max-age=3600; version=1"
+        
+        var encoded: Payload
+            
+        if let data = try encoder.encode(request: Request(method: .get, headers: headers), chunksOf: 1_000_000).first {
+            encoded = data
+        } else {
+            XCTFail()
+            return
+        }
+        
+        var decoded = try decoder.decode(encoded)
+        
+        let method = decoded[":method"]
+        let path = decoded[":path"]
+        
+        decoded[":authority"] = nil
+        decoded[.contentLength] = nil
+        decoded[":method"] = nil
+        decoded[":path"] = nil
+        
+        XCTAssertEqual(method, "GET")
+        XCTAssertEqual(path, "/")
+        XCTAssertEqual(headers, decoded)
     }
     
     func testHeaderEncoding1() throws {
@@ -522,5 +579,24 @@ public class HPACKTests: XCTestCase {
     
     func testConstants() {
         XCTAssertEqual(HeadersTable.staticEntries.count, 61)
+    }
+}
+
+extension Headers: Equatable {
+    public static func ==(lhs: Headers, rhs: Headers) -> Bool {
+        let lhs = Array(lhs)
+        let rhsCount = Array(rhs).count
+        
+        guard lhs.count == rhsCount else {
+            return false
+        }
+        
+        for (key, value) in lhs {
+            guard rhs[key] == value else {
+                return false
+            }
+        }
+        
+        return true
     }
 }

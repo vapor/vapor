@@ -60,6 +60,7 @@ public final class HPACKDecoder {
             let name: Headers.Name
             
             if incrementallyIndexed {
+                // Incrementally indexed
                 if (byte & 0b00111111) == 0 {
                     // Header not indexed
                     packet.bytePosition += 1
@@ -70,20 +71,24 @@ public final class HPACKDecoder {
                     name = try table.getEntry(at: nameIndex).name
                 }
             } else if neverIndexed {
-                // Never indexed
+                // Never indexed, ignore index
                 let nameIndex = try packet.parseInteger(prefix: 4)
                 
                 if nameIndex == 0 {
-                    packet.bytePosition += 1
+                    // Header not indexed
                     name = Headers.Name(try packet.parseString())
                 } else {
-                    name = try table.getEntry(at: nameIndex).name
+                    // Header indexed
+                    name = try table.getEntry(at: nameIndex, dynamicTable: false).name
                 }
             } else {
+                // Not indexed
                 if (byte & 0b00001111) == 0 {
+                    // Header not indexed
                     packet.bytePosition += 1
                     name = Headers.Name(try packet.parseString())
                 } else {
+                    // Header indexed
                     let nameIndex = try packet.parseInteger(prefix: 4)
                     name = try table.getEntry(at: nameIndex).name
                 }

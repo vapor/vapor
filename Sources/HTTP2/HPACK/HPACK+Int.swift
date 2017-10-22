@@ -60,7 +60,7 @@ extension Payload {
         let max: UInt8 = numericCast(power(of: 2, to: n) - 1)
         
         guard int >= numericCast(max) else {
-            data[data.count - 1] &= numericCast(int)
+            data[data.count - 1] |= numericCast(int)
             return
         }
         
