@@ -43,7 +43,13 @@ extension HTTP2Client {
         case .goAway:
             fatalError()
         case .windowUpdate:
-            fatalError()
+            let update = try WindowUpdate(frame: frame, errorsTo: frameSerializer)
+            
+            if let windowSize = windowSize {
+                self.windowSize = windowSize &+ numericCast(update.windowSize) as UInt64
+            } else {
+                windowSize = numericCast(update.windowSize)
+            }
         default:
             throw Error(.invalidStreamIdentifier)
         }

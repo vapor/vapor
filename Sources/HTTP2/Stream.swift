@@ -35,15 +35,39 @@ public final class HTTP2Stream: Async.Stream {
     public var outputStream: OutputHandler?
     public var errorStream: ErrorHandler?
     
+    let identifier: Int32
     let serializer: FrameSerializer
     let parser: FrameParser
+    var windowSize: UInt64? = nil
     
     init(id: Int32, serializer: FrameSerializer, parser: FrameParser) {
+        self.identifier = id
         self.serializer = serializer
         self.parser = parser
     }
     
-    public func inputStream(_ input: Frame) {
-        
+    public func inputStream(_ frame: Frame) {
+        do {
+            switch frame.type {
+            case .windowUpdate:
+                let update = try WindowUpdate(frame: frame, errorsTo: serializer)
+                
+                if let windowSize = windowSize {
+                    self.windowSize = windowSize &+ numericCast(update.windowSize) as UInt64
+                } else {
+                    windowSize = numericCast(update.windowSize)
+                }
+            case .headers:
+                fatalError()
+            case .data:
+                fatalError()
+            case .pushPromise:
+                fatalError()
+            default:
+                break
+            }
+        } catch {
+            self.errorStream?(error)
+        }
     }
 }

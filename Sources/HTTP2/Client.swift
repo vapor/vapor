@@ -32,7 +32,7 @@ public final class HTTP2Client: BaseStream {
         return _nextStreamID
     }
     
-    var upgraded = false
+    var windowSize: UInt64? = nil
     
     public internal(set) var remoteSettings = HTTP2Settings() {
         didSet {
@@ -67,7 +67,9 @@ public final class HTTP2Client: BaseStream {
         
         frameParser.drain { frame in
             do {
-                if frame.streamIdentifier == 0 {
+                if frame.type == .reset {
+                    fatalError("I'm afraid of errors!")
+                } else if frame.streamIdentifier == 0 {
                     try self.processTopLevelStream(from: frame)
                 } else {
                     guard
