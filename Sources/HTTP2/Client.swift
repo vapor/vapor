@@ -68,55 +68,19 @@ public final class HTTP2Client: BaseStream {
         frameParser.drain { frame in
             do {
                 if frame.streamIdentifier == 0 {
+                    try self.processTopLevelStream(from: frame)
+                } else {
                     guard
-                        frame.type == .settings || frame.type == .ping  ||
-                        frame.type == .priority || frame.type == .reset ||
-                        frame.type == .goAway   || frame.type == .windowUpdate
+                        frame.type == .windowUpdate || frame.type == .headers ||
+                        frame.type == .pushPromise  || frame.type == .data
                     else {
                         throw Error(.invalidStreamIdentifier)
                     }
-                
-                    switch frame.type {
-                    case .settings:
-                        guard frame.streamIdentifier == 0 else {
-                            throw Error(.invalidStreamIdentifier)
-                        }
-                        
-                        if frame.flags & 0x01 == 0x01 {
-                            // Acknowledgement
-                            self.updatingSettings = false
-                        } else {
-                            try self.remoteSettings.update(to: frame)
-                            self.frameSerializer.inputStream(HTTP2Settings.acknowledgeFrame)
-                            
-                            if !self.future.isCompleted {
-                                self.promise.complete(self)
-                            }
-                        }
-                    case .ping:
-                        fatalError()
-                    case .priority:
-                        fatalError()
-                    case .reset:
-                        fatalError()
-                    case .goAway:
-                        fatalError()
-                    case .windowUpdate:
-                        fatalError()
-                    default:
-                        throw Error(.invalidStreamIdentifier)
-                    }
-                } else {
-                    switch frame.type {
-                    case .headers, .data, .pushPromise:
-                        self.streamPool[frame.streamIdentifier].inputStream(frame)
-                    case .windowUpdate:
-                        fatalError()
-                    default:
-                        throw Error(.invalidStreamIdentifier)
-                    }
+                    
+                    self.streamPool[frame.streamIdentifier].inputStream(frame)
                 }
             } catch {
+                self.frameSerializer.inputStream(ResetFrame(code: .protocolError, stream: frame.streamIdentifier).frame)
                 self.handleError(error: error)
             }
         }
