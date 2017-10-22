@@ -7,6 +7,6 @@ extension Request {
         
         var frames = [Frame]()
         
-        HuffmanEncoder.hpack.encode(data: <#T##Data#>)
+        return frames
     }
 }

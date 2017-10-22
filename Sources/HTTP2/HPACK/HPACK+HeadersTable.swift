@@ -4,12 +4,50 @@ final class HeadersTable {
     struct Entry {
         var name: Headers.Name
         var isDummy = false
+        var index: Int
         var value: String
         
         init(index: Int = 0, name: Headers.Name?, value: String = "") {
+            self.index = index
             self.name = name ?? ""
             self.value = value
             self.isDummy = name == nil
+        }
+    }
+    
+    var tableSize: Int = 4_096
+    var currentTableSize = 0
+    var maxTableSize: Int?
+    
+    func getEntry(at index: Int) throws -> HeadersTable.Entry {
+        // First the static entries
+        if index >= 0, index <= HeadersTable.staticEntries.count {
+            return HeadersTable.staticEntries[index &- 1]
+        }
+        
+        // Get the dynamic entry index
+        let index = index &- HeadersTable.staticEntries.count &- 1
+        
+        // The synamic entry *must* exist
+        guard index < dynamicEntries.count else {
+            throw Error(.invalidStaticTableIndex(index))
+        }
+        
+        let entry = dynamicEntries[index]
+        
+        // Check if the name exist (I.E. not a dummy index reservation)
+        guard !entry.isDummy else {
+            throw Error(.invalidStaticTableIndex(index))
+        }
+        
+        return entry
+    }
+    
+    func cleanTable() {
+        // Remove extra entries if the table shrinks
+        while currentTableSize > self.tableSize {
+            let nextEntry = dynamicEntries.removeLast()
+            currentTableSize -= nextEntry.octets
         }
     }
     

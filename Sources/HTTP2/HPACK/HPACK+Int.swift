@@ -20,14 +20,16 @@ extension Payload {
         
         var integer: Int = numericCast(byte)
         var offset = 0
+        var iterations = 0
         
         repeat {
             byte = data[bytePosition]
             bytePosition += 1
             integer += numericCast(byte & 0b01111111) * power(of: 2, to: offset)
-            offset += 7
-            // While the significant bit is set
-        } while byte & 0b10000000 == 0b10000000
+            offset = offset &+ 7
+            iterations = iterations &+ 1
+            // While the significant bit is set, prevent too many iterations
+        } while byte & 0b10000000 == 0b10000000 && iterations < 3
         
         return integer
     }
