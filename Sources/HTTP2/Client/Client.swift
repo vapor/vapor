@@ -12,8 +12,7 @@ enum Constants {
 public final class HTTP2Client: BaseStream {
     let client: TLSClient
     
-    let frameParser = FrameParser()
-    let frameSerializer = FrameSerializer()
+    let context: ConnectionContext
     
     public var errorStream: ErrorHandler?
     
@@ -36,13 +35,13 @@ public final class HTTP2Client: BaseStream {
     
     public internal(set) var remoteSettings = HTTP2Settings() {
         didSet {
-            self.frameParser.settings = remoteSettings
+            self.context.parser.settings = remoteSettings
         }
     }
     
     public internal(set) var settings = HTTP2Settings() {
         didSet {
-            self.frameSerializer.inputStream(settings.frame)
+            self.context.serializer.inputStream(settings.frame)
         }
     }
     
@@ -57,15 +56,18 @@ public final class HTTP2Client: BaseStream {
     
     init(upgrading client: TLSClient) {
         self.client = client
+        self.context = ConnectionContext(
+            parser: FrameParser(),
+            serializer: FrameSerializer()
+        )
         self.streamPool = HTTP2StreamPool(
-            serializer: self.frameSerializer,
-            parser: self.frameParser
+            context: context
         )
         
-        client.drain(into: frameParser)
-        frameSerializer.drain(into: client)
+        client.drain(into: context.parser)
+        context.serializer.drain(into: client)
         
-        frameParser.drain { frame in
+        context.parser.drain { frame in
             do {
                 if frame.type == .reset {
                     fatalError("I'm afraid of errors!")
@@ -82,14 +84,14 @@ public final class HTTP2Client: BaseStream {
                     self.streamPool[frame.streamIdentifier].inputStream(frame)
                 }
             } catch {
-                self.frameSerializer.inputStream(ResetFrame(code: .protocolError, stream: frame.streamIdentifier).frame)
+                self.context.serializer.inputStream(ResetFrame(code: .protocolError, stream: frame.streamIdentifier).frame)
                 self.handleError(error: error)
             }
         }
         
         client.catch(self.handleError)
-        frameParser.catch(self.handleError)
-        frameSerializer.catch(self.handleError)
+        context.parser.catch(self.handleError)
+        context.serializer.catch(self.handleError)
     }
     
     fileprivate func handleError(error: Swift.Error) {

@@ -3,12 +3,10 @@ import Async
 final class HTTP2StreamPool {
     var streams = [Int32: HTTP2Stream]()
     
-    let serializer: FrameSerializer
-    let parser: FrameParser
+    let context: ConnectionContext
     
-    init(serializer: FrameSerializer, parser: FrameParser) {
-        self.serializer = serializer
-        self.parser = parser
+    init(context: ConnectionContext) {
+        self.context = context
     }
     
     subscript(streamID: Int32) -> HTTP2Stream {
@@ -18,13 +16,23 @@ final class HTTP2StreamPool {
         
         let stream = HTTP2Stream(
             id: streamID,
-            serializer: serializer,
-            parser: parser
+            context: context
         )
         
         self.streams[streamID] = stream
         
         return stream
+    }
+}
+
+public final class ConnectionContext {
+    let serializer: FrameSerializer
+    let parser: FrameParser
+    let remoteHeaders = HPACKEncoder()
+    
+    init(parser: FrameParser, serializer: FrameSerializer) {
+        self.parser = parser
+        self.serializer = serializer
     }
 }
 
@@ -36,21 +44,19 @@ public final class HTTP2Stream: Async.Stream {
     public var errorStream: ErrorHandler?
     
     let identifier: Int32
-    let serializer: FrameSerializer
-    let parser: FrameParser
+    let context: ConnectionContext
     var windowSize: UInt64? = nil
     
-    init(id: Int32, serializer: FrameSerializer, parser: FrameParser) {
+    init(id: Int32, context: ConnectionContext) {
         self.identifier = id
-        self.serializer = serializer
-        self.parser = parser
+        self.context = context
     }
     
     public func inputStream(_ frame: Frame) {
         do {
             switch frame.type {
             case .windowUpdate:
-                let update = try WindowUpdate(frame: frame, errorsTo: serializer)
+                let update = try WindowUpdate(frame: frame, errorsTo: context.serializer)
                 
                 if let windowSize = windowSize {
                     self.windowSize = windowSize &+ numericCast(update.windowSize) as UInt64

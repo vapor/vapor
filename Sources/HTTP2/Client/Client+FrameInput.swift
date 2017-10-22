@@ -11,10 +11,10 @@ extension HTTP2Client {
             do {
                 try self.remoteSettings.update(to: frame)
             } catch {
-                self.frameSerializer.inputStream(ResetFrame(code: .frameSizeError, stream: frame.streamIdentifier).frame)
+                self.context.serializer.inputStream(ResetFrame(code: .frameSizeError, stream: frame.streamIdentifier).frame)
                 return
             }
-            self.frameSerializer.inputStream(HTTP2Settings.acknowledgeFrame)
+            self.context.serializer.inputStream(HTTP2Settings.acknowledgeFrame)
             
             if !self.future.isCompleted {
                 self.promise.complete(self)
@@ -43,7 +43,7 @@ extension HTTP2Client {
         case .goAway:
             fatalError()
         case .windowUpdate:
-            let update = try WindowUpdate(frame: frame, errorsTo: frameSerializer)
+            let update = try WindowUpdate(frame: frame, errorsTo: self.context.serializer)
             
             if let windowSize = windowSize {
                 self.windowSize = windowSize &+ numericCast(update.windowSize) as UInt64
