@@ -8,12 +8,20 @@ extension HTTP2Client {
             let promise = Promise<Response>()
             
             let stream = openStream()
+            let response = Response()
             
             stream.drain { frame in
-                
+                switch frame.type {
+                case .headers:
+                    fatalError()
+                case .data:
+                    fatalError()
+                default:
+                    break
+                }
             }
             
-            for frame in request.headerFrames {
+            for frame in request.headerFrames(for: stream) {
                 stream.inputStream(frame)
             }
             

@@ -26,7 +26,7 @@ extension HTTP2Client {
             }
             
             client.updateSettings(to: settings)
-            }.catch(callback: client.promise.fail)
+        }.catch(callback: client.promise.fail)
         
         return client.future
     }

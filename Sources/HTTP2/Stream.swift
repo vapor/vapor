@@ -58,11 +58,12 @@ public final class HTTP2Stream: Async.Stream {
                     windowSize = numericCast(update.windowSize)
                 }
             case .headers:
-                fatalError()
+                outputStream?(frame)
             case .data:
-                fatalError()
+                outputStream?(frame)
             case .pushPromise:
-                fatalError()
+                assertionFailure("Unsupported")
+                break
             default:
                 break
             }

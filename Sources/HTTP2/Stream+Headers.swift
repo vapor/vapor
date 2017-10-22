@@ -1,9 +1,12 @@
 import HTTP
+import Pufferfish
 
 extension Request {
-    var headerFrames: [Frame] {
+    func headerFrames(for stream: HTTP2Stream) -> [Frame] {
+        // TODO: Support Padding, Stream Dependencies and priorities
         
+        var frames = [Frame]()
         
-        return []
+        HuffmanEncoder.hpack.encode(data: <#T##Data#>)
     }
 }

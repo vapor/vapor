@@ -14,6 +14,10 @@ public class HPACKTests: XCTestCase {
         ("testHeaderDecoding1", testHeaderDecoding1),
         ("testHeaderDecoding2", testHeaderDecoding2),
         ("testHeaderDecoding3", testHeaderDecoding3),
+        ("testHeaderEncoding0", testHeaderEncoding0),
+        ("testHeaderEncoding1", testHeaderEncoding1),
+        ("testHeaderEncoding2", testHeaderEncoding2),
+        ("testHeaderEncoding3", testHeaderEncoding3),
         ("testPlainMultiHeaderRequestDecoding", testPlainMultiHeaderRequestDecoding),
         ("testHuffmanMultiHeaderRequestDecoding", testHuffmanMultiHeaderRequestDecoding),
         ("testHeaderResponseDecoding", testHeaderResponseDecoding),
@@ -487,6 +491,22 @@ public class HPACKTests: XCTestCase {
         XCTAssertEqual(decoder.table.dynamicEntries[0].value, "foo=ASDJKHQKBZXOQWEOPIUAXQWEOIU; max-age=3600; version=1")
         XCTAssertEqual(decoder.table.dynamicEntries[1].value, "gzip")
         XCTAssertEqual(decoder.table.dynamicEntries[2].value, "Mon, 21 Oct 2013 20:13:22 GMT")
+    }
+    
+    func testHeaderEncoding0() throws {
+        
+    }
+    
+    func testHeaderEncoding1() throws {
+        
+    }
+    
+    func testHeaderEncoding2() throws {
+        
+    }
+    
+    func testHeaderEncoding3() throws {
+        
     }
     
     func testHeaderDecodingFailure0() throws {
