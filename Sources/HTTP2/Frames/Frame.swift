@@ -2,7 +2,7 @@ import Bits
 import Foundation
 
 /// http://httpwg.org/specs/rfc7540.html#FrameHeader
-public struct Frame {
+public final class Frame {
     enum FrameType: UInt8 {
         case data = 0
         case headers = 1

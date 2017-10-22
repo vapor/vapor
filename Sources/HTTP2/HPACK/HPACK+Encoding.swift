@@ -7,7 +7,7 @@ public final class HPACKEncoder {
     var currentTableSize = 0
     var maxTableSize: Int?
     
-    public func encode(request: Request, chunksOf size: Int) throws -> [Payload] {
+    public func encode(request: Request, chunksOf size: Int, streamID: Int32) throws -> [Frame] {
         var payloads = [Payload]()
         
         try payloads.withPayload(maxSize: size) { payload in
@@ -47,14 +47,33 @@ public final class HPACKEncoder {
             }
         }
         
-        return payloads
+        return [Frame](
+            headers: payloads,
+            streamID: streamID,
+            endingStream: request.body.data.count == 0
+        )
     }
 }
 
-enum HPACKIndex {
-    case none
-    case incremental
-    case never
+extension Array where Element == Frame {
+    init(headers: [Payload], streamID: Int32, endingStream: Bool) {
+        self.init()
+        
+        for i in 0..<headers.count {
+            let frame = Frame(type: .headers, payload: headers[i], streamID: streamID)
+            
+            if i == headers.count - 1 {
+                // The last header needs the END_HEADERS flag
+                frame.flags |= 0x04
+                
+                if endingStream {
+                    frame.flags |= 0x01
+                }
+            }
+            
+            self.append(frame)
+        }
+    }
 }
 
 extension Payload {

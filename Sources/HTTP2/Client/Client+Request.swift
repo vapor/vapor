@@ -13,16 +13,26 @@ extension HTTP2Client {
             stream.drain { frame in
                 switch frame.type {
                 case .headers:
-                    fatalError()
+                    do {
+                        let headers = try self.context.localHeaders.decode(frame.payload)
+                        
+                        print(headers)
+                    } catch {
+                        self.context.serializer.inputStream(ResetFrame(code: .protocolError, stream: frame.streamIdentifier).frame)
+                        self.errorStream?(error)
+                        return
+                    }
                 case .data:
-                    fatalError()
+                    let body = String(data: frame.payload.data, encoding: .utf8)
+                    
+                    print(body)
                 default:
                     break
                 }
             }
             
-            for frame in request.headerFrames(for: stream) {
-                stream.inputStream(frame)
+            for frame in try request.headerFrames(for: stream) {
+                stream.context.serializer.inputStream(frame)
             }
             
             return promise.future

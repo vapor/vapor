@@ -532,8 +532,8 @@ public class HPACKTests: XCTestCase {
         
         var encoded: Payload
             
-        if let data = try encoder.encode(request: Request(method: .get, headers: headers), chunksOf: 1_000_000).first {
-            encoded = data
+        if let data = try encoder.encode(request: Request(method: .get, headers: headers), chunksOf: 1_000_000, streamID: 1).first {
+            encoded = data.payload
         } else {
             XCTFail()
             return

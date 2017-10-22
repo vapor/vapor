@@ -52,7 +52,7 @@ public final class FrameParser: Async.Stream {
                 return true
             }
             
-            guard offset &+ 1 < input.count else {
+            guard offset < input.count else {
                 return false
             }
             

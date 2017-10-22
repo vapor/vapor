@@ -29,6 +29,7 @@ public final class ConnectionContext {
     let serializer: FrameSerializer
     let parser: FrameParser
     let remoteHeaders = HPACKEncoder()
+    let localHeaders = HPACKDecoder()
     
     init(parser: FrameParser, serializer: FrameSerializer) {
         self.parser = parser
