@@ -35,7 +35,8 @@ extension HTTP2Client {
         case .settings:
             try self.processSettings(from: frame)
         case .ping:
-            fatalError()
+            frame.flags = 0x01
+            self.context.serializer.inputStream(frame)
         case .priority:
             fatalError()
         case .reset:
