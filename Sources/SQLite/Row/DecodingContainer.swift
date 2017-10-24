@@ -103,11 +103,16 @@ internal final class DecodingContainer<K: CodingKey>:
         return string
     }
 
-    func decode<T>(_ type: T.Type, forKey key: K) throws -> T where T : Decodable {
-        fatalError("unimplemented")
+    func decode<T: Decodable>(_ type: T.Type, forKey key: K) throws -> T {
+        guard let data = decoder.row[key.stringValue] else {
+            throw "no data at key"
+        }
+
+        let d = SQLiteDataDecoder(data: data)
+        return try T(from: d)
     }
 
-    func nestedContainer<NestedKey>(keyedBy type: NestedKey.Type, forKey key: K) throws -> KeyedDecodingContainer<NestedKey> where NestedKey : CodingKey {
+    func nestedContainer<NestedKey: CodingKey>(keyedBy type: NestedKey.Type, forKey key: K) throws -> KeyedDecodingContainer<NestedKey> {
         fatalError("unimplemented")
     }
 
@@ -197,6 +202,21 @@ internal final class DecodingContainer<K: CodingKey>:
 }
 
 extension SQLiteData {
+    internal var fuzzyBool: Bool? {
+        if let int = fuzzyInt {
+            switch int {
+            case 1:
+                return true
+            case 0:
+                return false
+            default:
+                return nil
+            }
+        } else {
+            return nil
+        }
+    }
+
     internal var fuzzyInt: Int? {
         switch self {
         case .integer(let int):

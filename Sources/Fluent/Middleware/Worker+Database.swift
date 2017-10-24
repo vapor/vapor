@@ -29,11 +29,11 @@ extension Worker {
             return nil
         }
 
-        if let existing = extend["fluent:connection-pool"] as? DatabaseConnectionPool {
+        if let existing = extend["fluent:connection-pool:\(database)"] as? DatabaseConnectionPool {
             return existing
         } else {
             let new = database.makeConnectionPool(max: 2, on: queue)
-            extend["vapor:connection-pool"] = new
+            extend["fluent:connection-pool:\(database)"] = new
             return new
         }
     }

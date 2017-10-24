@@ -78,7 +78,7 @@ extension SQLiteConnection: QueryExecutor {
                 }
 
                 sqlQuery = .data(select)
-            case .update:
+            case .update, .create:
                 var insert = DataQuery(statement: .insert, table: fluentQuery.entity)
 
                 guard let data = fluentQuery.data else {
@@ -100,8 +100,8 @@ extension SQLiteConnection: QueryExecutor {
             select.computed.append(count)
 
             sqlQuery = .data(select)
-
         default:
+
             fatalError("\(fluentQuery.action) not yet supported")
         }
 

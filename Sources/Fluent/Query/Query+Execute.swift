@@ -59,4 +59,17 @@ extension QueryBuilder {
 
         return promise.future
     }
+
+    public func run() -> Future<Void> {
+        let promise = Promise(Void.self)
+
+        let stream = BasicStream<M>()
+        executor.then { conn in
+            conn.execute(query: self.query, into: stream)
+                .then(stream.close)
+                .catch(promise.fail)
+            }.catch(promise.fail)
+
+        return promise.future
+    }
 }

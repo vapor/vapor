@@ -18,15 +18,6 @@ public final class QueryBuilder<M: Model> {
     }
 }
 
-// MARK: CRUD
-
-extension QueryBuilder {
-    public func save() -> Future<Void> {
-        query.action = .update // TODO: check if exists
-        return all().map { _ in Void() }
-    }
-}
-
 // MARK: Convenience
 extension QueryBuilder {
     /// Convenience init with non-future connection.

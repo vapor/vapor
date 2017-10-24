@@ -7,7 +7,6 @@ extension SQLiteConnection: SchemaExecutor {
         let promise = Promise(Void.self)
 
         let sqlQuery: SQLQuery
-        var values: [SQLiteData] = [] // FIXME: default values
 
         switch schema.action {
         case .create:
@@ -31,12 +30,6 @@ extension SQLiteConnection: SchemaExecutor {
             statement: string,
             connection: self
         )
-
-        for value in values {
-            print(value)
-            try! sqliteQuery.bind(value)
-        }
-
         sqliteQuery.execute().then {
             promise.complete()
         }.catch { err in

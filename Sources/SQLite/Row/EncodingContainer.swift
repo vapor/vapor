@@ -71,14 +71,18 @@ internal final class RowEncodingContainer<K: CodingKey>: KeyedEncodingContainerP
     }
 
     func encode<T: Encodable>(_ value: T, forKey key: K) throws {
-        try value.encode(to: encoder)
+        let d = SQLiteDataEncoder()
+        try value.encode(to: d)
+        encoder.row[key.stringValue] = d.data
     }
 
     func encodeNil(forKey key: K) throws {
         encoder.row[key.stringValue] = .null
     }
 
-    func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type, forKey key: K) -> KeyedEncodingContainer<NestedKey> where NestedKey : CodingKey {
+    func nestedContainer<NestedKey: CodingKey>(
+        keyedBy keyType: NestedKey.Type, forKey key: K
+    ) -> KeyedEncodingContainer<NestedKey> {
         return KeyedEncodingContainer(UnsupportedEncodingContainer(encoder: encoder))
     }
 

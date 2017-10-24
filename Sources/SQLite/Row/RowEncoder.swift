@@ -14,10 +14,10 @@ public final class SQLiteRowEncoder: Encoder {
     }
 
     public func unkeyedContainer() -> UnkeyedEncodingContainer {
-        return UnsupportedEncodingContainer<NoKey>(encoder: self)
+        fatalError("unsupported")
     }
 
     public func singleValueContainer() -> SingleValueEncodingContainer {
-        return UnsupportedEncodingContainer<NoKey>(encoder: self)
+        fatalError("unsupported")
     }
 }

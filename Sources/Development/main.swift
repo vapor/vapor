@@ -25,7 +25,7 @@ try services.register(FluentProvider())
 var databaseConfig = DatabaseConfig()
 databaseConfig.add(database: SQLiteDatabase.self)
 databaseConfig.add(
-    database: SQLiteDatabase(storage: .memory),
+    database: SQLiteDatabase(storage: .file(path: "/tmp/memory.sqlite")),
     as: .memory
 )
 services.register(databaseConfig)
@@ -83,7 +83,10 @@ struct Message: Model {
     var id: String?
     var text: String
     var time: Int
-    let storage = Storage()
+}
+
+async.get("users") { req -> Future<[User]> in
+    return try req.query(User.self, database: .memory).all()
 }
 
 async.get("fluent") { req -> Future<String> in

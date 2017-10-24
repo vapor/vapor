@@ -28,3 +28,9 @@ extension DatabaseIdentifier {
         return DatabaseIdentifier("default")
     }
 }
+
+extension DatabaseIdentifier: CustomStringConvertible {
+    public var description: String {
+        return uid
+    }
+}

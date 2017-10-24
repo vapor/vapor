@@ -11,10 +11,9 @@ final class User: Model, ResponseRepresentable {
     var age: Int
 //    var child: User?
 //    var futureChild: Future<User>?
-    let storage = Storage()
     
     func makeResponse(for request: Request) throws -> Response {
-        let body = Body(try JSONEncoder().encode(self))
+        let body = try  Body(JSONEncoder().encode(self))
         
         return Response(body: body)
     }
@@ -39,6 +38,13 @@ extension Future: Codable {
     }
 }
 
+extension Array: ResponseRepresentable {
+    public func makeResponse(for request: Request) throws -> Response {
+        let body = try Body(JSONEncoder().encode(self))
+        return Response(body: body)
+    }
+}
+
 extension User: Migration {
     static func prepare(_ database: DatabaseConnection) -> Future<Void> {
         return database.create(User.self) { user in
@@ -55,8 +61,8 @@ extension User: Migration {
 
 struct AddUsers: Migration {
     static func prepare(_ database: DatabaseConnection) -> Future<Void> {
-        let bob = User(name: "Bob", age: 42)
-        let vapor = User(name: "Vapor", age: 3)
+        var bob = User(name: "Bob", age: 42)
+        var vapor = User(name: "Vapor", age: 3)
 
         return [
             bob.save(to: database),
@@ -122,7 +128,7 @@ final class ManyFutures<F: FutureType> {
     /// Updates the many futures
     func update() {
         if results.count + errors.count == many.count {
-            if errors.count > 0 {
+            if errors.count == 0 {
                 promise.complete(results)
             } else {
                 promise.fail(errors.first!) // FIXME: combine errors

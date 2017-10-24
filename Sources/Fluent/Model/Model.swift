@@ -6,16 +6,13 @@ import Async
 /// Types conforming to this protocol provide the basis
 /// fetching and saving data to/from Fluent.
 public protocol Model: Codable {
-    associatedtype Identifier: Codable
+    associatedtype I: Identifier
 
     /// This model's collection/table name
     static var entity: String { get }
 
     /// The model's identifier.
-    var id: Identifier? { get set }
-
-    /// Stores crucial state info on the model.
-    var storage: Storage { get }
+    var id: I? { get set }
 }
 
 /// Free implementations.
@@ -29,15 +26,29 @@ extension Model {
 // MARK: CRUD
 
 extension Model {
-    public func save(to executor: QueryExecutor) -> Future<Void> {
+    public mutating func save(to executor: QueryExecutor, asNew: Bool = true) -> Future<Void> {
         let query = executor.query(Self.self)
         query.query.data = self
-        if exists {
-            query.query.action = .update
+        
+        if let id = self.id, !asNew {
             query.filter("id" == id)
+            // update record w/ matching id
+            query.query.action = .update
+        } else if id == nil {
+            switch I.identifierType {
+            case .autoincrementing: break
+            case .generated(let factory):
+                id = factory()
+            case .supplied: break
+                // FIXME: error if not actually supplied?
+            }
+            // create w/ generated id
+            query.query.action = .create
         } else {
+            // just create, with existing id
             query.query.action = .create
         }
+
         return executor.execute(query: query.query, into: BasicStream<Self>())
     }
 }
