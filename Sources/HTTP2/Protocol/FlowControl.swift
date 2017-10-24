@@ -1,3 +1,6 @@
+/// Updates the maximum window size I.E. maximum amount of bytes sent by the client
+///
+/// The server manages how much data the client is able to send/upload
 struct WindowUpdate {
     init(frame: Frame, errorsTo serializer: FrameSerializer) throws {
         guard frame.payload.data.count == 4 else {
@@ -21,5 +24,6 @@ struct WindowUpdate {
         }
     }
     
+    /// The additional data that can be sent (in payloads) since the previous frame
     var windowSize: Int32
 }

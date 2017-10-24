@@ -51,6 +51,17 @@ public struct Headers: Codable {
     }
 }
 
+/// Joins two headers, overwriting the data in `lhs` with `rhs`' equivalent for duplicated
+public func +(lhs: Headers, rhs: Headers) -> Headers {
+    var storage = lhs.storage
+    
+    for (key, value) in rhs.storage {
+        storage[key] = value
+    }
+    
+    return Headers(storage: storage)
+}
+
 extension Headers : ExpressibleByDictionaryLiteral {
     /// Creates HTTP headers.
     public init(dictionaryLiteral: (Name, String)...) {

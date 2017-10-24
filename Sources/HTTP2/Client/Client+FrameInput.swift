@@ -1,4 +1,8 @@
 extension HTTP2Client {
+    /// Updates the frame's contents as settings, sends an acknowledgement
+    ///
+    /// TODO: Settings changed in the middle of the stream affecting the context
+    /// TODO: Pause streams from processing?
     func processSettings(from frame: Frame) throws {
         guard frame.streamIdentifier == 0 else {
             throw Error(.invalidStreamIdentifier)
@@ -38,7 +42,8 @@ extension HTTP2Client {
             frame.flags = 0x01
             self.context.serializer.inputStream(frame)
         case .priority:
-            fatalError()
+            // TODO: In the future this can be used for processing order
+            break
         case .reset:
             self.close()
         case .goAway:
@@ -47,10 +52,10 @@ extension HTTP2Client {
         case .windowUpdate:
             let update = try WindowUpdate(frame: frame, errorsTo: self.context.serializer)
             
-            if let windowSize = windowSize {
-                self.windowSize = windowSize &+ numericCast(update.windowSize) as UInt64
+            if let windowSize = context.windowSize {
+                context.windowSize = windowSize &+ numericCast(update.windowSize) as UInt64
             } else {
-                windowSize = numericCast(update.windowSize)
+                context.windowSize = numericCast(update.windowSize)
             }
         default:
             throw Error(.invalidStreamIdentifier)

@@ -11,6 +11,7 @@ extension HeadersTable.Entry {
 public final class HPACKDecoder {
     let table = HeadersTable()
     
+    /// Decodes HPACK encoded headers using the statically defined HPACK table
     public func decode(_ packet: Payload) throws -> Headers {
         var decoded = Headers()
         

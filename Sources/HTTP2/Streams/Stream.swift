@@ -26,6 +26,9 @@ final class HTTP2StreamPool {
 }
 
 public final class ConnectionContext {
+    /// The window size keeps track of the maximum amount of data that can still be sent
+    var windowSize: UInt64? = nil
+    
     let serializer: FrameSerializer
     let parser: FrameParser
     let remoteHeaders = HPACKEncoder()

@@ -16,6 +16,7 @@ struct Error: Swift.Error {
         case invalidUTF8String
         case invalidUpgrade
         case clientError
+        case tooManyConnectionReuses
         case invalidStreamIdentifier
         case maxHeaderTableSizeOverridden(max: Int, updatedTo: Int)
         case invalidTableIndex(Int)
