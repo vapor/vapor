@@ -18,9 +18,7 @@ public final class DatabaseMiddleware: Middleware {
     /// See Responder.respond(to:...)
     public func respond(to req: Request, chainingTo next: Responder) throws -> Future<Response> {
         let worker = try req.requireWorker()
-        for (id, database) in databases.storage {
-            worker.setDatabase(id: id, to: database)
-        }
+        worker.databases = self.databases
         let res = try next.respond(to: req)
         for id in databases.storage.keys {
             try req.releaseCurrentConnection(database: id)

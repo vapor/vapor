@@ -2,19 +2,15 @@ import Async
 
 extension Worker {
     /// This worker's database.
-    func getDatabase(id: DatabaseIdentifier) -> Database? {
-        return extend["fluent:database:\(id.uid)"] as? Database
-    }
-
-    /// Sets this worker's database.
-    func setDatabase(id: DatabaseIdentifier, to database: Database?) {
-        extend["fluent:database:\(id.uid)"] = database
+    var databases: Databases? {
+        get { return extend["fluent:databases"] as? Databases }
+        set { extend["fluent:databases"] = newValue }
     }
 
     /// Returns this worker's database if one
     /// exists or throws an error.
     func requireDatabase(id: DatabaseIdentifier) throws -> Database {
-        guard let database = getDatabase(id: id) else {
+        guard let database = databases?.storage[id] else {
             throw "Database on worker required"
         }
 
@@ -23,17 +19,17 @@ extension Worker {
 
     /// This's worker's connection pool.
     func getConnectionPool(
-        database: DatabaseIdentifier
+        database id: DatabaseIdentifier
     ) -> DatabaseConnectionPool? {
-        guard let database = getDatabase(id: database) else {
+        guard let database = databases?.storage[id] else {
             return nil
         }
 
-        if let existing = extend["fluent:connection-pool:\(database)"] as? DatabaseConnectionPool {
+        if let existing = extend["fluent:connection-pool:\(id)"] as? DatabaseConnectionPool {
             return existing
         } else {
             let new = database.makeConnectionPool(max: 2, on: queue)
-            extend["fluent:connection-pool:\(database)"] = new
+            extend["fluent:connection-pool:\(id)"] = new
             return new
         }
     }
