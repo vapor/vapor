@@ -75,7 +75,7 @@ class ContentTests: XCTestCase {
     func testParse() {
         let string = "value=123&emptyString=&isTrue"
 
-        let data = Node(formURLEncoded: string.makeBytes())
+        let data = Node(formURLEncoded: string.makeBytes(), allowEmptyValues: true)
         print(data)
         XCTAssertEqual(data["value"]?.int, 123, "Request did not parse correctly")
         XCTAssertEqual(data["emptyString"]?.string, "")
@@ -85,7 +85,7 @@ class ContentTests: XCTestCase {
     func testFormURLEncoded() {
         let body = "first=value&arr[]=foo+bar&arr[]=b%3Daz"
 
-        let data = Node(formURLEncoded: body.makeBytes())
+        let data = Node(formURLEncoded: body.makeBytes(), allowEmptyValues: true)
         print(data)
         XCTAssert(data["first"]?.string == "value", "Request key first did not parse correctly")
         XCTAssert(data["arr", 0]?.string == "foo bar", "Request key arr did not parse correctly")
@@ -95,7 +95,7 @@ class ContentTests: XCTestCase {
     func testFormURLEncodedEdge() {
         let body = "singleKeyArray[]=value&implicitArray=1&implicitArray=2"
 
-        let data = Node(formURLEncoded: body.makeBytes())
+        let data = Node(formURLEncoded: body.makeBytes(), allowEmptyValues: true)
 
         XCTAssert(data["singleKeyArray", 0]?.string == "value", "singleKeyArray did not parse correctly")
         XCTAssert(data["implicitArray", 0]?.string == "1", "implicitArray did not parse correctly")
@@ -104,7 +104,7 @@ class ContentTests: XCTestCase {
 
     func testFormURLEncodedDict() {
         let body = "obj[foo]=bar&obj[soo]=car"
-        let data = Node(formURLEncoded: body.makeBytes())
+        let data = Node(formURLEncoded: body.makeBytes(), allowEmptyValues: true)
         let foo = try! data.converted(to: JSON.self).makeBytes().makeString()
         print(foo)
         XCTAssertEqual(data["obj.foo"], "bar")
