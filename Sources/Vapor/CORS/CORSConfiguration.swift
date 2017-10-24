@@ -91,12 +91,14 @@ public struct CORSConfiguration {
     ///   - allowCredentials: If cookies and other credentials will be sent in the response.
     ///   - cacheExpiration: Optionally sets expiration of the cached pre-flight request in seconds.
     ///   - exposedHeaders: Headers exposed in the response of pre-flight request.
-    public init(allowedOrigin: AllowOriginSetting,
-                allowedMethods: [Method],
-                allowedHeaders: [String],
-                allowCredentials: Bool = false,
-                cacheExpiration: Int? = 600,
-                exposedHeaders: [String]? = nil) {
+    public init(
+        allowedOrigin: AllowOriginSetting,
+        allowedMethods: [Method],
+        allowedHeaders: [String],
+        allowCredentials: Bool = false,
+        cacheExpiration: Int? = 600,
+        exposedHeaders: [String]? = nil
+    ) {
         self.allowedOrigin = allowedOrigin
         self.allowedMethods = allowedMethods.map({ $0.description }).joined(separator: ", ")
         self.allowedHeaders = allowedHeaders.joined(separator: ", ")
@@ -121,11 +123,11 @@ extension CORSConfiguration: ConfigInitializable {
         // Allowed origin
         do {
             let originString: String = try cors.get("allowedOrigin")
-            switch originString {
-            case "all", "*": self.allowedOrigin = .all
-            case "none", "": self.allowedOrigin = .none
-            case "origin", "Origin": self.allowedOrigin = .originBased
-            default: self.allowedOrigin = .custom(originString)
+            switch originString.lowercased() {
+            case "all", "*": allowedOrigin = .all
+            case "none", "": allowedOrigin = .none
+            case "origin": allowedOrigin = .originBased
+            default: allowedOrigin = .custom(originString)
             }
         } catch {
             throw CORSConfigurationError.missingRequiredConfigurationKey("allowedOrigin")
@@ -134,7 +136,7 @@ extension CORSConfiguration: ConfigInitializable {
         // Get methods
         do {
             let methodArray: [String] = try cors.get("allowedMethods")
-            self.allowedMethods = methodArray.joined(separator: ", ").uppercased()
+            allowedMethods = methodArray.joined(separator: ", ").uppercased()
         } catch {
             throw CORSConfigurationError.missingRequiredConfigurationKey("allowedMethods")
         }
@@ -142,17 +144,16 @@ extension CORSConfiguration: ConfigInitializable {
         // Get allowed headers
         do {
             let headersArray: [String] = try cors.get("allowedHeaders")
-            self.allowedHeaders = headersArray.joined(separator: ", ")
+            allowedHeaders = headersArray.joined(separator: ", ")
         } catch {
             throw CORSConfigurationError.missingRequiredConfigurationKey("allowedHeaders")
         }
 
         // Allow credentials
-        let allowCredentials: Bool? = try cors.get("allowCredentials")
-        self.allowCredentials = allowCredentials ?? false
+        allowCredentials = try cors.get("allowCredentials") ?? false
 
         // Cache expiration
-        self.cacheExpiration = try cors.get("cacheExpiration") ?? 600
+        cacheExpiration = try cors.get("cacheExpiration") ?? 600
 
         if let exposedHeaders = cors["exposedHeaders"] {
             switch exposedHeaders.wrapped {
