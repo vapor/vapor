@@ -9,7 +9,7 @@ extension Message {
                 return existing
             } else if let type = headers[.contentType], type.contains("application/x-www-form-urlencoded") {
                 guard case let .data(body) = body else { return nil }
-                let formURLEncoded = Node(formURLEncoded: body, allowEmptyValues: false)
+                let formURLEncoded = Node(formURLEncoded: body, allowEmptyValues: true)
                 storage["form-urlencoded"] = formURLEncoded
                 return formURLEncoded
             } else {
