@@ -74,20 +74,18 @@ extension JSON {
             return
         }
         
-        if env != .production {
-            if let abort = error as? AbortError {
-                json.set("metadata", abort.metadata)
-            }
-            
-            if let debug = error as? Debuggable {
-                json.set("debugReason", debug.reason)
-                json.set("identifier", debug.fullIdentifier)
-                json.set("possibleCauses", debug.possibleCauses)
-                json.set("suggestedFixes", debug.suggestedFixes)
-                json.set("documentationLinks", debug.documentationLinks)
-                json.set("stackOverflowQuestions", debug.stackOverflowQuestions)
-                json.set("gitHubIssues", debug.gitHubIssues)
-            }
+        if let abort = error as? AbortError {
+            json.set("metadata", abort.metadata)
+        }
+
+        if let debug = error as? Debuggable {
+            json.set("debugReason", debug.reason)
+            json.set("identifier", debug.fullIdentifier)
+            json.set("possibleCauses", debug.possibleCauses)
+            json.set("suggestedFixes", debug.suggestedFixes)
+            json.set("documentationLinks", debug.documentationLinks)
+            json.set("stackOverflowQuestions", debug.stackOverflowQuestions)
+            json.set("gitHubIssues", debug.gitHubIssues)
         }
         
         self = json
