@@ -1,24 +1,35 @@
 import HTTP
 
+/// Keeps track of any (server or client's, remote or local) header table with entries
 final class HeadersTable {
+    /// A single table entry
     struct Entry {
+        /// The header name, *must* be lowercased
         var name: Headers.Name
-        var isDummy = false
+        
+        /// The table index of this header
         var index: Int
+        
+        /// The associated value (usually empty)
         var value: String
         
-        init(index: Int = 0, name: Headers.Name?, value: String = "") {
+        /// Creates a new header table entry
+        init(index: Int = 0, name: Headers.Name, value: String = "") {
             self.index = index
             self.name = name ?? ""
             self.value = value
-            self.isDummy = name == nil
         }
     }
     
+    /// The maximum size of the headers table as specified here:
+    ///
+    /// http://httpwg.org/specs/rfc7541.html#rfc.section.4.1
     var tableSize: Int = 4_096
-    var currentTableSize = 0
-    var maxTableSize: Int?
     
+    /// The current size (cached)
+    var currentTableSize = 0
+    
+    /// Gets a table entry by it's index number
     func getEntry(at index: Int, dynamicTable: Bool = true) throws -> HeadersTable.Entry {
         // First the static entries
         if index >= 0, index <= HeadersTable.staticEntries.count {
@@ -40,14 +51,10 @@ final class HeadersTable {
         
         let entry = dynamicEntries[index]
         
-        // Check if the name exist (I.E. not a dummy index reservation)
-        guard !entry.isDummy else {
-            throw Error(.invalidTableIndex(index))
-        }
-        
         return entry
     }
     
+    /// Removes any entiries that fall outside of the maximum table size
     func cleanTable() {
         // Remove extra entries if the table shrinks
         while currentTableSize > self.tableSize {

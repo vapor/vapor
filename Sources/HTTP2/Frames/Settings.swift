@@ -2,6 +2,8 @@ import Bits
 import Foundation
 
 /// http://httpwg.org/specs/rfc7540.html#SETTINGS
+///
+/// The settings of a HTTP2 client or peer
 public struct HTTP2Settings {
     public var headerTableSize: UInt32 = 4096
     public var pushEnabled = true
@@ -18,6 +20,7 @@ public struct HTTP2Settings {
     
     public init() {}
     
+    /// Updates the settings by a HTTP2 settings specification
     public mutating func update(to frame: Frame) throws {
         guard frame.payload.data.count % 6 == 0 else {
             throw Error(.invalidSettingsFrame(frame))
@@ -57,6 +60,7 @@ public struct HTTP2Settings {
         }
     }
     
+    /// Returns these settings serialized as a frame
     var frame: Frame {
         var payloadData = Data()
         
@@ -85,6 +89,7 @@ public struct HTTP2Settings {
 }
 
 fileprivate extension Data {
+    /// Appends a id-value pair for a HTTP/2 setting
     mutating func append(value: UInt32, forId: UInt16) {
         self.append(contentsOf: [
             numericCast((forId >> 8) & 0xff),

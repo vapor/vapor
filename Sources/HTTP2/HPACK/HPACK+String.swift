@@ -1,7 +1,8 @@
 import Pufferfish
 
 extension Payload {
-    public func append(string: String, huffmanEncoded: Bool = true, huffmanEncoder: HuffmanEncoder) throws {
+    /// Appends a (usually HPACK huffman encoded) UTF-8 string to this payload
+    func append(string: String, huffmanEncoded: Bool = true, huffmanEncoder: HuffmanEncoder) throws {
         let huffmanMarker: UInt8 = huffmanEncoded ? 0b10000000 : 0
         self.data.append(huffmanMarker)
         
@@ -15,7 +16,8 @@ extension Payload {
         }
     }
     
-    public func parseString() throws -> String {
+    /// Parses a string from the payload
+    func parseString() throws -> String {
         guard self.bytePosition < self.data.count else {
             throw Error(.unexpectedEOF)
         }

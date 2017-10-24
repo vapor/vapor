@@ -38,32 +38,43 @@ public final class HTTP2Client: BaseStream {
         return _nextStreamID
     }
     
+    /// Reads the remote's (server) settings
     public internal(set) var remoteSettings = HTTP2Settings() {
         didSet {
             self.context.parser.settings = remoteSettings
+            self.context.serializer.maxLength = remoteSettings.maxFrameSize
         }
     }
     
+    /// Reads the local (client) settings
     public internal(set) var settings = HTTP2Settings() {
         didSet {
             self.context.serializer.inputStream(settings.frame)
+            self.context.parser.maxFrameSize = settings.maxFrameSize
         }
     }
     
-    public var updatingSettings = false
+    /// If true, the settings are currently being updated
+    ///
+    /// TODO: Pause further stream execution?
+    var updatingSettings = false
+    
+    /// Manages multiple streams within this connection
     let streamPool: HTTP2StreamPool
     
+    ///
     let promise = Promise<HTTP2Client>()
     
     var future: Future<HTTP2Client> {
         return promise.future
     }
     
+    /// Upgrades an existing TLSClient to use HTTP/2
     init(upgrading client: TLSClient) {
         self.client = client
         self.context = ConnectionContext(
-            parser: FrameParser(),
-            serializer: FrameSerializer()
+            parser: FrameParser(maxFrameSize: settings.maxFrameSize),
+            serializer: FrameSerializer(maxLength: remoteSettings.maxFrameSize)
         )
         self.streamPool = HTTP2StreamPool(
             context: context

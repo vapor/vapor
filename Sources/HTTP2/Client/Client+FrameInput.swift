@@ -26,6 +26,7 @@ extension HTTP2Client {
         }
     }
     
+    /// Processes frames targeted at the stream ID `0`, which is the global context
     func processTopLevelStream(from frame: Frame) throws {
         guard
             frame.type == .settings || frame.type == .ping  ||

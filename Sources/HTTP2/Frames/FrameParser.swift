@@ -2,25 +2,51 @@ import Async
 import Bits
 import Foundation
 
+/// Transforms an input bytes stream into a stream of frames
 public final class FrameParser: Async.Stream {
+    /// See `InputStream.Input`
     public typealias Input = ByteBuffer
+    
+    /// See `OutputStream.Output`
     public typealias Output = Frame
     
+    /// See `OutputStream.outputStream`
     public var outputStream: OutputHandler?
+    
+    /// See `Stream.errorStream`
     public var errorStream: ErrorHandler?
     
+    /// The maximum size of a frame
+    var maxFrameSize: UInt32
+    
+    /// Stores the HTTP2 remote server's settings
     var settings = HTTP2Settings()
     
+    /// The payload length of the currently parsing packet
     var payloadLength: UInt32 = 0
+    
+    /// The payload type of the currently parsing packet
     var type: Frame.FrameType?
+    
+    /// The flags of the currently parsing packet
     var flags: UInt8?
+    
+    /// The stream id of the currently parsing packet
     var streamIdentifier: Int32 = 0
     
+    /// The currently parsed length
     var parsed: UInt64 = 0
+    
+    /// The in-progress parsing payload
     var payload = Data()
     
-    init() {}
+    /// Creates a new frame parser
+    init(maxFrameSize: UInt32) {
+        self.maxFrameSize = maxFrameSize
+        self.payload.reserveCapacity(numericCast(self.maxFrameSize))
+    }
     
+    /// Resets all variables used for parsing to their defaults
     func reset() {
         self.payloadLength = 0
         self.type = nil
@@ -28,8 +54,10 @@ public final class FrameParser: Async.Stream {
         self.streamIdentifier = 0
         self.parsed = 0
         self.payload = Data()
+        self.payload.reserveCapacity(numericCast(self.maxFrameSize))
     }
     
+    /// Process the next buffer
     public func inputStream(_ input: ByteBuffer) {
         do {
             try self.process(buffer: input)
@@ -38,15 +66,18 @@ public final class FrameParser: Async.Stream {
         }
     }
     
+    /// Processthe input buffer and tries to emit a frame
+    ///
+    /// throws an error on invalid frames
     func process(buffer input: ByteBuffer) throws {
+        // Empty buffers are invalid
         guard let pointer = input.baseAddress else {
-            errorStream?(Error(.invalidFrameReceived))
-            return
+            throw Error(.invalidFrameReceived)
         }
         
         var offset = 0
         
-        // Returns `true` if you can continue parsing
+        // Returns `true` if you can continue parsing after processing the next byte
         func continueNextByte(offset minimum: Int, _ closure: (() throws -> ())) rethrows -> Bool {
             if parsed > minimum {
                 return true
@@ -64,25 +95,30 @@ public final class FrameParser: Async.Stream {
             return true
         }
         
+        // Continue for all data
         while offset < input.count {
+            // Process the first byte (payload length high byte)
             guard (continueNextByte(offset: 0) {
                 payloadLength |= numericCast(pointer[offset]) << 16
             }) else {
                 return
             }
             
+            // Process the second byte (payload length middle byte)
             guard (continueNextByte(offset: 1) {
                 payloadLength |= numericCast(pointer[offset]) << 8
             }) else {
                 return
             }
             
+            // Process the third byte (payload length low byte)
             guard (continueNextByte(offset: 2) {
                 payloadLength |= numericCast(pointer[offset])
             }) else {
                 return
             }
             
+            // Process the frame type byte
             guard (try continueNextByte(offset: 3) {
                 guard let frameType = Frame.FrameType(rawValue: pointer[offset]) else {
                     throw Error(.invalidFrameReceived)
@@ -93,13 +129,16 @@ public final class FrameParser: Async.Stream {
                 return
             }
             
+            // Process the frame flags byte
             guard (continueNextByte(offset: 4) {
                 self.flags = pointer[offset]
             }) else {
                 return
             }
             
+            // Process the stream identifier first (high) byte
             guard (try continueNextByte(offset: 5) {
+                // Reserved bit must not be set
                 guard pointer[offset] & 0b10000000 == 0 else {
                     // RESERVED BIT
                     throw Error(.invalidFrameReceived)
@@ -110,28 +149,33 @@ public final class FrameParser: Async.Stream {
                 return
             }
             
+            // Process the stream identifier second byte
             guard (continueNextByte(offset: 6) {
                 streamIdentifier |= numericCast((pointer[offset]) << 16)
             }) else {
                 return
             }
             
+            // Process the stream identifier third byte
             guard (continueNextByte(offset: 7) {
                 streamIdentifier |= numericCast((pointer[offset]) << 8)
             }) else {
                 return
             }
             
+            // Process the stream identifier last low byte
             guard (continueNextByte(offset: 8) {
                 streamIdentifier |= numericCast((pointer[offset]))
             }) else {
                 return
             }
             
-            guard self.payloadLength < settings.maxFrameSize else {
+            // Assert that the payload length is within this client's maximum
+            guard self.payloadLength < self.maxFrameSize else {
                 throw Error(.invalidFrameReceived)
             }
             
+            // Take the next bytes to fill up the payload
             let needed = numericCast(payloadLength) &- payload.count
             let remaining = input.count &- offset
             

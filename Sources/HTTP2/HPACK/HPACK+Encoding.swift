@@ -2,7 +2,8 @@ import HTTP
 import Foundation
 import Pufferfish
 
-public final class HPACKEncoder {
+/// Encodes HPACK headers
+final class HPACKEncoder {
     let remoteTable = HeadersTable()
     var tableSize: Int = 4_096
     var currentTableSize = 0
@@ -10,10 +11,10 @@ public final class HPACKEncoder {
     
     static let huffmanEncoder = HuffmanEncoder.hpack
     
-    /// Encodes a request into a set of frames
+    /// Encodes a request into a set of frames including the method, path and authority
     ///
     /// TODO: Body for non-GET requests
-    public func encode(request: Request, chunksOf size: Int, streamID: Int32) throws -> [Frame] {
+    func encode(request: Request, chunksOf size: Int, streamID: Int32) throws -> [Frame] {
         var payloads = [Payload]()
         
         // Encode the path (required)
@@ -93,6 +94,9 @@ public final class HPACKEncoder {
 }
 
 extension Array where Element == Frame {
+    /// Converts payloads to a set of frames targeted at a stream
+    ///
+    /// Sets the last frame to `END_STREAM` if specified
     init(headers: [Payload], streamID: Int32, endingStream: Bool) {
         self.init()
         
@@ -118,23 +122,31 @@ extension Array where Element == Frame {
 }
 
 extension Payload {
+    /// Writes a fully indexed pair to the payload
     func fullyIndexed(index: Int) throws {
         self.data.append(UInt8.completelyIndexed)
         try self.serialize(integer: index, prefix: 7)
     }
     
+    /// Writes a value to the payload for the specified indexed header key
+    ///
+    /// Encodes the value using huffman coding with the provided huffmanencoder
     func headerIndexed(index: Int, value: String, encoder: HuffmanEncoder) throws {
         self.data.append(UInt8.headerIndexed)
         try self.serialize(integer: index, prefix: 6)
         try self.append(string: value, huffmanEncoder: encoder)
     }
     
+    /// Writes a key and value to the payload
+    ///
+    /// Encodes the key and value using huffman coding with the provided huffmanencoder
     func neverIndexed(key: String, value: String, encoder: HuffmanEncoder) throws {
         self.data.append(UInt8.neverIndexed)
         try self.append(string: key, huffmanEncoder: encoder)
         try self.append(string: value, huffmanEncoder: encoder)
     }
     
+    /// Adds the headers needed for specifying a path
     func setPath(to path: String, encoder: HuffmanEncoder) throws {
         if path == "/" {
             try fullyIndexed(index: HeadersTable.root.index)
@@ -143,6 +155,7 @@ extension Payload {
         }
     }
     
+    /// Adds the headers needed for specifying an authority
     func setAuthority(to authority: String, encoder: HuffmanEncoder) throws {
         try headerIndexed(index: HeadersTable.host.index, value: authority, encoder: encoder)
     }

@@ -1,5 +1,4 @@
 import Async
-import Core
 import Dispatch
 import HTTP
 import TCP

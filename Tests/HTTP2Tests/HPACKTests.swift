@@ -27,6 +27,17 @@ public class HPACKTests: XCTestCase {
         ("testConstants", testConstants),
     ]
     
+    func testPerformanceB() {
+        let request = Request(method: .get, uri: "/", headers: [
+            .host: "www.example.com",
+            .cookie: "foo"
+        ], body: Body())
+        let encoder = HPACKEncoder()
+        let data = try! encoder.encode(request: request, chunksOf: 4000, streamID: 0)
+
+        print(Array(data.first?.payload.data ?? Data()))
+    }
+    
     /// http://httpwg.org/specs/rfc7541.html#rfc.section.C.1.1
     func testHPackIntegerParsing() throws {
         // First 3 bits don't matter in a 5-bit prefix

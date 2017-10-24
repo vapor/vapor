@@ -1,6 +1,5 @@
 import XCTest
 import Async
-import Core
 import Dispatch
 import TCP
 import Bits

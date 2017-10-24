@@ -1,6 +1,7 @@
 import Foundation
 
 extension Array where Element == Payload {
+    /// Helper for modifying an array of payloads (writing to the end)
     mutating func withPayload(maxSize: Int, _ closure: (Payload) throws -> ()) rethrows {
         var payload: Payload
         

@@ -3,12 +3,16 @@ import HTTP
 import Foundation
 
 extension HeadersTable.Entry {
+    /// Returns the size of a table entry in octets
     var octets: Int {
         return self.name.description.utf8.count + self.value.utf8.count + 32
     }
 }
 
-public final class HPACKDecoder {
+/// Decodes HPACK data
+///
+/// Keeps track of a table for a connection
+final class HPACKDecoder {
     let table = HeadersTable()
     
     /// Decodes HPACK encoded headers using the statically defined HPACK table
@@ -26,13 +30,6 @@ public final class HPACKDecoder {
             if dynamicTableUpdate {
                 // Base size of the static entries
                 let size = try packet.parseInteger(prefix: 5)
-                
-                // Check for the maxTableSize requirements
-                if let maxTableSize = table.maxTableSize {
-                    guard size <= maxTableSize else {
-                        throw Error(.maxHeaderTableSizeOverridden(max: maxTableSize, updatedTo: size))
-                    }
-                }
                 
                 table.tableSize = size
                 table.cleanTable()
