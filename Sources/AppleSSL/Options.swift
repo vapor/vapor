@@ -1,6 +1,18 @@
 import Security
 import Foundation
 
+public final class ALPNPreferences: ExpressibleByArrayLiteral {
+    var protocols: [String]
+    
+    public init(arrayLiteral elements: String...) {
+        self.protocols = elements
+    }
+    
+    public init(array: [String]) {
+        self.protocols = array
+    }
+}
+
 /// SSLOptions are used for configuring the SSL connection
 public struct SSLOption {
     /// A closure to be executed when applying the option
@@ -22,13 +34,15 @@ public struct SSLOption {
     }
     
     /// Sends the Application Layer Protocol Negotiation supported protocols
-    public static func alpn(protocols: [String]) -> SSLOption {
+    public static func alpn(protocols: ALPNPreferences) -> SSLOption {
         return SSLOption { context in
+            print("This may not work, apple needs to fix a bug related to ALPN")
+            
             if #available(OSX 10.13, *) {
-//                var protocols = protocols as CFArray
+//                let protocols = protocols.protocols as CFArray
 //                try assert(status: SSLSetALPNProtocols(context, protocols))
             } else {
-                throw Error(.notSupported)
+                print("This may not work, you need to upgrade to macOS 10.13")
             }
         }
     }

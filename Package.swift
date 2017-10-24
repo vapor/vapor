@@ -1,12 +1,11 @@
 // swift-tools-version:4.0
 import PackageDescription
 
-//#if os(macOS) || os(iOS)
-//    let ssl: Target.Dependency = "AppleSSL"
-//#else
-     // TODO: OpenSSL only on Linux
+#if os(macOS) || os(iOS)
+    let ssl: Target.Dependency = "AppleSSL"
+#else
     let ssl: Target.Dependency = "OpenSSL"
-//#endif
+#endif
 
 let package = Package(
     name: "Vapor",
@@ -173,8 +172,7 @@ let package = Package(
     package.products.append(
         .library(name: "AppleSSL", targets: ["AppleSSL"])
     )
-#endif // TODO: OpenSSL only on Linux
-//#else
+#else
     package.dependencies.append(
         .package(url: "https://github.com/vapor/copenssl.git", .revision("master"))
     )
@@ -186,4 +184,4 @@ let package = Package(
     package.products.append(
         .library(name: "OpenSSL", targets: ["OpenSSL"])
     )
-//#endif
+#endif

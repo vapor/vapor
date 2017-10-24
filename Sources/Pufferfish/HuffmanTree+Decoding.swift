@@ -1,18 +1,21 @@
 import Foundation
 
 public final class HuffmanDecoder {
-    public let tree: HuffmanTree
+    let tree: HuffmanTree
     
     public init(tree: HuffmanTree) {
         self.tree = tree
     }
     
+    /// Deocdes huffman encoded data using the huffman tree
     public func decode(data input: Data) -> Data {
         var output = Data()
         output.reserveCapacity(input.count)
         var currentTree = tree
         
+        // For each byte, walk down the tree
         for byte in input {
+            // Go left or right depending on the bit
             for bitOffset in 0..<8 {
                 let goLeft = (byte << bitOffset) & 0b10000000 == 0
                 
@@ -20,6 +23,8 @@ public final class HuffmanDecoder {
                 
                 switch node {
                 case .leaf(let leaf):
+                    // If the next node is a leaf, write the contents to the output
+                    // And reset the tree to the main tree
                     switch leaf {
                     case .single(let byte):
                         output.append(byte)
@@ -29,6 +34,7 @@ public final class HuffmanDecoder {
                         currentTree = self.tree
                     }
                 case .tree(let tree):
+                    // if the next node is a tree, we haven't reached the end yet
                     currentTree = tree
                 }
             }

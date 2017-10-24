@@ -1,17 +1,30 @@
 import Foundation
 
+/// The data that can be interchanged for huffman encoded bits
 public enum HuffmanAssociatedData {
     case single(UInt8)
     case many(Data)
 }
 
+/// A very primitive encodingtable.
+///
+/// This encodingtable does not help build a huffman tree.
 public struct EncodingTable {
     public typealias Pair = (encoded: UInt64, bits: UInt8)
     
-    public var elements = [HuffmanAssociatedData]()
-    public var encoded = [Pair]()
-    public var endOfString = UInt32.max
+    /// A pair describing the raw data for the huffman encoded form at the same index
+    var elements = [HuffmanAssociatedData]()
     
+    /// A pair describing the huffman encoded form of the element at the same index
+    var encoded = [Pair]()
+    
+    /// Appends a set of raw and encoded data to the table
+    public mutating func append(raw: HuffmanAssociatedData, pair: Pair) {
+        self.elements.append(raw)
+        self.encoded.append(pair)
+    }
+    
+    /// Create a new encoding table, reserving capacity
     public init(reserving size: Int = 0) {
         elements.reserveCapacity(size)
         encoded.reserveCapacity(size)
@@ -21,29 +34,19 @@ public struct EncodingTable {
 struct IncompleteEncodingTable: Swift.Error {}
 
 public final class HuffmanEncoder {
+    /// The encoding table specification to use for encoding
     var encodingTable: EncodingTable
+    
+    /// An arrray that is used for an intermediate for serializing the base data `UInt64` to
     var array = [UInt8](repeating: 0, count: 8)
     
-    fileprivate let bits: [UInt8] = [
-        0b00000000,
-        0b00000001,
-        0b00000011,
-        0b00000111,
-        0b00001111,
-        0b00011111,
-        0b00111111,
-        0b01111111
-    ]
-    
+    /// Create a new huffman encoder based on an encoding table
     public init(encodingTable: EncodingTable) {
         self.encodingTable = encodingTable
     }
     
+    /// Converts a single huffman encoded pair into an array buffer
     fileprivate func convert(_ base: UInt64, size: UInt8) {
-        for i in 0..<8 {
-            array[i] = 0
-        }
-        
         let remainder = size % 8
         let int = base.littleEndian >> remainder
         let bytes = numericCast(size / 8) as Int
@@ -64,13 +67,21 @@ public final class HuffmanEncoder {
         }
     }
     
+    /// Encoded data byte-for-byte using HuffmanCoding and an EncodingTable
+    ///
+    /// TODO: Support `HuffmanAssociatedData.many`
     public func encode(data input: Data) throws -> Data {
         var data = Data()
+        
+        // TODO: Better estimate
         data.reserveCapacity(input.count)
         
         var remainderBits: UInt8 = 0
         
+        // Loops over all bytes (TODO: not-single-bytes)
         nextCharacter: for byte in input {
+            // Find the byte related to the element
+            // TODO: Optimize
             guard let encodedIndex = encodingTable.elements.index(where: { element in
                 if case .single(let single) = element, single == byte {
                     return true
@@ -84,10 +95,12 @@ public final class HuffmanEncoder {
             let encoded: UInt64
             var bitLength: UInt8
             
+            // Sets up the encoded form
             (encoded, bitLength) = encodingTable.encoded[encodedIndex]
             
             convert(encoded, size: bitLength)
             
+            // If a previous encoding step filled in only part of the bytes
             if remainderBits > 0 {
                 let alreadyFilled = 8 &- remainderBits
                 
@@ -165,6 +178,8 @@ public final class HuffmanEncoder {
             }
         }
         
+        // If after encoding, remaining bits are still not set
+        // Fill them with `1`s
         if remainderBits > 0, data.count > 0 {
             var reset: UInt8 = 0x00
             
@@ -178,4 +193,3 @@ public final class HuffmanEncoder {
         return data
     }
 }
-

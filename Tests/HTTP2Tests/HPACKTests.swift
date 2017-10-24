@@ -115,14 +115,7 @@ public class HPACKTests: XCTestCase {
             let encoded = try HuffmanEncoder.hpack.encode(data: data)
             let decoded = try HuffmanDecoder.hpack().decode(data: encoded)
             
-            if data != decoded {
-                XCTFail("Byte \(byte) failed \(Array(encoded))")
-                print(Array(encoded))
-                print(Array(decoded))
-                print(Array(data))
-                let encoded = try HuffmanEncoder.hpack.encode(data: data)
-                let decoded = try HuffmanDecoder.hpack().decode(data: encoded)
-            }
+            XCTAssertEqual(decoded, data, "Byte \(byte) failed \(Array(encoded))")
         }
     }
     

@@ -1,8 +1,8 @@
-//#if (os(macOS) || os(iOS)) && !OPENSSL
-//    import AppleSSL
-//#else
+#if (os(macOS) || os(iOS)) && !OPENSSL
+    import AppleSSL
+#else
     import OpenSSL
-//#endif
+#endif
 
 import Async
 import Bits
