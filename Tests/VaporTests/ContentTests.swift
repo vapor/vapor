@@ -24,6 +24,8 @@ class ContentTests: XCTestCase {
         ("testFormURLEncoded", testFormURLEncoded),
         ("testFormURLEncodedEdge", testFormURLEncodedEdge),
         ("testFormURLEncodedDict", testFormURLEncodedDict),
+        ("testFormURLEncodedNestedDict", testFormURLEncodedNestedDict),
+        ("testFormURLEncodedNestedDictArray", testFormURLEncodedNestedDictArray),
         ("testSplitString", testSplitString),
         ("testEmptyQuery", testEmptyQuery),
     ]
@@ -109,6 +111,31 @@ class ContentTests: XCTestCase {
         print(foo)
         XCTAssertEqual(data["obj.foo"], "bar")
         XCTAssertEqual(data["obj.foo"], "bar")
+    }
+
+    func testFormURLEncodedNestedDict() {
+        let body="datatable[pagination][total]=1044&datatable[pagination][page]=1&datatable[pagination][perpage]=10&datatable[pagination][field]=name&datatable[pagination][sort]=asc&datatable[pagination][pages]=105&datatable[sort][field]=name&datatable[sort][sort]=asc&datatable[query][test]=test"
+        let data = Node(formURLEncoded: body.makeBytes(), allowEmptyValues: true)
+        let foo = try! data.converted(to: JSON.self).makeBytes().makeString()
+        print(foo)
+        XCTAssertEqual(data["datatable.pagination.total"], "1044")
+        XCTAssertEqual(data["datatable.pagination.page"], "1")
+        XCTAssertEqual(data["datatable.pagination.perpage"], "10")
+        XCTAssertEqual(data["datatable.pagination.field"], "name")
+        XCTAssertEqual(data["datatable.pagination.sort"], "asc")
+        XCTAssertEqual(data["datatable.pagination.pages"], "105")
+        XCTAssertEqual(data["datatable.sort.field"], "name")
+        XCTAssertEqual(data["datatable.sort.sort"], "asc")
+        XCTAssertEqual(data["datatable.query.test"], "test")
+    }
+
+    func testFormURLEncodedNestedDictArray() {
+        let body="datatable[pagination][]=1044&datatable[pagination][]=1"
+        let data = Node(formURLEncoded: body.makeBytes(), allowEmptyValues: true)
+        let foo = try! data.converted(to: JSON.self).makeBytes().makeString()
+        print(foo)
+        XCTAssertEqual(data["datatable", "pagination", 0], "1044")
+        XCTAssertEqual(data["datatable", "pagination", 1], "1")
     }
 
     func testSplitString() {

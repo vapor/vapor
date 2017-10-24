@@ -13,7 +13,7 @@ extension Node {
             return .space
         }
         
-        for pair in data.split(separator: .ampersand) {
+        perKeyLoop: for pair in data.split(separator: .ampersand) {
             var value: Node = .string("")
             var keyData: Bytes
 
@@ -48,28 +48,38 @@ extension Node {
             }
 
             var keyIndicatedArray = false
-
-            var subKey = ""
             var keyIndicatedObject = false
+            var subKey = ""
 
             // check if the key has `key[]` or `key[5]`
             if keyData.contains(.rightSquareBracket) && keyData.contains(.leftSquareBracket) {
                 // get the key without the `[]`
                 let slices = keyData
-                    .split(separator: .leftSquareBracket, maxSplits: 1)
-                guard slices.count == 2 else {
+                    .split(separator: .leftSquareBracket)
+                guard slices.count > 1 else {
                     print("Found bad encoded pair \(pair.makeString()) ... continuing")
                     continue
                 }
-
+                
                 keyData = slices[0].array
-
-                let contents = slices[1].array
-                if contents[0] == .rightSquareBracket {
-                    keyIndicatedArray = true
-                } else {
-                    subKey = contents.dropLast().makeString()
-                    keyIndicatedObject = true
+                
+                for (n, contents) in slices.dropFirst().enumerated() {
+                    let content = contents.array
+                    
+                    if content[0] == .rightSquareBracket {
+                        // Current subsequence indicates an array.
+                        guard n == slices.endIndex - 2 else { // subtract 2 because we also ignore element 0
+                            print("Array stem must be last in nested encoded key specifier in \(pair.makeString()) ... continuing")
+                            continue perKeyLoop
+                        }
+                        keyIndicatedArray = true
+                    } else {
+                        // Current subsequence indicates an object.
+                        // this can result in both keyIndicatedArray and keyIndicatedObject
+                        // being true. That's okay as long as array is checked first below.
+                        subKey += (subKey.count > 0 ? "." : "") + contents.dropLast().makeString()
+                        keyIndicatedObject = true
+                    }
                 }
             }
 
@@ -77,13 +87,27 @@ extension Node {
 
             if let existing = urlEncoded[key] {
                 if keyIndicatedArray {
-                    var array = existing.array ?? [existing]
-                    array.append(value)
-                    value = .array(array)
+                    if subKey.count > 0 { // there's a keypath before the array
+                        // This is an ugly mess. There must be a better way.
+                        var obj = existing
+                        if let _ = obj.object {} else { obj = Node.object([:]) }
+                        var array = obj[subKey]?.array ?? (obj[subKey] != nil ? [obj[subKey]!] : Array<Node>())
+                        array.append(value)
+                        obj[subKey] = Node.array(array)
+                        value = obj
+                    } else {
+                        var array = existing.array ?? [existing]
+                        array.append(value)
+                        value = .array(array)
+                    }
                 } else if keyIndicatedObject {
-                    var obj = existing.object ?? [:]
-                    obj[subKey] = value
-                    value = .object(obj)
+                    var obj = existing // Node is a struct, hence this (effectively) copies
+                    if let _ = obj.object {
+                    } else {
+                        obj = Node.object([:])
+                    }
+                    obj[subKey] = value // invoke keypath accessor
+                    value = obj
                 } else {
                     // if we don't have `[]` on this pair, but it was previously assigned
                     // an array, then it is implicit and should be appended.
@@ -94,9 +118,17 @@ extension Node {
                     value = .array(array)
                 }
             } else if keyIndicatedArray {
-                value = .array([value])
+                if subKey.count > 0 {
+                    var obj = Node.object([:])
+                    obj[subKey] = Node.array([value])
+                    value = obj
+                } else {
+                    value = .array([value])
+                }
             } else if keyIndicatedObject {
-                value = .object([subKey: value])
+                var obj = Node.object([:])
+                obj[subKey] = value // invoke keypath accessor
+                value = obj
             }
 
             urlEncoded[key] = value
