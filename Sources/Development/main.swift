@@ -85,7 +85,12 @@ struct Message: Model {
     var time: Int
 }
 
-async.get("users") { req -> Future<[User]> in
+async.post("users") { req -> Future<User> in
+    var user = try JSONDecoder().decode(User.self, from: req.body.data)
+    return try user.save(to: req, database: .memory).map { user }
+}
+
+async.get("users") { req in
     return try req.query(User.self, database: .memory).all()
 }
 

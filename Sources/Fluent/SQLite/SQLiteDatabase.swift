@@ -6,8 +6,9 @@ import SQLite
 extension SQLiteDatabase: Database {
     public func makeConnection(
         on queue: DispatchQueue
-    ) throws -> DatabaseConnection {
-        return try SQLiteConnection(database: self, queue: queue)
+    ) -> Future<DatabaseConnection> {
+        let sqlite: Future<SQLiteConnection> = makeConnection(on: queue)
+        return sqlite.map { $0 }
     }
 }
 

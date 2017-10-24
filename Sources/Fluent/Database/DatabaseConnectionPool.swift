@@ -35,20 +35,19 @@ public final class DatabaseConnectionPool {
     public func requestConnection() -> Future<DatabaseConnection> {
         let promise = Promise(DatabaseConnection.self)
 
-        do {
-            if let ready = self.available.popLast() {
-                promise.complete(ready)
-            } else {
-                if self.active < self.max {
-                    let connection = try self.database.makeConnection(on: queue)
+        if let ready = self.available.popLast() {
+            promise.complete(ready)
+        } else {
+            if self.active < self.max {
+                self.database.makeConnection(on: queue).then { connection in
                     self.active += 1
                     promise.complete(connection)
-                } else {
-                    self.waiters.append(promise.complete)
+                }.catch { err in
+                    promise.fail(err)
                 }
+            } else {
+                self.waiters.append(promise.complete)
             }
-        } catch {
-            promise.fail(error)
         }
 
         return promise.future

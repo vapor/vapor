@@ -66,7 +66,7 @@ extension QueryBuilder {
         let stream = BasicStream<M>()
         executor.then { conn in
             conn.execute(query: self.query, into: stream)
-                .then(stream.close)
+                .then { promise.complete() }
                 .catch(promise.fail)
             }.catch(promise.fail)
 

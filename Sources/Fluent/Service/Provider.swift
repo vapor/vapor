@@ -40,7 +40,7 @@ public final class FluentProvider: Provider {
                 throw "no database \(migration.database) was found for migration \(migration.migration)"
             }
 
-            let conn = try database.makeConnection(on: migrationQueue)
+            let conn = try database.makeConnection(on: migrationQueue).blockingAwait()
             print("Migrating \(migration.migration)")
             try migration.migration.prepare(conn).blockingAwait() // FIXME: is this fine being blocking?
             print("done!")
@@ -80,6 +80,17 @@ public struct DatabaseConfig {
         as id: DatabaseIdentifier = .default
     ) {
         databases[id] = { try $0.make(D.self, for: DatabaseConfig.self) }
+    }
+}
+
+extension Model {
+    public mutating func save(
+        to req: Request,
+        database: DatabaseIdentifier = .default,
+        new: Bool = false
+    ) throws -> Future<Void> {
+        let query = try req.query(Self.self, database: database)
+        return query.save(&self, new: new)
     }
 }
 

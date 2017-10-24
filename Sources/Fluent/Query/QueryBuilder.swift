@@ -38,3 +38,32 @@ extension QueryBuilder {
         self.init(M.self, on: promise.future)
     }
 }
+
+// MARK: Save
+
+extension QueryBuilder {
+    public func save(_ model: inout M, new: Bool) -> Future<Void> {
+        query.data = model
+
+        if let id = model.id, !new {
+            filter("id" == id)
+            // update record w/ matching id
+            query.action = .update
+        } else if model.id == nil {
+            switch M.I.identifierType {
+            case .autoincrementing: break
+            case .generated(let factory):
+                model.id = factory()
+            case .supplied: break
+                // FIXME: error if not actually supplied?
+            }
+            // create w/ generated id
+            query.action = .create
+        } else {
+            // just create, with existing id
+            query.action = .create
+        }
+
+        return run()
+    }
+}

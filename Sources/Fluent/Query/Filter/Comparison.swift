@@ -43,9 +43,9 @@ extension QueryBuilder {
         _ field: String,
         _ comparison: Comparison,
         _ value: Encodable?
-    ) throws -> Self {
+    ) -> Self {
         let filter = Filter(entity: T.entity, method: .compare(field, comparison, value))
-        return try self.filter(filter)
+        return self.filter(filter)
     }
 
     /// Filter entity where field equals value
@@ -54,8 +54,8 @@ extension QueryBuilder {
         _ entity: T.Type,
         _ field: String,
         _ value: Encodable?
-    ) throws -> Self {
-        return try filter(entity, field, .equals, value)
+    ) -> Self {
+        return filter(entity, field, .equals, value)
     }
 
     /// Filter self with field, comparison, and value.
@@ -64,8 +64,8 @@ extension QueryBuilder {
         _ field: String,
         _ comparison: Comparison,
         _ value: Encodable?
-    ) throws -> Self {
-        return try filter(M.self, field, comparison, value)
+    ) -> Self {
+        return filter(M.self, field, comparison, value)
     }
 
     /// Filter self where field equals value.
@@ -73,7 +73,7 @@ extension QueryBuilder {
     public func filter(
         _ field: String,
         _ value: Encodable?
-    ) throws -> Self {
-        return try filter(field, .equals, value)
+    )  -> Self {
+        return filter(field, .equals, value)
     }
 }

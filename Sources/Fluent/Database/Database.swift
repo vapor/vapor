@@ -1,3 +1,4 @@
+import Async
 import Dispatch
 
 /// Types conforming to this protocol can be used as
@@ -5,7 +6,9 @@ import Dispatch
 public protocol Database {
     /// Creates a new database connection that will
     /// execute callbacks on the supplied dispatch queue.
-    func makeConnection(on queue: DispatchQueue) throws -> DatabaseConnection
+    func makeConnection(
+        on queue: DispatchQueue
+    ) -> Future<DatabaseConnection>
 }
 
 extension Database {

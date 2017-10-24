@@ -26,11 +26,11 @@ extension Model {
 // MARK: CRUD
 
 extension Model {
-    public mutating func save(to executor: QueryExecutor, asNew: Bool = true) -> Future<Void> {
+    public mutating func save(to executor: QueryExecutor, new: Bool = false) -> Future<Void> {
         let query = executor.query(Self.self)
         query.query.data = self
         
-        if let id = self.id, !asNew {
+        if let id = self.id, !new {
             query.filter("id" == id)
             // update record w/ matching id
             query.query.action = .update
@@ -49,7 +49,7 @@ extension Model {
             query.query.action = .create
         }
 
-        return executor.execute(query: query.query, into: BasicStream<Self>())
+        return query.run()
     }
 }
 

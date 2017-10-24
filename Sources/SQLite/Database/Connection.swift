@@ -14,29 +14,6 @@ public final class SQLiteConnection {
     /// support using a single database connection across multiple threads.
     internal let background: DispatchQueue
 
-    /// Opens a connection to the SQLite database at a given path.
-    /// If the database does not already exist, it will be created.
-    ///
-    /// The supplied DispatchQueue will be used to dispatch output stream calls.
-    /// Make sure to supply the event loop to this parameter so you get called back
-    /// on the appropriate thread.
-    public init(database: SQLiteDatabase, queue: DispatchQueue) throws {
-        let options = SQLITE_OPEN_CREATE | SQLITE_OPEN_READWRITE | SQLITE_OPEN_NOMUTEX
-        var raw: Raw?
-
-        guard sqlite3_open_v2(database.storage.path, &raw, options, nil) == SQLITE_OK else {
-            throw SQLiteError(problem: .error, reason: "Could not open database.")
-        }
-
-        guard let r = raw else {
-            throw SQLiteError(problem: .error, reason: "Unexpected nil database.")
-        }
-
-        self.raw = r
-        self.queue = queue
-        self.background = DispatchQueue(label: "sqlite.connection.\(r)")
-    }
-
     /// Returns the last error message, if one exists.
     var errorMessage: String? {
         guard let raw = sqlite3_errmsg(raw) else {
@@ -44,6 +21,17 @@ public final class SQLiteConnection {
         }
 
         return String(cString: raw)
+    }
+
+    /// Create a new SQLite conncetion.
+    internal init(
+        raw: Raw,
+        queue: DispatchQueue,
+        background: DispatchQueue
+    ) {
+        self.raw = raw
+        self.queue = queue
+        self.background = background
     }
 
     /// Returns an identifier for the last inserted row.

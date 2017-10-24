@@ -41,7 +41,9 @@ extension Future: Codable {
 extension Array: ResponseRepresentable {
     public func makeResponse(for request: Request) throws -> Response {
         let body = try Body(JSONEncoder().encode(self))
-        return Response(body: body)
+        let res = Response(body: body)
+        res.mediaType = .json
+        return res
     }
 }
 
