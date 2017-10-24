@@ -91,7 +91,9 @@ extension Node {
                         // This is an ugly mess. There must be a better way.
                         var obj = existing
                         if let _ = obj.object {} else { obj = Node.object([:]) }
-                        var array = obj[subKey]?.array ?? (obj[subKey] != nil ? [obj[subKey]!] : Array<Node>())
+                        var array: [Node] = []
+                        if let orig = obj[subKey]?.array { array = orig }
+                        else if let sub = obj[subKey] { array = [sub] }
                         array.append(value)
                         obj[subKey] = Node.array(array)
                         value = obj
