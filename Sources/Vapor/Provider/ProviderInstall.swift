@@ -51,7 +51,7 @@ public final class ProviderInstall: Command {
                 console.print("Copied public files")
                 dirty = true
             } catch {
-                //
+                console.warning("Copy public files failed")
             }
             
             do {
@@ -59,11 +59,11 @@ public final class ProviderInstall: Command {
                 console.print("Copied resource files")
                 dirty = true
             } catch {
-                //
+                console.warning("Copy resource files failed")
             }
             
             if dirty {
-                console.success("Installed \(type.repositoryName)")
+                console.warning("Installed \(type.repositoryName)")
             } else {
                 console.print("Nothing to install")
             }
