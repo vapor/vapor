@@ -9,9 +9,7 @@ extension Message {
                 return existing
             } else if let type = headers[.contentType], type.contains("application/x-www-form-urlencoded") {
                 guard case let .data(body) = body else { return nil }
-                // TODO: Is there a way to avoid the downward dependency on
-                //       Request here?
-                let formURLEncoded = Node(formURLEncoded: body, distinguishingEmptyValues: Request.distinguishEmptyFormURLEncodedValues)
+                let formURLEncoded = Node(formURLEncoded: body)
                 storage["form-urlencoded"] = formURLEncoded
                 return formURLEncoded
             } else {
@@ -33,29 +31,7 @@ extension Message {
     }
 }
 
-// TODO: Is a fileprivate global the best place to store this value?
-fileprivate var requestsAreDistinguishingEmptyFormURLEncodedValues: Bool = false
-
 extension Request {
-    /// Whether to explicitly represent form-urlencoded parameters with empty or
-    /// absent values, or to omit them altogether. Despite its location in this
-    /// source file, this setting applies ONLY to parsing of
-    /// application/x-www-form-urlencoded requests; it does NOT apply to parsing
-    /// of query strings in a URL, nor to requests using multipart/form-data
-    /// encoding.
-    public internal(set) static var distinguishEmptyFormURLEncodedValues: Bool {
-    // TODO: Should this be publicly settable for droplets that don't wish to
-    //       set it in droplet.json?
-    // TODO: Should we just make the fileprivate global available instead, or
-    //       maybe create a RequestConfig class?
-    // TODO: While we have to honor this setting only for form-urlencoded form
-    //       submissions or else break backwards compat, it seems confusing to
-    //       ignore it for query string parsing. Is there a better paradigm?
-    //       Possibly separately configurable behaviors?
-        get { return requestsAreDistinguishingEmptyFormURLEncodedValues }
-        set { requestsAreDistinguishingEmptyFormURLEncodedValues = newValue }
-    }
-
     /// Query data from the URI path
     public var query: Node? {
         get {
