@@ -1,6 +1,5 @@
 import libc
 import TCP
-import Core
 import Dispatch
 
 /// Helper that keeps track of a connection counter for an `Address`
