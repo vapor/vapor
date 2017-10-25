@@ -31,7 +31,7 @@ public final class PeerValidationStream {
     }
     
     /// Validates incoming clients
-    public func accept(client: Client) -> Bool {
+    public func willAccept(client: Client) -> Bool {
         // Accept must always set the address
         guard let currentRemoteAddress = client.socket.address else {
             return false
@@ -55,7 +55,7 @@ public final class PeerValidationStream {
         }
         
         // Cleans up be decreasing the counter
-        client.socket.beforeClose = {
+        client.socket.didClose = {
             client.worker.queue.async {
                 guard let currentRemote = currentRemote else {
                     return

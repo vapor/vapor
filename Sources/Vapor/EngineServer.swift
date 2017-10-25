@@ -16,7 +16,7 @@ public final class EngineServer: HTTPServer {
     public func start(with responder: Responder) throws {
         // create a tcp server
         let tcp = try TCP.Server(workerCount: config.workerCount)
-        tcp.accept = PeerValidationStream(maxConnectionsPerIP: config.maxConnectionsPerIP).accept
+        tcp.willAccept = PeerValidationStream(maxConnectionsPerIP: config.maxConnectionsPerIP).willAccept
         
         let server = HTTP.Server(tcp: tcp)
         
@@ -69,7 +69,7 @@ public struct EngineServerConfig {
         port: UInt16 = 8080,
         backlog: Int32 = 4096,
         workerCount: Int = 8,
-        maxConnectionsPerIP: Int = 50
+        maxConnectionsPerIP: Int = 64
     ) {
         self.hostname = hostname
         self.port = port

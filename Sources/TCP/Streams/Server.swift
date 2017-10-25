@@ -22,9 +22,17 @@ public final class Server: Async.OutputStream {
     var worker: LoopIterator<[Worker]>
     var readSource: DispatchSourceRead?
     
-    public typealias AcceptClosure = (Client) -> (Bool)
+    /// A closure that can dictate if a client will be accepted
+    ///
+    /// `true` for accepted, `false` for not accepted
+    public typealias AcceptHandler = (Client) -> (Bool)
     
-    public var accept: AcceptClosure?
+    /// Controls whether or not to accept a client
+    ///
+    /// Useful for security purposes
+    public var willAccept: AcceptHandler = { _ in
+        return true
+    }
 
     /// Creates a TCP server from an existing TCP socket.
     public init(socket: Socket, workerCount: Int) {
@@ -72,7 +80,7 @@ public final class Server: Async.OutputStream {
             
             let client = Client(socket: socket, worker: worker)
             
-            guard self.accept?(client) != false else {
+            guard self.willAccept(client) else {
                 client.close()
                 return
             }

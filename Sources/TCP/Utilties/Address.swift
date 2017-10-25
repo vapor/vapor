@@ -3,11 +3,38 @@ import libc
 /// A socket address
 public struct Address {
     /// The raw underlying storage
-    public let storage: sockaddr_storage
+    let storage: sockaddr_storage
     
     /// Creates a new socket address
     init(storage: sockaddr_storage) {
         self.storage = storage
+    }
+    
+    /// Creates a new socket address
+    init(storage: sockaddr) {
+        var storage = storage
+        
+        self.storage = withUnsafePointer(to: &storage) { pointer in
+            return pointer.withMemoryRebound(to: sockaddr_storage.self, capacity: 1) { storage in
+                return storage.pointee
+            }
+        }
+    }
+    
+    static func withSockaddrPointer<T>(
+        do closure: ((UnsafeMutablePointer<sockaddr>) throws -> (T))
+    ) rethrows -> (T, Address) {
+        var addressStorage = sockaddr_storage()
+        
+        let other = try withUnsafeMutablePointer(to: &addressStorage) { pointer in
+            return try pointer.withMemoryRebound(to: sockaddr.self, capacity: 1) { socketAddress in
+                return try closure(socketAddress)
+            }
+        }
+        
+        let address = Address(storage: addressStorage)
+        
+        return (other, address)
     }
 }
 
@@ -144,6 +171,7 @@ extension sockaddr_storage {
     }
 }
 
+/// converts host byte order to network byte order
 fileprivate func htons(_ value: UInt16) -> UInt16 {
-    return (value << 8) + (value >> 8)
+    return (value << 8) &+ (value >> 8)
 }

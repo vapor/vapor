@@ -20,17 +20,19 @@ public class Socket {
     public typealias CloseHandler = (()->())
     
     /// Will be triggered before closing the socket, as part of the cleanup process
-    public var beforeClose: CloseHandler? = nil
+    public var didClose: CloseHandler? = nil
 
     /// Creates a TCP socket around an existing descriptor
     public init(
         established: Descriptor,
         isNonBlocking: Bool,
-        shouldReuseAddress: Bool
+        shouldReuseAddress: Bool,
+        address: Address?
     ) {
         self.descriptor = established
         self.isNonBlocking = isNonBlocking
         self.shouldReuseAddress = shouldReuseAddress
+        self.address = address
     }
     
     /// Creates a new TCP socket
@@ -62,14 +64,15 @@ public class Socket {
         self.init(
             established: descriptor,
             isNonBlocking: isNonBlocking,
-            shouldReuseAddress: shouldReuseAddress
+            shouldReuseAddress: shouldReuseAddress,
+            address: nil
         )
     }
 
     /// Closes the socket
     public func close() {
-        beforeClose?()
         libc.close(descriptor.raw)
+        didClose?()
     }
     
     /// Returns a boolean describing if the socket is still healthy and open

@@ -28,8 +28,11 @@ extension Socket {
         }
 
         res = libc.connect(descriptor.raw, info.pointee.ai_addr, info.pointee.ai_addrlen)
+        
         guard res == 0 || (isNonBlocking && errno == EINPROGRESS) else {
             throw Error.posix(errno, identifier: "connect")
         }
+        
+        self.address = Address(storage: info.pointee.ai_addr.pointee)
     }
 }
