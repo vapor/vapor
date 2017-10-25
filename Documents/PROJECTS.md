@@ -18,6 +18,8 @@ People have built some awesome things with Vapor, and we can't wait to see what 
 * [TinyFaces](#tinyfaces) - an api with random avatars that can be used by designers in their designs
 * [Geobot](#geobot) - a simple chat bot built using Wit.ai and Vapor
 * [HomeKitty](#homekitty) - a crowdsourced HomeKit database
+* [ServerSideSwift.racing](#serversideswiftracing) - growth statistics on popular server-side swift frameworks
+* [Vapor.berlin](#vaporberlin) - website to create and vote topics for the VaporBerlin meetup
 
 # PDX Cocoaheads
 
@@ -215,3 +217,24 @@ A crowdsourced HomeKit-compatible accessories database.
 
 ### Site
 [HomeKitty](https://homekitty.world)
+
+# ServerSideSwift.racing
+
+Overview of growth statistics on popular server side swift frameworks
+
+### GitHub
+[Source](https://github.com/MartinLasek/serversideswift.racing)
+
+### Site
+[Demo](http://www.serversideswift.racing/)
+
+# Vapor.berlin
+
+Website to create and vote topics for the VaporBerlin meetup
+
+### GitHub
+[Source](https://github.com/MartinLasek/vaporberlinBE)
+
+### Site
+[Demo](http://vapor.berlin/#/)
+
