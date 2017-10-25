@@ -130,7 +130,7 @@ let package = Package(
         .testTarget(name: "ServiceTests", dependencies: ["Service"]),
 
         // TLS
-        .target(name: "TLS", dependencies: [ssl, "TCP"]),
+        .target(name: "TLS", dependencies: ["Core", ssl, "TCP"]),
         .testTarget(name: "TLSTests", dependencies: ["TLS"]),
 
         // SQLite
