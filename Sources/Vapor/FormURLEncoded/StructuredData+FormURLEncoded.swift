@@ -87,7 +87,7 @@ extension Node {
 
             if let existing = urlEncoded[key] {
                 if keyIndicatedArray {
-                    if subKey.count > 0 { // there's a keypath before the array
+                    if subKey.characters.count > 0 { // there's a keypath before the array
                         // This is an ugly mess. There must be a better way.
                         var obj = existing
                         if let _ = obj.object {} else { obj = Node.object([:]) }
@@ -120,7 +120,7 @@ extension Node {
                     value = .array(array)
                 }
             } else if keyIndicatedArray {
-                if subKey.count > 0 {
+                if subKey.characters.count > 0 {
                     var obj = Node.object([:])
                     obj[subKey] = Node.array([value])
                     value = obj
