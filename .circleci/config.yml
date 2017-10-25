@@ -4,6 +4,9 @@ jobs:
   macos:
     macos:
       xcode: "9.0"
+    docker:
+      - image: redis:3.2
+      - image: mysql:5.7
     steps:
       - run: brew install vapor/tap/vapor
       - run: brew install redis
@@ -21,7 +24,7 @@ jobs:
       - image: redis:3.2
       - image: mysql:5.7
         environment:
-            MYSQL_ALLOW_EMPTY_PASSWORD: true
+          MYSQL_ALLOW_EMPTY_PASSWORD: true
     steps:
       - run: apt-get install -yq libssl-dev
       - checkout
