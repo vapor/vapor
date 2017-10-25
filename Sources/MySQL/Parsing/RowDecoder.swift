@@ -61,11 +61,7 @@ class RowDecoder : DecoderHelper {
     public func decode(_ type: Column) throws -> String {
         let value = try either.getValue()
         
-        if case .varString(let data) = value {
-            guard let string = String(bytes: data, encoding: .utf8) else {
-                throw DecodingError.incorrectValue
-            }
-            
+        if case .varString(let string) = value {
             return string
         } else {
             throw DecodingError.incorrectValue
@@ -120,9 +116,11 @@ class RowDecoder : DecoderHelper {
 extension Row : KeyedDecodingHelper {
     /// Makes Row conform to KeyedDecodingHelper to help decoding
     func value(forKey key: String) throws -> Column? {
-        return self.fields.first { pair in
-            return pair.field.name == key
-        }?.column
+        if let index = fieldNames.index(of: key) {
+            return columns[index]
+        }
+        
+        return nil
     }
 }
 
@@ -160,16 +158,14 @@ struct RowContainer<Key : CodingKey>: KeyedDecodingContainerProtocolHelper {
             return []
         }
         
-        return keyed.fields.flatMap { pair in
-            return Key(stringValue: pair.field.name)
+        return keyed.fieldNames.flatMap { name in
+            return Key(stringValue: name)
         }
     }
     
     /// Checks if the key exists in this row
     func contains(_ key: Key) -> Bool {
-        return (try? decoder.either.getKeyed().fields.contains { pair in
-            return pair.field.name == key.stringValue
-        }) == true
+        return (try? decoder.either.getKeyed().fieldNames.contains(key.stringValue)) == true
     }
 }
 

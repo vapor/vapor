@@ -16,7 +16,10 @@ final class ByteScanner {
     /// Create a new byte scanner
     public init(data: Data) {
         self.data = data
-        self.buffer = UnsafeBufferPointer(start: data.withUnsafeBytes { $0 }, count: data.count)
+        self.buffer = data.withUnsafeBytes { (pointer: UnsafePointer<UInt8>) in
+            return UnsafeBufferPointer(start: pointer, count: data.count)
+        }
+        
         self.pointer = buffer.baseAddress!
         self.endAddress = buffer.baseAddress!.advanced(by: buffer.endIndex)
         self.offset = 0

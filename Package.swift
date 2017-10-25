@@ -130,13 +130,17 @@ let package = Package(
         // Routing
         .target(name: "Routing", dependencies: ["Core", "Debugging", "HTTP", "WebSocket"]),
         .testTarget(name: "RoutingTests", dependencies: ["Routing"]),
+        
+        // Redis
+        .target(name: "Redis", dependencies: ["Async", "Bits", "Debugging", "TCP"]),
+        .testTarget(name: "RedisTests", dependencies: ["Redis"]),
 
         // Service
         .target(name: "Service", dependencies: ["Core", "Debugging"]),
         .testTarget(name: "ServiceTests", dependencies: ["Service"]),
 
         // TLS
-        .target(name: "TLS", dependencies: [ssl, "TCP"]),
+        .target(name: "TLS", dependencies: ["Core", ssl, "TCP"]),
         .testTarget(name: "TLSTests", dependencies: ["TLS"]),
 
         // SQLite

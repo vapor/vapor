@@ -5,13 +5,14 @@ import XCTest
 @testable import CryptoTests
 @testable import DebuggingTests
 @testable import HTTPTests
+@testable import HTTP2Tests
 @testable import JWTTests
 @testable import LeafTests
 @testable import MultipartTests
 @testable import MySQLTests
-@testable import RandomTests
 @testable import PufferfishTests
-@testable import HTTP2Tests
+@testable import RandomTests
+@testable import RedisTests
 @testable import RoutingTests
 @testable import ServiceTests
 @testable import TLSTests
@@ -55,15 +56,17 @@ XCTMain([
     testCase(MultipartTests.allTests),
 
     // MySQL
-    // FIXME: joannis, fix these :)
-    // testCase(MySQLTests.allTests),
-
-    // Random
-    testCase(RandomTests.allTests),
+    testCase(MySQLTests.allTests),
 
     // Pufferfish
     testCase(PufferfishTests.allTests),
+  
+    // Random
+    testCase(RandomTests.allTests),
 
+    // Redis
+    testCase(RedisTests.allTests),
+    
     // Routing
     testCase(RouterTests.allTests),
 
@@ -78,7 +81,7 @@ XCTMain([
     testCase(TCPTests.SocketsTests.allTests),
 
     // Vapor
-    //testCase(ApplicationTests.allTests),
+    testCase(ApplicationTests.allTests),
 
     // WebSocket
     testCase(WebSocketTests.allTests),
