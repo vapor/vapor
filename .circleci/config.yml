@@ -6,6 +6,8 @@ jobs:
       xcode: "9.0"
     steps:
       - run: brew install vapor/tap/vapor
+      - run: brew install redis
+      - run: brew services start redis
       - checkout
       - run: swift build
       - run: swift build -c release
@@ -16,6 +18,8 @@ jobs:
       - image: swift:4.0
     steps:
       - run: apt-get install -yq libssl-dev
+      - run: apt-get install redis-server
+      - run: /usr/local/bin/redis-server &
       - checkout
       - run: swift build
       - run: swift build -c release
