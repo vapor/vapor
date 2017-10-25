@@ -77,7 +77,7 @@ extension Node {
                         // Current subsequence indicates an object.
                         // this can result in both keyIndicatedArray and keyIndicatedObject
                         // being true. That's okay as long as array is checked first below.
-                        subKey += (subKey.count > 0 ? "." : "") + contents.dropLast().makeString()
+                        subKey += (subKey.characters.count > 0 ? "." : "") + contents.dropLast().makeString()
                         keyIndicatedObject = true
                     }
                 }
