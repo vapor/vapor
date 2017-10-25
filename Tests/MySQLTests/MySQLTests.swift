@@ -7,6 +7,13 @@ import Core
 class MySQLTests: XCTestCase {
     let pool = ConnectionPool(hostname: "127.0.0.1", user: "root", password: "", database: "test", queue: .global())
 
+    static let allTests = [
+        ("testNothing", testNothing),
+    ]
+
+    func testNothing() {
+        // hi
+    }
 //    func testVersion() {
 //        let group = DispatchGroup()
 //        group.enter()
