@@ -83,17 +83,6 @@ public struct DatabaseConfig {
     }
 }
 
-extension Model {
-    public mutating func save(
-        to req: Request,
-        database: DatabaseIdentifier = .default,
-        new: Bool = false
-    ) throws -> Future<Void> {
-        let query = try req.query(Self.self, database: database)
-        return query.save(&self, new: new)
-    }
-}
-
 public struct MigrationConfig {
     var migrations: [(migration: Migration.Type, database: DatabaseIdentifier)]
 

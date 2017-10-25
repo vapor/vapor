@@ -1,5 +1,7 @@
 import Async
 import Dispatch
+import Foundation
+import Random
 import SQL
 import SQLite
 
@@ -15,7 +17,31 @@ extension SQLiteDatabase: Database {
 extension SQLiteConnection: DatabaseConnection { }
 
 extension SQLiteConnection: QueryExecutor {
-    public func execute<I: InputStream, D: Decodable>(
+    public func execute(transaction: DatabaseTransaction) -> Future<Void> {
+        let promise = Promise(Void.self)
+
+        SQLiteQuery(string: "BEGIN TRANSACTION", connection: self).execute().then {_ in
+            transaction.closure(self).then {
+                print("transaction done")
+                SQLiteQuery(string: "COMMIT TRANSACTION", connection: self)
+                    .execute()
+                    .chain(to: promise)
+            }.catch { err in
+                SQLiteQuery(string: "ROLLBACK TRANSACTION", connection: self).execute().then { query in
+                    print("rollback success")
+                    // still fail even tho rollback succeeded
+                    promise.fail(err)
+                }.catch { err in
+                    print("Rollback failed") // fixme: combine errors here
+                    promise.fail(err)
+                }
+            }
+        }.catch(promise.fail)
+
+        return promise.future
+    }
+    
+    public func execute<I: Async.InputStream, D: Decodable>(
         query: DatabaseQuery,
         into stream: I
     ) -> Future<Void> where I.Input == D {
@@ -32,7 +58,7 @@ extension SQLiteConnection: QueryExecutor {
         return promise.future
     }
 
-    private func _perform<I: InputStream, D: Decodable>(
+    private func _perform<I: Async.InputStream, D: Decodable>(
         _ fluentQuery: DatabaseQuery,
         into stream: I
     ) throws -> Future<Void> where I.Input == D {
@@ -111,14 +137,13 @@ extension SQLiteConnection: QueryExecutor {
 
         print(string)
         
-        let sqliteQuery = try SQLiteQuery(
-            statement: string,
+        let sqliteQuery = SQLiteQuery(
+            string: string,
             connection: self
         )
-
         for value in values {
             print(value)
-            try sqliteQuery.bind(value)
+            sqliteQuery.bind(value) // FIXME: set array w/o need to loop?
         }
 
         sqliteQuery.drain { row in
@@ -143,3 +168,10 @@ extension SQLiteConnection: QueryExecutor {
         return promise.future
     }
 }
+
+//extension Data {
+//    var hexString: String {
+//        return self.reduce("") { $0 + String(format: "%02x", $1) }
+//    }
+//}
+

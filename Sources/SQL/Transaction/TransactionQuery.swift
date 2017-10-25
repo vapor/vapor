@@ -1,4 +1,0 @@
-public struct TransactionQuery {
-
-}
-

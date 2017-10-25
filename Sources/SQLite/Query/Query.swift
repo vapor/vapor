@@ -17,6 +17,9 @@ let SQLITE_TRANSIENT = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
 ///         .catch { ... }
 ///
 public final class SQLiteQuery: Async.OutputStream {
+    // internal C api pointer for this query
+    typealias Raw = OpaquePointer
+
     // stream conformance
     public typealias Output = SQLiteRow
 
@@ -26,50 +29,25 @@ public final class SQLiteQuery: Async.OutputStream {
     /// See BaseStream.ErrorHandler
     public var errorStream: ErrorHandler?
 
-    // raw pointers
-    internal typealias Raw = OpaquePointer
-
-    /// the raw statement pointer used for SQLite C API.
-    internal let raw: Raw
-
     /// the database this statement will
     /// be executed on.
     public let connection: SQLiteConnection
 
     /// the raw query string
-    public let statement: String
+    public let string: String
 
-    /// current bind position
-    var bindPosition: Int32
-
-    /// next bind position.
-    /// increments the current bind position.
-    var nextBindPosition: Int32 {
-        bindPosition += 1
-        return bindPosition
-    }
+    /// data bound to this query
+    var binds: [SQLiteData]
 
     /// Create a new SQLite statement with a supplied query string and database.
     ///
     /// The supplied DispatchQueue will be used to dispatch output stream calls.
     /// Make sure to supply the event loop to this parameter so you get called back
     /// on the appropriate thread.
-    public init(statement: String, connection: SQLiteConnection) throws {
-        var raw: Raw?
-        let ret = sqlite3_prepare_v2(connection.raw, statement, -1, &raw, nil)
-        guard ret == SQLITE_OK else {
-            throw SQLiteError(statusCode: ret, connection: connection)
-        }
-
-        guard let statementPointer = raw else {
-            throw SQLiteError(statusCode: ret, connection: connection)
-        }
-
+    public init(string: String, connection: SQLiteConnection) {
         self.connection = connection
-        self.raw = statementPointer
-        self.statement = statement
-
-        bindPosition = 0
+        self.string = string
+        self.binds = []
     }
 
     public func reset(_ statementPointer: OpaquePointer) {
@@ -81,26 +59,75 @@ public final class SQLiteQuery: Async.OutputStream {
 
     public func blockingExecute() throws {
         var columns: [SQLiteColumn] = []
-        let count = sqlite3_column_count(self.raw)
+
+        var raw: Raw?
+
+        var ret = sqlite3_prepare_v2(connection.raw, string, -1, &raw, nil)
+        guard ret == SQLITE_OK else {
+            throw SQLiteError(statusCode: ret, connection: connection)
+        }
+
+        guard let r = raw else {
+            throw SQLiteError(statusCode: ret, connection: connection)
+        }
+
+        var nextBindPosition: Int32 = 1
+
+        for bind in binds {
+            switch bind {
+            case .blob(let value):
+                let count = Int32(value.count)
+                let pointer: UnsafePointer<Byte> = value.withUnsafeBytes { $0 }
+                let ret = sqlite3_bind_blob(r, nextBindPosition, UnsafeRawPointer(pointer), count, SQLITE_TRANSIENT)
+                guard ret == SQLITE_OK else {
+                    throw SQLiteError(statusCode: ret, connection: connection)
+                }
+            case .float(let value):
+                let ret = sqlite3_bind_double(r, nextBindPosition, value)
+                guard ret == SQLITE_OK else {
+                    throw SQLiteError(statusCode: ret, connection: connection)
+                }
+            case .integer(let value):
+                let ret = sqlite3_bind_int64(r, nextBindPosition, Int64(value))
+                guard ret == SQLITE_OK else {
+                    throw SQLiteError(statusCode: ret, connection: connection)
+                }
+            case .null:
+                let ret = sqlite3_bind_null(r, nextBindPosition)
+                if ret != SQLITE_OK {
+                    throw SQLiteError(statusCode: ret, connection: connection)
+                }
+            case .text(let value):
+                let strlen = Int32(value.utf8.count)
+                let ret = sqlite3_bind_text(r, nextBindPosition, value, strlen, SQLITE_TRANSIENT)
+                guard ret == SQLITE_OK else {
+                    throw SQLiteError(statusCode: ret, connection: connection)
+                }
+            }
+
+            nextBindPosition += 1
+        }
+
+        let count = sqlite3_column_count(r)
         columns.reserveCapacity(Int(count))
 
         // iterate over column count and intialize columns once
         // we will then re-use the columns for each row
         for i in 0..<count {
-            let column = try SQLiteColumn(statement: self, offset: i)
+            let column = try SQLiteColumn(query: r, offset: i)
             columns.append(column)
         }
 
         // step over the query, this will continue to return SQLITE_ROW
         // for as long as there are new rows to be fetched
-        while sqlite3_step(self.raw) == SQLITE_ROW {
+        while sqlite3_step(r) == SQLITE_ROW {
             var row = SQLiteRow()
 
             // iterator over column count again and create a field
             // for each column. Use the column we have already initialized.
             for i in 0..<count {
                 let col = columns[Int(i)]
-                let field = try SQLiteField(statement: self, offset: i)
+                let field = try SQLiteField(query: r, offset: i)
                 row.fields[col] = field
             }
 
@@ -108,8 +135,9 @@ public final class SQLiteQuery: Async.OutputStream {
             self.connection.queue.async { self.outputStream?(row) }
         }
 
+        print(string)
         // cleanup
-        let ret = sqlite3_finalize(self.raw)
+        ret = sqlite3_finalize(r)
         guard ret == SQLITE_OK else {
             throw SQLiteError(statusCode: ret, connection: self.connection)
         }

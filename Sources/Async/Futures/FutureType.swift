@@ -121,34 +121,97 @@ extension FutureType {
 // MARK: Array
 
 
+//extension Array where Element: FutureType {
+//    /// Flattens an array of future results into one
+//    /// future array result.
+//    public func flatten() -> Future<[Element.Expectation]> {
+//        let promise = Promise<[Element.Expectation]>()
+//
+//        var elements: [Element.Expectation] = []
+//
+//        var iterator = makeIterator()
+//        func handle(_ future: Element) {
+//            future.then { res in
+//                elements.append(res)
+//                if let next = iterator.next() {
+//                    handle(next)
+//                } else {
+//                    promise.complete(elements)
+//                }
+//            }.catch { error in
+//                promise.fail(error)
+//            }
+//        }
+//
+//        if let first = iterator.next() {
+//            handle(first)
+//        } else {
+//            promise.complete(elements)
+//        }
+//
+//        return promise.future
+//    }
+//}
+
 extension Array where Element: FutureType {
-    /// Flattens an array of future results into one
-    /// future array result.
     public func flatten() -> Future<[Element.Expectation]> {
-        let promise = Promise<[Element.Expectation]>()
+        let many = ManyFutures(self)
+        return many.promise.future
+    }
+}
 
-        var elements: [Element.Expectation] = []
 
-        var iterator = makeIterator()
-        func handle(_ future: Element) {
+extension Array where Element: FutureType, Element.Expectation == Void {
+    public func flatten() -> Future<Void> {
+        let many = ManyFutures(self)
+        let promise = Promise(Void.self)
+        many.promise.future.then { _ in
+            promise.complete()
+            }.catch(promise.fail)
+        return promise.future
+    }
+}
+
+final class ManyFutures<F: FutureType> {
+    /// The future's result will be stored
+    /// here when it is resolved.
+    var promise: Promise<[F.Expectation]>
+
+    /// The futures completed.
+    private var results: [F.Expectation]
+
+    /// Ther errors caught.
+    private var errors: [Swift.Error]
+
+    /// All the awaited futures
+    private var many: [F]
+
+    /// Create a new many future.
+    public init(_ many: [F]) {
+        self.many = many
+        self.results = []
+        self.errors = []
+        self.promise = Promise<[F.Expectation]>()
+
+        for future in many {
             future.then { res in
-                elements.append(res)
-                if let next = iterator.next() {
-                    handle(next)
-                } else {
-                    promise.complete(elements)
-                }
-            }.catch { error in
-                promise.fail(error)
+                self.results.append(res)
+                self.update()
+                }.catch { err in
+                    self.errors.append(err)
+                    self.update()
             }
         }
+    }
 
-        if let first = iterator.next() {
-            handle(first)
-        } else {
-            promise.complete(elements)
+    /// Updates the many futures
+    func update() {
+        if results.count + errors.count == many.count {
+            if errors.count == 0 {
+                promise.complete(results)
+            } else {
+                promise.fail(errors.first!) // FIXME: combine errors
+            }
         }
-
-        return promise.future
     }
 }

@@ -10,8 +10,8 @@ public enum SQLiteFieldType {
     case null
 
     /// Create a new field type from statement and an offset.
-    init(statement: SQLiteQuery, offset: Int32) throws {
-        switch sqlite3_column_type(statement.raw, offset) {
+    init(query: SQLiteQuery.Raw, offset: Int32) throws {
+        switch sqlite3_column_type(query, offset) {
         case SQLITE_INTEGER:
             self = .integer
         case SQLITE_FLOAT:

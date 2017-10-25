@@ -6,43 +6,25 @@ public final class QueryBuilder<M: Model> {
     public var query: DatabaseQuery
 
     /// The connection this query will be excuted on.
-    public let executor: Future<QueryExecutor>
+    public let executor: QueryExecutor
 
     /// Create a new query.
     public init(
         _ type: M.Type = M.self,
-        on executor: Future<QueryExecutor>
+        on executor: QueryExecutor
     ) {
         query = DatabaseQuery(entity: M.entity)
         self.executor = executor
     }
 }
 
-// MARK: Convenience
-extension QueryBuilder {
-    /// Convenience init with non-future connection.
-    public convenience init(
-        _ type: M.Type = M.self,
-        on executor: QueryExecutor
-    ) {
-        self.init(M.self, on: Future(executor))
-    }
-
-    /// Create a new query.
-    public convenience init(
-        _ type: M.Type = M.self,
-        on conn: Future<DatabaseConnection>
-    ) {
-        let promise = Promise(QueryExecutor.self)
-        conn.then(promise.complete).catch(promise.fail)
-        self.init(M.self, on: promise.future)
-    }
-}
-
 // MARK: Save
 
 extension QueryBuilder {
-    public func save(_ model: inout M, new: Bool) -> Future<Void> {
+    public func save(
+        _ model: inout M,
+        new: Bool = false
+    ) -> Future<Void> {
         query.data = model
 
         if let id = model.id, !new {
@@ -65,5 +47,41 @@ extension QueryBuilder {
         }
 
         return run()
+    }
+}
+
+// MARK: Convenience - Fix w/ conditional conformance
+extension Future: QueryExecutor {
+    public func execute(transaction: DatabaseTransaction) -> Future<Void> {
+        let promise = Promise(Void.self)
+
+        self.then { result in
+            if let executor = result as? QueryExecutor {
+                executor.execute(transaction: transaction)
+                    .chain(to: promise)
+            } else {
+                promise.fail("future not query executor type")
+            }
+        }.catch(promise.fail)
+
+        return promise.future
+    }
+
+    public func execute<I: InputStream, D: Decodable>(
+        query: DatabaseQuery,
+        into stream: I
+    ) -> Future<Void> where I.Input == D {
+        let promise = Promise(Void.self)
+
+        self.then { result in
+            if let executor = result as? QueryExecutor {
+                executor.execute(query: query, into: stream)
+                    .chain(to: promise)
+            } else {
+                promise.fail("future not query executor type")
+            }
+        }.catch(promise.fail)
+
+        return promise.future
     }
 }

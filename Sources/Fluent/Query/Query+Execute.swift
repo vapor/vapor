@@ -8,16 +8,12 @@ extension QueryBuilder {
     /// query is done or fails
     public func run<T: Decodable>(
         decoding type: T.Type = T.self,
-        outputStream: @escaping BasicStream<T>.OutputHandler
+        into outputStream: @escaping BasicStream<T>.OutputHandler
     ) -> BasicStream<T> {
         let stream = BasicStream<T>()
 
-        executor.then { conn in
-            conn.execute(query: self.query, into: stream).then {
-                stream.close()
-            }.catch { err in
-                stream.errorStream?(err)
-            }
+        executor.execute(query: self.query, into: stream).then {
+            stream.close()
         }.catch { err in
             stream.errorStream?(err)
         }
@@ -31,7 +27,7 @@ extension QueryBuilder {
     public func run(
         outputStream: @escaping BasicStream<M>.OutputHandler
     ) -> BasicStream<M> {
-        return run(decoding: M.self, outputStream: outputStream)
+        return run(decoding: M.self, into: outputStream)
     }
 
     /// Executes the query, collecting the results
@@ -51,11 +47,9 @@ extension QueryBuilder {
             promise.complete(models)
         }
 
-        executor.then { conn in
-            conn.execute(query: self.query, into: stream)
-                .then(stream.close)
-                .catch(promise.fail)
-        }.catch(promise.fail)
+        executor.execute(query: self.query, into: stream)
+            .then(stream.close)
+            .catch(promise.fail)
 
         return promise.future
     }
@@ -64,11 +58,9 @@ extension QueryBuilder {
         let promise = Promise(Void.self)
 
         let stream = BasicStream<M>()
-        executor.then { conn in
-            conn.execute(query: self.query, into: stream)
-                .then { promise.complete() }
-                .catch(promise.fail)
-            }.catch(promise.fail)
+        executor.execute(query: self.query, into: stream)
+            .then { promise.complete() }
+            .catch(promise.fail)
 
         return promise.future
     }

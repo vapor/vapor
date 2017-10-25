@@ -62,14 +62,14 @@ extension User: Migration {
 }
 
 struct AddUsers: Migration {
-    static func prepare(_ database: DatabaseConnection) -> Future<Void> {
+    static func prepare(_ db: DatabaseConnection) -> Future<Void> {
         var bob = User(name: "Bob", age: 42)
         var vapor = User(name: "Vapor", age: 3)
 
         return [
-            bob.save(to: database),
-            vapor.save(to: database)
-        ].combine()
+            bob.save(to: db),
+            vapor.save(to: db)
+        ].flatten()
     }
 
     static func revert(_ database: DatabaseConnection) -> Future<Void> {
@@ -77,64 +77,5 @@ struct AddUsers: Migration {
     }
 }
 
-extension Array where Element: FutureType {
-    public func combine() -> Future<[Element.Expectation]> {
-        let many = ManyFutures(self)
-        return many.promise.future
-    }
-}
 
-extension Array where Element: FutureType, Element.Expectation == Void {
-    public func combine() -> Future<Void> {
-        let many = ManyFutures(self)
-        let promise = Promise(Void.self)
-        many.promise.future.then { _ in
-            promise.complete()
-        }.catch(promise.fail)
-        return promise.future
-    }
-}
 
-final class ManyFutures<F: FutureType> {
-    /// The future's result will be stored
-    /// here when it is resolved.
-    var promise: Promise<[F.Expectation]>
-
-    /// The futures completed.
-    private var results: [F.Expectation]
-
-    /// Ther errors caught.
-    private var errors: [Swift.Error]
-
-    /// All the awaited futures
-    private var many: [F]
-
-    /// Create a new many future.
-    public init(_ many: [F]) {
-        self.many = many
-        self.results = []
-        self.errors = []
-        self.promise = Promise<[F.Expectation]>()
-
-        for future in many {
-            future.then { res in
-                self.results.append(res)
-                self.update()
-            }.catch { err in
-                self.errors.append(err)
-                self.update()
-            }
-        }
-    }
-
-    /// Updates the many futures
-    func update() {
-        if results.count + errors.count == many.count {
-            if errors.count == 0 {
-                promise.complete(results)
-            } else {
-                promise.fail(errors.first!) // FIXME: combine errors
-            }
-        }
-    }
-}

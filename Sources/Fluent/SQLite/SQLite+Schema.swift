@@ -26,8 +26,8 @@ extension SQLiteConnection: SchemaExecutor {
 
         print(string)
 
-        let sqliteQuery = try! SQLiteQuery(
-            statement: string,
+        let sqliteQuery = SQLiteQuery(
+            string: string,
             connection: self
         )
         sqliteQuery.execute().then {

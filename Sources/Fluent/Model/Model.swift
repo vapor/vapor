@@ -23,47 +23,13 @@ extension Model {
     }
 }
 
-// MARK: CRUD
+/// MARK: CRUD
 
 extension Model {
-    public mutating func save(to executor: QueryExecutor, new: Bool = false) -> Future<Void> {
-        let query = executor.query(Self.self)
-        query.query.data = self
-        
-        if let id = self.id, !new {
-            query.filter("id" == id)
-            // update record w/ matching id
-            query.query.action = .update
-        } else if id == nil {
-            switch I.identifierType {
-            case .autoincrementing: break
-            case .generated(let factory):
-                id = factory()
-            case .supplied: break
-                // FIXME: error if not actually supplied?
-            }
-            // create w/ generated id
-            query.query.action = .create
-        } else {
-            // just create, with existing id
-            query.query.action = .create
-        }
-
-        return query.run()
-    }
-}
-
-// MARK: Convenience
-extension Model {
-    /// Create a query for this model type on the supplied connection.
-    public static func makeQuery<Self>(on conn: DatabaseConnection) -> QueryBuilder<Self> {
-        return QueryBuilder(on: conn)
-    }
-
-    /// Create a query for this model instance on the supplied connection.
-    public func makeQuery(on conn: DatabaseConnection) -> QueryBuilder<Self> {
-        let builder = QueryBuilder<Self>(on: conn)
-        builder.query.data = self
-        return builder
+    public mutating func save(
+        to executor: QueryExecutor,
+        new: Bool = false
+    ) -> Future<Void> {
+        return executor.query(Self.self).save(&self, new: new)
     }
 }

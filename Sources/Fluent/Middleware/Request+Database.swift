@@ -41,26 +41,25 @@ extension Request {
         }
     }
 
-    /// Creates a database query using this request's
-    /// current connection.
-    ///
-    /// If this request does not have a connection,
-    /// a new connection will be requested from the worker's
-    /// connection pool and cached to the request.
-    ///
-    /// Subsequent calls to this function will use the same connection.
-    public func query<M>(
-        _ modelType: M.Type = M.self,
-        database: DatabaseIdentifier = .default
-    ) throws -> QueryBuilder<M> {
+    public func database(
+        id database: DatabaseIdentifier = .default
+    ) -> Future<DatabaseConnection> {
+        let promise = Promise(DatabaseConnection.self)
+
         if let currentConnection = getCurrentConnection(database: database) {
-            return QueryBuilder(on: currentConnection)
+            currentConnection.chain(to: promise)
         } else {
-            let pool = try requireWorker()
-                .requireConnectionPool(database: database)
-            let conn = pool.requestConnection()
-            setCurrentConnection(to: conn, database: database)
-            return QueryBuilder(on: conn)
+            do {
+                let pool = try requireWorker()
+                    .requireConnectionPool(database: database)
+                let conn = pool.requestConnection()
+                setCurrentConnection(to: conn, database: database)
+                conn.chain(to: promise)
+            } catch {
+                promise.fail(error)
+            }
         }
+
+        return promise.future
     }
 }

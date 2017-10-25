@@ -4,11 +4,11 @@ import Async
 public final class SchemaCreator<M: Model>: SchemaBuilder {
     public typealias ModelType = M
     public var schema: DatabaseSchema
-    public let executor: Future<SchemaExecutor>
+    public let executor: SchemaExecutor
 
     public init(
         _ type: M.Type = M.self,
-        on executor: Future<SchemaExecutor>
+        on executor: SchemaExecutor
     ) {
         schema = DatabaseSchema(entity: M.entity)
         self.executor = executor

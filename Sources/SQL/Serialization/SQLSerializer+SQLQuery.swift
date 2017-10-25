@@ -5,8 +5,6 @@ extension SQLSerializer {
             return serialize(schema: schema)
         case .data(let data):
             return serialize(data: data)
-        case .transaction(let trans):
-            fatalError("Not implemented")
         }
     }
 }

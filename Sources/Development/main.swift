@@ -87,11 +87,25 @@ struct Message: Model {
 
 async.post("users") { req -> Future<User> in
     var user = try JSONDecoder().decode(User.self, from: req.body.data)
-    return try user.save(to: req, database: .memory).map { user }
+    return user.save(to: req.database(id: .memory)).map { user }
+}
+
+async.get("transaction") { req -> Future<String> in
+    return req.database(id: .memory).transaction { db in
+        var user = User(name: "NO SAVE", age: 500)
+        var message = Message(id: nil, text: "asdf", time: 42)
+
+        return [
+            user.save(to: db),
+            message.save(to: db)
+        ].flatten()
+    }.map {
+        return "Done"
+    }
 }
 
 async.get("users") { req in
-    return try req.query(User.self, database: .memory).all()
+    return req.database(id: .memory).query(User.self).all()
 }
 
 async.get("fluent") { req -> Future<String> in
@@ -103,7 +117,7 @@ async.get("fluent") { req -> Future<String> in
 //            print(count)
 //    }
 
-    let query = try req.query(Message.self)
+    let query = req.database().query(Message.self)
 
     // query.data = Message(id: "UUID:5", text: "asdf", time: 123)
 
