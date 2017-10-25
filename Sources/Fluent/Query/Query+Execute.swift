@@ -54,6 +54,10 @@ extension QueryBuilder {
         return promise.future
     }
 
+    public func first() -> Future<M?> {
+        return limit(1).all().map { $0.first }
+    }
+
     public func run() -> Future<Void> {
         let promise = Promise(Void.self)
 

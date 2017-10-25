@@ -54,7 +54,9 @@ internal struct LeafDataContainer<K: CodingKey>:
     }
 
     mutating func superEncoder(forKey key: K) -> Encoder {
-        fatalError("unimplemented")
+        print(key)
+        codingPath.append(key)
+        return encoder
     }
 
     mutating func encode(_ value: Bool) throws {

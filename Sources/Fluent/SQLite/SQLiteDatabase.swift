@@ -104,6 +104,9 @@ extension SQLiteConnection: QueryExecutor {
                     select.predicates.append(predicate)
                 }
 
+                select.limit = fluentQuery.limit?.count
+                select.offset = fluentQuery.limit?.offset
+
                 sqlQuery = .data(select)
             case .update, .create:
                 var insert = DataQuery(statement: .insert, table: fluentQuery.entity)

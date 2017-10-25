@@ -59,6 +59,8 @@ public final class Serializer {
         
         let promise = Promise(Data.self)
 
+        // FIXME: flatten() needs to be sequential here.
+        // maybe we have a special name for that?
         parts.flatten().then { data in
             let serialized = Data(data.joined())
             promise.complete(serialized)

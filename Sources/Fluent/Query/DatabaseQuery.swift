@@ -15,6 +15,9 @@ public struct DatabaseQuery {
     /// Optional model data to save or update.
     public var data: Encodable?
 
+    /// Limits and offsets the amount of results
+    public var limit: Limit?
+
     /// Create a new database query.
     public init(entity: String) {
         self.entity = entity
@@ -22,5 +25,6 @@ public struct DatabaseQuery {
         self.filters = []
         self.isDistinct = false
         self.data = nil
+        self.limit = nil
     }
 }

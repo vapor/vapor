@@ -85,6 +85,13 @@ struct Message: Model {
     var time: Int
 }
 
+async.get("userview") { req -> Future<View> in
+    let user = req.database().query(User.self).first()
+    return try view.make("/Users/tanner/Desktop/hello", context: [
+        "user": user
+    ], for: req)
+}
+
 async.post("users") { req -> Future<User> in
     var user = try JSONDecoder().decode(User.self, from: req.body.data)
     return user.save(to: req.database(id: .memory)).map { user }

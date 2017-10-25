@@ -52,6 +52,13 @@ extension SQLSerializer {
             statement.append(serializedPredicates.joined(separator: " AND "))
         }
 
+        if let limit = query.limit {
+            statement.append("LIMIT \(limit)")
+            if let offset = query.offset {
+                statement.append("OFFSET \(offset)")
+            }
+        }
+
         return statement.joined(separator: " ")
     }
 }

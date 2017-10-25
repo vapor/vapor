@@ -6,6 +6,8 @@ public struct DataQuery {
     public var computed: [DataComputed]
     public var predicates: [Predicate]
     public var joins: [Join]
+    public var limit: Int?
+    public var offset: Int?
 
     public init(
         statement: DataStatement,
@@ -13,7 +15,9 @@ public struct DataQuery {
         columns: [DataColumn] = [],
         computed: [DataComputed] = [],
         predicates: [Predicate] = [],
-        joins: [Join] = []
+        joins: [Join] = [],
+        limit: Int? = nil,
+        offset: Int? = nil
     ) {
         self.statement = statement
         self.table = table
@@ -21,6 +25,8 @@ public struct DataQuery {
         self.computed = computed
         self.predicates = predicates
         self.joins = joins
+        self.limit = limit
+        self.offset = offset
     }
 }
 
