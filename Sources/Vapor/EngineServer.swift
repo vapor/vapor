@@ -17,7 +17,7 @@ public final class EngineServer: HTTPServer {
         // create a tcp server
         let tcp = try TCP.Server(workerCount: config.workerCount)
         
-        tcp.willAccept = PeerValidationStream(maxConnectionsPerIP: config.maxConnectionsPerIP).willAccept
+        tcp.willAccept = PeerValidator(maxConnectionsPerIP: config.maxConnectionsPerIP).willAccept
         
         let server = HTTP.Server(clientStream: tcp)
         

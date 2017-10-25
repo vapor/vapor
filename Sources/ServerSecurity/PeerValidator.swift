@@ -16,7 +16,7 @@ fileprivate final class RemoteAddress {
 /// Validates peers against a set of rules before further processing the peer
 ///
 /// Used to harden a TCP Server against Denial of Service and other attacks.
-public final class PeerValidationStream {
+public final class PeerValidator {
     public typealias Input = TCPClient
     
     /// Limits the amount of connections per IP address to prevent certain Denial of Service attacks
