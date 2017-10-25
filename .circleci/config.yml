@@ -8,6 +8,8 @@ jobs:
       - run: brew install vapor/tap/vapor
       - run: brew install redis
       - run: brew services start redis
+      - run: brew install mysql
+      - run: brew services start mysql
       - checkout
       - run: swift build
       - run: swift build -c release
@@ -16,10 +18,9 @@ jobs:
   linux:
     docker:
       - image: swift:4.0
+      - image: redis:3.2.7
     steps:
       - run: apt-get install -yq libssl-dev
-      - run: apt-get install redis-server
-      - run: /usr/local/bin/redis-server &
       - checkout
       - run: swift build
       - run: swift build -c release
