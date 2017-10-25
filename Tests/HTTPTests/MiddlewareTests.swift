@@ -1,4 +1,5 @@
 import Async
+import Bits
 import Core
 import Dispatch
 import HTTP
@@ -37,7 +38,7 @@ class MiddlewareTests : XCTestCase {
         
         let serverSocket = try TCP.Server()
         
-        let server = HTTP.Server(tcp: serverSocket)
+        let server = HTTP.Server(clientStream: serverSocket)
         server.drain { peer in
             let parser = HTTP.RequestParser(worker: peer.tcp.worker)
             
@@ -57,13 +58,16 @@ class MiddlewareTests : XCTestCase {
         let socket = try TCP.Socket()
         try socket.connect(hostname: "0.0.0.0", port: 1234)
         
-        let tcpClient = TCP.Client(socket: socket, worker: Worker(queue: .global()))
-        let client = HTTP.Client(tcp: tcpClient)
+        let tcpClient = TCPClient.init(socket: socket, worker: Worker(queue: .global()))
+        let client = HTTPClient(tcp: tcpClient)
         tcpClient.start()
         
-        let response = try client.send(request: Request()).sync()
+        let response = try client.send(request: Request()).blockingAwait()
         
-        XCTAssertEqual(response.body.data, Data(responder.response.utf8))
+        response.body.withUnsafeBytes { (pointer: BytesPointer) in
+            let buffer = ByteBuffer(start: pointer, count: response.body.count)
+            XCTAssertEqual(Data(buffer), Data(responder.response.utf8))
+        }
     }
 
     static let allTests = [

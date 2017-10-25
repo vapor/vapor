@@ -20,13 +20,13 @@ extension ResultsStream {
                     if case .error(let error) = try input.parseResponse(mysql41: mysql41) {
                         self.errorStream?(error)
                     } else {
-                        self.onClose?()
+                        self.close()
                     }
                     return
                 }
                 
                 if header == 0 {
-                    self.onClose?()
+                    self.close()
                 }
                 
                 self.header = header
@@ -55,7 +55,7 @@ extension ResultsStream {
                 return
             }
             
-            onClose?()
+            close()
             return
         }
         
@@ -99,12 +99,12 @@ extension ResultsStream {
         let parser = Parser(packet: packet)
         
         do {
-            let catalog = try parser.parseLenEncString()
-            let database = try parser.parseLenEncString()
-            let table = try parser.parseLenEncString()
-            let originalTable = try parser.parseLenEncString()
+            try parser.skipLenEnc() // let catalog = try parser.parseLenEncString()
+            try parser.skipLenEnc() // let database = try parser.parseLenEncString()
+            try parser.skipLenEnc() // let table = try parser.parseLenEncString()
+            try parser.skipLenEnc() // let originalTable = try parser.parseLenEncString()
             let name = try parser.parseLenEncString()
-            let originalName = try parser.parseLenEncString()
+            try parser.skipLenEnc() // let originalName = try parser.parseLenEncString()
             
             parser.position += 1
             
@@ -121,12 +121,12 @@ extension ResultsStream {
             
             let decimals = try parser.byte()
             
-            let field = Field(catalog: catalog,
-                              database: database,
-                              table: table,
-                              originalTable: originalTable,
+            let field = Field(catalog: nil,
+                              database: nil,
+                              table: nil,
+                              originalTable: nil,
                               name: name,
-                              originalName: originalName,
+                              originalName: nil,
                               charSet: charSet,
                               collation: collation,
                               length: length,

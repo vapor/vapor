@@ -1,13 +1,25 @@
 import Async
-import Core
+import Async
 import Dispatch
 import libc
 
 /// A server socket can accept peers. Each accepted peer get's it own socket after accepting.
-public final class Server: Async.OutputStream {
+public final class Server: Async.OutputStream, ClosableStream {
+    /// Closes the socket
+    public func close() {
+        socket.close()
+    }
+    
     // MARK: Stream
-    public typealias Output = Client
+    public typealias Output = TCPClient
+    
+    /// See `BaseStream.onClose`
+    public var onClose: CloseHandler?
+    
+    /// See `BaseStream.errorStream`
     public var errorStream: ErrorHandler?
+    
+    /// See `OutputStream.outputStream`
     public var outputStream: OutputHandler?
 
     // MARK: Dispatch
@@ -25,7 +37,7 @@ public final class Server: Async.OutputStream {
     /// A closure that can dictate if a client will be accepted
     ///
     /// `true` for accepted, `false` for not accepted
-    public typealias AcceptHandler = (Client) -> (Bool)
+    public typealias AcceptHandler = (TCPClient) -> (Bool)
     
     /// Controls whether or not to accept a client
     ///
@@ -58,12 +70,12 @@ public final class Server: Async.OutputStream {
     /// Starts listening for peers asynchronously
     ///
     /// - parameter maxIncomingConnections: The maximum backlog of incoming connections. Defaults to 4096.
-    public func start(hostname: String = "localhost", port: UInt16, backlog: Int32 = 4096) throws {
+    public func start(hostname: String = "0.0.0.0", port: UInt16, backlog: Int32 = 4096) throws {
         try socket.bind(hostname: hostname, port: port)
         try socket.listen(backlog: backlog)
 
         let source = DispatchSource.makeReadSource(
-            fileDescriptor: socket.descriptor.raw,
+            fileDescriptor: socket.descriptor,
             queue: queue
         )
         
@@ -78,7 +90,7 @@ public final class Server: Async.OutputStream {
 
             let worker = self.worker.next()!
             
-            let client = Client(socket: socket, worker: worker)
+            let client = TCPClient(socket: socket, worker: worker)
             
             guard self.willAccept(client) else {
                 client.close()

@@ -1,4 +1,4 @@
-import Core
+import Async
 
 public protocol Container: Extendable {
     var config: Config { get }

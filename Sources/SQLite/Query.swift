@@ -108,12 +108,14 @@ public final class Query: Async.OutputStream {
     /// Bind Bytes to the current bind position.
     public func bind(_ value: Foundation.Data) throws -> Self {
         let count = Int32(value.count)
-        let pointer: UnsafePointer<Byte> = value.withUnsafeBytes { $0 }
-        let ret = sqlite3_bind_blob(raw, nextBindPosition, UnsafeRawPointer(pointer), count, SQLITE_TRANSIENT)
-        guard ret == SQLITE_OK else {
-            throw Error(statusCode: ret, database: connection)
+        
+        return try value.withUnsafeBytes { (pointer: BytesPointer) in
+            let ret = sqlite3_bind_blob(raw, nextBindPosition, UnsafeRawPointer(pointer), count, SQLITE_TRANSIENT)
+            guard ret == SQLITE_OK else {
+                throw Error(statusCode: ret, database: connection)
+            }
+            return self
         }
-        return self
     }
 
     /// Bind a Bool to the current bind position.

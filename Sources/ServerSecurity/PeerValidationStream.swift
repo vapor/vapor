@@ -17,7 +17,7 @@ fileprivate final class RemoteAddress {
 ///
 /// Used to harden a TCP Server against Denial of Service and other attacks.
 public final class PeerValidationStream {
-    public typealias Input = TCP.Client
+    public typealias Input = TCPClient
     
     /// Limits the amount of connections per IP address to prevent certain Denial of Service attacks
     public var maxConnectionsPerIP: Int
@@ -31,7 +31,7 @@ public final class PeerValidationStream {
     }
     
     /// Validates incoming clients
-    public func willAccept(client: Client) -> Bool {
+    public func willAccept(client: TCPClient) -> Bool {
         // Accept must always set the address
         guard let currentRemoteAddress = client.socket.address else {
             return false

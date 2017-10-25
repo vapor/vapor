@@ -1,4 +1,3 @@
-import Core
 import Debugging
 import Foundation
 import libc
@@ -14,7 +13,7 @@ public struct Error: Traceable, Debuggable, Swift.Error, Encodable {
     public var column: UInt
     public var stackTrace: [String]
     
-    public init(
+    init(
         identifier: String,
         reason: String,
         file: String = #file,
@@ -31,7 +30,7 @@ public struct Error: Traceable, Debuggable, Swift.Error, Encodable {
         self.stackTrace = Error.makeStackTrace()
     }
     
-    public static func unknownMediaType(
+    static func unknownMediaType(
         file: String = #file,
         function: String = #function,
         line: UInt = #line,

@@ -1,16 +1,23 @@
 import Async
 import Bits
-import Core
+import Async
 import Dispatch
 import Foundation
 import libc
 
 /// TCP client stream.
-public final class Client: Async.Stream {
+public final class TCPClient: Async.Stream, ClosableStream {
     // MARK: Stream
-    public typealias Input = DispatchData
+    public typealias Input = ByteBuffer
     public typealias Output = ByteBuffer
+    
+    /// See `BaseStream.onClose`
+    public var onClose: CloseHandler?
+    
+    /// See `BaseStream.errorStream`
     public var errorStream: ErrorHandler?
+    
+    /// See `OutputStream.outputStream`
     public var outputStream: OutputHandler?
 
     /// This client's dispatch queue. Use this
@@ -21,19 +28,22 @@ public final class Client: Async.Stream {
     /// The client stream's underlying socket.
     public let socket: Socket
 
-    // Bytes from the socket are read into this buffer.
-    // Views into this buffer supplied to output streams.
+    /// Bytes from the socket are read into this buffer.
+    /// Views into this buffer supplied to output streams.
     let outputBuffer: MutableByteBuffer
 
-    // Data being fed into the client stream is stored here.
-    var inputBuffer: DispatchData?
+    /// Data being fed into the client stream is stored here.
+    var inputBuffer = [Data]()
 
-    // Stores read event source.
+    /// Stores read event source.
     var readSource: DispatchSourceRead?
 
-    // Stores write event source.
+    /// Stores write event source.
     var writeSource: DispatchSourceWrite?
 
+    /// Keeps track of the writesource's active status so it's not resumed too often
+    var writing = false
+    
     /// Creates a new Remote Client from the ServerSocket's details
     public init(socket: Socket, worker: Worker) {
         self.socket = socket
@@ -46,59 +56,85 @@ public final class Client: Async.Stream {
     }
 
     // MARK: Stream
-
-    /// Handles stream input
+    
+    /// Handles normal stream input
+    public func inputStream(_ input: ByteBuffer) {
+        inputBuffer.append(Data(input))
+        ensureWriteSourceResumed()
+    }
+    
+    /// Handles DispatchData input
     public func inputStream(_ input: DispatchData) {
-        if inputBuffer == nil {
-            inputBuffer = input
-            writeSource?.resume()
-        } else {
-            inputBuffer?.append(input)
+        inputBuffer.append(Data(input))
+        ensureWriteSourceResumed()
+    }
+    
+    /// Handles Data input
+    public func inputStream(_ input: Data) {
+        inputBuffer.append(input)
+        ensureWriteSourceResumed()
+    }
+    
+    private func ensureWriteSourceResumed() {
+        if !writing {
+            ensureWriteSource().resume()
+            writing = true
         }
-
-        if writeSource == nil {
+    }
+    
+    /// Creates a new WriteSource is there is no write source yet
+    private func ensureWriteSource() -> DispatchSourceWrite {
+        guard let source = writeSource else {
             let source = DispatchSource.makeWriteSource(
-                fileDescriptor: socket.descriptor.raw,
+                fileDescriptor: socket.descriptor,
                 queue: worker.queue
             )
             
             source.setEventHandler {
-                // important: make sure to suspend or else writeable
-                // will keep calling.
-                self.writeSource?.suspend()
-
                 // grab input buffer
-                guard let data = self.inputBuffer else {
+                guard self.inputBuffer.count > 0 else {
                     return
                 }
-                self.inputBuffer = nil
-
-                // copy input into contiguous data and write it.
-                let copied = Data(data)
-                let buffer = ByteBuffer(start: copied.withUnsafeBytes { $0 }, count: copied.count)
-                do {
-                    _ = try self.socket.write(max: copied.count, from: buffer)
-                    // FIXME: we should verify the lengths match here.
-                } catch {
-                    // any errors that occur here cannot be thrown,
-                    // so send them to stream error catcher.
-                    self.errorStream?(error)
+                
+                let data = self.inputBuffer.removeFirst()
+                
+                if self.inputBuffer.count == 0 {
+                    // important: make sure to suspend or else writeable
+                    // will keep calling.
+                    self.writeSource?.suspend()
+                    
+                    self.writing = false
+                }
+                
+                data.withUnsafeBytes { (pointer: BytesPointer) in
+                    let buffer = ByteBuffer(start: pointer, count: data.count)
+                    
+                    do {
+                        _ = try self.socket.write(max: data.count, from: buffer)
+                        // FIXME: we should verify the lengths match here.
+                    } catch {
+                        // any errors that occur here cannot be thrown,
+                        // so send them to stream error catcher.
+                        self.errorStream?(error)
+                    }
                 }
             }
-
+            
             source.setCancelHandler {
                 self.close()
             }
-
-            source.resume()
+            
             writeSource = source
+            return source
         }
+        
+        return source
     }
 
     /// Starts receiving data from the client
     public func start() {
         let source = DispatchSource.makeReadSource(
-            fileDescriptor: socket.descriptor.raw,
+            fileDescriptor: socket.descriptor,
             queue: worker.queue
         )
 
@@ -107,7 +143,7 @@ public final class Client: Async.Stream {
             do {
                 read = try self.socket.read(
                     max: self.outputBuffer.count,
-                    into: self.outputBuffer
+                    into: self.outputBuffer.baseAddress!
                 )
             } catch {
                 // any errors that occur here cannot be thrown,
@@ -144,9 +180,10 @@ public final class Client: Async.Stream {
         // important!!!!!!
         // for some reason you can't cancel a suspended write source
         // if you remove this line, your life will be ruined forever!!!
-        if self.inputBuffer == nil {
+        if self.inputBuffer.count == 0 {
             writeSource?.resume()
         }
+        
         readSource = nil
         writeSource = nil
         socket.close()

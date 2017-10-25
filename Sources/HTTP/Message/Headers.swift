@@ -122,15 +122,17 @@ extension Headers : Sequence {
 extension Headers {
     /// Type used for the name of a HTTP header in the `HTTPHeaders` storage.
     public struct Name: Codable, Hashable, ExpressibleByStringLiteral, CustomStringConvertible {
+        public var hashValue: Int {
+            return lowercased.hashValue
+        }
+        
         let original: String
         let lowercased: String
-        public let hashValue: Int
 
         /// Create a HTTP header name with the provided String.
         public init(_ name: String) {
             original = name
             lowercased = name.lowercased()
-            hashValue = lowercased.hashValue
         }
 
         public init(stringLiteral: String) {

@@ -1,9 +1,10 @@
 import libc
+import Foundation
 
 extension Socket {
     /// bind - bind a name to a socket
     /// http://man7.org/linux/man-pages/man2/bind.2.html
-    public func bind(hostname: String = "localhost", port: UInt16 = 80) throws {
+    public func bind(hostname: String = CurrentHost.hostname, port: UInt16) throws {
         var hints = addrinfo()
 
         // Support both IPv4 and IPv6
@@ -34,7 +35,7 @@ extension Socket {
             throw Error(identifier: "unwrapAddress", reason: "Could not unwrap address info.")
         }
 
-        res = libc.bind(descriptor.raw, info.pointee.ai_addr, info.pointee.ai_addrlen)
+        res = libc.bind(descriptor, info.pointee.ai_addr, info.pointee.ai_addrlen)
         guard res == 0 else {
             throw Error.posix(errno, identifier: "bind")
         }
@@ -43,7 +44,7 @@ extension Socket {
     /// listen - listen for connections on a socket
     /// http://man7.org/linux/man-pages/man2/listen.2.html
     public func listen(backlog: Int32 = 4096) throws {
-        let res = libc.listen(descriptor.raw, backlog)
+        let res = libc.listen(descriptor, backlog)
         guard res == 0 else {
             throw Error.posix(errno, identifier: "listen")
         }
@@ -52,16 +53,16 @@ extension Socket {
     /// accept, accept4 - accept a connection on a socket
     /// http://man7.org/linux/man-pages/man2/accept.2.html
     public func accept() throws -> Socket {
-        let (clientfd, address) = try Address.withSockaddrPointer { address -> Descriptor in
+        let (clientfd, address) = try Address.withSockaddrPointer { address -> Int32 in
             var size = socklen_t(MemoryLayout<sockaddr>.size)
             
-            let descriptor = libc.accept(self.descriptor.raw, address, &size)
+            let descriptor = libc.accept(self.descriptor, address, &size)
             
             guard descriptor > 0 else {
                 throw Error.posix(errno, identifier: "accept")
             }
             
-            return Descriptor(raw: descriptor)
+            return descriptor
         }
         
         let socket = Socket(
