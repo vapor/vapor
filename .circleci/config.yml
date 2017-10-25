@@ -12,6 +12,7 @@ jobs:
       - run: brew services start mysql
       - checkout
       - run: swift build
+      # - run: swift build -c release
       - run: swift test
 
   linux:
@@ -19,10 +20,13 @@ jobs:
       - image: swift:4.0
       - image: redis:3.2
       - image: mysql:5.7
+        environment:
+            MYSQL_ALLOW_EMPTY_PASSWORD: true
     steps:
       - run: apt-get install -yq libssl-dev
       - checkout
       - run: swift build
+      # - run: swift build -c release
       - run: swift test
 
 workflows:
