@@ -54,42 +54,93 @@ public final class TrieRouter: Router {
         // set the resolved nodes responder
         current.responder = route.responder
     }
+    
+    /// Splits the URI into a substring for each component
+    fileprivate func split(_ uri: String) -> [Substring] {
+        var path = [Substring]()
+        path.reserveCapacity(7)
+        
+        // Skip past the first `/`
+        var baseIndex = uri.index(after: uri.startIndex)
+        
+        if baseIndex < uri.endIndex {
+            var currentIndex = baseIndex
+            
+            // Split up the path
+            while currentIndex < uri.endIndex {
+                if uri[currentIndex] == "/" {
+                    path.append(uri[baseIndex..<currentIndex])
+                    
+                    baseIndex = uri.index(after: currentIndex)
+                    currentIndex = baseIndex
+                } else {
+                    currentIndex = uri.index(after: currentIndex)
+                }
+            }
+            
+            // Add remaining path component
+            if baseIndex != uri.endIndex {
+                path.append(uri[baseIndex...])
+            }
+        }
+        
+        return path
+    }
+    
+    /// Walks the provided node based on the provided component.
+    ///
+    /// Returns a boolean for a successful walk
+    ///
+    /// Uses the provided request for parameterized components
+    fileprivate func walk<S: StringProtocol>(
+        node current: inout TrieRouterNode,
+        component: S,
+        request: Request
+    ) -> Bool {
+        if let node = current.findConstantNode(at: String(component)) {
+            // if we find a constant route path that matches this component,
+            // then we should use it.
+            current = node
+        } else if let node = current.parameterChild {
+            // if no constant routes were found that match the path, but
+            // a dynamic parameter child was found, we can use it
+            let lazy = LazyParameter(type: node.parameter, value: String(component))
+            request.parameters.parameters.append(lazy)
+            current = node
+        } else {
+            // no constant routes were found, and this node doesn't have
+            // a dynamic parameter child. so no match.
+            return false
+        }
+        
+        return true
+    }
 
     /// See Router.route()
     public func route(request: Request) -> Responder? {
-        var path: [String]
-        
-        if request.method == .options, let methodName = request.headers[.accessControlAllowMethods] {
-             path = [methodName]
-        } else {
-            path = [request.method.string]
-        }
-        
-        path += request.uri.path.split(separator: "/").map(String.init)
+        let path = split(request.uri.path)
         
         // always start at the root node
         var current: TrieRouterNode = root
-
-        // traverse the constant path supplied
-        var iterator = path.makeIterator()
-        while let path = iterator.next() {
-            if let node = current.findConstantNode(at: path) {
-                // if we find a constant route path that matches this component,
-                // then we should use it.
-                current = node
-            } else if let node = current.parameterChild {
-                // if no constant routes were found that match the path, but
-                // a dynamic parameter child was found, we can use it
-                let lazy = LazyParameter(type: node.parameter, value: path)
-                request.parameters.parameters.append(lazy)
-                current = node
-            } else {
-                // no constant routes were found, and this node doesn't have
-                // a dynamic parameter child. so no match.
+        
+        // Start with the method
+        if request.method == .options, let methodName = request.headers[.accessControlAllowMethods] {
+            guard walk(node: &current, component: methodName, request: request) else {
+                return nil
+            }
+        } else {
+            guard walk(node: &current, component: request.method.string, request: request) else {
                 return nil
             }
         }
 
+        // traverse the constant path supplied
+        for component in path {
+            guard walk(node: &current, component: component, request: request) else {
+                return nil
+            }
+        }
+        
         // return the resolved responder if there hasn't
         // been an early exit.
         return current.responder
