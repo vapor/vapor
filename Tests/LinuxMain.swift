@@ -50,8 +50,7 @@ XCTMain([
     testCase(MultipartTests.allTests),
 
     // MySQL
-    // FIXME: joannis, fix these :)
-    // testCase(MySQLTests.allTests),
+    testCase(MySQLTests.allTests),
 
     // Random
     testCase(RandomTests.allTests),
@@ -73,7 +72,7 @@ XCTMain([
     testCase(TCPTests.SocketsTests.allTests),
 
     // Vapor
-    //testCase(ApplicationTests.allTests),
+    testCase(ApplicationTests.allTests),
 
     // WebSocket
     testCase(WebSocketTests.allTests),

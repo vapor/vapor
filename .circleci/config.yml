@@ -18,7 +18,8 @@ jobs:
   linux:
     docker:
       - image: swift:4.0
-      - image: redis:3.2.7
+      - image: redis:3.2
+      - image: mysql:5.7
     steps:
       - run: apt-get install -yq libssl-dev
       - checkout
