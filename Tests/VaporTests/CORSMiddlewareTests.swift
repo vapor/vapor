@@ -46,7 +46,7 @@ class CORSMiddlewareTests: XCTestCase {
             let response = try drop.respond(to: req)
             XCTAssertEqual(response.headers["Access-Control-Allow-Origin"], "http://test.com")
         } catch {
-            XCTAssert(false)
+            XCTFail("Unexpected error: \(error)")
         }
     }
 
@@ -61,7 +61,7 @@ class CORSMiddlewareTests: XCTestCase {
             let response = try drop.respond(to: req)
             XCTAssertEqual(response.headers["Access-Control-Allow-Origin"], "*")
         } catch {
-            XCTAssert(false)
+            XCTFail("Unexpected error: \(error)")
         }
     }
 
@@ -77,7 +77,7 @@ class CORSMiddlewareTests: XCTestCase {
             let response = try drop.respond(to: req)
             XCTAssertEqual(response.headers["Access-Control-Allow-Origin"], "")
         } catch {
-            XCTAssert(false)
+            XCTFail("Unexpected error: \(error)")
         }
 
         // Test we don't get any cors headers if no origin specified
@@ -86,7 +86,7 @@ class CORSMiddlewareTests: XCTestCase {
             let response = try drop.respond(to: req)
             XCTAssertFalse(response.headers.contains(where: { $0.0 == "Access-Control-Allow-Origin" }), "")
         } catch {
-            XCTAssert(false)
+            XCTFail("Unexpected error: \(error)")
         }
     }
 
@@ -101,7 +101,7 @@ class CORSMiddlewareTests: XCTestCase {
             let response = try drop.respond(to: req)
             XCTAssertEqual(response.headers["Access-Control-Allow-Origin"], "http://vapor.codes")
         } catch {
-            XCTAssert(false)
+            XCTFail("Unexpected error: \(error)")
         }
     }
 
@@ -118,7 +118,7 @@ class CORSMiddlewareTests: XCTestCase {
             let response = try drop.respond(to: req)
             XCTAssertEqual(response.headers["Access-Control-Allow-Origin"], "http://beta.vapor.codes")
         } catch {
-            XCTAssert(false)
+            XCTFail("Unexpected error: \(error)")
         }
     }
 
@@ -135,7 +135,7 @@ class CORSMiddlewareTests: XCTestCase {
             let response = try drop.respond(to: req)
             XCTAssertEqual(response.headers["Access-Control-Allow-Origin"], "http://vapor.codes")
         } catch {
-            XCTAssert(false)
+            XCTFail("Unexpected error: \(error)")
         }
     }
 
@@ -152,7 +152,7 @@ class CORSMiddlewareTests: XCTestCase {
             let response = try drop.respond(to: req)
             XCTAssertEqual(response.headers["Access-Control-Allow-Origin"], "http://beta.vapor.codes, http://vapor.codes")
         } catch {
-            XCTAssert(false)
+            XCTFail("Unexpected error: \(error)")
         }
     }
 
@@ -168,7 +168,7 @@ class CORSMiddlewareTests: XCTestCase {
             let response = try drop.respond(to: req)
             XCTAssertEqual(response.headers["Access-Control-Allow-Credentials"], "true")
         } catch {
-            XCTAssert(false)
+            XCTFail("Unexpected error: \(error)")
         }
     }
 
@@ -193,7 +193,7 @@ class CORSMiddlewareTests: XCTestCase {
             response = try drop.respond(to: req)
             XCTAssertEqual(response.headers["Access-Control-Max-Age"], "100")
         } catch {
-            XCTAssert(false)
+            XCTFail("Unexpected error: \(error)")
         }
     }
 
@@ -208,7 +208,7 @@ class CORSMiddlewareTests: XCTestCase {
             let response = try drop.respond(to: req)
             XCTAssertEqual(response.headers["Access-Control-Allow-Methods"], "GET, PUT, DELETE")
         } catch {
-            XCTAssert(false)
+            XCTFail("Unexpected error: \(error)")
         }
     }
 }
