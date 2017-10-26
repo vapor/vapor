@@ -3,15 +3,21 @@ import Bits
 import Foundation
 
 /// A streaming Redis value parser
-final class DataParser: Async.InputStream {
+final class DataParser: Async.Stream {
     /// See `InputStream.Input`
     typealias Input = ByteBuffer
+    
+    /// See `OutputStream.RedisData`
+    typealias Output = RedisData
     
     /// See `BaseStream.errorStream`
     var errorStream: ErrorHandler?
     
+    /// See `OutputStream.OutputHandler`
+    var outputStream: OutputHandler?
+    
     /// A set of promises awaiting a response
-    var responseQueue = [Promise<PartialRedisData>]()
+    var responseQueue = [Promise<RedisData>]()
     
     /// The currently accumulated data from the socket
     var responseBuffer = Data()
@@ -198,12 +204,22 @@ final class DataParser: Async.InputStream {
     
     /// Helper that flushes the value into the first response
     fileprivate func flush(_ result: PartialRedisData) {
+        guard case .parsed(let data) = result else {
+            return
+        }
+        
+        parsingValue = nil
+        
+        if let outputStream = outputStream {
+            outputStream(data)
+            return
+        }
+        
         assert(responseQueue.count > 0, "ResponseQueue received a response and wasn't checked")
         
         let completion = responseQueue.removeFirst()
         
-        completion.complete(result)
-        parsingValue = nil
+        completion.complete(data)
     }
     
     fileprivate func continueParsing(partialValues values: [PartialRedisData]) throws -> Bool {
