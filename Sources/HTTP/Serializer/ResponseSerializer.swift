@@ -8,7 +8,7 @@ public final class ResponseSerializer: Serializer {
     public typealias Input = Response
 
     /// See OutputStream.Output
-    public typealias Output = SerializedMessage
+    public typealias Output = Data
 
     /// See OutputStream.outputStream
     public var outputStream: OutputHandler?
@@ -21,25 +21,30 @@ public final class ResponseSerializer: Serializer {
 
     /// Handles incoming responses.
     public func inputStream(_ input: Response) {
-        let data = serialize(input)
-        let message = SerializedMessage(message: data, onUpgrade: input.onUpgrade)
+        let message = serialize(input)
         outputStream?(message)
     }
 
     /// Serializes a response into DispatchData.
-    public func serialize(_ response: Response) -> DispatchData {
-        var serialized = serialize(response.status)
+    public func serialize(_ response: Response) -> Data {
+        var serialized = Data()
         
-        serialized.append(serialize(response.headers))
+        let statusLineData = serialize(response.status)
+        let headersData = serialize(response.headers)
+        let bodyData = serialize(response.body)
         
-        serialized.append(serialize(response.body))
-
+        serialized.reserveCapacity(statusLineData.count + headersData.count + bodyData.count)
+        
+        serialized.append(contentsOf: statusLineData)
+        serialized.append(contentsOf: headersData)
+        serialized.append(contentsOf: bodyData)
+        
         return serialized
     }
 
     /// Handles http response status serialization.
-    private func serialize(_ status: Status) -> DispatchData {
-        return DispatchData("HTTP/1.1 \(status.code.description) \(status.message)\r\n")
+    private func serialize(_ status: Status) -> Data {
+        return Data("HTTP/1.1 \(status.code.description) \(status.message)\r\n".utf8)
     }
 }
 

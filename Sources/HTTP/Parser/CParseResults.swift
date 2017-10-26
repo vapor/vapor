@@ -1,5 +1,6 @@
 import CHTTP
 import Dispatch
+import Foundation
 
 /// The parse results object helps get around
 /// the issue of not being able to capture context
@@ -18,14 +19,16 @@ internal final class CParseResults {
     // message components
     var version: Version?
     var headers: [Headers.Name: [String]]
-    var body: DispatchData?
-    var url: DispatchData?
+    var body: Data?
+    var url: Data?
 
     /// Creates a new results object
     init() {
         self.isComplete = false
         self.headers = [:]
         self.headerState = .none
+        
+        self.headers.reserveCapacity(16)
     }
 }
 

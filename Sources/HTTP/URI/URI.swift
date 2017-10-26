@@ -116,6 +116,6 @@ import Foundation
 
 extension URI: ExpressibleByStringLiteral {
     public init(stringLiteral value: String) {
-        self = URIParser().parse(bytes: DispatchData(value))
+        self = URIParser().parse(bytes: Data(value.utf8))
     }
 }

@@ -14,12 +14,10 @@ public final class URIParser {
     public init() {}
 
     /// Parses a URI from the supplied bytes.
-    public func parse(bytes: DispatchData) -> URI {
+    public func parse(bytes: Data) -> URI {
         // create url results struct
         var url = http_parser_url()
         http_parser_url_init(&url)
-        
-        let bytes = Data(bytes)
         
         // parse url
         bytes.withUnsafeBytes { pointer in

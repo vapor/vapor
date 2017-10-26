@@ -7,8 +7,8 @@ import Foundation
 /// Possible header states
 enum HeaderState {
     case none
-    case value(name: Headers.Name, DispatchData)
-    case key(DispatchData)
+    case value(name: Headers.Name, Data)
+    case key(Data)
 }
 
 
@@ -51,13 +51,13 @@ extension CParser {
             guard
                 let results = CParseResults.get(from: parser),
                 let bytes = chunk?.makeBuffer(length: length)
-                else {
-                    // signal an error
-                    return 1
+            else {
+                // signal an error
+                return 1
             }
 
             // append the url bytes to the results
-            let data = DispatchData(bytes: bytes)
+            let data = Data(bytes)
             if results.url == nil {
                 results.url = data
             } else {
@@ -76,7 +76,7 @@ extension CParser {
                 return 1
             }
 
-            let data = DispatchData(bytes: bytes)
+            let data = Data(bytes)
 
             // check current header parsing state
             switch results.headerState {
@@ -110,7 +110,7 @@ extension CParser {
                 // signal an error
                 return 1
             }
-            let data = DispatchData(bytes: bytes)
+            let data = Data(bytes)
 
             // check the current header parsing state
             switch results.headerState {
@@ -148,7 +148,7 @@ extension CParser {
             case .value(let key, let value):
                 // there was previously a value being parsed.
                 // it should be added to the headers dict.
-                let valueString = String(bytes: value, encoding: .utf8) ?? ""
+                let valueString = String(data: value, encoding: .utf8) ?? ""
                 results.headers[key, default: []].append(valueString)
             default:
                 // no other cases need to be handled.
@@ -168,7 +168,7 @@ extension CParser {
                 return 1
             }
 
-            let data = DispatchData(bytes: bytes)
+            let data = Data(bytes)
             if results.body == nil {
                 results.body = data
             } else {

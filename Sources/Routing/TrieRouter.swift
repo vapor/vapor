@@ -13,6 +13,11 @@ public final class TrieRouter: Router {
     
     /// The root node
     var root: RootNode
+    
+    /// If a route cannot be found, this is the fallback responder that will be used instead
+    public var fallbackResponder: Responder? = BasicSyncResponder { _ in
+        return Response(status: .notFound)
+    }
 
     public init() {
         self.root = RootNode()
@@ -62,6 +67,8 @@ public final class TrieRouter: Router {
     }
     
     /// Splits the URI into a substring for each component
+    ///
+    /// TODO: Binary data
     fileprivate func split(_ uri: String) -> [Substring] {
         var path = [Substring]()
         path.reserveCapacity(7)
@@ -98,6 +105,8 @@ public final class TrieRouter: Router {
     /// Returns a boolean for a successful walk
     ///
     /// Uses the provided request for parameterized components
+    ///
+    /// TODO: Binary data
     fileprivate func walk<S: StringProtocol>(
         node current: inout TrieRouterNode,
         component: S,
@@ -129,28 +138,21 @@ public final class TrieRouter: Router {
         // always start at the root node
         var current: TrieRouterNode = root
         
-        // Options exception
-        if request.method == .options, request.headers[.accessControlRequestMethod] != nil {
-            return BasicSyncResponder { _ in
-                return Response()
-            }
-        }
-        
         // Start with the method
         guard walk(node: &current, component: request.method.string, request: request) else {
-            return nil
+            return fallbackResponder
         }
 
         // traverse the constant path supplied
         for component in path {
             guard walk(node: &current, component: component, request: request) else {
-                return nil
+                return fallbackResponder
             }
         }
         
         // return the resolved responder if there hasn't
         // been an early exit.
-        return current.responder
+        return current.responder ?? fallbackResponder
     }
 
 }
@@ -239,12 +241,16 @@ final class ConstantNode: TrieRouterNode {
     var parameterChild: ParameterNode?
 
     /// This nodes path component
+    ///
+    /// TODO: Binary data
     let constant: String
 
     /// This node's resopnder
     var responder: Responder?
 
     /// Creates a new RouterNode
+    ///
+    /// TODO: Binary data
     init(constant: String) {
         self.constant = constant
         self.constantChildren = []

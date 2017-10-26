@@ -8,7 +8,7 @@ public final class RequestSerializer: Serializer {
     public typealias Input = Request
 
     /// See OutputStream.Output
-    public typealias Output = SerializedMessage
+    public typealias Output = Data
 
     /// See OutputStream.outputStream
     public var outputStream: OutputHandler?
@@ -21,24 +21,29 @@ public final class RequestSerializer: Serializer {
 
     /// Handles incoming requests.
     public func inputStream(_ input: Request) {
-        let data = serialize(input)
-        let message = SerializedMessage(message: data, onUpgrade: input.onUpgrade)
+        let message = serialize(input)
         outputStream?(message)
     }
 
     /// Serializes a request into DispatchData.
-    public func serialize(_ request: Request) -> DispatchData {
-        var serialized = serialize(method: request.method, uri: request.uri)
-
-        serialized.append(serialize(request.headers))
-
-        serialized.append(serialize(request.body))
-
+    public func serialize(_ request: Request) -> Data {
+        var serialized = Data()
+        
+        let requestLine = serialize(method: request.method, uri: request.uri)
+        let headersData = serialize(request.headers)
+        let bodyData = serialize(request.body)
+        
+        serialized.reserveCapacity(requestLine.count + headersData.count + bodyData.count)
+        
+        serialized.append(contentsOf: requestLine)
+        serialized.append(contentsOf: headersData)
+        serialized.append(contentsOf: bodyData)
+        
         return serialized
     }
 
     /// Handles http request method serialization
-    private func serialize(method: Method, uri: URI) -> DispatchData {
-        return DispatchData("\(method.string) \(uri.path) HTTP/1.1\r\n")
+    private func serialize(method: Method, uri: URI) -> Data {
+        return Data("\(method.string) \(uri.path) HTTP/1.1\r\n".utf8)
     }
 }
