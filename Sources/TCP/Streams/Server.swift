@@ -33,6 +33,18 @@ public final class Server: Async.OutputStream, ClosableStream {
     let workers: [Worker]
     var worker: LoopIterator<[Worker]>
     var readSource: DispatchSourceRead?
+    
+    /// A closure that can dictate if a client will be accepted
+    ///
+    /// `true` for accepted, `false` for not accepted
+    public typealias AcceptHandler = (TCPClient) -> (Bool)
+    
+    /// Controls whether or not to accept a client
+    ///
+    /// Useful for security purposes
+    public var willAccept: AcceptHandler = { _ in
+        return true
+    }
 
     /// Creates a TCP server from an existing TCP socket.
     public init(socket: Socket, workerCount: Int) {
@@ -66,6 +78,7 @@ public final class Server: Async.OutputStream, ClosableStream {
             fileDescriptor: socket.descriptor,
             queue: queue
         )
+        
         source.setEventHandler {
             let socket: Socket
             do {
@@ -76,10 +89,18 @@ public final class Server: Async.OutputStream, ClosableStream {
             }
 
             let worker = self.worker.next()!
+            
             let client = TCPClient(socket: socket, worker: worker)
+            
+            guard self.willAccept(client) else {
+                client.close()
+                return
+            }
+            
             client.errorStream = self.errorStream
             self.outputStream?(client)
         }
+        
         source.resume()
         readSource = source
     }

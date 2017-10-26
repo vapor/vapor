@@ -28,11 +28,13 @@ extension Socket {
         guard let info = result else {
             throw Error(identifier: "unwrapAddress", reason: "Could not unwrap address info.")
         }
-
+        
         res = libc.connect(descriptor, info.pointee.ai_addr, info.pointee.ai_addrlen)
         guard res == 0 || (isNonBlocking && errno == EINPROGRESS) else {
             throw Error.posix(errno, identifier: "connect")
         }
+        
+        self.address = Address(storage: info.pointee.ai_addr.pointee)
     }
     
     /// Gets called when the connection becomes writable.

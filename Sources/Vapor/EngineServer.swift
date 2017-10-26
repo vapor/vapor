@@ -1,5 +1,6 @@
 import Async
 import HTTP
+import ServerSecurity
 import TCP
 
 /// A TCP based server with HTTP parsing and serialization pipeline.
@@ -16,8 +17,11 @@ public final class EngineServer: HTTPServer {
     public func start(with responder: Responder) throws {
         // create a tcp server
         let tcp = try TCP.Server(workerCount: config.workerCount)
+        
+        tcp.willAccept = PeerValidator(maxConnectionsPerIP: config.maxConnectionsPerIP).willAccept
+        
         let server = HTTP.Server(clientStream: tcp)
-
+        
         // setup the server pipeline
         server.drain { client in
             let parser = HTTP.RequestParser(worker: client.tcp.worker)
@@ -35,7 +39,7 @@ public final class EngineServer: HTTPServer {
         }
 
         // bind, listen, and start accepting
-        try server.clientStream.start(
+        try tcp.start(
             hostname: config.hostname,
             port: config.port,
             backlog: config.backlog
@@ -57,17 +61,22 @@ public struct EngineServerConfig {
     /// Number of client accepting workers.
     /// Should be equal to the number of logical cores.
     public let workerCount: Int
+    
+    /// Limits the amount of connections per IP address to prevent certain Denial of Service attacks
+    public let maxConnectionsPerIP: Int
 
     /// Creates a new engine server config
     public init(
         hostname: String = "0.0.0.0",
         port: UInt16 = 8080,
         backlog: Int32 = 4096,
-        workerCount: Int = 8
+        workerCount: Int = 8,
+        maxConnectionsPerIP: Int = 64
     ) {
         self.hostname = hostname
         self.port = port
         self.backlog = backlog
         self.workerCount = workerCount
+        self.maxConnectionsPerIP = maxConnectionsPerIP
     }
 }

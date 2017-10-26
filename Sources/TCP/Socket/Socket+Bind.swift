@@ -53,15 +53,25 @@ extension Socket {
     /// accept, accept4 - accept a connection on a socket
     /// http://man7.org/linux/man-pages/man2/accept.2.html
     public func accept() throws -> Socket {
-        let clientfd = libc.accept(descriptor, nil, nil)
-        guard clientfd > 0 else {
-            throw Error.posix(errno, identifier: "accept")
+        let (clientfd, address) = try Address.withSockaddrPointer { address -> Int32 in
+            var size = socklen_t(MemoryLayout<sockaddr>.size)
+            
+            let descriptor = libc.accept(self.descriptor, address, &size)
+            
+            guard descriptor > 0 else {
+                throw Error.posix(errno, identifier: "accept")
+            }
+            
+            return descriptor
         }
-
-        return Socket(
+        
+        let socket = Socket(
             established: clientfd,
             isNonBlocking: isNonBlocking,
-            shouldReuseAddress: shouldReuseAddress
+            shouldReuseAddress: shouldReuseAddress,
+            address: address
         )
+        
+        return socket
     }
 }

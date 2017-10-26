@@ -26,7 +26,6 @@ class SocketsTests: XCTestCase {
         
         let promise = Promise<Void>()
 
-
         let read = DispatchSource.makeReadSource(fileDescriptor: socket.descriptor, queue: queue)
         read.setEventHandler {
             let response = try! socket.read(max: 8_192)
@@ -67,6 +66,7 @@ class SocketsTests: XCTestCase {
             
             accepted = (client, read)
             XCTAssertNotNil(accepted)
+            XCTAssert(client.address?.remoteAddress == "127.0.0.1" || client.address?.remoteAddress == "0.0.0.0" || client.address?.remoteAddress == "::1")
         }
         read.resume()
 
@@ -76,12 +76,40 @@ class SocketsTests: XCTestCase {
             let data = "hello".data(using: .utf8)!
             _ = try! client.write(data)
         }
-
+        
+        try promise.future.blockingAwait(timeout: .seconds(3))
+    }
+    
+    func testServer() throws {
+        let server = try Server()
+        try server.start(port: 8338)
+        let promise = Promise<Void>()
+        
+        server.drain { client in
+            client.drain { buffer in
+                XCTAssertEqual(String(bytes: buffer, encoding: .utf8), "hello")
+                promise.complete(())
+            }
+            
+            client.start()
+        }
+        
+        try clientHello(port: 8338)
         try promise.future.blockingAwait(timeout: .seconds(3))
     }
 
     static let allTests = [
         ("testConnect", testConnect),
         ("testBind", testBind),
+        ("testServer", testServer),
     ]
+}
+
+fileprivate func clientHello(port: UInt16) throws {
+    do {
+        let client = try Socket(isNonBlocking: false)
+        try client.connect(hostname: "localhost", port: port)
+        let data = "hello".data(using: .utf8)!
+        _ = try! client.write(data)
+    }
 }
