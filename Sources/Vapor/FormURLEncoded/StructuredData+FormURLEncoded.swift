@@ -6,7 +6,7 @@ extension Node {
     /// Queries allow empty values
     /// FormURLEncoded does not
     public init(formURLEncoded data: Bytes, allowEmptyValues: Bool) {
-        var urlEncoded: [String: Node] = [:]
+        var urlEncoded = Node.object([:])
 
         let replacePlus: (Byte) -> (Byte) = { byte in
             guard byte == .plus else { return byte }
@@ -48,7 +48,6 @@ extension Node {
             }
 
             var keyIndicatedArray = false
-            var keyIndicatedObject = false
             var subKey = ""
 
             // check if the key has `key[]` or `key[5]`
@@ -58,86 +57,70 @@ extension Node {
                     .split(separator: .leftSquareBracket)
                 guard slices.count > 1 else {
                     print("Found bad encoded pair \(pair.makeString()) ... continuing")
-                    continue
+                    continue perKeyLoop
                 }
-                
+
                 keyData = slices[0].array
                 
-                for (n, contents) in slices.dropFirst().enumerated() {
-                    let content = contents.array
+                // Iterate each [-separated slice. Start with the second slice
+                // (the first one is the base key). This is a 0-indexed loop.
+                for n in (1..<slices.count) {
+                    let content = slices[n].array
                     
-                    if content[0] == .rightSquareBracket {
-                        // Current subsequence indicates an array.
-                        guard n == slices.endIndex - 2 else { // subtract 2 because we also ignore element 0
-                            print("Array stem must be last in nested encoded key specifier in \(pair.makeString()) ... continuing")
+                    guard content.count > 0 else {
+                        //assertionFailure("Slice is empty - this should not be possible with .split()!")
+                        continue perKeyLoop
+                    }
+                    
+                    if content.first == .rightSquareBracket {
+                        // The current subsequence indicates an array (the "name" is empty, e.g. the entire slice is "]")
+                        // Array specifiers must be the last subsequence in a nested keypath.
+                        // For example, would you decode foo[][bar]=1&foo[][baz]=2 as
+                        // {"foo":[{"bar":1},{"baz":2}]} or {"foo":[{"bar":1,"baz":2}]}? There
+                        // is no simple way to disambiguate.
+                        //
+                        // endIndex represents "one past the end" of the array, but our n
+                        // value is a 0-based index. To test for "last item" we must check
+                        // for a value equal to the endIndex minus one.
+                        guard n == slices.endIndex - 1 else {
+                            //print("Array stem must be last in nested encoded key specifier in \(pair.makeString()) ... continuing")
                             continue perKeyLoop
                         }
                         keyIndicatedArray = true
                     } else {
                         // Current subsequence indicates an object.
-                        // this can result in both keyIndicatedArray and keyIndicatedObject
-                        // being true. That's okay as long as array is checked first below.
-                        subKey += (subKey.characters.count > 0 ? "." : "") + contents.dropLast().makeString()
-                        keyIndicatedObject = true
+                        // We have already verified that content has at least one element.
+                        subKey += (subKey.characters.count > 0 ? "." : "") + content.dropLast().makeString()
                     }
                 }
             }
 
             let key = keyData.makeString()
-
-            if let existing = urlEncoded[key] {
-                if keyIndicatedArray {
-                    if subKey.characters.count > 0 { // there's a keypath before the array
-                        // This is an ugly mess. There must be a better way.
-                        var obj = existing
-                        if let _ = obj.object {} else { obj = Node.object([:]) }
-                        var array: [Node] = []
-                        if let orig = obj[subKey]?.array { array = orig }
-                        else if let sub = obj[subKey] { array = [sub] }
-                        array.append(value)
-                        obj[subKey] = Node.array(array)
-                        value = obj
-                    } else {
-                        var array = existing.array ?? [existing]
-                        array.append(value)
-                        value = .array(array)
-                    }
-                } else if keyIndicatedObject {
-                    var obj = existing // Node is a struct, hence this (effectively) copies
-                    if let _ = obj.object {
-                    } else {
-                        obj = Node.object([:])
-                    }
-                    obj[subKey] = value // invoke keypath accessor
-                    value = obj
-                } else {
-                    // if we don't have `[]` on this pair, but it was previously assigned
-                    // an array, then it is implicit and should be appended.
-                    // OR if we found a subsequent value w/ same identifier, it should
-                    // become an array
-                    var array = existing.array ?? [existing]
+            let fullKeyPath = key + (subKey.characters.count > 0 ? "." : "") + subKey
+            
+            if let existing = urlEncoded[fullKeyPath] {
+                // If the existing value is already an array...
+                if var array = existing.array {
+                    // ... add the new value to it
                     array.append(value)
-                    value = .array(array)
-                }
-            } else if keyIndicatedArray {
-                if subKey.characters.count > 0 {
-                    var obj = Node.object([:])
-                    obj[subKey] = Node.array([value])
-                    value = obj
+                    urlEncoded[fullKeyPath] = .array(array)
                 } else {
-                    value = .array([value])
+                    // ... otherwise make a new array from the existing value and the new one
+                    urlEncoded[fullKeyPath] = .array([existing, value])
                 }
-            } else if keyIndicatedObject {
-                var obj = Node.object([:])
-                obj[subKey] = value // invoke keypath accessor
-                value = obj
+            } else {
+                // If an array was explicitly requested...
+                if keyIndicatedArray {
+                    // ... fulfill the request
+                    urlEncoded[fullKeyPath] = .array([value])
+                } else {
+                    // ... otherwise just set the value
+                    urlEncoded[fullKeyPath] = value
+                }
             }
-
-            urlEncoded[key] = value
-
         }
         
-        self = .object(urlEncoded)
+        self = urlEncoded
     }
     
     public func formURLEncoded() throws -> Bytes {
