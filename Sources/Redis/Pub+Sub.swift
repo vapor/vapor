@@ -63,6 +63,10 @@ public final class SubscriptionStream: Async.OutputStream {
                 return
             }
             
+            guard array[0].string == "message" else {
+                return
+            }
+            
             let message = ChannelMessage(channel: channel, message: array[2])
             
             self.outputStream?(message)

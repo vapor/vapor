@@ -268,7 +268,7 @@ final class DataParser: Async.Stream {
         }
         
         // Continues parsing while there are still pending requests
-        while responseQueue.count > 0 {
+        while true {
             // Continue parsing if a value is partially parsed
             if let parsingValue = parsingValue {
                 // The only half-parsed values can be arrays
