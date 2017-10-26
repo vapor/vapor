@@ -128,11 +128,14 @@ let package = Package(
         // Service
         .target(name: "Service", dependencies: ["Core", "Debugging"]),
         .testTarget(name: "ServiceTests", dependencies: ["Service"]),
-
+        
+        // Security
+        .target(name: "ServerSecurity", dependencies: ["TCP", "libc"]),
+       
         // TLS
         .target(name: "TLS", dependencies: ["Core", ssl, "TCP"]),
         .testTarget(name: "TLSTests", dependencies: ["TLS"]),
-
+        
         // SQLite
         .target(name: "CSQLite"),
         .target(name: "SQLite", dependencies: ["Core", "CSQLite", "Debugging"]),
@@ -148,7 +151,8 @@ let package = Package(
             "Routing",
             "Service",
             "TCP",
-            "WebSocket"
+            "ServerSecurity",
+            "WebSocket",
         ]),
         .testTarget(name: "VaporTests", dependencies: ["Vapor"]),
 
