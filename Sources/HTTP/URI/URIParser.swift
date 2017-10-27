@@ -1,3 +1,4 @@
+import Bits
 import CHTTP
 import Dispatch
 import Foundation
@@ -85,7 +86,18 @@ extension Data {
             return nil
         }
         
-        return String(bytes: self[numericCast(data.off) ..< numericCast(data.off + data.len)], encoding: .utf8)
+        let alloc = MutableBytesPointer.allocate(capacity: numericCast(data.len))
+        
+        self.withUnsafeBytes { (pointer: BytesPointer) in
+            alloc.initialize(from: pointer, count: numericCast(data.len))
+        }
+        
+        guard let string = String.init(bytesNoCopy: alloc, length: numericCast(data.len), encoding: .utf8, freeWhenDone: true) else {
+            alloc.deallocate(capacity: numericCast(data.len))
+            return nil
+        }
+        
+        return string
     }
 }
 
