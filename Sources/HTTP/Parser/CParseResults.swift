@@ -18,17 +18,21 @@ internal final class CParseResults {
 
     // message components
     var version: Version?
-    var headers: [Headers.Name: [String]]
-    var body: Data?
-    var url: Data?
+    var headersIndexes: [Headers.Index]
+    var headersData = Data()
+    var body = Data()
+    var url = Data()
 
     /// Creates a new results object
-    init() {
+    init(maxBodySize: Int) {
         self.isComplete = false
-        self.headers = [:]
-        self.headerState = .none
+        self.headersIndexes = []
+        headersData.reserveCapacity(4096)
+        headersIndexes.reserveCapacity(64)
+        body.reserveCapacity(4096)
+        url.reserveCapacity(128)
         
-        self.headers.reserveCapacity(16)
+        self.headerState = .none
     }
 }
 
@@ -36,9 +40,9 @@ internal final class CParseResults {
 
 extension CParseResults {
     /// Sets the parse results object on a C parser
-    static func set(on parser: inout http_parser) -> CParseResults {
+    static func set(on parser: inout http_parser, maxBodySize: Int) -> CParseResults {
         let results = UnsafeMutablePointer<CParseResults>.allocate(capacity: 1)
-        let new = CParseResults()
+        let new = CParseResults(maxBodySize: maxBodySize)
         results.initialize(to: new)
         parser.data = UnsafeMutableRawPointer(results)
         return new

@@ -20,13 +20,16 @@ public final class RequestParser: CParser {
 
     /// Queue to be set on messages created by this parser.
     private let worker: Worker
+    
+    let maxBodySize: Int
 
     /// Creates a new Request parser.
-    public init(worker: Worker) {
+    public init(worker: Worker, maxBodySize: Int) {
         self.parser = http_parser()
         self.settings = http_parser_settings()
         self.state = .ready
         self.worker = worker
+        self.maxBodySize = maxBodySize
         reset(HTTP_REQUEST)
     }
 
@@ -61,7 +64,7 @@ public final class RequestParser: CParser {
         case .ready:
             // create a new results object and set
             // a reference to it on the parser
-            let newResults = CParseResults.set(on: &parser)
+            let newResults = CParseResults.set(on: &parser, maxBodySize: maxBodySize)
             results = newResults
             state = .parsing
         case .parsing:
@@ -114,8 +117,7 @@ public final class RequestParser: CParser {
         }
 
         // parse the uri from the url bytes.
-        var uri = URIParser.shared.parse(bytes: results.url!)
-        let headers = Headers(storage: results.headers)
+        var uri = URIParser.shared.parse(bytes: results.url)
 
         // if there is no scheme, use http by default
         if uri.scheme?.isEmpty == true {
@@ -127,12 +129,9 @@ public final class RequestParser: CParser {
             throw Error.invalidMessage()
         }
 
-        let body: Body
-        if let data = results.body {
-            body = Body(data)
-        } else {
-            body = Body()
-        }
+        let body = Body(results.body)
+        
+        let headers = Headers(storage: results.headersData, indexes: results.headersIndexes)
 
         // create the request
         let request = Request(

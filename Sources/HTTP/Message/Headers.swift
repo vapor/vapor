@@ -1,3 +1,6 @@
+import Foundation
+import Bits
+
 /// Representation of the HTTP headers associated with a `HTTPRequest` or `HTTPResponse`.
 /// Headers are subscriptable using case-insensitive comparison or provide `Name` constants. eg.
 ///
@@ -11,24 +14,135 @@
 ///
 /// http://localhost:8000/http/headers/
 public struct Headers: Codable {
-    var storage: [Name: [String]]
+    struct Index {
+        var nameStartIndex: Int
+        
+        var startIndex: Int {
+            return nameStartIndex
+        }
+        
+        var nameEndIndex: Int
+        var valueStartIndex: Int
+        var valueEndIndex: Int
+        var endIndex: Int
+    }
+    
+    var headerIndexes = [Headers.Index]()
+    var storage: Data
+    
+    public init() {
+        self.storage = Data()
+        self.storage.reserveCapacity(4096)
+        self.headerIndexes.reserveCapacity(50)
+    }
+    
+    internal init(storage: Data, indexes: [Headers.Index]) {
+        self.storage = storage
+        self.headerIndexes = indexes
+    }
+    
+    public func encode(to encoder: Encoder) throws {
+        try storage.encode(to: encoder)
+    }
+    
+    public init(from decoder: Decoder) throws {
+        self.storage = try Data(from: decoder)
+    }
 
     /// Accesses the (first) value associated with the `Name` if any
     ///
     /// http://localhost:8000/http/headers/#accessing-headers
     public subscript(name: Name) -> String? {
         get {
-            guard let value = storage[name] else { return nil }
             switch name {
             case Name.setCookie: // Exception, see note in [RFC7230, section 3.2.2]
-                return value.isEmpty ? nil : value[0]
+                return self[valuesFor: .setCookie].first
             default:
-                return value.joined(separator: ",")
+                let values = self[valuesFor: name]
+                
+                if values.isEmpty {
+                    return nil
+                }
+                
+                return values.joined(separator: ",")
             }
         }
         set {
-            storage[name] = newValue.map { [$0] }
+            guard name != .contentLength else {
+                // Blocked for correctness of the rbody length
+                return
+            }
+            
+            guard let newValue = newValue else {
+                self.removeValues(forName: name)
+                return
+            }
+            
+            let indexes = self.indexes(forName: name)
+            
+            if  indexes.count == 1,
+                indexes[0].valueEndIndex - indexes[0].valueStartIndex == newValue.utf8.count
+            {
+                storage.withUnsafeMutableBytes { (outputPointer: MutableBytesPointer) in
+                    _ = memcpy(
+                        outputPointer.advanced(by: indexes[0].valueStartIndex),
+                        newValue,
+                        indexes[0].valueEndIndex - indexes[0].valueStartIndex
+                    )
+                }
+            } else {
+                removeValues(forName: name)
+                
+                appendValue(newValue, forName: name)
+            }
         }
+    }
+    
+    /// Removes all headers with this name
+    public mutating func removeValues(forName name: Name) {
+        // Reverse iteration to keep the index positions intact
+        for index in dropIndexes(forName: name).reversed() {
+            storage.removeSubrange(index.startIndex..<index.endIndex)
+            
+            let size = index.endIndex - index.startIndex
+            
+            for i in 0..<self.headerIndexes.count {
+                if self.headerIndexes[i].startIndex >= index.startIndex {
+                    self.headerIndexes[i].nameStartIndex -= size
+                    self.headerIndexes[i].nameEndIndex -= size
+                    self.headerIndexes[i].valueStartIndex -= size
+                    self.headerIndexes[i].valueEndIndex -= size
+                    self.headerIndexes[i].endIndex -= size
+                }
+            }
+        }
+    }
+    
+    /// An internal API that blindly adds a header without checking for doubles
+    internal mutating func appendValue(_ value: String, forName name: Name) {
+        let nameStartIndex = storage.endIndex
+        storage.append(contentsOf: name.original)
+        
+        let nameEndIndex = storage.endIndex
+        storage.append(.colon)
+        storage.append(.space)
+        
+        let valueStartIndex = storage.endIndex
+        storage.append(contentsOf: value.utf8)
+        
+        let valueEndIndex = storage.endIndex
+        storage.append(.carriageReturn)
+        storage.append(.newLine)
+        
+        headerIndexes.append(
+            Index(
+                nameStartIndex: nameStartIndex,
+                nameEndIndex: nameEndIndex,
+                valueStartIndex: valueStartIndex,
+                valueEndIndex: valueEndIndex,
+                endIndex: storage.endIndex
+            )
+        )
     }
     
     /// https://tools.ietf.org/html/rfc2616#section-3.6
@@ -51,17 +165,31 @@ public struct Headers: Codable {
 
     /// Accesses all values associated with the `Name`
     public subscript(valuesFor name: Name) -> [String] {
-        get { return storage[name] ?? [] }
-        set { storage[name] = newValue.isEmpty ? nil : newValue }
+        get {
+            return self.indexes(forName: name).flatMap { index in
+                return String(data: storage[index.valueStartIndex..<index.valueEndIndex], encoding: .utf8)
+            }
+        }
+        set {
+            removeValues(forName: name)
+            
+            for value in newValue {
+                appendValue(value, forName: name)
+            }
+        }
     }
 }
 
-extension Headers : ExpressibleByDictionaryLiteral {
+extension Headers: ExpressibleByDictionaryLiteral {
     /// Creates HTTP headers.
     public init(dictionaryLiteral: (Name, String)...) {
-        storage = [:]
+        storage = Data()
+        
+        // 64 bytes per key-value pair shouldn't be too far off
+        storage.reserveCapacity(dictionaryLiteral.count * 64)
+        
         for (name, value) in dictionaryLiteral {
-            storage[name, default: []].append(value)
+            appendValue(value, forName: name)
         }
     }
 }
@@ -80,17 +208,76 @@ extension Headers {
     /// Appends a header to the headers
     public mutating func append(_ literal: Headers.Literal) {
         for (name, value) in literal.fields {
-            storage[name, default: []].append(value)
+            appendValue(value, forName: name)
         }
+    }
+    
+    /// Scans the boundary of the value associated with a name
+    fileprivate func indexes(forName name: Name) -> [Index] {
+        var valueRanges = [Index]()
+        
+        for index in self.headerIndexes {
+            if equal(index: index, name: name) {
+                valueRanges.append(index)
+            }
+        }
+        
+        return valueRanges
+    }
+    
+    fileprivate func equal(index: Index, name: Name) -> Bool {
+        let indexSize = index.nameEndIndex - index.nameStartIndex
+        
+        guard name.lowercased.count == indexSize else {
+            return false
+        }
+        
+        return storage.withUnsafeBytes { (lhs: BytesPointer) in
+            return name.lowercased.withUnsafeBytes { (rhs: BytesPointer) in
+                for i in 0..<indexSize {
+                    let byte = lhs[index.nameStartIndex &+ i]
+                    
+                    if byte == rhs[i] {
+                        continue
+                    }
+                    
+                    if byte >= .A && byte <= .Z && byte &+ asciiCasingOffset == rhs[i] {
+                        continue
+                    }
+                    
+                    return false
+                }
+                
+                return true
+            }
+        }
+    }
+    
+    /// Scans the boundary of the value associated with a name
+    fileprivate mutating func dropIndexes(forName name: Name) -> [Index] {
+        var valueRanges = [Index]()
+        var removedIndexes = [Int]()
+        
+        for indexPosition in 0..<self.headerIndexes.count {
+            let index = headerIndexes[indexPosition]
+            
+            if equal(index: index, name: name) {
+                valueRanges.append(index)
+                removedIndexes.append(indexPosition)
+            }
+        }
+        
+        for indexPosition in removedIndexes {
+            self.headerIndexes.remove(at: indexPosition)
+        }
+        
+        return valueRanges
     }
 
     /// Replaces a header in the headers
     public mutating func replace(_ literal: Headers.Literal) {
-        for (name, _) in literal.fields {
-            storage[name] = []
-        }
         for (name, value) in literal.fields {
-            storage[name]!.append(value)
+            self[valuesFor: name] = [value]
         }
     }
 }
@@ -98,27 +285,21 @@ extension Headers {
 extension Headers: Sequence {
     /// Iterates over all headers
     public func makeIterator() -> AnyIterator<(name: Name, value: String)> {
-        return AnyIterator(StorageIterator(storage.makeIterator()))
-    }
-
-    struct StorageIterator : IteratorProtocol {
-        var headers: DictionaryIterator<Name, [String]>
-        var header: (name: Name, values: IndexingIterator<[String]>)?
-
-        init(_ iterator: DictionaryIterator<Name, [String]>) {
-            headers = iterator
-            header = headers.next().map { (name: $0.key, values: $0.value.makeIterator()) }
-        }
-
-        mutating func next() -> (name: Name, value: String)? {
-            while header != nil {
-                if let value = header!.values.next() {
-                    return (name: header!.name, value: value)
-                } else {
-                    header = headers.next().map { (name: $0.key, values: $0.value.makeIterator()) }
-                }
+        let storage = self.storage
+        var indexIterator = self.headerIndexes.makeIterator()
+        
+        return AnyIterator {
+            guard let index = indexIterator.next() else {
+                return nil
             }
-            return nil
+            
+            let name = storage[index.nameStartIndex..<index.nameEndIndex]
+            let value = storage[index.valueStartIndex..<index.valueEndIndex]
+            
+            return (
+                Name(data: name),
+                String(data: value, encoding: .utf8) ?? ""
+            )
         }
     }
 }
@@ -131,13 +312,19 @@ extension Headers {
             return lowercased.hashValue
         }
         
-        let original: String
-        let lowercased: String
+        let original: Data
+        let lowercased: Data
 
         /// Create a HTTP header name with the provided String.
         public init(_ name: String) {
-            original = name
-            lowercased = name.lowercased()
+            original = Data(name.utf8)
+            lowercased = original.lowercasedASCIIString()
+        }
+        
+        /// Create a HTTP header name with the provided String.
+        init(data: Data) {
+            original = data
+            lowercased = data.lowercasedASCIIString()
         }
 
         public init(stringLiteral: String) {
@@ -154,11 +341,11 @@ extension Headers {
 
         /// :nodoc:
         public var description: String {
-            return original
+            return String(data: original, encoding: .utf8) ?? ""
         }
 
         /// :nodoc:
-        public static func == (lhs: Name, rhs: Name) -> Bool {
+        public static func ==(lhs: Name, rhs: Name) -> Bool {
             return lhs.lowercased == rhs.lowercased
         }
 
