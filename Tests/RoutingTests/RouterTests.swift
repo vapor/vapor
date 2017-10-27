@@ -1,3 +1,4 @@
+import Async
 import HTTP
 import Bits
 import Routing
@@ -7,15 +8,15 @@ class RouterTests: XCTestCase {
     func testRouter() throws {
         let router = TrieRouter()
 
-        router.on(.get, to: ["hello", "world"].makePathComponents()) { req in
+        router.on(.get, to: ["hello", "world"].makePathComponents()) { req -> Response in
             return try Response(body: "hello")
         }
 
-        router.on(.get, to: ["foo", "bar", "baz"].makePathComponents()) { req in
+        router.on(.get, to: ["foo", "bar", "baz"].makePathComponents()) { req -> Response in
             return try Response(body: "foo")
         }
 
-        router.on(.get, to: ["users", User.parameter, "comments"].makePathComponents()) { req in
+        router.on(.get, to: ["users", User.parameter, "comments"].makePathComponents()) { req -> Response in
             let bob = try req.parameters.next(User.self)
             XCTAssertEqual(bob.name, "bob")
             
@@ -67,6 +68,10 @@ class RouterTests: XCTestCase {
     static let allTests = [
         ("testRouter", testRouter),
     ]
+}
+
+extension Response: FutureType {
+    public typealias Expectation = Response
 }
 
 final class User: Parameter {
