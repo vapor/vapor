@@ -1,9 +1,10 @@
 import Debugging
 
-public struct Error : Swift.Error, Debuggable, Traceable {
+public struct MySQLError : Swift.Error, Debuggable, Traceable {
     /// A description of the problem
     public var reason: String {
         switch problem {
+        case .invalidQuery(let code): return "MySQL error code \(code)"
         case .invalidPacket: return "The received packet was invalid"
         case .invalidHandshake: return "The server's handshake was invalid"
         case .invalidResponse: return "The packet could not be parsed into valid a response"
@@ -30,12 +31,32 @@ public struct Error : Swift.Error, Debuggable, Traceable {
          line: UInt = #line,
          column: UInt = #column
     ) {
-        self.stackTrace = Error.makeStackTrace()
+        self.stackTrace = MySQLError.makeStackTrace()
         self.file = file
         self.function = function
         self.line = line
         self.column = column
         self.problem = problem
+    }
+    
+    init(
+        packet: Packet,
+        file: String = #file,
+        function: String = #function,
+        line: UInt = #line,
+        column: UInt = #column
+    ) {
+        self.stackTrace = MySQLError.makeStackTrace()
+        self.file = file
+        self.function = function
+        self.line = line
+        self.column = column
+        
+        if let code = try? Parser(packet: packet, position: 1).parseUInt16() {
+            self.problem = .invalidQuery(code)
+        } else {
+            self.problem = .decodingError
+        }
     }
     
     /// The file this occurred in
@@ -54,7 +75,22 @@ public struct Error : Swift.Error, Debuggable, Traceable {
     internal let problem: Problem
     
     /// The problem
-    enum Problem : String {
+    enum Problem {
+        var rawValue: String {
+            switch self {
+            case .invalidQuery(_): return "invalidQuery"
+            case .invalidPacket: return "invalidPacket"
+            case .invalidHandshake: return "invalidHandshake"
+            case .invalidResponse: return "invalidResponse"
+            case .unsupported: return "unsupported"
+            case .parsingError: return "parsingError"
+            case .decodingError: return "decodingError"
+            case .connectionInUse: return "connectionInuse"
+            case .invalidCredentials: return "invalidCredentials"
+            }
+        }
+        
+        case invalidQuery(UInt16)
         case invalidPacket
         case invalidHandshake
         case invalidResponse

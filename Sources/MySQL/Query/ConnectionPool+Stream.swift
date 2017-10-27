@@ -7,10 +7,10 @@ extension ConnectionPool {
     /// - parameter query: The query to be executed to receive results from
     /// - throws: Network error
     /// - returns: A stream of all resulting rows
-    internal func streamRows(in query: Query) throws -> RowStream {
+    internal func streamRows(in query: Query) -> RowStream {
         let stream = RowStream(mysql41: true)
         
-        let future = try retain { connection, complete, fail in
+        let future = retain { connection, complete, fail in
             // Set up a parser
             connection.receivePackets(into: stream.inputStream)
             
@@ -47,10 +47,10 @@ extension ConnectionPool {
     /// - parameter query: The query to be executed to receive results from
     /// - throws: Network error
     /// - returns: A stream of all decoded resulting
-    public func stream<D: Decodable>(_ type: D.Type, in query: Query) throws -> ModelStream<D> {
+    public func stream<D: Decodable>(_ type: D.Type, in query: Query) -> ModelStream<D> {
         let stream = ModelStream<D>(mysql41: true)
         
-        let future = try retain { connection, complete, fail in
+        let future = retain { connection, complete, fail in
             // Set up a parser
             connection.receivePackets(into: stream.inputStream)
             

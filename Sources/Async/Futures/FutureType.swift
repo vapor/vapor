@@ -57,7 +57,7 @@ extension FutureType {
     }
 
     /// Maps a future to a future of a different type.
-    public func map<T>(callback: @escaping ExpectationMapCallback<T>) -> Future<T> {
+    public func map<T>(to type: T.Type = T.self, callback: @escaping ExpectationMapCallback<T>) -> Future<T> {
         let promise = Promise(T.self)
 
         then { expectation in

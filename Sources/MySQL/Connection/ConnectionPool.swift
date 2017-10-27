@@ -50,7 +50,7 @@ public class ConnectionPool {
     typealias Complete = (()->())
     
     /// Retains a connection (or creates a new one) to execute the handler with
-    internal func retain<T>(_ handler: @escaping ((Connection, @escaping ((T) -> ()), @escaping Stream.ErrorHandler) -> Void)) throws -> Future<T> {
+    internal func retain<T>(_ handler: @escaping ((Connection, @escaping ((T) -> ()), @escaping Stream.ErrorHandler) -> Void)) -> Future<T> {
         let promise = Promise<T>()
         
         // Checks for an existing connection
@@ -70,21 +70,25 @@ public class ConnectionPool {
             return promise.future
         }
         
-        _ = try Connection.makeConnection(hostname: hostname, user: user, password: password, database: database, queue: queue).then { connection in
-            let pair = ConnectionPair(connection: connection)
-            pair.reserved = true
-            
-            self.pool.append(pair)
-            
-            // Runs the handler with the connection
-            handler(pair.connection, { result in
-                // On completion, return the connection, complete the promise
-                pair.reserved = false
-                promise.complete(result)
-            }) { error in
-                pair.reserved = false
-                promise.fail(error)
+        do {
+            _ = try Connection.makeConnection(hostname: hostname, user: user, password: password, database: database, queue: queue).then { connection in
+                let pair = ConnectionPair(connection: connection)
+                pair.reserved = true
+                
+                self.pool.append(pair)
+                
+                // Runs the handler with the connection
+                handler(pair.connection, { result in
+                    // On completion, return the connection, complete the promise
+                    pair.reserved = false
+                    promise.complete(result)
+                }) { error in
+                    pair.reserved = false
+                    promise.fail(error)
+                }
             }
+        } catch {
+            return Future(error: error)
         }
         
         return promise.future

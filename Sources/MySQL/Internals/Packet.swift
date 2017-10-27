@@ -26,7 +26,7 @@ internal final class PacketParser : Async.Stream {
     func inputStream(_ input: MutableByteBuffer) {
         // If there's no input pointer, throw an error
         guard var pointer = input.baseAddress else {
-            errorStream?(Error(.invalidPacket))
+            errorStream?(MySQLError(.invalidPacket))
             return
         }
         
@@ -37,7 +37,7 @@ internal final class PacketParser : Async.Stream {
         func parseInput(into buffer: MutableByteBuffer, alreadyContaining containing: Int, sequenceId: UInt8) {
             // If there's no input pointer, throw an error
             guard let destination = buffer.baseAddress?.advanced(by: containing) else {
-                errorStream?(Error(.invalidPacket))
+                errorStream?(MySQLError(.invalidPacket))
                 return
             }
             
@@ -84,7 +84,7 @@ internal final class PacketParser : Async.Stream {
             // at least 4 packet bytes for new packets
             // TODO: internal 3-byte buffer like MongoKitten's for this odd scenario
             guard input.count > 3 else {
-                errorStream?(Error(.invalidPacket))
+                errorStream?(MySQLError(.invalidPacket))
                 return
             }
             

@@ -16,13 +16,23 @@ extension Connection {
         
         try self.write(packetFor: buffer)
     }
+    
+    /// Writes a preparation message to the connection
+    internal func prepare(query: String) throws {
+        var buffer = Data()
+        buffer.reserveCapacity(query.utf8.count + 1)
+        
+        // SQL Query
+        buffer.append(0x16)
+        buffer.append(contentsOf: [UInt8](query.utf8))
+        
+        try self.write(packetFor: buffer)
+    }
 }
 
 extension ConnectionPool {
     @discardableResult
-    public func query(_ query: Query) throws -> Future<Void> {
-        return try self.allRows(in: query).map { _ in
-            return ()
-        }
+    internal func query(_ query: Query) -> Future<Void> {
+        return self.allRows(in: query).map { _ in }
     }
 }
