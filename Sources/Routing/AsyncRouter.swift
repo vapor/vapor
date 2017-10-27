@@ -1,27 +1,8 @@
 import Async
 import HTTP
 
-/// Capable of register async routes.
-public protocol AsyncRouter: Router { }
-
-extension AsyncRouter {
-    /// Registers a route handler at the supplied path.
-    @discardableResult
-    public func on<F: FutureType>(
-        _ method: Method,
-        to path: [PathComponent],
-        use closure: @escaping BasicAsyncResponder<F>.Closure
-    ) -> Route where F.Expectation: ResponseRepresentable {
-        let responder = BasicAsyncResponder(closure: closure)
-        let route = Route(method: method, path: path, responder: responder)
-        self.register(route: route)
-        
-        return route
-    }
-}
-
 /// A basic, closure-based responder.
-public struct BasicAsyncResponder<F: FutureType>: Responder where F.Expectation: ResponseRepresentable {
+public struct BasicResponder<F: FutureType>: Responder where F.Expectation: ResponseRepresentable {
     /// Responder closure
     public typealias Closure = (Request) throws -> F
 

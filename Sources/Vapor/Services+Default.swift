@@ -34,7 +34,7 @@ extension Services {
         }
 
         // register router
-        services.register([SyncRouter.self, AsyncRouter.self, Router.self]) { container in
+        services.register([Router.self]) { container in
             return TrieRouter()
         }
 
