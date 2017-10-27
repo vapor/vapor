@@ -47,7 +47,7 @@ extension Extend: ExpressibleByDictionaryLiteral {
 
     public init(dictionaryLiteral elements: (String, Any)...) {
         self.init()
-        elements.forEach { (key, value) in
+        for (key, value) in elements {
             self[key] = value
         }
     }
