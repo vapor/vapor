@@ -20,3 +20,13 @@ extension Data {
         return lowercased
     }
 }
+
+extension Data {
+    public func withByteBuffer<T>(_ closure: (ByteBuffer) throws -> T) rethrows -> T {
+        return try self.withUnsafeBytes { (pointer: BytesPointer) in
+            let buffer = ByteBuffer(start: pointer,count: self.count)
+            
+            return try closure(buffer)
+        }
+    }
+}

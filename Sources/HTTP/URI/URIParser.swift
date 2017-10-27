@@ -65,11 +65,11 @@ public final class URIParser {
 
         // create uri
         let uri = URI(
-            scheme: data.string(for: scheme) ?? "",
+            scheme: data.string(for: scheme),
             userInfo: info,
-            hostname: data.string(for: hostname) ?? "",
+            hostname: data.string(for: hostname),
             port: p,
-            path: data.string(for: path) ?? "",
+            pathData: data.data(for: path),
             query: data.string(for: query),
             fragment: data.string(for: fragment)
         )
@@ -80,24 +80,19 @@ public final class URIParser {
 // MARK: Utilities
 
 extension Data {
+    fileprivate func data(for field: http_parser_url_field_data) -> Data {
+        return self[numericCast(field.off)..<numericCast(field.len)]
+    }
+    
     /// Creates a string from the supplied field data offsets
-    fileprivate func string(for data: http_parser_url_field_data) -> String? {
-        guard data.len > 0 else {
+    fileprivate func string(for field: http_parser_url_field_data) -> String? {
+        let data = self.data(for: field)
+        
+        guard data.count > 0 else {
             return nil
         }
         
-        let alloc = MutableBytesPointer.allocate(capacity: numericCast(data.len))
-        
-        self.withUnsafeBytes { (pointer: BytesPointer) in
-            alloc.initialize(from: pointer, count: numericCast(data.len))
-        }
-        
-        guard let string = String.init(bytesNoCopy: alloc, length: numericCast(data.len), encoding: .utf8, freeWhenDone: true) else {
-            alloc.deallocate(capacity: numericCast(data.len))
-            return nil
-        }
-        
-        return string
+        return String(data: data, encoding: .utf8)
     }
 }
 

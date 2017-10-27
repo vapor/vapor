@@ -69,11 +69,9 @@ public final class TrieRouter: Router {
     }
     
     /// Splits the URI into a substring for each component
-    ///
-    /// TODO: Binary data
     fileprivate func split(_ uri: Data) -> [Data] {
         var path = [Data]()
-        path.reserveCapacity(7)
+        path.reserveCapacity(8)
         
         // Skip past the first `/`
         var baseIndex = uri.index(after: uri.startIndex)
@@ -118,10 +116,10 @@ public final class TrieRouter: Router {
             // if we find a constant route path that matches this component,
             // then we should use it.
             current = node
-        } else if let node = current.parameterChild, let component = String(data: component, encoding: .utf8) {
+        } else if let node = current.parameterChild {
             // if no constant routes were found that match the path, but
             // a dynamic parameter child was found, we can use it
-            let lazy = LazyParameter(type: node.parameter, value: component)
+            let lazy = LazyParameter(type: node.parameter, value: String(data: component, encoding: .utf8) ?? "")
             request.parameters.parameters.append(lazy)
             current = node
         } else {
@@ -135,13 +133,12 @@ public final class TrieRouter: Router {
 
     /// See Router.route()
     public func route(request: Request) -> Responder? {
-        let path = split(Data(request.uri.path.utf8))
+        let path = split(request.uri.pathData)
         
         // always start at the root node
         var current: TrieRouterNode = root
         
-        // Start with the method
-        guard walk(node: &current, component: Data(request.method.string.utf8), request: request) else {
+        guard walk(node: &current, component: request.method.data, request: request) else {
             return fallbackResponder
         }
 
@@ -156,7 +153,6 @@ public final class TrieRouter: Router {
         // been an early exit.
         return current.responder ?? fallbackResponder
     }
-
 }
 
 // MARK: Node Protocol
@@ -179,10 +175,15 @@ extension TrieRouterNode {
     /// node's constant children.
     func findConstantNode(at path: Data) -> ConstantNode? {
         for child in constantChildren {
-            if child.constant == path {
+            guard path.count == child.constant.count else {
+                continue
+            }
+            
+            if path == child.constant {
                 return child
             }
         }
+        
         return nil
     }
 }

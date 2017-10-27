@@ -28,7 +28,17 @@ public struct URI: Codable {
     public var port: Port?
     
     // https://tools.ietf.org/html/rfc3986#section-3.3
-    public var path: String
+    public private(set) var pathData: Data
+    
+    // https://tools.ietf.org/html/rfc3986#section-3.3
+    public var path: String {
+        get {
+            return String(data: pathData, encoding: .utf8) ?? ""
+        }
+        set {
+            self.pathData = Data(newValue.utf8)
+        }
+    }
     
     // https://tools.ietf.org/html/rfc3986#section-3.4
     public var query: String?
@@ -45,7 +55,29 @@ public struct URI: Codable {
         path: String = "/",
         query: String? = nil,
         fragment: String? = nil
-        ) {
+    ) {
+        let path = path.first == "/" ? path : "/" + path
+        
+        self.init(
+            scheme: scheme,
+            userInfo: userInfo,
+            hostname: hostname,
+            port: port,
+            pathData: Data(path.utf8),
+            query: query,
+            fragment: fragment
+        )
+    }
+    
+    internal init(
+        scheme: String? = nil,
+        userInfo: UserInfo? = nil,
+        hostname: String? = nil,
+        port: Port? = nil,
+        pathData: Data,
+        query: String? = nil,
+        fragment: String? = nil
+    ) {
         self.scheme = scheme?.lowercased()
         self.userInfo = userInfo
         self.hostname = hostname?.lowercased()
@@ -54,7 +86,8 @@ public struct URI: Codable {
         } else {
             self.port = nil
         }
-        self.path = path.first == "/" ? path : "/" + path
+        
+        self.pathData = pathData
         self.query = query
         self.fragment = fragment
     }

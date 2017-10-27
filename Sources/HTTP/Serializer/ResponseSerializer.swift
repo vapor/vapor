@@ -1,8 +1,9 @@
 import Async
+import Bits
 import Dispatch
 import Foundation
 
-/// Converts responses to Dispatch Data.
+/// Converts responses to Data.
 public final class ResponseSerializer: Serializer {
     /// See InputStream.Input
     public typealias Input = Response
@@ -25,41 +26,62 @@ public final class ResponseSerializer: Serializer {
         outputStream?(message)
     }
 
-    /// Serializes a response into DispatchData.
+    /// Efficiently serializes a response into Data.
     public func serialize(_ response: Response) -> Data {
-        let bodyData = serialize(response.body)
+        let statusCode = Data(response.status.code.description.utf8)
+        let contentLength = Data(response.body.count.description.utf8)
         
-        var serialized = Data()
+        let contentLengthLength = Headers.Name.contentLength.original.count + headerKeyValueSeparator.count + contentLength.count + eol.count
         
-        // Reserve 128 bytes for the content length and first line
-        serialized.reserveCapacity(response.headers.storage.count + bodyData.count + 512)
+        // prefix + status + space + message + eol
+        let firstLineCount = http1Prefix.count + statusCode.count + 1 + response.status.messageData.count + eol.count
         
-        // HTTP first response line
-        serialized.append(contentsOf: http1Prefix)
-        serialized.append(contentsOf: response.status.code.description.utf8)
-        serialized.append(.space)
-        serialized.append(contentsOf: response.status.message.utf8)
-        serialized.append(.carriageReturn)
-        serialized.append(.newLine)
+        // first line + headers + contentLengthHeader + EOL + body + EOL
+        let messageSize = firstLineCount + response.headers.storage.count + contentLengthLength + eol.count + response.body.count
         
-        serialized.append(contentsOf: response.headers.storage)
+        let message = MutableBytesPointer.allocate(capacity: messageSize)
         
-        // Content-Length header
-        serialized.append(contentsOf: Headers.Name.contentLength.original)
-        serialized.append(contentsOf: headerKeyValueSeparator)
-        serialized.append(contentsOf: bodyData.count.description.utf8)
-        serialized.append(.carriageReturn)
-        serialized.append(.newLine)
+        var offset = 0
         
-        // End of Headers
-        serialized.append(.carriageReturn)
-        serialized.append(.newLine)
+        // First line
+        offset += copy(http1Prefix, to: message)
+        offset += copy(statusCode, to: message.advanced(by: offset))
+        message.advanced(by: offset).pointee = .space
+        offset += 1
+        offset += copy(response.status.messageData, to: message.advanced(by: offset))
+        offset += copy(eol, to: message.advanced(by: offset))
         
-        // Body
-        serialized.append(contentsOf: bodyData)
+        // headers
+        offset += copy(response.headers.storage, to: message.advanced(by: offset))
         
-        return serialized
+        // Content-Length
+        offset += copy(Headers.Name.contentLength.original, to: message.advanced(by: offset))
+        offset += copy(headerKeyValueSeparator, to: message.advanced(by: offset))
+        offset += copy(contentLength, to: message.advanced(by: offset))
+        offset += copy(eol, to: message.advanced(by: offset))
+        
+        // End of headers
+        offset += copy(eol, to: message.advanced(by: offset))
+        
+        switch response.body.storage {
+        case .data(let data):
+            offset += copy(data, to: message.advanced(by: offset))
+        case .dispatchData(let data):
+            offset += copy(Data(data), to: message.advanced(by: offset))
+        }
+        
+        return Data(bytesNoCopy: message, count: messageSize, deallocator: Data.Deallocator.custom { pointer, len in
+            message.deallocate(capacity: messageSize)
+        })
     }
+}
+
+fileprivate func copy(_ data: Data, to pointer: MutableBytesPointer) -> Int {
+    data.withUnsafeBytes { (dataPointer: BytesPointer) in
+        _ = memcpy(pointer, dataPointer, data.count)
+    }
+    
+    return data.count
 }
 
 internal let http1Prefix = Data("HTTP/1.1 ".utf8)

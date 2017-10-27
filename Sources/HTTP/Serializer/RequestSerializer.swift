@@ -27,20 +27,20 @@ public final class RequestSerializer: Serializer {
 
     /// Serializes a request into DispatchData.
     public func serialize(_ request: Request) -> Data {
-        let requestLine = serialize(method: request.method, uri: request.uri)
-        let bodyData = serialize(request.body)
+        var serialized = request.method.data
+        serialized.reserveCapacity(request.headers.storage.count + 256 + request.body.count)
         
-        var serialized = Data()
-        serialized.reserveCapacity(requestLine.count + request.headers.storage.count + 2 + bodyData.count)
+        serialized.append(.space)
+        serialized.append(contentsOf: request.uri.pathData)
+        serialized.append(contentsOf: http1newLine)
         
-        serialized.append(contentsOf: requestLine)
         serialized.append(contentsOf: request.headers.storage)
         
         // Content-Length header
         serialized.append(contentsOf: Headers.Name.contentLength.original)
         serialized.append(.colon)
         serialized.append(.space)
-        serialized.append(contentsOf: bodyData.count.description.utf8)
+        serialized.append(contentsOf: request.body.count.description.utf8)
         serialized.append(.carriageReturn)
         serialized.append(.newLine)
         
@@ -49,13 +49,15 @@ public final class RequestSerializer: Serializer {
         serialized.append(.newLine)
         
         // Body
-        serialized.append(contentsOf: bodyData)
+        switch request.body.storage {
+        case .dispatchData(let data):
+            serialized.append(contentsOf: data)
+        case .data(let data):
+            serialized.append(contentsOf: data)
+        }
         
         return serialized
     }
-
-    /// Handles http request method serialization
-    private func serialize(method: Method, uri: URI) -> Data {
-        return Data("\(method.string) \(uri.path) HTTP/1.1\r\n".utf8)
-    }
 }
+
+fileprivate let http1newLine = Data(" HTTP/1.1\r\n".utf8)
