@@ -44,7 +44,7 @@ final class HTTPTestServer {
         
         // setup the server pipeline
         server.drain { client in
-            let parser = HTTP.RequestParser(worker: client.tcp.worker)
+            let parser = HTTP.RequestParser(worker: client.tcp.worker, maxBodySize: 100_000)
             let responderStream = responder.makeStream()
             let serializer = HTTP.ResponseSerializer()
             

@@ -9,6 +9,7 @@ extension SSLStream {
     public func initializeClient(hostname: String, signedBy certificate: String? = nil) throws -> Future<Void> {
         let context = try self.initialize(side: .clientSide)
         
+        var hostname = [Int8](hostname.utf8.map { Int8($0) })
         let status = SSLSetPeerDomainName(context, &hostname, hostname.count)
         
         guard status == 0 else {
