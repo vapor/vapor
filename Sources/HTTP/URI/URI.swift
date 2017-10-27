@@ -54,7 +54,7 @@ public struct URI: Codable {
         } else {
             self.port = nil
         }
-        self.path = path.hasPrefix("/") ? path : "/" + path
+        self.path = path.first == "/" ? path : "/" + path
         self.query = query
         self.fragment = fragment
     }
