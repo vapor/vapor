@@ -55,7 +55,6 @@ public final class Request: Message {
         self.headers = headers
         self.body = body
         self.extend = Extend()
-        updateContentLength()
     }
 }
 

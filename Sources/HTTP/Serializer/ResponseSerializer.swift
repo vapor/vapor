@@ -27,27 +27,42 @@ public final class ResponseSerializer: Serializer {
 
     /// Serializes a response into DispatchData.
     public func serialize(_ response: Response) -> Data {
-        var serialized = Data()
-        
-        let statusLineData = serialize(response.status)
-        let headersData = serialize(response.headers)
         let bodyData = serialize(response.body)
         
-        serialized.reserveCapacity(statusLineData.count + headersData.count + bodyData.count)
+        var serialized = Data()
         
-        serialized.append(contentsOf: statusLineData)
-        serialized.append(contentsOf: headersData)
+        // Reserve 128 bytes for the content length and first line
+        serialized.reserveCapacity(response.headers.storage.count + bodyData.count + 512)
+        
+        // HTTP first response line
+        serialized.append(contentsOf: http1Prefix)
+        serialized.append(contentsOf: response.status.code.description.utf8)
+        serialized.append(.space)
+        serialized.append(contentsOf: response.status.message.utf8)
+        serialized.append(.carriageReturn)
+        serialized.append(.newLine)
+        
+        serialized.append(contentsOf: response.headers.storage)
+        
+        // Content-Length header
+        serialized.append(contentsOf: Headers.Name.contentLength.original)
+        serialized.append(contentsOf: headerKeyValueSeparator)
+        serialized.append(contentsOf: bodyData.count.description.utf8)
+        serialized.append(.carriageReturn)
+        serialized.append(.newLine)
+        
+        // End of Headers
+        serialized.append(.carriageReturn)
+        serialized.append(.newLine)
+        
+        // Body
         serialized.append(contentsOf: bodyData)
         
         return serialized
     }
-
-    /// Handles http response status serialization.
-    private func serialize(_ status: Status) -> Data {
-        return Data("HTTP/1.1 \(status.code.description) \(status.message)\r\n".utf8)
-    }
 }
 
+internal let http1Prefix = Data("HTTP/1.1 ".utf8)
 internal let eol = Data("\r\n".utf8)
 internal let headerKeyValueSeparator: Data = Data(": ".utf8)
 

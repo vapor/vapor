@@ -27,16 +27,28 @@ public final class RequestSerializer: Serializer {
 
     /// Serializes a request into DispatchData.
     public func serialize(_ request: Request) -> Data {
-        var serialized = Data()
-        
         let requestLine = serialize(method: request.method, uri: request.uri)
-        let headersData = serialize(request.headers)
         let bodyData = serialize(request.body)
         
-        serialized.reserveCapacity(requestLine.count + headersData.count + bodyData.count)
+        var serialized = Data()
+        serialized.reserveCapacity(requestLine.count + request.headers.storage.count + 2 + bodyData.count)
         
         serialized.append(contentsOf: requestLine)
-        serialized.append(contentsOf: headersData)
+        serialized.append(contentsOf: request.headers.storage)
+        
+        // Content-Length header
+        serialized.append(contentsOf: Headers.Name.contentLength.original)
+        serialized.append(.colon)
+        serialized.append(.space)
+        serialized.append(contentsOf: bodyData.count.description.utf8)
+        serialized.append(.carriageReturn)
+        serialized.append(.newLine)
+        
+        // End of Headers
+        serialized.append(.carriageReturn)
+        serialized.append(.newLine)
+        
+        // Body
         serialized.append(contentsOf: bodyData)
         
         return serialized

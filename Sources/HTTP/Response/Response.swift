@@ -32,9 +32,7 @@ public final class Response: Message {
     public var headers: Headers
 
     /// See Message.body
-    public var body: Body {
-        didSet { updateContentLength() }
-    }
+    public var body: Body
 
     /// See Extendable.extend
     public var extend: Extend
@@ -51,7 +49,6 @@ public final class Response: Message {
         self.headers = headers
         self.body = body
         self.extend = Extend()
-        updateContentLength()
     }
 }
 
