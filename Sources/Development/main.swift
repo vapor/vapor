@@ -36,9 +36,24 @@ async.get("hello") { req in
     return Future<User>(user)
 }
 
-let hello = try Response(body: "Hello, world!")
-sync.get("plaintext") { req in
-    return hello
+extension Worker {
+    var response: Response {
+        if let response = self.extend["response"] as? Response {
+            return response
+        }
+
+        let response = try! Response(headers: [
+            .contentType: "text/plain; charset=utf-8"
+        ], body: "Hello, world!")
+
+        self.extend["response"] = response
+
+        return response
+    }
+}
+
+sync.grouped(DateMiddleware()).get("plaintext") { req in
+    return try req.requireWorker().response
 }
 
 let view = try app.make(ViewRenderer.self)
