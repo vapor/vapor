@@ -63,6 +63,12 @@ public struct Body: Codable {
         storage = .dispatchData(data)
     }
     
+    public init(string: String) {
+        let data = string.data(using: .utf8) ?? Data()
+        
+        self.storage = .data(data)
+    }
+    
     /// Decodes a body from from a Decoder
     public init(from decoder: Decoder) throws {
         self.storage = try Storage(from: decoder)
@@ -93,10 +99,6 @@ public protocol BodyRepresentable {
 extension String: BodyRepresentable {
     /// See BodyRepresentable.makeBody()
     public func makeBody() throws -> Body {
-        guard let data = self.data(using: .utf8) else {
-            throw Error(identifier: "string-body-conversion", reason: "Converting a String to an HTTP Body failed.")
-        }
-        
-        return Body(data)
+        return Body(string: self)
     }
 }
