@@ -16,6 +16,9 @@ public final class ResponseSerializer: Serializer {
 
     /// See BaseStream.errorStream
     public var errorStream: ErrorHandler?
+    
+    /// When an upgrade request is in progress, this is set
+    public private(set) var upgradeHandler: OnUpgrade?
 
     /// Create a new ResponseSerializer.
     public init() {}
@@ -28,6 +31,8 @@ public final class ResponseSerializer: Serializer {
 
     /// Efficiently serializes a response into Data.
     public func serialize(_ response: Response) -> Data {
+        self.upgradeHandler = response.onUpgrade
+        
         let statusCode = Data(response.status.code.description.utf8)
         let contentLength = Data(response.body.count.description.utf8)
         

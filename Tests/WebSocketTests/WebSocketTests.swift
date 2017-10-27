@@ -51,7 +51,10 @@ final class HTTPTestServer {
             client.stream(to: parser)
                 .stream(to: responderStream)
                 .stream(to: serializer)
-                .drain(into: client)
+                .drain { data in
+                    client.inputStream(data)
+                    serializer.upgradeHandler?(client.tcp)
+                }
             
             client.tcp.start()
         }
