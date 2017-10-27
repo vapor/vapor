@@ -1,16 +1,16 @@
 import Dispatch
 /*
  https://tools.ietf.org/html/rfc3986#section-3
-
+ 
  URI         = scheme ":" hier-part [ "?" query ] [ "#" fragment ]
  
  The following are two example URIs and their component parts:
  
  foo://example.com:8042/over/there?name=ferret#nose
  \_/   \______________/\_________/ \_________/ \__/
-  |           |            |            |        |
+ |           |            |            |        |
  scheme     authority       path        query   fragment
-  |   _____________________|__
+ |   _____________________|__
  / \ /                        \
  urn:example:animal:ferret:nose
  
@@ -19,23 +19,23 @@ import Dispatch
 public struct URI: Codable {
     // https://tools.ietf.org/html/rfc3986#section-3.1
     public var scheme: String?
-
+    
     // https://tools.ietf.org/html/rfc3986#section-3.2.1
     public var userInfo: UserInfo?
     // https://tools.ietf.org/html/rfc3986#section-3.2.2
     public var hostname: String?
     // https://tools.ietf.org/html/rfc3986#section-3.2.3
     public var port: Port?
-
+    
     // https://tools.ietf.org/html/rfc3986#section-3.3
     public var path: String
-
+    
     // https://tools.ietf.org/html/rfc3986#section-3.4
     public var query: String?
-
+    
     // https://tools.ietf.org/html/rfc3986#section-3.5
     public var fragment: String?
-
+    
     /// Creates a new URI
     public init(
         scheme: String? = nil,
@@ -45,7 +45,7 @@ public struct URI: Codable {
         path: String = "/",
         query: String? = nil,
         fragment: String? = nil
-    ) {
+        ) {
         self.scheme = scheme?.lowercased()
         self.userInfo = userInfo
         self.hostname = hostname?.lowercased()
@@ -65,7 +65,7 @@ extension URI {
     public struct UserInfo: Codable {
         public let username: String
         public let info: String?
-
+        
         public init(username: String, info: String? = nil) {
             self.username = username
             self.info = info
@@ -95,7 +95,7 @@ extension URI {
         "ws": 80,
         "wss": 443
     ]
-
+    
     /// The default port for scheme associated with this URI if known
     public var defaultPort: Port? {
         guard let scheme = scheme else {
@@ -116,6 +116,7 @@ import Foundation
 
 extension URI: ExpressibleByStringLiteral {
     public init(stringLiteral value: String) {
-        self = URIParser().parse(bytes: Data(value.utf8))
+        self = URIParser().parse(data: Data(value.utf8))
     }
 }
+

@@ -1,4 +1,6 @@
 import HTTP
+import Foundation
+import Bits
 
 /// A basic router that can route requests depending on the method and URI
 ///
@@ -38,7 +40,7 @@ public final class TrieRouter: Router {
             switch path {
             case .constant(let s):
                 // find the child node matching this constant
-                if let node = current.findConstantNode(at: s) {
+                if let node = current.findConstantNode(at: Data(s.utf8)) {
                     current = node
                 } else {
                     // if no child node matches this constant,
@@ -69,8 +71,8 @@ public final class TrieRouter: Router {
     /// Splits the URI into a substring for each component
     ///
     /// TODO: Binary data
-    fileprivate func split(_ uri: String) -> [Substring] {
-        var path = [Substring]()
+    fileprivate func split(_ uri: Data) -> [Data] {
+        var path = [Data]()
         path.reserveCapacity(7)
         
         // Skip past the first `/`
@@ -81,7 +83,7 @@ public final class TrieRouter: Router {
             
             // Split up the path
             while currentIndex < uri.endIndex {
-                if uri[currentIndex] == "/" {
+                if uri[currentIndex] == .forwardSlash {
                     path.append(uri[baseIndex..<currentIndex])
                     
                     baseIndex = uri.index(after: currentIndex)
@@ -107,19 +109,19 @@ public final class TrieRouter: Router {
     /// Uses the provided request for parameterized components
     ///
     /// TODO: Binary data
-    fileprivate func walk<S: StringProtocol>(
+    fileprivate func walk(
         node current: inout TrieRouterNode,
-        component: S,
+        component: Data,
         request: Request
     ) -> Bool {
-        if let node = current.findConstantNode(at: String(component)) {
+        if let node = current.findConstantNode(at: component) {
             // if we find a constant route path that matches this component,
             // then we should use it.
             current = node
-        } else if let node = current.parameterChild {
+        } else if let node = current.parameterChild, let component = String(data: component, encoding: .utf8) {
             // if no constant routes were found that match the path, but
             // a dynamic parameter child was found, we can use it
-            let lazy = LazyParameter(type: node.parameter, value: String(component))
+            let lazy = LazyParameter(type: node.parameter, value: component)
             request.parameters.parameters.append(lazy)
             current = node
         } else {
@@ -133,13 +135,13 @@ public final class TrieRouter: Router {
 
     /// See Router.route()
     public func route(request: Request) -> Responder? {
-        let path = split(request.uri.path)
+        let path = split(Data(request.uri.path.utf8))
         
         // always start at the root node
         var current: TrieRouterNode = root
         
         // Start with the method
-        guard walk(node: &current, component: request.method.string, request: request) else {
+        guard walk(node: &current, component: Data(request.method.string.utf8), request: request) else {
             return fallbackResponder
         }
 
@@ -175,7 +177,7 @@ protocol TrieRouterNode {
 extension TrieRouterNode {
     /// Finds the node with the supplied path in the
     /// node's constant children.
-    func findConstantNode(at path: String) -> ConstantNode? {
+    func findConstantNode(at path: Data) -> ConstantNode? {
         for child in constantChildren {
             if child.constant == path {
                 return child
@@ -241,9 +243,7 @@ final class ConstantNode: TrieRouterNode {
     var parameterChild: ParameterNode?
 
     /// This nodes path component
-    ///
-    /// TODO: Binary data
-    let constant: String
+    let constant: Data
 
     /// This node's resopnder
     var responder: Responder?
@@ -252,7 +252,7 @@ final class ConstantNode: TrieRouterNode {
     ///
     /// TODO: Binary data
     init(constant: String) {
-        self.constant = constant
+        self.constant = Data(constant.utf8)
         self.constantChildren = []
     }
 }
