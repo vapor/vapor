@@ -81,7 +81,7 @@ public final class URIParser {
 
 extension Data {
     fileprivate func data(for field: http_parser_url_field_data) -> Data {
-        return self[numericCast(field.off)..<numericCast(field.len)]
+        return self[numericCast(field.off)..<numericCast(field.off + field.len)]
     }
     
     /// Creates a string from the supplied field data offsets
