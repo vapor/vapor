@@ -54,6 +54,10 @@ public final class RequestSerializer: Serializer {
             serialized.append(contentsOf: data)
         case .data(let data):
             serialized.append(contentsOf: data)
+        case .staticString(let string):
+            let buffer = UnsafeBufferPointer(start: string.utf8Start, count: string.utf8CodeUnitCount)
+            
+            serialized.append(contentsOf: buffer)
         }
         
         return serialized

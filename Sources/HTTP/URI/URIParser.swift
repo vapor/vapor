@@ -86,13 +86,11 @@ extension Data {
     
     /// Creates a string from the supplied field data offsets
     fileprivate func string(for field: http_parser_url_field_data) -> String? {
-        let data = self.data(for: field)
-        
-        guard data.count > 0 else {
+        if field.len == 0 {
             return nil
         }
         
-        return String(data: data, encoding: .utf8)
+        return String(data: self[numericCast(field.off)..<numericCast(field.off + field.len)], encoding: .utf8)
     }
 }
 

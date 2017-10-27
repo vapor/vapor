@@ -127,8 +127,7 @@ extension CParser {
             case .key(let key):
                 // there was previously a key being parsed.
                 // it is now finished.
-                results.headersData.append(.colon)
-                results.headersData.append(.space)
+                results.headersData.append(contentsOf: headerSeparator)
                 
                 // Set a dummy hashvalue
                 let index = Headers.Index(
@@ -220,6 +219,8 @@ extension UnsafeBufferPointer where Element == Byte {
         return baseAddress.unsafelyUnwrapped.withMemoryRebound(to: CChar.self, capacity: count) { $0 }
     }
 }
+
+fileprivate let headerSeparator = Data([.colon, .space])
 
 extension Data {
     fileprivate var cPointer: UnsafePointer<CChar> {
