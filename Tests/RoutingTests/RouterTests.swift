@@ -69,8 +69,6 @@ class RouterTests: XCTestCase {
     ]
 }
 
-extension TrieRouter: SyncRouter { }
-
 final class User: Parameter {
     static let uniqueSlug: String = "user"
     var name: String
