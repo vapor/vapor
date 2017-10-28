@@ -6,30 +6,51 @@ extension Connection {
     /// https://mariadb.com/kb/en/library/com_stmt_prepare/
     func prepare(query: Query) -> Future<PreparedStatement> {
         let promise = Promise<PreparedStatement>()
+        var statement: PreparedStatement?
         
         self.receivePackets { packet in
-            guard packet.payload.count == 12, packet.payload.first == 0x00 else {
-                promise.fail(MySQLError(.invalidPacket))
-                return
-            }
-            
-            let parser = Parser(packet: packet, position: 1)
-            
-            do {
-                let statementID = try parser.parseUInt32()
-                let columnCount = try parser.parseUInt16()
-                let parameterCount = try parser.parseUInt16()
+            if let statement = statement {
+                do {
+                    if statement.columns.count < statement.columnCount {
+                        statement.columns.append(try packet.parseFieldDefinition())
+                    } else if statement.parameters.count < statement.parameterCount {
+                        statement.parameters.append(try packet.parseFieldDefinition())
+                    }
+                    
+                    if statement.columns.count == statement.columnCount && statement.parameters.count == statement.parameterCount {
+                        promise.complete(statement)
+                    }
+                } catch {
+                    promise.fail(error)
+                }
+            } else {
+                guard packet.payload.count == 12, packet.payload.first == 0x00 else {
+                    promise.fail(MySQLError(packet: packet))
+                    return
+                }
                 
-                promise.complete(
-                    PreparedStatement(
+                let parser = Parser(packet: packet, position: 1)
+                
+                do {
+                    let statementID = try parser.parseUInt32()
+                    let columnCount = try parser.parseUInt16()
+                    let parameterCount = try parser.parseUInt16()
+                    
+                    let preparedStatement = PreparedStatement(
                         statementID: statementID,
                         columnCount: columnCount,
                         connection: self,
                         parameterCount: parameterCount
                     )
-                )
-            } catch {
-                promise.fail(error)
+                    
+                    if columnCount == 0 && parameterCount == 0 {
+                        promise.complete(preparedStatement)
+                    }
+                    
+                    statement = preparedStatement
+                } catch {
+                    promise.fail(error)
+                }
             }
         }
         

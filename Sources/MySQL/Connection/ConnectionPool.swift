@@ -38,7 +38,7 @@ public class ConnectionPool {
     /// All connections in this pool will use this queue
     ///
     /// This pool is not threadsafe. Use one pool per thread
-    public init(hostname: String, port: UInt16 = 3306, user: String, password: String?, database: String?, queue: DispatchQueue) {
+    public init(hostname: String, port: UInt16 = 3306, user: String, password: String? = nil, database: String?, queue: DispatchQueue) {
         self.queue = queue
         self.hostname = hostname
         self.port = port

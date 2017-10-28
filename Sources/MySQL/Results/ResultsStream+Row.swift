@@ -5,11 +5,12 @@ final class RowStream : ResultsStream {
     
     /// Parses a packet into a Row
     func parseRows(from packet: Packet) throws -> Row {
-        return try packet.makeRow(columns: columns)
+        return try packet.makeRow(columns: columns, binary: binary)
     }
     
-    init(mysql41: Bool) {
+    init(mysql41: Bool, binary: Bool = false) {
         self.mysql41 = mysql41
+        self.binary = binary
     }
     
     /// A list of all fields' descriptions in this table
@@ -25,6 +26,7 @@ final class RowStream : ResultsStream {
     var errorStream: ErrorHandler?
     
     let mysql41: Bool
+    let binary: Bool
     
     var onClose: CloseHandler?
     

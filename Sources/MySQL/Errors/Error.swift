@@ -4,7 +4,7 @@ public struct MySQLError : Swift.Error, Debuggable, Traceable {
     /// A description of the problem
     public var reason: String {
         switch problem {
-        case .invalidQuery(let code): return "MySQL error code \(code)"
+        case .invalidQuery(let code, let message): return "MySQL error \(code) \(message)"
         case .invalidPacket: return "The received packet was invalid"
         case .invalidHandshake: return "The server's handshake was invalid"
         case .invalidResponse: return "The packet could not be parsed into valid a response"
@@ -53,9 +53,30 @@ public struct MySQLError : Swift.Error, Debuggable, Traceable {
         self.line = line
         self.column = column
         
-        if let code = try? Parser(packet: packet, position: 1).parseUInt16() {
-            self.problem = .invalidQuery(code)
-        } else {
+        let parser = Parser(packet: packet, position: 1)
+        
+        do {
+            let code = try parser.parseUInt16()
+                
+            if code != 0xffff {
+                if try parser.byte() == .numberSign {
+                    // SQL State
+                    parser.position += 5
+                }
+                
+                guard
+                    parser.position < parser.payload.count,
+                    let message = String(bytes: parser.payload[parser.position...], encoding: .utf8)
+                else {
+                    self.problem = .decodingError
+                    return
+                }
+                
+                self.problem = .invalidQuery(code, message)
+            } else {
+                self.problem = .invalidQuery(code, "")
+            }
+        } catch {
             self.problem = .decodingError
         }
     }
@@ -92,7 +113,7 @@ public struct MySQLError : Swift.Error, Debuggable, Traceable {
             }
         }
         
-        case invalidQuery(UInt16)
+        case invalidQuery(UInt16, String)
         case invalidPacket
         case invalidHandshake
         case invalidResponse

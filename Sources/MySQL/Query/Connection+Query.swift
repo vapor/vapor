@@ -33,6 +33,21 @@ extension Connection {
 extension ConnectionPool {
     @discardableResult
     internal func query(_ query: Query) -> Future<Void> {
-        return self.allRows(in: query).map { _ in }
+        return retain { connection, complete, fail in
+            do {
+                connection.receivePackets { packet in
+                    guard packet.payload.first == 0x00 else {
+                        fail(MySQLError(packet: packet))
+                        return
+                    }
+                    
+                    complete(())
+                }
+                
+                try connection.write(query: query.string)
+            } catch {
+                fail(error)
+            }
+        }
     }
 }

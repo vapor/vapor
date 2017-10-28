@@ -97,7 +97,7 @@ class Parser {
             
             return try parseUInt64()
         case 0xff:
-            throw MySQLError(.invalidResponse)
+            throw MySQLError(packet: packet)
         default:
             defer { position = position &+ 1 }
             return UInt64(self.payload[position])

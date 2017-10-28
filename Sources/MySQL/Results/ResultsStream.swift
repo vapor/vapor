@@ -1,4 +1,5 @@
 import Async
+import libc
 
 protocol ResultsStream : OutputStream, ClosableStream {
     var columns: [Field] { get set }
@@ -34,7 +35,7 @@ extension ResultsStream {
             }
             
             guard columns.count == header else {
-                parseColumns(from: input, amount: header)
+                parseColumns(from: input)
                 return
             }
             
@@ -64,17 +65,14 @@ extension ResultsStream {
             let pointer = packet.payload.baseAddress,
             pointer[0] == 0xff,
             let error = try packet.parseResponse(mysql41: self.mysql41).error {
+            print(error)
                 throw error
         }
         
         self.outputStream?(try parseRows(from: packet))
     }
     
-    func parseColumns(from packet: Packet, amount: UInt64) {
-        if amount == 0 {
-            self.columns = []
-        }
-        
+    func parseColumns(from packet: Packet) {
         // EOF
         if packet.isResponse {
             do {
@@ -85,10 +83,7 @@ extension ResultsStream {
                 case .ok(_):
                     fallthrough
                 case .eof(_):
-                    guard amount == columns.count else {
-                        self.errorStream?(MySQLError(.invalidPacket))
-                        return
-                    }
+                    return
                 }
             } catch {
                 self.errorStream?(MySQLError(.invalidPacket))
@@ -96,43 +91,8 @@ extension ResultsStream {
             }
         }
         
-        let parser = Parser(packet: packet)
-        
         do {
-            try parser.skipLenEnc() // let catalog = try parser.parseLenEncString()
-            try parser.skipLenEnc() // let database = try parser.parseLenEncString()
-            try parser.skipLenEnc() // let table = try parser.parseLenEncString()
-            try parser.skipLenEnc() // let originalTable = try parser.parseLenEncString()
-            let name = try parser.parseLenEncString()
-            try parser.skipLenEnc() // let originalName = try parser.parseLenEncString()
-            
-            parser.position += 1
-            
-            let charSet = try parser.byte()
-            let collation = try parser.byte()
-            
-            let length = try parser.parseUInt32()
-            
-            guard let fieldType = Field.FieldType(rawValue: try parser.byte()) else {
-                throw MySQLError(.invalidPacket)
-            }
-            
-            let flags = Field.Flags(rawValue: try parser.parseUInt16())
-            
-            let decimals = try parser.byte()
-            
-            let field = Field(catalog: nil,
-                              database: nil,
-                              table: nil,
-                              originalTable: nil,
-                              name: name,
-                              originalName: nil,
-                              charSet: charSet,
-                              collation: collation,
-                              length: length,
-                              fieldType: fieldType,
-                              flags: flags,
-                              decimals: decimals)
+            let field = try packet.parseFieldDefinition()
             
             self.columns.append(field)
         } catch {

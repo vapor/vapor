@@ -132,7 +132,6 @@ class Field: Hashable {
 
 /// All supported column contents
 enum Column {
-    case string(String)
     case uint64(UInt64)
     case int64(Int64)
     case uint32(UInt32)
@@ -144,7 +143,9 @@ enum Column {
     case double(Double)
     case float(Float)
     case null
+    case varChar(String)
     case varString(String)
+    case string(String)
 }
 
 /// A single row from a table
