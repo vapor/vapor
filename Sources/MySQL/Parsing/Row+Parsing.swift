@@ -23,81 +23,9 @@ extension Packet {
             
             // If null
             if binary {
-                if parser.payload[1 + (offset / 8)] >> (8 - (offset % 8)) == 1 {
-                    row.append(.null, forField: field)
-                } else {
-                    switch field.fieldType {
-                    case .decimal: throw MySQLError(.unsupported)
-                    case .tiny:
-                        let byte = try parser.byte()
-                        
-                        if field.flags.contains(.unsigned) {
-                            row.append(.uint8(byte), forField: field)
-                        } else {
-                            row.append(.int8(numericCast(byte)), forField: field)
-                        }
-                    case .short:
-                        let num = try parser.parseUInt16()
-                        
-                        if field.flags.contains(.unsigned) {
-                            row.append(.uint16(num), forField: field)
-                        } else {
-                            row.append(.int16(numericCast(num)), forField: field)
-                        }
-                    case .long:
-                        let num = try parser.parseUInt32()
-                        
-                        if field.flags.contains(.unsigned) {
-                            row.append(.uint32(num), forField: field)
-                        } else {
-                            row.append(.int32(numericCast(num)), forField: field)
-                        }
-                    case .float: throw MySQLError(.unsupported)
-                    case .double: throw MySQLError(.unsupported)
-                    case .null:
-                        row.append(.null, forField: field)
-                    case .timestamp: throw MySQLError(.unsupported)
-                    case .longlong:
-                        let num = try parser.parseUInt64()
-                        
-                        if field.flags.contains(.unsigned) {
-                            row.append(.uint64(num), forField: field)
-                        } else {
-                            row.append(.int64(numericCast(num)), forField: field)
-                        }
-                    case .int24: throw MySQLError(.unsupported)
-                    case .date: throw MySQLError(.unsupported)
-                    case .time: throw MySQLError(.unsupported)
-                    case .datetime: throw MySQLError(.unsupported)
-                    case .year: throw MySQLError(.unsupported)
-                    case .newdate: throw MySQLError(.unsupported)
-                    case .varchar:
-                        row.append(
-                            .varChar(try parser.parseLenEncString()),
-                            forField: field
-                        )
-                    case .bit: throw MySQLError(.unsupported)
-                    case .json: throw MySQLError(.unsupported)
-                    case .newdecimal: throw MySQLError(.unsupported)
-                    case .enum: throw MySQLError(.unsupported)
-                    case .set: throw MySQLError(.unsupported)
-                    case .tinyBlob: throw MySQLError(.unsupported)
-                    case .mediumBlob: throw MySQLError(.unsupported)
-                    case .longBlob: throw MySQLError(.unsupported)
-                    case .blob: throw MySQLError(.unsupported)
-                    case .varString:
-                        row.append(
-                            .varString(try parser.parseLenEncString()),
-                            forField: field
-                        )
-                    case .string:
-                        row.append(
-                            .string(try parser.parseLenEncString()),
-                            forField: field
-                        )
-                    case .geometry: throw MySQLError(.unsupported)
-                    }
-                }
+                let value = try parser.parseColumn(forField: field, index: offset)
+                
+                row.append(value, forField: field)
             } else {
                 if field.isBinary {
                     let value = try parser.parseLenEncData()
@@ -112,6 +40,87 @@ extension Packet {
         }
         
         return row
+    }
+}
+
+extension Parser {
+    func parseColumn(forField field: Field, index: Int) throws -> Column {
+        if self.payload[1 + (index / 8)] >> (8 - (index % 8)) == 1 {
+            return .null
+        } else {
+            switch field.fieldType {
+            case .decimal: throw MySQLError(.unsupported)
+            case .tiny:
+                let byte = try self.byte()
+                
+                if field.flags.contains(.unsigned) {
+                    return .uint8(byte)
+                } else {
+                    return .int8(numericCast(byte))
+                }
+            case .short:
+                let num = try self.parseUInt16()
+                
+                if field.flags.contains(.unsigned) {
+                    return .uint16(num)
+                } else {
+                    return .int16(numericCast(num))
+                }
+            case .long:
+                let num = try self.parseUInt32()
+                
+                if field.flags.contains(.unsigned) {
+                    return .uint32(num)
+                } else {
+                    return .int32(numericCast(num))
+                }
+            case .float:
+                let num = try self.parseUInt32()
+                
+                return .float(Float(bitPattern: num))
+            case .double:
+                let num = try self.parseUInt64()
+                
+                return .double(Double(bitPattern: num))
+            case .null:
+                return .null
+            case .timestamp: throw MySQLError(.unsupported)
+            case .longlong:
+                let num = try self.parseUInt64()
+                
+                if field.flags.contains(.unsigned) {
+                    return .uint64(num)
+                } else {
+                    return .int64(numericCast(num))
+                }
+            case .int24: throw MySQLError(.unsupported)
+            case .date: throw MySQLError(.unsupported)
+            case .time: throw MySQLError(.unsupported)
+            case .datetime: throw MySQLError(.unsupported)
+            case .year: throw MySQLError(.unsupported)
+            case .newdate: throw MySQLError(.unsupported)
+            case .varchar:
+                return .varChar(try self.parseLenEncString())
+            case .bit: throw MySQLError(.unsupported)
+            case .json: throw MySQLError(.unsupported)
+            case .newdecimal: throw MySQLError(.unsupported)
+            case .enum: throw MySQLError(.unsupported)
+            case .set: throw MySQLError(.unsupported)
+            case .tinyBlob:
+                return .tinyBlob(try self.parseLenEncData())
+            case .mediumBlob:
+                return .mediumBlob(try self.parseLenEncData())
+            case .longBlob:
+                return .longBlob(try self.parseLenEncData())
+            case .blob:
+                return .blob(try self.parseLenEncData())
+            case .varString:
+                return .varString(try self.parseLenEncString())
+            case .string:
+                return .string(try self.parseLenEncString())
+            case .geometry: throw MySQLError(.unsupported)
+            }
+        }
     }
 }
 

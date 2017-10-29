@@ -143,6 +143,10 @@ enum Column {
     case double(Double)
     case float(Float)
     case null
+    case tinyBlob(Data)
+    case mediumBlob(Data)
+    case longBlob(Data)
+    case blob(Data)
     case varChar(String)
     case varString(String)
     case string(String)

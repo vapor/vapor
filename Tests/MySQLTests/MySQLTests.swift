@@ -8,16 +8,8 @@ import Core
 class MySQLTests: XCTestCase {
     let pool = ConnectionPool(hostname: "127.0.0.1", user: "root", password: nil, database: "test", queue: .global())
     
-//    func testVersion() {
-//        let group = DispatchGroup()
-//        group.enter()
-//        try! pool.forEach([[String: String]].self, in: "SELECT @@version;") { version in
-//            print(version)
-//            group.leave()
-//        }
-//        group.wait()
-//    }
     static let allTests = [
+        ("testPreparedStatements", testPreparedStatements),
         ("testCreateUsersSchema", testCreateUsersSchema),
         ("testPopulateUsersSchema", testPopulateUsersSchema),
         ("testForEach", testForEach),
@@ -43,6 +35,7 @@ class MySQLTests: XCTestCase {
         }.blockingAwait(timeout: .seconds(150))
         
         XCTAssertEqual(users.count, 1)
+        XCTAssertEqual(users.first?.username, "Joannis")
     }
     
     func testCreateUsersSchema() throws {

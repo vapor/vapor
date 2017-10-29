@@ -4,16 +4,28 @@ public struct MySQLError : Swift.Error, Debuggable, Traceable {
     /// A description of the problem
     public var reason: String {
         switch problem {
-        case .invalidQuery(let code, let message): return "MySQL error \(code) \(message)"
-        case .invalidPacket: return "The received packet was invalid"
-        case .invalidHandshake: return "The server's handshake was invalid"
-        case .invalidResponse: return "The packet could not be parsed into valid a response"
-        case .unsupported: return "This feature is not (yet) supported"
-        case .parsingError: return "The binary format was not successfully parsed"
-        case .decodingError: return "The received data did not correctly decode into a `Decodable`"
-        case .connectionInUse: return "Connections can't be used twice at the same time. Communicate using a separate connection or though the connection pool instead."
-        case .invalidCredentials: return "Authentication was not successful"
-        case.tooManyParametersBound: return "More parameters were bound than specified in the query"
+        case .invalidTypeBound(let got, let expected):
+            return "Field of type `\(got)` was bound, mismatching the expected type `\(expected)`"
+        case .invalidQuery(let code, let message):
+            return "MySQL error \(code) \(message)"
+        case .invalidPacket:
+            return "The received packet was invalid"
+        case .invalidHandshake:
+            return "The server's handshake was invalid"
+        case .invalidResponse:
+            return "The packet could not be parsed into valid a response"
+        case .unsupported:
+            return "This feature is not (yet) supported"
+        case .parsingError:
+            return "The binary format was not successfully parsed"
+        case .decodingError:
+            return "The received data did not correctly decode into a `Decodable`"
+        case .connectionInUse:
+            return "Connections can't be used twice at the same time. Communicate using a separate connection or though the connection pool instead."
+        case .invalidCredentials:
+            return "Authentication was not successful"
+        case.tooManyParametersBound:
+            return "More parameters were bound than specified in the query"
         }
     }
     
@@ -110,9 +122,11 @@ public struct MySQLError : Swift.Error, Debuggable, Traceable {
             case .connectionInUse: return "connectionInuse"
             case .invalidCredentials: return "invalidCredentials"
             case .tooManyParametersBound: return "tooManyParametersBound"
+            case .invalidTypeBound(_, _): return "invalidTypeBound"
             }
         }
         
+        case invalidTypeBound(got: Field.FieldType, expected: Field.FieldType)
         case invalidQuery(UInt16, String)
         case invalidPacket
         case invalidHandshake
