@@ -4,8 +4,6 @@ public struct MySQLError : Swift.Error, Debuggable, Traceable {
     /// A description of the problem
     public var reason: String {
         switch problem {
-        case .invalidTypeBound(let got, let expected):
-            return "Field of type `\(got)` was bound, mismatching the expected type `\(expected)`"
         case .invalidQuery(let code, let message):
             return "MySQL error \(code) \(message)"
         case .invalidPacket:
@@ -24,8 +22,12 @@ public struct MySQLError : Swift.Error, Debuggable, Traceable {
             return "Connections can't be used twice at the same time. Communicate using a separate connection or though the connection pool instead."
         case .invalidCredentials:
             return "Authentication was not successful"
+        case .invalidTypeBound(let got, let expected):
+            return "Field of type `\(got)` was bound, mismatching the expected type `\(expected)`"
         case.tooManyParametersBound:
             return "More parameters were bound than specified in the query"
+        case .notEnoughParametersBound:
+            return "Not enough parameters were bound to match the parameter count of this query"
         }
     }
     
@@ -122,6 +124,7 @@ public struct MySQLError : Swift.Error, Debuggable, Traceable {
             case .connectionInUse: return "connectionInuse"
             case .invalidCredentials: return "invalidCredentials"
             case .tooManyParametersBound: return "tooManyParametersBound"
+            case .notEnoughParametersBound: return "notEnoughParametersBound"
             case .invalidTypeBound(_, _): return "invalidTypeBound"
             }
         }
@@ -136,6 +139,7 @@ public struct MySQLError : Swift.Error, Debuggable, Traceable {
         case decodingError
         case connectionInUse
         case invalidCredentials
+        case notEnoughParametersBound
         case tooManyParametersBound
     }
 }

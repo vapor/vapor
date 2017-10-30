@@ -4,6 +4,8 @@ import Foundation
 
 extension Connection {
     /// https://mariadb.com/kb/en/library/com_stmt_prepare/
+    ///
+    /// Prepares a query and returns a prepared statement that can be used for binding and execution
     func prepare(query: Query) -> Future<PreparedStatement> {
         let promise = Promise<PreparedStatement>()
         var statement: PreparedStatement?
@@ -63,6 +65,8 @@ extension Connection {
     }
     
     /// https://mariadb.com/kb/en/com_stmt_reset/
+    ///
+    /// Resets a prepared statement so it can be re-used for another binding + execution
     func resetPreparedStatement(_ statement: PreparedStatement) -> Future<Void> {
         var data = Data(repeating: 0x1a, count: 5)
         
@@ -93,6 +97,8 @@ extension Connection {
     }
     
     /// https://mariadb.com/kb/en/library/3-binary-protocol-prepared-statements-com_stmt_close/
+    ///
+    /// Closes (cleans up) the statement
     func closeStatement(_ statement: PreparedStatement) {
         var data = Data(repeating: 0x19, count: 5)
         
