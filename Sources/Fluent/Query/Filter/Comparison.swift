@@ -45,7 +45,7 @@ extension QueryBuilder {
         _ value: Encodable?
     ) -> Self {
         let filter = Filter(entity: T.entity, method: .compare(field, comparison, value))
-        return self.filter(filter)
+        return addFilter(filter)
     }
 
     /// Filter entity where field equals value

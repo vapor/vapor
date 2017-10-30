@@ -21,6 +21,19 @@ public protocol ClosableStream: BaseStream {
     var onClose: CloseHandler? { get set }
 }
 
+extension ClosableStream {
+    /// Closes the stream, calling the `onClose` handler.
+    public func close() {
+        onClose?()
+    }
+
+    /// Sets a CloseHandler callback on this stream.
+    public func finally(_ onClose: @escaping CloseHandler) {
+        self.onClose = onClose
+    }
+}
+
+
 public protocol OutputStream: BaseStream {
     /// The output type for this stream.
     /// For example: Request, ByteBuffer, Client

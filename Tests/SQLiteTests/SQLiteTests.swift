@@ -5,7 +5,7 @@ import XCTest
 
 extension SQLiteConnection {
     func query(_ string: String) throws -> SQLiteQuery {
-        return try SQLiteQuery(statement: string, connection: self)
+        return SQLiteQuery(string: string, connection: self)
     }
 }
 

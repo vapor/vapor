@@ -1,6 +1,6 @@
 public enum SchemaStatement {
-    case create
-    case alter
+    case create(columns: [SchemaColumn])
+    case alter(columns: [SchemaColumn], deleteColumns: [String])
     case drop
     case rename(String)
 }

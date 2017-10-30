@@ -28,7 +28,7 @@ public final class Loop: Tag {
                     ast: body,
                     renderer: renderer,
                     context: temp,
-                    queue: parsed.queue
+                    worker: parsed.worker
                 )
                 let subpromise = Promise(Data.self)
                 try serializer.serialize().then { bytes in

@@ -2,7 +2,7 @@ import Async
 import HTTP
 import SQLite
 
-/// This middleware stores the supplied Fluent database
+/// This middleware stores the supplied Fluent databases
 /// on request workers. This database can then be fetched
 /// from a given request for queries.
 public final class DatabaseMiddleware: Middleware {
@@ -17,8 +17,7 @@ public final class DatabaseMiddleware: Middleware {
 
     /// See Responder.respond(to:...)
     public func respond(to req: Request, chainingTo next: Responder) throws -> Future<Response> {
-        let worker = try req.requireWorker()
-        worker.databases = self.databases
+        req.eventLoop.databases = self.databases
         let res = try next.respond(to: req)
         for id in databases.storage.keys {
             try req.releaseCurrentConnection(database: id)

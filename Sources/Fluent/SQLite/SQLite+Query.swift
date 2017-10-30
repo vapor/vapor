@@ -5,42 +5,7 @@ import Random
 import SQL
 import SQLite
 
-extension SQLiteDatabase: Database {
-    public func makeConnection(
-        on queue: DispatchQueue
-    ) -> Future<DatabaseConnection> {
-        let sqlite: Future<SQLiteConnection> = makeConnection(on: queue)
-        return sqlite.map { $0 }
-    }
-}
-
-extension SQLiteConnection: DatabaseConnection { }
-
 extension SQLiteConnection: QueryExecutor {
-    public func execute(transaction: DatabaseTransaction) -> Future<Void> {
-        let promise = Promise(Void.self)
-
-        SQLiteQuery(string: "BEGIN TRANSACTION", connection: self).execute().then {_ in
-            transaction.closure(self).then {
-                print("transaction done")
-                SQLiteQuery(string: "COMMIT TRANSACTION", connection: self)
-                    .execute()
-                    .chain(to: promise)
-            }.catch { err in
-                SQLiteQuery(string: "ROLLBACK TRANSACTION", connection: self).execute().then { query in
-                    print("rollback success")
-                    // still fail even tho rollback succeeded
-                    promise.fail(err)
-                }.catch { err in
-                    print("Rollback failed") // fixme: combine errors here
-                    promise.fail(err)
-                }
-            }
-        }.catch(promise.fail)
-
-        return promise.future
-    }
-    
     public func execute<I: Async.InputStream, D: Decodable>(
         query: DatabaseQuery,
         into stream: I

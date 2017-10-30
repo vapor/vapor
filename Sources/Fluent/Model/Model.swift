@@ -6,6 +6,8 @@ import Async
 /// Types conforming to this protocol provide the basis
 /// fetching and saving data to/from Fluent.
 public protocol Model: Codable {
+    /// The associated Identifier type.
+    /// Usually Int or UUID.
     associatedtype I: Identifier
 
     /// This model's collection/table name
@@ -26,10 +28,13 @@ extension Model {
 /// MARK: CRUD
 
 extension Model {
+    /// Saves this model to the supplied query executor.
+    /// If `shouldCreate` is true, the model will be saved
+    /// as a new item even if it already has an identifier.
     public mutating func save(
         to executor: QueryExecutor,
-        new: Bool = false
+        shouldCreate: Bool = false
     ) -> Future<Void> {
-        return executor.query(Self.self).save(&self, new: new)
+        return executor.query(Self.self).save(&self, shouldCreate: shouldCreate)
     }
 }

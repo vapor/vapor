@@ -1,3 +1,15 @@
+/// Each database in your application receives its own identifier.
+/// Your main database should use the `.default` identifier.
+/// Create identifiers for your non-default databases by adding
+/// a static extension to this struct:
+///
+///     extension DatabaseIdentifier {
+///         /// My custom DB.
+///         public static var myCustom: DatabaseIdentifier {
+///             return DatabaseIdentifier("myCustom")
+///         }
+///     }
+///
 public struct DatabaseIdentifier {
     /// The unique id.
     public let uid: String

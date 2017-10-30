@@ -28,7 +28,7 @@ public final class Renderer {
 
     /// Renders the supplied template bytes into a view
     /// using the supplied context.
-    public func render(template: Data, context: LeafData, on queue: DispatchQueue) throws -> Future<Data> {
+    public func render(template: Data, context: LeafData, on worker: Worker) throws -> Future<Data> {
         let hash = template.hashValue
 
         let ast: [Syntax]
@@ -49,7 +49,7 @@ public final class Renderer {
                 ast: ast,
                 renderer: self,
                 context: context,
-                queue: queue
+                worker: worker
             )
             return try serializer.serialize()
         } catch let error as SerializerError {
@@ -64,10 +64,10 @@ public final class Renderer {
 
 extension Renderer: ViewRenderer {
     /// See ViewRenderer.make
-    public func make(_ path: String, context: Encodable, on queue: DispatchQueue) throws -> Future<View> {
+    public func make(_ path: String, context: Encodable, on worker: Worker) throws -> Future<View> {
         let encoder = LeafDataEncoder()
         try context.encode(to: encoder)
-        return render(path: path, context: encoder.context, on: queue).map { data in
+        return render(path: path, context: encoder.context, on: worker).map { data in
             return View(data: data)
         }
     }
@@ -77,21 +77,21 @@ extension Renderer: ViewRenderer {
 
 extension Renderer {
     /// Loads the leaf template from the supplied path.
-    public func render(path: String, context: LeafData, on queue: DispatchQueue) -> Future<Data> {
+    public func render(path: String, context: LeafData, on worker: Worker) -> Future<Data> {
         let path = path.hasSuffix(".leaf") ? path : path + ".leaf"
         let promise = Promise(Data.self)
 
         let file: FileReader & FileCache
-        if let existing = _files[queue.label.hashValue] {
+        if let existing = _files[worker.eventLoop.queue.label.hashValue] {
             file = existing
         } else {
-            file = fileFactory(queue)
-            _files[queue.label.hashValue] = file
+            file = fileFactory(worker.eventLoop.queue)
+            _files[worker.eventLoop.queue.label.hashValue] = file
         }
 
         file.cachedRead(at: path).then { view in
             do {
-                try self.render(template: view, context: context, on: queue).then { data in
+                try self.render(template: view, context: context, on: worker).then { data in
                     promise.complete(data)
                 }.catch { error in
                     promise.fail(error)
@@ -110,7 +110,7 @@ extension Renderer {
     }
 
     /// Renders a string template and returns a string.
-    public func render(_ view: String, context: LeafData, on queue: DispatchQueue) -> Future<String> {
+    public func render(_ view: String, context: LeafData, on worker: Worker) -> Future<String> {
         let promise = Promise(String.self)
 
         do {
@@ -121,7 +121,7 @@ extension Renderer {
                 )
             }
 
-            try render(template: data, context: context, on: queue).then { rendered in
+            try render(template: data, context: context, on: worker).then { rendered in
                 do {
                     guard let string = String(data: rendered, encoding: .utf8) else {
                         throw RenderError(

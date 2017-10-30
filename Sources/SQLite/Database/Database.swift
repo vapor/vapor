@@ -19,7 +19,7 @@ public final class SQLiteDatabase {
     /// Make sure to supply the event loop to this parameter so you get called back
     /// on the appropriate thread.
     public func makeConnection(
-        on queue: DispatchQueue
+        on worker: Worker
     ) -> Future<SQLiteConnection> {
         let promise = Promise(SQLiteConnection.self)
         let background = DispatchQueue(label: "sqlite.connection.background")
@@ -28,7 +28,7 @@ public final class SQLiteDatabase {
             let options = SQLITE_OPEN_CREATE | SQLITE_OPEN_READWRITE | SQLITE_OPEN_NOMUTEX
             var raw: SQLiteConnection.Raw?
             guard sqlite3_open_v2(self.storage.path, &raw, options, nil) == SQLITE_OK else {
-                queue.async {
+                worker.eventLoop.queue.async {
                     promise.fail(
                         SQLiteError(
                             problem: .error,
@@ -40,7 +40,7 @@ public final class SQLiteDatabase {
             }
 
             guard let r = raw else {
-                queue.async {
+                worker.eventLoop.queue.async {
                     promise.fail(
                         SQLiteError(
                             problem: .error,
@@ -53,10 +53,10 @@ public final class SQLiteDatabase {
 
             let connection = SQLiteConnection(
                 raw: r,
-                queue: queue,
+                worker: worker,
                 background: background
             )
-            queue.async {
+            worker.eventLoop.queue.async {
                 promise.complete(connection)
             }
         }

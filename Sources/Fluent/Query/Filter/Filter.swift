@@ -17,6 +17,7 @@ public struct Filter {
 }
 
 extension Filter: CustomStringConvertible {
+    /// A readable description of this filter.
     public var description: String {
         switch method {
         case .compare(let field, let comparison, let value):
@@ -32,7 +33,7 @@ extension Filter: CustomStringConvertible {
 extension QueryBuilder {
     /// Manually create and append filter
     @discardableResult
-    public func filter(
+    public func addFilter(
         _ filter: Filter
     ) -> Self {
         query.filters.append(filter)

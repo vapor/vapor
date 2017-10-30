@@ -143,7 +143,7 @@ public final class RequestParser: CParser {
             body: body
         )
 
-        request.worker = self.worker
+        request.eventLoop = worker.eventLoop
         return request
     }
 }

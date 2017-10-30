@@ -23,7 +23,8 @@ extension QueryBuilder {
         return stream
     }
 
-    /// Convenience run that defaults to query builder's model.
+    /// Convenience run that defaults to outputting a
+    /// stream of the QueryBuilder's model type.
     public func run(
         outputStream: @escaping BasicStream<M>.OutputHandler
     ) -> BasicStream<M> {
@@ -54,10 +55,13 @@ extension QueryBuilder {
         return promise.future
     }
 
+    /// Returns a future with the first result of the query.
+    /// `nil` if no results were returned.
     public func first() -> Future<M?> {
         return limit(1).all().map { $0.first }
     }
 
+    /// Runs the query, discarding any results.
     public func run() -> Future<Void> {
         let promise = Promise(Void.self)
 

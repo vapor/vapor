@@ -22,7 +22,7 @@ public final class Var: Tag {
                     ast: body,
                     renderer: renderer,
                     context: context,
-                    queue: parsed.queue
+                    worker: parsed.worker
                 )
                 try serializer.serialize().then { rendered in
                     dict[key] = .data(rendered)

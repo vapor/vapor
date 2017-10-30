@@ -79,7 +79,7 @@ class WebSocketTests : XCTestCase {
         let promise0 = Promise<Void>()
         let promise1 = Promise<Void>()
 
-        let worker = Worker(queue: .global())
+        let worker = EventLoop(queue: .global())
         _ = try WebSocket.connect(to: "ws://0.0.0.0:8080/", worker: worker).then { socket in
             let responses = ["test", "cat", "banana"]
             let reversedResponses = responses.map {

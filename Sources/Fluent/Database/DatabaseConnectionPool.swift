@@ -7,7 +7,7 @@ public final class DatabaseConnectionPool {
     public let database: Database
 
     /// The queue for this pool
-    public let queue: DispatchQueue
+    public let worker: Worker
 
     /// The maximum number of connections this pool should hold.
     public let max: UInt
@@ -22,9 +22,9 @@ public final class DatabaseConnectionPool {
     private var waiters: [(DatabaseConnection) -> ()]
 
     /// Create a new Queue pool
-    public init(max: UInt, database: Database, queue: DispatchQueue) {
+    public init(max: UInt, database: Database, worker: Worker) {
         self.database = database
-        self.queue = queue
+        self.worker = worker
         self.max = max
         self.active = 0
         self.available = []
@@ -39,7 +39,7 @@ public final class DatabaseConnectionPool {
             promise.complete(ready)
         } else {
             if self.active < self.max {
-                self.database.makeConnection(on: queue).then { connection in
+                self.database.makeConnection(on: worker).then { connection in
                     self.active += 1
                     promise.complete(connection)
                 }.catch { err in

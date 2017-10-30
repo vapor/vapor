@@ -1,6 +1,6 @@
 import Async
 
-/// A Fluent database query.
+/// A Fluent database query builder.
 public final class QueryBuilder<M: Model> {
     /// The query we are building
     public var query: DatabaseQuery
@@ -21,13 +21,16 @@ public final class QueryBuilder<M: Model> {
 // MARK: Save
 
 extension QueryBuilder {
+    /// Saves the supplied model.
+    /// If `shouldCreate` is true, the model will be saved
+    /// as a new item even if it already has an identifier.
     public func save(
         _ model: inout M,
-        new: Bool = false
+        shouldCreate: Bool = false
     ) -> Future<Void> {
         query.data = model
 
-        if let id = model.id, !new {
+        if let id = model.id, !shouldCreate {
             filter("id" == id)
             // update record w/ matching id
             query.action = .update
@@ -47,41 +50,5 @@ extension QueryBuilder {
         }
 
         return run()
-    }
-}
-
-// MARK: Convenience - Fix w/ conditional conformance
-extension Future: QueryExecutor {
-    public func execute(transaction: DatabaseTransaction) -> Future<Void> {
-        let promise = Promise(Void.self)
-
-        self.then { result in
-            if let executor = result as? QueryExecutor {
-                executor.execute(transaction: transaction)
-                    .chain(to: promise)
-            } else {
-                promise.fail("future not query executor type")
-            }
-        }.catch(promise.fail)
-
-        return promise.future
-    }
-
-    public func execute<I: InputStream, D: Decodable>(
-        query: DatabaseQuery,
-        into stream: I
-    ) -> Future<Void> where I.Input == D {
-        let promise = Promise(Void.self)
-
-        self.then { result in
-            if let executor = result as? QueryExecutor {
-                executor.execute(query: query, into: stream)
-                    .chain(to: promise)
-            } else {
-                promise.fail("future not query executor type")
-            }
-        }.catch(promise.fail)
-
-        return promise.future
     }
 }

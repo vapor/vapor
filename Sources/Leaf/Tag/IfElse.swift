@@ -14,7 +14,7 @@ public final class IfElse: Tag {
                 ast: body,
                 renderer: renderer,
                 context: context,
-                queue: parsed.queue
+                worker: parsed.worker
             )
             try serializer.serialize().then { bytes in
                 promise.complete(.data(bytes))

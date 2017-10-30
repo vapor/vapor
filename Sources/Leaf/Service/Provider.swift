@@ -64,5 +64,5 @@ public struct View {
 
 
 public protocol ViewRenderer {
-    func make(_ path: String, context: Encodable, on queue: DispatchQueue) throws -> Future<View>
+    func make(_ path: String, context: Encodable, on worker: Worker) throws -> Future<View>
 }

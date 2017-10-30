@@ -5,26 +5,32 @@ public enum FilterMethod {
     case group(Relation, [Filter])
 }
 
+/// .equals
 public func == (lhs: String, rhs: Encodable) -> FilterMethod {
     return .compare(lhs, .equals, rhs)
 }
 
+/// .greaterThan
 public func > (lhs: String, rhs: Encodable) -> FilterMethod {
     return .compare(lhs, .greaterThan, rhs)
 }
 
+/// .lessThan
 public func < (lhs: String, rhs: Encodable) -> FilterMethod {
     return .compare(lhs, .lessThan, rhs)
 }
 
+/// .greaterThanOrEquals
 public func >= (lhs: String, rhs: Encodable) -> FilterMethod {
     return .compare(lhs, .greaterThanOrEquals, rhs)
 }
 
+/// .lessThanOrEquals
 public func <= (lhs: String, rhs: Encodable) -> FilterMethod {
     return .compare(lhs, .lessThanOrEquals, rhs)
 }
 
+/// .notEquals
 public func != (lhs: String, rhs: Encodable) -> FilterMethod {
     return .compare(lhs, .notEquals, rhs)
 }
@@ -37,7 +43,7 @@ extension QueryBuilder {
         _ value: FilterMethod
     ) -> Self {
         let filter = Filter(entity: T.entity, method: value)
-        return self.filter(filter)
+        return addFilter(filter)
     }
 
     /// Self operator filter queries
@@ -46,6 +52,6 @@ extension QueryBuilder {
         _ value: FilterMethod
     ) -> Self {
         let filter = Filter(entity: M.entity, method: value)
-        return self.filter(filter)
+        return addFilter(filter)
     }
 }

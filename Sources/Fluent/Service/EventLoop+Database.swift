@@ -1,6 +1,8 @@
 import Async
 
-extension Worker {
+// MARK: Internal
+
+extension EventLoop {
     /// This worker's database.
     var databases: Databases? {
         get { return extend["fluent:databases"] as? Databases }
@@ -28,7 +30,7 @@ extension Worker {
         if let existing = extend["fluent:connection-pool:\(id)"] as? DatabaseConnectionPool {
             return existing
         } else {
-            let new = database.makeConnectionPool(max: 2, on: queue)
+            let new = database.makeConnectionPool(max: 2, on: self)
             extend["fluent:connection-pool:\(id)"] = new
             return new
         }

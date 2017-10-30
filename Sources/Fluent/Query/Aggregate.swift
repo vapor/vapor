@@ -10,10 +10,6 @@ public enum Aggregate {
     case custom(string: String)
 }
 
-struct AggregateResult: Decodable {
-    var fluentAggregate: Int
-}
-
 extension QueryBuilder {
     /// Get the number of results for this query.
     /// Optionally specify a specific field to count.
@@ -34,30 +30,7 @@ extension QueryBuilder {
     }
 }
 
-
-public final class BasicStream<Data>: Stream, ClosableStream {
-
-    public typealias Input = Data
-    public typealias Output = Data
-
-    public var errorStream: ErrorHandler? {
-        didSet {
-            print("did set error stream")
-        }
-    }
-    public var outputStream: OutputHandler?
-    public var onClose: CloseHandler?
-    public func inputStream(_ input: Data) {
-        outputStream?(input)
-    }
-}
-
-extension ClosableStream {
-    public func close() {
-        onClose?()
-    }
-
-    public func finally(_ onClose: @escaping CloseHandler) {
-        self.onClose = onClose
-    }
+/// Aggreagate result structure expected from DB.
+internal struct AggregateResult: Decodable {
+    var fluentAggregate: Int
 }

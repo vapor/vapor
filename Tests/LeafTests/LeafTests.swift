@@ -1,3 +1,4 @@
+import Async
 import Core
 import Dispatch
 import Leaf
@@ -6,11 +7,11 @@ import XCTest
 
 class LeafTests: XCTestCase {
     var renderer: Renderer!
-    var queue: DispatchQueue!
+    var queue: Worker!
 
     override func setUp() {
         self.renderer = Renderer.makeTestRenderer()
-        self.queue = DispatchQueue(label: "codes.vapor.leaf.test")
+        self.queue = EventLoop(queue: DispatchQueue(label: "codes.vapor.leaf.test"))
     }
 
     func testRaw() throws {
@@ -20,13 +21,8 @@ class LeafTests: XCTestCase {
 
     func testPrint() throws {
         let template = "Hello, #(name)!"
-<<<<<<< HEAD
         let data = LeafData.dictionary(["name": .string("Tanner")])
-        try XCTAssertEqual(renderer.render(template, context: data, on: queue).sync(), "Hello, Tanner!")
-=======
-        let data = Context.dictionary(["name": .string("Tanner")])
         try XCTAssertEqual(renderer.render(template, context: data, on: queue).blockingAwait(), "Hello, Tanner!")
->>>>>>> beta
     }
 
     func testConstant() throws {
@@ -38,59 +34,35 @@ class LeafTests: XCTestCase {
         let template = """
         <p>#("foo: #(foo)")</p>
         """
-<<<<<<< HEAD
         let data = LeafData.dictionary(["foo": .string("bar")])
-        try XCTAssertEqual(renderer.render(template, context: data, on: queue).sync(), "<p>foo: bar</p>")
-=======
-        let data = Context.dictionary(["foo": .string("bar")])
         try XCTAssertEqual(renderer.render(template, context: data, on: queue).blockingAwait(), "<p>foo: bar</p>")
->>>>>>> beta
     }
 
     func testNested() throws {
         let template = """
         <p>#(embed(foo))</p>
         """
-<<<<<<< HEAD
         let data = LeafData.dictionary(["foo": .string("bar")])
-        try XCTAssertEqual(renderer.render(template, context: data, on: queue).sync(), "<p>Test file name: &quot;bar.leaf&quot;</p>")
-=======
-        let data = Context.dictionary(["foo": .string("bar")])
         try XCTAssertEqual(renderer.render(template, context: data, on: queue).blockingAwait(), "<p>Test file name: &quot;bar.leaf&quot;</p>")
->>>>>>> beta
     }
 
     func testExpression() throws {
         let template = "#(age > 99)"
 
-<<<<<<< HEAD
         let young = LeafData.dictionary(["age": .int(21)])
         let old = LeafData.dictionary(["age": .int(150)])
-        try XCTAssertEqual(renderer.render(template, context: young, on: queue).sync(), "false")
-        try XCTAssertEqual(renderer.render(template, context: old, on: queue).sync(), "true")
-=======
-        let young = Context.dictionary(["age": .int(21)])
-        let old = Context.dictionary(["age": .int(150)])
         try XCTAssertEqual(renderer.render(template, context: young, on: queue).blockingAwait(), "false")
         try XCTAssertEqual(renderer.render(template, context: old, on: queue).blockingAwait(), "true")
->>>>>>> beta
     }
 
     func testBody() throws {
         let template = """
         #if(show) {hi}
         """
-<<<<<<< HEAD
         let noShow = LeafData.dictionary(["show": .bool(false)])
         let yesShow = LeafData.dictionary(["show": .bool(true)])
-        try XCTAssertEqual(renderer.render(template, context: noShow, on: queue).sync(), "")
-        try XCTAssertEqual(renderer.render(template, context: yesShow, on: queue).sync(), "hi")
-=======
-        let noShow = Context.dictionary(["show": .bool(false)])
-        let yesShow = Context.dictionary(["show": .bool(true)])
         try XCTAssertEqual(renderer.render(template, context: noShow, on: queue).blockingAwait(), "")
         try XCTAssertEqual(renderer.render(template, context: yesShow, on: queue).blockingAwait(), "hi")
->>>>>>> beta
     }
 
     func testRuntime() throws {

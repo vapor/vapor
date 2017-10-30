@@ -1,3 +1,4 @@
+import Async
 import Dispatch
 import XCTest
 @testable import SQLite
@@ -5,10 +6,10 @@ import XCTest
 extension SQLiteConnection {
     static func makeTestConnection(queue: DispatchQueue) -> SQLiteConnection? {
         do {
-            let sqlite = try SQLiteDatabase(
+            let sqlite = SQLiteDatabase(
                 storage: .file(path: "/tmp/test_database.sqlite")
             )
-            return try SQLiteConnection(database: sqlite, queue: queue)
+            return try sqlite.makeConnection(on: EventLoop(queue: queue)).blockingAwait()
         } catch {
             XCTFail()
         }

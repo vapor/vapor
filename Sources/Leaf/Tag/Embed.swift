@@ -9,7 +9,7 @@ public final class Embed: Tag {
 
         let promise = Promise(LeafData?.self)
 
-        renderer.render(path: name, context: copy, on: parsed.queue).then { data in
+        renderer.render(path: name, context: copy, on: parsed.worker).then { data in
             promise.complete(.data(data))
         }.catch { error in
             promise.fail(error)

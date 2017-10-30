@@ -3,28 +3,27 @@ import SQL
 import SQLite
 
 extension SQLiteConnection: SchemaExecutor {
+    /// See SchemaExecutor.execute()
     public func execute(schema: DatabaseSchema) -> Future<Void> {
         let promise = Promise(Void.self)
 
-        let sqlQuery: SQLQuery
+        let schemaStatement: SchemaStatement
 
         switch schema.action {
         case .create:
-            var create = SchemaQuery(statement: .create, table: schema.entity)
-
-            for field in schema.addFields {
-                create.columns.append(field.column)
-            }
-
-            sqlQuery = .schema(create)
-        default:
-            fatalError("not supported")
+            schemaStatement = .create(columns: schema.addFields.map { $0.column })
+        case .update:
+            schemaStatement = .alter(
+                columns: schema.addFields.map { $0.column },
+                deleteColumns: schema.removeFields
+            )
+        case .delete:
+            schemaStatement = .drop
         }
 
+        let schemaQuery = SchemaQuery(statement: schemaStatement, table: schema.entity)
         let string = SQLiteSQLSerializer()
-            .serialize(query: sqlQuery)
-
-        print(string)
+            .serialize(query: .schema(schemaQuery))
 
         let sqliteQuery = SQLiteQuery(
             string: string,
@@ -39,6 +38,8 @@ extension SQLiteConnection: SchemaExecutor {
         return promise.future
     }
 }
+
+// MARK: private
 
 extension Field {
     fileprivate var column: SchemaColumn {

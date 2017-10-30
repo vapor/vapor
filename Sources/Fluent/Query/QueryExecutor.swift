@@ -1,5 +1,6 @@
 import Async
 
+/// Capable of executing a database query.
 public protocol QueryExecutor {
     /// Executes the supplied query on the database connection.
     /// The returned future will be completed when the query is complete.
@@ -8,9 +9,6 @@ public protocol QueryExecutor {
         query: DatabaseQuery,
         into stream: I
     ) -> Future<Void> where I.Input == D
-
-    /// Executes the supplied transaction on the db connection.
-    func execute(transaction: DatabaseTransaction) -> Future<Void>
 }
 
 /// Creates a database query using this executor.
@@ -26,12 +24,24 @@ extension QueryExecutor {
     }
 }
 
+// MARK: temporary, fixme w/ conditional conformance.
+extension Future: QueryExecutor {
+    /// See QueryExecutor.execute
+    public func execute<I: InputStream, D: Decodable>(
+        query: DatabaseQuery,
+        into stream: I
+    ) -> Future<Void> where I.Input == D {
+        let promise = Promise(Void.self)
 
-extension QueryExecutor {
-    public func transaction(
-        _ closure: @escaping DatabaseTransaction.Closure
-    ) -> Future<Void> {
-        let transaction = DatabaseTransaction(closure: closure)
-        return execute(transaction: transaction)
+        self.then { result in
+            if let executor = result as? QueryExecutor {
+                executor.execute(query: query, into: stream)
+                    .chain(to: promise)
+            } else {
+                promise.fail("future not query executor type")
+            }
+        }.catch(promise.fail)
+
+        return promise.future
     }
 }

@@ -1,7 +1,38 @@
 import Async
 import HTTP
 
-extension Request {
+extension Worker {
+    /// Returns a future database connection for the
+    /// supplied database identifier if one can be fetched.
+    /// The database connection will be cached on this worker.
+    /// The same database connection will always be returned for
+    /// a given worker.
+    public func database(
+        id database: DatabaseIdentifier = .default
+    ) -> Future<DatabaseConnection> {
+        let promise = Promise(DatabaseConnection.self)
+
+        if let currentConnection = getCurrentConnection(database: database) {
+            currentConnection.chain(to: promise)
+        } else {
+            do {
+                let pool = try eventLoop
+                    .requireConnectionPool(database: database)
+                let conn = pool.requestConnection()
+                setCurrentConnection(to: conn, database: database)
+                conn.chain(to: promise)
+            } catch {
+                promise.fail(error)
+            }
+        }
+
+        return promise.future
+    }
+}
+
+// MARK: Internal
+
+extension Worker {
     /// The current connection for this request.
     /// Note: This is a Future as the connection may not yet
     /// be available. However, we want all queries for
@@ -30,7 +61,7 @@ extension Request {
             return
         }
 
-        let pool = try requireWorker()
+        let pool = try eventLoop
             .requireConnectionPool(database: database)
 
         current.then { conn in
@@ -39,27 +70,5 @@ extension Request {
         }.catch { err in
             print("could not release connection")
         }
-    }
-
-    public func database(
-        id database: DatabaseIdentifier = .default
-    ) -> Future<DatabaseConnection> {
-        let promise = Promise(DatabaseConnection.self)
-
-        if let currentConnection = getCurrentConnection(database: database) {
-            currentConnection.chain(to: promise)
-        } else {
-            do {
-                let pool = try requireWorker()
-                    .requireConnectionPool(database: database)
-                let conn = pool.requestConnection()
-                setCurrentConnection(to: conn, database: database)
-                conn.chain(to: promise)
-            } catch {
-                promise.fail(error)
-            }
-        }
-
-        return promise.future
     }
 }

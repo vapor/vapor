@@ -4,11 +4,11 @@ extension SQLSerializer {
         let table = makeEscapedString(from: query.table)
 
         switch query.statement {
-        case .create:
+        case .create(let columns):
             statement.append("CREATE TABLE")
             statement.append(table)
 
-            let columns = query.columns.map { serialize(column: $0) }
+            let columns = columns.map { serialize(column: $0) }
             statement.append("(" + columns.joined(separator: ", ") + ")")
         default:
             fatalError("not supported")

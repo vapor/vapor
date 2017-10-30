@@ -1,5 +1,5 @@
 /// The types of actions that can be performed
-/// on database entities, such as fetching, deleting,
+/// while querying a database, such as fetching, deleting,
 /// creating, and updating.
 public enum QueryAction {
     case create
@@ -7,5 +7,4 @@ public enum QueryAction {
     case update
     case delete
     case aggregate(Aggregate, field: String?)
-
 }

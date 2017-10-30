@@ -121,37 +121,37 @@ extension FutureType {
 // MARK: Array
 
 
-//extension Array where Element: FutureType {
-//    /// Flattens an array of future results into one
-//    /// future array result.
-//    public func flatten() -> Future<[Element.Expectation]> {
-//        let promise = Promise<[Element.Expectation]>()
-//
-//        var elements: [Element.Expectation] = []
-//
-//        var iterator = makeIterator()
-//        func handle(_ future: Element) {
-//            future.then { res in
-//                elements.append(res)
-//                if let next = iterator.next() {
-//                    handle(next)
-//                } else {
-//                    promise.complete(elements)
-//                }
-//            }.catch { error in
-//                promise.fail(error)
-//            }
-//        }
-//
-//        if let first = iterator.next() {
-//            handle(first)
-//        } else {
-//            promise.complete(elements)
-//        }
-//
-//        return promise.future
-//    }
-//}
+extension Array where Element: FutureType {
+    /// Flattens an array of future results into one
+    /// future array result.
+    public func chainingFlatten() -> Future<[Element.Expectation]> {
+        let promise = Promise<[Element.Expectation]>()
+
+        var elements: [Element.Expectation] = []
+
+        var iterator = makeIterator()
+        func handle(_ future: Element) {
+            future.then { res in
+                elements.append(res)
+                if let next = iterator.next() {
+                    handle(next)
+                } else {
+                    promise.complete(elements)
+                }
+            }.catch { error in
+                promise.fail(error)
+            }
+        }
+
+        if let first = iterator.next() {
+            handle(first)
+        } else {
+            promise.complete(elements)
+        }
+
+        return promise.future
+    }
+}
 
 extension Array where Element: FutureType {
     public func flatten() -> Future<[Element.Expectation]> {
@@ -197,15 +197,18 @@ final class ManyFutures<F: FutureType> {
             future.then { res in
                 self.results.append(res)
                 self.update()
-                }.catch { err in
-                    self.errors.append(err)
-                    self.update()
+            }.catch { err in
+                self.errors.append(err)
+                self.update()
             }
         }
     }
 
     /// Updates the many futures
     func update() {
+        print(many.count)
+        print(results)
+        print(errors)
         if results.count + errors.count == many.count {
             if errors.count == 0 {
                 promise.complete(results)

@@ -64,7 +64,7 @@ async.get("leaf") { req -> Future<View> in
     let promise = Promise(User.self)
     // user.futureChild = promise.future
 
-    try req.requireWorker().queue.asyncAfter(deadline: .now() + 2) {
+    req.eventLoop.queue.asyncAfter(deadline: .now() + 2) {
         let user = User(name: "unborn", age: -1)
         promise.complete(user)
     }

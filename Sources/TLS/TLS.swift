@@ -66,7 +66,7 @@ public final class TLSClient: Async.Stream, ClosableStream {
     public init(worker: Worker) throws {
         let socket = try Socket()
         
-        self.queue = worker.queue
+        self.queue = worker.eventLoop.queue
         self.client = TCPClient(socket: socket, worker: worker)
         self.ssl = try SSLStream(socket: self.client, descriptor: socket.descriptor, queue: queue)
     }

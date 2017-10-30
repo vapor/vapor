@@ -12,6 +12,7 @@ public struct Field {
     public var isIdentifier: Bool
 }
 
+/// Supported database field types.
 public enum FieldType {
     case string
     case int

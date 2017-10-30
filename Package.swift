@@ -72,7 +72,7 @@ let package = Package(
         .target(name: "Bits"),
 
         // Core
-        .target(name: "Core", dependencies: ["libc", "Debugging"]),
+        .target(name: "Core", dependencies: ["Async", "libc", "Debugging"]),
         .target(name: "libc"),
         
         // Crypto

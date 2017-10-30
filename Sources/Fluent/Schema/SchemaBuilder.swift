@@ -1,5 +1,6 @@
 import Async
 
+/// Helps you create and execute a database schema.
 public protocol SchemaBuilder: class {
     /// The associated model type.
     associatedtype ModelType: Model
@@ -12,23 +13,4 @@ public protocol SchemaBuilder: class {
 
     /// Create a new schema builder.
     init(_ type: ModelType.Type, on executor: SchemaExecutor)
-}
-
-// MARK: Convenience - Fix w/ conditional conformance
-extension Future: SchemaExecutor {
-    public func execute(schema: DatabaseSchema) -> Future<Void> {
-        let promise = Promise(Void.self)
-
-        if T.self is SchemaExecutor {
-            self.then { result in
-                let executor = result as! SchemaExecutor
-                executor.execute(schema: schema)
-                    .chain(to: promise)
-            }.catch(promise.fail)
-        } else {
-            promise.fail("future not schema executor type")
-        }
-
-        return promise.future
-    }
 }

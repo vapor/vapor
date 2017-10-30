@@ -8,7 +8,7 @@ public final class SQLiteConnection {
     public var raw: Raw
 
     /// the queue statement's will dispatch stream output to.
-    public let queue: DispatchQueue
+    public let worker: Worker
 
     /// serial background queue to perform all calls to SQLite C API on.
     /// this must be a serial queue since the SQLITE_OPEN_NOMUTEX does not
@@ -27,11 +27,11 @@ public final class SQLiteConnection {
     /// Create a new SQLite conncetion.
     internal init(
         raw: Raw,
-        queue: DispatchQueue,
+        worker: Worker,
         background: DispatchQueue
     ) {
         self.raw = raw
-        self.queue = queue
+        self.worker = worker
         self.background = background
     }
 
