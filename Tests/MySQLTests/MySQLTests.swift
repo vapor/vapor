@@ -15,6 +15,7 @@ class MySQLTests: XCTestCase {
         ("testForEach", testForEach),
         ("testAll", testAll),
         ("testStream", testStream),
+        ("testComplexModel", testComplexModel),
         ("testFailures", testFailures),
     ]
     
