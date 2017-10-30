@@ -9,26 +9,26 @@ extension PreparationBinding {
     /// TODO: Better method? This is the "official" way
     /// https://mariadb.com/kb/en/library/packet_bindata/
     public func bind(decimal: String) throws {
-        try self.bind(fieldType: .decimal, unsigned: false, data: decimal.makeData())
+        try self.bind(.decimal, unsigned: false, data: decimal.makeData())
     }
     
     /// TODO: Better method? This is the "official" way
     /// https://mariadb.com/kb/en/library/packet_bindata/
     public func bind(newDecimal: String) throws {
-        try self.bind(fieldType: .newdecimal, unsigned: false, data: newDecimal.makeData())
+        try self.bind(.decimal, unsigned: false, data: newDecimal.makeData())
     }
     
     public func bind(_ int: Int8) throws {
-        try self.bind(fieldType: .tiny, unsigned: false, data: Data([numericCast(int)]))
+        try self.bind(.int, unsigned: false, data: Data([numericCast(int)]))
     }
     
     public func bind(_ int: UInt8) throws {
-        try self.bind(fieldType: .tiny, unsigned: true, data: Data([int]))
+        try self.bind(.int, unsigned: true, data: Data([int]))
     }
     
     public func bind(_ int: Int16) throws {
         try self.bind(
-            fieldType: .short,
+            .int,
             unsigned: false,
             data: int.makeData()
         )
@@ -36,7 +36,7 @@ extension PreparationBinding {
     
     public func bind(_ int: UInt16) throws {
         try self.bind(
-            fieldType: .short,
+            .int,
             unsigned: false,
             data: int.makeData()
         )
@@ -45,7 +45,7 @@ extension PreparationBinding {
     /// Binds to either Int32 or Int24
     public func bind(_ int: Int32) throws {
         try self.bind(
-            fieldType: .long,
+            .int,
             unsigned: false,
             data: int.makeData()
         )
@@ -54,7 +54,7 @@ extension PreparationBinding {
     /// Binds to either UInt32 or UInt24
     public func bind(_ int: UInt32) throws {
         try self.bind(
-            fieldType: .long,
+            .int,
             unsigned: true,
             data: int.makeData()
         )
@@ -78,7 +78,7 @@ extension PreparationBinding {
     
     public func bind(_ int: Int64) throws {
         try self.bind(
-            fieldType: .longlong,
+            .int,
             unsigned: false,
             data: int.makeData()
         )
@@ -86,7 +86,7 @@ extension PreparationBinding {
     
     public func bind(_ int: UInt64) throws {
         try self.bind(
-            fieldType: .longlong,
+            .int,
             unsigned: true,
             data: int.makeData()
         )
@@ -96,38 +96,44 @@ extension PreparationBinding {
     /// MariaDB doesn't support those directly
     public func bind(_ float: Float32) throws {
         try self.bind(
-            fieldType: .float,
+            .float,
             unsigned: true,
             data: float.makeData(size: 4)
         )
     }
     
-    public func bind(varChar: String) throws {
-        try self.bind(fieldType: .varchar, unsigned: false, data: varChar.makeData())
+    public func bind(_ data: Data) throws {
+        try self.bind(.blob, unsigned: false, data: data.makeLenEnc())
     }
     
-    public func bind(tinyBlob data: Data) throws {
-        try self.bind(fieldType: .tinyBlob, unsigned: false, data: data.makeLenEnc())
+    public func bind(_ string: String) throws {
+        try self.bind(.string, unsigned: false, data: string.makeData())
     }
+}
+
+enum PseudoType {
+    case decimal
+    case int
+    case double
+    case float
+    case blob
+    case string
     
-    public func bind(mediumBlob data: Data) throws {
-        try self.bind(fieldType: .mediumBlob, unsigned: false, data: data.makeLenEnc())
-    }
-    
-    public func bind(longBlob data: Data) throws {
-        try self.bind(fieldType: .longBlob, unsigned: false, data: data.makeLenEnc())
-    }
-    
-    public func bind(blob data: Data) throws {
-        try self.bind(fieldType: .blob, unsigned: false, data: data.makeLenEnc())
-    }
-    
-    public func bind(varString: String) throws {
-        try self.bind(fieldType: .varString, unsigned: false, data: varString.makeData())
-    }
-    
-    public func bind(string: String) throws {
-        try self.bind(fieldType: .string, unsigned: false, data: string.makeData())
+    func supports(_ type: Field.FieldType) -> Bool {
+        switch self {
+        case .decimal:
+            return type == .decimal || type == .newdecimal
+        case .int:
+            return type == .int24 || type == .tiny || type == .long || type == .short || type == .longlong
+        case .double:
+            return type == .double
+        case .float:
+            return type == .float
+        case .blob:
+            return type == .blob || type == .longBlob || type == .tinyBlob || type == .mediumBlob
+        case .string:
+            return type == .varString || type == .varString || type == .string
+        }
     }
 }
 

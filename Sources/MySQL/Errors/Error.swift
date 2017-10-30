@@ -126,7 +126,7 @@ public struct MySQLError : Swift.Error, Debuggable, Traceable {
             }
         }
         
-        case invalidTypeBound(got: Field.FieldType, expected: Field.FieldType)
+        case invalidTypeBound(got: PseudoType, expected: Field.FieldType)
         case invalidQuery(UInt16, String)
         case invalidPacket
         case invalidHandshake

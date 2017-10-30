@@ -6,7 +6,7 @@ import TCP
 import Core
 
 class MySQLTests: XCTestCase {
-    let pool = ConnectionPool(hostname: "127.0.0.1", user: "root", password: nil, database: "test", queue: .global())
+    let pool = ConnectionPool(hostname: "localhost", user: "root", password: nil, database: "test", queue: .global())
     
     static let allTests = [
         ("testPreparedStatements", testPreparedStatements),
@@ -31,7 +31,7 @@ class MySQLTests: XCTestCase {
         
         let users = try pool.withPreparation(statement: query) { statement in
             return try statement.bind { binding in
-                try binding.bind(varChar: "Joannis")
+                try binding.bind("Joannis")
             }.all(User.self)
         }.blockingAwait(timeout: .seconds(150))
         
