@@ -6,6 +6,7 @@ extension Packet {
         let parser = Parser(packet: self)
         var row = Row()
         
+        // Binary packets have a bit more data to carry `null`s  and a header
         if binary {
             guard try parser.byte() == 0 else {
                 throw MySQLError(.invalidPacket)
@@ -18,15 +19,17 @@ extension Packet {
         
         var offset = 0
         
+        // Parses each field
         for field in columns {
             defer { offset += 1 }
             
-            // If null
             if binary {
+                // Binary packets are parsed more literally (binary)
                 let value = try parser.parseColumn(forField: field, index: offset)
                 
                 row.append(value, forField: field)
             } else {
+                // Text packets are parsed from strings or raw data
                 if field.isBinary {
                     let value = try parser.parseLenEncData()
                     

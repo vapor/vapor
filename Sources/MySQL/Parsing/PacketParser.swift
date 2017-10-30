@@ -114,6 +114,7 @@ internal final class PacketParser : Async.Stream {
 }
 
 extension Packet {
+    /// Parses the field definition from a packet
     func parseFieldDefinition() throws -> Field {
         let parser = Parser(packet: self)
         

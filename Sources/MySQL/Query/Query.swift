@@ -1,3 +1,4 @@
+/// Any query type
 public protocol Query {
     /// Returns this query represented as a String
     var string: String { get }

@@ -2,6 +2,20 @@ import Core
 import Async
 import Dispatch
 
+/// Holds a connection in combination with it's reservation status
+fileprivate class ConnectionPair {
+    /// The connection to be reserved
+    let connection: Connection
+    
+    /// The current reservation status
+    var reserved = false
+    
+    /// Creates a new connectionpair from a connection, defaulting to not reserved
+    init(connection: Connection) {
+        self.connection = connection
+    }
+}
+
 public class ConnectionPool {
     /// The queue on which connections will be created
     let queue: DispatchQueue
@@ -22,16 +36,7 @@ public class ConnectionPool {
     let database: String?
     
     /// A list of all currently active connections
-    var pool = [ConnectionPair]()
-    
-    class ConnectionPair {
-        let connection: Connection
-        var reserved = false
-        
-        init(connection: Connection) {
-            self.connection = connection
-        }
-    }
+    fileprivate var pool = [ConnectionPair]()
     
     /// Creates a connection pool for a specific queue
     ///
@@ -71,7 +76,9 @@ public class ConnectionPool {
         }
         
         do {
+            // Creates a new connection if the ConnectionPool has no unreserved connections
             _ = try Connection.makeConnection(hostname: hostname, user: user, password: password, database: database, queue: queue).then { connection in
+                // When done connecting
                 let pair = ConnectionPair(connection: connection)
                 pair.reserved = true
                 
@@ -86,7 +93,7 @@ public class ConnectionPool {
                     pair.reserved = false
                     promise.fail(error)
                 }
-            }
+            }.catch(callback: promise.fail)
         } catch {
             return Future(error: error)
         }

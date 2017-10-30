@@ -31,12 +31,15 @@ extension Connection {
 }
 
 extension ConnectionPool {
+    /// An internal function that shoots a raw query without expecting a real answer
     @discardableResult
     internal func query(_ query: Query) -> Future<Void> {
         return retain { connection, complete, fail in
             do {
                 connection.receivePackets { packet in
+                    // Expect an `OK` or `EOF` packet
                     guard packet.payload.first == 0x00 else {
+                        // Otherwise, reutrn an error
                         fail(MySQLError(packet: packet))
                         return
                     }

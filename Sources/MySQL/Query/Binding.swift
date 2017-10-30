@@ -8,24 +8,47 @@ import Foundation
 extension PreparationBinding {
     /// TODO: Better method? This is the "official" way
     /// https://mariadb.com/kb/en/library/packet_bindata/
+    ///
+    /// Binds to the first unbound parameter
+    ///
+    /// - throws: If the next unbound parameter is of a different type or if there are no more unbound parameters
     public func bind(decimal: String) throws {
         try self.bind(.decimal, unsigned: false, data: decimal.makeData())
     }
     
     /// TODO: Better method? This is the "official" way
     /// https://mariadb.com/kb/en/library/packet_bindata/
+    ///
+    /// Binds to the first unbound parameter
+    ///
+    /// - throws: If the next unbound parameter is of a different type or if there are no more unbound parameters
     public func bind(newDecimal: String) throws {
         try self.bind(.decimal, unsigned: false, data: newDecimal.makeData())
     }
     
+    /// Binds an Int8
+    ///
+    /// Binds to the first unbound parameter
+    ///
+    /// - throws: If the next unbound parameter is of a different type or if there are no more unbound parameters
     public func bind(_ int: Int8) throws {
         try self.bind(.int, unsigned: false, data: Data([numericCast(int)]))
     }
     
+    /// Binds an UInt8
+    ///
+    /// Binds to the first unbound parameter
+    ///
+    /// - throws: If the next unbound parameter is of a different type or if there are no more unbound parameters
     public func bind(_ int: UInt8) throws {
         try self.bind(.int, unsigned: true, data: Data([int]))
     }
     
+    /// Binds an Int16
+    ///
+    /// Binds to the first unbound parameter
+    ///
+    /// - throws: If the next unbound parameter is of a different type or if there are no more unbound parameters
     public func bind(_ int: Int16) throws {
         try self.bind(
             .int,
@@ -34,6 +57,11 @@ extension PreparationBinding {
         )
     }
     
+    /// Binds an UInt16
+    ///
+    /// Binds to the first unbound parameter
+    ///
+    /// - throws: If the next unbound parameter is of a different type or if there are no more unbound parameters
     public func bind(_ int: UInt16) throws {
         try self.bind(
             .int,
@@ -43,6 +71,10 @@ extension PreparationBinding {
     }
     
     /// Binds to either Int32 or Int24
+    ///
+    /// Binds to the first unbound parameter
+    ///
+    /// - throws: If the next unbound parameter is of a different type or if there are no more unbound parameters
     public func bind(_ int: Int32) throws {
         try self.bind(
             .int,
@@ -52,6 +84,10 @@ extension PreparationBinding {
     }
     
     /// Binds to either UInt32 or UInt24
+    ///
+    /// Binds to the first unbound parameter
+    ///
+    /// - throws: If the next unbound parameter is of a different type or if there are no more unbound parameters
     public func bind(_ int: UInt32) throws {
         try self.bind(
             .int,
@@ -60,6 +96,11 @@ extension PreparationBinding {
         )
     }
     
+    /// Binds to an `Int32` or `Int64` depending on the processor architecture
+    ///
+    /// Binds to the first unbound parameter
+    ///
+    /// - throws: If the next unbound parameter is of a different type or if there are no more unbound parameters
     public func bind(_ int: Int) throws {
         #if arch(x86_64) || arch(arm64)
             try self.bind(numericCast(int) as Int32)
@@ -68,6 +109,11 @@ extension PreparationBinding {
         #endif
     }
     
+    /// Binds to an `UInt32` or `UInt64` depending on the processor architecture
+    ///
+    /// Binds to the first unbound parameter
+    ///
+    /// - throws: If the next unbound parameter is of a different type or if there are no more unbound parameters
     public func bind(_ int: UInt) throws {
         #if arch(x86_64) || arch(arm64)
             try self.bind(numericCast(int) as UInt32)
@@ -76,6 +122,11 @@ extension PreparationBinding {
         #endif
     }
     
+    /// Binds to an `Int64`
+    ///
+    /// Binds to the first unbound parameter
+    ///
+    /// - throws: If the next unbound parameter is of a different type or if there are no more unbound parameters
     public func bind(_ int: Int64) throws {
         try self.bind(
             .int,
@@ -84,6 +135,11 @@ extension PreparationBinding {
         )
     }
     
+    /// Binds to an `UInt64`
+    ///
+    /// Binds to the first unbound parameter
+    ///
+    /// - throws: If the next unbound parameter is of a different type or if there are no more unbound parameters
     public func bind(_ int: UInt64) throws {
         try self.bind(
             .int,
@@ -92,8 +148,12 @@ extension PreparationBinding {
         )
     }
     
-    /// TODO: Float/Float64?
-    /// MariaDB doesn't support those directly
+    /// Binds to a float
+    ///
+    /// Binds to the first unbound parameter
+    ///
+    /// - throws: If the next unbound parameter is of a different type or if there are no more unbound parameters
+    /// - TODO: Float/Float64? MariaDB doesn't support those directly
     public func bind(_ float: Float32) throws {
         try self.bind(
             .float,
@@ -102,10 +162,12 @@ extension PreparationBinding {
         )
     }
     
+    /// Binds to a `Blob`, doesn't require specifying the type of blob
     public func bind(_ data: Data) throws {
         try self.bind(.blob, unsigned: false, data: data.makeLenEnc())
     }
     
+    /// Binds to a `varchar`, `string` or `varString`, doesn't require specifying the type of string
     public func bind(_ string: String) throws {
         try self.bind(.string, unsigned: false, data: string.makeData())
     }
@@ -165,15 +227,21 @@ extension BinaryInteger {
 }
 
 extension String {
+    /// Enocodes the string using lenEnc
+    ///
+    /// - TODO: Collations?
     fileprivate func makeData() -> Data {
         return Data(self.utf8).makeLenEnc()
     }
 }
 
 extension Data {
+    /// Enocodes the data using lenEnc
     fileprivate func makeLenEnc() -> Data {
+        /// < 0xfc we can use the literal count
         if self.count < 0xfc {
             return Data([numericCast(self.count)]) + self
+        // <= UInt16.max we need to prefix with `0xfc` and the append the length
         } else if self.count <= numericCast(UInt16.max) {
             var lenEnc = Data(repeating: 0xfc, count: 3)
             
@@ -184,6 +252,7 @@ extension Data {
             }
             
             return lenEnc + self
+        // <= UInt32.max we need to prefix with `0xfd` and the append the length
         } else if self.count <= numericCast(UInt32.max) {
             var lenEnc = Data(repeating: 0xfd, count: 5)
             
@@ -194,6 +263,7 @@ extension Data {
             }
             
             return lenEnc + self
+        // <= UInt64.max we need to prefix with `0xfe` and the append the length
         } else {
             var lenEnc = Data(repeating: 0xfe, count: 9)
             
@@ -205,5 +275,6 @@ extension Data {
             
             return lenEnc + self
         }
+        // 0xff is unused, unsupported and reserved
     }
 }
