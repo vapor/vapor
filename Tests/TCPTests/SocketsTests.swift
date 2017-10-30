@@ -25,9 +25,7 @@ class SocketsTests: XCTestCase {
         }
         write.resume()
 
-        let group = DispatchGroup()
-        group.enter()
-
+        let semaphore = DispatchSemaphore(value: 0)
 
         let read = DispatchSource.makeReadSource(fileDescriptor: socket.descriptor, queue: queue)
         read.setEventHandler {
@@ -35,12 +33,12 @@ class SocketsTests: XCTestCase {
 
             let string = String(data: response, encoding: .utf8)
             XCTAssert(string?.contains("HTTP/1.0 400 Bad Request") == true)
-            group.leave()
+            semaphore.signal()
         }
         read.resume()
 
         XCTAssertNotNil([read, write])
-        group.wait()
+        semaphore.wait()
     }
 
     func testBind() throws {
@@ -52,8 +50,7 @@ class SocketsTests: XCTestCase {
         try server.listen()
 
         let queue = DispatchQueue(label: "codes.vapor.test")
-        let group = DispatchGroup()
-        group.enter()
+        let semaphore = DispatchSemaphore(value: 0)
 
         var accepted: (Socket, DispatchSourceRead)?
 
@@ -67,12 +64,13 @@ class SocketsTests: XCTestCase {
             read.setEventHandler {
                 let data = try! client.read(max: 8_192)
                 XCTAssertEqual(String(data: data, encoding: .utf8), "hello")
-                group.leave()
+                semaphore.signal()
             }
             read.resume()
             
             accepted = (client, read)
             XCTAssertNotNil(accepted)
+            XCTAssert(client.address?.remoteAddress == "127.0.0.1" || client.address?.remoteAddress == "0.0.0.0" || client.address?.remoteAddress == "::1")
         }
         read.resume()
         XCTAssertNotNil(read)
@@ -84,11 +82,39 @@ class SocketsTests: XCTestCase {
             _ = try! client.write(data)
         }
 
-        group.wait()
+        semaphore.wait()
+    }
+    
+    func testServer() throws {
+        let server = try Server()
+        try server.start(port: 8338)
+        let semaphore = DispatchSemaphore(value: 0)
+        
+        server.drain { client in
+            client.drain { buffer in
+                XCTAssertEqual(String(bytes: buffer, encoding: .utf8), "hello")
+                semaphore.signal()
+            }
+            
+            client.start()
+        }
+        
+        try clientHello(port: 8338)
+        semaphore.wait()
     }
 
     static let allTests = [
         ("testConnect", testConnect),
         ("testBind", testBind),
+        ("testServer", testServer),
     ]
+}
+
+fileprivate func clientHello(port: UInt16) throws {
+    do {
+        let client = try Socket(isNonBlocking: false)
+        try client.connect(hostname: "localhost", port: port)
+        let data = "hello".data(using: .utf8)!
+        _ = try! client.write(data)
+    }
 }

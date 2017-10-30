@@ -56,4 +56,8 @@ class ApplicationTests: XCTestCase {
             XCTAssertEqual(data, Data("hello".utf8))
         }
     }
+
+    static let allTests = [
+        ("testCORSMiddleware", testCORSMiddleware),
+    ]
 }

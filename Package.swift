@@ -120,13 +120,20 @@ let package = Package(
         // Routing
         .target(name: "Routing", dependencies: ["Core", "Debugging", "HTTP", "WebSocket"]),
         .testTarget(name: "RoutingTests", dependencies: ["Routing"]),
+        
+        // Redis
+        .target(name: "Redis", dependencies: ["Async", "Bits", "Debugging", "TCP"]),
+        .testTarget(name: "RedisTests", dependencies: ["Redis"]),
 
         // Service
         .target(name: "Service", dependencies: ["Core", "Debugging"]),
         .testTarget(name: "ServiceTests", dependencies: ["Service"]),
-
+        
+        // Security
+        .target(name: "ServerSecurity", dependencies: ["TCP", "libc"]),
+       
         // TLS
-        .target(name: "TLS", dependencies: [ssl, "TCP"]),
+        .target(name: "TLS", dependencies: ["Core", ssl, "TCP"]),
         .testTarget(name: "TLSTests", dependencies: ["TLS"]),
 
         // SQL
@@ -148,7 +155,8 @@ let package = Package(
             "Routing",
             "Service",
             "TCP",
-            "WebSocket"
+            "ServerSecurity",
+            "WebSocket",
         ]),
         .testTarget(name: "VaporTests", dependencies: ["Vapor"]),
 
