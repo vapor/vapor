@@ -11,7 +11,7 @@ class ApplicationTests: XCTestCase {
         let app = Application()
         let cors = CORSMiddleware()
         
-        let router = try app.make(SyncRouter.self).grouped(cors) as SyncRouter
+        let router = try app.make(Router.self).grouped(cors)
         
         router.post("good") { req in
             return try Response(
@@ -28,6 +28,12 @@ class ApplicationTests: XCTestCase {
                 .accessControlRequestMethod: "POST",
             ]
         )
+        
+        let trieRouter = try app.make(TrieRouter.self)
+        
+        if let responder = trieRouter.fallbackResponder {
+            trieRouter.fallbackResponder = cors.makeResponder(chainedTo: responder)
+        }
         
         var response = try router.route(request: request)?.respond(to: request).blockingAwait()
         

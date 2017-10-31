@@ -28,11 +28,11 @@ services.register { container in
 
 let app = Application(services: services)
 
-let async = try app.make(AsyncRouter.self)
-let sync = try app.make(SyncRouter.self)
+let router = try app.make(Router.self)
 
 let user = User(name: "Vapor", age: 3);
-async.get("hello") { req in
+
+router.get("hello") { req in
     return Future<User>(user)
 }
 
@@ -52,12 +52,13 @@ extension Worker {
     }
 }
 
-sync.grouped(DateMiddleware()).get("plaintext") { req in
+router.grouped(DateMiddleware()).get("plaintext") { req in
     return try req.requireWorker().response
 }
 
 let view = try app.make(ViewRenderer.self)
-async.get("leaf") { req -> Future<View> in
+
+router.get("leaf") { req -> Future<View> in
     user.child = User(name: "Leaf", age: 1)
     let promise = Promise(User.self)
     user.futureChild = promise.future
@@ -93,7 +94,7 @@ extension Worker {
 
 let database = SQLite.Database(path: "/tmp/db.sqlite")
 
-async.get("sqlite") { req -> Future<String> in
+router.get("sqlite") { req -> Future<String> in
     let promise = Promise(String.self)
     
     let pool = try req.requireWorker()
