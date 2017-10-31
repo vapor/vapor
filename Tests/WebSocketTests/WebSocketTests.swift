@@ -87,7 +87,7 @@ class WebSocketTests : XCTestCase {
         let queue = DispatchQueue(label: "test.client")
         let worker = Worker(queue: queue)
         
-        let uri = URI(stringLiteral: "ws://\(CurrentHost.hostname):8080/")
+        let uri = URI(stringLiteral: "ws://localhost:8080/")
         
         do {
             _ = try WebSocket.connect(to: uri, worker: worker).then { socket in
