@@ -79,10 +79,16 @@ extension String: ResponseRepresentable {
     }
 }
 
-struct Message: Model {
+final class Message: Model {
     var id: String?
     var text: String
     var time: Int
+
+    init(id: String? = nil, text: String, time: Int) {
+        self.id = id
+        self.text = text
+        self.time = time
+    }
 }
 
 async.get("userview") { req -> Future<View> in
@@ -93,14 +99,14 @@ async.get("userview") { req -> Future<View> in
 }
 
 async.post("users") { req -> Future<User> in
-    var user = try JSONDecoder().decode(User.self, from: req.body.data)
+    let user = try JSONDecoder().decode(User.self, from: req.body.data)
     return user.save(on: req.database(id: .memory)).map { user }
 }
 
 async.get("transaction") { req -> Future<String> in
     return req.database(id: .memory).transaction { db in
-        var user = User(name: "NO SAVE", age: 500)
-        var message = Message(id: nil, text: "asdf", time: 42)
+        let user = User(name: "NO SAVE", age: 500)
+        let message = Message(id: nil, text: "asdf", time: 42)
 
         return [
             user.save(on: db),

@@ -26,6 +26,7 @@ public enum FieldType {
     case int
     case double
     case data
+    case date
     case custom(String)
 }
 
@@ -53,7 +54,7 @@ extension SchemaBuilder {
         schema.addFields.append(field)
     }
 
-    /// Adds a string type field.
+    /// Adds a int type field.
     public func int(_ name: String, isOptional: Bool = false, isIdentifier: Bool = false) {
         let field = Field(
             name: name,
@@ -64,7 +65,7 @@ extension SchemaBuilder {
         schema.addFields.append(field)
     }
 
-    /// Adds a string type field.
+    /// Adds a double type field.
     public func double(_ name: String, isOptional: Bool = false, isIdentifier: Bool = false) {
         let field = Field(
             name: name,
@@ -75,11 +76,22 @@ extension SchemaBuilder {
         schema.addFields.append(field)
     }
 
-    /// Adds a string type field.
+    /// Adds a data type field.
     public func data(_ name: String, length: Int, isOptional: Bool = false, isIdentifier: Bool = false) {
         let field = Field(
             name: name,
             type: .data,
+            isOptional: isOptional,
+            isIdentifier: isIdentifier
+        )
+        schema.addFields.append(field)
+    }
+
+    /// Adds a date type field.
+    public func date(_ name: String, isOptional: Bool = false, isIdentifier: Bool = false) {
+        let field = Field(
+            name: name,
+            type: .date,
             isOptional: isOptional,
             isIdentifier: isIdentifier
         )

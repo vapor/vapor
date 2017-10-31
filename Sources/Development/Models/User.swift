@@ -63,8 +63,8 @@ extension User: Migration {
 
 struct AddUsers: Migration {
     static func prepare(_ db: DatabaseConnection) -> Future<Void> {
-        var bob = User(name: "Bob", age: 42)
-        var vapor = User(name: "Vapor", age: 3)
+        let bob = User(name: "Bob", age: 42)
+        let vapor = User(name: "Vapor", age: 3)
 
         return [
             bob.save(on: db),

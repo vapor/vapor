@@ -70,6 +70,8 @@ extension FieldType {
             return "REAL"
         case .data:
             return "BLOB"
+        case .date:
+            return "INTEGER"
         case .custom(let custom):
             return custom
         }
