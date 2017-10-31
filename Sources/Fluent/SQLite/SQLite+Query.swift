@@ -161,12 +161,22 @@ extension Filter {
             predicate = Predicate(
                 table: entity,
                 column: field,
-                comparison: .equal // FIXME: convert
+                comparison: comp.predicate
             )
 
             let encoder = SQLiteDataEncoder()
             try encodable.encode(to: encoder)
-            value = encoder.data
+
+            switch comp {
+            case .hasPrefix:
+                value = .text((encoder.data.text ?? "") + "%")
+            case .hasSuffix:
+                value = .text("%" + (encoder.data.text ?? ""))
+            case .contains:
+                value = .text("%" + (encoder.data.text ?? "") + "%")
+            default:
+                value = encoder.data
+            }
         default:
             fatalError("not implemented")
         }
@@ -175,9 +185,18 @@ extension Filter {
     }
 }
 
-//extension Data {
-//    var hexString: String {
-//        return self.reduce("") { $0 + String(format: "%02x", $1) }
-//    }
-//}
-
+extension Comparison {
+    var predicate: PredicateComparison {
+        switch self {
+        case .equals: return .equal
+        case .greaterThan: return .greaterThan
+        case .greaterThanOrEquals: return .greaterThanOrEqual
+        case .lessThan: return .lessThan
+        case .lessThanOrEquals: return .lessThanOrEqual
+        case .notEquals: return .notEqual
+        case .hasPrefix: return .like
+        case .hasSuffix: return .like
+        case .contains: return .like
+        }
+    }
+}

@@ -10,29 +10,6 @@ public enum Comparison {
     case hasSuffix
     case hasPrefix
     case contains
-    case custom(String)
-}
-
-/// Equatable
-extension Comparison: Equatable {
-    public static func ==(lhs: Comparison, rhs: Comparison) -> Bool {
-        switch (lhs, rhs) {
-        case (.equals, .equals),
-             (.greaterThan, .greaterThan),
-             (.lessThan, .lessThan),
-             (.greaterThanOrEquals, .greaterThanOrEquals),
-             (.lessThanOrEquals, .lessThanOrEquals),
-             (.notEquals, .notEquals),
-             (.hasSuffix, .hasSuffix),
-             (.hasPrefix, .hasPrefix),
-             (.contains, .contains):
-            return true
-        case (.custom(let a), .custom(let b)):
-            return a == b
-        default:
-            return false
-        }
-    }
 }
 
 extension QueryBuilder {
