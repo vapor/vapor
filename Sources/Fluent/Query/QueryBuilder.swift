@@ -74,6 +74,7 @@ extension QueryBuilder {
                 case .update: model.didUpdate()
                 default: break
                 }
+                promise.complete()
             }.catch(promise.fail)
         } catch {
             promise.fail(error)

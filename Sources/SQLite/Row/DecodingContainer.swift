@@ -238,6 +238,17 @@ extension SQLiteData {
             return nil
         }
     }
+
+    internal var fuzzyDouble: Double? {
+        switch self {
+        case .float(let double):
+            return double
+        case .text(let text):
+            return Double(text)
+        default:
+            return nil
+        }
+    }
 }
 
 extension String: Error { }

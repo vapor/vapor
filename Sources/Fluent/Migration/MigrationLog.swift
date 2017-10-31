@@ -20,6 +20,12 @@ final class MigrationLog: Model, Timestampable {
 
     /// See Timestampable.updatedAt
     var updatedAt: Date?
+
+    init(id: UUID? = nil, name: String, batch: Int) {
+        self.id = id
+        self.name = name
+        self.batch = batch
+    }
 }
 
 /// MARK: Migration

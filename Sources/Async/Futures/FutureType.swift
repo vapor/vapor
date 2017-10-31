@@ -167,7 +167,7 @@ extension Array where Element: FutureType, Element.Expectation == Void {
         let promise = Promise(Void.self)
         many.promise.future.then { _ in
             promise.complete()
-            }.catch(promise.fail)
+        }.catch(promise.fail)
         return promise.future
     }
 }
@@ -206,9 +206,6 @@ final class ManyFutures<F: FutureType> {
 
     /// Updates the many futures
     func update() {
-        print(many.count)
-        print(results)
-        print(errors)
         if results.count + errors.count == many.count {
             if errors.count == 0 {
                 promise.complete(results)

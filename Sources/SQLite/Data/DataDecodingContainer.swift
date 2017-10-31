@@ -61,7 +61,10 @@ internal final class DataDecodingContainer: SingleValueDecodingContainer {
     }
 
     func decode(_ type: Double.Type) throws -> Double {
-        fatalError("unsupported")
+        guard let double = decoder.data.fuzzyDouble else {
+            throw "could not get double"
+        }
+        return double
     }
 
     func decode(_ type: String.Type) throws -> String {

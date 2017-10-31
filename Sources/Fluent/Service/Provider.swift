@@ -42,15 +42,24 @@ public final class FluentProvider: Provider {
         let migrationQueue = DispatchQueue(label: "codes.vapor.fluent.migration")
         let migrationEventLoop = EventLoop(queue: migrationQueue)
 
+        var organizedMigrations: [DatabaseIdentifier: [Migration.Type]] = [:]
+
         for migration in config.migrations {
-            guard let database = databases.storage[migration.database] else {
-                throw "no database \(migration.database) was found for migration \(migration.migration)"
+            organizedMigrations[migration.database, default: []].append(migration.migration)
+        }
+
+        print(organizedMigrations)
+
+        for (dbID, migrations) in organizedMigrations {
+            guard let database = databases.storage[dbID] else {
+                throw "no database \(dbID) was found for migrations \(migrations)"
             }
 
             let conn = try database.makeConnection(on: migrationEventLoop).blockingAwait()
-            print("Migrating \(migration.migration)")
-            try migration.migration.prepare(conn).blockingAwait() // FIXME: is this fine being blocking?
-            print("done!")
+            print("migrating \(dbID)")
+            try conn.blockingPrepare(migrations)
         }
+
+        print("done")
     }
 }

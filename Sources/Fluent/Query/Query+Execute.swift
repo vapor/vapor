@@ -61,6 +61,12 @@ extension QueryBuilder {
         return limit(1).all().map { $0.first }
     }
 
+    /// Runs a delete operation.
+    public func delete() -> Future<Void> {
+        query.action = .delete
+        return run()
+    }
+
     /// Runs the query, discarding any results.
     public func run() -> Future<Void> {
         let promise = Promise(Void.self)
