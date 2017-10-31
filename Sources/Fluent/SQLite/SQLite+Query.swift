@@ -42,8 +42,6 @@ extension SQLiteConnection: QueryExecutor {
                 select.columns += encoder.row.fields.keys.map {
                     DataColumn(table: fluentQuery.entity, name: $0.name)
                 }
-                // do this on insert
-                // values += encoder.row.fields.values.map { $0.data }
             }
 
             for filter in fluentQuery.filters {
