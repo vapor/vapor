@@ -57,7 +57,6 @@ class SocketsTests: XCTestCase {
     }
 
     static let allTests = [
-        ("testConnect", testConnect),
         ("testBind", testBind),
         ("testServer", testServer),
     ]
