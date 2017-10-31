@@ -106,7 +106,8 @@ extension SQLiteConnection: QueryExecutor {
             }
 
             sqlQuery = .data(delete)
-        case .aggregate(let field, let aggregate):
+        case .aggregate(_, _):
+            // FIXME: actually take field and aggregate into account
             var select = DataQuery(statement: .select, table: fluentQuery.entity)
 
             let count = DataComputed(function: "count", key: "fluentAggregate")

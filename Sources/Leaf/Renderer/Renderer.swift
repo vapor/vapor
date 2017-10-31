@@ -28,8 +28,10 @@ public final class Renderer {
 
     /// Renders the supplied template bytes into a view
     /// using the supplied context.
-    public func render(template: Data, context: LeafData, on worker: Worker) throws -> Future<Data> {
+    public func render(template: Data, context: LeafData, on worker: Worker) -> Future<Data> {
         let hash = template.hashValue
+
+        let promise = Promise(Data.self)
 
         let ast: [Syntax]
         if let cached = _cachedASTs[hash] {
@@ -39,24 +41,36 @@ public final class Renderer {
             do {
                 ast = try parser.parse()
             } catch let error as ParserError {
-                throw RenderError(source: error.source, reason: error.reason, error: error)
+                promise.fail(RenderError(source: error.source, reason: error.reason, error: error))
+                return promise.future
+            } catch {
+                promise.fail(error)
+                return promise.future
             }
             _cachedASTs[hash] = ast
         }
 
-        do {
-            let serializer = Serializer(
-                ast: ast,
-                renderer: self,
-                context: context,
-                worker: worker
-            )
-            return try serializer.serialize()
-        } catch let error as SerializerError {
-            throw RenderError(source: error.source, reason: error.reason, error: error)
-        } catch let error as TagError {
-            throw RenderError(source: error.source, reason: error.reason, error: error)
+
+        let serializer = Serializer(
+            ast: ast,
+            renderer: self,
+            context: context,
+            worker: worker
+        )
+
+        serializer.serialize().then { data in
+            promise.complete(data)
+        }.catch { err in
+            if let serr = err as? SerializerError {
+                promise.fail(RenderError(source: serr.source, reason: serr.reason, error: serr))
+            } else if let terr = err as? TagError {
+                promise.fail(RenderError(source: terr.source, reason: terr.reason, error: terr))
+            } else {
+                promise.fail(err)
+            }
         }
+
+        return promise.future
     }
 }
 
@@ -90,17 +104,15 @@ extension Renderer {
         }
 
         file.cachedRead(at: path).then { view in
-            do {
-                try self.render(template: view, context: context, on: worker).then { data in
-                    promise.complete(data)
-                }.catch { error in
+            self.render(template: view, context: context, on: worker).then { data in
+                promise.complete(data)
+            }.catch { error in
+                if var error = error as? RenderError {
+                    error.path = path
+                    promise.fail(error)
+                } else {
                     promise.fail(error)
                 }
-            } catch var error as RenderError {
-                error.path = path
-                promise.fail(error)
-            } catch {
-                promise.fail(error)
             }
         }.catch { error in
             promise.fail(error)
@@ -121,7 +133,7 @@ extension Renderer {
                 )
             }
 
-            try render(template: data, context: context, on: worker).then { rendered in
+            render(template: data, context: context, on: worker).then { rendered in
                 do {
                     guard let string = String(data: rendered, encoding: .utf8) else {
                         throw RenderError(

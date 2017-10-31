@@ -31,7 +31,7 @@ public final class Loop: Tag {
                     worker: parsed.worker
                 )
                 let subpromise = Promise(Data.self)
-                try serializer.serialize().then { bytes in
+                serializer.serialize().then { bytes in
                     subpromise.complete(bytes)
                 }.catch { error in
                     promise.fail(error)

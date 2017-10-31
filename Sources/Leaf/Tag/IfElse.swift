@@ -16,7 +16,7 @@ public final class IfElse: Tag {
                 context: context,
                 worker: parsed.worker
             )
-            try serializer.serialize().then { bytes in
+            serializer.serialize().then { bytes in
                 promise.complete(.data(bytes))
             }.catch { error in
                 promise.fail(error)

@@ -7,14 +7,14 @@ final class ModelTests: XCTestCase {
     func testCreate() throws {
         // save user
         let conn = try User.makeTestConnection()
-        var user = User(name: "Vapor", age: 2)
+        let user = User(name: "Vapor", age: 2)
         try user.save(on: conn).blockingAwait()
     }
 
     func testRead() throws {
         // save user
         let conn = try User.makeTestConnection()
-        var user = User(name: "Vapor", age: 2)
+        let user = User(name: "Vapor", age: 2)
         try user.save(on: conn).blockingAwait()
 
         // find user
@@ -26,12 +26,12 @@ final class ModelTests: XCTestCase {
         let conn = try User.makeTestConnection()
 
         // save user
-        var user = User(name: "Vapor", age: 2)
+        let user = User(name: "Vapor", age: 2)
         try user.save(on: conn).blockingAwait()
         XCTAssertNotNil(user.id)
 
         // create user w/ same id and save
-        var copy = User(id: user.id, name: user.name, age: 3)
+        let copy = User(id: user.id, name: user.name, age: 3)
         try copy.save(on: conn).blockingAwait()
 
         // get user table count
@@ -43,7 +43,7 @@ final class ModelTests: XCTestCase {
         let conn = try User.makeTestConnection()
 
         // save user
-        var user = User(name: "Vapor", age: 2)
+        let user = User(name: "Vapor", age: 2)
         try user.save(on: conn).blockingAwait()
         XCTAssertNotNil(user.id)
 

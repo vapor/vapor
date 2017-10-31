@@ -4,6 +4,7 @@ import XCTest
 @testable import AsyncTests
 @testable import CryptoTests
 @testable import DebuggingTests
+@testable import FluentTests
 @testable import HTTPTests
 @testable import JWTTests
 @testable import LeafTests
