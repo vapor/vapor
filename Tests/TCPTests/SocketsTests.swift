@@ -6,7 +6,7 @@ import XCTest
 class SocketsTests: XCTestCase {
     func testServer() throws {
         let server = try Server()
-        try server.start(port: 8338)
+        try server.start(port: 8449)
         let promise = Promise<Void>()
         
         server.drain { client in
@@ -18,7 +18,7 @@ class SocketsTests: XCTestCase {
             client.start()
         }
         
-        try clientHello(port: 8338)
+        try clientHello(port: 8449)
         try promise.future.blockingAwait(timeout: .seconds(3))
     }
 
