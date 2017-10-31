@@ -25,7 +25,7 @@ final class HTTPTestServer {
     /// Creates a new engine server config
     public init(
         hostname: String = "0.0.0.0",
-        port: UInt16 = 8080,
+        port: UInt16 = 8282,
         backlog: Int32 = 4096,
         workerCount: Int = 8
     ) {
@@ -87,7 +87,7 @@ class WebSocketTests : XCTestCase {
         let queue = DispatchQueue(label: "test.client")
         let worker = Worker(queue: queue)
         
-        let uri = URI(stringLiteral: "ws://localhost:8080/")
+        let uri = URI(stringLiteral: "ws://localhost:8282/")
         
         do {
             _ = try WebSocket.connect(to: uri, worker: worker).then { socket in
