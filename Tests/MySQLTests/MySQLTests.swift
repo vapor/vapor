@@ -6,7 +6,7 @@ import TCP
 import Core
 
 class MySQLTests: XCTestCase {
-    let pool = ConnectionPool(hostname: "localhost", user: "root@localhost", password: nil, database: "test", queue: .global())
+    let pool = ConnectionPool(hostname: "localhost", user: "vapor", password: "vapor", database: "vapor_test", queue: .global())
     
     static let allTests = [
         ("testPreparedStatements", testPreparedStatements),
