@@ -35,6 +35,10 @@ XCTMain([
     testCase(GeneralTests.allTests),
     testCase(TraceableTests.allTests),
 
+    // Fluent
+    testCase(ModelTests.allTests),
+    testCase(SchemaTests.allTests),
+
     // HTTP
     testCase(MiddlewareTests.allTests),
     testCase(ParserTests.allTests),

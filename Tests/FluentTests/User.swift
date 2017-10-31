@@ -1,4 +1,5 @@
 import Async
+import Dispatch
 import Fluent
 import Foundation
 import SQLite
