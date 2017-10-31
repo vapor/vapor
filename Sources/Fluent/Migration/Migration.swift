@@ -3,6 +3,8 @@ import Async
 /// Declares a database migration.
 public protocol Migration {
     /// The type of database this migration can run on.
+    /// Migrations require a query executor to work correctly
+    /// as they must be able to query the MigrationLog model.
     associatedtype Database: Fluent.Database where Database.Connection: QueryExecutor
 
     /// Runs this migration's changes on the database.

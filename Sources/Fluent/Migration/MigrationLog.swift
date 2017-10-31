@@ -56,9 +56,11 @@ extension MigrationLog: Migration {
     }
 }
 
-/// MARK: Private
+/// MARK: Internal
 
 extension MigrationLog {
+    /// Returns the latest batch number.
+    /// note: returns 0 if no batches have run yet.
     internal static func latestBatch(on connection: Database.Connection) -> Future<Int> {
         return connection.query(MigrationLog<Database>.self)
             .all()
@@ -68,7 +70,9 @@ extension MigrationLog {
             }
     }
 
-
+    /// Prepares the connection for storing migration logs.
+    /// note: this is unlike other migrations since we are checking
+    /// for an error instead of asking if the migration has already prepared.
     internal static func prepareMetadata(on connection: Database.Connection) -> Future<Void> {
         let promise = Promise(Void.self)
 
@@ -82,6 +86,8 @@ extension MigrationLog {
         return promise.future
     }
 
+    /// For parity, reverts the migration metadata.
+    /// This simply calls the migration revert function.
     internal static func revertMetadata(on connection: Database.Connection) -> Future<Void> {
         return self.revert(on: connection)
     }

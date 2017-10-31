@@ -30,6 +30,8 @@ internal struct DatabaseMigrationConfig<Database: Fluent.Database>: MigrationRun
         return promise.future
     }
 
+    /// Prepares the connection for migrations by ensuring
+    /// the migration log model is ready for use.
     internal func prepareForMigration(on conn: Database.Connection) -> Future<Void> {
         return MigrationLog<Database>.prepareMetadata(on: conn).flatMap { _ in
             return MigrationLog<Database>.latestBatch(on: conn).flatMap { lastBatch in
@@ -38,6 +40,8 @@ internal struct DatabaseMigrationConfig<Database: Fluent.Database>: MigrationRun
         }
     }
 
+    /// Migrates this configs migrations under the current batch.
+    /// Migrations that have already been prepared will be skipped.
     internal func migrateBatch(on conn: Database.Connection, batch: Int) -> Future<Void> {
         return migrations.map { migration in
             return { migration.prepareIfNeeded(batch: batch, on: conn) }

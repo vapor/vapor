@@ -28,7 +28,7 @@ public struct MigrationConfig {
     }
 }
 
-/// Capable of running a migration.
+/// Capable of running migrations when supplied databases and a worker.
 /// We need this protocol because we lose some database type
 /// info in our MigrationConfig storage.
 internal protocol MigrationRunnable {
