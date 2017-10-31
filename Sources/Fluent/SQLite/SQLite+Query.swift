@@ -118,8 +118,7 @@ extension SQLiteConnection: QueryExecutor {
         let string = SQLiteSQLSerializer()
             .serialize(query: sqlQuery)
 
-        print("[SQLite] \(string)")
-        print(values)
+        print("[SQLite] \(string) \(values)")
         
         let sqliteQuery = SQLiteQuery(
             string: string,

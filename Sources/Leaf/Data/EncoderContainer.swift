@@ -54,7 +54,6 @@ internal struct LeafDataContainer<K: CodingKey>:
     }
 
     mutating func superEncoder(forKey key: K) -> Encoder {
-        print(key)
         codingPath.append(key)
         return encoder
     }

@@ -48,18 +48,16 @@ public final class FluentProvider: Provider {
             organizedMigrations[migration.database, default: []].append(migration.migration)
         }
 
-        print(organizedMigrations)
-
         for (dbID, migrations) in organizedMigrations {
             guard let database = databases.storage[dbID] else {
                 throw "no database \(dbID) was found for migrations \(migrations)"
             }
 
             let conn = try database.makeConnection(on: migrationEventLoop).blockingAwait()
-            print("migrating \(dbID)")
+            print("Running \(migrations.count) migrations for `\(dbID)` database")
             try conn.blockingPrepare(migrations)
         }
 
-        print("done")
+        print("Migrations complete")
     }
 }
