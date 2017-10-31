@@ -6,7 +6,7 @@ import XCTest
 class SocketsTests: XCTestCase {
     func testBind() throws {
         let server = try Socket()
-        try server.bind(hostname: CurrentHost.hostname, port: 8337)
+        try server.bind(hostname: "0.0.0.0", port: 8337)
         try server.listen()
 
         let queue = DispatchQueue(label: "codes.vapor.test")
@@ -30,7 +30,7 @@ class SocketsTests: XCTestCase {
 
         do {
             let client = try Socket(isNonBlocking: false)
-            try client.connect(hostname: CurrentHost.hostname, port: 8337)
+            try client.connect(hostname: "localhost", port: 8337)
             let data = "hello".data(using: .utf8)!
             _ = try! client.write(data)
         }
