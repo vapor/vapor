@@ -98,7 +98,7 @@ extension URI {
     public struct UserInfo: Codable {
         public let username: String
         public let info: String?
-        
+
         public init(username: String, info: String? = nil) {
             self.username = username
             self.info = info

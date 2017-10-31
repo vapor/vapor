@@ -18,9 +18,12 @@ public struct Body: Codable {
         
         func encode(to encoder: Encoder) throws {
             switch self {
-            case .data(let data): try data.encode(to: encoder)
-            case .dispatchData(let data): try Data(data).encode(to: encoder)
-            case.staticString(let string): try Data(bytes: string.utf8Start, count: string.utf8CodeUnitCount).encode(to: encoder)
+            case .data(let data):
+                try data.encode(to: encoder)
+            case .dispatchData(let data):
+                try Data(data).encode(to: encoder)
+            case .staticString(let string):
+                try Data(bytes: string.utf8Start, count: string.utf8CodeUnitCount).encode(to: encoder)
             }
         }
         
@@ -68,11 +71,12 @@ public struct Body: Codable {
         storage = .dispatchData(data)
     }
     
-    /// Create a new body wrapping `DispatchData`.
+    /// Create a new body from the UTF-8 representation of a StaticString
     public init(staticString: StaticString) {
         storage = .staticString(staticString)
     }
     
+    /// Create a new body from the UTF-8 representation of a string
     public init(string: String) {
         let data = string.data(using: .utf8) ?? Data()
         
