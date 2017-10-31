@@ -24,7 +24,7 @@ final class HTTPTestServer {
     
     /// Creates a new engine server config
     public init(
-        hostname: String = CurrentHost.hostname,
+        hostname: String = "0.0.0.0",
         port: UInt16 = 8080,
         backlog: Int32 = 4096,
         workerCount: Int = 8
