@@ -10,8 +10,22 @@ extension SQLSerializer {
 
             let columns = columns.map { serialize(column: $0) }
             statement.append("(" + columns.joined(separator: ", ") + ")")
-        default:
-            fatalError("not supported")
+        case .alter(let columns, let deleteColumns):
+            statement.append("ALTER TABLE")
+            statement.append(table)
+
+            let adds = columns.map { "ADD " + serialize(column: $0) }
+            if adds.count > 0 {
+                statement.append(adds.joined(separator: ", "))
+            }
+
+            let deletes = deleteColumns.map { "DROP " + makeEscapedString(from: $0) }
+            if deletes.count > 0 {
+                statement.append(deletes.joined(separator: ", "))
+            }
+        case .drop:
+            statement.append("DROP TABLE")
+            statement.append(table)
         }
 
         return statement.joined(separator: " ")

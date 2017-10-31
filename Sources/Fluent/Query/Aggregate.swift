@@ -23,7 +23,7 @@ extension QueryBuilder {
         }.catch { err in
             promise.fail(err)
         }.finally {
-            promise.fail("did not complete")
+            promise.fail("no agggregate")
         }
 
         return promise.future

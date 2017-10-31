@@ -13,6 +13,11 @@ extension SQLiteConnection: SchemaExecutor {
         case .create:
             schemaStatement = .create(columns: schema.addFields.map { $0.column })
         case .update:
+            guard schema.removeFields.count == 0 else {
+                promise.fail("SQLite does not support deleting columns")
+                return promise.future
+            }
+
             schemaStatement = .alter(
                 columns: schema.addFields.map { $0.column },
                 deleteColumns: schema.removeFields
@@ -24,6 +29,8 @@ extension SQLiteConnection: SchemaExecutor {
         let schemaQuery = SchemaQuery(statement: schemaStatement, table: schema.entity)
         let string = SQLiteSQLSerializer()
             .serialize(query: .schema(schemaQuery))
+
+        print("[SQLite Schema] \(string)")
 
         let sqliteQuery = SQLiteQuery(
             string: string,

@@ -94,7 +94,7 @@ async.get("userview") { req -> Future<View> in
 
 async.post("users") { req -> Future<User> in
     var user = try JSONDecoder().decode(User.self, from: req.body.data)
-    return user.save(to: req.database(id: .memory)).map { user }
+    return user.save(on: req.database(id: .memory)).map { user }
 }
 
 async.get("transaction") { req -> Future<String> in
@@ -103,8 +103,8 @@ async.get("transaction") { req -> Future<String> in
         var message = Message(id: nil, text: "asdf", time: 42)
 
         return [
-            user.save(to: db),
-            message.save(to: db)
+            user.save(on: db),
+            message.save(on: db)
         ].flatten()
     }.map {
         return "Done"

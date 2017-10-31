@@ -32,9 +32,26 @@ extension Model {
     /// If `shouldCreate` is true, the model will be saved
     /// as a new item even if it already has an identifier.
     public mutating func save(
-        to executor: QueryExecutor,
+        on executor: QueryExecutor,
         shouldCreate: Bool = false
     ) -> Future<Void> {
         return executor.query(Self.self).save(&self, shouldCreate: shouldCreate)
+    }
+
+    /// Saves this model to the supplied query executor.
+    /// If `shouldCreate` is true, the model will be saved
+    /// as a new item even if it already has an identifier.
+    public mutating func delete(
+        on executor: QueryExecutor
+    ) -> Future<Void> {
+        return executor.query(Self.self).delete(&self)
+    }
+
+    /// Attempts to find an instance of this model w/
+    /// the supplied identifier.
+    public static func find(_ id: Self.I, on executor: QueryExecutor) -> Future<Self?> {
+        let query = executor.query(Self.self)
+        query.filter("id" == id)
+        return query.first()
     }
 }

@@ -51,4 +51,20 @@ extension QueryBuilder {
 
         return run()
     }
+
+    /// Deletes the supplied model.
+    /// Throws an error if the mdoel did not have an id.
+    public func delete(_ model: inout M) -> Future<Void> {
+        let promise = Promise(Void.self)
+
+        if let id = model.id {
+            filter("id" == id)
+            query.action = .delete
+            run().chain(to: promise)
+        } else {
+            promise.fail("model does not have an id")
+        }
+
+        return promise.future
+    }
 }

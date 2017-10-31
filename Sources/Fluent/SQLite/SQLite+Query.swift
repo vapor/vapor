@@ -30,64 +30,84 @@ extension SQLiteConnection: QueryExecutor {
         let promise = Promise(Void.self)
 
         let sqlQuery: SQLQuery
-
         var values: [SQLiteData] = []
 
         switch fluentQuery.action {
-            case .read:
-                var select = DataQuery(statement: .select, table: fluentQuery.entity)
+        case .read:
+            var select = DataQuery(statement: .select, table: fluentQuery.entity)
 
-                if let data = fluentQuery.data {
-                    let encoder = SQLiteRowEncoder()
-                    try data.encode(to: encoder)
-                    print(encoder.row)
-                    select.columns += encoder.row.fields.keys.map {
-                        DataColumn(table: fluentQuery.entity, name: $0.name)
-                    }
-                    // do this on insert
-                    // values += encoder.row.fields.values.map { $0.data }
-                }
-
-                for filter in fluentQuery.filters {
-                    let predicate: Predicate
-
-                    switch filter.method {
-                    case .compare(let field, let comp, let value):
-                        predicate = Predicate(
-                            table: filter.entity,
-                            column: field,
-                            comparison: .equal // FIXME: convert
-                        )
-
-                        let encoder = SQLiteDataEncoder()
-                        try value.encode(to: encoder)
-                        values.append(encoder.data)
-                    default:
-                        fatalError("not implemented")
-                    }
-
-                    select.predicates.append(predicate)
-                }
-
-                select.limit = fluentQuery.limit?.count
-                select.offset = fluentQuery.limit?.offset
-
-                sqlQuery = .data(select)
-            case .update, .create:
-                var insert = DataQuery(statement: .insert, table: fluentQuery.entity)
-
-                guard let data = fluentQuery.data else {
-                    throw "data required for insert"
-                }
-
+            if let data = fluentQuery.data {
                 let encoder = SQLiteRowEncoder()
                 try data.encode(to: encoder)
-                print(encoder.row)
-                insert.columns += encoder.row.fields.keys.map {
+                select.columns += encoder.row.fields.keys.map {
                     DataColumn(table: fluentQuery.entity, name: $0.name)
                 }
-                values += encoder.row.fields.values.map { $0.data }
-                sqlQuery = .data(insert)
+                // do this on insert
+                // values += encoder.row.fields.values.map { $0.data }
+            }
+
+            for filter in fluentQuery.filters {
+                let (predicate, value) = try filter.makePredicate()
+                select.predicates.append(predicate)
+                if let value = value {
+                    values.append(value)
+                }
+            }
+
+            select.limit = fluentQuery.limit?.count
+            select.offset = fluentQuery.limit?.offset
+
+            sqlQuery = .data(select)
+        case .update:
+            var update = DataQuery(statement: .update, table: fluentQuery.entity)
+
+            guard let data = fluentQuery.data else {
+                throw "data required for insert"
+            }
+
+            let encoder = SQLiteRowEncoder()
+            try data.encode(to: encoder)
+
+            update.columns = encoder.row.fields.keys.map {
+                DataColumn(table: fluentQuery.entity, name: $0.name)
+            }
+            values = encoder.row.fields.values.map { $0.data }
+
+            for filter in fluentQuery.filters {
+                let (predicate, value) = try filter.makePredicate()
+                update.predicates.append(predicate)
+                if let value = value {
+                    values.append(value)
+                }
+            }
+
+            sqlQuery = .data(update)
+        case .create:
+            var insert = DataQuery(statement: .insert, table: fluentQuery.entity)
+
+            guard let data = fluentQuery.data else {
+                throw "data required for insert"
+            }
+
+            let encoder = SQLiteRowEncoder()
+            try data.encode(to: encoder)
+            insert.columns += encoder.row.fields.keys.map {
+                DataColumn(table: fluentQuery.entity, name: $0.name)
+            }
+            values += encoder.row.fields.values.map { $0.data }
+            sqlQuery = .data(insert)
+        case .delete:
+            var delete = DataQuery(statement: .delete, table: fluentQuery.entity)
+
+            for filter in fluentQuery.filters {
+                let (predicate, value) = try filter.makePredicate()
+                delete.predicates.append(predicate)
+                if let value = value {
+                    values.append(value)
+                }
+            }
+
+            sqlQuery = .data(delete)
         case .aggregate(let field, let aggregate):
             var select = DataQuery(statement: .select, table: fluentQuery.entity)
 
@@ -95,22 +115,19 @@ extension SQLiteConnection: QueryExecutor {
             select.computed.append(count)
 
             sqlQuery = .data(select)
-        default:
-
-            fatalError("\(fluentQuery.action) not yet supported")
         }
 
         let string = SQLiteSQLSerializer()
             .serialize(query: sqlQuery)
 
-        print(string)
+        print("[SQLite] \(string)")
+        print(values)
         
         let sqliteQuery = SQLiteQuery(
             string: string,
             connection: self
         )
         for value in values {
-            print(value)
             sqliteQuery.bind(value) // FIXME: set array w/o need to loop?
         }
 
@@ -134,6 +151,30 @@ extension SQLiteConnection: QueryExecutor {
         }
 
         return promise.future
+    }
+}
+
+extension Filter {
+    fileprivate func makePredicate() throws -> (predicate: Predicate, value: SQLiteData?) {
+        let predicate: Predicate
+        let value: SQLiteData?
+
+        switch method {
+        case .compare(let field, let comp, let encodable):
+            predicate = Predicate(
+                table: entity,
+                column: field,
+                comparison: .equal // FIXME: convert
+            )
+
+            let encoder = SQLiteDataEncoder()
+            try encodable.encode(to: encoder)
+            value = encoder.data
+        default:
+            fatalError("not implemented")
+        }
+
+        return (predicate, value)
     }
 }
 

@@ -10,6 +10,14 @@ public struct Field {
 
     /// Is the primary identifier field.
     public var isIdentifier: Bool
+
+    /// Create a new field.
+    public init(name: String, type: FieldType, isOptional: Bool = false, isIdentifier: Bool = false) {
+        self.name = name
+        self.type = type
+        self.isOptional = isOptional
+        self.isIdentifier = isIdentifier
+    }
 }
 
 /// Supported database field types.
@@ -24,6 +32,16 @@ public enum FieldType {
 // MARK: Fields
 
 extension SchemaBuilder {
+    public func id() {
+        let field = Field(
+            name: "id",
+            type: ModelType.I.fieldType,
+            isOptional: false,
+            isIdentifier: true
+        )
+        schema.addFields.append(field)
+    }
+
     /// Adds a string type field.
     public func string(_ name: String, isOptional: Bool = false, isIdentifier: Bool = false) {
         let field = Field(

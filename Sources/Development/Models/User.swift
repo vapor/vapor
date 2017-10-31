@@ -67,8 +67,8 @@ struct AddUsers: Migration {
         var vapor = User(name: "Vapor", age: 3)
 
         return [
-            bob.save(to: db),
-            vapor.save(to: db)
+            bob.save(on: db),
+            vapor.save(on: db)
         ].flatten()
     }
 

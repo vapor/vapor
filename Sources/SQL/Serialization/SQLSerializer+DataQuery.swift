@@ -39,9 +39,10 @@ extension SQLSerializer {
         case .update:
             statement.append("UPDATE")
             statement.append(table)
+            statement.append("SET")
 
-            let columns = query.columns.map { serialize(column: $0) }
-            let set = columns.map { "SET \($0) = " + makePlaceholder(name: $0) }
+            let columns = query.columns.map { makeEscapedString(from: $0.name) }
+            let set = columns.map { "\($0) = " + makePlaceholder(name: $0) }
             statement.append(set.joined(separator: ", "))
         }
 

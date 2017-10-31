@@ -2,13 +2,6 @@ import XCTest
 @testable import Debugging
 
 class GeneralTests: XCTestCase {
-    static let allTests = [
-        ("testBulletedList", testBulletedList),
-        ("testReadableName", testReadableName),
-        ("testReadableNameEdgeCase", testReadableNameEdgeCase),
-        ("testMinimumConformance", testMinimumConformance),
-    ]
-
     func testBulletedList() {
         let todos = [
             "Get groceries",
@@ -46,4 +39,11 @@ class GeneralTests: XCTestCase {
         let expectation = "⚠️ Minimum Error: Not enabled\n- id: DebuggingTests.MinimumError.alpha"
         XCTAssertEqual(description, expectation)
     }
+
+    static let allTests = [
+        ("testBulletedList", testBulletedList),
+        ("testReadableName", testReadableName),
+        ("testReadableNameEdgeCase", testReadableNameEdgeCase),
+        ("testMinimumConformance", testMinimumConformance),
+    ]
 }
