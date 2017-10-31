@@ -89,49 +89,54 @@ class WebSocketTests : XCTestCase {
         
         let uri = URI(stringLiteral: "ws://\(CurrentHost.hostname):8080/")
         
-        _ = try WebSocket.connect(to: uri, worker: worker).then { socket in
-            let responses = ["test", "cat", "banana"]
-            let reversedResponses = responses.map {
-                String($0.reversed())
-            }
-            
-            var count = 0
-            
-            socket.onText { string in
-                XCTAssert(reversedResponses.contains(string))
-                count += 1
-                
-                if count == 3 {
-                    promise0.complete(())
+        do {
+            _ = try WebSocket.connect(to: uri, worker: worker).then { socket in
+                let responses = ["test", "cat", "banana"]
+                let reversedResponses = responses.map {
+                    String($0.reversed())
                 }
-            }
-            
-            socket.onBinary { blob in
-                defer { promise1.complete(()) }
                 
-                guard Array(blob) == [0x00, 0x01, 0x00, 0x02] else {
-                    XCTFail()
-                    return
+                var count = 0
+                
+                socket.onText { string in
+                    XCTAssert(reversedResponses.contains(string))
+                    count += 1
+                    
+                    if count == 3 {
+                        promise0.complete(())
+                    }
                 }
-            }
-            
-            for response in responses {
-                socket.send(response)
-            }
-            
-            Data([
-                0x00, 0x01, 0x00, 0x02
-            ]).withUnsafeBytes { (pointer: BytesPointer) in
-                let buffer = ByteBuffer(start: pointer, count: 4)
                 
-                socket.send(buffer)
-            }
+                socket.onBinary { blob in
+                    defer { promise1.complete(()) }
+                    
+                    guard Array(blob) == [0x00, 0x01, 0x00, 0x02] else {
+                        XCTFail()
+                        return
+                    }
+                }
+                
+                for response in responses {
+                    socket.send(response)
+                }
+                
+                Data([
+                    0x00, 0x01, 0x00, 0x02
+                ]).withUnsafeBytes { (pointer: BytesPointer) in
+                    let buffer = ByteBuffer(start: pointer, count: 4)
+                    
+                    socket.send(buffer)
+                }
+                
+                promise0.complete(())
+            }.blockingAwait(timeout: .seconds(10))
             
-            promise0.complete(())
-        }.blockingAwait(timeout: .seconds(10))
-        
-        try promise0.future.blockingAwait(timeout: .seconds(10))
-        try promise1.future.blockingAwait(timeout: .seconds(10))
+            try promise0.future.blockingAwait(timeout: .seconds(10))
+            try promise1.future.blockingAwait(timeout: .seconds(10))
+        } catch {
+            XCTFail("Error connecting to \(uri)")
+            throw error
+        }
     }
     
     static let allTests = [
