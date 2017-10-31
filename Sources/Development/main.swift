@@ -45,22 +45,20 @@ services.register(
 
 let app = try Application(services: services)
 
-let async = try app.make(AsyncRouter.self)
-let sync = try app.make(SyncRouter.self)
+let router = try app.make(Router.self)
 
 let user = User(name: "Vapor", age: 3);
-async.get("hello") { req in
+router.get("hello") { req in
     return Future<User>(user)
 }
 
 let hello = try Response(body: "Hello, world!")
-sync.get("plaintext") { req in
+router.get("plaintext") { req in
     return hello
 }
 
 let view = try app.make(ViewRenderer.self)
-async.get("leaf") { req -> Future<View> in
-    // user.child = User(name: "Leaf", age: 1)
+router.get("leaf") { req -> Future<View> in
     let promise = Promise(User.self)
     // user.futureChild = promise.future
 
@@ -91,19 +89,19 @@ final class Message: Model {
     }
 }
 
-async.get("userview") { req -> Future<View> in
+router.get("userview") { req -> Future<View> in
     let user = req.database().query(User.self).first()
     return try view.make("/Users/tanner/Desktop/hello", context: [
         "user": user
     ], for: req)
 }
 
-async.post("users") { req -> Future<User> in
+router.post("users") { req -> Future<User> in
     let user = try JSONDecoder().decode(User.self, from: req.body.data)
     return user.save(on: req.database(id: .memory)).map { user }
 }
 
-async.get("transaction") { req -> Future<String> in
+router.get("transaction") { req -> Future<String> in
     return req.database(id: .memory).transaction { db in
         let user = User(name: "NO SAVE", age: 500)
         let message = Message(id: nil, text: "asdf", time: 42)
@@ -117,11 +115,11 @@ async.get("transaction") { req -> Future<String> in
     }
 }
 
-async.get("users") { req in
+router.get("users") { req in
     return req.database(id: .memory).query(User.self).all()
 }
 
-async.get("fluent") { req -> Future<String> in
+router.get("sqlite") { req -> Future<String> in
     let promise = Promise(String.self)
 
 //    try req.query(Message.self)

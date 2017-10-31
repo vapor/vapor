@@ -17,6 +17,9 @@ public final class RedisClient<DuplexByteStream: Async.Stream> where DuplexByteS
     /// Serializes redis data to binary
     let dataSerializer = DataSerializer()
     
+    /// Keeps track of whether this client is currently subscribed to a channel
+    var isSubscribed = false
+    
     /// The maximum size of a single response. Prevents excessive memory usage
     public var maximumResponseSize: Int {
         get {
@@ -32,22 +35,20 @@ public final class RedisClient<DuplexByteStream: Async.Stream> where DuplexByteS
     /// - returns: A future containing the server's response
     /// - throws: On network error
     public func run(command: String, arguments: [RedisData]? = nil) -> Future<RedisData> {
-        let promise = Promise<PartialRedisData>()
+        if isSubscribed {
+            return Future(error: RedisError(.cannotReuseSubscribedClients))
+        }
+        
+        let promise = Promise<RedisData>()
         
         dataParser.responseQueue.append(promise)
         
         let arguments = arguments ?? []
-        let command = RedisData.array([.bulkString(Data(command.utf8))] + arguments)
+        let command = RedisData.array([.bulkString(command)] + arguments)
         
         dataSerializer.inputStream(command)
         
-        return promise.future.map { result in
-            guard case .parsed(let value) = result else {
-                throw RedisError(.parsingError)
-            }
-            
-            return value
-        }
+        return promise.future
     }
     
     /// Creates a new Redis client on the provided connection
