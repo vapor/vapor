@@ -51,6 +51,11 @@ public final class RedisClient<DuplexByteStream: Async.Stream> where DuplexByteS
         return promise.future
     }
     
+    /// Creates a pipeline and returns it.
+    public func makePipeline() -> Pipeline<DuplexByteStream> {
+        return Pipeline(client: self)
+    }
+    
     /// Creates a new Redis client on the provided connection
     public init(socket: DuplexByteStream) {
         self.socket = socket

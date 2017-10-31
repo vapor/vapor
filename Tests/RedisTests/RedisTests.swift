@@ -9,6 +9,7 @@ class RedisTests: XCTestCase {
     static let allTests = [
         ("testCRUD", testCRUD),
         ("testPubSub", testPubSub),
+        ("testPipeline", testPipeline),
     ]
     
     var clientCount = 0
@@ -56,5 +57,21 @@ class RedisTests: XCTestCase {
         
         // Prevent deallocation
         XCTAssert(listener.socket.socket.isConnected)
+    }
+    
+    func testPipeline() throws {
+        let connection = try makeClient()
+        _ = try connection.delete(keys: ["*"]).blockingAwait(timeout: .seconds(1))
+        
+        let pipeline = connection.makePipeline()
+        let result = try pipeline
+            .enqueue(command: "SET", arguments: [RedisData(bulk: "hello"), "world"])
+            .enqueue(command: "SET", arguments: [RedisData(bulk: "hello2"), "world"])
+            .execute()
+            .blockingAwait(timeout: .seconds(1))
+        XCTAssertEqual(result[0].string, "+OK\r")
+        XCTAssertEqual(result[1].string, "+OK\r")
+        _ = try connection.delete(keys: ["*"]).blockingAwait(timeout: .seconds(1))
+        
     }
 }
