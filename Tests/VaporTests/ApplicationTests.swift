@@ -11,7 +11,7 @@ class ApplicationTests: XCTestCase {
         let app = Application()
         let cors = CORSMiddleware()
         
-        let router = try app.make(SyncRouter.self).grouped(cors) as SyncRouter
+        let router = try app.make(Router.self).grouped(cors)
         
         router.post("good") { req in
             return try Response(
