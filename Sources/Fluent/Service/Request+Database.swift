@@ -1,7 +1,7 @@
 import Async
 import HTTP
 
-extension Worker {
+extension Request {
     /// Returns a future database connection for the
     /// supplied database identifier if one can be fetched.
     /// The database connection will be cached on this worker.
@@ -32,7 +32,7 @@ extension Worker {
 
 // MARK: Internal
 
-extension Worker {
+extension Request {
     /// The current connection for this request.
     /// Note: This is a Future as the connection may not yet
     /// be available. However, we want all queries for

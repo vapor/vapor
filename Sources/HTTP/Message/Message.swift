@@ -28,7 +28,7 @@ import Dispatch
 /// to add your own stored properties to requests and responses
 /// that can be accessed simply by importing the module that
 /// adds them. This is how much of Vapor's functionality is created.
-public protocol Message: Codable, CustomDebugStringConvertible, Worker {
+public protocol Message: Codable, CustomDebugStringConvertible, Worker, Extendable {
     /// The HTTP version of this message.
     var version: Version { get set }
     /// The HTTP headers.
