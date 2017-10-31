@@ -10,12 +10,12 @@
 ///         }
 ///     }
 ///
-public struct DatabaseIdentifier {
+public struct DatabaseIdentifier<D: Database> {
     /// The unique id.
     public let uid: String
 
     /// Create a new database identifier.
-    public init(_ uid: String) {
+    public init(_ uid: String, type: D.Type = D.self) {
         self.uid = uid
     }
 }
@@ -33,13 +33,6 @@ extension DatabaseIdentifier: Hashable {
 }
 
 // MARK: Default
-
-extension DatabaseIdentifier {
-    /// The main/default database identifier.
-    public static var `default`: DatabaseIdentifier {
-        return DatabaseIdentifier("default")
-    }
-}
 
 extension DatabaseIdentifier: CustomStringConvertible {
     public var description: String {

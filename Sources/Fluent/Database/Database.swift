@@ -4,16 +4,20 @@ import Dispatch
 /// Types conforming to this protocol can be used as
 /// a database for Fluent connections and connection pools.
 public protocol Database {
+    /// This database's connection type.
+    associatedtype Connection
+
     /// Creates a new database connection that will
     /// execute callbacks on the supplied dispatch queue.
+
     func makeConnection(
         on worker: Worker
-    ) -> Future<DatabaseConnection>
+    ) -> Future<Connection>
 }
 
 extension Database {
     /// Create a fluent connection pool for this database.
-    public func makeConnectionPool(max: UInt, on worker: Worker) -> DatabaseConnectionPool {
+    public func makeConnectionPool(max: UInt, on worker: Worker) -> DatabaseConnectionPool<Self> {
         return DatabaseConnectionPool(max: max, database: self, worker: worker)
     }
 }

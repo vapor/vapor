@@ -2,7 +2,7 @@ import Async
 import Dispatch
 
 /// Pools database connections for re-use.
-public final class DatabaseConnectionPool {
+public final class DatabaseConnectionPool<Database: Fluent.Database> {
     /// The database to use to generate new connections.
     public let database: Database
 
@@ -16,10 +16,10 @@ public final class DatabaseConnectionPool {
     private var active: UInt
 
     /// Available connections.
-    private var available: [DatabaseConnection]
+    private var available: [Database.Connection]
 
     /// Notified when more connections are available.
-    private var waiters: [(DatabaseConnection) -> ()]
+    private var waiters: [(Database.Connection) -> ()]
 
     /// Create a new Queue pool
     public init(max: UInt, database: Database, worker: Worker) {
@@ -32,8 +32,8 @@ public final class DatabaseConnectionPool {
     }
 
     /// Request a connection from this queue pool.
-    public func requestConnection() -> Future<DatabaseConnection> {
-        let promise = Promise(DatabaseConnection.self)
+    public func requestConnection() -> Future<Database.Connection> {
+        let promise = Promise(Database.Connection.self)
 
         if let ready = self.available.popLast() {
             promise.complete(ready)
@@ -54,7 +54,7 @@ public final class DatabaseConnectionPool {
     }
 
     /// Release a connection back to the queue pool.
-    public func releaseConnection(_ connection: DatabaseConnection) {
+    public func releaseConnection(_ connection: Database.Connection) {
         if let waiter = self.waiters.popLast() {
             waiter(connection)
         } else {

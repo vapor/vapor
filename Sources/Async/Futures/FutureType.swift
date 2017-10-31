@@ -25,8 +25,11 @@ extension FutureType {
     /// Callback for accepting an error.
     public typealias ErrorCallback = (Error) -> ()
 
-    /// Callback for accepting the expectation.
-    public typealias ExpectationMapCallback<T> = (Expectation) throws -> (T)
+    /// Callback for accepting the expectation and returning something else.
+    public typealias ExpectationMapCallback<T> = (Expectation) throws -> T
+
+    /// Callback for accepting the expectation and returning a new future.
+    public typealias ExpectationFlatMapCallback<T> = (Expectation) throws -> Future<T>
 
     /// Adds a handler to be asynchronously executed on
     /// completion of this future.
@@ -60,6 +63,7 @@ extension FutureType {
     }
 
     /// Maps a future to a future of a different type.
+    /// The result returned within should be non-future type.
     public func map<T>(_ callback: @escaping ExpectationMapCallback<T>) -> Future<T> {
         let promise = Promise(T.self)
 
@@ -72,6 +76,25 @@ extension FutureType {
             }
         }.catch { error in
             promise.fail(error)
+        }
+
+        return promise.future
+    }
+
+    /// Maps a future to a future of a different type.
+    /// The result returned within should be a future.
+    public func flatMap<T>(_ callback: @escaping ExpectationFlatMapCallback<T>) -> Future<T> {
+        let promise = Promise(T.self)
+
+        then { expectation in
+            do {
+                let mapped = try callback(expectation)
+                mapped.chain(to: promise)
+            } catch {
+                promise.fail(error)
+            }
+        }.catch { error in
+                promise.fail(error)
         }
 
         return promise.future
@@ -120,11 +143,42 @@ extension FutureType {
 
 // MARK: Array
 
+public typealias LazyFuture<T> = () -> (Future<T>)
+
+/// FIXME: some way to make this generic?
+extension Array where Element == LazyFuture<Void> {
+    /// Flattens an array of future results into one
+    /// future array result.
+    public func syncFlatten() -> Future<Void> {
+        let promise = Promise<Void>()
+
+        var iterator = makeIterator()
+        func handle(_ future: Element) {
+            future().then { res in
+                if let next = iterator.next() {
+                    handle(next)
+                } else {
+                    promise.complete()
+                }
+            }.catch { error in
+                    promise.fail(error)
+            }
+        }
+
+        if let first = iterator.next() {
+            handle(first)
+        } else {
+            promise.complete()
+        }
+
+        return promise.future
+    }
+}
 
 extension Array where Element: FutureType {
     /// Flattens an array of future results into one
     /// future array result.
-    public func chainingFlatten() -> Future<[Element.Expectation]> {
+    public func orderedFlatten() -> Future<[Element.Expectation]> {
         let promise = Promise<[Element.Expectation]>()
 
         var elements: [Element.Expectation] = []

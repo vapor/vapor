@@ -1,5 +1,5 @@
 /// Represents the databases currently configured for Fluent.
 public struct Databases {
-    /// Internal storage.
-    public let storage: [DatabaseIdentifier: Database]
+    /// Internal storage: [DatabaseIdentifier: Database]
+    internal let storage: [String: Any]
 }

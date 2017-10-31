@@ -10,6 +10,9 @@ public protocol Model: class, Codable {
     /// Usually Int or UUID.
     associatedtype I: Identifier
 
+    /// This model's unique name.
+    static var name: String { get }
+
     /// This model's collection/table name
     static var entity: String { get }
 
@@ -37,9 +40,14 @@ public protocol Model: class, Codable {
 
 /// Free implementations.
 extension Model {
+    /// See Model.name
+    public static var name: String {
+        return "\(Self.self)".lowercased()
+    }
+
     /// See Model.entity
     public static var entity: String {
-        return "\(Self.self)".lowercased() + "s"
+        return name + "s"
     }
 
     /// Seee Model.willCreate()
@@ -56,6 +64,18 @@ extension Model {
     public func willDelete() throws {}
     /// See Model.didDelete()
     public func didDelete() {}
+}
+
+/// MARK: Convenience
+
+extension Model {
+    public func requireId() throws -> I {
+        guard let id = self.id else {
+            throw "no id"
+        }
+
+        return id
+    }
 }
 
 /// MARK: CRUD

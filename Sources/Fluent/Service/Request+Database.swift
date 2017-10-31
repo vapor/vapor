@@ -7,10 +7,10 @@ extension Request {
     /// The database connection will be cached on this worker.
     /// The same database connection will always be returned for
     /// a given worker.
-    public func database(
-        id database: DatabaseIdentifier = .default
-    ) -> Future<DatabaseConnection> {
-        let promise = Promise(DatabaseConnection.self)
+    public func database<Database>(
+        id database: DatabaseIdentifier<Database>
+    ) -> Future<Database.Connection> {
+        let promise = Promise(Database.Connection.self)
 
         if let currentConnection = getCurrentConnection(database: database) {
             currentConnection.chain(to: promise)
@@ -38,15 +38,15 @@ extension Request {
     /// be available. However, we want all queries for
     /// this request to use the _same_ connection when it
     /// becomes available.
-    func getCurrentConnection(
-        database: DatabaseIdentifier
-    ) -> Future<DatabaseConnection>? {
-        return extend["fluent:current-connection:\(database.uid)"] as? Future<DatabaseConnection>
+    func getCurrentConnection<Database>(
+        database: DatabaseIdentifier<Database>
+    ) -> Future<Database.Connection>? {
+        return extend["fluent:current-connection:\(database.uid)"] as? Future<Database.Connection>
     }
 
-    func setCurrentConnection(
-        to connection: Future<DatabaseConnection>?,
-        database: DatabaseIdentifier
+    func setCurrentConnection<Database>(
+        to connection: Future<Database.Connection>?,
+        database: DatabaseIdentifier<Database>
     ) {
         extend["fluent:current-connection:\(database.uid)"] = connection
     }
@@ -54,8 +54,8 @@ extension Request {
 
     /// Releases the current connection for this request
     /// if one exists.
-    func releaseCurrentConnection(
-        database: DatabaseIdentifier
+    func releaseCurrentConnection<Database>(
+        database: DatabaseIdentifier<Database>
     ) throws {
         guard let current = getCurrentConnection(database: database) else {
             return

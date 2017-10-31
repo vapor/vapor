@@ -20,7 +20,9 @@ public final class DatabaseMiddleware: Middleware {
         req.eventLoop.databases = self.databases
         let res = try next.respond(to: req)
         for id in databases.storage.keys {
-            try req.releaseCurrentConnection(database: id)
+            // FIXME:
+            print("need to release: \(id)")
+            // try req.releaseCurrentConnection(database: id)
         }
         return res
     }
