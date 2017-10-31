@@ -5,8 +5,9 @@ import TCP
 @testable import MySQL
 import Core
 
+/// Requires a user with the username `vapor` and password `vapor` with permissions on the `vapor_test` database on localhost
 class MySQLTests: XCTestCase {
-    let pool = ConnectionPool(hostname: "localhost", user: "vapor", password: "vapor", database: "vapor_test", queue: .global())
+    let pool = ConnectionPool(hostname: "localhost", user: "root", password: nil, database: "vapor_test", queue: .global())
     
     static let allTests = [
         ("testPreparedStatements", testPreparedStatements),

@@ -10,6 +10,7 @@ jobs:
       - run: brew services start redis
       - run: brew install mysql
       - run: brew services start mysql
+      - run: echo "CREATE DATABASE vapor_test" | mysql -uroot
       - checkout
       - run: swift build
       # - run: swift build -c release
@@ -24,8 +25,8 @@ jobs:
           MYSQL_ALLOW_EMPTY_PASSWORD: true
           MYSQL_DATABASE: vapor_test
           # MYSQL_ROOT_HOST: %
-          MYSQL_USER: vapor
-          MYSQL_PASSWORD: vapor
+          MYSQL_USER: root
+          # MYSQL_PASSWORD: vapor
     steps:
       - run: apt-get install -yq libssl-dev
       - checkout
