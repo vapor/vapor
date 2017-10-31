@@ -31,7 +31,7 @@ class SocketsTests: XCTestCase {
             let response = try! socket.read(max: 8_192)
 
             let string = String(data: response, encoding: .utf8)
-            XCTAssert(string?.contains("HTTP/1.0 400 Bad Request") == true)
+            XCTAssert(string?.contains("HTTP/1.0 400 Bad Request") == true, "Response \(response) did not contain the expected 'HTTP/1.0 400 Bad Request'")
             promise.complete(())
         }
         read.resume()
@@ -66,7 +66,10 @@ class SocketsTests: XCTestCase {
             
             accepted = (client, read)
             XCTAssertNotNil(accepted)
-            XCTAssert(client.address?.remoteAddress == "127.0.0.1" || client.address?.remoteAddress == "0.0.0.0" || client.address?.remoteAddress == "::1")
+            XCTAssert(
+                client.address?.remoteAddress == "127.0.0.1" || client.address?.remoteAddress == "0.0.0.0" || client.address?.remoteAddress == "::1",
+                "\(client.address?.remoteAddress ?? "nil") was not localhost or an alias"
+            )
         }
         read.resume()
 
