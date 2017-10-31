@@ -10,9 +10,9 @@ jobs:
       - run: brew services start redis
       - run: brew install mysql
       - run: brew services start mysql
-      - run: echo "CREATE DATABASE vapor_test" | mysql -uroot
       - checkout
       - run: swift build
+      - run: echo "CREATE DATABASE vapor_test" | mysql -uroot
       # - run: swift build -c release
       - run: swift test
 
