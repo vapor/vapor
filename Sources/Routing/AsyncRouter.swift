@@ -9,7 +9,7 @@ extension Router {
         _ method: Method,
         to path: [PathComponent],
         use closure: @escaping BasicResponder<F>.Closure
-        ) -> Route where F.Expectation: ResponseRepresentable {
+    ) -> Route where F.Expectation: ResponseRepresentable {
         let responder = BasicResponder(closure: closure)
         let route = Route(method: method, path: path, responder: responder)
         self.register(route: route)
