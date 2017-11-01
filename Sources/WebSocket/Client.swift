@@ -10,10 +10,10 @@ extension WebSocket {
     ///
     /// The future will be completed with the WebSocket connection once the handshake using HTTP is complete.
     ///
-    /// - parameter hostname: The server's hostname to connect to
-    /// - parameter port: The port to connect to, for HTTP
-    /// - parameter uri: The URI is not officially part of the spec, but could route to a different API on the server
-    /// - parameter queue: The queue on which this websocket will read and write
+    /// - parameter uri: The URI containing the remote host to connect to.
+    /// - parameter worker: The Worker which this websocket will use for managing read and write operations
+    ///
+    /// http://localhost:8000/websocket/client/#connecting-a-websocket-client
     public static func connect(
         to uri: URI,
         worker: Worker
@@ -21,8 +21,9 @@ extension WebSocket {
         guard
             uri.scheme == "ws" || uri.scheme == "wss",
             let hostname = uri.hostname,
-            let port = uri.defaultPort ?? uri.port else {
-                throw Error(.invalidURI)
+            let port = uri.port ?? uri.defaultPort
+        else {
+            throw Error(.invalidURI)
         }
         
         // Create a new socket to the host
@@ -39,21 +40,21 @@ extension WebSocket {
         
         // Creates an HTTP client for the handshake
         let serializer = RequestSerializer()
-        let parser = ResponseParser()
+        let parser = ResponseParser(maxBodySize: 50_000)
         
         // Generates the UUID that will make up the WebSocket-Key
-        let uuid = NSUUID().uuidString
+        let id = OSRandom().data(count: 16).base64EncodedString()
         
         // Create a basic HTTP Request, requesting an upgrade
         let request = Request(method: .get, uri: uri, headers: [
+            "Host": uri.hostname ?? "",
             "Connection": "Upgrade",
-            "Upgrade": "websocket",
-            "Sec-WebSocket-Key": uuid,
+            "Sec-WebSocket-Key": id,
             "Sec-WebSocket-Version": "13"
         ])
 
         // Calculates the expected key
-        let expectatedKey = Base64Encoder.encode(data: SHA1.hash(uuid + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"))
+        let expectatedKey = Base64Encoder.encode(data: SHA1.hash(id + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"))
         let expectedKeyString = String(bytes: expectatedKey, encoding: .utf8) ?? ""
 
         // Any errors in the handshake will cause the promise to fail
@@ -88,14 +89,16 @@ extension WebSocket {
         }.catch { error in
             promise.fail(error)
         }
-
-        // Start reading in the client
-        client.start()
-
-        // Send the initial request
-        let data = serializer.serialize(request)
-        client.inputStream(data)
-
-        return promise.future
+        
+        return client.socket.writable(queue: worker.queue).flatMap {
+            // Start reading in the client
+            client.start()
+            
+            // Send the initial request
+            let data = serializer.serialize(request)
+            client.inputStream(data)
+            
+            return promise.future
+        }
     }
 }

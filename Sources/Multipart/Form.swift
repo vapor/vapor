@@ -1,6 +1,9 @@
 import Foundation
+import HTTP
 
 /// A single part
+///
+/// http://localhost:8000/http/multipart/#reading-forms
 public struct Part {
     /// The part's containing data
     public var data: Data
@@ -20,6 +23,8 @@ public struct Part {
 }
 
 /// A Multipart, commonly used in HTTP Forms and SMTP emails
+///
+/// http://localhost:8000/http/multipart/#reading-forms
 public struct Form {
     /// All raw parts in this multipart
     public var parts: [Part]
@@ -28,13 +33,13 @@ public struct Form {
     public func getString(forName name: String) throws -> String {
         for part in parts where part.key == name {
             guard let string = String(bytes: part.data, encoding: .utf8) else {
-                throw Error(identifier: "multipart:invalid-utf8-string", reason: "The part could not be deserialized as UTF-8")
+                throw MultipartError(identifier: "multipart:invalid-utf8-string", reason: "The part could not be deserialized as UTF-8")
             }
             
             return string
         }
         
-        throw Error(identifier: "multipart:no-part", reason: "There is no part with the provided name")
+        throw MultipartError(identifier: "multipart:no-part", reason: "There is no part with the provided name")
     }
     
     /// Gets the `File` associated with the `name`. Throws an error if there is no `File` encoded as UTF-8
@@ -43,7 +48,7 @@ public struct Form {
             return part.data
         }
         
-        throw Error(identifier: "multipart:no-part", reason: "There is no part with the provided name")
+        throw MultipartError(identifier: "multipart:no-part", reason: "There is no part with the provided name")
     }
     
     /// Gets all `File`s associated with the `name`.

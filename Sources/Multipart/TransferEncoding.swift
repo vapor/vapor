@@ -1,4 +1,5 @@
 import Foundation
+import HTTP
 import Bits
 
 /// Encodes buffers

@@ -1,9 +1,11 @@
 import Dispatch
 /*
  https://tools.ietf.org/html/rfc3986#section-3
-
+ 
  URI         = scheme ":" hier-part [ "?" query ] [ "#" fragment ]
+ 
  The following are two example URIs and their component parts:
+ 
  foo://example.com:8042/over/there?name=ferret#nose
  \_/   \______________/\_________/ \_________/ \__/
  |           |            |            |        |
@@ -11,27 +13,39 @@ import Dispatch
  |   _____________________|__
  / \ /                        \
  urn:example:animal:ferret:nose
+ 
+ http://localhost:8000/http/uri/
  */
 public struct URI: Codable {
     // https://tools.ietf.org/html/rfc3986#section-3.1
     public var scheme: String?
-
+    
     // https://tools.ietf.org/html/rfc3986#section-3.2.1
     public var userInfo: UserInfo?
     // https://tools.ietf.org/html/rfc3986#section-3.2.2
     public var hostname: String?
     // https://tools.ietf.org/html/rfc3986#section-3.2.3
     public var port: Port?
-
+    
     // https://tools.ietf.org/html/rfc3986#section-3.3
-    public var path: String
-
+    public private(set) var pathData: Data
+    
+    // https://tools.ietf.org/html/rfc3986#section-3.3
+    public var path: String {
+        get {
+            return String(data: pathData, encoding: .utf8) ?? ""
+        }
+        set {
+            self.pathData = Data(newValue.utf8)
+        }
+    }
+    
     // https://tools.ietf.org/html/rfc3986#section-3.4
     public var query: String?
-
+    
     // https://tools.ietf.org/html/rfc3986#section-3.5
     public var fragment: String?
-
+    
     /// Creates a new URI
     public init(
         scheme: String? = nil,
@@ -39,6 +53,28 @@ public struct URI: Codable {
         hostname: String? = nil,
         port: Port? = nil,
         path: String = "/",
+        query: String? = nil,
+        fragment: String? = nil
+    ) {
+        let path = path.first == "/" ? path : "/" + path
+        
+        self.init(
+            scheme: scheme,
+            userInfo: userInfo,
+            hostname: hostname,
+            port: port,
+            pathData: Data(path.utf8),
+            query: query,
+            fragment: fragment
+        )
+    }
+    
+    internal init(
+        scheme: String? = nil,
+        userInfo: UserInfo? = nil,
+        hostname: String? = nil,
+        port: Port? = nil,
+        pathData: Data,
         query: String? = nil,
         fragment: String? = nil
     ) {
@@ -50,7 +86,8 @@ public struct URI: Codable {
         } else {
             self.port = nil
         }
-        self.path = path.hasPrefix("/") ? path : "/" + path
+        
+        self.pathData = pathData
         self.query = query
         self.fragment = fragment
     }
@@ -91,7 +128,7 @@ extension URI {
         "ws": 80,
         "wss": 443
     ]
-
+    
     /// The default port for scheme associated with this URI if known
     public var defaultPort: Port? {
         guard let scheme = scheme else {
@@ -112,6 +149,7 @@ import Foundation
 
 extension URI: ExpressibleByStringLiteral {
     public init(stringLiteral value: String) {
-        self = URIParser().parse(bytes: DispatchData(value))
+        self = URIParser().parse(data: Data(value.utf8))
     }
 }
+

@@ -170,7 +170,7 @@ public final class Connection {
         var offset = 0
         
         guard let input = data.baseAddress else {
-            throw Error(.invalidPacket)
+            throw MySQLError(.invalidPacket)
         }
         
         // Starts the packet number at the starting number

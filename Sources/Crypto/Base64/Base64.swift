@@ -20,7 +20,7 @@ protocol Base64: class, Async.Stream, ClosableStream {
     var pointer: MutableBytesPointer { get }
     
     /// The bytes that couldn't be parsed from the previous buffer
-    var remainder: [UInt8] { get set }
+    var remainder: Data { get set }
 }
 
 extension Base64 {
@@ -46,7 +46,7 @@ extension Base64 {
         
         // Continues processing the `ByteBuffer` at `input`
         func process() {
-            self.remainder = []
+            self.remainder = Data()
             
             do {
                 // Process the bytes into the local buffer `pointer`
@@ -84,7 +84,9 @@ extension Base64 {
             }
             
             // Set the remainder
-            newPointer.assign(from: remainder, count: remainder.count)
+            remainder.withUnsafeBytes { pointer in
+                newPointer.assign(from: pointer, count: remainder.count)
+            }
             
             // Appends the input
             if input.count > 0, let inputPointer = input.baseAddress {
@@ -106,7 +108,22 @@ extension Base64 {
     /// Any data after this will reopen the stream
     public func close() {
         if remainder.count > 0 {
-            self.inputStream(ByteBuffer(start: nil, count: 0))
+            remainder.withUnsafeBytes { (pointer: BytesPointer) in
+                do {
+                    let buffer = ByteBuffer(start: pointer, count: remainder.count)
+                    
+                    /// Process the remainder
+                    let (_, capacity, _) = try Self.process(buffer, toPointer: self.pointer, capacity: allocatedCapacity, finish: true)
+                    
+                    /// Create an output buffer (having to force cast an always-success case)
+                    let writeBuffer: Output = ByteBuffer(start: self.pointer, count: capacity) as! Self.Output
+                    
+                    // Write the output buffer to the output stream
+                    self.outputStream?(writeBuffer)
+                } catch {
+                    self.errorStream?(error)
+                }
+            }
         }
         
         self.onClose?()

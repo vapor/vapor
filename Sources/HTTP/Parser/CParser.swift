@@ -7,8 +7,8 @@ import Foundation
 /// Possible header states
 enum HeaderState {
     case none
-    case value(name: Headers.Name, DispatchData)
-    case key(DispatchData)
+    case value(Headers.Index)
+    case key(startIndex: Int, endIndex: Int)
 }
 
 
@@ -47,70 +47,70 @@ extension CParser {
     /// Initializes the http parser settings with appropriate callbacks.
     func initialize(_ settings: inout http_parser_settings) {
         // called when chunks of the url have been read
-        settings.on_url = { parser, chunk, length in
+        settings.on_url = { parser, chunkPointer, length in
             guard
                 let results = CParseResults.get(from: parser),
-                let bytes = chunk?.makeBuffer(length: length)
-                else {
-                    // signal an error
-                    return 1
-            }
-
-            // append the url bytes to the results
-            let data = DispatchData(bytes: bytes)
-            if results.url == nil {
-                results.url = data
-            } else {
-                results.url?.append(data)
-            }
-            return 0
-        }
-
-        // called when chunks of a header field have been read
-        settings.on_header_field = { parser, chunk, length in
-            guard
-                let results = CParseResults.get(from: parser),
-                let bytes = chunk?.makeBuffer(length: length)
+                let chunkPointer = chunkPointer
             else {
                 // signal an error
                 return 1
             }
 
-            let data = DispatchData(bytes: bytes)
+            // append the url bytes to the results
+            chunkPointer.withMemoryRebound(to: UInt8.self, capacity: length) { chunkPointer in
+                results.url.append(chunkPointer, count: length)
+            }
+            
+            return 0
+        }
 
+        // called when chunks of a header field have been read
+        settings.on_header_field = { parser, chunkPointer, length in
+            guard
+                let results = CParseResults.get(from: parser),
+                let chunkPointer = chunkPointer
+            else {
+                // signal an error
+                return 1
+            }
+            
             // check current header parsing state
             switch results.headerState {
             case .none:
                 // nothing is being parsed, start a new key
-                results.headerState = .key(data)
-            case .value(let key, let value):
+                results.headerState = .key(startIndex: results.headersData.count, endIndex: results.headersData.count + length)
+            case .value(let index):
                 // there was previously a value being parsed.
                 // it is now finished.
-                let copiedValue = Data(value)
-                let headerValue = String(data: copiedValue, encoding: .utf8) ?? ""
-                results.headers[key, default: []].append(headerValue)
+                
+                results.headersIndexes.append(index)
+                
+                results.headersData.append(.carriageReturn)
+                results.headersData.append(.newLine)
+                
                 // start a new key
-                results.headerState = .key(data)
-            case .key(var key):
+                results.headerState = .key(startIndex: results.headersData.count, endIndex: results.headersData.count + length)
+            case .key(let start, let end):
                 // there is a key currently being parsed.
-                // add the new bytes to it.
-                key.append(data)
-                results.headerState = .key(key)
+                results.headerState = .key(startIndex: start, endIndex: end + length)
+            }
+            
+            chunkPointer.withMemoryRebound(to: UInt8.self, capacity: length) { chunkPointer in
+                results.headersData.append(chunkPointer, count: length)
             }
 
             return 0
         }
 
         // called when chunks of a header value have been read
-        settings.on_header_value = { parser, chunk, length in
+        settings.on_header_value = { parser, chunkPointer, length in
             guard
                 let results = CParseResults.get(from: parser),
-                let bytes = chunk?.makeBuffer(length: length)
+                let chunkPointer = chunkPointer
             else {
                 // signal an error
                 return 1
             }
-            let data = DispatchData(bytes: bytes)
 
             // check the current header parsing state
             switch results.headerState {
@@ -119,18 +119,30 @@ extension CParser {
                 // value is useless.
                 // (this should never be reached)
                 results.headerState = .none
-            case .value(let key, var value):
+            case .value(var index):
                 // there was previously a value being parsed.
                 // add the new bytes to it.
-                value.append(data)
-                results.headerState = .value(name: key, value)
+                index.nameEndIndex += length
+                results.headerState = .value(index)
             case .key(let key):
                 // there was previously a key being parsed.
                 // it is now finished.
-                let key = String(bytes: key, encoding: .utf8)
-                let headerKey = Headers.Name(key ?? "")
-                // add the new bytes alongside the created key
-                results.headerState = .value(name: headerKey, data)
+                results.headersData.append(contentsOf: headerSeparator)
+                
+                // Set a dummy hashvalue
+                let index = Headers.Index(
+                    nameStartIndex: key.startIndex,
+                    nameEndIndex: key.endIndex,
+                    valueStartIndex: results.headersData.count,
+                    valueEndIndex: results.headersData.count + length,
+                    endIndex: results.headersData.count + length + 2
+                )
+                
+                results.headerState = .value(index)
+            }
+            
+            chunkPointer.withMemoryRebound(to: UInt8.self, capacity: length) { chunkPointer in
+                results.headersData.append(chunkPointer, count: length)
             }
 
             return 0
@@ -145,11 +157,13 @@ extension CParser {
 
             // check the current header parsing state
             switch results.headerState {
-            case .value(let key, let value):
+            case .value(let index):
                 // there was previously a value being parsed.
                 // it should be added to the headers dict.
-                let valueString = String(bytes: value, encoding: .utf8) ?? ""
-                results.headers[key, default: []].append(valueString)
+                
+                results.headersIndexes.append(index)
+                results.headersData.append(.carriageReturn)
+                results.headersData.append(.newLine)
             default:
                 // no other cases need to be handled.
                 break
@@ -162,18 +176,16 @@ extension CParser {
         settings.on_body = { parser, chunk, length in
             guard
                 let results = CParseResults.get(from: parser),
-                let bytes = chunk?.makeBuffer(length: length)
+                let chunk = chunk
             else {
                 // signal an error
                 return 1
             }
 
-            let data = DispatchData(bytes: bytes)
-            if results.body == nil {
-                results.body = data
-            } else {
-                results.body?.append(data)
+            chunk.withMemoryRebound(to: UInt8.self, capacity: length) { pointer in
+                results.body.append(pointer, count: length)
             }
+                
             return 0
         }
 
@@ -207,6 +219,8 @@ extension UnsafeBufferPointer where Element == Byte {
         return baseAddress.unsafelyUnwrapped.withMemoryRebound(to: CChar.self, capacity: count) { $0 }
     }
 }
+
+fileprivate let headerSeparator = Data([.colon, .space])
 
 extension Data {
     fileprivate var cPointer: UnsafePointer<CChar> {

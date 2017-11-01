@@ -11,8 +11,8 @@ public final class SHA256 : SHA2_32 {
     /// The amount of processed bytes per chunk
     public static let chunkSize = 64
     
-    /// A buffer that keeps track of any bytes that cannot be processed until the chunk is full.  Size *must* be `chunkSize - 1`
-    public var remainder = MutableBytesPointer.allocate(capacity: 63)
+    /// A buffer that keeps track of any bytes that cannot be processed until the chunk is full.
+    public var remainder = MutableBytesPointer.allocate(capacity: 64)
     
     /// The amount of bytes currently inside the `remainder` pointer.
     public var containedRemainder = 0
@@ -96,8 +96,8 @@ public final class SHA224 : SHA2_32 {
     /// The amount of processed bytes per chunk
     public static let chunkSize = 64
     
-    /// A buffer that keeps track of any bytes that cannot be processed until the chunk is full.  Size *must* be `chunkSize - 1`
-    public var remainder = MutableBytesPointer.allocate(capacity: 63)
+    /// A buffer that keeps track of any bytes that cannot be processed until the chunk is full.
+    public var remainder = MutableBytesPointer.allocate(capacity: 64)
     
     /// The amount of bytes currently inside the `remainder` pointer.
     public var containedRemainder = 0

@@ -14,11 +14,12 @@ public final class HTTPClient {
     let serializer = RequestSerializer()
     
     /// Parses the received `Response`s
-    let parser = ResponseParser()
+    let parser: ResponseParser
     
     /// Creates a new Client wrapped around a `TCP.Client`
-    public init(tcp: TCPClient) {
+    public init(tcp: TCPClient, maxBodySize: Int = 10_000_000) {
         self.tcp = tcp
+        self.parser = ResponseParser(maxBodySize: maxBodySize)
     }
     
     /// Sends a single `Request` and returns a future that can be completed with a `Response`

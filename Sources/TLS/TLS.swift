@@ -76,7 +76,7 @@ public final class TLSClient: Async.Stream, ClosableStream {
         try client.socket.connect(hostname: hostname, port: port)
         
         // Continues setting up SSL after the socket becomes writable (successful connection)
-        return client.socket.writable(queue: queue).flatten {
+        return client.socket.writable(queue: queue).flatMap {
             return try self.ssl.initializeClient(hostname: hostname, signedBy: self.clientCertificatePath)
         }.map {
             self.ssl.start()
