@@ -39,7 +39,7 @@ public final class DatabaseConnectionPool<Database: Fluent.Database> {
             promise.complete(ready)
         } else {
             if self.active < self.max {
-                self.database.makeConnection(on: worker).then { connection in
+                self.database.makeConnection(on: worker).do { connection in
                     self.active += 1
                     promise.complete(connection)
                 }.catch { err in

@@ -65,7 +65,7 @@ public final class BasicPivot<L: Model, R: Model>: ModifiablePivot {
 
 public struct BasicPivotMigration<
     L: Model, R: Model, D: Database
->: Migration where D.Connection: QueryExecutor & SchemaExecutor {
+>: Migration where D.Connection: SchemaExecutor {
     /// See Migration.Database
     public typealias Database = D
 

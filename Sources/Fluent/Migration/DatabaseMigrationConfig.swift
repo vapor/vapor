@@ -2,7 +2,7 @@ import Async
 
 /// Internal struct containing migrations for a single database.
 /// note: This struct is important for maintaining database connection type info.
-internal struct DatabaseMigrationConfig<Database: Fluent.Database>: MigrationRunnable where Database.Connection: QueryExecutor {
+internal struct DatabaseMigrationConfig<Database: Fluent.Database>: MigrationRunnable {
     /// The database identifier for these migrations.
     internal let database: DatabaseIdentifier<Database>
 
@@ -17,17 +17,15 @@ internal struct DatabaseMigrationConfig<Database: Fluent.Database>: MigrationRun
 
     /// See MigrationRunnable.migrate
     internal func migrate(using databases: Databases, on worker: Worker) -> Future<Void> {
-        let promise = Promise(Void.self)
+        return then {
+            guard let database = databases.storage[self.database.uid] as? Database else {
+                throw "no database \(self.database.uid) was found for migrations"
+            }
 
-        if let database = databases.storage[database.uid] as? Database {
-            database.makeConnection(on: worker).then { conn in
-                self.prepareForMigration(on: conn).chain(to: promise)
-            }.catch(promise.fail)
-        } else {
-            promise.fail("no database \(database.uid) was found for migrations")
+            return database.makeConnection(on: worker).then { conn in
+                self.prepareForMigration(on: conn)
+            }
         }
-
-        return promise.future
     }
 
     /// Prepares the connection for migrations by ensuring

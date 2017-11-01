@@ -2,7 +2,7 @@ import Async
 import Foundation
 
 /// Represents a migration that has succesfully ran.
-final class MigrationLog<D: Database>: Model, Timestampable where D.Connection: QueryExecutor {
+final class MigrationLog<D: Database>: Model, Timestampable {
     /// See Model.entity
     static var entity: String { return "fluent" }
 
@@ -76,7 +76,7 @@ extension MigrationLog {
     internal static func prepareMetadata(on connection: Database.Connection) -> Future<Void> {
         let promise = Promise(Void.self)
 
-        connection.query(self).count().then { count in
+        connection.query(self).count().do { count in
             promise.complete()
         }.catch { err in
             // table needs to be created

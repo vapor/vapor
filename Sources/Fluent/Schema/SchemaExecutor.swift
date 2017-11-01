@@ -43,18 +43,13 @@ extension SchemaExecutor {
 extension Future: SchemaExecutor {
     /// See SchemaExecutor.execute()
     public func execute(schema: DatabaseSchema) -> Future<Void> {
-        let promise = Promise(Void.self)
-
         if T.self is SchemaExecutor {
-            self.then { result in
+            return then { result in
                 let executor = result as! SchemaExecutor
-                executor.execute(schema: schema)
-                    .chain(to: promise)
-                }.catch(promise.fail)
+                return executor.execute(schema: schema)
+            }
         } else {
-            promise.fail("future not schema executor type")
+            return Future<Void>(error: "future not schema executor type")
         }
-
-        return promise.future
     }
 }

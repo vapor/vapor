@@ -2,7 +2,7 @@ import Async
 
 /// Contains a single migration.
 /// note: we need this type for type erasing purposes.
-internal struct MigrationContainer<D: Database> where D.Connection: QueryExecutor {
+internal struct MigrationContainer<D: Database> {
     /// static database type info
     /// note: this is important
     typealias Database = D
@@ -31,43 +31,34 @@ internal struct MigrationContainer<D: Database> where D.Connection: QueryExecuto
         batch: Int,
         on connection: Database.Connection
     ) -> Future<Void> {
-        let promise = Promise(Void.self)
-
-        hasPrepared(on: connection).then { hasPrepared in
+        return hasPrepared(on: connection).then { hasPrepared in
             if hasPrepared {
-                promise.complete()
+                return .done
             } else {
-                self.prepare(connection).then {
+                return self.prepare(connection).then {
                     // create the migration log
                     let log = MigrationLog<Database>(name: self.name, batch: batch)
-                    log.save(on: connection).chain(to: promise)
-                }.catch(promise.fail)
+                    return log.save(on: connection)
+                }
             }
-        }.catch(promise.fail)
-
-        return promise.future
+        }
     }
 
     /// reverts this migration only if it hasn't previous run.
     /// if reverted, the migration log is deleted.
     internal func revertIfNeeded(on connection: Database.Connection) -> Future<Void> {
-        let promise = Promise(Void.self)
-
-        hasPrepared(on: connection).then { hasPrepared in
+        return hasPrepared(on: connection).then { hasPrepared in
             if hasPrepared {
-                self.revert(connection).then {
+                return self.revert(connection).then {
                     // delete the migration log
-                    connection.query(MigrationLog<Database>.self)
+                    return connection.query(MigrationLog<Database>.self)
                         .filter("name" == self.name)
                         .delete()
-                        .chain(to: promise)
-                    }.catch(promise.fail)
+                }
             } else {
-                promise.complete()
+                return .done
             }
-        }.catch(promise.fail)
-
-        return promise.future
+        }
     }
 
     /// returns true if the migration has already been prepared.

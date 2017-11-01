@@ -58,7 +58,7 @@ public final class Renderer {
             worker: worker
         )
 
-        serializer.serialize().then { data in
+        serializer.serialize().do { data in
             promise.complete(data)
         }.catch { err in
             if let serr = err as? SerializerError {
@@ -103,8 +103,8 @@ extension Renderer {
             _files[worker.eventLoop.queue.label.hashValue] = file
         }
 
-        file.cachedRead(at: path).then { view in
-            self.render(template: view, context: context, on: worker).then { data in
+        file.cachedRead(at: path).do { view in
+            self.render(template: view, context: context, on: worker).do { data in
                 promise.complete(data)
             }.catch { error in
                 if var error = error as? RenderError {
@@ -133,7 +133,7 @@ extension Renderer {
                 )
             }
 
-            render(template: data, context: context, on: worker).then { rendered in
+            render(template: data, context: context, on: worker).do { rendered in
                 do {
                     guard let string = String(data: rendered, encoding: .utf8) else {
                         throw RenderError(

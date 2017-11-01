@@ -10,17 +10,9 @@ extension SQLiteConnection: QueryExecutor {
         query: DatabaseQuery,
         into stream: I
     ) -> Future<Void> where I.Input == D {
-        let promise = Promise(Void.self)
-
-        do {
-            try _perform(query, into: stream)
-                .then { promise.complete(()) }
-                .catch { err in promise.fail(err) }
-        } catch {
-            promise.fail(error)
+        return then {
+            return try self._perform(query, into: stream)
         }
-
-        return promise.future
     }
 
     private func _perform<I: Async.InputStream, D: Decodable>(
@@ -151,7 +143,7 @@ extension SQLiteConnection: QueryExecutor {
             promise.fail(err)
         }
 
-        sqliteQuery.execute().then {
+        sqliteQuery.execute().do {
             promise.complete()
         }.catch { err in
             promise.fail(err)

@@ -33,7 +33,7 @@ public final class Serializer {
                     body: body,
                     chained: chained,
                     source: syntax.source
-                ).then { context in
+                ).do { context in
                     guard let context = context else {
                         promise.complete(Data())
                         return
@@ -56,7 +56,7 @@ public final class Serializer {
         
         let promise = Promise(Data.self)
 
-        parts.orderedFlatten().then { data in
+        parts.orderedFlatten().do { data in
             let serialized = Data(data.joined())
             promise.complete(serialized)
         }.catch { error in
@@ -87,7 +87,7 @@ public final class Serializer {
 
         for parameter in parameters {
             let inputPromise = Promise(LeafData.self)
-            resolveSyntax(parameter).then { input in
+            resolveSyntax(parameter).do { input in
                 inputPromise.complete(input ?? .null)
             }.catch { error in
                 inputPromise.fail(error)
@@ -95,7 +95,7 @@ public final class Serializer {
             inputFutures.append(inputPromise.future)
         }
 
-        inputFutures.orderedFlatten().then { inputs in
+        inputFutures.orderedFlatten().do { inputs in
             do {
                 let parsed = ParsedTag(
                     name: name,
@@ -109,7 +109,7 @@ public final class Serializer {
                     parsed: parsed,
                     context: &self.context,
                     renderer: self.renderer
-                ).then { data in
+                ).do { data in
                     if let data = data {
                         promise.complete(data)
                     } else if let chained = chained {
@@ -121,7 +121,7 @@ public final class Serializer {
                                 body: body,
                                 chained: c,
                                 source: chained.source
-                            ).then { data in
+                            ).do { data in
                                 promise.complete(data)
                             }.catch { error in
                                 promise.fail(error)
@@ -162,7 +162,7 @@ public final class Serializer {
                 context: context,
                 worker: self.worker
             )
-            serializer.serialize().then { bytes in
+            serializer.serialize().do { bytes in
                 promise.complete(.data(bytes))
             }.catch { error in
                 promise.fail(error)
@@ -180,18 +180,14 @@ public final class Serializer {
 
         switch op {
         case .equal:
-            l.then { l in
-                r.then { r in
-                    promise.complete(.bool(l == r))
-                }.catch { error in
-                    promise.fail(error)
+            return l.then { l in
+                return r.map { r in
+                    return .bool(l == r)
                 }
-            }.catch { error in
-                promise.fail(error)
             }
         case .notEqual:
-            l.then { l in
-                r.then { r in
+            l.do { l in
+                r.do { r in
                     promise.complete(.bool(l != r))
                 }.catch { error in
                     promise.fail(error)
@@ -200,8 +196,8 @@ public final class Serializer {
                 promise.fail(error)
             }
         case .and:
-            l.then { l in
-                r.then { r in
+            l.do { l in
+                r.do { r in
                     promise.complete(.bool(l?.bool != false && r?.bool != false))
                 }.catch { error in
                     promise.fail(error)
@@ -210,8 +206,8 @@ public final class Serializer {
                 promise.fail(error)
             }
         case .or:
-            r.then { r in
-                l.then { l in
+            r.do { r in
+                l.do { l in
                     promise.complete(.bool(l?.bool != false || r?.bool != false))
                 }.catch { error in
                     promise.fail(error)
@@ -220,8 +216,8 @@ public final class Serializer {
                 promise.fail(error)
             }
         default:
-            l.then { l in
-                r.then { r in
+            l.do { l in
+                r.do { r in
                     if let leftDouble = l?.double, let rightDouble = r?.double {
                         switch op {
                         case .add:
@@ -259,19 +255,19 @@ public final class Serializer {
 
         switch syntax.kind {
         case .constant(let constant):
-            resolveConstant(constant).then { data in
+            resolveConstant(constant).do { data in
                 promise.complete(data)
             }.catch { error in
                 promise.fail(error)
             }
         case .expression(let op, let left, let right):
-            resolveExpression(op, left: left, right: right).then { data in
+            resolveExpression(op, left: left, right: right).do { data in
                 promise.complete(data)
             }.catch { error in
                 promise.fail(error)
             }
         case .identifier(let id):
-            contextFetch(path: id).then { value in
+            contextFetch(path: id).do { value in
                 promise.complete(value ?? .null)
             }.catch { error in
                 promise.fail(error)
@@ -288,7 +284,7 @@ public final class Serializer {
             switch syntax.kind {
             case .identifier(let id):
                 let promise = Promise(LeafData?.self)
-                contextFetch(path: id).then { data in
+                contextFetch(path: id).do { data in
                     promise.complete(.bool(data?.bool == true))
                 }.catch { error in
                     promise.fail(error)
@@ -335,7 +331,7 @@ public final class Serializer {
                     promise.complete(nil)
                 }
             case .future(let fut):
-                fut.then { value in
+                fut.do { value in
                     current = value
                     handle(path)
                 }.catch { error in

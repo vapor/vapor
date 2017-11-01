@@ -68,7 +68,7 @@ extension QueryBuilder {
             default: break
             }
 
-            run().then {
+            run().do {
                 switch self.query.action {
                 case .create: model.didCreate()
                 case .update: model.didUpdate()
@@ -94,7 +94,7 @@ extension QueryBuilder {
             if let id = model.id {
                 filter("id" == id)
                 query.action = .delete
-                run().then {
+                run().do {
                     model.didDelete()
                     promise.complete()
                 }.catch(promise.fail)

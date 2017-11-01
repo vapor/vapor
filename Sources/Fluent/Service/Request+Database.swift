@@ -10,12 +10,10 @@ extension Request {
     public func database<Database>(
         _ database: DatabaseIdentifier<Database>
     ) -> Future<Database.Connection> {
-        let promise = Promise(Database.Connection.self)
-
         if let currentConnection = currentConnections[database.uid]?.connection as? Future<Database.Connection> {
             /// this request already has a connection
             /// for this db, use it
-            currentConnection.chain(to: promise)
+            return currentConnection
         } else {
             /// this is the first attempt to connect to this
             /// db for this request
@@ -26,7 +24,7 @@ extension Request {
                 /// create a struct that contains both this connection
                 /// and the information to release it.
                 let current = CurrentConnection(connection: conn) {
-                    conn.then { conn in
+                    conn.do { conn in
                         pool.releaseConnection(conn)
                         self.currentConnections[database.uid] = nil
                     }.catch { err in
@@ -38,13 +36,11 @@ extension Request {
                 currentConnections[database.uid] = current
 
                 /// done
-                conn.chain(to: promise)
+                return conn
             } else {
-                promise.fail("no connection pool for \(database)")
+                return Future(error: "no connection pool for \(database)")
             }
         }
-
-        return promise.future
     }
 
     /// Releases the database connection for the supplied

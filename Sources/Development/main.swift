@@ -147,7 +147,7 @@ router.get("sqlite") { req -> Future<String> in
 
     // query.data = Message(id: "UUID:5", text: "asdf", time: 123)
 
-    query.all().then { messages in
+    query.all().do { messages in
         var data = ""
         for message in messages {
             data += "\(message.id!): \(message.text) @ \(message.time)\n"

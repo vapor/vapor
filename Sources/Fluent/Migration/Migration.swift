@@ -5,7 +5,7 @@ public protocol Migration {
     /// The type of database this migration can run on.
     /// Migrations require a query executor to work correctly
     /// as they must be able to query the MigrationLog model.
-    associatedtype Database: Fluent.Database where Database.Connection: QueryExecutor
+    associatedtype Database: Fluent.Database
 
     /// Runs this migration's changes on the database.
     /// This is usually creating a table, or altering an existing one.

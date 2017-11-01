@@ -5,8 +5,6 @@ import SQLite
 extension SQLiteConnection: SchemaExecutor {
     /// See SchemaExecutor.execute()
     public func execute(schema: DatabaseSchema) -> Future<Void> {
-        let promise = Promise(Void.self)
-
         let schemaStatement: SchemaStatement
 
         switch schema.action {
@@ -14,8 +12,7 @@ extension SQLiteConnection: SchemaExecutor {
             schemaStatement = .create(columns: schema.addFields.map { $0.column })
         case .update:
             guard schema.removeFields.count == 0 else {
-                promise.fail("SQLite does not support deleting columns")
-                return promise.future
+                return Future(error: "SQLite does not support deleting columns")
             }
 
             schemaStatement = .alter(
@@ -30,14 +27,7 @@ extension SQLiteConnection: SchemaExecutor {
         let string = SQLiteSQLSerializer()
             .serialize(query: .schema(schemaQuery))
 
-        let sqliteQuery = self.makeQuery(string)
-        sqliteQuery.execute().then {
-            promise.complete()
-        }.catch { err in
-            promise.fail(err)
-        }
-
-        return promise.future
+        return makeQuery(string).execute()
     }
 }
 

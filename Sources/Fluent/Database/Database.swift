@@ -5,7 +5,7 @@ import Dispatch
 /// a database for Fluent connections and connection pools.
 public protocol Database {
     /// This database's connection type.
-    associatedtype Connection
+    associatedtype Connection: QueryExecutor
 
     /// Creates a new database connection that will
     /// execute callbacks on the supplied dispatch queue.

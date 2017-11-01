@@ -24,7 +24,7 @@ public final class Var: Tag {
                     context: context,
                     worker: parsed.worker
                 )
-                serializer.serialize().then { rendered in
+                serializer.serialize().do { rendered in
                     dict[key] = .data(rendered)
                     updateContext(with: .dictionary(dict))
                     promise.complete(nil)

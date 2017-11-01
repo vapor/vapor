@@ -31,7 +31,7 @@ public final class Loop: Tag {
                     worker: parsed.worker
                 )
                 let subpromise = Promise(Data.self)
-                serializer.serialize().then { bytes in
+                serializer.serialize().do { bytes in
                     subpromise.complete(bytes)
                 }.catch { error in
                     promise.fail(error)
@@ -39,7 +39,7 @@ public final class Loop: Tag {
                 results.append(subpromise.future)
             }
 
-            results.flatten().then { datas in
+            results.flatten().do { datas in
                 let data = Data(datas.joined())
                 promise.complete(.data(data))
             }.catch { error in

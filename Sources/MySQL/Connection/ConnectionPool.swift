@@ -70,7 +70,7 @@ public class ConnectionPool {
             return promise.future
         }
         
-        _ = try Connection.makeConnection(hostname: hostname, user: user, password: password, database: database, queue: queue).then { connection in
+        _ = try Connection.makeConnection(hostname: hostname, user: user, password: password, database: database, queue: queue).do { connection in
             let pair = ConnectionPair(connection: connection)
             pair.reserved = true
             

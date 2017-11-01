@@ -184,7 +184,7 @@ public final class SQLiteQuery: Async.OutputStream {
         }
 
         // start the statement's output stream
-        execute().then {
+        execute().do {
             promise.complete(rows)
         }.catch { error in
             promise.fail(error)

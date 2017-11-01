@@ -35,7 +35,7 @@ extension FutureType {
     /// completion of this future.
     ///
     /// Will *not* be executed if an error occurrs
-    public func then(_ callback: @escaping ExpectationCallback) -> Self {
+    public func `do`(_ callback: @escaping ExpectationCallback) -> Self {
         addAwaiter { result in
             guard let ex = result.expectation else {
                 return
@@ -67,7 +67,7 @@ extension FutureType {
     public func map<T>(_ callback: @escaping ExpectationMapCallback<T>) -> Future<T> {
         let promise = Promise(T.self)
 
-        then { expectation in
+        self.do { expectation in
             do {
                 let mapped = try callback(expectation)
                 promise.complete(mapped)
@@ -86,7 +86,7 @@ extension FutureType {
     public func then<T>(_ callback: @escaping ExpectationFlatMapCallback<T>) -> Future<T> {
         let promise = Promise(T.self)
 
-        then { expectation in
+        self.do { expectation in
             do {
                 let mapped = try callback(expectation)
                 mapped.chain(to: promise)
@@ -122,7 +122,7 @@ extension FutureType {
 
     /// Chains a future to a promise of the same type.
     public func chain(to promise: Promise<Expectation>) {
-        then(promise.complete).catch(promise.fail)
+        self.do(promise.complete).catch(promise.fail)
     }
 
     /// Get called back whenever the future is complete,
@@ -141,6 +141,18 @@ extension FutureType {
     }
 }
 
+public func then<T>(_ callback: @escaping () throws -> Future<T>) -> Future<T> {
+    let promise = Promise(T.self)
+
+    do {
+        try callback().chain(to: promise)
+    } catch {
+        promise.fail(error)
+    }
+
+    return promise.future
+}
+
 // MARK: Array
 
 public typealias LazyFuture<T> = () -> (Future<T>)
@@ -154,7 +166,7 @@ extension Array where Element == LazyFuture<Void> {
 
         var iterator = makeIterator()
         func handle(_ future: Element) {
-            future().then { res in
+            future().do { res in
                 if let next = iterator.next() {
                     handle(next)
                 } else {
@@ -185,7 +197,7 @@ extension Array where Element: FutureType {
 
         var iterator = makeIterator()
         func handle(_ future: Element) {
-            future.then { res in
+            future.do { res in
                 elements.append(res)
                 if let next = iterator.next() {
                     handle(next)
@@ -219,7 +231,7 @@ extension Array where Element: FutureType, Element.Expectation == Void {
     public func flatten() -> Future<Void> {
         let many = ManyFutures(self)
         let promise = Promise(Void.self)
-        many.promise.future.then { _ in
+        many.promise.future.do { _ in
             promise.complete()
         }.catch(promise.fail)
         return promise.future
@@ -248,7 +260,7 @@ final class ManyFutures<F: FutureType> {
         self.promise = Promise<[F.Expectation]>()
 
         for future in many {
-            future.then { res in
+            future.do { res in
                 self.results.append(res)
                 self.update()
             }.catch { err in

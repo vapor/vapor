@@ -3,9 +3,9 @@ extension Future {
     public func flatten<B>(_ closure: @escaping ((T) throws -> (Future<B>))) -> Future<B> {
         let promise = Promise<B>()
         
-        self.then { result in
+        self.do { result in
             do {
-                try closure(result).then { result in
+                try closure(result).do { result in
                     promise.complete(result)
                     
                 // Cascades failed promise results
