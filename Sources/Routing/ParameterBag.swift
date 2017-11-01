@@ -1,3 +1,4 @@
+import Async
 import HTTP
 
 /// A bag for holding parameters resolved during router
@@ -24,44 +25,45 @@ public struct ParameterBag {
     ///     let post = try parameters.next(Post.self)
     ///     let comment = try parameters.next(Comment.self)
     ///
-    public mutating func next<P: Parameter>(_ parameter: P.Type = P.self) throws -> P {
-        guard parameters.count > 0 else {
-            throw Error(.insufficientParameters)
+    public mutating func next<P: Parameter>(_ parameter: P.Type = P.self) -> Future<P> {
+        let promise = Promise(P.self)
+
+        if parameters.count > 0 {
+            let current = parameters[0]
+
+            if current.slug == P.uniqueSlug {
+                do {
+                    let item = try P.make(for: current.value, in: request)
+                    parameters = Array(parameters.dropFirst())
+                    item.chain(to: promise)
+                } catch {
+                    promise.fail(error)
+                }
+            } else {
+                promise.fail(Error(.invalidParameterType(
+                    actual: P.self, // FIXME
+                    expected: P.self
+                )))
+            }
+        } else {
+            promise.fail(Error(.insufficientParameters))
         }
-        let current = parameters[0]
 
-        guard current.type == P.self else {
-            throw Error(.invalidParameterType(
-                actual: current.type,
-                expected: P.self
-            ))
-        }
-
-        let item = try current.type.make(for: current.value, in: request)
-        guard let cast = item as? P else {
-            throw Error(.invalidParameterType(
-                actual: type(of: item),
-                expected: P.self
-            ))
-        }
-
-        parameters = Array(parameters.dropFirst())
-
-        return cast
+        return promise.future
     }
 }
 
 /// A parameter and its resolved value.
 internal struct LazyParameter {
     /// The parameter type.
-    let type: Parameter.Type
+    let slug: String
 
     /// The resolved value.
     let value: String
 
     /// Create a new lazy parameter.
-    init(type: Parameter.Type, value: String) {
-        self.type = type
+    init(slug: String, value: String) {
+        self.slug = slug
         self.value = value
     }
 }

@@ -23,8 +23,8 @@ public final class BasicPivot<L: Model, R: Model>: Pivot {
     /// Create a new basic pivot from instances.
     public init(id: UUID? = nil, _ left: Left, _ right: Right) throws {
         self.id = id
-        self.leftID = try left.requireId()
-        self.rightID = try right.requireId()
+        self.leftID = try left.requireID()
+        self.rightID = try right.requireID()
     }
 
     /// Create a new basic pivot from IDs.

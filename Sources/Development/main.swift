@@ -41,6 +41,7 @@ migrationConfig.add(migration: AddUsers.self, database: .beta)
 migrationConfig.add(migration: Pet.self, database: .beta)
 migrationConfig.add(migration: Toy.self, database: .beta)
 migrationConfig.add(migration: BasicPivotMigration<Toy, Pet, SQLiteDatabase>.self, database: .beta)
+migrationConfig.add(migration: TestSiblings.self, database: .beta)
 services.register(migrationConfig)
 
 services.register(
@@ -119,6 +120,12 @@ router.get("transaction") { req -> Future<String> in
         ].flatten()
     }.map {
         return "Done"
+    }
+}
+
+router.get("pets", Pet.parameter, "toys") { req -> Future<[Toy]> in
+    return req.parameters.next(Pet.self).flatMap { pet in
+        return pet.toys.query(on: req.database(.beta)).all()
     }
 }
 

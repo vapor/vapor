@@ -76,7 +76,13 @@ extension QueryBuilder {
         baseKey: String = M.idKey,
         joinedKey: String = M.foreignIDKey
     ) -> Self {
-        let join = Join(type: type, base: M.self, joined: Joined.self)
+        let join = Join(
+            type: type,
+            base: M.self,
+            joined: Joined.self,
+            baseKey: baseKey,
+            joinedKey: joinedKey
+        )
         query.joins.append(join)
         return self
     }

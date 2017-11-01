@@ -6,17 +6,69 @@ import Vapor
 import Fluent
 import SQLite
 
+
+struct TestSiblings: Migration {
+    typealias Database = SQLiteDatabase
+
+    static func prepare(on connection: SQLiteConnection) -> Future<Void> {
+        let owner = User(name: "Tanner", age: 23)
+        return owner.save(on: connection).flatMap {
+            let pet = try Pet(name: "Ziz", ownerID: owner.requireID())
+            let toy = Toy(name: "Rubber Band")
+
+            return [
+                pet.save(on: connection),
+                toy.save(on: connection)
+            ].flatten().flatMap {
+                let pivot = try BasicPivot<Toy, Pet>(toy, pet)
+                return pivot.save(on: connection)
+            }
+        }
+    }
+
+    static func revert(on connection: SQLiteConnection) -> Future<Void> {
+        return Future(())
+    }
+}
+
+import Routing
+
+extension Pet: Parameter {
+    static var uniqueSlug: String {
+        return "pet"
+    }
+
+    static func make(for parameter: String, in request: Request) throws -> Future<Pet> {
+        guard let uuid = UUID(uuidString: parameter) else {
+            throw "not a uuid"
+        }
+
+        return Pet.find(uuid, on: request.database(.beta)).map { pet in
+            guard let pet = pet else {
+                throw "invalid pet id"
+            }
+
+            return pet
+        }
+    }
+}
+
 final class Pet: Model {
     var id: UUID?
     var name: String
     var ownerID: UUID
+
+    init(name: String, ownerID: UUID) {
+        self.name = name
+        self.ownerID = ownerID
+    }
 
     var owner: Parent<Pet, User> {
         return parent(idKey: \Pet.ownerID)
     }
 
     var toys: Siblings<Pet, Toy, BasicPivot<Toy, Pet>> {
-        return siblings()
+        return siblings(fromForeignIDKey: "rightID", toForeignIDKey: "leftID")
     }
 }
 
@@ -39,6 +91,10 @@ extension Pet: Migration {
 final class Toy: Model {
     var id: UUID?
     var name: String
+
+    init(name: String) {
+        self.name = name
+    }
 
     var pets: Siblings<Toy, Pet, BasicPivot<Toy, Pet>> {
         return siblings()

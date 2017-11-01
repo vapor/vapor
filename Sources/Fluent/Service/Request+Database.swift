@@ -13,13 +13,16 @@ extension Request {
         let promise = Promise(Database.Connection.self)
 
         if let currentConnection = currentConnections[database.uid]?.connection as? Future<Database.Connection> {
+            print("current conn")
             /// this request already has a connection
             /// for this db, use it
             currentConnection.chain(to: promise)
         } else {
+            print("request new conn")
             /// this is the first attempt to connect to this
             /// db for this request
             if let pool = eventLoop.getConnectionPool(database: database) {
+                print("pool \(pool)")
                 /// request a connection from the pool
                 let conn = pool.requestConnection()
 
@@ -36,10 +39,12 @@ extension Request {
 
                 /// store this struct
                 currentConnections[database.uid] = current
+                print(currentConnections)
 
                 /// done
                 conn.chain(to: promise)
             } else {
+                print("no event loop")
                 promise.fail("no connection pool for \(database)")
             }
         }

@@ -4,7 +4,7 @@ public enum PathComponent {
     case constant(String)
 
     /// A dynamic parameter component.
-    case parameter(Parameter.Type)
+    case parameter(String)
 }
 
 /// Capable of being represented by a path component.

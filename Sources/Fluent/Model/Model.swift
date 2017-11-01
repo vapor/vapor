@@ -89,7 +89,7 @@ extension Model {
 /// MARK: Convenience
 
 extension Model {
-    public func requireId() throws -> Identifier {
+    public func requireID() throws -> Identifier {
         guard let id = self.id else {
             throw "no id"
         }
