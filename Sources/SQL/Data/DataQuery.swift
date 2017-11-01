@@ -31,9 +31,9 @@ public struct DataQuery {
 }
 
 public struct DataComputed {
-    public let function: String
-    public let columns: [DataColumn]
-    public let key: String?
+    public var function: String
+    public var columns: [DataColumn]
+    public var key: String?
 
     public init(
         function: String,

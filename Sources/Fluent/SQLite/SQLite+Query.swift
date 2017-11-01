@@ -110,11 +110,17 @@ extension SQLiteConnection: QueryExecutor {
             }
 
             sqlQuery = .data(delete)
-        case .aggregate(_, _):
-            // FIXME: actually take field and aggregate into account
+        case .aggregate(let action, let entity, let field):
             var select = DataQuery(statement: .select, table: fluentQuery.entity)
 
-            let count = DataComputed(function: "count", key: "fluentAggregate")
+            var count = DataComputed(
+                function: action.function,
+                key: "fluentAggregate"
+            )
+            if let name = field {
+                let col = DataColumn(table: entity, name: name)
+                count.columns.append(col)
+            }
             select.computed.append(count)
 
             sqlQuery = .data(select)
@@ -148,6 +154,19 @@ extension SQLiteConnection: QueryExecutor {
         }
 
         return promise.future
+    }
+}
+
+extension Aggregate {
+    var function: String {
+        switch self {
+        case .count: return "count"
+        case .sum: return "sum"
+        case .custom(let s): return s
+        case .average: return "avg"
+        case .min: return "min"
+        case .max: return "max"
+        }
     }
 }
 
