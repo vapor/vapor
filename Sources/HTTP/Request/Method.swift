@@ -1,6 +1,8 @@
 /// An HTTP Request method
 ///
 /// Used to provide information about the kind of action being requested
+///
+/// http://localhost:8000/http/method/
 public enum Method : Equatable, Hashable, Codable, CustomDebugStringConvertible, ExpressibleByStringLiteral {
     /// Decodes a method from a String
     public init(from decoder: Decoder) throws {
@@ -101,7 +103,7 @@ public enum Method : Equatable, Hashable, Codable, CustomDebugStringConvertible,
 
     /// Creates a new method from a String
     public init(_ string: String ){
-        switch string {
+        switch string.uppercased() {
         case "GET": self = .get
         case "PUT": self = .put
         case "POST": self = .post

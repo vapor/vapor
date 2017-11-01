@@ -3,14 +3,18 @@ import Dispatch
  https://tools.ietf.org/html/rfc3986#section-3
 
  URI         = scheme ":" hier-part [ "?" query ] [ "#" fragment ]
+ 
  The following are two example URIs and their component parts:
+ 
  foo://example.com:8042/over/there?name=ferret#nose
  \_/   \______________/\_________/ \_________/ \__/
- |           |            |            |        |
+  |           |            |            |        |
  scheme     authority       path        query   fragment
- |   _____________________|__
+  |   _____________________|__
  / \ /                        \
  urn:example:animal:ferret:nose
+ 
+ http://localhost:8000/http/uri/
  */
 public struct URI: Codable {
     // https://tools.ietf.org/html/rfc3986#section-3.1

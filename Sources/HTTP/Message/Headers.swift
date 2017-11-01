@@ -1,5 +1,6 @@
 /// Representation of the HTTP headers associated with a `HTTPRequest` or `HTTPResponse`.
 /// Headers are subscriptable using case-insensitive comparison or provide `Name` constants. eg.
+///
 /// ```swift
 ///    let contentLength = headers["content-length"]
 /// ```
@@ -7,10 +8,14 @@
 /// ```swift
 ///    let contentLength = headers[.contentLength]
 /// ```
+///
+/// http://localhost:8000/http/headers/
 public struct Headers: Codable {
     var storage: [Name: [String]]
 
-    /// :nodoc:
+    /// Accesses the (first) value associated with the `Name` if any
+    ///
+    /// http://localhost:8000/http/headers/#accessing-headers
     public subscript(name: Name) -> String? {
         get {
             guard let value = storage[name] else { return nil }
@@ -44,7 +49,7 @@ public struct Headers: Codable {
         }
     }
 
-    /// :nodoc:
+    /// Accesses all values associated with the `Name`
     public subscript(valuesFor name: Name) -> [String] {
         get { return storage[name] ?? [] }
         set { storage[name] = newValue.isEmpty ? nil : newValue }
@@ -90,8 +95,8 @@ extension Headers {
     }
 }
 
-extension Headers : Sequence {
-    /// :nodoc:
+extension Headers: Sequence {
+    /// Iterates over all headers
     public func makeIterator() -> AnyIterator<(name: Name, value: String)> {
         return AnyIterator(StorageIterator(storage.makeIterator()))
     }

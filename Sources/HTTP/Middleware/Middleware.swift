@@ -1,14 +1,16 @@
 import Async
 
 /// Capable of transforming requests and responses.
+///
+/// http://localhost:8000/http/middleware/
 public protocol Middleware {
     func respond(to request: Request, chainingTo next: Responder) throws -> Future<Response>
 }
 
 // MARK: Responder
 
-/// A wrapper that applies the supplied middleware
-/// to a responder.
+/// A wrapper that applies the supplied middleware to a responder.
+///
 /// Note: internal since it is exposed through `makeResponder` extensions.
 internal final class MiddlewareResponder: Responder {
     /// The middleware to apply.
@@ -33,8 +35,7 @@ internal final class MiddlewareResponder: Responder {
 // MARK: Convenience
 
 extension Middleware {
-    /// Converts a middleware into a responder by chaining it
-    /// to an actual responder.
+    /// Converts a middleware into a responder by chaining it to an actual responder.
     public func makeResponder(chainedTo responder: Responder) -> Responder {
         return MiddlewareResponder(middleware: self, chained: responder)
     }
@@ -42,8 +43,8 @@ extension Middleware {
 
 /// Extension on [Middleware]
 extension Array where Element == Middleware {
-    /// Converts an array of middleware into a responder by chaining
-    /// them to an actual responder.
+    /// Converts an array of middleware into a responder by
+    /// chaining them to an actual responder.
     public func makeResponder(chainedto responder: Responder) -> Responder {
         var responder = responder
         for middleware in self {
@@ -55,8 +56,8 @@ extension Array where Element == Middleware {
 
 /// Extension on [ConcreteMiddleware]
 extension Array where Element: Middleware {
-    /// Converts an array of middleware into a responder by chaining
-    /// them to an actual responder.
+    /// Converts an array of middleware into a responder by
+    /// chaining them to an actual responder.
     public func makeResponder(chainedto responder: Responder) -> Responder {
         var responder = responder
         for middleware in self {

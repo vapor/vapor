@@ -37,7 +37,7 @@ extension Row {
         case .null:
             append(.null, forField: field)
         default:
-            throw Error(.unsupported)
+            throw MySQLError(.unsupported)
         }
     }
     
@@ -54,13 +54,13 @@ extension Row {
             // `longlong` is an (U)Int64 being either signed or unsigned
             if field.flags.contains(.unsigned) {
                 guard let int = UInt64(value) else {
-                    throw Error(.parsingError)
+                    throw MySQLError(.parsingError)
                 }
                 
                 append(.uint64(int), forField: field)
             } else {
                 guard let int = Int64(value) else {
-                    throw Error(.parsingError)
+                    throw MySQLError(.parsingError)
                 }
                 
                 append(.int64(int), forField: field)
@@ -72,13 +72,13 @@ extension Row {
             // `long` is an (U)Int32 being either signed or unsigned
             if field.flags.contains(.unsigned) {
                 guard let int = UInt32(value) else {
-                    throw Error(.parsingError)
+                    throw MySQLError(.parsingError)
                 }
                 
                 append(.uint32(int), forField: field)
             } else {
                 guard let int = Int32(value) else {
-                    throw Error(.parsingError)
+                    throw MySQLError(.parsingError)
                 }
                 
                 append(.int32(int), forField: field)
@@ -87,13 +87,13 @@ extension Row {
             // `long` is an (U)Int16 being either signed or unsigned
             if field.flags.contains(.unsigned) {
                 guard let int = UInt16(value) else {
-                    throw Error(.parsingError)
+                    throw MySQLError(.parsingError)
                 }
                 
                 append(.uint16(int), forField: field)
             } else {
                 guard let int = Int16(value) else {
-                    throw Error(.parsingError)
+                    throw MySQLError(.parsingError)
                 }
                 
                 append(.int16(int), forField: field)
@@ -102,13 +102,13 @@ extension Row {
             // `tiny` is an (U)Int8 being either signed or unsigned
             if field.flags.contains(.unsigned) {
                 guard let int = UInt8(value) else {
-                    throw Error(.parsingError)
+                    throw MySQLError(.parsingError)
                 }
                 
                 append(.uint8(int), forField: field)
             } else {
                 guard let int = Int8(value) else {
-                    throw Error(.parsingError)
+                    throw MySQLError(.parsingError)
                 }
                 
                 append(.int8(int), forField: field)
@@ -116,19 +116,19 @@ extension Row {
         case .double:
             // Decodes this string as a Double
             guard let double = Double(value) else {
-                throw Error(.parsingError)
+                throw MySQLError(.parsingError)
             }
             
             append(.double(double), forField: field)
         case .float:
             // Decodes this string as a Float
             guard let float = Float(value) else {
-                throw Error(.parsingError)
+                throw MySQLError(.parsingError)
             }
             
             append(.float(float), forField: field)
         default:
-            throw Error(.unsupported)
+            throw MySQLError(.unsupported)
         }
     }
 }

@@ -24,6 +24,18 @@ fileprivate let encodeTable = Data("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqr
 ///     encoder.finishStream()
 ///     // after finishing the stream, the encoder will return to the start and will be reuable for the next incoming data
 public final class Base64Encoder: Base64 {
+    /// The capacity currently used in the pointer
+    var currentCapacity = 0
+    
+    /// The total capacity of the pointer
+    let allocatedCapacity: Int
+    
+    /// The pointer for containing the base64 encoded data
+    let pointer: MutableBytesPointer
+    
+    /// The bytes that couldn't be parsed from the previous buffer
+    var remainder = Data()
+    
     /// Accepts byte streams
     public typealias Input = ByteBuffer
     
@@ -136,18 +148,6 @@ public final class Base64Encoder: Base64 {
         return (inputPosition == buffer.count, outputPosition, inputPosition)
     }
     
-    /// The capacity currently used in the pointer
-    var currentCapacity = 0
-    
-    /// The total capacity of the pointer
-    let allocatedCapacity: Int
-    
-    /// The pointer for containing the base64 encoded data
-    let pointer: MutableBytesPointer
-    
-    /// The bytes that couldn't be parsed from the previous buffer
-    var remainder = [UInt8]()
-    
     /// Creates a new Base64 encoder
     ///
     /// - parameter allocatedCapacity: The expected (maximum) size of each buffer inputted into this stream
@@ -155,6 +155,7 @@ public final class Base64Encoder: Base64 {
         self.allocatedCapacity = (bufferCapacity / 3) * 4 &+ ((bufferCapacity % 3 > 0) ? 1 : 0)
         self.pointer = MutableBytesPointer.allocate(capacity: self.allocatedCapacity)
         self.pointer.initialize(to: 0, count: self.allocatedCapacity)
+        self.remainder.reserveCapacity(4)
     }
     
     deinit {

@@ -40,7 +40,8 @@ enum Response {
              file: String = #file,
              function: String = #function,
              line: UInt = #line,
-             column: UInt = #column) {
+             column: UInt = #column
+        ) {
             self.code = code
             self.state = state
             self.message = message

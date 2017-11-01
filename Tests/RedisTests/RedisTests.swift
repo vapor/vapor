@@ -25,7 +25,7 @@ class RedisTests: XCTestCase {
         
         _ = try connection.delete(keys: ["*"]).blockingAwait(timeout: .seconds(1))
         
-        let result = try connection.set("world", forKey: "hello").flatten {
+        let result = try connection.set("world", forKey: "hello").flatMap {
             return connection.getData(forKey: "hello")
         }.blockingAwait(timeout: .seconds(1))
         

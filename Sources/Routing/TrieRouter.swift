@@ -1,6 +1,12 @@
 import HTTP
 
-/// A basic router
+/// A basic router that can route requests depending on the method and URI
+///
+/// http://localhost:8000/routing/router/
+///
+/// http://localhost:8000/routing/async/
+///
+/// http://localhost:8000/routing/sync/
 public final class TrieRouter: Router {
     /// All routes registered to this router
     public private(set) var routes: [Route] = []
@@ -124,14 +130,8 @@ public final class TrieRouter: Router {
         var current: TrieRouterNode = root
         
         // Start with the method
-        if request.method == .options, let methodName = request.headers[.accessControlAllowMethods] {
-            guard walk(node: &current, component: methodName, request: request) else {
-                return nil
-            }
-        } else {
-            guard walk(node: &current, component: request.method.string, request: request) else {
-                return nil
-            }
+        guard walk(node: &current, component: request.method.string, request: request) else {
+            return nil
         }
 
         // traverse the constant path supplied

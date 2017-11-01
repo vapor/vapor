@@ -1,4 +1,5 @@
 import Async
+import Bits
 import Core
 import Foundation
 import Dispatch
@@ -23,7 +24,7 @@ final class HTTPTestServer {
     
     /// Creates a new engine server config
     public init(
-        hostname: String = CurrentHost.hostname,
+        hostname: String = "0.0.0.0",
         port: UInt16 = 8080,
         backlog: Int32 = 4096,
         workerCount: Int = 8
@@ -37,7 +38,8 @@ final class HTTPTestServer {
     /// Start the server. Server protocol requirement.
     public func start(with responder: Responder) throws {
         // create a tcp server
-        let tcp = try TCP.Server(workerCount: workerCount)
+        let socket = try Socket(isNonBlocking: false)
+        let tcp = TCP.Server(socket: socket, workerCount: workerCount)
         let server = HTTP.Server(clientStream: tcp)
         
         // setup the server pipeline
@@ -69,18 +71,22 @@ final class HTTPTestServer {
 
 class WebSocketTests : XCTestCase {
     func testClientServer() throws {
+        // TODO: Failing on Linux
         return;
         let app = WebSocketApplication()
-        let tcp = try TCP.Server()
         let server = HTTPTestServer()
         
-        // try server.start(with: app)
+        try server.start(with: app)
+        
+        sleep(1)
         
         let promise0 = Promise<Void>()
         let promise1 = Promise<Void>()
 
-        let worker = Worker(queue: .global())
-        _ = try WebSocket.connect(to: "ws://0.0.0.0:8080/", worker: worker).then { socket in
+        let queue = DispatchQueue(label: "test.client")
+        let worker = Worker(queue: queue)
+        
+        _ = try WebSocket.connect(to: "ws://localhost:8080/", worker: worker).then { socket in
             let responses = ["test", "cat", "banana"]
             let reversedResponses = responses.map {
                 String($0.reversed())
@@ -110,15 +116,19 @@ class WebSocketTests : XCTestCase {
                 socket.send(response)
             }
             
-//            socket.send(Data([
-//                0x00, 0x01, 0x00, 0x02
-//                ]))
+            Data([
+                0x00, 0x01, 0x00, 0x02
+            ]).withUnsafeBytes { (pointer: BytesPointer) in
+                let buffer = ByteBuffer(start: pointer, count: 4)
+                
+                socket.send(buffer)
+            }
             
             promise0.complete(())
-        }
+        }.blockingAwait(timeout: .seconds(10))
         
         try promise0.future.blockingAwait(timeout: .seconds(10))
-//        try promise1.future.blockingAwait()
+        try promise1.future.blockingAwait(timeout: .seconds(10))
     }
     
     static let allTests = [
@@ -137,6 +147,9 @@ struct WebSocketApplication: Responder {
                 websocket.onText { text in
                     let rev = String(text.reversed())
                     websocket.send(rev)
+                }
+                websocket.onBinary { buffer in
+                    websocket.send(buffer)
                 }
             }
             promise.complete(res)

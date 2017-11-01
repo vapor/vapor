@@ -62,7 +62,7 @@ extension Cookie {
             switch sameSite {
             case .lax:
                 serialized += "=Lax"
-            default:
+            case .strict:
                 serialized += "=Strict"
             }
         }

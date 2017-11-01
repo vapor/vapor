@@ -6,6 +6,8 @@ import Dispatch
 /// A provider returns a future type that will be completed with the future result
 ///
 /// A future can also contain an error, rather than a result.
+///
+/// http://localhost:8000/async/promise-future-introduction/
 public final class Future<T>: FutureType {
     /// Future expectation type
     public typealias Expectation = T
@@ -32,12 +34,16 @@ public final class Future<T>: FutureType {
     }
 
     /// Pre-filled promise future
+    ///
+    /// http://localhost:8000/async/promise-future-introduction/#futures-without-promise
     public convenience init(_ result: T) {
         self.init()
         self.result = .expectation(result)
     }
 
     /// Pre-filled failed promise
+    ///
+    /// http://localhost:8000/async/promise-future-introduction/#futures-without-promise
     public convenience init(error: Error) {
         self.init()
         self.result = .error(error)
@@ -48,7 +54,7 @@ public final class Future<T>: FutureType {
         return result != nil
     }
 
-    // Completes the result, notifying awaiters.
+    /// Completes the result, notifying awaiters.
     internal func complete(with result: Result) {
         guard self.result == nil else {
             return
@@ -61,6 +67,8 @@ public final class Future<T>: FutureType {
     }
 
     /// Locked method for adding an awaiter
+    ///
+    /// http://localhost:8000/async/advanced-futures/#adding-awaiters-to-all-results
     public func addAwaiter(callback: @escaping ResultCallback) {
         if let result = self.result {
             callback(result)
