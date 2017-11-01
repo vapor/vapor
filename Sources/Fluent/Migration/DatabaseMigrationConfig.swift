@@ -33,8 +33,8 @@ internal struct DatabaseMigrationConfig<Database: Fluent.Database>: MigrationRun
     /// Prepares the connection for migrations by ensuring
     /// the migration log model is ready for use.
     internal func prepareForMigration(on conn: Database.Connection) -> Future<Void> {
-        return MigrationLog<Database>.prepareMetadata(on: conn).flatMap { _ in
-            return MigrationLog<Database>.latestBatch(on: conn).flatMap { lastBatch in
+        return MigrationLog<Database>.prepareMetadata(on: conn).then { _ in
+            return MigrationLog<Database>.latestBatch(on: conn).then { lastBatch in
                 return self.migrateBatch(on: conn, batch: lastBatch + 1)
             }
         }

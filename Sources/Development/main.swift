@@ -124,7 +124,7 @@ router.get("transaction") { req -> Future<String> in
 }
 
 router.get("pets", Pet.parameter, "toys") { req -> Future<[Toy]> in
-    return req.parameters.next(Pet.self).flatMap { pet in
+    return req.parameters.next(Pet.self).then { pet in
         return pet.toys.query(on: req.database(.beta)).all()
     }
 }

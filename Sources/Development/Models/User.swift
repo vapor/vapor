@@ -12,14 +12,14 @@ struct TestSiblings: Migration {
 
     static func prepare(on connection: SQLiteConnection) -> Future<Void> {
         let owner = User(name: "Tanner", age: 23)
-        return owner.save(on: connection).flatMap {
+        return owner.save(on: connection).then {
             let pet = try Pet(name: "Ziz", ownerID: owner.requireID())
             let toy = Toy(name: "Rubber Band")
 
             return [
                 pet.save(on: connection),
                 toy.save(on: connection)
-            ].flatten().flatMap {
+            ].flatten().then {
                 let pivot = try BasicPivot<Toy, Pet>(toy, pet)
                 return pivot.save(on: connection)
             }
@@ -45,7 +45,7 @@ extension Pet: Parameter {
 
         return Pet.find(uuid, on: request.database(.beta)).map { pet in
             guard let pet = pet else {
-                throw "invalid pet id"
+                throw "no pet w/ that id was found"
             }
 
             return pet

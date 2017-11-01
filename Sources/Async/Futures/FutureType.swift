@@ -83,7 +83,7 @@ extension FutureType {
 
     /// Maps a future to a future of a different type.
     /// The result returned within should be a future.
-    public func flatMap<T>(_ callback: @escaping ExpectationFlatMapCallback<T>) -> Future<T> {
+    public func then<T>(_ callback: @escaping ExpectationFlatMapCallback<T>) -> Future<T> {
         let promise = Promise(T.self)
 
         then { expectation in
