@@ -1,4 +1,5 @@
 import Async
+import Fluent
 import SQLite
 
 extension SQLiteDatabase: Database { }

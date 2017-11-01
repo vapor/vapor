@@ -1,4 +1,5 @@
 import Async
+import Fluent
 import SQL
 import SQLite
 
@@ -44,7 +45,7 @@ extension SchemaField {
     }
 }
 
-extension FieldType {
+extension SchemaFieldType {
     fileprivate var dataType: String {
         switch self {
         case .string:

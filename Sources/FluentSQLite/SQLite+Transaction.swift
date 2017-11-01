@@ -1,7 +1,9 @@
 import Async
+import Fluent
 import SQLite
 
 extension SQLiteConnection: TransactionExecutor {
+    /// See TransactionExecutor.execute
     public func execute(transaction: DatabaseTransaction) -> Future<Void> {
         let promise = Promise(Void.self)
 
@@ -11,15 +13,15 @@ extension SQLiteConnection: TransactionExecutor {
                 self.makeQuery("COMMIT TRANSACTION")
                     .execute()
                     .chain(to: promise)
+            }.catch { err in
+                self.makeQuery("ROLLBACK TRANSACTION").execute().do { query in
+                    print("rollback success")
+                    // still fail even tho rollback succeeded
+                    promise.fail(err)
                 }.catch { err in
-                    self.makeQuery("ROLLBACK TRANSACTION").execute().do { query in
-                        print("rollback success")
-                        // still fail even tho rollback succeeded
-                        promise.fail(err)
-                    }.catch { err in
-                        print("Rollback failed") // fixme: combine errors here
-                        promise.fail(err)
-                    }
+                    print("Rollback failed") // fixme: combine errors here
+                    promise.fail(err)
+                }
             }
         }.catch(promise.fail)
 

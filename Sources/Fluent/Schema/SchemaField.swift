@@ -3,7 +3,7 @@ public struct SchemaField {
     public var name: String
 
     /// The type of field.
-    public var type: FieldType
+    public var type: SchemaFieldType
 
     /// True if the field supports nil.
     public var isOptional: Bool
@@ -12,7 +12,7 @@ public struct SchemaField {
     public var isIdentifier: Bool
 
     /// Create a new field.
-    public init(name: String, type: FieldType, isOptional: Bool = false, isIdentifier: Bool = false) {
+    public init(name: String, type: SchemaFieldType, isOptional: Bool = false, isIdentifier: Bool = false) {
         self.name = name
         self.type = type
         self.isOptional = isOptional
@@ -21,7 +21,7 @@ public struct SchemaField {
 }
 
 /// Supported database field types.
-public enum FieldType {
+public enum SchemaFieldType {
     case string(length: Int?)
     case int
     case double

@@ -8,7 +8,7 @@ public protocol Identifier: Codable, Equatable {
     static var identifierType: IdentifierType<Self> { get }
 
     /// The field type used to store this identifier.
-    static var fieldType: FieldType { get }
+    static var fieldType: SchemaFieldType { get }
 }
 
 /// MARK: Default supported types.
@@ -20,7 +20,7 @@ extension Int: Identifier {
     }
 
     /// See Identifier.fieldType
-    public static var fieldType: FieldType {
+    public static var fieldType: SchemaFieldType {
         return .int
     }
 }
@@ -32,7 +32,7 @@ extension UUID: Identifier {
     }
 
     /// See Identifier.fieldType
-    public static var fieldType: FieldType {
+    public static var fieldType: SchemaFieldType {
         return .data(length: 16)
     }
 }
@@ -44,7 +44,7 @@ extension String: Identifier {
     }
 
     /// See Identifier.fieldType
-    public static var fieldType: FieldType {
+    public static var fieldType: SchemaFieldType {
         return .string(length: nil)
     }
 }

@@ -2,8 +2,8 @@ import Fluent
 import SQL
 
 extension DatabaseQuery {
-    public func makeDataQuery() -> DataQuery {
-        return DataQuery(
+    public func makeDataQuery() -> (DataQuery, [Encodable]) {
+        let query = DataQuery(
             statement: action.makeDataStatement(),
             table: entity,
             columns: [],
@@ -14,6 +14,8 @@ extension DatabaseQuery {
             limit: nil,
             offset: nil
         )
+
+        return (query, [])
     }
 }
 
@@ -59,25 +61,21 @@ extension ComparisonValue {
     }
 }
 
-extension Filter {
-    fileprivate func makePredicate() throws -> (predicate: Predicate, value: SQLiteData?) {
+extension QueryFilter {
+    fileprivate func makeDataPredicate() throws -> (Predicate, [Encodable]) {
         let predicate: Predicate
-        let data: SQLiteData?
+        var values: [Encodable] = []
 
         switch method {
-        case .equality(let field, let comp, let value):
+        case .compare(let field, let comp, let value):
             predicate = Predicate(
                 column: field.dataColumn,
-                comparison: comp.predicate,
+                comparison: .equal, // FIXME:
                 value: value.predicateValue
             )
 
             if case .value(let encodable) = value {
-                let encoder = SQLiteDataEncoder()
-                try encodable.encode(to: encoder)
-                data = encoder.data
-            } else {
-                data = nil
+                values.append(encodable)
             }
 
 //            switch comp {
@@ -93,14 +91,14 @@ extension Filter {
             fatalError("not implemented")
         }
 
-        return (predicate, data)
+        return (predicate, values)
     }
 }
 
-extension Join {
-    fileprivate var join: SQL.Join {
+extension QueryJoin {
+    public func makeDataJoin() -> DataJoin {
         return .init(
-            method: type.method,
+            method: method.makeDataJoinMethod(),
             table: baseEntity,
             column: baseKey,
             foreignTable: joinedEntity,
@@ -109,8 +107,8 @@ extension Join {
     }
 }
 
-extension JoinType {
-    fileprivate var method: SQL.JoinMethod {
+extension QueryJoinMethod {
+    public func makeDataJoinMethod() -> DataJoinMethod {
         switch self {
         case .inner: return .inner
         case .outer: return .outer

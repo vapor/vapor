@@ -20,7 +20,7 @@ public struct DatabaseLog: CustomStringConvertible {
     }
 
     /// Create a new database log.
-    init(query: String, values: [String] = [], dbID: String = "fluent", date: Date = Date()) {
+    public init(query: String, values: [String] = [], dbID: String = "fluent", date: Date = Date()) {
         self.query = query
         self.values = values
         self.date = date

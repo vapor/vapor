@@ -1,4 +1,4 @@
-public enum JoinMethod {
+public enum DataJoinMethod {
     case inner
     case outer
 }

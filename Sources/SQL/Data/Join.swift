@@ -1,6 +1,6 @@
 /// Represents a SQL join.
-public struct Join {
-    public let method: JoinMethod
+public struct DataJoin {
+    public let method: DataJoinMethod
     public let table: String
     public let column: String
     public let foreignTable: String
@@ -8,7 +8,7 @@ public struct Join {
 
     /// Create a new SQL join.
     public init(
-        method: JoinMethod,
+        method: DataJoinMethod,
         table: String,
         column: String,
         foreignTable: String,

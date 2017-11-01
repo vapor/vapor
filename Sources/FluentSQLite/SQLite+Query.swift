@@ -1,294 +1,56 @@
 import Async
-import Dispatch
-import Foundation
-import Random
-import SQL
+import Fluent
+import FluentSQL
 import SQLite
 
 extension SQLiteConnection: QueryExecutor {
+    /// See QueryExecutor.execute
     public func execute<I: Async.InputStream, D: Decodable>(
         query: DatabaseQuery,
         into stream: I
     ) -> Future<Void> where I.Input == D {
         return then {
-            return try self._perform(query, into: stream)
-        }
-    }
+            /// create sqlite query
+            let (dataQuery, encodables) = query.makeDataQuery()
+            let sqlString = SQLiteSQLSerializer()
+                .serialize(query: .data(dataQuery))
+            let sqliteQuery = self.makeQuery(sqlString)
 
-    private func _perform<I: Async.InputStream, D: Decodable>(
-        _ fluentQuery: DatabaseQuery,
-        into stream: I
-    ) throws -> Future<Void> where I.Input == D {
-        let promise = Promise(Void.self)
+            /// encode data
+            let encoder = SQLiteDataEncoder()
+            for value in encodables {
+                try value.encode(to: encoder)
+                sqliteQuery.bind(encoder.data)
+            }
 
-        let sqlQuery: SQLQuery
-        var values: [SQLiteData] = []
-
-        switch fluentQuery.action {
-        case .read:
-            var select = DataQuery(statement: .select, table: fluentQuery.entity)
-
-            if let data = fluentQuery.data {
-                let encoder = SQLiteRowEncoder()
-                try data.encode(to: encoder)
-                select.columns += encoder.row.fields.keys.map {
-                    DataColumn(table: fluentQuery.entity, name: $0.name)
+            /// setup drain
+            let promise = Promise(Void.self)
+            sqliteQuery.drain { row in
+                let decoder = SQLiteRowDecoder(row: row)
+                do {
+                    let model = try D(from: decoder)
+                    stream.inputStream(model)
+                } catch {
+                    /// FIXME: should we fail or just put in the error stream?
+                    promise.fail(error)
                 }
+            }.catch { err in
+                /// FIXME: should we fail or just put in the error stream?
+                promise.fail(err)
             }
 
-            for filter in fluentQuery.filters {
-                let (predicate, value) = try filter.makePredicate()
-                select.predicates.append(predicate)
-                if let value = value {
-                    values.append(value)
-                }
+            /// execute query
+            sqliteQuery.execute().do {
+                promise.complete()
+            }.catch { err in
+                promise.fail(err)
             }
 
-            for join in fluentQuery.joins {
-                select.joins.append(join.join)
-            }
-
-            for sort in fluentQuery.sorts {
-                select.orderBys.append(sort.orderBy)
-            }
-
-
-            select.offset = fluentQuery.range?.lower
-            if let upper = fluentQuery.range?.upper, let lower = fluentQuery.range?.lower {
-                select.limit = upper - lower
-            }
-
-            sqlQuery = .data(select)
-        case .update:
-            var update = DataQuery(statement: .update, table: fluentQuery.entity)
-
-            guard let data = fluentQuery.data else {
-                throw "data required for insert"
-            }
-
-            let encoder = SQLiteRowEncoder()
-            try data.encode(to: encoder)
-
-            update.columns = encoder.row.fields.keys.map {
-                DataColumn(table: fluentQuery.entity, name: $0.name)
-            }
-            values = encoder.row.fields.values.map { $0.data }
-
-            for filter in fluentQuery.filters {
-                let (predicate, value) = try filter.makePredicate()
-                update.predicates.append(predicate)
-                if let value = value {
-                    values.append(value)
-                }
-            }
-
-            sqlQuery = .data(update)
-        case .create:
-            var insert = DataQuery(statement: .insert, table: fluentQuery.entity)
-
-            guard let data = fluentQuery.data else {
-                throw "data required for insert"
-            }
-
-            let encoder = SQLiteRowEncoder()
-            try data.encode(to: encoder)
-            insert.columns += encoder.row.fields.keys.map {
-                DataColumn(table: fluentQuery.entity, name: $0.name)
-            }
-            values += encoder.row.fields.values.map { $0.data }
-            sqlQuery = .data(insert)
-        case .delete:
-            var delete = DataQuery(statement: .delete, table: fluentQuery.entity)
-
-            for filter in fluentQuery.filters {
-                let (predicate, value) = try filter.makePredicate()
-                delete.predicates.append(predicate)
-                if let value = value {
-                    values.append(value)
-                }
-            }
-
-            sqlQuery = .data(delete)
-        case .aggregate(let action, let entity, let field):
-            var select = DataQuery(statement: .select, table: fluentQuery.entity)
-
-            var count = DataComputed(
-                function: action.function,
-                key: "fluentAggregate"
-            )
-            if let name = field {
-                let col = DataColumn(table: entity, name: name)
-                count.columns.append(col)
-            }
-            select.computed.append(count)
-
-            sqlQuery = .data(select)
-        }
-
-        let string = SQLiteSQLSerializer()
-            .serialize(query: sqlQuery)
-        
-        let sqliteQuery = self.makeQuery(string)
-        for value in values {
-            sqliteQuery.bind(value) // FIXME: set array w/o need to loop?
-        }
-
-        sqliteQuery.drain { row in
-            let decoder = SQLiteRowDecoder(row: row)
-            do {
-                let model = try D(from: decoder)
-                stream.inputStream(model)
-            } catch {
-                fatalError("uncaught error")
-                // fluentQuery.errorStream?(error)
-            }
-        }.catch { err in
-            promise.fail(err)
-        }
-
-        sqliteQuery.execute().do {
-            promise.complete()
-        }.catch { err in
-            promise.fail(err)
-        }
-
-        return promise.future
-    }
-}
-
-extension Aggregate {
-    var function: String {
-        switch self {
-        case .count: return "count"
-        case .sum: return "sum"
-        case .custom(let s): return s
-        case .average: return "avg"
-        case .min: return "min"
-        case .max: return "max"
+            return promise.future
         }
     }
 }
 
-extension QueryField {
-    fileprivate var dataColumn: DataColumn {
-        return DataColumn(table: entity, name: name)
-    }
-}
 
-extension ComparisonValue {
-    fileprivate var predicateValue: PredicateValue {
-        switch self {
-        case .field(let field):
-            return .column(field.dataColumn)
-        case .value:
-            return .placeholder
-        }
-    }
-}
 
-extension Filter {
-    fileprivate func makePredicate() throws -> (predicate: Predicate, value: SQLiteData?) {
-        let predicate: Predicate
-        let data: SQLiteData?
 
-        switch method {
-        case .equality(let field, let comp, let value):
-            predicate = Predicate(
-                column: field.dataColumn,
-                comparison: comp.predicate,
-                value: value.predicateValue
-            )
-
-            if case .value(let encodable) = value {
-                let encoder = SQLiteDataEncoder()
-                try encodable.encode(to: encoder)
-                data = encoder.data
-            } else {
-                data = nil
-            }
-
-//            switch comp {
-//            case .hasPrefix:
-//                value = .text((encoder.data.text ?? "") + "%")
-//            case .hasSuffix:
-//                value = .text("%" + (encoder.data.text ?? ""))
-//            case .contains:
-//                value = .text("%" + (encoder.data.text ?? "") + "%")
-//            default:
-//            }
-        default:
-            fatalError("not implemented")
-        }
-
-        return (predicate, data)
-    }
-}
-
-extension Join {
-    fileprivate var join: SQL.Join {
-        return .init(
-            method: type.method,
-            table: baseEntity,
-            column: baseKey,
-            foreignTable: joinedEntity,
-            foreignColumn: joinedKey
-        )
-    }
-}
-
-extension JoinType {
-    fileprivate var method: SQL.JoinMethod {
-        switch self {
-        case .inner: return .inner
-        case .outer: return .outer
-        }
-    }
-}
-
-extension Sort {
-    fileprivate var orderBy: OrderBy {
-        return OrderBy(
-            columns: [DataColumn(table: entity, name: field)],
-            direction: direction.orderByDirection
-        )
-    }
-}
-
-extension SortDirection {
-    fileprivate var orderByDirection: OrderByDirection {
-        switch self {
-        case .ascending: return .ascending
-        case .descending: return .descending
-        }
-    }
-}
-
-extension EqualityComparison {
-    var predicate: PredicateComparison {
-        switch self {
-        case .equals: return .equal
-        case .notEquals: return .notEqual
-        }
-    }
-}
-
-extension OrderedComparison {
-    var predicate: PredicateComparison {
-        switch self {
-        case .greaterThan: return .greaterThan
-        case .greaterThanOrEquals: return .greaterThanOrEqual
-        case .lessThan: return .lessThan
-        case .lessThanOrEquals: return .lessThanOrEqual
-        }
-    }
-}
-
-extension SequenceComparison {
-    var predicate: PredicateComparison {
-        switch self {
-        case .hasPrefix: return .like
-        case .hasSuffix: return .like
-        case .contains: return .like
-        }
-    }
-}

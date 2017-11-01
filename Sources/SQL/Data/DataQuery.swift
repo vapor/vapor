@@ -4,7 +4,7 @@ public struct DataQuery {
     public var table: String
     public var columns: [DataColumn]
     public var computed: [DataComputed]
-    public var joins: [Join]
+    public var joins: [DataJoin]
     public var predicates: [Predicate]
     public var orderBys: [OrderBy]
     public var limit: Int?
@@ -15,7 +15,7 @@ public struct DataQuery {
         table: String,
         columns: [DataColumn] = [],
         computed: [DataComputed] = [],
-        joins: [Join] = [],
+        joins: [DataJoin] = [],
         predicates: [Predicate] = [],
         orderBys: [OrderBy] = [],
         limit: Int? = nil,

@@ -19,8 +19,8 @@ public struct QueryJoin {
     public let joinedEntity: String
 
     /// Join type.
-    /// See JoinType.
-    public let type: JoinType
+    /// See QueryJoinMethod.
+    public let method: QueryJoinMethod
 
     /// The key from the base table that will
     /// be compared to the key from the joined
@@ -42,13 +42,13 @@ public struct QueryJoin {
 
     /// Create a new Join
     public init<Base: Model, Joined: Model>(
-        type: JoinType,
+        method: QueryJoinMethod,
         base: Base.Type = Base.self,
         joined: Joined.Type = Joined.self,
         baseKey: String = Base.idKey,
         joinedKey: String = Base.foreignIDKey
     ) {
-        self.type = type
+        self.method = method
         self.baseEntity = base.entity
         self.joinedEntity = joined.entity
         self.baseKey = baseKey
@@ -58,7 +58,7 @@ public struct QueryJoin {
 
 /// An exhaustive list of
 /// possible join types.
-public enum JoinType {
+public enum QueryJoinMethod {
     /// returns only rows that
     /// appear in both sets
     case inner
@@ -72,12 +72,12 @@ extension QueryBuilder {
     /// Join another model to this query builder.
     public func join<Joined: Model>(
         _ model: Joined.Type,
-        type: JoinType = .inner,
+        method: QueryJoinMethod = .inner,
         baseKey: String = M.idKey,
         joinedKey: String = M.foreignIDKey
     ) -> Self {
         let join = QueryJoin(
-            type: type,
+            method: method,
             base: M.self,
             joined: Joined.self,
             baseKey: baseKey,
