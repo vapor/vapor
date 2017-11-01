@@ -15,17 +15,3 @@ extension TransactionExecutor {
         return execute(transaction: transaction)
     }
 }
-
-// MARK: temporary, fixme w/ conditional conformance.
-extension Future: TransactionExecutor {
-    /// See TransactionExecutor.execute
-    public func execute(transaction: DatabaseTransaction) -> Future<Void> {
-        return then { result in
-            guard let executor = result as? TransactionExecutor else {
-                throw "future not query executor type"
-            }
-            
-            return executor.execute(transaction: transaction)
-        }
-    }
-}

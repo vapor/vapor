@@ -19,9 +19,9 @@ public struct Children<Parent: Model, Child: Model> {
     }
 
     /// Create a query for all children.
-    public func query(on executor: QueryExecutor) -> QueryBuilder<Child> {
+    public func query(on executor: QueryExecutor) throws -> QueryBuilder<Child> {
         let builder = executor.query(Child.self)
-        return builder.filter(foreignKey == parent.id)
+        return try builder.filter(foreignKey == parent.requireID())
     }
 }
 

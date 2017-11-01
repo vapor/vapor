@@ -29,17 +29,19 @@ extension Pet: Parameter {
         return "pet"
     }
 
-    static func make(for parameter: String, in request: Request) throws -> Future<Pet> {
+    static func make(for parameter: String, in req: Request) throws -> Future<Pet> {
         guard let uuid = UUID(uuidString: parameter) else {
             throw "not a uuid"
         }
 
-        return Pet.find(uuid, on: request.database(.beta)).map { pet in
-            guard let pet = pet else {
-                throw "no pet w/ that id was found"
-            }
+        return req.database(.beta) { conn in
+            return Pet.find(uuid, on: conn).map { pet in
+                guard let pet = pet else {
+                    throw "no pet w/ that id was found"
+                }
 
-            return pet
+                return pet
+            }
         }
     }
 }

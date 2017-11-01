@@ -54,7 +54,7 @@ public final class Application: Container {
             router: make(Router.self)
         )
 
-        let middleware = try make(MiddlewareConfig.self).resolve(for: self)
+        let middleware = try defaultMiddleware() + make(MiddlewareConfig.self).resolve(for: self)
         let chained = middleware.makeResponder(chainedto: router)
         try server.start(with: chained)
 
@@ -62,5 +62,13 @@ public final class Application: Container {
         group.enter()
         group.wait()
         exit(0)
+    }
+
+    // MARK: Private
+
+    /// creates an array of default middleware the application
+    /// needs to work properly
+    func defaultMiddleware() -> [Middleware] {
+        return [ApplicationMiddleware(application: self)]
     }
 }

@@ -20,7 +20,11 @@ extension Filter: CustomStringConvertible {
     /// A readable description of this filter.
     public var description: String {
         switch method {
-        case .compare(let field, let comparison, let value):
+        case .equality(let field, let comparison, let value):
+            return "(\(entity)) \(field) \(comparison) \(value)"
+        case .order(let field, let comparison, let value):
+            return "(\(entity)) \(field) \(comparison) \(value)"
+        case .sequence(let field, let comparison, let value):
             return "(\(entity)) \(field) \(comparison) \(value)"
         case .subset(let field, let scope, let values):
             return "(\(entity)) \(field) \(scope) \(values)"

@@ -33,7 +33,7 @@ extension SQLiteConnection: SchemaExecutor {
 
 // MARK: private
 
-extension Field {
+extension SchemaField {
     fileprivate var column: SchemaColumn {
         return SchemaColumn(
             name: name,

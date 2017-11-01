@@ -58,10 +58,10 @@ public struct Siblings<From: Model, To: Model, Through: Pivot> {
     }
 
     /// Create a query for the parent.
-    public func query(on executor: QueryExecutor) -> QueryBuilder<To> {
-        return executor.query(To.self)
+    public func query(on executor: QueryExecutor) throws -> QueryBuilder<To> {
+        return try executor.query(To.self)
             .join(Through.self, joinedKey: toForeignIDKey)
-            .filter(Through.self, fromForeignIDKey == from.id)
+            .filter(Through.field(fromForeignIDKey) == from.requireID())
     }
 }
 
@@ -70,20 +70,20 @@ public struct Siblings<From: Model, To: Model, Through: Pivot> {
 extension Siblings where Through: ModifiablePivot {
     /// Returns true if the supplied model is attached
     /// to this relationship.
-    public func isAttached(_ model: To, on executor: QueryExecutor) -> Future<Bool> {
-        return executor.query(Through.self)
-            .filter(From.foreignIDKey == from.id)
-            .filter(To.foreignIDKey == model.id)
+    public func isAttached(_ model: To, on executor: QueryExecutor) throws -> Future<Bool> {
+        return try executor.query(Through.self)
+            .filter(From.field(fromForeignIDKey) == from.requireID())
+            .filter(To.field(toForeignIDKey) == model.requireID())
             .first()
             .map { $0 != nil }
     }
 
     /// Detaches the supplied model from this relationship
     /// if it was attached.
-    public func detach(_ model: To, on executor: QueryExecutor) -> Future<Void> {
-        return executor.query(Through.self)
-            .filter(From.foreignIDKey == from.id)
-            .filter(To.foreignIDKey == model.id)
+    public func detach(_ model: To, on executor: QueryExecutor) throws -> Future<Void> {
+        return try executor.query(Through.self)
+            .filter(From.field(fromForeignIDKey) == from.requireID())
+            .filter(To.field(toForeignIDKey) == model.requireID())
             .delete()
     }
 }

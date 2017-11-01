@@ -11,9 +11,9 @@ extension SQLSerializer {
     public func serialize(predicate: Predicate) -> String {
         var statement: [String] = []
 
-        let escapedColumn = makeEscapedString(from: predicate.column)
+        let escapedColumn = makeEscapedString(from: predicate.column.name)
 
-        if let table = predicate.table {
+        if let table = predicate.column.table {
             let escaped = makeEscapedString(from: table)
             statement.append("\(escaped).\(escapedColumn)")
         } else {
@@ -45,11 +45,11 @@ extension SQLSerializer {
 
         switch predicate.comparison {
         case .between:
-            statement.append(makePlaceholder(name: predicate.column + ".min"))
+            statement.append(makePlaceholder(name: predicate.column.name + ".min"))
             statement.append("AND")
-            statement.append(makePlaceholder(name: predicate.column + ".max"))
+            statement.append(makePlaceholder(name: predicate.column.name + ".max"))
         default:
-            statement.append(makePlaceholder(name: predicate.column))
+            statement.append(makePlaceholder(name: predicate.column.name))
         }
 
         return statement.joined(separator: " ")

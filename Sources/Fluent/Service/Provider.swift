@@ -1,6 +1,5 @@
 import Async
 import Dispatch
-import HTTP
 import Service
 import SQLite
 
@@ -19,13 +18,13 @@ public final class FluentProvider: Provider {
             return SQLiteDatabase(storage: storage)
         }
 
-        services.register { container -> DatabaseMiddleware in
-            let databases = try container.make(Databases.self, for: DatabaseMiddleware.self)
-            return DatabaseMiddleware(databases: databases)
-        }
+//        services.register { container -> DatabaseMiddleware in
+//            let databases = try container.make(Databases.self, for: DatabaseMiddleware.self)
+//            return DatabaseMiddleware(databases: databases)
+//        }
 
         services.register { container -> Databases in
-            let config = try container.make(DatabaseConfig.self, for: DatabaseMiddleware.self)
+            let config = try container.make(DatabaseConfig.self, for: FluentProvider.self)
             var databases: [String: Any] = [:]
             for (id, lazyDatabase) in config.databases {
                 let db = try lazyDatabase(container)

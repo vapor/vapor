@@ -1,4 +1,4 @@
-public struct Field {
+public struct SchemaField {
     /// The name of this field.
     public var name: String
 
@@ -34,7 +34,7 @@ public enum FieldType {
 
 extension SchemaBuilder {
     public func id() {
-        let field = Field(
+        let field = SchemaField(
             name: ModelType.idKey,
             type: ModelType.Identifier.fieldType,
             isOptional: false,
@@ -44,7 +44,7 @@ extension SchemaBuilder {
     }
 
     public func id<M: Model>(for model: M.Type) {
-        let field = Field(
+        let field = SchemaField(
             name: M.foreignIDKey,
             type: M.Identifier.fieldType,
             isOptional: false,
@@ -55,7 +55,7 @@ extension SchemaBuilder {
 
     /// Adds a string type field.
     public func string(_ name: String, length: Int? = nil, isOptional: Bool = false, isIdentifier: Bool = false) {
-        let field = Field(
+        let field = SchemaField(
             name: name,
             type: .string(length: length),
             isOptional: isOptional,
@@ -66,7 +66,7 @@ extension SchemaBuilder {
 
     /// Adds a int type field.
     public func int(_ name: String, isOptional: Bool = false, isIdentifier: Bool = false) {
-        let field = Field(
+        let field = SchemaField(
             name: name,
             type: .int,
             isOptional: isOptional,
@@ -77,7 +77,7 @@ extension SchemaBuilder {
 
     /// Adds a double type field.
     public func double(_ name: String, isOptional: Bool = false, isIdentifier: Bool = false) {
-        let field = Field(
+        let field = SchemaField(
             name: name,
             type: .double,
             isOptional: isOptional,
@@ -88,7 +88,7 @@ extension SchemaBuilder {
 
     /// Adds a data type field.
     public func data(_ name: String, length: Int? = nil, isOptional: Bool = false, isIdentifier: Bool = false) {
-        let field = Field(
+        let field = SchemaField(
             name: name,
             type: .data(length: length),
             isOptional: isOptional,
@@ -99,7 +99,7 @@ extension SchemaBuilder {
 
     /// Adds a date type field.
     public func date(_ name: String, isOptional: Bool = false, isIdentifier: Bool = false) {
-        let field = Field(
+        let field = SchemaField(
             name: name,
             type: .date,
             isOptional: isOptional,

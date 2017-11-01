@@ -7,7 +7,7 @@ public struct DatabaseSchema {
     public var action: SchemaAction
 
     /// The fields to add to this schema
-    public var addFields: [Field]
+    public var addFields: [SchemaField]
 
     /// The fields to be removed from this schema.
     public var removeFields: [String]

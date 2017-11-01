@@ -1,48 +1,26 @@
 /// Types of fluent filters.
 public enum FilterMethod {
-    case compare(String, Comparison, Encodable)
-    case subset(String, SubsetScope, [Encodable])
+    case equality(QueryField, EqualityComparison, ComparisonValue) // Encodable & Equatable
+    case order(QueryField, OrderedComparison, ComparisonValue) // Encodable & Comparable
+    case sequence(QueryField, SequenceComparison, ComparisonValue) // Encodable & Sequence
+    case subset(QueryField, SubsetScope, SubsetValue)
     case group(Relation, [Filter])
 }
 
-/// .equals
-public func == (lhs: String, rhs: Encodable) -> FilterMethod {
-    return .compare(lhs, .equals, rhs)
+public enum ComparisonValue {
+    case value(Encodable)
+    case field(QueryField)
 }
 
-/// .greaterThan
-public func > (lhs: String, rhs: Encodable) -> FilterMethod {
-    return .compare(lhs, .greaterThan, rhs)
-}
-
-/// .lessThan
-public func < (lhs: String, rhs: Encodable) -> FilterMethod {
-    return .compare(lhs, .lessThan, rhs)
-}
-
-/// .greaterThanOrEquals
-public func >= (lhs: String, rhs: Encodable) -> FilterMethod {
-    return .compare(lhs, .greaterThanOrEquals, rhs)
-}
-
-/// .lessThanOrEquals
-public func <= (lhs: String, rhs: Encodable) -> FilterMethod {
-    return .compare(lhs, .lessThanOrEquals, rhs)
-}
-
-/// .notEquals
-public func != (lhs: String, rhs: Encodable) -> FilterMethod {
-    return .compare(lhs, .notEquals, rhs)
-}
-
+/// Generic filter method acceptors.
 extension QueryBuilder {
     /// Entity operator filter queries
     @discardableResult
-    public func filter<T: Model>(
-        _ entity: T.Type,
+    public func filter<M: Model>(
+        _ model: M.Type,
         _ value: FilterMethod
     ) -> Self {
-        let filter = Filter(entity: T.entity, method: value)
+        let filter = Filter(entity: M.entity, method: value)
         return addFilter(filter)
     }
 

@@ -41,7 +41,6 @@ extension ClosableStream {
     }
 }
 
-
 /// A type that emits `Ouptut` asynchronously and at unspecified moments
 ///
 /// http://localhost:8000/async/streams-introduction/#implementing-an-example-stream

@@ -58,7 +58,7 @@ extension QueryBuilder {
     /// Returns a future with the first result of the query.
     /// `nil` if no results were returned.
     public func first() -> Future<M?> {
-        return limit(1).all().map { $0.first }
+        return range(...1).all().map { $0.first }
     }
 
     /// Runs a delete operation.

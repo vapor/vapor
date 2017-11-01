@@ -41,3 +41,30 @@ extension Services {
         return services
     }
 }
+
+
+extension Request: HasContainer {
+    public var app: Application? {
+        get { return extend["vapor:application"] as? Application }
+        set { extend["vapor:application"] = newValue }
+    }
+
+    public var container: Container? {
+        return app
+    }
+}
+
+import Async
+
+internal class ApplicationMiddleware: Middleware {
+    let application: Application
+
+    init(application: Application) {
+        self.application = application
+    }
+
+    func respond(to req: Request, chainingTo next: Responder) throws -> Future<Response> {
+        req.app = application
+        return try next.respond(to: req)
+    }
+}

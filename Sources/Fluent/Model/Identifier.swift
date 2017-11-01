@@ -2,7 +2,7 @@ import Foundation
 
 /// Types conforming to this protocol may be used
 /// as identifiers for Fluent models.
-public protocol Identifier: Codable {
+public protocol Identifier: Codable, Equatable {
     /// The specific type of fluent identifier.
     /// This dictates how the identifier will behave when saved.
     static var identifierType: IdentifierType<Self> { get }

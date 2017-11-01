@@ -13,10 +13,18 @@ final class DataTests: XCTestCase {
     func testSelectWithPredicates() {
         var select = DataQuery(statement: .select, table: "foo")
 
-        let predicateA = Predicate(column: "id", comparison: .equal)
+        let predicateA = Predicate(
+            column: DataColumn(name: "id"),
+            comparison: .equal,
+            value: .placeholder
+        )
         select.predicates.append(predicateA)
 
-        let predicateB = Predicate(table: "foo", column: "name", comparison: .equal)
+        let predicateB = Predicate(
+            column: DataColumn(table: "foo", name: "name"),
+            comparison: .equal,
+            value: .placeholder
+        )
         select.predicates.append(predicateB)
 
         XCTAssertEqual(

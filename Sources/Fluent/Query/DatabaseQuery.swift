@@ -22,7 +22,7 @@ public struct DatabaseQuery {
     public var data: Encodable?
 
     /// Limits and offsets the amount of results
-    public var limit: Limit?
+    public var range: QueryRange?
 
     /// Create a new database query.
     public init(entity: String) {
@@ -33,6 +33,6 @@ public struct DatabaseQuery {
         self.sorts = []
         self.isDistinct = false
         self.data = nil
-        self.limit = nil
+        self.range = nil
     }
 }

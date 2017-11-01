@@ -38,18 +38,3 @@ extension SchemaExecutor {
         return execute(schema: schema)
     }
 }
-
-// MARK: temporary, fixme w/ conditional conformance.
-extension Future: SchemaExecutor {
-    /// See SchemaExecutor.execute()
-    public func execute(schema: DatabaseSchema) -> Future<Void> {
-        if T.self is SchemaExecutor {
-            return then { result in
-                let executor = result as! SchemaExecutor
-                return executor.execute(schema: schema)
-            }
-        } else {
-            return Future<Void>(error: "future not schema executor type")
-        }
-    }
-}

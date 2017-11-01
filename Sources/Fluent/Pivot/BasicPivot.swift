@@ -77,10 +77,10 @@ public struct BasicPivotMigration<
         return connection.create(Pivot.self) { builder in
             builder.id()
 
-            let left = Field(name: Pivot.Left.foreignIDKey, type: Pivot.Left.Identifier.fieldType)
+            let left = SchemaField(name: Pivot.Left.foreignIDKey, type: Pivot.Left.Identifier.fieldType)
             builder.schema.addFields.append(left)
 
-            let right = Field(name: Pivot.Right.foreignIDKey, type: Pivot.Right.Identifier.fieldType)
+            let right = SchemaField(name: Pivot.Right.foreignIDKey, type: Pivot.Right.Identifier.fieldType)
             builder.schema.addFields.append(right)
         }
     }

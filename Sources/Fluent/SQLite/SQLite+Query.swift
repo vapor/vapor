@@ -52,8 +52,11 @@ extension SQLiteConnection: QueryExecutor {
                 select.orderBys.append(sort.orderBy)
             }
 
-            select.limit = fluentQuery.limit?.count
-            select.offset = fluentQuery.limit?.offset
+
+            select.offset = fluentQuery.range?.lower
+            if let upper = fluentQuery.range?.upper, let lower = fluentQuery.range?.lower {
+                select.limit = upper - lower
+            }
 
             sqlQuery = .data(select)
         case .update:
@@ -166,37 +169,58 @@ extension Aggregate {
     }
 }
 
+extension QueryField {
+    fileprivate var dataColumn: DataColumn {
+        return DataColumn(table: entity, name: name)
+    }
+}
+
+extension ComparisonValue {
+    fileprivate var predicateValue: PredicateValue {
+        switch self {
+        case .field(let field):
+            return .column(field.dataColumn)
+        case .value:
+            return .placeholder
+        }
+    }
+}
+
 extension Filter {
     fileprivate func makePredicate() throws -> (predicate: Predicate, value: SQLiteData?) {
         let predicate: Predicate
-        let value: SQLiteData?
+        let data: SQLiteData?
 
         switch method {
-        case .compare(let field, let comp, let encodable):
+        case .equality(let field, let comp, let value):
             predicate = Predicate(
-                table: entity,
-                column: field,
-                comparison: comp.predicate
+                column: field.dataColumn,
+                comparison: comp.predicate,
+                value: value.predicateValue
             )
 
-            let encoder = SQLiteDataEncoder()
-            try encodable.encode(to: encoder)
-
-            switch comp {
-            case .hasPrefix:
-                value = .text((encoder.data.text ?? "") + "%")
-            case .hasSuffix:
-                value = .text("%" + (encoder.data.text ?? ""))
-            case .contains:
-                value = .text("%" + (encoder.data.text ?? "") + "%")
-            default:
-                value = encoder.data
+            if case .value(let encodable) = value {
+                let encoder = SQLiteDataEncoder()
+                try encodable.encode(to: encoder)
+                data = encoder.data
+            } else {
+                data = nil
             }
+
+//            switch comp {
+//            case .hasPrefix:
+//                value = .text((encoder.data.text ?? "") + "%")
+//            case .hasSuffix:
+//                value = .text("%" + (encoder.data.text ?? ""))
+//            case .contains:
+//                value = .text("%" + (encoder.data.text ?? "") + "%")
+//            default:
+//            }
         default:
             fatalError("not implemented")
         }
 
-        return (predicate, value)
+        return (predicate, data)
     }
 }
 
@@ -239,15 +263,29 @@ extension SortDirection {
     }
 }
 
-extension Comparison {
+extension EqualityComparison {
     var predicate: PredicateComparison {
         switch self {
         case .equals: return .equal
+        case .notEquals: return .notEqual
+        }
+    }
+}
+
+extension OrderedComparison {
+    var predicate: PredicateComparison {
+        switch self {
         case .greaterThan: return .greaterThan
         case .greaterThanOrEquals: return .greaterThanOrEqual
         case .lessThan: return .lessThan
         case .lessThanOrEquals: return .lessThanOrEqual
-        case .notEquals: return .notEqual
+        }
+    }
+}
+
+extension SequenceComparison {
+    var predicate: PredicateComparison {
+        switch self {
         case .hasPrefix: return .like
         case .hasSuffix: return .like
         case .contains: return .like

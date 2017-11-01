@@ -84,7 +84,7 @@ let package = Package(
         .testTarget(name: "DebuggingTests", dependencies: ["Debugging"]),
 
         // Fluent
-        .target(name: "Fluent", dependencies: ["Async", "Core", "HTTP", "SQL", "SQLite", "Vapor"]),
+        .target(name: "Fluent", dependencies: ["Async", "Core", "Service", "SQL", "SQLite"]),
         .testTarget(name: "FluentTests", dependencies: ["Fluent"]),
 
         // JWT
