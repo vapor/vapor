@@ -40,13 +40,13 @@ public struct ParameterBag {
                     promise.fail(error)
                 }
             } else {
-                promise.fail(Error(.invalidParameterType(
-                    actual: P.self, // FIXME
-                    expected: P.self
+                promise.fail(RoutingError(.invalidParameterType(
+                    actual: current.slug,
+                    expected: P.uniqueSlug
                 )))
             }
         } else {
-            promise.fail(Error(.insufficientParameters))
+            promise.fail(RoutingError(.insufficientParameters))
         }
 
         return promise.future

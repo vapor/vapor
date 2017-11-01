@@ -1,9 +1,27 @@
+/// Capable of being a pivot between two
+/// models. Usually in a Siblings relation.
+/// note: special care must be taken when using pivots
+/// with equal left and right types.
 public protocol Pivot: Model {
+    /// The Left model for this pivot.
+    /// note: a pivot with opposite right/left is distinct.
     associatedtype Left: Model
-    associatedtype Right: Model
 
-    var leftID: Left.Identifier { get set }
-    var rightID: Right.Identifier { get set }
+    /// The Right model for this pivot.
+    /// note: a pivot with opposite right/left is distinct.
+    associatedtype Right: Model
+}
+
+/// A pivot that can be initialized from just
+/// the left and right models. This allows
+/// Fluent to automatically create pivots for
+/// extended functionality.
+/// ex: attach, detach, isAttached
+/// note: pivots with equal left and right types
+/// cannot take advantage of this protocol due to
+/// ambiguous type errors.
+public protocol ModifiablePivot: Pivot {
+    init(_ left: Left, _ right: Right) throws
 }
 
 extension Pivot {

@@ -40,7 +40,7 @@ migrationConfig.add(migration: User.self, database: .beta)
 migrationConfig.add(migration: AddUsers.self, database: .beta)
 migrationConfig.add(migration: Pet.self, database: .beta)
 migrationConfig.add(migration: Toy.self, database: .beta)
-migrationConfig.add(migration: BasicPivotMigration<Toy, Pet, SQLiteDatabase>.self, database: .beta)
+migrationConfig.add(migration: PetToyPivot.self, database: .beta)
 migrationConfig.add(migration: TestSiblings.self, database: .beta)
 services.register(migrationConfig)
 

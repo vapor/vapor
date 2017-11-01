@@ -1,3 +1,5 @@
+import Async
+
 public struct Siblings<From: Model, To: Model, Through: Pivot> {
     /// The base model which all fetched models
     /// should be related to.
@@ -33,6 +35,56 @@ public struct Siblings<From: Model, To: Model, Through: Pivot> {
             .filter(Through.self, fromForeignIDKey == from.id)
     }
 }
+
+// MARK: ModifiablePivot
+
+extension Siblings where Through: ModifiablePivot {
+    /// Returns true if the supplied model is attached
+    /// to this relationship.
+    public func isAttached(_ model: To, on executor: QueryExecutor) -> Future<Bool> {
+        return executor.query(Through.self)
+            .filter(From.foreignIDKey == from.id)
+            .filter(To.foreignIDKey == model.id)
+            .first()
+            .map { $0 != nil }
+    }
+
+    /// Detaches the supplied model from this relationship
+    /// if it was attached.
+    public func detach(_ model: To, on executor: QueryExecutor) -> Future<Void> {
+        return executor.query(Through.self)
+            .filter(From.foreignIDKey == from.id)
+            .filter(To.foreignIDKey == model.id)
+            .delete()
+    }
+}
+
+/// Left-side
+extension Siblings where Through: ModifiablePivot, Through.Left == From, Through.Right == To {
+    /// Attaches the model to this relationship.
+    public func attach(_ model: To, on executor: QueryExecutor) -> Future<Void> {
+        do {
+            let pivot = try Through(from, model)
+            return pivot.save(on: executor)
+        } catch {
+            return Future(error: error)
+        }
+    }
+}
+
+/// Right-side
+extension Siblings where Through: ModifiablePivot, Through.Left == To, Through.Right == From {
+    /// Attaches the model to this relationship.
+    public func attach(_ model: To, on executor: QueryExecutor) -> Future<Void> {
+        do {
+            let pivot = try Through(model, from)
+            return pivot.save(on: executor)
+        } catch {
+            return Future(error: error)
+        }
+    }
+}
+
 
 // MARK: Model
 

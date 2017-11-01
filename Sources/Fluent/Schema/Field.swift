@@ -35,10 +35,20 @@ public enum FieldType {
 extension SchemaBuilder {
     public func id() {
         let field = Field(
-            name: "id",
+            name: ModelType.idKey,
             type: ModelType.Identifier.fieldType,
             isOptional: false,
             isIdentifier: true
+        )
+        schema.addFields.append(field)
+    }
+
+    public func id<M: Model>(for model: M.Type) {
+        let field = Field(
+            name: M.foreignIDKey,
+            type: M.Identifier.fieldType,
+            isOptional: false,
+            isIdentifier: false
         )
         schema.addFields.append(field)
     }
