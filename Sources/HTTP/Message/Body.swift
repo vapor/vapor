@@ -13,12 +13,17 @@ public struct Body: Codable {
     /// NOTE: This is an implementation detail
     enum Storage: Codable {
         case data(Data)
+        case staticString(StaticString)
         case dispatchData(DispatchData)
         
         func encode(to encoder: Encoder) throws {
             switch self {
-            case .data(let data): try data.encode(to: encoder)
-            case .dispatchData(let data): try Data(data).encode(to: encoder)
+            case .data(let data):
+                try data.encode(to: encoder)
+            case .dispatchData(let data):
+                try Data(data).encode(to: encoder)
+            case .staticString(let string):
+                try Data(bytes: string.utf8Start, count: string.utf8CodeUnitCount).encode(to: encoder)
             }
         }
         
@@ -31,6 +36,7 @@ public struct Body: Codable {
             switch self {
             case .data(let data): return data.count
             case .dispatchData(let data): return data.count
+            case .staticString(let staticString): return staticString.utf8CodeUnitCount
             }
         }
         
@@ -41,6 +47,8 @@ public struct Body: Codable {
                 return try data.withUnsafeBytes(run)
             case .dispatchData(let data):
                 return try data.withUnsafeBytes(body: run)
+            case .staticString(let staticString):
+                return try run(staticString.utf8Start)
             }
         }
     }
@@ -61,6 +69,18 @@ public struct Body: Codable {
     /// Create a new body wrapping `DispatchData`.
     public init(_ data: DispatchData) {
         storage = .dispatchData(data)
+    }
+    
+    /// Create a new body from the UTF-8 representation of a StaticString
+    public init(staticString: StaticString) {
+        storage = .staticString(staticString)
+    }
+    
+    /// Create a new body from the UTF-8 representation of a string
+    public init(string: String) {
+        let data = string.data(using: .utf8) ?? Data()
+        
+        self.storage = .data(data)
     }
     
     /// Decodes a body from from a Decoder
@@ -93,10 +113,6 @@ public protocol BodyRepresentable {
 extension String: BodyRepresentable {
     /// See BodyRepresentable.makeBody()
     public func makeBody() throws -> Body {
-        guard let data = self.data(using: .utf8) else {
-            throw Error(identifier: "string-body-conversion", reason: "Converting a String to an HTTP Body failed.")
-        }
-        
-        return Body(data)
+        return Body(string: self)
     }
 }

@@ -40,7 +40,7 @@ extension WebSocket {
         
         // Creates an HTTP client for the handshake
         let serializer = RequestSerializer()
-        let parser = ResponseParser()
+        let parser = ResponseParser(maxBodySize: 50_000)
         
         // Generates the UUID that will make up the WebSocket-Key
         let id = OSRandom().data(count: 16).base64EncodedString()

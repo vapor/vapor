@@ -74,12 +74,12 @@ class SSLTests: XCTestCase {
         try server.start(port: 8432)
         let clientQueue = DispatchQueue(label: "test.client")
 
-        let future = try clientQueue.sync { () -> Future<()> in 
-            let client = try! TLSClient(worker: Worker(queue: clientQueue))
+        let future = try clientQueue.sync { () -> Future<()> in
+            let client = try TLSClient(worker: Worker(queue: clientQueue))
 
             clients.append(client)
 
-            return try client.connect(hostname: CurrentHost.hostname, port: 8432).map {
+            return try client.connect(hostname: "localhost", port: 8432).map {
                 message.withUnsafeBytes { (pointer: BytesPointer) in
                     let buffer = ByteBuffer(start: pointer, count: message.count)
 

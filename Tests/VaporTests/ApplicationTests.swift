@@ -29,6 +29,12 @@ class ApplicationTests: XCTestCase {
             ]
         )
         
+        let trieRouter = try app.make(TrieRouter.self)
+        
+        if let responder = trieRouter.fallbackResponder {
+            trieRouter.fallbackResponder = cors.makeResponder(chainedTo: responder)
+        }
+        
         var response = try router.route(request: request)?.respond(to: request).blockingAwait()
         
 //        XCTAssertEqual(response?.status, 200)

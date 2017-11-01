@@ -24,14 +24,17 @@ public final class EngineServer: HTTPServer {
         
         // setup the server pipeline
         server.drain { client in
-            let parser = HTTP.RequestParser(worker: client.tcp.worker)
+            let parser = HTTP.RequestParser(worker: client.tcp.worker, maxBodySize: 10_000_000)
             let responderStream = responder.makeStream()
             let serializer = HTTP.ResponseSerializer()
-
+            
             client.stream(to: parser)
                 .stream(to: responderStream)
                 .stream(to: serializer)
-                .drain(into: client)
+                .drain { data in
+                    client.inputStream(data)
+                    serializer.upgradeHandler?(client.tcp)
+                }
 
             client.tcp.start()
         }.catch { error in
@@ -71,7 +74,7 @@ public struct EngineServerConfig {
         port: UInt16 = 8080,
         backlog: Int32 = 4096,
         workerCount: Int = 8,
-        maxConnectionsPerIP: Int = 64
+        maxConnectionsPerIP: Int = 128
     ) {
         self.hostname = hostname
         self.port = port

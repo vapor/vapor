@@ -1,3 +1,4 @@
+import Bits
 import CHTTP
 import Dispatch
 import Foundation
@@ -14,16 +15,14 @@ public final class URIParser {
     public init() {}
 
     /// Parses a URI from the supplied bytes.
-    public func parse(bytes: DispatchData) -> URI {
+    public func parse(data: Data) -> URI {
         // create url results struct
         var url = http_parser_url()
         http_parser_url_init(&url)
         
-        let bytes = Data(bytes)
-        
         // parse url
-        bytes.withUnsafeBytes { pointer in
-            _ = http_parser_parse_url(pointer, bytes.count, 0, &url)
+        data.withUnsafeBytes { pointer in
+            _ = http_parser_parse_url(pointer, data.count, 0, &url)
         }
 
         // fetch offsets from result
@@ -32,7 +31,7 @@ public final class URIParser {
         // parse uri info
         let info: URI.UserInfo?
         if userinfo.len > 0, userinfo.len > 0 {
-            let bytes = bytes[numericCast(userinfo.off) ..< numericCast(userinfo.off + userinfo.len)]
+            let bytes = data[numericCast(userinfo.off) ..< numericCast(userinfo.off + userinfo.len)]
             
             let parts = bytes.split(
                 separator: 58,
@@ -58,7 +57,7 @@ public final class URIParser {
         // sets a port if one was supplied
         // in the url bytes
         let p: Port?
-        if let bytes = bytes.string(for: port) {
+        if let bytes = data.string(for: port) {
             p = Port(bytes)
         } else {
             p = nil
@@ -66,13 +65,13 @@ public final class URIParser {
 
         // create uri
         let uri = URI(
-            scheme: bytes.string(for: scheme) ?? "",
+            scheme: data.string(for: scheme),
             userInfo: info,
-            hostname: bytes.string(for: hostname) ?? "",
+            hostname: data.string(for: hostname),
             port: p,
-            path: bytes.string(for: path) ?? "",
-            query: bytes.string(for: query),
-            fragment: bytes.string(for: fragment)
+            pathData: data.data(for: path),
+            query: data.string(for: query),
+            fragment: data.string(for: fragment)
         )
         return uri
     }
@@ -81,13 +80,17 @@ public final class URIParser {
 // MARK: Utilities
 
 extension Data {
+    fileprivate func data(for field: http_parser_url_field_data) -> Data {
+        return self[numericCast(field.off)..<numericCast(field.off + field.len)]
+    }
+    
     /// Creates a string from the supplied field data offsets
-    fileprivate func string(for data: http_parser_url_field_data) -> String? {
-        guard data.len > 0 else {
+    fileprivate func string(for field: http_parser_url_field_data) -> String? {
+        if field.len == 0 {
             return nil
         }
         
-        return String(bytes: self[numericCast(data.off) ..< numericCast(data.off + data.len)], encoding: .utf8)
+        return String(data: self[numericCast(field.off)..<numericCast(field.off + field.len)], encoding: .utf8)
     }
 }
 

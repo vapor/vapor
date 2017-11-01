@@ -61,7 +61,7 @@ public final class Future<T>: FutureType {
         }
         self.result = result
 
-        awaiters.forEach { awaiter in
+        for awaiter in self.awaiters {
             awaiter.callback(result)
         }
     }
