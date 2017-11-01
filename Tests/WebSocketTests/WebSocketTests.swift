@@ -24,7 +24,7 @@ final class HTTPTestServer {
     
     /// Creates a new engine server config
     public init(
-        hostname: String = CurrentHost.hostname,
+        hostname: String = "0.0.0.0",
         port: UInt16 = 8080,
         backlog: Int32 = 4096,
         workerCount: Int = 8
@@ -84,9 +84,7 @@ class WebSocketTests : XCTestCase {
         let queue = DispatchQueue(label: "test.client")
         let worker = Worker(queue: queue)
         
-        let uri = URI(stringLiteral: "ws://\(CurrentHost.hostname):8080/")
-        
-        _ = try WebSocket.connect(to: uri, worker: worker).then { socket in
+        _ = try WebSocket.connect(to: "ws://localhost:8080/", worker: worker).then { socket in
             let responses = ["test", "cat", "banana"]
             let reversedResponses = responses.map {
                 String($0.reversed())

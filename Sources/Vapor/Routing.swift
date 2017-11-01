@@ -21,15 +21,12 @@ public struct RouterResponder: Responder {
     }
 }
 
-/// Makes `TrieRouter` both an `AsyncRouter` and `SyncRouter`
-extension TrieRouter: AsyncRouter, SyncRouter { }
-
-extension AsyncRouter {
+extension Router {
     /// Creates an Async `Route` at the provided path using the `GET` method.
     @discardableResult
     public func get<F: FutureType>(
         _ path: PathComponentRepresentable...,
-        use closure: @escaping BasicAsyncResponder<F>.Closure
+        use closure: @escaping BasicResponder<F>.Closure
     ) -> Route where F.Expectation: ResponseRepresentable {
         return self.on(.get, to: path.makePathComponents(), use: closure)
     }
@@ -38,7 +35,7 @@ extension AsyncRouter {
     @discardableResult
     public func put<F: FutureType>(
         _ path: PathComponentRepresentable...,
-        use closure: @escaping BasicAsyncResponder<F>.Closure
+        use closure: @escaping BasicResponder<F>.Closure
     ) -> Route where F.Expectation: ResponseRepresentable {
         return self.on(.put, to: path.makePathComponents(), use: closure)
     }
@@ -47,7 +44,7 @@ extension AsyncRouter {
     @discardableResult
     public func post<F: FutureType>(
         _ path: PathComponentRepresentable...,
-        use closure: @escaping BasicAsyncResponder<F>.Closure
+        use closure: @escaping BasicResponder<F>.Closure
     ) -> Route where F.Expectation: ResponseRepresentable {
         return self.on(.post, to: path.makePathComponents(), use: closure)
     }
@@ -56,7 +53,7 @@ extension AsyncRouter {
     @discardableResult
     public func delete<F: FutureType>(
         _ path: PathComponentRepresentable...,
-        use closure: @escaping BasicAsyncResponder<F>.Closure
+        use closure: @escaping BasicResponder<F>.Closure
     ) -> Route where F.Expectation: ResponseRepresentable {
         return self.on(.delete, to: path.makePathComponents(), use: closure)
     }
@@ -65,55 +62,8 @@ extension AsyncRouter {
     @discardableResult
     public func patch<F: FutureType>(
         _ path: PathComponentRepresentable...,
-        use closure: @escaping BasicAsyncResponder<F>.Closure
+        use closure: @escaping BasicResponder<F>.Closure
     ) -> Route where F.Expectation: ResponseRepresentable {
-        return self.on(.patch, to: path.makePathComponents(), use: closure)
-    }
-}
-
-extension SyncRouter {
-    /// Creates  Sync `Route` at the provided path using the `GET` method.
-    @discardableResult
-    public func get(
-        _ path: PathComponentRepresentable...,
-        use closure: @escaping BasicSyncResponder.Closure
-    ) -> Route {
-        return self.on(.get, to: path.makePathComponents(), use: closure)
-    }
-    
-    /// Creates  Sync `Route` at the provided path using the `PUT` method.
-    @discardableResult
-    public func put(
-        _ path: PathComponentRepresentable...,
-        use closure: @escaping BasicSyncResponder.Closure
-    ) -> Route {
-        return self.on(.put, to: path.makePathComponents(), use: closure)
-    }
-    
-    /// Creates  Sync `Route` at the provided path using the `POST` method.
-    @discardableResult
-    public func post(
-        _ path: PathComponentRepresentable...,
-        use closure: @escaping BasicSyncResponder.Closure
-    ) -> Route {
-        return self.on(.post, to: path.makePathComponents(), use: closure)
-    }
-    
-    /// Creates  Sync `Route` at the provided path using the `DELETE` method.
-    @discardableResult
-    public func delete(
-        _ path: PathComponentRepresentable...,
-        use closure: @escaping BasicSyncResponder.Closure
-    ) -> Route {
-        return self.on(.delete, to: path.makePathComponents(), use: closure)
-    }
-    
-    /// Creates  Sync `Route` at the provided path using the `PATCH` method.
-    @discardableResult
-    public func patch(
-        _ path: PathComponentRepresentable...,
-        use closure: @escaping BasicSyncResponder.Closure
-    ) -> Route {
         return self.on(.patch, to: path.makePathComponents(), use: closure)
     }
 }
