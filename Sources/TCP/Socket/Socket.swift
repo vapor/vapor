@@ -17,6 +17,9 @@ public final class Socket {
     /// True if the socket should re-use addresses
     public let shouldReuseAddress: Bool
     
+    /// A read source that's used to check when the connection is readable
+    internal var readSource: DispatchSourceRead?
+    
     /// A handler that gets called when closing the socket
     public typealias CloseHandler = (()->())
     

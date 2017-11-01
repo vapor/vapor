@@ -1,10 +1,3 @@
-//
-//  MD5.swift
-//  MongoKitten
-//
-//  Created by Joannis Orlandos on 06/08/2017.
-//
-
 import Bits
 import Foundation
 
@@ -53,7 +46,7 @@ public final class MD5 : Hash {
     var g: Int = 0
     var Mg: UInt32 = 0
     
-    public var remainder = MutableBytesPointer.allocate(capacity: 63)
+    public var remainder = MutableBytesPointer.allocate(capacity: 64)
     public var containedRemainder = 0
     public var totalLength: UInt64 = 0
     

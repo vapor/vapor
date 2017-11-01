@@ -1,4 +1,6 @@
 import XCTest
+import Async
+import Bits
 import Crypto
 
 class Base64Tests : XCTestCase {
@@ -14,6 +16,31 @@ class Base64Tests : XCTestCase {
         let old = try Base64Decoder.decode(string: result)
         
         XCTAssertEqual(string, String(bytes: old, encoding: .utf8))
+    }
+    
+    func testStreaminingEncoding() throws {
+        let input = EmitterStream<ByteBuffer>()
+        var buffer = ""
+        
+        let encoder = Base64Encoder(bufferCapacity: 100)
+        
+        input.stream(to: encoder).drain { string in
+            buffer += String(bytes: string, encoding: .utf8)!
+        }
+        
+        Data("tes".utf8).withUnsafeBytes { (pointer: BytesPointer) in
+            input.emit(ByteBuffer(start: pointer, count: 1))
+            input.emit(ByteBuffer(start: pointer.advanced(by: 1), count: 2))
+        }
+        
+        Data("t1".utf8).withUnsafeBytes { (pointer: BytesPointer) in
+            input.emit(ByteBuffer(start: pointer, count: 1))
+            input.emit(ByteBuffer(start: pointer.advanced(by: 1), count: 1))
+        }
+        
+        encoder.close()
+        
+        XCTAssertEqual(buffer, "dGVzdDE=")
     }
     
     func testEncoding() throws {

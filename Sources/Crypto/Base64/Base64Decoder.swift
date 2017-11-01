@@ -49,7 +49,7 @@ public final class Base64Decoder: Base64 {
     let pointer: MutableBytesPointer
     
     /// The bytes that couldn't be parsed from the previous buffer
-    var remainder = [UInt8]()
+    var remainder = Data()
     
     /// Creates a new Base64 encoder
     ///

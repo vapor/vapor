@@ -22,7 +22,7 @@ import Bits
 /// + - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - +
 /// |                     Payload Data continued ...                |
 /// +---------------------------------------------------------------+
-
+///
 /// A WebSocket frame contains a payload
 ///
 /// Interfacing with this class directly is usually not necessary and not recommended unless you know how WebSockets work.

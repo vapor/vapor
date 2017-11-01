@@ -1,18 +1,16 @@
 import Async
 import HTTP
 
-/// Capable of register async routes.
-public protocol AsyncRouter: Router { }
-
-extension AsyncRouter {
+/// Capable of registering async routes.
+extension Router {
     /// Registers a route handler at the supplied path.
     @discardableResult
     public func on<F: FutureType>(
         _ method: Method,
         to path: [PathComponent],
-        use closure: @escaping BasicAsyncResponder<F>.Closure
+        use closure: @escaping BasicResponder<F>.Closure
     ) -> Route where F.Expectation: ResponseRepresentable {
-        let responder = BasicAsyncResponder(closure: closure)
+        let responder = BasicResponder(closure: closure)
         let route = Route(method: method, path: path, responder: responder)
         self.register(route: route)
         
@@ -21,7 +19,7 @@ extension AsyncRouter {
 }
 
 /// A basic, closure-based responder.
-public struct BasicAsyncResponder<F: FutureType>: Responder where F.Expectation: ResponseRepresentable {
+public struct BasicResponder<F: FutureType>: Responder where F.Expectation: ResponseRepresentable {
     /// Responder closure
     public typealias Closure = (Request) throws -> F
 
@@ -40,4 +38,3 @@ public struct BasicAsyncResponder<F: FutureType>: Responder where F.Expectation:
         }
     }
 }
-

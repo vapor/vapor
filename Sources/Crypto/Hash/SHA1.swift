@@ -22,7 +22,7 @@ public final class SHA1 : Hash {
     var k: UInt32 = 0
     var temp: UInt32 = 0
     
-    public var remainder = MutableBytesPointer.allocate(capacity: 63)
+    public var remainder = MutableBytesPointer.allocate(capacity: 64)
     public var containedRemainder = 0
     public var totalLength: UInt64 = 0
     

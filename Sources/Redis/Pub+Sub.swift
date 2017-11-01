@@ -1,0 +1,37 @@
+import Async
+
+extension RedisClient {
+    /// Subscribes to the given channel
+    public func subscribe(to channel: String) -> SubscriptionStream {
+        return self.subscribe(to: [channel])
+    }
+        
+    /// Subscribes to the given list of channels
+    public func subscribe(to channels: Set<String>) -> SubscriptionStream {
+        let channels = channels.map { name in
+            return RedisData(bulk: name)
+        }
+        
+        let command = RedisData.array(["SUBSCRIBE"] + channels)
+        
+        dataSerializer.inputStream(command)
+        
+        // Mark this client as being subscribed
+        // The client cannot be used for other commands now
+        self.isSubscribed = true
+        
+        return SubscriptionStream(reading: self.dataParser)
+    }
+    
+    /// Publishes the message to a channels
+    @discardableResult
+    public func publish(_ message: RedisData, to channel: String) -> Future<Int> {
+        return run(command: "PUBLISH", arguments: [.bulkString(channel), message]).map { reply in
+            guard let receivers = reply.int else {
+                throw RedisError(.unexpectedResult(reply))
+            }
+            
+            return receivers
+        }
+    }
+}

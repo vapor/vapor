@@ -20,7 +20,7 @@ class ParserTests : XCTestCase {
         """.data(using: .utf8) ?? Data()
 
         let worker = Worker(queue: .global())
-        let parser = RequestParser(worker: worker)
+        let parser = RequestParser(worker: worker, maxBodySize: 100_000)
         guard let req = try parser.parse(from: data) else {
             XCTFail("No request parsed")
             return
@@ -55,7 +55,7 @@ class ParserTests : XCTestCase {
         <vapor>
         """.data(using: .utf8) ?? Data()
 
-        let parser = ResponseParser()
+        let parser = ResponseParser(maxBodySize: 100_000)
         guard let res = try parser.parse(from: data) else {
             XCTFail("No response parsed")
             return

@@ -17,11 +17,14 @@ public final class ResponseParser: CParser, Async.Stream {
     var settings: http_parser_settings
     var state:  CHTTPParserState
     
+    let maxBodySize: Int
+    
     /// Creates a new Request parser.
-    public init() {
+    public init(maxBodySize: Int) {
         self.parser = http_parser()
         self.settings = http_parser_settings()
         self.state = .ready
+        self.maxBodySize = maxBodySize
         reset(HTTP_RESPONSE)
     }
 
@@ -60,7 +63,7 @@ public final class ResponseParser: CParser, Async.Stream {
         case .ready:
             // create a new results object and set
             // a reference to it on the parser
-            let newResults = CParseResults.set(on: &parser)
+            let newResults = CParseResults.set(on: &parser, maxBodySize: maxBodySize)
             results = newResults
             state = .parsing
         case .parsing:
@@ -85,20 +88,15 @@ public final class ResponseParser: CParser, Async.Stream {
 
         /// get response status
         let status = Status(code: Int(parser.status_code))
-        let headers = Headers(storage: results.headers)
 
         // require a version to have been parsed
         guard let version = results.version else {
             throw Error.invalidMessage()
         }
         
-        let body: Body
-        if let data = results.body {
-            let copied = Data(data)
-            body = Body(copied)
-        } else {
-            body = Body()
-        }
+        let body = Body(results.body)
+        
+        let headers = Headers(storage: results.headersData, indexes: results.headersIndexes)
         
         // create the request
         return Response(

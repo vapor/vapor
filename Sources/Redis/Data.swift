@@ -69,6 +69,24 @@ public struct RedisData {
             return nil
         }
     }
+    
+    /// Extracts an array type from this data
+    public var array: [RedisData]? {
+        guard case .array(let array) = self.storage else {
+            return nil
+        }
+        
+        return array
+    }
+    
+    /// Extracts an array type from this data
+    public var int: Int? {
+        guard case .integer(let int) = self.storage else {
+            return nil
+        }
+        
+        return int
+    }
 }
 
 extension RedisData: ExpressibleByStringLiteral {
