@@ -1,7 +1,6 @@
 import Async
 import Dispatch
 import Service
-import SQLite
 
 /// Registers Fluent related services.
 public final class FluentProvider: Provider {
@@ -13,16 +12,6 @@ public final class FluentProvider: Provider {
 
     /// See Provider.register()
     public func register(_ services: inout Services) throws {
-        services.register { container -> SQLiteDatabase in
-            let storage = try container.make(SQLiteStorage.self, for: SQLiteDatabase.self)
-            return SQLiteDatabase(storage: storage)
-        }
-
-//        services.register { container -> DatabaseMiddleware in
-//            let databases = try container.make(Databases.self, for: DatabaseMiddleware.self)
-//            return DatabaseMiddleware(databases: databases)
-//        }
-
         services.register { container -> Databases in
             let config = try container.make(DatabaseConfig.self, for: FluentProvider.self)
             var databases: [String: Any] = [:]
@@ -40,21 +29,19 @@ public final class FluentProvider: Provider {
 
     /// See Provider.boot()
     public func boot(_ container: Container) throws {
-        let config = try container.make(MigrationConfig.self, for: FluentProvider.self)
+        let migrations = try container.make(MigrationConfig.self, for: FluentProvider.self)
         let databases = try container.make(Databases.self, for: FluentProvider.self)
 
         let migrationQueue = DispatchQueue(label: "codes.vapor.fluent.migration")
 
-        var results: [Future<Void>] = []
-
-        for (uid, config) in config.storage {
-            print("Migrating \(uid) DB")
-            let result = config.migrate(using: databases, on: migrationQueue)
-            results.append(result)
-        }
-
         // FIXME: should this be nonblocking?
-        try results.flatten().blockingAwait()
+        try migrations.storage.map { (uid, container) in
+            return {
+                // FIXME: use console protocol, once we have it
+                print("Migrating \(uid) DB")
+                return container.migrate(using: databases, on: migrationQueue)
+            }
+        }.syncFlatten().blockingAwait()
 
         print("Migrations complete")
     }

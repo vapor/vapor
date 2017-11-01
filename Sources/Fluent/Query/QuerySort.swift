@@ -1,6 +1,6 @@
 /// Sorts results based on a field
 /// and direction.
-public struct Sort {
+public struct QuerySort {
     /// The entity to sort.
     public let entity: String
 
@@ -8,13 +8,13 @@ public struct Sort {
     public let field: String
 
     /// The direction to sort by.
-    public let direction: SortDirection
+    public let direction: QuerySortDirection
 
     /// Create a new sort
     public init<M: Model>(
         _ model: M.Type = M.self,
         field: String,
-        direction: SortDirection
+        direction: QuerySortDirection
     ) {
         self.entity = M.entity
         self.field = field
@@ -24,7 +24,7 @@ public struct Sort {
 
 /// The types of directions
 /// fields can be sorted.
-public enum SortDirection {
+public enum QuerySortDirection {
     case ascending
     case descending
 }
@@ -33,18 +33,18 @@ public enum SortDirection {
 
 extension QueryBuilder {
     /// Add a Sort to the Query.
-    public func sort<M: Model>(_ model: M.Type = M.self, _ field: String, _ direction: SortDirection) -> Self {
-        let sort = Sort(M.self, field: field, direction: direction)
+    public func sort<M: Model>(_ model: M.Type = M.self, _ field: String, _ direction: QuerySortDirection) -> Self {
+        let sort = QuerySort(M.self, field: field, direction: direction)
         return self.sort(sort)
     }
 
     /// Add a Sort to the Query.
-    public func sort(_ field: String, _ direction: SortDirection) -> Self {
+    public func sort(_ field: String, _ direction: QuerySortDirection) -> Self {
         return sort(M.self, field, direction)
     }
 
     /// Add a Sort to the Query.
-    public func sort(_ sort: Sort) -> Self {
+    public func sort(_ sort: QuerySort) -> Self {
         query.sorts.append(sort)
         return self
     }

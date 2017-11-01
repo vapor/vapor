@@ -9,8 +9,10 @@ extension QueryBuilder {
     public func filter<
         Field: QueryFieldRepresentable
     >(_ field: Field, in values: [Encodable?]) throws -> Self {
-        let method = FilterMethod.subset(field.makeQueryField(), .in, .array(values))
-        let filter = Filter(entity: M.entity, method: method)
+        let filter = QueryFilter(
+            entity: M.entity,
+            method: .subset(field.makeQueryField(), .in, .array(values))
+        )
         return addFilter(filter)
     }
 
@@ -19,8 +21,10 @@ extension QueryBuilder {
     public func filter<
         Field: QueryFieldRepresentable
     >(_ field: Field, notIn values: [Encodable?]) throws -> Self {
-        let method = FilterMethod.subset(field.makeQueryField(), .notIn, .array(values))
-        let filter = Filter(entity: M.entity, method: method)
+        let filter = QueryFilter(
+            entity: M.entity,
+            method: .subset(field.makeQueryField(), .notIn, .array(values))
+        )
         return addFilter(filter)
     }
 }

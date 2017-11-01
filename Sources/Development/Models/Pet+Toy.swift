@@ -2,6 +2,7 @@ import Async
 import Fluent
 import Foundation
 import SQLite
+import FluentSQLite
 
 final class PetToyPivot: ModifiablePivot {
     typealias Left = Pet

@@ -9,7 +9,7 @@
 ///
 /// joinedKey = A.b_id
 /// baseKey = B.id
-public struct Join {
+public struct QueryJoin {
     /// table/collection that will be
     /// accepting the joined data
     public let baseEntity: String
@@ -76,7 +76,7 @@ extension QueryBuilder {
         baseKey: String = M.idKey,
         joinedKey: String = M.foreignIDKey
     ) -> Self {
-        let join = Join(
+        let join = QueryJoin(
             type: type,
             base: M.self,
             joined: Joined.self,

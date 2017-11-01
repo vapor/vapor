@@ -1,7 +1,7 @@
 import Async
 
 /// Possible aggregation types.
-public enum Aggregate {
+public enum QueryAggregate {
     case count
     case sum
     case average
@@ -40,7 +40,7 @@ extension QueryBuilder {
     /// Perform an aggregate action on the supplied field.
     /// Decode as the supplied type.
     public func aggregate<D: Decodable>(
-        _ aggregate: Aggregate,
+        _ aggregate: QueryAggregate,
         field: String?,
         as type: D.Type = D.self
     ) -> Future<D> {
@@ -52,7 +52,7 @@ extension QueryBuilder {
     /// Decode as the supplied type.
     public func aggregate<M: Model, D: Decodable>(
         _ model: M.Type = M.self,
-        _ aggregate: Aggregate,
+        _ aggregate: QueryAggregate,
         field: String?,
         as type: D.Type = D.self
     ) -> Future<D> {

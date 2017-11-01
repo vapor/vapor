@@ -7,13 +7,13 @@ public struct DatabaseQuery {
     public var action: QueryAction
 
     /// Result stream will be filtered by these queries.
-    public var filters: [Filter]
+    public var filters: [QueryFilter]
 
     /// Joined models.
-    public var joins: [Join]
+    public var joins: [QueryJoin]
 
     /// Sorts to be applied to the results.
-    public var sorts: [Sort]
+    public var sorts: [QuerySort]
 
     /// If true, the query will only select distinct rows.
     public var isDistinct: Bool

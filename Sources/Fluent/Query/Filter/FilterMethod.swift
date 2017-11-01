@@ -1,10 +1,14 @@
 /// Types of fluent filters.
-public enum FilterMethod {
-    case equality(QueryField, EqualityComparison, ComparisonValue) // Encodable & Equatable
-    case order(QueryField, OrderedComparison, ComparisonValue) // Encodable & Comparable
-    case sequence(QueryField, SequenceComparison, ComparisonValue) // Encodable & Sequence
+public enum QueryFilterMethod {
+    case compare(QueryField, QueryComparison, ComparisonValue)
     case subset(QueryField, SubsetScope, SubsetValue)
-    case group(Relation, [Filter])
+    case group(Relation, [QueryFilter])
+}
+
+public enum QueryComparison {
+    case equality(EqualityComparison) // Encodable & Equatable
+    case order(OrderedComparison) // Encodable & Comparable
+    case sequence(SequenceComparison) // Encodable & Sequence
 }
 
 public enum ComparisonValue {
@@ -18,18 +22,18 @@ extension QueryBuilder {
     @discardableResult
     public func filter<M: Model>(
         _ model: M.Type,
-        _ value: FilterMethod
+        _ value: QueryFilterMethod
     ) -> Self {
-        let filter = Filter(entity: M.entity, method: value)
+        let filter = QueryFilter(entity: M.entity, method: value)
         return addFilter(filter)
     }
 
     /// Self operator filter queries
     @discardableResult
     public func filter(
-        _ value: FilterMethod
+        _ value: QueryFilterMethod
     ) -> Self {
-        let filter = Filter(entity: M.entity, method: value)
+        let filter = QueryFilter(entity: M.entity, method: value)
         return addFilter(filter)
     }
 }
