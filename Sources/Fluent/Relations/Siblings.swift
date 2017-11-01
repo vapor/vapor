@@ -1,5 +1,34 @@
 import Async
 
+/// A siblings relation is a many-to-many relation between
+/// two models.
+///
+/// Each model should have an opposite Siblings relation.
+///
+///     typealias PetToyPivot = BasicPivot<Pet, Toy> // or custom `Pivot`
+///
+///     class Pet: Model {
+///         var toys: Siblings<Pet, Toy, PetToyPivot> {
+///             return siblings()
+///         }
+///     }
+///
+///     class Toy: Model {
+///         var pets: Siblings<Toy, Pet, PetToyPivot> {
+///             return siblings()
+///         }
+///     }
+///
+/// The third generic parameter to this relation is a Pivot.
+/// Althrough not enforced by compiler (due to the handedness), the Through pivot _must_
+/// have Left & Right model types equal to the siblings From & To models.
+/// (This cannot be enforced by the compiler due to the handedness)
+///
+/// In other words a pivot for Foo & Bar should not be used in a siblings
+/// relation between Boo & Baz.
+///
+/// It is recommended that you use your own types conforming to `Pivot`
+/// for Siblings pivots as you cannot add additional fields to a `BasicPivot`.
 public struct Siblings<From: Model, To: Model, Through: Pivot> {
     /// The base model which all fetched models
     /// should be related to.

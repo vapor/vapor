@@ -122,13 +122,8 @@ extension SQLiteConnection: QueryExecutor {
 
         let string = SQLiteSQLSerializer()
             .serialize(query: sqlQuery)
-
-        print("[SQLite] \(string) \(values)")
         
-        let sqliteQuery = SQLiteQuery(
-            string: string,
-            connection: self
-        )
+        let sqliteQuery = self.makeQuery(string)
         for value in values {
             sqliteQuery.bind(value) // FIXME: set array w/o need to loop?
         }

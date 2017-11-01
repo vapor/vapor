@@ -22,12 +22,12 @@ public struct Field {
 
 /// Supported database field types.
 public enum FieldType {
-    case string
+    case string(length: Int?)
     case int
     case double
-    case data
+    case data(length: Int?)
     case date
-    case custom(String)
+    case custom(type: String)
 }
 
 // MARK: Fields
@@ -54,10 +54,10 @@ extension SchemaBuilder {
     }
 
     /// Adds a string type field.
-    public func string(_ name: String, isOptional: Bool = false, isIdentifier: Bool = false) {
+    public func string(_ name: String, length: Int? = nil, isOptional: Bool = false, isIdentifier: Bool = false) {
         let field = Field(
             name: name,
-            type: .string,
+            type: .string(length: length),
             isOptional: isOptional,
             isIdentifier: isIdentifier
         )
@@ -87,10 +87,10 @@ extension SchemaBuilder {
     }
 
     /// Adds a data type field.
-    public func data(_ name: String, length: Int, isOptional: Bool = false, isIdentifier: Bool = false) {
+    public func data(_ name: String, length: Int? = nil, isOptional: Bool = false, isIdentifier: Bool = false) {
         let field = Field(
             name: name,
-            type: .data,
+            type: .data(length: length),
             isOptional: isOptional,
             isIdentifier: isIdentifier
         )

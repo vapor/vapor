@@ -9,7 +9,6 @@ public protocol Database {
 
     /// Creates a new database connection that will
     /// execute callbacks on the supplied dispatch queue.
-
     func makeConnection(
         on worker: Worker
     ) -> Future<Connection>

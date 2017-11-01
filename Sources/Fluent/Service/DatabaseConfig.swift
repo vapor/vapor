@@ -7,10 +7,12 @@ public struct DatabaseConfig {
 
     /// Internal storage.
     internal var databases: [String: (Container) throws -> Any]
+    internal var logging: [String: DatabaseLogger]
 
     /// Create a new database config helper.
     public init() {
         self.databases = [:]
+        self.logging = [:]
     }
 
     /// Add a pre-initialized database to the config.
@@ -37,5 +39,13 @@ public struct DatabaseConfig {
         database: @escaping LazyDatabase<D>
     ) {
         databases[id.uid] = database
+    }
+
+    /// Enables logging on the supplied database
+    public mutating func enableLogging<D>(
+        on database: DatabaseIdentifier<D>,
+        logger: DatabaseLogger = .print
+    ) where D: SupportsLogging {
+        logging[database.uid] = logger
     }
 }

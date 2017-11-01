@@ -33,7 +33,7 @@ extension UUID: Identifier {
 
     /// See Identifier.fieldType
     public static var fieldType: FieldType {
-        return .data
+        return .data(length: 16)
     }
 }
 
@@ -45,7 +45,7 @@ extension String: Identifier {
 
     /// See Identifier.fieldType
     public static var fieldType: FieldType {
-        return .string
+        return .string(length: nil)
     }
 }
 

@@ -28,7 +28,12 @@ public final class FluentProvider: Provider {
             let config = try container.make(DatabaseConfig.self, for: DatabaseMiddleware.self)
             var databases: [String: Any] = [:]
             for (id, lazyDatabase) in config.databases {
-                databases[id] = try lazyDatabase(container)
+                let db = try lazyDatabase(container)
+                if let supports = db as? SupportsLogging, let logger = config.logging[id] {
+                    logger.dbID = id
+                    supports.enableLogging(using: logger)
+                }
+                databases[id] = db
             }
             return Databases(storage: databases)
         }
@@ -49,6 +54,7 @@ public final class FluentProvider: Provider {
             results.append(result)
         }
 
+        // FIXME: should this be nonblocking?
         try results.flatten().blockingAwait()
 
         print("Migrations complete")

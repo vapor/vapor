@@ -37,14 +37,10 @@ public final class SQLiteQuery: Async.OutputStream {
     public let string: String
 
     /// data bound to this query
-    var binds: [SQLiteData]
+    public var binds: [SQLiteData]
 
     /// Create a new SQLite statement with a supplied query string and database.
-    ///
-    /// The supplied DispatchQueue will be used to dispatch output stream calls.
-    /// Make sure to supply the event loop to this parameter so you get called back
-    /// on the appropriate thread.
-    public init(string: String, connection: SQLiteConnection) {
+    internal init(string: String, connection: SQLiteConnection) {
         self.connection = connection
         self.string = string
         self.binds = []
@@ -142,6 +138,8 @@ public final class SQLiteQuery: Async.OutputStream {
         guard ret == SQLITE_OK else {
             throw SQLiteError(statusCode: ret, connection: self.connection)
         }
+
+        try connection.database.logger?.log(query: self).blockingAwait()
     }
 
     /// Starts executing the statement.

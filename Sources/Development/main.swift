@@ -32,6 +32,7 @@ databaseConfig.add(
     database: SQLiteDatabase(storage: .file(path: "/tmp/beta.sqlite")),
     as: .beta
 )
+databaseConfig.enableLogging(on: .beta)
 services.register(databaseConfig)
 
 

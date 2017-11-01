@@ -30,12 +30,7 @@ extension SQLiteConnection: SchemaExecutor {
         let string = SQLiteSQLSerializer()
             .serialize(query: .schema(schemaQuery))
 
-        print("[SQLite Schema] \(string)")
-
-        let sqliteQuery = SQLiteQuery(
-            string: string,
-            connection: self
-        )
+        let sqliteQuery = self.makeQuery(string)
         sqliteQuery.execute().then {
             promise.complete()
         }.catch { err in
