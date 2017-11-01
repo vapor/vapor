@@ -1,3 +1,4 @@
+import Async
 import HTTP
 
 /// Capable of being used as a route parameter.
@@ -8,12 +9,12 @@ public protocol Parameter {
     static var uniqueSlug: String { get }
 
     // returns the found model for the resolved url parameter
-    static func make(for parameter: String, in request: Request) throws -> Self
+    static func make(for parameter: String, in request: Request) throws -> Future<Self>
 }
 
 extension Parameter {
     /// The path component for this route parameter
     public static var parameter: PathComponent {
-        return .parameter(self)
+        return .parameter(uniqueSlug)
     }
 }

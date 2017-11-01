@@ -1,14 +1,22 @@
 import Async
 import SQLite
 
-extension SQLiteDatabase: Database {
-    public func makeConnection(
-        on worker: Worker
-    ) -> Future<DatabaseConnection> {
-        let sqlite: Future<SQLiteConnection> = makeConnection(on: worker)
-        return sqlite.map { $0 }
+extension SQLiteDatabase: Database { }
+
+extension SQLiteDatabase: SupportsLogging {
+    /// See SupportsLogging.enableLogging
+    public func enableLogging(using logger: DatabaseLogger) {
+        self.logger = logger
     }
 }
 
-extension SQLiteConnection: DatabaseConnection { }
-
+extension DatabaseLogger: SQLiteLogger {
+    /// See SQLiteLogger.log
+    public func log(query: SQLiteQuery) -> Future<Void> {
+        let log = DatabaseLog(
+            query: query.string,
+            values: query.binds.map { $0.description }
+        )
+        return record(log: log)
+    }
+}

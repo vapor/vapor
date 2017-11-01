@@ -26,9 +26,14 @@ public final class FluentProvider: Provider {
 
         services.register { container -> Databases in
             let config = try container.make(DatabaseConfig.self, for: DatabaseMiddleware.self)
-            var databases: [DatabaseIdentifier: Database] = [:]
+            var databases: [String: Any] = [:]
             for (id, lazyDatabase) in config.databases {
-                databases[id] = try lazyDatabase(container)
+                let db = try lazyDatabase(container)
+                if let supports = db as? SupportsLogging, let logger = config.logging[id] {
+                    logger.dbID = id
+                    supports.enableLogging(using: logger)
+                }
+                databases[id] = db
             }
             return Databases(storage: databases)
         }
@@ -40,23 +45,17 @@ public final class FluentProvider: Provider {
         let databases = try container.make(Databases.self, for: FluentProvider.self)
 
         let migrationQueue = DispatchQueue(label: "codes.vapor.fluent.migration")
-        let migrationEventLoop = EventLoop(queue: migrationQueue)
 
-        var organizedMigrations: [DatabaseIdentifier: [Migration.Type]] = [:]
+        var results: [Future<Void>] = []
 
-        for migration in config.migrations {
-            organizedMigrations[migration.database, default: []].append(migration.migration)
+        for (uid, config) in config.storage {
+            print("Migrating \(uid) DB")
+            let result = config.migrate(using: databases, on: migrationQueue)
+            results.append(result)
         }
 
-        for (dbID, migrations) in organizedMigrations {
-            guard let database = databases.storage[dbID] else {
-                throw "no database \(dbID) was found for migrations \(migrations)"
-            }
-
-            let conn = try database.makeConnection(on: migrationEventLoop).blockingAwait()
-            print("Running \(migrations.count) migrations for `\(dbID)` database")
-            try conn.blockingPrepare(migrations)
-        }
+        // FIXME: should this be nonblocking?
+        try results.flatten().blockingAwait()
 
         print("Migrations complete")
     }

@@ -97,7 +97,7 @@ final class TestMiddleware: Middleware {
 
         let promise = Promise<Response>()
 
-        try next.respond(to: request).then { res in
+        try next.respond(to: request).do { res in
             res.headers["baz"] = "bar"
             promise.complete(res)
         }.catch { error in

@@ -8,7 +8,7 @@ final class SchemaTests: XCTestCase {
         var schema = DatabaseSchema(entity: "users")
         schema.action = .create
 
-        let name = Field(name: "name", type: .string)
+        let name = Field(name: "name", type: .string(length: nil))
         schema.addFields.append(name)
 
         let age = Field(name: "age", type: .int)
@@ -22,7 +22,7 @@ final class SchemaTests: XCTestCase {
         var schema = DatabaseSchema(entity: "users")
         schema.action = .create
 
-        let name = Field(name: "name", type: .string)
+        let name = Field(name: "name", type: .string(length: nil))
         schema.addFields.append(name)
 
         let age = Field(name: "age", type: .int)
@@ -33,7 +33,7 @@ final class SchemaTests: XCTestCase {
 
         var change = DatabaseSchema(entity: "users")
         change.action = .update
-        let bio = Field(name: "bio", type: .string, isOptional: true)
+        let bio = Field(name: "bio", type: .string(length: nil), isOptional: true)
         change.addFields.append(bio)
         try! conn.execute(schema: change).blockingAwait()
     }
@@ -42,7 +42,7 @@ final class SchemaTests: XCTestCase {
         var schema = DatabaseSchema(entity: "users")
         schema.action = .create
 
-        let name = Field(name: "name", type: .string)
+        let name = Field(name: "name", type: .string(length: nil))
         schema.addFields.append(name)
 
         let age = Field(name: "age", type: .int)

@@ -7,68 +7,86 @@ extension Request {
     /// The database connection will be cached on this worker.
     /// The same database connection will always be returned for
     /// a given worker.
-    public func database(
-        id database: DatabaseIdentifier = .default
-    ) -> Future<DatabaseConnection> {
-        let promise = Promise(DatabaseConnection.self)
-
-        if let currentConnection = getCurrentConnection(database: database) {
-            currentConnection.chain(to: promise)
+    public func database<Database>(
+        _ database: DatabaseIdentifier<Database>
+    ) -> Future<Database.Connection> {
+        if let currentConnection = currentConnections[database.uid]?.connection as? Future<Database.Connection> {
+            /// this request already has a connection
+            /// for this db, use it
+            return currentConnection
         } else {
-            do {
-                let pool = try eventLoop
-                    .requireConnectionPool(database: database)
+            /// this is the first attempt to connect to this
+            /// db for this request
+            if let pool = eventLoop.getConnectionPool(database: database) {
+                /// request a connection from the pool
                 let conn = pool.requestConnection()
-                setCurrentConnection(to: conn, database: database)
-                conn.chain(to: promise)
-            } catch {
-                promise.fail(error)
+
+                /// create a struct that contains both this connection
+                /// and the information to release it.
+                let current = CurrentConnection(connection: conn) {
+                    conn.do { conn in
+                        pool.releaseConnection(conn)
+                        self.currentConnections[database.uid] = nil
+                    }.catch { err in
+                        print("could not release connection: \(err)")
+                    }
+                }
+
+                /// store this struct
+                currentConnections[database.uid] = current
+
+                /// done
+                return conn
+            } else {
+                return Future(error: "no connection pool for \(database)")
             }
         }
+    }
 
-        return promise.future
+    /// Releases the database connection for the supplied
+    /// database id if it is currently in-use.
+    public func releaseDatabaseConnection<Database>(_ database: DatabaseIdentifier<Database>) {
+        currentConnections[database.uid]?.release()
+    }
+
+    /// Releases all database connections.
+    public func releaseDatabaseConnections() {
+        for connection in currentConnections.values {
+            connection.release()
+        }
     }
 }
 
-// MARK: Internal
+// MARK: Private
 
 extension Request {
-    /// The current connection for this request.
+    /// The current connections for this request.
     /// Note: This is a Future as the connection may not yet
     /// be available. However, we want all queries for
     /// this request to use the _same_ connection when it
     /// becomes available.
-    func getCurrentConnection(
-        database: DatabaseIdentifier
-    ) -> Future<DatabaseConnection>? {
-        return extend["fluent:current-connection:\(database.uid)"] as? Future<DatabaseConnection>
+    fileprivate var currentConnections: [String: CurrentConnection] {
+        get { return extend["fluent:current-connections"] as? [String: CurrentConnection] ?? [:] }
+        set { extend["fluent:current-connections"] = newValue }
     }
+}
 
-    func setCurrentConnection(
-        to connection: Future<DatabaseConnection>?,
-        database: DatabaseIdentifier
-    ) {
-        extend["fluent:current-connection:\(database.uid)"] = connection
-    }
+/// Struct containing an in-use connection
+fileprivate struct CurrentConnection {
+    /// Store the connection here. This
+    /// must be casted back to the desired connection type.
+    let connection: Any
 
+    /// Closure for releasing the connection.
+    typealias ReleaseClosure = () -> ()
 
-    /// Releases the current connection for this request
-    /// if one exists.
-    func releaseCurrentConnection(
-        database: DatabaseIdentifier
-    ) throws {
-        guard let current = getCurrentConnection(database: database) else {
-            return
-        }
+    /// Upon call, will release the connection.
+    let release: ReleaseClosure
 
-        let pool = try eventLoop
-            .requireConnectionPool(database: database)
-
-        current.then { conn in
-            pool.releaseConnection(conn)
-            self.setCurrentConnection(to: nil, database: database)
-        }.catch { err in
-            print("could not release connection")
-        }
+    /// Create a new CurrentConnection for the supplied connection
+    /// and release callback.
+    init(connection: Any, release: @escaping ReleaseClosure) {
+        self.connection = connection
+        self.release = release
     }
 }

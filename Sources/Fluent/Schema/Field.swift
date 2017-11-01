@@ -22,12 +22,12 @@ public struct Field {
 
 /// Supported database field types.
 public enum FieldType {
-    case string
+    case string(length: Int?)
     case int
     case double
-    case data
+    case data(length: Int?)
     case date
-    case custom(String)
+    case custom(type: String)
 }
 
 // MARK: Fields
@@ -35,19 +35,29 @@ public enum FieldType {
 extension SchemaBuilder {
     public func id() {
         let field = Field(
-            name: "id",
-            type: ModelType.I.fieldType,
+            name: ModelType.idKey,
+            type: ModelType.Identifier.fieldType,
             isOptional: false,
             isIdentifier: true
         )
         schema.addFields.append(field)
     }
 
+    public func id<M: Model>(for model: M.Type) {
+        let field = Field(
+            name: M.foreignIDKey,
+            type: M.Identifier.fieldType,
+            isOptional: false,
+            isIdentifier: false
+        )
+        schema.addFields.append(field)
+    }
+
     /// Adds a string type field.
-    public func string(_ name: String, isOptional: Bool = false, isIdentifier: Bool = false) {
+    public func string(_ name: String, length: Int? = nil, isOptional: Bool = false, isIdentifier: Bool = false) {
         let field = Field(
             name: name,
-            type: .string,
+            type: .string(length: length),
             isOptional: isOptional,
             isIdentifier: isIdentifier
         )
@@ -77,10 +87,10 @@ extension SchemaBuilder {
     }
 
     /// Adds a data type field.
-    public func data(_ name: String, length: Int, isOptional: Bool = false, isIdentifier: Bool = false) {
+    public func data(_ name: String, length: Int? = nil, isOptional: Bool = false, isIdentifier: Bool = false) {
         let field = Field(
             name: name,
-            type: .data,
+            type: .data(length: length),
             isOptional: isOptional,
             isIdentifier: isIdentifier
         )

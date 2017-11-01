@@ -7,6 +7,9 @@ public final class SQLiteDatabase {
     /// The path to the SQLite file.
     public let storage: SQLiteStorage
 
+    /// If set, query logs will be sent to the supplied logger.
+    public var logger: SQLiteLogger?
+
     /// Create a new SQLite database.
     public init(storage: SQLiteStorage) {
         self.storage = storage
@@ -54,7 +57,8 @@ public final class SQLiteDatabase {
             let connection = SQLiteConnection(
                 raw: r,
                 worker: worker,
-                background: background
+                background: background,
+                database: self
             )
             worker.eventLoop.queue.async {
                 promise.complete(connection)

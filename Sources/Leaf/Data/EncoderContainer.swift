@@ -174,7 +174,7 @@ internal struct LeafDataContainer<K: CodingKey>:
     mutating func encode<E>(_ future: Future<E>) throws {
         let promise = Promise(LeafData.self)
 
-        future.then { item in
+        future.do { item in
             if let encodable = item as? Encodable {
                 let encoder = LeafDataEncoder()
                 try! encodable.encode(to: encoder)

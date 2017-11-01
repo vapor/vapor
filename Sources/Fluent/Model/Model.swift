@@ -8,13 +8,26 @@ import Async
 public protocol Model: class, Codable {
     /// The associated Identifier type.
     /// Usually Int or UUID.
-    associatedtype I: Identifier
+    associatedtype Identifier: Fluent.Identifier
+
+    /// This model's unique name.
+    static var name: String { get }
 
     /// This model's collection/table name
     static var entity: String { get }
 
+    /// This model's id key.
+    /// note: If this is not `id`, you
+    /// will still need to implement `var id`
+    /// on your model as a computed property.
+    static var idKey: String { get }
+
+    /// This model's default foreign id key
+    /// for relations and joins.
+    static var foreignIDKey: String { get }
+
     /// The model's identifier.
-    var id: I? { get set }
+    var id: Identifier? { get set }
 
     /// Called before a model is created when saving.
     /// Throwing will cancel the save.
@@ -37,9 +50,24 @@ public protocol Model: class, Codable {
 
 /// Free implementations.
 extension Model {
+    /// See Model.name
+    public static var name: String {
+        return "\(Self.self)".lowercased()
+    }
+
     /// See Model.entity
     public static var entity: String {
-        return "\(Self.self)".lowercased() + "s"
+        return name + "s"
+    }
+
+    /// See Model.idKey
+    public static var idKey: String {
+        return "id"
+    }
+
+    /// See Model.foreignIDKey
+    public static var foreignIDKey: String {
+        return name + "ID"
     }
 
     /// Seee Model.willCreate()
@@ -56,6 +84,18 @@ extension Model {
     public func willDelete() throws {}
     /// See Model.didDelete()
     public func didDelete() {}
+}
+
+/// MARK: Convenience
+
+extension Model {
+    public func requireID() throws -> Identifier {
+        guard let id = self.id else {
+            throw "no id"
+        }
+
+        return id
+    }
 }
 
 /// MARK: CRUD
@@ -82,7 +122,7 @@ extension Model {
 
     /// Attempts to find an instance of this model w/
     /// the supplied identifier.
-    public static func find(_ id: Self.I, on executor: QueryExecutor) -> Future<Self?> {
+    public static func find(_ id: Self.Identifier, on executor: QueryExecutor) -> Future<Self?> {
         let query = executor.query(Self.self)
         query.filter("id" == id)
         return query.first()

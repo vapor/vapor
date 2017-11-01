@@ -2,6 +2,8 @@ import Async
 
 // MARK: Internal
 
+/// Connection pools can be shared among event loops
+/// without requiring thread safety.
 extension EventLoop {
     /// This worker's database.
     var databases: Databases? {
@@ -11,8 +13,10 @@ extension EventLoop {
 
     /// Returns this worker's database if one
     /// exists or throws an error.
-    func requireDatabase(id: DatabaseIdentifier) throws -> Database {
-        guard let database = databases?.storage[id] else {
+    func requireDatabase<Database>(
+        id: DatabaseIdentifier<Database>
+    ) throws -> Database {
+        guard let database = databases?.storage[id.uid] as? Database else {
             throw "Database on worker required"
         }
 
@@ -20,14 +24,14 @@ extension EventLoop {
     }
 
     /// This's worker's connection pool.
-    func getConnectionPool(
-        database id: DatabaseIdentifier
-    ) -> DatabaseConnectionPool? {
-        guard let database = databases?.storage[id] else {
+    func getConnectionPool<Database>(
+        database id: DatabaseIdentifier<Database>
+    ) -> DatabaseConnectionPool<Database>? {
+        guard let database = databases?.storage[id.uid] as? Database else {
             return nil
         }
 
-        if let existing = extend["fluent:connection-pool:\(id)"] as? DatabaseConnectionPool {
+        if let existing = extend["fluent:connection-pool:\(id)"] as? DatabaseConnectionPool<Database> {
             return existing
         } else {
             let new = database.makeConnectionPool(max: 2, on: self)
@@ -38,9 +42,9 @@ extension EventLoop {
 
     /// Returns this worker's connection pool if one
     /// exists or throws an error.
-    func requireConnectionPool(
-        database: DatabaseIdentifier
-    ) throws -> DatabaseConnectionPool {
+    func requireConnectionPool<Database>(
+        database: DatabaseIdentifier<Database>
+    ) throws -> DatabaseConnectionPool<Database> {
         guard let connectionPool = getConnectionPool(database: database) else {
             throw "Connection pool on worker required"
         }

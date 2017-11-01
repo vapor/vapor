@@ -12,7 +12,7 @@ extension QueryBuilder {
     ) -> BasicStream<T> {
         let stream = BasicStream<T>()
 
-        executor.execute(query: self.query, into: stream).then {
+        executor.execute(query: self.query, into: stream).do {
             stream.close()
         }.catch { err in
             stream.errorStream?(err)
@@ -49,7 +49,7 @@ extension QueryBuilder {
         }
 
         executor.execute(query: self.query, into: stream)
-            .then(stream.close)
+            .do(stream.close)
             .catch(promise.fail)
 
         return promise.future
@@ -69,13 +69,7 @@ extension QueryBuilder {
 
     /// Runs the query, discarding any results.
     public func run() -> Future<Void> {
-        let promise = Promise(Void.self)
-
         let stream = BasicStream<M>()
-        executor.execute(query: self.query, into: stream)
-            .then { promise.complete() }
-            .catch(promise.fail)
-
-        return promise.future
+        return executor.execute(query: self.query, into: stream)
     }
 }

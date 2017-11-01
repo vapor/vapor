@@ -31,17 +31,12 @@ extension Future: QueryExecutor {
         query: DatabaseQuery,
         into stream: I
     ) -> Future<Void> where I.Input == D {
-        let promise = Promise(Void.self)
-
-        self.then { result in
-            if let executor = result as? QueryExecutor {
-                executor.execute(query: query, into: stream)
-                    .chain(to: promise)
-            } else {
-                promise.fail("future not query executor type")
+        return self.then { result in
+            guard let executor = result as? QueryExecutor else {
+                throw "future not query executor type"
             }
-        }.catch(promise.fail)
 
-        return promise.future
+            return executor.execute(query: query, into: stream)
+        }
     }
 }

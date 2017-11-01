@@ -11,29 +11,38 @@ import SQLite
 import Vapor
 
 extension DatabaseIdentifier {
-    static var memory: DatabaseIdentifier {
-        return .init("memory")
+    static var beta: DatabaseIdentifier<SQLiteDatabase> {
+        return .init("beta")
+    }
+
+    static var alpha: DatabaseIdentifier<SQLiteDatabase> {
+        return .init("alpha")
     }
 }
 
 var services = Services.default()
 
-services.register(SQLiteStorage.file(path: "/tmp/db.sqlite"))
+services.register(SQLiteStorage.file(path: "/tmp/alpha.sqlite"))
 try services.register(LeafProvider())
 try services.register(FluentProvider())
 
 var databaseConfig = DatabaseConfig()
-databaseConfig.add(database: SQLiteDatabase.self)
+databaseConfig.add(database: SQLiteDatabase.self, as: .alpha)
 databaseConfig.add(
-    database: SQLiteDatabase(storage: .file(path: "/tmp/memory.sqlite")),
-    as: .memory
+    database: SQLiteDatabase(storage: .file(path: "/tmp/beta.sqlite")),
+    as: .beta
 )
+databaseConfig.enableLogging(on: .beta)
 services.register(databaseConfig)
 
 
 var migrationConfig = MigrationConfig()
-migrationConfig.add(migration: User.self, database: .memory)
-migrationConfig.add(migration: AddUsers.self, database: .memory)
+migrationConfig.add(migration: User.self, database: .beta)
+migrationConfig.add(migration: AddUsers.self, database: .beta)
+migrationConfig.add(migration: Pet.self, database: .beta)
+migrationConfig.add(migration: Toy.self, database: .beta)
+migrationConfig.add(migration: PetToyPivot.self, database: .beta)
+migrationConfig.add(migration: TestSiblings.self, database: .beta)
 services.register(migrationConfig)
 
 services.register(
@@ -48,9 +57,8 @@ let app = try Application(services: services)
 let router = try app.make(Router.self)
 
 let user = User(name: "Vapor", age: 3);
-
-router.get("hello") { req in
-    return Future<User>(user)
+router.get("hello") { req -> Response in
+    return try user.makeResponse(for: req)
 }
 
 extension Worker {
@@ -107,7 +115,7 @@ final class Message: Model {
 }
 
 router.get("userview") { req -> Future<View> in
-    let user = req.database().query(User.self).first()
+    let user = req.database(.beta).query(User.self).first()
     return try view.make("/Users/tanner/Desktop/hello", context: [
         "user": user
     ], for: req)
@@ -115,11 +123,11 @@ router.get("userview") { req -> Future<View> in
 
 router.post("users") { req -> Future<User> in
     let user = try JSONDecoder().decode(User.self, from: req.body.data)
-    return user.save(on: req.database(id: .memory)).map { user }
+    return user.save(on: req.database(.beta)).map { user }
 }
 
 router.get("transaction") { req -> Future<String> in
-    return req.database(id: .memory).transaction { db in
+    return req.database(.beta).transaction { db in
         let user = User(name: "NO SAVE", age: 500)
         let message = Message(id: nil, text: "asdf", time: 42)
 
@@ -132,8 +140,14 @@ router.get("transaction") { req -> Future<String> in
     }
 }
 
+router.get("pets", Pet.parameter, "toys") { req -> Future<[Toy]> in
+    return req.parameters.next(Pet.self).then { pet in
+        return pet.toys.query(on: req.database(.beta)).all()
+    }
+}
+
 router.get("users") { req in
-    return req.database(id: .memory).query(User.self).all()
+    return req.database(.beta).query(User.self).all()
 }
 
 router.get("sqlite") { req -> Future<String> in
@@ -145,11 +159,11 @@ router.get("sqlite") { req -> Future<String> in
 //            print(count)
 //    }
 
-    let query = req.database().query(Message.self)
+    let query = req.database(.beta).query(Message.self)
 
     // query.data = Message(id: "UUID:5", text: "asdf", time: 123)
 
-    query.all().then { messages in
+    query.all().do { messages in
         var data = ""
         for message in messages {
             data += "\(message.id!): \(message.text) @ \(message.time)\n"

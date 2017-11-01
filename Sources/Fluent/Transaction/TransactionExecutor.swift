@@ -20,17 +20,12 @@ extension TransactionExecutor {
 extension Future: TransactionExecutor {
     /// See TransactionExecutor.execute
     public func execute(transaction: DatabaseTransaction) -> Future<Void> {
-        let promise = Promise(Void.self)
-
-        self.then { result in
-            if let executor = result as? TransactionExecutor {
-                executor.execute(transaction: transaction)
-                    .chain(to: promise)
-            } else {
-                promise.fail("future not query executor type")
+        return then { result in
+            guard let executor = result as? TransactionExecutor else {
+                throw "future not query executor type"
             }
-            }.catch(promise.fail)
-
-        return promise.future
+            
+            return executor.execute(transaction: transaction)
+        }
     }
 }

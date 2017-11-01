@@ -18,7 +18,7 @@ final class FutureTests : XCTestCase {
         let group = DispatchGroup()
         group.enter()
 
-        promise.future.then { result in
+        promise.future.do { result in
             XCTAssertEqual(result, "test")
             group.leave()
         }.catch { error in
@@ -51,7 +51,7 @@ final class FutureTests : XCTestCase {
 
         let group = DispatchGroup()
         group.enter()
-        promise.future.then { _ in
+        promise.future.do { _ in
             XCTFail()
             executed += 1
         }.catch { error in
@@ -75,7 +75,7 @@ final class FutureTests : XCTestCase {
 
         let group = DispatchGroup()
         group.enter()
-        futures.flatten().then { array in
+        futures.flatten().do { array in
             XCTAssertEqual(array, ["a", "b"])
             group.leave()
         }.catch { error in
@@ -96,7 +96,7 @@ final class FutureTests : XCTestCase {
 
         intPromise.future.map { int in
             return String(int)
-        }.then { string in
+        }.do { string in
             XCTAssertEqual(string, "42")
             group.leave()
         }.catch { error in

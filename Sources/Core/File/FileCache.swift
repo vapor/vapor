@@ -15,23 +15,15 @@ extension FileReader where Self: FileCache {
     /// Checks the cache for the file path or reads
     /// it from the reader.
     public func cachedRead(at path: String) -> Future<Data> {
-        let promise = Promise(Data.self)
-
-        getFile(hash: path).then { data in
+        return getFile(hash: path).then { data in
             if let data = data {
-                promise.complete(data)
+                return Future(data)
             } else {
-                self.read(at: path).then { data in
+                return self.read(at: path).map { data in
                     self.setFile(file: data, hash: path)
-                    promise.complete(data)
-                }.catch { error in
-                    promise.fail(error)
+                    return data
                 }
             }
-        }.catch { error in
-            promise.fail(error)
         }
-
-        return promise.future
     }
 }

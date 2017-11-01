@@ -9,7 +9,7 @@ public final class ErrorMiddleware: Middleware {
         let promise = Promise(Response.self)
 
         do {
-            try next.respond(to: req).then { res in
+            try next.respond(to: req).do { res in
                 promise.complete(res)
             }.catch { error in
                 debugPrint(error)

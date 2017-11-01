@@ -16,7 +16,7 @@ extension QueryBuilder {
     /// Filter entity with field, comparison, and value.
     @discardableResult
     public func filter<T: Model>(
-        _ entity: T.Type,
+        _ model: T.Type,
         _ field: String,
         _ comparison: Comparison,
         _ value: Encodable?
@@ -28,11 +28,11 @@ extension QueryBuilder {
     /// Filter entity where field equals value
     @discardableResult
     public func filter<T: Model>(
-        _ entity: T.Type,
+        _ model: T.Type,
         _ field: String,
         _ value: Encodable?
     ) -> Self {
-        return filter(entity, field, .equals, value)
+        return filter(model, field, .equals, value)
     }
 
     /// Filter self with field, comparison, and value.

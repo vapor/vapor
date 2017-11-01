@@ -214,7 +214,7 @@ final class RootNode: TrieRouterNode {
 /// A node that stores a dynamic parameter.
 final class ParameterNode: TrieRouterNode {
     /// The parameter type stored at this node
-    let parameter: Parameter.Type
+    let parameter: String
 
     /// All constant child nodes
     var constantChildren: [ConstantNode]
@@ -228,7 +228,7 @@ final class ParameterNode: TrieRouterNode {
     var responder: Responder?
 
     /// Creates a new RouterNode
-    init(parameter: Parameter.Type) {
+    init(parameter: String) {
         self.parameter = parameter
         self.constantChildren = []
     }

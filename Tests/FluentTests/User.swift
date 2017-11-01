@@ -17,7 +17,9 @@ final class User: Model {
 }
 
 extension User: Migration {
-    static func prepare(_ database: DatabaseConnection) -> Future<Void> {
+    typealias Database = SQLiteDatabase
+
+    static func prepare(on database: Database.Connection) -> Future<Void> {
         return database.create(User.self) { builder in
             builder.id()
             builder.string("name")
@@ -25,24 +27,24 @@ extension User: Migration {
         }
     }
 
-    static func revert(_ database: DatabaseConnection) -> Future<Void> {
+    static func revert(on database: Database.Connection) -> Future<Void> {
         return database.delete(User.self)
     }
 }
 
 extension User {
-    static func makeTestConnection() throws -> DatabaseConnection {
+    static func makeTestConnection() throws -> SQLiteConnection {
         let conn = try SQLiteDatabase.makeTestConnection()
-        try User.prepare(conn).blockingAwait()
+        try User.prepare(on: conn).blockingAwait()
         return conn
     }
 }
 
 extension SQLiteDatabase {
-    static func makeTestConnection() throws -> DatabaseConnection {
+    static func makeTestConnection() throws -> SQLiteConnection {
         let test = DispatchQueue(label: "codes.vapor.test.fluent.database")
         let futureConn = SQLiteDatabase(storage: .memory)
-            .makeConnection(on: EventLoop(queue: test)) as Future<DatabaseConnection>
+            .makeConnection(on: EventLoop(queue: test)) as Future<SQLiteConnection>
         return try futureConn.blockingAwait()
     }
 }

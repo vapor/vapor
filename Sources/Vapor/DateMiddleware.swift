@@ -34,7 +34,7 @@ public final class DateMiddleware: Middleware {
     public func respond(to request: Request, chainingTo next: Responder) throws -> Future<Response> {
         let promise = Promise<Response>()
         
-        try next.respond(to: request).then { res in
+        try next.respond(to: request).do { res in
             res.headers[.date] = self.getDate()
             promise.complete(res)
         }.catch { error in

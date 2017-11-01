@@ -7,6 +7,9 @@ public final class SQLiteConnection {
     public typealias Raw = OpaquePointer
     public var raw: Raw
 
+    /// Reference to the database that created this connection.
+    public let database: SQLiteDatabase
+
     /// the queue statement's will dispatch stream output to.
     public let worker: Worker
 
@@ -28,11 +31,13 @@ public final class SQLiteConnection {
     internal init(
         raw: Raw,
         worker: Worker,
-        background: DispatchQueue
+        background: DispatchQueue,
+        database: SQLiteDatabase
     ) {
         self.raw = raw
         self.worker = worker
         self.background = background
+        self.database = database
     }
 
     /// Returns an identifier for the last inserted row.
@@ -44,6 +49,11 @@ public final class SQLiteConnection {
     /// Closes the database connection.
     public func close() {
         sqlite3_close(raw)
+    }
+
+    /// Convenience for creating a SQLite query.
+    public func makeQuery(_ string: String) -> SQLiteQuery {
+        return SQLiteQuery(string: string, connection: self)
     }
 
     /// Closes the database when deinitialized.

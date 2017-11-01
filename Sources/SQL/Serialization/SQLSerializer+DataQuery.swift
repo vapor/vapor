@@ -46,11 +46,16 @@ extension SQLSerializer {
             statement.append(set.joined(separator: ", "))
         }
 
-        if !query.predicates.isEmpty {
-            statement.append("WHERE")
+        if !query.joins.isEmpty {
+            statement.append(serialize(joins: query.joins))
+        }
 
-            let serializedPredicates = query.predicates.map { serialize(predicate: $0) }
-            statement.append(serializedPredicates.joined(separator: " AND "))
+        if !query.predicates.isEmpty {
+            statement.append(serialize(predicates: query.predicates))
+        }
+
+        if !query.orderBys.isEmpty {
+            statement.append(serialize(orderBys: query.orderBys))
         }
 
         if let limit = query.limit {

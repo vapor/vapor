@@ -4,8 +4,9 @@ public struct DataQuery {
     public var table: String
     public var columns: [DataColumn]
     public var computed: [DataComputed]
-    public var predicates: [Predicate]
     public var joins: [Join]
+    public var predicates: [Predicate]
+    public var orderBys: [OrderBy]
     public var limit: Int?
     public var offset: Int?
 
@@ -14,8 +15,9 @@ public struct DataQuery {
         table: String,
         columns: [DataColumn] = [],
         computed: [DataComputed] = [],
-        predicates: [Predicate] = [],
         joins: [Join] = [],
+        predicates: [Predicate] = [],
+        orderBys: [OrderBy] = [],
         limit: Int? = nil,
         offset: Int? = nil
     ) {
@@ -23,17 +25,36 @@ public struct DataQuery {
         self.table = table
         self.columns = columns
         self.computed = computed
-        self.predicates = predicates
         self.joins = joins
+        self.predicates = predicates
+        self.orderBys = orderBys
         self.limit = limit
         self.offset = offset
     }
 }
 
+public struct OrderBy {
+    public var columns: [DataColumn]
+    public var direction: OrderByDirection
+
+    public init(
+        columns: [DataColumn],
+        direction: OrderByDirection = .descending
+    ) {
+        self.columns = columns
+        self.direction = direction
+    }
+}
+
+public enum OrderByDirection {
+    case ascending
+    case descending
+}
+
 public struct DataComputed {
-    public let function: String
-    public let columns: [DataColumn]
-    public let key: String?
+    public var function: String
+    public var columns: [DataColumn]
+    public var key: String?
 
     public init(
         function: String,
