@@ -2,6 +2,8 @@ import Async
 
 // MARK: Internal
 
+/// Connection pools can be shared among event loops
+/// without requiring thread safety.
 extension EventLoop {
     /// This worker's database.
     var databases: Databases? {

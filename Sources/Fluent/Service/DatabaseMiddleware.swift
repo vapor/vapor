@@ -17,13 +17,15 @@ public final class DatabaseMiddleware: Middleware {
 
     /// See Responder.respond(to:...)
     public func respond(to req: Request, chainingTo next: Responder) throws -> Future<Response> {
+        /// set fluent's databases on the event loop
+        /// if they haven't already been.
         req.eventLoop.databases = self.databases
-        let res = try next.respond(to: req)
-        for id in databases.storage.keys {
-            // FIXME:
-            print("need to release: \(id)")
-            // try req.releaseCurrentConnection(database: id)
+
+        return try next.respond(to: req).map { res in
+            /// the response is ready, we can release
+            /// all current connections
+            req.releaseDatabaseConnections()
+            return res
         }
-        return res
     }
 }

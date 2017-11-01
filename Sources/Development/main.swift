@@ -94,7 +94,7 @@ final class Message: Model {
 }
 
 router.get("userview") { req -> Future<View> in
-    let user = req.database(id: .beta).query(User.self).first()
+    let user = req.database(.beta).query(User.self).first()
     return try view.make("/Users/tanner/Desktop/hello", context: [
         "user": user
     ], for: req)
@@ -102,11 +102,11 @@ router.get("userview") { req -> Future<View> in
 
 router.post("users") { req -> Future<User> in
     let user = try JSONDecoder().decode(User.self, from: req.body.data)
-    return user.save(on: req.database(id: .beta)).map { user }
+    return user.save(on: req.database(.beta)).map { user }
 }
 
 router.get("transaction") { req -> Future<String> in
-    return req.database(id: .beta).transaction { db in
+    return req.database(.beta).transaction { db in
         let user = User(name: "NO SAVE", age: 500)
         let message = Message(id: nil, text: "asdf", time: 42)
 
@@ -120,7 +120,7 @@ router.get("transaction") { req -> Future<String> in
 }
 
 router.get("users") { req in
-    return req.database(id: .beta).query(User.self).all()
+    return req.database(.beta).query(User.self).all()
 }
 
 router.get("sqlite") { req -> Future<String> in
@@ -132,7 +132,7 @@ router.get("sqlite") { req -> Future<String> in
 //            print(count)
 //    }
 
-    let query = req.database(id: .beta).query(Message.self)
+    let query = req.database(.beta).query(Message.self)
 
     // query.data = Message(id: "UUID:5", text: "asdf", time: 123)
 
