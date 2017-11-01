@@ -16,11 +16,11 @@ class RouterTests: XCTestCase {
             return try Response(body: "foo")
         }
 
-        router.on(.get, to: ["users", User.parameter, "comments"].makePathComponents()) { req -> Response in
-            let bob = try req.parameters.next(User.self)
-            XCTAssertEqual(bob.name, "bob")
-            
-            return try Response(body: "users!")
+        router.on(.get, to: ["users", User.parameter, "comments"].makePathComponents()) { req -> Future<Response> in
+            return req.parameters.next(User.self).map { bob in
+                XCTAssertEqual(bob.name, "bob")
+                return try Response(body: "users!")
+            }
         }
 
         do {
@@ -82,7 +82,7 @@ final class User: Parameter {
         self.name = name
     }
 
-    static func make(for parameter: String, in request: Request) throws -> User {
-        return User(name: parameter)
+    static func make(for parameter: String, in request: Request) throws -> Future<User> {
+        return Future(User(name: parameter))
     }
 }

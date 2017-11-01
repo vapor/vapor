@@ -103,7 +103,7 @@ class LeafTests: XCTestCase {
             print("\(error)")
         }
 
-        renderer.render(path: "##()", context: .null, on: queue).then { data in
+        renderer.render(path: "##()", context: .null, on: queue).do { data in
             print(data)
             // FIXME: check for error
         }.catch { error in

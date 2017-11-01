@@ -3,7 +3,7 @@ extension SQLSerializer {
         var statement: [String] = []
 
         statement.append("WHERE")
-        statement.append(predicates.map(serialize).joined(separator: "AND"))
+        statement.append(predicates.map(serialize).joined(separator: " AND "))
 
         return statement.joined(separator: " ")
     }
