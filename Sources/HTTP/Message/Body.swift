@@ -102,6 +102,8 @@ public struct Body: Codable {
             return data
         case .dispatchData(let dispatch):
             return Data(dispatch)
+        case .staticString(let string):
+            fatalError("//FIXME: @joannis")
         }
     }
     

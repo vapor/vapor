@@ -120,7 +120,7 @@ public final class TrieRouter: Router {
         } else if let node = current.parameterChild {
             // if no constant routes were found that match the path, but
             // a dynamic parameter child was found, we can use it
-            let lazy = LazyParameter(type: node.parameter, value: String(data: component, encoding: .utf8) ?? "")
+            let lazy = LazyParameter(slug: node.parameter, value: String(data: component, encoding: .utf8) ?? "")
             request.parameters.parameters.append(lazy)
             current = node
         } else {

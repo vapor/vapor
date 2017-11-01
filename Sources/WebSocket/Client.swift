@@ -90,7 +90,7 @@ extension WebSocket {
             promise.fail(error)
         }
         
-        return client.socket.writable(queue: worker.queue).flatMap {
+        return client.socket.writable(queue: worker.eventLoop.queue).flatMap {
             // Start reading in the client
             client.start()
             

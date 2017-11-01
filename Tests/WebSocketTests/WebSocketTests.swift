@@ -92,7 +92,7 @@ class WebSocketTests : XCTestCase {
         let uri = URI(stringLiteral: "ws://localhost:8282/")
         
         do {
-            _ = try WebSocket.connect(to: uri, worker: worker).then { socket in
+            _ = try WebSocket.connect(to: uri, worker: worker).do { socket in
                 let responses = ["test", "cat", "banana"]
                 let reversedResponses = responses.map {
                     String($0.reversed())
