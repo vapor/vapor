@@ -18,7 +18,7 @@ public struct AsyncError: Swift.Error, Encodable {
         function: String = #function,
         line: UInt = #line,
         column: UInt = #column
-        ) {
+    ) {
         self.identifier = identifier
         self.reason = reason
         self.file = file
