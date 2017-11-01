@@ -52,6 +52,10 @@ extension SQLiteConnection: QueryExecutor {
                 }
             }
 
+            for join in fluentQuery.joins {
+                select.joins.append(join.join)
+            }
+
             select.limit = fluentQuery.limit?.count
             select.offset = fluentQuery.limit?.offset
 
@@ -183,6 +187,27 @@ extension Filter {
         }
 
         return (predicate, value)
+    }
+}
+
+extension Join {
+    fileprivate var join: SQL.Join {
+        return .init(
+            method: type.method,
+            table: baseEntity,
+            column: baseKey,
+            foreignTable: joinedEntity,
+            foreignColumn: joinedKey
+        )
+    }
+}
+
+extension JoinType {
+    fileprivate var method: SQL.JoinMethod {
+        switch self {
+        case .inner: return .inner
+        case .outer: return .outer
+        }
     }
 }
 

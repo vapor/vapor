@@ -38,6 +38,9 @@ services.register(databaseConfig)
 var migrationConfig = MigrationConfig()
 migrationConfig.add(migration: User.self, database: .beta)
 migrationConfig.add(migration: AddUsers.self, database: .beta)
+migrationConfig.add(migration: Pet.self, database: .beta)
+migrationConfig.add(migration: Toy.self, database: .beta)
+migrationConfig.add(migration: BasicPivotMigration<Toy, Pet, SQLiteDatabase>.self, database: .beta)
 services.register(migrationConfig)
 
 services.register(
@@ -52,8 +55,8 @@ let app = try Application(services: services)
 let router = try app.make(Router.self)
 
 let user = User(name: "Vapor", age: 3);
-router.get("hello") { req in
-    return Future<User>(user)
+router.get("hello") { req -> Response in
+    return try user.makeResponse(for: req)
 }
 
 let hello = try Response(body: "Hello, world!")

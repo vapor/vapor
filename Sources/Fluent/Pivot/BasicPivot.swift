@@ -15,10 +15,10 @@ public final class BasicPivot<L: Model, R: Model>: Pivot {
     public var id: UUID?
 
     /// See Pivot.leftId
-    public var leftID: Left.I
+    public var leftID: Left.Identifier
 
     /// See Pivot.rightId
-    public var rightID: Right.I
+    public var rightID: Right.Identifier
 
     /// Create a new basic pivot from instances.
     public init(id: UUID? = nil, _ left: Left, _ right: Right) throws {
@@ -28,7 +28,7 @@ public final class BasicPivot<L: Model, R: Model>: Pivot {
     }
 
     /// Create a new basic pivot from IDs.
-    public init(id: UUID? = nil, leftID: Left.I, rightID: Right.I) {
+    public init(id: UUID? = nil, leftID: Left.Identifier, rightID: Right.Identifier) {
         self.id = id
         self.leftID = leftID
         self.rightID = rightID
@@ -37,24 +37,31 @@ public final class BasicPivot<L: Model, R: Model>: Pivot {
 
 // MARK: Migration
 
-// FIXME:
-//extension BasicPivot: Migration {
-//    /// See Migration.prepare
-//    public static func prepare(_ database: MigrationExecutor) -> Future<Void> {
-//        return database.create(self) { builder in
-//            builder.id()
-//
-//            let left = Field(name: "leftID", type: Left.I.fieldType)
-//            builder.schema.addFields.append(left)
-//
-//            let right = Field(name: "rightID", type: Right.I.fieldType)
-//            builder.schema.addFields.append(right)
-//        }
-//    }
-//
-//    /// See Migration.revert
-//    public static func revert(_ database: MigrationExecutor) -> Future<Void> {
-//        return database.delete(self)
-//    }
-//}
+public struct BasicPivotMigration<
+    L: Model, R: Model, D: Database
+>: Migration where D.Connection: QueryExecutor & SchemaExecutor {
+    /// See Migration.Database
+    public typealias Database = D
+
+    /// This migration's corresponding pivot type.
+    public typealias Pivot = BasicPivot<L, R>
+
+    /// See Migration.prepare
+    public static func prepare(on connection: Database.Connection) -> Future<Void> {
+        return connection.create(Pivot.self) { builder in
+            builder.id()
+
+            let left = Field(name: "leftID", type: Pivot.Left.Identifier.fieldType)
+            builder.schema.addFields.append(left)
+
+            let right = Field(name: "rightID", type: Pivot.Right.Identifier.fieldType)
+            builder.schema.addFields.append(right)
+        }
+    }
+
+    /// See Migration.revert
+    public static func revert(on connection: Database.Connection) -> Future<Void> {
+        return connection.delete(Pivot.self)
+    }
+}
 

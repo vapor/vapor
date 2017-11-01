@@ -46,6 +46,10 @@ extension SQLSerializer {
             statement.append(set.joined(separator: ", "))
         }
 
+        if !query.joins.isEmpty {
+            statement.append(serialize(joins: query.joins))
+        }
+
         if !query.predicates.isEmpty {
             statement.append("WHERE")
 

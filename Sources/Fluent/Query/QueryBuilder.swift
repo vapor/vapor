@@ -36,7 +36,7 @@ extension QueryBuilder {
             // update record w/ matching id
             query.action = .update
         } else if model.id == nil {
-            switch M.I.identifierType {
+            switch M.Identifier.identifierType {
             case .autoincrementing: break
             case .generated(let factory):
                 model.id = factory()

@@ -64,7 +64,7 @@ extension Request {
 // MARK: Private
 
 extension Request {
-    /// The current connection for this request.
+    /// The current connections for this request.
     /// Note: This is a Future as the connection may not yet
     /// be available. However, we want all queries for
     /// this request to use the _same_ connection when it

@@ -14,6 +14,50 @@ final class Pet: Model {
     var owner: Parent<Pet, User> {
         return parent(idKey: \Pet.ownerID)
     }
+
+    var toys: Siblings<Pet, Toy, BasicPivot<Toy, Pet>> {
+        return siblings()
+    }
+}
+
+extension Pet: Migration {
+    typealias Database = SQLiteDatabase
+
+    static func prepare(on connection: SQLiteConnection) -> Future<Void> {
+        return connection.create(self) { builder in
+            builder.id()
+            builder.string("name")
+            builder.data("ownerID", length: 16)
+        }
+    }
+
+    static func revert(on connection: SQLiteConnection) -> Future<Void> {
+        return connection.delete(self)
+    }
+}
+
+final class Toy: Model {
+    var id: UUID?
+    var name: String
+
+    var pets: Siblings<Toy, Pet, BasicPivot<Toy, Pet>> {
+        return siblings()
+    }
+}
+
+extension Toy: Migration {
+    typealias Database = SQLiteDatabase
+
+    static func prepare(on connection: SQLiteConnection) -> Future<Void> {
+        return connection.create(self) { builder in
+            builder.id()
+            builder.string("name")
+        }
+    }
+
+    static func revert(on connection: SQLiteConnection) -> Future<Void> {
+        return connection.delete(self)
+    }
 }
 
 final class User: Model, ResponseRepresentable {

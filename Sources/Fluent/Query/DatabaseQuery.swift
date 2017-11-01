@@ -9,6 +9,9 @@ public struct DatabaseQuery {
     /// Result stream will be filtered by these queries.
     public var filters: [Filter]
 
+    /// Joined models.
+    public var joins: [Join]
+
     /// If true, the query will only select distinct rows.
     public var isDistinct: Bool
 
@@ -23,6 +26,7 @@ public struct DatabaseQuery {
         self.entity = entity
         self.action = .read
         self.filters = []
+        self.joins = []
         self.isDistinct = false
         self.data = nil
         self.limit = nil

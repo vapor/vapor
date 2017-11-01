@@ -36,7 +36,7 @@ extension SchemaBuilder {
     public func id() {
         let field = Field(
             name: "id",
-            type: ModelType.I.fieldType,
+            type: ModelType.Identifier.fieldType,
             isOptional: false,
             isIdentifier: true
         )

@@ -12,7 +12,7 @@ public struct Parent<Child: Model, Parent: Model> {
     public var child: Child
 
     /// Key referencing property storing parent's ID
-    public typealias ParentIDKey = ReferenceWritableKeyPath<Child, Parent.I>
+    public typealias ParentIDKey = ReferenceWritableKeyPath<Child, Parent.Identifier>
 
     /// Reference to the parent's ID
     public var parentIDKey: ParentIDKey
@@ -26,7 +26,7 @@ public struct Parent<Child: Model, Parent: Model> {
     /// Create a query for the parent.
     public func query(on executor: QueryExecutor) -> QueryBuilder<Parent> {
         let builder = executor.query(Parent.self)
-        return builder.filter("id" == child[keyPath: parentIDKey])
+        return builder.filter(Parent.idKey == child[keyPath: parentIDKey])
     }
 
     /// Convenience for getting the parent.

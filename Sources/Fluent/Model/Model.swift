@@ -8,7 +8,7 @@ import Async
 public protocol Model: class, Codable {
     /// The associated Identifier type.
     /// Usually Int or UUID.
-    associatedtype I: Identifier
+    associatedtype Identifier: Fluent.Identifier
 
     /// This model's unique name.
     static var name: String { get }
@@ -16,8 +16,18 @@ public protocol Model: class, Codable {
     /// This model's collection/table name
     static var entity: String { get }
 
+    /// This model's id key.
+    /// note: If this is not `id`, you
+    /// will still need to implement `var id`
+    /// on your model as a computed property.
+    static var idKey: String { get }
+
+    /// This model's default foreign id key
+    /// for relations and joins.
+    static var foreignIDKey: String { get }
+
     /// The model's identifier.
-    var id: I? { get set }
+    var id: Identifier? { get set }
 
     /// Called before a model is created when saving.
     /// Throwing will cancel the save.
@@ -50,6 +60,16 @@ extension Model {
         return name + "s"
     }
 
+    /// See Model.idKey
+    public static var idKey: String {
+        return "id"
+    }
+
+    /// See Model.foreignIDKey
+    public static var foreignIDKey: String {
+        return name + "ID"
+    }
+
     /// Seee Model.willCreate()
     public func willCreate() throws {}
     /// See Model.didCreate()
@@ -69,7 +89,7 @@ extension Model {
 /// MARK: Convenience
 
 extension Model {
-    public func requireId() throws -> I {
+    public func requireId() throws -> Identifier {
         guard let id = self.id else {
             throw "no id"
         }
@@ -102,7 +122,7 @@ extension Model {
 
     /// Attempts to find an instance of this model w/
     /// the supplied identifier.
-    public static func find(_ id: Self.I, on executor: QueryExecutor) -> Future<Self?> {
+    public static func find(_ id: Self.Identifier, on executor: QueryExecutor) -> Future<Self?> {
         let query = executor.query(Self.self)
         query.filter("id" == id)
         return query.first()

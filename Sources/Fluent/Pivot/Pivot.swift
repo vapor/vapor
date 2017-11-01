@@ -2,8 +2,8 @@ public protocol Pivot: Model {
     associatedtype Left: Model
     associatedtype Right: Model
 
-    var leftID: Left.I { get set }
-    var rightID: Right.I { get set }
+    var leftID: Left.Identifier { get set }
+    var rightID: Right.Identifier { get set }
 }
 
 extension Pivot {

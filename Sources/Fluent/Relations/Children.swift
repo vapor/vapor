@@ -30,7 +30,7 @@ public struct Children<Parent: Model, Child: Model> {
 extension Model {
     /// Create a children relation for this model.
     public func children<Child: Model>(
-        foreignKey: String = "\(Self.name)ID"
+        foreignKey: String = Self.foreignIDKey
     ) -> Children<Self, Child> {
         return Children(
             parent: self,
