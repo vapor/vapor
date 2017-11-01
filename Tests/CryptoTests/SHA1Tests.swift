@@ -47,12 +47,6 @@ class SHA1Tests: XCTestCase {
         }
     }
     
-//    func testPerformance() {
-//        measure {
-//            _ = SHA1.hash(Data("kaas".utf8))
-//        }
-//    }
-    
     func testNotCrashing() {
         let data = Data(repeating: 0x02, count: 263)
         

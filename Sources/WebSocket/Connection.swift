@@ -45,6 +45,9 @@ internal final class Connection: Async.Stream, ClosableStream {
     /// Serializes data into frames
     let serializer: FrameSerializer
     
+    /// Defines the side of the socket
+    ///
+    /// Server side Sockets don't use masking
     let serverSide: Bool
 
     /// The underlying TCP connection

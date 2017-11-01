@@ -8,15 +8,17 @@ import Service
 /// Core framework class. You usually create only
 /// one of these per application.
 /// Acts as a service container and much more.
+///
+/// http://localhost:8000/vapor/application/#creating-a-basic-application
 public final class Application: Container {
     /// Config preferences and requirements for available services.
-    public var config: Config
+    public let config: Config
 
     /// Environment this application is running in.
     public let environment: Environment
 
     /// Services that can be created by this application.
-    public var services: Services
+    public let services: Services
 
     /// Use this to create stored properties in extensions.
     public var extend: Extend

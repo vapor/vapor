@@ -14,7 +14,7 @@ extension Cookies {
                 return nil
             }
             
-            cookies.append(cookie)
+            cookies[cookie.name] = cookie.value
         }
         
         self = cookies
@@ -33,7 +33,7 @@ extension Cookies {
                 return nil
             }
             
-            cookies.append(cookie)
+            cookies[cookie.name] = cookie.value
         }
         
         self = cookies

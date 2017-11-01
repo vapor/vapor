@@ -60,6 +60,8 @@ extension FutureType {
     }
 
     /// Maps a future to a future of a different type.
+    ///
+    /// http://localhost:8000/async/promise-future-introduction/#mapping-results
     public func map<T>(_ callback: @escaping ExpectationMapCallback<T>) -> Future<T> {
         let promise = Promise(T.self)
 
@@ -81,6 +83,8 @@ extension FutureType {
     ///
     /// Will return the results when available unless the specified
     /// time has been reached, in which case it will timeout
+    ///
+    /// http://localhost:8000/async/promise-future-introduction/#synchronous-apis
     public func blockingAwait(deadline time: DispatchTime = .distantFuture) throws -> Expectation {
         let semaphore = DispatchSemaphore(value: 0)
         var awaitedResult: FutureResult<Expectation>?
@@ -113,6 +117,8 @@ extension FutureType {
     /// Waits for the specified duration for a result.
     ///
     /// Will return the results when available unless the specified timeout has been reached, in which case it will timeout
+    ///
+    /// http://localhost:8000/async/promise-future-introduction/#synchronous-apis
     public func blockingAwait(timeout interval: DispatchTimeInterval) throws -> Expectation {
         return try blockingAwait(deadline: DispatchTime.now() + interval)
     }
@@ -124,10 +130,13 @@ extension FutureType {
 extension Array where Element: FutureType {
     /// Flattens an array of future results into one
     /// future array result.
-    public func chainingFlatten() -> Future<[Element.Expectation]> {
+    ///
+    /// http://localhost:8000/async/advanced-futures/#combining-multiple-futures
+    public func flatten() -> Future<[Element.Expectation]> {
         let promise = Promise<[Element.Expectation]>()
 
         var elements: [Element.Expectation] = []
+        elements.reserveCapacity(self.count)
 
         var iterator = makeIterator()
         func handle(_ future: Element) {

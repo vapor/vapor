@@ -180,11 +180,9 @@ internal struct LeafDataContainer<K: CodingKey>:
                 try! encodable.encode(to: encoder)
                 promise.complete(encoder.context)
             } else {
-                print("fail")
                 promise.fail("could not encode")
             }
         }.catch { error in
-            print("fail")
             promise.fail(error)
         }
 

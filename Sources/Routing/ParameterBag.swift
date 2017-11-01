@@ -1,6 +1,8 @@
 import HTTP
 
 /// A bag for holding parameters resolved during router
+///
+/// http://localhost:8000/routing/parameters/
 public struct ParameterBag {
     /// The parameters, not yet resolved
     /// so that the `.next()` method can throw any errors.

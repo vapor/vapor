@@ -48,16 +48,33 @@ let app = try Application(services: services)
 let router = try app.make(Router.self)
 
 let user = User(name: "Vapor", age: 3);
+
 router.get("hello") { req in
     return Future<User>(user)
 }
 
-let hello = try Response(body: "Hello, world!")
-router.get("plaintext") { req in
-    return hello
+extension Worker {
+    var response: Response {
+        if let response = self.extend["response"] as? Response {
+            return response
+        }
+
+        let response = try! Response(headers: [
+            .contentType: "text/plain; charset=utf-8"
+        ], body: "Hello, world!")
+
+        self.extend["response"] = response
+
+        return response
+    }
+}
+
+router.grouped(DateMiddleware()).get("plaintext") { req in
+    return try req.requireWorker().response
 }
 
 let view = try app.make(ViewRenderer.self)
+
 router.get("leaf") { req -> Future<View> in
     let promise = Promise(User.self)
     // user.futureChild = promise.future

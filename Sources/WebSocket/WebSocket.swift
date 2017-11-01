@@ -5,6 +5,8 @@ import Crypto
 import TCP
 
 /// A websocket connection. Can be either the client or server side of the connection
+///
+/// http://localhost:8000/websocket/websocket/
 public class WebSocket {
     /// A stream of incoming and outgoing strings between both parties
     let textStream = TextStream()

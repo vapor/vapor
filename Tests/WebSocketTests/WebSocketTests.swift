@@ -1,4 +1,5 @@
 import Async
+import Bits
 import Core
 import Foundation
 import Dispatch
@@ -23,11 +24,11 @@ final class HTTPTestServer {
     
     /// Creates a new engine server config
     public init(
-        hostname: String = CurrentHost.hostname,
-        port: UInt16 = 8080,
+        hostname: String = "0.0.0.0",
+        port: UInt16 = 8282,
         backlog: Int32 = 4096,
         workerCount: Int = 8
-    ) {
+        ) {
         self.hostname = hostname
         self.port = port
         self.workerCount = workerCount
@@ -37,19 +38,23 @@ final class HTTPTestServer {
     /// Start the server. Server protocol requirement.
     public func start(with responder: Responder) throws {
         // create a tcp server
-        let tcp = try TCP.Server(workerCount: workerCount)
+        let socket = try Socket(isNonBlocking: false)
+        let tcp = TCP.Server(socket: socket, workerCount: workerCount)
         let server = HTTP.Server(clientStream: tcp)
         
         // setup the server pipeline
         server.drain { client in
-            let parser = HTTP.RequestParser(worker: client.tcp.worker)
+            let parser = HTTP.RequestParser(worker: client.tcp.worker, maxBodySize: 100_000)
             let responderStream = responder.makeStream()
             let serializer = HTTP.ResponseSerializer()
             
             client.stream(to: parser)
                 .stream(to: responderStream)
                 .stream(to: serializer)
-                .drain(into: client)
+                .drain { data in
+                    client.inputStream(data)
+                    serializer.upgradeHandler?(client.tcp)
+            }
             
             client.tcp.start()
         }
@@ -69,56 +74,71 @@ final class HTTPTestServer {
 
 class WebSocketTests : XCTestCase {
     func testClientServer() throws {
+        // TODO: Failing on Linux
         return;
         let app = WebSocketApplication()
-        let tcp = try TCP.Server()
         let server = HTTPTestServer()
         
-        // try server.start(with: app)
+        try server.start(with: app)
+        
+        sleep(1)
         
         let promise0 = Promise<Void>()
         let promise1 = Promise<Void>()
-
-        let worker = EventLoop(queue: .global())
-        _ = try WebSocket.connect(to: "ws://0.0.0.0:8080/", worker: worker).then { socket in
-            let responses = ["test", "cat", "banana"]
-            let reversedResponses = responses.map {
-                String($0.reversed())
-            }
-            
-            var count = 0
-            
-            socket.onText { string in
-                XCTAssert(reversedResponses.contains(string))
-                count += 1
-                
-                if count == 3 {
-                    promise0.complete(())
-                }
-            }
-            
-            socket.onBinary { blob in
-                defer { promise1.complete(()) }
-                
-                guard Array(blob) == [0x00, 0x01, 0x00, 0x02] else {
-                    XCTFail()
-                    return
-                }
-            }
-            
-            for response in responses {
-                socket.send(response)
-            }
-            
-//            socket.send(Data([
-//                0x00, 0x01, 0x00, 0x02
-//                ]))
-            
-            promise0.complete(())
-        }
         
-        try promise0.future.blockingAwait(timeout: .seconds(10))
-//        try promise1.future.blockingAwait()
+        let queue = DispatchQueue(label: "test.client")
+        let worker = EventLoop(queue: queue)
+        
+        let uri = URI(stringLiteral: "ws://localhost:8282/")
+        
+        do {
+            _ = try WebSocket.connect(to: uri, worker: worker).then { socket in
+                let responses = ["test", "cat", "banana"]
+                let reversedResponses = responses.map {
+                    String($0.reversed())
+                }
+                
+                var count = 0
+                
+                socket.onText { string in
+                    XCTAssert(reversedResponses.contains(string))
+                    count += 1
+                    
+                    if count == 3 {
+                        promise0.complete(())
+                    }
+                }
+                
+                socket.onBinary { blob in
+                    defer { promise1.complete(()) }
+                    
+                    guard Array(blob) == [0x00, 0x01, 0x00, 0x02] else {
+                        XCTFail()
+                        return
+                    }
+                }
+                
+                for response in responses {
+                    socket.send(response)
+                }
+                
+                Data([
+                    0x00, 0x01, 0x00, 0x02
+                    ]).withUnsafeBytes { (pointer: BytesPointer) in
+                        let buffer = ByteBuffer(start: pointer, count: 4)
+                        
+                        socket.send(buffer)
+                }
+                
+                promise0.complete(())
+                }.blockingAwait(timeout: .seconds(10))
+            
+            try promise0.future.blockingAwait(timeout: .seconds(10))
+            try promise1.future.blockingAwait(timeout: .seconds(10))
+        } catch {
+            XCTFail("Error connecting to \(uri)")
+            throw error
+        }
     }
     
     static let allTests = [
@@ -137,6 +157,9 @@ struct WebSocketApplication: Responder {
                 websocket.onText { text in
                     let rev = String(text.reversed())
                     websocket.send(rev)
+                }
+                websocket.onBinary { buffer in
+                    websocket.send(buffer)
                 }
             }
             promise.complete(res)

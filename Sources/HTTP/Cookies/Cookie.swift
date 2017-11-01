@@ -1,6 +1,8 @@
 import Foundation
 
 /// A single Key-Value pair
+///
+/// http://localhost:8000/http/cookies/#a-single-cookie
 public struct Cookie {
     /// The cookie's `Key`/name
     public var name: String
@@ -29,6 +31,8 @@ public protocol CookieValueRepresentable {
 
 extension Cookie {
     /// The `Cookie` pair's `Value`
+    ///
+    /// http://localhost:8000/http/cookies/#values
     public struct Value: CookieValueInitializable, CookieValueRepresentable, ExpressibleByStringLiteral {
         /// Initializes itself to itself
         public init(from value: Cookie.Value) throws {
