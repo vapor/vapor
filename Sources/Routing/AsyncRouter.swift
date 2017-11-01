@@ -1,9 +1,7 @@
 import Async
 import HTTP
 
-/// Capable of register async routes.
-///
-/// http://localhost:8000/routing/async/
+/// Capable of registering async routes.
 extension Router {
     /// Registers a route handler at the supplied path.
     @discardableResult

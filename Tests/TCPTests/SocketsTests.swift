@@ -23,7 +23,7 @@ class SocketsTests: XCTestCase {
     }
 
     static let allTests = [
-        ("testServer", testServer)
+        ("testServer", testServer),
     ]
 }
 
