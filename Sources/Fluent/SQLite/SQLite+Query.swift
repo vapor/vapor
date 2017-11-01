@@ -56,6 +56,10 @@ extension SQLiteConnection: QueryExecutor {
                 select.joins.append(join.join)
             }
 
+            for sort in fluentQuery.sorts {
+                select.orderBys.append(sort.orderBy)
+            }
+
             select.limit = fluentQuery.limit?.count
             select.offset = fluentQuery.limit?.offset
 
@@ -221,6 +225,24 @@ extension JoinType {
         switch self {
         case .inner: return .inner
         case .outer: return .outer
+        }
+    }
+}
+
+extension Sort {
+    fileprivate var orderBy: OrderBy {
+        return OrderBy(
+            columns: [DataColumn(table: entity, name: field)],
+            direction: direction.orderByDirection
+        )
+    }
+}
+
+extension SortDirection {
+    fileprivate var orderByDirection: OrderByDirection {
+        switch self {
+        case .ascending: return .ascending
+        case .descending: return .descending
         }
     }
 }

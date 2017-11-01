@@ -17,7 +17,10 @@ internal final class DataDecodingContainer: SingleValueDecodingContainer {
     }
 
     func decode(_ type: Int.Type) throws -> Int {
-        fatalError("unsupported")
+        guard let int = decoder.data.fuzzyInt else {
+            throw "could not get itn"
+        }
+        return int
     }
 
     func decode(_ type: Int8.Type) throws -> Int8 {

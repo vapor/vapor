@@ -63,10 +63,10 @@ extension MigrationLog {
     /// note: returns 0 if no batches have run yet.
     internal static func latestBatch(on connection: Database.Connection) -> Future<Int> {
         return connection.query(MigrationLog<Database>.self)
-            .all()
-            .map { logs in
-                // FIXME: fluent sorting combined with first
-                return logs.sorted { $0.batch > $1.batch }.first?.batch ?? 0
+            .sort("batch", .descending)
+            .first()
+            .map { log in
+                return log?.batch ?? 0
             }
     }
 

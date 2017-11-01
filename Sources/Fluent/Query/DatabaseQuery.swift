@@ -12,6 +12,9 @@ public struct DatabaseQuery {
     /// Joined models.
     public var joins: [Join]
 
+    /// Sorts to be applied to the results.
+    public var sorts: [Sort]
+
     /// If true, the query will only select distinct rows.
     public var isDistinct: Bool
 
@@ -27,6 +30,7 @@ public struct DatabaseQuery {
         self.action = .read
         self.filters = []
         self.joins = []
+        self.sorts = []
         self.isDistinct = false
         self.data = nil
         self.limit = nil
