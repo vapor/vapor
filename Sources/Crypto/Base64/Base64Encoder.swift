@@ -40,16 +40,16 @@ public final class Base64Encoder: Base64 {
     public typealias Input = ByteBuffer
     
     /// Outputs Base64Encoded byte streams
-    public typealias Output = ByteBuffer
+    public typealias Notification = ByteBuffer
     
     /// See `BaseStream.onClose`
     public var onClose: CloseHandler?
     
-    /// See `BaseStream.errorStream`
-    public var errorStream: ErrorHandler?
+    /// See `BaseStream.errorNotification`
+    public let errorNotification = SingleNotification<Error>()
     
     /// See `OutputStream.outputStream`
-    public var outputStream: OutputHandler?
+    public var outputStream: NotificationCallback?
     
     /// Encodes the contents of the buffer into the pointer until the provided capacity has been reached
     ///

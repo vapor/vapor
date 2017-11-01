@@ -8,8 +8,8 @@ public final class Peer: Async.Stream, ClosableStream {
     /// See `InputStream.Input`
     public typealias Input = Data
     
-    /// See `OutputStream.Output`
-    public typealias Output = ByteBuffer
+    /// See `OutputStream.Notification`
+    public typealias Notification = ByteBuffer
     
     /// See `BaseStream.onClose`
     public var onClose: CloseHandler? {
@@ -21,8 +21,8 @@ public final class Peer: Async.Stream, ClosableStream {
         }
     }
     
-    /// See `OutputStream.OutputHandler`
-    public var outputStream: OutputHandler? {
+    /// See `OutputStream.NotificationCallback`
+    public var outputStream: NotificationCallback? {
         get {
             return tcp.outputStream
         }
@@ -32,7 +32,7 @@ public final class Peer: Async.Stream, ClosableStream {
     }
     
     /// See `OutputStream.errorStream`
-    public var errorStream: ErrorHandler?
+    public let errorNotification = SingleNotification<Error>()
     
     /// The underlying TCP Client
     public let tcp: TCPClient

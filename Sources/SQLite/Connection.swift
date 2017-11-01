@@ -25,11 +25,11 @@ public final class Connection {
         var raw: Raw?
 
         guard sqlite3_open_v2(database.path, &raw, options, nil) == SQLITE_OK else {
-            throw Error(problem: .error, reason: "Could not open database.")
+            throw SQLiteError(problem: .error, reason: "Could not open database.")
         }
 
         guard let r = raw else {
-            throw Error(problem: .error, reason: "Unexpected nil database.")
+            throw SQLiteError(problem: .error, reason: "Unexpected nil database.")
         }
 
         self.raw = r

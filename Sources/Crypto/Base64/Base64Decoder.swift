@@ -28,16 +28,16 @@ public final class Base64Decoder: Base64 {
     public typealias Input = ByteBuffer
     
     /// Outputs  byte streams
-    public typealias Output = ByteBuffer
+    public typealias Notification = ByteBuffer
     
-    /// See `OutputStream.OutputHandler`
-    public var outputStream: OutputHandler?
+    /// See `OutputStream.NotificationCallback`
+    public var outputStream: NotificationCallback?
     
     /// See `BaseStream.onClose`
     public var onClose: CloseHandler?
     
     /// See `BaseStream.Errorhandler`
-    public var errorStream: ErrorHandler?
+    public let errorNotification = SingleNotification<Error>()
     
     /// The capacity currently used in the pointer
     var currentCapacity = 0

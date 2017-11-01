@@ -5,7 +5,7 @@ protocol ResultsStream : OutputStream, ClosableStream {
     var header: UInt64? { get set }
     var mysql41: Bool { get }
     
-    func parseRows(from packet: Packet) throws -> Output
+    func parseRows(from packet: Packet) throws -> Notification
 }
 
 fileprivate let serverMoreResultsExists: UInt16 = 0x0008
@@ -18,7 +18,7 @@ extension ResultsStream {
                 
                 guard let header = try? parser.parseLenEnc() else {
                     if case .error(let error) = try input.parseResponse(mysql41: mysql41) {
-                        self.errorStream?(error)
+                        self.errorNotification.notify(of: error)
                     } else {
                         self.close()
                     }
@@ -40,7 +40,7 @@ extension ResultsStream {
             
             try preParseRows(from: input)
         } catch {
-            errorStream?(error)
+            errorNotification.notify(of: error)
         }
     }
     
@@ -80,18 +80,18 @@ extension ResultsStream {
             do {
                 switch try packet.parseResponse(mysql41: mysql41) {
                 case .error(let error):
-                    self.errorStream?(error)
+                    self.errorNotification.notify(of: error)
                     return
                 case .ok(_):
                     fallthrough
                 case .eof(_):
                     guard amount == columns.count else {
-                        self.errorStream?(MySQLError(.invalidPacket))
+                        self.errorNotification.notify(of: MySQLError(.invalidPacket))
                         return
                     }
                 }
             } catch {
-                self.errorStream?(MySQLError(.invalidPacket))
+                self.errorNotification.notify(of: MySQLError(.invalidPacket))
                 return
             }
         }
@@ -136,7 +136,7 @@ extension ResultsStream {
             
             self.columns.append(field)
         } catch {
-            self.errorStream?(MySQLError(.invalidPacket))
+            self.errorNotification.notify(of: MySQLError(.invalidPacket))
             return
         }
     }

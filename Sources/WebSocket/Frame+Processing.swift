@@ -33,7 +33,7 @@ extension WebSocket {
                 let pongFrame = try Frame(op: .pong , payload: frame.payload, mask: frame.maskBytes, isMasked: self.connection.serverSide)
                 self.connection.inputStream(pongFrame)
             } catch {
-                self.connection.errorStream?(error)
+                self.connection.errorNotification.notify(of: error)
             }
         case .continuation:
             processBinary()

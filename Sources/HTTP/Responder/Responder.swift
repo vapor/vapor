@@ -20,13 +20,13 @@ public final class ResponderStream: Async.Stream {
     public typealias Input = Request
 
     /// See OutputStream.Output
-    public typealias Output = Response
+    public typealias Notification = Response
 
-    /// See BaseStream.errorStream
-    public var errorStream: ErrorHandler?
+    /// See BaseStream.errorNotification
+    public let errorNotification = SingleNotification<Error>()
 
     // See BaseStream.outputStream
-    public var outputStream: OutputHandler?
+    public var outputStream: NotificationCallback?
 
     /// The responder
     let responder: Responder
@@ -45,10 +45,10 @@ public final class ResponderStream: Async.Stream {
             try responder.respond(to: input).then { res in
                 self.outputStream?(res)
             }.catch { error in
-                self.errorStream?(error)
+                self.errorNotification.notify(of: error)
             }
         } catch {
-            errorStream?(error)
+            self.errorNotification.notify(of: error)
         }
     }
 }

@@ -4,7 +4,7 @@ import Bits
 /// A stream of incoming and outgoing strings between 2 parties over WebSockets
 final class TextStream : Async.Stream {
     /// A stream of strings received from the other party
-    var outputStream: OutputHandler?
+    var outputStream: NotificationCallback?
     
     /// A framestream to stream text frames to
     internal weak var frameStream: Connection?
@@ -12,10 +12,10 @@ final class TextStream : Async.Stream {
     /// A stream of errors
     ///
     /// Will only be called if there's a problem creating a frame for output
-    var errorStream: ErrorHandler?
+    let errorNotification = SingleNotification<Error>()
     
     typealias Input = String
-    typealias Output = String
+    typealias Notification = String
     
     /// Returns whether to add mask a mask to this message
     var masking: Bool {
@@ -35,7 +35,7 @@ final class TextStream : Async.Stream {
                 
                 frameStream?.inputStream(frame)
             } catch {
-                self.errorStream?(error)
+                self.errorNotification.notify(of: error)
             }
         }
     }

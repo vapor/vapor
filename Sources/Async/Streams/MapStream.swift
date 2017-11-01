@@ -25,14 +25,14 @@ public final class MapStream<In, Out>: Stream {
     /// See `InputStream.Input`
     public typealias Input = In
 
-    /// See `OutputStream.Output`
-    public typealias Output = Out
+    /// See `OutputStream.Notification`
+    public typealias Notification = Out
 
     /// See `OutputStream.outputStream`
-    public var outputStream: OutputHandler?
+    public var outputStream: NotificationCallback?
 
-    /// See `BaseStream.errorStream`
-    public var errorStream: ErrorHandler?
+    /// See `BaseStream.errorNotification`
+    public let errorNotification = SingleNotification<Error>()
 
     /// Maps input to output
     public typealias MapClosure = (In) throws -> (Out)
@@ -51,7 +51,7 @@ public final class MapStream<In, Out>: Stream {
             let output = try map(input)
             outputStream?(output)
         } catch {
-            errorStream?(error)
+            errorNotification.notify(of: error)
         }
     }
 }
@@ -67,7 +67,7 @@ extension OutputStream {
     ///     }
     ///
     /// http://localhost:8000/async/stream/#transforming-streams-without-an-intermediary-stream
-    public func map<T>(_ transform: @escaping ((Output) throws -> (T))) -> MapStream<Output, T> {
+    public func map<T>(_ transform: @escaping ((Notification) throws -> (T))) -> MapStream<Notification, T> {
         let stream = MapStream(map: transform)
         self.drain(into: stream)
         

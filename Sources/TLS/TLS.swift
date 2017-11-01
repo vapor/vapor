@@ -12,14 +12,14 @@ import TCP
 
 /// A Client (used for connecting to servers) that uses the platform specific SSL library.
 public final class TLSClient: Async.Stream, ClosableStream {
-    /// See `OutputStream.Output`
-    public typealias Output = ByteBuffer
+    /// See `OutputStream.Notification`
+    public typealias Notification = ByteBuffer
     
     /// See `InputStream.Input`
     public typealias Input = ByteBuffer
     
     /// See `OutputStream.outputStream`
-    public var outputStream: OutputHandler? {
+    public var outputStream: NotificationCallback? {
         get {
             return ssl.outputStream
         }
@@ -39,13 +39,8 @@ public final class TLSClient: Async.Stream, ClosableStream {
     }
     
     /// See `Stream.errorStream`
-    public var errorStream: ErrorHandler? {
-        get {
-            return ssl.errorStream
-        }
-        set {
-            ssl.errorStream = newValue
-        }
+    public var errorNotification: SingleNotification<Error> {
+        return ssl.errorNotification
     }
     
     /// The AppleSSL (macOS/iOS) or OpenSSL (Linux) stream

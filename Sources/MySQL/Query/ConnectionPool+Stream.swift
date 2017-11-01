@@ -14,13 +14,8 @@ extension ConnectionPool {
             // Set up a parser
             connection.receivePackets(into: stream.inputStream)
             
-            stream.onClose = {
-                complete(())
-            }
-            
-            stream.errorStream = { error in
-                fail(error)
-            }
+            stream.onClose = complete
+            stream.errorNotification.handleNotification(callback: fail)
             
             // Send the query
             do {
@@ -30,10 +25,10 @@ extension ConnectionPool {
             }
         } as Future<Void>
         
-        future.addAwaiter { result in
+        future.handleNotification { result in
             switch result {
             case .error(let error):
-                stream.errorStream?(error)
+                stream.errorNotification.notify(of: error)
             case .expectation(_):
                 stream.close()
             }
@@ -54,13 +49,9 @@ extension ConnectionPool {
             // Set up a parser
             connection.receivePackets(into: stream.inputStream)
             
-            stream.onClose = {
-                complete(())
-            }
+            stream.onClose = complete
             
-            stream.errorStream = { error in
-                fail(error)
-            }
+            stream.errorNotification.handleNotification(callback: fail)
             
             // Send the query
             do {
@@ -70,10 +61,10 @@ extension ConnectionPool {
             }
         } as Future<Void>
         
-        future.addAwaiter { result in
+        future.handleNotification { result in
             switch result {
             case .error(let error):
-                stream.errorStream?(error)
+                stream.errorNotification.notify(of: error)
                 stream.close()
             case .expectation(_):
                 stream.close()

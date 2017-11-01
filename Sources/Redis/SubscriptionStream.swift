@@ -2,14 +2,14 @@ import Async
 
 /// Outputs all notifications for a listening client's channels
 public final class SubscriptionStream: Async.OutputStream {
-    /// See `OutputStream.Output`
-    public typealias Output = ChannelMessage
+    /// See `OutputStream.Notification`
+    public typealias Notification = ChannelMessage
     
-    /// See `OutputStream.OutputHandler`
-    public var outputStream: OutputHandler?
+    /// See `OutputStream.NotificationCallback`
+    public var outputStream: NotificationCallback?
     
-    /// See `BaseStream.errorStream`
-    public var errorStream: ErrorHandler?
+    /// See `BaseStream.errorNotification`
+    public let errorNotification = SingleNotification<Error>()
     
     /// Drains a Redis Client's parser of it's results
     init(reading parser: DataParser) {
@@ -24,7 +24,7 @@ public final class SubscriptionStream: Async.OutputStream {
                 array.count == 3,
                 let channel = array[1].string
                 else {
-                    self.errorStream?(RedisError(.unexpectedResult(data)))
+                    self.errorNotification.notify(of: RedisError(.unexpectedResult(data)))
                     return
             }
             

@@ -2,8 +2,8 @@ import Debugging
 import libc
 
 /// Errors that can be thrown while working with TCP sockets.
-public struct Error: Traceable, Debuggable, Swift.Error, Encodable {
-    public static let readableName = "TCP Error"
+public struct TCPError: Traceable, Debuggable, Swift.Error, Encodable {
+    public static let readableName = "TCP TCPError"
     public let identifier: String
     public var reason: String
     public var file: String
@@ -27,7 +27,7 @@ public struct Error: Traceable, Debuggable, Swift.Error, Encodable {
         self.function = function
         self.line = line
         self.column = column
-        self.stackTrace = Error.makeStackTrace()
+        self.stackTrace = TCPError.makeStackTrace()
     }
 
     /// Create a new TCP error from a POSIX errno.
@@ -38,10 +38,10 @@ public struct Error: Traceable, Debuggable, Swift.Error, Encodable {
         function: String = #function,
         line: UInt = #line,
         column: UInt = #column
-    ) -> Error {
+    ) -> TCPError {
         let message = libc.strerror(errno)
         let string = String(cString: message!, encoding: .utf8) ?? "unknown"
-        return Error(
+        return TCPError(
             identifier: identifier,
             reason: string,
             file: file,

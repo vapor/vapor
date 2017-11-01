@@ -24,7 +24,7 @@ extension Socket {
                 // timeout reached (linux)
                 return 0
             default:
-                throw Error.posix(errno, identifier: "read")
+                throw TCPError.posix(errno, identifier: "read")
             }
         }
         

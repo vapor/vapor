@@ -9,13 +9,13 @@ public final class ResponseSerializer: Serializer {
     public typealias Input = Response
 
     /// See OutputStream.Output
-    public typealias Output = Data
+    public typealias Notification = Data
 
     /// See OutputStream.outputStream
-    public var outputStream: OutputHandler?
+    public var outputStream: NotificationCallback?
 
-    /// See BaseStream.errorStream
-    public var errorStream: ErrorHandler?
+    /// See BaseStream.errorNotification
+    public let errorNotification = SingleNotification<Error>()
     
     /// When an upgrade request is in progress, this is set
     public private(set) var upgradeHandler: OnUpgrade?

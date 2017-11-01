@@ -15,21 +15,21 @@ import Security
 /// The TCP socket will also be read and deciphered into plaintext and outputted.
 ///
 /// https://developer.apple.com/documentation/security/secure_transport
-public final class SSLStream<DuplexByteStream: Async.Stream>: Async.Stream, ClosableStream where DuplexByteStream.Output == ByteBuffer, DuplexByteStream.Input == ByteBuffer, DuplexByteStream: ClosableStream {
-    /// See `OutputStream.Output`
-    public typealias Output = ByteBuffer
+public final class SSLStream<DuplexByteStream: Async.Stream>: Async.Stream, ClosableStream where DuplexByteStream.Notification == ByteBuffer, DuplexByteStream.Input == ByteBuffer, DuplexByteStream: ClosableStream {
+    /// See `OutputStream.Notification`
+    public typealias Notification = ByteBuffer
     
     /// See `InputStream.Input`
     public typealias Input = ByteBuffer
     
     /// See `OutputStream.outputStream`
-    public var outputStream: OutputHandler?
+    public var outputStream: NotificationCallback?
     
     /// See `BaseStream.onClose`
     public var onClose: CloseHandler?
     
     /// See `Stream.errorStream`
-    public var errorStream: ErrorHandler?
+    public let errorNotification = SingleNotification<Error>()
     
     /// The `SSLContext` that manages this stream
     var context: SSLContext?
@@ -82,7 +82,7 @@ public final class SSLStream<DuplexByteStream: Async.Stream>: Async.Stream, Clos
                     try self.write(from: buffer, allowWouldBlock: false)
                     _ = self.writeQueue.removeFirst()
                 } catch {
-                    self.errorStream?(error)
+                    self.errorNotification.notify(of: error)
                 }
             }
             
@@ -104,7 +104,7 @@ public final class SSLStream<DuplexByteStream: Async.Stream>: Async.Stream, Clos
     public func read(into buffer: MutableByteBuffer) throws -> Int {
         guard let context = self.context else {
             close()
-            throw Error(.noSSLContext)
+            throw SSLError(.noSSLContext)
         }
         
         var processed = 0
@@ -119,7 +119,7 @@ public final class SSLStream<DuplexByteStream: Async.Stream>: Async.Stream, Clos
         do {
             try self.write(from: input)
         } catch {
-            self.errorStream?(error)
+            self.errorNotification.notify(of: error)
             self.close()
         }
     }

@@ -1,3 +1,5 @@
+import Async
+
 final class RowStream : ResultsStream {
     func close() {
         self.onClose?()
@@ -18,11 +20,11 @@ final class RowStream : ResultsStream {
     /// The header is used to indicate the amount of returned columns
     var header: UInt64?
     
-    typealias Output = Row
+    typealias Notification = Row
     
-    var outputStream: OutputHandler?
+    var outputStream: NotificationCallback?
     
-    var errorStream: ErrorHandler?
+    let errorNotification = SingleNotification<Error>()
     
     let mysql41: Bool
     

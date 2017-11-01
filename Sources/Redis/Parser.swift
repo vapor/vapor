@@ -8,13 +8,13 @@ final class DataParser: Async.Stream {
     typealias Input = ByteBuffer
     
     /// See `OutputStream.RedisData`
-    typealias Output = RedisData
+    typealias Notification = RedisData
     
-    /// See `BaseStream.errorStream`
-    var errorStream: ErrorHandler?
+    /// See `BaseStream.errorNotification`
+    var errorNotification = SingleNotification<Error>()
     
-    /// See `OutputStream.OutputHandler`
-    var outputStream: OutputHandler?
+    /// See `OutputStream.NotificationCallback`
+    var outputStream: NotificationCallback?
     
     /// A set of promises awaiting a response
     var responseQueue = [Promise<RedisData>]()
@@ -39,7 +39,7 @@ final class DataParser: Async.Stream {
             try parseBuffer()
         } catch {
             self.parsingValue = nil
-            errorStream?(error)
+            self.errorNotification.notify(of: error)
         }
     }
     

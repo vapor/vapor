@@ -23,7 +23,7 @@ public enum FieldType {
         case SQLITE_NULL:
             self = .null
         default:
-            throw Error(problem: .error, reason: "Unexpected column type.")
+            throw SQLiteError(problem: .error, reason: "Unexpected column type.")
         }
     }
 }

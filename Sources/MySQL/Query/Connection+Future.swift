@@ -19,9 +19,7 @@ extension ConnectionPool {
                 complete(rows)
             }
             
-            stream.errorStream = { error in
-                fail(error)
-            }
+            stream.errorNotification.handleNotification(callback: fail)
             
             stream.drain { row in
                 rows.append(row)
@@ -53,9 +51,7 @@ extension ConnectionPool {
                 complete(results)
             }
             
-            resultBuilder.errorStream = { error in
-                fail(error)
-            }
+            resultBuilder.errorNotification.handleNotification(callback: fail)
             
             resultBuilder.drain { result in
                 results.append(result)

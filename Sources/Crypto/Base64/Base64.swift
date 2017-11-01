@@ -2,11 +2,10 @@ import Foundation
 import Async
 import Bits
 
-protocol Base64: class, Async.Stream, ClosableStream {
+protocol Base64: class, Async.Stream, ClosableStream where Notification == ByteBuffer {
     static func process(_ buffer: ByteBuffer, toPointer pointer: MutableBytesPointer, capacity: Int, finish: Bool) throws -> (complete: Bool, filled: Int, consumed: Int)
     
     associatedtype Input = ByteBuffer
-    associatedtype Output = ByteBuffer
     
     init(bufferCapacity: Int)
     
@@ -24,7 +23,7 @@ protocol Base64: class, Async.Stream, ClosableStream {
 }
 
 extension Base64 {
-    public static func transforming<ByteStream: Async.OutputStream>(_ input: ByteStream) -> Self where ByteStream.Output == ByteBuffer {
+    public static func transforming<ByteStream: Async.OutputStream>(_ input: ByteStream) -> Self where ByteStream.Notification == ByteBuffer {
         let stream = Self.init(bufferCapacity: 65_507)
         
         if let input = input as? ClosableStream {
@@ -40,7 +39,7 @@ extension Base64 {
     
     /// Processed the `input`'s `ByteBuffer` by Base64-encoding it
     ///
-    /// Calls the `OutputHandler` with the Base64-encoded data
+    /// Calls the `NotificationCallback` with the Base64-encoded data
     public func inputStream(_ input: ByteBuffer) {
         var input = input
         
@@ -55,7 +54,7 @@ extension Base64 {
                 
                 // Swift doesn't recognize that Output == ByteBuffer
                 // Create a buffer referencing the ouput pointer and the outputted capacity
-                let writeBuffer: Output = ByteBuffer(start: pointer, count: capacity) as! Self.Output
+                let writeBuffer = ByteBuffer(start: pointer, count: capacity)
                 
                 // Write the output buffer to the output stream
                 self.outputStream?(writeBuffer)
@@ -67,7 +66,7 @@ extension Base64 {
                     return
                 }
             } catch {
-                errorStream?(error)
+                self.errorNotification.notify(of: error)
             }
         }
         
@@ -116,12 +115,12 @@ extension Base64 {
                     let (_, capacity, _) = try Self.process(buffer, toPointer: self.pointer, capacity: allocatedCapacity, finish: true)
                     
                     /// Create an output buffer (having to force cast an always-success case)
-                    let writeBuffer: Output = ByteBuffer(start: self.pointer, count: capacity) as! Self.Output
+                    let writeBuffer = ByteBuffer(start: self.pointer, count: capacity)
                     
                     // Write the output buffer to the output stream
                     self.outputStream?(writeBuffer)
                 } catch {
-                    self.errorStream?(error)
+                    self.errorNotification.notify(of: error)
                 }
             }
         }

@@ -9,7 +9,7 @@ extension SSLStream {
         let context = try self.initialize(side: .serverSide)
         
         guard let certificate = FileManager.default.contents(atPath: certificate) else {
-            throw Error(.certificateNotFound)
+            throw SSLError(.certificateNotFound)
         }
         
         try self.setCertificate(to: certificate, for: context)

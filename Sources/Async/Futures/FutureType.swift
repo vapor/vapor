@@ -1,21 +1,15 @@
 import Dispatch
 
-/// A future result type.
+/// Any type that can register completion handlers and returns a `FutureResult`.
+///
 /// Concretely implemented by `Future<T>`
-public protocol FutureType {
+public protocol FutureType: NotificationEmitter where Notification == FutureResult<Expectation> {
     associatedtype Expectation
-    func addAwaiter(callback: @escaping ResultCallback)
 }
 
 // MARK: Convenience
 
 extension FutureType {
-    /// This future's result type.
-    public typealias Result = FutureResult<Expectation>
-
-    /// Callback for accepting a result.
-    public typealias ResultCallback = ((Result) -> ())
-
     /// Callback for accepting the expectation.
     public typealias ExpectationCallback = ((Expectation) -> ())
 
@@ -30,7 +24,7 @@ extension FutureType {
     ///
     /// Will *not* be executed if an error occurrs
     public func then(callback: @escaping ExpectationCallback) -> Self {
-        addAwaiter { result in
+        handleNotification { result in
             guard let ex = result.expectation else {
                 return
             }
@@ -47,12 +41,12 @@ extension FutureType {
     /// Will *only* be executed if an error occurred.
     //// Successful results will not call this handler.
     public func `catch`(callback: @escaping ErrorCallback) {
-        addAwaiter { result in
-            guard let er = result.error else {
+        handleNotification { result in
+            guard let error = result.error else {
                 return
             }
 
-            callback(er)
+            callback(error)
         }
     }
 
@@ -86,7 +80,7 @@ extension FutureType {
         let semaphore = DispatchSemaphore(value: 0)
         var awaitedResult: FutureResult<Expectation>?
 
-        addAwaiter { result in
+        handleNotification { result in
             awaitedResult = result
             semaphore.signal()
         }

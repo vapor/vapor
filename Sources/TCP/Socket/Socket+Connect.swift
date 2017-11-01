@@ -19,19 +19,19 @@ extension Socket {
 
         var res = getaddrinfo(hostname, port.description, &hints, &result)
         guard res == 0 else {
-            throw Error.posix(errno, identifier: "getAddressInfo")
+            throw TCPError.posix(errno, identifier: "getAddressInfo")
         }
         defer {
             freeaddrinfo(result)
         }
 
         guard let info = result else {
-            throw Error(identifier: "unwrapAddress", reason: "Could not unwrap address info.")
+            throw TCPError(identifier: "unwrapAddress", reason: "Could not unwrap address info.")
         }
         
         res = libc.connect(descriptor, info.pointee.ai_addr, info.pointee.ai_addrlen)
         guard res == 0 || (isNonBlocking && errno == EINPROGRESS) else {
-            throw Error.posix(errno, identifier: "connect")
+            throw TCPError.posix(errno, identifier: "connect")
         }
         
         self.address = Address(storage: info.pointee.ai_addr.pointee)

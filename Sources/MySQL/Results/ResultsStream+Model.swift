@@ -15,11 +15,11 @@ public final class ModelStream<D: Decodable> : ResultsStream {
     
     let mysql41: Bool
     
-    public typealias Output = D
+    public typealias Notification = D
     
-    public var outputStream: OutputHandler?
+    public var outputStream: NotificationCallback?
     
-    public var errorStream: ErrorHandler?
+    public let errorNotification = SingleNotification<Error>()
     
     init(mysql41: Bool) {
         self.mysql41 = mysql41

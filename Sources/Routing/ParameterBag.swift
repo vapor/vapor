@@ -28,12 +28,12 @@ public struct ParameterBag {
     ///
     public mutating func next<P: Parameter>(_ parameter: P.Type = P.self) throws -> P {
         guard parameters.count > 0 else {
-            throw Error(.insufficientParameters)
+            throw RoutingError(.insufficientParameters)
         }
         let current = parameters[0]
 
         guard current.type == P.self else {
-            throw Error(.invalidParameterType(
+            throw RoutingError(.invalidParameterType(
                 actual: current.type,
                 expected: P.self
             ))
@@ -41,7 +41,7 @@ public struct ParameterBag {
 
         let item = try current.type.make(for: current.value, in: request)
         guard let cast = item as? P else {
-            throw Error(.invalidParameterType(
+            throw RoutingError(.invalidParameterType(
                 actual: type(of: item),
                 expected: P.self
             ))
