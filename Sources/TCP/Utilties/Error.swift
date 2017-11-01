@@ -3,7 +3,7 @@ import libc
 
 /// Errors that can be thrown while working with TCP sockets.
 public struct TCPError: Traceable, Debuggable, Swift.Error, Encodable {
-    public static let readableName = "TCP TCPError"
+    public static let readableName = "TCP Error"
     public let identifier: String
     public var reason: String
     public var file: String
@@ -31,7 +31,7 @@ public struct TCPError: Traceable, Debuggable, Swift.Error, Encodable {
     }
 
     /// Create a new TCP error from a POSIX errno.
-    public static func posix(
+    static func posix(
         _ errno: Int32,
         identifier: String,
         file: String = #file,
