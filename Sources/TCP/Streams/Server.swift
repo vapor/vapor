@@ -13,8 +13,8 @@ public final class Server: Async.OutputStream, ClosableStream {
     // MARK: Stream
     public typealias Notification = TCPClient
     
-    /// See `BaseStream.onClose`
-    public var onClose: CloseHandler?
+    /// See `ClosableStream.closeNotification`
+    public let closeNotification = SingleNotification<Void>()
     
     /// See `BaseStream.errorNotification`
     public let errorNotification = SingleNotification<Error>()

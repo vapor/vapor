@@ -19,13 +19,11 @@ public protocol InputStream: BaseStream {
 ///
 ///
 public protocol ClosableStream: BaseStream {
-    typealias CloseHandler = (() -> ())
-    
-    /// Closes the connection
+    /// Closes this stream
     func close()
     
     /// A function that gets called if the stream closes
-    var onClose: CloseHandler? { get set }
+    var closeNotification: SingleNotification<Void> { get }
 }
 
 /// A type that emits `Ouptut` notifications asynchronously and at unspecified moments
@@ -47,6 +45,12 @@ public protocol BaseStream: class {
 }
 
 // MARK: Convenience
+
+extension ClosableStream {
+    public func close() {
+        closeNotification.notify()
+    }
+}
 
 extension OutputStream {
     /// Overrides the outputStream callback to capture output notifications using the new callback

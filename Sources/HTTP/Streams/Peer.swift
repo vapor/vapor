@@ -11,14 +11,9 @@ public final class Peer: Async.Stream, ClosableStream {
     /// See `OutputStream.Notification`
     public typealias Notification = ByteBuffer
     
-    /// See `BaseStream.onClose`
-    public var onClose: CloseHandler? {
-        get {
-            return tcp.onClose
-        }
-        set {
-            tcp.onClose = newValue
-        }
+    /// See `ClosableStream.closeNotification`
+    public var closeNotification: SingleNotification<Void> {
+        return tcp.closeNotification
     }
     
     /// See `OutputStream.NotificationCallback`

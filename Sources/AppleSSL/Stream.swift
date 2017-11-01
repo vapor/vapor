@@ -25,8 +25,8 @@ public final class SSLStream<DuplexByteStream: Async.Stream>: Async.Stream, Clos
     /// See `OutputStream.outputStream`
     public var outputStream: NotificationCallback?
     
-    /// See `BaseStream.onClose`
-    public var onClose: CloseHandler?
+    /// See `ClosableStream.closeNotification`
+    public let closeNotification = SingleNotification<Void>()
     
     /// See `Stream.errorStream`
     public let errorNotification = SingleNotification<Error>()

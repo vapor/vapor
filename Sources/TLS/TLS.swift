@@ -28,14 +28,9 @@ public final class TLSClient: Async.Stream, ClosableStream {
         }
     }
     
-    /// See `BaseStream.onClose`
-    public var onClose: CloseHandler? {
-        get {
-            return ssl.onClose
-        }
-        set {
-            ssl.onClose = newValue
-        }
+    /// See `ClosableStream.closeNotification`
+    public var closeNotification: SingleNotification<Void> {
+        return ssl.closeNotification
     }
     
     /// See `Stream.errorStream`

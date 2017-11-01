@@ -1,11 +1,7 @@
 import Async
 
 public final class ModelStream<D: Decodable> : ResultsStream {
-    public func close() {
-        self.onClose?()
-    }
-    
-    public var onClose: CloseHandler?
+    public let closeNotification = SingleNotification<Void>()
     
     /// A list of all fields' descriptions in this table
     var columns = [Field]()

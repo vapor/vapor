@@ -15,7 +15,7 @@ extension ConnectionPool {
             let stream = RowStream(mysql41: connection.mysql41)
             connection.receivePackets(into: stream.inputStream)
             
-            stream.onClose = {
+            stream.closeNotification.handleNotification {
                 complete(rows)
             }
             
@@ -47,7 +47,7 @@ extension ConnectionPool {
             let resultBuilder = ModelStream<D>(mysql41: connection.mysql41)
             connection.receivePackets(into: resultBuilder.inputStream)
             
-            resultBuilder.onClose = {
+            resultBuilder.closeNotification.handleNotification {
                 complete(results)
             }
             

@@ -27,9 +27,7 @@ extension Base64 {
         let stream = Self.init(bufferCapacity: 65_507)
         
         if let input = input as? ClosableStream {
-            input.onClose = {
-                stream.close()
-            }
+            input.closeNotification.handleNotification(callback: stream.close)
         }
         
         input.drain(stream.inputStream)
@@ -125,6 +123,6 @@ extension Base64 {
             }
         }
         
-        self.onClose?()
+        self.closeNotification.notify()
     }
 }

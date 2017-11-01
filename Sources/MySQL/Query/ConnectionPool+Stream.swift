@@ -13,8 +13,7 @@ extension ConnectionPool {
         let future = try retain { connection, complete, fail in
             // Set up a parser
             connection.receivePackets(into: stream.inputStream)
-            
-            stream.onClose = complete
+            stream.closeNotification.handleNotification(callback: complete)
             stream.errorNotification.handleNotification(callback: fail)
             
             // Send the query
@@ -48,9 +47,7 @@ extension ConnectionPool {
         let future = try retain { connection, complete, fail in
             // Set up a parser
             connection.receivePackets(into: stream.inputStream)
-            
-            stream.onClose = complete
-            
+            stream.closeNotification.handleNotification(callback: complete)
             stream.errorNotification.handleNotification(callback: fail)
             
             // Send the query

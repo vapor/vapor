@@ -42,8 +42,8 @@ public final class Base64Encoder: Base64 {
     /// Outputs Base64Encoded byte streams
     public typealias Notification = ByteBuffer
     
-    /// See `BaseStream.onClose`
-    public var onClose: CloseHandler?
+    /// See `ClosableStream.closeNotification`
+    public let closeNotification = SingleNotification<Void>()
     
     /// See `BaseStream.errorNotification`
     public let errorNotification = SingleNotification<Error>()

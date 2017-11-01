@@ -33,13 +33,8 @@ internal final class Connection: Async.Stream, ClosableStream {
     let errorNotification = SingleNotification<Error>()
     
     /// Called when the connection closes
-    var onClose: CloseHandler? {
-        get {
-            return self.client.onClose
-        }
-        set {
-            self.client.onClose = newValue
-        }
+    var closeNotification: SingleNotification<Void> {
+        return self.client.closeNotification
     }
     
     /// Serializes data into frames

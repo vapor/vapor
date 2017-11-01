@@ -25,3 +25,9 @@ public final class SingleNotification<T>: NotificationEmitter {
         notified = true
     }
 }
+
+extension SingleNotification where T == Void {
+    public func notify() {
+        self.notify(of: ())
+    }
+}

@@ -33,8 +33,8 @@ public final class Base64Decoder: Base64 {
     /// See `OutputStream.NotificationCallback`
     public var outputStream: NotificationCallback?
     
-    /// See `BaseStream.onClose`
-    public var onClose: CloseHandler?
+    /// See `ClosableStream.closeNotification`
+    public let closeNotification = SingleNotification<Void>()
     
     /// See `BaseStream.Errorhandler`
     public let errorNotification = SingleNotification<Error>()

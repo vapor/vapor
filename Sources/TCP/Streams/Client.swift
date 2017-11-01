@@ -11,8 +11,8 @@ public final class TCPClient: Async.Stream, ClosableStream {
     public typealias Input = ByteBuffer
     public typealias Notification = ByteBuffer
     
-    /// See `BaseStream.onClose`
-    public var onClose: CloseHandler?
+    /// See `ClosableStream.closeNotification`
+    public let closeNotification = SingleNotification<Void>()
     
     /// See `BaseStream.errorNotification`
     public let errorNotification = SingleNotification<Error>()
