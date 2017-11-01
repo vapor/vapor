@@ -19,7 +19,7 @@ public protocol InputStream: BaseStream {
 ///
 ///
 public protocol ClosableStream: BaseStream {
-    /// Closes this stream
+    /// Closes this stream and must notify the `closeNotification`
     func close()
     
     /// A function that gets called if the stream closes
@@ -45,12 +45,6 @@ public protocol BaseStream: class {
 }
 
 // MARK: Convenience
-
-extension ClosableStream {
-    public func close() {
-        closeNotification.notify()
-    }
-}
 
 extension OutputStream {
     /// Overrides the outputStream callback to capture output notifications using the new callback

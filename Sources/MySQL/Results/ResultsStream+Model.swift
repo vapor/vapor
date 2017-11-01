@@ -29,5 +29,8 @@ public final class ModelStream<D: Decodable> : ResultsStream {
         return try D(from: decoder)
     }
     
+    public func close() {
+        self.closeNotification.notify()
+    }
 }
 

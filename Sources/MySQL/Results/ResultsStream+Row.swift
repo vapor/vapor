@@ -6,6 +6,10 @@ final class RowStream : ResultsStream {
         return try packet.makeRow(columns: columns)
     }
     
+    func close() {
+        self.closeNotification.notify()
+    }
+    
     init(mysql41: Bool) {
         self.mysql41 = mysql41
     }
