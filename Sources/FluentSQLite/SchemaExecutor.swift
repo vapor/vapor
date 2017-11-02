@@ -7,6 +7,7 @@ extension SQLiteConnection: SchemaExecutor {
     /// See SchemaExecutor.execute()
     public func execute(schema: DatabaseSchema) -> Future<Void> {
         let schemaQuery = schema.makeSchemaQuery(delegate: self)
+
         let string = SQLiteSQLSerializer()
             .serialize(schema: schemaQuery)
 
