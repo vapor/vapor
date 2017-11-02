@@ -11,38 +11,37 @@ extension SQLiteConnection: QueryExecutor {
         into stream: I
     ) -> Future<Void> where I.Input == D {
         return then {
-            // extract columns and data from
-            // query data, if exists
-            let modelColumns: [DataColumn]
-            let modelData: [SQLiteData]
+            /// convert fluent query to sql query
+            var (dataQuery, binds) = query.makeDataQuery()
 
+            // create row encoder, will only
+            // be used if a model is being binded
+            let rowEncoder = SQLiteRowEncoder()
+
+            // bind model columns to sql query
             if let model = query.data {
-                let encoder = SQLiteRowEncoder()
-                try model.encode(to: encoder)
-                modelColumns = encoder.row.fields.keys.map {
+                try model.encode(to: rowEncoder)
+                dataQuery.columns += rowEncoder.row.fields.keys.map {
                     DataColumn(table: query.entity, name: $0.name)
                 }
-                modelData = encoder.row.fields.values.map { $0.data }
-            } else {
-                modelColumns = []
-                modelData = []
             }
 
-            /// create sqlite query
-            let (dataQuery, binds) = query.makeDataQuery(columns: modelColumns)
+            /// create sql query
             let sqlString = SQLiteSQLSerializer()
                 .serialize(data: dataQuery)
             let sqliteQuery = self.makeQuery(sqlString)
 
-            /// bind model data
-            for data in modelData {
-                sqliteQuery.bind(data)
+            /// bind model data to sqlite query
+            if query.data != nil {
+                for data in rowEncoder.row.fields.values.map({ $0.data }) {
+                    sqliteQuery.bind(data)
+                }
             }
 
             /// encode binds
-            let encoder = SQLiteDataEncoder()
+            let dataEncoder = SQLiteDataEncoder()
             for bind in binds {
-                try sqliteQuery.bind(encoder.makeSQLiteData(bind))
+                try sqliteQuery.bind(dataEncoder.makeSQLiteData(bind))
             }
 
             /// setup drain

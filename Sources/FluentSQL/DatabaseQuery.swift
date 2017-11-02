@@ -6,7 +6,7 @@ extension DatabaseQuery {
     /// All Encodable values found while converting the query
     /// will be returned in an array in the order that placeholders
     /// will appear in the serialized SQL query.
-    public func makeDataQuery(columns: [DataColumn] = []) -> (DataQuery, [BindValue]) {
+    public func makeDataQuery() -> (DataQuery, [BindValue]) {
         var encodables: [BindValue] = []
 
         let limit: Int?
@@ -19,7 +19,7 @@ extension DatabaseQuery {
         let query = DataQuery(
             statement: action.makeDataStatement(),
             table: entity,
-            columns: columns,
+            columns: [],
             computed: aggregates.map { $0.makeDataComputed() },
             joins: joins.map { $0.makeDataJoin() },
             predicates: filters.map { filter in
