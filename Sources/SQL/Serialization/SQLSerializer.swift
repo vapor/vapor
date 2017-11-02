@@ -102,13 +102,6 @@ public protocol SQLSerializer {
     ///
     func serialize(column: SchemaColumn) -> String
 
-    /// Serializes a SQL `SchemaDataType` to a string.
-    ///
-    ///     INT
-    ///
-    /// Note: this will likely need to be overridden.
-    func serialize(dataType: SchemaDataType) -> String
-
     // MARK: Utility
 
     /// Creates a placeholder for the supplied column name.
