@@ -2,6 +2,7 @@ import Async
 import Fluent
 import FluentSQL
 import SQLite
+import SQL
 
 extension SQLiteConnection: QueryExecutor {
     /// See QueryExecutor.execute
@@ -10,16 +11,38 @@ extension SQLiteConnection: QueryExecutor {
         into stream: I
     ) -> Future<Void> where I.Input == D {
         return then {
+            // extract columns and data from
+            // query data, if exists
+            let modelColumns: [DataColumn]
+            let modelData: [SQLiteData]
+
+            if let model = query.data {
+                let encoder = SQLiteRowEncoder()
+                try model.encode(to: encoder)
+                modelColumns = encoder.row.fields.keys.map {
+                    DataColumn(table: query.entity, name: $0.name)
+                }
+                modelData = encoder.row.fields.values.map { $0.data }
+            } else {
+                modelColumns = []
+                modelData = []
+            }
+
             /// create sqlite query
-            let (dataQuery, encodables) = query.makeDataQuery()
+            let (dataQuery, binds) = query.makeDataQuery(columns: modelColumns)
             let sqlString = SQLiteSQLSerializer()
                 .serialize(data: dataQuery)
             let sqliteQuery = self.makeQuery(sqlString)
 
-            /// encode data
+            /// bind model data
+            for data in modelData {
+                sqliteQuery.bind(data)
+            }
+
+            /// encode binds
             let encoder = SQLiteDataEncoder()
-            for value in encodables {
-                try sqliteQuery.bind(encoder.makeSQLiteData(value))
+            for bind in binds {
+                try sqliteQuery.bind(encoder.makeSQLiteData(bind))
             }
 
             /// setup drain

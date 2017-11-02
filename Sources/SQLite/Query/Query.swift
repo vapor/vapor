@@ -58,6 +58,9 @@ public final class SQLiteQuery: Async.OutputStream {
 
         var raw: Raw?
 
+        // log before anything happens, in case there's an error
+        try connection.database.logger?.log(query: self).blockingAwait()
+
         var ret = sqlite3_prepare_v2(connection.raw, string, -1, &raw, nil)
         guard ret == SQLITE_OK else {
             throw SQLiteError(statusCode: ret, connection: connection)
@@ -138,8 +141,6 @@ public final class SQLiteQuery: Async.OutputStream {
         guard ret == SQLITE_OK else {
             throw SQLiteError(statusCode: ret, connection: self.connection)
         }
-
-        try connection.database.logger?.log(query: self).blockingAwait()
     }
 
     /// Starts executing the statement.
