@@ -1,10 +1,12 @@
 extension SQLSerializer {
+    /// See SQLSerializer.serialize(predicateGroup:)
     public func serialize(predicateGroup: DataPredicateGroup) -> String {
         let method = serialize(predicateGroupRelation: predicateGroup.relation)
         let group = predicateGroup.predicates.map(serialize).joined(separator: " \(method) ")
         return "(" + group + ")"
     }
 
+    /// See SQLSerializer.serialize(predicateGroupRelation:)
     public func serialize(predicateGroupRelation: DataPredicateGroupRelation) -> String {
         switch predicateGroupRelation {
         case .and: return "AND"
@@ -12,6 +14,10 @@ extension SQLSerializer {
         }
     }
 
+    /// Depending on the predicate item case, calls either:
+    ///     - `serialize(predicateGroup:)`
+    ///     - `serialize(predicate:)`
+    /// This should likely not need to be overridden.
     public func serialize(predicateItem: DataPredicateItem) -> String {
         switch predicateItem {
         case .group(let group): return serialize(predicateGroup: group)
@@ -19,6 +25,7 @@ extension SQLSerializer {
         }
     }
 
+    /// See SQLSerializer.serialize(predicate:)
     public func serialize(predicate: DataPredicate) -> String {
         var statement: [String] = []
 
@@ -54,6 +61,7 @@ extension SQLSerializer {
         return statement.joined(separator: " ")
     }
 
+    /// See SQLSerializer.makePlaceholder(predicate:)
     public func makePlaceholder(predicate: DataPredicate) -> String {
         var statement: [String] = []
 
@@ -69,6 +77,7 @@ extension SQLSerializer {
         return statement.joined(separator: " ")
     }
 
+    /// See SQLSerializer.serialize(comparison:)
     public func serialize(comparison: DataPredicateComparison) -> String {
         switch comparison {
         case .equal: return "="

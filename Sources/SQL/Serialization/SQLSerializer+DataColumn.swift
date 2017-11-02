@@ -1,4 +1,5 @@
 extension SQLSerializer {
+    /// See SQLSerializer.serialize(column:)
     public func serialize(column: DataColumn) -> String {
         let escapedName = makeEscapedString(from: column.name)
         if let table = column.table {

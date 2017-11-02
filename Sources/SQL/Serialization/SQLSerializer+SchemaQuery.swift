@@ -1,4 +1,5 @@
 extension SQLSerializer {
+    /// See SQLSerializer.serialize(schema:)
     public func serialize(schema query: SchemaQuery) -> String {
         var statement: [String] = []
         let table = makeEscapedString(from: query.table)
@@ -31,6 +32,7 @@ extension SQLSerializer {
         return statement.joined(separator: " ")
     }
 
+    /// See SQLSerializer.serialize(column:)
     public func serialize(column: SchemaColumn) -> String {
         var sql: [String] = []
 

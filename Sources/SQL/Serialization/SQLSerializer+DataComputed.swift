@@ -1,4 +1,5 @@
 extension SQLSerializer {
+    /// See SQLSerializer.serialize(computed:)
     public func serialize(computed: DataComputed) -> String {
         var serialized = computed.function
         serialized += "("

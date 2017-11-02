@@ -1,4 +1,5 @@
 extension SQLSerializer {
+    /// See SQLSerializer.serialize(orderBys:)
     public func serialize(orderBys: [DataOrderBy]) -> String {
         var statement: [String] = []
 
@@ -8,6 +9,7 @@ extension SQLSerializer {
         return statement.joined(separator: " ")
     }
 
+    /// See SQLSerializer.serialize(orderBy:)
     public func serialize(orderBy: DataOrderBy) -> String {
         var statement: [String] = []
 
@@ -18,6 +20,7 @@ extension SQLSerializer {
         return statement.joined(separator: " ")
     }
 
+    /// See SQLSerializer.serialize(orderByDirection:)
     public func serialize(orderByDirection: OrderByDirection) -> String {
         switch orderByDirection {
         case .ascending:

@@ -1,4 +1,5 @@
 extension SQLSerializer {
+    /// See SQLSerializer.serialize(data:)
     public func serialize(data query: DataQuery) -> String {
         let table = makeEscapedString(from: query.table)
         var statement: [String] = []

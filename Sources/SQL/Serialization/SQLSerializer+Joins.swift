@@ -1,8 +1,10 @@
 extension SQLSerializer {
+    /// See SQLSerializer.serialize(joins:)
     public func serialize(joins: [DataJoin]) -> String {
         return joins.map(serialize).joined(separator: " ")
     }
 
+    /// See SQLSerializer.serialize(join:)
     public func serialize(join: DataJoin) -> String {
         var statement: [String] = []
         statement.append("JOIN")
