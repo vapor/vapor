@@ -25,7 +25,7 @@ public enum SchemaFieldType {
     case string(length: Int?)
     case int
     case double
-    case data(length: Int?)
+    case data(length: Int)
     case date
     case custom(type: String)
 }
@@ -87,7 +87,7 @@ extension SchemaBuilder {
     }
 
     /// Adds a data type field.
-    public func data(_ name: String, length: Int? = nil, isOptional: Bool = false, isIdentifier: Bool = false) {
+    public func data(_ name: String, length: Int, isOptional: Bool = false, isIdentifier: Bool = false) {
         let field = SchemaField(
             name: name,
             type: .data(length: length),

@@ -39,7 +39,7 @@ extension SQLSerializer {
         let name = makeEscapedString(from: column.name)
         sql.append(name)
 
-        sql.append(column.dataType)
+        sql.append(serialize(dataType: column.dataType))
 
         if column.isPrimaryKey {
             sql.append("PRIMARY KEY")
@@ -48,5 +48,28 @@ extension SQLSerializer {
         }
 
         return sql.joined(separator: " ")
+    }
+
+    /// See SQLSerializer.serialize(dataType:)
+    public func serialize(dataType: SchemaDataType) -> String {
+        switch dataType {
+        case .character(let n): return "CHARACTER(\(n))"
+        case .varchar(let n): return "VARCHAR(\(n))"
+        case .binary(let n): return "BINARY(\(n))"
+        case .boolean: return "BOOLEAN"
+        case .varbinary(let n): return "VARBINARY(\(n))"
+        case .integer(let p): return "INTEGER(\(p))"
+        case .decimal(let p, let s): return "DECIMAL(\(p),\(s))"
+        case .float(let p): return "FLOAT(\(p))"
+        case .date: return "DATE"
+        case .time: return "TIME"
+        case .timestamp: return "TIMESTAMP"
+        case .interval: return "INTERVAL"
+        case .array: return "ARRAY"
+        case .multiset: return "MULTISET"
+        case .xml: return "XML"
+        case .custom(let s): return s
+        }
+
     }
 }

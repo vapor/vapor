@@ -18,14 +18,14 @@ final class DataTests: XCTestCase {
             comparison: .equal,
             value: .placeholder
         )
-        select.predicates.append(predicateA)
+        select.predicates.append(.predicate(predicateA))
 
         let predicateB = DataPredicate(
             column: DataColumn(table: "foo", name: "name"),
             comparison: .equal,
             value: .placeholder
         )
-        select.predicates.append(predicateB)
+        select.predicates.append(.predicate(predicateB))
 
         XCTAssertEqual(
             GeneralSQLSerializer.shared.serialize(data: select),
@@ -36,7 +36,11 @@ final class DataTests: XCTestCase {
     func testSelectWithJoins() {
         var select = DataQuery(statement: .select, table: "foo")
 
-        let joinA = Join(method: .inner, table: "foo", column: "id", foreignTable: "bar", foreignColumn: "foo_id")
+        let joinA = DataJoin(
+            method: .inner,
+            local: DataColumn(table: "foo", name: "id"),
+            foreign: DataColumn(table: "bar", name: "foo_id")
+        )
         select.joins.append(joinA)
 
         XCTAssertEqual(
