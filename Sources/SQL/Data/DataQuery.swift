@@ -5,8 +5,8 @@ public struct DataQuery {
     public var columns: [DataColumn]
     public var computed: [DataComputed]
     public var joins: [DataJoin]
-    public var predicates: [Predicate]
-    public var orderBys: [OrderBy]
+    public var predicates: [DataPredicateItem]
+    public var orderBys: [DataOrderBy]
     public var limit: Int?
     public var offset: Int?
 
@@ -16,8 +16,8 @@ public struct DataQuery {
         columns: [DataColumn] = [],
         computed: [DataComputed] = [],
         joins: [DataJoin] = [],
-        predicates: [Predicate] = [],
-        orderBys: [OrderBy] = [],
+        predicates: [DataPredicateItem] = [],
+        orderBys: [DataOrderBy] = [],
         limit: Int? = nil,
         offset: Int? = nil
     ) {
@@ -33,7 +33,30 @@ public struct DataQuery {
     }
 }
 
-public struct OrderBy {
+public enum DataPredicateItem {
+    case group(DataPredicateGroup)
+    case predicate(DataPredicate)
+}
+
+public struct DataPredicateGroup {
+    public var relation: DataPredicateGroupRelation
+    public var predicates: [DataPredicateItem]
+
+    public init(
+        relation: DataPredicateGroupRelation,
+        predicates: [DataPredicateItem]
+    ) {
+        self.relation = relation
+        self.predicates = predicates
+    }
+}
+
+public enum DataPredicateGroupRelation {
+    case and
+    case or
+}
+
+public struct DataOrderBy {
     public var columns: [DataColumn]
     public var direction: OrderByDirection
 

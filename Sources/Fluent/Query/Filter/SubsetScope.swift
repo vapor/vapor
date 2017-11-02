@@ -1,7 +1,7 @@
 /// Describes the methods for comparing
 /// a field to a set of values.
 /// Think of it like Swift's `.contains`.
-public enum SubsetScope {
+public enum QuerySubsetScope {
     case `in`
     case notIn
 }
@@ -10,7 +10,7 @@ public enum SubsetScope {
 /// The subset can be either an array of encodable
 /// values or another query whose purpose
 /// is to yield an array of values.
-public enum SubsetValue {
+public enum QuerySubsetValue {
     case array([Encodable])
     case subquery(DatabaseQuery)
 }

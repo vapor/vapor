@@ -1,5 +1,5 @@
 /// Possible relations between items in a group
-public enum Relation {
+public enum QueryGroupRelation {
     case and, or
 }
 

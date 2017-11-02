@@ -1,5 +1,5 @@
 extension SQLSerializer {
-    public func serialize(orderBys: [OrderBy]) -> String {
+    public func serialize(orderBys: [DataOrderBy]) -> String {
         var statement: [String] = []
 
         statement.append("ORDER BY")
@@ -8,7 +8,7 @@ extension SQLSerializer {
         return statement.joined(separator: " ")
     }
 
-    public func serialize(orderBy: OrderBy) -> String {
+    public func serialize(orderBy: DataOrderBy) -> String {
         var statement: [String] = []
 
         let columns = orderBy.columns.map(serialize).joined(separator: ", ")

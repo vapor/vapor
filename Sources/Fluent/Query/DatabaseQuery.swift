@@ -15,6 +15,9 @@ public struct DatabaseQuery {
     /// Sorts to be applied to the results.
     public var sorts: [QuerySort]
 
+    /// Aggregates / computed methods.
+    public var aggregates: [QueryAggregate]
+
     /// If true, the query will only select distinct rows.
     public var isDistinct: Bool
 
@@ -31,6 +34,7 @@ public struct DatabaseQuery {
         self.filters = []
         self.joins = []
         self.sorts = []
+        self.aggregates = []
         self.isDistinct = false
         self.data = nil
         self.range = nil

@@ -51,7 +51,9 @@ extension SQLSerializer {
         }
 
         if !query.predicates.isEmpty {
-            statement.append(serialize(predicates: query.predicates))
+            statement.append("WHERE")
+            let group = DataPredicateGroup(relation: .and, predicates: query.predicates)
+            statement.append(serialize(predicateGroup: group))
         }
 
         if !query.orderBys.isEmpty {

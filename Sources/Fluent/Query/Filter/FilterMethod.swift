@@ -1,8 +1,8 @@
 /// Types of fluent filters.
 public enum QueryFilterMethod {
-    case compare(QueryField, QueryComparison, ComparisonValue)
-    case subset(QueryField, SubsetScope, SubsetValue)
-    case group(Relation, [QueryFilter])
+    case compare(QueryField, QueryComparison, QueryComparisonValue)
+    case subset(QueryField, QuerySubsetScope, QuerySubsetValue)
+    case group(QueryGroupRelation, [QueryFilter])
 }
 
 public enum QueryComparison {
@@ -11,7 +11,7 @@ public enum QueryComparison {
     case sequence(SequenceComparison) // Encodable & Sequence
 }
 
-public enum ComparisonValue {
+public enum QueryComparisonValue {
     case value(Encodable)
     case field(QueryField)
 }

@@ -2,6 +2,7 @@ import Async
 import Core
 import Dispatch
 import Fluent
+import FluentSQLite
 import Foundation
 import HTTP
 import Leaf
@@ -25,6 +26,7 @@ var services = Services.default()
 services.register(SQLiteStorage.file(path: "/tmp/alpha.sqlite"))
 try services.register(LeafProvider())
 try services.register(FluentProvider())
+try services.register(SQLiteProvider())
 
 var databaseConfig = DatabaseConfig()
 databaseConfig.add(database: SQLiteDatabase.self, as: .alpha)

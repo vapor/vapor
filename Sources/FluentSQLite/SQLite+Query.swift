@@ -19,8 +19,7 @@ extension SQLiteConnection: QueryExecutor {
             /// encode data
             let encoder = SQLiteDataEncoder()
             for value in encodables {
-                try value.encode(to: encoder)
-                sqliteQuery.bind(encoder.data)
+                try sqliteQuery.bind(encoder.makeSQLiteData(value))
             }
 
             /// setup drain
@@ -52,5 +51,24 @@ extension SQLiteConnection: QueryExecutor {
 }
 
 
+extension SQLiteDataEncoder {
+    fileprivate func makeSQLiteData(_ bind: BindValue) throws -> SQLiteData {
+        try bind.encodable.encode(to: self)
+        switch bind.method {
+        case .plain:
+            return data
+        case .wildcard(let wildcard):
+            // FIXME: fuzzy string
+            guard let string = data.text else {
+                throw "could not convert value with wildcards to string: \(data)"
+            }
 
+            switch wildcard {
+            case .fullWildcard: return .text("%" + string + "%")
+            case .leadingWildcard: return .text("%" + string)
+            case .trailingWildcard: return .text(string + "%")
+            }
+        }
+    }
+}
 

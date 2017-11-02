@@ -13,14 +13,14 @@ final class DataTests: XCTestCase {
     func testSelectWithPredicates() {
         var select = DataQuery(statement: .select, table: "foo")
 
-        let predicateA = Predicate(
+        let predicateA = DataPredicate(
             column: DataColumn(name: "id"),
             comparison: .equal,
             value: .placeholder
         )
         select.predicates.append(predicateA)
 
-        let predicateB = Predicate(
+        let predicateB = DataPredicate(
             column: DataColumn(table: "foo", name: "name"),
             comparison: .equal,
             value: .placeholder
