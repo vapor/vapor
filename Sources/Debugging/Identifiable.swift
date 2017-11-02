@@ -68,8 +68,7 @@ extension Identifiable {
 
 extension String {
     func readableTypeName() -> String {
-        let characterSequence = self.characters
-            .split(separator: ".")
+        let characterSequence = self.split(separator: ".")
             .dropFirst() // drop module
             .joined(separator: [])
 

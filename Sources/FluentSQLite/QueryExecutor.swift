@@ -26,9 +26,8 @@ extension SQLiteConnection: QueryExecutor {
                 }
             }
 
-            /// create sql query
-            let sqlString = SQLiteSQLSerializer()
-                .serialize(data: dataQuery)
+            /// create sqlite query from string
+            let sqlString = SQLiteSQLSerializer().serialize(data: dataQuery)
             let sqliteQuery = self.makeQuery(sqlString)
 
             /// bind model data to sqlite query
@@ -38,7 +37,7 @@ extension SQLiteConnection: QueryExecutor {
                 }
             }
 
-            /// encode binds
+            /// encode sql placeholder binds
             let dataEncoder = SQLiteDataEncoder()
             for bind in binds {
                 try sqliteQuery.bind(dataEncoder.makeSQLiteData(bind))

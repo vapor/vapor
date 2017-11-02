@@ -128,7 +128,7 @@ extension Renderer {
         do {
             guard let data = view.data(using: .utf8) else {
                 throw RenderError(
-                    source: Source(line: 0, column: 0, range: 0..<view.characters.count),
+                    source: Source(line: 0, column: 0, range: 0..<view.count),
                     reason: "Could not convert view String to Data."
                 )
             }
