@@ -92,6 +92,14 @@ extension String: ResponseRepresentable {
 }
 
 final class Message: Model {
+    static let keyFieldMap = [
+        key(\.id): field("id"),
+        key(\.text): field("text"),
+        key(\.time): field("customtime"),
+    ]
+
+    static let idKey = \Message.id
+
     var id: String?
     var text: String
     var time: Int
@@ -100,6 +108,20 @@ final class Message: Model {
         self.id = id
         self.text = text
         self.time = time
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: QueryField.self)
+        id = try container.decode(forKey: \Message.id)
+        text = try container.decode(forKey: \Message.text)
+        time = try container.decode(forKey: \Message.time)
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: QueryField.self)
+        try container.encode(id, forKey: \Message.id)
+        try container.encode(text, forKey: \Message.text)
+        try container.encode(time, forKey: \Message.time)
     }
 }
 
@@ -117,6 +139,12 @@ router.post("users") { req -> Future<User> in
     let user = try JSONDecoder().decode(User.self, from: req.body.data)
     return req.database(.beta) { db in
         return user.save(on: db).map { user }
+    }
+}
+
+router.get("builder") { req -> Future<[User]> in
+    return req.database(.beta) { db in
+        return db.query(User.self).filter(\User.name == "Bob").all()
     }
 }
 

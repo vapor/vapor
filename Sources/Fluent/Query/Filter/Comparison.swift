@@ -15,6 +15,28 @@ public func == <
 }
 
 public func == <
+    Root: Model,
+    Value: Encodable & Equatable,
+    Key: KeyPath<Root, Value>
+>(lhs: Key, rhs: Value) -> QueryFilterMethod {
+    return .compare(lhs.makeQueryField(), .equality(.equals), .value(rhs))
+}
+
+public func == <
+    Root: Model,
+    Value: Encodable & Equatable,
+    Key: KeyPath<Root, Value?>
+>(lhs: Key, rhs: Value) -> QueryFilterMethod {
+    return .compare(lhs.makeQueryField(), .equality(.equals), .value(rhs))
+}
+
+extension KeyPath where Root: Model {
+    func makeQueryField() -> QueryField {
+        return Root.keyFieldMap[self]! // FIXME: throw an error i guess :(
+    }
+}
+
+public func == <
     Field: QueryFieldRepresentable
 >(lhs: Field, rhs: QueryField) -> QueryFilterMethod {
     return .compare(lhs.makeQueryField(), .equality(.equals), .field(rhs))

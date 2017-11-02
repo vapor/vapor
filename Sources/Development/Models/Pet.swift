@@ -6,6 +6,18 @@ import Routing
 import SQLite
 
 final class Pet: Model {
+    typealias ID = UUID
+
+    static var keyFieldMap: [AnyKeyPath: QueryField] {
+        return [
+            \Pet.id: field("id"),
+            \Pet.name: field("name"),
+            \Pet.ownerID: field("ownerID")
+        ]
+    }
+
+    static let idKey = \Pet.id
+
     var id: UUID?
     var name: String
     var ownerID: UUID
@@ -16,7 +28,7 @@ final class Pet: Model {
     }
 
     var owner: Parent<Pet, User> {
-        return parent(idKey: \Pet.ownerID)
+        return parent(\.ownerID)
     }
 
     var toys: Siblings<Pet, Toy, PetToyPivot> {

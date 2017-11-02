@@ -34,23 +34,29 @@ public struct Siblings<Base: Model, Related: Model, Through: Pivot> {
     /// should be related to.
     public let base: Base
 
+    /// Base pivot field type.
+    public typealias BasePivotField = ReferenceWritableKeyPath<Through, Base.ID>
+
     /// The base model's foreign id field
     /// that appears on the pivot.
     /// ex: Through.baseID
-    public let basePivotField: QueryField
+    public let basePivotField: BasePivotField
+
+    // Related pivot field type.
+    public typealias RelatedPivotField = ReferenceWritableKeyPath<Through, Related.ID>
 
     /// The related model's foreign id field
     /// that appears on the pivot.
     /// ex: Through.relatedID
-    public let relatedPivotField: QueryField
+    public let relatedPivotField: RelatedPivotField
 
     /// Create a new Siblings relation.
     public init(
         base: Base,
         related: Related.Type = Related.self,
         through: Through.Type = Through.self,
-        basePivotField: QueryField = Through.field(Base.foreignIDKey),
-        relatedPivotField: QueryField = Through.field(Related.foreignIDKey)
+        basePivotField: BasePivotField,
+        relatedPivotField: RelatedPivotField
     ) {
         self.base = base
         self.basePivotField = basePivotField
@@ -60,7 +66,7 @@ public struct Siblings<Base: Model, Related: Model, Through: Pivot> {
     /// Create a query for the parent.
     public func query(on executor: QueryExecutor) throws -> QueryBuilder<Related> {
         return try executor.query(Related.self)
-            .join(field: relatedPivotField)
+            .join(joined: relatedPivotField)
             .filter(basePivotField == base.requireID())
     }
 }
@@ -133,16 +139,38 @@ extension Model {
     /// about the many parameters. They can be confusing at first!
     ///
     /// Note: From is assumed to be the model you are calling this method on.
-    public func siblings<Related: Model, Through: Pivot>(
+    public func siblings<Related, Through>(
         related: Related.Type = Related.self,
         through: Through.Type = Through.self,
-        basePivotField: QueryField = Through.field(Self.foreignIDKey),
-        relatedPivotField: QueryField = Through.field(Related.foreignIDKey)
+        _ basePivotField: Siblings<Self, Related, Through>.BasePivotField,
+        _ relatedPivotField: Siblings<Self, Related, Through>.RelatedPivotField
     ) -> Siblings<Self, Related, Through> {
         return Siblings(
             base: self,
             basePivotField: basePivotField,
             relatedPivotField: relatedPivotField
         )
+    }
+
+    /// Free implementation where pivot constraints are met.
+    /// See Model.siblings(_:_:)
+    public func siblings<Related, Through>(
+        related: Related.Type = Related.self,
+        through: Through.Type = Through.self
+    ) -> Siblings<Self, Related, Through>
+        where Through.Right == Self, Through.Left == Related
+    {
+        return siblings(Through.rightIDKey, Through.leftIDKey)
+    }
+
+    /// Free implementation where pivot constraints are met.
+    /// See Model.siblings(_:_:)
+    public func siblings<Related, Through>(
+        related: Related.Type = Related.self,
+        through: Through.Type = Through.self
+    ) -> Siblings<Self, Related, Through>
+        where Through.Left == Self, Through.Right == Related
+    {
+        return siblings(Through.leftIDKey, Through.rightIDKey)
     }
 }

@@ -1,5 +1,5 @@
 /// Supported model identifier types.
-public enum IdentifierType<I: Identifier> {
+public enum IDType<ID: Fluent.ID> {
     /// The identifier property on the model
     /// should always be `nil` when saving a new model.
     /// The database driver is expected to generate an
@@ -7,7 +7,7 @@ public enum IdentifierType<I: Identifier> {
     /// identifiers that exist in the database.
     case autoincrementing
     /// A closure that creates a new identifier.
-    public typealias IdentifierFactory = () -> I
+    public typealias IdentifierFactory = () -> ID
     /// The identifier property on the model should
     /// always be `nil` when saving a new model.
     /// The supplied `IdentifierFactory` will be used

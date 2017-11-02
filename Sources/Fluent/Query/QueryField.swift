@@ -52,4 +52,44 @@ extension Model {
     }
 }
 
+// MARK: Coding key
+
+/// Allow query fields to be used as coding keys.
+extension QueryField: CodingKey {
+    /// See CodingKey.stringValue
+    public var stringValue: String {
+        return name
+    }
+
+    /// See CodingKey.intValue
+    public var intValue: Int? {
+        return nil
+    }
+
+    /// See CodingKey.init(stringValue:)
+    public init?(stringValue: String) {
+        self.init(name: stringValue)
+    }
+
+    /// See CodingKey.init(intValue:)
+    public init?(intValue: Int) {
+        return nil
+    }
+}
+
+extension KeyedDecodingContainer where K == QueryField {
+    /// Decodes a value from a key path.
+    public func decode<T: Decodable, M: Model>(_ type: T.Type = T.self, forKey key: KeyPath<M, T>) throws -> T {
+        let field = key.makeQueryField()
+        return try decode(T.self, forKey: field)
+    }
+}
+
+extension KeyedEncodingContainer where K == QueryField {
+    /// Encodes a value to a key path.
+    public mutating func encode<T: Encodable, M: Model>(_ value: T, forKey key: KeyPath<M, T>) throws {
+        let field = key.makeQueryField()
+        try self.encode(value, forKey: field)
+    }
+}
 

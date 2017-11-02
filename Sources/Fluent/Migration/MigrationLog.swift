@@ -3,8 +3,27 @@ import Foundation
 
 /// Represents a migration that has succesfully ran.
 final class MigrationLog<D: Database>: Model, Timestampable {
+    /// See Model.ID
+    typealias ID = UUID
+
     /// See Model.entity
     static var entity: String { return "fluent" }
+
+    /// See Model.idKeyPath
+    static var idKey: IDKey {
+        return \.id
+    }
+
+    /// See Model.keyPathMap
+    static var keyFieldMap: [AnyKeyPath: QueryField] { return
+        [
+            key(\.id): field("id"),
+            key(\.name): field("name"),
+            key(\.batch): field("batch"),
+            key(\.createdAt): field("createdAt"),
+            key(\.updatedAt): field("updatedAt"),
+        ]
+    }
 
     /// See Model.id
     var id: UUID?

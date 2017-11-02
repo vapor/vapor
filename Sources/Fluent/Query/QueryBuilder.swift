@@ -31,15 +31,15 @@ extension QueryBuilder {
     ) -> Future<Void> {
         query.data = model
 
-        if let id = model.id, !shouldCreate {
+        if let id = model.fluentID, !shouldCreate {
             filter("id" == id)
             // update record w/ matching id
             query.action = .update
-        } else if model.id == nil {
-            switch M.Identifier.identifierType {
+        } else if model.fluentID == nil {
+            switch M.ID.identifierType {
             case .autoincrementing: break
             case .generated(let factory):
-                model.id = factory()
+                model.fluentID = factory()
             case .supplied: break
                 // FIXME: error if not actually supplied?
             }
@@ -91,7 +91,7 @@ extension QueryBuilder {
         do {
             try model.willDelete()
 
-            if let id = model.id {
+            if let id = model.fluentID {
                 filter("id" == id)
                 query.action = .delete
                 run().do {

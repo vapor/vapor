@@ -8,7 +8,7 @@ import Async
 public protocol Model: class, Codable {
     /// The associated Identifier type.
     /// Usually Int or UUID.
-    associatedtype Identifier: Fluent.Identifier
+    associatedtype ID: Fluent.ID
 
     /// This model's unique name.
     static var name: String { get }
@@ -16,18 +16,14 @@ public protocol Model: class, Codable {
     /// This model's collection/table name
     static var entity: String { get }
 
+    /// Key path to identifier
+    typealias IDKey = ReferenceWritableKeyPath<Self, ID?>
+
     /// This model's id key.
     /// note: If this is not `id`, you
     /// will still need to implement `var id`
     /// on your model as a computed property.
-    static var idKey: String { get }
-
-    /// This model's default foreign id key
-    /// for relations and joins.
-    static var foreignIDKey: String { get }
-
-    /// The model's identifier.
-    var id: Identifier? { get set }
+    static var idKey: IDKey { get }
 
     /// Called before a model is created when saving.
     /// Throwing will cancel the save.
@@ -46,6 +42,26 @@ public protocol Model: class, Codable {
     func willDelete() throws
     /// Called after the model is deleted.
     func didDelete()
+
+    // MARK: Key paths
+
+    /// Maps key paths to their codable key.
+    static var keyFieldMap: [AnyKeyPath: QueryField] { get }
+}
+
+extension Model {
+    /// Access the fluent identifier
+    internal var fluentID: ID? {
+        get { return self[keyPath: Self.idKey] }
+        set { self[keyPath: Self.idKey] = newValue }
+    }
+}
+
+extension Model {
+    /// Maps a model's key path to AnyKeyPath.
+    public static func key<T, K: KeyPath<Self, T>>(_ path: K) -> AnyKeyPath {
+        return path
+    }
 }
 
 /// Free implementations.
@@ -58,16 +74,6 @@ extension Model {
     /// See Model.entity
     public static var entity: String {
         return name + "s"
-    }
-
-    /// See Model.idKey
-    public static var idKey: String {
-        return "id"
-    }
-
-    /// See Model.foreignIDKey
-    public static var foreignIDKey: String {
-        return name + "ID"
     }
 
     /// Seee Model.willCreate()
@@ -89,8 +95,8 @@ extension Model {
 /// MARK: Convenience
 
 extension Model {
-    public func requireID() throws -> Identifier {
-        guard let id = self.id else {
+    public func requireID() throws -> ID {
+        guard let id = self.fluentID else {
             throw "no id"
         }
 
@@ -122,7 +128,7 @@ extension Model {
 
     /// Attempts to find an instance of this model w/
     /// the supplied identifier.
-    public static func find(_ id: Self.Identifier, on executor: QueryExecutor) -> Future<Self?> {
+    public static func find(_ id: Self.ID, on executor: QueryExecutor) -> Future<Self?> {
         let query = executor.query(Self.self)
         query.filter("id" == id)
         return query.first()

@@ -12,21 +12,21 @@ public struct Parent<Child: Model, Parent: Model> {
     public var child: Child
 
     /// Key referencing property storing parent's ID
-    public typealias ParentIDKey = ReferenceWritableKeyPath<Child, Parent.Identifier>
+    public typealias ParentForeignIDKey = KeyPath<Child, Parent.ID>
 
     /// Reference to the parent's ID
-    public var parentIDKey: ParentIDKey
+    public var parentForeignIDKey: ParentForeignIDKey
 
     /// Creates a new children relationship.
-    public init(child: Child, idKey: ParentIDKey) {
+    public init(child: Child, parentForeignIDKey: ParentForeignIDKey) {
         self.child = child
-        self.parentIDKey = idKey
+        self.parentForeignIDKey = parentForeignIDKey
     }
 
     /// Create a query for the parent.
     public func query(on executor: QueryExecutor) -> QueryBuilder<Parent> {
         let builder = executor.query(Parent.self)
-        return builder.filter(Parent.idKey == child[keyPath: parentIDKey])
+        return builder.filter(Parent.idKey == child[keyPath: parentForeignIDKey])
     }
 
     /// Convenience for getting the parent.
@@ -40,11 +40,11 @@ public struct Parent<Child: Model, Parent: Model> {
 extension Model {
     /// Create a children relation for this model.
     public func parent<P: Model>(
-        idKey: Parent<Self, P>.ParentIDKey
+        _ parentForeignIDKey: Parent<Self, P>.ParentForeignIDKey
     ) -> Parent<Self, P> {
         return Parent(
             child: self,
-            idKey: idKey
+            parentForeignIDKey: parentForeignIDKey
         )
     }
 }

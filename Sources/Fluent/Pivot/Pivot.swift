@@ -10,6 +10,12 @@ public protocol Pivot: Model {
     /// The Right model for this pivot.
     /// note: a pivot with opposite right/left is distinct.
     associatedtype Right: Model
+
+    typealias LeftIDKey = ReferenceWritableKeyPath<Self, Left.ID>
+    static var leftIDKey: LeftIDKey { get }
+
+    typealias RightIDKey = ReferenceWritableKeyPath<Self, Right.ID>
+    static var rightIDKey: RightIDKey { get }
 }
 
 /// A pivot that can be initialized from just

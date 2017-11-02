@@ -31,6 +31,18 @@ struct TestSiblings: Migration {
 }
 
 final class User: Model, ResponseRepresentable {
+    typealias ID = UUID
+
+    static let keyFieldMap = [
+        key(\.id): field("id"),
+        key(\.name): field("name"),
+        key(\.age): field("age"),
+    ]
+
+    static var idKey: IDKey {
+        return \.id
+    }
+
     var id: UUID?
     var name: String
     var age: Int
@@ -49,7 +61,7 @@ final class User: Model, ResponseRepresentable {
     }
 
     var pets: Children<User, Pet> {
-        return children(foreignField: User.field("ownerID"))
+        return children(\.ownerID)
     }
 }
 

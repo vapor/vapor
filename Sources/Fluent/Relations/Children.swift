@@ -9,19 +9,22 @@ public struct Children<Parent: Model, Child: Model> {
     /// Reference to the parent's ID
     public var parent: Parent
 
+    /// Key referencing property storing parent's ID
+    public typealias ParentForeignIDKey = KeyPath<Child, Parent.ID>
+
     /// Reference to the foreign key on the child.
-    public var foreignField: QueryField
+    public var parentForeignIDKey: ParentForeignIDKey
 
     /// Creates a new children relationship.
-    public init(parent: Parent, foreignField: QueryField) {
+    public init(parent: Parent, parentForeignIDKey: ParentForeignIDKey) {
         self.parent = parent
-        self.foreignField = foreignField
+        self.parentForeignIDKey = parentForeignIDKey
     }
 
     /// Create a query for all children.
     public func query(on executor: QueryExecutor) throws -> QueryBuilder<Child> {
         let builder = executor.query(Child.self)
-        return try builder.filter(foreignField == parent.requireID())
+        return try builder.filter(parentForeignIDKey.makeQueryField() == parent.requireID())
     }
 }
 
@@ -33,11 +36,11 @@ extension Model {
     /// The `foreignField` should refer to the field
     /// on the child entity that contains the parent's ID.
     public func children<Child: Model>(
-        foreignField: QueryField = Child.field(Self.foreignIDKey)
+        _ parentForeignIDKey: Children<Self, Child>.ParentForeignIDKey
     ) -> Children<Self, Child> {
         return Children(
             parent: self,
-            foreignField: foreignField
+            parentForeignIDKey: parentForeignIDKey
         )
     }
 }
