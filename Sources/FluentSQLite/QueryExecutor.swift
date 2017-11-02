@@ -52,6 +52,8 @@ extension SQLiteConnection: QueryExecutor {
 
 
 extension SQLiteDataEncoder {
+    /// Converts a SQL bind value into SQLite data.
+    /// This method applies wildcards if necessary.
     fileprivate func makeSQLiteData(_ bind: BindValue) throws -> SQLiteData {
         try bind.encodable.encode(to: self)
         switch bind.method {
