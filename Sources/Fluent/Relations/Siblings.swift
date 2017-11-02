@@ -66,14 +66,14 @@ public struct Siblings<Base: Model, Related: Model, Through: Pivot> {
     /// Create a query for the parent.
     public func query(on executor: QueryExecutor) throws -> QueryBuilder<Related> {
         return try executor.query(Related.self)
-            .join(joined: relatedPivotField)
+            .join(field: relatedPivotField)
             .filter(basePivotField == base.requireID())
     }
 }
 
 // MARK: ModifiablePivot
 
-extension Siblings where Through: ModifiablePivot {
+extension Siblings {
     /// Returns true if the supplied model is attached
     /// to this relationship.
     public func isAttached(_ model: Related, on executor: QueryExecutor) throws -> Future<Bool> {

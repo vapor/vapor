@@ -11,10 +11,16 @@ public protocol Pivot: Model {
     /// note: a pivot with opposite right/left is distinct.
     associatedtype Right: Model
 
+    /// Key path type for left id key
     typealias LeftIDKey = ReferenceWritableKeyPath<Self, Left.ID>
+
+    /// Key for accessing left id
     static var leftIDKey: LeftIDKey { get }
 
+    /// Key path type for right id key
     typealias RightIDKey = ReferenceWritableKeyPath<Self, Right.ID>
+
+    /// Key for accessing right id
     static var rightIDKey: RightIDKey { get }
 }
 
@@ -22,7 +28,7 @@ public protocol Pivot: Model {
 /// the left and right models. This allows
 /// Fluent to automatically create pivots for
 /// extended functionality.
-/// ex: attach, detach, isAttached
+/// ex: attach
 /// note: pivots with equal left and right types
 /// cannot take advantage of this protocol due to
 /// ambiguous type errors.
