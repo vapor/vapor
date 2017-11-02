@@ -29,7 +29,7 @@ final class DataTests: XCTestCase {
 
         XCTAssertEqual(
             GeneralSQLSerializer.shared.serialize(data: select),
-            "SELECT `foo`.* FROM `foo` WHERE `id` = ? AND `foo`.`name` = ?"
+            "SELECT `foo`.* FROM `foo` WHERE (`id` = ? AND `foo`.`name` = ?)"
         )
     }
 

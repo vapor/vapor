@@ -1,6 +1,7 @@
 import Async
 import Fluent
 import SQLite
+import FluentSQLite
 import XCTest
 
 final class ModelTests: XCTestCase {
