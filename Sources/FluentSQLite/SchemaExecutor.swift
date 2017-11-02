@@ -26,7 +26,7 @@ extension SQLiteConnection: SchemaExecutor {
 
         let schemaQuery = SchemaQuery(statement: schemaStatement, table: schema.entity)
         let string = SQLiteSQLSerializer()
-            .serialize(query: .schema(schemaQuery))
+            .serialize(schema: schemaQuery)
 
         return makeQuery(string).execute()
     }

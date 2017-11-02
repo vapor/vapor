@@ -13,7 +13,7 @@ extension SQLiteConnection: QueryExecutor {
             /// create sqlite query
             let (dataQuery, encodables) = query.makeDataQuery()
             let sqlString = SQLiteSQLSerializer()
-                .serialize(query: .data(dataQuery))
+                .serialize(data: dataQuery)
             let sqliteQuery = self.makeQuery(sqlString)
 
             /// encode data

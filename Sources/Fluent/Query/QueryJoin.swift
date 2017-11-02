@@ -10,18 +10,13 @@
 /// joinedKey = A.b_id
 /// baseKey = B.id
 public struct QueryJoin {
-    /// table/collection that will be
-    /// accepting the joined data
-    public let baseEntity: String
-
-    /// table/collection that will be
-    /// joining the base data
-    public let joinedEntity: String
-
     /// Join type.
     /// See QueryJoinMethod.
     public let method: QueryJoinMethod
 
+    /// table/collection that will be
+    /// accepting the joined data
+    ///
     /// The key from the base table that will
     /// be compared to the key from the joined
     /// table during the join.
@@ -29,8 +24,11 @@ public struct QueryJoin {
     /// base        | joined
     /// ------------+-------
     /// <baseKey>   | base_id
-    public let baseKey: String
+    public let base: QueryField
 
+    /// table/collection that will be
+    /// joining the base data
+    ///
     /// The key from the joined table that will
     /// be compared to the key from the base
     /// table during the join.
@@ -38,21 +36,17 @@ public struct QueryJoin {
     /// base | joined
     /// -----+-------
     /// id   | <joined_key>
-    public let joinedKey: String
+    public let joined: QueryField
 
     /// Create a new Join
-    public init<Base: Model, Joined: Model>(
+    public init(
         method: QueryJoinMethod,
-        base: Base.Type = Base.self,
-        joined: Joined.Type = Joined.self,
-        baseKey: String = Base.idKey,
-        joinedKey: String = Base.foreignIDKey
+        base: QueryField,
+        joined: QueryField
     ) {
         self.method = method
-        self.baseEntity = base.entity
-        self.joinedEntity = joined.entity
-        self.baseKey = baseKey
-        self.joinedKey = joinedKey
+        self.base = base
+        self.joined = joined
     }
 }
 
@@ -72,16 +66,27 @@ extension QueryBuilder {
     /// Join another model to this query builder.
     public func join<Joined: Model>(
         _ model: Joined.Type,
-        method: QueryJoinMethod = .inner,
-        baseKey: String = M.idKey,
-        joinedKey: String = M.foreignIDKey
+        method: QueryJoinMethod = .inner
     ) -> Self {
         let join = QueryJoin(
             method: method,
-            base: M.self,
-            joined: Joined.self,
-            baseKey: baseKey,
-            joinedKey: joinedKey
+            base: M.field(Joined.foreignIDKey),
+            joined: Joined.field(Joined.idKey)
+        )
+        query.joins.append(join)
+        return self
+    }
+
+    /// Join another model to this query builder.
+    public func join(
+        method: QueryJoinMethod = .inner,
+        base: QueryField,
+        joined: QueryField
+    ) -> Self {
+        let join = QueryJoin(
+            method: method,
+            base: base,
+            joined: joined
         )
         query.joins.append(join)
         return self

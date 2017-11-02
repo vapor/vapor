@@ -9,17 +9,13 @@ extension SQLSerializer {
         var statement: [String] = []
         statement.append("JOIN")
 
-        let foreignTable = makeEscapedString(from: join.foreignTable)
+        let foreignTable = makeEscapedString(from: join.foreign.table ?? "") // FIXME: this is an error
         statement.append(foreignTable)
         statement.append("ON")
 
-        let localColumn = DataColumn(table: join.table, name: join.column)
-        statement.append(serialize(column: localColumn))
-
+        statement.append(serialize(column: join.local))
         statement.append("=")
-
-        let foreignColumn = DataColumn(table: join.foreignTable, name: join.foreignColumn)
-        statement.append(serialize(column: foreignColumn))
+        statement.append(serialize(column: join.foreign))
 
         return statement.joined(separator: " ")
     }

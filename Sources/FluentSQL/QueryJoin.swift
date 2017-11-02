@@ -4,12 +4,10 @@ import SQL
 extension QueryJoin {
     /// Convert query join to sql join
     internal func makeDataJoin() -> DataJoin {
-        return .init(
+        return DataJoin(
             method: method.makeDataJoinMethod(),
-            table: baseEntity,
-            column: baseKey,
-            foreignTable: joinedEntity,
-            foreignColumn: joinedKey
+            local: base.makeDataColumn(),
+            foreign: joined.makeDataColumn()
         )
     }
 }

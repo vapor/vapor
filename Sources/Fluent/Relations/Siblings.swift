@@ -34,34 +34,46 @@ public struct Siblings<From: Model, To: Model, Through: Pivot> {
     /// should be related to.
     public let from: From
 
-    /// The From model's foreign id key.
-    /// This is usually From.foreignIDKey.
-    /// note: This is used to filter the pivot.
-    public let fromForeignIDKey: String
+    /// The From model's local id field.
+    /// ex: From.id
+    public let fromIDField: QueryField
 
-    /// The To model's foreign id key.
-    /// This is usually To.foreignIDKey.
-    /// note: This is used to join the pivot.
-    public let toForeignIDKey: String
+    /// The To model's local id field
+    /// ex: To.id
+    public let toIDField: QueryField
+
+    /// The From model's foreign id field
+    /// that appears on the pivot.
+    /// ex: Through.fromID
+    public let fromForeignIDField: QueryField
+
+    /// The To model's foreign id field
+    /// that appears on the pivot.
+    /// ex: Through.toID
+    public let toForeignIDField: QueryField
 
     /// Create a new Siblings relation.
     public init(
         from: From,
         to: To.Type = To.self,
         through: Through.Type = Through.self,
-        fromForeignIDKey: String = From.foreignIDKey,
-        toForeignIDKey: String = To.foreignIDKey
+        fromIDField: QueryField = From.field(From.idKey),
+        toIDField: QueryField = To.field(To.idKey),
+        fromForeignIDField: QueryField = Through.field(From.foreignIDKey),
+        toForeignIDField: QueryField = Through.field(To.foreignIDKey)
     ) {
         self.from = from
-        self.fromForeignIDKey = fromForeignIDKey
-        self.toForeignIDKey = toForeignIDKey
+        self.fromIDField = fromIDField
+        self.toIDField = toIDField
+        self.fromForeignIDField = fromForeignIDField
+        self.toForeignIDField = toForeignIDField
     }
 
     /// Create a query for the parent.
     public func query(on executor: QueryExecutor) throws -> QueryBuilder<To> {
         return try executor.query(To.self)
-            .join(Through.self, joinedKey: toForeignIDKey)
-            .filter(Through.field(fromForeignIDKey) == from.requireID())
+            .join(base: toIDField, joined: toForeignIDField)
+            .filter(fromForeignIDField == from.requireID())
     }
 }
 
@@ -72,8 +84,8 @@ extension Siblings where Through: ModifiablePivot {
     /// to this relationship.
     public func isAttached(_ model: To, on executor: QueryExecutor) throws -> Future<Bool> {
         return try executor.query(Through.self)
-            .filter(From.field(fromForeignIDKey) == from.requireID())
-            .filter(To.field(toForeignIDKey) == model.requireID())
+            .filter(fromForeignIDField == from.requireID())
+            .filter(toForeignIDField == model.requireID())
             .first()
             .map { $0 != nil }
     }
@@ -82,8 +94,8 @@ extension Siblings where Through: ModifiablePivot {
     /// if it was attached.
     public func detach(_ model: To, on executor: QueryExecutor) throws -> Future<Void> {
         return try executor.query(Through.self)
-            .filter(From.field(fromForeignIDKey) == from.requireID())
-            .filter(To.field(toForeignIDKey) == model.requireID())
+            .filter(fromForeignIDField == from.requireID())
+            .filter(toForeignIDField == model.requireID())
             .delete()
     }
 }
@@ -122,13 +134,17 @@ extension Model {
     public func siblings<To: Model, Through: Pivot>(
         to: To.Type = To.self,
         through: Through.Type = Through.self,
-        fromForeignIDKey: String = Self.foreignIDKey,
-        toForeignIDKey: String = To.foreignIDKey
+        fromIDField: QueryField = Self.field(Self.idKey),
+        toIDField: QueryField = To.field(To.idKey),
+        fromForeignIDField: QueryField = Through.field(Self.foreignIDKey),
+        toForeignIDField: QueryField = Through.field(To.foreignIDKey)
     ) -> Siblings<Self, To, Through> {
         return Siblings(
             from: self,
-            fromForeignIDKey: fromForeignIDKey,
-            toForeignIDKey: toForeignIDKey
+            fromIDField: fromIDField,
+            toIDField: toIDField,
+            fromForeignIDField: fromForeignIDField,
+            toForeignIDField: toForeignIDField
         )
     }
 }
