@@ -29,51 +29,39 @@ import Async
 ///
 /// It is recommended that you use your own types conforming to `Pivot`
 /// for Siblings pivots as you cannot add additional fields to a `BasicPivot`.
-public struct Siblings<From: Model, To: Model, Through: Pivot> {
+public struct Siblings<Base: Model, Related: Model, Through: Pivot> {
     /// The base model which all fetched models
     /// should be related to.
-    public let from: From
+    public let base: Base
 
-    /// The From model's local id field.
-    /// ex: From.id
-    public let fromIDField: QueryField
-
-    /// The To model's local id field
-    /// ex: To.id
-    public let toIDField: QueryField
-
-    /// The From model's foreign id field
+    /// The base model's foreign id field
     /// that appears on the pivot.
-    /// ex: Through.fromID
-    public let fromForeignIDField: QueryField
+    /// ex: Through.baseID
+    public let basePivotField: QueryField
 
-    /// The To model's foreign id field
+    /// The related model's foreign id field
     /// that appears on the pivot.
-    /// ex: Through.toID
-    public let toForeignIDField: QueryField
+    /// ex: Through.relatedID
+    public let relatedPivotField: QueryField
 
     /// Create a new Siblings relation.
     public init(
-        from: From,
-        to: To.Type = To.self,
+        base: Base,
+        related: Related.Type = Related.self,
         through: Through.Type = Through.self,
-        fromIDField: QueryField = From.field(From.idKey),
-        toIDField: QueryField = To.field(To.idKey),
-        fromForeignIDField: QueryField = Through.field(From.foreignIDKey),
-        toForeignIDField: QueryField = Through.field(To.foreignIDKey)
+        basePivotField: QueryField = Through.field(Base.foreignIDKey),
+        relatedPivotField: QueryField = Through.field(Related.foreignIDKey)
     ) {
-        self.from = from
-        self.fromIDField = fromIDField
-        self.toIDField = toIDField
-        self.fromForeignIDField = fromForeignIDField
-        self.toForeignIDField = toForeignIDField
+        self.base = base
+        self.basePivotField = basePivotField
+        self.relatedPivotField = relatedPivotField
     }
 
     /// Create a query for the parent.
-    public func query(on executor: QueryExecutor) throws -> QueryBuilder<To> {
-        return try executor.query(To.self)
-            .join(base: toIDField, joined: toForeignIDField)
-            .filter(fromForeignIDField == from.requireID())
+    public func query(on executor: QueryExecutor) throws -> QueryBuilder<Related> {
+        return try executor.query(Related.self)
+            .join(field: relatedPivotField)
+            .filter(basePivotField == base.requireID())
     }
 }
 
@@ -82,30 +70,30 @@ public struct Siblings<From: Model, To: Model, Through: Pivot> {
 extension Siblings where Through: ModifiablePivot {
     /// Returns true if the supplied model is attached
     /// to this relationship.
-    public func isAttached(_ model: To, on executor: QueryExecutor) throws -> Future<Bool> {
+    public func isAttached(_ model: Related, on executor: QueryExecutor) throws -> Future<Bool> {
         return try executor.query(Through.self)
-            .filter(fromForeignIDField == from.requireID())
-            .filter(toForeignIDField == model.requireID())
+            .filter(basePivotField == base.requireID())
+            .filter(relatedPivotField == model.requireID())
             .first()
             .map { $0 != nil }
     }
 
     /// Detaches the supplied model from this relationship
     /// if it was attached.
-    public func detach(_ model: To, on executor: QueryExecutor) throws -> Future<Void> {
+    public func detach(_ model: Related, on executor: QueryExecutor) throws -> Future<Void> {
         return try executor.query(Through.self)
-            .filter(fromForeignIDField == from.requireID())
-            .filter(toForeignIDField == model.requireID())
+            .filter(basePivotField == base.requireID())
+            .filter(relatedPivotField == model.requireID())
             .delete()
     }
 }
 
 /// Left-side
-extension Siblings where Through: ModifiablePivot, Through.Left == From, Through.Right == To {
+extension Siblings where Through: ModifiablePivot, Through.Left == Base, Through.Right == Related {
     /// Attaches the model to this relationship.
-    public func attach(_ model: To, on executor: QueryExecutor) -> Future<Void> {
+    public func attach(_ model: Related, on executor: QueryExecutor) -> Future<Void> {
         do {
-            let pivot = try Through(from, model)
+            let pivot = try Through(base, model)
             return pivot.save(on: executor)
         } catch {
             return Future(error: error)
@@ -114,11 +102,11 @@ extension Siblings where Through: ModifiablePivot, Through.Left == From, Through
 }
 
 /// Right-side
-extension Siblings where Through: ModifiablePivot, Through.Left == To, Through.Right == From {
+extension Siblings where Through: ModifiablePivot, Through.Left == Related, Through.Right == Base {
     /// Attaches the model to this relationship.
-    public func attach(_ model: To, on executor: QueryExecutor) -> Future<Void> {
+    public func attach(_ model: Related, on executor: QueryExecutor) -> Future<Void> {
         do {
-            let pivot = try Through(model, from)
+            let pivot = try Through(model, base)
             return pivot.save(on: executor)
         } catch {
             return Future(error: error)
@@ -131,20 +119,30 @@ extension Siblings where Through: ModifiablePivot, Through.Left == To, Through.R
 
 extension Model {
     /// Create a siblings relation for this model.
-    public func siblings<To: Model, Through: Pivot>(
-        to: To.Type = To.self,
+    ///
+    /// Unless you are doing custom keys, you should not need to
+    /// pass any parameters to this function.
+    ///
+    ///     class Toy: Model {
+    ///         var pets: Siblings<Toy, Pet, PetToyPivot> {
+    ///             return siblings()
+    ///         }
+    ///     }
+    ///
+    /// See Siblings class documentation for more information
+    /// about the many parameters. They can be confusing at first!
+    ///
+    /// Note: From is assumed to be the model you are calling this method on.
+    public func siblings<Related: Model, Through: Pivot>(
+        related: Related.Type = Related.self,
         through: Through.Type = Through.self,
-        fromIDField: QueryField = Self.field(Self.idKey),
-        toIDField: QueryField = To.field(To.idKey),
-        fromForeignIDField: QueryField = Through.field(Self.foreignIDKey),
-        toForeignIDField: QueryField = Through.field(To.foreignIDKey)
-    ) -> Siblings<Self, To, Through> {
+        basePivotField: QueryField = Through.field(Self.foreignIDKey),
+        relatedPivotField: QueryField = Through.field(Related.foreignIDKey)
+    ) -> Siblings<Self, Related, Through> {
         return Siblings(
-            from: self,
-            fromIDField: fromIDField,
-            toIDField: toIDField,
-            fromForeignIDField: fromForeignIDField,
-            toForeignIDField: toForeignIDField
+            base: self,
+            basePivotField: basePivotField,
+            relatedPivotField: relatedPivotField
         )
     }
 }

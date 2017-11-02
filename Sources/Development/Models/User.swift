@@ -49,7 +49,7 @@ final class User: Model, ResponseRepresentable {
     }
 
     var pets: Children<User, Pet> {
-        return children(foreignKey: "ownerID")
+        return children(foreignField: User.field("ownerID"))
     }
 }
 

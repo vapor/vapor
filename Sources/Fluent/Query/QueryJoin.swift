@@ -79,14 +79,14 @@ extension QueryBuilder {
 
     /// Join another model to this query builder.
     public func join(
-        method: QueryJoinMethod = .inner,
-        base: QueryField,
-        joined: QueryField
+        field: QueryField,
+        baseField: QueryField = M.field(M.idKey),
+        method: QueryJoinMethod = .inner
     ) -> Self {
         let join = QueryJoin(
             method: method,
-            base: base,
-            joined: joined
+            base: baseField,
+            joined: field
         )
         query.joins.append(join)
         return self
