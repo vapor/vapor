@@ -4,7 +4,7 @@ import Foundation
 ///
 /// Each variable represents a claim
 public protocol JWTPayload: Codable {
-    
+    func verify() throws
 }
 
 /// A claim is a codable top-level property that can be verified against the current circumstances

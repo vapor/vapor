@@ -2,38 +2,37 @@ import XCTest
 @testable import JWT
 
 class JWSTests: XCTestCase {
-    func testSuccess(for header: Header) throws {
+    func testSuccess(for header: JWTHeader) throws {
         let secret = Data("aaaaaaaabvbcas".utf8)
         
-        let signer = Signer<AuthenticationMessage>(secret: secret, identifier: "xctest")
+        let signer = JWTSigner(secret: secret, identifier: "xctest")
         
-        let signature = try JSONWebSignature(header: .hs256(), payload: AuthenticationMessage(token: "test"), signer: signer).sign()
+        let token = AuthenticationMessage(token: "test")
+        let signature = try signer.signPayload(token, using: .hs256())
+        let signedString = String(data: signature, encoding: .utf8) ?? ""
         
-        let signedString = try JSONWebSignature(header: .hs256(), payload: AuthenticationMessage(token: "test"), signer: signer).signedString()
+        var decoded = try AuthenticationMessage(from: signature, verifiedWith: signer)
+        XCTAssertEqual(decoded.token, "test")
         
-        XCTAssertEqual(Data(signedString.utf8), signature)
-        
-        var decoded = try JSONWebSignature<AuthenticationMessage>(from: signature, verifyingAs: signer)
-        XCTAssertEqual(decoded.payload.token, "test")
-        
-        decoded = try JSONWebSignature<AuthenticationMessage>(from: signedString, verifyingAs: signer)
-        XCTAssertEqual(decoded.payload.token, "test")
+        decoded = try AuthenticationMessage(from: signedString, verifiedWith: signer)
+        XCTAssertEqual(decoded.token, "test")
     }
     
-    func invalidSignature(for header: Header) throws {
+    func invalidSignature(for header: JWTHeader) throws {
         let secret = Data("aaaaaaaabvbcas".utf8)
-        let signer = Signer<AuthenticationMessage>(secret: secret, identifier: "xctest")
+        let signer = JWTSigner(secret: secret, identifier: "xctest")
         
         let otherSecret = Data("dasdasdassad".utf8)
-        let otherSigner = Signer<AuthenticationMessage>(secret: otherSecret, identifier: "xctest")
+        let otherSigner = JWTSigner(secret: otherSecret, identifier: "xctest")
         
-        let signature = try JSONWebSignature(header: header, payload: AuthenticationMessage(token: "test"), signer: signer).sign()
+        let token = AuthenticationMessage(token: "test")
+        let signature = try signer.signPayload(token, using: header)
         
-        XCTAssertThrowsError(try JSONWebSignature<AuthenticationMessage>(from: signature, verifyingAs: otherSigner))
+        XCTAssertThrowsError(try AuthenticationMessage(from: signature, verifiedWith: otherSigner))
     }
     
     func testBasics() throws {
-        let headers: [Header] = [
+        let headers: [JWTHeader] = [
             .hs256(),
             .hs384(),
             .hs512()
@@ -47,7 +46,7 @@ class JWSTests: XCTestCase {
     
     func testTimeClaims() throws {
         let secret = Data("aaaaaaaabvbcas".utf8)
-        let signer = Signer<TimeClaim>(secret: secret, identifier: "xctest")
+        let signer = JWTSigner(secret: secret, identifier: "xctest")
         
         let alreadyExpired = TimeClaim(
             exp: Date().addingTimeInterval(-5),
@@ -73,13 +72,12 @@ class JWSTests: XCTestCase {
         )
         
         func test(claim: TimeClaim, expectingFailure: Bool) throws {
-            let jwt = JSONWebSignature(header: .hs256(), payload: claim, signer: signer)
-            let token = try jwt.sign()
+            let token = try signer.signPayload(claim, using: .hs256())
             
             if expectingFailure {
-                XCTAssertThrowsError(try JSONWebSignature(from: token, verifyingAs: signer))
+                XCTAssertThrowsError(try TimeClaim(from: token, verifiedWith: signer))
             } else {
-                XCTAssertNoThrow(try JSONWebSignature(from: token, verifyingAs: signer))
+                XCTAssertNoThrow(try TimeClaim(from: token, verifiedWith: signer))
             }
         }
         
@@ -94,20 +92,18 @@ class JWSTests: XCTestCase {
     func testAudienceClaim() throws {
         let secret = Data("aaaaaaaabvbcas".utf8)
         
-        let signer = Signer<AudienceBasedClaim>(secret: secret, identifier: "signer")
-        let verifier = Signer<AudienceBasedClaim>(secret: secret, identifier: "verifier")
+        let signer = JWTSigner(secret: secret, identifier: "signer")
+        let verifier = JWTSigner(secret: secret, identifier: "verifier")
         
         let validClaim = AudienceBasedClaim(aud: "verifier")
         let invalidClaim = AudienceBasedClaim(aud: "fake")
         
-        let validJWT = JSONWebSignature(header: .hs256(), payload: validClaim, signer: signer)
-        let validToken = try validJWT.sign()
+        let validToken = try signer.signPayload(validClaim, using: .hs256())
         
-        let invalidJWT = JSONWebSignature(header: .hs256(), payload: invalidClaim, signer: signer)
-        let invalidToken = try invalidJWT.sign()
+        let invalidToken = try signer.signPayload(invalidClaim, using: .hs256())
         
-        XCTAssertThrowsError(try JSONWebSignature(from: invalidToken, verifyingAs: verifier))
-        XCTAssertNoThrow(try JSONWebSignature(from: validToken, verifyingAs: verifier))
+        XCTAssertThrowsError(try AudienceBasedClaim(from: invalidToken, verifiedWith: verifier))
+        XCTAssertNoThrow(try AudienceBasedClaim(from: validToken, verifiedWith: verifier))
     }
     
     static var allTests: [(String, (JWSTests) -> () throws -> Void)] = [
@@ -117,7 +113,9 @@ class JWSTests: XCTestCase {
     ]
 }
 
-struct TimeClaim: JWT, ExpirationClaim, NotBeforeClaim, IssuedAtClaim {
+struct TimeClaim: JWTPayload, ExpirationClaim, NotBeforeClaim, IssuedAtClaim {
+    func verify() throws {}
+    
     var exp: Date
     var nbf: Date
     var iat = Date()
@@ -128,7 +126,9 @@ struct TimeClaim: JWT, ExpirationClaim, NotBeforeClaim, IssuedAtClaim {
     }
 }
 
-struct AudienceBasedClaim: JWT, AudienceClaim {
+struct AudienceBasedClaim: JWTPayload, AudienceClaim {
+    func verify() throws {}
+    
     var aud: String
     
     init(aud: String) {
@@ -136,6 +136,8 @@ struct AudienceBasedClaim: JWT, AudienceClaim {
     }
 }
 
-struct AuthenticationMessage: JWT {
+struct AuthenticationMessage: JWTPayload {
+    func verify() throws {}
+    
     var token: String
 }

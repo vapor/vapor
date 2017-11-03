@@ -26,22 +26,39 @@ enum JWTError: Error {
     case invalidAudience
 }
 
-public struct Signer<C: JWT> {
-    public typealias Verifier = ((C) throws -> Void)
-    
+public struct JWTSigner {
     var secret: Data
     var identifier: String
-    
-    public var verifications = [Verifier]()
     
     init(secret: Data, identifier: String) {
         self.secret = secret
         self.identifier = identifier
     }
+    
+    /// Signs the message and returns the UTF8 of this message
+    ///
+    /// Can be transformed into a String like so:
+    ///
+    /// ```swift
+    /// let signed = try jws.sign()
+    /// let signedString = String(bytes: signed, encoding: .utf8)
+    /// ```
+    public func signPayload<C: JWTPayload>(_ payload: C, using header: JWTHeader) throws -> Data {
+        let headerData = try JSONEncoder().encode(header)
+        let encodedHeader = Base64Encoder.encode(data: headerData)
+        
+        let payloadData = try JSONEncoder().encode(payload)
+        let encodedPayload = Base64Encoder.encode(data: payloadData)
+        
+        let signature = try header.algorithm.sign(Data(encodedHeader + [0x2e] + encodedPayload), with: secret)
+        let encodedSignature = Base64Encoder.encode(data: signature)
+        
+        return encodedHeader + [0x2e] + encodedPayload + [0x2e] + encodedSignature
+    }
 }
 
 /// The header (details) used for signing and processing this JSON Web Signature
-public struct Header: Codable {
+public struct JWTHeader: Codable {
     enum CodingKeys: String, CodingKey {
         case algorithm = "alg"
         case signatureType = "typ"
@@ -85,78 +102,14 @@ public struct Header: Codable {
 }
 
 /// JSON Web Signature (signature based JSON Web Token)
-public struct JSONWebSignature<C: JWT> {
-    /// The headers linked to this message
-    ///
-    /// A Web Token can be signed by multiple headers
-    ///
-    /// Currently we don't support anything other than 1 header
-    private var headers: [Header]
-    
-    /// The JSON payload within this message
-    public var payload: C
-    
-    /// The secret that is used by all authorized parties to sign messages
-    private var signer: Signer<C>
-    
-    /// Signs the message and returns the UTF8 encoded String of this message
-    public func signedString(_ header: Header? = nil) throws -> String {
-        let signed = try sign(header)
-        
-        guard let string = String(bytes: signed, encoding: .utf8) else {
-            throw JWTError.unsupported
-        }
-        
-        return string
-    }
-    
-    /// Signs the message and returns the UTF8 of this message
-    ///
-    /// Can be transformed into a String like so:
-    ///
-    /// ```swift
-    /// let signed = try jws.sign()
-    /// let signedString = String(bytes: signed, encoding: .utf8)
-    /// ```
-    public func sign(_ header: Header? = nil) throws -> Data {
-        let usedHeader: Header
-        
-        if let header = header {
-            usedHeader = header
-        } else {
-            guard let header = headers.first else {
-                throw JWTError.unsupported
-            }
-            
-            usedHeader = header
-        }
-        
-        let headerData = try JSONEncoder().encode(usedHeader)
-        let encodedHeader = Base64Encoder.encode(data: headerData)
-        
-        let payloadData = try JSONEncoder().encode(payload)
-        let encodedPayload = Base64Encoder.encode(data: payloadData)
-        
-        let signature = try usedHeader.algorithm.sign(Data(encodedHeader + [0x2e] + encodedPayload), with: signer.secret)
-        let encodedSignature = Base64Encoder.encode(data: signature)
-        
-        return encodedHeader + [0x2e] + encodedPayload + [0x2e] + encodedSignature
-    }
-    
-    /// Creates a new JSON Web Signature from predefined data
-    public init(header: Header, payload: C, signer: Signer<C>) {
-        self.headers = [header]
-        self.payload = payload
-        self.signer = signer
-    }
-    
+extension JWTPayload {
     /// Parses a JWT String into a JSON Web Signature
     ///
     /// Verifies using the provided secret
     ///
     /// - throws: When the signature is invalid or the JWT is invalid
-    public init(from string: String, verifyingAs signer: Signer<C>) throws {
-        try self.init(from: Data(string.utf8), verifyingAs: signer)
+    public init(from string: String, verifiedWith signer: JWTSigner) throws {
+        try self.init(from: Data(string.utf8), verifiedWith: signer)
     }
     
     /// Parses a JWT UTF8 String into a JSON Web Signature
@@ -164,70 +117,43 @@ public struct JSONWebSignature<C: JWT> {
     /// Verifies using the provided secret
     ///
     /// - throws: When the signature is invalid or the JWT is invalid
-    public init(from string: Data, verifyingAs signer: Signer<C>) throws {
-        let parts = string.split(separator: 0x2e)
-        
-        self.signer = signer
+    public init(from data: Data, verifiedWith signer: JWTSigner) throws {
+        let parts = data.split(separator: 0x2e)
         
         switch parts.count {
         case 3:
             let headerData = try Base64Decoder.decode(data: Data(parts[0]))
             let payloadData = try Base64Decoder.decode(data: Data(parts[1]))
             
-            let header = try JSONDecoder().decode(Header.self, from: headerData)
-            let payload = try JSONDecoder().decode(C.self, from: payloadData)
+            let header = try JSONDecoder().decode(JWTHeader.self, from: headerData)
+            let payload = try JSONDecoder().decode(Self.self, from: payloadData)
             
-            self.headers = []
-            self.payload = payload
+            self = payload
             
-            guard try sign(header) == string else {
+            guard try signer.signPayload(self, using: header) == data else {
                 throw JWTError.invalidSignature
             }
         default:
             throw JWTError.invalidJWS
         }
         
-        try self.verify(claim: payload)
-    }
-    
-    fileprivate func verify(claim: C) throws {
-        if let claim = claim as? ExpirationClaim {
-            guard claim.exp > Date() else {
-                throw JWTError.claimExpired
-            }
-        }
-        
-        if let claim = claim as? NotBeforeClaim {
-            guard Date() > claim.nbf else {
-                throw JWTError.claimedTooSoon
-            }
-        }
-        
-        if let claim = claim as? AudienceClaim {
-            guard claim.aud == signer.identifier else {
-                throw JWTError.invalidAudience
-            }
-        }
-        
-        for verify in signer.verifications {
-            try verify(claim)
-        }
+        try self.verify()
     }
 }
 
-extension Header {
+extension JWTHeader {
     /// Creates a simple HMAC SHA256 header
-    public static func hs256() -> Header {
-        return Header(algorithm: .HS256, signatureType: nil, payloadType: nil, criticalFields: nil)
+    public static func hs256() -> JWTHeader {
+        return JWTHeader(algorithm: .HS256, signatureType: nil, payloadType: nil, criticalFields: nil)
     }
     
     /// Creates a simple HMAC SHA384 header
-    public static func hs384() -> Header {
-        return Header(algorithm: .HS384, signatureType: nil, payloadType: nil, criticalFields: nil)
+    public static func hs384() -> JWTHeader {
+        return JWTHeader(algorithm: .HS384, signatureType: nil, payloadType: nil, criticalFields: nil)
     }
     
     /// Creates a simple HMAC SHA512 header
-    public static func hs512() -> Header {
-        return Header(algorithm: .HS512, signatureType: nil, payloadType: nil, criticalFields: nil)
+    public static func hs512() -> JWTHeader {
+        return JWTHeader(algorithm: .HS512, signatureType: nil, payloadType: nil, criticalFields: nil)
     }
 }
