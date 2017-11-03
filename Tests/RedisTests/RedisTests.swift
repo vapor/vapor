@@ -62,28 +62,28 @@ class RedisTests: XCTestCase {
     func testPipeline() throws {
         let connection = try makeClient()
         _ = try connection.delete(keys: ["*"]).blockingAwait(timeout: .seconds(1))
-        let result =  try connection.pipeline {
-            [
-                .array([.bulkString("SET"), .bulkString("hello"), .bulkString("world")]),
-                .array([.bulkString("SET"), .bulkString("hello1"), .bulkString("world")])
-            ]
-            
-            }.blockingAwait(timeout: .seconds(1))
+        
+        let pipeline = connection.makePipeline()
+        
+        let result = try pipeline
+            .enqueue(command: "SET", arguments: [.bulkString("hello"), .bulkString("world")])
+            .enqueue(command: "SET", arguments: [.bulkString("hello1"), .bulkString("world")])
+            .execute()
+            .blockingAwait(timeout: .seconds(1))
+        
         
         XCTAssertEqual(result[0].string, "+OK\r")
         XCTAssertEqual(result[1].string, "+OK\r")
         
-        let deleted = try connection.pipeline {
-            [
-                .array([.bulkString("DEL"), .bulkString("hello")]),
-                .array([.bulkString("DEL"), .bulkString("hello1")])
-            ]
-            
-            }.blockingAwait(timeout: .seconds(1))
+        
+        let deleted = try pipeline
+            .enqueue(command: "DEL", arguments: [.bulkString("hello")])
+            .enqueue(command: "DEL", arguments: [.bulkString("hello1")])
+            .execute()
+            .blockingAwait(timeout: .seconds(1))
         
         XCTAssertEqual(deleted[0].int, 1)
         XCTAssertEqual(deleted[1].int, 1)
-
     }
     
     
