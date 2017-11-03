@@ -20,7 +20,7 @@ public protocol Hash: class {
     /// The amount of bytes currently inside the `remainder` pointer.
     var containedRemainder: Int { get set }
     
-    /// A buffer that keeps track of any bytes that cannot be processed until the chunk is full.  Size *must* be `chunkSize - 1`
+    /// A buffer that keeps track of any bytes that cannot be processed until the chunk is full.
     var remainder: MutableBytesPointer { get }
     
     /// Updates the hash using exactly one `chunkSize` of bytes referenced by a pointer
@@ -95,12 +95,14 @@ extension Hash {
             length.reverse()
         }
         
-        var lastBlocks: [UInt8]
+        var lastBlocks = [UInt8]()
+        
+        if containedRemainder > 0 {
+            lastBlocks += Array(ByteBuffer(start: remainder, count: containedRemainder))
+        }
         
         if let buffer = buffer {
             lastBlocks = Array(buffer)
-        } else {
-            lastBlocks = []
         }
         
         lastBlocks = lastBlocks + [0x80] + Data(repeating: 0, count: zeroes) + length
@@ -121,7 +123,7 @@ extension Hash {
     ///
     /// Doesn't finalize the hash
     public func update(_ buffer: ByteBuffer) {
-        totalLength = totalLength &+ UInt64(buffer.count)
+        totalLength = totalLength &+ (UInt64(buffer.count) &* 8)
         
         var buffer = buffer
         
@@ -138,6 +140,8 @@ extension Hash {
                 memcpy(remainder.advanced(by: containedRemainder), bufferPointer, needed)
                 
                 buffer = UnsafeBufferPointer(start: bufferPointer.advanced(by: needed), count: buffer.count &- needed)
+                update(pointer: remainder)
+                containedRemainder = 0
             } else {
                 memcpy(remainder.advanced(by: containedRemainder), bufferPointer, buffer.count)
                 return

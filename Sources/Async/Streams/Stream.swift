@@ -1,6 +1,11 @@
 /// A stream is both an InputStream and an OutputStream
+///
+/// http://localhost:8000/async/streams-introduction/#implementing-an-example-stream
 public typealias Stream = InputStream & OutputStream
 
+/// A type that accepts a stream of `Input`
+///
+/// http://localhost:8000/async/streams-introduction/#implementing-an-example-stream
 public protocol InputStream: BaseStream {
     /// The input type for this stream.
     /// For example: Request, ByteBuffer, Client
@@ -10,6 +15,9 @@ public protocol InputStream: BaseStream {
     func inputStream(_ input: Input)
 }
 
+/// A Stream that can be closed and can be listened to for closing
+///
+///
 public protocol ClosableStream: BaseStream {
     typealias CloseHandler = (() -> ())
     
@@ -20,6 +28,9 @@ public protocol ClosableStream: BaseStream {
     var onClose: CloseHandler? { get set }
 }
 
+/// A type that emits `Ouptut` asynchronously and at unspecified moments
+///
+/// http://localhost:8000/async/streams-introduction/#implementing-an-example-stream
 public protocol OutputStream: BaseStream {
     /// The output type for this stream.
     /// For example: Request, ByteBuffer, Client
@@ -49,21 +60,28 @@ public protocol BaseStream: class {
 
 extension OutputStream {
     /// Drains the output stream into a closure.
+    ///
+    /// http://localhost:8000/async/streams-basics/#draining-streams
     @discardableResult
     public func drain(_ handler: @escaping OutputHandler) -> Self {
         self.outputStream = handler
         return self
     }
 
-    /// Drains the output stream into a closure.
+    /// Drains the output stream into a closure
+    ///
+    /// http://localhost:8000/async/streams-basics/#catching-stream-errors
     @discardableResult
     public func `catch`(_ handler: @escaping ErrorHandler) -> Self {
         self.errorStream = handler
         return self
     }
 
-    /// Drains the output stream into another
-    /// input/output stream which can be chained.
+    /// Drains the output stream into another input/output stream which can be chained.
+    ///
+    /// Also chains the errors to the other input/output stream
+    ///
+    /// http://localhost:8000/async/streams-basics/#chaining-streams
     public func stream<S: Stream>(to stream: S) -> S where S.Input == Self.Output {
         stream.errorStream = self.errorStream
         self.outputStream = stream.inputStream
@@ -71,6 +89,8 @@ extension OutputStream {
     }
 
     /// Drains the output stream into an input stream.
+    ///
+    /// http://localhost:8000/async/streams-basics/#draining-streams
     public func drain<I: InputStream>(into input: I) where I.Input == Self.Output {
         input.errorStream = self.errorStream
         self.outputStream = input.inputStream

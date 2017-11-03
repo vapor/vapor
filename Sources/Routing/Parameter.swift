@@ -1,6 +1,8 @@
 import HTTP
 
 /// Capable of being used as a route parameter.
+///
+/// http://localhost:8000/routing/parameters/#creating-custom-parameters
 public protocol Parameter {
     /// the unique key to use as a slug in route building
     static var uniqueSlug: String { get }

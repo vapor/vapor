@@ -8,11 +8,23 @@ public final class Socket {
     /// The file descriptor related to this socket
     public let descriptor: Int32
 
+    /// The remote's address
+    public var address: Address?
+    
     /// True if the socket is non blocking
     public let isNonBlocking: Bool
 
     /// True if the socket should re-use addresses
     public let shouldReuseAddress: Bool
+    
+    /// A read source that's used to check when the connection is readable
+    internal var readSource: DispatchSourceRead?
+    
+    /// A handler that gets called when closing the socket
+    public typealias CloseHandler = (()->())
+    
+    /// Will be triggered before closing the socket, as part of the cleanup process
+    public var didClose: CloseHandler? = nil
     
     /// A write source that's used to check when the connection is open
     internal var writeSource: DispatchSourceWrite?
@@ -21,11 +33,13 @@ public final class Socket {
     public init(
         established: Int32,
         isNonBlocking: Bool,
-        shouldReuseAddress: Bool
+        shouldReuseAddress: Bool,
+        address: Address?
     ) {
         self.descriptor = established
         self.isNonBlocking = isNonBlocking
         self.shouldReuseAddress = shouldReuseAddress
+        self.address = address
     }
     
     /// Creates a new TCP socket
@@ -56,13 +70,15 @@ public final class Socket {
         self.init(
             established: sockfd,
             isNonBlocking: isNonBlocking,
-            shouldReuseAddress: shouldReuseAddress
+            shouldReuseAddress: shouldReuseAddress,
+            address: nil
         )
     }
 
     /// Closes the socket
     public func close() {
         libc.close(descriptor)
+        didClose?()
     }
     
     /// Returns a boolean describing if the socket is still healthy and open

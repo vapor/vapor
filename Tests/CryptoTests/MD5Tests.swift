@@ -1,10 +1,10 @@
 import XCTest
+import Bits
 import Crypto
 
 class MD5Tests: XCTestCase {
     static var allTests = [
         ("testBasic", testBasic),
-        ("testPerformance", testPerformance),
         ("testHMAC", testHMAC),
     ]
 
@@ -25,15 +25,25 @@ class MD5Tests: XCTestCase {
             XCTAssertEqual(result, test.1.lowercased())
         }
     }
-
-    func testPerformance() {
-        return;
-        let data = Data(repeating: 0x63, count: 100_000)
-
-        // ~0.121 release
-        measure {
-            _ = MD5.hash(data)
+    
+    func testUpdated() throws {
+        let hash = MD5()
+        let buffers = [
+            Data("1234567890123456789012345678901234".utf8),
+            Data("5678901234567890123456789012345678901234567890".utf8)
+        ]
+        
+        for buffer in buffers {
+            buffer.withUnsafeBytes { (pointer: BytesPointer) in
+                let buffer = ByteBuffer(start: pointer, count: buffer.count)
+                
+                hash.update(buffer)
+            }
         }
+        
+        hash.finalize()
+        
+        XCTAssertEqual(hash.hash.hexString.lowercased(), "57edf4a22be3c955ac49da2e2107b67a")
     }
 
     func testHMAC() throws {
@@ -54,7 +64,8 @@ class MD5Tests: XCTestCase {
             let result = HMAC<MD5>.authenticate(
                 Data(test.message.utf8),
                 withKey: Data(test.key.utf8)
-                ).hexString.lowercased()
+            ).hexString.lowercased()
+            
             XCTAssertEqual(result, test.expected.lowercased())
         }
     }
