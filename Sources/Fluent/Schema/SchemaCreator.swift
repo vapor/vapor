@@ -2,22 +2,22 @@ import Async
 
 /// A schema builder specifically for creating
 /// new tables and collections.
-public final class SchemaCreator<M: Model>: SchemaBuilder {
-    /// See SechemaBuilder.ModelType
-    public typealias ModelType = M
-
+public final class SchemaCreator<
+    Model: Fluent.Model,
+    Connection: SchemaSupporting
+>: SchemaBuilder {
     /// See SchemaBuilder.schema
     public var schema: DatabaseSchema
 
     /// See SchemaBuilder.executor
-    public let executor: SchemaExecutor
+    public let connection: Connection
 
     /// Create a new schema creator.
     public init(
-        _ type: M.Type = M.self,
-        on executor: SchemaExecutor
+        _ type: Model.Type = Model.self,
+        on connection: Connection
     ) {
-        schema = DatabaseSchema(entity: M.entity)
-        self.executor = executor
+        schema = DatabaseSchema(entity: Model.entity)
+        self.connection = connection
     }
 }

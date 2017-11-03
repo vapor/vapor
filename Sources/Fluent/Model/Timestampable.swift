@@ -11,7 +11,7 @@ public protocol Timestampable {
     var updatedAt: Date? { get set }
 }
 
-extension SchemaCreator where ModelType: Timestampable {
+extension SchemaCreator where Model: Timestampable {
     /// Adds createdAt and updatedAt timestamps to the schema.
     public func timestamps() {
         date("createdAt")

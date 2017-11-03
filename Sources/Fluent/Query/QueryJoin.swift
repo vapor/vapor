@@ -64,9 +64,9 @@ public enum QueryJoinMethod {
 
 extension QueryBuilder {
     /// Join another model to this query builder.
-    public func join<Joined: Model>(
-        field joinedKey: ReferenceWritableKeyPath<Joined, M.ID>,
-        to baseKey: ReferenceWritableKeyPath<M, M.ID?> = M.idKey,
+    public func join<Joined: Fluent.Model>(
+        field joinedKey: ReferenceWritableKeyPath<Joined, Model.ID>,
+        to baseKey: ReferenceWritableKeyPath<Model, Model.ID?> = Model.idKey,
         method: QueryJoinMethod = .inner
     ) -> Self {
         let join = QueryJoin(
@@ -79,9 +79,9 @@ extension QueryBuilder {
     }
 
     /// Join another model to this query builder.
-    public func join<Joined: Model>(
+    public func join<Joined: Fluent.Model>(
         field joinedKey: ReferenceWritableKeyPath<Joined, Joined.ID?>,
-        to baseKey: ReferenceWritableKeyPath<M, Joined.ID>,
+        to baseKey: ReferenceWritableKeyPath<Model, Joined.ID>,
         method: QueryJoinMethod = .inner
     ) -> Self {
         let join = QueryJoin(

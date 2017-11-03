@@ -8,13 +8,11 @@ import SQLite
 final class Pet: Model {
     typealias ID = UUID
 
-    static var keyFieldMap: [AnyKeyPath: QueryField] {
-        return [
-            \Pet.id: field("id"),
-            \Pet.name: field("name"),
-            \Pet.ownerID: field("ownerID")
-        ]
-    }
+    static let keyFieldMap =  [
+        key(\.id): field("id"),
+        key(\.name): field("name"),
+        key(\.ownerID): field("ownerID")
+    ]
 
     static let idKey = \Pet.id
 

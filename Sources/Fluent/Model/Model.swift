@@ -110,27 +110,29 @@ extension Model {
     /// Saves this model to the supplied query executor.
     /// If `shouldCreate` is true, the model will be saved
     /// as a new item even if it already has an identifier.
-    public func save(
-        on executor: QueryExecutor,
+    public func save<Connection: Fluent.Connection>(
+        on connection: Connection,
         shouldCreate: Bool = false
     ) -> Future<Void> {
-        return executor.query(Self.self).save(self, shouldCreate: shouldCreate)
+        return connection.query(Self.self).save(self, shouldCreate: shouldCreate)
     }
 
     /// Saves this model to the supplied query executor.
     /// If `shouldCreate` is true, the model will be saved
     /// as a new item even if it already has an identifier.
-    public func delete(
-        on executor: QueryExecutor
+    public func delete<Connection: Fluent.Connection>(
+        on connection: Connection
     ) -> Future<Void> {
-        return executor.query(Self.self).delete(self)
+        return connection.query(Self.self).delete(self)
     }
 
     /// Attempts to find an instance of this model w/
     /// the supplied identifier.
-    public static func find(_ id: Self.ID, on executor: QueryExecutor) -> Future<Self?> {
-        let query = executor.query(Self.self)
-        query.filter("id" == id)
-        return query.first()
+    public static func find<
+        Connection: Fluent.Connection
+    >(_ id: Self.ID, on connection: Connection) -> Future<Self?> {
+        return connection.query(Self.self)
+            .filter("id" == id)
+            .first()
     }
 }

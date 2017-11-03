@@ -85,10 +85,11 @@ let package = Package(
 
         // Fluent
         .target(name: "Fluent", dependencies: ["Async", "Core", "Service"]),
+        .target(name: "FluentBenchmark", dependencies: ["Fluent"]),
         .target(name: "FluentSQL", dependencies: ["Fluent", "SQL"]),
         .target(name: "FluentSQLite", dependencies: ["Fluent", "FluentSQL", "SQLite"]),
 
-        .testTarget(name: "FluentTests", dependencies: ["Fluent", "FluentSQLite", "SQLite"]),
+        .testTarget(name: "FluentTests", dependencies: ["FluentBenchmark", "FluentSQLite", "SQLite"]),
 
         // JWT
         .target(name: "JWT", dependencies: ["Crypto"]),

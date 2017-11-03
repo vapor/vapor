@@ -4,7 +4,9 @@ import SQLite
 
 extension SQLiteDatabase: Database { }
 
-extension SQLiteDatabase: SupportsLogging {
+extension SQLiteConnection: Connection { }
+
+extension SQLiteDatabase: LogSupporting {
     /// See SupportsLogging.enableLogging
     public func enableLogging(using logger: DatabaseLogger) {
         self.logger = logger

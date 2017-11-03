@@ -24,14 +24,18 @@ public struct Parent<Child: Model, Parent: Model> {
     }
 
     /// Create a query for the parent.
-    public func query(on executor: QueryExecutor) -> QueryBuilder<Parent> {
-        let builder = executor.query(Parent.self)
+    public func query<Connection: Fluent.Connection>(
+        on connection: Connection
+    ) -> QueryBuilder<Parent, Connection> {
+        let builder = connection.query(Parent.self)
         return builder.filter(Parent.idKey == child[keyPath: parentForeignIDKey])
     }
 
     /// Convenience for getting the parent.
-    public func get(on executor: QueryExecutor) -> Future<Parent?> {
-        return query(on: executor).first()
+    public func get<Connection: Fluent.Connection>(
+        on connection: Connection
+    ) -> Future<Parent?> {
+        return query(on: connection).first()
     }
 }
 

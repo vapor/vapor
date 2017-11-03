@@ -3,7 +3,7 @@ import Fluent
 import FluentSQL
 import SQLite
 
-extension SQLiteConnection: SchemaExecutor {
+extension SQLiteConnection: SchemaSupporting {
     /// See SchemaExecutor.execute()
     public func execute(schema: DatabaseSchema) -> Future<Void> {
         let schemaQuery = schema.makeSchemaQuery(delegate: self)

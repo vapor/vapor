@@ -11,19 +11,36 @@ public struct MigrationConfig {
     }
 
     /// Adds a migration to the config.
-    public mutating func add<M: Migration, D> (
-        migration: M.Type,
-        database: DatabaseIdentifier<D>
-    ) where M.Database == D {
-        var config: DatabaseMigrationConfig<D>
+    public mutating func add<Migration: Fluent.Migration, Database> (
+        migration: Migration.Type,
+        database: DatabaseIdentifier<Database>
+    ) where Migration.Database == Database {
+        var config: QueryMigrationConfig<Database>
 
-        if let existing = storage[database.uid] as? DatabaseMigrationConfig<D> {
+        if let existing = storage[database.uid] as? QueryMigrationConfig<Database> {
             config = existing
         } else {
             config = .init(database: database)
         }
 
-        config.add(migration: M.self)
+        config.add(migration: Migration.self)
+        storage[database.uid] = config
+    }
+
+    /// Adds a schema supporting migration to the config.
+    public mutating func add<Migration: Fluent.Migration, Database> (
+        migration: Migration.Type,
+        database: DatabaseIdentifier<Database>
+    ) where Migration.Database == Database, Database.Connection: SchemaSupporting {
+        var config: SchemaMigrationConfig<Database>
+
+        if let existing = storage[database.uid] as? SchemaMigrationConfig<Database> {
+            config = existing
+        } else {
+            config = .init(database: database)
+        }
+
+        config.add(migration: Migration.self)
         storage[database.uid] = config
     }
 }

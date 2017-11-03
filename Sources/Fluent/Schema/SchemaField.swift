@@ -35,18 +35,18 @@ public enum SchemaFieldType {
 extension SchemaBuilder {
     public func id() {
         let field = SchemaField(
-            name: ModelType.idKey.makeQueryField().name,
-            type: ModelType.ID.fieldType,
+            name: Model.idKey.makeQueryField().name,
+            type: Model.ID.fieldType,
             isOptional: false,
             isIdentifier: true
         )
         schema.addFields.append(field)
     }
 
-    public func id<M: Model>(for model: M.Type, key: KeyPath<ModelType, M.ID>) {
+    public func id<Other: Fluent.Model>(for model: Other.Type, key: KeyPath<Model, Other.ID>) {
         let field = SchemaField(
             name: key.makeQueryField().name,
-            type: M.ID.fieldType,
+            type: Other.ID.fieldType,
             isOptional: false,
             isIdentifier: false
         )

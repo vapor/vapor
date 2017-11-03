@@ -2,28 +2,24 @@ import Async
 import Foundation
 
 /// Represents a migration that has succesfully ran.
-final class MigrationLog<D: Database>: Model, Timestampable {
+final class MigrationLog: Model, Timestampable {
     /// See Model.ID
     typealias ID = UUID
 
     /// See Model.entity
-    static var entity: String { return "fluent" }
+    static let entity = "fluent"
 
     /// See Model.idKeyPath
-    static var idKey: IDKey {
-        return \.id
-    }
+    static let idKey = \MigrationLog.id
 
     /// See Model.keyPathMap
-    static var keyFieldMap: [AnyKeyPath: QueryField] { return
-        [
-            key(\.id): field("id"),
-            key(\.name): field("name"),
-            key(\.batch): field("batch"),
-            key(\.createdAt): field("createdAt"),
-            key(\.updatedAt): field("updatedAt"),
-        ]
-    }
+    static let keyFieldMap = [
+        key(\.id): field("id"),
+        key(\.name): field("name"),
+        key(\.batch): field("batch"),
+        key(\.createdAt): field("createdAt"),
+        key(\.updatedAt): field("updatedAt"),
+    ]
 
     /// See Model.id
     var id: UUID?
@@ -40,6 +36,7 @@ final class MigrationLog<D: Database>: Model, Timestampable {
     /// See Timestampable.updatedAt
     var updatedAt: Date?
 
+    /// Create a new migration log
     init(id: UUID? = nil, name: String, batch: Int) {
         self.id = id
         self.name = name
@@ -48,31 +45,26 @@ final class MigrationLog<D: Database>: Model, Timestampable {
 }
 
 /// MARK: Migration
-extension MigrationLog: Migration {
-    typealias Database = D
+final class MigrationLogMigration<
+    D: Fluent.Database
+>: Migration where D.Connection: SchemaSupporting {
+    public typealias Database = D
 
     /// See Migration.prepare
     static func prepare(on connection: Database.Connection) -> Future<Void> {
-        if let schema = connection as? SchemaExecutor {
-            return schema.create(self) { builder in
+            return connection.create(MigrationLog.self) { builder in
                 builder.id()
                 builder.string("name")
                 builder.int("batch")
                 builder.timestamps()
             }
-        } else {
-            return Future(())
-        }
     }
 
     /// See Migration.revert
     static func revert(on connection: Database.Connection) -> Future<Void> {
-        if let schema = connection as? SchemaExecutor {
-            return schema.delete(self)
-        } else {
-            return Future(())
-        }
+        return connection.delete(MigrationLog.self)
     }
+
 }
 
 /// MARK: Internal
@@ -80,22 +72,26 @@ extension MigrationLog: Migration {
 extension MigrationLog {
     /// Returns the latest batch number.
     /// note: returns 0 if no batches have run yet.
-    internal static func latestBatch(on connection: Database.Connection) -> Future<Int> {
-        return connection.query(MigrationLog<Database>.self)
+    internal static func latestBatch<Connection: Fluent.Connection>(
+        on connection: Connection
+    ) -> Future<Int> {
+        return connection.query(MigrationLog.self)
             .sort("batch", .descending)
             .first()
             .map { log in
                 return log?.batch ?? 0
             }
     }
+}
 
+extension MigrationLogMigration {
     /// Prepares the connection for storing migration logs.
     /// note: this is unlike other migrations since we are checking
     /// for an error instead of asking if the migration has already prepared.
     internal static func prepareMetadata(on connection: Database.Connection) -> Future<Void> {
         let promise = Promise(Void.self)
 
-        connection.query(self).count().do { count in
+        connection.query(MigrationLog.self).count().do { count in
             promise.complete()
         }.catch { err in
             // table needs to be created

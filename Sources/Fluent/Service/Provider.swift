@@ -17,7 +17,7 @@ public final class FluentProvider: Provider {
             var databases: [String: Any] = [:]
             for (id, lazyDatabase) in config.databases {
                 let db = try lazyDatabase(container)
-                if let supports = db as? SupportsLogging, let logger = config.logging[id] {
+                if let supports = db as? LogSupporting, let logger = config.logging[id] {
                     logger.dbID = id
                     supports.enableLogging(using: logger)
                 }

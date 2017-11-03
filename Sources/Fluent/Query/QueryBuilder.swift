@@ -2,20 +2,23 @@ import Async
 import Foundation
 
 /// A Fluent database query builder.
-public final class QueryBuilder<M: Model> {
+public final class QueryBuilder<
+    Model: Fluent.Model,
+    Connection: Fluent.Connection
+> {
     /// The query we are building
     public var query: DatabaseQuery
 
     /// The connection this query will be excuted on.
-    public let executor: QueryExecutor
+    public let connection: Connection
 
     /// Create a new query.
     public init(
-        _ type: M.Type = M.self,
-        on executor: QueryExecutor
+        _ model: Model.Type = Model.self,
+        on connection: Connection
     ) {
-        query = DatabaseQuery(entity: M.entity)
-        self.executor = executor
+        query = DatabaseQuery(entity: Model.entity)
+        self.connection = connection
     }
 }
 
@@ -26,7 +29,7 @@ extension QueryBuilder {
     /// If `shouldCreate` is true, the model will be saved
     /// as a new item even if it already has an identifier.
     public func save(
-        _ model: M,
+        _ model: Model,
         shouldCreate: Bool = false
     ) -> Future<Void> {
         query.data = model
@@ -36,7 +39,7 @@ extension QueryBuilder {
             // update record w/ matching id
             query.action = .update
         } else if model.fluentID == nil {
-            switch M.ID.identifierType {
+            switch Model.ID.identifierType {
             case .autoincrementing: break
             case .generated(let factory):
                 model.fluentID = factory()
@@ -85,7 +88,7 @@ extension QueryBuilder {
 
     /// Deletes the supplied model.
     /// Throws an error if the mdoel did not have an id.
-    public func delete(_ model: M) -> Future<Void> {
+    public func delete(_ model: Model) -> Future<Void> {
         let promise = Promise(Void.self)
 
         do {

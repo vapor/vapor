@@ -10,7 +10,7 @@ extension QueryBuilder {
         Field: QueryFieldRepresentable
     >(_ field: Field, in values: [Encodable?]) throws -> Self {
         let filter = QueryFilter(
-            entity: M.entity,
+            entity: Model.entity,
             method: .subset(field.makeQueryField(), .in, .array(values))
         )
         return addFilter(filter)
@@ -22,7 +22,7 @@ extension QueryBuilder {
         Field: QueryFieldRepresentable
     >(_ field: Field, notIn values: [Encodable?]) throws -> Self {
         let filter = QueryFilter(
-            entity: M.entity,
+            entity: Model.entity,
             method: .subset(field.makeQueryField(), .notIn, .array(values))
         )
         return addFilter(filter)

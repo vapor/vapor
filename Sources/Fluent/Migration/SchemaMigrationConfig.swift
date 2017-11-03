@@ -2,7 +2,9 @@ import Async
 
 /// Internal struct containing migrations for a single database.
 /// note: This struct is important for maintaining database connection type info.
-internal struct DatabaseMigrationConfig<Database: Fluent.Database>: MigrationRunnable {
+internal struct SchemaMigrationConfig<
+    Database: Fluent.Database
+>: MigrationRunnable where Database.Connection: SchemaSupporting {
     /// The database identifier for these migrations.
     internal let database: DatabaseIdentifier<Database>
 
@@ -31,8 +33,8 @@ internal struct DatabaseMigrationConfig<Database: Fluent.Database>: MigrationRun
     /// Prepares the connection for migrations by ensuring
     /// the migration log model is ready for use.
     internal func prepareForMigration(on conn: Database.Connection) -> Future<Void> {
-        return MigrationLog<Database>.prepareMetadata(on: conn).then { _ in
-            return MigrationLog<Database>.latestBatch(on: conn).then { lastBatch in
+        return MigrationLogMigration<Database>.prepareMetadata(on: conn).then { _ in
+            return MigrationLog.latestBatch(on: conn).then { lastBatch in
                 return self.migrateBatch(on: conn, batch: lastBatch + 1)
             }
         }
@@ -49,9 +51,10 @@ internal struct DatabaseMigrationConfig<Database: Fluent.Database>: MigrationRun
     /// Adds a migration to the config.
     internal mutating func add<M: Migration> (
         migration: M.Type
-    ) where M.Database == Database {
+        ) where M.Database == Database {
         let container = MigrationContainer(migration)
         migrations.append(container)
     }
 }
+
 

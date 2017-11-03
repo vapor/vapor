@@ -1,23 +1,23 @@
 import Async
 
 /// Updates schemas, capable of deleting fields.
-public final class SchemaUpdater<M: Model>: SchemaBuilder {
-    /// See SechemaBuilder.ModelType
-    public typealias ModelType = M
-
+public final class SchemaUpdater<
+    Model: Fluent.Model,
+    Connection: SchemaSupporting
+>: SchemaBuilder {
     /// See SchemaBuilder.schema
     public var schema: DatabaseSchema
 
     /// See SchemaBuilder.executor
-    public let executor: SchemaExecutor
+    public let connection: Connection
 
     /// Create a new schema updater.
     public init(
-        _ type: M.Type = M.self,
-        on executor: SchemaExecutor
+        _ type: Model.Type = Model.self,
+        on executor: Connection
     ) {
-        schema = DatabaseSchema(entity: M.entity)
-        self.executor = executor
+        schema = DatabaseSchema(entity: Model.entity)
+        self.connection = executor
     }
 
     /// Deletes the field with the supplied name.

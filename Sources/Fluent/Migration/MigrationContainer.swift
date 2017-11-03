@@ -37,7 +37,7 @@ internal struct MigrationContainer<D: Database> {
             } else {
                 return self.prepare(connection).then {
                     // create the migration log
-                    let log = MigrationLog<Database>(name: self.name, batch: batch)
+                    let log = MigrationLog(name: self.name, batch: batch)
                     return log.save(on: connection)
                 }
             }
@@ -51,7 +51,7 @@ internal struct MigrationContainer<D: Database> {
             if hasPrepared {
                 return self.revert(connection).then {
                     // delete the migration log
-                    return connection.query(MigrationLog<Database>.self)
+                    return connection.query(MigrationLog.self)
                         .filter("name" == self.name)
                         .delete()
                 }
@@ -63,7 +63,7 @@ internal struct MigrationContainer<D: Database> {
 
     /// returns true if the migration has already been prepared.
     internal func hasPrepared(on connection: Database.Connection) -> Future<Bool> {
-        return connection.query(MigrationLog<Database>.self)
+        return connection.query(MigrationLog.self)
             .filter("name" == name)
             .first()
             .map { $0 != nil }

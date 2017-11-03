@@ -64,7 +64,9 @@ public struct Siblings<Base: Model, Related: Model, Through: Pivot> {
     }
 
     /// Create a query for the parent.
-    public func query(on executor: QueryExecutor) throws -> QueryBuilder<Related> {
+    public func query<Connection: Fluent.Connection>(
+        on executor: Connection
+    ) throws -> QueryBuilder<Related, Connection> {
         return try executor.query(Related.self)
             .join(field: relatedPivotField)
             .filter(basePivotField == base.requireID())
@@ -76,8 +78,11 @@ public struct Siblings<Base: Model, Related: Model, Through: Pivot> {
 extension Siblings {
     /// Returns true if the supplied model is attached
     /// to this relationship.
-    public func isAttached(_ model: Related, on executor: QueryExecutor) throws -> Future<Bool> {
-        return try executor.query(Through.self)
+    public func isAttached<Connection: Fluent.Connection>(
+        _ model: Related,
+        on connection: Connection
+    ) throws -> Future<Bool> {
+        return try connection.query(Through.self)
             .filter(basePivotField == base.requireID())
             .filter(relatedPivotField == model.requireID())
             .first()
@@ -86,8 +91,11 @@ extension Siblings {
 
     /// Detaches the supplied model from this relationship
     /// if it was attached.
-    public func detach(_ model: Related, on executor: QueryExecutor) throws -> Future<Void> {
-        return try executor.query(Through.self)
+    public func detach<Connection: Fluent.Connection>(
+        _ model: Related,
+        on connection: Connection
+    ) throws -> Future<Void> {
+        return try connection.query(Through.self)
             .filter(basePivotField == base.requireID())
             .filter(relatedPivotField == model.requireID())
             .delete()
@@ -97,10 +105,13 @@ extension Siblings {
 /// Left-side
 extension Siblings where Through: ModifiablePivot, Through.Left == Base, Through.Right == Related {
     /// Attaches the model to this relationship.
-    public func attach(_ model: Related, on executor: QueryExecutor) -> Future<Void> {
+    public func attach<Connection: Fluent.Connection>(
+        _ model: Related,
+        on connection: Connection
+    ) -> Future<Void> {
         do {
             let pivot = try Through(base, model)
-            return pivot.save(on: executor)
+            return pivot.save(on: connection)
         } catch {
             return Future(error: error)
         }
@@ -110,10 +121,13 @@ extension Siblings where Through: ModifiablePivot, Through.Left == Base, Through
 /// Right-side
 extension Siblings where Through: ModifiablePivot, Through.Left == Related, Through.Right == Base {
     /// Attaches the model to this relationship.
-    public func attach(_ model: Related, on executor: QueryExecutor) -> Future<Void> {
+    public func attach<Connection: Fluent.Connection>(
+        _ model: Related,
+        on connection: Connection
+    ) -> Future<Void> {
         do {
             let pivot = try Through(model, base)
-            return pivot.save(on: executor)
+            return pivot.save(on: connection)
         } catch {
             return Future(error: error)
         }

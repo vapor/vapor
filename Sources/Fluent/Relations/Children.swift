@@ -22,8 +22,8 @@ public struct Children<Parent: Model, Child: Model> {
     }
 
     /// Create a query for all children.
-    public func query(on executor: QueryExecutor) throws -> QueryBuilder<Child> {
-        let builder = executor.query(Child.self)
+    public func query<C: Connection>(on connection: C) throws -> QueryBuilder<Child, C> {
+        let builder = connection.query(Child.self)
         return try builder.filter(parentForeignIDKey.makeQueryField() == parent.requireID())
     }
 }

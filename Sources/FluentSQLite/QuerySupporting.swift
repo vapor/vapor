@@ -4,7 +4,7 @@ import FluentSQL
 import SQLite
 import SQL
 
-extension SQLiteConnection: QueryExecutor {
+extension SQLiteConnection: QuerySupporting {
     /// See QueryExecutor.execute
     public func execute<I: Async.InputStream, D: Decodable>(
         query: DatabaseQuery,

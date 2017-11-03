@@ -18,22 +18,12 @@ public enum QueryComparisonValue {
 
 /// Generic filter method acceptors.
 extension QueryBuilder {
-    /// Entity operator filter queries
-    @discardableResult
-    public func filter<M: Model>(
-        _ model: M.Type,
-        _ value: QueryFilterMethod
-    ) -> Self {
-        let filter = QueryFilter(entity: M.entity, method: value)
-        return addFilter(filter)
-    }
-
     /// Self operator filter queries
     @discardableResult
     public func filter(
         _ value: QueryFilterMethod
     ) -> Self {
-        let filter = QueryFilter(entity: M.entity, method: value)
+        let filter = QueryFilter(entity: Model.entity, method: value)
         return addFilter(filter)
     }
 }

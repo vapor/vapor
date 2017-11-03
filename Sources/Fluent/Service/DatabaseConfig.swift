@@ -45,7 +45,7 @@ public struct DatabaseConfig {
     public mutating func enableLogging<D>(
         on database: DatabaseIdentifier<D>,
         logger: DatabaseLogger = .print
-    ) where D: SupportsLogging {
+    ) where D: LogSupporting {
         logging[database.uid] = logger
     }
 }
