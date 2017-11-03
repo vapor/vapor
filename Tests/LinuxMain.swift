@@ -37,8 +37,7 @@ XCTMain([
     testCase(TraceableTests.allTests),
 
     // Fluent
-    testCase(ModelTests.allTests),
-    testCase(SchemaTests.allTests),
+    testCase(SQLiteBenchmarkTests.allTests),
 
     // HTTP
     testCase(MiddlewareTests.allTests),
