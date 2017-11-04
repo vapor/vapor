@@ -17,6 +17,8 @@ public struct RedisError: Debuggable, Traceable, Swift.Error, Encodable {
         
         /// A server-side error
         case serverSide(String)
+        
+        case pipelineCommandsRequired
     }
     
     /// This error's kind
@@ -35,6 +37,8 @@ public struct RedisError: Debuggable, Traceable, Swift.Error, Encodable {
             return "The server response was successfully parsed but did not match driver expectations. The result was: \(result)"
         case .serverSide(let reason):
             return reason
+        case .pipelineCommandsRequired:
+            return "Pipeline cannot be executed until commands are enqueued"
         }
     }
     
@@ -51,6 +55,8 @@ public struct RedisError: Debuggable, Traceable, Swift.Error, Encodable {
             return "Unexpected result: (\(result))"
         case .serverSide(let reason):
             return "Server error: \(reason)"
+        case .pipelineCommandsRequired:
+            return "pipelineCommandsRequired"
         }
     }
     
