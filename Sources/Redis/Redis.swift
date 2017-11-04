@@ -52,7 +52,7 @@ public final class RedisClient<DuplexByteStream: Async.Stream> where DuplexByteS
     }
     
     /// Creates a pipeline and returns it.
-    func makePipeline() -> Pipeline<DuplexByteStream> {
+    func makePipeline() -> Pipeline {
         return Pipeline(self)
     }
     

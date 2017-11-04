@@ -2,23 +2,30 @@ import Async
 import Bits
 import Foundation
 
-final class Pipeline<DuplexByteStream: Async.Stream> where DuplexByteStream.Input == ByteBuffer, DuplexByteStream.Output == ByteBuffer, DuplexByteStream: ClosableStream {
+final class Pipeline {
+    var isSubscribed: () -> Bool
+    var queuePromise: (Promise<RedisData>) -> ()
     
-    let client: RedisClient<DuplexByteStream>
+    let serializer: DataSerializer
+    
     private var commands = [RedisData]()
     
-    init(_ client:  RedisClient<DuplexByteStream>) {
-        self.client = client
+    init<AnyStream>(_ client: RedisClient<AnyStream>) {
+        self.serializer = client.dataSerializer
+        
+        isSubscribed = {
+            return client.isSubscribed
+        }
+        
+        queuePromise = { promise in
+            client.dataParser.responseQueue.append(promise)
+        }
     }
     
     /// Enqueues a commands.
     @discardableResult
-    public func enqueue(command: String, arguments: [RedisData]? = nil) throws -> Pipeline<DuplexByteStream> {
-        if client.isSubscribed {
-            throw RedisError(.cannotReuseSubscribedClients)
-        }
-        
-        commands.append(RedisData.array([.bulkString(command)] + (arguments ?? [])))
+    public func enqueue(command: String, arguments: [RedisData] = []) throws -> Pipeline {
+        commands.append(RedisData.array([.bulkString(command)] + arguments))
         return self
     }
     
@@ -29,7 +36,7 @@ final class Pipeline<DuplexByteStream: Async.Stream> where DuplexByteStream.Inpu
             commands = []
         }
         
-        if client.isSubscribed {
+        guard !isSubscribed() else {
              return Future(error: RedisError(.cannotReuseSubscribedClients))
         }
         
@@ -37,17 +44,19 @@ final class Pipeline<DuplexByteStream: Async.Stream> where DuplexByteStream.Inpu
             return Future(error: RedisError(.pipelineCommandsRequired))
         }
         
-        let promises = commands.map { _ in
-            Promise<RedisData>()
+        var promises = [Promise<RedisData>]()
+        
+        for _ in 0..<commands.count {
+            let promise = Promise<RedisData>()
+            
+            queuePromise(promise)
+            promises.append(promise)
         }
         
-        client.dataParser.responseQueue.append(contentsOf: promises)
-        
-        client.dataSerializer.inputStream(commands)
+        serializer.inputStream(commands)
         
         return promises
             .map { $0.future }
             .flatten()
     }
-    
 }
