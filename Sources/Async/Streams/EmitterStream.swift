@@ -20,25 +20,24 @@
 ///     print(squares) // [1, 4, 9]
 ///
 public final class EmitterStream<Out>: OutputStream {
-    /// See OutputStream.Output
-    public typealias Output = Out
+    public typealias Notification = Out
 
     /// See OutputStream.outputStream
-    public var outputStream: OutputHandler?
+    public var outputStream: NotificationCallback?
 
-    /// See BaseStream.errorStream
-    public var errorStream: ErrorHandler?
-
+    /// See BaseStream.errorNotification
+    public let errorNotification = SingleNotification<Error>()
+    
     /// Create a new emitter stream.
     public init(_ type: Out.Type = Out.self) { }
 
     /// Emits an output.
-    public func emit(_ output: Output) {
+    public func emit(_ output: Notification) {
         outputStream?(output)
     }
 
     /// Emits an error.
     public func report(_ error: Error) {
-        errorStream?(error)
+        errorNotification.notify(of: error)
     }
 }

@@ -15,13 +15,11 @@ extension ConnectionPool {
             let stream = RowStream(mysql41: connection.mysql41)
             connection.receivePackets(into: stream.inputStream)
             
-            stream.onClose = {
+            stream.closeNotification.handleNotification {
                 complete(rows)
             }
             
-            stream.errorStream = { error in
-                fail(error)
-            }
+            stream.errorNotification.handleNotification(callback: fail)
             
             stream.drain { row in
                 rows.append(row)
@@ -49,13 +47,11 @@ extension ConnectionPool {
             let resultBuilder = ModelStream<D>(mysql41: connection.mysql41)
             connection.receivePackets(into: resultBuilder.inputStream)
             
-            resultBuilder.onClose = {
+            resultBuilder.closeNotification.handleNotification {
                 complete(results)
             }
             
-            resultBuilder.errorStream = { error in
-                fail(error)
-            }
+            resultBuilder.errorNotification.handleNotification(callback: fail)
             
             resultBuilder.drain { result in
                 results.append(result)

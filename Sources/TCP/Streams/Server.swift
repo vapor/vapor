@@ -11,16 +11,16 @@ public final class Server: Async.OutputStream, ClosableStream {
     }
     
     // MARK: Stream
-    public typealias Output = TCPClient
+    public typealias Notification = TCPClient
     
-    /// See `BaseStream.onClose`
-    public var onClose: CloseHandler?
+    /// See `ClosableStream.closeNotification`
+    public let closeNotification = SingleNotification<Void>()
     
-    /// See `BaseStream.errorStream`
-    public var errorStream: ErrorHandler?
+    /// See `BaseStream.errorNotification`
+    public let errorNotification = SingleNotification<Error>()
     
     /// See `OutputStream.outputStream`
-    public var outputStream: OutputHandler?
+    public var outputStream: NotificationCallback?
 
     // MARK: Dispatch
 
@@ -84,7 +84,7 @@ public final class Server: Async.OutputStream, ClosableStream {
             do {
                 socket = try self.socket.accept()
             } catch {
-                self.errorStream?(error)
+                self.errorNotification.notify(of: error)
                 return
             }
 
@@ -97,7 +97,7 @@ public final class Server: Async.OutputStream, ClosableStream {
                 return
             }
             
-            client.errorStream = self.errorStream
+            client.errorNotification.handleNotification(callback: self.errorNotification.notify)
             self.outputStream?(client)
         }
         

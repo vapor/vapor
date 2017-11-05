@@ -107,7 +107,7 @@ class SQLiteTests: XCTestCase {
         do {
             try database.query("asdf").execute().blockingAwait()
             XCTFail("Should have errored")
-        } catch let error as SQLite.Error {
+        } catch let error as SQLiteError {
             print(error)
             XCTAssert(error.reason.contains("syntax error"))
         } catch {

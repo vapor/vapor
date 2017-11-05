@@ -55,7 +55,7 @@ extension Message {
     /// Return's the message's queue if one exists or throws.
     public func requireWorker() throws -> Worker {
         guard let worker = self.worker else {
-            throw Error(identifier: "missingWorker", reason: "The worker property on this message is nil.")
+            throw HTTPError(identifier: "missingWorker", reason: "The worker property on this message is nil.")
         }
 
         return worker

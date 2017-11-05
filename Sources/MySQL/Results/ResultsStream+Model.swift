@@ -1,11 +1,7 @@
 import Async
 
 public final class ModelStream<D: Decodable> : ResultsStream {
-    public func close() {
-        self.onClose?()
-    }
-    
-    public var onClose: CloseHandler?
+    public let closeNotification = SingleNotification<Void>()
     
     /// A list of all fields' descriptions in this table
     var columns = [Field]()
@@ -15,11 +11,11 @@ public final class ModelStream<D: Decodable> : ResultsStream {
     
     let mysql41: Bool
     
-    public typealias Output = D
+    public typealias Notification = D
     
-    public var outputStream: OutputHandler?
+    public var outputStream: NotificationCallback?
     
-    public var errorStream: ErrorHandler?
+    public let errorNotification = SingleNotification<Error>()
     
     init(mysql41: Bool) {
         self.mysql41 = mysql41
@@ -33,5 +29,8 @@ public final class ModelStream<D: Decodable> : ResultsStream {
         return try D(from: decoder)
     }
     
+    public func close() {
+        self.closeNotification.notify()
+    }
 }
 

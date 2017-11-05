@@ -29,7 +29,7 @@ extension SSLStream {
             // If it's not blocking and not a success, it's an error
             guard result == errSecSuccess || result == errSSLPeerAuthCompleted else {
                 readSource.cancel()
-                promise.fail(Error(.sslError(result)))
+                promise.fail(SSLError(.sslError(result)))
                 return
             }
             
@@ -42,7 +42,7 @@ extension SSLStream {
         
         let future = promise.future
         
-        future.addAwaiter { _ in
+        future.handleNotification { _ in
             self.readSource = nil
         }
         
@@ -62,7 +62,7 @@ extension SSLStream {
     /// https://www.sslshopper.com/article-most-common-openssl-commands.html
     public func setCertificate(to certificate: Data, for context: SSLContext) throws {
         guard let certificate = SecCertificateCreateWithData(nil, certificate as CFData) else {
-            throw Error(.invalidCertificate)
+            throw SSLError(.invalidCertificate)
         }
         
         var ref: SecIdentity?
@@ -70,13 +70,13 @@ extension SSLStream {
         var error = SecIdentityCreateWithCertificate(nil, certificate, &ref)
         
         guard error == errSecSuccess else {
-            throw Error(.invalidCertificate)
+            throw SSLError(.invalidCertificate)
         }
         
         error = SSLSetCertificate(context, [ref as Any, certificate] as CFArray)
         
         guard error == errSecSuccess else {
-            throw Error(.invalidCertificate)
+            throw SSLError(.invalidCertificate)
         }
     }
     
@@ -94,7 +94,7 @@ extension SSLStream {
             } catch {
                 // any errors that occur here cannot be thrown,
                 // so send them to stream error catcher.
-                self.errorStream?(error)
+                self.errorNotification.notify(of: error)
                 return
             }
             

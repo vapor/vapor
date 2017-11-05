@@ -7,9 +7,9 @@ import Foundation
 public final class ResponseParser: CParser, Async.Stream {
     // MARK: Stream
     public typealias Input = ByteBuffer
-    public typealias Output = Response
-    public var outputStream: OutputHandler?
-    public var errorStream: ErrorHandler?
+    public typealias Notification = Response
+    public var outputStream: NotificationCallback?
+    public let errorNotification = SingleNotification<Error>()
     
     // Internal variables to conform
     // to the C HTTP parser protocol.
@@ -43,7 +43,7 @@ public final class ResponseParser: CParser, Async.Stream {
             }
             outputStream?(request)
         } catch {
-            self.errorStream?(error)
+            self.errorNotification.notify(of: error)
             reset(HTTP_RESPONSE)
         }
     }
@@ -91,7 +91,7 @@ public final class ResponseParser: CParser, Async.Stream {
 
         // require a version to have been parsed
         guard let version = results.version else {
-            throw Error.invalidMessage()
+            throw HTTPError.invalidMessage()
         }
         
         let body = Body(results.body)

@@ -27,8 +27,8 @@ public class ByteStreamHasher<H: Hash> : Async.InputStream {
     /// `ByteStreamHasher` accepts byte streams
     public typealias Input = ByteBuffer
     
-    /// See `BaseStream.errorStream`
-    public var errorStream: ErrorHandler?
+    /// See `BaseStream.errorNotification`
+    public let errorNotification = SingleNotification<Error>()
     
     /// The hash context
     let context = H()
@@ -47,8 +47,8 @@ public final class PassthroughByteStreamHasher<H: Hash> : ByteStreamHasher<H>, A
     }
     
     /// The output is equal to the input
-    public typealias Output = ByteBuffer
+    public typealias Notification = ByteBuffer
     
     /// This handler will receive the hash's raw input
-    public var outputStream: OutputHandler?
+    public var outputStream: NotificationCallback?
 }

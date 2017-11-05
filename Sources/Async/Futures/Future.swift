@@ -9,21 +9,17 @@ import Dispatch
 ///
 /// http://localhost:8000/async/promise-future-introduction/
 public final class Future<T>: FutureType {
+    public typealias Notification = FutureResult<T>
+    
     /// Future expectation type
     public typealias Expectation = T
 
     /// The future's result will be stored
     /// here when it is resolved.
-    private var result: Result?
-
-    /// Contains information about callbacks
-    /// waiting for this future to complete
-    private struct Awaiter {
-        let callback: ResultCallback
-    }
+    private var result: Notification?
 
     /// A list of all handlers waiting to 
-    private var awaiters: [Awaiter]
+    private var awaiters: [NotificationCallback]
 
     /// Creates a new, uncompleted, unprovoked future
     /// Can only be created by a Promise, so this is hidden
@@ -55,26 +51,26 @@ public final class Future<T>: FutureType {
     }
 
     /// Completes the result, notifying awaiters.
-    internal func complete(with result: Result) {
+    internal func complete(with result: Notification) {
         guard self.result == nil else {
             return
         }
+        
         self.result = result
 
         for awaiter in self.awaiters {
-            awaiter.callback(result)
+            awaiter(result)
         }
     }
-
+    
     /// Locked method for adding an awaiter
     ///
     /// http://localhost:8000/async/advanced-futures/#adding-awaiters-to-all-results
-    public func addAwaiter(callback: @escaping ResultCallback) {
+    public func handleNotification(callback: @escaping NotificationCallback) {
         if let result = self.result {
             callback(result)
         } else {
-            let awaiter = Awaiter(callback: callback)
-            awaiters.append(awaiter)
+            self.awaiters.append(callback)
         }
     }
 }

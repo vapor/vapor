@@ -27,7 +27,7 @@ public final class OutputStreamSplitter<O: OutputStream> {
 
     /// Split handlers can throw, we will report
     /// to the error stream
-    public typealias Splits = (O.Output) throws -> ()
+    public typealias Splits = (O.Notification) throws -> ()
 
     /// The stored stream deltas
     public var splits: [Splits]
@@ -41,7 +41,7 @@ public final class OutputStreamSplitter<O: OutputStream> {
                 do {
                     try delta(output)
                 } catch {
-                    outputStream.errorStream?(error)
+                    outputStream.errorNotification.notify(of: error)
                 }
             }
         }

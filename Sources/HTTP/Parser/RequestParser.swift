@@ -8,9 +8,9 @@ import Foundation
 public final class RequestParser: CParser {
     // MARK: Stream
     public typealias Input = ByteBuffer
-    public typealias Output = Request
-    public var outputStream: OutputHandler?
-    public var errorStream: ErrorHandler?
+    public typealias Notification = Request
+    public var outputStream: NotificationCallback?
+    public let errorNotification = SingleNotification<Error>()
 
     // Internal variables to conform
     // to the C HTTP parser protocol.
@@ -41,7 +41,7 @@ public final class RequestParser: CParser {
             }
             outputStream?(request)
         } catch {
-            self.errorStream?(error)
+            self.errorNotification.notify(of: error)
             reset(HTTP_REQUEST)
         }
     }
@@ -111,7 +111,7 @@ public final class RequestParser: CParser {
                 let pointer = http_method_str(http_method(parser.method)),
                 let string = String(validatingUTF8: pointer)
             else {
-                throw Error.invalidMessage()
+                throw HTTPError.invalidMessage()
             }
             method = Method(string)
         }
@@ -126,7 +126,7 @@ public final class RequestParser: CParser {
 
         // require a version to have been parsed
         guard let version = results.version else {
-            throw Error.invalidMessage()
+            throw HTTPError.invalidMessage()
         }
 
         let body = Body(results.body)

@@ -7,7 +7,7 @@ import TCP
 /// A Redis client
 ///
 /// Wraps around the provided Connection/Closable Binary Stream
-public final class RedisClient<DuplexByteStream: Async.Stream> where DuplexByteStream.Input == ByteBuffer, DuplexByteStream.Output == ByteBuffer, DuplexByteStream: ClosableStream {
+public final class RedisClient<DuplexByteStream: Async.Stream> where DuplexByteStream.Input == ByteBuffer, DuplexByteStream.Notification == ByteBuffer, DuplexByteStream: ClosableStream {
     /// The closable binary stream that this client runs on
     let socket: DuplexByteStream
     
@@ -60,7 +60,7 @@ public final class RedisClient<DuplexByteStream: Async.Stream> where DuplexByteS
     public init(socket: DuplexByteStream) {
         self.socket = socket
         
-        socket.errorStream = { _ in
+        socket.errorNotification.handleNotification { _ in
             socket.close()
         }
         

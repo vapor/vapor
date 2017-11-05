@@ -4,9 +4,3 @@ extension Promise {
         future.then(callback: self.complete).catch(callback: self.fail)
     }
 }
-
-extension FutureType where Expectation == Self {
-    public func addAwaiter(callback: @escaping ((FutureResult<Self>) -> ())) {
-        callback(.expectation(self))
-    }
-}

@@ -5,14 +5,14 @@ public final class FrameParser : Async.Stream {
     /// See `InputStream.Input`
     public typealias Input = ByteBuffer
     
-    /// See `OutputStream.Output`
-    public typealias Output = Frame
+    /// See `OutputStream.Notification`
+    public typealias Notification = Frame
     
     /// See `OutputStream.outputStream`
-    public var outputStream: OutputHandler?
+    public var outputStream: NotificationCallback?
     
-    /// See `baseStream.errorStream`
-    public var errorStream: ErrorHandler?
+    /// See `BaseStream.errorNotification`
+    public let errorNotification = SingleNotification<Error>()
     
     /// The currently accumulated payload data
     var accumulated = 0
@@ -58,7 +58,7 @@ public final class FrameParser : Async.Stream {
             // Too big packets are rejected to prevent too much memory usage, causing potential crashes
             guard header.size < UInt64(self.maximumPayloadSize) else {
                 self.accumulated = 0
-                self.errorStream?(Error(.invalidBufferSize))
+                self.errorNotification.notify(of: WebSocketError(.invalidBufferSize))
                 return (false, 0)
             }
             
@@ -80,7 +80,7 @@ public final class FrameParser : Async.Stream {
                 self.outputStream?(frame)
                 return (true, frame.buffer.count)
             } catch {
-                errorStream?(error)
+                self.errorNotification.notify(of: error)
                 return (false, 0)
             }
         }
@@ -100,7 +100,7 @@ public final class FrameParser : Async.Stream {
                     
                     self.outputStream?(frame)
                 } catch {
-                    errorStream?(error)
+                    self.errorNotification.notify(of: error)
                 }
                 
                 self.inputStream(ByteBuffer(start: pointer.advanced(by: consume), count: input.count &- consume))
@@ -115,7 +115,7 @@ public final class FrameParser : Async.Stream {
             guard accumulated + input.count < UInt64(self.maximumPayloadSize) else {
                 // reject
                 self.accumulated = 0
-                self.errorStream?(Error(.invalidBufferSize))
+                self.errorNotification.notify(of: WebSocketError(.invalidBufferSize))
                 return
             }
             
@@ -150,7 +150,7 @@ public final class FrameParser : Async.Stream {
         guard
             length > 3,
             let code = Frame.OpCode(rawValue: base[0] & 0b00001111) else {
-                throw Error(.invalidFrame)
+                throw WebSocketError(.invalidFrame)
         }
         
         // If the FIN bit is set
@@ -165,21 +165,21 @@ public final class FrameParser : Async.Stream {
         // Binary and continuation frames don't need to be final
         if !final {
             guard code == .continuation || code == .binary else {
-                throw Error(.invalidFrameParameters)
+                throw WebSocketError(.invalidFrameParameters)
             }
         }
         
         // Ping and pong cannot have a bigger payload than tihs
         if code == .ping || code == .pong {
             guard payloadLength < 126 else {
-                throw Error(.invalidFrame)
+                throw WebSocketError(.invalidFrame)
             }
         }
         
         // Parse the payload length as UInt16 following the 126
         if payloadLength == 126 {
             guard length >= 5 else {
-                throw Error(.invalidFrame)
+                throw WebSocketError(.invalidFrame)
             }
             
             payloadLength = base.withMemoryRebound(to: UInt16.self, capacity: 1, { UInt64($0.pointee) })
@@ -190,7 +190,7 @@ public final class FrameParser : Async.Stream {
         // payload length byte == 127 means it's followed by a UInt64
         } else if payloadLength == 127 {
             guard length >= 11 else {
-                throw Error(.invalidFrame)
+                throw WebSocketError(.invalidFrame)
             }
             
             payloadLength = base.withMemoryRebound(to: UInt64.self, capacity: 1, { $0.pointee })
@@ -205,12 +205,12 @@ public final class FrameParser : Async.Stream {
             // Ensure the minimum length is available
             guard length &- consumed >= payloadLength &+ 4, payloadLength < Int.max else {
                 // throw an invalidFrame for incomplete/invalid
-                throw Error(.invalidFrame)
+                throw WebSocketError(.invalidFrame)
             }
             
             guard consumed &+ 4 < length else {
                 // throw an invalidFrame for a missing mask buffer
-                throw Error(.invalidMask)
+                throw WebSocketError(.invalidMask)
             }
             
             mask = [base[0], base[1], base[2], base[3]]
@@ -219,7 +219,7 @@ public final class FrameParser : Async.Stream {
         } else {
             // throw an invalidFrame for incomplete/invalid
             guard length &- consumed >= payloadLength, payloadLength < Int.max else {
-                throw Error(.invalidFrame)
+                throw WebSocketError(.invalidFrame)
             }
             
             mask = nil

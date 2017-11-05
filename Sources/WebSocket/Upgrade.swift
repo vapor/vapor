@@ -21,7 +21,7 @@ extension WebSocket {
             let secWebsocketVersion = req.headers[.secWebSocketVersion],
             let version = Int(secWebsocketVersion)
             else {
-                throw Error(.invalidRequest)
+                throw WebSocketError(.invalidRequest)
         }
         
         let headers: Headers

@@ -23,7 +23,7 @@ extension WebSocket {
             let hostname = uri.hostname,
             let port = uri.port ?? uri.defaultPort
         else {
-            throw Error(.invalidURI)
+            throw WebSocketError(.invalidURI)
         }
         
         // Create a new socket to the host
@@ -58,7 +58,7 @@ extension WebSocket {
         let expectedKeyString = String(bytes: expectatedKey, encoding: .utf8) ?? ""
 
         // Any errors in the handshake will cause the promise to fail
-        serializer.errorStream = promise.fail
+        serializer.errorNotification.handleNotification(callback: promise.fail)
 
         // Sets up the handler for the handshake
         client.stream(to: parser).drain { response in
@@ -68,7 +68,7 @@ extension WebSocket {
                 response.headers["Connection"] == "Upgrade",
                 response.headers["Upgrade"] == "websocket"
             else {
-                promise.fail(Error(.notUpgraded))
+                promise.fail(WebSocketError(.notUpgraded))
                 return
             }
 
@@ -79,7 +79,7 @@ extension WebSocket {
             } else {
                 // Fail if the handshake didn't return the expected accept-key
                 guard response.headers["Sec-WebSocket-Accept"] == expectedKeyString else {
-                    promise.fail(Error(.notUpgraded))
+                    promise.fail(WebSocketError(.notUpgraded))
                     return
                 }
 

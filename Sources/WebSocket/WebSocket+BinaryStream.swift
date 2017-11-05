@@ -11,10 +11,10 @@ final class BinaryStream : Async.Stream {
     /// A stream of errors
     ///
     /// Will only be called if there's a problem creating a frame for output
-    var errorStream: ErrorHandler?
+    let errorNotification = SingleNotification<Error>()
     
     typealias Input = ByteBuffer
-    typealias Output = ByteBuffer
+    typealias Notification = ByteBuffer
     
     /// Returns whether to add mask a mask to this message
     var masking: Bool {
@@ -37,7 +37,7 @@ final class BinaryStream : Async.Stream {
             
             frameStream?.inputStream(frame)
         } catch {
-            self.errorStream?(error)
+            self.errorNotification.notify(of: error)
         }
     }
 }

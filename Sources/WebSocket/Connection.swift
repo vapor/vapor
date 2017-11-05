@@ -14,32 +14,27 @@ internal final class Connection: Async.Stream, ClosableStream {
             self.inputStream(frame)
             self.client.close()
         } catch {
-            errorStream?(error)
+            errorNotification.notify(of: error)
         }
     }
     
     /// See `InputStream.Input`
     typealias Input = Frame
     
-    /// See `OutputStream.Output`
-    typealias Output = Frame
+    /// See `OutputStream.Notification`
+    typealias Notification = Frame
 
     /// The incoming frames handler
     ///
     /// See `OutputStream.outputStream`
-    var outputStream: OutputHandler?
+    var outputStream: NotificationCallback?
     
     /// See `BaseStream.erorStream`
-    var errorStream: ErrorHandler?
+    let errorNotification = SingleNotification<Error>()
     
     /// Called when the connection closes
-    var onClose: CloseHandler? {
-        get {
-            return self.client.onClose
-        }
-        set {
-            self.client.onClose = newValue
-        }
+    var closeNotification: SingleNotification<Void> {
+        return self.client.closeNotification
     }
     
     /// Serializes data into frames

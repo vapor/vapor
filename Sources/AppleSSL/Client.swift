@@ -13,12 +13,12 @@ extension SSLStream {
         let status = SSLSetPeerDomainName(context, &hostname, hostname.count)
         
         guard status == 0 else {
-            throw Error(.sslError(status))
+            throw SSLError(.sslError(status))
         }
         
         if let certificate = certificate {
             guard let certificate = FileManager.default.contents(atPath: certificate) else {
-                throw Error(.certificateNotFound)
+                throw SSLError(.certificateNotFound)
             }
             
             try self.setCertificate(to: certificate, for: context)

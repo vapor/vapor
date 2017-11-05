@@ -7,14 +7,14 @@ final class DataSerializer: Async.Stream {
     /// See `InputStream.Input`
     typealias Input = RedisData
     
-    /// See `OutputStream.Output`
-    typealias Output = ByteBuffer
+    /// See `OutputStream.Notification`
+    typealias Notification = ByteBuffer
     
-    /// See `BaseStream.errorStream`
-    var errorStream: ErrorHandler?
+    /// See `BaseStream.errorNotification`
+    let errorNotification = SingleNotification<Error>()
     
     /// See `OutputStream.outputStream`
-    var outputStream: OutputHandler?
+    var outputStream: NotificationCallback?
 
     /// Creates a new ValueSerializer
     init() {}

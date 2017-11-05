@@ -18,13 +18,13 @@ let SQLITE_TRANSIENT = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
 ///
 public final class Query: Async.OutputStream {
     // stream conformance
-    public typealias Output = Row
+    public typealias Notification = Row
 
-    /// See OutputStream.OutputHandler
-    public var outputStream: OutputHandler?
+    /// See OutputStream.NotificationCallback
+    public var outputStream: NotificationCallback?
 
     /// See BaseStream.ErrorHandler
-    public var errorStream: ErrorHandler?
+    public let errorNotification = SingleNotification<Error>()
 
     // raw pointers
     internal typealias Raw = OpaquePointer
@@ -58,11 +58,11 @@ public final class Query: Async.OutputStream {
         var raw: Raw?
         let ret = sqlite3_prepare_v2(database.raw, statement, -1, &raw, nil)
         guard ret == SQLITE_OK else {
-            throw Error(statusCode: ret, database: database)
+            throw SQLiteError(statusCode: ret, database: database)
         }
 
         guard let statementPointer = raw else {
-            throw Error(statusCode: ret, database: database)
+            throw SQLiteError(statusCode: ret, database: database)
         }
 
         self.connection = database
@@ -81,7 +81,7 @@ public final class Query: Async.OutputStream {
     public func bind(_ value: Double) throws -> Self {
         let ret = sqlite3_bind_double(raw, nextBindPosition, value)
         guard ret == SQLITE_OK else {
-            throw Error(statusCode: ret, database: connection)
+            throw SQLiteError(statusCode: ret, database: connection)
         }
         return self
     }
@@ -90,7 +90,7 @@ public final class Query: Async.OutputStream {
     public func bind(_ value: Int) throws -> Self {
         let ret = sqlite3_bind_int64(raw, nextBindPosition, Int64(value))
         guard ret == SQLITE_OK else {
-            throw Error(statusCode: ret, database: connection)
+            throw SQLiteError(statusCode: ret, database: connection)
         }
         return self
     }
@@ -100,7 +100,7 @@ public final class Query: Async.OutputStream {
         let strlen = Int32(value.utf8.count)
         let ret = sqlite3_bind_text(raw, nextBindPosition, value, strlen, SQLITE_TRANSIENT)
         guard ret == SQLITE_OK else {
-            throw Error(statusCode: ret, database: connection)
+            throw SQLiteError(statusCode: ret, database: connection)
         }
         return self
     }
@@ -112,7 +112,7 @@ public final class Query: Async.OutputStream {
         return try value.withUnsafeBytes { (pointer: BytesPointer) in
             let ret = sqlite3_bind_blob(raw, nextBindPosition, UnsafeRawPointer(pointer), count, SQLITE_TRANSIENT)
             guard ret == SQLITE_OK else {
-                throw Error(statusCode: ret, database: connection)
+                throw SQLiteError(statusCode: ret, database: connection)
             }
             return self
         }
@@ -127,7 +127,7 @@ public final class Query: Async.OutputStream {
     public func bindNull() throws -> Self {
         let ret = sqlite3_bind_null(raw, nextBindPosition)
         if ret != SQLITE_OK {
-            throw Error(statusCode: ret, database: connection)
+            throw SQLiteError(statusCode: ret, database: connection)
         }
         return self
     }
@@ -165,7 +165,7 @@ public final class Query: Async.OutputStream {
         // cleanup
         let ret = sqlite3_finalize(self.raw)
         guard ret == SQLITE_OK else {
-            throw Error(statusCode: ret, database: self.connection)
+            throw SQLiteError(statusCode: ret, database: self.connection)
         }
     }
 

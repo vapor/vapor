@@ -1,11 +1,13 @@
+import Async
+
 final class RowStream : ResultsStream {
-    func close() {
-        self.onClose?()
-    }
-    
     /// Parses a packet into a Row
     func parseRows(from packet: Packet) throws -> Row {
         return try packet.makeRow(columns: columns)
+    }
+    
+    func close() {
+        self.closeNotification.notify()
     }
     
     init(mysql41: Bool) {
@@ -18,15 +20,15 @@ final class RowStream : ResultsStream {
     /// The header is used to indicate the amount of returned columns
     var header: UInt64?
     
-    typealias Output = Row
+    typealias Notification = Row
     
-    var outputStream: OutputHandler?
+    var outputStream: NotificationCallback?
     
-    var errorStream: ErrorHandler?
+    let errorNotification = SingleNotification<Error>()
     
     let mysql41: Bool
     
-    var onClose: CloseHandler?
+    let closeNotification = SingleNotification<Void>()
     
     typealias Input = Packet
 }

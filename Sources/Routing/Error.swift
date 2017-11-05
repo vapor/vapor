@@ -1,7 +1,7 @@
 import Debugging
 
 /// Errors that can be thrown while working with TCP sockets.
-public struct Error: Traceable, Debuggable, Swift.Error, Encodable {
+public struct RoutingError: Traceable, Debuggable, Swift.Error, Encodable {
     enum Kind {
         case insufficientParameters
         case invalidParameterType(actual: Any.Type, expected: Any.Type)
@@ -48,7 +48,7 @@ public struct Error: Traceable, Debuggable, Swift.Error, Encodable {
         self.function = function
         self.line = line
         self.column = column
-        self.stackTrace = Error.makeStackTrace()
+        self.stackTrace = RoutingError.makeStackTrace()
     }
 }
 

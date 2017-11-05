@@ -71,6 +71,11 @@ class RouterTests: XCTestCase {
 }
 
 extension Response: FutureType {
+    public func handleNotification(callback: @escaping ((FutureResult<Response>) -> ())) {
+        callback(.expectation(self))
+    }
+    
+    public typealias Notification = FutureResult<Response>
     public typealias Expectation = Response
 }
 

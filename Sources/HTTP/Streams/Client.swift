@@ -30,7 +30,7 @@ public final class HTTPClient {
         
         tcp.stream(to: parser).drain(promise.complete)
         
-        tcp.errorStream = { error in
+        tcp.errorNotification.handleNotification { error in
             promise.fail(error)
         }
         

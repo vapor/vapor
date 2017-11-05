@@ -9,16 +9,16 @@ import libc
 public final class TCPClient: Async.Stream, ClosableStream {
     // MARK: Stream
     public typealias Input = ByteBuffer
-    public typealias Output = ByteBuffer
+    public typealias Notification = ByteBuffer
     
-    /// See `BaseStream.onClose`
-    public var onClose: CloseHandler?
+    /// See `ClosableStream.closeNotification`
+    public let closeNotification = SingleNotification<Void>()
     
-    /// See `BaseStream.errorStream`
-    public var errorStream: ErrorHandler?
+    /// See `BaseStream.errorNotification`
+    public let errorNotification = SingleNotification<Error>()
     
     /// See `OutputStream.outputStream`
-    public var outputStream: OutputHandler?
+    public var outputStream: NotificationCallback?
 
     /// This client's dispatch queue. Use this
     /// for all async operations performed as a
@@ -115,7 +115,7 @@ public final class TCPClient: Async.Stream, ClosableStream {
                     } catch {
                         // any errors that occur here cannot be thrown,
                         // so send them to stream error catcher.
-                        self.errorStream?(error)
+                        self.errorNotification.notify(of: error)
                     }
                 }
             }
@@ -148,7 +148,7 @@ public final class TCPClient: Async.Stream, ClosableStream {
             } catch {
                 // any errors that occur here cannot be thrown,
                 //selfso send them to stream error catcher.
-                self.errorStream?(error)
+                self.errorNotification.notify(of: error)
                 return
             }
 
@@ -190,7 +190,6 @@ public final class TCPClient: Async.Stream, ClosableStream {
         // important! it's common for a client to drain into itself
         // we need to make sure to break that reference cycle
         outputStream = nil
-        errorStream = nil
     }
 
     /// Deallocated the pointer buffer

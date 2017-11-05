@@ -7,14 +7,14 @@ final class FrameSerializer : Async.Stream {
     /// See `InputStream.Input`
     typealias Input = Frame
     
-    /// See `OutputStream.Output`
-    typealias Output = ByteBuffer
+    /// See `OutputStream.Notification`
+    typealias Notification = ByteBuffer
     
     /// See `OutputStream.outputStream`
-    var outputStream: OutputHandler?
+    var outputStream: NotificationCallback?
     
     /// See `BaseStream.erorStream`
-    var errorStream: ErrorHandler?
+    let errorNotification = SingleNotification<Error>()
     
     func inputStream(_ input: Frame) {
         // masks the data if needed

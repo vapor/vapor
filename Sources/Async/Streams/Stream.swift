@@ -19,28 +19,19 @@ public protocol InputStream: BaseStream {
 ///
 ///
 public protocol ClosableStream: BaseStream {
-    typealias CloseHandler = (() -> ())
-    
-    /// Closes the connection
+    /// Closes this stream and must notify the `closeNotification`
     func close()
     
     /// A function that gets called if the stream closes
-    var onClose: CloseHandler? { get set }
+    var closeNotification: SingleNotification<Void> { get }
 }
 
-/// A type that emits `Ouptut` asynchronously and at unspecified moments
+/// A type that emits `Ouptut` notifications asynchronously and at unspecified moments
 ///
 /// http://localhost:8000/async/streams-introduction/#implementing-an-example-stream
-public protocol OutputStream: BaseStream {
-    /// The output type for this stream.
-    /// For example: Request, ByteBuffer, Client
-    associatedtype Output
-
-    /// A closure that takes one onput.
-    typealias OutputHandler = (Output) -> ()
-
+public protocol OutputStream: BaseStream, NotificationEmitter {
     /// Pass output as it is generated to this stream.
-    var outputStream: OutputHandler? { get set }
+    var outputStream: NotificationCallback? { get set }
 }
 
 /// Base stream protocol. Simply handles errors.
@@ -48,32 +39,37 @@ public protocol OutputStream: BaseStream {
 /// after reporting an error and be ready for
 /// additional incoming data.
 public protocol BaseStream: class {
-    /// A closure that takes one error.
-    typealias ErrorHandler = (Error) -> ()
-
     /// Pass any errors that are thrown to
     /// the error stream
-    var errorStream: ErrorHandler? { get set }
+    var errorNotification: SingleNotification<Error> { get }
 }
 
 // MARK: Convenience
 
 extension OutputStream {
+    /// Overrides the outputStream callback to capture output notifications using the new callback
+    public func handleNotification(callback: @escaping ((Notification) -> ())) {
+        self.outputStream = callback
+    }
+    
     /// Drains the output stream into a closure.
     ///
     /// http://localhost:8000/async/streams-basics/#draining-streams
     @discardableResult
-    public func drain(_ handler: @escaping OutputHandler) -> Self {
+    public func drain(_ handler: @escaping NotificationCallback) -> Self {
         self.outputStream = handler
         return self
     }
+    
+    /// A closure that takes one error.
+    public typealias ErrorHandler = (Error) -> ()
 
     /// Drains the output stream into a closure
     ///
     /// http://localhost:8000/async/streams-basics/#catching-stream-errors
     @discardableResult
     public func `catch`(_ handler: @escaping ErrorHandler) -> Self {
-        self.errorStream = handler
+        self.errorNotification.handleNotification(callback: handler)
         return self
     }
 
@@ -82,8 +78,8 @@ extension OutputStream {
     /// Also chains the errors to the other input/output stream
     ///
     /// http://localhost:8000/async/streams-basics/#chaining-streams
-    public func stream<S: Stream>(to stream: S) -> S where S.Input == Self.Output {
-        stream.errorStream = self.errorStream
+    public func stream<S: Stream>(to stream: S) -> S where S.Input == Self.Notification {
+        stream.catch(self.errorNotification.notify)
         self.outputStream = stream.inputStream
         return stream
     }
@@ -91,8 +87,8 @@ extension OutputStream {
     /// Drains the output stream into an input stream.
     ///
     /// http://localhost:8000/async/streams-basics/#draining-streams
-    public func drain<I: InputStream>(into input: I) where I.Input == Self.Output {
-        input.errorStream = self.errorStream
+    public func drain<I: InputStream>(into input: I) where I.Input == Self.Notification {
+        input.errorNotification.handleNotification(callback: self.errorNotification.notify)
         self.outputStream = input.inputStream
     }
 }

@@ -59,7 +59,7 @@ final class HTTPTestServer {
             client.tcp.start()
         }
         
-        server.errorStream = { error in
+        server.errorNotification.handleNotification { error in
             debugPrint(error)
         }
         
