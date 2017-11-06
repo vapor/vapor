@@ -2,9 +2,12 @@ import Core
 import Async
 import Dispatch
 
+/// An automatically managed pool of connections to a server.
+///
+/// http://localhost:8000/mysql/setup/#connecting
 public class ConnectionPool {
     /// The queue on which connections will be created
-    let queue: DispatchQueue
+    let worker: Worker
     
     /// The hostname to which connections will be connected
     let hostname: String
@@ -38,8 +41,8 @@ public class ConnectionPool {
     /// All connections in this pool will use this queue
     ///
     /// This pool is not threadsafe. Use one pool per thread
-    public init(hostname: String, port: UInt16 = 3306, user: String, password: String?, database: String?, queue: DispatchQueue) {
-        self.queue = queue
+    public init(hostname: String, port: UInt16 = 3306, user: String, password: String?, database: String?, worker: Worker) {
+        self.worker = worker
         self.hostname = hostname
         self.port = port
         self.user = user
@@ -50,7 +53,7 @@ public class ConnectionPool {
     typealias Complete = (()->())
     
     /// Retains a connection (or creates a new one) to execute the handler with
-    internal func retain<T>(_ handler: @escaping ((Connection, @escaping ((T) -> ()), @escaping Stream.ErrorHandler) -> Void)) throws -> Future<T> {
+    internal func retain<T>(_ handler: @escaping ((Connection, @escaping ((T) -> ()), @escaping Stream.ErrorHandler) -> Void)) -> Future<T> {
         let promise = Promise<T>()
         
         // Checks for an existing connection
@@ -70,7 +73,7 @@ public class ConnectionPool {
             return promise.future
         }
         
-        _ = try Connection.makeConnection(hostname: hostname, user: user, password: password, database: database, queue: queue).then { connection in
+        Connection.makeConnection(hostname: hostname, user: user, password: password, database: database, worker: worker).then { connection in
             let pair = ConnectionPair(connection: connection)
             pair.reserved = true
             
@@ -85,7 +88,7 @@ public class ConnectionPool {
                 pair.reserved = false
                 promise.fail(error)
             }
-        }
+        }.catch(callback: promise.fail)
         
         return promise.future
     }

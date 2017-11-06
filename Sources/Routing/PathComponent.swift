@@ -1,4 +1,6 @@
 /// Components of a router path.
+///
+/// http://localhost:8000/routing/parameters/
 public enum PathComponent {
     /// A normal, constant path component.
     case constant(String)
@@ -8,6 +10,8 @@ public enum PathComponent {
 }
 
 /// Capable of being represented by a path component.
+///
+/// http://localhost:8000/routing/parameters/
 public protocol PathComponentRepresentable {
     /// Convert to path component.
     func makePathComponent() -> PathComponent

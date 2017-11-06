@@ -1,6 +1,8 @@
 import Async
 import Dispatch
 
+// FIXME: @tanner docs
+
 public final class ConnectionPool {
     /// The database to use to generate new connections.
     public let database: Database

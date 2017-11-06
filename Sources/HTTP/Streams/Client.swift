@@ -6,6 +6,8 @@ import TCP
 /// Can handle a single `Request` at a given time.
 ///
 /// Multiple requests at the same time are subject to unknown behaviour
+///
+/// http://localhost:8000/http/client/
 public final class HTTPClient {
     /// The underlying TCP Client
     public let tcp: TCPClient

@@ -4,6 +4,8 @@ import CSQLite
 import Dispatch
 import Foundation
 
+// FIXME: @tanner vapor/documentation PR
+
 let SQLITE_TRANSIENT = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
 
 /// An executable statement. Use this to bind parameters to a query, and finally

@@ -2,7 +2,10 @@ import Async
 import Bits
 import Foundation
 
-final class Pipeline {
+/// A Redis pipeline. Executes multiple commands in a single batch.
+///
+/// http://localhost:8000/redis/pipeline/
+public final class Pipeline {
     var isSubscribed: () -> Bool
     var queuePromise: (Promise<RedisData>) -> ()
     
@@ -23,6 +26,8 @@ final class Pipeline {
     }
     
     /// Enqueues a commands.
+    ///
+    /// http://localhost:8000/redis/pipeline/#enqueuing-commands
     @discardableResult
     public func enqueue(command: String, arguments: [RedisData] = []) throws -> Pipeline {
         commands.append(RedisData.array([.bulkString(command)] + arguments))
@@ -30,6 +35,8 @@ final class Pipeline {
     }
     
     /// Executes a series of commands and returns a future for the responses
+    ///
+    /// http://localhost:8000/redis/pipeline/#enqueuing-commands
     @discardableResult
     public func execute() throws -> Future<[RedisData]> {
         defer {
