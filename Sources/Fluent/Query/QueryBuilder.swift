@@ -26,91 +26,86 @@ public final class QueryBuilder<
 
 extension QueryBuilder {
     /// Saves the supplied model.
-    /// If `shouldCreate` is true, the model will be saved
-    /// as a new item even if it already has an identifier.
-    public func save(
-        _ model: Model,
-        shouldCreate: Bool = false
-    ) -> Future<Void> {
+    /// Calls `create` if the ID is `nil`, and `update` if it exists.
+    /// If you need to create a model with a pre-existing ID,
+    /// call `create` instead.
+    public func save(_ model: Model) -> Future<Void> {
+        if model.fluentID != nil {
+            return update(model)
+        } else {
+            return create(model)
+        }
+    }
+
+    /// Saves this model as a new item in the database.
+    /// This method can auto-generate an ID depending on ID type.
+    public func create(_ model: Model) -> Future<Void> {
         return then {
             self.query.data = model
+            self.query.action = .create
 
-            if let id = model.fluentID, !shouldCreate {
-                try self.filter(Model.idKey == id)
-                // update record w/ matching id
-                self.query.action = .update
-            } else if model.fluentID == nil {
+            if model.fluentID == nil {
+                // generate an id
                 switch Model.ID.identifierType {
                 case .autoincrementing: break
                 case .generated(let factory):
                     model.fluentID = factory()
-                case .supplied: break
-                    // FIXME: error if not actually supplied?
+                case .supplied: throw "model id type is `supplied`, but no id was supplied"
                 }
-                // create w/ generated id
-                self.query.action = .create
-            } else {
-                // just create, with existing id
-                self.query.action = .create
             }
+
+            // set timestamps
+            if var timestampable = model as? Timestampable {
+                let now = Date()
+                timestampable.updatedAt = now
+                timestampable.createdAt = now
+            }
+
+            return try model.willCreate()
+                .then(self.run)
+                .then(model.didCreate)
+        }
+    }
+
+    /// Updates the model. This requires that
+    /// the model has its ID set.
+    public func update(_ model: Model) -> Future<Void> {
+        return then {
+            self.query.data = model
+
+            guard let id = model.fluentID else {
+                throw "id required for update"
+            }
+
+            // update record w/ matching id
+            try self.filter(Model.idKey == id)
+            self.query.action = .update
 
             // update timestamps if required
             if var timestampable = model as? Timestampable {
                 timestampable.updatedAt = Date()
-                switch self.query.action {
-                case .create: timestampable.createdAt = Date()
-                default: break
-                }
             }
 
-            let promise = Promise(Void.self)
 
-            do {
-                switch self.query.action {
-                case .create: try model.willCreate()
-                case .update: try model.willUpdate()
-                default: break
-                }
-
-                self.run().do {
-                    switch self.query.action {
-                    case .create: model.didCreate()
-                    case .update: model.didUpdate()
-                    default: break
-                    }
-                    promise.complete()
-                }.catch(promise.fail)
-            } catch {
-                promise.fail(error)
-            }
-
-            return promise.future
+            return try model.willUpdate()
+                .then(self.run)
+                .then(model.didUpdate)
         }
     }
 
     /// Deletes the supplied model.
     /// Throws an error if the mdoel did not have an id.
     public func delete(_ model: Model) -> Future<Void> {
-        let promise = Promise(Void.self)
+        return then {
+            return try model.willDelete().then {
+                guard let id = model.fluentID else {
+                    throw "model does not have an id"
+                }
 
-        do {
-            try model.willDelete()
-
-            if let id = model.fluentID {
-                try filter(Model.idKey == id)
-                query.action = .delete
-                run().do {
-                    model.didDelete()
-                    promise.complete()
-                }.catch(promise.fail)
-            } else {
-                promise.fail("model does not have an id")
+                try self.filter(Model.idKey == id)
+                self.query.action = .delete
+                return self.run().then(model.didDelete)
             }
-        } catch {
-            promise.fail(error)
         }
-
-
-        return promise.future
     }
 }

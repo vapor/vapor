@@ -27,23 +27,24 @@ public protocol Model: class, Codable, KeyFieldMappable {
 
     /// Called before a model is created when saving.
     /// Throwing will cancel the save.
-    func willCreate() throws
+    func willCreate()  throws -> Future<Void>
     /// Called after the model is created when saving.
-    func didCreate()
+    func didCreate() throws -> Future<Void>
 
     /// Called before a model is updated when saving.
     /// Throwing will cancel the save.
-    func willUpdate() throws
+    func willUpdate() throws -> Future<Void>
     /// Called after the model is updated when saving.
-    func didUpdate()
+    func didUpdate() throws -> Future<Void>
 
     /// Called before a model is deleted.
     /// Throwing will cancel the deletion.
-    func willDelete() throws
+    func willDelete() throws -> Future<Void>
     /// Called after the model is deleted.
-    func didDelete()
+    func didDelete() throws -> Future<Void>
 }
 
+/// Capable of mapping Swift key path's to Fluent query fields.
 public protocol KeyFieldMappable {
     /// Maps key paths to their codable key.
     static var keyFieldMap: [ModelKey: QueryField] { get }
@@ -102,19 +103,19 @@ extension Model {
     }
 
     /// Seee Model.willCreate()
-    public func willCreate() throws {}
+    public func willCreate() throws -> Future<Void> { return .done }
     /// See Model.didCreate()
-    public func didCreate() {}
+    public func didCreate() throws -> Future<Void> { return .done }
 
     /// See Model.willUpdate()
-    public func willUpdate() throws  {}
+    public func willUpdate() throws -> Future<Void> { return .done }
     /// See Model.didUpdate()
-    public func didUpdate() {}
+    public func didUpdate() throws -> Future<Void> { return .done }
 
     /// See Model.willDelete()
-    public func willDelete() throws {}
+    public func willDelete() throws -> Future<Void> { return .done }
     /// See Model.didDelete()
-    public func didDelete() {}
+    public func didDelete() throws -> Future<Void> { return .done }
 }
 
 /// MARK: Convenience
@@ -132,14 +133,30 @@ extension Model {
 /// MARK: CRUD
 
 extension Model {
-    /// Saves this model to the supplied query executor.
-    /// If `shouldCreate` is true, the model will be saved
-    /// as a new item even if it already has an identifier.
+    /// Saves the supplied model.
+    /// Calls `create` if the ID is `nil`, and `update` if it exists.
+    /// If you need to create a model with a pre-existing ID,
+    /// call `create` instead.
     public func save<Connection: Fluent.Connection>(
-        on connection: Connection,
-        shouldCreate: Bool = false
+        on connection: Connection
     ) -> Future<Void> {
-        return connection.query(Self.self).save(self, shouldCreate: shouldCreate)
+        return connection.query(Self.self).save(self)
+    }
+
+    /// Saves this model as a new item in the database.
+    /// This method can auto-generate an ID depending on ID type.
+    public func create<Connection: Fluent.Connection>(
+        on connection: Connection
+    ) -> Future<Void> {
+        return connection.query(Self.self).create(self)
+    }
+
+    /// Updates the model. This requires that
+    /// the model has its ID set.
+    public func update<Connection: Fluent.Connection>(
+        on connection: Connection
+    ) -> Future<Void> {
+        return connection.query(Self.self).update(self)
     }
 
     /// Saves this model to the supplied query executor.
