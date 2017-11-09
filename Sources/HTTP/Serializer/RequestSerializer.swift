@@ -22,7 +22,7 @@ public final class RequestSerializer: Serializer {
     /// Handles incoming requests.
     public func inputStream(_ input: Request) {
         let message = serialize(input)
-        outputStream?(message)
+        output(message)
     }
 
     /// Serializes a request into DispatchData.

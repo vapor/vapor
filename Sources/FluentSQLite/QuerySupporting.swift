@@ -6,11 +6,11 @@ import SQL
 
 extension SQLiteConnection: QuerySupporting {
     /// See QueryExecutor.execute
-    public func execute<I: Async.InputStream, D: Decodable>(
+    public func execute<I: InputStream & ClosableStream, D: Decodable>(
         query: DatabaseQuery,
         into stream: I
-    ) -> Future<Void> where I.Input == D {
-        return then {
+    ) where I.Input == D {
+        do {
             /// convert fluent query to sql query
             var (dataQuery, binds) = query.makeDataQuery()
 
@@ -44,29 +44,30 @@ extension SQLiteConnection: QuerySupporting {
             }
 
             /// setup drain
-            let promise = Promise(Void.self)
             sqliteQuery.drain { row in
                 let decoder = SQLiteRowDecoder(row: row)
                 do {
                     let model = try D(from: decoder)
-                    stream.inputStream(model)
+                    stream.input(model)
                 } catch {
-                    /// FIXME: should we fail or just put in the error stream?
-                    promise.fail(error)
+                    stream.errorStream?(error)
+                    stream.close()
                 }
             }.catch { err in
-                /// FIXME: should we fail or just put in the error stream?
-                promise.fail(err)
+                stream.errorStream?(err)
+                stream.close()
             }
 
             /// execute query
             sqliteQuery.execute().do {
-                promise.complete()
+                stream.close()
             }.catch { err in
-                promise.fail(err)
+                stream.errorStream?(err)
+                stream.close()
             }
-
-            return promise.future
+        } catch {
+            stream.errorStream?(error)
+            stream.close()
         }
     }
 }

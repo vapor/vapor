@@ -67,7 +67,7 @@ extension ResultsStream {
                 throw error
         }
         
-        self.outputStream?(try parseRows(from: packet))
+        self.output(try parseRows(from: packet))
     }
     
     func parseColumns(from packet: Packet, amount: UInt64) {

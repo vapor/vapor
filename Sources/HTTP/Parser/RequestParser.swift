@@ -39,7 +39,7 @@ public final class RequestParser: CParser {
             guard let request = try parse(from: input) else {
                 return
             }
-            outputStream?(request)
+            output(request)
         } catch {
             self.errorStream?(error)
             reset(HTTP_REQUEST)

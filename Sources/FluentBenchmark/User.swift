@@ -2,7 +2,8 @@ import Async
 import Fluent
 import Foundation
 
-internal final class User: Model {
+internal final class User: Model, Timestampable {
+
     /// See Model.ID
     typealias ID = UUID
 
@@ -18,7 +19,9 @@ internal final class User: Model {
     static var keyFieldMap = [
         key(\.id): field("id"),
         key(\.name): field("name"),
-        key(\.age): field("age")
+        key(\.age): field("age"),
+        key(\.createdAt): field("createdAt"),
+        key(\.updatedAt): field("updatedAt")
     ]
 
     /// Foo's identifier
@@ -29,6 +32,12 @@ internal final class User: Model {
 
     /// Age int
     var age: Int
+
+    /// Timestampable.createdAt
+    var createdAt: Date?
+
+    /// Timestampable.updatedAt
+    var updatedAt: Date?
 
     /// Create a new foo
     init(id: ID? = nil, name: String, age: Int) {
@@ -59,6 +68,8 @@ internal struct UserMigration<D: Database>: Migration where D.Connection: Schema
             try builder.id()
             try builder.field(for: \.name)
             try builder.field(for: \.age)
+            try builder.field(for: \.createdAt)
+            try builder.field(for: \.updatedAt)
         }
     }
 
@@ -67,4 +78,3 @@ internal struct UserMigration<D: Database>: Migration where D.Connection: Schema
         return connection.delete(User.self)
     }
 }
-

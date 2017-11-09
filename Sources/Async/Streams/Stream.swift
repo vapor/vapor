@@ -12,7 +12,19 @@ public protocol InputStream: BaseStream {
     associatedtype Input
 
     /// Input will be passed here as it is received.
-    func inputStream(_ input: Input)
+    func inputStream(_ input: Input) throws
+}
+
+extension InputStream {
+    /// Send input to stream, catching errors in
+    /// the error stream.
+    public func input(_ input: Input) {
+        do {
+            try inputStream(input)
+        } catch {
+            errorStream?(error)
+        }
+    }
 }
 
 /// A Stream that can be closed and can be listened to for closing
@@ -50,10 +62,22 @@ public protocol OutputStream: BaseStream {
     associatedtype Output
 
     /// A closure that takes one onput.
-    typealias OutputHandler = (Output) -> ()
+    typealias OutputHandler = (Output) throws -> ()
 
     /// Pass output as it is generated to this stream.
     var outputStream: OutputHandler? { get set }
+}
+
+extension OutputStream {
+    /// Send output to stream, catching errors in
+    /// the error stream.
+    public func output(_ output: Output) {
+        do {
+            try outputStream?(output)
+        } catch {
+            errorStream?(error)
+        }
+    }
 }
 
 /// Base stream protocol. Simply handles errors.

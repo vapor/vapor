@@ -25,9 +25,24 @@ final class SQLiteBencharkTests: XCTestCase {
         try benchmarker.benchmarkRelations_withSchema()
     }
 
+    func testTimestampable() throws {
+        try benchmarker.benchmarkTimestampable_withSchema()
+    }
+
+    func testTransactions() throws {
+        try benchmarker.benchmarkTransactions_withSchema()
+    }
+
+    func testChunking() throws {
+        try benchmarker.benchmarkChunking_withSchema()
+    }
+
     static let allTests = [
         ("testSchema", testSchema),
         ("testModels", testModels),
         ("testRelations", testRelations),
+        ("testTimestampable", testTimestampable),
+        ("testTransactions", testTransactions),
+        ("testChunking", testChunking),
     ]
 }

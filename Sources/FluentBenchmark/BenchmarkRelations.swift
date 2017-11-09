@@ -53,7 +53,7 @@ extension Benchmarker {
         }
     }
 
-    /// Benchmark the basic model CRUD.
+    /// Benchmark fluent relations.
     public func benchmarkRelations() throws {
         let worker = DispatchQueue(label: "codes.vapor.fluent.benchmark.models")
         let conn = try test(database.makeConnection(on: worker))
@@ -62,7 +62,7 @@ extension Benchmarker {
 }
 
 extension Benchmarker where Database.Connection: SchemaSupporting {
-    /// Benchmark the basic model CRUD.
+    /// Benchmark fluent relations.
     /// The schema will be prepared first.
     public func benchmarkRelations_withSchema() throws {
         let worker = DispatchQueue(label: "codes.vapor.fluent.benchmark.models")

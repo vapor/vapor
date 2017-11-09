@@ -4,7 +4,7 @@ import Bits
 /// A stream of incoming and outgoing binary  between 2 parties over WebSockets
 final class BinaryStream : Async.Stream {
     /// A stream of incoming binary data
-    var outputStream: ((ByteBuffer) -> ())?
+    var outputStream: OutputHandler?
     
     internal weak var frameStream: Connection?
     

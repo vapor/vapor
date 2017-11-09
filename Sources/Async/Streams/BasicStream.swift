@@ -17,7 +17,7 @@ public final class BasicStream<Data>: Stream, ClosableStream {
 
     /// See InputStream.inputStream()
     public func inputStream(_ input: Data) {
-        outputStream?(input)
+        output(input)
     }
 
     /// Create a new BasicStream generic on the supplied type.

@@ -41,7 +41,7 @@ public final class ResponseParser: CParser, Async.Stream {
             guard let request = try parse(from: input) else {
                 return
             }
-            outputStream?(request)
+            output(request)
         } catch {
             self.errorStream?(error)
             reset(HTTP_RESPONSE)

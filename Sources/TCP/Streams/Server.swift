@@ -97,7 +97,7 @@ public final class Server: Async.OutputStream, ClosableStream {
             }
             
             client.errorStream = self.errorStream
-            self.outputStream?(client)
+            self.output(client)
         }
         
         source.resume()

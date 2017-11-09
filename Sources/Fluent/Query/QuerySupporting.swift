@@ -5,10 +5,10 @@ public protocol QuerySupporting {
     /// Executes the supplied query on the database connection.
     /// The returned future will be completed when the query is complete.
     /// Results will be outputed through the query's output stream.
-    func execute<I: InputStream, D: Decodable>(
+    func execute<I: InputStream & ClosableStream, D: Decodable>(
         query: DatabaseQuery,
         into stream: I
-    ) -> Future<Void> where I.Input == D
+    ) where I.Input == D
 }
 
 /// Creates a database query using this executor.

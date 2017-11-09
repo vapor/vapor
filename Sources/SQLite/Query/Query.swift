@@ -117,6 +117,7 @@ public final class SQLiteQuery: Async.OutputStream {
             columns.append(column)
         }
 
+
         // step over the query, this will continue to return SQLITE_ROW
         // for as long as there are new rows to be fetched
         while sqlite3_step(r) == SQLITE_ROW {
@@ -132,7 +133,7 @@ public final class SQLiteQuery: Async.OutputStream {
 
             // return to event loop
             self.connection.worker.eventLoop.queue.async {
-                self.outputStream?(row)
+                self.output(row)
             }
         }
 

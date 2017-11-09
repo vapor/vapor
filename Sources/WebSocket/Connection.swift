@@ -65,7 +65,7 @@ internal final class Connection: Async.Stream, ClosableStream {
         
         // Streams incoming data into the parser which sends it to this frame's handler
         client.stream(to: parser).drain { frame in
-            self.outputStream?(frame)
+            self.output(frame)
         }.catch { error in
             // FIXME: @joannis
             fatalError("\(error)")

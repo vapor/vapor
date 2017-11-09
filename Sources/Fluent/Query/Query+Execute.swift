@@ -9,25 +9,33 @@ extension QueryBuilder {
     public func run<T: Decodable>(
         decoding type: T.Type = T.self,
         into outputStream: @escaping BasicStream<T>.OutputHandler
-    ) -> BasicStream<T> {
+    ) -> Future<Void> {
         let stream = BasicStream<T>()
+        let promise = Promise(Void.self)
 
-        connection.execute(query: self.query, into: stream).do {
-            stream.close()
-        }.catch { err in
-            stream.errorStream?(err)
-        }
-
+        // connect output
         stream.outputStream = outputStream
 
-        return stream
+        // connect close
+        stream.onClose = {
+            promise.complete()
+        }
+
+        // connect error
+        stream.errorStream = { error in
+            promise.fail(error)
+        }
+
+        // execute
+        connection.execute(query: self.query, into: stream)
+        return promise.future
     }
 
     /// Convenience run that defaults to outputting a
     /// stream of the QueryBuilder's model type.
     public func run(
         outputStream: @escaping BasicStream<Model>.OutputHandler
-    ) -> BasicStream<Model> {
+    ) -> Future<Void> {
         return run(decoding: Model.self, into: outputStream)
     }
 
@@ -38,19 +46,12 @@ extension QueryBuilder {
     public func all() -> Future<[Model]> {
         let promise = Promise([Model].self)
         var models: [Model] = []
-        let stream = BasicStream<Model>()
 
-        stream.drain { model in
+        run { model in
             models.append(model)
-        }.catch { err in
-            promise.fail(err)
-        }.finally {
+        }.do {
             promise.complete(models)
-        }
-
-        connection.execute(query: self.query, into: stream)
-            .do(stream.close)
-            .catch(promise.fail)
+        }.catch(promise.fail)
 
         return promise.future
     }
@@ -69,7 +70,43 @@ extension QueryBuilder {
 
     /// Runs the query, discarding any results.
     public func run() -> Future<Void> {
-        let stream = BasicStream<Model>()
-        return connection.execute(query: self.query, into: stream)
+        return run { _ in }
+    }
+}
+
+// MARK: Chunk
+
+extension QueryBuilder {
+    /// Accepts a chunk of models.
+    public typealias ChunkClosure<T> = ([T]) throws -> ()
+
+    /// Convenience for chunking model results.
+    public func chunk(
+        max: Int, closure: @escaping ChunkClosure<Model>
+    ) -> Future<Void> {
+        return chunk(decoding: Model.self, max: max, closure: closure)
+    }
+
+    /// Run the query, grouping the results into chunks before calling closure.
+    public func chunk<T: Decodable>(
+        decoding type: T.Type = T.self,
+        max: Int, closure: @escaping ChunkClosure<T>
+    ) -> Future<Void> {
+        var partial: [T] = []
+        partial.reserveCapacity(max)
+
+        return self.run(decoding: T.self) { model in
+            partial.append(model)
+            if partial.count >= max {
+                try closure(partial)
+                partial = []
+            }
+        }.then {
+            if partial.count > 0 {
+                try closure(partial)
+            }
+
+            return .done
+        }
     }
 }

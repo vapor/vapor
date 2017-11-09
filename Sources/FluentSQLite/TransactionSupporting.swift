@@ -8,14 +8,13 @@ extension SQLiteConnection: TransactionSupporting {
         let promise = Promise(Void.self)
 
         makeQuery("BEGIN TRANSACTION").execute().do {
-            transaction.closure(self).do {
+            transaction.run(on: self).do {
                 print("transaction done")
                 self.makeQuery("COMMIT TRANSACTION")
                     .execute()
                     .chain(to: promise)
             }.catch { err in
                 self.makeQuery("ROLLBACK TRANSACTION").execute().do { query in
-                    print("rollback success")
                     // still fail even tho rollback succeeded
                     promise.fail(err)
                 }.catch { err in

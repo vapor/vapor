@@ -210,8 +210,8 @@ final class DataParser: Async.Stream {
         
         parsingValue = nil
         
-        if let outputStream = outputStream {
-            outputStream(data)
+        if outputStream != nil {
+            output(data)
             return
         }
         

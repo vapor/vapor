@@ -43,7 +43,7 @@ public final class ResponderStream: Async.Stream {
             // dispatches the incoming request to the responder.
             // the response is awaited on the responder stream's queue.
             try responder.respond(to: input).do { res in
-                self.outputStream?(res)
+                self.output(res)
             }.catch { error in
                 self.errorStream?(error)
             }

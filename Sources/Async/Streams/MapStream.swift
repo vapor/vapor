@@ -48,8 +48,7 @@ public final class MapStream<In, Out>: Stream {
     /// See InputStream.inputStream
     public func inputStream(_ input: In) {
         do {
-            let output = try map(input)
-            outputStream?(output)
+            try output(map(input))
         } catch {
             errorStream?(error)
         }

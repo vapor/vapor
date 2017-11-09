@@ -51,7 +51,7 @@ internal final class PacketParser : Async.Stream {
                 
                 // Packet is complete, send it up
                 let packet = Packet(sequenceId: sequenceId, payload: buffer)
-                outputStream?(packet)
+                output(packet)
                 
                 self.buffer = nil
                 self.inputStream(MutableByteBuffer(start: pointer.advanced(by: needing), count: length &- needing))
@@ -69,7 +69,7 @@ internal final class PacketParser : Async.Stream {
                 
                 // Packet is complete, send it up
                 let packet = Packet(sequenceId: sequenceId, payload: buffer)
-                outputStream?(packet)
+                output(packet)
                 
                 self.buffer = nil
             }
@@ -112,7 +112,7 @@ internal final class PacketParser : Async.Stream {
         }
     }
     
-    var outputStream: ((Packet) -> ())?
+    var outputStream: OutputHandler?
     var errorStream: BaseStream.ErrorHandler?
     
     public typealias Input = MutableByteBuffer

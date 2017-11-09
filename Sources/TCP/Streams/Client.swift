@@ -164,7 +164,7 @@ public final class TCPClient: Async.Stream, ClosableStream {
                 start: self.outputBuffer.baseAddress,
                 count: read
             )
-            self.outputStream?(bufferView)
+            self.output(bufferView)
         }
 
         source.setCancelHandler {

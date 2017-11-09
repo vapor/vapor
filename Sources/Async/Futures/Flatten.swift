@@ -122,9 +122,9 @@ internal final class ManyFutures<F: FutureType> {
             future.do { res in
                 self.results.append(res)
                 self.update()
-                }.catch { err in
-                    self.errors.append(err)
-                    self.update()
+            }.catch { err in
+                self.errors.append(err)
+                self.update()
             }
         }
     }

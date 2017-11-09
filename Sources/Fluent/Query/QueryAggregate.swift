@@ -71,8 +71,6 @@ extension QueryBuilder {
             promise.complete(res.fluentAggregate)
         }.catch { err in
             promise.fail(err)
-        }.finally {
-            promise.fail("no agggregate")
         }
 
         return promise.future

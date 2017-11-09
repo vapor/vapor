@@ -35,7 +35,7 @@ public final class SubscriptionStream: Async.OutputStream {
             
             let message = ChannelMessage(channel: channel, message: array[2])
             
-            self.outputStream?(message)
+            self.output(message)
         }
     }
 }
