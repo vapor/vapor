@@ -20,7 +20,8 @@ final class Pet: Model {
     var name: String
     var ownerID: UUID
 
-    init(name: String, ownerID: UUID) {
+    init(id: ID? = nil, name: String, ownerID: UUID) {
+        self.id = id
         self.name = name
         self.ownerID = ownerID
     }
@@ -34,6 +35,7 @@ final class Pet: Model {
     }
 }
 
+// FIXME: find way to include this in fluent
 extension Pet: Parameter {
     static var uniqueSlug: String {
         return "pet"
@@ -59,16 +61,4 @@ extension Pet: Parameter {
 
 extension Pet: Migration {
     typealias Database = SQLiteDatabase
-
-    static func prepare(on connection: SQLiteConnection) -> Future<Void> {
-        return connection.create(self) { builder in
-            builder.id()
-            builder.string("name")
-            builder.data("ownerID", length: 16)
-        }
-    }
-
-    static func revert(on connection: SQLiteConnection) -> Future<Void> {
-        return connection.delete(self)
-    }
 }

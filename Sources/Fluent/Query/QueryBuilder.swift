@@ -32,58 +32,60 @@ extension QueryBuilder {
         _ model: Model,
         shouldCreate: Bool = false
     ) -> Future<Void> {
-        query.data = model
+        return then {
+            self.query.data = model
 
-        if let id = model.fluentID, !shouldCreate {
-            filter("id" == id)
-            // update record w/ matching id
-            query.action = .update
-        } else if model.fluentID == nil {
-            switch Model.ID.identifierType {
-            case .autoincrementing: break
-            case .generated(let factory):
-                model.fluentID = factory()
-            case .supplied: break
-                // FIXME: error if not actually supplied?
-            }
-            // create w/ generated id
-            query.action = .create
-        } else {
-            // just create, with existing id
-            query.action = .create
-        }
-
-        // update timestamps if required
-        if var timestampable = model as? Timestampable {
-            timestampable.updatedAt = Date()
-            switch query.action {
-            case .create: timestampable.createdAt = Date()
-            default: break
-            }
-        }
-
-        let promise = Promise(Void.self)
-
-        do {
-            switch query.action {
-            case .create: try model.willCreate()
-            case .update: try model.willUpdate()
-            default: break
+            if let id = model.fluentID, !shouldCreate {
+                try self.filter(Model.idKey == id)
+                // update record w/ matching id
+                self.query.action = .update
+            } else if model.fluentID == nil {
+                switch Model.ID.identifierType {
+                case .autoincrementing: break
+                case .generated(let factory):
+                    model.fluentID = factory()
+                case .supplied: break
+                    // FIXME: error if not actually supplied?
+                }
+                // create w/ generated id
+                self.query.action = .create
+            } else {
+                // just create, with existing id
+                self.query.action = .create
             }
 
-            run().do {
+            // update timestamps if required
+            if var timestampable = model as? Timestampable {
+                timestampable.updatedAt = Date()
                 switch self.query.action {
-                case .create: model.didCreate()
-                case .update: model.didUpdate()
+                case .create: timestampable.createdAt = Date()
                 default: break
                 }
-                promise.complete()
-            }.catch(promise.fail)
-        } catch {
-            promise.fail(error)
-        }
+            }
 
-        return promise.future
+            let promise = Promise(Void.self)
+
+            do {
+                switch self.query.action {
+                case .create: try model.willCreate()
+                case .update: try model.willUpdate()
+                default: break
+                }
+
+                self.run().do {
+                    switch self.query.action {
+                    case .create: model.didCreate()
+                    case .update: model.didUpdate()
+                    default: break
+                    }
+                    promise.complete()
+                }.catch(promise.fail)
+            } catch {
+                promise.fail(error)
+            }
+
+            return promise.future
+        }
     }
 
     /// Deletes the supplied model.
@@ -95,7 +97,7 @@ extension QueryBuilder {
             try model.willDelete()
 
             if let id = model.fluentID {
-                filter("id" == id)
+                try filter(Model.idKey == id)
                 query.action = .delete
                 run().do {
                     model.didDelete()

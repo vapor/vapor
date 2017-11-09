@@ -51,8 +51,8 @@ internal struct MigrationContainer<D: Database> {
             if hasPrepared {
                 return self.revert(connection).then {
                     // delete the migration log
-                    return connection.query(MigrationLog.self)
-                        .filter("name" == self.name)
+                    return try connection.query(MigrationLog.self)
+                        .filter(\MigrationLog.name == self.name)
                         .delete()
                 }
             } else {
@@ -63,9 +63,11 @@ internal struct MigrationContainer<D: Database> {
 
     /// returns true if the migration has already been prepared.
     internal func hasPrepared(on connection: Database.Connection) -> Future<Bool> {
-        return connection.query(MigrationLog.self)
-            .filter("name" == name)
-            .first()
-            .map { $0 != nil }
+        return then {
+            return try connection.query(MigrationLog.self)
+                .filter(\MigrationLog.name == self.name)
+                .first()
+                .map { $0 != nil }
+        }
     }
 }

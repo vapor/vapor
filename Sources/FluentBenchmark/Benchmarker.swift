@@ -24,6 +24,7 @@ public final class Benchmarker<Database: Fluent.Database> {
         if let logSupporting = database as? LogSupporting {
             let logger = DatabaseLogger { log in
                 self.logs.append(log)
+                print(log)
                 return Future(())
             }
             logSupporting.enableLogging(using: logger)

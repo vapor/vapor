@@ -17,3 +17,25 @@ public protocol Migration {
     /// with an error.
     static func revert(on connection: Database.Connection) -> Future<Void>
 }
+
+// MARK: Model
+
+extension Migration where Self: Model, Database.Connection: SchemaSupporting {
+    /// See Migration.prepare
+    public static func prepare(on connection: Database.Connection) -> Future<Void> {
+        return connection.create(self) { builder in
+            for (key, field) in keyFieldMap {
+                if let schema = key.type as? SchemaFieldTypeRepresentable.Type {
+                    try builder.field(schema.makeSchemaFieldType(), field, isOptional: key.isOptional)
+                } else {
+                    throw "Type `\(key.type)` for field `\(Self.self).\(field.name)` does not conform to `SchemaFieldTypeRepresentable`."
+                }
+            }
+        }
+    }
+
+    /// See Migration.revert
+    public static func revert(on connection: Database.Connection) -> Future<Void> {
+        return connection.delete(self)
+    }
+}

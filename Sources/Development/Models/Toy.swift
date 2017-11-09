@@ -27,15 +27,4 @@ final class Toy: Model {
 
 extension Toy: Migration {
     typealias Database = SQLiteDatabase
-
-    static func prepare(on connection: SQLiteConnection) -> Future<Void> {
-        return connection.create(self) { builder in
-            builder.id()
-            builder.string("name")
-        }
-    }
-
-    static func revert(on connection: SQLiteConnection) -> Future<Void> {
-        return connection.delete(self)
-    }
 }

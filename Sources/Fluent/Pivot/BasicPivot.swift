@@ -15,7 +15,7 @@ public final class BasicPivot<L: Model, R: Model>: ModifiablePivot {
     public typealias Right = R
 
     /// See Model.keyPathMap
-    public static var keyFieldMap: [AnyKeyPath: QueryField] {
+    public static var keyFieldMap: [ModelKey: QueryField] {
         return [
             key(\.id): field("id"),
             key(\.leftID): field("leftID"),
@@ -99,13 +99,9 @@ public struct BasicPivotMigration<
     /// See Migration.prepare
     public static func prepare(on connection: Database.Connection) -> Future<Void> {
         return connection.create(Pivot.self) { builder in
-            builder.id()
-
-            let left = SchemaField(name: Pivot.leftIDKey.makeQueryField().name, type: Pivot.Left.ID.fieldType)
-            builder.schema.addFields.append(left)
-
-            let right = SchemaField(name: Pivot.rightIDKey.makeQueryField().name, type: Pivot.Right.ID.fieldType)
-            builder.schema.addFields.append(right)
+            try builder.field(for: \.id)
+            try builder.field(for: \.leftID)
+            try builder.field(for: \.rightID)
         }
     }
 

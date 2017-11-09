@@ -71,6 +71,10 @@ let package = Package(
         // Bits
         .target(name: "Bits"),
 
+        // Boilerplate
+        .target(name: "Boilerplate", dependencies: ["Fluent", "Service", "Vapor"]),
+        .target(name: "BoilerplateRun", dependencies: ["Boilerplate"]),
+
         // 
         .target(name: "Core", dependencies: ["Async", "libc", "Debugging"]),
         .target(name: "libc"),

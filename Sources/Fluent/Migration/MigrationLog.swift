@@ -53,10 +53,11 @@ final class MigrationLogMigration<
     /// See Migration.prepare
     static func prepare(on connection: Database.Connection) -> Future<Void> {
             return connection.create(MigrationLog.self) { builder in
-                builder.id()
-                builder.string("name")
-                builder.int("batch")
-                builder.timestamps()
+                try builder.field(for: \.id)
+                try builder.field(for: \.name)
+                try builder.field(for: \.batch)
+                try builder.field(for: \.createdAt)
+                try builder.field(for: \.updatedAt)
             }
     }
 
@@ -75,12 +76,14 @@ extension MigrationLog {
     internal static func latestBatch<Connection: Fluent.Connection>(
         on connection: Connection
     ) -> Future<Int> {
-        return connection.query(MigrationLog.self)
-            .sort("batch", .descending)
-            .first()
-            .map { log in
-                return log?.batch ?? 0
+        return then {
+            return try connection.query(MigrationLog.self)
+                .sort("batch", .descending)
+                .first()
+                .map { log in
+                    return log?.batch ?? 0
             }
+        }
     }
 }
 

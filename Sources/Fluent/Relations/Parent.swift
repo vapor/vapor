@@ -26,16 +26,23 @@ public struct Parent<Child: Model, Parent: Model> {
     /// Create a query for the parent.
     public func query<Connection: Fluent.Connection>(
         on connection: Connection
-    ) -> QueryBuilder<Parent, Connection> {
+    ) throws -> QueryBuilder<Parent, Connection> {
         let builder = connection.query(Parent.self)
-        return builder.filter(Parent.idKey == child[keyPath: parentForeignIDKey])
+        return try builder.filter(Parent.idKey == child[keyPath: parentForeignIDKey])
     }
 
     /// Convenience for getting the parent.
     public func get<Connection: Fluent.Connection>(
         on connection: Connection
-    ) -> Future<Parent?> {
-        return query(on: connection).first()
+    ) -> Future<Parent> {
+        return then {
+            try self.query(on: connection).first().map { first in
+                guard let parent = first else {
+                    throw "Parent not found"
+                }
+                return parent
+            }
+        }
     }
 }
 

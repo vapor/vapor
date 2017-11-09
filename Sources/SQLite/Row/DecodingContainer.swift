@@ -45,7 +45,7 @@ internal final class DecodingContainer<K: CodingKey>:
 
     func decode(_ type: Int.Type, forKey key: K) throws -> Int {
         guard let int = decoder.row[key.stringValue]?.fuzzyInt else {
-            throw "No int found at key '\(key.stringValue)'"
+            throw "No int found at key `\(key.stringValue)`"
         }
 
         return int
@@ -97,7 +97,7 @@ internal final class DecodingContainer<K: CodingKey>:
 
     func decode(_ type: String.Type, forKey key: K) throws -> String {
         guard let string = decoder.row[key.stringValue]?.fuzzyString else {
-            throw "No string found at key '\(key.stringValue)'"
+            throw "No string found at key `\(key.stringValue)`"
         }
 
         return string

@@ -144,7 +144,7 @@ router.post("users") { req -> Future<User> in
 
 router.get("builder") { req -> Future<[User]> in
     return req.database(.beta) { db in
-        return db.query(User.self).filter(\User.name == "Bob").all()
+        return try db.query(User.self).filter(\User.name == "Bob").all()
     }
 }
 

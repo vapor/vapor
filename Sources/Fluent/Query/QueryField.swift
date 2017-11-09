@@ -17,7 +17,7 @@ public struct QueryField {
 
 /// Representable as a Query Field
 public protocol QueryFieldRepresentable {
-    func makeQueryField() -> QueryField
+    func makeQueryField() throws -> QueryField
 }
 
 /// Strings should be usable as query fields in builder.filter(...) calls.
@@ -28,6 +28,23 @@ extension String: QueryFieldRepresentable {
     }
 }
 
+/// Conform key path's where the root is a model.
+/// FIXME: conditional conformance
+extension KeyPath: QueryFieldRepresentable {
+    /// See QueryFieldRepresentable.makeQueryField()
+    public func makeQueryField() throws -> QueryField {
+        guard let model = Root.self as? KeyFieldMappable.Type else {
+            throw "`Can't create query field. \(Root.self)` does not conform to `Model`."
+        }
+
+        let key = ModelKey(path: self, type: Value.self, isOptional: false)
+        guard let queryField = model.keyFieldMap[key] else {
+            throw "No query field on model `\(Root.self)` for key path `\(self)`"
+        }
+
+        return queryField
+    }
+}
 
 /// Query fields obviously should get free conformance.
 extension QueryField: QueryFieldRepresentable {
@@ -80,7 +97,7 @@ extension QueryField: CodingKey {
 extension KeyedDecodingContainer where K == QueryField {
     /// Decodes a value from a key path.
     public func decode<T: Decodable, M: Model>(_ type: T.Type = T.self, forKey key: KeyPath<M, T>) throws -> T {
-        let field = key.makeQueryField()
+        let field = try key.makeQueryField()
         return try decode(T.self, forKey: field)
     }
 }
@@ -88,7 +105,7 @@ extension KeyedDecodingContainer where K == QueryField {
 extension KeyedEncodingContainer where K == QueryField {
     /// Encodes a value to a key path.
     public mutating func encode<T: Encodable, M: Model>(_ value: T, forKey key: KeyPath<M, T>) throws {
-        let field = key.makeQueryField()
+        let field = try key.makeQueryField()
         try self.encode(value, forKey: field)
     }
 }

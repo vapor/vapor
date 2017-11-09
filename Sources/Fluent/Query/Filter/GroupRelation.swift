@@ -9,7 +9,7 @@ extension QueryBuilder {
     public func filter<
         Field: QueryFieldRepresentable
     >(_ field: Field, in values: [Encodable?]) throws -> Self {
-        let filter = QueryFilter(
+        let filter = try QueryFilter(
             entity: Model.entity,
             method: .subset(field.makeQueryField(), .in, .array(values))
         )
@@ -21,7 +21,7 @@ extension QueryBuilder {
     public func filter<
         Field: QueryFieldRepresentable
     >(_ field: Field, notIn values: [Encodable?]) throws -> Self {
-        let filter = QueryFilter(
+        let filter = try QueryFilter(
             entity: Model.entity,
             method: .subset(field.makeQueryField(), .notIn, .array(values))
         )

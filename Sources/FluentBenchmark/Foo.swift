@@ -43,9 +43,9 @@ internal struct FooMigration<D: Database>: Migration where D.Connection: SchemaS
     /// See Migration.prepare
     static func prepare(on connection: Database.Connection) -> Future<Void> {
         return connection.create(Foo.self) { builder in
-            builder.id()
-            builder.string("bar")
-            builder.int("baz")
+            try builder.id()
+            try builder.field(for: \.bar)
+            try builder.field(for: \.baz)
         }
     }
 

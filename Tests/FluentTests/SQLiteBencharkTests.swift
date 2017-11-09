@@ -21,8 +21,13 @@ final class SQLiteBencharkTests: XCTestCase {
         try benchmarker.benchmarkModels_withSchema()
     }
 
+    func testRelations() throws {
+        try benchmarker.benchmarkRelations_withSchema()
+    }
+
     static let allTests = [
         ("testSchema", testSchema),
         ("testModels", testModels),
+        ("testRelations", testRelations),
     ]
 }

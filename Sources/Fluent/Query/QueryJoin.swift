@@ -68,8 +68,8 @@ extension QueryBuilder {
         field joinedKey: ReferenceWritableKeyPath<Joined, Model.ID>,
         to baseKey: ReferenceWritableKeyPath<Model, Model.ID?> = Model.idKey,
         method: QueryJoinMethod = .inner
-    ) -> Self {
-        let join = QueryJoin(
+    ) throws -> Self {
+        let join = try QueryJoin(
             method: method,
             base: baseKey.makeQueryField(),
             joined: joinedKey.makeQueryField()
@@ -83,8 +83,8 @@ extension QueryBuilder {
         field joinedKey: ReferenceWritableKeyPath<Joined, Joined.ID?>,
         to baseKey: ReferenceWritableKeyPath<Model, Joined.ID>,
         method: QueryJoinMethod = .inner
-    ) -> Self {
-        let join = QueryJoin(
+    ) throws -> Self {
+        let join = try QueryJoin(
             method: method,
             base: baseKey.makeQueryField(),
             joined: joinedKey.makeQueryField()

@@ -45,7 +45,7 @@ final class User: Model, ResponseRepresentable {
 
     var id: UUID?
     var name: String
-    var age: Int
+    var age: Double
 //    var child: User?
 //    var futureChild: Future<User>?
     
@@ -55,7 +55,7 @@ final class User: Model, ResponseRepresentable {
         return Response(body: body)
     }
 
-    init(name: String, age: Int) {
+    init(name: String, age: Double) {
         self.name = name
         self.age = age
     }
@@ -92,17 +92,17 @@ extension Array: ResponseRepresentable {
 extension User: Migration {
     typealias Database = SQLiteDatabase
 
-    static func prepare(on conn: SQLiteConnection) -> Future<Void> {
-        return conn.create(User.self) { user in
-            user.data("id", length: 16, isIdentifier: true)
-            user.string("name")
-            user.int("age")
-        }
-    }
-
-    static func revert(on conn: SQLiteConnection) -> Future<Void> {
-        return conn.delete(User.self)
-    }
+//    static func prepare(on conn: SQLiteConnection) -> Future<Void> {
+//        return conn.create(User.self) { user in
+//            user.id()
+//            user.field(for: \.name)
+//            user.field(for: \.age)
+//        }
+//    }
+//
+//    static func revert(on conn: SQLiteConnection) -> Future<Void> {
+//        return conn.delete(User.self)
+//    }
 }
 
 struct AddUsers: Migration {

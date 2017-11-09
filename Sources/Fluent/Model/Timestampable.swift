@@ -11,10 +11,11 @@ public protocol Timestampable {
     var updatedAt: Date? { get set }
 }
 
-extension SchemaCreator where Model: Timestampable {
-    /// Adds createdAt and updatedAt timestamps to the schema.
-    public func timestamps() {
-        date("createdAt")
-        date("updatedAt")
-    }
-}
+//extension SchemaCreator where Model: Timestampable {
+//    /// Adds createdAt and updatedAt timestamps to the schema.
+//    public func timestamps() {
+//        field(for: \.createdAt)
+//        field(for: \.updatedAt)
+//    }
+//}
+

@@ -51,8 +51,10 @@ extension QueryBuilder {
         field: F?,
         as type: D.Type = D.self
     ) -> Future<D> {
-        let aggregate = QueryAggregate(field: field?.makeQueryField(), method: method)
-        return self.aggregate(aggregate)
+        return then {
+            let aggregate = try QueryAggregate(field: field?.makeQueryField(), method: method)
+            return self.aggregate(aggregate)
+        }
     }
 
     /// Performs the supplied aggregate struct.

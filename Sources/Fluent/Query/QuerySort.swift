@@ -28,8 +28,11 @@ public enum QuerySortDirection {
 
 extension QueryBuilder {
     /// Add a Sort to the Query.
-    public func sort<F: QueryFieldRepresentable>(_ field: F, _ direction: QuerySortDirection) -> Self {
-        let sort = QuerySort(field: field.makeQueryField(), direction: direction)
+    public func sort<F: QueryFieldRepresentable>(_ field: F, _ direction: QuerySortDirection) throws -> Self {
+        let sort = try QuerySort(
+            field: field.makeQueryField(),
+            direction: direction
+        )
         return self.sort(sort)
     }
     

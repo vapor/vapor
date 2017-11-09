@@ -5,7 +5,7 @@ import Async
 ///
 /// Types conforming to this protocol provide the basis
 /// fetching and saving data to/from Fluent.
-public protocol Model: class, Codable {
+public protocol Model: class, Codable, KeyFieldMappable {
     /// The associated Identifier type.
     /// Usually Int or UUID.
     associatedtype ID: Fluent.ID
@@ -42,11 +42,11 @@ public protocol Model: class, Codable {
     func willDelete() throws
     /// Called after the model is deleted.
     func didDelete()
+}
 
-    // MARK: Key paths
-
+public protocol KeyFieldMappable {
     /// Maps key paths to their codable key.
-    static var keyFieldMap: [AnyKeyPath: QueryField] { get }
+    static var keyFieldMap: [ModelKey: QueryField] { get }
 }
 
 extension Model {
@@ -57,10 +57,35 @@ extension Model {
     }
 }
 
+public struct ModelKey: Hashable {
+    public var hashValue: Int {
+        return path.hashValue
+    }
+
+    public static func ==(lhs: ModelKey, rhs: ModelKey) -> Bool {
+        return lhs.path == rhs.path
+    }
+
+    var path: AnyKeyPath
+    var type: Any.Type
+    var isOptional: Bool
+
+    init<T>(path: AnyKeyPath, type: T.Type, isOptional: Bool) {
+        self.path = path
+        self.type = type
+        self.isOptional = isOptional
+    }
+}
+
 extension Model {
     /// Maps a model's key path to AnyKeyPath.
-    public static func key<T, K: KeyPath<Self, T>>(_ path: K) -> AnyKeyPath {
-        return path
+    public static func key<T, K: KeyPath<Self, T>>(_ path: K) -> ModelKey {
+        return ModelKey(path: path, type: T.self, isOptional: false)
+    }
+
+    /// Maps a model's key path to AnyKeyPath.
+    public static func key<T, K: KeyPath<Self, Optional<T>>>(_ path: K) -> ModelKey {
+        return ModelKey(path: path, type: T.self, isOptional: true)
     }
 }
 
@@ -131,8 +156,10 @@ extension Model {
     public static func find<
         Connection: Fluent.Connection
     >(_ id: Self.ID, on connection: Connection) -> Future<Self?> {
-        return connection.query(Self.self)
-            .filter("id" == id)
-            .first()
+        return then {
+            return try connection.query(Self.self)
+                .filter(idKey == id)
+                .first()
+        }
     }
 }

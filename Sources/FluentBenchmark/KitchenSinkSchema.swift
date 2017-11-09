@@ -24,23 +24,23 @@ internal struct KitchenSinkSchema<
     /// See Migration.prepare
     static func prepare(on connection: D.Connection) -> Future<Void> {
         return connection.create(KitchenSink.self) { builder in
-            builder.id()
+            try builder.id()
 
-            builder.string("string")
-            builder.string("stringEight", length: 8)
-            builder.string("optionalStringSixteen", length: 16, isOptional: true)
+            try builder.field(.string(nil), "string")
+            try builder.field(.string(8), "stringEight")
+            try builder.field(.string(16), "optionalStringSixteen", isOptional: true)
 
-            builder.int("int")
-            builder.int("optionalInt", isOptional: true)
+            try builder.field(.int, "int")
+            try builder.field(.int, "optionalInt", isOptional: true)
 
-            builder.double("double")
-            builder.double("optionalDouble", isOptional: true)
+            try builder.field(.double, "double")
+            try builder.field(.double, "optionalDouble", isOptional: true)
 
-            builder.data("dataEight", length: 8)
-            builder.data("optionalSDataSixteen", length: 16, isOptional: true)
+            try builder.field(.data(8), "dataEight")
+            try builder.field(.data(16), "optionalSDataSixteen", isOptional: true)
 
-            builder.date("date")
-            builder.date("optionalDate", isOptional: true)
+            try builder.field(.date, "date")
+            try builder.field(.date, "optionalDate", isOptional: true)
         }
     }
 
