@@ -5,11 +5,12 @@ extension SQLSerializer {
         let table = makeEscapedString(from: query.table)
 
         switch query.statement {
-        case .create(let columns):
+        case .create(let columns, let foreignKeys):
             statement.append("CREATE TABLE")
             statement.append(table)
 
             let columns = columns.map { serialize(column: $0) }
+                + foreignKeys.map { serialize(foreignKey: $0) }
             statement.append("(" + columns.joined(separator: ", ") + ")")
         case .alter(let columns, let deleteColumns):
             statement.append("ALTER TABLE")
@@ -46,6 +47,27 @@ extension SQLSerializer {
         } else if column.isNotNull {
             sql.append("NOT NULL")
         }
+
+        return sql.joined(separator: " ")
+    }
+
+    public func serialize(foreignKey: SchemaForeignKey) -> String {
+        // FOREIGN KEY(trackartist) REFERENCES artist(artistid)
+        var sql: [String] = []
+
+        sql.append("FOREIGN KEY")
+
+        if let table = foreignKey.local.table {
+            sql.append(makeEscapedString(from: table))
+        }
+        sql.append("(" + makeEscapedString(from: foreignKey.local.name) + ")")
+
+        sql.append("REFERENCES")
+
+        if let table = foreignKey.foreign.table {
+            sql.append(makeEscapedString(from: table))
+        }
+        sql.append("(" + makeEscapedString(from: foreignKey.foreign.name) + ")")
 
         return sql.joined(separator: " ")
     }

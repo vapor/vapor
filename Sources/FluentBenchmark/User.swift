@@ -62,7 +62,9 @@ extension User {
 
 // MARK: Migration
 
-internal struct UserMigration<D: Database>: Migration where D.Connection: SchemaSupporting {
+internal struct UserMigration<D: Database>: Migration
+    where D.Connection: SchemaSupporting
+{
     /// See Migration.database
     typealias Database = D
 

@@ -3,7 +3,7 @@ import Fluent
 import FluentSQL
 import SQLite
 
-extension SQLiteConnection: SchemaSupporting {
+extension SQLiteConnection: SchemaSupporting, ReferenceSupporting {
     /// See SchemaExecutor.execute()
     public func execute(schema: DatabaseSchema) -> Future<Void> {
         let schemaQuery = schema.makeSchemaQuery(delegate: self)
@@ -12,6 +12,16 @@ extension SQLiteConnection: SchemaSupporting {
             .serialize(schema: schemaQuery)
 
         return makeQuery(string).execute()
+    }
+
+    /// ReferenceSupporting.enableReferences
+    public func enableReferences() -> Future<Void> {
+        return makeQuery("PRAGMA foreign_keys = ON;").execute()
+    }
+
+    /// ReferenceSupporting.disableReferences
+    public func disableReferences() -> Future<Void> {
+        return makeQuery("PRAGMA foreign_keys = OFF;").execute()
     }
 }
 

@@ -61,7 +61,9 @@ extension Pet where Database.Connection: JoinSupporting {
 
 // MARK: Migration
 
-internal struct PetMigration<D: Database>: Migration where D.Connection: SchemaSupporting {
+internal struct PetMigration<D: Database>: Migration
+    where D.Connection: SchemaSupporting & ReferenceSupporting
+{
     /// See Migration.database
     typealias Database = D
 
@@ -70,7 +72,7 @@ internal struct PetMigration<D: Database>: Migration where D.Connection: SchemaS
         return connection.create(Pet<Database>.self) { builder in
             try builder.id()
             try builder.field(for: \.name)
-            try builder.field(for: \.ownerID)
+            try builder.field(for: \.ownerID, referencing: \User<Database>.id)
         }
     }
 

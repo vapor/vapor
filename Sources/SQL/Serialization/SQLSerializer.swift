@@ -102,6 +102,12 @@ public protocol SQLSerializer {
     ///
     func serialize(column: SchemaColumn) -> String
 
+    /// Serializes a SQL `SchemaColumn` to a string.
+    ///
+    ///     FOREIGN KEY (`trackartist`) REFERENCES `artist`(`artistid`)
+    ///
+    func serialize(foreignKey: SchemaForeignKey) -> String
+
     // MARK: Utility
 
     /// Creates a placeholder for the supplied column name.

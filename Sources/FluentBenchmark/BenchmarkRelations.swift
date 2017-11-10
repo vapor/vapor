@@ -2,15 +2,26 @@ import Async
 import Fluent
 import Foundation
 
-extension Benchmarker where Database.Connection: JoinSupporting {
+extension Benchmarker where Database.Connection: JoinSupporting & ReferenceSupporting {
     /// The actual benchmark.
     fileprivate func _benchmark(on conn: Database.Connection) throws {
+        try test(conn.enableReferences())
+        
         // create
         let tanner = User<Database>(name: "Tanner", age: 23)
         try test(tanner.save(on: conn))
 
         let ziz = try Pet<Database>(name: "Ziz", ownerID: tanner.requireID())
         try test(ziz.save(on: conn))
+
+        // create w/ bad id
+        do {
+            let foo = Pet<Database>(name: "Foo", ownerID: UUID())
+            try foo.save(on: conn).blockingAwait()
+            fail("should not have saved")
+        } catch {
+            // should fail
+        }
 
         // test pet attached
         if try test(tanner.pets.query(on: conn).count()) != 1 {
@@ -61,7 +72,7 @@ extension Benchmarker where Database.Connection: JoinSupporting {
     }
 }
 
-extension Benchmarker where Database.Connection: SchemaSupporting & JoinSupporting {
+extension Benchmarker where Database.Connection: SchemaSupporting & JoinSupporting & ReferenceSupporting {
     /// Benchmark fluent relations.
     /// The schema will be prepared first.
     public func benchmarkRelations_withSchema() throws {

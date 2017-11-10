@@ -35,30 +35,35 @@ public enum SchemaFieldType {
 // MARK: Fields
 
 extension SchemaBuilder {
+    /// Adds an ID field for this model to the schema.
     public func id() throws {
         try field(for: Model.idKey)
     }
 
+    /// Adds a field to the schema.
+    @discardableResult
     public func field<
         T: SchemaFieldTypeRepresentable
-    >(for key: KeyPath<Model, Optional<T>>) throws {
-        try field(T.makeSchemaFieldType(), key, isOptional: true, isIdentifier: key == Model.idKey)
+    >(for key: KeyPath<Model, Optional<T>>) throws -> SchemaField {
+        return try field(T.makeSchemaFieldType(), key, isOptional: true, isIdentifier: key == Model.idKey)
     }
 
     /// Adds a field to the schema.
+    @discardableResult
     public func field<
         T: SchemaFieldTypeRepresentable
-    >(for key: KeyPath<Model, T>) throws {
-        try field(T.makeSchemaFieldType(), key, isOptional: false, isIdentifier: false)
+    >(for key: KeyPath<Model, T>) throws -> SchemaField {
+        return try field(T.makeSchemaFieldType(), key, isOptional: false, isIdentifier: false)
     }
 
     /// Adds a field to the schema.
+    @discardableResult
     public func field<Field: QueryFieldRepresentable>(
         _ type: SchemaFieldType,
         _ field: Field,
         isOptional: Bool = false,
         isIdentifier: Bool = false
-    ) throws {
+    ) throws -> SchemaField {
         let field = SchemaField(
             name: try field.makeQueryField().name,
             type: type,
@@ -66,6 +71,7 @@ extension SchemaBuilder {
             isIdentifier: isIdentifier
         )
         schema.addFields.append(field)
+        return field
     }
 }
 

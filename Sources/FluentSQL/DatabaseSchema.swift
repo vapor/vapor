@@ -8,9 +8,10 @@ extension DatabaseSchema {
 
         switch action {
         case .create:
-            schemaStatement = .create(columns: addFields.map {
-                $0.makeSchemaColumn(delegate: delegate)
-            })
+            schemaStatement = .create(
+                columns: addFields.map { $0.makeSchemaColumn(delegate: delegate) },
+                foreignKeys: references.map { $0.makeForeignKey() }
+            )
         case .update:
             schemaStatement = .alter(
                 columns: addFields.map {

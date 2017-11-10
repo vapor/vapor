@@ -6,8 +6,6 @@ extension SQLiteDatabase: Database { }
 
 extension SQLiteConnection: Connection { }
 
-extension SQLiteConnection: JoinSupporting { }
-
 extension SQLiteDatabase: LogSupporting {
     /// See SupportsLogging.enableLogging
     public func enableLogging(using logger: DatabaseLogger) {
